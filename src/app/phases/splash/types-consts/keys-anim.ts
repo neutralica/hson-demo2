@@ -1,3 +1,13 @@
+import type { AnimSpec } from "hson-live/types";
+import { skyTimeNum, skyTimeString, starTimeString } from "./css.consts";
+import type { AnimPart } from "./splash.types";
+
+export const starDelayNum = 3000;
+export const starDelayString = `${starDelayNum}ms`
+
+export const flareAt = 0.4659;
+export const flareDelayNum = Math.round(skyTimeNum * flareAt);
+
 // keyframes.ts 
 export const SPLASH_KEYS = [
   {
@@ -73,20 +83,11 @@ export const SPLASH_KEYS = [
   {
     name: "hson_letter_starshine",
     steps: {
-      "0%": { textShadow: "0 0 0 transparent", filter: "brightness(1)" },
-      "35%": { textShadow: "0 0 0 transparent", filter: "brightness(1)" },
-
-      // hit window (tune these %s to match the star crossing)
-      "45%": {
-        textShadow: "0 0 2px var(--glow), 0 0 10px var(--glow), 0 0 22px rgba(255,255,255,0.10)",
-        filter: "brightness(1.25)",
-      },
-      "55%": {
-        textShadow: "0 0 1px var(--glow), 0 0 6px var(--glow), 0 0 14px rgba(255,255,255,0.08)",
-        filter: "brightness(1.08)",
-      },
-
-      "100%": { textShadow: "0 0 0 transparent", filter: "brightness(1)" },
+      "0%": { color: "var(--final)", filter: "brightness(1)", textShadow: "0 0 0 transparent" },
+      "62%": { color: "var(--final)", filter: "brightness(1)", textShadow: "0 0 2px var(--starshine), 0 0 2px var(--starshine)" },
+      "75%": { color: "var(--final)", filter: "brightness(1.98)", textShadow: "0 0 1px var(--starshine), 0 0 5px var(--starshine)" },
+      "85%": { color: "var(--final)", filter: "brightness(1)", textShadow: "0 0 1px var(--starshine), 0 0 2px var(--starshine)" },
+      "100%": { color: "var(--final)", filter: "brightness(1)", textShadow: "0 0 0 transparent" },
     },
   },
   {
@@ -148,4 +149,118 @@ export const SPLASH_KEYS = [
       "100%": { opacity: "0", transform: "translate(-100%, -50%) scaleX(44)" },
     },
   },
+  {
+  name: "hson_lens_flare",
+  steps: {
+    "0%": {
+      opacity: "0",
+      transform: "translateX(-5%) translateY(7%)",
+    },
+    "20%": {
+      opacity: "0.85",
+    },
+    "40%": {
+      opacity: "0.65",
+    },
+    "100%": {
+      opacity: "0",
+      transform: "translateX(5%) translateY(-7%)",
+    },
+  },
+}
+
 ];
+
+export const SKY_ANIM = {
+  name: "hson_sky",
+  duration: skyTimeString,
+  timingFunction: "ease-in-out",
+  fillMode: "forwards",
+}
+
+export const STAR_MOVE_ANIM: AnimSpec = {
+  name: "hson_star_move",
+  delay: "2000ms",
+  duration: starTimeString,
+  timingFunction: "linear",
+  iterationCount: "1",
+  fillMode: "forwards",
+};
+
+export const STARSHINE_ANIM: AnimSpec = {
+  name: "hson_letter_starshine",
+  delay: starDelayString,
+  duration: starTimeString,          
+  timingFunction: "linear",   
+  iterationCount: "1",
+  fillMode: "none",
+};
+
+export const VER_ANIM: AnimSpec = {
+  name: "hson_ver",
+  duration: "700ms",
+  // delay: "1000ms",
+  timingFunction: "ease-out",
+  fillMode: "forwards",
+}
+
+export const NEON_FLASH = {
+  name: "hson_letters",
+  duration: "700ms",
+  timingFunction: "ease-in-out",
+  fillMode: "forwards",
+}
+
+export const SUN_DISK_ANIM = {
+  name: "hson_sun_disk",
+  duration: skyTimeString,
+  timingFunction: "ease-in-out",
+  fillMode: "forwards",
+}
+
+export const SUN_CARRIER_ANIM = {
+  name: "hson_sun_path",
+  duration: skyTimeString,
+  timingFunction: "linear",
+  fillMode: "forwards",
+}
+
+export const FLARE_ANIM: AnimSpec = {
+  name: "hson_lens_flare",
+  duration: "520ms",
+  timingFunction: "cubic-bezier(0.2, 0.9, 0.2, 1)",
+  delay: `${flareDelayNum}ms`,     // <-- your calibrated cue
+  iterationCount: "1",
+  fillMode: "both",    // keep opacity=0 before, return to 0 after
+};
+
+const starAnimBase = {
+  duration: starTimeString,
+  timingFunction: "linear",
+  fillMode: "forwards",
+  delay: starDelayString,
+  iterationCount: "1",
+}
+
+export const STAR_CARRIER_ANIM = {
+  name: "hson_star_move",
+  ...starAnimBase,
+}
+
+export const STAR_HEAD_ANIM = {
+  name: "hson_star_head",
+  ...starAnimBase
+}
+
+export const TAIL_A_ANIM = {
+  name: "hson_star_tail_a",
+  ...starAnimBase
+}
+export const TAIL_B_ANIM = {
+  name: "hson_star_tail_b",
+  ...starAnimBase
+}
+export const TAIL_C_ANIM = {
+  name: "hson_star_tail_c",
+  ...starAnimBase
+}

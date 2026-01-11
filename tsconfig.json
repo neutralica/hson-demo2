@@ -19,6 +19,6 @@
 
     "noEmit": true
   },
-  "include": ["src", "src/app/phases/splash/consts/css.consts.ts"],
+  "include": ["src", "src/app/phases/splash/types-consts/css.consts.ts"],
   "exclude": ["dist", "node_modules"]
 }

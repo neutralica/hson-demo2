@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import { outcome, relay, void_sync, type Outcome } from "intrastructure";
 import { mount_intro } from "./phases/mount-intro";
-import { mount_splash } from "./phases/mount-splash";
+import { mount_splash } from "./phases/splash/mount-splash";
 
 
 export function run_app(root: LiveTree): boolean {

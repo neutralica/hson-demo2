@@ -1,6 +1,6 @@
 // core.types.ts
 
-import type { HSON_LETTERS } from "../app/phases/splash/consts/css.consts";
+import type { HSON_LETTERS } from "../app/phases/splash/types-consts/css.consts";
 
 export type PhaseId = "intro" | "splash";
 

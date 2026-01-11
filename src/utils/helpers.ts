@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import type { LETTER_COLOR } from "../app/phases/splash/consts/css.consts";
+import type { LETTER_COLOR } from "../app/phases/splash/types-consts/css.consts";
 
 type LetterKey = keyof typeof LETTER_COLOR; // "H" | "S" | "O" | "N"
 
