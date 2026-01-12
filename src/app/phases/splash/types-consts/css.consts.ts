@@ -2,22 +2,28 @@
 
 import type { CssMap } from "hson-live/types";
 
-export const skyTimeNum = 10000;
-export const skyTimeString = `${skyTimeNum}ms`;
-
-
-export const starTimeNum = 500;
-export const starTimeString = `${starTimeNum}ms`;
 // export const starDelayString = `${skyTimeNum + 2000}ms`
 
 export const HSON_LETTERS = ["H", "S", "O", "N"] as const;
+export const sunColor = "rgb(255, 196, 84)"
+export const sunFade = "rgb(255, 196, 84, 0.55)"
+export const bckColor = "black";
+export const skyGradient = "linear-gradient(30deg, transparent 0%,transparent 10%, white 100%)";
+
+export const STAGE_CSS: CssMap = {
+  position: "fixed",
+  top: "0",
+  left: "0",
+  width: "100vw",
+  height: "100vh",
+  backgroundColor: bckColor
+}
 
 export const SKY_CSS = {
   position: "relative",
   width: "100%",
-  minHeight: "100vh",
+  minHeight: "calc(var(--frameSize) * 2)",
   overflow: "hidden",
-  background: "black",
   "--frameSize": "min(15rem, 520px)",
 }
 
@@ -38,8 +44,8 @@ export const SUN_CSS: CssMap = {
   width: "5.25em",
   height: "5.25em",
   borderRadius: "999px",
-  background: "rgb(255, 196, 84)",
-  boxShadow: "0 0 28px rgba(255, 196, 84, 0.55)",
+  background: sunColor,
+  boxShadow:`0 0 28px ${sunFade}`,
   opacity: "0",
   transform: "scale(1.06)",
   willChange: "transform, opacity",
@@ -55,7 +61,7 @@ export const FLARE_BOX_CSS: CssMap = {
 
   pointerEvents: "none",
   overflow: "visible",
-  zIndex: "60",
+  zIndex: "50",
 
 };
 export const FLARE_CSS: CssMap = {
@@ -89,11 +95,24 @@ export const FRAME_CSS: CssMap = {
   // CHANGED: use the shared var
   width: "var(--frameSize)",
   height: "var(--frameSize)",
-
+  background: bckColor,
   display: "grid",
   placeItems: "center",
   overflow: "hidden",
+  willChange: ""
 };
+
+export const GRADIENT_CSS: CssMap = {
+  position: "absolute",
+  left: "0%",
+  top: "0%",
+  width: "100%",
+  height: "100%",
+  zIndex: 30,
+  opacity: 0,
+  willChange: "opacity",
+  background: skyGradient,
+}
 
 export const WORD_CSS: CssMap = {
   position: "relative",
@@ -104,7 +123,7 @@ export const WORD_CSS: CssMap = {
   placeItems: "end start",
   isolation: "isolate",
   userSelect: "none",
-  zIndex: "0",
+  zIndex: "40",
 };
 
 /*  layout box: stable geometry */
@@ -230,7 +249,7 @@ export const STAR_TAIL_A_CSS: CssMap = {
   ...TAIL_BASE,
   height: "2px",
   background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.95))",
-  filter: "blur(0.05px)",
+  filter: "blur(01.05px)",
   opacity: "0",
 };
 
@@ -238,7 +257,7 @@ export const STAR_TAIL_B_CSS: CssMap = {
   ...TAIL_BASE,
   height: "5px",
   background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(210,235,255,0.45))",
-  filter: "blur(1.2px)",
+  filter: "blur(6.2px)",
   opacity: "0",
 };
 
@@ -246,6 +265,6 @@ export const STAR_TAIL_C_CSS: CssMap = {
   ...TAIL_BASE,
   height: "9px",
   background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(180,220,255,0.22))",
-  filter: "blur(2.4px)",
+  filter: "blur(14.4px)",
   opacity: "0",
 };

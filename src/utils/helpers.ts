@@ -10,3 +10,7 @@ export function get_letter_key(l: LiveTree): LetterKey | null {
   if (l.classlist.has("N")) return "N";
   return null;
 }
+
+export function _sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

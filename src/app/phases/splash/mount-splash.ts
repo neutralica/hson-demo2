@@ -1,8 +1,9 @@
 // mount-splash.ts
 
 import type { LiveTree } from "hson-live";
-import { LETTER_CSS, LETTER_COLOR, O_ROT, SUN_CSS, VER_CSS, WORD_CSS, FRAME_CSS, SKY_CSS, CELL_CSS, HSON_LETTERS, VER6_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, skyTimeString, LETTER_CSS_FINAL, FLARE_CSS, FLARE_BOX_CSS } from "./types-consts/css.consts";
-import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, SPLASH_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./types-consts/keys-anim";
+import { LETTER_CSS, LETTER_COLOR, O_ROT, SUN_CSS, VER_CSS, WORD_CSS, FRAME_CSS, SKY_CSS, CELL_CSS, HSON_LETTERS, VER6_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, LETTER_CSS_FINAL, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./types-consts/css.consts";
+import { GRADIENT_ANIM, skyTimeString } from "./types-consts/keys-anim";
+import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./types-consts/keys-anim";
 import { get_letter_key } from "../../../utils/helpers";
 import type { LetterKey } from "../../../types/core.types";
 
@@ -12,20 +13,25 @@ export function mount_splash(stage: LiveTree): boolean {
     stage.empty();
 
     /* create container layers */
-    const sky = stage.create.section().id.set("splash").classlist.set(["splash"]);
-
-    const frame = makeDiv(sky, 'splash-frame');
+    const sky = stage.create.section().id.set("sky").classlist.set(["sky"]);
+    /* stacking order matters here: */
+    const frame = makeDiv(sky, 'sky-frame');
     const flareBox = makeDiv(frame, 'flare-box');
     const flare = makeDiv(flareBox, 'lens-flare');
-    const word = makeDiv(frame, "wordmark");
-
+    
+    
+    /* sky gradient */
+    const gradient = makeDiv(flareBox, 'sky-gradient');
+    gradient.css.setMany(GRADIENT_CSS);
+    const hsonWord = makeDiv(frame, "wordmark");
+    
     /* create sun */
-    const sunCarrier = makeDiv(word, "sun-carrier");
+    const sunCarrier = makeDiv(hsonWord, "sun-carrier");
     const sun = makeDiv(sunCarrier, "sun");
-
+    
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
-        const cell = word.create.span().classlist.set(["cell", ltr])
+        const cell = hsonWord.create.span().classlist.set(["cell", ltr])
         const l = cell.create.span().classlist.set(["letter", ltr]).setText(ltr)
         return [l, cell];
     }
@@ -35,7 +41,7 @@ export function mount_splash(stage: LiveTree): boolean {
     const [n, nCell] = createLetter("N")
     const letters = [h, s, o, n];
     const cells = [hCell, sCell, oCell, nCell];
-
+    
 
     /* create star */
     const starCarrier = makeDiv(frame, "star-carrier");
@@ -49,6 +55,7 @@ export function mount_splash(stage: LiveTree): boolean {
     const ver = nCell.create.span().classlist.set(["ver"]);
     ver.create.span().classlist.set(["ver-a"]).setText("2.0.2");
     const ver6 = ver.create.span().classlist.set(["ver-6"]).setText("6");
+
 
     /* style letters */
     cells.forEach(c => c.css.setMany(CELL_CSS));
@@ -64,19 +71,19 @@ export function mount_splash(stage: LiveTree): boolean {
     h.css.set.transform("translateX(13px)");  // tiny nudges
     s.css.set.transform("translateX(6px)");
     o.css.setMany(O_ROT); // rotate 'O'
-    
+
     /* style frame/sky/sun */
     sky.css.setMany(SKY_CSS);
     frame.css.setMany(FRAME_CSS);
     sunCarrier.css.setMany(SUN_CARRIER_CSS);
     sun.css.setMany(SUN_CSS);
-    sky.css.keyframes.setMany(SPLASH_KEYS);
+    sky.css.keyframes.setMany(ANIM_KEYS);
     flare.css.setMany(FLARE_CSS);
     flareBox.css.setMany(FLARE_BOX_CSS);
-    
-    
+
+
     /* style letters */
-    word.css.setMany(WORD_CSS);
+    hsonWord.css.setMany(WORD_CSS);
     letters.forEach(l => l.css.setMany(LETTER_CSS));
     ver.css.setMany(VER_CSS);
     ver6.css.setMany(VER6_CSS);
@@ -93,13 +100,20 @@ export function mount_splash(stage: LiveTree): boolean {
     frame.css.anim.begin(SKY_ANIM);
     sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
     sun.css.anim.begin(SUN_DISK_ANIM);
+    gradient.css.anim.begin(GRADIENT_ANIM);
     sun.listen.once().onAnimationStart((an: AnimationEvent) => {
         if (an.animationName !== "hson_sun_disk") return;
         flare.css.anim.begin(FLARE_ANIM);
+        flare.listen.onAnimationEnd((ev) => {
+            if (ev.animationName !== 'hson_lens_flare') {
+                flare.removeSelf();
+            }
+        })
     });
     /* animation sequencing avoids recalculating hard-coded duration/delay consts */
     sun.listen.once().onAnimationEnd((ev) => {
         if (ev.animationName !== "hson_sun_disk") return;
+        sun.removeSelf();
         letters.forEach((l) => {
             l.css.anim.begin(NEON_FLASH);
         });
