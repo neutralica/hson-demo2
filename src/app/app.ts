@@ -10,7 +10,7 @@ import { _sleep } from "../utils/helpers";
 
 
 // changed to 30000 from 3000 for testing
-const phaseLinger = 3000; /* ms */
+export const phaseLinger = 5000; /* ms */
 
 export async function run_app(root: LiveTree): Promise<boolean> {
     root.empty();

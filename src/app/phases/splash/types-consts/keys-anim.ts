@@ -194,7 +194,7 @@ export const ANIM_KEYS = [
       "0%": { opacity: "0", transform: "translate(-100%, -50%) scaleX(0.01)" },
       "6%": { opacity: "0.28", transform: "translate(-100%, -50%) scaleX(0.6)" },
       "26%": { opacity: "0.58", transform: "translate(-100%, -50%) scaleX(38)" },
-      "88%": { opacity: "0.12", transform: "translate(-100%, -50%) scaleX(44)" },
+      "88%": { opacity: "0.32", transform: "translate(-100%, -50%) scaleX(44)" },
       "100%": { opacity: "0", transform: "translate(-100%, -50%) scaleX(64)" },
     },
   },
