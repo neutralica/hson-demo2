@@ -1,38 +1,41 @@
 // mount-splash.ts
 
-import type { LiveTree } from "hson-live";
-import { LETTER_CSS, LETTER_COLOR, O_ROT, SUN_CSS, VER_CSS, WORD_CSS, FRAME_CSS, SKY_CSS, CELL_CSS, HSON_LETTERS, VER6_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, LETTER_CSS_FINAL, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./types-consts/css.consts";
-import { GRADIENT_ANIM, skyTimeString } from "./types-consts/keys-anim";
+import { type LiveTree } from "hson-live";
+import { SUN_CSS, FRAME_CSS, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./types-consts/splash-css.consts";
+import { LETTER_COLOR, O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../consts/core-css.consts";
+import { GRADIENT_ANIM } from "./types-consts/keys-anim";
 import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./types-consts/keys-anim";
-import { get_letter_key } from "../../../utils/helpers";
+import { get_letter_key, makeDivId } from "../../../utils/helpers";
 import type { LetterKey } from "../../../types/core.types";
+import { $COLOR } from "../../consts/styling.consts";
+import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../consts/core-css.consts";
+import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/helpers";
 
-export function mount_splash(stage: LiveTree): boolean {
-    const makeDiv = (lt: LiveTree, cls: string | string[]) => lt.create.div().classlist.set(cls);
+export async function mount_splash(stage: LiveTree): Promise<boolean> {
     /* clear livetree contents */
     stage.empty();
 
     /* create container layers */
-    const sky = stage.create.section().id.set("sky").classlist.set(["sky"]);
+    const sky = makeSection(stage, "sky");
     /* stacking order matters here: */
-    const frame = makeDiv(sky, 'sky-frame');
-    const flareBox = makeDiv(frame, 'flare-box');
-    const flare = makeDiv(flareBox, 'lens-flare');
-    
-    
+    const frame = makeDivClass(sky, 'sky-frame');
+    const flareBox = makeDivClass(frame, 'flare-box');
+    const flare = makeDivClass(flareBox, 'lens-flare');
+
+
     /* sky gradient */
-    const gradient = makeDiv(flareBox, 'sky-gradient');
+    const gradient = makeDivClass(flareBox, 'sky-gradient');
     gradient.css.setMany(GRADIENT_CSS);
-    const hsonWord = makeDiv(frame, "wordmark");
-    
+    const hsonWord = makeDivClass(frame, "wordmark");
+
     /* create sun */
-    const sunCarrier = makeDiv(hsonWord, "sun-carrier");
-    const sun = makeDiv(sunCarrier, "sun");
-    
+    const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
+    const sun = makeDivClass(sunCarrier, "sun");
+
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
-        const cell = hsonWord.create.span().classlist.set(["cell", ltr])
-        const l = cell.create.span().classlist.set(["letter", ltr]).setText(ltr)
+        const cell = makeSpanClass(hsonWord, ["cell", ltr])
+        const l = makeSpanClass(cell, ["letter", ltr]).setText(ltr)
         return [l, cell];
     }
     const [h, hCell] = createLetter("H")
@@ -41,20 +44,20 @@ export function mount_splash(stage: LiveTree): boolean {
     const [n, nCell] = createLetter("N")
     const letters = [h, s, o, n];
     const cells = [hCell, sCell, oCell, nCell];
-    
+
 
     /* create star */
-    const starCarrier = makeDiv(frame, "star-carrier");
-    const starWrap = makeDiv(starCarrier, "star-wrap");
-    const starHead = makeDiv(starWrap, "star-head");
-    const tailA = makeDiv(starWrap, ["star-tail", "a"]);
-    const tailB = makeDiv(starWrap, ["star-tail", "b"]);
-    const tailC = makeDiv(starWrap, ["star-tail", "c"]);
+    const starCarrier = makeDivClass(frame, "star-carrier");
+    const starWrap = makeDivClass(starCarrier, "star-wrap");
+    const starHead = makeDivClass(starWrap, "star-head");
+    const tailA = makeDivClass(starWrap, ["star-tail", "a"]);
+    const tailB = makeDivClass(starWrap, ["star-tail", "b"]);
+    const tailC = makeDivClass(starWrap, ["star-tail", "c"]);
 
     /* create semver pop-up */
-    const ver = nCell.create.span().classlist.set(["ver"]);
-    ver.create.span().classlist.set(["ver-a"]).setText("2.0.2");
-    const ver6 = ver.create.span().classlist.set(["ver-6"]).setText("6");
+    const ver = makeSpanClass(nCell, ["ver"]);
+    makeSpanClass(ver, "ver-a").setText("2.0.2");
+    const ver6 = makeSpanClass(ver, "ver-6").setText("6");
 
 
     /* style letters */
@@ -101,33 +104,32 @@ export function mount_splash(stage: LiveTree): boolean {
     sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
     sun.css.anim.begin(SUN_DISK_ANIM);
     gradient.css.anim.begin(GRADIENT_ANIM);
-    sun.listen.once().onAnimationStart((an: AnimationEvent) => {
-        if (an.animationName !== "hson_sun_disk") return;
+
+
+sun.listen.onAnimationStart((an: AnimationEvent) => {
+        if (an.animationName !== SUN_DISK_ANIM.name) return;
         flare.css.anim.begin(FLARE_ANIM);
         flare.listen.onAnimationEnd((ev) => {
-            if (ev.animationName !== 'hson_lens_flare') {
-                flare.removeSelf();
+            if (ev.animationName === FLARE_ANIM.name) {
+                flareBox.removeSelf();
             }
         })
     });
-    /* animation sequencing avoids recalculating hard-coded duration/delay consts */
-    sun.listen.once().onAnimationEnd((ev) => {
-        if (ev.animationName !== "hson_sun_disk") return;
-        sun.removeSelf();
+
+    sun.listen.onAnimationEnd((ev) => {
+        if (ev.animationName !== SUN_DISK_ANIM.name) return;
+        sunCarrier.removeSelf();
         letters.forEach((l) => {
             l.css.anim.begin(NEON_FLASH);
         });
-        letters[0]!
-            .listen.once()
-            .onAnimationEnd((ev) => {
-                if (ev.animationName !== "hson_letters") return;
-                letters.forEach((l) => l.css.setMany(LETTER_CSS_FINAL));
-
-                ver.css.anim.begin(VER_ANIM);
-            });
-        s.listen.once().onAnimationEnd((ev) => {
+        h.listen.once().onAnimationEnd((ev) => {
+            if (ev.animationName !== NEON_FLASH.name) return;
+            letters.forEach((l) => l.css.setMany(LETTER_CSS_FINAL));
+            ver.css.anim.begin(VER_ANIM); // l is h, s, o, and finally n
+        });
+        h.listen.once().onAnimationEnd((ev) => {
             console.log(ev.animationName);
-            if (ev.animationName !== "hson_letters") return;
+            if (ev.animationName !== NEON_FLASH.name) return;
             begin_star(starCarrier, starHead, tailA, tailB, tailC);
             letters.forEach(l => {
                 l.css.anim.begin(STARSHINE_ANIM)
@@ -136,6 +138,62 @@ export function mount_splash(stage: LiveTree): boolean {
     });
 
 
+    const subBox = makeDivId(stage, 'sub-head-box')
+        .css.setMany({
+            position: "absolute",
+            right: "25%",
+            width: "30vw",
+            height: "30vw",
+            color: $COLOR.textMain,
+            fontFamily: "monospace",
+
+        });
+    const subhead = makeDivId(subBox, 'sub-head')
+        .setText(`<hson-live 2026>`)
+    const subsubhead = makeDivId(subBox, 'sub-sub-head')
+        .setText("~ DEMO / PROOF OF CONCEPT~")
+        .css.setMany({
+            // position: "absolute",
+            // bottom: "0",
+            // left: "50%",
+            // width: "30vw",
+            // height: "30vw",
+            color: $COLOR.skyBlue,
+            // fontFamily: "monospace",
+
+        });
+    const cleanup = () => {
+        starCarrier.removeSelf();
+        sunCarrier.removeSelf();
+        flareBox.removeSelf();
+    };
+    let resolveDone: (() => void) | undefined;
+    let finished = false;
+
+    const done = new Promise<void>((resolve) => {
+        resolveDone = resolve;
+    });
+
+
+    const tailEnd = tailC.listen.onAnimationEnd((ev) => {
+        if (ev.animationName !== "hson_star_tail_c") return;
+        finalize();
+    });
+
+    const skipL = stage.listen.onPointerDown((ev) => {
+        if ("button" in ev && (ev as any).button !== 0) return;
+        finalize();
+    });
+
+    const finalize = () => {
+
+        if (finished) return;
+        finished = true;
+        cleanup();
+        resolveDone?.();
+    };
+
+    await done;
     return true;
 }
 

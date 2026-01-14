@@ -1,6 +1,6 @@
 import type { AnimSpec } from "hson-live/types";
 import type { AnimPart } from "./splash.types";
-import { bckColor } from "./css.consts";
+import { bckColor } from "../consts/splash.consts";
 
 export const shortFlash = 700;
 const shortFlashString = `${shortFlash}ms`;
@@ -33,11 +33,11 @@ export const ANIM_KEYS = [
   {
     name: "hson_sky",
     steps: {
-      "0%": { background: skyGradientFinal, skyGradLower: bckColor, skyGradUpper: bckColor },
-      "20%": { background: "rgb(0,0,0)" },
+      "0%": { background: bckColor },
+      "20%": { background: bckColor },
       "69%": { background: "rgba(0,89,255,1)" },
       "74%": { background: "rgba(0,89,255,1)" },
-      "100%": { background: "rgb(0,0,0)" },
+      "100%": { background: bckColor },
     },
   },
 
@@ -265,7 +265,7 @@ export const STARSHINE_ANIM: AnimSpec = {
 export const VER_ANIM: AnimSpec = {
   name: "hson_ver",
   duration: shortFlashString,
-  // delay: "1000ms",
+  delay: "2000ms",
   timingFunction: "ease-out",
   fillMode: "forwards",
 }
@@ -328,6 +328,7 @@ export const TAIL_B_ANIM = {
   ...starAnimBase,
   duration: `${starTimeNum*12.5}ms`,
 }
+
 export const TAIL_C_ANIM = {
   name: "hson_star_tail_c",
   ...starAnimBase,

@@ -25,18 +25,6 @@ const COMB_BELOW = [
 const COMB_MID = [
   "\u0334", "\u0335", "\u0336", "\u0337", "\u0338",
 ] as const;
-console.log('AVBOVE')
-COMB_ABOVE.forEach((i, ix) => {
-  console.log('index: ', ix , '\n value: ', i)
-})
-console.log('BELOW:')
-COMB_BELOW.forEach((i, ix) => {
-  console.log('index: ', ix , '\n value: ', i)
-})
-console.log('MID:')
-COMB_MID.forEach((i, ix) => {
-  console.log('index: ', ix , '\n value: ', i)
-})
 
 // CHANGED: tiny deterministic PRNG (Mulberry32)
 function mulberry32(seed: number): () => number {

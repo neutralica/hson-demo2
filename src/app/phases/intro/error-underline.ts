@@ -102,8 +102,7 @@ export function attach_error_underline(host: LiveTree, preset = ERROR_UNDERLINE_
   // host.css.set.position("relative");
 
   const el = host.asDomElement() as HTMLElement;
-  const w = Math.ceil(parseFloat(getComputedStyle(el).width));
-
+  const w = Math.ceil(el.getBoundingClientRect().width);
   const svgHTML = makeSvgErrUnderline({
     width: w,
     ...preset,
@@ -126,8 +125,6 @@ export function attach_error_underline(host: LiveTree, preset = ERROR_UNDERLINE_
     placeItems: "center",
   });
 
-  // we need *your* existing “trusted HTML injection” move here:
-  // e.g. box.html.setTrusted(svgHTML) OR box.setInnerHTML(svgHTML) OR graft a branch from hson.fromTrustedHtml(svgHTML)
   box.append(svgBranch);
 }
 function calcZigzagPathSegmented(opts: {
