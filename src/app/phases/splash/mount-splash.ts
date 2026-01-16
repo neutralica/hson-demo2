@@ -1,15 +1,17 @@
 // mount-splash.ts
 
 import { type LiveTree } from "hson-live";
-import { SUN_CSS, FRAME_CSS, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./types-consts/splash-css.consts";
+import { SUN_CSS, FRAME_CSS, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./consts/splash-css.consts";
 import { LETTER_COLOR, O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../consts/core-css.consts";
 import { GRADIENT_ANIM } from "./types-consts/keys-anim";
 import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./types-consts/keys-anim";
-import { get_letter_key, makeDivId } from "../../../utils/helpers";
+import { get_letter_key } from "../../../utils/helpers";
+import { makeDivId } from "../../../utils/makers";
 import type { LetterKey } from "../../../types/core.types";
 import { $COLOR } from "../../consts/styling.consts";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../consts/core-css.consts";
-import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/helpers";
+import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
+import { wait } from "../../../utils/wait-for";
 
 export async function mount_splash(stage: LiveTree): Promise<boolean> {
     /* clear livetree contents */
@@ -19,6 +21,7 @@ export async function mount_splash(stage: LiveTree): Promise<boolean> {
     const sky = makeSection(stage, "sky");
     /* stacking order matters here: */
     const frame = makeDivClass(sky, 'sky-frame');
+    const hsonWord = makeDivClass(frame, "wordmark");
     const flareBox = makeDivClass(frame, 'flare-box');
     const flare = makeDivClass(flareBox, 'lens-flare');
 
@@ -26,7 +29,6 @@ export async function mount_splash(stage: LiveTree): Promise<boolean> {
     /* sky gradient */
     const gradient = makeDivClass(flareBox, 'sky-gradient');
     gradient.css.setMany(GRADIENT_CSS);
-    const hsonWord = makeDivClass(frame, "wordmark");
 
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
@@ -104,39 +106,24 @@ export async function mount_splash(stage: LiveTree): Promise<boolean> {
     sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
     sun.css.anim.begin(SUN_DISK_ANIM);
     gradient.css.anim.begin(GRADIENT_ANIM);
+    sun.css.anim.begin(SUN_DISK_ANIM);
+    flare.css.anim.begin(FLARE_ANIM);
 
 
-sun.listen.onAnimationStart((an: AnimationEvent) => {
-        if (an.animationName !== SUN_DISK_ANIM.name) return;
-        flare.css.anim.begin(FLARE_ANIM);
-        flare.listen.onAnimationEnd((ev) => {
-            if (ev.animationName === FLARE_ANIM.name) {
-                flareBox.removeSelf();
-            }
-        })
+    await wait.for(flare).anim(FLARE_ANIM).end();
+    flareBox.removeSelf();
+
+    await wait.for(sun).anim(SUN_DISK_ANIM).end()
+    sunCarrier.removeSelf();
+    letters.forEach(l => { l.css.anim.begin(NEON_FLASH) });
+
+    await wait.for(h).anim(NEON_FLASH).end()
+    ver.css.anim.begin(VER_ANIM);
+    begin_star(starCarrier, starHead, tailA, tailB, tailC);
+    letters.forEach((l) => {
+        l.css.setMany(LETTER_CSS_FINAL);
+        l.css.anim.begin(STARSHINE_ANIM);
     });
-
-    sun.listen.onAnimationEnd((ev) => {
-        if (ev.animationName !== SUN_DISK_ANIM.name) return;
-        sunCarrier.removeSelf();
-        letters.forEach((l) => {
-            l.css.anim.begin(NEON_FLASH);
-        });
-        h.listen.once().onAnimationEnd((ev) => {
-            if (ev.animationName !== NEON_FLASH.name) return;
-            letters.forEach((l) => l.css.setMany(LETTER_CSS_FINAL));
-            ver.css.anim.begin(VER_ANIM); // l is h, s, o, and finally n
-        });
-        h.listen.once().onAnimationEnd((ev) => {
-            console.log(ev.animationName);
-            if (ev.animationName !== NEON_FLASH.name) return;
-            begin_star(starCarrier, starHead, tailA, tailB, tailC);
-            letters.forEach(l => {
-                l.css.anim.begin(STARSHINE_ANIM)
-            })
-        });
-    });
-
 
     const subBox = makeDivId(stage, 'sub-head-box')
         .css.setMany({
@@ -146,6 +133,7 @@ sun.listen.onAnimationStart((an: AnimationEvent) => {
             height: "30vw",
             color: $COLOR.textMain,
             fontFamily: "monospace",
+            fontSize: "1rem",
 
         });
     const subhead = makeDivId(subBox, 'sub-head')

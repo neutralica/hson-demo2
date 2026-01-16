@@ -1,12 +1,12 @@
 // app.ts
 
 import { type LiveTree } from "hson-live";
-import { mount_intro } from "./phases/intro/mount-intro";
+import { mount_intro } from "./phases/brand/mount-intro";
 import { mount_splash } from "./phases/splash/mount-splash";
-import { STAGE_CSS } from "./phases/splash/types-consts/splash-css.consts";
-import { _sleep, makeDivId } from "../utils/helpers";
+import { STAGE_CSS } from "./phases/splash/consts/splash-css.consts";
+import { _sleep } from "../utils/helpers";
+import { makeDivId } from "../utils/makers";
 import { PHASE_LINGER } from "./consts/config.consts";
-import { run_fireworks } from "./phases/hson-wasm/hson-wasm-fireworks";
 
 const _pause = () => _sleep(PHASE_LINGER);
 
@@ -18,9 +18,6 @@ export async function run_app(root: LiveTree): Promise<boolean> {
     const stage = makeDivId(app, "stage")
         .classlist.add("stage")
         .css.setMany(STAGE_CSS);
-    
-    run_fireworks(stage);
-    await _sleep(10000);
     //  one skip signal governs all phases
     const { skip, off: offSkip } = make_skip_promise(stage);
 
@@ -48,7 +45,6 @@ export async function run_app(root: LiveTree): Promise<boolean> {
             }
             if (res === "fail") return false;
         }
-
         // --- demo ---
 
 
@@ -78,26 +74,29 @@ async function run_phase(
 
 // build a single skip Promise (resolves once) for the entire run
 function make_skip_promise(stage: LiveTree): {
-    skip: Promise<"skip">;
-    off: () => void;
+  skip: Promise<"skip">;
+  off: () => void;
+  signal: AbortSignal;
 } {
-    let resolveSkip: ((v: "skip") => void) | undefined;
+  const ac = new AbortController();
 
-    const skip = new Promise<"skip">((resolve) => {
-        resolveSkip = resolve;
-    });
+  let resolveSkip: ((v: "skip") => void) | undefined;
+  const skip = new Promise<"skip">((resolve) => { resolveSkip = resolve; });
 
-    // NOTE: do NOT use .once() here; we want name-filter footguns nowhere near this.
-    const handle = stage.listen.onPointerDown((ev) => {
-        //  ignore non-primary button when available
-        if ("button" in ev && (ev as any).button !== 0) return;
+  const handle = stage.listen.onPointerDown((ev) => {
+    if ("button" in ev && (ev as any).button !== 0) return;
 
-        //  resolve skip (idempotent is fine; promise ignores subsequent resolves)
-        resolveSkip?.("skip");
-    });
+    // 1) resolve the race
+    resolveSkip?.("skip");
+    resolveSkip = undefined;
 
-    return {
-        skip,
-        off: () => handle.off(),
-    };
+    // 2) abort *all* in-flight waits
+    if (!ac.signal.aborted) ac.abort();
+  });
+
+  return {
+    skip,
+    off: () => handle.off(),
+    signal: ac.signal,
+  };
 }

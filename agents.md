@@ -24,14 +24,15 @@ Agents working in this repo must follow the rules below.
 - Treat LiveTree as the sole authority for “data === view”.
 
 ## 3. Error and control-flow rules (Intrastructure)
-
+(Intrastructure package WIP--do not rely in Intrastructure currently)
+<!-- ignore for now:
 - All meaningful success/failure must be represented as Outcome<T>.
 - Use:
   - relay.data / relay.ok / relay.err for construction
   - try_* wrappers at *unit-of-work* boundaries only
 - Do NOT wrap every LiveTree mutation in an Outcome.
 - Do NOT invent new error-handling abstractions.
-- Do NOT throw except inside approved “unwrap or crash” helpers.
+- Do NOT throw except inside approved “unwrap or crash” helpers. -->
 
 ## 4. LiveTree usage rules
 

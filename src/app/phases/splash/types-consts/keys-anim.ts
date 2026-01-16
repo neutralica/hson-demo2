@@ -295,7 +295,7 @@ export const FLARE_ANIM: AnimSpec = {
   name: "hson_lens_flare",
   duration: flareDurStr,
   timingFunction: "cubic-bezier(0.2, 0.9, 0.2, 1)",
-  delay: `${flareDelayNum}ms`,     // <-- your calibrated cue
+  delay: `${flareDelayNum}ms`,   
   iterationCount: "1",
   fillMode: "both",    // keep opacity=0 before, return to 0 after
 };

@@ -1,7 +1,7 @@
 // css.consts.ts
 
 import type { CssMap } from "hson-live/types";
-import { bckColor, sunColor, sunFade, skyGradient } from "../consts/splash.consts";
+import { bckColor, sunColor, sunFade, skyGradient } from "./splash.consts";
 
 export const STAGE_CSS: CssMap = {
   position: "fixed",
@@ -85,7 +85,7 @@ export const FRAME_CSS: CssMap = {
   top: "32%",
   transform: "translate(-50%, -50%)",
 
-  // CHANGED: use the shared var
+  // use the shared var
   width: "var(--frameSize)",
   height: "var(--frameSize)",
   background: bckColor,
@@ -101,7 +101,7 @@ export const GRADIENT_CSS: CssMap = {
   top: "0%",
   width: "100%",
   height: "100%",
-  zIndex: 30,
+  zIndex: 90,
   opacity: 0,
   willChange: "opacity",
   background: skyGradient,

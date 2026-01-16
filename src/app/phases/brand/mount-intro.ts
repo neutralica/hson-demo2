@@ -6,7 +6,7 @@ import { zalgo_unicode, type ZConfig } from "./zalgo";
 import { Intro_anim, Intro_keys } from "./consts/keyframes.consts.intro";
 import { Intro_css } from "./consts/intro-css.consts";
 import { $COLOR } from "../../consts/styling.consts";
-import { makeDivId } from "../../../utils/helpers";
+import { makeDivId } from "../../../utils/makers";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
