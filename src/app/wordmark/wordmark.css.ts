@@ -1,14 +1,14 @@
 import type { CssMap } from "hson-live/types";
 
-/*  layout box: stable geometry */
+
 export const CELL_CSS: CssMap = {
   display: "block",
   alignItems: "baseline",
   lineHeight: "1",
   position: "relative",
-};
+};/*  layout box: stable geometry */
 
-/*  glyph: rotate/translate */
+
 export const LETTER_CSS: CssMap = {
   position: "relative",
   display: "block",
@@ -24,11 +24,13 @@ export const LETTER_CSS_FINAL: CssMap = {
   color: "var(--final)",
   textShadow: "0 0 0 transparent",
   filter: "brightness(1)",
-};export const WORD_CSS: CssMap = {
+};
+
+export const WORD_CSS: CssMap = {
   position: "relative",
   display: "grid",
-  gridTemplateColumns: "4.25rem 4.25rem",
-  gridTemplateRows: "3.85rem 3.95rem",
+  gridTemplateColumns: "4.15rem 4.25rem",
+  gridTemplateRows: "5rem 3.96rem",
   gap: "0",
   placeItems: "end start",
   isolation: "isolate",
@@ -37,9 +39,9 @@ export const LETTER_CSS_FINAL: CssMap = {
 };
 
 export const O_ROT: CssMap = {
-  fontSize: "3.8rem",
+  fontSize: "5.7rem",
   display: "inline-block",
-  transform: "rotate(32deg) translateX(5px) translateY(-3px)",
+  transform: "rotate(32deg) translateX(5px) translateY(-6px)",
   transformOrigin: "50% 55%",
 };
 

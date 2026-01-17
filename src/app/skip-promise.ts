@@ -10,18 +10,15 @@ type SkipPromise = {
 }
 
 //  helper that runs (mount + pause) as a single cancellable chunk
-export async function run_phase(
-    stage: LiveTree,
-    mountFn: (s: LiveTree) => OutcomeAsync<void | LiveTree>,
-    pauseFn: () => Promise<void>,
-): OutcomeAsync<void> {
-
-    const mounted = await mountFn(stage);
-
-    if (outcome.isErr(mounted)) return mounted;
-
-    await pauseFn();
-    return relay.ok();
+export async function run_phase<T>(
+  stage: LiveTree,
+  mountFn: (s: LiveTree) => OutcomeAsync<T>,
+  pauseFn: () => Promise<void>,
+): OutcomeAsync<T> {
+  const mounted = await mountFn(stage);
+  if (outcome.isErr(mounted)) return mounted;
+  await pauseFn();
+  return mounted;
 }
 
 // build a single skip Promise (resolves once) for the entire run

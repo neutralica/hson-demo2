@@ -2,7 +2,11 @@
 
 import type { LiveTree } from "hson-live";
 import { makeDivId } from "../../../utils/makers";
-import { relay, type OutcomeVoid } from "intrastructure";
+import { relay, type OutcomeAsync, type OutcomeVoid } from "intrastructure";
+import { build_wordmark } from "../../wordmark/wordmark-factory";
+import { style_wordmark_splash, word_keyframes_splash } from "../../wordmark/styles/splash.style-wordmark";
+import { style_wordmark_demo } from "../../wordmark/styles/demo.style-wordmark";
+
 
 /**
  * Mount the demo phase.
@@ -17,11 +21,15 @@ import { relay, type OutcomeVoid } from "intrastructure";
  * - manage skipping
  * - return Outcomes
  */
-export function mount_demo(stage: LiveTree, wordmark: LiveTree): OutcomeVoid {
+export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
+  stage.empty();   
+  console.log(stage.content.count())
   const demo = makeDivId(stage, "demo").classlist.add("demo");
   const backdrop = makeDivId(demo, "demo-backdrop").classlist.add("demo-backdrop");
   const scene = makeDivId(demo, "demo-scene").classlist.add("demo-scene");
-
-  scene.append(wordmark);
+  const wordMark = build_wordmark(scene);
+  const styledWord = style_wordmark_demo(wordMark);
+  console.log(scene.content.count())
+  // const keyedWord = word(scene);
   return relay.ok();
 }

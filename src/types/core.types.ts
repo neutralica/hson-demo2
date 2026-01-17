@@ -23,4 +23,5 @@ export type PhaseCtx = {
 export type App = {
   readonly start: () => void;
 };
+
 export type LetterKey = (typeof HSON_LETTERS)[number];

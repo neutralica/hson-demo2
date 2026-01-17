@@ -3,8 +3,8 @@
 import type { LiveTree } from "hson-live";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
-import { Intro_anim, Intro_keys } from "./consts/keyframes.consts.intro";
-import { Intro_css } from "./consts/intro-css.consts";
+import { Intro_anim, Intro_keys } from "./consts/brand.anim-keys";
+import { Intro_css } from "./consts/brand.css";
 import { $COLOR } from "../../consts/styling.consts";
 import { makeDivId } from "../../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
@@ -18,7 +18,7 @@ const zalgoCol2 = $COLOR.dragonGreen;
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };
 const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
 
-export async function mount_intro(s: LiveTree): OutcomeAsync<void> {
+export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
   const stage = s;
   stage.empty();
   

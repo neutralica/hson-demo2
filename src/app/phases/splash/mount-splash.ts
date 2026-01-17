@@ -1,15 +1,15 @@
 // mount-splash.ts
 
 import { type LiveTree } from "hson-live";
-import { SUN_CSS, FRAME_CSS, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./consts/splash-css.consts";
-import { LETTER_COLOR, O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../consts/core-css.consts";
-import { GRADIENT_ANIM } from "./types-consts/keys-anim";
-import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./types-consts/keys-anim";
+import { SUN_CSS, FRAME_CSS, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./splash.css";
+import { LETTER_COLOR, O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
+import { GRADIENT_ANIM } from "./splash.anim-keys";
+import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim-keys";
 import { get_letter_key } from "../../../utils/helpers";
 import { makeDivId } from "../../../utils/makers";
 import type { LetterKey } from "../../../types/core.types";
 import { $COLOR } from "../../consts/styling.consts";
-import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../consts/core-css.consts";
+import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait-for";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
@@ -81,12 +81,12 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     frame.css.setMany(FRAME_CSS);
     sunCarrier.css.setMany(SUN_CARRIER_CSS);
     sun.css.setMany(SUN_CSS);
-    sky.css.keyframes.setMany(ANIM_KEYS);
     flare.css.setMany(FLARE_CSS);
     flareBox.css.setMany(FLARE_BOX_CSS);
     gradient.css.setMany(GRADIENT_CSS);
-
-
+    sky.css.keyframes.setMany(ANIM_KEYS);
+    
+    
     /* style letters */
     hsonWord.css.setMany(WORD_CSS);
     letters.forEach(l => l.css.setMany(LETTER_CSS));
