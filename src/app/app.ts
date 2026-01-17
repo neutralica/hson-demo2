@@ -52,6 +52,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
                 return relay.ok();   //  (skipping also counts as success)
             }
             if (outcome.isErr(res)) { return res; }
+            
         }
         // --- phase 3: feature demo ---
 

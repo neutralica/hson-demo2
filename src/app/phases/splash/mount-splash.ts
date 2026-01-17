@@ -124,38 +124,12 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
         l.css.anim.begin(STARSHINE_ANIM);
     });
 
-    const subBox = makeDivId(frame, 'sub-head-box')
-        .css.setMany({
-            position: "absolute",
-            right: "25%",
-            bottom: "25%",
-            width: "30vw",
-            height: "30vw",
-            color: $COLOR.textMain,
-            fontFamily: "monospace",
-            fontSize: "1rem",
-
-        });
-    const subhead = makeDivId(subBox, 'sub-head')
-        .setText(`<hson-live 2026>`)
-    const subsubhead = makeDivId(subBox, 'sub-sub-head')
-        .setText("~ DEMO / PROOF OF CONCEPT ~")
-        .css.setMany({
-            // position: "absolute",
-            // bottom: "0",
-            // left: "50%",
-            // width: "30vw",
-            // height: "30vw",
-            color: $COLOR.skyBlue,
-            // fontFamily: "monospace",
-
-        });
-
     await wait.for(tailC).anim(TAIL_C_ANIM).end();
-    // cleanup transient actors
+
     starCarrier.removeSelf();
     sunCarrier.removeSelf();
     flareBox.removeSelf();
+    gradient.removeSelf();
     return relay.data(hsonWord);
 }
 
