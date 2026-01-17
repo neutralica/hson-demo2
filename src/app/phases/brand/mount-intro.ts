@@ -7,6 +7,7 @@ import { Intro_anim, Intro_keys } from "./consts/keyframes.consts.intro";
 import { Intro_css } from "./consts/intro-css.consts";
 import { $COLOR } from "../../consts/styling.consts";
 import { makeDivId } from "../../../utils/makers";
+import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
@@ -17,7 +18,8 @@ const zalgoCol2 = $COLOR.dragonGreen;
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };
 const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
 
-export async function mount_intro(stage: LiveTree): Promise<boolean> {
+export async function mount_intro(s: LiveTree): OutcomeAsync<void> {
+  const stage = s;
   stage.empty();
   
   const logoBox = makeDivId(stage, "logo-box")
@@ -67,5 +69,5 @@ export async function mount_intro(stage: LiveTree): Promise<boolean> {
   zalgo1.css.anim.begin(Intro_anim.zalgo1)
   zalgo2.css.anim.begin(Intro_anim.zalgo2);
 
-  return true;
+  return relay.ok();
 }
