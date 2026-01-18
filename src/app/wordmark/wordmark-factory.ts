@@ -7,7 +7,15 @@ import { makeDivClass, makeSpanClass } from "../../utils/makers";
 export function build_wordmark(parent: LiveTree): WordmarkParts {
   const frame = makeDivClass(parent, "frame");
   const wordbox = makeDivClass(frame, "wordmark");
-
+  const shadow = makeDivClass(frame, "shadow").css.setMany({
+    position: "absolute",
+    inset: "0",
+    borderRradius: "18px",
+    background: "rgba(0, 0, 0, 0.55)",
+    filter: "blur(24px)",
+    transform: "translate(var(--sx), var(--sy))",
+    willChange: "transform",
+  })
   const mk = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
     const cell = makeSpanClass(wordbox, ["cell", ltr]);
     const letter = makeSpanClass(cell, ["letter", ltr]).setText(ltr);

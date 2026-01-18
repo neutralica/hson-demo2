@@ -11,7 +11,6 @@ export const STAGE_CSS: CssMap = {
   height: "100vh",
   backgroundColor: bckColor
 }
-
 export const SKY_CSS = {
   position: "relative",
   width: "100%",
@@ -38,7 +37,7 @@ export const SUN_CSS: CssMap = {
   height: "5.25em",
   borderRadius: "999px",
   background: sunColor,
-  boxShadow:`0 0 28px ${sunFade}`,
+  boxShadow: `0 0 28px ${sunFade}`,
   opacity: "0",
   transform: "scale(1.06)",
   willChange: "transform, opacity",

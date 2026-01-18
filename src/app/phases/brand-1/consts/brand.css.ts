@@ -1,7 +1,7 @@
 //css.consts.ts
 
 import type { CssMap } from "hson-live/types";
-import { bckColor } from "../../splash/splash.consts";
+import { bckColor } from "../../splash-2/splash.consts";
 
 const LOGOBOX_CSS = {
   display: "flex",

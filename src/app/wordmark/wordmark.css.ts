@@ -1,6 +1,5 @@
 import type { CssMap } from "hson-live/types";
 
-
 export const CELL_CSS: CssMap = {
   display: "block",
   alignItems: "baseline",
@@ -20,6 +19,7 @@ export const LETTER_CSS: CssMap = {
   textShadow: "0 0 0 transparent",
 };
 
+
 export const LETTER_CSS_FINAL: CssMap = {
   color: "var(--final)",
   textShadow: "0 0 0 transparent",
@@ -36,6 +36,7 @@ export const WORD_CSS: CssMap = {
   isolation: "isolate",
   userSelect: "none",
   zIndex: "40",
+  
 };
 
 export const O_ROT: CssMap = {

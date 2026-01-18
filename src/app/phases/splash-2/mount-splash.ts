@@ -14,6 +14,10 @@ import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers"
 import { wait } from "../../../utils/wait-for";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 
+
+/**
+ * this is all very messy but it works; organize/structure calls better TODO
+ */
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
@@ -28,11 +32,11 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     /* sky gradient */
     const gradient = makeDivClass(frame, 'sky-gradient');
-    
+
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
     const sun = makeDivClass(sunCarrier, "sun");
-    
+
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
         const cell = makeSpanClass(hsonWord, ["cell", ltr])
@@ -45,8 +49,8 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const [n, nCell] = createLetter("N")
     const letters = [h, s, o, n];
     const cells = [hCell, sCell, oCell, nCell];
-    
-    
+
+
     /* create star */
     const starCarrier = makeDivClass(frame, "star-carrier");
     const starWrap = makeDivClass(starCarrier, "star-wrap");
@@ -54,13 +58,13 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const tailA = makeDivClass(starWrap, ["star-tail", "a"]);
     const tailB = makeDivClass(starWrap, ["star-tail", "b"]);
     const tailC = makeDivClass(starWrap, ["star-tail", "c"]);
-    
+
     /* create semver pop-up */
     const ver = makeSpanClass(nCell, ["ver"]);
     makeSpanClass(ver, "ver-a").setText("2.0.2");
     const ver6 = makeSpanClass(ver, "ver-6").setText("6");
-    
-    
+
+
     /* style letters */
     cells.forEach(c => c.css.setMany(CELL_CSS));
     letters.forEach(l => {
@@ -70,12 +74,12 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
         l.css.set.var("--glow", col);
         l.css.set.var("--final", col);
         l.css.set.var("--starshine", col);
-        
+
     });
     h.css.set.transform("translateX(13px)");  // tiny nudges
     s.css.set.transform("translateX(6px)");
     o.css.setMany(O_ROT); // rotate 'O'
-    
+
     /* style frame/sky/sun */
     sky.css.setMany(SKY_CSS);
     frame.css.setMany(FRAME_CSS);
@@ -85,8 +89,8 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     flareBox.css.setMany(FLARE_BOX_CSS);
     gradient.css.setMany(GRADIENT_CSS);
     sky.css.keyframes.setMany(ANIM_KEYS);
-    
-    
+
+
     /* style letters */
     hsonWord.css.setMany(WORD_CSS);
     letters.forEach(l => l.css.setMany(LETTER_CSS));
@@ -126,11 +130,17 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     await wait.for(tailC).anim(TAIL_C_ANIM).end();
 
+    ANIM_KEYS.forEach(kf => {
+        sky.css.keyframes.delete(kf.name)
+    })
+
+    /* unnecessary: remove? */
     starCarrier.removeSelf();
     sunCarrier.removeSelf();
     flareBox.removeSelf();
     gradient.removeSelf();
-    return relay.data(hsonWord);
+
+    return relay.ok();
 }
 
 
