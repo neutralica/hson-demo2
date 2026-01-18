@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live";
 import type { LetterKey } from "../../../types/core.types";
 import { CELL_CSS, LETTER_COLOR, O_ROT } from "../wordmark.css";
-import { FRAME_CSS } from "../../phases/splash-2/splash.css";
+import { FRAME_CSS_SPLASH } from "../../phases/splash-2/splash.css";
 import type { WordmarkParts } from "../wordmark.types";
 import type { KeyframesInput } from "../../../../../hson-live/dist/types-consts/keyframes.types";
 
@@ -9,7 +9,7 @@ import type { KeyframesInput } from "../../../../../hson-live/dist/types-consts/
 export function style_wordmark_splash(parts: WordmarkParts): void {
   const { frame, letters, cellList } = parts;
 
-  frame.css.setMany(FRAME_CSS);
+  frame.css.setMany(FRAME_CSS_SPLASH);
 
   for (const c of cellList) c.css.setMany(CELL_CSS);
 

@@ -1,14 +1,14 @@
 // mount-splash.ts
 
 import { type LiveTree } from "hson-live";
-import { SUN_CSS, FRAME_CSS, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./splash.css";
+import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./splash.css";
 import { LETTER_COLOR, O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
 import { GRADIENT_ANIM } from "./splash.anim-keys";
 import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim-keys";
 import { get_letter_key } from "../../../utils/helpers";
 import { makeDivId } from "../../../utils/makers";
 import type { LetterKey } from "../../../types/core.types";
-import { $COLOR } from "../../consts/styling.consts";
+import { $COLOR } from "../../consts/color.consts";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait-for";
@@ -25,13 +25,14 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* create container layers */
     const sky = makeSection(stage, "sky");
     /* stacking order matters here: */
-    const frame = makeDivClass(sky, 'sky-frame');
+    const logoBox = makeDivClass(sky, "hson-logo")
+    const frame = makeDivClass(logoBox, "frame");
     const hsonWord = makeDivClass(frame, "wordmark");
-    const flareBox = makeDivClass(frame, 'flare-box');
-    const flare = makeDivClass(flareBox, 'lens-flare');
+    const flareBox = makeDivClass(frame, "flare-box");
+    const flare = makeDivClass(flareBox, "lens-flare");
 
     /* sky gradient */
-    const gradient = makeDivClass(frame, 'sky-gradient');
+    const gradient = makeDivClass(frame, "sky-gradient");
 
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
@@ -82,7 +83,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     /* style frame/sky/sun */
     sky.css.setMany(SKY_CSS);
-    frame.css.setMany(FRAME_CSS);
+    frame.css.setMany(FRAME_CSS_SPLASH);
     sunCarrier.css.setMany(SUN_CARRIER_CSS);
     sun.css.setMany(SUN_CSS);
     flare.css.setMany(FLARE_CSS);
@@ -139,7 +140,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     sunCarrier.removeSelf();
     flareBox.removeSelf();
     gradient.removeSelf();
-
+    stage.empty();
     return relay.ok();
 }
 

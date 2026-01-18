@@ -1,7 +1,10 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { LETTER_CSS, VER_CSS, WORD_CSS } from "../../wordmark/wordmark.css";
+import { LETTER_CSS, LOGOBOX_CSS, VER_CSS, WORD_CSS } from "../../wordmark/wordmark.css";
+import { $COLOR } from "../../consts/color.consts";
+import { FRAME_CSS_SPLASH } from "../splash-2/splash.css";
+import { FRAME_CSS } from "../../consts/core.css";
 
 // “home page” palette: mostly grayscale, small accent per letter (optional)
 export const LETTER_COLOR_DEMO = {
@@ -11,7 +14,7 @@ export const LETTER_COLOR_DEMO = {
   N: "rgb(255,225,232)",
 } as const;
 
-// If you still want per-letter accents, make them *subtle* and use as --glow
+
 export const LETTER_ACCENT_DEMO = {
   H: "rgba(80,200,255,0.55)",
   S: "rgba(255,210,80,0.45)",
@@ -20,10 +23,10 @@ export const LETTER_ACCENT_DEMO = {
 } as const;
 
 export const LETTER_INK_DEMO = {
-  H: "rgb(212,214,218)", // bright
-  S: "rgb(162,168,176)", // darker
-  O: "rgb(186,191,180)", // slightly warm
-  N: "rgb(150,145,162)", // slightly cool
+  H: "rgba(153, 162, 190, 1)", // bright
+  S: "rgba(181, 140, 153, 1)", // darker
+  O: "rgba(104, 108, 97, 1)", // slightly warm
+  N: "rgba(73, 64, 92, 1)" // slightly cool
 } as const;
 
 export const LETTER_HALO_DEMO = {
@@ -46,58 +49,19 @@ export const CELL_CSS_DEMO: CssMap = {
 
 export const VER6_CSS_DEMO: CssMap = {
   display: "inline-block",
-  transform: "translateX(0.11em)",
+  transform: "translateX(2px)",
 };
 
 export const FRAME_CSS_DEMO: CssMap = {
-  position: "relative",
-
-  // geometry
-  padding: "56px 64px",
-  borderRadius: "22px",
-width: "80%",
-height: "80%",
-  // “terminal slab”
-  background: [
-    "linear-gradient(180deg, rgba(18,18,22,0.96), rgba(8,8,10,0.96))",
-  ].join(", "),
-
-  // hard-ish frame + soft room shadow (static, cheap)
-  boxShadow: [
-    "0 26px 90px rgba(0,0,0,0.72)",
-    "0 2px 0 rgba(255,255,255,0.05)",
-    "inset 0 0 0 1px rgba(255,255,255,0.08)",
-    "inset 0 10px 18px rgba(255,255,255,0.04)",
-    "inset 0 -18px 26px rgba(0,0,0,0.55)",
-  ].join(", "),
-
-  overflow: "hidden",
-  isolation: "isolate",
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr",
-  gridTemplateRows: "1fr 1fr 1fr",
-  placeItems: "center",
-  // optional: very slight “CRT softness” without blur
-  filter: "contrast(1.02)",
+  ...FRAME_CSS,
+  border: `2px solid ${$COLOR.greyDim}`,
 };
 
-export const FRAME_SHINE_CSS: CssMap = {
-  position: "absolute",
-  inset: "0",
-  pointerEvents: "none",
-  borderRadius: "18px",
-  mixBlendMode: "screen",
-  opacity: "0.55",
-  background: [
-    // highlight follows mouse (near side)
-    "radial-gradient(420px 320px at var(--mxp, 50%) var(--myp, 50%), rgba(255,255,255,0.14), transparent 70%)",
-    // gentle edge sheen
-    "linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%, rgba(0,0,0,0.10))",
-  ].join(", "),
-};
 
 export const DEMO_CSS: CssMap = {
-  position: "absolute",
+  position: "fixed",
+  width: "100%",
+  height: "100%",
   inset: "0",
   overflow: "hidden",
   background: "#07070a",
@@ -123,14 +87,12 @@ export const DEMO_BACKDROP_CSS: CssMap = {
 };
 
 export const DEMO_LOGOBOX_CSS: CssMap = {
-  position: "absolute",
-  inset: "0",
-  display: "grid",
-  placeItems: "center",
-
-  // for any absolute children you still want
-  isolation: "isolate",
+  ...LOGOBOX_CSS,
+  // transform: "translate(-50%, -50%) scale(0.975)",
+  opacity: "0.86",
+  // filter: "saturate(0) contrast(1.08) brightness(0.98)",
 };
+
 
 export const STAGE_CSS_DEMO: CssMap = {
   position: "relative",
@@ -153,17 +115,12 @@ export const PORTAL_CSS: CssMap = {
   background: "linear-gradient(180deg, rgba(24,26,32,0.94), rgba(14,15,18,0.94))",
   boxShadow: [
     "0 30px 110px rgba(0,0,0,0.70)",
-    "inset 0 0 0 1px rgba(255,255,255,0.10)",
+    // "inset 0 0 0 1px rgba(255,255,255,0.10)",
     "inset 0 16px 26px rgba(255,255,255,0.05)",
     "inset 0 -18px 30px rgba(0,0,0,0.35)",
   ].join(", "),
   overflow: "hidden",
   isolation: "isolate",
-};
-
-export const WORDMARK_SUNK_CSS: CssMap = {
-  opacity: "0.92",
-  filter: "saturate(0.85) contrast(1.05)",
 };
 
 export const LETTER_CSS_DEMO: CssMap = {
@@ -206,56 +163,118 @@ export const MENU_BULLET_CSS: CssMap = {
 export const VER_CSS_DEMO: CssMap = {
   ...VER_CSS,
 
-  color: "rgba(225,228,235,1)",
+  color: "rgba(159, 160, 162, 1)",
   opacity: "1",
 };
 
 export const DEMO_WALL_CSS: CssMap = {
   position: "absolute",
   inset: "0",
+  // borderRadius: "28px",
+  overflow: "hidden",
+  pointerEvents: "none",
+  // Wall should read as a field (texture + gentle room light), not a machined bezel.
   background: [
-    "radial-gradient(120% 110% at 40% 18%, rgba(255,255,255,0.08), transparent 62%)",
-    "radial-gradient(90% 120% at 70% 68%, rgba(140,190,255,0.06), transparent 60%)",
+    // outside-high -> inside-low (broad ramp)
+    // ADDED
+   // edges a hair brighter, center a hair darker (reads as sinking inward)
+"radial-gradient(140% 140% at 50% 50%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.00) 55%, rgba(255,255,255,0.030) 100%)",
+    // room tone (very broad)
+    "radial-gradient(closest-side at 50% 50%, rgba(0,0,0,0.00) 78%, rgba(0,0,0,0.18) 94%, rgba(0,0,0,0.24) 100%)",
+    "radial-gradient(140% 110% at 45% 8%, rgba(255,255,255,0.07), transparent 60%)",
+    "radial-gradient(120% 140% at 60% 70%, rgba(120,170,255,0.04), transparent 65%)",
+    // DEMO_WALL_CSS: add near the top of background layers
+    "radial-gradient(140% 120% at 50% 40%, rgba(255,255,255,0.040), transparent 62%)",
+    "radial-gradient(120% 120% at 50% 55%, rgba(0,0,0,0.38), transparent 70%)",
+    // DEMO_WALL_CSS: add near top (after pillow roll is fine)
+    "radial-gradient(closest-side at 50% 50%, rgba(0,0,0,0.00) 62%, rgba(0,0,0,0.20) 82%, rgba(0,0,0,0.30) 100%)",
+    // micro-grid (keep it subtle)
+    "repeating-linear-gradient(0deg, rgba(255,255,255,0.014) 0 1px, transparent 1px 4px)",
+    "repeating-linear-gradient(90deg, rgba(255,255,255,0.010) 0 1px, transparent 1px 5px)",
 
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.016) 0 1px, transparent 1px 4px)",
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 5px)",
-
-    "linear-gradient(180deg, #1a1d22, #13161b 55%, #0f1116)",
+    // base material
+    "linear-gradient(180deg, #15181d, #11141a 55%, #0d1015)",
   ].join(", "),
-  filter: "contrast(1.03) brightness(1.12)",
-};export const DEMO_SCREEN_CSS: CssMap = {
-  position: "relative", // CHANGE: was absolute; make this the containing block
-  width: "min(860px, 78vw)",
-  height: "min(540px, 68vh)", // keep
-  minHeight: "360px",         // CHANGE: safety for short viewports
 
-  borderRadius: "20px",
+  // Important: no “frame-like” shadowing here.
+  boxShadow: "none",
+  filter: "contrast(1.02) brightness(1.08)",
+};
+
+export const DEMO_SCREEN_CSS: CssMap = {
+  position: "relative", // important: it sits inside plush padding
+  width: "100%",
+  height: "100%",
+  borderRadius: "18px",
   overflow: "hidden",
   isolation: "isolate",
+pointerEvents: "none",
+  background: "linear-gradient(180deg, rgba(24,26,32,0.96), rgba(10,11,14,0.97))",
 
-  background: "linear-gradient(180deg, rgba(24,26,30,0.94), rgba(14,15,18,0.96))",
   boxShadow: [
-    "0 18px 60px rgba(0,0,0,0.45)",
-    "inset 0 0 0 1px rgba(255,255,255,0.06)",
+    // inner falloff: this is the “depth” cue *inside* the screen, not a rim
+    "inset 0 18px 28px rgba(0,0,0,0.40)",
+    "inset 0 -28px 44px rgba(0,0,0,0.62)",
+    // almost-nothing edge line
+    // "inset 0 0 0 1px rgba(255,255,255,0.02)",
   ].join(", "),
 };
+
 export const DEMO_SCREEN_FX_CSS: CssMap = {
   position: "absolute",
   inset: "0",
   pointerEvents: "none",
 
   opacity: "0.28",
-  mixBlendMode: "soft-light",
+  mixBlendMode: "overlay",
 
   background: [
-    // corpo stipple (bigger than wall micro-grid)
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 8px)",
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.032) 0 1px, transparent 1px 10px)",
-
-    // VERY subtle falloff (don’t crush mids)
-    "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.14) 78%, rgba(0,0,0,0.22))",
+    "repeating-linear-gradient(0deg, rgba(255,255,255,0.040) 0 1px, transparent 1px 9px)",
+    "repeating-linear-gradient(90deg, rgba(255,255,255,0.024) 0 1px, transparent 1px 12px)",
+    "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.18) 78%, rgba(0,0,0,0.26))",
   ].join(", "),
 
-  // keep this modest; your wall already has contrast
-  filter: "contrast(1.02) brightness(1.04)",
+};
+
+export const DEMO_SCREEN_PLUSH_CSS: CssMap = {
+  position: "absolute",
+  left: "2%",
+  top: "2%",
+  width: "96%",
+  height: "96%",
+pointerEvents: "none",
+  borderRadius: "26px",
+  padding: "24px", // was 28px — small physical thin; tweak 20–26
+  boxSizing: "border-box",
+  overflow: "hidden",
+  isolation: "isolate",
+
+  background: [
+    // 1) broad roll (very subtle, prevents “machined ring”)
+    "radial-gradient(160% 130% at 38% 18%, rgba(255,255,255,0.045), transparent 60%)",
+    "radial-gradient(150% 150% at 70% 88%, rgba(0,0,0,0.40), transparent 62%)",
+
+    // 2) IMPORTANT: most contrast lives near the inner seam (steeper at the end)
+    // Think: gentle slope → sharper drop into cavity.
+    "radial-gradient(closest-side at 50% 50%, " +
+    "transparent 70%, " +                 // flat-ish plateau
+    "rgba(0,0,0,0.14) 86%, " +            // begin slope
+    "rgba(0,0,0,0.6) 96%, " +            // steepening
+    "rgba(0,0,0,0.70) 100%)",             // seam
+
+    // 3) base leather tone (keep it simple)
+    "linear-gradient(180deg, rgba(70, 73, 84, 0.62), rgba(14,16,20,0.94))",
+  ].join(", "),
+
+  boxShadow: [
+    // Outer weight (soft, wide)
+    "0 18px 70px rgba(0,0,0,0.28)",
+
+    // Subtle top-left lift and bottom-right sink (avoid crisp edges)
+    "inset 10px 10px 22px rgba(255,255,255,0.025)",
+    "inset -16px -16px 30px rgba(0,0,0,0.42)",
+
+    // Kill outlines: if you keep this at all, keep it *nearly invisible*
+    // "inset 0 0 0 1px rgba(255,255,255,0.010)",
+  ].join(", "),
 };

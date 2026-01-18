@@ -1,5 +1,8 @@
 import type { CssMap } from "hson-live/types";
 
+export const HSON_FONT_PX = 96
+export const HSON_FONT_STR = `${HSON_FONT_PX}px`;
+
 export const CELL_CSS: CssMap = {
   display: "block",
   alignItems: "baseline",
@@ -11,7 +14,7 @@ export const CELL_CSS: CssMap = {
 export const LETTER_CSS: CssMap = {
   position: "relative",
   display: "block",
-  fontSize: "6rem",
+  fontSize: HSON_FONT_STR,
   lineHeight: "0.88",
   fontFamily: "'Times New Roman', Georgia, Iowan Old Style, Palatino, serif, ui-serif",
   fontWeight: "700",
@@ -38,6 +41,19 @@ export const WORD_CSS: CssMap = {
   zIndex: "40",
   
 };
+
+export const LOGOBOX_CSS: CssMap = {
+  position: "fixed",
+  left: "50vw",
+  top: "32vh",
+  transform: "translate(-50%, -50%)",
+
+  width: "max-content",
+  height: "max-content",
+  zIndex: "50",
+  pointerEvents: "none",
+};
+
 
 export const O_ROT: CssMap = {
   fontSize: "5.7rem",

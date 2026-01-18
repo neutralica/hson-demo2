@@ -2,6 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { bckColor, sunColor, sunFade, skyGradient } from "./splash.consts";
+import { FRAME_CSS } from "../../consts/core.css";
 
 export const STAGE_CSS: CssMap = {
   position: "fixed",
@@ -42,6 +43,7 @@ export const SUN_CSS: CssMap = {
   transform: "scale(1.06)",
   willChange: "transform, opacity",
 };
+
 export const FLARE_BOX_CSS: CssMap = {
   position: "absolute",
   left: "50%",
@@ -56,6 +58,7 @@ export const FLARE_BOX_CSS: CssMap = {
   zIndex: "50",
 
 };
+
 export const FLARE_CSS: CssMap = {
   position: "absolute",
   inset: "0",                    // keep: ensures real size
@@ -78,20 +81,8 @@ export const FLARE_CSS: CssMap = {
   `,
 };
 
-export const FRAME_CSS: CssMap = {
-  position: "absolute",
-  left: "50%",
-  top: "32%",
-  transform: "translate(-50%, -50%)",
-
-  // use the shared var
-  width: "var(--frameSize)",
-  height: "var(--frameSize)",
-  background: bckColor,
-  display: "grid",
-  placeItems: "center",
-  overflow: "hidden",
-  willChange: ""
+export const FRAME_CSS_SPLASH: CssMap = {
+  ...FRAME_CSS,
 };
 
 export const GRADIENT_CSS: CssMap = {

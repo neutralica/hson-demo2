@@ -2,7 +2,7 @@
 // style-wordmark.demo.ts
 import { get_letter_key } from "../../../utils/helpers";
 import { CELL_CSS_DEMO, FRAME_CSS_DEMO, LETTER_ACCENT_DEMO, LETTER_COLOR_DEMO, LETTER_CSS_DEMO, LETTER_HALO_DEMO, LETTER_INK_DEMO, VER6_CSS_DEMO, VER_CSS_DEMO, WORD_CSS_DEMO } from "../../phases/demo-3/demo.css";
-import { FRAME_CSS } from "../../phases/splash-2/splash.css";
+import { FRAME_CSS_SPLASH } from "../../phases/splash-2/splash.css";
 import { CELL_CSS } from "../wordmark.css";
 import { O_ROT } from "../wordmark.css";
 import type { WordmarkParts } from "../wordmark.types"; // CHANGE: adjust path
@@ -25,9 +25,9 @@ export function style_wordmark_demo(parts: WordmarkParts): WordmarkParts {
     l.css.set.color("var(--ink)");
     l.css.set.textShadow([
       // crisp “ink trap” edge
-      "0 1px 0 rgba(0,0,0,0.65)",
-      "1px 0 0 rgba(0,0,0,0.45)",
-      "-1px 0 0 rgba(0,0,0,0.35)",
+      // "0 1px 0 rgba(0,0,0,0.65)",
+      // "1px 0 0 rgba(0,0,0,0.45)",
+      // "-1px 0 0 rgba(0,0,0,0.35)",
 
       // tiny specular scrape (keeps it “computer-printed”)
       "0 -1px 0 rgba(255,255,255,0.10)",
@@ -37,7 +37,7 @@ export function style_wordmark_demo(parts: WordmarkParts): WordmarkParts {
     ].join(", "));
 
     // kill the “too modern” smoothness
-    l.css.set.filter("grayscale(1) contrast(1.08)");
+    // l.css.set.filter("grayscale(1) contrast(1.08)");
     l.css.set.opacity("0.82"); // watermark vibe
   }
   parts.letters.H.css.set.transform("translateX(13px)");
