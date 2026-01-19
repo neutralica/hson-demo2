@@ -5,7 +5,7 @@ import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
 import { Intro_anim, Intro_keys } from "./consts/brand.anim-keys";
 import { Intro_css } from "./consts/brand.css";
-import { $COLOR } from "../../consts/color.consts";
+import { $COL } from "../../consts/color.consts";
 import { makeDivId } from "../../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../../utils/wait-for";
@@ -13,8 +13,8 @@ import { wait } from "../../../utils/wait-for";
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
 
-const zalgoCol = $COLOR.skyBlue;
-const zalgoCol2 = $COLOR.dragonGreen;
+const zalgoCol = $COL.skyBlue;
+const zalgoCol2 = $COL.dragonGreen;
 
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };
 const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };

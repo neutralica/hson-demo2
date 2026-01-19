@@ -1,7 +1,6 @@
 // core-css.ts
 
 import type { CssMap } from "hson-live/types";
-import { bckColor } from "../phases/splash-2/splash.consts";
 
 
 export const FRAME_CSS: CssMap = {
@@ -19,4 +18,6 @@ export const FRAME_CSS: CssMap = {
     overflow: "hidden",
     padding: "56px 64px",
     willChange: "",
-}
+};
+
+

@@ -8,7 +8,7 @@ import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HE
 import { get_letter_key } from "../../../utils/helpers";
 import { makeDivId } from "../../../utils/makers";
 import type { LetterKey } from "../../../types/core.types";
-import { $COLOR } from "../../consts/color.consts";
+import { $COL } from "../../consts/color.consts";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait-for";

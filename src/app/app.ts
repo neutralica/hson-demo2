@@ -7,7 +7,7 @@ import { STAGE_CSS } from "./phases/splash-2/splash.css";
 import { _sleep } from "../utils/helpers";
 import { makeDivId } from "../utils/makers";
 import { PHASE_LINGER } from "./consts/config.consts";
-import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from "./skip-promise";
+import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from "../utils/skip-promise";
 import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "intrastructure";
 import { mount_demo } from "./phases/demo-3/mount-demo";
 
@@ -28,21 +28,13 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     try {
         // --- phase 1: intro ---
         {
-
             const introP = run_phase(stage, mount_brand, _shortpause); // OutcomeAsync<void>
-
             const res = await Promise.race([introP, skip]);       // "skip" | Outcome<void>
-
             cancel();
-
             if (res === "skip") {
                 stage.empty();
-                // return relay.ok();
             }
 
-            // if (outcome.isErr(res)) { return res; }
-
-            // return relay.ok();
         }
         // --- phase 2: splash ---
         let wordMark: LiveTree | undefined = undefined;
@@ -52,13 +44,10 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
             if (res === "skip") {
                 stage.empty(); //  hard cut
             }
-
         }
         // --- phase 3: feature demo ---
         {
             const demo = run_phase(stage, mount_demo, _shortpause);
-
-
         }
 
         return relay.ok();

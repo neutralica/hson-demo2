@@ -4,25 +4,29 @@ const skyBlue = "rgba(68, 149, 255, 1)";
 const richCrimson = "rgba(170, 20, 90, 1)"
 const heartsBlood = "rgba(161, 49, 49, 1)"
 const stonerPurple = "rgba(126, 40, 143, 1)"
+
 const greyLite = "rgba(230, 230, 230, 1)"
 const greyDim = "rgba(58, 58, 58, 1)"
 const greyMid = "rgba(82, 82, 82, 1)"
 const grey = "rgba(114, 114, 114, 1) 1)"
+const greyBlack = "rgba(26, 26, 26, 1)"
+
+export const bckColor = "black";
+const txtMain = greyLite;
 
 
 
-const textMain = greyLite;
-
-export const $COLOR = {
+export const $COL = {
     dragonGreen,
     skyBlue,
     richCrimson, 
     heartsBlood,
     stonerPurple,
-    textMain,
+    textMain: txtMain,
     grey,
     greyDim,
     greyLite,
-    greyMid
+    greyMid,
+    greyBlack,
 
-}
+};

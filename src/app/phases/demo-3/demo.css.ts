@@ -2,9 +2,10 @@
 
 import type { CssMap } from "hson-live/types";
 import { LETTER_CSS, LOGOBOX_CSS, VER_CSS, WORD_CSS } from "../../wordmark/wordmark.css";
-import { $COLOR } from "../../consts/color.consts";
+import { $COL } from "../../consts/color.consts";
 import { FRAME_CSS_SPLASH } from "../splash-2/splash.css";
 import { FRAME_CSS } from "../../consts/core.css";
+import { bckColor } from "../../consts/color.consts";
 
 // “home page” palette: mostly grayscale, small accent per letter (optional)
 export const LETTER_COLOR_DEMO = {
@@ -54,7 +55,7 @@ export const VER6_CSS_DEMO: CssMap = {
 
 export const FRAME_CSS_DEMO: CssMap = {
   ...FRAME_CSS,
-  border: `2px solid ${$COLOR.greyDim}`,
+  border: `2px solid ${$COL.greyDim}`,
 };
 
 
@@ -65,6 +66,7 @@ export const DEMO_CSS: CssMap = {
   inset: "0",
   overflow: "hidden",
   background: "#07070a",
+  pointerEvents: "none",
 };
 
 export const DEMO_BACKDROP_CSS: CssMap = {
@@ -102,6 +104,8 @@ export const STAGE_CSS_DEMO: CssMap = {
   "--mxp": "50%",
   "--myp": "40%",
   backgroundColor: "#0e0f12",
+  pointerEvents: "none",
+
 };
 
 export const PORTAL_CSS: CssMap = {
@@ -167,56 +171,60 @@ export const VER_CSS_DEMO: CssMap = {
   opacity: "1",
 };
 
+
+
+/***************
+ * BORDER AND INSET
+ ***************/
+
+
+
 export const DEMO_WALL_CSS: CssMap = {
   position: "absolute",
   inset: "0",
-  // borderRadius: "28px",
   overflow: "hidden",
   pointerEvents: "none",
-  // Wall should read as a field (texture + gentle room light), not a machined bezel.
-  background: [
-    // outside-high -> inside-low (broad ramp)
-    // ADDED
-   // edges a hair brighter, center a hair darker (reads as sinking inward)
-"radial-gradient(140% 140% at 50% 50%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.00) 55%, rgba(255,255,255,0.030) 100%)",
-    // room tone (very broad)
-    "radial-gradient(closest-side at 50% 50%, rgba(0,0,0,0.00) 78%, rgba(0,0,0,0.18) 94%, rgba(0,0,0,0.24) 100%)",
-    "radial-gradient(140% 110% at 45% 8%, rgba(255,255,255,0.07), transparent 60%)",
-    "radial-gradient(120% 140% at 60% 70%, rgba(120,170,255,0.04), transparent 65%)",
-    // DEMO_WALL_CSS: add near the top of background layers
-    "radial-gradient(140% 120% at 50% 40%, rgba(255,255,255,0.040), transparent 62%)",
-    "radial-gradient(120% 120% at 50% 55%, rgba(0,0,0,0.38), transparent 70%)",
-    // DEMO_WALL_CSS: add near top (after pillow roll is fine)
-    "radial-gradient(closest-side at 50% 50%, rgba(0,0,0,0.00) 62%, rgba(0,0,0,0.20) 82%, rgba(0,0,0,0.30) 100%)",
-    // micro-grid (keep it subtle)
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.014) 0 1px, transparent 1px 4px)",
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.010) 0 1px, transparent 1px 5px)",
+  borderRadius: "28px",
+  isolation: "isolate",
 
-    // base material
-    "linear-gradient(180deg, #15181d, #11141a 55%, #0d1015)",
-  ].join(", "),
-
-  // Important: no “frame-like” shadowing here.
-  boxShadow: "none",
-  filter: "contrast(1.02) brightness(1.08)",
+  // CHANGED: darker, flatter (no big lighting story on this plane)
+  background: "linear-gradient(180deg, #0e1014, #0c0e12 55%, #090b0f)",
 };
+export const DEMO_WALL_FX_CSS: CssMap = {
+  position: "absolute",
+  inset: "6px",            // CHANGED: pull the blur away from the wall face
+  pointerEvents: "none",
+  borderRadius: "22px",    // CHANGED: match inset
 
+  background: "none",
+  overflow: "hidden",
+
+  borderRight: "2px solid rgba(255,255,255,0.10)",
+  borderBottom: "2px solid rgba(255,255,255,0.10)",
+
+  filter: "blur(1.6px)",
+  opacity: "0.75",
+};
+// ------------------------------------------------------------
+// 1) SCREEN: add a tiny outward “glow” onto the glass-adjacent frame
+// ------------------------------------------------------------
 export const DEMO_SCREEN_CSS: CssMap = {
-  position: "relative", // important: it sits inside plush padding
+  position: "relative",
   width: "100%",
   height: "100%",
   borderRadius: "18px",
   overflow: "hidden",
   isolation: "isolate",
-pointerEvents: "none",
-  background: "linear-gradient(180deg, rgba(24,26,32,0.96), rgba(10,11,14,0.97))",
+  pointerEvents: "all",
 
-  boxShadow: [
-    // inner falloff: this is the “depth” cue *inside* the screen, not a rim
-    "inset 0 18px 28px rgba(0,0,0,0.40)",
-    "inset 0 -28px 44px rgba(0,0,0,0.62)",
-    // almost-nothing edge line
-    // "inset 0 0 0 1px rgba(255,255,255,0.02)",
+  background: $COL.greyBlack,
+
+   boxShadow: [
+    // edge definition so the glass doesn't vanish
+    "0 0 20px 1px rgba(255,255,255,0.2)",
+
+    // THIS is the glow — but it must be BLURRED, not spread
+    "0 0 6px rgba(255,255,255,0.06)",
   ].join(", "),
 };
 
@@ -225,15 +233,14 @@ export const DEMO_SCREEN_FX_CSS: CssMap = {
   inset: "0",
   pointerEvents: "none",
 
-  opacity: "0.28",
-  mixBlendMode: "overlay",
+  // keep neutral
+  mixBlendMode: "normal",
+  opacity: "0.08",
 
   background: [
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.040) 0 1px, transparent 1px 9px)",
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.024) 0 1px, transparent 1px 12px)",
-    "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.18) 78%, rgba(0,0,0,0.26))",
+    "repeating-linear-gradient(0deg, rgba(255,255,255,0.020) 0 1px, transparent 1px 12px)",
+    "repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 16px)",
   ].join(", "),
-
 };
 
 export const DEMO_SCREEN_PLUSH_CSS: CssMap = {
@@ -242,39 +249,32 @@ export const DEMO_SCREEN_PLUSH_CSS: CssMap = {
   top: "2%",
   width: "96%",
   height: "96%",
-pointerEvents: "none",
+  pointerEvents: "none",
   borderRadius: "26px",
-  padding: "24px", // was 28px — small physical thin; tweak 20–26
+  padding: "12px",
   boxSizing: "border-box",
   overflow: "hidden",
   isolation: "isolate",
 
-  background: [
-    // 1) broad roll (very subtle, prevents “machined ring”)
-    "radial-gradient(160% 130% at 38% 18%, rgba(255,255,255,0.045), transparent 60%)",
-    "radial-gradient(150% 150% at 70% 88%, rgba(0,0,0,0.40), transparent 62%)",
-
-    // 2) IMPORTANT: most contrast lives near the inner seam (steeper at the end)
-    // Think: gentle slope → sharper drop into cavity.
-    "radial-gradient(closest-side at 50% 50%, " +
-    "transparent 70%, " +                 // flat-ish plateau
-    "rgba(0,0,0,0.14) 86%, " +            // begin slope
-    "rgba(0,0,0,0.6) 96%, " +            // steepening
-    "rgba(0,0,0,0.70) 100%)",             // seam
-
-    // 3) base leather tone (keep it simple)
-    "linear-gradient(180deg, rgba(70, 73, 84, 0.62), rgba(14,16,20,0.94))",
-  ].join(", "),
+  // CHANGED: slightly darker than the glass, fairly uniform
+  background: "rgba(18,18,18,1)",
 
   boxShadow: [
-    // Outer weight (soft, wide)
-    "0 18px 70px rgba(0,0,0,0.28)",
+    // ---- seam where plush meets wall (subtle, symmetric)
+    
+    "inset 0 0 0 2px rgba(0,0,0,0.22)",
+// 
+    // ---- CHANGED: glass -> plastic illumination should be OUTWARD, not inset.
+    // This is the key: a faint outer glow that makes the plastic edge “catch” the screen.
+    // (2–3px, ~0.2 strength)
+    "2px 2px 0 0.5px rgba(255,255,255,0.4)",
+    
 
-    // Subtle top-left lift and bottom-right sink (avoid crisp edges)
-    "inset 10px 10px 22px rgba(255,255,255,0.025)",
-    "inset -16px -16px 30px rgba(0,0,0,0.42)",
-
-    // Kill outlines: if you keep this at all, keep it *nearly invisible*
-    // "inset 0 0 0 1px rgba(255,255,255,0.010)",
+    // ---- keep depth, but DO NOT crush corners
+    "inset 0 18px 30px rgba(63, 63, 63, 0.1)",
+    "inset 0 -18px 30px rgba(44, 43, 43, 0.12)",
   ].join(", "),
 };
+
+export const SCREEN_GLINT_SHADOW = 
+  "2px 2px 0 0.5px rgba(255,255,255,0.28)";
