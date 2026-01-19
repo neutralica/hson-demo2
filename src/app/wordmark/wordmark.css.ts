@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 
 export const HSON_FONT_PX = 96
-export const HSON_FONT_STR = `${HSON_FONT_PX}px`;
+export const HSON_FONT_str = `${HSON_FONT_PX}px`;
 
 export const CELL_CSS: CssMap = {
   display: "block",
@@ -14,7 +14,7 @@ export const CELL_CSS: CssMap = {
 export const LETTER_CSS: CssMap = {
   position: "relative",
   display: "block",
-  fontSize: HSON_FONT_STR,
+  fontSize: HSON_FONT_str,
   lineHeight: "0.88",
   fontFamily: "'Times New Roman', Georgia, Iowan Old Style, Palatino, serif, ui-serif",
   fontWeight: "700",
@@ -38,19 +38,19 @@ export const WORD_CSS: CssMap = {
   placeItems: "end start",
   isolation: "isolate",
   userSelect: "none",
-  zIndex: "40",
+  zIndex: "-10",
   
 };
 
 export const LOGOBOX_CSS: CssMap = {
   position: "fixed",
   left: "50vw",
-  top: "32vh",
+  top: "30vh",
   transform: "translate(-50%, -50%)",
 
   width: "max-content",
   height: "max-content",
-  zIndex: "50",
+  // zIndex: "50",
   pointerEvents: "none",
 };
 
@@ -60,13 +60,6 @@ export const O_ROT: CssMap = {
   display: "inline-block",
   transform: "rotate(32deg) translateX(5px) translateY(-6px)",
   transformOrigin: "50% 55%",
-};
-
-export const LETTER_COLOR = {
-  H: "rgb(0, 220, 255)",
-  S: "rgb(255, 210, 0)",
-  O: "rgb(0, 255, 120)",
-  N: "rgb(255, 100, 170)",
 };
 
 export const VER6_CSS: CssMap = {

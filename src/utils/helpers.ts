@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import type { LETTER_COLOR } from "../app/wordmark/wordmark.css";
+import type { LETTER_COLOR_std } from "../app/consts/colors.consts";
 import type { LetterKey } from "../types/core.types";
 
 // export type LetterKey = keyof typeof LETTER_COLOR; // "H" | "S" | "O" | "N"

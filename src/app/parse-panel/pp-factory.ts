@@ -1,55 +1,48 @@
 // pp_factory.ts
-
-import { hson, LiveTree } from "hson-live";
-
-type PanelFmt = "json" | "hson" | "html" | "node"; // extend as needed
+import { hson, type LiveTree } from "hson-live";
+import type { Fmt, Panels, PanelParts } from "./pp.types";
 
 type PpFactoryOpts = {
-  // CHANGED: pass formats so adding a 4th panel is a 1-line change
-  fmts?: readonly PanelFmt[];
-  // CHANGED: hide node-output unless explicitly enabled
-  includeNodeOutput?: boolean;
+  fmts?: readonly Fmt[];
+  // includeNodeOutput?: boolean;
 };
 
-export function pp_factory(host: LiveTree, opts: PpFactoryOpts = {}): LiveTree {
-  // CHANGED: configurable formats
+export function pp_factory(host: LiveTree, opts: PpFactoryOpts = {}): Panels {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
 
-  // root container
-  const pp = hson
+  const root = hson
     .fromTrustedHtml("<div id='parsing-panels-root'></div>")
     .liveTree()
     .asBranch();
-  host.append(pp);
-  // need to append first otherwise the checks don't work
+
+  host.append(root); // keep your “append before setText” rule
+
+  const panels = {} as Record<Fmt, PanelParts>;
+
   for (const fmt of fmts) {
-    const s = pp.create.section()
-      .data.set("role", `panel-${fmt}`);
+    const panel = root.create.section();
 
-    // textarea
-    s.create.textarea().data.set("input", fmt);
+    // CHANGED: keep *structural* hook as role
+    panel.data.set("role", `panel-${fmt}`);
 
-    // validity chip (two classes)
-    const chip = s.create.span();
-    chip.classlist.add("chip");       
-    chip.classlist.add("validity");   
-    // bytes field
-    s.create.span()
-      .data.set("field", `${fmt}-bytes`)
-      .setText("0 bytes");
+    const textarea = panel.create.textarea();
+    textarea.data.set("input", fmt);
 
-    // copy button (optional in init, but handy)
-    s.create.button()
-      .data.set("action", `copy-${fmt}`)
-      .setText("copy");
-    chip.setText(`[enter valid ${fmt}]`);
+    const chip = panel.create.span();
+    chip.classlist.add("chip");
+    chip.classlist.add("validity");
+    chip.setText("stale");
+
+    const bytes = panel.create.span();
+    bytes.data.set("field", `${fmt}-bytes`);
+    bytes.setText("0 bytes");
+
+    const copyBtn = panel.create.button();
+    copyBtn.data.set("action", `copy-${fmt}`);
+    copyBtn.setText("copy");
+
+    panels[fmt] = { fmt, panel, textarea, chip, bytes, copyBtn };
   }
 
-  // optional debug output
-  if (opts.includeNodeOutput) {
-    pp.create.pre().id.set("node-output");
-  }
-  const pphtml = pp.asDomElement();
-
-  return pp;
+  return { root, panels };
 }

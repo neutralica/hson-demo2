@@ -1,7 +1,7 @@
 //css.consts.ts
 
 import type { CssMap } from "hson-live/types";
-import { bckColor } from "../../../consts/color.consts";
+import { bckColor } from "../../../consts/colors.consts";
 
 const LOGOBOX_CSS = {
   display: "flex",
@@ -42,7 +42,7 @@ const ZALGO_CSS: CssMap = {
   whiteSpace: "pre",
   pointerEvents: "none",
   opacity: "0",
-  filter: "blur(0.3px)",
+  // removed filter: blur here
 }
 
 export const Intro_css = {

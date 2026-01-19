@@ -10,6 +10,7 @@ import { PHASE_LINGER } from "./consts/config.consts";
 import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from "../utils/skip-promise";
 import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "intrastructure";
 import { mount_demo } from "./phases/demo-3/mount-demo";
+import { make_vines } from "./vines/vines";
 
 const _pause = () => _sleep(PHASE_LINGER);
 const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
@@ -28,6 +29,21 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     try {
         // --- phase 1: intro ---
         {
+            // console.log(make_fluting({
+            //     rows: 20,
+            //     width: 10,
+            //     seed: 9199,
+            //     flutes: 0.23,
+            //     grooveDepth: 0.4,
+            //     grooveWidth: .15,
+            //     ink: 0.15,
+            //     lightPos: 0.13,
+            //     speckle: 0.9,
+
+            // }));
+            // mount_ornament(stage);
+            // console.log(make_vines({ width: 20, rows: 200, seed: 5555 }));
+            // await _pause();
             const introP = run_phase(stage, mount_brand, _shortpause); // OutcomeAsync<void>
             const res = await Promise.race([introP, skip]);       // "skip" | Outcome<void>
             cancel();
@@ -57,3 +73,27 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     }
 }
 
+
+export function mount_ornament(parent: LiveTree): LiveTree {
+    const pre = parent.create.pre().data.set("role", "ornament");
+    pre.setText(make_vines({ width: 72, rows: 81, seed: (Math.random()*10000)-1 }));
+    pre.css.setMany({
+        position: "absolute",
+        left: "18px",
+        right: "18px",
+        bottom: "14px",
+        whiteSpace: "pre",
+        pointerEvents: "none",
+        opacity: "0.22",
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontSize: "12px",
+        lineHeight: "12px",
+        letterSpacing: "0.02em",
+        // optional: tint via currentColor
+        color: "rgba(160, 220, 255, 0.85)",
+        // subtle glow
+        textShadow: "0 0 10px rgba(160, 220, 255, 0.25)",
+    });
+
+    return pre;
+}

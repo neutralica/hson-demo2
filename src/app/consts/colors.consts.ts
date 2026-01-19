@@ -6,27 +6,39 @@ const heartsBlood = "rgba(161, 49, 49, 1)"
 const stonerPurple = "rgba(126, 40, 143, 1)"
 
 const greyLite = "rgba(230, 230, 230, 1)"
-const greyDim = "rgba(58, 58, 58, 1)"
 const greyMid = "rgba(82, 82, 82, 1)"
 const grey = "rgba(114, 114, 114, 1) 1)"
+const greyDim = "rgba(58, 58, 58, 1)"
+const greyDimmer = "rgba(40, 38, 38, 1)"
 const greyBlack = "rgba(26, 26, 26, 1)"
 
 export const bckColor = "black";
 const txtMain = greyLite;
 
+export const LETTER_COLOR_std = {
+  H: "rgb(0, 220, 255)",
+  S: "rgb(255, 210, 0)",
+  O: "rgb(0, 255, 120)",
+  N: "rgb(255, 100, 170)",
+};
+
 
 
 export const $COL = {
+    _txtMain: txtMain,
+    _backColor: bckColor,
     dragonGreen,
     skyBlue,
     richCrimson, 
     heartsBlood,
     stonerPurple,
-    textMain: txtMain,
     grey,
-    greyDim,
     greyLite,
     greyMid,
+    greyDim,
+    greyDimmer,
     greyBlack,
+    
 
 };
+

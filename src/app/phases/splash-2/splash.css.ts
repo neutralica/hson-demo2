@@ -2,7 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { sunColor, sunFade, skyGradient } from "./splash.consts";
-import { bckColor } from "../../consts/color.consts";
+import { bckColor } from "../../consts/colors.consts";
 import { FRAME_CSS } from "../../consts/core.css";
 
 export const STAGE_CSS: CssMap = {

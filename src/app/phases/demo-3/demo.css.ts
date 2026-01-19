@@ -2,10 +2,10 @@
 
 import type { CssMap } from "hson-live/types";
 import { LETTER_CSS, LOGOBOX_CSS, VER_CSS, WORD_CSS } from "../../wordmark/wordmark.css";
-import { $COL } from "../../consts/color.consts";
-import { FRAME_CSS_SPLASH } from "../splash-2/splash.css";
+import { $COL, bckColor } from "../../consts/colors.consts";
+
 import { FRAME_CSS } from "../../consts/core.css";
-import { bckColor } from "../../consts/color.consts";
+import { make_stipple_drift_css } from "../../stipple/make-stipple";
 
 // “home page” palette: mostly grayscale, small accent per letter (optional)
 export const LETTER_COLOR_DEMO = {
@@ -24,10 +24,10 @@ export const LETTER_ACCENT_DEMO = {
 } as const;
 
 export const LETTER_INK_DEMO = {
-  H: "rgba(153, 162, 190, 1)", // bright
-  S: "rgba(181, 140, 153, 1)", // darker
-  O: "rgba(104, 108, 97, 1)", // slightly warm
-  N: "rgba(73, 64, 92, 1)" // slightly cool
+  H: "rgba(88, 215, 151, 1)", // bright
+  S: "rgba(66, 167, 229, 1)", // darker
+  O: "rgba(233, 123, 209, 1)", // slightly warm
+  N: "rgba(116, 116, 231, 1)" // slightly cool
 } as const;
 
 export const LETTER_HALO_DEMO = {
@@ -103,7 +103,7 @@ export const STAGE_CSS_DEMO: CssMap = {
   // default vars (even if unused initially)
   "--mxp": "50%",
   "--myp": "40%",
-  backgroundColor: "#0e0f12",
+  backgroundColor: $COL._backColor,
   pointerEvents: "none",
 
 };
@@ -171,14 +171,44 @@ export const VER_CSS_DEMO: CssMap = {
   opacity: "1",
 };
 
+/**
+ * A tight “leather weave” that reads as texture, not “noise”.
+ * Use as a top layer with very low alpha.
+ */
+export const STIPPLE_WEAVE_TIGHT =
+  [
+    // micro crosshatch
+    "repeating-linear-gradient(0deg, rgba(255,255,255,0.020) 0 1px, transparent 1px 3px)",
+    "repeating-linear-gradient(90deg, rgba(255,255,255,0.016) 0 1px, transparent 1px 4px)",
 
+    // faint diagonal bias (breaks grid tyranny)
+    "repeating-linear-gradient(45deg, rgba(255,255,255,0.010) 0 1px, transparent 1px 6px)",
+    "repeating-linear-gradient(-45deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 7px)",
+  ].join(", ");
 
-/***************
- * BORDER AND INSET
- ***************/
+/**
+ * Bigger “corpo wall” texture: less busy, reads as manufactured finish.
+ */
+export const STIPPLE_CORPO_WALL =
+  [
+    // micro specks (dark)
+    "radial-gradient(circle at 13px 9px, rgba(36, 74, 43, 1)1px, transparent 1px) 0 0 / 17px 19px",
+    "radial-gradient(circle at 5px 14px, rgba(83, 46, 46, 1)0 2px, transparent 1px) 0 0 / 23px 29px",
 
+    // micro specks (light)
+    "radial-gradient(circle at 9px 6px, rgba(58, 54, 33, 1) 0 1px, transparent 1px) 0 0 / 31px 27px",
+    "radial-gradient(circle at 19px 6px, rgba(28, 56, 54, 1) 0 2px, transparent 1px) 0 0 / 37px 41px",
 
+    // macro unevenness (keeps it from looking printed)
+    "radial-gradient(140% 120% at 20% 10%, rgba(255,255,255,0.020), transparent 60%)",
+    "radial-gradient(120% 140% at 85% 80%, rgba(0,0,0,0.030), transparent 65%)",
+  ].join(", ");
 
+/**
+ * OUTER SURFACE (user-facing bezel plane)
+ * - texture carries the darkness (not a single flat dark color)
+ * - keep it subtle so panels remain legible
+ */
 export const DEMO_WALL_CSS: CssMap = {
   position: "absolute",
   inset: "0",
@@ -187,27 +217,50 @@ export const DEMO_WALL_CSS: CssMap = {
   borderRadius: "28px",
   isolation: "isolate",
 
-  // CHANGED: darker, flatter (no big lighting story on this plane)
-  background: "linear-gradient(180deg, #0e1014, #0c0e12 55%, #090b0f)",
+  background: [
+    // base tone (do not over-darken; let texture do the work)
+    // "linear-gradient(180deg, #0f1116, #0c0e12 55%, #090b0f)",
+
+    // leather-ish weave
+    STIPPLE_WEAVE_TIGHT,
+
+    // corpo wall grain
+    // STIPPLE_CORPO_WALL,
+  ].join(", "),
+
+  // kill “rubber gasket” read: no fat inner rings here
+  boxShadow: [
+    // just enough perimeter definition
+    "inset 0 0 0 1px rgba(255,255,255,0.025)",
+    // soft vignette for depth (not a seal)
+    "inset 0 0 70px rgba(0,0,0,0.35)",
+  ].join(", "),
 };
+
+/**
+ * WALL FX (glint + edge pickup)
+ * - this should NOT paint a giant hazy frame
+ * - keep it to bottom/right edges only
+ */
 export const DEMO_WALL_FX_CSS: CssMap = {
   position: "absolute",
-  inset: "6px",            // CHANGED: pull the blur away from the wall face
+  inset: "0",
   pointerEvents: "none",
-  borderRadius: "22px",    // CHANGED: match inset
-
-  background: "none",
+  borderRadius: "28px",
   overflow: "hidden",
+  // A *localized* edge pickup, not a ring.
+  // Use backgrounds instead of borders+blur (borders+blur tend to smear into a gasket look).
+  backgroundColor: " rgba(255,255,255,0.10)",
 
-  borderRight: "2px solid rgba(255,255,255,0.10)",
-  borderBottom: "2px solid rgba(255,255,255,0.10)",
-
-  filter: "blur(1.6px)",
-  opacity: "0.75",
+  opacity: "0.65",
+  filter: "blur(1.1px)",
 };
-// ------------------------------------------------------------
-// 1) SCREEN: add a tiny outward “glow” onto the glass-adjacent frame
-// ------------------------------------------------------------
+
+/**
+ * GLASS (screen)
+ * - keep your greyBlack
+ * - stop huge bloom that reads like a seal / fog
+ */
 export const DEMO_SCREEN_CSS: CssMap = {
   position: "relative",
   width: "100%",
@@ -216,65 +269,89 @@ export const DEMO_SCREEN_CSS: CssMap = {
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "all",
+  backgroundColor: $COL.greyDimmer,
+  // background: [
+  //   // $COL.greyDimmer
+  //   // base tone (do not over-darken; let texture do the work)
+  //   // "linear-gradient(180deg, #0f1116, #0c0e12 55%, #090b0f)",
 
-  background: $COL.greyBlack,
+  //   // leather-ish weave
+  //   // STIPPLE_WEAVE_TIGHT,
+  //   // corpo wall grain
+  //   ].join(", "),
 
-   boxShadow: [
-    // edge definition so the glass doesn't vanish
-    "0 0 20px 1px rgba(255,255,255,0.2)",
+  boxShadow: [
+    // edge definition only (tight)
+    "inset 0 0 0 1px rgba(255,255,255,0.034)",
 
-    // THIS is the glow — but it must be BLURRED, not spread
-    "0 0 6px rgba(255,255,255,0.06)",
+    // very soft glass bloom (small + subtle)
+    "0 0 10px rgba(255,255,255,0.015)",
+
+    // tiny “lift” so it doesn’t look switched off
+    "0 0 40px rgba(255,255,255,0.030)",
   ].join(", "),
-};
+}
 
 export const DEMO_SCREEN_FX_CSS: CssMap = {
   position: "absolute",
   inset: "0",
   pointerEvents: "none",
-
-  // keep neutral
   mixBlendMode: "normal",
-  opacity: "0.08",
+  opacity: "1",
 
-  background: [
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.020) 0 1px, transparent 1px 12px)",
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 16px)",
-  ].join(", "),
 };
 
-export const DEMO_SCREEN_PLUSH_CSS: CssMap = {
+export const STIPPLE_PLANE_CSS: CssMap = {
+  ...DEMO_SCREEN_FX_CSS,
+  ...make_stipple_drift_css({ speed: 4 })
+}
+
+/**
+ * INSET / INNER FRAME
+ * - stop heavy uniform inset rings (gasket)
+ * - keep your bottom-right glint via XY offset shadow
+ * - allow it to read as a darker surround to the glass
+ */
+export const SCREEN_GLINT_SHADOW =
+  "2px 2px 0 0.5px rgba(255,255,255,0.28)";
+
+/**
+ * this selector describes the (in the narrative of the terminal screen) 
+ * thin band of plastic that meets the glass perpendicularly, which will 
+ * catch reflection from the screen illumination and also carry a thin 
+ * band of ambient light on the frame edge
+ */
+export const DEMO_SCREEN_INSET_CSS: CssMap = {
   position: "absolute",
-  left: "2%",
-  top: "2%",
-  width: "96%",
-  height: "96%",
+  left: "3%",
+  top: "3%",
+  width: "94%",
+  height: "94%",
   pointerEvents: "none",
   borderRadius: "26px",
   padding: "12px",
   boxSizing: "border-box",
   overflow: "hidden",
   isolation: "isolate",
-
-  // CHANGED: slightly darker than the glass, fairly uniform
-  background: "rgba(18,18,18,1)",
+  backgroundColor: $COL.greyDimmer,
+  // slightly darker than glass
+  background: [
+    // "linear-gradient(180deg, rgba(18,18,18,1), rgba(16,16,16,1))",
+    //   // tiny internal grain so it isn’t a flat slab
+    // "repeating-linear-gradient(0deg, rgba(255,255,255,0.010) 0 1px, transparent 1px 12px)",
+    // "repeating-linear-gradient(90deg, rgba(255,255,255,0.008) 0 1px, transparent 1px 16px)",
+  ].join(", "),
 
   boxShadow: [
-    // ---- seam where plush meets wall (subtle, symmetric)
-    
-    "inset 0 0 0 2px rgba(0,0,0,0.22)",
-// 
-    // ---- CHANGED: glass -> plastic illumination should be OUTWARD, not inset.
-    // This is the key: a faint outer glow that makes the plastic edge “catch” the screen.
-    // (2–3px, ~0.2 strength)
-    "2px 2px 0 0.5px rgba(255,255,255,0.4)",
-    
+    // remove the thick uniform ring that reads like rubber
+    "inset 0 0 0 1px rgba(255,255,255,0.020)",
+    "inset 0 0 0 2px rgba(0,0,0,0.18)",
 
-    // ---- keep depth, but DO NOT crush corners
-    "inset 0 18px 30px rgba(63, 63, 63, 0.1)",
-    "inset 0 -18px 30px rgba(44, 43, 43, 0.12)",
+    // bottom-right specular catch (your discovery)
+    SCREEN_GLINT_SHADOW,
+
+    // depth, but light-touch
+    "inset 0 18px 30px rgba(0,0,0,0.16)",
+    "inset 0 -18px 30px rgba(0,0,0,0.20)",
   ].join(", "),
 };
-
-export const SCREEN_GLINT_SHADOW = 
-  "2px 2px 0 0.5px rgba(255,255,255,0.28)";

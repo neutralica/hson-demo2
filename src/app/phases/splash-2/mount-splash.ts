@@ -2,17 +2,19 @@
 
 import { type LiveTree } from "hson-live";
 import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./splash.css";
-import { LETTER_COLOR, O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
+import { O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
+import { LETTER_COLOR_std } from "../../consts/colors.consts";
 import { GRADIENT_ANIM } from "./splash.anim-keys";
 import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim-keys";
 import { get_letter_key } from "../../../utils/helpers";
 import { makeDivId } from "../../../utils/makers";
 import type { LetterKey } from "../../../types/core.types";
-import { $COL } from "../../consts/color.consts";
+import { $COL } from "../../consts/colors.consts";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait-for";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
+
 
 
 /**
@@ -21,7 +23,6 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
-
     /* create container layers */
     const sky = makeSection(stage, "sky");
     /* stacking order matters here: */
@@ -30,7 +31,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const hsonWord = makeDivClass(frame, "wordmark");
     const flareBox = makeDivClass(frame, "flare-box");
     const flare = makeDivClass(flareBox, "lens-flare");
-
     /* sky gradient */
     const gradient = makeDivClass(frame, "sky-gradient");
 
@@ -71,7 +71,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     letters.forEach(l => {
         const k = get_letter_key(l);
         if (!k) return;
-        const col = LETTER_COLOR[k]
+        const col = LETTER_COLOR_std[k]
         l.css.set.var("--glow", col);
         l.css.set.var("--final", col);
         l.css.set.var("--starshine", col);

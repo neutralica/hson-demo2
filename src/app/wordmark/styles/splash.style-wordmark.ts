@@ -1,6 +1,7 @@
 import type { LiveTree } from "hson-live";
 import type { LetterKey } from "../../../types/core.types";
-import { CELL_CSS, LETTER_COLOR, O_ROT } from "../wordmark.css";
+import { CELL_CSS, O_ROT } from "../wordmark.css";
+import { LETTER_COLOR_std } from "../../consts/colors.consts";
 import { FRAME_CSS_SPLASH } from "../../phases/splash-2/splash.css";
 import type { WordmarkParts } from "../wordmark.types";
 import type { KeyframesInput } from "../../../../../hson-live/dist/types-consts/keyframes.types";
@@ -15,7 +16,7 @@ export function style_wordmark_splash(parts: WordmarkParts): void {
 
   (Object.keys(letters) as LetterKey[]).forEach((k) => {
     const l = letters[k];
-    const col = LETTER_COLOR[k];
+    const col = LETTER_COLOR_std[k];
     l.css.set.var("--glow", col);
     l.css.set.var("--final", col);
     l.css.set.var("--starshine", col);

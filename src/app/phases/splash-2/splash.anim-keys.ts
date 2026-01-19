@@ -1,6 +1,6 @@
 import type { AnimSpec } from "hson-live/types";
 import type { AnimPart } from "./splash.types";
-import { bckColor } from "../../consts/color.consts";
+import { bckColor } from "../../consts/colors.consts";
 
 export const shortFlash = 700;
 const shortFlashString = `${shortFlash}ms`;
