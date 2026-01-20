@@ -3,15 +3,16 @@
 import type { LiveTree } from "hson-live";
 import { makeDivId } from "../../../utils/makers";
 import { relay, type OutcomeAsync } from "intrastructure";
-import { build_wordmark } from "../../wordmark/wordmark-factory";
-import { style_wordmark_demo } from "../../wordmark/styles/demo.style-wordmark";
-import { CELL_CSS_DEMO, DEMO_CSS, DEMO_LOGOBOX_CSS, DEMO_SCREEN_CSS, DEMO_SCREEN_FX_CSS, DEMO_SCREEN_INSET_CSS, DEMO_WALL_CSS, DEMO_WALL_FX_CSS, FRAME_CSS_DEMO, STIPPLE_PLANE_CSS } from "./demo.css";
+import { DEMO_CSS, DEMO_LOGOBOX_CSS, DEMO_SCREEN_CSS, DEMO_SCREEN_FX_CSS, DEMO_SCREEN_INSET_CSS, DEMO_WALL_CSS, DEMO_WALL_FX_CSS } from "./demo.css";
 import { $COL } from "../../consts/colors.consts";
 import { pp_factory } from "../../parse-panel/pp-factory";
 import { style_parsing_panels } from "../../parse-panel/style-pp";
 import { init_parsing_panels } from "../../parse-panel/init.pp";
-import { KF_STIPPLE_BGPOS_ALL, KF_STIPPLE_DRIFT_0, KF_STIPPLE_DRIFT_1, KF_STIPPLE_DRIFT_2, KF_STIPPLE_DRIFT_3 } from "../../stipple/stipple.anim-keys";
-import { attach_stipple_layers } from "../../stipple/make-stipple";
+import { KF_STIPPLE_BGPOS_ALL } from "../../stipple/stipple.anim-keys";
+import { make_stipple_drift_css } from "../../stipple/make-stipple";
+import { STIPPLE_PLANE_BASE } from "../../stipple/stipple.css";
+
+
 
 
 /**
@@ -38,18 +39,15 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const screeninset = makeDivId(wall, "screen-inset").classlist.add("screen-inset");
   const screen = makeDivId(screeninset, "demo-screen").classlist.add("demo-screen");
   const screenFx = makeDivId(screen, "demo-screen-fx").classlist.add("demo-screen-fx");
-  
-  const logoBox = makeDivId(demo, "hson-logo").classlist.add("hson-logo");
-  const wordMark = build_wordmark(logoBox);
-  style_wordmark_demo(wordMark);
-  wordMark.frame.css.setMany(FRAME_CSS_DEMO);
-  for (const c of wordMark.cellList) c.css.setMany(CELL_CSS_DEMO);
-  screen.css.keyframes.setMany([KF_STIPPLE_DRIFT_0, KF_STIPPLE_DRIFT_1, KF_STIPPLE_DRIFT_2, KF_STIPPLE_DRIFT_3]);
+  // const logoBox = makeDivId(demo, "hson-logo").classlist.add("hson-logo");
+  // const wordMark = build_wordmark(logoBox);
+  // style_wordmark_demo(wordMark);
+  // wordMark.frame.css.setMany(FRAME_CSS_DEMO);
+  // for (const c of wordMark.cellList) c.css.setMany(CELL_CSS_DEMO);
   demo.css.setMany(DEMO_CSS);
-  logoBox.css.setMany(DEMO_LOGOBOX_CSS);
+  // logoBox.css.setMany(DEMO_LOGOBOX_CSS);
   demo.css.keyframes.set(KF_STIPPLE_BGPOS_ALL)
   
-  attach_stipple_layers(demo);
   // existing
   wall.css.setMany(DEMO_WALL_CSS);
   
@@ -62,8 +60,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   screen.css.setMany(DEMO_SCREEN_CSS);
   screenFx.css.setMany(DEMO_SCREEN_FX_CSS);
   
-  const stipPLane = makeDivId(screenFx, "stipple-plane").css.setMany(STIPPLE_PLANE_CSS);
-  
+  // CHANGED: single canonical stipple plane
+  const stipple = makeDivId(screenFx, "stipple-plane").classlist.add("stipple-plane");
+  stipple.css.setMany(STIPPLE_PLANE_BASE);
+  stipple.css.setMany(make_stipple_drift_css({ speed: 4, noise: false }));
   const menuBox = makeDivId(screen, 'menu-box').classlist.add('ui menu box');
   menuBox.css.setMany({
     position: "absolute",
@@ -87,7 +87,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     style_parsing_panels(pp);
 
   })
-
 
   return relay.ok();
 

@@ -33,7 +33,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const flare = makeDivClass(flareBox, "lens-flare");
     /* sky gradient */
     const gradient = makeDivClass(frame, "sky-gradient");
-
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
     const sun = makeDivClass(sunCarrier, "sun");

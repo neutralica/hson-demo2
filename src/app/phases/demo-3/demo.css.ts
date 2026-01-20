@@ -7,6 +7,7 @@ import { $COL, bckColor } from "../../consts/colors.consts";
 import { FRAME_CSS } from "../../consts/core.css";
 import { make_stipple_drift_css } from "../../stipple/make-stipple";
 
+
 // “home page” palette: mostly grayscale, small accent per letter (optional)
 export const LETTER_COLOR_DEMO = {
   H: "rgb(230,230,235)",
@@ -186,23 +187,6 @@ export const STIPPLE_WEAVE_TIGHT =
     "repeating-linear-gradient(-45deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 7px)",
   ].join(", ");
 
-/**
- * Bigger “corpo wall” texture: less busy, reads as manufactured finish.
- */
-export const STIPPLE_CORPO_WALL =
-  [
-    // micro specks (dark)
-    "radial-gradient(circle at 13px 9px, rgba(36, 74, 43, 1)1px, transparent 1px) 0 0 / 17px 19px",
-    "radial-gradient(circle at 5px 14px, rgba(83, 46, 46, 1)0 2px, transparent 1px) 0 0 / 23px 29px",
-
-    // micro specks (light)
-    "radial-gradient(circle at 9px 6px, rgba(58, 54, 33, 1) 0 1px, transparent 1px) 0 0 / 31px 27px",
-    "radial-gradient(circle at 19px 6px, rgba(28, 56, 54, 1) 0 2px, transparent 1px) 0 0 / 37px 41px",
-
-    // macro unevenness (keeps it from looking printed)
-    "radial-gradient(140% 120% at 20% 10%, rgba(255,255,255,0.020), transparent 60%)",
-    "radial-gradient(120% 140% at 85% 80%, rgba(0,0,0,0.030), transparent 65%)",
-  ].join(", ");
 
 /**
  * OUTER SURFACE (user-facing bezel plane)
@@ -216,25 +200,7 @@ export const DEMO_WALL_CSS: CssMap = {
   pointerEvents: "none",
   borderRadius: "28px",
   isolation: "isolate",
-
-  background: [
-    // base tone (do not over-darken; let texture do the work)
-    // "linear-gradient(180deg, #0f1116, #0c0e12 55%, #090b0f)",
-
-    // leather-ish weave
-    STIPPLE_WEAVE_TIGHT,
-
-    // corpo wall grain
-    // STIPPLE_CORPO_WALL,
-  ].join(", "),
-
-  // kill “rubber gasket” read: no fat inner rings here
-  boxShadow: [
-    // just enough perimeter definition
-    "inset 0 0 0 1px rgba(255,255,255,0.025)",
-    // soft vignette for depth (not a seal)
-    "inset 0 0 70px rgba(0,0,0,0.35)",
-  ].join(", "),
+  border: `1px double ${$COL.stonerPurple}`
 };
 
 /**
@@ -250,7 +216,7 @@ export const DEMO_WALL_FX_CSS: CssMap = {
   overflow: "hidden",
   // A *localized* edge pickup, not a ring.
   // Use backgrounds instead of borders+blur (borders+blur tend to smear into a gasket look).
-  backgroundColor: " rgba(255,255,255,0.10)",
+  // backgroundColor: " rgba(255,255,255,0.10)",
 
   opacity: "0.65",
   filter: "blur(1.1px)",
@@ -269,7 +235,7 @@ export const DEMO_SCREEN_CSS: CssMap = {
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "all",
-  backgroundColor: $COL.greyDimmer,
+  // backgroundColor: $COL.greyDimmer,
   // background: [
   //   // $COL.greyDimmer
   //   // base tone (do not over-darken; let texture do the work)
@@ -280,16 +246,16 @@ export const DEMO_SCREEN_CSS: CssMap = {
   //   // corpo wall grain
   //   ].join(", "),
 
-  boxShadow: [
-    // edge definition only (tight)
-    "inset 0 0 0 1px rgba(255,255,255,0.034)",
+  // boxShadow: [
+  //   // edge definition only (tight)
+  //   "inset 0 0 0 1px rgba(255,255,255,0.034)",
 
-    // very soft glass bloom (small + subtle)
-    "0 0 10px rgba(255,255,255,0.015)",
+  //   // very soft glass bloom (small + subtle)
+  //   "0 0 10px rgba(255,255,255,0.015)",
 
-    // tiny “lift” so it doesn’t look switched off
-    "0 0 40px rgba(255,255,255,0.030)",
-  ].join(", "),
+  //   // tiny “lift” so it doesn’t look switched off
+  //   "0 0 40px rgba(255,255,255,0.030)",
+  // ].join(", "),
 }
 
 export const DEMO_SCREEN_FX_CSS: CssMap = {
@@ -301,10 +267,6 @@ export const DEMO_SCREEN_FX_CSS: CssMap = {
 
 };
 
-export const STIPPLE_PLANE_CSS: CssMap = {
-  ...DEMO_SCREEN_FX_CSS,
-  ...make_stipple_drift_css({ speed: 4 })
-}
 
 /**
  * INSET / INNER FRAME
@@ -313,7 +275,7 @@ export const STIPPLE_PLANE_CSS: CssMap = {
  * - allow it to read as a darker surround to the glass
  */
 export const SCREEN_GLINT_SHADOW =
-  "2px 2px 0 0.5px rgba(255,255,255,0.28)";
+  "2px 2px 0 0.5px rgba(65, 110, 165, 0.96)";
 
 /**
  * this selector describes the (in the narrative of the terminal screen) 
@@ -333,7 +295,7 @@ export const DEMO_SCREEN_INSET_CSS: CssMap = {
   boxSizing: "border-box",
   overflow: "hidden",
   isolation: "isolate",
-  backgroundColor: $COL.greyDimmer,
+  backgroundColor: $COL.greyBlack,
   // slightly darker than glass
   background: [
     // "linear-gradient(180deg, rgba(18,18,18,1), rgba(16,16,16,1))",
