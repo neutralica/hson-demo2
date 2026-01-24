@@ -73,6 +73,12 @@ function withControls<T>(p: Promise<T>, opts?: WaitOpts): Promise<T> {
   });
 }
 
+function timer(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 function waitAnimEvent(
   lt: LiveTree,
   kind: "start" | "end",
@@ -202,7 +208,7 @@ export const race = <T>(promises: readonly Promise<T>[]): Promise<T> => {
  *   await wait.for(stage).pointerDown({ leftOnly: true, signal });
  */
 export const wait = {
-
+timer,
   for: nextPhase,
   // keep race as a plain function (no builder needed)
   race: race,

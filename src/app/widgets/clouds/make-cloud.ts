@@ -178,8 +178,9 @@ export function create_cloud_river(
     const u = i / Math.max(1, t.layers - 1);
 
     const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
+   
+    const circles = Math.round(lerp(80, 140, 1 - u)); // fewer than 200–270; looks cleaner
 
-    const circles = Math.round(lerp(t.circlesMin, t.circlesMax, 1 - u)); // more circles near top = more wispy detail
     const alpha = lerp(t.alphaTop, t.alphaBottom, u);
     const maxAlpha = lerp(0.22, 0.08, u); // bottom=0.22, top=0.08
 
@@ -238,7 +239,6 @@ export function create_cloud_river(
 
       maskSize: `${t.w}px 100%`,
       WebkitMaskSize: `${t.w}px 100%`,
-      // paint color (already correct in your system)
 
       backgroundImage: "none",
       backgroundRepeat: "no-repeat",

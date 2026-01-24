@@ -9,7 +9,7 @@ const shortFlashString = `${shortFlash}ms`;
 export const skyTimeNum = 20000;
 export const skyTimeString = `${skyTimeNum}ms`;
 
-export const cloudTimeNum = 6000;
+export const cloudTimeNum = 4000;
 export const cloudtimeStr = `${cloudTimeNum}ms`
 
 export const sunTimeNum = skyTimeNum - cloudTimeNum;
@@ -241,11 +241,11 @@ export const KF_CLOUD_BAND_LOOP = {
 export const KF_CLOUD_FADE_ONCE = {
   name: "cloud_fade_once",
   steps: {
-    "0%":   {opacity: "1"},
-    "2%":   {opacity: "1"},
+    "0%":   {opacity: "1", bottom: "0"},
+    "2%":   {opacity: "1", bottom: "0"},
 
-    "88%": { opacity: "0"},
-    "100%": { opacity: "0"},
+    "78%": { opacity: "0", bottom: "-156px"},
+    "100%": { opacity: "0", bottom: "-200px"},
   },
 } as const;
 

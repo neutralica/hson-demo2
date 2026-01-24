@@ -12,7 +12,7 @@ import type { LetterKey } from "../../../types/core.types";
 import { $COL } from "../../consts/colors.consts";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
-import { wait } from "../../../utils/wait-for";
+import { wait } from "../../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_cloud_river } from "../../widgets/clouds/make-cloud";
 import type { HsonNode } from "hson-live/types";
@@ -21,8 +21,8 @@ const CLOUD_CONFIG = {
     layers: 8,
     seed: 1211,
     w: CLOUD_TILE_W,
-    circlesMin: 50,
-    circlesMax: 70,
+    circlesMin: 20,
+    circlesMax: 40,
 
 }
 
@@ -150,8 +150,8 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
             willChange: "mask-position, -webkit-mask-position, opacity",
         });
     });
-    await wait.for(clouds![0]!).anim(CLOUD_FADE_ANIM).end();
-    // cloudBox.removeSelf();
+
+    await wait.timer(4000);
     sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
     sun.css.anim.begin(SUN_DISK_ANIM);
     gradient.css.anim.begin(GRADIENT_ANIM);

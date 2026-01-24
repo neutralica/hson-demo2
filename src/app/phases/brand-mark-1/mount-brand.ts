@@ -6,7 +6,7 @@ import { zalgo_unicode, type ZConfig } from "./zalgo";
 import { $COL } from "../../consts/colors.consts";
 import { makeDivId } from "../../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
-import { wait } from "../../../utils/wait-for";
+import { wait } from "../../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
 
