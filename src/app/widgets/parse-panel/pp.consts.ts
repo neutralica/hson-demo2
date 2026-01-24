@@ -1,6 +1,6 @@
 // parse-panels.css.ts
 import type { CssMap } from "hson-live/types";
-import { $COL } from "../consts/colors.consts";
+import { $COL } from "../../consts/colors.consts";
 
 
 /**
@@ -35,7 +35,7 @@ export const PP_ROOT_CSS: CssMap = {
   zIndex: "70",
 
   // The plane itself should be almost invisible.
-  backgroundColor: $COL._backColor,
+  backgroundColor: $COL._bckgd,
 
   // Keep the “projection” feel: faint perimeter + soft lift, NOT a big box.
   boxShadow: [

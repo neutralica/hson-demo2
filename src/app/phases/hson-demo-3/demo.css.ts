@@ -2,10 +2,9 @@
 
 import type { CssMap } from "hson-live/types";
 import { LETTER_CSS, LOGOBOX_CSS, VER_CSS, WORD_CSS } from "../../wordmark/wordmark.css";
-import { $COL, bckColor } from "../../consts/colors.consts";
+import { $COL } from "../../consts/colors.consts";
 
 import { FRAME_CSS } from "../../consts/core.css";
-import { make_stipple_drift_css } from "../../stipple/make-stipple";
 
 
 // “home page” palette: mostly grayscale, small accent per letter (optional)
@@ -104,29 +103,29 @@ export const STAGE_CSS_DEMO: CssMap = {
   // default vars (even if unused initially)
   "--mxp": "50%",
   "--myp": "40%",
-  backgroundColor: $COL._backColor,
+  backgroundColor: $COL._bckgd,
   pointerEvents: "none",
 
 };
 
-export const PORTAL_CSS: CssMap = {
-  position: "absolute",
-  left: "50%",
-  top: "44%",
-  transform: "translate(-50%, -50%)",
-  width: "min(860px, 92vw)",
-  padding: "44px 52px 36px",
-  borderRadius: "16px",
-  background: "linear-gradient(180deg, rgba(24,26,32,0.94), rgba(14,15,18,0.94))",
-  boxShadow: [
-    "0 30px 110px rgba(0,0,0,0.70)",
-    // "inset 0 0 0 1px rgba(255,255,255,0.10)",
-    "inset 0 16px 26px rgba(255,255,255,0.05)",
-    "inset 0 -18px 30px rgba(0,0,0,0.35)",
-  ].join(", "),
-  overflow: "hidden",
-  isolation: "isolate",
-};
+// export const PORTAL_CSS: CssMap = {
+//   position: "absolute",
+//   left: "50%",
+//   top: "44%",
+//   transform: "translate(-50%, -50%)",
+//   width: "min(860px, 92vw)",
+//   padding: "44px 52px 36px",
+//   borderRadius: "16px",
+//   background: "linear-gradient(180deg, rgba(24,26,32,0.94), rgba(14,15,18,0.94))",
+//   boxShadow: [
+//     "0 30px 110px rgba(0,0,0,0.70)",
+//     // "inset 0 0 0 1px rgba(255,255,255,0.10)",
+//     "inset 0 16px 26px rgba(255,255,255,0.05)",
+//     "inset 0 -18px 30px rgba(0,0,0,0.35)",
+//   ].join(", "),
+//   overflow: "hidden",
+//   isolation: "isolate",
+// };
 
 export const LETTER_CSS_DEMO: CssMap = {
   ...LETTER_CSS,
@@ -171,22 +170,6 @@ export const VER_CSS_DEMO: CssMap = {
   color: "rgba(159, 160, 162, 1)",
   opacity: "1",
 };
-
-/**
- * A tight “leather weave” that reads as texture, not “noise”.
- * Use as a top layer with very low alpha.
- */
-export const STIPPLE_WEAVE_TIGHT =
-  [
-    // micro crosshatch
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.020) 0 1px, transparent 1px 3px)",
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.016) 0 1px, transparent 1px 4px)",
-
-    // faint diagonal bias (breaks grid tyranny)
-    "repeating-linear-gradient(45deg, rgba(255,255,255,0.010) 0 1px, transparent 1px 6px)",
-    "repeating-linear-gradient(-45deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 7px)",
-  ].join(", ");
-
 
 /**
  * OUTER SURFACE (user-facing bezel plane)
@@ -235,27 +218,6 @@ export const DEMO_SCREEN_CSS: CssMap = {
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "all",
-  // backgroundColor: $COL.greyDimmer,
-  // background: [
-  //   // $COL.greyDimmer
-  //   // base tone (do not over-darken; let texture do the work)
-  //   // "linear-gradient(180deg, #0f1116, #0c0e12 55%, #090b0f)",
-
-  //   // leather-ish weave
-  //   // STIPPLE_WEAVE_TIGHT,
-  //   // corpo wall grain
-  //   ].join(", "),
-
-  // boxShadow: [
-  //   // edge definition only (tight)
-  //   "inset 0 0 0 1px rgba(255,255,255,0.034)",
-
-  //   // very soft glass bloom (small + subtle)
-  //   "0 0 10px rgba(255,255,255,0.015)",
-
-  //   // tiny “lift” so it doesn’t look switched off
-  //   "0 0 40px rgba(255,255,255,0.030)",
-  // ].join(", "),
 }
 
 export const DEMO_SCREEN_FX_CSS: CssMap = {

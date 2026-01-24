@@ -1,16 +1,17 @@
 // app.ts
 
 import { type LiveTree } from "hson-live";
-import { mount_brand } from "./phases/brand-1/mount-brand";
-import { mount_splash } from "./phases/splash-2/mount-splash";
-import { STAGE_CSS } from "./phases/splash-2/splash.css";
+import { mount_brand } from "./phases/brand-mark-1/mount-brand";
+import { mount_splash } from "./phases/logo-splash-2/mount-splash";
+import { STAGE_CSS } from "./phases/logo-splash-2/splash.css";
 import { _sleep } from "../utils/helpers";
 import { makeDivId } from "../utils/makers";
 import { PHASE_LINGER } from "./consts/config.consts";
 import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from "../utils/skip-promise";
 import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "intrastructure";
-import { mount_demo } from "./phases/demo-3/mount-demo";
-import { make_vines } from "./vines/vines";
+import { mount_demo } from "./phases/hson-demo-3/mount-demo";
+import { make_vines } from "./widgets/vines/vines";
+
 
 const _pause = () => _sleep(PHASE_LINGER);
 const _shortpause = () => _sleep(PHASE_LINGER * 0.15);

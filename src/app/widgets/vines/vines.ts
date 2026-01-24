@@ -1,6 +1,8 @@
 // vines.ts
 
-import { mulberry32 } from "../../utils/rng";
+import { mulberry32 } from "../../../utils/rng";
+
+
 
 export type FlourishOpts = {
   width: number;     // characters

@@ -1,7 +1,7 @@
 //css.consts.ts
 
 import type { CssMap } from "hson-live/types";
-import { bckColor } from "../../../consts/colors.consts";
+import { $COL } from "../../consts/colors.consts";
 
 const LOGOBOX_CSS = {
   display: "flex",
@@ -14,7 +14,7 @@ const LOGOBOX_CSS = {
   overflowY: "hidden",
   color: "white",
   width: "25ch",
-  backgroundColor: bckColor,
+  backgroundColor: $COL._bckgd,
   fontFamily: `monospace`,
 }
 

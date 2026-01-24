@@ -1,4 +1,6 @@
-import { mulberry32 } from "../utils/rng";
+// cols.ts
+
+import { mulberry32 } from "../../../utils/rng";
 
 export type FlutingOpts = {
   width: number;

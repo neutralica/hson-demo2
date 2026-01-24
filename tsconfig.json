@@ -19,6 +19,6 @@
 
     "noEmit": true
   },
-  "include": ["src", "src/app/phases/splash-2/splash.css.ts", "_archive-delete/hson-wasm", "src/app/phases/splash-2/splash.anim-keys.ts"],
+  "include": ["src", "src/app/phases/logo-splash-2/splash.css.ts", "_archive-delete/hson-wasm", "src/app/phases/logo-splash-2/splash.anim-keys.ts"],
   "exclude": ["dist", "node_modules"]
 }

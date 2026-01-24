@@ -1,6 +1,6 @@
 // keyframes.consts.ts
 
-import { PHASE_LINGER } from "../../../consts/config.consts";
+import { PHASE_LINGER } from "../../consts/config.consts";
 
 
 const LOGOBOX_KEYF = {

@@ -1,8 +1,8 @@
 
 // style-wordmark.demo.ts
 import { get_letter_key } from "../../../utils/helpers";
-import { CELL_CSS_DEMO, FRAME_CSS_DEMO, LETTER_ACCENT_DEMO, LETTER_COLOR_DEMO, LETTER_CSS_DEMO, LETTER_HALO_DEMO, LETTER_INK_DEMO, VER6_CSS_DEMO, VER_CSS_DEMO, WORD_CSS_DEMO } from "../../phases/demo-3/demo.css";
-import { FRAME_CSS_SPLASH } from "../../phases/splash-2/splash.css";
+import { CELL_CSS_DEMO, FRAME_CSS_DEMO, LETTER_ACCENT_DEMO, LETTER_COLOR_DEMO, LETTER_CSS_DEMO, LETTER_HALO_DEMO, LETTER_INK_DEMO, VER6_CSS_DEMO, VER_CSS_DEMO, WORD_CSS_DEMO } from "../../phases/hson-demo-3/demo.css";
+import { FRAME_CSS_SPLASH } from "../../phases/logo-splash-2/splash.css";
 import { CELL_CSS } from "../wordmark.css";
 import { O_ROT } from "../wordmark.css";
 import type { WordmarkParts } from "../wordmark.types"; // CHANGE: adjust path

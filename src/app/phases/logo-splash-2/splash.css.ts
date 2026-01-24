@@ -2,8 +2,8 @@
 
 import type { CssMap } from "hson-live/types";
 import { sunColor, sunFade, skyGradient } from "./splash.consts";
-import { bckColor } from "../../consts/colors.consts";
 import { FRAME_CSS } from "../../consts/core.css";
+import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
 
 export const STAGE_CSS: CssMap = {
   position: "fixed",
@@ -11,7 +11,7 @@ export const STAGE_CSS: CssMap = {
   left: "0",
   width: "100vw",
   height: "100vh",
-  backgroundColor: bckColor
+  backgroundColor: $COL._bckgd
 }
 export const SKY_CSS = {
   position: "relative",
@@ -43,6 +43,7 @@ export const SUN_CSS: CssMap = {
   opacity: "0",
   transform: "scale(1.06)",
   willChange: "transform, opacity",
+
 };
 
 export const FLARE_BOX_CSS: CssMap = {
@@ -181,3 +182,32 @@ export const STAR_TAIL_C_CSS: CssMap = {
   filter: "blur(14.4px)",
   opacity: "0",
 };
+
+export const CLOUD_LAYER_BASE_CSS: CssMap = {
+  position: "absolute",
+  left: "0",
+  bottom: "0%",
+  width: "100%",
+  height: "52%",
+  pointerEvents: "none",
+  zIndex: "35",
+
+  // CHANGED: do not set maskImage here (masking strategy is per-layer)
+  // CHANGED: do not set backgroundRepeat/Position/Size here (we're using mask tiling)
+
+  filter: "none",
+  mixBlendMode: "multiply",
+  opacity: "1",
+
+  // CHANGED: we animate mask-position + opacity, not background-position
+  willChange: "mask-position, -webkit-mask-position, opacity",
+};
+
+export const CLOUD_BOX_CSS ={
+        position: "absolute",
+        inset: "0",
+        pointerEvents: "none",
+        zIndex: "40",
+        overflow: "hidden",          // crops the river at the frame edge
+        transform: "translateZ(0)",  // forces compositing; helps mask/filter weirdness
+    }

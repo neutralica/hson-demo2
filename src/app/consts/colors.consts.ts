@@ -12,7 +12,14 @@ const greyDim = "rgba(58, 58, 58, 1)"
 const greyDimmer = "rgba(40, 38, 38, 1)"
 const greyBlack = "rgba(26, 26, 26, 1)"
 
-export const bckColor = "black";
+const bckColorR = 12;
+const bckColorG = 19;
+const bckColorB = 26;
+const bckAlpha = 1;
+const bckColor = `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${bckAlpha})`;
+export const _setBckgdAlpha = (n: number) => {
+  return `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${n <= 1 ? n : 1})`;
+}
 const txtMain = greyLite;
 
 export const LETTER_COLOR_std = {
@@ -25,20 +32,20 @@ export const LETTER_COLOR_std = {
 
 
 export const $COL = {
-    _txtMain: txtMain,
-    _backColor: bckColor,
-    dragonGreen,
-    skyBlue,
-    richCrimson, 
-    heartsBlood,
-    stonerPurple,
-    grey,
-    greyLite,
-    greyMid,
-    greyDim,
-    greyDimmer,
-    greyBlack,
-    
+  _txtmain: txtMain,
+  _bckgd: bckColor,
+  dragonGreen,
+  skyBlue,
+  richCrimson,
+  heartsBlood,
+  stonerPurple,
+  grey,
+  greyLite,
+  greyMid,
+  greyDim,
+  greyDimmer,
+  greyBlack,
+
 
 };
 

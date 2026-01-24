@@ -3,12 +3,12 @@
 import type { LiveTree } from "hson-live";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
-import { Intro_anim, Intro_keys } from "./consts/brand.anim-keys";
-import { Intro_css } from "./consts/brand.css";
 import { $COL } from "../../consts/colors.consts";
 import { makeDivId } from "../../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../../utils/wait-for";
+import { Intro_keys, Intro_anim } from "./brand.anim-keys";
+import { Intro_css } from "./brand.css";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"

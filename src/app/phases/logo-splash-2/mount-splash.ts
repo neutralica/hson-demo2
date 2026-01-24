@@ -1,10 +1,10 @@
 // mount-splash.ts
 
 import { type LiveTree } from "hson-live";
-import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS } from "./splash.css";
+import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS, CLOUD_BOX_CSS } from "./splash.css";
 import { O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
 import { LETTER_COLOR_std } from "../../consts/colors.consts";
-import { GRADIENT_ANIM } from "./splash.anim-keys";
+import { CLOUD_BAND_ANIM, CLOUD_FADE_ANIM, CLOUD_TILE_W, cloudtimeStr, GRADIENT_ANIM, KF_CLOUD_BAND_LOOP, KF_CLOUD_FADE_ONCE } from "./splash.anim-keys";
 import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim-keys";
 import { get_letter_key } from "../../../utils/helpers";
 import { makeDivId } from "../../../utils/makers";
@@ -14,7 +14,17 @@ import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait-for";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
+import { create_cloud_river } from "../../widgets/clouds/make-cloud";
+import type { HsonNode } from "hson-live/types";
 
+const CLOUD_CONFIG = {
+    layers: 8,
+    seed: 1211,
+    w: CLOUD_TILE_W,
+    circlesMin: 50,
+    circlesMax: 70,
+
+}
 
 
 /**
@@ -23,8 +33,26 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
+    const startTime = Date.now();
+    const timerDiv = stage.create.div().css.setMany({
+        position: "fixed",
+        top: "1rem",
+        left: "1rem",
+        border: `${$COL.dragonGreen}`,
+        color: `${$COL.greyLite}`,
+    });
+
     /* create container layers */
     const sky = makeSection(stage, "sky");
+
+    const timerInt = setInterval(() => {
+        if (sky) {
+            timerDiv.setText(`${Date.now() - startTime}`)
+        } else {
+            clearInterval(timerInt);
+            timerDiv.removeSelf();
+        }
+    }, 100)
     /* stacking order matters here: */
     const logoBox = makeDivClass(sky, "hson-logo")
     const frame = makeDivClass(logoBox, "frame");
@@ -33,10 +61,12 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const flare = makeDivClass(flareBox, "lens-flare");
     /* sky gradient */
     const gradient = makeDivClass(frame, "sky-gradient");
+    const cloudBox = makeDivClass(frame, "cloud-box");
+    cloudBox.css.setMany(CLOUD_BOX_CSS);
+    const cloudTree = create_cloud_river(cloudBox /* not frame */, CLOUD_CONFIG);
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
     const sun = makeDivClass(sunCarrier, "sun");
-
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
         const cell = makeSpanClass(hsonWord, ["cell", ltr])
@@ -88,8 +118,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     flare.css.setMany(FLARE_CSS);
     flareBox.css.setMany(FLARE_BOX_CSS);
     gradient.css.setMany(GRADIENT_CSS);
-    sky.css.keyframes.setMany(ANIM_KEYS);
-
 
     /* style letters */
     hsonWord.css.setMany(WORD_CSS);
@@ -104,9 +132,26 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     tailA.css.setMany(STAR_TAIL_A_CSS);
     tailB.css.setMany(STAR_TAIL_B_CSS);
     tailC.css.setMany(STAR_TAIL_C_CSS);
-
-    /* begin animation */
+    const clouds = cloudTree.content.mustOnly()?.content.all();
+    sky.css.keyframes.setMany(ANIM_KEYS);
     frame.css.anim.begin(SKY_ANIM);
+    cloudBox.css.keyframes.set(KF_CLOUD_BAND_LOOP);
+    cloudBox.css.keyframes.set(KF_CLOUD_FADE_ONCE);
+    const L = clouds!.length;
+    clouds!.forEach((cl, i) => {
+        // cl.css.anim.begin(CLOUD_BAND_ANIM);
+        const topFirst = (L - 1 - i);
+        const delay = (topFirst * 0.18).toFixed(2);
+        cl.css.setMany({
+            animation: [
+                `cloud_band_loop ${cloudtimeStr} linear infinite`,
+                `cloud_fade_once 10s linear 1 ${delay}s forwards`,
+            ].join(", "),
+            willChange: "mask-position, -webkit-mask-position, opacity",
+        });
+    });
+    await wait.for(clouds![0]!).anim(CLOUD_FADE_ANIM).end();
+    // cloudBox.removeSelf();
     sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
     sun.css.anim.begin(SUN_DISK_ANIM);
     gradient.css.anim.begin(GRADIENT_ANIM);
