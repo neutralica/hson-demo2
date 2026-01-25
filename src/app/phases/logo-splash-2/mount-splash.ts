@@ -4,21 +4,21 @@ import { type LiveTree } from "hson-live";
 import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS, CLOUD_BOX_CSS } from "./splash.css";
 import { O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
 import { LETTER_COLOR_std } from "../../consts/colors.consts";
-import { CLOUD_BAND_ANIM, CLOUD_FADE_ANIM, CLOUD_TILE_W, cloudtimeStr, GRADIENT_ANIM, KF_CLOUD_BAND_LOOP, KF_CLOUD_FADE_ONCE } from "./splash.anim-keys";
-import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, ANIM_KEYS, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim-keys";
+import { KF_CLOUD_BAND_LOOP_WEBKIT, KF_CLOUD_BOX_FADE, KF_LAYER_FADE } from "./splash.keys";
+import { CLOUD_BAND_ANIM, CLOUD_FADE_ANIM, GRADIENT_ANIM } from "./splash.anim";
+import { CLOUD_TILE_W, cloudTimeNum, cloudtimeStr, sunDelay } from "./splash.consts";
+import { SPLASH_KEYS } from "./splash.keys";
+import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim";
 import { get_letter_key } from "../../../utils/helpers";
-import { makeDivId } from "../../../utils/makers";
 import type { LetterKey } from "../../../types/core.types";
-import { $COL } from "../../consts/colors.consts";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_cloud_river } from "../../widgets/clouds/make-cloud";
-import type { HsonNode } from "hson-live/types";
 
 const CLOUD_CONFIG = {
-    layers: 8,
+    layers: 20,
     seed: 1211,
     w: CLOUD_TILE_W,
     circlesMin: 20,
@@ -26,33 +26,14 @@ const CLOUD_CONFIG = {
 
 }
 
-
 /**
  * this is all very messy but it works; organize/structure calls better TODO
  */
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
-    const startTime = Date.now();
-    const timerDiv = stage.create.div().css.setMany({
-        position: "fixed",
-        top: "1rem",
-        left: "1rem",
-        border: `${$COL.dragonGreen}`,
-        color: `${$COL.greyLite}`,
-    });
-
     /* create container layers */
     const sky = makeSection(stage, "sky");
-
-    const timerInt = setInterval(() => {
-        if (sky) {
-            timerDiv.setText(`${Date.now() - startTime}`)
-        } else {
-            clearInterval(timerInt);
-            timerDiv.removeSelf();
-        }
-    }, 100)
     /* stacking order matters here: */
     const logoBox = makeDivClass(sky, "hson-logo")
     const frame = makeDivClass(logoBox, "frame");
@@ -63,7 +44,22 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const gradient = makeDivClass(frame, "sky-gradient");
     const cloudBox = makeDivClass(frame, "cloud-box");
     cloudBox.css.setMany(CLOUD_BOX_CSS);
-    const cloudTree = create_cloud_river(cloudBox /* not frame */, CLOUD_CONFIG);
+    cloudBox.css.atProperty.register({
+        name: "--layer-fade",
+        syn: "<number>",
+        inh: true,
+        init: "1",
+    });
+
+    cloudBox.css.atProperty.register({
+        name: "--layer-max",
+        syn: "<number>",
+        inh: true,
+        init: "0.1",
+    });
+    cloudBox.css.keyframes.set(KF_LAYER_FADE);
+
+    const cloudRiver = create_cloud_river(cloudBox /* not frame */, CLOUD_CONFIG);
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
     const sun = makeDivClass(sunCarrier, "sun");
@@ -132,32 +128,83 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     tailA.css.setMany(STAR_TAIL_A_CSS);
     tailB.css.setMany(STAR_TAIL_B_CSS);
     tailC.css.setMany(STAR_TAIL_C_CSS);
-    const clouds = cloudTree.content.mustOnly()?.content.all();
-    sky.css.keyframes.setMany(ANIM_KEYS);
+    sky.css.keyframes.setMany(SPLASH_KEYS);
     frame.css.anim.begin(SKY_ANIM);
-    cloudBox.css.keyframes.set(KF_CLOUD_BAND_LOOP);
-    cloudBox.css.keyframes.set(KF_CLOUD_FADE_ONCE);
-    const L = clouds!.length;
-    clouds!.forEach((cl, i) => {
-        // cl.css.anim.begin(CLOUD_BAND_ANIM);
-        const topFirst = (L - 1 - i);
-        const delay = (topFirst * 0.18).toFixed(2);
+
+    cloudBox.css.keyframes.set(KF_CLOUD_BAND_LOOP_WEBKIT);
+    cloudBox.css.keyframes.set(KF_CLOUD_BOX_FADE);
+
+    // Optional global fade for the whole system (slower than layers)
+    cloudBox.css.anim.begin({
+        name: "cloud-box-fade",
+        duration: `${cloudTimeNum}ms`, // CHANGED: slower global fade
+        timingFunction: "linear",
+        iterationCount: "1",
+        fillMode: "forwards",
+        delay: "0s",
+    });
+
+    const clouds = cloudRiver.content.mustOnly()?.content.all();
+    if (!clouds?.length) return relay.err("no length in clouds");
+
+    // Per-layer fade keyframe generator (bakes opacity numerically)
+    const ensure_layer_fade_kf = (i: number, maxOpacity: number): string => {
+        const kfName = `cloud_fade_layer_${i}`;
+
+        cloudBox.css.keyframes.set({
+            name: kfName,
+            steps: {
+                // CHANGED: fade in quickly, hold, then fade out + drop near end
+                "0%": { opacity: "1", bottom: "0px" },
+                "10%": { opacity: String(maxOpacity), bottom: "0px" },
+                "80%": { opacity: String(maxOpacity), bottom: "-80px" },
+                "100%": { opacity: "0", bottom: "-100px" },
+            },
+        } as const);
+
+        return kfName;
+    };
+
+    clouds.forEach((cl, i) => {
+        // 1) scud runs on the paint child (mask-position animation)
+        const paint = cl.content.mustOnly(); // CHANGED: scud target is child
+        paint.css.anim.begin(CLOUD_BAND_ANIM(i));
+
+        // 2) per-layer fade runs once on the parent layer
+        const maxStr = cl.data.get("cloud-max") ?? "0.12"; // CHANGED: hyphen key
+        const max = Number(maxStr);
+
+        const kfName = ensure_layer_fade_kf(i, max);
+
+        cl.css.anim.begin({
+            name: kfName,
+            duration: cloudtimeStr,                 // e.g. "6000ms"
+            timingFunction: "linear",
+            iterationCount: "1",
+            fillMode: "forwards",
+            // CHANGED: top clears first (small stagger, not a big “pause”)
+            // delay: `${(i * 0.14).toFixed(2)}s`,
+        });
+        cl.css.anim.begin({
+            name: "cloud-layer-fade",
+            duration: cloudtimeStr,
+            timingFunction: "linear",
+            iterationCount: "1",
+            fillMode: "forwards",
+            delay: `${(i * 320).toFixed(0)}ms`, // tune: 60–180ms per layer
+        });
         cl.css.setMany({
-            animation: [
-                `cloud_band_loop ${cloudtimeStr} linear infinite`,
-                `cloud_fade_once 10s linear 1 ${delay}s forwards`,
-            ].join(", "),
-            willChange: "mask-position, -webkit-mask-position, opacity",
+            willChange: "opacity, bottom",
         });
     });
 
-    await wait.timer(4000);
+    await wait.timer(sunDelay);
     sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
     sun.css.anim.begin(SUN_DISK_ANIM);
     gradient.css.anim.begin(GRADIENT_ANIM);
     flare.css.anim.begin(FLARE_ANIM);
 
-
+    console.log(cloudtimeStr)
     await wait.for(flare).anim(FLARE_ANIM).end();
     flareBox.removeSelf();
 
@@ -175,7 +222,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     await wait.for(tailC).anim(TAIL_C_ANIM).end();
 
-    ANIM_KEYS.forEach(kf => {
+    SPLASH_KEYS.forEach(kf => {
         sky.css.keyframes.delete(kf.name)
     })
 
@@ -184,6 +231,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     sunCarrier.removeSelf();
     flareBox.removeSelf();
     gradient.removeSelf();
+    sky.removeSelf();
     stage.empty();
     return relay.ok();
 }

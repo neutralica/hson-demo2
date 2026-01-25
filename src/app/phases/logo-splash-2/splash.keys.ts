@@ -1,40 +1,15 @@
-import type { AnimSpec } from "hson-live/types";
 import type { AnimPart } from "./splash.types";
 import { $COL } from "../../consts/colors.consts";
-
-export const CLOUD_TILE_W = 400;
-export const shortFlash = 700; //ms
-const shortFlashString = `${shortFlash}ms`;
-
-export const skyTimeNum = 20000;
-export const skyTimeString = `${skyTimeNum}ms`;
-
-export const cloudTimeNum = 4000;
-export const cloudtimeStr = `${cloudTimeNum}ms`
-
-export const sunTimeNum = skyTimeNum - cloudTimeNum;
-export const sunTimeString = `${sunTimeNum}ms`
-
-export const starTimeNum = 300;
-export const starTimeString = `${starTimeNum}ms`;
-
-export const starDelayNum = skyTimeNum * 0.46;
-export const starDelayString = `${starDelayNum}ms`
-
-export const flareAt = 0.4659; /* time of ideal sun position for flare on a 10-second animation */
-export const flareDelayNum = Math.round(sunTimeNum * flareAt);
-
-const flareLengthNum = 320;
-const flareDurStr = `${flareLengthNum}ms`;
+import { CLOUD_TILE_W } from "./splash.consts";
 
 // keyframes.ts 
-export const ANIM_KEYS = [
+export const SPLASH_KEYS = [
   {
     name: "hson_sky",
     steps: {
       "0%": { background: $COL._bckgd },
       "02%": { background: $COL._bckgd },
-      "70%": { background: "rgba(0,89,255,1)" },
+      "57%": { background: "rgba(0,89,255,1)" },
       "92%": { background: "rgba(0,89,255,1)" },
       "100%": { background: $COL._bckgd },
     },
@@ -149,12 +124,12 @@ export const ANIM_KEYS = [
       "0%": { opacity: "0" },
       "6%": { opacity: "1" },   // fade in quickly
       "16%": { opacity: ".2" },   // fade in quickly
-      "26%": { opacity: ".4" },   // fade in quickly
-      "36%": { opacity: "1" },   // fade in quickly
-      "46%": { opacity: ".3" },   // fade in quickly
-      "65%": { opacity: "6" },   // stay on
-      "85%": { opacity: "0" },   // fade out
-      "100%": { opacity: "1" },
+      "36%": { opacity: ".4" },   // fade in quickly
+      "46%": { opacity: "1" },   // fade in quickly
+      "61%": { opacity: ".3" },   // fade in quickly
+      "65%": { opacity: "0" },   // stay on
+      "80%": { opacity: "0" },   // fade out
+      "100%": { opacity: "0" },
     },
   },
 
@@ -216,159 +191,42 @@ export const ANIM_KEYS = [
       "62%": { opacity: ".2" },
       "72%": { opacity: ".3" },
       "85%": { opacity: ".8" },   // fade in quickly
-      "90%": { opacity: ".6" },   // fade in quickly
+      "90%": { opacity: ".4" },   // fade in quickly
       "96%": { opacity: "0" },
       "100%": { opacity: "0" },
     },
   },
 ]
-export const KF_CLOUD_BAND_LOOP = {
-  name: "cloud_band_loop",
+
+// Optional global fade for the whole cloudBox (keep if you want)
+export const KF_CLOUD_BOX_FADE = {
+  name: "cloud-box-fade",
   steps: {
-    "0%": {
-      maskPosition: "var(--cloud_phase_px) 100%, 0px 100%",
-      WebkitMaskPosition: "var(--cloud_phase_px) 100%, 0px 100%",
-    },
-    "100%": {
-      // CHANGED: slide ONLY the SVG tile (mask layer 1) left by exactly one tile width.
-      // fade layer (mask layer 2) stays pinned.
-      maskPosition: `calc(var(--cloud_phase_px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
-      WebkitMaskPosition: `calc(var(--cloud_phase_px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
-    },
+    "0%": { opacity: "1" },
+    "70%": { opacity: "1" },
+    "100%": { opacity: "0" },
   },
 } as const;
-
-export const KF_CLOUD_FADE_ONCE = {
-  name: "cloud_fade_once",
+export const KF_LAYER_FADE = {
+  name: "cloud-layer-fade",
   steps: {
-    "0%":   {opacity: "1", bottom: "0"},
-    "2%":   {opacity: "1", bottom: "0"},
-
-    "78%": { opacity: "0", bottom: "-156px"},
-    "100%": { opacity: "0", bottom: "-200px"},
+    "0%":   { "--layer-fade": "1" },
+    "10%":  { "--layer-fade": "1" },
+    "20%":  { "--layer-fade": "0" },
+    "100%": { "--layer-fade": "0" },
   },
 } as const;
+export const KF_CLOUD_BAND_LOOP_WEBKIT = {
+    name: "cloud-band-loop",
+    steps: {
+        "0%": {
+            "mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
+            "-webkit-mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
+        },
+        "100%": {
+            "mask-position": `calc(var(--cloud-phase-px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
+            "-webkit-mask-position": `calc(var(--cloud-phase-px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
+        },
+    },
+} as const;
 
-export const SKY_ANIM = {
-  name: "hson_sky",
-  duration: skyTimeString,
-  timingFunction: "ease-in-out",
-  fillMode: "forwards",
-}
-
-export const GRADIENT_ANIM = {
-  name: "gradient-opacity",
-  duration: sunTimeString,
-  timingFunction: "ease-in-out",
-  fillMode: "forwards",
-}
-
-export const STAR_MOVE_ANIM: AnimSpec = {
-  name: "hson_star_move",
-  delay: "2000ms",
-  duration: starTimeString,
-  timingFunction: "linear",
-  iterationCount: "1",
-  fillMode: "forwards",
-};
-
-export const STARSHINE_ANIM: AnimSpec = {
-  name: "hson_letter_starshine",
-  delay: starDelayString,
-  duration: `${starTimeNum / 2}ms`,
-  timingFunction: "linear",
-  iterationCount: "1",
-  fillMode: "none",
-};
-
-export const VER_ANIM: AnimSpec = {
-  name: "hson_ver",
-  duration: shortFlashString,
-  delay: "2000ms",
-  timingFunction: "ease-out",
-  fillMode: "forwards",
-}
-
-export const NEON_FLASH = {
-  name: "hson_letters",
-  duration: shortFlashString,
-  timingFunction: "ease-in-out",
-  fillMode: "forwards",
-}
-
-export const SUN_DISK_ANIM = {
-  name: "hson_sun_disk",
-  duration: sunTimeString,
-  timingFunction: "ease-in-out",
-  fillMode: "forwards",
-}
-
-export const SUN_CARRIER_ANIM = {
-  name: "hson_sun_path",
-  duration: sunTimeString,
-  timingFunction: "linear",
-  fillMode: "forwards",
-}
-
-export const FLARE_ANIM: AnimSpec = {
-  name: "hson_lens_flare",
-  duration: flareDurStr,
-  timingFunction: "cubic-bezier(0.2, 0.9, 0.2, 1)",
-  delay: `${flareDelayNum}ms`,
-  iterationCount: "1",
-  fillMode: "both",    // keep opacity=0 before, return to 0 after
-};
-
-const starAnimBase = {
-  duration: starTimeString,
-  timingFunction: "linear",
-  fillMode: "forwards",
-  delay: starDelayString,
-  iterationCount: "1",
-}
-
-export const STAR_CARRIER_ANIM = {
-  name: "hson_star_move",
-  ...starAnimBase,
-}
-
-export const STAR_HEAD_ANIM = {
-  name: "hson_star_head",
-  ...starAnimBase
-}
-
-export const TAIL_A_ANIM = {
-  name: "hson_star_tail_a",
-  ...starAnimBase,
-  duration: `${starTimeNum * 2.5}ms`,
-}
-export const TAIL_B_ANIM = {
-  name: "hson_star_tail_b",
-  ...starAnimBase,
-  duration: `${starTimeNum * 12.5}ms`,
-}
-
-export const TAIL_C_ANIM = {
-  name: "hson_star_tail_c",
-  ...starAnimBase,
-  duration: `${starTimeNum * 23.5}ms`,
-};
-
-// CHANGED: infinite motion, starts immediately
-export const CLOUD_BAND_ANIM: AnimSpec = {
-  name: "cloud_band_loop",
-  duration: "1s",          // e.g. "7s"
-  timingFunction: "linear",
-  iterationCount: "infinite",
-  fillMode: "both",
-  delay: "0s",
-};
-
-export const CLOUD_FADE_ANIM: AnimSpec = {
-  name: "cloud_fade_once",
-  duration: cloudtimeStr,                // total life of clouds
-  timingFunction: "linear",
-  iterationCount: "1",
-  fillMode: "forwards",
-  delay: "0s",
-};

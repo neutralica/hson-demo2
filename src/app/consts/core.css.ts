@@ -1,6 +1,8 @@
 // core-css.ts
 
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "../../../../hson-live/dist/types/css.types";
+
+
 
 
 export const FRAME_CSS: CssMap = {

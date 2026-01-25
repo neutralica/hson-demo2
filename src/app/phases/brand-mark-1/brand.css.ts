@@ -1,6 +1,6 @@
 //css.consts.ts
 
-import type { CssMap } from "hson-live/types";
+import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
 import { $COL } from "../../consts/colors.consts";
 
 const LOGOBOX_CSS = {

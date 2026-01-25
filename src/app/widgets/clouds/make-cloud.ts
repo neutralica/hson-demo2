@@ -3,7 +3,7 @@ import { makeDivClass, makeDivId } from "../../../utils/makers";
 import { mulberry32 } from "../../../utils/rng";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
 import { $COL } from "../../consts/colors.consts";
-import { CLOUD_TILE_W } from "../../phases/logo-splash-2/splash.anim-keys";
+import { CLOUD_TILE_W, cloudTimeNum } from "../../phases/logo-splash-2/splash.consts";
 
 // const CLOUD_PX_PER_SEC = 220; // push this hard for debugging
 // const cloudDurSec = Math.max(3, CLOUD_TILE_W / CLOUD_PX_PER_SEC);
@@ -30,9 +30,8 @@ export type CloudSvgOpts = {
   ySpreadPct: number;
   rMin: number;
   rMax: number;
-  alpha: number;   // currently unused for mask-only; keep if you want later
+  alpha: number;   // currently unused 
   blur?: number;
-  // ADDED:
   fillBelowPct?: number;
 };
 
@@ -154,108 +153,150 @@ const noise1d = (x: number, period: number, seed: number): number => {
   return lerp(a, b, u); // [0,1]
 };
 
-export function create_cloud_river(
-  tree: LiveTree,
-  tune?: Partial<CloudTune>
-): LiveTree {
-  console.log('create cloud river')
+
+export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): LiveTree {
   const t: CloudTune = {
     layers: 15,
     seed: 1919,
+
+    // NOTE: alpha values not used inside SVG anymore (mask-only),
+    // but keeping them in tune is fine.
     alphaTop: 0.04,
     alphaBottom: 0.12,
-    blurTop: 0/* 0.45 */,
-    blurBottom: 0/* 1.25 */,
-    w: 900,
+
+    blurTop: 0,
+    blurBottom: 0,
+
+    w: CLOUD_TILE_W,     // IMPORTANT: should equal CLOUD_TILE_W
     h: 220,
+
     circlesMin: 22,
     circlesMax: 34,
     ...tune,
   };
 
-  const layers: LiveTree = makeDivId(tree, 'cloud-layer');
+  const layers = makeDivId(tree, "cloud-layer");
+
   for (let i = 0; i < t.layers; i++) {
     const u = i / Math.max(1, t.layers - 1);
-
     const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
-   
-    const circles = Math.round(lerp(80, 140, 1 - u)); // fewer than 200–270; looks cleaner
-
-    const alpha = lerp(t.alphaTop, t.alphaBottom, u);
-    const maxAlpha = lerp(0.22, 0.08, u); // bottom=0.22, top=0.08
-
-    const blur = lerp(t.blurTop, t.blurBottom, u);
-    // CHANGED: top layer much higher; bottom layer much lower
-    const yBandPct = lerp(18, 88, u);
-
-    // CHANGED: thickness can still grow downward
+    // CHANGED: keep band placement in 0..100 range (percent)
+    const yBandPct = lerp(5, 90, u);
     const ySpreadPct = lerp(16, 34, u);
 
-    // OPTIONAL: if you keep fillBelowPct at all, make it track the band
-    const fillBelowPct = yBandPct + lerp(2, 6, u);
+    const circles = Math.round(lerp(80, 140, 1 - u));
+    const blur = lerp(t.blurTop, t.blurBottom, u);
+
     const bg = make_cloud_svg_data_uri({
       seed,
       w: t.w,
       h: t.h,
       circles,
       yBandPct,
-      ySpreadPct,      // thickness
+      ySpreadPct,
       rMin: lerp(10, 18, u),
       rMax: lerp(28, 52, u),
-      alpha,
+      alpha: 1, // mask-only
       blur,
-      fillBelowPct
     });
+
     const layer = makeDivClass(layers, ["cloud-layer", `cloud-${i}`]);
+
+    // CHANGED: deterministic phase per layer; var lives on parent
     const phasePx = Math.round(mulberry32(seed)() * t.w);
-    layer.css.setMany(CLOUD_LAYER_BASE_CSS);
-    const baseOpacity = lerp(0.10, 0.22, u).toFixed(3);
+    layer.css.set.var("--cloud-phase-px", `${phasePx}px`);
 
+    // CHANGED: expose per-layer max opacity to mount_splash (hyphen key)
+    // (bottom stronger, top weaker)
+    const maxAlpha = lerp(0.22, 0.08, u);
+    layer.data.set("cloud-max", maxAlpha.toFixed(3));
+    // CHANGED: per-layer static strength (you already compute this)
+    layer.css.set.var("--layer-max", maxAlpha.toFixed(3));
+
+    // ADDED: animated multiplier starts at 1
+    layer.css.set.var("--layer-fade", "1");
+
+    // CHANGED: opacity becomes product (don’t also set opacity elsewhere)
+    layer.css.set.opacity("calc(var(--layer-max) * var(--layer-fade))");
+
+    // Parent layer is just a container for fade/drop (no mask here)
     layer.css.setMany({
-      "--cloud_phase_px": `${phasePx}px`,
-      // vertical stacking
-      bottom: "0%",
-      height: "100%",
-      left: "0",
-      width: "100%",
+      position: "absolute",
+      inset: "0",
+      pointerEvents: "none",
       zIndex: String(35 + i),
-      // per-layer max strength
-      "--cloud_max": maxAlpha.toFixed(3),
+      willChange: "opacity, bottom",
+    });
+    const cloudDropPct = 25;
 
-      // start hidden; fade anim will drive this
-      "--cloud_fade": "0",
-      opacity: baseOpacity,
-
+    // Child does the mask scud and holds the “ink” color
+    const paint = layer.create.div();
+    const paintClass = `cloud-paint-${i}`;
+    paint.classlist.add("cloud-paint", paintClass);
+    paint.css.setMany({
+      position: "absolute",
+      inset: "0",
+      height: `${100 + cloudDropPct}%`,
+      // CHANGED: clouds are literally the background color
       backgroundColor: $COL._bckgd,
+      transform: `translateY(${cloudDropPct}%)`,
 
-      maskImage: bg,
-      WebkitMaskImage: bg,
-
-      maskRepeat: "repeat-x",
-      WebkitMaskRepeat: "repeat-x",
-
-      maskPosition: "var(--cloud_phase_px) 100%",
-      WebkitMaskPosition: "var(--cloud_phase_px) 100%",
-
-      maskSize: `${t.w}px 100%`,
-      WebkitMaskSize: `${t.w}px 100%`,
-
-      backgroundImage: "none",
-      backgroundRepeat: "no-repeat",
-      backgroundSize: "auto",
-      backgroundPosition: "0% 0%",
-      // ---- MASK COMPOSITION ----
-      // 1) SVG silhouette
-      // 2) vertical fade
-
-      // intersect the two masks
-      // maskComposite: "intersect",
-      // WebkitMaskComposite: "source-in",
-
-      // eliminate color surprises
       mixBlendMode: "normal",
       filter: "none",
+      willChange: "mask-position, -webkit-mask-position",
     });
+
+    // Work around WebKit-prefixed mask properties being canonicalized incorrectly
+    // by pushing the mask declarations through raw global CSS text.
+    layer.css.globals.set(
+      `cloud-mask-${i}`,
+      [
+        `.${paintClass} {`,
+        `  mask-image: ${bg}, ${fade};`,
+        `  -webkit-mask-image: ${bg}, ${fade};`,
+        `  mask-repeat: repeat-x, no-repeat;`,
+        `  -webkit-mask-repeat: repeat-x, no-repeat;`,
+        `  mask-position: var(--cloud-phase-px) 100%, 0px 100%;`,
+        `  -webkit-mask-position: var(--cloud-phase-px) 100%, 0px 100%;`,
+        `  mask-size: ${t.w}px 100%, 100% 100%;`,
+        `  -webkit-mask-size: ${t.w}px 100%, 100% 100%;`,
+        `  mask-composite: intersect;`,
+        `  -webkit-mask-composite: source-in;`,
+        `}`,
+      ].join("\n"),
+    );
+
+    const far = 1 - u;
+
+    // easeOut-ish curve (adjust exponent 1.6–3.0)
+    const curved = Math.pow(far, 1.2);
+    const perLayerBase = 1 / t.layers;               // keeps total energy sane
+    const gain = 2.8;                               // tune
+    const opacity = Math.min(1, perLayerBase * gain * (0.35 + 0.65 * curved));
+
+    const slowMul = 1.1;
+    const fastMul = .01;
+    const mul = fastMul + (slowMul - fastMul) * curved;
+
+    const bandDurationMs = Math.round(cloudTimeNum * mul);
+    // layer.css.set.opacity(opacity.toFixed(3));
+    layer.css.globals.set(
+      `cloud-band-anim-${i}`,
+      [
+        `.${paintClass} {`,
+        `  animation-name: cloud-band-loop;`,
+        `  animation-duration: ${bandDurationMs}ms;`,
+        `  animation-timing-function: linear;`,
+        `  animation-iteration-count: infinite;`,
+        `  animation-fill-mode: both;`,
+        `  animation-delay: 0s;`,
+        `}`,
+      ].join("\n"),
+    );
+
+    // OPTIONAL: if you want easy access later
+    paint.data?.set?.("is-cloud-paint", "1"); // only if you have data on all nodes
   }
+
   return layers;
 }

@@ -73,9 +73,13 @@ function withControls<T>(p: Promise<T>, opts?: WaitOpts): Promise<T> {
   });
 }
 
-function timer(ms: number): Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
+function timer(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(id);
+      reject(new DOMException("Aborted", "AbortError"));
+    });
   });
 }
 

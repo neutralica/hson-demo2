@@ -1,4 +1,5 @@
-import type { KeyframesInput } from "../../../../../hson-live/dist/types-consts/keyframes.types";
+import type { KeyframesInput } from "hson-live/types";
+
 
 
 export const KF_STIPPLE_PLANE_DRIFT: KeyframesInput = {

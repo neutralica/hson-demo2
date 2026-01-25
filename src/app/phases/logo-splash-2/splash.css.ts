@@ -188,18 +188,18 @@ export const CLOUD_LAYER_BASE_CSS: CssMap = {
   left: "0",
   bottom: "0%",
   width: "100%",
-  height: "52%",
+  height: "100%",
   pointerEvents: "none",
   zIndex: "35",
 
-  // CHANGED: do not set maskImage here (masking strategy is per-layer)
-  // CHANGED: do not set backgroundRepeat/Position/Size here (we're using mask tiling)
+  //  do not set maskImage here (masking strategy is per-layer)
+  // do not set backgroundRepeat/Position/Size here (we're using mask tiling)
 
   filter: "none",
-  mixBlendMode: "multiply",
-  opacity: "1",
+  mixBlendMode: "normal",
+  // opacity: "1",
 
-  // CHANGED: we animate mask-position + opacity, not background-position
+  //  animate mask-position + opacity, not background-position
   willChange: "mask-position, -webkit-mask-position, opacity",
 };
 

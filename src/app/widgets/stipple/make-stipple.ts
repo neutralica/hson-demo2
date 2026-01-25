@@ -1,7 +1,7 @@
 // stipple.system.ts
 import type { LiveTree } from "hson-live";
-import type { KeyframesInput } from "../../../../../hson-live/dist/types-consts/keyframes.types";
 import { mulberry32 } from "../../../utils/rng";
+import type { KeyframesInput } from "hson-live/types";
 
 /************************
  *  abandoned for now  *
