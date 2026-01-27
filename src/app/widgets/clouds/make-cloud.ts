@@ -1,25 +1,19 @@
-import type { LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId } from "../../../utils/makers";
 import { mulberry32 } from "../../../utils/rng";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
-import { $COL } from "../../consts/colors.consts";
-import { CLOUD_TILE_W, cloudTimeNum } from "../../phases/logo-splash-2/splash.consts";
+import { $COL, _bckRGB, _setBckgdAlpha } from "../../consts/colors.consts";
+import { CLOUD_TILE_W, CLOUD_DURnum } from "../../phases/logo-splash-2/splash.consts";
 
-// const CLOUD_PX_PER_SEC = 220; // push this hard for debugging
-// const cloudDurSec = Math.max(3, CLOUD_TILE_W / CLOUD_PX_PER_SEC);
-// const cloudtimeStr = `${cloudDurSec.toFixed(2)}s`;
 
-const BASE_BOTTOM_PCT = -20;   // where the lowest cloud band sits
-const STEP_BOTTOM_PCT = 10;    // vertical separation between bands
-
-const FADE_SOLID_PCT = 72;    // solid mask until here
-const FADE_MID_PCT = 86;      // start thinning here
+const FADE_SOLID_PCT = 0;    // solid mask until here
+const FADE_MID_PCT = 10;      // start thinning here
 const FADE_MID_ALPHA = 0.65;  // how strong mid-fade is
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  rgba(255,255,255,${FADE_MID_ALPHA}) ${FADE_MID_PCT}%,
-  rgba(255,255,255,0) 100%
+  ${$COL._bckgd} ${FADE_MID_PCT}%,
+  ${$COL._bckgd} 100%
 )`;
 export type CloudSvgOpts = {
   seed: number;
@@ -154,7 +148,7 @@ const noise1d = (x: number, period: number, seed: number): number => {
 };
 
 
-export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): LiveTree {
+export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTree {
   const t: CloudTune = {
     layers: 15,
     seed: 1919,
@@ -164,7 +158,7 @@ export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): L
     alphaTop: 0.04,
     alphaBottom: 0.12,
 
-    blurTop: 0,
+    blurTop: 1,
     blurBottom: 0,
 
     w: CLOUD_TILE_W,     // IMPORTANT: should equal CLOUD_TILE_W
@@ -175,13 +169,13 @@ export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): L
     ...tune,
   };
 
-  const layers = makeDivId(tree, "cloud-layer");
+  const wrapper = makeDivId(tree, "cloud-wrapper");
 
   for (let i = 0; i < t.layers; i++) {
     const u = i / Math.max(1, t.layers - 1);
     const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
     // CHANGED: keep band placement in 0..100 range (percent)
-    const yBandPct = lerp(5, 90, u);
+    const yBandPct = lerp(15, 95, u);
     const ySpreadPct = lerp(16, 34, u);
 
     const circles = Math.round(lerp(80, 140, 1 - u));
@@ -200,7 +194,7 @@ export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): L
       blur,
     });
 
-    const layer = makeDivClass(layers, ["cloud-layer", `cloud-${i}`]);
+    const layer = makeDivClass(wrapper, ["cloud-layer", `cloud-${i}`]);
 
     // CHANGED: deterministic phase per layer; var lives on parent
     const phasePx = Math.round(mulberry32(seed)() * t.w);
@@ -208,39 +202,43 @@ export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): L
 
     // CHANGED: expose per-layer max opacity to mount_splash (hyphen key)
     // (bottom stronger, top weaker)
-    const maxAlpha = lerp(0.22, 0.08, u);
+    const maxAlpha = lerp(0.02, 0.28, u);
+    // per-layer static strength (you already compute this)
     layer.data.set("cloud-max", maxAlpha.toFixed(3));
-    // CHANGED: per-layer static strength (you already compute this)
-    layer.css.set.var("--layer-max", maxAlpha.toFixed(3));
-
-    // ADDED: animated multiplier starts at 1
-    layer.css.set.var("--layer-fade", "1");
-
-    // CHANGED: opacity becomes product (don’t also set opacity elsewhere)
-    layer.css.set.opacity("calc(var(--layer-max) * var(--layer-fade))");
-
-    // Parent layer is just a container for fade/drop (no mask here)
     layer.css.setMany({
+      "--layer-max": maxAlpha.toFixed(3),
+      "--layer-fade": "1",
+      /*  *ONLY SET OPACITY HERE* */
+      opacity: "calc(var(--layer-max) * var(--layer-fade))",
+
+
       position: "absolute",
       inset: "0",
       pointerEvents: "none",
       zIndex: String(35 + i),
       willChange: "opacity, bottom",
     });
+
     const cloudDropPct = 25;
 
     // Child does the mask scud and holds the “ink” color
-    const paint = layer.create.div();
-    const paintClass = `cloud-paint-${i}`;
-    paint.classlist.add("cloud-paint", paintClass);
+    const paintIxClass = `cloud-paint-${i}`;
+    const paint = makeDivClass(layer, paintIxClass)
     paint.css.setMany({
       position: "absolute",
       inset: "0",
       height: `${100 + cloudDropPct}%`,
-      // CHANGED: clouds are literally the background color
       backgroundColor: $COL._bckgd,
       transform: `translateY(${cloudDropPct}%)`,
-
+      backgroundImage: [
+        `linear-gradient(${$COL._bckgd}, ${$COL._bckgd})`,
+        `linear-gradient(` +
+        `to top, ` +
+        `rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, calc(0.00 + 0.10 * var(--sun-kiss))) 0%, ` +
+        `rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, calc(0.00 + 0.06 * var(--sun-kiss))) 55%, ` +
+        `rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b},  0) 100%` +
+        `)`,
+      ].join(", "),
       mixBlendMode: "normal",
       filter: "none",
       willChange: "mask-position, -webkit-mask-position",
@@ -248,23 +246,25 @@ export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): L
 
     // Work around WebKit-prefixed mask properties being canonicalized incorrectly
     // by pushing the mask declarations through raw global CSS text.
-    layer.css.globals.set(
-      `cloud-mask-${i}`,
-      [
-        `.${paintClass} {`,
-        `  mask-image: ${bg}, ${fade};`,
-        `  -webkit-mask-image: ${bg}, ${fade};`,
-        `  mask-repeat: repeat-x, no-repeat;`,
-        `  -webkit-mask-repeat: repeat-x, no-repeat;`,
-        `  mask-position: var(--cloud-phase-px) 100%, 0px 100%;`,
-        `  -webkit-mask-position: var(--cloud-phase-px) 100%, 0px 100%;`,
-        `  mask-size: ${t.w}px 100%, 100% 100%;`,
-        `  -webkit-mask-size: ${t.w}px 100%, 100% 100%;`,
-        `  mask-composite: intersect;`,
-        `  -webkit-mask-composite: source-in;`,
-        `}`,
-      ].join("\n"),
-    );
+    const cssgl = CssManager.globals.invoke()
+    cssgl.sel(`.${paintIxClass}`)
+      .setMany({
+        maskImage: `${bg}, ${fade}`,
+        WebkitMaskImage: `${bg}, ${fade}`,
+
+        maskRepeat: "repeat-x, no-repeat",
+        WebkitMaskRepeat: "repeat-x, no-repeat",
+
+        maskPosition: "var(--cloud-phase-px) 100%, 0px 100%",
+        WebkitMaskPosition: "var(--cloud-phase-px) 100%, 0px 100%",
+
+        maskSize: `${t.w}px 100%, 100% 100%`,
+        WebkitMaskSize: `${t.w}px 100%, 100% 100%`,
+
+        // NOTE: these are “weird” across engines; keep exactly what worked.
+        maskComposite: "intersect",
+        WebkitMaskComposite: "source-in",
+      });
 
     const far = 1 - u;
 
@@ -278,25 +278,21 @@ export function create_cloud_river(tree: LiveTree, tune?: Partial<CloudTune>): L
     const fastMul = .01;
     const mul = fastMul + (slowMul - fastMul) * curved;
 
-    const bandDurationMs = Math.round(cloudTimeNum * mul);
+    const bandDurationMs = Math.round(CLOUD_DURnum * mul);
     // layer.css.set.opacity(opacity.toFixed(3));
-    layer.css.globals.set(
-      `cloud-band-anim-${i}`,
-      [
-        `.${paintClass} {`,
-        `  animation-name: cloud-band-loop;`,
-        `  animation-duration: ${bandDurationMs}ms;`,
-        `  animation-timing-function: linear;`,
-        `  animation-iteration-count: infinite;`,
-        `  animation-fill-mode: both;`,
-        `  animation-delay: 0s;`,
-        `}`,
-      ].join("\n"),
-    );
+    cssgl.sel(`.${paintIxClass}`)
+      .setMany({
+        animationName: "cloud-band-loop",
+        animationDuration: `${bandDurationMs}ms`,
+        animationTimingFunction: "linear",
+        animationIterationCount: "infinite",
+        animationFillMode: "both",
+        animationDelay: "0s",
+      });
 
     // OPTIONAL: if you want easy access later
     paint.data?.set?.("is-cloud-paint", "1"); // only if you have data on all nodes
   }
 
-  return layers;
+  return wrapper;
 }

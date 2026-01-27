@@ -1,7 +1,7 @@
 // css.consts.ts
 
 import type { CssMap } from "hson-live/types";
-import { sunColor, sunFade, skyGradient } from "./splash.consts";
+import { sunColor, sunFade, SKY_GRADIENT } from "./splash.consts";
 import { FRAME_CSS } from "../../consts/core.css";
 import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
 
@@ -96,7 +96,7 @@ export const GRADIENT_CSS: CssMap = {
   zIndex: 90,
   opacity: 0,
   willChange: "opacity",
-  background: skyGradient,
+  background: SKY_GRADIENT,
 }
 
 export const STAR_CARRIER_CSS: CssMap = {
@@ -203,11 +203,11 @@ export const CLOUD_LAYER_BASE_CSS: CssMap = {
   willChange: "mask-position, -webkit-mask-position, opacity",
 };
 
-export const CLOUD_BOX_CSS ={
-        position: "absolute",
-        inset: "0",
-        pointerEvents: "none",
-        zIndex: "40",
-        overflow: "hidden",          // crops the river at the frame edge
-        transform: "translateZ(0)",  // forces compositing; helps mask/filter weirdness
-    }
+export const CLOUD_BOX_CSS = {
+  position: "absolute",
+  inset: "0",
+  pointerEvents: "none",
+  zIndex: "40",
+  overflow: "hidden",          // crops the river at the frame edge
+  transform: "translateZ(0)",  // forces compositing; helps mask/filter weirdness
+}

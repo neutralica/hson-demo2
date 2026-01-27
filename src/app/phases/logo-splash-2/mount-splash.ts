@@ -4,27 +4,18 @@ import { type LiveTree } from "hson-live";
 import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS, CLOUD_BOX_CSS } from "./splash.css";
 import { O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
 import { LETTER_COLOR_std } from "../../consts/colors.consts";
-import { KF_CLOUD_BAND_LOOP_WEBKIT, KF_CLOUD_BOX_FADE, KF_LAYER_FADE } from "./splash.keys";
-import { CLOUD_BAND_ANIM, CLOUD_FADE_ANIM, GRADIENT_ANIM } from "./splash.anim";
-import { CLOUD_TILE_W, cloudTimeNum, cloudtimeStr, sunDelay } from "./splash.consts";
+import { kf_CLOUD_LOOP, kf_CLOUD_SUN_KISS, kf_LAYER_FADE } from "./splash.keys";
+import { anim_CLOUD_LOOP, anim_CLOUD_LAYER_FADE, anim_CLOUD_SUN_KISS, GRADIENTanim } from "./splash.anim";
+import { AT_LAYER_FADE, AT_LAYER_MAX, CLOUD_CONFIG, CLOUD_DURnum, CLOUD_DURstr, SUN_DELnum } from "./splash.consts";
 import { SPLASH_KEYS } from "./splash.keys";
-import { FLARE_ANIM, NEON_FLASH, SKY_ANIM, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE_ANIM, SUN_CARRIER_ANIM, SUN_DISK_ANIM, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VER_ANIM } from "./splash.anim";
+import { FLAREanim, NEON_FLASHanim, SKYanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_CARRIERanim, SUN_DISKanim, TAIL_A_ANIM, TAIL_B_ANIM, TAIL_C_ANIM, VERanim } from "./splash.anim";
 import { get_letter_key } from "../../../utils/helpers";
 import type { LetterKey } from "../../../types/core.types";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
 import { makeDivClass, makeSection, makeSpanClass } from "../../../utils/makers";
 import { wait } from "../../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
-import { create_cloud_river } from "../../widgets/clouds/make-cloud";
-
-const CLOUD_CONFIG = {
-    layers: 20,
-    seed: 1211,
-    w: CLOUD_TILE_W,
-    circlesMin: 20,
-    circlesMax: 40,
-
-}
+import { create_clouds } from "../../widgets/clouds/make-cloud";
 
 /**
  * this is all very messy but it works; organize/structure calls better TODO
@@ -44,22 +35,12 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const gradient = makeDivClass(frame, "sky-gradient");
     const cloudBox = makeDivClass(frame, "cloud-box");
     cloudBox.css.setMany(CLOUD_BOX_CSS);
-    cloudBox.css.atProperty.register({
-        name: "--layer-fade",
-        syn: "<number>",
-        inh: true,
-        init: "1",
-    });
+    cloudBox.css.atProperty.register(AT_LAYER_FADE);
+    cloudBox.css.atProperty.register(AT_LAYER_MAX);
+    const wrapper = create_clouds(cloudBox /* not frame */, CLOUD_CONFIG).content.mustOnly();
+    const clouds = wrapper.content.all();
+    if (!clouds?.length) return relay.err("no clouds created");
 
-    cloudBox.css.atProperty.register({
-        name: "--layer-max",
-        syn: "<number>",
-        inh: true,
-        init: "0.1",
-    });
-    cloudBox.css.keyframes.set(KF_LAYER_FADE);
-
-    const cloudRiver = create_cloud_river(cloudBox /* not frame */, CLOUD_CONFIG);
     /* create sun */
     const sunCarrier = makeDivClass(hsonWord, "sun-carrier");
     const sun = makeDivClass(sunCarrier, "sun");
@@ -105,6 +86,11 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     h.css.set.transform("translateX(13px)");  // tiny nudges
     s.css.set.transform("translateX(6px)");
     o.css.setMany(O_ROT); // rotate 'O'
+    
+    hsonWord.css.setMany(WORD_CSS);
+    letters.forEach(l => l.css.setMany(LETTER_CSS));
+    ver.css.setMany(VER_CSS);
+    ver6.css.setMany(VER6_CSS);
 
     /* style frame/sky/sun */
     sky.css.setMany(SKY_CSS);
@@ -115,11 +101,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     flareBox.css.setMany(FLARE_BOX_CSS);
     gradient.css.setMany(GRADIENT_CSS);
 
-    /* style letters */
-    hsonWord.css.setMany(WORD_CSS);
-    letters.forEach(l => l.css.setMany(LETTER_CSS));
-    ver.css.setMany(VER_CSS);
-    ver6.css.setMany(VER6_CSS);
 
     /* style star */
     starCarrier.css.setMany(STAR_CARRIER_CSS);
@@ -129,110 +110,52 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     tailB.css.setMany(STAR_TAIL_B_CSS);
     tailC.css.setMany(STAR_TAIL_C_CSS);
     sky.css.keyframes.setMany(SPLASH_KEYS);
-    frame.css.anim.begin(SKY_ANIM);
+    frame.css.anim.begin(SKYanim);
 
-    cloudBox.css.keyframes.set(KF_CLOUD_BAND_LOOP_WEBKIT);
-    cloudBox.css.keyframes.set(KF_CLOUD_BOX_FADE);
-
-    // Optional global fade for the whole system (slower than layers)
-    cloudBox.css.anim.begin({
-        name: "cloud-box-fade",
-        duration: `${cloudTimeNum}ms`, // CHANGED: slower global fade
-        timingFunction: "linear",
-        iterationCount: "1",
-        fillMode: "forwards",
-        delay: "0s",
-    });
-
-    const clouds = cloudRiver.content.mustOnly()?.content.all();
-    if (!clouds?.length) return relay.err("no length in clouds");
-
-    // Per-layer fade keyframe generator (bakes opacity numerically)
-    const ensure_layer_fade_kf = (i: number, maxOpacity: number): string => {
-        const kfName = `cloud_fade_layer_${i}`;
-
-        cloudBox.css.keyframes.set({
-            name: kfName,
-            steps: {
-                // CHANGED: fade in quickly, hold, then fade out + drop near end
-                "0%": { opacity: "1", bottom: "0px" },
-                "10%": { opacity: String(maxOpacity), bottom: "0px" },
-                "80%": { opacity: String(maxOpacity), bottom: "-80px" },
-                "100%": { opacity: "0", bottom: "-100px" },
-            },
-        } as const);
-
-        return kfName;
-    };
+    /* clouds keyframes */
+    cloudBox.css.keyframes.set(kf_CLOUD_LOOP);
+    cloudBox.css.keyframes.set(kf_CLOUD_SUN_KISS);
+    cloudBox.css.keyframes.set(kf_LAYER_FADE);
 
     clouds.forEach((cl, i) => {
-        // 1) scud runs on the paint child (mask-position animation)
-        const paint = cl.content.mustOnly(); // CHANGED: scud target is child
-        paint.css.anim.begin(CLOUD_BAND_ANIM(i));
-
-        // 2) per-layer fade runs once on the parent layer
-        const maxStr = cl.data.get("cloud-max") ?? "0.12"; // CHANGED: hyphen key
-        const max = Number(maxStr);
-
-        const kfName = ensure_layer_fade_kf(i, max);
-
-        cl.css.anim.begin({
-            name: kfName,
-            duration: cloudtimeStr,                 // e.g. "6000ms"
-            timingFunction: "linear",
-            iterationCount: "1",
-            fillMode: "forwards",
-            // CHANGED: top clears first (small stagger, not a big “pause”)
-            // delay: `${(i * 0.14).toFixed(2)}s`,
-        });
-        cl.css.anim.begin({
-            name: "cloud-layer-fade",
-            duration: cloudtimeStr,
-            timingFunction: "linear",
-            iterationCount: "1",
-            fillMode: "forwards",
-            delay: `${(i * 320).toFixed(0)}ms`, // tune: 60–180ms per layer
-        });
+        // 1) per-layer fade runs on the parent layer
+        cl.css.anim.begin(anim_CLOUD_LAYER_FADE(i));
         cl.css.setMany({
             willChange: "opacity, bottom",
         });
+        // 2) scud runs on the paint child (mask-position animation)
+        const paint = cl.content.mustOnly();
+        // paint.css.anim.begin(anim_CLOUD_SUN_KISS);
+        // paint.css.anim.begin(anim_CLOUD_LOOP(i));
     });
 
-    await wait.timer(sunDelay);
-    sunCarrier.css.anim.begin(SUN_CARRIER_ANIM);
-    sun.css.anim.begin(SUN_DISK_ANIM);
-    gradient.css.anim.begin(GRADIENT_ANIM);
-    flare.css.anim.begin(FLARE_ANIM);
+    await wait.timer(SUN_DELnum);
+    sunCarrier.css.anim.begin(SUN_CARRIERanim);
+    sun.css.anim.begin(SUN_DISKanim);
+    gradient.css.anim.begin(GRADIENTanim);
+    flare.css.anim.begin(FLAREanim);
 
-    console.log(cloudtimeStr)
-    await wait.for(flare).anim(FLARE_ANIM).end();
+    await wait.for(flare).anim(FLAREanim).end();
     flareBox.removeSelf();
 
-    await wait.for(sun).anim(SUN_DISK_ANIM).end()
+    await wait.for(sun).anim(SUN_DISKanim).end()
     sunCarrier.removeSelf();
-    letters.forEach(l => { l.css.anim.begin(NEON_FLASH) });
+    letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });
 
-    await wait.for(h).anim(NEON_FLASH).end()
-    ver.css.anim.begin(VER_ANIM);
+    await wait.for(h).anim(NEON_FLASHanim).end()
+    ver.css.anim.begin(VERanim);
     begin_star(starCarrier, starHead, tailA, tailB, tailC);
     letters.forEach((l) => {
         l.css.setMany(LETTER_CSS_FINAL);
-        l.css.anim.begin(STARSHINE_ANIM);
+        l.css.anim.begin(STARSHINEanim);
     });
 
     await wait.for(tailC).anim(TAIL_C_ANIM).end();
 
     SPLASH_KEYS.forEach(kf => {
         sky.css.keyframes.delete(kf.name)
-    })
+    });
 
-    /* unnecessary: remove? */
-    starCarrier.removeSelf();
-    sunCarrier.removeSelf();
-    flareBox.removeSelf();
-    gradient.removeSelf();
-    sky.removeSelf();
-    stage.empty();
     return relay.ok();
 }
 

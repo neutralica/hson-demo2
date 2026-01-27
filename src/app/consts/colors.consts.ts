@@ -20,6 +20,11 @@ const bckColor = `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${bckAlpha})`;
 export const _setBckgdAlpha = (n: number) => {
   return `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${n <= 1 ? n : 1})`;
 }
+export const _bckRGB = {
+  r: bckColorR,
+  g: bckColorG,
+  b: bckColorB,
+}
 const txtMain = greyLite;
 
 export const LETTER_COLOR_std = {

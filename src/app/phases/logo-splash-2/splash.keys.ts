@@ -1,6 +1,6 @@
 import type { AnimPart } from "./splash.types";
 import { $COL } from "../../consts/colors.consts";
-import { CLOUD_TILE_W } from "./splash.consts";
+import { CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
 
 // keyframes.ts 
 export const SPLASH_KEYS = [
@@ -9,7 +9,7 @@ export const SPLASH_KEYS = [
     steps: {
       "0%": { background: $COL._bckgd },
       "02%": { background: $COL._bckgd },
-      "57%": { background: "rgba(0,89,255,1)" },
+      "27%": { background: "rgba(0,89,255,1)" },
       "92%": { background: "rgba(0,89,255,1)" },
       "100%": { background: $COL._bckgd },
     },
@@ -125,10 +125,10 @@ export const SPLASH_KEYS = [
       "6%": { opacity: "1" },   // fade in quickly
       "16%": { opacity: ".2" },   // fade in quickly
       "36%": { opacity: ".4" },   // fade in quickly
-      "46%": { opacity: "1" },   // fade in quickly
-      "61%": { opacity: ".3" },   // fade in quickly
-      "65%": { opacity: "0" },   // stay on
-      "80%": { opacity: "0" },   // fade out
+      "56%": { opacity: "1" },   // fade in quickly
+      "71%": { opacity: ".3" },   // fade in quickly
+      "75%": { opacity: "0" },   // stay on
+      "90%": { opacity: "0" },   // fade out
       "100%": { opacity: "0" },
     },
   },
@@ -198,35 +198,38 @@ export const SPLASH_KEYS = [
   },
 ]
 
-// Optional global fade for the whole cloudBox (keep if you want)
-export const KF_CLOUD_BOX_FADE = {
-  name: "cloud-box-fade",
+export const kf_LAYER_FADE = { 
+  name: "cloud-layer-fade", 
   steps: {
-    "0%": { opacity: "1" },
-    "70%": { opacity: "1" },
-    "100%": { opacity: "0" },
-  },
-} as const;
-export const KF_LAYER_FADE = {
-  name: "cloud-layer-fade",
-  steps: {
-    "0%":   { "--layer-fade": "1" },
-    "10%":  { "--layer-fade": "1" },
-    "20%":  { "--layer-fade": "0" },
+    "0%": { "--layer-fade": "1" },
+    "40%": { "--layer-fade": "1" },
+    "98%": { "--layer-fade": "0" },
     "100%": { "--layer-fade": "0" },
   },
 } as const;
-export const KF_CLOUD_BAND_LOOP_WEBKIT = {
-    name: "cloud-band-loop",
-    steps: {
-        "0%": {
-            "mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
-            "-webkit-mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
-        },
-        "100%": {
-            "mask-position": `calc(var(--cloud-phase-px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
-            "-webkit-mask-position": `calc(var(--cloud-phase-px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
-        },
+
+export const kf_CLOUD_LOOP = { 
+  name: "cloud-band-loop",
+  steps: {
+    "0%": {
+      "mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
+      "-webkit-mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
     },
+    "100%": {
+      "mask-position": `calc(var(--cloud-phase-px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
+      "-webkit-mask-position": `calc(var(--cloud-phase-px) - ${CLOUD_TILE_W}px) 100%, 0px 100%`,
+    },
+  },
 } as const;
+
+
+export const kf_CLOUD_SUN_KISS = { // currently dnw
+  name: "cloud-sun-kiss",
+  steps: {
+    "0%": { filter: "brightness(1) saturate(1)" },
+    "60%": { filter: "brightness(1) saturate(1)" },
+    "85%": { filter: "brightness(1.25) saturate(1.1)" },
+    "100%": { filter: "brightness(1) saturate(1)" },
+  },
+}
 
