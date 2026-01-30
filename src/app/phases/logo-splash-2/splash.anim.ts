@@ -16,14 +16,14 @@ export const GRADIENTanim = {
   fillMode: "forwards",
 };
 
-export const STAR_MOVEanim: AnimSpec = {
-  name: "hson_star_move",
-  delay: "2000ms",
-  duration: STAR_DURstr,
-  timingFunction: "linear",
-  iterationCount: "1",
-  fillMode: "forwards",
-};
+// export const STAR_MOVEanim: AnimSpec = {
+//   name: "hson_star_move",
+//   delay: "2000ms",
+//   duration: STAR_DURstr,
+//   timingFunction: "linear",
+//   iterationCount: "1",
+//   fillMode: "forwards",
+// };
 
 export const STARSHINEanim: AnimSpec = {
   name: "hson_letter_starshine",
@@ -133,7 +133,7 @@ export const anim_CLOUD_FADE: AnimSpec = {
   delay: "0s",
 };
 
-export const anim_CLOUD_SUN_KISS = {
+export const CLOUD_SUN_KISSanim = {
   name: CLOUD_SUN_KISSstr,
   duration: `${CLOUD_DURnum}ms`,
   timingFunction: "linear",
@@ -141,7 +141,7 @@ export const anim_CLOUD_SUN_KISS = {
   fillMode: "both",
 }
 
-export const anim_CLOUD_LAYER_FADE = (i = 0) => {
+export const CLOUD_LAYER_FADEanim = (i = 0) => {
   return {
     name: CLOUD_LAYER_FADEstr,
     duration: CLOUD_DURstr,

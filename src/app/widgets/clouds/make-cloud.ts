@@ -3,7 +3,7 @@ import { makeDivClass, makeDivId } from "../../../utils/makers";
 import { mulberry32 } from "../../../utils/rng";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
 import { $COL, _bckRGB, _setBckgdAlpha } from "../../consts/colors.consts";
-import { CLOUD_TILE_W, CLOUD_DURnum } from "../../phases/logo-splash-2/splash.consts";
+import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, SKY_GRADIENT, CLOUD_DURstr, CLOUD_SUN_KISSstr } from "../../phases/logo-splash-2/splash.consts";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
@@ -228,20 +228,18 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       position: "absolute",
       inset: "0",
       height: `${100 + cloudDropPct}%`,
-      backgroundColor: $COL._bckgd,
       transform: `translateY(${cloudDropPct}%)`,
       backgroundImage: [
-        `linear-gradient(${$COL._bckgd}, ${$COL._bckgd})`,
-        `linear-gradient(` +
-        `to top, ` +
-        `rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, calc(0.00 + 0.10 * var(--sun-kiss))) 0%, ` +
-        `rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, calc(0.00 + 0.06 * var(--sun-kiss))) 55%, ` +
-        `rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b},  0) 100%` +
-        `)`,
+        `linear-gradient(rgba(12, 19, 26, var(--kiss)), rgba(215, 215, 215,var(--kiss)))`,
+        `linear-gradient(to bottom,
+     rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, 1) 0%,
+     rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, 1) 55%,
+     rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, 1) 100%)`,
       ].join(", "),
       mixBlendMode: "normal",
       filter: "none",
       willChange: "mask-position, -webkit-mask-position",
+      
     });
 
     // Work around WebKit-prefixed mask properties being canonicalized incorrectly
@@ -251,10 +249,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       .setMany({
         maskImage: `${bg}, ${fade}`,
         WebkitMaskImage: `${bg}, ${fade}`,
-
         maskRepeat: "repeat-x, no-repeat",
         WebkitMaskRepeat: "repeat-x, no-repeat",
-
         maskPosition: "var(--cloud-phase-px) 100%, 0px 100%",
         WebkitMaskPosition: "var(--cloud-phase-px) 100%, 0px 100%",
 
@@ -264,6 +260,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
         // NOTE: these are “weird” across engines; keep exactly what worked.
         maskComposite: "intersect",
         WebkitMaskComposite: "source-in",
+
+    
       });
 
     const far = 1 - u;
@@ -282,14 +280,14 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
     // layer.css.set.opacity(opacity.toFixed(3));
     cssgl.sel(`.${paintIxClass}`)
       .setMany({
-        animationName: "cloud-band-loop",
-        animationDuration: `${bandDurationMs}ms`,
-        animationTimingFunction: "linear",
-        animationIterationCount: "infinite",
-        animationFillMode: "both",
-        animationDelay: "0s",
+        animationName: `${CLOUD_BAND_LOOPstr}, ${CLOUD_SUN_KISSstr}`,
+        animationDuration: `${CLOUD_DURnum}ms, ${CLOUD_DURnum}ms`,
+        animationTimingFunction: "linear, linear",
+        animationIterationCount: "infinite, 1",
+        animationFillMode: "both, both",
+        animationDelay: "0s, 0s",
       });
-
+    paint.css.setMany({ backgroundColor: `rgba(255,0,255,var(--kiss))` });
     // OPTIONAL: if you want easy access later
     paint.data?.set?.("is-cloud-paint", "1"); // only if you have data on all nodes
   }

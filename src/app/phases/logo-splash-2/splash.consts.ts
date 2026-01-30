@@ -1,9 +1,10 @@
 import type { PropertyRegistration } from "../../../../../hson-live/dist/types/at-property.types";
+import { $COL } from "../../consts/colors.consts";
 
 export const CLOUD_TILE_W = 400;
 export const sunColor = "rgb(255, 196, 84)";
 export const sunFade = "rgba(255, 196, 84, 0.55)";
-export const SKY_GRADIENT = "linear-gradient(30deg, transparent 0%,transparent 10%, white 100%)";
+export const SKY_GRADIENT = "linear-gradient(30deg, transparent 0%, transparent 10%, white 100%)";
 
 export const CLOUD_BAND_LOOPstr = "cloud-band-loop";
 export const CLOUD_FADE_ONCEstr = "all-fade-once";
@@ -18,10 +19,10 @@ export const SHORT_FLASHstr = `${SHORT_FLASHnum}ms`;
 export const SKY_DURnum = 20000;
 export const SKY_DURstr = `${SKY_DURnum}ms`;
 
-export const CLOUD_DURnum = 8000;
+export const CLOUD_DURnum = 9000;
 export const CLOUD_DURstr = `${CLOUD_DURnum}ms`;
 
-export const SUN_DELnum = CLOUD_DURnum * 0.6
+export const SUN_DELnum = CLOUD_DURnum * 0.5
 export const SUN_DURnum = SKY_DURnum - SUN_DELnum;
 export const SUN_TIMEstr = `${SUN_DURnum}ms`;
 
@@ -53,16 +54,23 @@ export const AT_LAYER_FADE: PropertyRegistration = {
     init: "1",
 }
 
+export const KISSat: PropertyRegistration = {
+  name: "--kiss",
+  syn: "<number>",
+  inh: false,
+  init: "0",
+};
+
+export const KISS_COLat: PropertyRegistration = {
+  name: "--kissCol",
+  syn: "<color>",
+  inh: false,
+  init: $COL._bckgd, // ok if this is a valid CSS color string
+};
+
 export const AT_LAYER_MAX: PropertyRegistration = {
     name: "--layer-max",
     syn: "<number>",
     inh: true,
     init: "0.1",
-};
-
-export const at_SUN_KISS: PropertyRegistration = {
-    name: SUN_KISS_PROPstr,
-    syn: "<number>",
-    inh: true,
-    init: "0",
 };

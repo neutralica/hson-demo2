@@ -53,7 +53,7 @@ function ensure_motes_css(tree: LiveTree): void {
     // ADDED: global structural CSS for motes (no per-element inline clutter)
     // NOTE: using css.globals so we don't need to pre-bake these into a stylesheet file.
     const cssgl = CssManager.globals.invoke()
-    cssgl.class(`.${$CLS_MOTE}`)
+    cssgl.sel(`.${$CLS_MOTE}`)
         .setMany({
             position: "absolute",
             top: "0",

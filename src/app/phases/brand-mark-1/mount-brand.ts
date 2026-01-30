@@ -22,6 +22,20 @@ const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
 export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
   const stage = s;
   stage.empty();
+  const introNote = "// created with hson-live"
+  const noteBox = makeDivId(stage, "note-box");
+  noteBox.css.setMany({
+    position: "fixed",
+    top: "1rem",
+    left: "1rem",
+    backgroundColor: $COL._bckgd,
+    padding: "1rem",
+    fontFamily: "monospace",
+    color: $COL.dragonGreen,
+    filter: "blur(0.5px)",
+  })
+  const noteText = makeDivId(noteBox, "note-text")
+  noteText.setText(introNote);
 
   const logoBox = makeDivId(stage, "logo-box")
     .css.setMany(Intro_css.logobox);

@@ -189,7 +189,6 @@ export const nextPhase = (lt: LiveTree) => {
       } else {
         n = anim.name;
       }
-
       return {
         begin: (opts?: WaitOpts) => waitAnimEvent(lt, "start", n, opts),
         end: (opts?: WaitOpts) => waitAnimEvent(lt, "end", n, opts),

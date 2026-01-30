@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -6,8 +6,19 @@
         <link rel="icon" type="image/x-icon" href="/hson-favicon-dark.ico" />
         <title>hson-box</title>
         <script type="module" src="/src/main.ts"></script>
+        <style>
+            @font-face {
+                font-family: 'Jacquard12';
+                src: url('/Jacquard12.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
     </head>
     <body>
-        <div id="app-container"><x><!-- need for xml parse --></x></div>
+        <div id="app-container">
+            <x><!-- need for xml parse --></x>
+        </div>
     </body>
 </html>

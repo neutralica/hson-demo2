@@ -1,6 +1,6 @@
 import type { AnimPart } from "./splash.types";
 import { $COL } from "../../consts/colors.consts";
-import { CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
+import { CLOUD_BAND_LOOPstr as CLOUD_LOOPstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
 
 // keyframes.ts 
 export const SPLASH_KEYS = [
@@ -9,7 +9,7 @@ export const SPLASH_KEYS = [
     steps: {
       "0%": { background: $COL._bckgd },
       "02%": { background: $COL._bckgd },
-      "27%": { background: "rgba(0,89,255,1)" },
+      "37%": { background: "rgba(0,89,255,1)" },
       "92%": { background: "rgba(0,89,255,1)" },
       "100%": { background: $COL._bckgd },
     },
@@ -173,13 +173,15 @@ export const SPLASH_KEYS = [
       },
       "20%": {
         opacity: "0.85",
+        transform: "translateX(-25%) translateY(17%) rotate(0deg)",
       },
       "40%": {
         opacity: "0.25",
+        transform: "translateX(5%) translateY(27%) rotate(30deg)",
       },
       "100%": {
         opacity: "0",
-        transform: "translateX(5%) translateY(27%) rotate(20deg)",
+        transform: "translateX(5%) translateY(27%) rotate(40deg)",
       },
     },
   },
@@ -198,18 +200,18 @@ export const SPLASH_KEYS = [
   },
 ]
 
-export const kf_LAYER_FADE = { 
-  name: "cloud-layer-fade", 
+export const LAYER_FADEkf = {
+  name: CLOUD_LAYER_FADEstr,
   steps: {
     "0%": { "--layer-fade": "1" },
-    "40%": { "--layer-fade": "1" },
+    "70%": { "--layer-fade": "1" },
     "98%": { "--layer-fade": "0" },
     "100%": { "--layer-fade": "0" },
   },
 } as const;
 
-export const kf_CLOUD_LOOP = { 
-  name: "cloud-band-loop",
+export const CLOUD_LOOPkf = {
+  name: CLOUD_LOOPstr,
   steps: {
     "0%": {
       "mask-position": "var(--cloud-phase-px) 100%, 0px 100%",
@@ -222,14 +224,13 @@ export const kf_CLOUD_LOOP = {
   },
 } as const;
 
-
-export const kf_CLOUD_SUN_KISS = { // currently dnw
-  name: "cloud-sun-kiss",
+export const CLOUD_SUN_KISSkf = {
+  name: CLOUD_SUN_KISSstr,
   steps: {
-    "0%": { filter: "brightness(1) saturate(1)" },
-    "60%": { filter: "brightness(1) saturate(1)" },
-    "85%": { filter: "brightness(1.25) saturate(1.1)" },
-    "100%": { filter: "brightness(1) saturate(1)" },
+    "0%": { "--kiss": "0" },
+    "22%": { "--kiss": "0"},
+    "70%": { "--kiss": "0.6" },
+    "90%": { "--kiss": "0.9" },
+    "100%": { "--kiss": "0.9" },
   },
-}
-
+} as const;

@@ -29,7 +29,6 @@ function set_cell(grid: string[][], y: number, x: number, v: string): void {
 }
 
 export function make_vines(opts: FlourishOpts): string {
-  console.log('m,aking vines')
     const width = Math.max(0, Math.floor(opts.width));
   const rows = Math.max(0, Math.floor(opts.rows));
   const rnd = mulberry32(opts.seed);

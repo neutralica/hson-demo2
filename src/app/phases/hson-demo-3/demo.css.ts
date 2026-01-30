@@ -161,22 +161,12 @@ export const MENU_ITEM_CSS: CssMap = {
   userSelect: "none",
 };
 
-export const MENU_BULLET_CSS: CssMap = {
-  opacity: "0.55",
-};
-export const VER_CSS_DEMO: CssMap = {
-  ...VER_CSS,
-
-  color: "rgba(159, 160, 162, 1)",
-  opacity: "1",
-};
-
 /**
  * OUTER SURFACE (user-facing bezel plane)
  * - texture carries the darkness (not a single flat dark color)
  * - keep it subtle so panels remain legible
  */
-export const DEMO_WALL_CSS: CssMap = {
+export const DEMO_WALLcss: CssMap = {
   position: "absolute",
   inset: "0",
   overflow: "hidden",
@@ -191,7 +181,7 @@ export const DEMO_WALL_CSS: CssMap = {
  * - this should NOT paint a giant hazy frame
  * - keep it to bottom/right edges only
  */
-export const DEMO_WALL_FX_CSS: CssMap = {
+export const DEMO_WALL_FXcss: CssMap = {
   position: "absolute",
   inset: "0",
   pointerEvents: "none",
@@ -210,7 +200,7 @@ export const DEMO_WALL_FX_CSS: CssMap = {
  * - keep your greyBlack
  * - stop huge bloom that reads like a seal / fog
  */
-export const DEMO_SCREEN_CSS: CssMap = {
+export const DEMO_SCREENcss: CssMap = {
   position: "relative",
   width: "100%",
   height: "100%",
@@ -220,15 +210,29 @@ export const DEMO_SCREEN_CSS: CssMap = {
   pointerEvents: "all",
 }
 
-export const DEMO_SCREEN_FX_CSS: CssMap = {
+export const DEMO_SCREEN_FXcss: CssMap = {
   position: "absolute",
   inset: "0",
-  pointerEvents: "none",
+  pointerEvents: "all",
   mixBlendMode: "normal",
   opacity: "1",
 
 };
 
+export const MENU_BOXcss ={
+    position: "absolute",
+    left: "500px",
+    height: "max-content",
+    width: "max-content",
+    zIndex: "-1",
+    color: $COL.skyBlue,
+    filter: "blur(0.35px)",
+    margin: "2rem",
+    fontFamily: "monospace",
+    border: "1px solid aquamarine",
+    pointerEvents: "any",
+    padding: "1rem",
+  }
 
 /**
  * INSET / INNER FRAME

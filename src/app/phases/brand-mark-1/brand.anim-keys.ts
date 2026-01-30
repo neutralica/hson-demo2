@@ -9,8 +9,8 @@ const LOGOBOX_KEYF = {
     "0%": { opacity: "0" },
     "02%": { opacity: "0" },
     "38%": { opacity: "1" },
-    "75%": { opacity: "1" },
-    "95%": { opacity: "0" },
+    "85%": { opacity: "1" },
+    "98%": { opacity: "0" },
     "100%": { opacity: "0" },
 
   }
@@ -21,9 +21,9 @@ const ZALGO_FADE = {
   steps: {
     "0%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
     "42%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
-    "90%": { opacity: "0.2", transform: "translateX(3px) rotate(1deg) scale(1.05)" },
-    "98%": { opacity: "0", transform: "translateX(5px) rotate(2deg) scale(1.1)" },
-    "100%": { opacity: "0", transform: "translateX(5px) rotate(2deg) scale(1.1)" },
+    "90%": { opacity: "0.4", transform: "translateX(3px) rotate(2deg) scale(1.05)" },
+    "98%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
+    "100%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
 
   }
 };
@@ -32,9 +32,9 @@ const ZALGO_FADE_2 = {
   steps: {
     "0%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1.1)" },
     "32%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1.1)" },
-    "90%": { opacity: "0.2", transform: "translateX(0px) rotate(-1deg)  scale(1.05)" },
-    "98%": { opacity: "0", transform: "translateX(-1px) rotate(-2deg) scale(1)" },
-    "100%": { opacity: "0", transform: "translateX(-1px) rotate(-2deg) scale(1)" },
+    "90%": { opacity: "0.3", transform: "translateX(0px) rotate(-2deg)  scale(1.05)" },
+    "98%": { opacity: "0", transform: "translateX(-1px) rotate(-4deg) scale(1.1)" },
+    "100%": { opacity: "0", transform: "translateX(-1px) rotate(-4deg) scale(1.12)" },
 
   }
 };
