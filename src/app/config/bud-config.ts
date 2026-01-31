@@ -21,7 +21,7 @@ export type BudSpec = Readonly<{
   anim?: readonly AnimSpec[] | AnimSpec;
 }>;
 
-type BudFob = Readonly<{
+export type BudFob = Readonly<{
   tree: LiveTree;
   bud: (spec: BudSpec) => BudFob; // child rooted at node
   animate: () => void;

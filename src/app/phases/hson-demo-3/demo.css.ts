@@ -54,11 +54,6 @@ export const LETTER_CSS_DEMO: CssMap = {
 };
 
 
-/**
- * OUTER SURFACE (user-facing bezel plane)
- * - texture carries the darkness (not a single flat dark color)
- * - keep it subtle so panels remain legible
- */
 export const DEMO_WALLcss: CssMap = {
   position: "absolute",
   inset: "0",
@@ -101,15 +96,18 @@ export const DEMO_SCREENcss: CssMap = {
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "all",
+   minHeight: "0",
 }
 
 export const DEMO_SCREEN_FXcss: CssMap = {
-  position: "absolute",
+   position: "relative",  // critical anchor for uiRoot absolute
+  width: "100%",
+  height: "100%",
+  minHeight: "0",
   inset: "0",
   pointerEvents: "all",
   mixBlendMode: "normal",
   opacity: "1",
-
 };
 
 export const MENU_BOXcss = {
@@ -143,11 +141,12 @@ export const SCREEN_GLINTstr =
  * band of ambient light on the frame edge
  */
 export const DEMO_SCREEN_INSETcss: CssMap = {
-  position: "absolute",
+   position: "relative",  // critical anchor for uiRoot absolute
+  width: "100%",
+  height: "100%",
+  minHeight: "0",
   left: "3%",
-  top: "3%",
-  width: "94%",
-  height: "94%",
+  top: "3%",  
   pointerEvents: "none",
   borderRadius: "26px",
   padding: "12px",
