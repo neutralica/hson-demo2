@@ -1,7 +1,8 @@
 // stipple.system.ts
 import type { LiveTree } from "hson-live";
-import { mulberry32 } from "../../../utils/rng";
+import { mulberry32 } from "../../utils/rng";
 import type { KeyframesInput } from "hson-live/types";
+import { _clamp01, _lerp } from "../../utils/helpers";
 
 /************************
  *  abandoned for now  *
@@ -231,7 +232,7 @@ function build_plane(parent: LiveTree, t: StippleTune, rnd: () => number, ix: nu
     inset: "0",
     pointerEvents: "none",
     willChange: "background-position",
-    opacity: `${clamp01(t.planes.opacityMaster * plane_opacity(rnd, t, ix))}`, // keep master here
+    opacity: `${_clamp01(t.planes.opacityMaster * plane_opacity(rnd, t, ix))}`, // keep master here
 
   });
 
@@ -267,7 +268,7 @@ function build_plane(parent: LiveTree, t: StippleTune, rnd: () => number, ix: nu
     backgroundRepeat: "repeat",
     backgroundSize: `${tileW}px ${tileH}px`,
     backgroundPosition: "0px 0px",
-    opacity: `${clamp01(t.planes.opacityMaster * plane_opacity(rnd, t, ix))}`,
+    opacity: `${_clamp01(t.planes.opacityMaster * plane_opacity(rnd, t, ix))}`,
   });
 
   // --- motion: seamless drift end positions (integer multiples of tile size) ---
@@ -391,13 +392,7 @@ function rand_float(rnd: () => number, min: number, max: number): number {
   const hi = Math.max(min, max);
   return lo + rnd() * (hi - lo);
 }
-function clamp01(n: number): number {
-  return Math.max(0, Math.min(1, n));
-}
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
 
 function pick<T>(rnd: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rnd() * arr.length)]!;
@@ -423,19 +418,19 @@ function make_dot_hsla(rnd: () => number, t: typeof STIPPLE_TUNE, vol01: number)
   const hue = wrapHue(hueBase + jitter(rnd, c.hueJitterDeg * ( vol01)));
 
   // High saturation, with volatility widening range slightly.
-  const sat = lerp(c.satMin, c.satMax, rnd() ** (0.65 - 0.25 * vol01));
+  const sat = _lerp(c.satMin, c.satMax, rnd() ** (0.65 - 0.25 * vol01));
 
   // Lightness: keep it “above mud”; volatility nudges it around.
-  const light = lerp(c.litMin, c.litMax, rnd() ** (0.75 - 0.30 * vol01));
+  const light = _lerp(c.litMin, c.litMax, rnd() ** (0.75 - 0.30 * vol01));
 
   // Alpha: still your dot alpha range; volatility can widen a touch.
-  const a0 = lerp(t.dots.alphaMin, t.dots.alphaMax, rnd() ** (1 * vol01));
+  const a0 = _lerp(t.dots.alphaMin, t.dots.alphaMax, rnd() ** (1 * vol01));
   let a = 1;
 
   // Rare “sparkle” accents: higher lightness + alpha
   if (rnd() < c.sparkleChance) {
     const l2 = Math.min(92, light + c.sparkleLightBoost);
-    const a2 = clamp01(a + c.sparkleAlphaBoost);
+    const a2 = _clamp01(a + c.sparkleAlphaBoost);
     return `hsla(${hue.toFixed(1)}, ${sat.toFixed(1)}%, ${l2.toFixed(1)}%, ${a2.toFixed(3)})`;
   }
 
@@ -447,5 +442,5 @@ function plane_opacity(rnd: () => number, t: StippleTune, ix: number): number {
   // You can delete this if you want strictly uniform planes.
   const wobble = 0.72 + rnd() * 0.56; // 0.72..1.28
   const base = 0.22;                  // typical plane contribution
-  return clamp01(base * wobble);
+  return _clamp01(base * wobble);
 }

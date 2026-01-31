@@ -3,14 +3,14 @@ import { $COL } from "../../consts/colors.consts";
 import { CLOUD_BAND_LOOPstr as CLOUD_LOOPstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
 
 // keyframes.ts 
-export const SPLASH_KEYS = [
+export const SPLASHkfs = [
   {
     name: "hson_sky",
     steps: {
       "0%": { background: $COL._bckgd },
       "02%": { background: $COL._bckgd },
-      "37%": { background: "rgba(0,89,255,1)" },
-      "92%": { background: "rgba(0,89,255,1)" },
+      "57%": { background: "rgba(0,89,255,1)" },
+      "92%": { background: "rgba(0, 128, 255, 1)" },
       "100%": { background: $COL._bckgd },
     },
   },
@@ -204,8 +204,8 @@ export const LAYER_FADEkf = {
   name: CLOUD_LAYER_FADEstr,
   steps: {
     "0%": { "--layer-fade": "1" },
-    "70%": { "--layer-fade": "1" },
-    "98%": { "--layer-fade": "0" },
+    "30%": { "--layer-fade": "1" },
+    "98%": {"--layer-fade": "0" },
     "100%": { "--layer-fade": "0" },
   },
 } as const;
@@ -228,9 +228,8 @@ export const CLOUD_SUN_KISSkf = {
   name: CLOUD_SUN_KISSstr,
   steps: {
     "0%": { "--kiss": "0" },
-    "22%": { "--kiss": "0"},
-    "70%": { "--kiss": "0.6" },
-    "90%": { "--kiss": "0.9" },
+    "42%": { "--kiss": "0"},
+    "85%": { "--kiss": "0.8" },
     "100%": { "--kiss": "0.9" },
   },
 } as const;

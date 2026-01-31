@@ -8,7 +8,6 @@ export const PALETTE_TAB_CSS: CssMap = {
     bottom: "1rem",
     right: "1rem",
     padding: "1.5rem",
-    border: `4px double ${$COL.dragonGreen}`,
     width: "30%",
     minWidth: "300px",
     maxWidth: "2600px",

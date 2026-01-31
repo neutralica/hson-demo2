@@ -3,6 +3,8 @@
 // - No deps
 // - Deterministic from a 4-digit seed (or any string)
 
+import { _clamp01, _clampN1P1, _lerp, _wrap360 } from "../../utils/helpers";
+
 export type PaletteOpts = Readonly<{
   volatility?: number; // 0..1  (hue wander + chroma punch)
   baselineLight?: number;      // 0..1  baseline dark lightness
@@ -44,10 +46,10 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
   const seed = seedRaw.trim() || "0000";
 
   const opts: Required<PaletteOpts> = {
-    volatility: clamp01(optsRaw.volatility ?? 0.55),
-    baselineLight: clamp01(optsRaw.baselineLight ?? 0.22),
-    baselineDark: clamp01(optsRaw.baselineDark ?? 0.82),
-    grayWarmth: clampN1P1(optsRaw.grayWarmth ?? 0.25),
+    volatility: _clamp01(optsRaw.volatility ?? 0.55),
+    baselineLight: _clamp01(optsRaw.baselineLight ?? 0.22),
+    baselineDark: _clamp01(optsRaw.baselineDark ?? 0.82),
+    grayWarmth: _clampN1P1(optsRaw.grayWarmth ?? 0.25),
   };
 
   const rng = mulberry32(hash32(seed));
@@ -57,34 +59,34 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
 
   // “Terminal gothic” tends to like restrained chroma + occasional punch.
   const v = opts.volatility;
-  const hueSpread = lerp(12, 130, v);      // how far hues wander from base
-  const chromaBase = lerp(0.06, 0.16, v); // overall saturation level
+  const hueSpread = _lerp(12, 130, v);      // how far hues wander from base
+  const chromaBase = _lerp(0.06, 0.16, v); // overall saturation level
 
-  const jitter = lerp(2, 18, v); // CHANGED: volatility controls wobble
+  const jitter = _lerp(2, 18, v); // CHANGED: volatility controls wobble
   const dimHuesForLightMode = ring_hues(rng, 8, baseHue, jitter, 0);
   const brightHuesForDarkMode = [...ring_hues(rng, 8, baseHue, jitter, 360 / 16)] as number[]; // 22.5° shift
   // --- Light ramp anchors: force distinct blue + distinct neighbor ---
 
   // Pick a "true blue" anchor. 255–265 is a solid modern UI blue region in OKLCH.
-  const BLUE = wrap360(260 + randRange(rng, -8, 8)); // tiny seed wobble
+  const BLUE = _wrap360(260 + randRange(rng, -8, 8)); // tiny seed wobble
 
   // Make light1 a clear blue.
   brightHuesForDarkMode[0] = BLUE;
 
   // Make light2 *not* nearby: push it at least 50° away from BLUE.
-  const h1 = brightHuesForDarkMode[1] ?? wrap360(BLUE + 60);
+  const h1 = brightHuesForDarkMode[1] ?? _wrap360(BLUE + 60);
   const sepMin = 55;
   const delta = wrapHue(h1 - BLUE);
   brightHuesForDarkMode[1] = Math.abs(delta) < sepMin
-    ? wrap360(BLUE + (delta >= 0 ? sepMin : -sepMin))
+    ? _wrap360(BLUE + (delta >= 0 ? sepMin : -sepMin))
     : h1;
   // CHANGED: bias two slots away from warm-neutral mush
   // keep your existing nudges if you want, but replace them with this:
-  brightHuesForDarkMode[0] = wrap360(baseHue);          // light4 stays warm-ish
-  brightHuesForDarkMode[1] = wrap360(baseHue + 50);          // light4 stays warm-ish
-  brightHuesForDarkMode[3] = wrap360(baseHue + 178);          // light4 stays warm-ish
-  brightHuesForDarkMode[4] = wrap360(baseHue - 290);         // light5 forced violet/purple
-  brightHuesForDarkMode[6] = wrap360(baseHue - 140);         // light5 forced violet/purple
+  brightHuesForDarkMode[0] = _wrap360(baseHue);          // light4 stays warm-ish
+  brightHuesForDarkMode[1] = _wrap360(baseHue + 50);          // light4 stays warm-ish
+  brightHuesForDarkMode[3] = _wrap360(baseHue + 178);          // light4 stays warm-ish
+  brightHuesForDarkMode[4] = _wrap360(baseHue - 290);         // light5 forced violet/purple
+  brightHuesForDarkMode[6] = _wrap360(baseHue - 140);         // light5 forced violet/purple
   
   const lightModeColorway = build_ramp({
   rng,
@@ -92,12 +94,12 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
   hues: dimHuesForLightMode,
 
   // Brighter base, but keep jitter moderate so they feel like a set.
-  l0: clamp01(opts.baselineLight + lerp(0.05, 0.10, v))+.2,
-  lJitter: lerp(0.02, 0.06, v),
+  l0: _clamp01(opts.baselineLight + _lerp(0.05, 0.10, v))+.2,
+  lJitter: _lerp(0.02, 0.06, v),
 
   // Dust: reduce chroma overall and reduce jitter.
   c0: chromaBase * 0.45,
-  cJitter: lerp(0.02, 0.06, v),
+  cJitter: _lerp(0.02, 0.06, v),
 
   alpha: 1,
   });
@@ -108,12 +110,12 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
   hues: brightHuesForDarkMode,
 
   // darker than before, less "easter"
-  l0: clamp01(opts.baselineDark - lerp(0.06, 0.10, v))-.05,
-  lJitter: lerp(0.015, 0.045, v),
+  l0: _clamp01(opts.baselineDark - _lerp(0.06, 0.10, v))-.05,
+  lJitter: _lerp(0.015, 0.045, v),
 
   // much less chroma (this is the big one)
   c0: chromaBase * 0.65,
-  cJitter: lerp(0.008, 0.025, v),
+  cJitter: _lerp(0.008, 0.025, v),
 
   alpha: 1,
 });
@@ -200,11 +202,11 @@ function build_ramp(args: BuildRampArgs): string[] {
       hues?.[i] ??
       wrapHue((baseHue ?? 0) + (rng() * 2 - 1) * (hueSpread ?? 0));
 
-    let l = clamp01(l0 + (rng() * 2 - 1) * lJitter);
+    let l = _clamp01(l0 + (rng() * 2 - 1) * lJitter);
     let c = Math.max(0, c0 + (rng() * 2 - 1) * cJitter);
 
     // ADDED: deterministic per-slot nudge to break “pairs”
-    if (slotBoostL?.[i] != null) l = clamp01(l + slotBoostL[i]!);
+    if (slotBoostL?.[i] != null) l = _clamp01(l + slotBoostL[i]!);
 
     // ADDED: wash/compress step
     const o = wash_oklch({ l, c, h, a: alpha }, wash ?? 0);
@@ -231,10 +233,10 @@ function build_accents(rng: () => number, baseHue: number, v: number): readonly 
   // CHANGED: avoid [0,90,180,270] symmetry (it reads “paired”).
   // Use uneven, but well-separated offsets + small seeded wobble.
   const rot = randRange(rng, -12, 12);
-  const hs = [0, 72, 155, 245].map(d => wrap360(baseHue + d + rot));
+  const hs = [0, 72, 155, 245].map(d => _wrap360(baseHue + d + rot));
 
   // CHANGED: slightly less punch by default; volatility still increases it.
-  const punch = lerp(0.14, 0.22, v);
+  const punch = _lerp(0.14, 0.22, v);
 
   // Optional: give accents a mild L variation so they’re not all the same “weight”.
   return [
@@ -247,33 +249,19 @@ function build_accents(rng: () => number, baseHue: number, v: number): readonly 
 
 function fmt_oklch(x: Oklch): string {
   // CSS okLCH is commonly written as: oklch(<L%> <C> <H> / <A>)
-  const L = Math.round(clamp01(x.l) * 1000) / 10; // 1 decimal %
-  const C = Math.round(clamp01(x.c) * 1000) / 1000;
-  const H = Math.round(wrap360(x.h) * 10) / 10;
+  const L = Math.round(_clamp01(x.l) * 1000) / 10; // 1 decimal %
+  const C = Math.round(_clamp01(x.c) * 1000) / 1000;
+  const H = Math.round(_wrap360(x.h) * 10) / 10;
 
   if (x.a == null) return `oklch(${L}% ${C} ${H})`;
 
-  const A = Math.round(clamp01(x.a) * 1000) / 1000;
+  const A = Math.round(_clamp01(x.a) * 1000) / 1000;
   return `oklch(${L}% ${C} ${H} / ${A})`;
 }
 
 function warm_hue(w: number): number {
   // Warm: ~60° (amber). Cool: ~250° (blue-violet). Neutral splits the diff.
-  return lerp(250, 60, (clampN1P1(w) + 1) / 2);
-}
-
-function clamp01(n: number): number {
-  return n < 0 ? 0 : n > 1 ? 1 : n;
-}
-function clampN1P1(n: number): number {
-  return n < -1 ? -1 : n > 1 ? 1 : n;
-}
-function wrap360(h: number): number {
-  const x = h % 360;
-  return x < 0 ? x + 360 : x;
-}
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
+  return _lerp(250, 60, (_clampN1P1(w) + 1) / 2);
 }
 
 function randRange(rng: () => number, a: number, b: number): number {
@@ -402,7 +390,7 @@ function ring_hues(
   const out: number[] = [];
   for (let i = 0; i < count; i++) {
     const jitter = (rng() * 2 - 1) * jitterDeg;
-    out.push(wrap360(baseHue + rotateDeg + i * step + jitter));
+    out.push(_wrap360(baseHue + rotateDeg + i * step + jitter));
   }
   return out;
 }
@@ -410,14 +398,14 @@ function ring_hues(
 // ADDED: compress chroma + slightly lift lightness to get "ghost pastel".
 // wash=0 => no change, wash=1 => heavy wash.
 function wash_oklch(x: Oklch, washRaw: number): Oklch {
-  const wash = clamp01(washRaw);
+  const wash = _clamp01(washRaw);
 
   // Lift lightness a bit (phosphor / airy)
-  const l = clamp01(x.l + wash * 0.06);
+  const l = _clamp01(x.l + wash * 0.06);
 
   // Compress chroma toward a modest target band instead of scaling.
   const targetC = 0.11;
-  const maxC = lerp(0.26, 0.18, wash);
+  const maxC = _lerp(0.26, 0.18, wash);
 
   const cToward = x.c + (targetC - x.c) * (wash * 0.85);
   const c = Math.min(maxC, Math.max(0, cToward));

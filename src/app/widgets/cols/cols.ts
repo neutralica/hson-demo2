@@ -1,6 +1,7 @@
 // cols.ts
 
-import { mulberry32 } from "../../../utils/rng";
+import { _clamp01 } from "../../utils/helpers";
+import { mulberry32 } from "../../utils/rng";
 
 export type FlutingOpts = {
   width: number;
@@ -21,13 +22,13 @@ export function make_fluting(opts: FlutingOpts): string {
   const rows = Math.max(6, Math.floor(opts.rows));
   const rnd = mulberry32(opts.seed);
 
-  const lightPos = clamp01(opts.lightPos ?? 0.75);
+  const lightPos = _clamp01(opts.lightPos ?? 0.75);
   const flutes = Math.max(2, Math.floor(opts.flutes ?? Math.floor(width / 9)));
   const grooveWidth = Math.max(1, Math.floor(opts.grooveWidth ?? 1));
 
-  const ink = clamp01(opts.ink ?? 0.92);             // start here for “less empty”
-  const speckle = clamp01(opts.speckle ?? 0.90);     // subtle texture
-  const grooveDepth = clamp01(opts.grooveDepth ?? 0.55);
+  const ink = _clamp01(opts.ink ?? 0.92);             // start here for “less empty”
+  const speckle = _clamp01(opts.speckle ?? 0.90);     // subtle texture
+  const grooveDepth = _clamp01(opts.grooveDepth ?? 0.55);
 
   // Dark -> light, but IMPORTANT: lowest is NOT a space.
   // This alone makes a huge difference.
@@ -58,24 +59,24 @@ export function make_fluting(opts: FlutingOpts): string {
       // “reads like a cylinder” bump around the highlight position
       const dist = Math.abs(nx - lx);
       let b = 1 - dist;            // 0..1-ish
-      b = clamp01(b + yWobble);
+      b = _clamp01(b + yWobble);
 
       // Ink floor (density knob): prevent big blank deserts
-      b = clamp01(ink + (1 - ink) * b);
+      b = _clamp01(ink + (1 - ink) * b);
 
       // Grooves: darker, but still respect ink floor
       const inGroove = grooveMask[x];
       if (inGroove) {
         // pull brightness down toward ink, by grooveDepth
-        b = clamp01(b * (1 - grooveDepth));
-        b = clamp01(ink + (1 - ink) * b);
+        b = _clamp01(b * (1 - grooveDepth));
+        b = _clamp01(ink + (1 - ink) * b);
       }
 
       // Optional speckle: deterministic micro-variation
       // Uses a “mostly off” dither so it doesn’t become fuzz.
       if (speckle > 0) {
         const j = (rnd() - 0.5) * (0.22 * speckle);
-        b = clamp01(b + j);
+        b = _clamp01(b + j);
       }
 
       // Structure: hard rails so it frames as a column
@@ -91,11 +92,6 @@ export function make_fluting(opts: FlutingOpts): string {
 
 // -------------------- helpers --------------------
 
-function clamp01(n: number): number {
-  if (n < 0) return 0;
-  if (n > 1) return 1;
-  return n;
-}
 
 function rampPick(ramp: readonly string[], b: number): string {
   const last = ramp.length - 1;

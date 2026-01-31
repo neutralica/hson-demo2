@@ -1,6 +1,6 @@
 // core.types.ts
 
-import type { HSON_LETTERS } from "../app/consts/config.consts";
+import type { LETTER_CAPS, LETTER_LOWS } from "../app/consts/config.consts";
 
 export type PhaseId = "intro" | "splash";
 
@@ -24,4 +24,5 @@ export type App = {
   readonly start: () => void;
 };
 
-export type LetterKey = (typeof HSON_LETTERS)[number];
+export type LetterKey = (typeof LETTER_LOWS)[number];
+export type LetterCaps = (typeof LETTER_CAPS)[number];

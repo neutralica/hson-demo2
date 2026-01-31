@@ -1,14 +1,14 @@
 import { CssManager, type LiveTree } from "hson-live";
-import { makeDivClass, makeDivId } from "../../../utils/makers";
-import { mulberry32 } from "../../../utils/rng";
+import { makeDivClass, makeDivId } from "../../utils/makers";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
 import { $COL, _bckRGB, _setBckgdAlpha } from "../../consts/colors.consts";
-import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, SKY_GRADIENT, CLOUD_DURstr, CLOUD_SUN_KISSstr } from "../../phases/logo-splash-2/splash.consts";
+import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/logo-splash-2/splash.consts";
+import { _hash01, _lerp } from "../../utils/helpers";
+import { mulberry32 } from "../../utils/rng";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
 const FADE_MID_PCT = 10;      // start thinning here
-const FADE_MID_ALPHA = 0.65;  // how strong mid-fade is
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
@@ -116,38 +116,6 @@ type CloudTune = {
   circlesMax: number;       // e.g. 34
 };
 
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-const clamp01 = (x: number): number => Math.max(0, Math.min(1, x));
-
-// Tiny deterministic hash -> [0,1)
-const hash01 = (n: number): number => {
-  // integer hash (stable, cheap)
-  let x = n | 0;
-  x ^= x >>> 16;
-  x = Math.imul(x, 0x7feb352d);
-  x ^= x >>> 15;
-  x = Math.imul(x, 0x846ca68b);
-  x ^= x >>> 16;
-  // to [0,1)
-  return (x >>> 0) / 0xffffffff;
-};
-
-// 1D value noise: smooth between hashed lattice points.
-const noise1d = (x: number, period: number, seed: number): number => {
-  // x in pixels; period in pixels
-  const t = x / period;
-  const i0 = Math.floor(t);
-  const f = t - i0;
-
-  const a = hash01(i0 + seed * 1013);
-  const b = hash01(i0 + 1 + seed * 1013);
-
-  // smoothstep (cubic)
-  const u = f * f * (3 - 2 * f);
-  return lerp(a, b, u); // [0,1]
-};
-
-
 export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTree {
   const t: CloudTune = {
     layers: 15,
@@ -175,11 +143,11 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
     const u = i / Math.max(1, t.layers - 1);
     const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
     // CHANGED: keep band placement in 0..100 range (percent)
-    const yBandPct = lerp(15, 95, u);
-    const ySpreadPct = lerp(16, 34, u);
+    const yBandPct = _lerp(15, 95, u);
+    const ySpreadPct = _lerp(16, 34, u);
 
-    const circles = Math.round(lerp(80, 140, 1 - u));
-    const blur = lerp(t.blurTop, t.blurBottom, u);
+    const circles = Math.round(_lerp(80, 140, 1 - u));
+    const blur = _lerp(t.blurTop, t.blurBottom, u);
 
     const bg = make_cloud_svg_data_uri({
       seed,
@@ -188,8 +156,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       circles,
       yBandPct,
       ySpreadPct,
-      rMin: lerp(10, 18, u),
-      rMax: lerp(28, 52, u),
+      rMin: _lerp(10, 18, u),
+      rMax: _lerp(28, 52, u),
       alpha: 1, // mask-only
       blur,
     });
@@ -202,7 +170,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // CHANGED: expose per-layer max opacity to mount_splash (hyphen key)
     // (bottom stronger, top weaker)
-    const maxAlpha = lerp(0.02, 0.28, u);
+    const maxAlpha = _lerp(0.02, 0.28, u);
     // per-layer static strength (you already compute this)
     layer.data.set("cloud-max", maxAlpha.toFixed(3));
     layer.css.setMany({
@@ -238,7 +206,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       ].join(", "),
       mixBlendMode: "normal",
       filter: "none",
-      willChange: "mask-position, -webkit-mask-position",
+      willChange: "mask-position, -webkit-mask-position, opacity, bottom",
       
     });
 
@@ -266,18 +234,6 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     const far = 1 - u;
 
-    // easeOut-ish curve (adjust exponent 1.6–3.0)
-    const curved = Math.pow(far, 1.2);
-    const perLayerBase = 1 / t.layers;               // keeps total energy sane
-    const gain = 2.8;                               // tune
-    const opacity = Math.min(1, perLayerBase * gain * (0.35 + 0.65 * curved));
-
-    const slowMul = 1.1;
-    const fastMul = .01;
-    const mul = fastMul + (slowMul - fastMul) * curved;
-
-    const bandDurationMs = Math.round(CLOUD_DURnum * mul);
-    // layer.css.set.opacity(opacity.toFixed(3));
     cssgl.sel(`.${paintIxClass}`)
       .setMany({
         animationName: `${CLOUD_BAND_LOOPstr}, ${CLOUD_SUN_KISSstr}`,

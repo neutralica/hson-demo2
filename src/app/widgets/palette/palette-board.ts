@@ -2,7 +2,7 @@
 import type { LiveTree } from "hson-live";
 import type { Palette } from "./calc-palette";
 import { $COL } from "../../consts/colors.consts";
-import { makeDivClass } from "../../../utils/makers";
+import { makeDivClass, makeDivId } from "../../utils/makers";
 
 // Render a simple grid of clickable swatches.
 // Click swatch → copies `oklch(...)` string.
@@ -10,18 +10,19 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
     const root = host.create.div().setAttrs("class", "palette-board");
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     // Layout shell
-    root.css.setMany({
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gap: "10px",
-        fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-        fontSize: "12px",
-        color: p.textOnDark,
+    root.setText("HSON")
+        .css.setMany({
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: "10px",
+            fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+            fontSize: "12px",
+            color: p.textOnDark,
+        });
 
-    });
 
     // Background helps you see contrast immediately.
-    makeDivClass(root, "palette-banner")
+    const pal = makeDivClass(root, "palette-banner")
         .setText(`PALETTE seed: ${p.seed}  vol: ${p.opts.volatility.toFixed(2)}`)
         .css.setMany({
             padding: "10px 12px",
@@ -29,7 +30,6 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
             background: p.bgDark,
             border: `1px solid ${p.grays[1]}`,
         });
-
 
     /* 
     single-section helper
@@ -116,7 +116,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
 
     const g4 = section("Accents (4)");
     p.accents.forEach((v, i) => addSwatch(g4, `accent${i + 1}`, v));
-const empty = ()=>root.empty()
+    const empty = () => root.empty()
     return empty;
 }
 

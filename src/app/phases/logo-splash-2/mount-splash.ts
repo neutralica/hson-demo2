@@ -1,158 +1,31 @@
 // mount-splash.ts
 
 import { type LiveTree } from "hson-live";
-import { SUN_CSS, FRAME_CSS_SPLASH, SKY_CSS, SUN_CARRIER_CSS, STAR_CARRIER_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS, STAR_WRAP_CSS, FLARE_CSS, FLARE_BOX_CSS, GRADIENT_CSS, CLOUD_BOX_CSS } from "./splash.css";
-import { O_ROT, VER_CSS, WORD_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
-import { LETTER_COLOR_std } from "../../consts/colors.consts";
-import { CLOUD_LOOPkf, CLOUD_SUN_KISSkf, LAYER_FADEkf } from "./splash.keys";
-import { CLOUD_LAYER_FADEanim, GRADIENTanim } from "./splash.anim";
-import { AT_LAYER_FADE, AT_LAYER_MAX, CLOUD_CONFIG, KISSat, SUN_DELnum } from "./splash.consts";
-import { SPLASH_KEYS } from "./splash.keys";
-import { FLAREanim, NEON_FLASHanim, SKYanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_CARRIERanim, SUN_DISKanim, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM, VERanim } from "./splash.anim";
-import { get_letter_key } from "../../../utils/helpers";
-import type { LetterKey } from "../../../types/core.types";
+import { O_ROT, VER_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
+import { LETTER_COLORstd } from "../../consts/colors.consts";
+import { CLOUD_LAYER_FADEanim } from "./splash.anim";
+import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
+import { SPLASHkfs } from "./splash.keys";
+import { FLAREanim, NEON_FLASHanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_DISKanim, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM, VERanim } from "./splash.anim";
+import { get_letter_key } from "../../utils/helpers";
+import type { LetterCaps, LetterKey } from "../../../types/core.types";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
-import { makeDivClass, makeDivId, makeSectionClass, makeSpanClass } from "../../../utils/makers";
-import { wait } from "../../../utils/wait";
+import { makeSpanClass } from "../../utils/makers";
+import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
-import { make_budder, make_div, make_section } from "../../config/bud-config";
+import { make_bud_node } from "../../config/bud-config";
+import { SPLASH_BUDS } from "./splash.buds";
 
 
 
-export const SPLASH_BUDS = {
-    // stage -> sky
-    sky: {
-        name: "sky",
-        make: make_section,
-        id: "sky",
-        css: SKY_CSS,
-        kf: SPLASH_KEYS,
-    },
-
-    // sky -> logoBox -> frame
-    logoBox: {
-        name: "logoBox",
-        make: make_div,
-        id: "hson-logo",
-    },
-
-    frame: {
-        name: "frame",
-        make: make_div,
-        id: "frame",
-        css: FRAME_CSS_SPLASH,
-        anim: SKYanim, 
-    },
-
-    // frame -> wordmark
-    wordmark: {
-        name: "wordmark",
-        make: make_div,
-        id: "wordmark",
-        css: WORD_CSS,
-    },
-
-    // frame -> flare
-    flareBox: {
-        name: "flareBox",
-        make: make_div,
-        id: "flare-box",
-        css: FLARE_BOX_CSS,
-    },
-    flare: {
-        name: "flare",
-        make: make_div,
-        id: "lens-flare",
-        css: FLARE_CSS,
-        anim: FLAREanim,
-    },
-
-    // frame -> sky gradient
-    gradient: {
-        name: "gradient",
-        make: make_div,
-        id: "sky-gradient",
-        css: GRADIENT_CSS,
-        anim: GRADIENTanim
-    },
-
-    // frame -> cloud box
-    cloudBox: {
-        name: "cloudBox",
-        make: make_div,
-        id: "cloud-box",
-        css: CLOUD_BOX_CSS,
-        at: [AT_LAYER_FADE, AT_LAYER_MAX, KISSat],
-        kf: [CLOUD_LOOPkf, CLOUD_SUN_KISSkf, LAYER_FADEkf],
-    },
-
-    // word -> sun
-    sunCarrier: {
-        name: "sunCarrier",
-        make: make_div,
-        id: "sun-carrier",
-        css: SUN_CARRIER_CSS,
-        anim: SUN_CARRIERanim,
-    },
-    sun: {
-        name: "sun",
-        make: make_div,
-        id: "sun",
-        css: SUN_CSS,
-        anim: SUN_DISKanim,
-    },
-
-    // frame -> star cluster
-    starCarrier: {
-        name: "starCarrier",
-        make: make_div,
-        id: "star-carrier",
-        css: STAR_CARRIER_CSS,
-        anim: STAR_CARRIER_ANIM,
-    },
-    starWrap: {
-        name: "starWrap",
-        make: make_div,
-        id: "star-wrap",
-        css: STAR_WRAP_CSS,
-    },
-    starHead: {
-        name: "starHead",
-        make: make_div,
-        id: "star-head",
-        css: STAR_HEAD_CSS,
-        anim: STAR_HEAD_ANIM,
-    },
-    starTailA: {
-        name: "starTailA",
-        make: make_div,
-        cls: "star-tail a",
-        css: STAR_TAIL_A_CSS,
-        anim: STAR_TAIL_A_ANIM
-    },
-    starTailB: {
-        name: "starTailB",
-        make: make_div,
-        cls: "star-tail b",
-        css: STAR_TAIL_B_CSS,
-        anim: STAR_TAIL_B_ANIM
-    },
-    starTailC: {
-        name: "starTailC",
-        make: make_div,
-        cls: "star-tail c",
-        css: STAR_TAIL_C_CSS,
-        anim: STAR_TAIL_C_ANIM
-    },
-}
 /**
  * this is all very messy but it works; organize/structure calls better TODO
  */
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
-    const b = make_budder(stage)
+    const b = make_bud_node(stage)
    
     /* create structural layers */
     // NOT ANYMORE!!! /* stacking order matters here: */
@@ -185,7 +58,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     if (!clouds?.length) return relay.err("no clouds created");
     
     /* create H-S-O-N letters */
-    const createLetter = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
+    const createLetter = (ltr: LetterCaps): readonly [LiveTree, LiveTree] => {
         const cell = makeSpanClass(wordMark.tree, ["cell", ltr])
         const l = makeSpanClass(cell, ["letter", ltr]).setText(ltr)
         return [l, cell];
@@ -207,7 +80,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     letters.forEach(l => {
         const k = get_letter_key(l);
         if (!k) return;
-        const col = LETTER_COLOR_std[k]
+        const col = LETTER_COLORstd[k]
         l.css.set.var("--glow", col);
         l.css.set.var("--final", col);
         l.css.set.var("--starshine", col);
@@ -226,9 +99,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     clouds.forEach((cl, i) => {
         // 1) per-layer fade runs on the parent layer
         cl.css.anim.begin(CLOUD_LAYER_FADEanim(i));
-        cl.css.setMany({
-            willChange: "opacity, bottom",
-        });
     });
 
     await wait.timer(SUN_DELnum);
@@ -254,7 +124,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     await wait.for(tailC.tree).anim(STAR_TAIL_C_ANIM).end();
 
-    SPLASH_KEYS.forEach(kf => {
+    SPLASHkfs.forEach(kf => {
         sky.tree.css.keyframes.delete(kf.name)
     });
 

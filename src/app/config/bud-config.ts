@@ -8,7 +8,6 @@ export type BudList = Record<string, BudSpec>;
 
 export type BudSpec = Readonly<{
   name: string;
-
   // create+append under the provided parent
   make: (parent: LiveTree) => LiveTree;
 
@@ -28,7 +27,7 @@ type BudFob = Readonly<{
   animate: () => void;
 }>;
 
-export function make_budder(parent: LiveTree) {
+export function make_bud_node(parent: LiveTree) {
   const newBud = (spec: BudSpec): BudFob => {
     const node = spec.make(parent);
 
@@ -49,7 +48,7 @@ export function make_budder(parent: LiveTree) {
     };
 
     // CHANGED: return a new bud rooted at this node (chainable)
-    const budlet = make_budder(node);
+    const budlet = make_bud_node(node);
 
     return {
       tree: node,

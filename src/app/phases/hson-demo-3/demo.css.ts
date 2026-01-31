@@ -1,65 +1,23 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { LETTER_CSS, LOGOBOX_CSS, VER_CSS, WORD_CSS } from "../../wordmark/wordmark.css";
+import { LETTER_CSS } from "../../wordmark/wordmark.css";
 import { $COL } from "../../consts/colors.consts";
 
-import { FRAME_CSS } from "../../consts/core.css";
 
+export const MAIN_TEXTcss: CssMap = {
+  fontFamily: "'Inconsolata', monaco, monospace",
+  fontSize: "2rem",
 
-// “home page” palette: mostly grayscale, small accent per letter (optional)
-export const LETTER_COLOR_DEMO = {
-  H: "rgb(230,230,235)",
-  S: "rgb(220,220,226)",
-  O: "rgb(235,235,240)",
-  N: "rgb(255,225,232)",
-} as const;
+}
 
+export const $T$GHSONcss = {
+  fontSize: "6rem",
+  fontFamily: "Jacquard12",
+  width: "max-content",
+}
 
-export const LETTER_ACCENT_DEMO = {
-  H: "rgba(80,200,255,0.55)",
-  S: "rgba(255,210,80,0.45)",
-  O: "rgba(120,255,180,0.40)",
-  N: "rgba(255,140,200,0.40)",
-} as const;
-
-export const LETTER_INK_DEMO = {
-  H: "rgba(88, 215, 151, 1)", // bright
-  S: "rgba(66, 167, 229, 1)", // darker
-  O: "rgba(233, 123, 209, 1)", // slightly warm
-  N: "rgba(116, 116, 231, 1)" // slightly cool
-} as const;
-
-export const LETTER_HALO_DEMO = {
-  H: "rgba(210,215,255,0.10)",
-  S: "rgba(190,255,230,0.08)",
-  O: "rgba(255,220,190,0.08)",
-  N: "rgba(255,190,240,0.08)",
-} as const;
-
-export const WORD_CSS_DEMO: CssMap = {
-  ...WORD_CSS,
-  zIndex: "10",
-};
-
-export const CELL_CSS_DEMO: CssMap = {
-  display: "block",
-  position: "relative",
-  lineHeight: "1",
-};
-
-export const VER6_CSS_DEMO: CssMap = {
-  display: "inline-block",
-  transform: "translateX(2px)",
-};
-
-export const FRAME_CSS_DEMO: CssMap = {
-  ...FRAME_CSS,
-  border: `2px solid ${$COL.greyDim}`,
-};
-
-
-export const DEMO_CSS: CssMap = {
+export const DEMOcss: CssMap = {
   position: "fixed",
   width: "100%",
   height: "100%",
@@ -69,34 +27,8 @@ export const DEMO_CSS: CssMap = {
   pointerEvents: "none",
 };
 
-export const DEMO_BACKDROP_CSS: CssMap = {
-  position: "absolute",
-  inset: "0",
-  background: [
-    // top wash (cool, dim)
-    "radial-gradient(1200px 700px at 45% 18%, rgba(210,220,255,0.10), transparent 58%)",
-    // bottom weight (denser, darker)
-    "radial-gradient(1400px 900px at 50% 110%, rgba(0,0,0,0.55), transparent 55%)",
-    // stipple A (fine)
-    "repeating-linear-gradient(0deg, rgba(255,255,255,0.040) 0 1px, transparent 1px 4px)",
-    // stipple B (coarse)
-    "repeating-linear-gradient(90deg, rgba(255,255,255,0.022) 0 1px, transparent 1px 7px)",
-    // subtle vertical vignette / “screen falloff”
-    "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.30))",
-    // base
-    "linear-gradient(180deg, #101118, #0d0e12 50%, #090a0d)",
-  ].join(", "),
-};
 
-export const DEMO_LOGOBOX_CSS: CssMap = {
-  ...LOGOBOX_CSS,
-  // transform: "translate(-50%, -50%) scale(0.975)",
-  opacity: "0.86",
-  // filter: "saturate(0) contrast(1.08) brightness(0.98)",
-};
-
-
-export const STAGE_CSS_DEMO: CssMap = {
+export const DEMO_STAGEcss: CssMap = {
   position: "relative",
   minHeight: "100vh",
   overflow: "hidden",
@@ -107,25 +39,6 @@ export const STAGE_CSS_DEMO: CssMap = {
   pointerEvents: "none",
 
 };
-
-// export const PORTAL_CSS: CssMap = {
-//   position: "absolute",
-//   left: "50%",
-//   top: "44%",
-//   transform: "translate(-50%, -50%)",
-//   width: "min(860px, 92vw)",
-//   padding: "44px 52px 36px",
-//   borderRadius: "16px",
-//   background: "linear-gradient(180deg, rgba(24,26,32,0.94), rgba(14,15,18,0.94))",
-//   boxShadow: [
-//     "0 30px 110px rgba(0,0,0,0.70)",
-//     // "inset 0 0 0 1px rgba(255,255,255,0.10)",
-//     "inset 0 16px 26px rgba(255,255,255,0.05)",
-//     "inset 0 -18px 30px rgba(0,0,0,0.35)",
-//   ].join(", "),
-//   overflow: "hidden",
-//   isolation: "isolate",
-// };
 
 export const LETTER_CSS_DEMO: CssMap = {
   ...LETTER_CSS,
@@ -140,26 +53,6 @@ export const LETTER_CSS_DEMO: CssMap = {
   filter: "contrast(1.02)",
 };
 
-export const MENU_CSS: CssMap = {
-  marginTop: "28px",
-  display: "grid",
-  gap: "10px",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
-  fontSize: "14px",
-  letterSpacing: "0.02em",
-  color: "rgba(230,232,238,0.82)",
-};
-
-export const MENU_ITEM_CSS: CssMap = {
-  display: "grid",
-  gridTemplateColumns: "22px 1fr",
-  alignItems: "baseline",
-  padding: "10px 12px",
-  borderRadius: "10px",
-  background: "rgba(255,255,255,0.03)",
-  cursor: "pointer",
-  userSelect: "none",
-};
 
 /**
  * OUTER SURFACE (user-facing bezel plane)
@@ -219,20 +112,20 @@ export const DEMO_SCREEN_FXcss: CssMap = {
 
 };
 
-export const MENU_BOXcss ={
-    position: "absolute",
-    left: "500px",
-    height: "max-content",
-    width: "max-content",
-    zIndex: "-1",
-    color: $COL.skyBlue,
-    filter: "blur(0.35px)",
-    margin: "2rem",
-    fontFamily: "monospace",
-    border: "1px solid aquamarine",
-    pointerEvents: "any",
-    padding: "1rem",
-  }
+export const MENU_BOXcss = {
+  position: "absolute",
+  left: "500px",
+  height: "max-content",
+  width: "max-content",
+  zIndex: "-1",
+  color: $COL.skyBlue,
+  filter: "blur(0.35px)",
+  margin: "2rem",
+  fontFamily: "monospace",
+  border: "1px solid aquamarine",
+  pointerEvents: "all",
+  padding: "1rem",
+}
 
 /**
  * INSET / INNER FRAME
@@ -240,7 +133,7 @@ export const MENU_BOXcss ={
  * - keep your bottom-right glint via XY offset shadow
  * - allow it to read as a darker surround to the glass
  */
-export const SCREEN_GLINT_SHADOW =
+export const SCREEN_GLINTstr =
   "2px 2px 0 0.5px rgba(65, 110, 165, 0.96)";
 
 /**
@@ -249,7 +142,7 @@ export const SCREEN_GLINT_SHADOW =
  * catch reflection from the screen illumination and also carry a thin 
  * band of ambient light on the frame edge
  */
-export const DEMO_SCREEN_INSET_CSS: CssMap = {
+export const DEMO_SCREEN_INSETcss: CssMap = {
   position: "absolute",
   left: "3%",
   top: "3%",
@@ -276,10 +169,39 @@ export const DEMO_SCREEN_INSET_CSS: CssMap = {
     "inset 0 0 0 2px rgba(0,0,0,0.18)",
 
     // bottom-right specular catch (your discovery)
-    SCREEN_GLINT_SHADOW,
+    SCREEN_GLINTstr,
 
     // depth, but light-touch
     "inset 0 18px 30px rgba(0,0,0,0.16)",
     "inset 0 -18px 30px rgba(0,0,0,0.20)",
   ].join(", "),
+};
+
+export const TITLE_BOX_CSS: CssMap = {
+  position: "absolute",
+  display: "flex",
+  flexDirection: "row",
+  padding: "1rem",
+}
+
+export const HEADLINE_CSS: CssMap = {
+  display: "flex",
+  alignContent: "baseline",
+  justifyContent: "flex-start",
+  zIndex: 100,
+  fontFamily: "Jacquard12",
+}
+
+export const MAIN_CONTAINERcss = {
+  position: "relative",
+  top: "5vh",
+  left: "5vw",
+  height: "90%",
+  width: "20rem",
+  border: "1px dashed grey",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+
+
 };

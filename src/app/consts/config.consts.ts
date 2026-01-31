@@ -3,4 +3,20 @@
 export const PHASE_LINGER = 3000;
 // export const starDelayString = `${skyTimeNum + 2000}ms`
 
-export const HSON_LETTERS = ["H", "S", "O", "N"] as const;
+export const LETTER_LOWS = ["h", "s", "o", "n"] as const;
+export const LETTER_CAPS = ["H", "S", "O", "N"] as const;
+
+export const HSONlower = {
+  h: "h",
+  s: "s",
+  o: "o",
+  n: "n",
+} as const;
+
+export const HSONcaps = {
+  h: "H",
+  s: "S",
+  o: "O",
+  n: "N",
+} as const;
+

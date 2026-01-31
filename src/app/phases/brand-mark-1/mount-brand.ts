@@ -4,9 +4,9 @@ import type { LiveTree } from "hson-live";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
 import { $COL } from "../../consts/colors.consts";
-import { makeDivId } from "../../../utils/makers";
+import { makeDivId } from "../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
-import { wait } from "../../../utils/wait";
+import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
 
