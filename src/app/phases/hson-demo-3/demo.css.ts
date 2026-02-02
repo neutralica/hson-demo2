@@ -1,13 +1,12 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { LETTER_CSS } from "../../wordmark/wordmark.css";
-import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
+import { $cols } from "../../consts/colors.consts";
 
 
 export const MAIN_TEXTcss: CssMap = {
   fontFamily: "'Inconsolata', monaco, monospace",
-  fontSize: "40px",
+  fontSize: "20px",
 
 }
 
@@ -35,24 +34,10 @@ export const DEMO_STAGEcss: CssMap = {
   // default vars (even if unused initially)
   "--mxp": "50%",
   "--myp": "40%",
-  backgroundColor: $COL._bckgd,
+  backgroundColor: $cols.bckgd,
   pointerEvents: "none",
 
 };
-
-export const LETTER_CSS_DEMO: CssMap = {
-  ...LETTER_CSS,
-  color: "rgba(230,232,238,0.80)",
-  textShadow: [
-    // slight emboss: light edge + dark edge
-    "0 1px 0 rgba(255,255,255,0.08)",
-    "0 -1px 0 rgba(0,0,0,0.35)",
-    // soft “ink” bleed
-    "0 0 18px rgba(0,0,0,0.30)",
-  ].join(", "),
-  filter: "contrast(1.02)",
-};
-
 
 /**
  * GLASS (screen)
@@ -83,19 +68,10 @@ export const DEMO_SCREEN_FXcss: CssMap = {
 
 export const MENU_BOXcss: CssMap = {
   position: "absolute",
-  left: "500px",
-  height: "max-content",
-  width: "max-content",
-  zIndex: "-1",
-  filter: "blur(0.35px)",
-  margin: "2rem",
-  fontFamily: "monospace",
-  border: "1px solid aquamarine",
-  pointerEvents: "all",
-  padding: "1rem",
-  color: $COL.skyBlue,
-}
+  top: "6rem",
+  left: "3rem",
 
+}
 
 export const TITLE_BOXcss: CssMap = {
   position: "absolute",
@@ -184,7 +160,7 @@ export const BELT_HOLDERcss: CssMap = {
 } as const;
 
 export const LAYOUT_GRIDcss = {
-
+left: "30%",
   gridTemplateColumns: "1fr",
   gridTemplateRows: "1fr 1fr",   // force two visible rows
 

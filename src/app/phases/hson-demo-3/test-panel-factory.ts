@@ -1,7 +1,7 @@
 
 
 import { hson, type LiveTree } from "hson-live";
-import { MENU_BTNcss, TEST_BODY_OVERRIDEScss, TEST_CONSOLEcss, TEST_STATUS_CHIPcss, TEST_TOOLBARcss } from "./panels.css";
+import { MENU_BTNcss, TEST_BODY_OVERRIDEScss, TEST_CONSOLEcss, TEST_STATUS_CHIPcss, TEST_TOOLBARcss } from "./demo-panels.css";
 import type { ConsoleLevel } from "../../console/console";
 import type { TestRunMode } from "../../../tests/tests.types";
 import { TEST_SELECTcss } from "./demo-panels";

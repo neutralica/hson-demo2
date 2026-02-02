@@ -1,7 +1,6 @@
 // palette-board.ts
 import type { LiveTree } from "hson-live";
 import type { Palette } from "./calc-palette";
-import { $COL } from "../../consts/colors.consts";
 import { makeDivClass, makeDivId } from "../../utils/makers";
 
 // Render a simple grid of clickable swatches.

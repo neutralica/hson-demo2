@@ -3,18 +3,18 @@
 import type { LiveTree } from "hson-live";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
-import { $COL } from "../../consts/colors.consts";
 import { makeDivId } from "../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
+import { $cols } from "../../consts/colors.consts";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
 
-const zalgoCol = $COL.skyBlue;
-const zalgoCol2 = $COL.dragonGreen;
+const zalgoCol = $cols.blu.sky;
+const zalgoCol2 = $cols.dragonGreen;
 
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };
 const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
@@ -28,10 +28,10 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     position: "fixed",
     top: "1rem",
     left: "1rem",
-    backgroundColor: $COL._bckgd,
+    backgroundColor: $cols.bckgd,
     padding: "1rem",
     fontFamily: "monospace",
-    color: $COL.dragonGreen,
+    color: $cols.dragonGreen,
     filter: "blur(0.5px)",
   })
   const noteText = makeDivId(noteBox, "note-text")

@@ -3,6 +3,7 @@
 import { PHASE_LINGER } from "../../consts/config.consts";
 
 
+
 const LOGOBOX_KEYF = {
   name: 'logo-fade',
   steps: {

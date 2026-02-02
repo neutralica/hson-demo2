@@ -1,5 +1,5 @@
 import { make_panel_specs } from "../../ui/make-panel";
-import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "./panels.css";
+import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "./demo-panels.css";
 
 export const PARSE_PANEL = make_panel_specs({
   key: "parse",

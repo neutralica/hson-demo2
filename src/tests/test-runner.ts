@@ -2,6 +2,7 @@
 // Purpose: deterministic runner. No DOM, no global state, no “clever” chaining.
 // Emits events to recorder + console via a single callback.
 
+import { _freeze } from "../fixtures/fixture-gen";
 import { TestRecorder } from "./test-recorder";
 import type { TestEvent, TestSummary } from "./tests.types";
 
@@ -91,9 +92,9 @@ export async function run_suites(
   }
 
   const totalMs = now() - t0;
-  const summary = Object.freeze({ ...rec.summary(), msTotal: totalMs });
+  const summary = _freeze({ ...rec.summary(), msTotal: totalMs });
 
-  return Object.freeze({ ok: summary.fail === 0, summary });
+  return _freeze({ ok: summary.fail === 0, summary });
 }
 
 function emit(rec: TestRecorder, onEvent: (e: TestEvent) => void, e: TestEvent): void {

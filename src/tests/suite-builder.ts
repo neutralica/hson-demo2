@@ -33,7 +33,7 @@ export function make_full_loop_suite(hson: HsonTestApi): TestSuite {
   const cases = (Object.keys(LOOP_FIXTURES) as readonly LoopFixtureKey[]).map((k) => {
     const src = LOOP_FIXTURES[k];
 
-    return Object.freeze({
+    return _freeze({
       suite,                 // CHANGED: required by your TestCase type
       name: k,               // CHANGED: TestCase.name is the case name
       meta: { fixture: k },  // OK: Record<string,string>
@@ -46,9 +46,9 @@ export function make_full_loop_suite(hson: HsonTestApi): TestSuite {
     });
   });
 
-  return Object.freeze({
+  return _freeze({
     suite,                   // CHANGED: TestSuite.suite (not name)
-    cases: Object.freeze(cases),
+    cases: _freeze(cases),
   });
 }
 
@@ -60,9 +60,9 @@ export function make_generated_fixtures_suite(
 ): TestSuite {
   const suite = "fixtures/generated";
 
-  return Object.freeze({
+  return _freeze({
     suite, // CHANGED: was `name`
-    cases: Object.freeze(
+    cases: _freeze(
       fixtures.map((fx) => {
         // CHANGED: avoid meta: undefined under exactOptionalPropertyTypes
         const base = {
@@ -75,7 +75,7 @@ export function make_generated_fixtures_suite(
         } as const;
 
         const tags = fx.tags?.length ? fx.tags.join(",") : "";
-        return Object.freeze(tags ? { ...base, meta: { tags } } : base);
+        return _freeze(tags ? { ...base, meta: { tags } } : base);
       }),
     ),
   });

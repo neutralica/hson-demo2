@@ -1,10 +1,10 @@
 import { CssManager, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId } from "../../utils/makers";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
-import { $COL, _bckRGB, _setBckgdAlpha } from "../../consts/colors.consts";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/logo-splash-2/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { mulberry32 } from "../../utils/rng";
+import { $cols, _bckRGB } from "../../consts/colors.consts";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
@@ -12,8 +12,8 @@ const FADE_MID_PCT = 10;      // start thinning here
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  ${$COL._bckgd} ${FADE_MID_PCT}%,
-  ${$COL._bckgd} 100%
+  ${$cols.bckgd} ${FADE_MID_PCT}%,
+  ${$cols.bckgd} 100%
 )`;
 export type CloudSvgOpts = {
   seed: number;

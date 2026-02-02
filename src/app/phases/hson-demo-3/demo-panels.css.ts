@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
+import { $cols } from "../../consts/colors.consts";
 
 export const UI_ROOTcss:CssMap = {
     position: "absolute",
@@ -34,21 +34,19 @@ export const PANEL_SURFACEcss: CssMap = {
     overflow: "auto",
     display: "grid",
     gap: "8px",
-    minHeight: "0",
+    minHeight: "18rem",
     minWidth: "0",
-    backgroundColor: "rgba(0, 0, 40, 0.85)",
-    pointerEvents: "all"
+    backgroundColor: "rgba(0, 20, 20, 1)",
+    pointerEvents: "all",
 
 } as const;
 
 export const PANEL_FRAMEcss = {
-    boxShadow:
-        `inset 0 0 0 1px ${$COL.stonerPurple}, inset 0 0 0 2px rgba(0,0,0,0.22)`,
-    backgroundColor: "white",
+    backgroundColor: $cols.bckgd,
     backdropFilter: "blur(8px)",
-    minHeight: "1.5rem",
-    outline: "1px solid rgba(255,0,0,0.65)",
-    color: $COL._txtmain,
+    minHeight: "18rem",
+    outline: `1px solid rgba(10,150,220,1)`,
+    color: $cols.txtmain,
     fontFamily: "'Inconsolata'",
 } as const;
 
@@ -132,8 +130,8 @@ export const PANEL_TEXTAREAcss = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: "12px",
     lineHeight: "1.35",
-    background: "rgba(0,0,0,0.18)",
-    color: "rgba(255,255,255,0.88)",
+    background: "rgba(110, 13, 50, .3)",
+    color: $cols.blu.sky,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: "10px",
     padding: "10px",
@@ -166,7 +164,7 @@ export const TEST_STATUS_CHIPcss: CssMap = {
     background: "rgba(255,255,255,0.02)",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
     opacity: "0.9",
-    color: $COL.skyBlue
+    color: $cols.blu.pastel
 } as const;
 
 export const TEST_CONSOLEcss = {
@@ -181,5 +179,5 @@ export const TEST_CONSOLEcss = {
     lineHeight: "1.35",
     whiteSpace: "pre",
     minWidth: "0",
-    color: $COL._txtmain,
+    color: $cols.txtmain,
 } as const;

@@ -1,0 +1,37 @@
+<div class="page" data-role="page">
+    <!-- Brand / heading cluster (top-left ~20%) -->
+    <layer id="motes-container"></layer>
+    <header class="hson-header" data-role="banner">
+        <div class="glyph">$T$G</div>
+        <div class="title">
+            <h1 class="headline">hson</h1>
+            <p class="sub-head">v.1.0 DEMO/PROOF OF CONCEPT</p>
+        </div>
+        <div class="menu-head">
+            <button id="start-fleurs" class="btn">[FLEURS]</button>
+            <button id="test-livetree" class="btn">test liveTree</button>
+            <button id="start-tests" class="btn">[START TESTS]</button>
+        </div>
+    </header>
+    <!-- Parsing panels row (bottom): JSON → HSON → HTML -->
+    <div id="parsing container">
+        
+    </div>
+    <!-- Main attraction (center ~60%) -->
+
+    <!-- Diagnostics / console (right column) -->
+    <section class="panel" data-role="console">
+        <header class="panel-head">
+            <h3 class="title">console</h3>
+        </header>
+        <div class="panel-body">
+            <pre class="log" data-field="console-log" aria-live="polite"></pre>
+        </div>
+    </section>
+    <footer class="demo-foot">
+        <div id="mouse-tracker">
+            <pre id="coords">X:0000 Y:0000</pre>
+            <div id="pointer">⇡</div>
+        </div>
+    </footer>
+</div>

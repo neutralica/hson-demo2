@@ -2,6 +2,7 @@
 
 import type { LETTER_CAPS, LETTER_LOWS } from "../app/consts/config.consts";
 
+
 export type PhaseId = "intro" | "splash";
 
 export type AppEnv = {

@@ -1,6 +1,6 @@
 import type { HsonAttrs } from "hson-live/types";
 import type { Gen, J, Fixture, FixtureBag, Named } from "./fixtures.types";
-
+import {json_ALL} from "../../_data-old/data/json-fixtures"
 
 
 function el(tag: string, attrs: HsonAttrs, inner: string): string {
@@ -131,7 +131,7 @@ export function make_bag(items: readonly Fixture[]): FixtureBag {
     out[f.name] = f;
   }
 
-  return Object.freeze(out);
+  return _freeze(out);
 }
 
 export function product(
@@ -152,7 +152,7 @@ export function product(
     acc = next;
   }
 
-  return acc.map((x) => Object.freeze({ name: x.name, values: Object.freeze([...x.values]) }));
+  return acc.map((x) => _freeze({ name: x.name, values: _freeze([...x.values]) }));
 }
 
 // CHANGED: typed freeze wrapper preserves generics
@@ -197,6 +197,12 @@ export function product3<A, B, C>(
 }
 
 
+// CHANGED: extra helper(s) for shape building
+type HtmlShape = Readonly<{
+  name: string;
+  apply: (tag: string, attrs: HsonAttrs, inner: string) => string;
+}>;
+
 export function make_html_generated_fixtures(): readonly Fixture[] {
   const TAGS = [
     { name: "p", value: "p" },
@@ -209,26 +215,72 @@ export function make_html_generated_fixtures(): readonly Fixture[] {
     { name: "multi", value: { class: "a\tb\nb  a", lang: "en" } as HsonAttrs },
     { name: "boolean", value: { disabled: true, required: true } as HsonAttrs },
     { name: "quotes", value: { title: `He said "hi" & left <soon>` } as HsonAttrs },
+
+    // ADDED: empty-string + zero-ish values (often exposes “stringified number” bugs downstream)
+    { name: "empty_attr", value: { title: "" } as HsonAttrs },
+    { name: "numish_attr", value: { "data-n": 0 } as unknown as HsonAttrs }, // if your HsonAttrs forbids numbers, remove
   ] as const;
 
   const CONTENTS = [
     { name: "plain", value: "basic paragraph" },
     { name: "unicode", value: `e\u0301 = é; ZWJ: 👩‍💻; ZWNJ:\u200Cbetween` },
-    { name: "mixed", value: `<header>paragraph with <span>mixed content</span> inside</header>` },
+
+    // NOTE: this is “inner HTML” content; great for mixed-content testing
+    { name: "mixed_inline", value: `paragraph with <span>mixed content</span> inside` },
+
+    // ADDED: text + element + text (classic mixed-node edge)
+    { name: "txt_span_txt", value: `alpha <span>mid</span> omega` },
+
+    // ADDED: empty-ish content
+    { name: "empty", value: "" },
+    { name: "spaces", value: "   " },
+  ] as const;
+
+  // ADDED: shape axis (tree topology)
+  const SHAPES: readonly HtmlShape[] = [
+    {
+      name: "single",
+      apply: (tag, attrs, inner) => el(tag, attrs, inner),
+    },
+    {
+      name: "wrapped_div",
+      apply: (tag, attrs, inner) => el("div", {} as HsonAttrs, el(tag, attrs, inner)),
+    },
+    {
+      name: "siblings_h2_p",
+      apply: (tag, attrs, inner) =>
+        `<h2>sib</h2>${el(tag, attrs, inner)}`,
+    },
+    {
+      name: "mixed_text_nodes",
+      apply: (tag, attrs, inner) =>
+        el(tag, attrs, `pre ${inner} post`),
+    },
+    {
+      name: "void_hr_between",
+      apply: (tag, attrs, inner) =>
+        `<p>line one</p><hr>${el(tag, attrs, inner)}<p>line two</p>`,
+    },
+    {
+      name: "optional_end_li",
+      apply: (_tag, _attrs, inner) =>
+        `<ul><li>one<li>${inner}<li>three</ul>`,
+    },
   ] as const;
 
   const combos = product2(TAGS, ATTR_SETS);
 
-  // build fixtures
   const out: Fixture[] = [];
   for (const ta of combos) {
     for (const c of CONTENTS) {
-      out.push({
-        name: `html__${ta.name}__${c.name}`,
-        fmt: "html",
-        atom: el(ta.a, ta.b, c.value), // your existing el()
-        tags: ["generated"],
-      });
+      for (const s of SHAPES) {
+        out.push({
+          name: `html__${ta.name}__${c.name}__${s.name}`,
+          fmt: "html",
+          atom: s.apply(ta.a, ta.b, c.value),
+          tags: ["generated", "html", `shape:${s.name}`],
+        });
+      }
     }
   }
 
@@ -236,6 +288,7 @@ export function make_html_generated_fixtures(): readonly Fixture[] {
 }
 
 export const FIXTURES_GENERATED: readonly Fixture[] = _freeze([
-    ...make_html_generated_fixtures(),
-    
+  ...make_html_generated_fixtures(),
+
+    /// make_json_fixtures
     ]);

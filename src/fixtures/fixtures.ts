@@ -3,11 +3,11 @@
 
 import type { HsonAttrs } from "hson-live/types";
 import type { Fixture, J, Named } from "./fixtures.types";
-import { product3 } from "./fixture-gen";
+import { _freeze, product3 } from "./fixture-gen";
 
 
 export function named<const T>(name: string, value: T): Named<T> {
-  return Object.freeze({ name, value });
+  return _freeze({ name, value });
 }
 
 function attrs_to_html(attrs: HsonAttrs): string {
@@ -51,15 +51,15 @@ function json_text(v: J): string {
 
 // ---------- Fixture constructors ----------
 function fx_html(name: string, atom: string, tags: readonly string[]): Fixture {
-  return Object.freeze({ name, fmt: "html", atom, tags });
+  return _freeze({ name, fmt: "html", atom, tags });
 }
 function fx_json(name: string, atom: string, tags: readonly string[]): Fixture {
-  return Object.freeze({ name, fmt: "json", atom, tags });
+  return _freeze({ name, fmt: "json", atom, tags });
 }
 
 // ---------- Core shape sets ----------
 
-const TXT = Object.freeze({
+const TXT = _freeze({
   plain: "basic paragraph",
   empty: "",
   whitespace: "   ",
@@ -120,7 +120,7 @@ function gen_html_shapes(): readonly Fixture[] {
   out.push(fx_html("html__duplicate_attrs_policy", `<div class="a" class="b">dup</div>`, ["html", "shape:policy", "policy:dup_attrs"]));
   out.push(fx_html("html__uppercase_tags_attrs", `<DIV CLASS="X" data-FOO="Bar">Up</DIV>`, ["html", "shape:policy", "policy:case"]));
 
-  return Object.freeze(out);
+  return _freeze(out);
 }
 
 // ---------- JSON fixtures ----------
@@ -185,12 +185,12 @@ function gen_json_shapes(): readonly Fixture[] {
     a: 1, b: "2", c: true, d: null, e: [1, 2], f: { g: "h" }, i: "", j: false, k: 0, l: "01",
   }), ["json", "shape:wide"]));
 
-  return Object.freeze(out);
+  return _freeze(out);
 }
 
 // ---------- exported entrypoint ----------
 export function gen_transformer_fixtures(): readonly Fixture[] {
-  return Object.freeze([
+  return _freeze([
     ...gen_html_shapes(),
     ...gen_json_shapes(),
   ]);

@@ -1,0 +1,156 @@
+<div class="page" data-role="page">
+    <!-- Brand / heading cluster (top-left ~20%) -->
+    <layer id="motes-container"></layer>
+    <header class="brand" data-role="brand">
+        <div class="brand-mark" aria-hidden="true">$T$G</div>
+        <div class="brand-text">
+            <h1 class="brand-title">hson</h1>
+            <p class="brand-sub">v.1.0 DEMO/PROOF OF CONCEPT</p>
+        </div>
+        <div class="brand-status">
+            <button id="start-fleurs" class="btn">[FLEURS]</button>
+            <button id="new-test" class="btn">[NEW TEST]</button>
+            <span class="chip counter" data-key="fixtures"
+                >fixtures: <b data-field="count-fixtures">0</b></span
+            >
+            <button id="start-tests" class="btn">[START TESTS]</button>
+        </div>
+
+        <div id="mouse-tracker">
+            <pre id="coords">X:0000 Y:0000</pre>
+            <div id="pointer">⇡</div>
+        </div>
+    </header>
+    <!-- Parsing panels row (bottom): JSON → HSON → HTML -->
+    <section class="parsing" data-role="parsing-row">
+        <article class="parse-card json" data-role="panel-json">
+            <header class="card-head">
+                <h4 class="title-json">JSON</h4>
+                <div class="actions">
+                    <button class="btn" data-action="copy-json">copy</button>
+                </div>
+            </header>
+            <div class="card-body">
+                <textarea
+                    class="editor"
+                    spellcheck="false"
+                    data-input="json"
+                    placeholder="{...}"
+                >
+                </textarea>
+            </div>
+            <footer class="card-foot">
+                <span class="chip validity" data-valid="false">invalid</span>
+                <span class="chip metric bytes" data-field="json-bytes"
+                    >0 bytes</span
+                >
+            </footer>
+        </article>
+        <article class="parse-card hson" data-role="panel-hson">
+            <header class="card-head">
+                <h4 class="title-hson">HSON</h4>
+                <div class="actions">
+                    <button class="btn" data-action="copy-hson">copy</button>
+                </div>
+            </header>
+            <div class="card-body">
+                <textarea
+                    class="editor"
+                    spellcheck="false"
+                    data-input="hson"
+                    placeholder="‹...›"
+                ></textarea>
+            </div>
+            <footer class="card-foot">
+                <span class="chip validity" data-valid="false">invalid</span>
+                <span class="chip metric bytes" data-field="hson-bytes"
+                    >0 bytes</span
+                >
+            </footer>
+        </article>
+        <article class="parse-card html" data-role="panel-html">
+            <header class="card-head">
+                <h4 class="title">HTML</h4>
+                <div class="actions">
+                    <button class="btn" data-action="copy-html">copy</button>
+                </div>
+            </header>
+            <div class="card-body">
+                <textarea
+                    class="editor"
+                    spellcheck="false"
+                    data-input="html"
+                    placeholder="‹...‹/"
+                ></textarea>
+            </div>
+            <footer class="card-foot">
+                <span class="chip validity" data-valid="false">invalid</span>
+                <span class="chip metric bytes" data-field="html-bytes"
+                    >0 bytes</span
+                >
+            </footer>
+        </article>
+    </section>
+    <!-- Main attraction (center ~60%) -->
+    <main class="main" data-role="main">
+        <section class="demo-card" data-role="demo">
+            <header class="demo-head">
+                <h2 class="title">working</h2>
+                <div class="demo-actions">
+                    <button class="btn" data-action="start">start</button>
+                    <button class="btn" data-action="stop">stop</button>
+                    <button class="btn" data-action="reset">reset</button>
+                </div>
+            </header>
+            <div class="demo-body">
+                <div class="demo-placeholder" aria-label="demo-area">
+                    <!-- LiveTree will mount content here -->
+                    <p class="muted">Ready.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Diagnostics / console (right column) -->
+    <aside class="side" data-role="side">
+        <section class="panel diag" data-role="diagnostics">
+            <header class="panel-head"><h3 class="title">results</h3></header>
+            <div class="panel-body">
+                <ul class="kv">
+                    <li>
+                        <span class="k">tests:</span
+                        ><span class="v" data-field="tests-total">0</span>
+                    </li>
+                    <li>
+                        <span class="k">ok:</span
+                        ><span class="v ok" data-field="tests-ok">0</span>
+                    </li>
+                    <li>
+                        <span class="k">fail:</span
+                        ><span class="v err" data-field="tests-fail">0</span>
+                    </li>
+                    <li>
+                        <span class="k">bytes:</span
+                        ><span class="v" data-field="bytes">0</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </aside>
+    <section class="panel console" data-role="console">
+        <header class="panel-head">
+            <h3 class="title">console</h3>
+            <div class="actions">
+                <button class="btn clear" data-action="console-clear">
+                    clear
+                </button>
+            </div>
+        </header>
+        <div class="panel-body">
+            <pre class="log" data-field="console-log" aria-live="polite"></pre>
+        </div>
+        <footer class="demo-foot">
+            <span class="chip mode" data-mode="html">mode: html</span>
+            <span class="chip metric bytes">0 bytes</span>
+        </footer>
+    </section>
+</div>

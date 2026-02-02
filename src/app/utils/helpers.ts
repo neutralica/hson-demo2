@@ -51,3 +51,14 @@ export const _hash01 = (n: number): number => {
   return (x >>> 0) / 0xffffffff;
 };
 
+// ADDED: deterministic RNG (xorshift32)
+export function _rng_xs32(seed: number): () => number {
+  let x = seed | 0;
+  return () => {
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    // normalize to [0,1)
+    return ((x >>> 0) / 0x1_0000_0000);
+  };
+}

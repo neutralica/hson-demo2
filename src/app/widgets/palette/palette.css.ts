@@ -1,7 +1,7 @@
 // palette.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $COL } from "../../consts/colors.consts";
+import { $cols } from "../../consts/colors.consts";
 
 export const PALETTE_TAB_CSS: CssMap = {
     position: "fixed",
@@ -15,6 +15,6 @@ export const PALETTE_TAB_CSS: CssMap = {
     minHeight: "200px",
     maxHeight: "700px",
     overflowY: "scroll",
-    backgroundColor: $COL._bckgd,
+    backgroundColor: $cols.bckgd,
 
 }

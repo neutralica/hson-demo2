@@ -2,7 +2,6 @@
 
 import { type LiveTree } from "hson-live";
 import { O_ROT, VER_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
-import { LETTER_COLORstd } from "../../consts/colors.consts";
 import { CLOUD_LAYER_FADEanim } from "./splash.anim";
 import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
 import { SPLASHkfs } from "./splash.keys";
@@ -16,6 +15,7 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
 import { fill_create } from "../../config/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
+import { LETTER_COLORstd } from "../../consts/colors.consts";
 
 
 

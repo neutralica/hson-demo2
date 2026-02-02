@@ -6,11 +6,11 @@ import { mount_splash } from "./phases/logo-splash-2/mount-splash";
 import { STAGE_CSS } from "./phases/logo-splash-2/splash.css";
 import { _sleep } from "../app/utils/helpers";
 import { makeDivId } from "../app/utils/makers";
-import { PHASE_LINGER } from "./consts/config.consts";
 import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from "../app/utils/skip-promise";
 import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "intrastructure";
 import { mount_demo } from "./phases/hson-demo-3/mount-demo";
 import { make_vines } from "./widgets/vines/vines";
+import { PHASE_LINGER } from "./consts/config.consts";
 
 
 const _pause = () => _sleep(PHASE_LINGER);
@@ -23,28 +23,17 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     const stage = makeDivId(app, "stage")
         .classlist.add("stage")
         .css.setMany(STAGE_CSS);
-
+    
+    
+    console.log("// DEBUG tired of skipping") 
+    const demoTEMP = run_phase(stage, mount_demo, _shortpause);
+    return relay.ok();
     //  one skip signal governs all phases
     const { skip, cancel } = make_skip_promise(stage);
 
     try {
         // --- phase 1: intro ---
         {
-            // console.log(make_fluting({
-            //     rows: 20,
-            //     width: 10,
-            //     seed: 9199,
-            //     flutes: 0.23,
-            //     grooveDepth: 0.4,
-            //     grooveWidth: .15,
-            //     ink: 0.15,
-            //     lightPos: 0.13,
-            //     speckle: 0.9,
-
-            // }));
-            // mount_ornament(stage);
-            // console.log(make_vines({ width: 20, rows: 200, seed: 5555 }));
-            // await _pause();
             const introP = run_phase(stage, mount_brand, _shortpause); // OutcomeAsync<void>
             const res = await Promise.race([introP, skip]);       // "skip" | Outcome<void>
             cancel();

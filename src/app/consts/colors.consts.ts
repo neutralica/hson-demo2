@@ -1,9 +1,36 @@
 
-const dragonGreen = "rgba(24, 201, 137, 1)";
-const skyBlue = "rgba(68, 149, 255, 1)";
-const richCrimson = "rgba(170, 20, 90, 1)"
-const heartsBlood = "rgba(161, 49, 49, 1)"
-const stonerPurple = "rgba(126, 40, 143, 1)"
+const greenDragon = "rgba(24, 201, 137, 1)";
+const greenEaster = "rgba(120,255,180,0.40)";
+const greenBleach = "rgba(228, 244, 228, 1)";
+const greenCandy = "rgba(66, 167, 229, 1)";
+const greenMuted = "rgba(96, 193, 141, 1)";
+const greenFaded = "rgba(80, 163, 119, 1)";
+
+const blueEaster = "rgba(80,200,255,0.55)";
+const blueSky = "rgba(68, 149, 255, 1)";
+const blueBaby = "rgba(125, 169, 228, 1)";
+const bluePastel = "rgba(146, 193, 255, 1)";
+const blueBleach = "rgba(221, 221, 249, 1)";
+const blueCandy = "rgba(231, 223, 116, 1)";
+const blueMuted = "rgba(96, 182, 196, 1)";
+const blueFaded = "rgba(77, 150, 161, 1)";
+
+const richCrimson = "rgba(228, 34, 125, 1)"
+const redHeartsBlood = "rgba(161, 49, 49, 1)"
+
+const pinkCandy = "rgba(233, 123, 209, 1)";
+const pinkEaster = "rgba(255,140,200,0.40)";
+const pinkBleach = "rgba(255,225,232,1)";
+const pinkMuted = "rgba(180, 114, 144, 1)";
+const pinkFaded = "rgba(180, 114, 144, 1)";
+
+const purpleStoner = "rgba(126, 40, 143, 1)"
+
+const yellowEaster = "rgba(255,210,80,0.45)";
+const yellowBleach = "rgba(255, 252, 233, 1)";
+const yellowCandy = "rgba(88, 215, 151, 1)";
+const yellowMuted = "rgba(189, 171, 92, 1)";
+const yellowFaded = "rgba(163, 145, 64, 1)";
 
 const greyLite = "rgba(230, 230, 230, 1)"
 const greyMid = "rgba(82, 82, 82, 1)"
@@ -34,18 +61,18 @@ export const LETTER_COLORstd = {
   n: "rgb(255, 100, 170)",
 };
 
-export const LETTER_COLORmuted = {
-  h: "rgba(96, 182, 196, 1)",
-  s: "rgba(189, 171, 92, 1)",
-  o: "rgba(96, 193, 141, 1)",
-  n: "rgba(180, 114, 144, 1)",
-};
 
+export const LETTER_COLORmuted = {
+  h:blueMuted,
+  s:yellowMuted,
+  o: greenMuted,
+  n:pinkMuted,
+};
 export const LETTER_COLORfaded = {
-  h: "rgba(77, 150, 161, 1)",
-  s: "rgba(163, 145, 64, 1)",
-  o: "rgba(80, 163, 119, 1)",
-  n: "rgba(180, 114, 144, 1)",
+  h: blueFaded,
+  s: yellowFaded,
+  o: greenFaded,
+  n: pinkFaded,
 };
 
 export const LETTER_COLORwashed = {
@@ -55,44 +82,57 @@ export const LETTER_COLORwashed = {
   n: "rgba(110, 66, 86, 1)",
 };
 
-export const LETTER_COLORbright = {
-  h: "rgb(230,230,235)",
-  s: "rgb(220,220,226)",
-  o: "rgb(235,235,240)",
-  n: "rgb(255,225,232)",
+export const LETTER_COLORbleach = {
+  h: blueBleach,
+  s: yellowBleach,
+  o: greenBleach,
+  n: pinkBleach,
 } as const;
 
 
 export const LETTER_COLORsubdued = {
-  h: "rgba(80,200,255,0.55)",
-  s: "rgba(255,210,80,0.45)",
-  o: "rgba(120,255,180,0.40)",
-  n: "rgba(255,140,200,0.40)",
+  h: blueEaster,
+  s: yellowEaster,
+  o: greenEaster,
+  n: pinkEaster,
 } as const;
 
 export const LETTER_COLORcandy = {
-  h: "rgba(88, 215, 151, 1)", // bright
-  s: "rgba(66, 167, 229, 1)", // darker
-  o: "rgba(233, 123, 209, 1)", // slightly warm
-  n: "rgba(116, 116, 231, 1)" // slightly cool
+  h:blueCandy, // darker
+  s: yellowCandy, // slightly cool
+  o: greenCandy, // bright
+  n: pinkCandy, // slightly warm
 } as const;
 
 
 
-export const $COL = {
-  _txtmain: txtMain,
-  _bckgd: bckColor,
-  dragonGreen,
-  skyBlue,
+export const $cols = {
+  txtmain: txtMain,
+  bckgd: bckColor,
+  gry: {
+    std: grey,
+    lite: greyLite,
+    mid: greyMid,
+    dim: greyDim,
+    dimmer: greyDimmer,
+    black: greyBlack,
+  },
+  blu: {
+    sky: blueSky,
+    pastel: bluePastel,
+    baby: blueBaby,
+  },
+  dragonGreen: greenDragon,
   richCrimson,
-  heartsBlood,
-  stonerPurple,
+  heartsBlood: redHeartsBlood,
+  stonerPurple: purpleStoner,
   grey,
   greyLite,
   greyMid,
   greyDim,
   greyDimmer,
   greyBlack,
+
 
 
 };

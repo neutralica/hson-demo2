@@ -2,8 +2,9 @@
 
 import type { CssMap } from "hson-live/types";
 import { sunColor, sunFade, SKY_GRADIENT } from "./splash.consts";
+import { $cols } from "../../consts/colors.consts";
 
-import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
+
 
 export const STAGE_CSS: CssMap = {
   position: "fixed",
@@ -11,7 +12,7 @@ export const STAGE_CSS: CssMap = {
   left: "0",
   width: "100vw",
   height: "100vh",
-  backgroundColor: $COL._bckgd
+  backgroundColor: $cols.bckgd
 }
 export const SKY_CSS = {
   position: "relative",

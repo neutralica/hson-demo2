@@ -2,7 +2,7 @@
 import { hson, type LiveTree } from "hson-live";
 import type { Fmt, Panels, PanelShell } from "./pp.types";
 import { PP_PANEL_HEADER_TG_CSS } from "./pp.css";
-import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../../phases/hson-demo-3/panels.css";
+import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../../phases/hson-demo-3/demo-panels.css";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "./pp.consts";
 
 type PpFactoryOpts = {

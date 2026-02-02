@@ -3,28 +3,27 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { relay, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, BELT_HOLDERcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, TITLE_BOXcss } from "./demo.css";
+import { $T$GHSONcss, BELT_HOLDERcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss,  MENU_BOXcss,  TITLE_BOXcss } from "./demo.css";
 import { init_parsing_panels } from "../../widgets/parse-panel/init.pp";
 import { pp_factory } from "../../widgets/parse-panel/pp-factory";
 import { style_parsing_panels } from "../../widgets/parse-panel/style-pp";
 import { fill_create as bud_node } from "../../config/bud-config";
 import { DEMO_BUDS } from "./demo.buds";
 import { shade_class } from "./demo.consts";
-import { LETTER_LOWS, HSONlower } from "../../consts/config.consts";
-import { $COL, LETTER_COLORcandy, LETTER_COLORfaded, LETTER_COLORwashed } from "../../consts/colors.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import { LAYOUT_GRIDcss, PANEL_FRAMEcss, PANEL_OUTERcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./panels.css";
+import { LAYOUT_GRIDcss, PANEL_FRAMEcss, PANEL_OUTERcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./demo-panels.css";
 import { PARSE_PANEL, TEST_PANEL } from "./demo-panels";
 import { mount_panel } from "../../ui/make-panel";
 import { test_panel_factory_offdom } from "./test-panel-factory";
-import { $PANEL_HIDDEN } from "../../consts/ui-consts";
-import { belt_attach_spin } from "../../ui/belt";
 import { create_console } from "../../console/console";
 import { build_suites_for_mode, make_full_loop_suite, make_generated_fixtures_suite } from "../../../tests/suite-builder";
 import { run_suites } from "../../../tests/test-runner";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { FIXTURES_GENERATED } from "../../../fixtures/fixture-gen";
 import type { TestSuite } from "../../../tests/tests.types";
+import { $PANEL_HIDDEN } from "../../consts/ui-consts";
+import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
+import { $cols, LETTER_COLORfaded } from "../../consts/colors.consts";
 
 export const $PARSE = "parse";
 export const $TEST = "test";
@@ -98,22 +97,22 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   const cons = create_console(tp.branch);
 
-tp.runBtn.listen.onClick(async () => {
-  cons.clear();
-  cons.setLevel("normal");
+  tp.runBtn.listen.onClick(async () => {
+    cons.clear();
+    cons.setLevel("normal");
 
-  const suites: readonly TestSuite[] = [
-    make_generated_fixtures_suite({ _test_full_loop }, FIXTURES_GENERATED),
-    // add other suites here
-  ];
-cons.onEvent({ t: "suite_begin", suite: "debug", totalPlanned: 0 });
-for (const s of suites) {
-  tp.appendLine(`${s.suite}: ${s.cases.length} cases`);
-}
-tp.appendLine(`FIXTURES_GENERATED: ${FIXTURES_GENERATED.length}`);
-  const res = await run_suites(suites, cons.onEvent, { bail: false });
-  cons.onSummary(res.summary);
-});
+    const suites: readonly TestSuite[] = [
+      make_generated_fixtures_suite({ _test_full_loop }, FIXTURES_GENERATED),
+      // add other suites here
+    ];
+    cons.onEvent({ t: "suite_begin", suite: "debug", totalPlanned: 0 });
+    for (const s of suites) {
+      tp.appendLine(`${s.suite}: ${s.cases.length} cases`);
+    }
+
+    const res = await run_suites(suites, cons.onEvent, { bail: false });
+    cons.onSummary(res.summary);
+  });
 
   const gcss = CssManager.globals.invoke();
   LETTER_LOWS.forEach(l => {
@@ -131,12 +130,7 @@ tp.appendLine(`FIXTURES_GENERATED: ${FIXTURES_GENERATED.length}`);
   });
 
   const menuBox = makeDivId(mainContainer, "menu-box")
-    .css.setMany({
-      position: "absolute",
-      top: "6rem",
-      left: "3rem",
-
-    });
+    .css.setMany(MENU_BOXcss);
 
   const menu = {
     aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
@@ -151,7 +145,7 @@ tp.appendLine(`FIXTURES_GENERATED: ${FIXTURES_GENERATED.length}`);
   keys_of(menu).forEach((k) => {
     menu[k].css.setMany({
       ...MAIN_TEXTcss,
-      color: $COL.skyBlue,
+      color: $cols.blu.sky,
     });
   });
 
