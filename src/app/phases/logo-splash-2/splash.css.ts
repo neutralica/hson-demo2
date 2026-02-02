@@ -2,7 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { sunColor, sunFade, SKY_GRADIENT } from "./splash.consts";
-import { FRAME_CSS } from "../../consts/core.css";
+
 import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
 
 export const STAGE_CSS: CssMap = {
@@ -81,6 +81,25 @@ export const FLARE_CSS: CssMap = {
       transparent 60%
     )
   `,
+};
+
+
+
+export const FRAME_CSS: CssMap = {
+    position: "fixed",
+    left: "50%",
+    top: "32%",
+    borderRadius: "22px",
+    transform: "translate(-50%, -50%)",
+    // use the shared var
+    width: "max-content",
+    height: "max-content",
+    // background: bckColor,
+    display: "grid",
+    placeItems: "center",
+    overflow: "hidden",
+    padding: "56px 64px",
+    willChange: "",
 };
 
 export const FRAME_CSS_SPLASH: CssMap = {

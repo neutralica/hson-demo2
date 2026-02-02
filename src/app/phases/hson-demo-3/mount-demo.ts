@@ -1,13 +1,13 @@
 // mount-demo.ts
 
-import { CssManager, type LiveTree } from "hson-live";
+import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { relay, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, HEADLINE_CSS, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, TITLE_BOX_CSS } from "./demo.css";
+import { $T$GHSONcss, BELT_HOLDERcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, TITLE_BOXcss } from "./demo.css";
 import { init_parsing_panels } from "../../widgets/parse-panel/init.pp";
 import { pp_factory } from "../../widgets/parse-panel/pp-factory";
 import { style_parsing_panels } from "../../widgets/parse-panel/style-pp";
-import { make_bud_node } from "../../config/bud-config";
+import { fill_create as bud_node } from "../../config/bud-config";
 import { DEMO_BUDS } from "./demo.buds";
 import { shade_class } from "./demo.consts";
 import { LETTER_LOWS, HSONlower } from "../../consts/config.consts";
@@ -15,11 +15,20 @@ import { $COL, LETTER_COLORcandy, LETTER_COLORfaded, LETTER_COLORwashed } from "
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { LAYOUT_GRIDcss, PANEL_FRAMEcss, PANEL_OUTERcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./panels.css";
 import { PARSE_PANEL, TEST_PANEL } from "./demo-panels";
-import { build_panel } from "../../ui/make-panel";
+import { mount_panel } from "../../ui/make-panel";
 import { test_panel_factory_offdom } from "./test-panel-factory";
+import { $PANEL_HIDDEN } from "../../consts/ui-consts";
+import { belt_attach_spin } from "../../ui/belt";
+import { create_console } from "../../console/console";
+import { build_suites_for_mode, make_full_loop_suite, make_generated_fixtures_suite } from "../../../tests/suite-builder";
+import { run_suites } from "../../../tests/test-runner";
+import { _test_full_loop } from "hson-live/diagnostics";
+import { FIXTURES_GENERATED } from "../../../fixtures/fixture-gen";
+import type { TestSuite } from "../../../tests/tests.types";
 
 export const $PARSE = "parse";
 export const $TEST = "test";
+export const $BUILD = "build";
 export const $CONSOLE = "console";
 export const $OKLCH = "oklch";
 export const $MOUSE = "mouse";
@@ -28,6 +37,7 @@ export const $ABOUT = "about";
 const MENU_OPTIONS = [
   $PARSE,
   $TEST,
+  $BUILD,
   $OKLCH,
   $MOUSE,
   $ABOUT,
@@ -39,55 +49,8 @@ export type MenuKey = typeof MENU_OPTIONS[number];
 
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
-  const testCol = "oklch(52.3% 0.075 220.8 / 1)";
-  const _testColPanel = stage.create.div()
-    .css.setMany({
-      position: "fixed",
-      bottom: "5vh",
-      left: "5vw",
-      backgroundColor: testCol,
-      width: "20vw",
-      height: "20vh",
-      zIndex: "100",
-    })
 
-  _testColPanel
-    .listen
-    .onClick(() => { _testColPanel.removeSelf() })
-
-  const b = make_bud_node(stage);
-  const demo = b.bud(DEMO_BUDS.demo);
-  const wall = demo.bud(DEMO_BUDS.wall);
-  const wallFx = wall.bud(DEMO_BUDS.wallFx);
-  const inset = wall.bud(DEMO_BUDS.screenInset);
-  const screen = inset.bud(DEMO_BUDS.screen);
-  const screenFx = screen.bud(DEMO_BUDS.screenFx);
-  const uiRoot = makeDivId(screenFx.tree, "ui-root").css.setMany(UI_ROOTcss);
-  const layoutGrid = makeDivId(uiRoot, "layout-grid").css.setMany({
-    gridTemplateColumns: "1fr",
-    gridTemplateRows: "1fr 1fr",   // force two visible rows
-
-
-  });
-
-  // PARSE panel ////(seeing two still)
-
-  // test.body.tree.css.setMany(TEST_BODY_OVERRIDEScss);
-
-  // test internals
-  const tp = test_panel_factory_offdom();
-
-  // temporary wiring (until you hook runner/reporter)
-  tp.runBtn.listen.onClick(() => {
-    tp.setStatus("running");
-    tp.appendLine("running tests…");
-  });
-
-  tp.clearBtn.listen.onClick(() => {
-    tp.clear();
-    tp.setStatus("idle");
-  });
-  // needed for bud:
+  // needed/optional for bud:
   // makeDivID/Class/etc
   // set CSS
   // [parent].set-keyframes
@@ -95,13 +58,62 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   // return animate()
   // (teardown??)
 
-
+  const b = bud_node(stage);
+  const demo = b.bud(DEMO_BUDS.demo);
+  const screen = demo.bud(DEMO_BUDS.screen);
+  const screenFx = screen.bud(DEMO_BUDS.screenFx);
   const mainContainer = makeDivId(screenFx.tree, "main-container")
     .css.setMany(MAIN_CONTAINERcss)
   const titleBox = makeDivId(mainContainer, "title-box");
-  titleBox.css.setMany(TITLE_BOX_CSS)
+  titleBox.css.setMany(TITLE_BOXcss)
   const headline = makeDivId(titleBox, "hson-headline");
-  headline.css.setMany(HEADLINE_CSS);
+  headline.css.setMany(HEADLINEcss);
+  const uiRoot = makeDivId(screenFx.tree, "ui-root").css.setMany(UI_ROOTcss);
+  const layoutGrid = makeDivId(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
+
+  const parse = mount_panel(layoutGrid, PARSE_PANEL);
+  parse.tree.classlist.add($PANEL_HIDDEN);
+  const pp = pp_factory(parse.body.tree);
+  init_parsing_panels(pp);
+
+  const test = mount_panel(layoutGrid, TEST_PANEL); // returns { body, ... }
+  test.tree.classlist.add($PANEL_HIDDEN);
+  test.body.tree.css.setMany(TEST_BODY_OVERRIDEScss);
+  const tp = test_panel_factory_offdom();
+  tp.mount(test.body.tree); // IMPORTANT: mount first so setText/listeners are safe
+
+  tp.runBtn.listen.onClick(async () => {
+    cons.clear();
+    cons.setLevel(tp.getLevel());
+
+    tp.setStatus("running");
+
+    const suites = build_suites_for_mode(tp.getMode(), { _test_full_loop });
+
+    const res = await run_suites(suites, cons.onEvent, { bail: false });
+
+    cons.onSummary(res.summary);
+    tp.setStatus(res.ok ? "green" : `${res.summary.fail} failing`);
+  });
+
+  const cons = create_console(tp.branch);
+
+tp.runBtn.listen.onClick(async () => {
+  cons.clear();
+  cons.setLevel("normal");
+
+  const suites: readonly TestSuite[] = [
+    make_generated_fixtures_suite({ _test_full_loop }, FIXTURES_GENERATED),
+    // add other suites here
+  ];
+cons.onEvent({ t: "suite_begin", suite: "debug", totalPlanned: 0 });
+for (const s of suites) {
+  tp.appendLine(`${s.suite}: ${s.cases.length} cases`);
+}
+tp.appendLine(`FIXTURES_GENERATED: ${FIXTURES_GENERATED.length}`);
+  const res = await run_suites(suites, cons.onEvent, { bail: false });
+  cons.onSummary(res.summary);
+});
 
   const gcss = CssManager.globals.invoke();
   LETTER_LOWS.forEach(l => {
@@ -109,51 +121,48 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       color: LETTER_COLORfaded[l]
     });
   });
-
+  gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).set.visibility('hidden');
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
     const span = makeSpanId(headline, `${k}-letter`)
-      // set CSS - use --shade as color?? can --shade be set for individual selectors?
       .setText(HSONlower[k])
       .classlist.add(shade_class(k))
       .css.setMany($T$GHSONcss)
     return span;
   });
 
-  const optionsBox = makeDivId(mainContainer, "options-box")
+  const menuBox = makeDivId(mainContainer, "menu-box")
     .css.setMany({
       position: "absolute",
       top: "6rem",
       left: "3rem",
+
     });
 
   const menu = {
-    $ABOUTbtn: makeDivIdTxt(optionsBox, `${$ABOUT}-button`, $ABOUT),
-    $TESTbtn: makeDivIdTxt(optionsBox, `${$TEST}-button`, $TEST),
-    $PARSEbtn: makeDivIdTxt(optionsBox, `${$PARSE}-button`, $PARSE),
-    $OKLCHbtn: makeDivIdTxt(optionsBox, `${$OKLCH}-button`, $OKLCH),
-    $MOUSEbtn: makeDivIdTxt(optionsBox, `${$MOUSE}-button`, $MOUSE),
-    $CONSOLEbtn: makeDivIdTxt(optionsBox, `${$CONSOLE}-button`, $CONSOLE),
+    aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
+    testBtn: makeDivIdTxt(menuBox, `${$TEST}-button`, $TEST),
+    parseBtn: makeDivIdTxt(menuBox, `${$PARSE}-button`, $PARSE),
+    oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button`, $OKLCH),
+    mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button`, $MOUSE),
+    consoleBtn: makeDivIdTxt(menuBox, `${$CONSOLE}-button`, $CONSOLE),
 
   } as const;
 
   keys_of(menu).forEach((k) => {
     menu[k].css.setMany({
       ...MAIN_TEXTcss,
-      color: $COL.greyLite,
+      color: $COL.skyBlue,
     });
   });
 
 
-  menu.$PARSEbtn.listen.onClick(ev => {
-    const parse = build_panel(layoutGrid, PARSE_PANEL);
-    /* awaiting parsing panel unfucking: */
-    // const test = build_panel(layoutGrid, TEST_PANEL);
+  menu.parseBtn.listen.onClick(ev => {
+    parse.tree.classlist.remove($PANEL_HIDDEN)
+  });
+  menu.testBtn.listen.onClick(ev => {
+    test.tree.classlist.remove($PANEL_HIDDEN)
 
-    const pp = pp_factory(parse.body.tree);
-    init_parsing_panels(pp);
   })
 
   return relay.ok();
-
-
 }

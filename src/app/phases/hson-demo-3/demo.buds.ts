@@ -1,5 +1,5 @@
 import { make_div, type BudList, type BudSpec } from "../../config/bud-config";
-import { DEMOcss, DEMO_WALLcss, DEMO_WALL_FXcss, DEMO_SCREEN_INSETcss, DEMO_SCREENcss, DEMO_SCREEN_FXcss, MENU_BOXcss } from "./demo.css";
+import { DEMOcss, DEMO_SCREENcss, DEMO_SCREEN_FXcss, MENU_BOXcss } from "./demo.css";
 import { $DS } from "./demo.consts";
 
 export const DEMO_BUDS = {
@@ -11,29 +11,6 @@ export const DEMO_BUDS = {
     css: DEMOcss,
   },
 
-  wall: {
-    name: $DS.wall,
-    make: make_div,
-    id: $DS.wall,
-    cls: "demo wall",
-    css: DEMO_WALLcss,
-  },
-
-  wallFx: {
-    name: $DS.wallFx,
-    make: make_div,
-    id: $DS.wallFx,
-    cls: "demo wall fx",
-    css: DEMO_WALL_FXcss,
-  },
-
-  screenInset: {
-    name: $DS.inset,
-    make: make_div,
-    id: $DS.inset,
-    cls: "demo screen inset",
-    css: DEMO_SCREEN_INSETcss,
-  },
 
   screen: {
     name: $DS.screen,

@@ -1,7 +1,9 @@
 // pp_factory.ts
 import { hson, type LiveTree } from "hson-live";
-import type { Fmt, Panels, PanelParts } from "./pp.types";
+import type { Fmt, Panels, PanelShell } from "./pp.types";
 import { PP_PANEL_HEADER_TG_CSS } from "./pp.css";
+import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../../phases/hson-demo-3/panels.css";
+import { $PARSING_PANELS_ROOT, $PP_HEAD } from "./pp.consts";
 
 type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -16,35 +18,18 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
   if (old) old.removeSelf();
 
   const root = hostBody.create.div()
-    .id.set("parsing-panels-root")
-    .css.setMany({
-      display: "grid",
-      gap: "12px",
-      minHeight: "0",
-      minWidth: "0",
-      gridAutoFlow: "row",
-    });
+    .id.set($PARSING_PANELS_ROOT)
+    .css.setMany(PARSING_PANEL_ROOTcss);
 
-  const panels = {} as Record<Fmt, PanelParts>;
+  const panels = {} as Record<Fmt, PanelShell>;
 
   for (const fmt of fmts) {
     const panel = root.create.section()
       .data.set("role", `panel-${fmt}`)
-      .css.setMany({
-        display: "grid",
-        gridTemplateRows: "auto 1fr",
-        gap: "8px",
-        minHeight: "0",
-        minWidth: "0",
-        padding: "10px",
-        borderRadius: "12px",
-        boxSizing: "border-box",
-        background: "rgba(255,255,255,0.03)",
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-      });
+      .css.setMany(PANELcss);
 
     const head = panel.create.div()
-      .data.set("role", "pp-head")
+      .data.set("role", $PP_HEAD)
       .css.setMany(PP_PANEL_HEADER_TG_CSS);
 
     const chip = head.create.span();
@@ -61,23 +46,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
 
     const textarea = panel.create.textarea();
     textarea.data.set("input", fmt);
-    textarea.css.setMany({
-      minHeight: "0",
-      minWidth: "0",
-      resize: "none",
-      width: "100%",
-      height: "100%",
-      boxSizing: "border-box",
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-      fontSize: "12px",
-      lineHeight: "1.35",
-      background: "rgba(0,0,0,0.18)",
-      color: "rgba(255,255,255,0.88)",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: "10px",
-      padding: "10px",
-      outline: "none",
-    });
+    textarea.css.setMany(PANEL_TEXTAREAcss);
 
     panels[fmt] = { fmt, panel, textarea, chip, bytes, copyBtn };
   }

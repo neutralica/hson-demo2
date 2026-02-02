@@ -3,6 +3,8 @@ import type { CssMap } from "hson-live/types";
 import { $COL } from "../../consts/colors.consts";
 
 
+export const $PARSING_PANELS_ROOT = "parsing-panels-root";
+export const $PP_HEAD = "pp-head";
 /**
  * HOLO: overall projected plane
  * NOTE: we rely on an extra child overlay element (#pp-holo-fx) created in pp_factory.

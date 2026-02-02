@@ -21,6 +21,9 @@ export function _sleep(ms: number): Promise<void> {
 export function _clamp01(n: number): number {
   return n < 0 ? 0 : n > 1 ? 1 : n;
 }
+export function _clampLoHi(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n));
+}
 
 export function _clampN1P1(n: number): number {
   return n < -1 ? -1 : n > 1 ? 1 : n;

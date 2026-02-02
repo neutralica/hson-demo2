@@ -2,16 +2,16 @@
 
 import type { CssMap } from "hson-live/types";
 import { LETTER_CSS } from "../../wordmark/wordmark.css";
-import { $COL } from "../../consts/colors.consts";
+import { $COL, _setBckgdAlpha } from "../../consts/colors.consts";
 
 
 export const MAIN_TEXTcss: CssMap = {
   fontFamily: "'Inconsolata', monaco, monospace",
-  fontSize: "2rem",
+  fontSize: "40px",
 
 }
 
-export const $T$GHSONcss = {
+export const $T$GHSONcss: CssMap = {
   fontSize: "6rem",
   fontFamily: "Jacquard12",
   width: "max-content",
@@ -54,35 +54,6 @@ export const LETTER_CSS_DEMO: CssMap = {
 };
 
 
-export const DEMO_WALLcss: CssMap = {
-  position: "absolute",
-  inset: "0",
-  overflow: "hidden",
-  pointerEvents: "none",
-  borderRadius: "28px",
-  isolation: "isolate",
-  border: `1px double ${$COL.stonerPurple}`
-};
-
-/**
- * WALL FX (glint + edge pickup)
- * - this should NOT paint a giant hazy frame
- * - keep it to bottom/right edges only
- */
-export const DEMO_WALL_FXcss: CssMap = {
-  position: "absolute",
-  inset: "0",
-  pointerEvents: "none",
-  borderRadius: "28px",
-  overflow: "hidden",
-  // A *localized* edge pickup, not a ring.
-  // Use backgrounds instead of borders+blur (borders+blur tend to smear into a gasket look).
-  // backgroundColor: " rgba(255,255,255,0.10)",
-
-  opacity: "0.65",
-  filter: "blur(1.1px)",
-};
-
 /**
  * GLASS (screen)
  * - keep your greyBlack
@@ -96,11 +67,11 @@ export const DEMO_SCREENcss: CssMap = {
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "all",
-   minHeight: "0",
+  minHeight: "0",
 }
 
 export const DEMO_SCREEN_FXcss: CssMap = {
-   position: "relative",  // critical anchor for uiRoot absolute
+  position: "relative",  // critical anchor for uiRoot absolute
   width: "100%",
   height: "100%",
   minHeight: "0",
@@ -110,97 +81,111 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   opacity: "1",
 };
 
-export const MENU_BOXcss = {
+export const MENU_BOXcss: CssMap = {
   position: "absolute",
   left: "500px",
   height: "max-content",
   width: "max-content",
   zIndex: "-1",
-  color: $COL.skyBlue,
   filter: "blur(0.35px)",
   margin: "2rem",
   fontFamily: "monospace",
   border: "1px solid aquamarine",
   pointerEvents: "all",
   padding: "1rem",
+  color: $COL.skyBlue,
 }
 
-/**
- * INSET / INNER FRAME
- * - stop heavy uniform inset rings (gasket)
- * - keep your bottom-right glint via XY offset shadow
- * - allow it to read as a darker surround to the glass
- */
-export const SCREEN_GLINTstr =
-  "2px 2px 0 0.5px rgba(65, 110, 165, 0.96)";
 
-/**
- * this selector describes the (in the narrative of the terminal screen) 
- * thin band of plastic that meets the glass perpendicularly, which will 
- * catch reflection from the screen illumination and also carry a thin 
- * band of ambient light on the frame edge
- */
-export const DEMO_SCREEN_INSETcss: CssMap = {
-   position: "relative",  // critical anchor for uiRoot absolute
-  width: "100%",
-  height: "100%",
-  minHeight: "0",
-  left: "3%",
-  top: "3%",  
-  pointerEvents: "none",
-  borderRadius: "26px",
-  padding: "12px",
-  boxSizing: "border-box",
-  overflow: "hidden",
-  isolation: "isolate",
-  backgroundColor: $COL.greyBlack,
-  // slightly darker than glass
-  background: [
-    // "linear-gradient(180deg, rgba(18,18,18,1), rgba(16,16,16,1))",
-    //   // tiny internal grain so it isn’t a flat slab
-    // "repeating-linear-gradient(0deg, rgba(255,255,255,0.010) 0 1px, transparent 1px 12px)",
-    // "repeating-linear-gradient(90deg, rgba(255,255,255,0.008) 0 1px, transparent 1px 16px)",
-  ].join(", "),
-
-  boxShadow: [
-    // remove the thick uniform ring that reads like rubber
-    "inset 0 0 0 1px rgba(255,255,255,0.020)",
-    "inset 0 0 0 2px rgba(0,0,0,0.18)",
-
-    // bottom-right specular catch (your discovery)
-    SCREEN_GLINTstr,
-
-    // depth, but light-touch
-    "inset 0 18px 30px rgba(0,0,0,0.16)",
-    "inset 0 -18px 30px rgba(0,0,0,0.20)",
-  ].join(", "),
-};
-
-export const TITLE_BOX_CSS: CssMap = {
+export const TITLE_BOXcss: CssMap = {
   position: "absolute",
   display: "flex",
   flexDirection: "row",
   padding: "1rem",
 }
 
-export const HEADLINE_CSS: CssMap = {
+export const HEADLINEcss: CssMap = {
   display: "flex",
   alignContent: "baseline",
   justifyContent: "flex-start",
-  zIndex: 100,
   fontFamily: "Jacquard12",
 }
 
-export const MAIN_CONTAINERcss = {
+export const MAIN_CONTAINERcss: CssMap = {
   position: "relative",
   top: "5vh",
-  left: "5vw",
+  left: "10vw",
   height: "90%",
   width: "20rem",
-  border: "1px dashed grey",
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
-
-
 };
+
+export const BELT_HOLDERcss: CssMap = {
+  position: "fixed",
+  top: "0",
+  left: "0",
+  height: "100%",
+  width: "17%",
+  overflow: "hidden",
+  scaleY: "3",
+  background: `
+    /* side sheen */
+    linear-gradient(to right,
+      rgba(255,255,255,0.10),
+      rgba(255,255,255,0.05) 40%,
+      rgba(0,0,0,0.08) 78%,
+      rgba(0,0,0,0.22)
+    ),
+
+    /* end vignette */
+    linear-gradient(to bottom,
+      rgba(0,0,0,0.62),
+      rgba(0,0,0,0.20) 18%,
+      rgba(0,0,0,0.08) 50%,
+      rgba(0,0,0,0.20) 82%,
+      rgba(0,0,0,0.62)
+    ),
+
+    /* repeatable signature: faint diagonal scuffs */
+    repeating-linear-gradient(135deg,
+      rgba(255,255,255,0.02) 0px,
+      rgba(255,255,255,0.02) 2px,
+      rgba(0,0,0,0.05) 2px,
+      rgba(0,0,0,0.00) 10px
+    ),
+
+    /* ribs */
+    repeating-linear-gradient(to bottom,
+      rgba(255,255,255,0.10) 0px,
+      rgba(255,255,255,0.60) 1px,
+      rgba(255,255,255,0.20) 1px,
+      rgba(0,0,0,0.90) 6px
+    )
+  `,
+
+  backgroundSize: `
+    auto,
+    auto,
+    100% 220px,
+    auto
+  `,
+
+  backgroundPosition: `
+    0 0,
+    0 0,
+    0 var(--belt-scroll, 0px),
+    0 var(--belt-scroll, 0px)
+  `,
+
+  boxShadow:
+    "inset -1px 0 0 rgba(255,255,255,0.10), inset 1px 0 0 rgba(0,0,0,0.55)",
+} as const;
+
+export const LAYOUT_GRIDcss = {
+
+  gridTemplateColumns: "1fr",
+  gridTemplateRows: "1fr 1fr",   // force two visible rows
+
+}

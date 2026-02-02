@@ -25,3 +25,23 @@ export type TestSummary = Readonly<{
   msTotal: number;
   failures: readonly TestFailure[];
 }>;
+
+export type TestCase = Readonly<{
+  suite: string;
+  name: string;
+  meta?: Record<string, string>;
+  run: () => void | Promise<void>; // throw = fail, return = pass
+}>;
+
+export type TestSuite = Readonly<{
+  suite: string;
+  cases: readonly TestCase[];
+}>;
+
+
+export type TestRunMode =
+  | "all"
+  | "generated"
+  | "full_loop_basic"
+  | "hero_wikipedia"
+  | "hero_gwern";

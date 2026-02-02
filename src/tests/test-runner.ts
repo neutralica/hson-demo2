@@ -6,84 +6,106 @@ import { TestRecorder } from "./test-recorder";
 import type { TestEvent, TestSummary } from "./tests.types";
 
 export type TestCase = Readonly<{
-    name: string;
-    run: () => void | Promise<void>;
-    meta?: Record<string, string>;
+  suite: string; // CHANGED: runner inputs align with TestEvent
+  name: string;
+  run: () => void | Promise<void>;
+  meta?: Record<string, string>;
 }>;
 
 export type TestSuite = Readonly<{
-    name: string;
-    cases: readonly TestCase[];
+  suite: string; // CHANGED: not `name`
+  cases: readonly TestCase[];
 }>;
 
 export type RunOptions = Readonly<{
-    bail?: boolean;         // stop on first failure
-    filterSuite?: string;   // exact match
-    filterCase?: string;    // substring match
+  bail?: boolean;         // stop on first failure
+  filterSuite?: string;   // exact match
+  filterCase?: string;    // substring match
 }>;
 
 export type RunResult = Readonly<{
-    ok: boolean;
-    summary: TestSummary;
+  ok: boolean;
+  summary: TestSummary;
 }>;
 
 export async function run_suites(
-    suites: readonly TestSuite[],
-    onEvent: (e: TestEvent) => void,
-    opts: RunOptions = {},
+  suites: readonly TestSuite[],
+  onEvent: (e: TestEvent) => void,
+  opts: RunOptions = {},
 ): Promise<RunResult> {
-    const rec = new TestRecorder();
-    const t0 = now();
+  const rec = new TestRecorder();
+  const t0 = now();
 
-    for (const suite of suites) {
-        if (opts.filterSuite && suite.name !== opts.filterSuite) continue;
+  for (const suite of suites) {
+    if (opts.filterSuite && suite.suite !== opts.filterSuite) continue;
 
-        const s0 = now();
-        emit(rec, onEvent, { t: "suite_begin", suite: suite.name, totalPlanned: suite.cases.length });
+    const s0 = now();
+    emit(rec, onEvent, {
+      t: "suite_begin",
+      suite: suite.suite,
+      totalPlanned: suite.cases.length,
+    });
 
-        for (const tc of suite.cases) {
-            if (opts.filterCase && !tc.name.includes(opts.filterCase)) continue;
+    for (const tc of suite.cases) {
+      // CHANGED: tc already includes suite; enforce consistency if you want:
+      // if (tc.suite !== suite.suite) continue; // or throw
 
-            const c0 = now();
-            // CHANGED: don't emit `meta: undefined` under exactOptionalPropertyTypes
-            const evBase = {
-                t: "case_begin",
-                suite: suite.name,
-                name: tc.name,
-            } as const;
+      if (opts.filterSuite && tc.suite !== opts.filterSuite) continue;
+      if (opts.filterCase && !tc.name.includes(opts.filterCase)) continue;
 
-            emit(rec, onEvent, tc.meta ? { ...evBase, meta: tc.meta } : evBase);
-            try {
-                await tc.run();
-                emit(rec, onEvent, { t: "case_end", suite: suite.name, name: tc.name, status: "pass", ms: now() - c0 });
-            } catch (err) {
-                const msg = asErrMsg(err);
-                emit(rec, onEvent, { t: "case_end", suite: suite.name, name: tc.name, status: "fail", ms: now() - c0, err: msg });
-                if (opts.bail) break;
-            }
-        }
+      const c0 = now();
 
-        emit(rec, onEvent, { t: "suite_end", suite: suite.name, ms: now() - s0 });
-        if (opts.bail && rec.summary().fail > 0) break;
+      const evBase = {
+        t: "case_begin",
+        suite: tc.suite,
+        name: tc.name,
+      } as const;
+
+      emit(rec, onEvent, tc.meta ? { ...evBase, meta: tc.meta } : evBase);
+
+      try {
+        await tc.run();
+        emit(rec, onEvent, {
+          t: "case_end",
+          suite: tc.suite,
+          name: tc.name,
+          status: "pass",
+          ms: now() - c0,
+        });
+      } catch (err) {
+        const msg = asErrMsg(err);
+        emit(rec, onEvent, {
+          t: "case_end",
+          suite: tc.suite,
+          name: tc.name,
+          status: "fail",
+          ms: now() - c0,
+          err: msg,
+        });
+        if (opts.bail) break;
+      }
     }
 
-    // CHANGED: add total runtime as a synthetic suite_end for easy aggregation
-    const totalMs = now() - t0;
-    const summary = Object.freeze({ ...rec.summary(), msTotal: totalMs });
+    emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
+    if (opts.bail && rec.summary().fail > 0) break;
+  }
 
-    return Object.freeze({ ok: summary.fail === 0, summary });
+  const totalMs = now() - t0;
+  const summary = Object.freeze({ ...rec.summary(), msTotal: totalMs });
+
+  return Object.freeze({ ok: summary.fail === 0, summary });
 }
 
 function emit(rec: TestRecorder, onEvent: (e: TestEvent) => void, e: TestEvent): void {
-    rec.ingest(e);
-    onEvent(e);
+  rec.ingest(e);
+  onEvent(e);
 }
 
 function now(): number {
-    return typeof performance !== "undefined" ? performance.now() : Date.now();
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
 
 function asErrMsg(err: unknown): string {
-    if (err instanceof Error) return err.stack ? `${err.message}\n${err.stack}` : err.message;
-    return String(err);
+  if (err instanceof Error) return err.stack ? `${err.message}\n${err.stack}` : err.message;
+  return String(err);
 }

@@ -14,7 +14,7 @@ import { makeSpanClass } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
-import { make_bud_node } from "../../config/bud-config";
+import { fill_create } from "../../config/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 
 
@@ -25,7 +25,7 @@ import { SPLASH_BUDS } from "./splash.buds";
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
-    const b = make_bud_node(stage)
+    const b = fill_create(stage)
    
     /* create structural layers */
     // NOT ANYMORE!!! /* stacking order matters here: */

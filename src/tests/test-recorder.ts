@@ -1,4 +1,6 @@
+import { hson } from "hson-live";
 import type { TestEvent, TestFailure, TestSummary } from "./tests.types";
+import { _test_full_loop } from "hson-live/diagnostics";
 
 export class TestRecorder {
     private suites = 0;
@@ -13,7 +15,7 @@ export class TestRecorder {
     public ingest(e: TestEvent): void {
         if (e.t === "suite_begin") this.suites += 1;
         if (e.t === "suite_end") this.msTotal += e.ms;
-
+_test_full_loop
         if (e.t === "case_begin") {
             this.cases += 1;
             this.metaByCase.set(this.key(e.suite, e.name), e.meta);

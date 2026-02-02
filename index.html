@@ -14,6 +14,30 @@
                 font-style: normal;
                 font-display: swap;
             }
+
+            /* single catching edge */
+            #menu-belt::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+
+                /* thin highlight, centered, moved with --belt-glint-x */
+                background: linear-gradient(
+                    to right,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0) 48%,
+                    rgba(255, 255, 255, 0.18) 49.4%,
+                    rgba(255, 255, 255, 0.65) 50%,
+                    rgba(255, 255, 255, 0.18) 50.6%,
+                    rgba(255, 255, 255, 0) 52%,
+                    rgba(255, 255, 255, 0) 100%
+                );
+
+                transform: translateX(var(--belt-glint-x, -6px));
+                opacity: var(--belt-glint, 0);
+                mix-blend-mode: screen;
+            }
         </style>
     </head>
     <body>

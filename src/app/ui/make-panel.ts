@@ -1,9 +1,9 @@
 // ui-panels.spec.ts
 import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
-import { make_bud_node, type BudFob, type BudSpec } from "../config/bud-config";
+import { fill_create, type BudFob, type BudSpec } from "../config/bud-config";
 
-type PanelParts = Readonly<{
+type PanelSpecs = Readonly<{
     panel: BudSpec;     // grid item wrapper
     frame: BudSpec;     // the chrome
     head?: BudSpec;     // optional header area
@@ -19,7 +19,7 @@ type PanelSpecArgs = Readonly<{
     headCss?: CssMap;         // optional
 }>;
 
-export function make_panel_specs(a: PanelSpecArgs): PanelParts {
+export function make_panel_specs(a: PanelSpecArgs): PanelSpecs {
     const { key, panelId, panelCss, frameCss, bodyCss, headCss } = a;
 
     const mk = (tag: "div" | "section" = "div") =>
@@ -67,8 +67,8 @@ export type BuiltPanel = Readonly<{
     tree: LiveTree;
 }>;
 
-export function build_panel(parent: LiveTree, specs: PanelParts): BuiltPanel {
-  const b = make_bud_node(parent);
+export function mount_panel(parent: LiveTree, specs: PanelSpecs): BuiltPanel {
+  const b = fill_create(parent);
   const panel = b.bud(specs.panel);
   const frame = panel.bud(specs.frame);
   const head = specs.head ? frame.bud(specs.head) : undefined;

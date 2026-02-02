@@ -1,7 +1,7 @@
 // init.pp.ts
 import { hson } from "hson-live";
 import type { LiveTree } from "hson-live";
-import type { Panels, PanelParts, Fmt } from "./pp.types";
+import type { Panels, PanelShell, Fmt } from "./pp.types";
 
 const FMTS: readonly Fmt[] = ["json", "hson", "html"] as const;
 
@@ -12,8 +12,8 @@ export function init_parsing_panels(pp: Panels): void {
 
   const encBytes = (s: string) => new TextEncoder().encode(s).length;
 
-  const getValue = (p: PanelParts): string => p.textarea.getFormValue() ?? "";
-  const setValue = (p: PanelParts, v: string): void =>
+  const getValue = (p: PanelShell): string => p.textarea.getFormValue() ?? "";
+  const setValue = (p: PanelShell, v: string): void =>
     void p.textarea.setFormValue(v, { silent: true });
 
   const compactJSON = (raw: string): string => {
@@ -26,7 +26,7 @@ export function init_parsing_panels(pp: Panels): void {
 
   const compactLoose = (raw: string): string => raw.replace(/\s+/g, " ").trim();
 
-  const markPanel = (p: PanelParts, opts: MarkOpts): void => {
+  const markPanel = (p: PanelShell, opts: MarkOpts): void => {
     if (opts.valid !== undefined) {
       p.chip
         .setAttrs("data-valid", String(opts.valid))

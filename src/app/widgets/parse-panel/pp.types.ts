@@ -3,7 +3,7 @@ import type { LiveTree } from "hson-live";
 
 export type Fmt = "json" | "hson" | "html";
 
-export type PanelParts = {
+export type PanelShell = {
   fmt: Fmt;
   panel: LiveTree;
   textarea: LiveTree;
@@ -14,6 +14,6 @@ export type PanelParts = {
 
 export type Panels = {
   root: LiveTree;
-  panels: Record<Fmt, PanelParts>;
+  panels: Record<Fmt, PanelShell>;
   // nodeOut?: LiveTree; // add later if you bring it back
 };

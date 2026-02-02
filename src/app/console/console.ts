@@ -1,7 +1,6 @@
 // console.ts
-// Purpose: tiny LiveTree UI console that can show status + counters + failure details.
-// NOTE: if your LiveTree method names differ, patch only here.
 
+import type { LiveTree } from "hson-live";
 import type { TestEvent, TestFailure, TestSummary } from "../../tests/tests.types";
 
 export type ConsoleLevel = "quiet" | "normal" | "verbose";
@@ -14,15 +13,9 @@ export type ConsoleUi = Readonly<{
   clear: () => void;
 }>;
 
-type ConsoleHost = {
-  create: { div: () => ConsoleHost };
-  setAttrs: (...args: string[]) => ConsoleHost;
-  setText: (t: string) => ConsoleHost;
-  style: { setMany: (m: Record<string, string>) => ConsoleHost };
-};
-
-export function create_console(host: ConsoleHost): ConsoleUi {
+export function create_console(host: LiveTree): ConsoleUi {
   let level: ConsoleLevel = "normal";
+  let buf = ""; // CHANGED: internal buffer; no getText needed
 
   const root = host.create.div().setAttrs("class", "console");
   const header = root.create.div().setAttrs("class", "cons-header");
@@ -30,48 +23,58 @@ export function create_console(host: ConsoleHost): ConsoleUi {
   const chips = header.create.div().setAttrs("class", "cons-chips").setText("—");
   const body = root.create.div().setAttrs("class", "cons-body").setText("");
 
-  root.style.setMany({
+  root.css.setMany({
     display: "grid",
     gap: "8px",
     padding: "10px",
-    "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
-    "font-size": "12px",
-    "line-height": "1.35",
-    "user-select": "text",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+    fontSize: "12px",
+    lineHeight: "1.35",
+    userSelect: "text",
+    minHeight: "0",
+    minWidth: "0",
   });
 
   const setChips = (s: TestSummary): void => {
     chips.setText(`pass ${s.pass}  fail ${s.fail}  skip ${s.skip}  total ${s.cases}  ${s.msTotal.toFixed(1)}ms`);
   };
 
+  const flush = (): void => {
+    body.setText(buf);
+  };
+
   const writeLine = (t: string): void => {
     if (level === "quiet") return;
-    body.setText(`${bodyText(body)}\n${t}`.trim());
+    buf = buf.length ? `${buf}\n${t}` : t;
+    flush();
   };
 
   return {
     setLevel: (lvl) => { level = lvl; },
 
     onEvent: (e) => {
-      if (e.t === "suite_begin") {
-        status.setText(`suite: ${e.suite}`);
-        if (level === "verbose") writeLine(`BEGIN suite ${e.suite}`);
-        return;
-      }
-      if (e.t === "case_begin") {
-        if (level === "verbose") writeLine(`… ${e.suite} :: ${e.name}`);
-        return;
-      }
-      if (e.t === "case_end") {
-        if (e.status === "fail") {
-          writeLine(`FAIL ${e.suite} :: ${e.name} (${e.ms.toFixed(1)}ms)\n${e.err ?? ""}`.trim());
-        } else if (level === "verbose") {
-          writeLine(`PASS ${e.suite} :: ${e.name} (${e.ms.toFixed(1)}ms)`);
-        }
-        return;
-      }
-      if (e.t === "suite_end") {
-        if (level === "verbose") writeLine(`END suite (${e.ms.toFixed(1)}ms)`);
+      switch (e.t) {
+        case "suite_begin":
+          status.setText(`suite: ${e.suite}`);
+          if (level === "verbose") writeLine(`BEGIN suite ${e.suite} (${e.totalPlanned ?? "?"} planned)`);
+          return;
+
+        case "case_begin":
+          if (level === "verbose") writeLine(`… ${e.suite} :: ${e.name}`);
+          return;
+
+        case "case_end":
+          if (e.status === "fail") {
+            writeLine(`FAIL ${e.suite} :: ${e.name} (${e.ms.toFixed(1)}ms)`);
+            if (e.err) writeLine(e.err);
+          } else if (level === "verbose") {
+            writeLine(`PASS ${e.suite} :: ${e.name} (${e.ms.toFixed(1)}ms)`);
+          }
+          return;
+
+        case "suite_end":
+          if (level === "verbose") writeLine(`END suite ${e.suite} (${e.ms.toFixed(1)}ms)`);
+          return;
       }
     },
 
@@ -82,20 +85,18 @@ export function create_console(host: ConsoleHost): ConsoleUi {
     },
 
     showFailure: (f) => {
-      writeLine(`\n=== FAILURE ===\n${f.suite} :: ${f.name}\n${f.err}\n(${f.ms.toFixed(1)}ms)\n`);
+      writeLine(``);
+      writeLine(`=== FAILURE ===`);
+      writeLine(`${f.suite} :: ${f.name} (${f.ms.toFixed(1)}ms)`);
+      writeLine(f.err);
     },
 
     clear: () => {
+      level = level; // no-op, keeps current level
+      buf = "";
       status.setText("tests: idle");
       chips.setText("—");
       body.setText("");
     },
   };
-}
-
-// CHANGED: LiveTree-like has no getText API in your snippets, so we keep it internal.
-// If you have a proper getter, swap this out.
-function bodyText(_body: unknown): string {
-  // best-effort: we treat append-as-replace; keeps module tiny.
-  return "";
 }
