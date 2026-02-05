@@ -26,8 +26,8 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     
     
     console.log("// DEBUG tired of skipping") 
-    const demoTEMP = run_phase(stage, mount_demo, _shortpause);
-    return relay.ok();
+    // const demoTEMP = run_phase(stage, mount_demo, _shortpause);
+    // return relay.ok();
     //  one skip signal governs all phases
     const { skip, cancel } = make_skip_promise(stage);
 

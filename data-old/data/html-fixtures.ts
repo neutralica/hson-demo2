@@ -1,6 +1,6 @@
 // html-fixtures.ts
 
-import { html_mdn } from "./html-mdn";
+// import { html_mdn } from "./html-mdn";
 import { html_gwern } from "./large-fixtures/html-gwern.mock";
 import { html_hackerNews } from "./large-fixtures/html-hackernews.mock";
 import { html_wikipedia } from "./large-fixtures/html-wikipedia.mock";
@@ -451,7 +451,7 @@ export const html_ALL = {
     html_wikipedia,
     html_hackerNews,
     html_gwern,
-    html_mdn,
+    // html_mdn,
   },
 
   // parses but loses style & noncompliant attrs etc

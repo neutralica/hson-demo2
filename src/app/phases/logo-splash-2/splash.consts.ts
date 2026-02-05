@@ -29,7 +29,7 @@ export const SUN_TIMEstr = `${SUN_DURnum}ms`;
 export const STAR_DURnum = 300;
 export const STAR_DURstr = `${STAR_DURnum}ms`;
 
-export const STAR_DELnum = SKY_DURnum * 0.46;
+export const STAR_DELnum = SKY_DURnum * 0.26;
 export const STAR_DELstr = `${STAR_DELnum}ms`;
 
 const flareAt = 0.4659;

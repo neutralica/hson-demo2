@@ -42,6 +42,4 @@ export type TestSuite = Readonly<{
 export type TestRunMode =
   | "all"
   | "generated"
-  | "full_loop_basic"
-  | "hero_wikipedia"
-  | "hero_gwern";
+  | "basic"

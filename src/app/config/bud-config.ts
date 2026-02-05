@@ -27,7 +27,7 @@ export type BudFob = Readonly<{
   animate: () => void;
 }>;
 
-export function fill_create(parent: LiveTree) {
+export function bud_node(parent: LiveTree) {
   const newBud = (spec: BudSpec): BudFob => {
     const node = spec.make(parent);
 
@@ -48,7 +48,7 @@ export function fill_create(parent: LiveTree) {
     };
 
     // CHANGED: return a new bud rooted at this node (chainable)
-    const budlet = fill_create(node);
+    const budlet = bud_node(node);
 
     return {
       tree: node,

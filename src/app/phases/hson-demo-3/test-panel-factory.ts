@@ -3,9 +3,75 @@
 import { hson, type LiveTree } from "hson-live";
 import { MENU_BTNcss, TEST_BODY_OVERRIDEScss, TEST_CONSOLEcss, TEST_STATUS_CHIPcss, TEST_TOOLBARcss } from "./demo-panels.css";
 import type { ConsoleLevel } from "../../console/console";
-import type { TestRunMode } from "../../../tests/tests.types";
+import type { TestRunMode, TestSummary } from "../../../tests/tests.types";
 import { TEST_SELECTcss } from "./demo-panels";
+import { makeDivId } from "../../utils/makers";
 
+export type TestGems = Readonly<{
+  clear: () => void;
+  render: (s: TestSummary) => void;
+}>;
+
+export function create_test_gems(host: LiveTree): TestGems {
+  const box = host.create.div()
+    .id.set("test-gems")
+    .css.setMany({
+      display: "flex",
+      gap: "6px",
+      flexWrap: "wrap",
+      padding: "6px 0",
+    });
+
+  const makeGem = (label: string) => {
+    const g = box.create.div().css.setMany({
+      minWidth: "44px",
+      padding: "6px 8px",
+      borderRadius: "6px",
+      background: "rgba(255,255,255,0.08)",
+      display: "grid",
+      gridTemplateRows: "auto auto",
+      justifyItems: "center",
+      fontFamily: "ui-monospace, monospace",
+      fontSize: "12px",
+    });
+
+    const val = g.create.div().setText("—").css.setMany({
+      fontSize: "14px",
+      fontWeight: "600",
+    });
+
+    const lbl = g.create.div().setText(label).css.setMany({
+      opacity: "0.6",
+      fontSize: "10px",
+    });
+
+    return {
+      set: (v: string | number) => val.setText(String(v)),
+      clear: () => val.setText("—"),
+    };
+  };
+
+  const total = makeGem("total");
+  const pass = makeGem("pass");
+  const fail = makeGem("fail");
+  const time = makeGem("ms");
+
+  return {
+    clear: () => {
+      total.clear();
+      pass.clear();
+      fail.clear();
+      time.clear();
+    },
+
+    render: (s) => {
+      total.set(s.cases);
+      pass.set(s.pass);
+      fail.set(s.fail);
+      time.set(Math.round(s.msTotal));
+    },
+  };
+}
 
 export type TestPanel = Readonly<{
   branch: LiveTree;
@@ -17,15 +83,15 @@ export type TestPanel = Readonly<{
   suiteSel: LiveTree;
 
   status: LiveTree;
-  console: LiveTree;
-
+  marquee: LiveTree;
+  gems: TestGems,
   // state accessors (so callsite doesn’t poke DOM attrs directly)
   getLevel: () => ConsoleLevel;
   getMode: () => TestRunMode;
 
   setStatus: (txt: string) => void;
-  appendLine: (txt: string) => void;
-  clear: () => void;
+  setMarquee: (txt: string) => void;
+  clearMarquee: () => void;
 }>;
 
 const LEVELS: readonly ConsoleLevel[] = ["normal", "verbose", "quiet"] as const;
@@ -33,9 +99,7 @@ const LEVELS: readonly ConsoleLevel[] = ["normal", "verbose", "quiet"] as const;
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
   { key: "all", label: "all" },
   { key: "generated", label: "generated" },
-  { key: "full_loop_basic", label: "full loop (basic)" },
-  { key: "hero_wikipedia", label: "hero: wikipedia" },
-  { key: "hero_gwern", label: "hero: gwern" },
+  { key: "basic", label: "basic" },
 ] as const;
 
 export function test_panel_factory_offdom(): TestPanel {
@@ -54,8 +118,7 @@ export function test_panel_factory_offdom(): TestPanel {
     .id.set("test-verbosity")
     .css.setMany(MENU_BTNcss);
 
-  const runBtn = toolbar.create.div()
-    .id.set("test-run")
+  const runBtn = makeDivId(toolbar, "test-run")
     .css.setMany(MENU_BTNcss);
 
   const clearBtn = toolbar.create.div()
@@ -66,9 +129,11 @@ export function test_panel_factory_offdom(): TestPanel {
     .id.set("test-status")
     .css.setMany(TEST_STATUS_CHIPcss);
 
-  const consoleEl = branch.create.div()
-    .id.set("test-console")
+  const marquee = branch.create.div()
+    .id.set("test-marquee")
     .css.setMany(TEST_CONSOLEcss);
+
+  const gems = create_test_gems(branch);
 
   let mounted = false;
 
@@ -80,16 +145,14 @@ export function test_panel_factory_offdom(): TestPanel {
     if (!mounted) return;
     status.setText(txt);
   };
-
-  const appendLine = (txt: string): void => {
+  const setMarquee = (txt: string): void => {
     if (!mounted) return;
-    const prev = consoleEl.getText() ?? "";
-    consoleEl.setText(prev.length ? `${prev}\n${txt}` : txt);
+    marquee.setText(txt);
   };
 
-  const clear = (): void => {
+  const clearMarquee = (): void => {
     if (!mounted) return;
-    consoleEl.setText("");
+    marquee.setText("");
   };
 
   const renderLevel = (): void => {
@@ -102,47 +165,49 @@ export function test_panel_factory_offdom(): TestPanel {
     void 0;
   };
 
-  const mount = (hostBody: LiveTree): void => {
-    if (mounted) return;
-    hostBody.append(branch);
-    mounted = true;
+  // CHANGED: add near top of file
+const LEVELS: readonly ConsoleLevel[] = ["quiet", "normal", "verbose"] as const;
 
-    // text/DOM-backed ops: only now
-    runBtn.setText("run");
-    clearBtn.setText("clear");
-    levelBtn.setText(`verbosity: ${level}`);
-    status.setText("idle");
+// ...
 
-    // populate select options (now safe)
-    suiteSel.empty();
-    for (const m of MODES) {
-      const opt = suiteSel.create.option();
-      opt.setAttrs("value", m.key);
-      opt.setText(m.label);
-      if (m.key === mode) opt.setAttrs("selected", "selected");
-    }
+const mount = (hostBody: LiveTree): void => {
+  if (mounted) return;
+  hostBody.append(branch);
+  mounted = true;
 
-    levelBtn.listen.onClick(() => {
-      // cycle: normal -> verbose -> quiet -> normal
-      const idx = LEVELS.indexOf(level);
-      level = LEVELS[(idx + 1) % LEVELS.length] ?? "normal";
-      renderLevel();
-    });
+  runBtn.setText("run");
+  clearBtn.setText("clear");
+  renderLevel();            // CHANGED: use helper so it stays consistent
+  status.setText("idle");
 
-    suiteSel.listen.on("change", () => {
-      // NOTE: LiveTree select value getter may differ in your API.
-      // If you don’t have a getter yet, read from DOM element directly via node->el map,
-      // or temporarily encode the chosen mode in data-attrs and read it back.
-      const v = suiteSel.getFormValue?.() ?? "all"; // if you have it
-      mode = (MODES.find(m => m.key === v)?.key ?? "all");
-      renderMode();
-    });
+  // populate select options...
+  suiteSel.empty();
+  for (const m of MODES) {
+    const opt = suiteSel.create.option();
+    opt.setAttrs("value", m.key);
+    opt.setText(m.label);
+    if (m.key === mode) opt.setAttrs("selected", "selected");
+  }
 
-    clearBtn.listen.onClick(() => {
-      clear();
-      setStatus("idle");
-    });
-  };
+  suiteSel.listen.on("change", () => {
+    const v = suiteSel.getFormValue() ?? "all";
+    mode = (MODES.find(m => m.key === v)?.key ?? "all");
+    renderMode();
+  });
+
+  // CHANGED: re-add verbosity cycling, but ONLY after mount (DOM-backed)
+  levelBtn.listen.onClick(() => {
+    const idx = LEVELS.indexOf(level);
+    level = LEVELS[(idx + 1) % LEVELS.length] ?? "normal";
+    renderLevel();
+  });
+
+  // CHANGED: clear should clear the tiny panel surfaces
+  clearBtn.listen.onClick(() => {
+    clearMarquee();
+    setStatus("idle");
+  });
+};
 
   return {
     branch,
@@ -152,13 +217,14 @@ export function test_panel_factory_offdom(): TestPanel {
     levelBtn,
     suiteSel,
     status,
-    console: consoleEl,
+    marquee,
 
     getLevel: () => level,
     getMode: () => mode,
 
+    gems,
     setStatus,
-    appendLine,
-    clear,
+    setMarquee,
+    clearMarquee,
   } as const;
 }

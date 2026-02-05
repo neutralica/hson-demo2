@@ -1,7 +1,7 @@
 // json-chunks.mock.hson-showcase.ts
 
 
-export const json_CARS =
+export const json_CARS =`
 {
   "lastUpdated": "2025-06-07T15:30:00Z",
   "dataSource": "Internal Market Analysis Group",
@@ -238,10 +238,10 @@ export const json_CARS =
     ]
   }
 }
+`
 
 
-
-export const json_invertebrae =
+export const json_invertebrae =`
 {
   "kingdom": "Animalia",
   "invertebrates": [
@@ -249,8 +249,8 @@ export const json_invertebrae =
       "phylum": "Arthropoda",
       "characteristics": {
         "segmentedBody": true,
-        // "exoskeleton": true,
-        // "jointedAppendages": true,
+        "exoskeleton": true,
+        "jointedAppendages": true,
         "examples": ["insects", "spiders", "crustaceans"]
       },
       "classes": [
@@ -262,9 +262,9 @@ export const json_invertebrae =
               "exampleSpecies": [
                 {
                   "scientificName": "Danaus plexippus",
-                  // "commonName": "Monarch butterfly",
-                  // "wingspanCm": 10.2,
-                  // "isPollinator": true,
+                  "commonName": "Monarch butterfly",
+                  "wingspanCm": 10.2,
+                  "isPollinator": true,
                   "lifespanDays": null
                 }
               ]
@@ -274,8 +274,8 @@ export const json_invertebrae =
               "exampleSpecies": [
                 {
                   "scientificName": "Coccinella septempunctata",
-                  // "commonName": "Seven-spot ladybird",
-                  // "diet": ["aphids", "mites"],
+                  "commonName": "Seven-spot ladybird",
+                  "diet": ["aphids", "mites"],
                   "venomous": false
                 }
               ]
@@ -331,13 +331,13 @@ export const json_invertebrae =
       "phylum": "Cnidaria",
       "characteristics": {
         "radialSymmetry": true,
-        // "nematocysts": true,
+        "nematocysts": true,
         "bodyForms": ["polyp", "medusa"]
       },
       "classes": [
         {
           "name": "Anthozoa",
-          // "orders": [],
+          "orders": [],
           "note": "Includes corals and sea anemones, mostly sessile"
         }
       ]
@@ -349,4 +349,4 @@ export const json_invertebrae =
   ],
   "extinctGroups": "null2222"
 }
-  ;
+  `;

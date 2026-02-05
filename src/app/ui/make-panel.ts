@@ -1,7 +1,10 @@
 // ui-panels.spec.ts
 import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
-import { fill_create, type BudFob, type BudSpec } from "../config/bud-config";
+import { bud_node, type BudFob, type BudSpec } from "../config/bud-config";
+import { makeDivClass } from "../utils/makers";
+import { $cols } from "../consts/colors.consts";
+import { $PANEL_HIDDEN } from "../consts/ui-consts";
 
 type PanelSpecs = Readonly<{
     panel: BudSpec;     // grid item wrapper
@@ -22,7 +25,7 @@ type PanelSpecArgs = Readonly<{
 export function make_panel_specs(a: PanelSpecArgs): PanelSpecs {
     const { key, panelId, panelCss, frameCss, bodyCss, headCss } = a;
 
-    const mk = (tag: "div" | "section" = "div") =>
+    const mk = (tag: "div" | "section"  | "span" = "div") =>
         (parent: LiveTree) => parent.create[tag]();
 
     return {
@@ -60,7 +63,8 @@ export function make_panel_specs(a: PanelSpecArgs): PanelSpecs {
 }
 
 export type BuiltPanel = Readonly<{
-  panel: BudFob;
+  // really these should all just return livetrees
+    panel: BudFob;
   frame: BudFob;
   head?: BudFob | undefined;
     body: BudFob;
@@ -68,10 +72,26 @@ export type BuiltPanel = Readonly<{
 }>;
 
 export function mount_panel(parent: LiveTree, specs: PanelSpecs): BuiltPanel {
-  const b = fill_create(parent);
-  const panel = b.bud(specs.panel);
-  const frame = panel.bud(specs.frame);
-  const head = specs.head ? frame.bud(specs.head) : undefined;
-  const body = frame.bud(specs.body);
-  return { panel, frame, head, body, tree: parent };
+    const b = bud_node(parent);
+    const panel = b.bud(specs.panel);
+    const frame = panel.bud(specs.frame);
+    const head = specs.head ? frame.bud(specs.head) : undefined;
+    const body = frame.bud(specs.body);
+  const closeButton = makeDivClass(frame.tree, "close-button")
+    .setText('[ X ]')
+    .css.setMany({
+    position: "absolute",
+    top: "0.5rem",
+    left: "0.5rem",
+    width: "4rem",
+      height: "1rem",
+    color:$cols.blu.pastel,
+        border: $cols.blu.pastel,
+        zIndex: 100,
+    pointerEvents: "all"
+    })
+    .listen.onClick(() => {
+      panel.tree.classlist.add($PANEL_HIDDEN);
+  })
+    return { panel, frame, head, body, tree: parent };
 }

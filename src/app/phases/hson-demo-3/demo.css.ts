@@ -161,7 +161,7 @@ export const BELT_HOLDERcss: CssMap = {
 
 export const LAYOUT_GRIDcss = {
 left: "30%",
-  gridTemplateColumns: "1fr",
+  gridTemplateColumns: "1fr 1fr",
   gridTemplateRows: "1fr 1fr",   // force two visible rows
 
 }

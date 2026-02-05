@@ -1,6 +1,5 @@
 import type { HsonAttrs } from "hson-live/types";
-import type { Gen, J, Fixture, FixtureBag, Named } from "./fixtures.types";
-import {json_ALL} from "../../_data-old/data/json-fixtures"
+import type { Gen, Jsonish, Fixture, FixtureBag, Named } from "./fixtures.types";
 
 
 function el(tag: string, attrs: HsonAttrs, inner: string): string {
@@ -17,7 +16,7 @@ export const g_choice = <T>(name: string, xs: readonly T[]): Gen<T> => ({
   sample: (rnd) => xs[Math.floor(rnd() * xs.length)]!,
 });
 
-export const g_arr = (inner: Gen<J>, min = 0, max = 4): Gen<readonly J[]> => ({
+export const g_arr = (inner: Gen<Jsonish>, min = 0, max = 4): Gen<readonly Jsonish[]> => ({
   name: `arr(${inner.name})`,
   sample: (rnd) => {
     const n = min + Math.floor(rnd() * (max - min + 1));
@@ -25,10 +24,10 @@ export const g_arr = (inner: Gen<J>, min = 0, max = 4): Gen<readonly J[]> => ({
   },
 });
 
-export const g_obj = (inner: Gen<J>, keys: readonly string[]): Gen<Readonly<Record<string, J>>> => ({
+export const g_obj = (inner: Gen<Jsonish>, keys: readonly string[]): Gen<Readonly<Record<string, Jsonish>>> => ({
   name: `obj(${inner.name})`,
   sample: (rnd) => {
-    const out: Record<string, J> = {};
+    const out: Record<string, Jsonish> = {};
     for (const k of keys) out[k] = inner.sample(rnd);
     return out;
   },
@@ -40,13 +39,13 @@ export type ShapeOpts = Readonly<{
   arrMax: number;
 }>;
 
-export function make_json_shape(inner: Gen<J>, o: ShapeOpts): Gen<J> {
+export function make_json_shape(inner: Gen<Jsonish>, o: ShapeOpts): Gen<Jsonish> {
   const base = inner;
 
-  const step = (g: Gen<J>, depth: number): Gen<J> => {
+  const step = (g: Gen<Jsonish>, depth: number): Gen<Jsonish> => {
     if (depth >= o.maxDepth) return g;
 
-    const wrapped: readonly Gen<J>[] = [
+    const wrapped: readonly Gen<Jsonish>[] = [
       g,
       {
         name: `arr(${g.name})`,
@@ -68,7 +67,7 @@ export function make_json_shape(inner: Gen<J>, o: ShapeOpts): Gen<J> {
   };
 
   // fold depth times, but the *choice* happens per-sample, so you get variety
-  let out: Gen<J> = base;
+  let out: Gen<Jsonish> = base;
   for (let d = 0; d < o.maxDepth; d++) out = step(out, d);
   return out;
 }
@@ -166,7 +165,7 @@ export function product2<A, B>(
 
   for (const aa of a) for (const bb of b) {
     out.push({
-      name: `${aa.name}__${bb.name}`,
+      name: `${aa.name}_|_${bb.name}`,
       a: aa.value,
       b: bb.value,
     });
@@ -185,7 +184,7 @@ export function product3<A, B, C>(
 
   for (const aa of a) for (const bb of b) for (const cc of c) {
     out.push({
-      name: `${aa.name}__${bb.name}__${cc.name}`,
+      name: `${aa.name}_|_${bb.name}_|_${cc.name}`,
       a: aa.value,
       b: bb.value,
       c: cc.value,
@@ -290,5 +289,5 @@ export function make_html_generated_fixtures(): readonly Fixture[] {
 export const FIXTURES_GENERATED: readonly Fixture[] = _freeze([
   ...make_html_generated_fixtures(),
 
-    /// make_json_fixtures
+
     ]);

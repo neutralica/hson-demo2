@@ -62,3 +62,8 @@ export function _rng_xs32(seed: number): () => number {
     return ((x >>> 0) / 0x1_0000_0000);
   };
 }
+
+
+export function _snip(s: string, max = 2000): string {
+  return s.length > max ? `${s.slice(0, max)}…` : s;
+}

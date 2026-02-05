@@ -1,4 +1,4 @@
-import { _freeze } from "../fixtures/fixture-gen";
+import { _freeze } from "../fixtures/generate-fixtures";
 import type { TestEvent, TestFailure, TestStatus, TestSummary } from "./tests.types";
 
 export type CaseKey = `${string}::${string}`; // suite::name
@@ -104,7 +104,7 @@ export function create_test_log(): TestLog {
       ensureSuite(e.suite);
 
       const s = suites.get(e.suite)!;
-      s.totalPlanned = e.totalPlanned || 0;
+      if (e.totalPlanned !== undefined) s.totalPlanned = e.totalPlanned;
       lastLine = `suite ${e.suite}…`;
       return;
     }
@@ -116,19 +116,13 @@ export function create_test_log(): TestLog {
       const k = key(e.suite, e.name);
       const meta = e.meta;
 
-      // register the case key for this suite once
-      const arr = caseKeysBySuite.get(e.suite)!;
-      if (!arr.includes(k)) arr.push(k);
-
       const s = suites.get(e.suite)!;
-      if (!s.caseKeys.includes(k)) s.caseKeys.push(k);
+      caseKeysBySuite.get(e.suite)!.push(k);
+      s.caseKeys.push(k);
 
       const base = { key: k, suite: e.suite, name: e.name } as const;
+      cases.set(k, _freeze(meta ? { ...base, meta } : base));
 
-      cases.set(
-        k,
-        _freeze(meta ? { ...base, meta } : base),
-      );
       lastLine = `… ${e.name}`;
       return;
     }

@@ -17,12 +17,12 @@ export type FixtureBag = Readonly<Record<string, Fixture>>;
 export type JPrim = null | boolean | number | string;
 
 export interface JObj {
-    readonly [k: string]: J;
+    readonly [k: string]: Jsonish;
 }
 
-export interface JArr extends ReadonlyArray<J> { }
+export interface JArr extends ReadonlyArray<Jsonish> { }
 
-export type J = JPrim | JArr | JObj;
+export type Jsonish = JPrim | JArr | JObj;
 
 export type Rng = () => number;
 

@@ -13,7 +13,7 @@ import { makeSpanClass } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
-import { fill_create } from "../../config/bud-config";
+import { bud_node } from "../../config/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { LETTER_COLORstd } from "../../consts/colors.consts";
 
@@ -25,10 +25,9 @@ import { LETTER_COLORstd } from "../../consts/colors.consts";
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
-    const b = fill_create(stage)
+    const b = bud_node(stage)
    
     /* create structural layers */
-    // NOT ANYMORE!!! /* stacking order matters here: */
     const sky = b.bud(SPLASH_BUDS.sky);
     const logoBox = sky.bud(SPLASH_BUDS.logoBox);
     const frame = logoBox.bud(SPLASH_BUDS.frame);

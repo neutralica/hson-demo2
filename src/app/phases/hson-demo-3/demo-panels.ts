@@ -11,7 +11,25 @@ export const PARSE_PANEL = make_panel_specs({
 export const TEST_PANEL = make_panel_specs({
   key: "test",
   panelId: "test-panel",
-  frameCss: PANEL_FRAMEcss,
+  frameCss: {
+    ...PANEL_FRAMEcss,
+    width: "50%"
+  },
+  bodyCss: PANEL_SURFACEcss,
+});
+
+export const INSPECTOR_PANEL = make_panel_specs({
+  // CHANGED: new key
+  key: "inspector",
+
+  // CHANGED: new, unique DOM id
+  panelId: "inspector-panel",
+
+  // reuse your standard chrome
+  frameCss: {
+    ...PANEL_FRAMEcss,
+    
+  },
   bodyCss: PANEL_SURFACEcss,
 });
 

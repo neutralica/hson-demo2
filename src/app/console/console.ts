@@ -2,8 +2,16 @@
 
 import type { LiveTree } from "hson-live";
 import type { TestEvent, TestFailure, TestSummary } from "../../tests/tests.types";
+import { _freeze } from "../../fixtures/generate-fixtures";
 
-export type ConsoleLevel = "quiet" | "normal" | "verbose";
+export type ConsoleLevel = "quiet" | "normal" | "verbose" | "v2";
+
+export const CONSOLE_LEVELS: readonly ConsoleLevel[] = _freeze([
+  "quiet",
+  "normal",
+  "verbose",
+  "v2",
+] as const);
 
 export type ConsoleUi = Readonly<{
   setLevel: (lvl: ConsoleLevel) => void;

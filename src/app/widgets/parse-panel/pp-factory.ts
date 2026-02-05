@@ -4,6 +4,8 @@ import type { Fmt, Panels, PanelShell } from "./pp.types";
 import { PP_PANEL_HEADER_TG_CSS } from "./pp.css";
 import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../../phases/hson-demo-3/demo-panels.css";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "./pp.consts";
+import { makeDivClass, makeDivId } from "../../utils/makers";
+import { $cols } from "../../consts/colors.consts";
 
 type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -47,9 +49,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
     const textarea = panel.create.textarea();
     textarea.data.set("input", fmt);
     textarea.css.setMany(PANEL_TEXTAREAcss);
-
+    
     panels[fmt] = { fmt, panel, textarea, chip, bytes, copyBtn };
   }
-
   return { root, panels };
 }

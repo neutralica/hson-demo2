@@ -2,8 +2,8 @@
 // ---------- HTML building helpers ----------
 
 import type { HsonAttrs } from "hson-live/types";
-import type { Fixture, J, Named } from "./fixtures.types";
-import { _freeze, product3 } from "./fixture-gen";
+import type { Fixture, Jsonish, Named } from "./fixtures.types";
+import { _freeze, product3 } from "./generate-fixtures";
 
 
 export function named<const T>(name: string, value: T): Named<T> {
@@ -45,7 +45,7 @@ function mixed(tag: string): string {
 
 // IMPORTANT: Keep JSON fixtures as JSON TEXT if you want to exercise fromJson parsing.
 // If you want both, keep separate tags or suites.
-function json_text(v: J): string {
+function json_text(v: Jsonish): string {
   return JSON.stringify(v);
 }
 

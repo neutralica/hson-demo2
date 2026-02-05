@@ -37,7 +37,7 @@ export const STARSHINEanim: AnimSpec = {
 export const VERanim: AnimSpec = {
   name: "hson_ver",
   duration: SHORT_FLASHstr,
-  delay: "2000ms",
+  delay: STAR_DELstr,
   timingFunction: "ease-out",
   fillMode: "forwards",
 };
@@ -45,6 +45,7 @@ export const VERanim: AnimSpec = {
 export const NEON_FLASHanim = {
   name: "hson_letters",
   duration: SHORT_FLASHstr,
+  delay: SHORT_FLASHstr,
   timingFunction: "ease-in-out",
   fillMode: "forwards",
 };

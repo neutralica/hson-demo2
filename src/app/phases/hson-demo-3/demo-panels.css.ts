@@ -11,19 +11,19 @@ export const UI_ROOTcss:CssMap = {
     // outline: "2px solid red",
 } as const;
 
-export const UI_SHELLcss: CssMap = {
-    pointerEvents: "auto",
-    width: "min(1100px, 100%)",
-    height: "100%",
-    display: "grid",
-    gap: "12px",
-    boxSizing: "border-box",
-} as const;
+// export const UI_SHELLcss: CssMap = {
+//     pointerEvents: "auto",
+//     width: "min(1100px, 100%)",
+//     height: "100%",
+//     display: "grid",
+//     gap: "12px",
+//     boxSizing: "border-box",
+// } as const;
 
 export const PANEL_OUTERcss:CssMap = {
     minHeight: "200px",
     minWidth: "0",
-    display: "grid",
+    // display: "grid",
     pointerEvents: "all",
 } as const;
 
@@ -58,7 +58,8 @@ export const LAYOUT_GRIDcss: CssMap = {
     gap: "12px",
     padding: "12px",
     boxSizing: "border-box",
-    gridAutoColumns: "minmax(200px, auto)",
+    gridAutoColumns: "1fr 1fr",
+    overflowY: "scroll"
 } as const;
 
 export const MENU_BTNcss = {
