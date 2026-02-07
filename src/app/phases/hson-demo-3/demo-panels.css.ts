@@ -1,5 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { $cols } from "../../consts/colors.consts";
+import { $blu_, $cols } from "../../consts/colors.consts";
+import { $GEM_WIDTHstr } from "../../../tests/tests.consts";
 
 export const UI_ROOTcss:CssMap = {
     position: "absolute",
@@ -131,44 +132,49 @@ export const PANEL_TEXTAREAcss = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: "12px",
     lineHeight: "1.35",
-    background: "rgba(110, 13, 50, .3)",
-    color: $cols.blu.sky,
+    background: $cols.bckgd,
+    color: $blu_.sky,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: "10px",
     padding: "10px",
     outline: "none",
 };
 
-export const TEST_BODY_OVERRIDEScss = {
-    overflow: "hidden",              // override PANEL_SURFACEcss
-    gridTemplateRows: "auto 1fr",    // toolbar + console
+export const TEST_BODY_OVERRIDEScss: CssMap = {
+    overflow: "hidden",           
+    // gridTemplateRows: "auto 1fr", 
     alignContent: "start",
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gridTemplateRows: "1fr auto"
 } as const;
 
-export const TEST_TOOLBARcss = {
-    display: "grid",
-    gridAutoFlow: "column",
-    gridAutoColumns: "max-content",
-    gap: "8px",
-    alignItems: "center",
-    minHeight: "0",
+export const TEST_TOOLBARcss: CssMap = {
+   display: "grid",
+  gap: "8px",
+  width: "100%",
+  gridTemplateColumns: "1fr 1fr",
+  gridTemplateRows: "1fr 1fr",
+    boxSizing: "border-box",
+    gridRow: "2 / 3",
+  gridColumn: "1 / 3"
 } as const;
 
 export const TEST_STATUS_CHIPcss: CssMap = {
     padding: "8px 10px",
-    borderRadius: "999px",
     boxSizing: "border-box",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: "12px",
     letterSpacing: "0.08em",
     textTransform: "uppercase",
     background: "rgba(255,255,255,0.02)",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
     opacity: "0.9",
-    color: $cols.blu.pastel
+    color: $blu_.pastel,
+    maxWidth: $GEM_WIDTHstr
 } as const;
 
-export const TEST_CONSOLEcss = {
+export const MARQUEEcss: CssMap = {
     ...SCROLLERcss,                  // <- reuse
     borderRadius: "12px",
     padding: "10px",
@@ -179,6 +185,7 @@ export const TEST_CONSOLEcss = {
     fontSize: "12px",
     lineHeight: "1.35",
     whiteSpace: "pre",
-    minWidth: "0",
+    minWidth: "100%",
+    gridColumn: "1 / 5",
     color: $cols.txtmain,
 } as const;

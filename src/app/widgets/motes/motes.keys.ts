@@ -22,6 +22,6 @@ export const KF_MOTE_RISE = {
     name: $MOTE_RISE,
     steps: {
         "from": { "--ty": "0px" },
-        "to": { "--ty": "-110vh" }, // CHANGED: overshoot so end is off-screen
+        "to": { "--ty": "-110vh" }, // overshoot so end is off-screen
     }
 }

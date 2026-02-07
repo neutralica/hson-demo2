@@ -62,7 +62,7 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
   const hueSpread = _lerp(12, 130, v);      // how far hues wander from base
   const chromaBase = _lerp(0.06, 0.16, v); // overall saturation level
 
-  const jitter = _lerp(2, 18, v); // CHANGED: volatility controls wobble
+  const jitter = _lerp(2, 18, v); // volatility controls wobble
   const dimHuesForLightMode = ring_hues(rng, 8, baseHue, jitter, 0);
   const brightHuesForDarkMode = [...ring_hues(rng, 8, baseHue, jitter, 360 / 16)] as number[]; // 22.5° shift
   // --- Light ramp anchors: force distinct blue + distinct neighbor ---
@@ -80,7 +80,7 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
   brightHuesForDarkMode[1] = Math.abs(delta) < sepMin
     ? _wrap360(BLUE + (delta >= 0 ? sepMin : -sepMin))
     : h1;
-  // CHANGED: bias two slots away from warm-neutral mush
+  // bias two slots away from warm-neutral mush
   // keep your existing nudges if you want, but replace them with this:
   brightHuesForDarkMode[0] = _wrap360(baseHue);          // light4 stays warm-ish
   brightHuesForDarkMode[1] = _wrap360(baseHue + 50);          // light4 stays warm-ish
@@ -219,7 +219,7 @@ function build_grays(rng: () => number, warmth: number): readonly string[] {
   const h = warm_hue(warmth);
   const c = 0.01 + Math.abs(warmth) * 0.01;
 
-  // CHANGED: lift the floor so gray1 isn’t basically bgDark
+  // lift the floor so gray1 isn’t basically bgDark
   // (You hard-code bgDark at l=0.10.)
   return [
     fmt_oklch({ l: 0.22, c, h }),
@@ -230,12 +230,12 @@ function build_grays(rng: () => number, warmth: number): readonly string[] {
 }
 
 function build_accents(rng: () => number, baseHue: number, v: number): readonly string[] {
-  // CHANGED: avoid [0,90,180,270] symmetry (it reads “paired”).
+  // avoid [0,90,180,270] symmetry (it reads “paired”).
   // Use uneven, but well-separated offsets + small seeded wobble.
   const rot = randRange(rng, -12, 12);
   const hs = [0, 72, 155, 245].map(d => _wrap360(baseHue + d + rot));
 
-  // CHANGED: slightly less punch by default; volatility still increases it.
+  // slightly less punch by default; volatility still increases it.
   const punch = _lerp(0.14, 0.22, v);
 
   // Optional: give accents a mild L variation so they’re not all the same “weight”.
@@ -325,7 +325,7 @@ function spaced_hues(
 
   // Low-discrepancy sequence around the color wheel, centered on baseHue.
   for (let i = 0; i < count; i++) {
-    // CHANGED: deterministic spread instead of rolling random hue
+    // deterministic spread instead of rolling random hue
     const core = baseHue + rotateDeg + i * GOLDEN_ANGLE;
 
     // Pull it back toward baseHue within hueSpread (keeps “theme” coherent)

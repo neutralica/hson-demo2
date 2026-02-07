@@ -3,7 +3,7 @@ import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
 import { bud_node, type BudFob, type BudSpec } from "../config/bud-config";
 import { makeDivClass } from "../utils/makers";
-import { $cols } from "../consts/colors.consts";
+import { $blu_, $cols } from "../consts/colors.consts";
 import { $PANEL_HIDDEN } from "../consts/ui-consts";
 
 type PanelSpecs = Readonly<{
@@ -33,7 +33,7 @@ export function make_panel_specs(a: PanelSpecArgs): PanelSpecs {
             name: `${key}.panel`,
             make: (parent) => mk("div")(parent).id.set(panelId),
             cls: `panel ${key}`,
-            ...(panelCss ? { css: panelCss } : {}), // CHANGED: only attach when present
+            ...(panelCss ? { css: panelCss } : {}), // only attach when present
         },
         frame: {
             name: `${key}.frame`,
@@ -85,8 +85,8 @@ export function mount_panel(parent: LiveTree, specs: PanelSpecs): BuiltPanel {
     left: "0.5rem",
     width: "4rem",
       height: "1rem",
-    color:$cols.blu.pastel,
-        border: $cols.blu.pastel,
+    color:$blu_.pastel,
+        border: $blu_.pastel,
         zIndex: 100,
     pointerEvents: "all"
     })

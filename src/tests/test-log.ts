@@ -1,27 +1,5 @@
 import { _freeze } from "../fixtures/generate-fixtures";
-import type { TestEvent, TestFailure, TestStatus, TestSummary } from "./tests.types";
-
-export type CaseKey = `${string}::${string}`; // suite::name
-
-export type CaseLog = Readonly<{
-  key: CaseKey;
-  suite: string;
-  name: string;
-  status?: TestStatus;
-  ms?: number;
-  err?: string;
-  meta?: Record<string, string>;
-}>;
-
-export type SuiteLog = Readonly<{
-  suite: string;
-  totalPlanned?: number;
-  cases: readonly CaseKey[];
-  pass: number;
-  fail: number;
-  skip: number;
-  ms?: number;
-}>;
+import type { CaseKey, CaseLog, SuiteLog, TestEvent, TestFailure, TestSummary } from "./tests.types";
 
 export type TestLog = Readonly<{
   onEvent: (e: TestEvent) => void;
@@ -143,7 +121,12 @@ export function create_test_log(): TestLog {
       else if (e.status === "fail") s.fail += 1;
       else s.skip += 1;
 
+      // merge metaPatch into existing meta (exactOptionalPropertyTypes friendly)
       const prevMeta = prev?.meta;
+      const nextMeta =
+        (prevMeta || e.metaPatch)
+          ? _freeze({ ...(prevMeta ?? {}), ...(e.metaPatch ?? {}) })
+          : undefined;
 
       const baseEnd = {
         key: k,
@@ -154,7 +137,7 @@ export function create_test_log(): TestLog {
       } as const;
 
       //  only attach err/meta when present (no `undefined` assignment)
-      const withMeta = prevMeta ? { ...baseEnd, meta: prevMeta } : baseEnd;
+      const withMeta = nextMeta ? { ...baseEnd, meta: nextMeta } : baseEnd;
       const withErr = e.err ? { ...withMeta, err: e.err } : withMeta;
 
       cases.set(k, _freeze(withErr));
@@ -218,17 +201,7 @@ export function create_test_log(): TestLog {
       }),
     );
   }
-  /*  _freeze(
-     [...suites.values()].map((s) => _freeze({
-       suite: s.suite,
-       totalPlanned: s.totalPlanned,
-       cases: _freeze([...s.caseKeys]),
-       pass: s.pass,
-       fail: s.fail,
-       skip: s.skip,
-       ms: s.ms,
-     })),
-   ); */
+
 
   const listCases = (suite: string): readonly CaseLog[] => {
     const keys = caseKeysBySuite.get(suite) ?? [];

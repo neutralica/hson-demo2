@@ -9,7 +9,7 @@ const STIPPLE_LAYER_BASE: CssMap = {
   transform: "translate3d(0px,0px,0)",
   overflow: "hidden"
 };
-// CHANGED: base plane always defines geometry + compositing
+// base plane always defines geometry + compositing
 export const STIPPLE_PLANE_BASE: CssMap = {
   position: "absolute",
   inset: "0",

@@ -8,13 +8,13 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
-import { $cols } from "../../consts/colors.consts";
+import { $blu_, $cols, $grn_ } from "../../consts/colors.consts";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
 
-const zalgoCol = $cols.blu.sky;
-const zalgoCol2 = $cols.dragonGreen;
+const zalgoCol = $blu_.sky;
+const zalgoCol2 = $grn_.dragon;
 
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };
 const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
@@ -31,7 +31,7 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     backgroundColor: $cols.bckgd,
     padding: "1rem",
     fontFamily: "monospace",
-    color: $cols.dragonGreen,
+    color: $grn_.dragon,
     filter: "blur(0.5px)",
   })
   const noteText = makeDivId(noteBox, "note-text")

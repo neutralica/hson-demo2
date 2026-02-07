@@ -15,7 +15,6 @@ export class TestRecorder {
     public ingest(e: TestEvent): void {
         if (e.t === "suite_begin") this.suites += 1;
         if (e.t === "suite_end") this.msTotal += e.ms;
-_test_full_loop
         if (e.t === "case_begin") {
             this.cases += 1;
             this.metaByCase.set(this.key(e.suite, e.name), e.meta);
@@ -30,7 +29,7 @@ _test_full_loop
             if (e.status === "fail") {
                 const meta = this.metaByCase.get(this.key(e.suite, e.name));
 
-                // CHANGED: with exactOptionalPropertyTypes, do NOT set `meta: undefined`.
+                // with exactOptionalPropertyTypes, do NOT set `meta: undefined`.
                 const base = {
                     suite: e.suite,
                     name: e.name,

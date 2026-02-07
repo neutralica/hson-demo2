@@ -4,7 +4,7 @@ import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/logo-splash-2/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { mulberry32 } from "../../utils/rng";
-import { $cols, _bckRGB } from "../../consts/colors.consts";
+import { $cols, bckRGB } from "../../consts/colors.consts";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
@@ -56,7 +56,7 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   </filter>
 `;
 
-  // CHANGED: mask-only clouds (white = coverage)
+  // mask-only clouds (white = coverage)
   let circles = "";
   for (let i = 0; i < o.circles; i++) {
     const r = o.rMin + rnd() * (o.rMax - o.rMin);
@@ -68,7 +68,7 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   // ADDED: solid slab fill under the cloud line
   // Default start: a little above the band so you don’t get a thin “gap” under some silhouettes.
   // ADDED: solid slab fill under the cloud line
-  // CHANGED: derive from band geometry instead of a percent knob.
+  // derive from band geometry instead of a percent knob.
   const bulkRadius = o.rMin + 0.55 * (o.rMax - o.rMin);     // “typical” circle size
   const fillStartY =
     Math.min(
@@ -142,7 +142,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
   for (let i = 0; i < t.layers; i++) {
     const u = i / Math.max(1, t.layers - 1);
     const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
-    // CHANGED: keep band placement in 0..100 range (percent)
+    // keep band placement in 0..100 range (percent)
     const yBandPct = _lerp(15, 95, u);
     const ySpreadPct = _lerp(16, 34, u);
 
@@ -164,11 +164,11 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     const layer = makeDivClass(wrapper, ["cloud-layer", `cloud-${i}`]);
 
-    // CHANGED: deterministic phase per layer; var lives on parent
+    // deterministic phase per layer; var lives on parent
     const phasePx = Math.round(mulberry32(seed)() * t.w);
     layer.css.set.var("--cloud-phase-px", `${phasePx}px`);
 
-    // CHANGED: expose per-layer max opacity to mount_splash (hyphen key)
+    // expose per-layer max opacity to mount_splash (hyphen key)
     // (bottom stronger, top weaker)
     const maxAlpha = _lerp(0.02, 0.28, u);
     // per-layer static strength (you already compute this)
@@ -200,9 +200,9 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       backgroundImage: [
         `linear-gradient(rgba(12, 19, 26, var(--kiss)), rgba(215, 215, 215,var(--kiss)))`,
         `linear-gradient(to bottom,
-     rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, 1) 0%,
-     rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, 1) 55%,
-     rgba(${_bckRGB.r}, ${_bckRGB.g}, ${_bckRGB.b}, 1) 100%)`,
+     rgba(${bckRGB.r}, ${bckRGB.g}, ${bckRGB.b}, 1) 0%,
+     rgba(${bckRGB.r}, ${bckRGB.g}, ${bckRGB.b}, 1) 55%,
+     rgba(${bckRGB.r}, ${bckRGB.g}, ${bckRGB.b}, 1) 100%)`,
       ].join(", "),
       mixBlendMode: "normal",
       filter: "none",

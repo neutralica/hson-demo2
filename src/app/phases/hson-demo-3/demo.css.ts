@@ -22,7 +22,7 @@ export const DEMOcss: CssMap = {
   height: "100%",
   inset: "0",
   overflow: "hidden",
-  background: "#07070a",
+  background: $cols.bckgd,
   pointerEvents: "none",
 };
 
@@ -89,9 +89,9 @@ export const HEADLINEcss: CssMap = {
 
 export const MAIN_CONTAINERcss: CssMap = {
   position: "relative",
-  top: "5vh",
-  left: "10vw",
-  height: "90%",
+  top: "0",
+  left: "0",
+  height: "100%",
   width: "20rem",
   display: "flex",
   flexDirection: "column",

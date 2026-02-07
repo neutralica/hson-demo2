@@ -1,6 +1,8 @@
 // html-fixtures.ts
 
 // import { html_mdn } from "./html-mdn";
+import { _freeze } from "../../src/fixtures/generate-fixtures";
+import type { FixtureBundle } from "../../src/tests/tests.types";
 import { html_gwern } from "./large-fixtures/html-gwern.mock";
 import { html_hackerNews } from "./large-fixtures/html-hackernews.mock";
 import { html_wikipedia } from "./large-fixtures/html-wikipedia.mock";
@@ -440,28 +442,26 @@ const htmlAttributeCases: { [key: string]: string } = {
 
 
 
-export const html_ALL = {
-  htmlRudiments,
-  htmlPlus,
-  htmlLevel3,
-  html_edge_cases,
-  html_should_pass,
-  large_format: {
+export const HTML_FIXTURES_LEGACY = _freeze({
+  html__rudiments: htmlRudiments,
+  html_plus: htmlPlus,
+  html__level3: htmlLevel3,
+  html__edgeCases: html_edge_cases,
+  html__shouldPass: html_should_pass,
+  html__attributeCases: htmlAttributeCases,
+  html__problematic:html_problematic,
+  html__largeFormat: {
     html_homepage,
     html_wikipedia,
     html_hackerNews,
     html_gwern,
-    // html_mdn,
   },
 
   // parses but loses style & noncompliant attrs etc
-  // htmlLosesAttrs,
 
   // expect error:
 
-  // htmlAttributeCases,
-  // html_problematic,
   // htmlSanitizeFail,
   // html_INVALID, // expect errors
 
-}
+} satisfies FixtureBundle);

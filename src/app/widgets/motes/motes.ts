@@ -28,7 +28,7 @@ function _randomMinMax(min: number, max: number): number {
     return min + Math.random() * (max - min);
 }
 
-// CHANGED: register all motes infra once
+// register all motes infra once
 function ensure_motes_css(tree: LiveTree): void {
     if (_motesCssBooted) return;
     _motesCssBooted = true;
@@ -82,7 +82,7 @@ export function begin_motes(tree: LiveTree, count = COUNT_DEFAULT): void {
 
     const overlay = tree.find.must.byId("motes-container");
 
-    // CHANGED: listen on overlay for rise completion; rise is iterationCount: 1
+    // listen on overlay for rise completion; rise is iterationCount: 1
    
     overlay.listen.onAnimationEnd((e: AnimationEvent) => {
         if (e.animationName !== $MOTE_RISE) return;
@@ -92,14 +92,14 @@ export function begin_motes(tree: LiveTree, count = COUNT_DEFAULT): void {
     });
 
     for (let i = 0; i < count; i++) {
-        // CHANGED: class names now stable and match globals
+        // class names now stable and match globals
         const mote = overlay.create.div().classlist.add($CLS_MOTE);
         const spin = mote.create.div().classlist.add($CLS_SPIN).setText("*");
 
-        // CHANGED: only per-instance values are inline: size/color/vars/durations
+        // only per-instance values are inline: size/color/vars/durations
         seed_mote(mote, spin);
 
-        // CHANGED: animations are declared via anim manager
+        // animations are declared via anim manager
         mote.css.anim.begin(ANIM_RISE); // rises once; end triggers respawn
         spin.css.anim.begin(ANIM_SPIN); // spins forever
     }
@@ -138,7 +138,7 @@ function seed_mote(mote: LiveTree, spin: LiveTree): void {
     const hue = _randomMinMax(0, 360);
 
     const x = _randomMinMax(0, W);
-    const y0 = _randomMinMax(0, H); // CHANGED: start on-screen
+    const y0 = _randomMinMax(0, H); // start on-screen
 
     const riseS = _randomMinMax(RISE_MIN_S, RISE_MAX_S);
     const spinS = _randomMinMax(SPIN_MIN_S, SPIN_MAX_S);
@@ -150,7 +150,7 @@ function seed_mote(mote: LiveTree, spin: LiveTree): void {
         "--y0": `${y0.toFixed(3)}px`,
         "--ty": "0px",
         "--dead": "0",
-        // CHANGED: per-instance duration is just a style override
+        // per-instance duration is just a style override
         "animation-duration": `${riseS.toFixed(3)}s`,
     });
 
@@ -167,13 +167,13 @@ function kill_mote_el(moteEl: HTMLElement): void {
     moteEl.style.setProperty("--dead", "1");
     moteEl.style.pointerEvents = "none";
 
-    // CHANGED: to respawn soon, shorten *current* rise
+    // to respawn soon, shorten *current* rise
     moteEl.style.animationDuration = "0.40s";
 
     const spin = moteEl.querySelector(`.${$CLS_SPIN}`) as HTMLElement | null;
     if (spin) {
         // IMPORTANT: don't "begin()" twice; use animation lists.
-        // CHANGED: set die + spin together so die doesn't replace spin.
+        // set die + spin together so die doesn't replace spin.
         const spinDur = spin.style.animationDuration || "4s";
         spin.style.animationName = `${$MOTE_DIE}, ${$MOTE_SPIN}`;
         spin.style.animationDuration = `0.35s, ${spinDur}`;
@@ -189,7 +189,7 @@ function respawn_mote_el(moteEl: HTMLElement): void {
 
     const spin = moteEl.querySelector(`.${$CLS_SPIN}`) as HTMLElement | null;
     if (spin) {
-        // CHANGED: reset back to pure spin
+        // reset back to pure spin
         spin.style.animationName = $MOTE_SPIN;
         spin.style.animationTimingFunction = "linear";
         spin.style.animationIterationCount = "infinite";
@@ -224,7 +224,7 @@ function respawn_mote_el(moteEl: HTMLElement): void {
         spin.style.animationDuration = `${spinS.toFixed(3)}s`;
     }
 
-    // CHANGED: restart rise robustly (same trick, but now it matters because rise is 1x)
+    // restart rise robustly (same trick, but now it matters because rise is 1x)
     moteEl.style.animationName = "none";
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     moteEl.offsetHeight;

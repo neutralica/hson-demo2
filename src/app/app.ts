@@ -11,6 +11,9 @@ import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "int
 import { mount_demo } from "./phases/hson-demo-3/mount-demo";
 import { make_vines } from "./widgets/vines/vines";
 import { PHASE_LINGER } from "./consts/config.consts";
+import { $cols } from "./consts/colors.consts";
+import { _test_full_loop } from "hson-live/diagnostics";
+import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 
 
 const _pause = () => _sleep(PHASE_LINGER);
@@ -19,16 +22,14 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 
 export async function run_app(root: LiveTree): OutcomeAsync<void> {
     root.empty();
-    const app = makeDivId(root, "app").classlist.set("app");
+    const app = makeDivId(root, "app").classlist.set("app").css.set.backgroundColor($cols.bckgd);
     const stage = makeDivId(app, "stage")
         .classlist.add("stage")
         .css.setMany(STAGE_CSS);
     
+    const report = _test_full_loop(HTML_FIXTURES_LEGACY.html__attributeCases, {verbose: true, capture: true})
+    console.log(report);
     
-    console.log("// DEBUG tired of skipping") 
-    // const demoTEMP = run_phase(stage, mount_demo, _shortpause);
-    // return relay.ok();
-    //  one skip signal governs all phases
     const { skip, cancel } = make_skip_promise(stage);
 
     try {

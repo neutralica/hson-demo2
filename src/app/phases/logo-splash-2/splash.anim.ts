@@ -113,7 +113,7 @@ export const TAIL_C_ANIM = {
  */
 
 export const anim_CLOUD_LOOP = (i: number): AnimSpec => {
-  // CHANGED: no Infinity; bottom slower, top faster (tune)
+  // no Infinity; bottom slower, top faster (tune)
   const duration = CLOUD_DURnum * (1 + i / 0.18);
   return {
     name: CLOUD_BAND_LOOPstr,

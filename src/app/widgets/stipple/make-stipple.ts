@@ -146,7 +146,7 @@ export const STIPPLE_TUNE: StippleTune = {
  *   create_stipple(screenFx);
  */
 export function create_stipple(host: LiveTree, patch?: Partial<StippleTune>): LiveTree {
-  // CHANGED: patch merge; if patch is undefined this is still fine.
+  // patch merge; if patch is undefined this is still fine.
   const t: StippleTune = { ...STIPPLE_TUNE, ...patch };
 
   ensure_stipple_keyframes(host, t);
@@ -181,7 +181,7 @@ export function create_stipple(host: LiveTree, patch?: Partial<StippleTune>): Li
 // ============================
 
 function ensure_stipple_keyframes(host: LiveTree, t: StippleTune): void {
-  // CHANGED: register a single “rotate wrapper” keyframes.
+  // register a single “rotate wrapper” keyframes.
   // Drift keyframes are per-plane because each plane needs different end positions.
   // We register drift keyframes in build_plane() where we know the end positions.
 
@@ -304,7 +304,7 @@ function build_plane(parent: LiveTree, t: StippleTune, rnd: () => number, ix: nu
     const rotDur = rand_float(rnd, t.motion.rotDurMinS, t.motion.rotDurMaxS);
     const rotSpan = rand_float(rnd, -t.motion.rotSpanDeg, +t.motion.rotSpanDeg);
 
-    // CHANGED: each wrapper gets a static “bias” rotation plus slow spin,
+    // each wrapper gets a static “bias” rotation plus slow spin,
     // so planes don’t all share the same axis-aligned grid.
     wrap.css.setMany({
       transform: `rotate(${rotSpan.toFixed(3)}deg) scale(${t.motion.scale})`,
@@ -438,7 +438,7 @@ function make_dot_hsla(rnd: () => number, t: typeof STIPPLE_TUNE, vol01: number)
 }
 
 function plane_opacity(rnd: () => number, t: StippleTune, ix: number): number {
-  // CHANGED: keep it mild; master opacity already exists.
+  // keep it mild; master opacity already exists.
   // You can delete this if you want strictly uniform planes.
   const wobble = 0.72 + rnd() * 0.56; // 0.72..1.28
   const base = 0.22;                  // typical plane contribution

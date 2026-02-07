@@ -4,9 +4,9 @@ import { $MOTE_RISE, $MOTE_SPIN, $MOTE_DIE } from "./motes";
 // ADDED: animation specs (single responsibility)
 export const ANIM_RISE: AnimSpec = {
     name: $MOTE_RISE,
-    duration: "10s", // CHANGED: placeholder; per-mote overrides set inline
+    duration: "10s", // placeholder; per-mote overrides set inline
     timingFunction: "linear",
-    iterationCount: "1", // CHANGED: runs once so animationend fires
+    iterationCount: "1", // runs once so animationend fires
     fillMode: "forwards",
     delay: "0s",
 };

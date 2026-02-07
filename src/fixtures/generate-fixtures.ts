@@ -79,7 +79,7 @@ export type Wrap = Readonly<{
   apply: (inner: H) => H;
 }>;
 
-export const w_div = (name: string, attrs: string) : Wrap => ({
+export const w_div = (name: string, attrs: string): Wrap => ({
   name,
   apply: (inner) => `<div ${attrs}>${inner}</div>`,
 });
@@ -100,13 +100,11 @@ export function compose(base: Gen<H>, wraps: readonly Wrap[]): Gen<H> {
   };
 }
 
-
-
 export function attrs_to_html(attrs: HsonAttrs): string {
   const parts: string[] = [];
   for (const [k, v] of Object.entries(attrs)) {
     if (v === true) parts.push(k);                   // boolean attr
-    else parts.push(`${k}="${escape_attr(typeof v==="string" ? v : String(v))}"`);     // quoted
+    else parts.push(`${k}="${escape_attr(typeof v === "string" ? v : String(v))}"`);     // quoted
   }
   return parts.length ? " " + parts.join(" ") : "";
 }
@@ -154,7 +152,7 @@ export function product(
   return acc.map((x) => _freeze({ name: x.name, values: _freeze([...x.values]) }));
 }
 
-// CHANGED: typed freeze wrapper preserves generics
+// typed freeze wrapper preserves generics
 export const _freeze = <T>(x: T): Readonly<T> => Object.freeze(x);
 
 export function product2<A, B>(
@@ -171,7 +169,7 @@ export function product2<A, B>(
     });
   }
 
-  // CHANGED: use freeze wrapper, not Object.freeze directly
+  // use freeze wrapper, not Object.freeze directly
   return out.map((row) => _freeze(row));
 }
 
@@ -191,12 +189,12 @@ export function product3<A, B, C>(
     });
   }
 
-  // CHANGED: use freeze wrapper, not Object.freeze directly
+  // use freeze wrapper, not Object.freeze directly
   return out.map((row) => _freeze(row));
 }
 
 
-// CHANGED: extra helper(s) for shape building
+// extra helper(s) for shape building
 type HtmlShape = Readonly<{
   name: string;
   apply: (tag: string, attrs: HsonAttrs, inner: string) => string;
@@ -289,5 +287,4 @@ export function make_html_generated_fixtures(): readonly Fixture[] {
 export const FIXTURES_GENERATED: readonly Fixture[] = _freeze([
   ...make_html_generated_fixtures(),
 
-
-    ]);
+]);

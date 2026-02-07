@@ -47,7 +47,7 @@ export function bud_node(parent: LiveTree) {
       });
     };
 
-    // CHANGED: return a new bud rooted at this node (chainable)
+    // return a new bud rooted at this node (chainable)
     const budlet = bud_node(node);
 
     return {

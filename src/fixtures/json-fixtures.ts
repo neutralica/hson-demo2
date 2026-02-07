@@ -4,8 +4,13 @@ import { _freeze } from "./generate-fixtures";
 import type { Fixture } from "./fixtures.types";
 
 
+/**
+ *CURRENT UNUSED - delete? 
+ **/
+
 export type JsonAuthor = unknown;
 export type JsonAuthorMap = Readonly<Record<string, JsonAuthor>>;
+
 
 function assert_jsonable(v: unknown, path: string): void {
   const t = typeof v;

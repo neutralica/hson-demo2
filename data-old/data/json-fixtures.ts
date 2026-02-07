@@ -2,7 +2,8 @@
 
 import { json_CARS, json_invertebrae } from "./large-fixtures/json-chunks.mock";
 import { json_homepage } from "./large-fixtures/json-homepage-string.mock";
-
+import { _freeze } from "../../src/fixtures/generate-fixtures";
+import type { FixtureBundle } from "../../src/tests/tests.types";
 
 const jsonRudiments = {
   simpleObject: `{"test_case": "simpleObject", "value": 1}`,
@@ -67,7 +68,7 @@ const jsonSamples = {
 
 export const nastyJson =
 {
-  "heterogeneousArrayDeep": `[
+  heterogeneousArrayDeep: `[
             { "a": 1 },
             2,
             "x",
@@ -76,36 +77,36 @@ export const nastyJson =
             { "b": [1, { "c": null }, []] },
             []
         ]`,
-  "indexWidth": `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]`,
-  "emptiesEverywhere": `{
+  indexWidth: `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]`,
+  emptiesEverywhere: `{
             "emptyObj": {},
             "emptyArr": [],
             "nested": [{}, []],
             "emptyStr": ""
         }`,
-  "unicodeAndBidi": `{
+  unicodeAndBidi: `{
             "emoji": "🧪🚀",
             "combining": "e\u0301",
             "rtl_override": "\u202Eabc\u202C",
             "astral_pair": "\uD83D\uDE80"
         }`,
-  "htmlLikeSubstrings": `{
+  htmlLikeSubstrings: `{
             "looksLikeTag": "<notatag>",
             "commentLike": "<!-- not a comment -->",
             "entities": "&copy; &notanentity;"
         }`,
-  "numbersCorner": `{
+  numbersCorner: `{
             "int": 0,
             "negZero": -0,
             "float": 1.0,
             "exp": 1e-9,
             "big": 900719925479993
         }`,
-  "deepNesting": `{ "a": { "b": { "c": { "d": { "e": { "f": 1 } } } } } }`,
+  deepNesting: `{ "a": { "b": { "c": { "d": { "e": { "f": 1 } } } } } }`,
 
   // TODO - fix this case handling, and possibly only this: ("" as key)
 
-  "mixedArrayShapes": `[
+  mixedArrayShapes: `[
         [],
         [""],
         ["", ""],
@@ -115,25 +116,12 @@ export const nastyJson =
 
 }
 
-// const json_ALL = {
-//   jsonRudiments,
-//   jsonSamples,
-//   nastyJson,
-//   json_CARS,
-//   json_invertebrae,
-//   json_homepage
-// }
-
-import type { FixtureAtom } from "../../../hson-live/dist/diagnostics/loop-3.test";
-import { _freeze } from "../../src/fixtures/generate-fixtures";
-import type { FixtureBundle } from "../../src/tests/suite-builder";
-
-// CHANGED: simple, manual, flat. Keys are case names. Values are atoms.
-export const FIXTURES_BASIC = _freeze({
+// simple, manual, flat. Keys are case names. Values are atoms.
+export const JSON_FIXTURES_LEGACY = _freeze({
   json__Rudiments: jsonRudiments,
   json__Samples: jsonSamples,
   json__nastyJson: nastyJson,
-  big: {
+  json__biggish: {
     json__CARS: json_CARS,
     json__invertebrae: json_invertebrae,
     json__homepage: json_homepage

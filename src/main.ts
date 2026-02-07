@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import {  void_sync, type Outcome } from "intrastructure";
-import { boot_root_tree as graft_livetree } from "./app/boot";
+import { boot_livetree as graft_livetree } from "./app/boot";
 import { run_app } from "./app/app";
 
 

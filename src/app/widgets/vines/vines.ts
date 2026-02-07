@@ -16,21 +16,21 @@ export type VineOpts = {
 // Safer glyph sets (ASCII-only)
 // ----------------------------
 
-// CHANGED: rail is safe ASCII only
+// rail is safe ASCII only
 const railThresholds: readonly Threshold<string>[] = [
   { min: 0.00, value: "-" },
   { min: 0.50, value: "=" },
   { min: 0.80, value: "#" }, // "thick rail" but monospace-safe
 ];
 
-// CHANGED: trunk characters are single-column ASCII
+// trunk characters are single-column ASCII
 const trunkThresholds: readonly Threshold<readonly string[]>[] = [
   { min: 0.00, value: [".", ",", "'", "`"] },        // wispy / endpoints
   { min: 0.35, value: ["|", ":", ";", "!"] },        // medium
   { min: 0.70, value: ["|", "!", "I", "H", "#"] },   // thick near rail
 ];
 
-// CHANGED: leaves are single-column ASCII.
+// leaves are single-column ASCII.
 // NOTE: keep these subtle; too many makes “confetti.”
 const leafThresholds: readonly Threshold<readonly string[]>[] = [
   { min: 0.00, value: [".", "o"] },
@@ -38,7 +38,7 @@ const leafThresholds: readonly Threshold<readonly string[]>[] = [
   { min: 0.80, value: ["*", "+", "x"] },
 ];
 
-// CHANGED: hooks are single-column ASCII, used at termination
+// hooks are single-column ASCII, used at termination
 const hookThresholds: readonly Threshold<readonly string[]>[] = [
   { min: 0.00, value: ["'", ".", ","] },
   { min: 0.45, value: [")", "(", "\\", "/"] },
@@ -71,7 +71,7 @@ function set_cell(grid: string[][], y: number, x: number, v: string): void {
   row[x] = v;
 }
 
-// CHANGED: avoid overwriting something already “stronger”
+// avoid overwriting something already “stronger”
 function try_set_cell(grid: string[][], y: number, x: number, v: string): void {
   const row = grid[y];
   if (!row) return;
@@ -84,7 +84,7 @@ function nrmlz_ornate(raw01: number): number {
   return _lerp(0.1, 1, _clamp01(raw01));
 }
 
-// CHANGED: local ornamentation falls off down the strand (thick at top, thin at bottom)
+// local ornamentation falls off down the strand (thick at top, thin at bottom)
 function falloff_orn(orn: number, t01: number): number {
   // t01: 0 at top -> 1 at bottom
   const k = 1.6; // tune: higher = faster thinning
@@ -123,12 +123,12 @@ export function make_vines(opts: VineOpts): string {
   const rCh = pick_threshold(railThresholds, orn);
   for (let x = 0; x < width; x++) set_cell(grid, 0, x, rCh);
 
-  // CHANGED: strand count depends on width + orn (but bounded)
+  // strand count depends on width + orn (but bounded)
   const baseStrands = Math.max(3, Math.floor(width / 10));
   const extra = Math.floor(orn * Math.max(1, width / 14));
   const strandCount = Math.min(width, baseStrands + extra);
 
-  // CHANGED: pre-build stateful strands
+  // pre-build stateful strands
   const strands: Strand[] = Array.from({ length: strandCount }, () => {
     const x = Math.floor(rnd() * width);
 
@@ -149,7 +149,7 @@ export function make_vines(opts: VineOpts): string {
     };
   });
 
-  // CHANGED: render row-by-row so continuity is stable and “floating” junk is reduced
+  // render row-by-row so continuity is stable and “floating” junk is reduced
   for (let y = 1; y < rows; y++) {
     for (const s of strands) {
       if (!s.alive) continue;
@@ -158,7 +158,7 @@ export function make_vines(opts: VineOpts): string {
         continue;
       }
 
-      // CHANGED: gentle drift with momentum (prevents rigid straight lines, avoids chaos)
+      // gentle drift with momentum (prevents rigid straight lines, avoids chaos)
       // - mostly vertical (dx=0)
       // - occasional step left/right
       // - momentum sometimes persists
@@ -178,7 +178,7 @@ export function make_vines(opts: VineOpts): string {
 
       s.x = Math.max(0, Math.min(width - 1, s.x + s.dx));
 
-      // CHANGED: thickness falls off with depth
+      // thickness falls off with depth
       const t = s.yEnd <= 1 ? 1 : (y - 1) / (s.yEnd - 1); // 0..1 over the strand
       const localOrn = falloff_orn(s.orn0, t);
 
@@ -188,7 +188,7 @@ export function make_vines(opts: VineOpts): string {
       set_cell(grid, y, s.x, trunkCh);
 
       // leaves: only if trunk exists (it does), and bias toward mid-strand
-      // CHANGED: fewer leaves near the rail and at the very tip
+      // fewer leaves near the rail and at the very tip
       const midBias = 1 - Math.abs(t - 0.55) / 0.55; // peak near middle
       const leafChance = (0.05 + 0.18 * localOrn) * (0.35 + 0.65 * midBias);
 

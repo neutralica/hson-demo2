@@ -13,16 +13,15 @@ export const TEST_PANEL = make_panel_specs({
   panelId: "test-panel",
   frameCss: {
     ...PANEL_FRAMEcss,
-    width: "50%"
   },
   bodyCss: PANEL_SURFACEcss,
 });
 
 export const INSPECTOR_PANEL = make_panel_specs({
-  // CHANGED: new key
+  // new key
   key: "inspector",
 
-  // CHANGED: new, unique DOM id
+  // new, unique DOM id
   panelId: "inspector-panel",
 
   // reuse your standard chrome

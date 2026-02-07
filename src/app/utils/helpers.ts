@@ -67,3 +67,20 @@ export function _rng_xs32(seed: number): () => number {
 export function _snip(s: string, max = 2000): string {
   return s.length > max ? `${s.slice(0, max)}…` : s;
 }
+
+export function kb_txt(s: string): string {
+  if (!s) return "0.0";
+  const bytes = new TextEncoder().encode(s).length;
+  return (bytes / 1024).toFixed(1);
+}
+
+// FNV-1a 32-bit (fast, deterministic)
+export function hash32_fnv1a(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  // >>>0 => unsigned
+  return (h >>> 0).toString(16).padStart(8, "0");
+}

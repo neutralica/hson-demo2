@@ -4,32 +4,9 @@
 
 import { _freeze } from "../fixtures/generate-fixtures";
 import { TestRecorder } from "./test-recorder";
-import type { TestEvent, TestSummary } from "./tests.types";
+import type { RunOptions, RunResult, TestEvent, TestSuite } from "./tests.types";
 
-export type TestCase = Readonly<{
-  suite: string; // CHANGED: runner inputs align with TestEvent
-  name: string;
-  run: () => void | Promise<void>;
-  meta?: Record<string, string>;
-}>;
-
-export type TestSuite = Readonly<{
-  suite: string; // CHANGED: not `name`
-  cases: readonly TestCase[];
-}>;
-
-export type RunOptions = Readonly<{
-  bail?: boolean;         // stop on first failure
-  filterSuite?: string;   // exact match
-  filterCase?: string;    // substring match
-}>;
-
-export type RunResult = Readonly<{
-  ok: boolean;
-  summary: TestSummary;
-}>;
-
-export async function run_suites(
+export async function run_test_suites(
   suites: readonly TestSuite[],
   onEvent: (e: TestEvent) => void,
   opts: RunOptions = {},
@@ -48,9 +25,6 @@ export async function run_suites(
     });
 
     for (const tc of suite.cases) {
-      // CHANGED: tc already includes suite; enforce consistency if you want:
-      // if (tc.suite !== suite.suite) continue; // or throw
-
       if (opts.filterSuite && tc.suite !== opts.filterSuite) continue;
       if (opts.filterCase && !tc.name.includes(opts.filterCase)) continue;
 
@@ -65,16 +39,29 @@ export async function run_suites(
       emit(rec, onEvent, tc.meta ? { ...evBase, meta: tc.meta } : evBase);
 
       try {
-        await tc.run();
-        emit(rec, onEvent, {
+        // CHANGED: capture optional return (and await works for both sync+async)
+        const ret = await tc.run();
+        const metaPatch =
+          ret && typeof ret === "object" && "metaPatch" in ret
+            ? (ret as { metaPatch?: Record<string, string> }).metaPatch
+            : undefined;
+
+        // CHANGED: include metaPatch on case_end when present
+        const endBase = {
           t: "case_end",
           suite: tc.suite,
           name: tc.name,
           status: "pass",
           ms: now() - c0,
-        });
+        } as const;
+
+        emit(rec, onEvent, metaPatch ? { ...endBase, metaPatch } : endBase);
       } catch (err) {
         const msg = asErrMsg(err);
+
+        // OPTIONAL: if you ever want metaPatch on failures too,
+        // you can have tc.run() throw an Error that already includes metaPatch in message,
+        // or move digest generation outside tc.run(). For now: none on fail.
         emit(rec, onEvent, {
           t: "case_end",
           suite: tc.suite,
@@ -83,6 +70,7 @@ export async function run_suites(
           ms: now() - c0,
           err: msg,
         });
+
         if (opts.bail) break;
       }
     }

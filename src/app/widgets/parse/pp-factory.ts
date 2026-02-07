@@ -15,7 +15,7 @@ type PpFactoryOpts = {
 export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
 
-  // CHANGED: if a previous PP root exists, remove it (idempotent)
+  // if a previous PP root exists, remove it (idempotent)
   const old = hostBody.find.byId("parsing-panels-root");
   if (old) old.removeSelf();
 
