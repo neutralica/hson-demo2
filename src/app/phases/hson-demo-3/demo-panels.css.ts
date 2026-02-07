@@ -96,10 +96,10 @@ export const PANEL_HIDDENcss = {
     display: "none",
 } as const;
 
-export const SCROLLERcss = {
-    overflow: "auto",
-    minHeight: "0",
-} as const;
+// export const SCROLLERcss = {
+//     overflow: "auto",
+//     minHeight: "0",
+// } as const;
 
 export const PARSING_PANEL_ROOTcss ={
       display: "grid",
@@ -175,7 +175,7 @@ export const TEST_STATUS_CHIPcss: CssMap = {
 } as const;
 
 export const MARQUEEcss: CssMap = {
-    ...SCROLLERcss,                  // <- reuse
+    // ...SCROLLERcss,                  // nah
     borderRadius: "12px",
     padding: "10px",
     boxSizing: "border-box",

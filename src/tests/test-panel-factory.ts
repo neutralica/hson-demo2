@@ -46,12 +46,26 @@ export function test_panel_factory_offdom(): TestPanel {
   // const toolbar = branch.create.div()
   //   .id.set("test-toolbar")
   //   .css.setMany(TEST_TOOLBARcss);
-  const marquee = branch.create.div()
-    .id.set("test-marquee")
-    .css.setMany({
-      ...MARQUEEcss,
-      gridRow: "1",
-    });
+  // CHANGED: marquee is a viewport + inner moving strip
+const marquee = branch.create.tags(["marquee"]).first()!
+  .id.set("test-marquee")
+  .css.setMany({
+    ...MARQUEEcss,
+    gridRow: "1",
+
+    // CHANGED: true marquee viewport
+    overflow: "hidden",
+    position: "relative",
+  });
+
+// CHANGED: inner strip we translate left
+const marqueeStrip = marquee.create.div()
+  .classlist.set("marquee-strip")
+  .css.setMany({
+    display: "inline-block",
+    whiteSpace: "pre",
+    willChange: "transform",
+  });
 
   const controlsRow = branch.create.div().id.set("test-controls").css.setMany({
     ...TEST_PANELcss,
