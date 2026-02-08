@@ -1,7 +1,7 @@
 // vines.ts
 
 import { _clamp01, _lerp } from "../../utils/helpers";
-import { mulberry32 } from "../../utils/rng";
+import { make_rng } from "../../utils/rng";
 
 type Threshold<T> = Readonly<{ min: number; value: T }>;
 
@@ -109,7 +109,7 @@ export function make_vines(opts: VineOpts): string {
 
   // NOTE: you said non-determinism is intentional.
   const seed = Math.random() * opts.seed;
-  const rnd = mulberry32(seed);
+  const rnd = make_rng(seed);
 
   const orn = opts.ornate != null ? nrmlz_ornate(opts.ornate) : 0.3;
 

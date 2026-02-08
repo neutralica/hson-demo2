@@ -3,7 +3,7 @@ import { makeDivClass, makeDivId } from "../../utils/makers";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/logo-splash-2/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/logo-splash-2/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
-import { mulberry32 } from "../../utils/rng";
+import { make_rng } from "../../utils/rng";
 import { $cols, bckRGB } from "../../consts/colors.consts";
 
 
@@ -30,7 +30,7 @@ export type CloudSvgOpts = {
 };
 
 export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
-  const rnd = mulberry32(o.seed);
+  const rnd = make_rng(o.seed);
 
   const w = o.w;
   const h = o.h;
@@ -165,7 +165,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
     const layer = makeDivClass(wrapper, ["cloud-layer", `cloud-${i}`]);
 
     // deterministic phase per layer; var lives on parent
-    const phasePx = Math.round(mulberry32(seed)() * t.w);
+    const phasePx = Math.round(make_rng(seed)() * t.w);
     layer.css.set.var("--cloud-phase-px", `${phasePx}px`);
 
     // expose per-layer max opacity to mount_splash (hyphen key)

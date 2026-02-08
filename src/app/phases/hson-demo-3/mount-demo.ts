@@ -14,7 +14,6 @@ import { LAYOUT_GRIDcss, PANEL_FRAMEcss, PANEL_OUTERcss, TEST_BODY_OVERRIDEScss,
 import { INSPECTOR_PANEL, PARSE_PANEL, TEST_PANEL } from "./demo-panels";
 import { mount_panel } from "../../ui/make-panel";
 import { test_panel_factory_offdom } from "../../../tests/test-panel-factory";
-import { build_suites_for_mode, make_legacy_test_suite, make_generated_fixtures_suite } from "../../../tests/suite-builder";
 import { run_test_suites } from "../../../tests/test-runner";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey, TestEvent, TestSuite } from "../../../tests/tests.types";
@@ -24,6 +23,7 @@ import { $blu_, $cols, LETTER_COLORfaded } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import { create_inspector } from "../../../tests/test-inspector";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
+import { build_suites_for_mode } from "../../../tests/suite-builder";
 
 export const $PARSE = "parse";
 export const $TEST = "test";

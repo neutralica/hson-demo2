@@ -1,6 +1,6 @@
 // stipple.system.ts
 import type { LiveTree } from "hson-live";
-import { mulberry32 } from "../../utils/rng";
+import { make_rng } from "../../utils/rng";
 import type { KeyframesInput } from "hson-live/types";
 import { _clamp01, _lerp } from "../../utils/helpers";
 
@@ -164,7 +164,7 @@ export function create_stipple(host: LiveTree, patch?: Partial<StippleTune>): Li
     isolation: "isolate",
   });
 
-  const rnd = mulberry32(t.seed);
+  const rnd = make_rng(t.seed);
   const n = Math.max(1, Math.floor(t.planes.count));
 
   for (let i = 0; i < n; i++) {

@@ -1,7 +1,7 @@
 // cols.ts
 
 import { _clamp01 } from "../../utils/helpers";
-import { mulberry32 } from "../../utils/rng";
+import { make_rng } from "../../utils/rng";
 
 export type FlutingOpts = {
   width: number;
@@ -20,7 +20,7 @@ export type FlutingOpts = {
 export function make_fluting(opts: FlutingOpts): string {
   const width = Math.max(8, Math.floor(opts.width));
   const rows = Math.max(6, Math.floor(opts.rows));
-  const rnd = mulberry32(opts.seed);
+  const rnd = make_rng(opts.seed);
 
   const lightPos = _clamp01(opts.lightPos ?? 0.75);
   const flutes = Math.max(2, Math.floor(opts.flutes ?? Math.floor(width / 9)));

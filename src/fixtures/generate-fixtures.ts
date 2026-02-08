@@ -1,5 +1,6 @@
 import type { HsonAttrs } from "hson-live/types";
 import type { Gen, Jsonish, Fixture, FixtureBag, Named } from "./fixtures.types";
+import { make_rng } from "../app/utils/rng";
 
 
 function el(tag: string, attrs: HsonAttrs, inner: string): string {
@@ -200,7 +201,8 @@ type HtmlShape = Readonly<{
   apply: (tag: string, attrs: HsonAttrs, inner: string) => string;
 }>;
 
-export function make_html_generated_fixtures(): readonly Fixture[] {
+export function make_html_generated_fixtures(o?: Readonly<{ seed: number; count: number }>): readonly Fixture[] {
+  // existing axes unchanged...
   const TAGS = [
     { name: "p", value: "p" },
     { name: "div", value: "div" },
@@ -212,79 +214,75 @@ export function make_html_generated_fixtures(): readonly Fixture[] {
     { name: "multi", value: { class: "a\tb\nb  a", lang: "en" } as HsonAttrs },
     { name: "boolean", value: { disabled: true, required: true } as HsonAttrs },
     { name: "quotes", value: { title: `He said "hi" & left <soon>` } as HsonAttrs },
-
-    // ADDED: empty-string + zero-ish values (often exposes “stringified number” bugs downstream)
     { name: "empty_attr", value: { title: "" } as HsonAttrs },
-    { name: "numish_attr", value: { "data-n": 0 } as unknown as HsonAttrs }, // if your HsonAttrs forbids numbers, remove
+    { name: "numish_attr", value: { "data-n": 0 } as unknown as HsonAttrs },
   ] as const;
 
   const CONTENTS = [
     { name: "plain", value: "basic paragraph" },
     { name: "unicode", value: `e\u0301 = é; ZWJ: 👩‍💻; ZWNJ:\u200Cbetween` },
-
-    // NOTE: this is “inner HTML” content; great for mixed-content testing
     { name: "mixed_inline", value: `paragraph with <span>mixed content</span> inside` },
-
-    // ADDED: text + element + text (classic mixed-node edge)
     { name: "txt_span_txt", value: `alpha <span>mid</span> omega` },
-
-    // ADDED: empty-ish content
     { name: "empty", value: "" },
     { name: "spaces", value: "   " },
   ] as const;
 
-  // ADDED: shape axis (tree topology)
   const SHAPES: readonly HtmlShape[] = [
-    {
-      name: "single",
-      apply: (tag, attrs, inner) => el(tag, attrs, inner),
-    },
-    {
-      name: "wrapped_div",
-      apply: (tag, attrs, inner) => el("div", {} as HsonAttrs, el(tag, attrs, inner)),
-    },
-    {
-      name: "siblings_h2_p",
-      apply: (tag, attrs, inner) =>
-        `<h2>sib</h2>${el(tag, attrs, inner)}`,
-    },
-    {
-      name: "mixed_text_nodes",
-      apply: (tag, attrs, inner) =>
-        el(tag, attrs, `pre ${inner} post`),
-    },
-    {
-      name: "void_hr_between",
-      apply: (tag, attrs, inner) =>
-        `<p>line one</p><hr>${el(tag, attrs, inner)}<p>line two</p>`,
-    },
-    {
-      name: "optional_end_li",
-      apply: (_tag, _attrs, inner) =>
-        `<ul><li>one<li>${inner}<li>three</ul>`,
-    },
+    { name: "single", apply: (tag, attrs, inner) => el(tag, attrs, inner) },
+    { name: "wrapped_div", apply: (tag, attrs, inner) => el("div", {} as HsonAttrs, el(tag, attrs, inner)) },
+    { name: "siblings_h2_p", apply: (tag, attrs, inner) => `<h2>sib</h2>${el(tag, attrs, inner)}` },
+    { name: "mixed_text_nodes", apply: (tag, attrs, inner) => el(tag, attrs, `pre ${inner} post`) },
+    { name: "void_hr_between", apply: (tag, attrs, inner) => `<p>line one</p><hr>${el(tag, attrs, inner)}<p>line two</p>` },
+    { name: "optional_end_li", apply: (_tag, _attrs, inner) => `<ul><li>one<li>${inner}<li>three</ul>` },
   ] as const;
 
+  // ---- base deterministic cartesian set (your current behavior)
   const combos = product2(TAGS, ATTR_SETS);
 
-  const out: Fixture[] = [];
+  const base: Fixture[] = [];
   for (const ta of combos) {
     for (const c of CONTENTS) {
       for (const s of SHAPES) {
-        out.push({
+        base.push(_freeze({
           name: `html__${ta.name}__${c.name}__${s.name}`,
           fmt: "html",
           atom: s.apply(ta.a, ta.b, c.value),
-          tags: ["generated", "html", `shape:${s.name}`],
-        });
+          tags: _freeze(["generated", "html", "base", `shape:${s.name}`]),
+        } as const));
       }
     }
   }
 
-  return _freeze(out.map(_freeze));
+  // ---- optional seeded fuzz extension / truncation
+  if (!o) return _freeze(base);
+
+  const want = Math.max(0, o.count | 0);
+  const seed = (o.seed >>> 0);
+
+  if (want <= base.length) {
+    return _freeze(base.slice(0, want));
+  }
+
+  // CHANGED: add fuzz fixtures beyond base size
+  const extraCount = want - base.length;
+
+  const rnd = make_rng(seed); // use your seeded RNG helper
+  const pick = <T>(xs: readonly T[]): T => xs[Math.floor(rnd() * xs.length)]!;
+
+  const extra: Fixture[] = [];
+  for (let i = 0; i < extraCount; i++) {
+    const tag = pick(TAGS);
+    const attrs = pick(ATTR_SETS);
+    const content = pick(CONTENTS);
+    const shape = pick(SHAPES);
+
+    extra.push(_freeze({
+      name: `html__fuzz__${seed}__${String(i).padStart(4, "0")}__${tag.name}__${attrs.name}__${content.name}__${shape.name}`,
+      fmt: "html",
+      atom: shape.apply(tag.value, attrs.value, content.value),
+      tags: _freeze(["generated", "html", "fuzz", `seed:${seed}`, `shape:${shape.name}`]),
+    } as const));
+  }
+
+  return _freeze([...base, ...extra].map(_freeze));
 }
-
-export const FIXTURES_GENERATED: readonly Fixture[] = _freeze([
-  ...make_html_generated_fixtures(),
-
-]);

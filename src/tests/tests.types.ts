@@ -129,3 +129,9 @@ export type HsonTestApi = Readonly<{
   _test_full_loop: (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 }>;
 
+
+export type BuildSuitesOpts = Readonly<{
+  seed?: number;
+  genHtmlCount?: number;
+  genJsonCount?: number;
+}>;

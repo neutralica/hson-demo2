@@ -1,5 +1,7 @@
 // zalgo.ts
 
+import { make_rng } from "../../utils/rng";
+
 export type ZConfig = {
   // explicit knobs instead of a single “intensity”
   above: number;   // marks per char (0..)
@@ -26,17 +28,6 @@ const COMB_MID = [
   "\u0334", "\u0335", "\u0336", "\u0337", "\u0338",
 ] as const;
 
-// tiny deterministic PRNG (Mulberry32)
-function mulberry32(seed: number): () => number {
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6D2B79F5;
-    let x = Math.imul(t ^ (t >>> 15), 1 | t);
-    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 function pick<T>(arr: readonly T[], rand: () => number): T {
   return arr[Math.floor(rand() * arr.length)]!;
 }
@@ -48,7 +39,7 @@ function addMarks(count: number, marks: readonly string[], rand: () => number): 
 }
 
 export function zalgo_unicode(input: string, s: ZConfig): string {
-  const rand = s.seed === undefined ? Math.random : mulberry32(s.seed);
+  const rand = s.seed === undefined ? Math.random : make_rng(s.seed);
 
   const skip = s.skipChars ?? /[\s]/; // default skip whitespace only
 

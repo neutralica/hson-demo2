@@ -1,10 +1,16 @@
 // ui/prng.ts
-export function mulberry32(seed: number): () => number {
-  let t = seed >>> 0;
+export function normalize_seed(seed: number): number {
+  return (seed >>> 0);
+}
+
+// CHANGED: mulberry32 PRNG (fast, deterministic, good enough for test gen)
+export function make_rng(seed: number): () => number {
+  let a = normalize_seed(seed);
   return () => {
-    t += 0x6D2B79F5;
-    let x = Math.imul(t ^ (t >>> 15), 1 | t);
-    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    a |= 0;
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }

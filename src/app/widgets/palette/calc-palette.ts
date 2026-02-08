@@ -4,6 +4,7 @@
 // - Deterministic from a 4-digit seed (or any string)
 
 import { _clamp01, _clampN1P1, _lerp, _wrap360 } from "../../utils/helpers";
+import { make_rng } from "../../utils/rng";
 
 export type PaletteOpts = Readonly<{
   volatility?: number; // 0..1  (hue wander + chroma punch)
@@ -52,7 +53,7 @@ export function make_palette(seedRaw: string, optsRaw: PaletteOpts = {}): Palett
     grayWarmth: _clampN1P1(optsRaw.grayWarmth ?? 0.25),
   };
 
-  const rng = mulberry32(hash32(seed));
+  const rng = make_rng(hash32(seed));
 
   // Base hue anchored by seed; volatility controls how much we roam.
   const baseHue = randRange(rng, 0, 360);
@@ -269,17 +270,6 @@ function randRange(rng: () => number, a: number, b: number): number {
 }
 function randSigned(rng: () => number): number {
   return rng() * 2 - 1;
-}
-
-// Fast deterministic PRNG
-function mulberry32(seed: number): () => number {
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6D2B79F5;
-    let x = Math.imul(t ^ (t >>> 15), 1 | t);
-    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 // Hash any string to u32 (good enough; stable)

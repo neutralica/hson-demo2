@@ -1,11 +1,12 @@
 import type { FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
-import { _freeze, FIXTURES_GENERATED } from "../fixtures/generate-fixtures";
+import { _freeze, make_html_generated_fixtures } from "../fixtures/generate-fixtures";
 import type { Fixture, FixtureFmt } from "../fixtures/fixtures.types";
-import type { CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
+import type { BuildSuitesOpts, CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
 import { JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
+import { make_generated_json_fixtures } from "../fixtures/json-fixtures";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -164,12 +165,17 @@ export function make_legacy_test_suite(
   return _freeze({ suite, cases: _freeze(cases) });
 }
 
-export function make_generated_fixtures_suite(
+export function generate_fixture_suite(
   hson: HsonTestApi,
   fixtures: readonly Fixture[],
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
+  runMeta?: Readonly<{ seed: number; genHtmlCount: number; genJsonCount: number }>, // CHANGED
 ): TestSuite {
   const suite = "fixtures/generated";
+
+  const seedStr = runMeta ? String(runMeta.seed >>> 0) : "";
+  const genHtmlStr = runMeta ? String(runMeta.genHtmlCount) : "";
+  const genJsonStr = runMeta ? String(runMeta.genJsonCount) : "";
 
   return _freeze({
     suite,
@@ -177,23 +183,24 @@ export function make_generated_fixtures_suite(
       fixtures.map((fx) => {
         const preview = preview_atom(fx.atom);
         const tags = fx.tags?.length ? fx.tags.join(",") : "";
+
         const meta: Record<string, string> = {
           fmt: fx.fmt,
           preview,
           ...(tags ? { tags } : {}),
+          ...(runMeta ? { seed: seedStr, genHtmlCount: genHtmlStr, genJsonCount: genJsonStr } : {}), // CHANGED
         };
 
-        const k = `${suite}::${fx.name}` as CaseKey; // CHANGED
+        const k = `${suite}::${fx.name}` as CaseKey;
 
-        // CHANGED: register capture for generated fixtures
         if (captureMap) {
           captureMap.set(k, async () => {
             return hson._test_full_loop(fx.atom, {
               entry: fx.fmt,
               dual: true,
               times: 3,
-              verbose: true,  // CHANGED
-              capture: true,  // CHANGED
+              verbose: true,
+              capture: true,
             });
           });
         }
@@ -216,31 +223,41 @@ export function make_generated_fixtures_suite(
   });
 }
 
-
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
+
 
 export function build_suites_for_mode(
   mode: TestRunMode,
   h: Readonly<{ _test_full_loop: FullLoopFn }>,
   map?: Map<CaseKey, () => Promise<LoopReport>>,
+  o: BuildSuitesOpts = {},
 ): readonly TestSuite[] {
+  const seed = (o.seed ?? (Math.floor(Math.random() * 1e9) >>> 0)) >>> 0;
+
+  const genHtmlCount = o.genHtmlCount ?? 750;
+  const genJsonCount = o.genJsonCount ?? 750;
+
+  // CHANGED: build generated fixtures here (so seed is part of suite identity)
+  const generated: readonly Fixture[] = _freeze([
+    ...make_html_generated_fixtures({ seed, count: genHtmlCount }),
+    ...make_generated_json_fixtures({ seed, count: genJsonCount }),
+  ]);
+
   if (mode === "basic") {
     return _freeze([
       make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic", map),
       make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic", map),
     ]);
   }
-
   if (mode === "generated") {
     return _freeze([
-      make_generated_fixtures_suite(h, FIXTURES_GENERATED, map),
+      generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
     ]);
   }
 
-  // "all" (default)
   return _freeze([
     make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic", map),
     make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic", map),
-    make_generated_fixtures_suite(h, FIXTURES_GENERATED, map),
+    generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
   ]);
 }
