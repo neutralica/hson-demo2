@@ -27,8 +27,8 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
         .classlist.add("stage")
         .css.setMany(STAGE_CSS);
     
-    const report = _test_full_loop(HTML_FIXTURES_LEGACY.html__attributeCases, {verbose: true, capture: true})
-    console.log(report);
+    // const report = _test_full_loop(HTML_FIXTURES_LEGACY.html_INVALID.array_indices_gap_INVALID, {verbose: true, capture: true, stopOnFirstFail: false})
+    // console.log(report.artifacts);
     
     const { skip, cancel } = make_skip_promise(stage);
 

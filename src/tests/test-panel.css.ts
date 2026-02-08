@@ -2,15 +2,15 @@ import type { CssMap } from "hson-live/types";
 import { $GEM_WIDTHstr } from "./tests.consts"
 
 export const ROW_SUITE_FAILcss:CssMap = {
-  background: "rgba(255, 0, 0, 0.05)",
+  background: "rgba(255, 0, 0, 0.5)",
 };
 
 export const ROW_GROUP_FAILcss:CssMap = {
-  background: "rgba(255, 0, 0, 0.04)",
+  background: "rgba(255, 0, 0, 0.4)",
 };
 
 export const ROW_CASE_FAILcss:CssMap= {
-  background: "rgba(255, 0, 0, 0.06)",
+  background: "rgba(255, 0, 0, 0.6)",
 };
 
 export const TEST_PANELcss:CssMap = {

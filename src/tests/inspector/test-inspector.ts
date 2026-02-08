@@ -1,16 +1,24 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import type { TestLog } from "./test-log";
-import type { CaseKey, SuiteLog } from "./tests.types";
-import type { InspectorUi, TestFailure, UiLevel } from "./tests.types";
-import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "./test-panel.css";
-import { $cols } from "../app/consts/colors.consts";
-import { _test_full_loop, type LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
-import { open_report_window, render_report_html } from "./render-report";
+import type { TestLog } from "../test-log";
+import type { CaseKey, SuiteLog } from "../tests.types";
+import type { InspectorUi, TestFailure, UiLevel } from "../tests.types";
+import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "../test-panel.css";
+import { $cols } from "../../app/consts/colors.consts";
+import { _test_full_loop, type LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
+import { open_report_window, render_report_html } from "../render-report";
+import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
+import { clearBox, mkTable, mkTr, mkTh, mkTd } from "./inspector.helpers";
 
 export type CaptureFn = (key: CaseKey) => Promise<LoopReport>; // you’ll tighten to LoopReport
+let mainScrollEl: HTMLElement | null = null;
 
+const _stop = (ev: unknown): void => {
+  const e = ev as { stopPropagation?: () => void; preventDefault?: () => void };
+  e.preventDefault?.();
+  e.stopPropagation?.();
+};
 
 export function report_to_text(r: LoopReport): string {
   const lines: string[] = [];
@@ -59,18 +67,34 @@ export function report_to_text(r: LoopReport): string {
     if (r.dualFinals?.cw) pushBlock("cw final", r.dualFinals.cw.fmt, r.dualFinals.cw.text);
     if (r.dualFinals?.ccw) pushBlock("ccw final", r.dualFinals.ccw.fmt, r.dualFinals.ccw.text);
   }
+  const fmt_step = (s: unknown): string => {
+    if (!s) return "—";
+    if (typeof s === "string") return s;
+
+    const o = s as { step?: unknown; ok?: unknown; why?: unknown; err?: unknown };
+    const name = typeof o.step === "string" ? o.step : "[step]";
+    const ok = typeof o.ok === "boolean" ? (o.ok ? "OK" : "FAIL") : "—";
+
+    // optional details if present
+    const detail =
+      typeof o.why === "string" ? o.why :
+        typeof o.err === "string" ? o.err :
+          "";
+
+    return detail ? `${ok} ${name} — ${detail}` : `${ok} ${name}`;
+  };
 
   // 3) Failures (helpful even when ok=false)
+
   if (r.failures.length) {
     lines.push(`=== failures (${r.failures.length}) ===`);
-    for (const f of r.failures) {
-      // ADAPT: same field names caveat
-      lines.push(String((f as any).tag ?? "failure"));
-      lines.push(String((f as any).msg ?? ""));
-      lines.push("");
-    }
-  }
+    for (const f of r.failures) lines.push(fmt_step(f));
+    lines.push("");
 
+  }
+  const df = r.dualFinals?.ccw
+  lines.push(`=== ccw final (${df?.fmt}) ===`);
+  if (typeof df?.text === "string") { lines.push(df?.text.slice(0, 60)); }
   return lines.join("\n");
 }
 
@@ -125,99 +149,11 @@ export function create_inspector(
     return ns;
   };
 
-  // ---------------------------
-  // tiny “table” helpers
-  // ---------------------------
-  const clearBox = (box: LiveTree): LiveTree => box.empty();
-
-  const mkTable = (parent: LiveTree, cls: string): { table: LiveTree; thead: LiveTree; tbody: LiveTree } => {
-    const table = parent.create.table().classlist.set(`insp-table ${cls}`);
-    const thead = table.create.thead();
-    const tbody = table.create.tbody();
-    table.css.setMany({ width: "100%", borderCollapse: "collapse" });
-    return { table, thead, tbody };
-  };
-
-  const mkTr = (parent: LiveTree, cls: string): LiveTree => parent.create.tr().classlist.set(cls);
-
-  const mkTh = (row: LiveTree, cls: string, txt: string): LiveTree => {
-    const th = row.create.th().classlist.set(cls);
-    th.setText(txt);
-    return th;
-  };
-
-  const mkTd = (row: LiveTree, cls: string, txt: string): LiveTree => {
-    const td = row.create.td().classlist.set(cls);
-    td.setText(txt);
-    return td;
-  };
 
   // ---------------------------
   // component styles (no selectors)
   // ---------------------------
-  const SCROLL_WRAPcss: Record<string, string> = {
-    overflowX: "auto",
-    overflowY: "auto",
-    width: "100%",
-    maxHeight: "70vh",
-  };
 
-  const THcss: Record<string, string> = {
-    padding: "6px 8px",
-    textAlign: "left",
-    fontWeight: "600",
-    borderBottom: "1px solid rgba(255,255,255,0.12)",
-    whiteSpace: "nowrap",
-    opacity: "0.85",
-  };
-
-  const TDcss: Record<string, string> = {
-    padding: "6px 8px",
-    verticalAlign: "top",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-    whiteSpace: "nowrap",
-  };
-
-  const TD_PREVIEW_ROWcss: Record<string, string> = {
-    padding: "8px 12px",
-    whiteSpace: "pre-wrap",
-    overflowWrap: "anywhere",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-    background: "rgba(255,255,255,0.02)",
-    opacity: "0.95",
-  };
-
-  const CLICKABLEcss: Record<string, string> = { cursor: "pointer", userSelect: "none" };
-
-  const ROW_SUITEcss: Record<string, string> = {
-    background: "rgba(255,255,255,0.04)",
-    cursor: "pointer",
-  };
-
-  const ROW_GROUPcss: Record<string, string> = {
-    background: "rgba(255,255,255,0.025)",
-    cursor: "pointer",
-  };
-
-  const ROW_FAILcss: Record<string, string> = {
-    background: "rgba(255,0,0,0.06)",
-  };
-
-  const NAME_WIDTH = "38ch"; // standardize width so it doesn’t jump
-
-  const tdNameCssBase: Record<string, string> = {
-    width: NAME_WIDTH,
-    maxWidth: NAME_WIDTH,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  };
-
-  const tdNameChildCss: Record<string, string> = {
-    ...tdNameCssBase,
-    paddingLeft: "18px",
-    opacity: "0.95",
-  };
 
   // byte->kb helper (approx, UTF-8)
   const kbOf = (txt: string): string => {
@@ -264,7 +200,11 @@ export function create_inspector(
         fontFamily: "ui-monospace, monospace",
       });
 
-      row.listen.onClick(() => renderDetail(f));
+      row.listen.onClick((me) => {
+        _stop(me);
+        renderDetail(f);
+
+      });
     }
   };
 
@@ -284,33 +224,52 @@ export function create_inspector(
   // ---------------------------
   // main table: suite->group->case
   // ---------------------------
+
   const renderAll = (): void => {
+    const prevScroll = mainScrollEl?.scrollTop ?? 0;
+
+
     clearBox(tableHost);
 
     const level = getLevel();
     const suites = tlog.listSuites();
     const fails = tlog.listFailures();
+    const failKeys = new Set<CaseKey>();
+    const failGroupsBySuite = new Map<string, Set<string>>();
+    const failSuites = new Set<string>();
 
+    for (const f of fails) {
+      const key = `${f.suite}::${f.name}` as CaseKey;
+      failKeys.add(key);
+      failSuites.add(f.suite);
+
+      const gk = groupKeyFor(f.name);
+      let gs = failGroupsBySuite.get(f.suite);
+      if (!gs) { gs = new Set<string>(); failGroupsBySuite.set(f.suite, gs); }
+      gs.add(gk);
+    }
     // layout is 1 column when no fails, 2 columns when fails exist
     cols.css.setMany({
       display: "grid",
       gap: "10px",
-      gridTemplateColumns: fails.length ? "1fr 360px" : "1fr",
+      gridTemplateColumns: "1fr",
       alignItems: "start",
     });
 
-    // hide side entirely when empty
-    side.css.setMany({ display: fails.length ? "grid" : "none", gap: "8px" });
-    if (fails.length) {
-      renderFailures(fails);
-      renderDetail(fails[0]!);
-    } else {
-      detailBox.setText("—");
-      clearBox(failsBox);
-    }
+    // //no side we don't like it
+    // side.css.setMany({ display: fails.length ? "grid" : "none", gap: "8px" });
+    // if (fails.length) {
+    //   renderFailures(fails);
+    //   renderDetail(fails[0]!);
+    // } else {
+    //   detailBox.setText("—");
+    // clearBox(failsBox);
+    // }
 
     const wrap = tableHost.create.div().classlist.set("insp-scroll main-scroll");
     wrap.css.setMany(SCROLL_WRAPcss);
+    mainScrollEl = wrap.asDomElement() as HTMLElement;
+
 
     const { thead, tbody } = mkTable(wrap, "insp-main");
 
@@ -343,8 +302,8 @@ export function create_inspector(
       mkTd(sr, "c-kb", "—").css.setMany(TDcss);
       mkTd(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—").css.setMany(TDcss);
 
-      sr.listen.onClick((ev) => {
-        ev.stopPropagation?.();
+      sr.listen.onClick((me) => {
+        _stop(me)
         if (suiteIsOpen) expandedSuites.delete(suiteName);
         else expandedSuites.add(suiteName);
         renderAll();
@@ -407,14 +366,14 @@ export function create_inspector(
         mkTd(gr, "c-ms", msTotal ? msTotal.toFixed(1) : "—").css.setMany(TDcss);
 
         gr.listen.onClick((ev) => {
-          ev.stopPropagation?.();
+          ev.preventDefault();
+          ev.stopPropagation();
           if (groupIsOpen) expandedGroups.delete(gk);
           else expandedGroups.add(gk);
           renderAll();
         });
 
         if (!groupIsOpen) continue;
-
         for (const c of members) {
 
           const res = c.status ?? "—";
@@ -434,8 +393,8 @@ export function create_inspector(
           mkTd(cr, "c-ms", ms).css.setMany(TDcss);
 
           // click case name toggles “preview row below”
-          nameCell.listen.onClick((ev) => {
-            ev.stopPropagation?.();
+          nameCell.listen.onClick((me) => {
+            _stop(me);
             if (expandedCases.has(c.key)) expandedCases.delete(c.key);
             else expandedCases.add(c.key);
             renderAll();
@@ -445,24 +404,13 @@ export function create_inspector(
           if (expandedCases.has(c.key)) {
             const pr = mkTr(tbody, "insp-case-preview-row");
             const cell = pr.create.td().classlist.set("insp-case-preview-cell");
-
-            // CHANGED: this preview row is a container; do NOT call cell.setText() afterwards.
             cell.setAttrs("colspan", "4");
             cell.css.setMany(TD_PREVIEW_ROWcss);
 
-            // CHANGED: clear then build UI
+            // CHANGED: build composite content; never call cell.setText after this
             cell.empty();
 
-            // CHANGED: collapse preview if you click the empty background area
-            // (buttons and pre will stop propagation)
-            cell.css.setMany(CLICKABLEcss);
-            cell.listen.onClick((ev) => {
-              ev.stopPropagation?.();
-              expandedCases.delete(c.key);
-              renderAll();
-            });
-
-            // ---- top row: meta + buttons
+            // header row
             const topRow = cell.create.div().classlist.set("insp-cap-row");
             topRow.css.setMany({
               display: "grid",
@@ -481,9 +429,11 @@ export function create_inspector(
             });
             metaBox.setText(`${c.suite} :: ${c.name}`);
 
+            // CHANGED: use div-buttons to avoid focus scroll + default button behavior
             const mkBtn = (label: string): LiveTree => {
               const b = topRow.create.div().classlist.set("insp-cap-btn");
               b.setText(label);
+              b.setAttrs("role", "button");
               b.css.setMany({
                 padding: "4px 8px",
                 borderRadius: "8px",
@@ -496,7 +446,9 @@ export function create_inspector(
               return b;
             };
 
-            // ---- the snipped preview (always shown)
+            const copyBtn = mkBtn("copy");
+            const viewBtn = mkBtn("view");
+
             const pre = cell.create.pre().classlist.set("insp-preview-pre");
             pre.css.setMany({
               margin: "0",
@@ -511,55 +463,56 @@ export function create_inspector(
             });
             pre.setText(preview || "—");
 
-            // stop bubbling helper
-            const stop = (ev: unknown): void => {
-              const e = ev as { stopPropagation?: () => void; preventDefault?: () => void };
-              e.stopPropagation?.();
-              e.preventDefault?.();
-            };
+            // collapse affordance: click the PREVIEW TEXT, not the whole cell
+            pre.css.setMany(CLICKABLEcss);
+            pre.listen.onClick((me) => {
+              _stop(me);
+              expandedCases.delete(c.key);
+              renderAll();
+            });
 
-            // prevent clicks on preview text from collapsing the row
-            pre.listen.onClick((ev) => stop(ev));
+            queueMicrotask(() => {
+              wrap.asDomElement()!.scrollTop = prevScroll;
+            });
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                if (mainScrollEl) mainScrollEl.scrollTop = prevScroll;
+              });
+            });
+            // CHANGED: wire buttons; always stop propagation; show errors
+            copyBtn.listen.onClick(async (me) => {
+              _stop(me);
+              if (!capture) return;
 
-            // ---- buttons
-            // If capture isn't wired, still show placeholders but disabled-looking.
-            const copyBtn = mkBtn("copy");
-            const viewBtn = mkBtn("view");
-
-            const setDisabledLook = (b: LiveTree): void => {
-              b.css.setMany({ opacity: "0.4", cursor: "default" });
-            };
-
-            if (!capture) {
-              setDisabledLook(copyBtn);
-              setDisabledLook(viewBtn);
-              return;
-            }
-
-            copyBtn.listen.onClick(async (ev) => {
-              stop(ev);
-              copyBtn.setText("…");
+              copyBtn.setText("copying…");
               try {
-                // NOTE: capture(key) should already run with { verbose:true, capture:true }
                 const report = await capture(c.key);
                 const txt = report_to_text(report);
                 await navigator.clipboard.writeText(txt);
                 copyBtn.setText("copied");
-                window.setTimeout(() => copyBtn.setText("copy"), 900);
-              } catch {
-                copyBtn.setText("fail");
+              } catch (e) {
+                console.error(e);
+                copyBtn.setText("failed");
+              } finally {
                 window.setTimeout(() => copyBtn.setText("copy"), 900);
               }
             });
 
-            viewBtn.listen.onClick(async (ev) => {
-              stop(ev);
+            viewBtn.listen.onClick(async (me) => {
+              _stop(me);
               if (!capture) return;
 
-              const report = await capture(c.key);
-              const htmlDoc = render_report_html(c.key, c.name, c.suite, report); // must return FULL HTML doc string
-
-              open_report_window(htmlDoc.html);
+              viewBtn.setText("opening…");
+              try {
+                const report = await capture(c.key);
+                const render = render_report_html(c.key, c.name, c.suite, report);
+                open_report_window(render.html);
+                viewBtn.setText("view");
+              } catch (e) {
+                console.error(e);
+                viewBtn.setText("failed");
+                window.setTimeout(() => viewBtn.setText("view"), 900);
+              }
             });
           }
         }
@@ -596,3 +549,4 @@ export function create_inspector(
 
   return Object.freeze({ render, show, hide, clear });
 }
+

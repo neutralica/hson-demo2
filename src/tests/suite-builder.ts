@@ -1,4 +1,4 @@
-import type { FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
+import type { FixtureAtom, LoopOpts, LoopReport, SourceFormat } from "../../../hson-live/dist/diagnostics/loop-3.test";
 import { _freeze, make_html_generated_fixtures } from "../fixtures/generate-fixtures";
 import type { Fixture, FixtureFmt } from "../fixtures/fixtures.types";
 import type { BuildSuitesOpts, CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
@@ -38,7 +38,15 @@ function fmt_report(r: LoopReport): string {
   lines.push(`ok: ${String(r.ok)}`);
   lines.push(`entry: ${r.entry}`);
   lines.push(`failures: ${r.failures?.length ?? 0}`);
+  lines.push(`artifacts: ${r.artifacts?.length ?? 0}`);
   if (r.final) lines.push(`final: ${r.final.fmt}`);
+  if (r.artifacts?.length) {
+    const last = r.artifacts[r.artifacts.length - 1];
+    if (last && typeof last.text === "string") {
+      lines.push(`artifact(last): lap ${String(last.lap)} ${String(last.fmt)}`);
+      lines.push(preview_text(last.text));
+    }
+  }
   return lines.join("\n");
 }
 
@@ -128,7 +136,7 @@ export function make_legacy_test_suite(
     for (const [sub, atom] of Object.entries(bundle)) {
       const name = `${group}.${sub}`;
       const at = typeof atom === "string" ? atom : JSON.stringify(atom);
-      const entry = is_json_source_text(at) ? "json" : "html";
+      const entry = is_json_source_text(at) ? "json" : "html" as SourceFormat;
 
       const k = `${suite}::${name}` as const;
 
@@ -141,7 +149,8 @@ export function make_legacy_test_suite(
             times: 3,
             verbose: true,
             capture: true,
-            // paranoid: false,
+            stopOnFirstFail: false,
+            paranoid: true,
           });
         });
       }
@@ -155,8 +164,12 @@ export function make_legacy_test_suite(
           preview: preview_atom(atom),
         },
         run: () => {
-          const r = hson._test_full_loop(atom, { entry, dual: true, times: 3 });
-          if (!r.ok) throw new Error(`fixture failed: ${name}\n${fmt_report(r)}`);
+          const base = { entry, dual: true, times: 3, stopOnFirstFail: false };
+          const r = hson._test_full_loop(atom, base);
+          if (!r.ok) {
+            const cap = hson._test_full_loop(atom, { ...base, verbose: true, capture: true });
+            throw new Error(`fixture failed: ${name}\n${fmt_report(cap)}`);
+          }
         },
       }));
     }
@@ -201,6 +214,7 @@ export function generate_fixture_suite(
               times: 3,
               verbose: true,
               capture: true,
+              stopOnFirstFail: false,
             });
           });
         }
@@ -210,12 +224,12 @@ export function generate_fixture_suite(
           name: fx.name,
           meta,
           run: () => {
-            const r = hson._test_full_loop(fx.atom, {
-              entry: fx.fmt,
-              dual: true,
-              times: 3,
-            });
-            if (!r.ok) throw new Error(`fixture failed: ${fx.name}`);
+            const base = { entry: fx.fmt, dual: true, times: 3, stopOnFirstFail: false };
+            const r = hson._test_full_loop(fx.atom, base);
+            if (!r.ok) {
+              const cap = hson._test_full_loop(fx.atom, { ...base, capture: true });
+              throw new Error(`fixture failed: ${fx.name}\n${fmt_report(cap)}`);
+            }
           },
         });
       }),
@@ -245,8 +259,8 @@ export function build_suites_for_mode(
 
   if (mode === "basic") {
     return _freeze([
-      make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic", map),
-      make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic", map),
+      make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
+      make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic/html", map),
     ]);
   }
   if (mode === "generated") {
@@ -256,8 +270,8 @@ export function build_suites_for_mode(
   }
 
   return _freeze([
-    make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic", map),
-    make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic", map),
+    make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
+    make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),
     generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
   ]);
 }

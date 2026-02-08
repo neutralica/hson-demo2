@@ -21,7 +21,7 @@ import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
 import { $blu_, $cols, LETTER_COLORfaded } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
-import { create_inspector } from "../../../tests/test-inspector";
+import { create_inspector } from "../../../tests/inspector/test-inspector";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { build_suites_for_mode } from "../../../tests/suite-builder";
 
@@ -175,7 +175,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       tp.gems.clear();
       tp.marquee.setText("running…");
 
-      const suites = build_suites_for_mode(tp.getMode(), { _test_full_loop });
+      const suites = build_suites_for_mode(tp.getMode(), { _test_full_loop }, captureMap);
       const res = await run_test_suites(suites, onEvent, { bail: false });
 
       tp.gems.render(res.summary);

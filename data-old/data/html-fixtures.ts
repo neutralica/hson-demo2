@@ -456,7 +456,7 @@ export const HTML_FIXTURES_LEGACY = _freeze({
     html_hackerNews,
     html_gwern,
   },
-  // html_INVALID, // expect errors
+  html_INVALID, // expect errors
 
   // parses but loses style & noncompliant attrs etc
 
