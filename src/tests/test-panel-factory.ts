@@ -37,6 +37,7 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
   { key: "all", label: "all" },
   { key: "generated", label: "generated" },
   { key: "basic", label: "basic" },
+  { key: "dev", label: "dev" },
 ] as const;
 
 export function test_panel_factory_offdom(): TestPanel {

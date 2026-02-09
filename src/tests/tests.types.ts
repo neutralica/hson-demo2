@@ -59,6 +59,7 @@ export type TestRunMode =
   | "all"
   | "generated"
   | "basic"
+  | "dev"
 
   export type CaseMeta = Readonly<{
   fixture?: string;

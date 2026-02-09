@@ -1,6 +1,8 @@
 // fixtures.types
 
-import type { FixtureAtom } from "../../../hson-live/dist/diagnostics/loop-3.test";
+import type { FixtureAtom } from "../../../../hson-live/dist/diagnostics/loop-3.test";
+
+
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 

@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols } from "../../consts/colors.consts";
+import { $blu_, $cols, $gry_ } from "../../consts/colors.consts";
 import { $GEM_WIDTHstr } from "../../../tests/tests.consts";
 
 export const UI_ROOTcss:CssMap = {
@@ -134,7 +134,7 @@ export const PANEL_TEXTAREAcss = {
     lineHeight: "1.35",
     background: $cols.bckgd,
     color: $blu_.sky,
-    border: "1px solid rgba(255,255,255,0.08)",
+    border: `1px solid ${$cols.stonerPurple}`,
     borderRadius: "10px",
     padding: "10px",
     outline: "none",

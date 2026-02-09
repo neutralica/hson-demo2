@@ -20,6 +20,20 @@ const _stop = (ev: unknown): void => {
   e.stopPropagation?.();
 };
 
+/* TEMP DEBUG */
+function vis(s: string): string {
+  return s
+    .replaceAll("\\", "\\\\")   // show backslashes explicitly
+    .replaceAll("\t", "\\t")
+    .replaceAll("\r", "\\r")
+    .replaceAll("\n", "\\n\n")  // keep line breaks but mark them
+    .replaceAll("\f", "\\f")
+    .replaceAll("\v", "\\v");
+}
+
+// CHANGED: stop pretending trace contains fmt/text blocks.
+// Step is only { step, ok, error? }.
+// Use artifacts for “full chain” capture printing.
 export function report_to_text(r: LoopReport): string {
   const lines: string[] = [];
 
@@ -32,69 +46,65 @@ export function report_to_text(r: LoopReport): string {
 
   const pushBlock = (label: string, fmt: string, text: string): void => {
     lines.push(`=== ${label} (${fmt}) ===`);
-    lines.push(text);              // CHANGED: raw text, no JSON encoding
+     lines.push(vis(text));   // DEBUG
+ 
+    lines.push(text); // raw multiline
     lines.push("");
   };
 
-  // 1) Prefer trace-based printing (full chain).
+  // 1) Finals (quick “what did we end up with?”)
+  if (r.final) pushBlock("final", r.final.fmt, r.final.text);
+  if (r.dualFinals?.cw) pushBlock("cw final", r.dualFinals.cw.fmt, r.dualFinals.cw.text);
+  if (r.dualFinals?.ccw) pushBlock("ccw final", r.dualFinals.ccw.fmt, r.dualFinals.ccw.text);
+
+  // 2) Artifacts (this is the full chain: json/html/hson per lap)
+  // NOTE: Artifact shape from your earlier dump: { lap, fmt, text, node, ... }
+  const arts = (r as unknown as { artifacts?: readonly { lap: number; fmt: string; text: string; node?: string }[] })
+    .artifacts ?? [];
+
+  if (arts.length) {
+    // CHANGED: stable ordering so the report is readable and diffable
+    const sorted = [...arts].sort((a, b) => {
+      if (a.lap !== b.lap) return a.lap - b.lap;
+      return a.fmt.localeCompare(b.fmt);
+    });
+
+    lines.push(`=== artifacts (${sorted.length}) ===`);
+    lines.push("");
+
+    for (const a of sorted) {
+      pushBlock(`lap ${a.lap}`, a.fmt, a.text);
+
+      // Optional: include node snapshot, but it’s enormous—keep it behind another header.
+      if (typeof a.node === "string" && a.node.length) {
+        pushBlock(`lap ${a.lap} node`, "node", a.node);
+      }
+    }
+  }
+
+  // 3) Trace (your Step[] is perfect for a clean step list)
   const trace = r.trace ?? [];
-  let printedAny = false;
-
-  for (const step of trace) {
-    // ADAPT: rename these fields to your actual Step shape
-    const fmt = (step as any).fmt as string | undefined;
-    const text = (step as any).text as string | undefined;
-    const tag = (step as any).tag as string | undefined;
-    const dir = (step as any).dir as string | undefined;
-    const iter = (step as any).iter as number | undefined;
-
-    if (!fmt || text === undefined) continue;
-
-    const labelParts = [
-      dir ? `${dir}` : "",
-      iter !== undefined ? `iter ${iter}` : "",
-      tag ?? "step",
-    ].filter(Boolean);
-
-    const label = labelParts.join(" / ") || "step";
-    pushBlock(label, fmt, text);
-    printedAny = true;
+  if (trace.length) {
+    lines.push(`=== trace (${trace.length}) ===`);
+    for (const s of trace) {
+      const ok = s.ok ? "OK" : "FAIL";
+      const detail = s.error ? ` — ${s.error}` : "";
+      lines.push(`${ok} ${s.step}${detail}`);
+    }
+    lines.push("");
   }
 
-  // 2) Fall back to finals if trace didn’t include printable strings.
-  if (!printedAny) {
-    if (r.final) pushBlock("final", r.final.fmt, r.final.text);
-    if (r.dualFinals?.cw) pushBlock("cw final", r.dualFinals.cw.fmt, r.dualFinals.cw.text);
-    if (r.dualFinals?.ccw) pushBlock("ccw final", r.dualFinals.ccw.fmt, r.dualFinals.ccw.text);
-  }
-  const fmt_step = (s: unknown): string => {
-    if (!s) return "—";
-    if (typeof s === "string") return s;
-
-    const o = s as { step?: unknown; ok?: unknown; why?: unknown; err?: unknown };
-    const name = typeof o.step === "string" ? o.step : "[step]";
-    const ok = typeof o.ok === "boolean" ? (o.ok ? "OK" : "FAIL") : "—";
-
-    // optional details if present
-    const detail =
-      typeof o.why === "string" ? o.why :
-        typeof o.err === "string" ? o.err :
-          "";
-
-    return detail ? `${ok} ${name} — ${detail}` : `${ok} ${name}`;
-  };
-
-  // 3) Failures (helpful even when ok=false)
-
+  // 4) Failures (Step[])
   if (r.failures.length) {
     lines.push(`=== failures (${r.failures.length}) ===`);
-    for (const f of r.failures) lines.push(fmt_step(f));
+    for (const f of r.failures) {
+      const ok = f.ok ? "OK" : "FAIL";
+      const detail = f.error ? ` — ${f.error}` : "";
+      lines.push(`${ok} ${f.step}${detail}`);
+    }
     lines.push("");
-
   }
-  const df = r.dualFinals?.ccw
-  lines.push(`=== ccw final (${df?.fmt}) ===`);
-  if (typeof df?.text === "string") { lines.push(df?.text.slice(0, 60)); }
+
   return lines.join("\n");
 }
 

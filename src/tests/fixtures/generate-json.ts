@@ -1,4 +1,4 @@
-import { make_rng } from "../app/utils/rng";
+import { make_rng } from "../../app/utils/rng";
 import type { Rng, Jsonish, Gen, JArr, JObj, Fixture } from "./fixtures.types";
 import { _freeze } from "./generate-fixtures";
 
@@ -73,11 +73,16 @@ export function make_json_shape(inner: Gen<Jsonish>, o: ShapeOpts): Gen<Jsonish>
   const step = (g: Gen<Jsonish>, depth: number): Gen<Jsonish> => {
     if (depth >= o.maxDepth) return g;
 
-    const wrapped: readonly Gen<Jsonish>[] = [
-      g,
-      { name: `arr(${g.name})`, sample: (rnd) => g_arr(g, 0, o.arrMax).sample(rnd) },
-      { name: `obj(${g.name})`, sample: (rnd) => g_obj(g, o.keys).sample(rnd) },
-    ];
+    const wrapped: readonly Gen<Jsonish>[] = depth === 0
+      ? [
+        { name: `arr(${g.name})`, sample: (rnd) => g_arr(g, 0, o.arrMax).sample(rnd) },
+        { name: `obj(${g.name})`, sample: (rnd) => g_obj(g, o.keys).sample(rnd) },
+      ]
+      : [
+        g,
+        { name: `arr(${g.name})`, sample: (rnd) => g_arr(g, 0, o.arrMax).sample(rnd) },
+        { name: `obj(${g.name})`, sample: (rnd) => g_obj(g, o.keys).sample(rnd) },
+      ];
 
     return {
       name: `shape[d${depth}]`,

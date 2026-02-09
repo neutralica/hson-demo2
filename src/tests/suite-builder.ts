@@ -1,12 +1,12 @@
 import type { FixtureAtom, LoopOpts, LoopReport, SourceFormat } from "../../../hson-live/dist/diagnostics/loop-3.test";
-import { _freeze, make_html_generated_fixtures } from "../fixtures/generate-fixtures";
-import type { Fixture, FixtureFmt } from "../fixtures/fixtures.types";
 import type { BuildSuitesOpts, CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
-import { JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
+import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
-import { make_generated_json_fixtures } from "../fixtures/json-fixtures";
+import { _freeze, make_html_generated_fixtures } from "./fixtures/generate-fixtures";
+import { make_generated_json_fixtures } from "./fixtures/generate-json";
+import type { Fixture } from "./fixtures/fixtures.types";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -77,6 +77,12 @@ function is_plain_object(x: unknown): x is Record<string, unknown> {
   return true;
 }
 
+function is_html_element(x: unknown): x is HTMLElement {
+  const g: any = globalThis as any;
+  const H = g.HTMLElement;
+  return typeof H === "function" && x instanceof H;
+}
+
 function is_json_source_text(s: string): boolean {
   const t = s.trim();
   if (typeof t[0] !== "string") return false;
@@ -123,24 +129,25 @@ function is_fixture_atom(x: unknown): x is FixtureAtom {
   if (t === "object") return true;
   return false;
 }
-
+// CHANGED: add an explicit entryFmt param
 export function make_legacy_test_suite(
   hson: HsonTestApi,
   fixtures: FixtureBundle,
   suite = "fixtures/basic",
-  captureMap?: Map<CaseKey, () => Promise<LoopReport>>,   // CHANGED
+  captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
+  entryFmt: SourceFormat = "auto", // CHANGED
 ): TestSuite {
   const cases: TestCase[] = [];
 
   for (const [group, bundle] of Object.entries(fixtures)) {
     for (const [sub, atom] of Object.entries(bundle)) {
       const name = `${group}.${sub}`;
-      const at = typeof atom === "string" ? atom : JSON.stringify(atom);
-      const entry = is_json_source_text(at) ? "json" : "html" as SourceFormat;
+
+      // CHANGED: no guessing here
+      const entry = entryFmt;
 
       const k = `${suite}::${name}` as const;
 
-      //  register capture (no storage; reruns on demand)
       if (captureMap) {
         captureMap.set(k, async () => {
           return hson._test_full_loop(atom, {
@@ -150,7 +157,6 @@ export function make_legacy_test_suite(
             verbose: true,
             capture: true,
             stopOnFirstFail: false,
-            paranoid: true,
           });
         });
       }
@@ -158,14 +164,11 @@ export function make_legacy_test_suite(
       cases.push(_freeze({
         suite,
         name,
-        meta: {
-          fixture: group,
-          sub,
-          preview: preview_atom(atom),
-        },
+        meta: { fixture: group, sub, preview: preview_atom(atom) },
         run: () => {
-          const base = { entry, dual: true, times: 3, stopOnFirstFail: false };
+          const base = { entry, dual: true, times: 3, stopOnFirstFail: false } as const;
           const r = hson._test_full_loop(atom, base);
+
           if (!r.ok) {
             const cap = hson._test_full_loop(atom, { ...base, verbose: true, capture: true });
             throw new Error(`fixture failed: ${name}\n${fmt_report(cap)}`);
@@ -227,7 +230,7 @@ export function generate_fixture_suite(
             const base = { entry: fx.fmt, dual: true, times: 3, stopOnFirstFail: false };
             const r = hson._test_full_loop(fx.atom, base);
             if (!r.ok) {
-              const cap = hson._test_full_loop(fx.atom, { ...base, capture: true });
+              const cap = hson._test_full_loop(fx.atom, { ...base, verbose: true, capture: true });
               throw new Error(`fixture failed: ${fx.name}\n${fmt_report(cap)}`);
             }
           },
@@ -257,6 +260,7 @@ export function build_suites_for_mode(
     ...make_generated_json_fixtures({ seed, count: genJsonCount }),
   ]);
 
+
   if (mode === "basic") {
     return _freeze([
       make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
@@ -267,6 +271,11 @@ export function build_suites_for_mode(
     return _freeze([
       generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
     ]);
+  }
+  if (mode === "dev") {
+    return _freeze([
+      make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map)
+    ])
   }
 
   return _freeze([

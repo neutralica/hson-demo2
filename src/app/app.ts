@@ -14,6 +14,7 @@ import { PHASE_LINGER } from "./consts/config.consts";
 import { $cols } from "./consts/colors.consts";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
+import { JSON_FIXTURES_DEV } from "../../data-old/data/json-fixtures";
 
 
 const _pause = () => _sleep(PHASE_LINGER);
@@ -26,10 +27,17 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     const stage = makeDivId(app, "stage")
         .classlist.add("stage")
         .css.setMany(STAGE_CSS);
-    
-    // const report = _test_full_loop(HTML_FIXTURES_LEGACY.html_INVALID.array_indices_gap_INVALID, {verbose: true, capture: true, stopOnFirstFail: false})
-    // console.log(report.artifacts);
-    
+
+/**
+ * confirm test results by manually testing fixtures 
+ **/
+    if (false) {
+        console.log("debug - testing string:");
+        const report = _test_full_loop(JSON_FIXTURES_DEV, { verbose: true, capture: true, stopOnFirstFail: false })
+        console.log("report", report);
+        console.log(report.artifacts);
+    }
+
     const { skip, cancel } = make_skip_promise(stage);
 
     try {
@@ -67,7 +75,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
 
 export function mount_ornament(parent: LiveTree): LiveTree {
     const pre = parent.create.pre().data.set("role", "ornament");
-    pre.setText(make_vines({ width: 72, rows: 81, seed: (Math.random()*10000)-1 }));
+    pre.setText(make_vines({ width: 72, rows: 81, seed: (Math.random() * 10000) - 1 }));
     pre.css.setMany({
         position: "absolute",
         left: "18px",

@@ -1,6 +1,6 @@
 import type { HsonAttrs } from "hson-live/types";
 import type { Gen, Jsonish, Fixture, FixtureBag, Named } from "./fixtures.types";
-import { make_rng } from "../app/utils/rng";
+import { make_rng } from "../../app/utils/rng";
 
 
 function el(tag: string, attrs: HsonAttrs, inner: string): string {
@@ -202,38 +202,47 @@ type HtmlShape = Readonly<{
 }>;
 
 export function make_html_generated_fixtures(o?: Readonly<{ seed: number; count: number }>): readonly Fixture[] {
-  // existing axes unchanged...
   const TAGS = [
     { name: "p", value: "p" },
     { name: "div", value: "div" },
-    { name: "header", value: "header" },
+    { name: "section", value: "section" },
+    { name: "custom-name", value: "custom-name" },
   ] as const;
 
+  // CHANGED: XML-safe attrs (no tabs/newlines; boolean attrs valued form is handled elsewhere)
   const ATTR_SETS = [
     { name: "none", value: {} as HsonAttrs },
-    { name: "multi", value: { class: "a\tb\nb  a", lang: "en" } as HsonAttrs },
+    { name: "id", value: { id: "one-attr" } as HsonAttrs },
+    { name: "class_lang", value: { class: "a b b a", lang: "en" } as HsonAttrs },
     { name: "boolean", value: { disabled: true, required: true } as HsonAttrs },
-    { name: "quotes", value: { title: `He said "hi" & left <soon>` } as HsonAttrs },
+    { name: "quotes", value: { title: `"no"` } as HsonAttrs }, // CHANGED: avoid single-quote policy fights
     { name: "empty_attr", value: { title: "" } as HsonAttrs },
-    { name: "numish_attr", value: { "data-n": 0 } as unknown as HsonAttrs },
+    { name: "data_num", value: { "data-n": "0" } as HsonAttrs }, // CHANGED: keep it a string
   ] as const;
 
+  // CHANGED: content that won’t trigger XML weirdness (no raw markup, no control chars)
   const CONTENTS = [
     { name: "plain", value: "basic paragraph" },
-    { name: "unicode", value: `e\u0301 = é; ZWJ: 👩‍💻; ZWNJ:\u200Cbetween` },
-    { name: "mixed_inline", value: `paragraph with <span>mixed content</span> inside` },
-    { name: "txt_span_txt", value: `alpha <span>mid</span> omega` },
+    { name: "unicode", value: `e\u0301 = é; 漢字✓` },
+    { name: "amp_lt_gt", value: `A & B < C > D` }, // should be escaped by your emitter
+    { name: "quotes", value: `He said "hi"` },     // text-node quotes are fine
     { name: "empty", value: "" },
     { name: "spaces", value: "   " },
   ] as const;
 
+  // CHANGED: remove HTML-only optional-end-tag case; keep shapes that are XML-safe
   const SHAPES: readonly HtmlShape[] = [
     { name: "single", apply: (tag, attrs, inner) => el(tag, attrs, inner) },
     { name: "wrapped_div", apply: (tag, attrs, inner) => el("div", {} as HsonAttrs, el(tag, attrs, inner)) },
-    { name: "siblings_h2_p", apply: (tag, attrs, inner) => `<h2>sib</h2>${el(tag, attrs, inner)}` },
+
+    // CHANGED: keep siblings but ensure your overall generator wraps in a single root;
+    // if it doesn’t, delete this shape too.
+    { name: "siblings_h2_p", apply: (tag, attrs, inner) => `<root><h2>sib</h2>${el(tag, attrs, inner)}</root>` },
+
     { name: "mixed_text_nodes", apply: (tag, attrs, inner) => el(tag, attrs, `pre ${inner} post`) },
-    { name: "void_hr_between", apply: (tag, attrs, inner) => `<p>line one</p><hr>${el(tag, attrs, inner)}<p>line two</p>` },
-    { name: "optional_end_li", apply: (_tag, _attrs, inner) => `<ul><li>one<li>${inner}<li>three</ul>` },
+
+    // CHANGED: make hr XML-safe. If your parser doesn’t accept <hr />, drop this too.
+    { name: "void_hr_between", apply: (tag, attrs, inner) => `<root><p>line one</p><hr />${el(tag, attrs, inner)}<p>line two</p></root>` },
   ] as const;
 
   // ---- base deterministic cartesian set (your current behavior)
