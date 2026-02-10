@@ -36,7 +36,7 @@ export type TestPanel = Readonly<{
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
   { key: "all", label: "all" },
   { key: "generated", label: "generated" },
-  { key: "basic", label: "basic" },
+  { key: "legacy", label: "legacy" },
   { key: "dev", label: "dev" },
 ] as const;
 

@@ -58,7 +58,7 @@ export type TestSuite = Readonly<{
 export type TestRunMode =
   | "all"
   | "generated"
-  | "basic"
+  | "legacy"
   | "dev"
 
   export type CaseMeta = Readonly<{

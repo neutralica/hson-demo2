@@ -160,7 +160,6 @@ export function make_legacy_test_suite(
           });
         });
       }
-
       cases.push(_freeze({
         suite,
         name,
@@ -251,17 +250,17 @@ export function build_suites_for_mode(
 ): readonly TestSuite[] {
   const seed = (o.seed ?? (Math.floor(Math.random() * 1e9) >>> 0)) >>> 0;
 
-  const genHtmlCount = o.genHtmlCount ?? 750;
-  const genJsonCount = o.genJsonCount ?? 750;
+  const genHtmlCount = o.genHtmlCount ?? 2000;
+  const genJsonCount = o.genJsonCount ?? 2000;
 
   // CHANGED: build generated fixtures here (so seed is part of suite identity)
   const generated: readonly Fixture[] = _freeze([
     ...make_html_generated_fixtures({ seed, count: genHtmlCount }),
     ...make_generated_json_fixtures({ seed, count: genJsonCount }),
   ]);
-
-
-  if (mode === "basic") {
+  
+  
+  if (mode === "legacy") {
     return _freeze([
       make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
       make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic/html", map),
@@ -277,10 +276,11 @@ export function build_suites_for_mode(
       make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map)
     ])
   }
-
+  
   return _freeze([
     make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
     make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),
     generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
+    make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map)
   ]);
 }

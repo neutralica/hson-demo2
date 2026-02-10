@@ -451,7 +451,7 @@ export const HTML_FIXTURES_LEGACY = _freeze({
   html__largeFormat: {
     html_homepage,
     html_wikipedia,
-    // html_hackerNews,
+    html_hackerNews,
     html_gwern,
   },
   // html_INVALID, // expect errors

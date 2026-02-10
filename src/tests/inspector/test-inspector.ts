@@ -20,16 +20,16 @@ const _stop = (ev: unknown): void => {
   e.stopPropagation?.();
 };
 
-/* TEMP DEBUG */
-function vis(s: string): string {
-  return s
-    .replaceAll("\\", "\\\\")   // show backslashes explicitly
-    .replaceAll("\t", "\\t")
-    .replaceAll("\r", "\\r")
-    .replaceAll("\n", "\\n\n")  // keep line breaks but mark them
-    .replaceAll("\f", "\\f")
-    .replaceAll("\v", "\\v");
-}
+// /* TEMP DEBUG */
+// function vis(s: string): string {
+//   return s
+//     .replaceAll("\\", "\\\\")   // show backslashes explicitly
+//     .replaceAll("\t", "\\t")
+//     .replaceAll("\r", "\\r")
+//     .replaceAll("\n", "\\n\n")  // keep line breaks but mark them
+//     .replaceAll("\f", "\\f")
+//     .replaceAll("\v", "\\v");
+// }
 
 // CHANGED: stop pretending trace contains fmt/text blocks.
 // Step is only { step, ok, error? }.
@@ -46,9 +46,7 @@ export function report_to_text(r: LoopReport): string {
 
   const pushBlock = (label: string, fmt: string, text: string): void => {
     lines.push(`=== ${label} (${fmt}) ===`);
-     lines.push(vis(text));   // DEBUG
- 
-    lines.push(text); // raw multiline
+     lines.push(text);   // DEBUG
     lines.push("");
   };
 

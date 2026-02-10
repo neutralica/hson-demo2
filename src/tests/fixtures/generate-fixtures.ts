@@ -201,48 +201,116 @@ type HtmlShape = Readonly<{
   apply: (tag: string, attrs: HsonAttrs, inner: string) => string;
 }>;
 
+
 export function make_html_generated_fixtures(o?: Readonly<{ seed: number; count: number }>): readonly Fixture[] {
   const TAGS = [
     { name: "p", value: "p" },
     { name: "div", value: "div" },
     { name: "section", value: "section" },
     { name: "custom-name", value: "custom-name" },
+
+    //  inline element
+    { name: "span", value: "span" },
+
+    //  “preformatted” text context (serializer/parsing often differs)
+    { name: "pre", value: "pre" },
+
+    //  semantic but normal
+    { name: "article", value: "article" },
+
+    //  namespaces-ish / colon tag name (your XML path should accept this)
+    { name: "xlinkish", value: "x:tag" },
+    { name: "svga", value: "svga" },
+
+    //  underscore tag name (VSN-style); should be skipped by optional_endtag_preflight but still parse
+    // Only include if this is allowed by your entry policy for HTML fixtures.
+    { name: "vsn_like", value: "_vsn" },
   ] as const;
 
-  // CHANGED: XML-safe attrs (no tabs/newlines; boolean attrs valued form is handled elsewhere)
+  //  XML-safe attrs (no tabs/newlines; boolean attrs valued form is handled elsewhere)
   const ATTR_SETS = [
     { name: "none", value: {} as HsonAttrs },
     { name: "id", value: { id: "one-attr" } as HsonAttrs },
     { name: "class_lang", value: { class: "a b b a", lang: "en" } as HsonAttrs },
     { name: "boolean", value: { disabled: true, required: true } as HsonAttrs },
-    { name: "quotes", value: { title: `"no"` } as HsonAttrs }, // CHANGED: avoid single-quote policy fights
+    { name: "quotes", value: { title: `"no"` } as HsonAttrs },
     { name: "empty_attr", value: { title: "" } as HsonAttrs },
-    { name: "data_num", value: { "data-n": "0" } as HsonAttrs }, // CHANGED: keep it a string
+    { name: "data_num", value: { "data-n": "0" } as HsonAttrs },
+
+    //  multiple data attrs (ordering + escaping)
+    { name: "data_multi", value: { "data-a": "1", "data-b": "two", "data-c": "III" } as HsonAttrs },
+
+    //  “weird but legal” attr names
+    { name: "attr_punct", value: { "aria-label": "ok", "data_x.y": "dot", "data_x:y": "colon" } as HsonAttrs },
+
+    //  mix of boolean true/false (tests your boolean policy; false should probably omit)
+    { name: "bool_mix", value: { disabled: true, required: false, readonly: true } as unknown as HsonAttrs },
+
+    //  ampersand in attr value (should force entity/amp gating if you serialize to XML-ish)
+    { name: "attr_amp", value: { title: "A & B" } as HsonAttrs },
+
+    //  angle brackets in attr value (should trigger escape_attr_angles gating)
+    { name: "attr_angles", value: { title: "x < y > z" } as HsonAttrs },
+
+    //  whitespace-heavy attr value (tests normalization decisions)
+    { name: "attr_spaces", value: { title: "  lead  mid   tail  " } as HsonAttrs },
   ] as const;
 
-  // CHANGED: content that won’t trigger XML weirdness (no raw markup, no control chars)
+  //  content that won’t trigger XML weirdness (no raw markup, no control chars)
   const CONTENTS = [
     { name: "plain", value: "basic paragraph" },
     { name: "unicode", value: `e\u0301 = é; 漢字✓` },
-    { name: "amp_lt_gt", value: `A & B < C > D` }, // should be escaped by your emitter
-    { name: "quotes", value: `He said "hi"` },     // text-node quotes are fine
+    { name: "amp_lt_gt", value: `A & B < C > D` },
+    { name: "quotes", value: `He said "hi"` },
     { name: "empty", value: "" },
     { name: "spaces", value: "   " },
+
+    // NEW: LF newlines
+    { name: "lf", value: "line1\nline2" },
+
+    // NEW: CRLF newlines (directly hits your CRLF mismatch issue)
+    { name: "crlf", value: "line1\r\nline2" },
+
+    // NEW: leading/trailing newline
+    { name: "edge_newlines", value: "\nline\n" },
+
+    // NEW: tabs (should be safe as text content; attrs are the danger zone)
+    { name: "tabs", value: "a\tb\tc" },
+
+    // NEW: lots of spaces with text (serializer may wrap/inline differently)
+    { name: "spaced_text", value: "  a   b    c  " },
   ] as const;
 
-  // CHANGED: remove HTML-only optional-end-tag case; keep shapes that are XML-safe
+  //  remove HTML-only optional-end-tag case; keep shapes that are XML-safe
   const SHAPES: readonly HtmlShape[] = [
     { name: "single", apply: (tag, attrs, inner) => el(tag, attrs, inner) },
     { name: "wrapped_div", apply: (tag, attrs, inner) => el("div", {} as HsonAttrs, el(tag, attrs, inner)) },
-
-    // CHANGED: keep siblings but ensure your overall generator wraps in a single root;
-    // if it doesn’t, delete this shape too.
     { name: "siblings_h2_p", apply: (tag, attrs, inner) => `<root><h2>sib</h2>${el(tag, attrs, inner)}</root>` },
-
     { name: "mixed_text_nodes", apply: (tag, attrs, inner) => el(tag, attrs, `pre ${inner} post`) },
-
-    // CHANGED: make hr XML-safe. If your parser doesn’t accept <hr />, drop this too.
     { name: "void_hr_between", apply: (tag, attrs, inner) => `<root><p>line one</p><hr />${el(tag, attrs, inner)}<p>line two</p></root>` },
+
+    // NEW: deep nesting (tests recursion + indent policy)
+    {
+      name: "deep_nest_3", apply: (tag, attrs, inner) =>
+        `<root>${el("div", {} as HsonAttrs,
+          el("section", {} as HsonAttrs,
+            el(tag, attrs, inner)
+          )
+        )}</root>`
+    },
+
+    // NEW: two siblings of the same tag (tests sibling handling + root wrapping stability)
+    {
+      name: "two_siblings_same", apply: (tag, attrs, inner) =>
+        `<root>${el(tag, attrs, inner)}${el(tag, attrs, inner)}</root>`
+    },
+
+    // NEW: include a void tag (tests void expansion + mismatch handling)
+    // (wrap in <root> to avoid “extra content” err at the same time)
+    {
+      name: "void_embed_adjacent", apply: (tag, attrs, inner) =>
+        `<root>${el(tag, attrs, inner)}<embed src="x.swf" /></root>`
+    },
   ] as const;
 
   // ---- base deterministic cartesian set (your current behavior)
@@ -272,7 +340,7 @@ export function make_html_generated_fixtures(o?: Readonly<{ seed: number; count:
     return _freeze(base.slice(0, want));
   }
 
-  // CHANGED: add fuzz fixtures beyond base size
+  //  add fuzz fixtures beyond base size
   const extraCount = want - base.length;
 
   const rnd = make_rng(seed); // use your seeded RNG helper
