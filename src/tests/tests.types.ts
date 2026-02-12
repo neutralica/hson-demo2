@@ -25,7 +25,7 @@ export type TestFailure = Readonly<{
   name: string;
   err: string;
   ms: number;
-  meta?: Record<string, string>;
+  meta?: CaseMeta;
 }>;
 
 export type TestSummary = Readonly<{
@@ -109,7 +109,7 @@ export type CaseLog = Readonly<{
   status?: TestStatus;
   ms?: number;
   err?: string;
-  meta?: Record<string, string>;
+  meta?: CaseMeta;
 }>;
 
 export type SuiteLog = Readonly<{

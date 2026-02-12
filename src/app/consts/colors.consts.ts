@@ -2,7 +2,7 @@
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,0.40)";
 const greenBleach = "rgba(228, 244, 228, 1)";
-const greenCandy = "rgba(66, 167, 229, 1)";
+const greenCandy = "rgba(66, 197, 150, 1)";
 const greenMuted = "rgba(96, 193, 141, 1)";
 const greenFaded = "rgba(80, 163, 119, 1)";
 const greenStd = "rgb(0, 255, 120)";
@@ -142,41 +142,37 @@ export const $gry_ = {
   dimmer: greyDimmer,
   black: greyBlack,
 };
+export const $ylw_ = {
+  bleach: yellowBleach,
+  candy: yellowCandy,
+  easter: yellowEaster,
+  faded: yellowFaded,
+  muted: yellowMuted,
+  std: yellowStd
+};
+export const $pnk_ = {
+  bleach: pinkBleach,
+  candy: pinkCandy,
+  easter: pinkEaster,
+  faded: pinkFaded,
+  muted: pinkMuted,
+  std: pinkStd
+};
 
-
-export const $cols = {
-  txtmain: txtMain,
-  bckgd: bckColor,
-  backdeep: deepBack,
-
-
+export const $red_etc_ = {
 
   richCrimson,
   heartsBlood: redHeartsBlood,
   stonerPurple: purpleStoner,
-  grey,
-  greyLite,
-  greyMid,
-  greyDim,
-  greyDimmer,
-  greyBlack,
+}
 
-  ylw_: {
-    bleach: yellowBleach,
-    candy: yellowCandy,
-    easter: yellowEaster,
-    faded: yellowFaded,
-    muted: yellowMuted,
-    std: yellowStd
-  },
-  pnk_: {
-    bleach: pinkBleach,
-    candy: pinkCandy,
-    easter: pinkEaster,
-    faded: pinkFaded,
-    muted: pinkMuted,
-    std: pinkStd
-  },
+export const $cols_ = {
+  txtmain: txtMain,
+  bckgd: bckColor,
+  backdeep: deepBack,
+  txtarea: $grn_.faded,
+
+
 
 };
 

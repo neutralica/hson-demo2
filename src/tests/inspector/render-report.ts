@@ -1,7 +1,7 @@
 import { hson } from "hson-live";
 import type { Artifact, LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import type { CaseKey, CaseMeta } from "../tests.types";
-import { $cols } from "../../app/consts/colors.consts";
+import { $cols_ } from "../../app/consts/colors.consts";
 import { _freeze } from "../fixtures/generate-fixtures";
 
 type ReportHtml = Readonly<{ title: string; html: string }>;
@@ -204,7 +204,7 @@ export function render_report_html(
   name: string,
   suite: string,
   report: LoopReport,
-  meta?: Record<string, string>,
+  meta?: CaseMeta,
 ): ReportHtml {
   // CHANGED: build model first
   const m = build_report_view_model(key, name, suite, report);
@@ -240,7 +240,7 @@ const failHtml = `
       margin: 0; padding: 14px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px; line-height: 1.35;
-      background: ${$cols.backdeep}; color: #e9e9ee;
+      background: ${$cols_.backdeep}; color: #e9e9ee;
     }
     .top{
   display:grid;
@@ -389,7 +389,7 @@ const failHtml = `
   </section>
 `;
 
-  const input = meta?.input ?? "";
+  const input = meta?.fixture ?? "";
 
   const finalsBlock = `
 <section class="traceWrap" style="margin: 12px 0;">

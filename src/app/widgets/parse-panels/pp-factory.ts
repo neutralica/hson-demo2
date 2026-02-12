@@ -5,7 +5,7 @@ import { PP_PANEL_HEADER_TG_CSS } from "./pp.css";
 import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../../phases/hson-demo-3/demo-panels.css";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "./pp.consts";
 import { makeDivClass, makeDivId } from "../../utils/makers";
-import { $cols } from "../../consts/colors.consts";
+import { $cols_ } from "../../consts/colors.consts";
 
 type PpFactoryOpts = {
   fmts?: readonly Fmt[];

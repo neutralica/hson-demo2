@@ -19,7 +19,7 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey, TestEvent, TestSuite } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $cols, LETTER_COLORfaded } from "../../consts/colors.consts";
+import { $blu_, $cols_, LETTER_COLORfaded } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import { create_inspector } from "../../../tests/inspector/test-inspector";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
@@ -34,13 +34,13 @@ export const $MOUSE = "mouse";
 export const $ABOUT = "about";
 
 const MENU_OPTIONS = [
-  $PARSE,
+  $ABOUT,
   $TEST,
+  $PARSE,
   $BUILD,
+  $CONSOLE,
   $OKLCH,
   $MOUSE,
-  $ABOUT,
-  $CONSOLE
 ] as const;
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -157,8 +157,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     },
   );
 
-  // module-scope guard (NOT inside mount_demo)
-  /// let _testsWired = false;  // move this to module scope
 
   if (!_testsWired) {
     _testsWired = true;
@@ -172,13 +170,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       tp.setStatus("running");
 
       tlog.clear();
-      tp.gems.clear();
+      tp.chips.clear();
       tp.marquee.setText("running…");
 
       const suites = build_suites_for_mode(tp.getMode(), { _test_full_loop }, captureMap);
       const res = await run_test_suites(suites, onEvent, { bail: false });
 
-      tp.gems.render(res.summary);
+      tp.chips.render(res.summary);
       tp.setStatus(res.ok ? "pass" : "fail");
       tp.marquee.setText(tlog.getLastLine());
 
@@ -187,7 +185,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     });
     tp.clearBtn.listen.onClick(() => {
       tlog.clear();
-      tp.gems.clear();
+      tp.chips.clear();
       tp.setStatus("idle");
       tp.marquee.setText("idle");
 
@@ -218,9 +216,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
     testBtn: makeDivIdTxt(menuBox, `${$TEST}-button`, $TEST),
     parseBtn: makeDivIdTxt(menuBox, `${$PARSE}-button`, $PARSE),
-    oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button`, $OKLCH),
-    mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button`, $MOUSE),
-    consoleBtn: makeDivIdTxt(menuBox, `${$CONSOLE}-button`, $CONSOLE),
+    buildBtn: makeDivIdTxt(menuBox, `${$BUILD}-button`, $BUILD),
+    oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button // (WIP; styling placeholder)`, $OKLCH),
+    mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button // (WIP; styling placeholder)`, $MOUSE),
+    consoleBtn: makeDivIdTxt(menuBox, `${$CONSOLE}-button // (WIP; styling placeholder)`, $CONSOLE),
 
   } as const;
 

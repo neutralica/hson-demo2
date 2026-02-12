@@ -11,7 +11,7 @@ import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "int
 import { mount_demo } from "./phases/hson-demo-3/mount-demo";
 import { make_vines } from "./widgets/vines/vines";
 import { PHASE_LINGER } from "./consts/config.consts";
-import { $cols } from "./consts/colors.consts";
+import { $cols_ } from "./consts/colors.consts";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { JSON_FIXTURES_DEV } from "../../data-old/data/json-fixtures";
@@ -23,7 +23,7 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 
 export async function run_app(root: LiveTree): OutcomeAsync<void> {
     root.empty();
-    const app = makeDivId(root, "app").classlist.set("app").css.set.backgroundColor($cols.bckgd);
+    const app = makeDivId(root, "app").classlist.set("app").css.set.backgroundColor($cols_.bckgd);
     const stage = makeDivId(app, "stage")
         .classlist.add("stage")
         .css.setMany(STAGE_CSS);

@@ -2,16 +2,16 @@
 
 import { type LiveTree } from "hson-live";
 import type { TestLog } from "../test-log";
-import type { CaseKey, SuiteLog } from "../tests.types";
+import type { CaseKey, CaseMeta, SuiteLog } from "../tests.types";
 import type { InspectorUi, TestFailure, UiLevel } from "../tests.types";
 import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "../test-panel/test-panel.css";
-import { $cols } from "../../app/consts/colors.consts";
 import { _test_full_loop, type LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { open_report_window, render_report_html } from "./render-report";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clearBox, mkTable, mkTr, mkTh, mkTd } from "./inspector.helpers";
 import { loopreport_to_sections } from "./report-section";
 import { _freeze } from "../fixtures/generate-fixtures";
+import { $GEM_WIDTHnum, $GEM_WIDTHstr } from "../tests.consts";
 
 export type CaptureFn = (key: CaseKey) => Promise<LoopReport>; // you’ll tighten to LoopReport
 let mainScrollEl: HTMLElement | null = null;
@@ -24,8 +24,8 @@ const _stop = (ev: unknown): void => {
 
 // Step is { step, ok, error? }.
 // Use artifacts for “full chain” capture printing.
-export function report_to_text(r: LoopReport, meta?: Record<string, string>): string {
-  const input = meta?.input ?? "";
+export function report_to_text(r: LoopReport, meta?: CaseMeta): string {
+  const input = meta?.fixture ?? "";
 
   const secs = loopreport_to_sections(r);
 
@@ -81,7 +81,7 @@ export function create_inspector(
   const failsBox = side.create.div().classlist.set("insp-fails");
   const detailBox = side.create.div().classlist.set("insp-detail");
 
-  header.setText("inspector");
+  header.setText("inspect");
   detailBox.setText("—");
 
   // ---------------------------
@@ -189,7 +189,6 @@ export function create_inspector(
 
     clearBox(tableHost);
 
-    const level = getLevel();
     const suites = tlog.listSuites();
     const fails = tlog.listFailures();
     const failKeys = new Set<CaseKey>();
@@ -214,16 +213,6 @@ export function create_inspector(
       alignItems: "start",
     });
 
-    // //no side we don't like it
-    // side.css.setMany({ display: fails.length ? "grid" : "none", gap: "8px" });
-    // if (fails.length) {
-    //   renderFailures(fails);
-    //   renderDetail(fails[0]!);
-    // } else {
-    //   detailBox.setText("—");
-    // clearBox(failsBox);
-    // }
-
     const wrap = tableHost.create.div().classlist.set("insp-scroll main-scroll");
     wrap.css.setMany(SCROLL_WRAPcss);
     mainScrollEl = wrap.asDomElement() as HTMLElement;
@@ -233,10 +222,10 @@ export function create_inspector(
 
     // header columns are stable
     const hr = mkTr(thead, "insp-head-row");
-    mkTh(hr, "c-res", "res").css.setMany({ ...THcss, width: "7ch", maxWidth: "7ch" });
+    mkTh(hr, "c-res", "res").css.setMany({ ...THcss, width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
     mkTh(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
-    mkTh(hr, "c-kb", "kb").css.setMany({ ...THcss, width: "7ch", maxWidth: "7ch" });
-    mkTh(hr, "c-ms", "ms").css.setMany({ ...THcss, width: "7ch", maxWidth: "7ch" });
+    mkTh(hr, "c-kb", "kb").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
+    mkTh(hr, "c-ms", "ms").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
 
     if (!suites.length) {
       const r = mkTr(tbody, "insp-empty");
@@ -308,8 +297,8 @@ export function create_inspector(
 
           if (c.ms !== undefined) msTotal += c.ms;
 
-          const prev = c.meta?.preview ?? "";
-          if (prev) bytesTotal += new TextEncoder().encode(prev).length;
+          const string = c.meta?.fixture ?? "";
+          if (string) bytesTotal += new TextEncoder().encode(string).length;
         }
 
         // group row

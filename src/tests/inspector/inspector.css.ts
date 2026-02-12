@@ -1,3 +1,7 @@
+import { $cols_ } from "../../app/consts/colors.consts";
+
+export const NAME_WIDTH = "38ch"; // standardize width so it doesn’t jump
+
 export const SCROLL_WRAPcss: Record<string, string> = {
   overflowX: "auto",
   overflowY: "auto",
@@ -23,22 +27,18 @@ export const TD_PREVIEW_ROWcss: Record<string, string> = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  background: "rgba(255,255,255,0.02)",
+  background: $cols_.backdeep,
   opacity: "0.95",
 };
 export const CLICKABLEcss: Record<string, string> = { cursor: "pointer", userSelect: "none" };
 export const ROW_SUITEcss: Record<string, string> = {
-  background: "rgba(255,255,255,0.04)",
+  background: $cols_.backdeep,
   cursor: "pointer",
 };
 export const ROW_GROUPcss: Record<string, string> = {
-  background: "rgba(255,255,255,0.025)",
+  background: $cols_.backdeep,
   cursor: "pointer",
 };
-const ROW_FAILcss: Record<string, string> = {
-  background: "rgba(255,0,0,0.06)",
-};
-const NAME_WIDTH = "38ch"; // standardize width so it doesn’t jump
 
 export const tdNameCssBase: Record<string, string> = {
   width: NAME_WIDTH,
@@ -47,6 +47,7 @@ export const tdNameCssBase: Record<string, string> = {
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
 };
+
 export const tdNameChildCss: Record<string, string> = {
   ...tdNameCssBase,
   paddingLeft: "18px",

@@ -1,3 +1,4 @@
+import { $cols_, $grn_ } from "../../consts/colors.consts";
 import { make_panel_specs } from "../../ui/make-panel";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "./demo-panels.css";
 
@@ -42,8 +43,8 @@ export const TEST_SELECTcss = {
   fontSize: "12px",
   letterSpacing: "0.06em",
 
-  background: "rgba(255,255,255,0.03)",
-  color: "rgba(255,255,255,0.88)",
+  background: $cols_.backdeep,
+  color: $grn_.std,
   border: "1px solid rgba(255,255,255,0.10)",
   outline: "none",
 } as const;

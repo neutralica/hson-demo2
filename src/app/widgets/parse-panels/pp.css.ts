@@ -1,6 +1,6 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $cols } from "../../consts/colors.consts";
+import { $cols_ } from "../../consts/colors.consts";
 
 export const PP_ROOT_TG_CSS: CssMap = {
   position: "absolute",
@@ -18,7 +18,7 @@ export const PP_ROOT_TG_CSS: CssMap = {
   borderRadius: "16px",
 
   // mostly-transparent; let the “screen” show through
-  background: $cols.bckgd,
+  background: $cols_.bckgd,
 
   // tension lines, not “cards”
   boxShadow: [

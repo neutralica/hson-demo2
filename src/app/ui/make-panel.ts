@@ -3,7 +3,7 @@ import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
 import { bud_node, type BudFob, type BudSpec } from "../config/bud-config";
 import { makeDivClass } from "../utils/makers";
-import { $blu_, $cols } from "../consts/colors.consts";
+import { $blu_, $cols_ } from "../consts/colors.consts";
 import { $PANEL_HIDDEN } from "../consts/ui-consts";
 
 type PanelSpecs = Readonly<{

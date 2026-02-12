@@ -1,7 +1,7 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $cols } from "../../consts/colors.consts";
+import { $cols_ } from "../../consts/colors.consts";
 
 
 export const MAIN_TEXTcss: CssMap = {
@@ -22,7 +22,7 @@ export const DEMOcss: CssMap = {
   height: "100%",
   inset: "0",
   overflow: "hidden",
-  background: $cols.bckgd,
+  background: $cols_.bckgd,
   pointerEvents: "none",
 };
 
@@ -34,7 +34,7 @@ export const DEMO_STAGEcss: CssMap = {
   // default vars (even if unused initially)
   "--mxp": "50%",
   "--myp": "40%",
-  backgroundColor: $cols.bckgd,
+  backgroundColor: $cols_.bckgd,
   pointerEvents: "none",
 
 };

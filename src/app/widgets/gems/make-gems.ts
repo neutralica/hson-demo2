@@ -7,37 +7,7 @@ export type ToggleGem = Readonly<{
 }>;
 
 
-  export const makeGem = (lt: LiveTree, label: string) => {
-    const g = lt.create.div().css.setMany({
-      minWidth: "44px",
-      padding: "6px 8px",
-      borderRadius: "6px",
-      background: "rgba(255,255,255,0.08)",
-      display: "grid",
-      gridTemplateRows: "auto auto",
-      justifyItems: "center",
-      fontFamily: "ui-monospace, monospace",
-      fontSize: "12px",
-    });
-
-    const val = g.create.div().setText("—").css.setMany({
-      fontSize: "14px",
-      fontWeight: "600",
-    });
-
-    const lbl = g.create.div().setText(label).css.setMany({
-      opacity: "0.6",
-      fontSize: "10px",
-    });
-
-    return {
-      set: (v: string | number) => val.setText(String(v)),
-      clear: () => val.setText("—"),
-    };
-  };
-
-
-export function make_toggle_gem(parent: LiveTree, id: string, label: string): ToggleGem {
+export function make_btn_chip(parent: LiveTree, id: string, label: string): ToggleGem {
   const node = parent.create.div().id.set(id);
   node.setText(label);
 
@@ -46,13 +16,11 @@ export function make_toggle_gem(parent: LiveTree, id: string, label: string): To
     borderRadius: "10px",
     userSelect: "none",
     cursor: "pointer",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-    fontSize: "12px",
+    fontFamily: "monospace, SFMono-Regular, Menlo, monospace",
+    fontSize: "20px",
     letterSpacing: "0.02em",
     textAlign: "center",
     whiteSpace: "nowrap",
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.10)",
     boxSizing: "border-box",
   };
 
