@@ -1,6 +1,6 @@
 // tests.types.ts
 
-import type { FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
+import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
 
 
 export type TestStatus = "pass" | "fail" | "skip";
@@ -66,7 +66,7 @@ export type TestRunMode =
   sub?: string;
   preview?: string;      // snipped
   // later:
-  // reportId?: string;  // lookup key into a side-store
+  reportId?: Artifact;  // lookup key into a side-store
 }>;
 
 
@@ -135,4 +135,41 @@ export type BuildSuitesOpts = Readonly<{
   seed?: number;
   genHtmlCount?: number;
   genJsonCount?: number;
+}>;
+
+export type StepName =
+  | "enter"
+  | "emit:json" | "parse:json"
+  | "emit:hson" | "parse:hson"
+  | "emit:html" | "parse:html"
+  | "diff";
+
+export type StepLog = Readonly<{
+  i: number;
+  ok: boolean;
+  step: StepName;
+  label: string;          // nice label for humans
+  note?: string;          // optional details (e.g. “normalized CRLF→LF”)
+  artifacts?: readonly Artifact[];
+  err?: string;
+}>;
+export type CaseReport = Readonly<{
+  key: CaseKey;
+  suite: string;
+  name: string;
+  status: "pass" | "fail" | "skip";
+  ms?: number;
+
+  steps: readonly StepLog[];
+
+  summaryLine: string;
+
+  norms?: readonly string[];
+  hashes?: Readonly<{
+    in_raw?: string;
+    in_canon?: string;
+    out_raw?: string;
+    out_canon?: string;
+    
+  }>;
 }>;

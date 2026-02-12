@@ -57,6 +57,9 @@ export const DEMO_SCREENcss: CssMap = {
 
 export const DEMO_SCREEN_FXcss: CssMap = {
   position: "relative",  // critical anchor for uiRoot absolute
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr 1fr",
+  gridTemplateRows: "1fr 2fr 2fr 1fr",
   width: "100%",
   height: "100%",
   minHeight: "0",
@@ -159,9 +162,9 @@ export const BELT_HOLDERcss: CssMap = {
     "inset -1px 0 0 rgba(255,255,255,0.10), inset 1px 0 0 rgba(0,0,0,0.55)",
 } as const;
 
-export const LAYOUT_GRIDcss = {
+export const LAYOUT_GRIDcss: CssMap = {
 left: "30%",
   gridTemplateColumns: "1fr 1fr",
   gridTemplateRows: "1fr 1fr",   // force two visible rows
-
+gridColumn: "2 / 5"
 }

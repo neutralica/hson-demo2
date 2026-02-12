@@ -1,4 +1,6 @@
 import type { LiveTree } from "hson-live";
+import type { Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
+import type { CaseReport } from "../tests.types";
 
 
 /**
@@ -51,3 +53,28 @@ export const mkTd = (row: LiveTree, cls: string, txt: string): LiveTree => {
   td.setText(txt);
   return td;
 };
+
+
+export function get_final_artifacts(report: CaseReport): Readonly<{
+  json?: Artifact;
+  hson?: Artifact;
+  html?: Artifact;
+}> {
+  const out: {
+    json?: Artifact;
+    hson?: Artifact;
+    html?: Artifact;
+  } = {};
+
+  for (const step of report.steps) {
+    if (!step.artifacts) continue;
+
+    for (const a of step.artifacts) {
+      if (a.fmt === "json") out.json = a;
+      if (a.fmt === "hson") out.hson = a;
+      if (a.fmt === "html") out.html = a;
+    }
+  }
+
+  return out;
+}

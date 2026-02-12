@@ -1,6 +1,6 @@
 // core.consts.ts
 
-export const PHASE_LINGER = 3000;
+export const PHASE_LINGER = 4000;
 // export const starDelayString = `${skyTimeNum + 2000}ms`
 
 export const LETTER_LOWS = ["h", "s", "o", "n"] as const;

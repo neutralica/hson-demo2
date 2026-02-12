@@ -14,7 +14,6 @@ export const PP_ROOT_TG_CSS: CssMap = {
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
   gap: "18px",
-
   padding: "18px",
   borderRadius: "16px",
 

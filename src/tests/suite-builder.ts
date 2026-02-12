@@ -33,102 +33,6 @@ function preview_atom(atom: FixtureAtom): string {
   return String(atom);
 }
 
-function fmt_report(r: LoopReport): string {
-  const lines: string[] = [];
-  lines.push(`ok: ${String(r.ok)}`);
-  lines.push(`entry: ${r.entry}`);
-  lines.push(`failures: ${r.failures?.length ?? 0}`);
-  lines.push(`artifacts: ${r.artifacts?.length ?? 0}`);
-  if (r.final) lines.push(`final: ${r.final.fmt}`);
-  if (r.artifacts?.length) {
-    const last = r.artifacts[r.artifacts.length - 1];
-    if (last && typeof last.text === "string") {
-      lines.push(`artifact(last): lap ${String(last.lap)} ${String(last.fmt)}`);
-      lines.push(preview_text(last.text));
-    }
-  }
-  return lines.join("\n");
-}
-
-// helper
-function is_json_primitive(v: unknown): v is string | number | boolean | null {
-  return v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean";
-}
-
-// normalize JSON source so root is always obj/arr (wrap primitives)
-function normalize_json_root_source(src: string): { src: string; wrapped: boolean } {
-  const parsed = JSON.parse(src) as unknown;
-
-  if (is_json_primitive(parsed)) {
-    return {
-      src: JSON.stringify({ scalar: parsed }),
-      wrapped: true,
-    };
-  }
-
-  return { src, wrapped: false };
-}
-
-function is_plain_object(x: unknown): x is Record<string, unknown> {
-  if (!x || typeof x !== "object") return false;
-  if (Array.isArray(x)) return false;
-  if (x instanceof HTMLElement) return false;      // CHANGED
-  if (_is_Node(x)) return false;
-  return true;
-}
-
-function is_html_element(x: unknown): x is HTMLElement {
-  const g: any = globalThis as any;
-  const H = g.HTMLElement;
-  return typeof H === "function" && x instanceof H;
-}
-
-function is_json_source_text(s: string): boolean {
-  const t = s.trim();
-  if (typeof t[0] !== "string") return false;
-
-  // quick shape gate: most JSON documents/scalars start like this
-  const c0: string = t[0];
-  const looksLikeJson =
-    c0 === "{" || c0 === "[" || c0 === "\"" || c0 === "-" ||
-    (c0 >= "0" && c0 <= "9") || t === "true" || t === "false" || t === "null";
-
-  if (!looksLikeJson) return false;
-
-  try {
-    JSON.parse(t);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// normalize ANY Jsonish/scalar into JSON source text
-function to_json_source(v: unknown): string {
-  if (typeof v === "string") {
-    // If it already parses as JSON, keep verbatim (for your pre-stringified fixtures).
-    // Otherwise it’s a scalar string value -> quote it.
-    return is_json_source_text(v) ? v : JSON.stringify(v);
-  }
-  // numbers, booleans, null, objects, arrays
-  return JSON.stringify(v);
-}
-
-// snippet helper for inspector previews
-function preview_text(s: string, max = 200): string {
-  const t = s.length > max ? `${s.slice(0, max)}…` : s;
-  return t.replace(/\s+/g, " ").trim();
-}
-
-function is_fixture_atom(x: unknown): x is FixtureAtom {
-  if (x === null) return true;
-  const t = typeof x;
-  if (t === "string" || t === "number" || t === "boolean") return true;
-  if (typeof HTMLElement !== "undefined" && x instanceof HTMLElement) return true;
-  // HsonNode / object counts as FixtureAtom in your union, so:
-  if (t === "object") return true;
-  return false;
-}
 // CHANGED: add an explicit entryFmt param
 export function make_legacy_test_suite(
   hson: HsonTestApi,
@@ -165,14 +69,36 @@ export function make_legacy_test_suite(
         name,
         meta: { fixture: group, sub, preview: preview_atom(atom) },
         run: () => {
+          // ADDED: capture the *actual* input text we feed the loop
           const base = { entry, dual: true, times: 3, stopOnFirstFail: false } as const;
-          const r = hson._test_full_loop(atom, base);
+          // CHANGED: preserve strings as-is; stringify objects/arrays; stringify non-string .text
+          const input =
+            typeof atom === "string" ? atom :
+              (typeof atom === "object" && atom && "text" in atom)
+                ? JSON.stringify((atom as { text?: unknown }).text ?? "", null, 2)
+                : JSON.stringify(atom, null, 2);
 
-          if (!r.ok) {
-            const cap = hson._test_full_loop(atom, { ...base, verbose: true, capture: true });
-            throw new Error(`fixture failed: ${name}\n${fmt_report(cap)}`);
+          const report = hson._test_full_loop(atom, { ...base, verbose: true, capture: true });
+
+          // ADDED: propagate failure to runner/recorder
+          if (!report.ok) {
+            const f0 = report.failures?.[0];
+            const msg =
+              f0?.error
+                ? `${f0.step}: ${f0.error}`
+                : `loop failed (ok=false)`;
+            throw new Error(msg);
           }
-        },
+
+          return {
+            metaPatch: _freeze({
+              fixture: group,
+              input,
+              sub,
+              preview: input.length ? _snip(input) : "—",
+            }),
+          };
+        }
       }));
     }
   }
@@ -214,8 +140,8 @@ export function generate_fixture_suite(
               entry: fx.fmt,
               dual: true,
               times: 3,
-              verbose: true,
-              capture: true,
+              verbose: false,
+              capture: false,
               stopOnFirstFail: false,
             });
           });
@@ -226,13 +152,41 @@ export function generate_fixture_suite(
           name: fx.name,
           meta,
           run: () => {
-            const base = { entry: fx.fmt, dual: true, times: 3, stopOnFirstFail: false };
-            const r = hson._test_full_loop(fx.atom, base);
-            if (!r.ok) {
-              const cap = hson._test_full_loop(fx.atom, { ...base, verbose: true, capture: true });
-              throw new Error(`fixture failed: ${fx.name}\n${fmt_report(cap)}`);
+            // ADDED: capture the *actual* input text we feed the loop
+            // CHANGED: preserve strings as-is; stringify non-string values; pretty-print objects
+            const input =
+              typeof fx.atom === "string" ? fx.atom :
+                (typeof fx.atom === "object" && fx.atom && "text" in fx.atom)
+                  ? JSON.stringify((fx.atom as { text?: unknown }).text ?? "", null, 2)
+                  : JSON.stringify(fx.atom, null, 2);
+
+
+            const report = hson._test_full_loop(fx.atom, {
+              entry: fx.fmt,              // IMPORTANT: keep entry explicit here
+              dual: true,
+              times: 3,
+              stopOnFirstFail: false,
+              verbose: false,
+              capture: false,
+            });
+
+            // ADDED: propagate failure to runner/recorder
+            if (!report.ok) {
+              const f0 = report.failures?.[0];
+              const msg =
+                f0?.error
+                  ? `${f0.step}: ${f0.error}`
+                  : `loop failed (ok=false)`;
+              throw new Error(msg);
             }
-          },
+
+            return {
+              metaPatch: _freeze({
+                input,
+                preview: input.length ? _snip(input) : "—",
+              }),
+            };
+          }
         });
       }),
     ),
@@ -258,8 +212,8 @@ export function build_suites_for_mode(
     ...make_html_generated_fixtures({ seed, count: genHtmlCount }),
     ...make_generated_json_fixtures({ seed, count: genJsonCount }),
   ]);
-  
-  
+
+
   if (mode === "legacy") {
     return _freeze([
       make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
@@ -276,7 +230,7 @@ export function build_suites_for_mode(
       make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map)
     ])
   }
-  
+
   return _freeze([
     make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
     make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),

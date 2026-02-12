@@ -4,12 +4,14 @@ import { type LiveTree } from "hson-live";
 import type { TestLog } from "../test-log";
 import type { CaseKey, SuiteLog } from "../tests.types";
 import type { InspectorUi, TestFailure, UiLevel } from "../tests.types";
-import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "../test-panel.css";
+import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "../test-panel/test-panel.css";
 import { $cols } from "../../app/consts/colors.consts";
 import { _test_full_loop, type LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import { open_report_window, render_report_html } from "../render-report";
+import { open_report_window, render_report_html } from "./render-report";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clearBox, mkTable, mkTr, mkTh, mkTd } from "./inspector.helpers";
+import { loopreport_to_sections } from "./report-section";
+import { _freeze } from "../fixtures/generate-fixtures";
 
 export type CaptureFn = (key: CaseKey) => Promise<LoopReport>; // you’ll tighten to LoopReport
 let mainScrollEl: HTMLElement | null = null;
@@ -20,90 +22,38 @@ const _stop = (ev: unknown): void => {
   e.stopPropagation?.();
 };
 
-// /* TEMP DEBUG */
-// function vis(s: string): string {
-//   return s
-//     .replaceAll("\\", "\\\\")   // show backslashes explicitly
-//     .replaceAll("\t", "\\t")
-//     .replaceAll("\r", "\\r")
-//     .replaceAll("\n", "\\n\n")  // keep line breaks but mark them
-//     .replaceAll("\f", "\\f")
-//     .replaceAll("\v", "\\v");
-// }
-
-// CHANGED: stop pretending trace contains fmt/text blocks.
-// Step is only { step, ok, error? }.
+// Step is { step, ok, error? }.
 // Use artifacts for “full chain” capture printing.
-export function report_to_text(r: LoopReport): string {
-  const lines: string[] = [];
+export function report_to_text(r: LoopReport, meta?: Record<string, string>): string {
+  const input = meta?.input ?? "";
 
-  lines.push(`ok: ${r.ok}`);
-  lines.push(`entry: ${r.entry}`);
-  lines.push(`dir: ${r.dir}`);
-  lines.push(`times: ${r.times}`);
-  lines.push(`failures: ${r.failures.length}`);
-  lines.push("");
+  const secs = loopreport_to_sections(r);
 
-  const pushBlock = (label: string, fmt: string, text: string): void => {
-    lines.push(`=== ${label} (${fmt}) ===`);
-     lines.push(text);   // DEBUG
-    lines.push("");
-  };
+  // ADDED: inject “input” into Summary (or create a new section if you prefer)
+  const withInput = secs.map((s) => {
+    if (s.title !== "Summary") return s;
 
-  // 1) Finals (quick “what did we end up with?”)
-  if (r.final) pushBlock("final", r.final.fmt, r.final.text);
-  if (r.dualFinals?.cw) pushBlock("cw final", r.dualFinals.cw.fmt, r.dualFinals.cw.text);
-  if (r.dualFinals?.ccw) pushBlock("ccw final", r.dualFinals.ccw.fmt, r.dualFinals.ccw.text);
+    const block =
+      input.length
+        ? `\n\n=== input (as-fed) ===\n${input}`
+        : `\n\n=== input (as-fed) ===\n—`;
 
-  // 2) Artifacts (this is the full chain: json/html/hson per lap)
-  // NOTE: Artifact shape from your earlier dump: { lap, fmt, text, node, ... }
-  const arts = (r as unknown as { artifacts?: readonly { lap: number; fmt: string; text: string; node?: string }[] })
-    .artifacts ?? [];
+    return _freeze({ ...s, bodyText: `${s.bodyText}${block}` });
+  });
 
-  if (arts.length) {
-    // CHANGED: stable ordering so the report is readable and diffable
-    const sorted = [...arts].sort((a, b) => {
-      if (a.lap !== b.lap) return a.lap - b.lap;
-      return a.fmt.localeCompare(b.fmt);
-    });
+  return withInput.map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
+}
 
-    lines.push(`=== artifacts (${sorted.length}) ===`);
-    lines.push("");
+export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>): string {
+  const input = meta?.input ?? "";
+  const secs = loopreport_to_sections(r);
 
-    for (const a of sorted) {
-      pushBlock(`lap ${a.lap}`, a.fmt, a.text);
+  const inputSec = _freeze({
+    title: "Input",
+    bodyText: input.length ? input : "—",
+  });
 
-      // Optional: include node snapshot, but it’s enormous—keep it behind another header.
-      if (typeof a.node === "string" && a.node.length) {
-        pushBlock(`lap ${a.lap} node`, "node", a.node);
-      }
-    }
-  }
-
-  // 3) Trace (your Step[] is perfect for a clean step list)
-  const trace = r.trace ?? [];
-  if (trace.length) {
-    lines.push(`=== trace (${trace.length}) ===`);
-    for (const s of trace) {
-      const ok = s.ok ? "OK" : "FAIL";
-      const detail = s.error ? ` — ${s.error}` : "";
-      lines.push(`${ok} ${s.step}${detail}`);
-    }
-    lines.push("");
-  }
-
-  // 4) Failures (Step[])
-  if (r.failures.length) {
-    lines.push(`=== failures (${r.failures.length}) ===`);
-    for (const f of r.failures) {
-      const ok = f.ok ? "OK" : "FAIL";
-      const detail = f.error ? ` — ${f.error}` : "";
-      lines.push(`${ok} ${f.step}${detail}`);
-    }
-    lines.push("");
-  }
-
-  return lines.join("\n");
+  return [inputSec, ...secs].map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
 }
 
 export function create_inspector(
@@ -487,6 +437,7 @@ export function create_inspector(
                 if (mainScrollEl) mainScrollEl.scrollTop = prevScroll;
               });
             });
+
             // CHANGED: wire buttons; always stop propagation; show errors
             copyBtn.listen.onClick(async (me) => {
               _stop(me);
@@ -495,7 +446,13 @@ export function create_inspector(
               copyBtn.setText("copying…");
               try {
                 const report = await capture(c.key);
-                const txt = report_to_text(report);
+
+                // ADDED: pull stored meta (includes metaPatch.input from your suite builders)
+                const meta = tlog.getCase(c.key)?.meta;
+
+                // CHANGED: pass meta so the report can show input
+                const txt = report_to_text(report, meta);
+
                 await navigator.clipboard.writeText(txt);
                 copyBtn.setText("copied");
               } catch (e) {
@@ -513,7 +470,13 @@ export function create_inspector(
               viewBtn.setText("opening…");
               try {
                 const report = await capture(c.key);
-                const render = render_report_html(c.key, c.name, c.suite, report);
+
+                // ADDED
+                const meta = tlog.getCase(c.key)?.meta;
+
+                // CHANGED: pass meta into HTML renderer
+                const render = render_report_html(c.key, c.name, c.suite, report, meta);
+
                 open_report_window(render.html);
                 viewBtn.setText("view");
               } catch (e) {

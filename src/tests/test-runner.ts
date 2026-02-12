@@ -59,9 +59,6 @@ export async function run_test_suites(
       } catch (err) {
         const msg = asErrMsg(err);
 
-        // OPTIONAL: if you ever want metaPatch on failures too,
-        // you can have tc.run() throw an Error that already includes metaPatch in message,
-        // or move digest generation outside tc.run(). For now: none on fail.
         emit(rec, onEvent, {
           t: "case_end",
           suite: tc.suite,

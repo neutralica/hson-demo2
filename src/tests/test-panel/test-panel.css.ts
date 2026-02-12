@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $GEM_WIDTHstr } from "./tests.consts"
+import { $GEM_WIDTHstr } from "../tests.consts"
 
 export const ROW_SUITE_FAILcss:CssMap = {
   background: "rgba(255, 0, 0, 0.5)",

@@ -1,14 +1,14 @@
 
 
 import { hson, type LiveTree } from "hson-live";
-import { MENU_BTNcss, MARQUEEcss, TEST_STATUS_CHIPcss, TEST_TOOLBARcss } from "../app/phases/hson-demo-3/demo-panels.css";
-import type { TestRunMode } from "./tests.types";
-import { TEST_SELECTcss } from "../app/phases/hson-demo-3/demo-panels";
-import { make_toggle_gem } from "../app/widgets/gems/make-gems";
-import { type TestGems, create_test_gems } from "./test-gems";
-import { type UiLevel } from "./tests.types";
+import { MENU_BTNcss, MARQUEEcss, TEST_STATUS_CHIPcss, TEST_TOOLBARcss } from "../../app/phases/hson-demo-3/demo-panels.css";
+import type { TestRunMode } from "../tests.types";
+import { TEST_SELECTcss } from "../../app/phases/hson-demo-3/demo-panels";
+import { make_toggle_gem } from "../../app/widgets/gems/make-gems";
+import { type GemDisplay, create_test_gems } from "./test-gems";
+import { type UiLevel } from "../tests.types";
 import { PANEL_BRANCHcss, TEST_PANELcss } from "./test-panel.css";
-import type { LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
+import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 
 const introText = "3-way loop test: verifies parsing and serialization across JSON, HTML, and HSON by round-tripping an input string through all formats, reparsing to nodes and then reserializing at each step, then diffing final outputs and intermediary stages, esp. node structure."
 
@@ -18,12 +18,12 @@ export type TestPanel = Readonly<{
 
   runBtn: LiveTree;
   clearBtn: LiveTree;
-  levelBtn: LiveTree;
+  // levelBtn: LiveTree;
   suiteSel: LiveTree;
 
   status: LiveTree;
   marquee: LiveTree;
-  gems: TestGems,
+  gems: GemDisplay,
   // state accessors (so callsite doesn’t poke DOM attrs directly)
   getLevel: () => UiLevel;
   getMode: () => TestRunMode;
@@ -94,14 +94,14 @@ const marqueeStrip = marquee.create.div()
 
   const runGem = make_toggle_gem(controlsRow, "test-run", "run");
   const clearGem = make_toggle_gem(controlsRow, "test-clear", "clear");
-  const vGem = make_toggle_gem(controlsRow, "test-v", "--v");
-  vGem.setActive(true);
+  // const vGem = make_toggle_gem(controlsRow, "test-v", "--v");
+  // vGem.setActive(true);
   const runBtn = runGem.node.css.setMany(MENU_BTNcss);
   const clearBtn = clearGem.node.css.setMany(MENU_BTNcss);
-  const vBtn = vGem.node.css.setMany({
-    ...MENU_BTNcss,
-    gridColumn: "3 / 6"
-  });
+  // const vBtn = vGem.node.css.setMany({
+  //   ...MENU_BTNcss,
+  //   gridColumn: "3 / 6"
+  // });
   const gems = create_test_gems(branch);
 
   let mounted = false;
@@ -142,10 +142,10 @@ const marqueeStrip = marquee.create.div()
     marquee.setText("");
   };
 
-  const renderLevel = (): void => {
-    if (!mounted) return;
-    vBtn.setText(`--v: ${level}`);
-  };
+  // const renderLevel = (): void => {
+  //   if (!mounted) return;
+  //   vBtn.setText(`--v: ${level}`);
+  // };
 
   const renderMode = (): void => {
     // select shows it; nothing else required
@@ -159,7 +159,7 @@ const marqueeStrip = marquee.create.div()
 
     runBtn.setText("run");
     clearBtn.setText("clear");
-    renderLevel();            // use helper so it stays consistent
+    // renderLevel();            // use helper so it stays consistent
     status.setText("idle");
 
     // populate select options...
@@ -178,10 +178,10 @@ const marqueeStrip = marquee.create.div()
     });
 
     // re-add verbosity cycling, but ONLY after mount (DOM-backed)
-    vBtn.listen.onClick(() => {
-      level = level === "normal" ? "quiet" : "normal";
-      renderLevel();
-    });
+    // vBtn.listen.onClick(() => {
+    //   level = level === "normal" ? "quiet" : "normal";
+    //   renderLevel();
+    // });
 
     // clear should clear the tiny panel surfaces
     clearBtn.listen.onClick(() => {
@@ -197,7 +197,7 @@ const marqueeStrip = marquee.create.div()
     mount,
     runBtn,
     clearBtn,
-    levelBtn: vBtn,
+    // levelBtn: vBtn,
     suiteSel,
     status,
     marquee,
