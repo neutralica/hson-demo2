@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { relay, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, BELT_HOLDERcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, TITLE_BOXcss } from "./demo.css";
+import { $T$GHSONcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, TITLE_BOXcss } from "./demo.css";
 import { init_parsing_panels } from "../../widgets/parse-panels/init.pp";
 import { pp_factory } from "../../widgets/parse-panels/pp-factory";
 import { bud_node as bud_node } from "../../config/bud-config";
@@ -107,6 +107,28 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const uiRoot = makeDivId(screenFx.tree, "ui-root").css.setMany(UI_ROOTcss);
   const layoutGrid = makeDivId(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
 
+  const menuBox = makeDivId(mainContainer, "menu-box")
+    .css.setMany(MENU_BOXcss);
+
+  const menu = {
+    aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
+    testBtn: makeDivIdTxt(menuBox, `${$TEST}-button`, $TEST),
+    parseBtn: makeDivIdTxt(menuBox, `${$PARSE}-button`, $PARSE),
+    buildBtn: makeDivIdTxt(menuBox, `${$BUILD}-button`, $BUILD),
+    oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
+    mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button`, `${$MOUSE}`),
+    consoleBtn: makeDivIdTxt(menuBox, `${$CONSOLE}-button`, `${$CONSOLE}`),
+
+  } as const;
+
+  keys_of(menu).forEach((k) => {
+    menu[k].css.setMany({
+      ...MAIN_TEXTcss,
+      color: $blu_.candy,
+    });
+  });
+
+
   // mount inspector into its column
   const parse = mount_panel(layoutGrid, PARSE_PANEL);
   parse.panel.tree.classlist.add($PANEL_HIDDEN);
@@ -209,28 +231,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     return span;
   });
 
-  const menuBox = makeDivId(mainContainer, "menu-box")
-    .css.setMany(MENU_BOXcss);
-
-  const menu = {
-    aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
-    testBtn: makeDivIdTxt(menuBox, `${$TEST}-button`, $TEST),
-    parseBtn: makeDivIdTxt(menuBox, `${$PARSE}-button`, $PARSE),
-    buildBtn: makeDivIdTxt(menuBox, `${$BUILD}-button`, $BUILD),
-    oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button // (WIP; styling placeholder)`, $OKLCH),
-    mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button // (WIP; styling placeholder)`, $MOUSE),
-    consoleBtn: makeDivIdTxt(menuBox, `${$CONSOLE}-button // (WIP; styling placeholder)`, $CONSOLE),
-
-  } as const;
-
-  keys_of(menu).forEach((k) => {
-    menu[k].css.setMany({
-      ...MAIN_TEXTcss,
-      color: $blu_.sky,
-    });
-  });
-
-
   menu.parseBtn.listen.stopProp().onClick(ev => {
     parse.panel.tree.classlist.remove($PANEL_HIDDEN)
   });
@@ -239,6 +239,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     inspPanel.panel.tree.classlist.remove($PANEL_HIDDEN);
 
   })
-
+  
   return relay.ok();
 }

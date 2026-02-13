@@ -2,7 +2,7 @@
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,0.40)";
 const greenBleach = "rgba(228, 244, 228, 1)";
-const greenCandy = "rgba(66, 197, 150, 1)";
+const greenCandy = "rgba(88, 215, 151, 1)";
 const greenMuted = "rgba(96, 193, 141, 1)";
 const greenFaded = "rgba(80, 163, 119, 1)";
 const greenStd = "rgb(0, 255, 120)";
@@ -10,9 +10,9 @@ const greenStd = "rgb(0, 255, 120)";
 const blueEaster = "rgba(80,200,255,0.55)";
 const blueSky = "rgba(68, 149, 255, 1)";
 const blueBaby = "rgba(125, 169, 228, 1)";
+const blueCandy = "rgba(46, 167, 255, 1)";
 const bluePastel = "rgba(146, 193, 255, 1)";
 const blueBleach = "rgba(221, 221, 249, 1)";
-const blueCandy = "rgba(231, 223, 116, 1)";
 const blueMuted = "rgba(96, 182, 196, 1)";
 const blueFaded = "rgba(77, 150, 161, 1)";
 const blueStd = "rgb(0, 220, 255)";
@@ -27,12 +27,12 @@ const pinkMuted = "rgba(180, 114, 144, 1)";
 const pinkFaded = "rgba(180, 114, 144, 1)";
 const pinkStd = "rgb(255, 100, 170)"
 
-const yellowStd = "rgb(255, 210, 0)";
 const purpleStoner = "rgba(126, 40, 143, 1)"
 
 const yellowEaster = "rgba(255,210,80,0.45)";
 const yellowBleach = "rgba(255, 252, 233, 1)";
-const yellowCandy = "rgba(88, 215, 151, 1)";
+const yellowStd = "rgb(255, 210, 0)";
+const yellowCandy = "rgba(231, 223, 116, 1)";
 const yellowMuted = "rgba(189, 171, 92, 1)";
 const yellowFaded = "rgba(163, 145, 64, 1)";
 

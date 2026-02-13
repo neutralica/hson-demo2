@@ -8,10 +8,11 @@ import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "../test-
 import { _test_full_loop, type LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { open_report_window, render_report_html } from "./render-report";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
-import { clearBox, mkTable, mkTr, mkTh, mkTd } from "./inspector.helpers";
+import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { loopreport_to_sections } from "./report-section";
 import { _freeze } from "../fixtures/generate-fixtures";
 import { $GEM_WIDTHnum, $GEM_WIDTHstr } from "../tests.consts";
+import { $txt_ } from "../../app/consts/ui-consts";
 
 export type CaptureFn = (key: CaseKey) => Promise<LoopReport>; // you’ll tighten to LoopReport
 let mainScrollEl: HTMLElement | null = null;
@@ -135,7 +136,7 @@ export function create_inspector(
   // side panel: failures list + detail
   // ---------------------------
   const renderFailures = (fails: readonly TestFailure[]): void => {
-    clearBox(failsBox);
+    clear_box(failsBox);
 
     const head = failsBox.create.div().classlist.set("insp-fails-head");
     head.setText(fails.length ? "failures" : "no failures");
@@ -187,7 +188,7 @@ export function create_inspector(
     const prevScroll = mainScrollEl?.scrollTop ?? 0;
 
 
-    clearBox(tableHost);
+    clear_box(tableHost);
 
     const suites = tlog.listSuites();
     const fails = tlog.listFailures();
@@ -218,18 +219,18 @@ export function create_inspector(
     mainScrollEl = wrap.asDomElement() as HTMLElement;
 
 
-    const { thead, tbody } = mkTable(wrap, "insp-main");
+    const { thead, tbody } = mk_table(wrap, "insp-main");
 
     // header columns are stable
-    const hr = mkTr(thead, "insp-head-row");
-    mkTh(hr, "c-res", "res").css.setMany({ ...THcss, width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
-    mkTh(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
-    mkTh(hr, "c-kb", "kb").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
-    mkTh(hr, "c-ms", "ms").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
+    const hr = mk_tr(thead, "insp-head-row");
+    mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
+    mk_th(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
+    mk_th(hr, "c-kb", "kb").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
+    mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
 
     if (!suites.length) {
-      const r = mkTr(tbody, "insp-empty");
-      mkTd(r, "c-empty", "no suites").css.setMany(TDcss);
+      const r = mk_tr(tbody, "insp-empty");
+      mk_td(r, "c-empty", "no suites").css.setMany(TDcss);
       return;
     }
 
@@ -239,15 +240,15 @@ export function create_inspector(
       const caret = suiteIsOpen ? "▼" : "▶";
 
       // suite row
-      const sr = mkTr(tbody, "insp-suite-row");
+      const sr = mk_tr(tbody, "insp-suite-row");
       sr.css.setMany(ROW_SUITEcss);
 
       if (s.fail > 0) sr.css.setMany(ROW_SUITE_FAILcss); // CHANGED
 
-      mkTd(sr, "c-res", caret).css.setMany(TDcss);
-      mkTd(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
-      mkTd(sr, "c-kb", "—").css.setMany(TDcss);
-      mkTd(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—").css.setMany(TDcss);
+      mk_td(sr, "c-res", caret).css.setMany(TDcss);
+      mk_td(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
+      mk_td(sr, "c-kb", "—").css.setMany(TDcss);
+      mk_td(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—").css.setMany(TDcss);
 
       sr.listen.onClick((me) => {
         _stop(me)
@@ -302,15 +303,15 @@ export function create_inspector(
         }
 
         // group row
-        const gr = mkTr(tbody, "insp-group-row");
+        const gr = mk_tr(tbody, "insp-group-row");
         gr.css.setMany(ROW_GROUPcss);
 
         if (fail > 0) gr.css.setMany(ROW_GROUP_FAILcss); // CHANGED
 
-        mkTd(gr, "c-res", gCaret).css.setMany(TDcss);
-        mkTd(gr, "c-name", `${gk}  (${pass}/${fail}/${skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
-        mkTd(gr, "c-kb", bytesTotal ? (bytesTotal / 1024).toFixed(1) : "—").css.setMany(TDcss);
-        mkTd(gr, "c-ms", msTotal ? msTotal.toFixed(1) : "—").css.setMany(TDcss);
+        mk_td(gr, "c-res", gCaret).css.setMany(TDcss);
+        mk_td(gr, "c-name", `${gk}  (${pass}/${fail}/${skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
+        mk_td(gr, "c-kb", bytesTotal ? (bytesTotal / 1024).toFixed(1) : "—").css.setMany(TDcss);
+        mk_td(gr, "c-ms", msTotal ? msTotal.toFixed(1) : "—").css.setMany(TDcss);
 
         gr.listen.onClick((ev) => {
           ev.preventDefault();
@@ -328,16 +329,16 @@ export function create_inspector(
           const preview = c.meta?.preview ?? "";
 
           // case row
-          const cr = mkTr(tbody, "insp-case-row");
+          const cr = mk_tr(tbody, "insp-case-row");
           if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss); // CHANGED
 
-          mkTd(cr, "c-res", res).css.setMany(TDcss);
+          mk_td(cr, "c-res", res).css.setMany(TDcss);
 
-          const nameCell = mkTd(cr, "c-name", c.name);
+          const nameCell = mk_td(cr, "c-name", c.name);
           nameCell.css.setMany({ ...TDcss, ...tdNameChildCss, ...CLICKABLEcss });
 
-          mkTd(cr, "c-kb", preview ? kbOf(preview) : "—").css.setMany(TDcss);
-          mkTd(cr, "c-ms", ms).css.setMany(TDcss);
+          mk_td(cr, "c-kb", preview ? kbOf(preview) : "—").css.setMany(TDcss);
+          mk_td(cr, "c-ms", ms).css.setMany(TDcss);
 
           // click case name toggles “preview row below”
           nameCell.listen.onClick((me) => {
@@ -349,7 +350,7 @@ export function create_inspector(
 
           // preview row below (snipped preview only)
           if (expandedCases.has(c.key)) {
-            const pr = mkTr(tbody, "insp-case-preview-row");
+            const pr = mk_tr(tbody, "insp-case-preview-row");
             const cell = pr.create.td().classlist.set("insp-case-preview-cell");
             cell.setAttrs("colspan", "4");
             cell.css.setMany(TD_PREVIEW_ROWcss);
@@ -500,7 +501,7 @@ export function create_inspector(
     gap: "8px",
     padding: "10px",
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-    fontSize: "12px",
+    fontSize: $txt_.main,
     lineHeight: "1.35",
   });
 

@@ -1,17 +1,22 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_, $grn_ } from "../../consts/colors.consts";
+import { $txt_ } from "../../consts/ui-consts";
 
 
 export const MAIN_TEXTcss: CssMap = {
   fontFamily: "'Inconsolata', monaco, monospace",
-  fontSize: "20px",
-
+  fontSize: $txt_.heading,
+  _hover: {
+    fontWeight: "700",
+    background: $grn_.muted,
+    color: $cols_.backdeep
+  }
 }
 
 export const $T$GHSONcss: CssMap = {
-  fontSize: "6rem",
+  fontSize: $txt_.hsonWord,
   fontFamily: "Jacquard12",
   width: "max-content",
 }
@@ -70,17 +75,16 @@ export const DEMO_SCREEN_FXcss: CssMap = {
 };
 
 export const MENU_BOXcss: CssMap = {
-  position: "absolute",
-  top: "6rem",
-  left: "3rem",
+  position: "relative",
+  left: "6rem",
+  lineHeight: "2rem",
 
 }
 
 export const TITLE_BOXcss: CssMap = {
-  position: "absolute",
+  position: "relative",
   display: "flex",
   flexDirection: "row",
-  padding: "1rem",
 }
 
 export const HEADLINEcss: CssMap = {
@@ -88,83 +92,23 @@ export const HEADLINEcss: CssMap = {
   alignContent: "baseline",
   justifyContent: "flex-start",
   fontFamily: "Jacquard12",
+
 }
 
 export const MAIN_CONTAINERcss: CssMap = {
   position: "relative",
   top: "0",
   left: "0",
-  height: "100%",
+  height: "100vh",
   width: "20rem",
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
 };
 
-export const BELT_HOLDERcss: CssMap = {
-  position: "fixed",
-  top: "0",
-  left: "0",
-  height: "100%",
-  width: "17%",
-  overflow: "hidden",
-  scaleY: "3",
-  background: `
-    /* side sheen */
-    linear-gradient(to right,
-      rgba(255,255,255,0.10),
-      rgba(255,255,255,0.05) 40%,
-      rgba(0,0,0,0.08) 78%,
-      rgba(0,0,0,0.22)
-    ),
-
-    /* end vignette */
-    linear-gradient(to bottom,
-      rgba(0,0,0,0.62),
-      rgba(0,0,0,0.20) 18%,
-      rgba(0,0,0,0.08) 50%,
-      rgba(0,0,0,0.20) 82%,
-      rgba(0,0,0,0.62)
-    ),
-
-    /* repeatable signature: faint diagonal scuffs */
-    repeating-linear-gradient(135deg,
-      rgba(255,255,255,0.02) 0px,
-      rgba(255,255,255,0.02) 2px,
-      rgba(0,0,0,0.05) 2px,
-      rgba(0,0,0,0.00) 10px
-    ),
-
-    /* ribs */
-    repeating-linear-gradient(to bottom,
-      rgba(255,255,255,0.10) 0px,
-      rgba(255,255,255,0.60) 1px,
-      rgba(255,255,255,0.20) 1px,
-      rgba(0,0,0,0.90) 6px
-    )
-  `,
-
-  backgroundSize: `
-    auto,
-    auto,
-    100% 220px,
-    auto
-  `,
-
-  backgroundPosition: `
-    0 0,
-    0 0,
-    0 var(--belt-scroll, 0px),
-    0 var(--belt-scroll, 0px)
-  `,
-
-  boxShadow:
-    "inset -1px 0 0 rgba(255,255,255,0.10), inset 1px 0 0 rgba(0,0,0,0.55)",
-} as const;
-
 export const LAYOUT_GRIDcss: CssMap = {
-left: "30%",
+  left: "30%",
   gridTemplateColumns: "1fr 1fr",
   gridTemplateRows: "1fr 1fr",   // force two visible rows
-gridColumn: "2 / 5"
+  gridColumn: "2 / 5"
 }

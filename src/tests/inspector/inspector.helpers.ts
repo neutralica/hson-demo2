@@ -28,11 +28,11 @@ import type { CaseReport } from "../tests.types";
  
  **/
 // ---------------------------
-// tiny “table” helpers
+// table helpers
 // ---------------------------
-export const clearBox = (box: LiveTree): LiveTree => box.empty();
+export const clear_box = (box: LiveTree): LiveTree => box.empty();
 
-export const mkTable = (parent: LiveTree, cls: string): { table: LiveTree; thead: LiveTree; tbody: LiveTree; } => {
+export const mk_table = (parent: LiveTree, cls: string): { table: LiveTree; thead: LiveTree; tbody: LiveTree; } => {
   const table = parent.create.table().classlist.set(`insp-table ${cls}`);
   const thead = table.create.thead();
   const tbody = table.create.tbody();
@@ -40,15 +40,15 @@ export const mkTable = (parent: LiveTree, cls: string): { table: LiveTree; thead
   return { table, thead, tbody };
 };
 
-export const mkTr = (parent: LiveTree, cls: string): LiveTree => parent.create.tr().classlist.set(cls);
+export const mk_tr = (parent: LiveTree, cls: string): LiveTree => parent.create.tr().classlist.set(cls);
 
-export const mkTh = (row: LiveTree, cls: string, txt: string): LiveTree => {
+export const mk_th = (row: LiveTree, cls: string, txt: string): LiveTree => {
   const th = row.create.th().classlist.set(cls);
   th.setText(txt);
   return th;
 };
 
-export const mkTd = (row: LiveTree, cls: string, txt: string): LiveTree => {
+export const mk_td = (row: LiveTree, cls: string, txt: string): LiveTree => {
   const td = row.create.td().classlist.set(cls);
   td.setText(txt);
   return td;
