@@ -1,6 +1,6 @@
 // parse-panels.css.ts
 import type { CssMap } from "hson-live/types";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../../consts/colors.consts";
 
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";

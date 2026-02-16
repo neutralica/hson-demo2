@@ -3,15 +3,20 @@ import type { LiveTree } from "hson-live";
 
 export type Fmt = "json" | "hson" | "html";
 
-export type PanelShell = {
+export type PanelShell = Readonly<{
   fmt: Fmt;
   panel: LiveTree;
-  textarea: LiveTree;
+  head: LiveTree;
   chip: LiveTree;
   bytes: LiveTree;
-  copyBtn: LiveTree; // make it required if you always create it
-};
+  copyBtn: LiveTree;
 
+  wrap: LiveTree;       // ADDED
+  wmFmt: LiveTree;      // ADDED (big "JSON")
+  wmEmpty: LiveTree;    // ADDED ("{}" etc)
+  status: LiveTree;     // ADDED (focused-only "invalid/valid/...")
+  textarea: LiveTree;
+}>;
 export type Panels = {
   root: LiveTree;
   panels: Record<Fmt, PanelShell>;

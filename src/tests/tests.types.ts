@@ -81,24 +81,6 @@ export type RunResult = Readonly<{
   summary: TestSummary;
 }>;
 
-// reuse encoder to avoid alloc spam
-// const _ENC = new TextEncoder();
-// const bytes_of = (txt: string): number => {
-//   if (!txt) return 0;
-//   return _ENC.encode(txt).length;
-// };
-// const kb_str = (bytes: number): string => {
-//   if (!bytes) return "—";
-//   return (bytes / 1024).toFixed(1);
-// };
-
-export type InspectorUi = Readonly<{
-  render: () => void;
-  show: () => void;
-  hide: () => void;
-  clear: () => void;
-}>;
-
 export type UiLevel = "quiet" | "normal";
 export type CaseKey = `${string}::${string}`; // suite::name
 

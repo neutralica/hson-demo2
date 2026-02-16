@@ -1,19 +1,23 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../../consts/colors.consts";
+import { $GRID_GAPstr } from "../../../consts/ui-consts";
 
 export const PP_ROOT_TG_CSS: CssMap = {
+  display: "grid",
+  gap: $GRID_GAPstr,
+  width: "100%",
+  height: "100%",
+  minWidth: "0",
+  minHeight: "0",
+
+  // 3 panels side-by-side, each allowed to shrink
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  alignContent: "start",
   position: "absolute",
   left: "50%",
   top: "54%",
   transform: "translate(-50%, -50%)",
-
-  width: "min(1180px, 94vw)",
-  height: "min(640px, 72vh)",
-
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: "18px",
   padding: "18px",
   borderRadius: "16px",
 
@@ -61,13 +65,14 @@ export const PP_PANEL_HEADER_TG_CSS: CssMap = {
   display: "flex",
   alignItems: "baseline",
   gap: "10px",
+  position: "absolute",
+   zIndex: "5",
 
   padding: "6px 8px 8px",
   borderRadius: "10px",
 
   background: "rgba(255,255,255,0.03)",
   boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.08)",
-
   // small halo without skeuo
   textShadow: "0 0 10px rgba(140,210,255,0.10)",
 };

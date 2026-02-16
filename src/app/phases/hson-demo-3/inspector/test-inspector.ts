@@ -1,18 +1,27 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import type { TestLog } from "../test-log";
-import type { CaseKey, CaseMeta, SuiteLog } from "../tests.types";
-import type { InspectorUi, TestFailure, UiLevel } from "../tests.types";
-import { ROW_CASE_FAILcss, ROW_GROUP_FAILcss, ROW_SUITE_FAILcss } from "../test-panel/test-panel.css";
-import { _test_full_loop, type LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import { open_report_window, render_report_html } from "./render-report";
+import type { LoopReport } from "../../../../../../hson-live/dist/diagnostics/loop-3.test";
+import { _freeze } from "../../../../tests/fixtures/generate-fixtures";
+import type { TestLog } from "../../../../tests/test-log";
+import  { $GEM_WIDTHstr } from "../../../../tests/tests.consts";
+import type { CaseKey, CaseMeta, TestFailure } from "../../../../tests/tests.types";
+import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
+import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../demo-panels.css";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
+import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
-import { _freeze } from "../fixtures/generate-fixtures";
-import { $GEM_WIDTHnum, $GEM_WIDTHstr } from "../tests.consts";
-import { $txt_ } from "../../app/consts/ui-consts";
+
+
+export type InspectorUi = Readonly<{
+  render: () => void;
+  show: () => void;
+  hide: () => void;
+  clear: () => void;
+}>;
+
+
 
 export type CaptureFn = (key: CaseKey) => Promise<LoopReport>; // you’ll tighten to LoopReport
 let mainScrollEl: HTMLElement | null = null;
@@ -60,11 +69,10 @@ export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>)
 export function create_inspector(
   host: LiveTree,
   tlog: TestLog,
-  getLevel: () => UiLevel,
   opts?: { hideClass?: string },
   capture?: CaptureFn,                 // CHANGED: optional
 ): InspectorUi {
-  const hideClass = opts?.hideClass ?? "panel-hidden";
+  const hideClass = opts?.hideClass ?? "";
 
   const root = host.create.div().classlist.set("inspector");
   const header = root.create.div().classlist.set("insp-header");
@@ -132,53 +140,53 @@ export function create_inspector(
     return name;
   };
 
-  // ---------------------------
-  // side panel: failures list + detail
-  // ---------------------------
-  const renderFailures = (fails: readonly TestFailure[]): void => {
-    clear_box(failsBox);
+  // // ---------------------------
+  // // side panel: failures list + detail
+  // // ---------------------------
+  // const renderFailures = (fails: readonly TestFailure[]): void => {
+  //   clear_box(failsBox);
 
-    const head = failsBox.create.div().classlist.set("insp-fails-head");
-    head.setText(fails.length ? "failures" : "no failures");
-    head.css.setMany({
-      padding: "6px 8px",
-      borderBottom: "1px solid rgba(255,255,255,0.12)",
-      opacity: "0.8",
-      fontFamily: "ui-monospace, monospace",
-    });
+  //   const head = failsBox.create.div().classlist.set("insp-fails-head");
+  //   head.setText(fails.length ? "failures" : "no failures");
+  //   head.css.setMany({
+  //     padding: "6px 8px",
+  //     borderBottom: "1px solid rgba(255,255,255,0.12)",
+  //     opacity: "0.8",
+  //     fontFamily: "ui-monospace, monospace",
+  //   });
 
-    if (!fails.length) return;
+  //   if (!fails.length) return;
 
-    for (const f of fails) {
-      const row = failsBox.create.div().classlist.set("insp-fail-row");
-      row.setText(`${f.suite} :: ${f.name}`);
-      row.css.setMany({
-        padding: "6px 8px",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-        cursor: "pointer",
-        fontFamily: "ui-monospace, monospace",
-      });
+  //   for (const f of fails) {
+  //     const row = failsBox.create.div().classlist.set("insp-fail-row");
+  //     row.setText(`${f.suite} :: ${f.name}`);
+  //     row.css.setMany({
+  //       padding: "6px 8px",
+  //       borderBottom: "1px solid rgba(255,255,255,0.08)",
+  //       cursor: "pointer",
+  //       fontFamily: "ui-monospace, monospace",
+  //     });
 
-      row.listen.onClick((me) => {
-        _stop(me);
-        renderDetail(f);
+  //     row.listen.onClick((me) => {
+  //       _stop(me);
+  //       renderDetail(f);
 
-      });
-    }
-  };
+  //     });
+  //   }
+  // };
 
-  const renderDetail = (f: TestFailure): void => {
-    const snip = f.err.length > 3000 ? `${f.err.slice(0, 3000)}…` : f.err;
-    const meta = f.meta ? `\nmeta: ${JSON.stringify(f.meta)}` : "";
-    detailBox.setText(`${f.suite} :: ${f.name}\n${snip}${meta}\n(${f.ms.toFixed(1)}ms)`);
-    detailBox.css.setMany({
-      whiteSpace: "pre-wrap",
-      overflowWrap: "anywhere",
-      padding: "8px",
-      fontFamily: "ui-monospace, monospace",
-      borderTop: "1px solid rgba(255,255,255,0.12)",
-    });
-  };
+  // const renderDetail = (f: TestFailure): void => {
+  //   const snip = f.err.length > 3000 ? `${f.err.slice(0, 3000)}…` : f.err;
+  //   const meta = f.meta ? `\nmeta: ${JSON.stringify(f.meta)}` : "";
+  //   detailBox.setText(`${f.suite} :: ${f.name}\n${snip}${meta}\n(${f.ms.toFixed(1)}ms)`);
+  //   detailBox.css.setMany({
+  //     whiteSpace: "pre-wrap",
+  //     overflowWrap: "anywhere",
+  //     padding: "8px",
+  //     fontFamily: "ui-monospace, monospace",
+  //     borderTop: "1px solid rgba(255,255,255,0.12)",
+  //   });
+  // };
 
   // ---------------------------
   // main table: suite->group->case
@@ -186,8 +194,6 @@ export function create_inspector(
 
   const renderAll = (): void => {
     const prevScroll = mainScrollEl?.scrollTop ?? 0;
-
-
     clear_box(tableHost);
 
     const suites = tlog.listSuites();
@@ -206,13 +212,12 @@ export function create_inspector(
       if (!gs) { gs = new Set<string>(); failGroupsBySuite.set(f.suite, gs); }
       gs.add(gk);
     }
-    // layout is 1 column when no fails, 2 columns when fails exist
-    cols.css.setMany({
-      display: "grid",
-      gap: "10px",
-      gridTemplateColumns: "1fr",
-      alignItems: "start",
-    });
+    // cols.css.setMany({
+    //   display: "grid",
+    //   gap: "10px",
+    //   gridTemplateColumns: "1fr",
+    //   alignItems: "start",
+    // });
 
     const wrap = tableHost.create.div().classlist.set("insp-scroll main-scroll");
     wrap.css.setMany(SCROLL_WRAPcss);
@@ -510,4 +515,3 @@ export function create_inspector(
 
   return Object.freeze({ render, show, hide, clear });
 }
-

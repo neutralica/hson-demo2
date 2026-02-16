@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
-import type { Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import type { CaseReport } from "../tests.types";
+import type { Artifact } from "../../../../../../hson-live/dist/diagnostics/loop-3.test";
+import type { CaseReport } from "../../../../tests/tests.types";
 
 
 /**

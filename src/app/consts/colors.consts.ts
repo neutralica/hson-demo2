@@ -1,4 +1,8 @@
 
+
+const invalidRed = "rgba(200, 50, 50, 1)"
+
+
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,0.40)";
 const greenBleach = "rgba(228, 244, 228, 1)";
@@ -111,8 +115,6 @@ export const LETTER_COLORcandy = {
   o: greenCandy, // bright
   n: pinkCandy, // slightly warm
 } as const;
-
-
 export const $blu_ = {
   sky: blueSky,
   pastel: bluePastel,
@@ -160,7 +162,6 @@ export const $pnk_ = {
 };
 
 export const $red_etc_ = {
-
   richCrimson,
   heartsBlood: redHeartsBlood,
   stonerPurple: purpleStoner,
@@ -171,7 +172,7 @@ export const $cols_ = {
   bckgd: bckColor,
   backdeep: deepBack,
   txtarea: $grn_.faded,
-
+  sysInvalid: invalidRed,
 
 
 };

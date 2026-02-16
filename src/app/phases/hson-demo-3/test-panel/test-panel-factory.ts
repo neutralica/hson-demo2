@@ -1,14 +1,14 @@
-
-
-import {  hson, type LiveTree } from "hson-live";
-import { MENU_BTNcss, MARQUEEcss, TEST_STATUS_CHIPcss, TEST_TOOLBARcss } from "../../app/phases/hson-demo-3/demo-panels.css";
-import type { TestRunMode } from "../tests.types";
-import { TEST_SELECTcss } from "../../app/phases/hson-demo-3/demo-panels";
-import { make_btn_chip } from "../../app/widgets/gems/make-gems";
+import { hson } from "hson-live";
+import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
+import type { UiLevel, TestRunMode } from "../../../../tests/tests.types";
+import { $txt_ } from "../../../consts/ui-consts";
+import { make_btn_chip } from "../../../widgets/gems/make-gems";
+import { TEST_SELECTcss } from "../demo-panels.css";
+import { PANEL_BRANCHcss, MARQUEE_BOXcss, MARQUEEcss, TEST_STATUS_CHIPcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../demo-panels.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
-import { type UiLevel } from "../tests.types";
-import { PANEL_BRANCHcss, TEST_PANELcss } from "./test-panel.css";
-import { $txt_ } from "../../app/consts/ui-consts";
+import { relay, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
+
+
 
 const introText = "TRANSFORMER LOOP TEST: parses & seriualizes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps"
 
@@ -40,11 +40,20 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
   { key: "dev", label: "dev" },
 ] as const;
 
-// CHANGED: test_panel_factory_offdom rewritten to be barebones + typographic,
-// while KEEPING the marquee. All “gems” styling ripped out except minimal etched chips.
-// NOTE: This is a full replacement for the function you pasted (keep your exports/types above).
 
-export function test_panel_factory_offdom(): TestPanel {
+export type TestPanelWidget = ReturnType<typeof test_panel_factory>;
+
+export function mount_test_panel(host: LiveTree): Outcome<TestPanel> {
+  try {
+    const tp = test_panel_factory();
+    tp.mount(host);
+    return relay.data(tp);
+  } catch (err) {
+    return relay.err(err instanceof Error ? err.message : "unknown error");
+  }
+}
+
+function test_panel_factory(): TestPanel {
   const branch = hson.fromTrustedHtml("<div></div>").liveTree().asBranch().id.set("panel-branch");
 
   // CHANGED: keep your existing panel branch css hook
@@ -56,21 +65,13 @@ export function test_panel_factory_offdom(): TestPanel {
   // ADDED: viewport box so marquee reads as “embedded terminal glass”
   const marqueeBox = branch.create.div()
     .id.set("test-marquee-box")
-    .css.setMany({
-      gridRow: "1",
-      gridColumn: "1 / 5",
-      padding: "10px 12px",
-      overflow: "hidden",
-    });
+    .css.setMany(MARQUEE_BOXcss);
 
   // CHANGED: marquee is the actual <marquee> tag, no strip / no JS scrolling logic
   const marquee = marqueeBox.create.tags(["marquee"]).first()!
     .id.set("test-marquee")
     .css.setMany({
       ...MARQUEEcss,
-      whiteSpace: "nowrap",
-      letterSpacing: "0.01em",
-      opacity: "0.92",
     });
 
   // -------------------------
@@ -100,43 +101,20 @@ export function test_panel_factory_offdom(): TestPanel {
   // -------------------------
   const controlsRow = branch.create.div()
     .id.set("test-controls")
-    .css.setMany({
-      ...TEST_PANELcss,
-      gridRow: "3",
-      gridColumn: "1 / 4",
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: "10px",
-      padding: "0",
-      background: "transparent",
-      border: "none",
-      boxShadow: "none",
-    });
+    .css.setMany(CONTROL_ROWcss);
 
   // CHANGED: keep your existing helper (toggle gem), but treat it as a “chip”
   const runChip = make_btn_chip(controlsRow, "test-run", "run");
   const clearChip = make_btn_chip(controlsRow, "test-clear", "clear");
 
-  const runBtn = runChip.node.css.setMany({
-    ...MENU_BTNcss,
-    // CHANGED: minimal etched button
-    borderRadius: "18px",
-    background: "rgba(0,0,0,0.18)",
-    transition: "transform 90ms ease, filter 140ms ease",
-  });
+  const runBtn = runChip.node.css.setMany(RUN_BUTTONcss);
 
-  const clearBtn = clearChip.node.css.setMany({
-    ...MENU_BTNcss,
-    borderRadius: "18px",
-    background: "rgba(0,0,0,0.18)",
-    transition: "transform 90ms ease, filter 140ms ease",
-  });
+  const clearBtn = clearChip.node.css.setMany(CLEAR_BTNcss);
 
   // -------------------------
-  // “GEMS” (now just minimal chips)
+  // chips
   // -------------------------
-  // CHANGED: keep function call so you can later refactor it to "chips" internally.
-  // For now this can return the same GemDisplay object.
+  
   const chips = create_test_chips(branch);
 
   // -------------------------

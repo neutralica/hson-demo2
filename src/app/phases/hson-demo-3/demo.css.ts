@@ -61,25 +61,31 @@ export const DEMO_SCREENcss: CssMap = {
 }
 
 export const DEMO_SCREEN_FXcss: CssMap = {
-  position: "relative",  // critical anchor for uiRoot absolute
+  position: "relative",
   display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr 1fr",
-  gridTemplateRows: "1fr 2fr 2fr 1fr",
+
+  // left = nav, right = main
+  gridTemplateColumns: "minmax(18rem, 1fr) minmax(0, 2.5fr)",
+  gridTemplateRows: "minmax(0, 1fr)",
+
+  gap: "2.5rem",
+  padding: "3rem",
+
   width: "100%",
   height: "100%",
   minHeight: "0",
-  inset: "0",
+  minWidth: "0",
+
   pointerEvents: "all",
-  mixBlendMode: "normal",
-  opacity: "1",
 };
 
 export const MENU_BOXcss: CssMap = {
-  position: "relative",
-  left: "6rem",
-  lineHeight: "2rem",
+  gridColumn: "1",
+  gridRow: "1 / span 2",
 
-}
+  position: "relative",
+  lineHeight: "2rem",
+};
 
 export const TITLE_BOXcss: CssMap = {
   position: "relative",
@@ -96,19 +102,34 @@ export const HEADLINEcss: CssMap = {
 }
 
 export const MAIN_CONTAINERcss: CssMap = {
-  position: "relative",
-  top: "0",
-  left: "0",
-  height: "100vh",
-  width: "20rem",
+  // CHANGED: remove viewport anchoring — let the parent grid do its job
+  position: "absolute",
+  minWidth: "0",
+  minHeight: "0",
+
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
+  justifyContent: "flex-start",
+
+  // ADDED: place into left column
+  gridColumn: "1 / 2",
+  gridRow: "1 / 2",
 };
 
 export const LAYOUT_GRIDcss: CssMap = {
-  left: "30%",
-  gridTemplateColumns: "1fr 1fr",
-  gridTemplateRows: "1fr 1fr",   // force two visible rows
-  gridColumn: "2 / 5"
-}
+  gridColumn: "2",
+  gridRow: "1",
+  display: "grid",
+  placeItems: "center",
+  gap: "1.25rem",
+
+  minWidth: "0",
+  minHeight: "0",
+  overflow: "hidden",
+};
+
+export const PANEL_SAFETYcss: CssMap = {
+  minWidth: "0",
+  minHeight: "0",
+};

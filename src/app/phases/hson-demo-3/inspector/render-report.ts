@@ -1,8 +1,8 @@
-import { hson } from "hson-live";
-import type { Artifact, LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import type { CaseKey, CaseMeta } from "../tests.types";
-import { $cols_ } from "../../app/consts/colors.consts";
-import { _freeze } from "../fixtures/generate-fixtures";
+import type { LoopReport, Artifact } from "../../../../../../hson-live/dist/diagnostics/loop-3.test";
+import { _freeze } from "../../../../tests/fixtures/generate-fixtures";
+import type { CaseKey, CaseMeta } from "../../../../tests/tests.types";
+import { $cols_ } from "../../../consts/colors.consts";
+
 
 type ReportHtml = Readonly<{ title: string; html: string }>;
 

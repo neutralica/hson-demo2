@@ -3,26 +3,17 @@ import { $blu_, $cols_, $grn_, $gry_, $red_etc_ } from "../../consts/colors.cons
 import { $GEM_WIDTHstr } from "../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
-export const UI_ROOTcss:CssMap = {
-    position: "absolute",
-    inset: "0",
-    display: "grid",
-    height: "100%",
-    width: "100%",
-    pointerEvents: "none",
-    // outline: "2px solid red",
-} as const;
+export const UI_ROOTcss: CssMap = {
+    // CHANGED: must be a normal grid item (no absolute overlay)
+    position: "relative",
+    minWidth: "0",
+    minHeight: "0",
+    pointerEvents: "all",
+    gridColumn: "2 / 3",
+    gridRow: "1 / 2",
+};
 
-// export const UI_SHELLcss: CssMap = {
-//     pointerEvents: "auto",
-//     width: "min(1100px, 100%)",
-//     height: "100%",
-//     display: "grid",
-//     gap: "12px",
-//     boxSizing: "border-box",
-// } as const;
-
-export const PANEL_OUTERcss:CssMap = {
+export const PANEL_OUTERcss: CssMap = {
     minHeight: "200px",
     minWidth: "0",
     // display: "grid",
@@ -30,14 +21,16 @@ export const PANEL_OUTERcss:CssMap = {
 } as const;
 
 export const PANEL_SURFACEcss: CssMap = {
+    width: "100%",
+    height: "100%",
+    minWidth: "0",
+    minHeight: "0",
+    overflow: "auto",
     borderRadius: "14px",
     padding: "12px",
     boxSizing: "border-box",
-    overflow: "auto",
     display: "grid",
     gap: $GRID_GAPstr,
-    minHeight: "18rem",
-    minWidth: "0",
     backgroundColor: $cols_.bckgd,
     pointerEvents: "all",
 
@@ -64,7 +57,7 @@ export const LAYOUT_GRIDcss: CssMap = {
     overflowY: "scroll"
 } as const;
 
-export const MENU_BTNcss = {
+export const TEST_ACTION_BTN = {
     display: "grid",
     placeItems: "center",
     padding: "10px 8px",
@@ -86,7 +79,7 @@ export const PANEL_STACKcss = {
     display: "grid",
     alignContent: "start",
     gap: $GRID_GAPstr,
-    minHeight: "0",         // critical for nested scrolling
+    minHeight: "0",
 } as const;
 
 export const PANEL_ITEMcss = {
@@ -102,26 +95,26 @@ export const PANEL_HIDDENcss = {
 //     minHeight: "0",
 // } as const;
 
-export const PARSING_PANEL_ROOTcss ={
-      display: "grid",
-      gap: $GRID_GAPstr,
-      minHeight: "0",
-      minWidth: "0",
-      gridAutoFlow: "column",
+export const PARSING_PANEL_ROOTcss = {
+    display: "grid",
+    gap: $GRID_GAPstr,
+    minHeight: "0",
+    minWidth: "0",
+    gridAutoFlow: "column",
 }
-    
-export const PANELcss ={
-        display: "grid",
-        gridTemplateRows: "auto 1fr",
-        gap: $GRID_GAPstr,
-        minHeight: "0",
-        minWidth: "0",
-        padding: "10px",
-        borderRadius: "12px",
-        boxSizing: "border-box",
-        background: "rgba(255,255,255,0.03)",
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-      }
+
+export const PANELcss = {
+    display: "grid",
+    gridTemplateRows: "auto 1fr",
+    gap: $GRID_GAPstr,
+    minHeight: "0",
+    minWidth: "0",
+    padding: "10px",
+    borderRadius: "12px",
+    boxSizing: "border-box",
+    background: "rgba(255,255,255,0.03)",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+}
 
 export const PANEL_TEXTAREAcss = {
     minHeight: "0",
@@ -142,23 +135,11 @@ export const PANEL_TEXTAREAcss = {
 };
 
 export const TEST_BODY_OVERRIDEScss: CssMap = {
-    overflow: "hidden",           
-    // gridTemplateRows: "auto 1fr", 
+    overflow: "hidden",
     alignContent: "start",
     display: "grid",
     gridTemplateColumns: "1fr auto",
     gridTemplateRows: "1fr auto"
-} as const;
-
-export const TEST_TOOLBARcss: CssMap = {
-   display: "grid",
-  gap: $GRID_GAPstr,
-  width: "100%",
-  gridTemplateColumns: "1fr 1fr",
-  gridTemplateRows: "1fr 1fr",
-    boxSizing: "border-box",
-    gridRow: "2 / 3",
-  gridColumn: "1 / 3"
 } as const;
 
 export const TEST_STATUS_CHIPcss: CssMap = {
@@ -185,8 +166,89 @@ export const MARQUEEcss: CssMap = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: $txt_.sub,
     lineHeight: "1.35",
-    whiteSpace: "pre",
     minWidth: "100%",
     gridColumn: "1 / 5",
     color: $grn_.std,
+    whiteSpace: "nowrap",
+    letterSpacing: "0.01em",
+    opacity: "0.92",
+} as const;
+
+export const CLEAR_BTNcss = {
+    ...TEST_ACTION_BTN,
+    borderRadius: "18px",
+    background: "rgba(0,0,0,0.18)",
+    transition: "transform 90ms ease, filter 140ms ease",
+
+}
+
+export const MARQUEE_BOXcss = {
+    gridColumn: "1 / 5",
+    padding: "10px 12px",
+    overflow: "hidden",
+};
+export const ROW_SUITE_FAILcss: CssMap = {
+    background: "rgba(255, 0, 0, 0.2)",
+};
+
+export const ROW_GROUP_FAILcss: CssMap = {
+    background: "rgba(255, 0, 0, 0.3)",
+};
+
+export const ROW_CASE_FAILcss: CssMap = {
+    background: "rgba(255, 0, 0, 0.4)",
+};
+
+export const TEST_PANELcss: CssMap = {
+    display: "grid",
+    gap: "6px",
+    gridTemplateColumns: $GEM_WIDTHstr + $GEM_WIDTHstr + $GEM_WIDTHstr,
+    width: "100%",
+    boxSizing: "border-box",
+};
+
+export const PANEL_BRANCHcss: CssMap = {
+    display: "grid",
+    gap: "8px",
+    padding: "10px",
+    width: "100%",
+    boxSizing: "border-box",
+    gridTemplateColumns: `${$GEM_WIDTHstr} ${$GEM_WIDTHstr}`,
+    gridTemplateRows: "auto " + $GEM_WIDTHstr,
+};
+
+export const CONTROL_ROWcss: CssMap = {
+    ...TEST_PANELcss,
+    gridRow: "3",
+    gridColumn: "1 / 4",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "10px",
+    padding: "0",
+    background: "transparent",
+    border: "none",
+    boxShadow: "none",
+};
+
+export const RUN_BUTTONcss: CssMap = {
+    ...TEST_ACTION_BTN,
+    borderRadius: "18px",
+    background: "rgba(0,0,0,0.18)",
+    transition: "transform 90ms ease, filter 140ms ease",
+};
+// panel.args.ts (or inline at callsite)
+export const TEST_SELECTcss = {
+    minWidth: "12ch",
+    padding: "10px 8px",
+    borderRadius: "12px",
+    boxSizing: "border-box",
+
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: "12px",
+    letterSpacing: "0.06em",
+
+    background: $cols_.backdeep,
+    color: $grn_.std,
+    border: "1px solid rgba(255,255,255,0.10)",
+    outline: "none",
 } as const;

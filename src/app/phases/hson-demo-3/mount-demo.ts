@@ -2,18 +2,12 @@
 
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
-import { relay, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, TITLE_BOXcss } from "./demo.css";
-import { init_parsing_panels } from "../../widgets/parse-panels/init.pp";
-import { pp_factory } from "../../widgets/parse-panels/pp-factory";
-import { bud_node as bud_node } from "../../config/bud-config";
-import { DEMO_BUDS } from "./demo.buds";
-import { shade_class } from "./demo.consts";
+import { data_sync, outcome, relay, relay_data, type Outcome, type OutcomeAsync, type OutcomeData } from "intrastructure";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss } from "./demo.css";
+import { $DS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import { LAYOUT_GRIDcss, PANEL_FRAMEcss, PANEL_OUTERcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./demo-panels.css";
-import { INSPECTOR_PANEL, PARSE_PANEL, TEST_PANEL } from "./demo-panels";
-import { mount_panel } from "../../ui/make-panel";
-import { test_panel_factory_offdom } from "../../../tests/test-panel/test-panel-factory";
+import { LAYOUT_GRIDcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./demo-panels.css";
+import { mount_test_panel } from "./test-panel/test-panel-factory";
 import { run_test_suites } from "../../../tests/test-runner";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey, TestEvent, TestSuite } from "../../../tests/tests.types";
@@ -21,9 +15,14 @@ import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
 import { $blu_, $cols_, LETTER_COLORfaded } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
-import { create_inspector } from "../../../tests/inspector/test-inspector";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { build_suites_for_mode } from "../../../tests/suite-builder";
+import { demo_get_current_view, demo_set_current_view, demo_subscribe } from "./demo-state";
+import type { Panels } from "./parse-panel/pp.types";
+import { init_parsing_panels } from "./parse-panel/init.pp";
+import { mount_parsing_panels, pp_factory } from "./parse-panel/pp-factory";
+import { create_inspector } from "./inspector/test-inspector";
+import { mount_panel_simple } from "../../ui/panel-simple";
 
 export const $PARSE = "parse";
 export const $TEST = "test";
@@ -44,68 +43,38 @@ const MENU_OPTIONS = [
 ] as const;
 
 export type MenuKey = typeof MENU_OPTIONS[number];
-// anchor tags once, as readonly string[]
-// const TAGS_BASIC: readonly string[] = ["basic"];
-
-// const basicFixtures: readonly Fixture[] =
-//   Object.entries(JSON_FIXTURES_LEGACY).flatMap(([name, atom]) => {
-//     const fmt: FixtureFmt = name.startsWith("html__") ? "html" : "json";
-
-//     // explode bundle objects like {a:"...", b:"..."} into multiple fixtures
-//     if (atom && typeof atom === "object" && !Array.isArray(atom)) {
-//       const rec = atom as Record<string, unknown>;
-//       const entries = Object.entries(rec);
-
-//       const allPrimitiveish = entries.every(([, v]) =>
-//         v === null || ["string", "number", "boolean"].includes(typeof v),
-//       );
-
-//       if (allPrimitiveish) {
-//         return entries.map(([k, v]) => ({
-//           name: `${name}.${k}`,
-//           fmt,
-//           atom: v as FixtureAtom,
-//           tags: TAGS_BASIC, // CHANGED
-//         }));
-//       }
-//     }
-
-//     // otherwise treat as one fixture
-//     return [
-//       {
-//         name,
-//         fmt,
-//         atom: atom as FixtureAtom,
-//         tags: TAGS_BASIC, // CHANGED
-//       },
-//     ];
-//   });
-// const testFixtures = [...FIXTURES_GENERATED, ...basicFixtures];
 
 let _testsWired = false;
+
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
 
-  // needed/optional for bud:
-  // makeDivID/Class/etc
-  // set CSS
-  // [parent].set-keyframes
-  // set anim
-  // return animate()
-  // (teardown??)
+  const demo = makeDivId(stage, $DS.demo)
+    .classlist.add($DS.demo)
+    .css.setMany(DEMOcss);
 
-  const b = bud_node(stage);
-  const demo = b.bud(DEMO_BUDS.demo);
-  const screen = demo.bud(DEMO_BUDS.screen);
-  const screenFx = screen.bud(DEMO_BUDS.screenFx);
-  const mainContainer = makeDivId(screenFx.tree, "main-container")
+  const screen = makeDivId(demo, $DS.screen)
+    .classlist.add("demo screen")
+    .css.setMany(DEMO_SCREENcss)
+
+  const screenFx = makeDivId(screen, $DS.screenFx)
+    .classlist.add("demo screen fx")
+    .css.setMany(DEMO_SCREEN_FXcss);
+
+  const mainContainer = makeDivId(screenFx, "main-container")
     .css.setMany(MAIN_CONTAINERcss)
-  const titleBox = makeDivId(mainContainer, "title-box");
-  titleBox.css.setMany(TITLE_BOXcss)
-  const headline = makeDivId(titleBox, "hson-headline");
-  headline.css.setMany(HEADLINEcss);
-  const uiRoot = makeDivId(screenFx.tree, "ui-root").css.setMany(UI_ROOTcss);
-  const layoutGrid = makeDivId(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
+
+  const titleBox = makeDivId(mainContainer, "title-box")
+    .css.setMany(TITLE_BOXcss)
+
+  const headline = makeDivId(titleBox, "hson-headline")
+    .css.setMany(HEADLINEcss);
+
+  const uiRoot = makeDivId(screenFx, "ui-root")
+    .css.setMany(UI_ROOTcss);
+
+  const layoutGrid = makeDivId(uiRoot, "layout-grid")
+    .css.setMany(LAYOUT_GRIDcss);
 
   const menuBox = makeDivId(mainContainer, "menu-box")
     .css.setMany(MENU_BOXcss);
@@ -130,56 +99,69 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
 
   // mount inspector into its column
-  const parse = mount_panel(layoutGrid, PARSE_PANEL);
-  parse.panel.tree.classlist.add($PANEL_HIDDEN);
-  const pp = pp_factory(parse.body.tree);
-  init_parsing_panels(pp);
-
   const row = layoutGrid.create.div().classlist.set("test-row");
-  row.style.setMany({
-    display: "grid",
-    gap: "10px",
-    gridTemplateColumns: "300px 1fr",
-    alignContent: "center"
-  });
+  const testCell = makeDivClass(row, "test-row-panel");
+  const inspCell = makeDivClass(row, "test-row-inspect")
+    .css.setMany(PANEL_SAFETYcss);
 
-  // mount inspector into left cell
-  const testCell = row.create.div().classlist.set("test-row__panel");
-  const inspCell = row.create.div().classlist.set("test-row__insp");
+  const parse = mount_panel_simple(layoutGrid, "parse");
+  parse.panel.classlist.add($PANEL_HIDDEN);
 
-  // mount test panel into right cell
-  const test = mount_panel(testCell, TEST_PANEL);
-  test.panel.tree.classlist.add($PANEL_HIDDEN);
-  test.body.tree.css.setMany(TEST_BODY_OVERRIDEScss);
+  const test = mount_panel_simple(layoutGrid, "test");
+  test.panel.classlist.add($PANEL_HIDDEN);
 
-  const tp = test_panel_factory_offdom();
+  // ✅ symmetric widget mount calls
+  const ppO = relay_data(mount_parsing_panels(parse.surface));
+  // if (outcome.isErr(ppO)) return ppO; 
+  const pp = ppO;
 
-  // IMPORTANT: mount first so LiveTree ops are DOM-backed
-  tp.mount(test.body.tree);
-  // tp.mount(testCol);
+  const tp = relay_data(mount_test_panel(test.surface));
+  // if (outcome.isErr(tpO)) { return tpO; }
+  // if (outcome.isOK(tpO)) { return relay.err("no data in outcome") }
+  // const tp = tpO;
+  test.surface.css.setMany(TEST_BODY_OVERRIDEScss);
 
-  // create console + log immediately after mount
+  const inspPanel = mount_panel_simple(inspCell, "inspect");
+  inspPanel.panel.classlist.add($PANEL_HIDDEN);
+
+
+  // inspector wiring stays the same, but stop expecting it to unhide panels
   const tlog = create_test_log();
-  const inspPanel = mount_panel(inspCell, INSPECTOR_PANEL);
-  inspPanel.panel.tree.classlist.add($PANEL_HIDDEN);
   const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
 
-  const suites = build_suites_for_mode(tp.getMode(), { _test_full_loop }, captureMap);
-
-  // pass capture fn into inspector
   const inspector = create_inspector(
-    inspPanel.body.tree,
+    inspPanel.surface,
     tlog,
-    () => tp.getLevel(),
-    { hideClass: $PANEL_HIDDEN },
+    { hideClass: $PANEL_HIDDEN }, // CHANGED: if you keep inspector.show/hide, give it the real class
     async (key) => {
       const fn = captureMap.get(key);
       if (!fn) throw new Error(`no capture for ${key}`);
       return fn();
     },
   );
+  inspector.show();
 
+  const applyView = (): void => {
+    const view = demo_get_current_view();
 
+    // hide all panels you manage as "views"
+    parse.panel.classlist.add($PANEL_HIDDEN);
+    test.panel.classlist.add($PANEL_HIDDEN);
+    inspPanel.panel.classlist.add($PANEL_HIDDEN);
+
+    if (view === "parse") {
+      parse.panel.classlist.remove($PANEL_HIDDEN);
+    } else if (view === "test") {
+      test.panel.classlist.remove($PANEL_HIDDEN);
+      inspPanel.panel.classlist.remove($PANEL_HIDDEN);
+    }
+    // else if (view === "build") ...
+    // else if (view === "about") ...
+  };
+
+  demo_subscribe(() => applyView());
+
+  applyView();
   if (!_testsWired) {
     _testsWired = true;
 
@@ -199,11 +181,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       const res = await run_test_suites(suites, onEvent, { bail: false });
 
       tp.chips.render(res.summary);
-      tp.setStatus(res.ok ? "pass" : "fail");
+      tp.setStatus("idle");
       tp.marquee.setText(tlog.getLastLine());
-
+      inspector.show();
       inspector.render();
-      if (!res.ok) inspPanel.tree.classlist.remove($PANEL_HIDDEN);
+      if (!res.ok) inspPanel.panel.classlist.remove($PANEL_HIDDEN);
     });
     tp.clearBtn.listen.onClick(() => {
       tlog.clear();
@@ -215,7 +197,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     });
 
   }
-
+  applyView();
   const gcss = CssManager.globals.invoke();
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
@@ -231,14 +213,20 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     return span;
   });
 
-  menu.parseBtn.listen.stopProp().onClick(ev => {
-    parse.panel.tree.classlist.remove($PANEL_HIDDEN)
+  menu.parseBtn.listen.onClick(() => {
+    demo_set_current_view("parse");
   });
-  menu.testBtn.listen.stopProp().onClick(ev => {
-    test.panel.tree.classlist.remove($PANEL_HIDDEN);
-    inspPanel.panel.tree.classlist.remove($PANEL_HIDDEN);
 
-  })
-  
+  menu.testBtn.listen.onClick(() => {
+    demo_set_current_view("test");
+  });
+
+  menu.aboutBtn.listen.onClick(() => {
+    demo_set_current_view("about");
+  });
+
+  menu.buildBtn.listen.onClick(() => {
+    demo_set_current_view("build");
+  });
   return relay.ok();
 }
