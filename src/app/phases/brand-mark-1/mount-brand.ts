@@ -35,23 +35,23 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     filter: "blur(0.5px)",
   })
   const noteText = makeDivId(noteBox, "note-text")
-  noteText.setText(introNote);
+  noteText.text.set(introNote);
 
   const logoBox = makeDivId(stage, "logo-box")
     .css.setMany(Intro_css.logobox);
 
   const zalgo1 = makeDivId(logoBox, 'z-logo')
-    .setText(zalgo_unicode(LOGO_TEXT, zConfig))
+    .text.set(zalgo_unicode(LOGO_TEXT, zConfig))
     .css.setMany(Intro_css.zalgo)
     .css.set.color(zalgoCol);
 
   const zalgo2 = makeDivId(logoBox, 'z2-logo')
-    .setText(zalgo_unicode(LOGO_TEXT, zConfig2))
+    .text.set(zalgo_unicode(LOGO_TEXT, zConfig2))
     .css.setMany(Intro_css.zalgo)
     .css.set.color(zalgoCol2);
 
   const brand = makeDivId(logoBox, 'logo-text')
-    .setText(LOGO_TEXT)
+    .text.set(LOGO_TEXT)
     .css.setMany(Intro_css.brand);
 
   attach_error_underline(brand)
@@ -60,11 +60,11 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     const seed = Math.random() * 1000;
     const seed2 = Math.random() * 1000;
     try {
-      zalgo1.setText(zalgo_unicode(LOGO_TEXT, {
+      zalgo1.text.set(zalgo_unicode(LOGO_TEXT, {
         ...zConfig,
         seed
       }))
-      zalgo2.setText(zalgo_unicode(LOGO_TEXT, {
+      zalgo2.text.set(zalgo_unicode(LOGO_TEXT, {
         ...zConfig2,
         seed: seed2
       }))

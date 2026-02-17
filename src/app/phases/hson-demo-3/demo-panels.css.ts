@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $red_etc_ } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_ } from "../../consts/colors.consts";
 import { $GEM_WIDTHstr } from "../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
@@ -39,7 +39,7 @@ export const PANEL_SURFACEcss: CssMap = {
 export const PANEL_FRAMEcss = {
     // backgroundColor: $cols.backdeep,
     backdropFilter: "blur(8px)",
-    minHeight: "18rem",
+    // minHeight: "18rem",
     // outline: `1px solid rgba(10,150,220,1)`,
     color: $blu_.std,
     fontFamily: "'Inconsolata'",
@@ -60,14 +60,13 @@ export const LAYOUT_GRIDcss: CssMap = {
 export const TEST_ACTION_BTN = {
     display: "grid",
     placeItems: "center",
-    padding: "10px 8px",
     borderRadius: "12px",
     userSelect: "none",
     cursor: "pointer",
 
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: $txt_.sub,
-    letterSpacing: "0.08em",
+    letterSpacing: "0.1em",
     textTransform: "uppercase",
 
     // neutral default
@@ -130,23 +129,23 @@ export const PANEL_TEXTAREAcss = {
     color: $grn_.faded,
     border: `1px solid ${$red_etc_.stonerPurple}`,
     borderRadius: "10px",
-    padding: "10px",
+    // padding: "10px",
     outline: "none",
 };
 
 export const TEST_BODY_OVERRIDEScss: CssMap = {
-    overflow: "hidden",
-    alignContent: "start",
-    display: "grid",
-    gridTemplateColumns: "1fr auto",
-    gridTemplateRows: "1fr auto"
+    // overflow: "hidden",
+    // alignContent: "start",
+    // display: "grid",
+    // gridTemplateColumns: "1fr auto",
+    // gridTemplateRows: "1fr auto"
 } as const;
 
 export const TEST_STATUS_CHIPcss: CssMap = {
     padding: "8px 10px",
     boxSizing: "border-box",
     fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    fontSize: "12px",
+    fontSize: $txt_.heading,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
     background: $cols_.bckgd,
@@ -165,27 +164,33 @@ export const MARQUEEcss: CssMap = {
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: $txt_.sub,
-    lineHeight: "1.35",
+    height: "100%",
     minWidth: "100%",
     gridColumn: "1 / 5",
-    color: $grn_.std,
-    whiteSpace: "nowrap",
-    letterSpacing: "0.01em",
+    color: $ylw_.candy,
+    whiteSpace: "wrap",
+    letterSpacing: "0.1em",
+    lineHeight: "1.5rem",
     opacity: "0.92",
+    
 } as const;
 
-export const CLEAR_BTNcss = {
+export const CLEAR_BTNcss: CssMap = {
     ...TEST_ACTION_BTN,
     borderRadius: "18px",
     background: "rgba(0,0,0,0.18)",
     transition: "transform 90ms ease, filter 140ms ease",
-
+    _hover: {
+        background: "orange",
+        color: $cols_.backdeep,
+    }
 }
 
-export const MARQUEE_BOXcss = {
-    gridColumn: "1 / 5",
-    padding: "10px 12px",
+export const MARQUEE_BOXcss: CssMap = {
     overflow: "hidden",
+    gridColumn: "1 / 5",
+
+
 };
 export const ROW_SUITE_FAILcss: CssMap = {
     background: "rgba(255, 0, 0, 0.2)",
@@ -211,7 +216,7 @@ export const PANEL_BRANCHcss: CssMap = {
     display: "grid",
     gap: "8px",
     padding: "10px",
-    width: "100%",
+    width: "420px",
     boxSizing: "border-box",
     gridTemplateColumns: `${$GEM_WIDTHstr} ${$GEM_WIDTHstr}`,
     gridTemplateRows: "auto " + $GEM_WIDTHstr,
@@ -219,10 +224,10 @@ export const PANEL_BRANCHcss: CssMap = {
 
 export const CONTROL_ROWcss: CssMap = {
     ...TEST_PANELcss,
-    gridRow: "3",
-    gridColumn: "1 / 4",
+    // gridRow: "3",
+    gridColumn: "1 / 5",
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "1fr 2fr 1fr",
     gap: "10px",
     padding: "0",
     background: "transparent",
@@ -235,16 +240,20 @@ export const RUN_BUTTONcss: CssMap = {
     borderRadius: "18px",
     background: "rgba(0,0,0,0.18)",
     transition: "transform 90ms ease, filter 140ms ease",
+    _hover: {
+        background: $grn_.faded,
+        color: $cols_.backdeep
+    }
 };
-// panel.args.ts (or inline at callsite)
+
 export const TEST_SELECTcss = {
     minWidth: "12ch",
     padding: "10px 8px",
     borderRadius: "12px",
     boxSizing: "border-box",
 
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    fontSize: "12px",
+    fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: $txt_.sub,
     letterSpacing: "0.06em",
 
     background: $cols_.backdeep,

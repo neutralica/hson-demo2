@@ -75,7 +75,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
 
 export function mount_ornament(parent: LiveTree): LiveTree {
     const pre = parent.create.pre().data.set("role", "ornament");
-    pre.setText(make_vines({ width: 72, rows: 81, seed: (Math.random() * 10000) - 1 }));
+    pre.text.set(make_vines({ width: 72, rows: 81, seed: (Math.random() * 10000) - 1 }));
     pre.css.setMany({
         position: "absolute",
         left: "18px",

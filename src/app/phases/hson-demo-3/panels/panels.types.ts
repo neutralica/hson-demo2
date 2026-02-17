@@ -1,4 +1,4 @@
-// pp.types.ts
+// panels.types.ts
 import type { LiveTree } from "hson-live";
 
 export type Fmt = "json" | "hson" | "html";

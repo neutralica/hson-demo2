@@ -1,8 +1,8 @@
 import { type LiveTree } from "hson-live";
-import type { TestSummary } from "../../../../tests/tests.types";
-import { $red_etc_ } from "../../../consts/colors.consts";
-import { $txt_ } from "../../../consts/ui-consts";
-import { makeDivId, makeDivClass } from "../../../utils/makers";
+import type { TestSummary } from "../../../../../tests/tests.types";
+import { $red_etc_ } from "../../../../consts/colors.consts";
+import { $txt_ } from "../../../../consts/ui-consts";
+import { makeDivId, makeDivClass } from "../../../../utils/makers";
 
 
 export type ChipDisplay = Readonly<{
@@ -40,7 +40,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     });
 
     const val = makeDivClass(chip, "test-chip-value")
-      .setText("—")
+      .text.set("—")
       .css.setMany({
         fontSize: $txt_.sub,
         fontWeight: "700",
@@ -49,7 +49,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       });
 
     const lbl = makeDivClass(chip, "test-chip-label")
-      .setText(label)
+      .text.set(label)
       .css.setMany({
         marginTop: "4px",
         fontSize: $txt_.sub,
@@ -72,8 +72,8 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     chip.listen.onPointerCancel(() => press(false));
 
     return {
-      set: (v: string | number) => val.setText(String(v)),
-      clear: () => val.setText("—"),
+      set: (v: string | number) => val.text.set(String(v)),
+      clear: () => val.text.set("—"),
       _node: chip,
     };
   };

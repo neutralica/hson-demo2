@@ -33,7 +33,7 @@ export function bud_node(parent: LiveTree) {
 
     if (spec.id) node.id.set(spec.id);
     if (spec.cls) node.classlist.set(spec.cls);
-    if (spec.txt !== undefined) node.setText(spec.txt);
+    if (spec.txt !== undefined) node.text.set(spec.txt);
 
     if (spec.css) node.css.setMany(spec.css);
     spec.at?.forEach(at => node.css.atProperty.register(at));

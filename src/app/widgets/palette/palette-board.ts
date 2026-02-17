@@ -9,7 +9,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
     const root = host.create.div().setAttrs("class", "palette-board");
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     // Layout shell
-    root.setText("HSON")
+    root.text.set("HSON")
         .css.setMany({
             display: "grid",
             gridTemplateColumns: "1fr",
@@ -22,7 +22,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
 
     // Background helps you see contrast immediately.
     const pal = makeDivClass(root, "palette-banner")
-        .setText(`PALETTE seed: ${p.seed}  vol: ${p.opts.volatility.toFixed(2)}`)
+        .text.set(`PALETTE seed: ${p.seed}  vol: ${p.opts.volatility.toFixed(2)}`)
         .css.setMany({
             padding: "10px 12px",
             borderRadius: "10px",
@@ -49,7 +49,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
             gap: "2px",
         });
 
-        box.create.div().setText(title).css.setMany({
+        box.create.div().text.set(title).css.setMany({
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             color: `${modeGrey}`,
@@ -88,7 +88,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
         // Auto text color based on lightness guess:
         const text = guess_text(value, p.textOnDark, p.textOnLight);
 
-        sw.create.div().setText(name).css.setMany({
+        sw.create.div().text.set(name).css.setMany({
             color: text,
             fontWeight: "700",
         });

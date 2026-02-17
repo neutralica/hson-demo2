@@ -1,7 +1,8 @@
 // init.pp.ts
 import { hson } from "hson-live";
-import type { Panels, PanelShell, Fmt } from "./pp.types";
-import { PP_FOCUS_PANELcss, PP_MUTEDcss, PP_UNMUTEDcss } from "./pp2.css";
+
+import { PP_FOCUS_PANELcss, PP_MUTEDcss, PP_UNMUTEDcss } from "./pp.css";
+import type { Fmt, Panels, PanelShell } from "../panels.types";
 
 const lockTextarea = (p: PanelShell): void => {
   // CHANGED: lock via readonly + no selection, but keep focus/click working
@@ -58,7 +59,7 @@ export function init_parsing_panels(pp: Panels): void {
         if (!activeIsInvalid) return;
       }
       setValue(pp.panels[fmt], "");
-      pp.panels[fmt].bytes.setText("0 bytes");
+      pp.panels[fmt].bytes.text.set("0 bytes");
       // if it was unfocused already, nothing else needed
     }, 30000);
   };
@@ -77,21 +78,21 @@ export function init_parsing_panels(pp: Panels): void {
     const p = pp.panels[fmt];
 
     if (kind === "idle") {
-      p.status.setText("");
+      p.status.text.set("");
       p.status.css.setMany({ opacity: "0" });
       return;
     }
     if (kind === "typing") {
-      p.status.setText("...");
+      p.status.text.set("...");
       p.status.css.setMany({ opacity: "1", color: "dodgerblue" });
       return;
     }
     if (kind === "valid") {
-      p.status.setText("valid");
+      p.status.text.set("valid");
       p.status.css.setMany({ opacity: "1", color: "lime" });
       return;
     }
-    p.status.setText("invalid");
+    p.status.text.set("invalid");
     p.status.css.setMany({ opacity: "1", color: "red" });
   };
 
@@ -129,7 +130,7 @@ export function init_parsing_panels(pp: Panels): void {
     for (const f of FMTS) {
       if (f === origin) continue;
       setValue(pp.panels[f], "");
-      pp.panels[f].bytes.setText("0 bytes");
+      pp.panels[f].bytes.text.set("0 bytes");
     }
 
     return;
@@ -184,15 +185,13 @@ export function init_parsing_panels(pp: Panels): void {
     return { ok: false };
   };
 
-  const renderPrimitiveForHtml = (v: unknown): string => `<_val>${String(v)}</_val>`;
-
   const update = (origin: Fmt): void => {
     if (inProgress) return;
     inProgress = true;
 
     const srcParts = pp.panels[origin];
     const raw = getValue(srcParts);
-    srcParts.bytes.setText(`${encBytes(raw)} bytes`);
+    srcParts.bytes.text.set(`${encBytes(raw)} bytes`);
 
     // While typing, show ...
     if (active === origin) setStatus(origin, "typing");
@@ -202,7 +201,7 @@ export function init_parsing_panels(pp: Panels): void {
       if (active === origin) {
         activeIsInvalid = true;
         setStatus(origin, "invalid");
-        srcParts.bytes.setText(`INVALID`);
+        srcParts.bytes.text.set(`INVALID`);
         sync_ui_state();
       }
       inProgress = false;
@@ -230,13 +229,13 @@ export function init_parsing_panels(pp: Panels): void {
               : `<_val>${String(prim.value)}</_val>`;
 
           setValue(pp.panels.json, outJ);
-          pp.panels.json.bytes.setText(`${encBytes(outJ)} bytes`);
+          pp.panels.json.bytes.text.set(`${encBytes(outJ)} bytes`);
 
           setValue(pp.panels.hson, outH);
-          pp.panels.hson.bytes.setText(`${encBytes(outH)} bytes`);
+          pp.panels.hson.bytes.text.set(`${encBytes(outH)} bytes`);
 
           setValue(pp.panels.html, outX);
-          pp.panels.html.bytes.setText(`${encBytes(outX)} bytes`);
+          pp.panels.html.bytes.text.set(`${encBytes(outX)} bytes`);
 
           if (active === origin) {
             activeIsInvalid = false;
@@ -276,17 +275,17 @@ export function init_parsing_panels(pp: Panels): void {
       if (origin !== "json") {
         const outJ = t.toJson().serialize();
         setValue(pp.panels.json, outJ);
-        pp.panels.json.bytes.setText(`${encBytes(outJ)} bytes`);
+        pp.panels.json.bytes.text.set(`${encBytes(outJ)} bytes`);
       }
       if (origin !== "hson") {
         const outH = t.toHson().serialize();
         setValue(pp.panels.hson, outH);
-        pp.panels.hson.bytes.setText(`${encBytes(outH)} bytes`);
+        pp.panels.hson.bytes.text.set(`${encBytes(outH)} bytes`);
       }
       if (origin !== "html") {
         const outX = t.toHtml().serialize();
         setValue(pp.panels.html, outX);
-        pp.panels.html.bytes.setText(`${encBytes(outX)} bytes`);
+        pp.panels.html.bytes.text.set(`${encBytes(outX)} bytes`);
       }
 
       if (active === origin) {
@@ -316,7 +315,7 @@ export function init_parsing_panels(pp: Panels): void {
       if (active && active !== fmt && activeIsInvalid) {
         const prev = active;
         setValue(pp.panels[prev], "");
-        pp.panels[prev].bytes.setText("0 bytes");
+        pp.panels[prev].bytes.text.set("0 bytes");
       }
 
       clearTimer();
@@ -370,8 +369,8 @@ export function init_parsing_panels(pp: Panels): void {
 
   for (const fmt of FMTS) {
     const parts = pp.panels[fmt];
-    parts.bytes.setText(`${encBytes(getValue(parts))} bytes`);
-    parts.status.setText("");
+    parts.bytes.text.set(`${encBytes(getValue(parts))} bytes`);
+    parts.status.text.set("");
     parts.status.css.setMany({ opacity: "0" });
   }
 }

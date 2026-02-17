@@ -59,7 +59,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterCaps): readonly [LiveTree, LiveTree] => {
         const cell = makeSpanClass(wordMark.tree, ["cell", ltr])
-        const l = makeSpanClass(cell, ["letter", ltr]).setText(ltr)
+        const l = makeSpanClass(cell, ["letter", ltr]).text.set(ltr)
         return [l, cell];
     }
     const [h, hCell] = createLetter("H")
@@ -70,8 +70,8 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const cells = [hCell, sCell, oCell, nCell];
     /* create semver pop-up */
     const ver = makeSpanClass(nCell, ["ver"]);
-    makeSpanClass(ver, "ver-a").setText("2.0.2");
-    const ver6 = makeSpanClass(ver, "ver-6").setText("6");
+    makeSpanClass(ver, "ver-a").text.set("2.0.2");
+    const ver6 = makeSpanClass(ver, "ver-6").text.set("6");
 
 
     /* style letters */

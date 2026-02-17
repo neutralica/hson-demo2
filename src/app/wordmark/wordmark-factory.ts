@@ -10,7 +10,7 @@ export function build_wordmark(parent: LiveTree): WordmarkParts {
 
   const mk = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
     const cell = makeSpanClass(wordbox, ["cell", ltr]);
-    const letter = makeSpanClass(cell, ["letter", ltr]).setText(ltr);
+    const letter = makeSpanClass(cell, ["letter", ltr]).text.set(ltr);
     return [letter, cell] as const;
   };
 
@@ -22,8 +22,8 @@ export function build_wordmark(parent: LiveTree): WordmarkParts {
   const letters = { h: h, s: s, o: o, n: n } as const;
   const cells = { h: hCell, s: sCell, o: oCell, n: nCell } as const;
   const ver = makeSpanClass(nCell, ["ver"]);
-  makeSpanClass(ver, "ver-a").setText("2.0.2");
-  const ver6 = makeSpanClass(ver, "ver-6").setText("6");
+  makeSpanClass(ver, "ver-a").text.set("2.0.2");
+  const ver6 = makeSpanClass(ver, "ver-6").text.set("6");
   return {
     frame,
     wordbox,

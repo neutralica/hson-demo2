@@ -2,16 +2,17 @@
 
 import type { CssMap } from "hson-live/types";
 import { $cols_, $grn_ } from "../../consts/colors.consts";
-import { $txt_ } from "../../consts/ui-consts";
+import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 
 export const MAIN_TEXTcss: CssMap = {
   fontFamily: "'Inconsolata', monaco, monospace",
   fontSize: $txt_.heading,
+  fontWeight: "400",
   _hover: {
     fontWeight: "700",
     background: $grn_.muted,
-    color: $cols_.backdeep
+    color: $cols_.sysInvalid
   }
 }
 
@@ -53,7 +54,6 @@ export const DEMO_SCREENcss: CssMap = {
   position: "relative",
   width: "100%",
   height: "100%",
-  borderRadius: "18px",
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "all",
@@ -65,26 +65,26 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   display: "grid",
 
   // left = nav, right = main
-  gridTemplateColumns: "minmax(18rem, 1fr) minmax(0, 2.5fr)",
+  gridTemplateColumns: "1fr 4fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
-  gap: "2.5rem",
-  padding: "3rem",
+  gap:$GRID_GAPstr,
 
   width: "100%",
   height: "100%",
   minHeight: "0",
   minWidth: "0",
+  paddingLeft: "1rem",
 
   pointerEvents: "all",
 };
 
 export const MENU_BOXcss: CssMap = {
   gridColumn: "1",
-  gridRow: "1 / span 2",
-
+  // gridRow: "1 / span 2",
+  marginLeft: "2rem",
   position: "relative",
-  lineHeight: "2rem",
+  lineHeight: "1.5rem",
 };
 
 export const TITLE_BOXcss: CssMap = {
@@ -118,16 +118,18 @@ export const MAIN_CONTAINERcss: CssMap = {
 };
 
 export const LAYOUT_GRIDcss: CssMap = {
-  gridColumn: "2",
-  gridRow: "1",
-  display: "grid",
-  placeItems: "center",
-  gap: "1.25rem",
-
-  minWidth: "0",
+  width: "100%",
+  height: "100%",
   minHeight: "0",
-  overflow: "hidden",
-};
+  minWidth: "0",
+  display: "grid",
+  gap: $GRID_GAPstr,
+  // padding: "12px",
+  boxSizing: "border-box",
+
+
+  overflow: "hidden", // CHANGED: avoid scrollbars here; panels/surfaces scroll
+} as const;
 
 export const PANEL_SAFETYcss: CssMap = {
   minWidth: "0",

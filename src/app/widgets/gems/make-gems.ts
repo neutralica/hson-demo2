@@ -7,9 +7,9 @@ export type ToggleGem = Readonly<{
 }>;
 
 
-export function make_btn_chip(parent: LiveTree, id: string, label: string): ToggleGem {
+export function make_btn(parent: LiveTree, id: string, label: string): ToggleGem {
   const node = parent.create.div().id.set(id);
-  node.setText(label);
+  node.text.set(label);
 
   const base: Record<string, string> = {
     padding: "6px 8px",
@@ -38,6 +38,6 @@ export function make_btn_chip(parent: LiveTree, id: string, label: string): Togg
   return {
     node,
     setActive,
-    setText: (t) => node.setText(t),
+    setText: (t) => node.text.set(t),
   };
 }

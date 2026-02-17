@@ -90,8 +90,8 @@ export function create_inspector(
   const failsBox = side.create.div().classlist.set("insp-fails");
   const detailBox = side.create.div().classlist.set("insp-detail");
 
-  header.setText("inspect");
-  detailBox.setText("—");
+  header.text.set("inspect");
+  detailBox.text.set("—");
 
   // ---------------------------
   // UI state (expansion)
@@ -147,7 +147,7 @@ export function create_inspector(
   //   clear_box(failsBox);
 
   //   const head = failsBox.create.div().classlist.set("insp-fails-head");
-  //   head.setText(fails.length ? "failures" : "no failures");
+  //   head.text.set(fails.length ? "failures" : "no failures");
   //   head.css.setMany({
   //     padding: "6px 8px",
   //     borderBottom: "1px solid rgba(255,255,255,0.12)",
@@ -159,7 +159,7 @@ export function create_inspector(
 
   //   for (const f of fails) {
   //     const row = failsBox.create.div().classlist.set("insp-fail-row");
-  //     row.setText(`${f.suite} :: ${f.name}`);
+  //     row.text.set(`${f.suite} :: ${f.name}`);
   //     row.css.setMany({
   //       padding: "6px 8px",
   //       borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -178,7 +178,7 @@ export function create_inspector(
   // const renderDetail = (f: TestFailure): void => {
   //   const snip = f.err.length > 3000 ? `${f.err.slice(0, 3000)}…` : f.err;
   //   const meta = f.meta ? `\nmeta: ${JSON.stringify(f.meta)}` : "";
-  //   detailBox.setText(`${f.suite} :: ${f.name}\n${snip}${meta}\n(${f.ms.toFixed(1)}ms)`);
+  //   detailBox.text.set(`${f.suite} :: ${f.name}\n${snip}${meta}\n(${f.ms.toFixed(1)}ms)`);
   //   detailBox.css.setMany({
   //     whiteSpace: "pre-wrap",
   //     overflowWrap: "anywhere",
@@ -360,7 +360,7 @@ export function create_inspector(
             cell.setAttrs("colspan", "4");
             cell.css.setMany(TD_PREVIEW_ROWcss);
 
-            // CHANGED: build composite content; never call cell.setText after this
+            // CHANGED: build composite content; never call cell.text.set after this
             cell.empty();
 
             // header row
@@ -380,12 +380,12 @@ export function create_inspector(
               overflow: "hidden",
               textOverflow: "ellipsis",
             });
-            metaBox.setText(`${c.suite} :: ${c.name}`);
+            metaBox.text.set(`${c.suite} :: ${c.name}`);
 
             // CHANGED: use div-buttons to avoid focus scroll + default button behavior
             const mkBtn = (label: string): LiveTree => {
               const b = topRow.create.div().classlist.set("insp-cap-btn");
-              b.setText(label);
+              b.text.set(label);
               b.setAttrs("role", "button");
               b.css.setMany({
                 padding: "4px 8px",
@@ -414,7 +414,7 @@ export function create_inspector(
               whiteSpace: "pre-wrap",
               overflowWrap: "anywhere",
             });
-            pre.setText(preview || "—");
+            pre.text.set(preview || "—");
 
             // collapse affordance: click the PREVIEW TEXT, not the whole cell
             pre.css.setMany(CLICKABLEcss);
@@ -438,7 +438,7 @@ export function create_inspector(
               _stop(me);
               if (!capture) return;
 
-              copyBtn.setText("copying…");
+              copyBtn.text.set("copying…");
               try {
                 const report = await capture(c.key);
 
@@ -449,12 +449,12 @@ export function create_inspector(
                 const txt = report_to_text(report, meta);
 
                 await navigator.clipboard.writeText(txt);
-                copyBtn.setText("copied");
+                copyBtn.text.set("copied");
               } catch (e) {
                 console.error(e);
-                copyBtn.setText("failed");
+                copyBtn.text.set("failed");
               } finally {
-                window.setTimeout(() => copyBtn.setText("copy"), 900);
+                window.setTimeout(() => copyBtn.text.set("copy"), 900);
               }
             });
 
@@ -462,7 +462,7 @@ export function create_inspector(
               _stop(me);
               if (!capture) return;
 
-              viewBtn.setText("opening…");
+              viewBtn.text.set("opening…");
               try {
                 const report = await capture(c.key);
 
@@ -473,11 +473,11 @@ export function create_inspector(
                 const render = render_report_html(c.key, c.name, c.suite, report, meta);
 
                 open_report_window(render.html);
-                viewBtn.setText("view");
+                viewBtn.text.set("view");
               } catch (e) {
                 console.error(e);
-                viewBtn.setText("failed");
-                window.setTimeout(() => viewBtn.setText("view"), 900);
+                viewBtn.text.set("failed");
+                window.setTimeout(() => viewBtn.text.set("view"), 900);
               }
             });
           }
@@ -489,7 +489,7 @@ export function create_inspector(
   const clear = (): void => {
     tableHost.empty();
     failsBox.empty();
-    detailBox.setText("—");
+    detailBox.text.set("—");
     expandedSuites.clear();
     expandedGroupsBySuite.clear();
     expandedCasesBySuite.clear();

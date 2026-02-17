@@ -44,13 +44,13 @@ export const mk_tr = (parent: LiveTree, cls: string): LiveTree => parent.create.
 
 export const mk_th = (row: LiveTree, cls: string, txt: string): LiveTree => {
   const th = row.create.th().classlist.set(cls);
-  th.setText(txt);
+  th.text.set(txt);
   return th;
 };
 
 export const mk_td = (row: LiveTree, cls: string, txt: string): LiveTree => {
   const td = row.create.td().classlist.set(cls);
-  td.setText(txt);
+  td.text.set(txt);
   return td;
 };
 

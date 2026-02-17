@@ -4,43 +4,25 @@ import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivClass, makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { data_sync, outcome, relay, relay_data, type Outcome, type OutcomeAsync, type OutcomeData } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss } from "./demo.css";
-import { $DS, shade_class } from "./demo.consts";
+import { $ABOUT, $BUILD, $CONSOLE, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { LAYOUT_GRIDcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./demo-panels.css";
-import { mount_test_panel } from "./test-panel/test-panel-factory";
+import { mount_test_panel } from "./panels/test-panel/test-panel-factory";
 import { run_test_suites } from "../../../tests/test-runner";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey, TestEvent, TestSuite } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $cols_, LETTER_COLORfaded } from "../../consts/colors.consts";
+import { $blu_, $cols_, LETTER_COLORbleach, LETTER_COLORcandy, LETTER_COLORfaded, LETTER_COLORmuted, LETTER_COLORstd, LETTER_COLORwashed } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { build_suites_for_mode } from "../../../tests/suite-builder";
 import { demo_get_current_view, demo_set_current_view, demo_subscribe } from "./demo-state";
-import type { Panels } from "./parse-panel/pp.types";
-import { init_parsing_panels } from "./parse-panel/init.pp";
-import { mount_parsing_panels, pp_factory } from "./parse-panel/pp-factory";
+import type { Panels } from "./panels/panels.types";
+import { init_parsing_panels } from "./panels/parse-panel/init.pp";
+import { mount_parsing_panels, pp_factory } from "./panels/parse-panel/pp-factory";
 import { create_inspector } from "./inspector/test-inspector";
 import { mount_panel_simple } from "../../ui/panel-simple";
-
-export const $PARSE = "parse";
-export const $TEST = "test";
-export const $BUILD = "build";
-export const $CONSOLE = "console";
-export const $OKLCH = "oklch";
-export const $MOUSE = "mouse";
-export const $ABOUT = "about";
-
-const MENU_OPTIONS = [
-  $ABOUT,
-  $TEST,
-  $PARSE,
-  $BUILD,
-  $CONSOLE,
-  $OKLCH,
-  $MOUSE,
-] as const;
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -98,32 +80,52 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
 
-  // mount inspector into its column
-  const row = layoutGrid.create.div().classlist.set("test-row");
-  const testCell = makeDivClass(row, "test-row-panel");
-  const inspCell = makeDivClass(row, "test-row-inspect")
-    .css.setMany(PANEL_SAFETYcss);
+  // CHANGED: layoutGrid now has two stable slots
+  const viewSlot = makeDivId(layoutGrid, "view-slot").css.setMany({
+    position: "relative",
+    minHeight: "0",
+    minWidth: "0",
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    pointerEvents: "auto",
+  });
 
-  const parse = mount_panel_simple(layoutGrid, "parse");
+  // dock slot for “companions” (inspector, etc)
+  const dockSlot = makeDivId(layoutGrid, "dock-slot").css.setMany({
+    position: "relative",
+    minHeight: "0",
+    minWidth: "0",
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    pointerEvents: "auto",
+  });
+
+  // views stack in viewSlot
+  const parse = mount_panel_simple(viewSlot, "parse");
   parse.panel.classlist.add($PANEL_HIDDEN);
 
-  const test = mount_panel_simple(layoutGrid, "test");
+  const test = mount_panel_simple(viewSlot, "test");
   test.panel.classlist.add($PANEL_HIDDEN);
 
+  // build later:
+  // const build = mount_panel_simple(viewSlot, "build");
+  // build.panel.classlist.add($PANEL_HIDDEN);
+
+  // inspector lives in dockSlot (not stacked with views unless you want it)
+  const inspPanel = mount_panel_simple(dockSlot, "inspect");
+  inspPanel.panel.classlist.add($PANEL_HIDDEN);
+
   // ✅ symmetric widget mount calls
-  const ppO = relay_data(mount_parsing_panels(parse.surface));
+  const pp = relay_data(mount_parsing_panels(parse.surface));
   // if (outcome.isErr(ppO)) return ppO; 
-  const pp = ppO;
 
   const tp = relay_data(mount_test_panel(test.surface));
   // if (outcome.isErr(tpO)) { return tpO; }
   // if (outcome.isOK(tpO)) { return relay.err("no data in outcome") }
   // const tp = tpO;
   test.surface.css.setMany(TEST_BODY_OVERRIDEScss);
-
-  const inspPanel = mount_panel_simple(inspCell, "inspect");
-  inspPanel.panel.classlist.add($PANEL_HIDDEN);
-
 
   // inspector wiring stays the same, but stop expecting it to unhide panels
   const tlog = create_test_log();
@@ -140,11 +142,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     },
   );
   inspector.show();
-
   const applyView = (): void => {
     const view = demo_get_current_view();
 
-    // hide all panels you manage as "views"
     parse.panel.classlist.add($PANEL_HIDDEN);
     test.panel.classlist.add($PANEL_HIDDEN);
     inspPanel.panel.classlist.add($PANEL_HIDDEN);
@@ -153,10 +153,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       parse.panel.classlist.remove($PANEL_HIDDEN);
     } else if (view === "test") {
       test.panel.classlist.remove($PANEL_HIDDEN);
-      inspPanel.panel.classlist.remove($PANEL_HIDDEN);
+      inspPanel.panel.classlist.remove($PANEL_HIDDEN); // dock companion
     }
-    // else if (view === "build") ...
-    // else if (view === "about") ...
   };
 
   demo_subscribe(() => applyView());
@@ -167,22 +165,22 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     const onEvent = (e: TestEvent): void => {
       tlog.onEvent(e);
-      tp.marquee.setText(tlog.getLastLine());
+      tp.marquee.text.set(tlog.getLastLine());
     };
 
     tp.runBtn.listen.onClick(async () => {
-      tp.setStatus("running");
+      // tp.setStatus("running");
 
       tlog.clear();
       tp.chips.clear();
-      tp.marquee.setText("running…");
+      tp.marquee.text.set("running…");
 
       const suites = build_suites_for_mode(tp.getMode(), { _test_full_loop }, captureMap);
       const res = await run_test_suites(suites, onEvent, { bail: false });
 
       tp.chips.render(res.summary);
-      tp.setStatus("idle");
-      tp.marquee.setText(tlog.getLastLine());
+      // tp.setStatus("idle");
+      tp.marquee.text.set(tlog.getLastLine());
       inspector.show();
       inspector.render();
       if (!res.ok) inspPanel.panel.classlist.remove($PANEL_HIDDEN);
@@ -190,8 +188,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     tp.clearBtn.listen.onClick(() => {
       tlog.clear();
       tp.chips.clear();
-      tp.setStatus("idle");
-      tp.marquee.setText("idle");
+      // tp.setStatus("idle");
+      tp.marquee.text.set("idle");
 
       inspector.clear();
     });
@@ -201,13 +199,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const gcss = CssManager.globals.invoke();
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: LETTER_COLORfaded[l]
+      color: LETTER_COLORcandy[l]
     });
   });
   gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).set.visibility('hidden');
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
     const span = makeSpanId(headline, `${k}-letter`)
-      .setText(HSONlower[k])
+      .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .css.setMany($T$GHSONcss)
     return span;

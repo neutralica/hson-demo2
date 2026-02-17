@@ -1,16 +1,16 @@
 import { hson } from "hson-live";
-import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
-import type { UiLevel, TestRunMode } from "../../../../tests/tests.types";
-import { $txt_ } from "../../../consts/ui-consts";
-import { make_btn_chip } from "../../../widgets/gems/make-gems";
-import { TEST_SELECTcss } from "../demo-panels.css";
-import { PANEL_BRANCHcss, MARQUEE_BOXcss, MARQUEEcss, TEST_STATUS_CHIPcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../demo-panels.css";
+import type { LiveTree } from "../../../../../../../hson-live/dist/api/livetree/livetree";
+import type { UiLevel, TestRunMode } from "../../../../../tests/tests.types";
+import { $txt_ } from "../../../../consts/ui-consts";
+import { make_btn } from "../../../../widgets/gems/make-gems";
+import { TEST_SELECTcss } from "../../demo-panels.css";
+import { PANEL_BRANCHcss, MARQUEE_BOXcss, MARQUEEcss, TEST_STATUS_CHIPcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../../demo-panels.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
 
 
 
-const introText = "TRANSFORMER LOOP TEST: parses & seriualizes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps"
+const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps"
 
 export type TestPanel = Readonly<{
   branch: LiveTree;
@@ -21,14 +21,14 @@ export type TestPanel = Readonly<{
   // levelBtn: LiveTree;
   suiteSel: LiveTree;
 
-  status: LiveTree;
+  // status: LiveTree;
   marquee: LiveTree;
   chips: ChipDisplay,
   // state accessors (so callsite doesn’t poke DOM attrs directly)
   getLevel: () => UiLevel;
   getMode: () => TestRunMode;
 
-  setStatus: (txt: string) => void;
+  // setStatus: (txt: string) => void;
   setMarquee: (txt: string) => void;
   clearMarquee: () => void;
 }>;
@@ -68,7 +68,7 @@ function test_panel_factory(): TestPanel {
     .css.setMany(MARQUEE_BOXcss);
 
   // CHANGED: marquee is the actual <marquee> tag, no strip / no JS scrolling logic
-  const marquee = marqueeBox.create.tags(["marquee"]).first()!
+  const marquee = marqueeBox.create.div()
     .id.set("test-marquee")
     .css.setMany({
       ...MARQUEEcss,
@@ -77,24 +77,6 @@ function test_panel_factory(): TestPanel {
   // -------------------------
   // MODE SELECT + STATUS
   // -------------------------
-  const suiteSel = branch.create.select()
-    .id.set("test-select")
-    .css.setMany({
-      ...TEST_SELECTcss,
-      gridRow: "2",
-      gridColumn: "1 / 4",
-    });
-
-  const status = branch.create.div()
-    .id.set("test-status")
-    .css.setMany({
-      ...TEST_STATUS_CHIPcss,
-      gridRow: "2",
-      gridColumn: "4 / 5",
-      textTransform: "uppercase",
-      letterSpacing: "0.08em",
-      fontSize: $txt_.sub,
-    });
 
   // -------------------------
   // BUTTON ROW
@@ -104,8 +86,11 @@ function test_panel_factory(): TestPanel {
     .css.setMany(CONTROL_ROWcss);
 
   // CHANGED: keep your existing helper (toggle gem), but treat it as a “chip”
-  const runChip = make_btn_chip(controlsRow, "test-run", "run");
-  const clearChip = make_btn_chip(controlsRow, "test-clear", "clear");
+  const runChip = make_btn(controlsRow, "test-run", "run");
+  const suiteSel = controlsRow.create.select()
+    .id.set("test-select")
+    .css.setMany(TEST_SELECTcss);
+  const clearChip = make_btn(controlsRow, "test-clear", "clear");
 
   const runBtn = runChip.node.css.setMany(RUN_BUTTONcss);
 
@@ -114,7 +99,7 @@ function test_panel_factory(): TestPanel {
   // -------------------------
   // chips
   // -------------------------
-  
+
   const chips = create_test_chips(branch);
 
   // -------------------------
@@ -124,20 +109,20 @@ function test_panel_factory(): TestPanel {
   let level: UiLevel = "normal";
   let mode: TestRunMode = "all";
 
-  const setStatus = (txt: string): void => {
-    if (!mounted) return;
-    status.setText(txt);
-  };
+  // const setStatus = (txt: string): void => {
+  //   if (!mounted) return;
+  //   status.text.set(txt);
+  // };
 
   // CHANGED: simplest possible marquee writer (no strip, no scrollbars)
   const setMarquee = (txt: string): void => {
     if (!mounted) return;
-    marquee.setText(txt);
+    marquee.text.set(txt);
   };
 
   const clearMarquee = (): void => {
     if (!mounted) return;
-    marquee.setText("");
+    marquee.text.set("");
   };
 
   const mount = (hostBody: LiveTree): void => {
@@ -145,16 +130,16 @@ function test_panel_factory(): TestPanel {
     hostBody.append(branch);
     mounted = true;
 
-    runBtn.setText("run");
-    clearBtn.setText("clear");
-    status.setText("idle");
+    // runBtn.text.set("run");
+    // clearBtn.text.set("clear");
+    // status.text.set("idle");
 
     // populate select
     suiteSel.empty();
     for (const m of MODES) {
       const opt = suiteSel.create.option();
       opt.setAttrs("value", m.key);
-      opt.setText(m.label);
+      opt.text.set(m.label);
       if (m.key === mode) opt.setAttrs("selected", "selected");
     }
 
@@ -181,12 +166,12 @@ function test_panel_factory(): TestPanel {
     // clear should clear the tiny panel surfaces
     clearBtn.listen.onClick(() => {
       clearMarquee();
-      setStatus("idle");
+      // setStatus("idle");
     });
   };
 
   // CHANGED: set initial marquee before mount so it’s ready
-  marquee.setText(introText);
+  marquee.text.set(introText);
 
   return {
     branch,
@@ -196,14 +181,14 @@ function test_panel_factory(): TestPanel {
     clearBtn,
     suiteSel,
 
-    status,
+    // status,
     marquee,
-     chips,
+    chips,
 
     getLevel: () => level,
     getMode: () => mode,
 
-    setStatus,
+    // setStatus,
     setMarquee,
     clearMarquee,
   } as const;

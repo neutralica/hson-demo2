@@ -1,6 +1,5 @@
 // demo.consts.ts
 
-import type { CssMap } from "hson-live/types";
 
 /* GOOD SEEDS: 1129, 3577 */
 export const PAL_SEED = "3577";
@@ -33,4 +32,22 @@ export const shade_class = (l: string) => {
   }
   console.warn("shadeClass function failed");
   return "shadeClass function failed"
-}
+};
+export const $PARSE = "parse";
+export const $TEST = "test";
+export const $BUILD = "build";
+export const $CONSOLE = "console";
+export const $OKLCH = "oklch";
+export const $MOUSE = "mouse";
+export const $ABOUT = "about";
+export const MENU_OPTIONS = [
+  $ABOUT,
+  $TEST,
+  $PARSE,
+  $BUILD,
+  $CONSOLE,
+  $OKLCH,
+  $MOUSE,
+] as const;export const $PARSING_PANELS_ROOT = "parsing-panels-root";
+export const $PP_HEAD = "pp-head";
+

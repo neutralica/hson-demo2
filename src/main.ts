@@ -20,7 +20,7 @@ function render_err(root: LiveTree, err: unknown): void {
   // root.empty();
 
   const box = root.create.pre().classlist.set(["errbox"]);
-  box.setText(String(err)); 
+  box.text.set(String(err)); 
 }
 
 

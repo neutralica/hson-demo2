@@ -94,7 +94,7 @@ export function begin_motes(tree: LiveTree, count = COUNT_DEFAULT): void {
     for (let i = 0; i < count; i++) {
         // class names now stable and match globals
         const mote = overlay.create.div().classlist.add($CLS_MOTE);
-        const spin = mote.create.div().classlist.add($CLS_SPIN).setText("*");
+        const spin = mote.create.div().classlist.add($CLS_SPIN).text.set("*");
 
         // only per-instance values are inline: size/color/vars/durations
         seed_mote(mote, spin);
