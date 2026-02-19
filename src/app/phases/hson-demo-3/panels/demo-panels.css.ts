@@ -52,7 +52,7 @@ export const LAYOUT_GRIDcss: CssMap = {
     gap: $GRID_GAPstr,
     padding: "12px",
     boxSizing: "border-box",
-    gridAutoColumns: "1fr 1fr",
+    // gridAutoColumns: "1fr 1fr",
     // gridTemplateRows: "3fr 1fr"
 } as const;
 
@@ -93,19 +93,20 @@ export const PANEL_HIDDENcss = {
 //     minHeight: "0",
 // } as const;
 
-export const PARSING_PANEL_ROOTcss = {
+export const PARSING_PANEL_ROOTcss:CssMap = {
     display: "grid",
-    gap: $GRID_GAPstr,
     minHeight: "0",
     minWidth: "0",
     gridAutoFlow: "column",
+    
 }
 
-export const PANELcss = {
+export const PANELcss:CssMap = {
     display: "grid",
     gridTemplateRows: "auto 1fr",
     gap: $GRID_GAPstr,
     minHeight: "0",
+    maxHeight: "80%",
     minWidth: "0",
     padding: "10px",
     borderRadius: "12px",
@@ -128,7 +129,6 @@ export const PANEL_TEXTAREAcss = {
     color: $grn_.faded,
     border: `1px solid ${$red_etc_.stonerPurple}`,
     borderRadius: "10px",
-    // padding: "10px",
     outline: "none",
 };
 

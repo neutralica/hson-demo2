@@ -16,16 +16,16 @@ type PpFactoryOpts = {
 };
 
 
-const EMPTY_SYNTAX: Record<Fmt, string> = {
-  json: "{}",
-  hson: "<>",
-  html: "<></>",
-} as const;
+// const EMPTY_SYNTAX: Record<Fmt, string> = {
+//   json: "{}",
+//   hson: "<>",
+//   html: "<></>",
+// } as const;
 
 const WM_LABEL: Record<Fmt, string> = {
-  json: "JSON",
-  hson: "HSON",
-  html: "HTML",
+  json: "{JSON}",
+  hson: "<HSON>",
+  html: "<HTML/>",
 } as const;
 
 
@@ -41,7 +41,7 @@ export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
 export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcome<Panels> {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
 
-  const old = hostBody.find.byId("parsing-panels-root");
+  const old = hostBody.find.byId($PARSING_PANELS_ROOT);
   if (old) old.removeSelf();
 
   const root = hostBody.create.div()
@@ -89,7 +89,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     const wmEmpty = wrap.create.div()
       .classlist.set("pp-watermark pp-watermark--empty")
-      .text.set(EMPTY_SYNTAX[fmt])
+      // .text.set(EMPTY_SYNTAX[fmt])
       .css.setMany(PP_WATERMARK_EMPTYcss);
 
     // focused-only status overlay (big “invalid/valid/...” in red/green)

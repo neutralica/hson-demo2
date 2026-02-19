@@ -65,7 +65,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   display: "grid",
 
   // left = nav, right = main
-  gridTemplateColumns: "1fr 4fr",
+  gridTemplateColumns: "1fr 6fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
   gap:$GRID_GAPstr,

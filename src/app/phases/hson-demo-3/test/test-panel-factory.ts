@@ -56,8 +56,7 @@ export type TestPanelWidget = ReturnType<typeof test_panel_factory>;
 
 function test_panel_factory(): Outcome<TestPanel> {
   let inited = false;
-  const branch = hson.fromTrustedHtml("<div></div>").liveTree.asBranch().id.set("panel-branch");
-
+  const branch = hson.fromTrustedHtml("<div></div>").liveTree.asBranch().id.set("panel-branch")
   // CHANGED: keep your existing panel branch css hook
   branch.css.setMany(PANEL_BRANCHcss);
 

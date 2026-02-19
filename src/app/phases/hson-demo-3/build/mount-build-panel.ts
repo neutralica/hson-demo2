@@ -6,165 +6,156 @@ type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";
 
 export function mount_build_panels(host: LiveTree): Outcome<BuildDemo> {
-  const bp = relay_data(bp_factory(host));
+    const bp = relay_data(bp_factory(host));
 
-  init_build_panels(bp);
-  return relay.data(bp);
+    init_build_panels(bp);
+    return relay.data(bp);
 }
 
 export function init_build_panels(bp: BuildDemo): void {
-  let inProgress = false;
-  let activeTab: BuildTabKey = "render";
-  let touched = false;
+    let inProgress = false;
+    let activeTab: BuildTabKey = "render";
+    let touched = false;
 
-  const getSrc = (): string => bp.input.textarea.getFormValue() ?? "";
-  const setSrc = (v: string): void => void bp.input.textarea.setFormValue(v, { silent: true });
+    const getSrc = (): string => bp.input.textarea.getFormValue() ?? "";
+    const setSrc = (v: string): void => void bp.input.textarea.setFormValue(v, { silent: true });
 
-  const setStatus = (k: StatusKind): void => {
-    // CHANGED: keep this tiny + predictable
-    if (k === "idle") {
-      bp.input.status.text.set("");
-      bp.input.status.css.setMany({ opacity: "0" });
-      return;
-    }
-    if (k === "typing") {
-      bp.input.status.text.set("...");
-      bp.input.status.css.setMany({ opacity: "1" });
-      return;
-    }
-    if (k === "valid") {
-      bp.input.status.text.set("valid");
-      bp.input.status.css.setMany({ opacity: "1" });
-      return;
-    }
-    bp.input.status.text.set("invalid");
-    bp.input.status.css.setMany({ opacity: "1" });
-  };
+    const setStatus = (k: StatusKind): void => {
+        // CHANGED: keep this tiny + predictable
+        if (k === "idle") {
+            bp.input.status.text.set("");
+            bp.input.status.css.setMany({ opacity: "0" });
+            return;
+        }
+        if (k === "typing") {
+            bp.input.status.text.set("...");
+            bp.input.status.css.setMany({ opacity: "1" });
+            return;
+        }
+        if (k === "valid") {
+            bp.input.status.text.set("valid");
+            bp.input.status.css.setMany({ opacity: "1" });
+            return;
+        }
+        bp.input.status.text.set("invalid");
+        bp.input.status.css.setMany({ opacity: "1" });
+    };
 
-  const syncTabs = (): void => {
-    // show/hide the two output panes
-    const showRender = activeTab === "render";
-    bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" }); // CHANGED if you use grid
-    bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
+    const syncTabs = (): void => {
+        // show/hide the two output panes
+        const showRender = activeTab === "render";
+        bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" }); // CHANGED if you use grid
+        bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
 
-    // simple active affordance (optional)
-    bp.tabs.render.setAttrs("data-active", String(showRender));
-    bp.tabs.html.setAttrs("data-active", String(!showRender));
-  };
+        // simple active affordance (optional)
+        bp.tabs.render.setAttrs("data-active", String(showRender));
+        bp.tabs.html.setAttrs("data-active", String(!showRender));
+    };
 
-  const render = (raw: string): void => {
-    // NOTE: do not overwrite anything if invalid; just mark invalid.
-    //       do not “helpfully” coerce nonsense into <_obj></_obj>.
-    const t = raw.trim();
-    const empty = t.length === 0;
+    const render = (raw: string): void => {
+        // NOTE: do not overwrite anything if invalid; just mark invalid.
+        //       do not “helpfully” coerce nonsense into <_obj></_obj>.
+        const t = raw.trim();
+        const empty = t.length === 0;
 
-    // update watermark-ish state if you want
-    bp.input.wmEmpty.css.setMany({ opacity: empty ? "0.25" : "0" });
+        // update watermark-ish state if you want
+        // bp.input.wmEmpty.css.setMany({ opacity: empty ? "0.25" : "0" });
 
-    if (!touched) {
-      // don’t scream until first input
-      setStatus("idle");
-    } else if (empty) {
-      setStatus("invalid");
-    } else {
-      setStatus("typing");
-    }
+        if (!touched) {
+            // don’t scream until first input
+            setStatus("idle");
+        } else if (empty) {
+            setStatus("invalid");
+        } else {
+            setStatus("typing");
+        }
 
-    if (empty) return;
+        if (empty) return;
 
-    // Parse HSON → build preview + html
-    try {
-      // IMPORTANT: this must throw on invalid input
-      const doc = hson.fromHson(raw);
+        // Parse HSON → build preview + html
+        try {
+            // IMPORTANT: this must throw on invalid input
+            const doc = hson.fromHson(raw);
 
-      // 1) output html string
-      const htmlTxt = doc.toHtml().serialize();
+            // 1) output html string
+            const htmlTxt = doc.toHtml().serialize();
 
-      // 2) output preview tree
-      // Prefer LiveTree path (no DOM string parse). If your API differs, swap this line.
-      const branch = doc.liveTree.asBranch();
+            // 2) output preview tree
+            // Prefer LiveTree path (no DOM string parse). If your API differs, swap this line.
+            const branch = doc.liveTree.asBranch();
 
-      // Update output panes
-      bp.output.previewHost.empty();
-      bp.output.previewHost.append(branch);
+            // Update output panes
+            bp.output.previewHost.empty();
+            bp.output.previewHost.append(branch);
 
-      bp.output.htmlBox.text.set(htmlTxt);
+            bp.output.htmlBox.text.set(htmlTxt);
 
-      setStatus("valid");
-    } catch {
-      setStatus("invalid");
-      // keep last valid output; do not mutate preview/htmlBox
-    }
-  };
+            setStatus("valid");
+        } catch {
+            setStatus("invalid");
+            // keep last valid output; do not mutate preview/htmlBox
+        }
+    };
 
-  // --- events ---
+    // --- events ---
 
-  // Tabs
-  bp.tabs.render.listen.onClick(() => {
-    activeTab = "render";
+    // Tabs
+    bp.tabs.render.listen.onClick(() => {
+        activeTab = "render";
+        syncTabs();
+    });
+    bp.tabs.html.listen.onClick(() => {
+        activeTab = "html";
+        syncTabs();
+    });
+
+    // Input
+    bp.input.textarea.listen.onInput(() => {
+        if (inProgress) return;
+        inProgress = true;
+        try {
+            touched = true;
+            render(getSrc());
+        } finally {
+            inProgress = false;
+        }
+    });
+
+    // Buttons
+
+    bp.input.clearBtn.listen.onClick(() => {
+        touched = false;
+        setSrc("");
+        bp.output.previewHost.empty();
+        bp.output.htmlBox.text.set("");
+        setStatus("idle");
+        // bp.input.wmEmpty.css.setMany({ opacity: "0.25" });
+    });
+
+    bp.input.copyBtn.listen.onClick(() => {
+        // Copy current tab by default; easy to change
+        const clip = globalThis.navigator?.clipboard?.writeText;
+        if (!clip) return;
+
+        const txt =
+            activeTab === "html"
+                ? (bp.output.htmlBox.text.get() ?? "") // if you have .getText; else store htmlTxt elsewhere
+                : getSrc();
+
+        void clip.call(navigator.clipboard, txt);
+    });
+
+    // bp.input.testBtn.listen.onClick(() => {
+    //     // Simple starter payload; tweak anytime.
+    //     const starter = bp.input.textarea.text.get();
+
+    //     setSrc(starter);
+    //     touched = true;
+    //     render(starter);
+    // });
+
+    // Initial paint
     syncTabs();
-  });
-  bp.tabs.html.listen.onClick(() => {
-    activeTab = "html";
-    syncTabs();
-  });
+    render(getSrc());
 
-  // Input
-  bp.input.textarea.listen.onInput(() => {
-    if (inProgress) return;
-    inProgress = true;
-    try {
-      touched = true;
-      render(getSrc());
-    } finally {
-      inProgress = false;
-    }
-  });
-
-  // Buttons
-
-  bp.input.clearBtn.listen.onClick(() => {
-    touched = false;
-    setSrc("");
-    bp.output.previewHost.empty();
-    bp.output.htmlBox.text.set("");
-    setStatus("idle");
-    bp.input.wmEmpty.css.setMany({ opacity: "0.25" });
-  });
-
-  bp.input.copyBtn.listen.onClick(() => {
-    // Copy current tab by default; easy to change
-    const clip = globalThis.navigator?.clipboard?.writeText;
-    if (!clip) return;
-
-    const txt =
-      activeTab === "html"
-        ? (bp.output.htmlBox.text.get() ?? "") // if you have .getText; else store htmlTxt elsewhere
-        : getSrc();
-
-    void clip.call(navigator.clipboard, txt);
-  });
-
-  bp.input.testBtn.listen.onClick(() => {
-    // Simple starter payload; tweak anytime.
-    const starter = [
-      "<>",
-      "  <div class=card>",
-      "    <h1>HSON build</h1>",
-      "    <div class=row>",
-      "      <div class=box></div>",
-      "      <div class=box></div>",
-      "      <div class=dot></div>",
-      "    </div>",
-      "  </div>",
-    ].join("\n");
-
-    setSrc(starter);
-    touched = true;
-    render(starter);
-  });
-
-  // Initial paint
-  syncTabs();
-  render(getSrc());
 }

@@ -4,6 +4,7 @@ import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
 import { BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANE_BODYcss, BUILD_PREVIEWHOSTcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
 import { PANELcss } from "../panels/demo-panels.css";
+import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
 
 // CHANGED: keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{
@@ -23,13 +24,13 @@ export type BuildDemo = Readonly<{
   input: {
     wrap: LiveTree;
     textarea: LiveTree;
-    wmFmt: LiveTree;
-    wmEmpty: LiveTree;
+    // wmFmt: LiveTree;
+    // wmEmpty: LiveTree;
     status: LiveTree;
-    chip: LiveTree;
+    // chip: LiveTree;
     copyBtn: LiveTree;
     clearBtn: LiveTree;
-    testBtn: LiveTree;
+    // testBtn: LiveTree;
   };
 
   output: {
@@ -55,11 +56,26 @@ type BuildFactoryOpts = Readonly<{
 // IDs / consts
 const $BUILD_ROOT = "build-root" as const;
 
-const DEFAULT_SEED = `<div style="display:grid;grid-template-columns:80px 80px 80px;gap:14px;align-items:center;padding:12px;">
-  <div style="width:72px;height:72px;background:#7ef0c7;border-radius:10px;"></div>
-  <div style="width:72px;height:72px;background:#6fb4ff;border-radius:10px;"></div>
-  <div style="width:72px;height:72px;background:#ffb36b;border-radius:999px;"></div>
-</div>`;
+const DEFAULT_SEED = `
+<div id="panel-branch" style="border: 1px solid dodgerblue; height: 100%; position: relative; width: 100%"
+  <h1 id="build-heading"
+    "HSON BUILD DEMO"
+  />
+  <hr />
+  <h2 class="text-box" Ï
+    "<--- EDIT THE HSON..."
+  />
+  <div style="background-color: ${$blu_.easter}; border: 12px double ${$grn_.faded}; height: 50%; width: 90%"
+  <div style="display: grid; place-items: center; border-radius: 190px; background: ${$ylw_.muted}; height: 70%; width: 70%; margin: 1em"
+  <div style="color: ${$cols_.backdeep}; font-size: 1.5rem"
+   "...HTML CHANGES IN REALTIME"
+   />
+  />
+/>
+  <hr />
+/>
+
+`;
 
 export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {
   // CHANGED: idempotent remove like pp_factory
@@ -103,11 +119,11 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
   // ---- SRC head controls (test + clear + copy) ----
 
-  const testBtn = src.head.create.div()
-    .classlist.set("build-btn build-btn--test")
-    .text.set("test")
-    .css.setMany(BUILD_BTNcss)
-    .setAttrs({ role: "button", tabindex: "0", "aria-label": "test build loop" });
+  // const testBtn = src.head.create.div()
+  //   .classlist.set("build-btn build-btn--test")
+  //   .text.set("test")
+  //   .css.setMany(BUILD_BTNcss)
+  //   .setAttrs({ role: "button", tabindex: "0", "aria-label": "test build loop" });
 
   const clearBtn = src.head.create.div()
     .classlist.set("build-btn build-btn--clear")
@@ -132,11 +148,6 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .text.set("HSON")
     .css.setMany(BUILD_WATERMARK_FMTcss);
 
-  const wmEmpty = inputWrap.create.div()
-    .classlist.set("build-watermark build-watermark--empty")
-    .text.set("<>")
-    .css.setMany(BUILD_WATERMARK_EMPTYcss);
-
   const status = inputWrap.create.div()
     .classlist.set("build-status")
     .text.set("")
@@ -148,9 +159,9 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .css.setMany(BUILD_TEXTAREAcss);
 
   // CHANGED: chip is sibling overlay, not a child of textarea (textarea can’t have children)
-  const chip = inputWrap.create.div()
-    .classlist.set("build-chip validity")
-    .text.set("");
+  // const chip = inputWrap.create.div()
+  //   .classlist.set("build-chip validity")
+  //   .text.set("");
 
   // seed value (optional)
   const seed = opts.seed ?? DEFAULT_SEED;
@@ -203,12 +214,11 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
       wrap: inputWrap,
       textarea,
       wmFmt,
-      wmEmpty,
       status,
-      chip,
+      // chip,
       copyBtn,
       clearBtn,
-      testBtn,
+      // testBtn,
     },
     output: {
       wrap: outWrap,
