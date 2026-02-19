@@ -171,7 +171,7 @@ function test_panel_factory(): Outcome<TestPanel> {
     // clear should clear the tiny panel surfaces
     clearBtn.listen.onClick(() => {
       clearMarquee();
-      // setStatus("idle");
+      setMarquee("idle");
     });
   };
 

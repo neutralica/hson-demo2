@@ -6,7 +6,7 @@ import { _freeze } from "../../../../tests/fixtures/generate-fixtures";
 import type { TestLog } from "../../../../tests/test-log";
 import  { $GEM_WIDTHstr } from "../../../../tests/tests.consts";
 import type { CaseKey, CaseMeta, TestFailure } from "../../../../tests/tests.types";
-import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
+import {  $txt_ } from "../../../consts/ui-consts";
 import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../panels/demo-panels.css";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
@@ -90,7 +90,7 @@ export function create_inspector(
   const failsBox = side.create.div().classlist.set("insp-fails");
   const detailBox = side.create.div().classlist.set("insp-detail");
 
-  header.text.set("inspect");
+  // header.text.set("inspect");
   detailBox.text.set("—");
 
   // ---------------------------
@@ -367,7 +367,7 @@ export function create_inspector(
             const topRow = cell.create.div().classlist.set("insp-cap-row");
             topRow.css.setMany({
               display: "grid",
-              gridTemplateColumns: "1fr auto auto",
+              gridTemplateColumns: "2rem auto auto",
               gap: "8px",
               alignItems: "center",
               marginBottom: "8px",
@@ -410,7 +410,7 @@ export function create_inspector(
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(0,0,0,0.35)",
               overflow: "auto",
-              maxHeight: "18vh",
+              maxHeight: "100%",
               whiteSpace: "pre-wrap",
               overflowWrap: "anywhere",
             });
@@ -502,8 +502,6 @@ export function create_inspector(
 
   // baseline
   root.css.setMany({
-    display: "grid",
-    gap: "8px",
     padding: "10px",
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
     fontSize: $txt_.main,

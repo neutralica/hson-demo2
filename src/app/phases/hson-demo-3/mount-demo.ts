@@ -1,27 +1,22 @@
 // mount-demo.ts
 
-import { CssManager, hson, type LiveTree } from "hson-live";
-import { makeDivClass, makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
-import { data_sync, outcome, relay, relay_data, type Outcome, type OutcomeAsync, type OutcomeData } from "intrastructure";
+import { CssManager, type LiveTree } from "hson-live";
+import { makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
+import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss } from "./demo.css";
 import { $ABOUT, $BUILD, $CONSOLE, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import { LAYOUT_GRIDcss, TEST_BODY_OVERRIDEScss, UI_ROOTcss } from "./panels/demo-panels.css";
-import {  mount_test_panels } from "./test/test-panel-factory";
-import { run_test_suites } from "../../../tests/test-runner";
+import { LAYOUT_GRIDcss,  UI_ROOTcss } from "./panels/demo-panels.css";
+import { mount_test_panels } from "./test/test-panel-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
-import type { CaseKey, TestEvent, TestSuite } from "../../../tests/tests.types";
+import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $cols_, LETTER_COLORbleach, LETTER_COLORcandy, LETTER_COLORfaded, LETTER_COLORmuted, LETTER_COLORstd, LETTER_COLORwashed } from "../../consts/colors.consts";
+import { $blu_, LETTER_COLORcandy } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { build_suites_for_mode } from "../../../tests/suite-builder";
 import { demo_get_current_view, demo_set_current_view, demo_subscribe } from "./demo-state";
-import type { Panels } from "./panels/panels.types";
-import { init_parsing_panels } from "./parse/init.pp";
-import { mount_parsing_panels, pp_factory } from "./parse/pp-factory";
-import { create_inspector } from "./inspect/test-inspector";
+import { mount_parsing_panels } from "./parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./build/build";
 
@@ -108,48 +103,28 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     pointerEvents: "auto",
   });
 
-  // dock slot for “companions” (inspector, etc)
-  const dockSlot = makeDivId(layoutGrid, "dock-slot").css.setMany({
-    position: "relative",
-    minHeight: "0",
-    minWidth: "0",
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
-    pointerEvents: "auto",
-  });
-
   // views stack in viewSlot
   const parse = mount_panel_simple(viewSlot, "parse");
   const test = mount_panel_simple(viewSlot, "test");
-  test.surface.css.setMany(TEST_BODY_OVERRIDEScss);
-  const testRig = relay_data(mount_test_panels(test.surface));
   const build = mount_panel_simple(viewSlot, "build");
-  // const inspPanel = mount_panel_simple(dockSlot, "inspect");
-
-  const pp = relay_data(mount_parsing_panels(parse.surface));
   
+  const tp = relay_data(mount_test_panels(test.surface));
+  const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = bp_factory(build.surface);
-
-
-  // inspector wiring stays the same, but stop expecting it to unhide panels
-  const tlog = create_test_log();
-  const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
 
   const applyView = (): void => {
     const view = demo_get_current_view();
-    parse.panel.classlist.add($PANEL_HIDDEN);
-    test.panel.classlist.add($PANEL_HIDDEN);
-    // inspPanel.panel.classlist.add($PANEL_HIDDEN);
-    build.panel.classlist.add($PANEL_HIDDEN);
+    _hide(parse.panel);
+    _hide(test.panel);
+    _hide(build.panel);
     if (view === "parse") {
-      parse.panel.classlist.remove($PANEL_HIDDEN);
+      _unhide(parse.panel)
     } else if (view === "test") {
-      test.panel.classlist.remove($PANEL_HIDDEN);
+    _unhide(test.panel)
       // inspPanel.panel.classlist.remove($PANEL_HIDDEN); // dock companion
     }
     else if (view === "build") {
-      build.panel.classlist.remove($PANEL_HIDDEN);
+      _unhide(build.panel)
     }
   };
   demo_subscribe(() => applyView());

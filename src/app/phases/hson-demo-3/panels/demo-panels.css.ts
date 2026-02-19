@@ -53,6 +53,7 @@ export const LAYOUT_GRIDcss: CssMap = {
     padding: "12px",
     boxSizing: "border-box",
     gridAutoColumns: "1fr 1fr",
+    // gridTemplateRows: "3fr 1fr"
 } as const;
 
 export const TEST_ACTION_BTN = {
@@ -131,13 +132,6 @@ export const PANEL_TEXTAREAcss = {
     outline: "none",
 };
 
-export const TEST_BODY_OVERRIDEScss: CssMap = {
-    // overflow: "hidden",
-    // alignContent: "start",
-    // display: "grid",
-    // gridTemplateColumns: "1fr auto",
-    // gridTemplateRows: "1fr auto"
-} as const;
 
 export const TEST_STATUS_CHIPcss: CssMap = {
     padding: "8px 10px",
@@ -163,6 +157,7 @@ export const MARQUEEcss: CssMap = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: $txt_.sub,
     height: "100%",
+    minHeight:"10rem",
     minWidth: "100%",
     gridColumn: "1 / 5",
     color: $ylw_.candy,

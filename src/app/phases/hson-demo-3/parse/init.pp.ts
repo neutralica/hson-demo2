@@ -130,7 +130,7 @@ export function init_parsing_panels(pp: Panels): void {
     for (const f of FMTS) {
       if (f === origin) continue;
       setValue(pp.panels[f], "");
-      pp.panels[f].bytes.text.set("0 bytes");
+      pp.panels[f].bytes.text.add("0 bytes");
     }
 
     return;
