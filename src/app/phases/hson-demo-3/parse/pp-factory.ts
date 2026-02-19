@@ -1,13 +1,13 @@
 // pp_factory.ts
 import { hson, type LiveTree } from "hson-live";
-import type { Fmt, Panels, PanelShell } from "../panels.types";
+import type { Fmt, Panels, PanelShell } from "../panels/panels.types";
 import { PP_HEADERcss } from "./pp.css";
 
 import { PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARK_EMPTYcss, PP_WATERMARK_FMTcss } from "./pp.css";
 import { outcome, relay, relay_data, type Outcome, type OutcomeData } from "intrastructure";
-import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../../demo.consts";
+import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { PP_COPYBTNcss } from "./pp.css";
-import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../../demo-panels.css";
+import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../panels/demo-panels.css";
 import { init_parsing_panels } from "./init.pp";
 
 type PpFactoryOpts = {
@@ -31,9 +31,9 @@ const WM_LABEL: Record<Fmt, string> = {
 
 
 export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
-  const ppO = relay_data(pp_factory(host));
-  init_parsing_panels(ppO);
-  return relay.data(ppO);
+  const pp = relay_data(pp_factory(host));
+  init_parsing_panels(pp);
+  return relay.data(pp);
 }
 
 

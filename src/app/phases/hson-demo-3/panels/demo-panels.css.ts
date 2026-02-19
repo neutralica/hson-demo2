@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_ } from "../../consts/colors.consts";
-import { $GEM_WIDTHstr } from "../../../tests/tests.consts";
-import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
+import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
+import { $GEM_WIDTHstr } from "../../../../tests/tests.consts";
+import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 
 export const UI_ROOTcss: CssMap = {
     // CHANGED: must be a normal grid item (no absolute overlay)
@@ -25,7 +25,6 @@ export const PANEL_SURFACEcss: CssMap = {
     height: "100%",
     minWidth: "0",
     minHeight: "0",
-    overflow: "auto",
     borderRadius: "14px",
     padding: "12px",
     boxSizing: "border-box",
@@ -54,7 +53,6 @@ export const LAYOUT_GRIDcss: CssMap = {
     padding: "12px",
     boxSizing: "border-box",
     gridAutoColumns: "1fr 1fr",
-    overflowY: "scroll"
 } as const;
 
 export const TEST_ACTION_BTN = {

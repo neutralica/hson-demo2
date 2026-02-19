@@ -33,6 +33,7 @@ export const shade_class = (l: string) => {
   console.warn("shadeClass function failed");
   return "shadeClass function failed"
 };
+
 export const $PARSE = "parse";
 export const $TEST = "test";
 export const $BUILD = "build";
@@ -49,5 +50,6 @@ export const MENU_OPTIONS = [
   $OKLCH,
   $MOUSE,
 ] as const;export const $PARSING_PANELS_ROOT = "parsing-panels-root";
+
 export const $PP_HEAD = "pp-head";
 

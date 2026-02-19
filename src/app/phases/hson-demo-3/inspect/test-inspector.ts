@@ -7,7 +7,7 @@ import type { TestLog } from "../../../../tests/test-log";
 import  { $GEM_WIDTHstr } from "../../../../tests/tests.consts";
 import type { CaseKey, CaseMeta, TestFailure } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
-import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../demo-panels.css";
+import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../panels/demo-panels.css";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";

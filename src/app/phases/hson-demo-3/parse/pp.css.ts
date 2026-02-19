@@ -1,8 +1,8 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_ } from "../../../../consts/colors.consts";
-import type { CssMapBase } from "../../../../../../../hson-live/dist/types/css.types";
-import { $txt_ } from "../../../../consts/ui-consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
+import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
+import { $txt_ } from "../../../consts/ui-consts";
 
 //// used
 export const PP_HEADERcss: CssMap = {

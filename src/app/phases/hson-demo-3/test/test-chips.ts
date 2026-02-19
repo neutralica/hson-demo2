@@ -1,8 +1,8 @@
 import { type LiveTree } from "hson-live";
-import type { TestSummary } from "../../../../../tests/tests.types";
-import { $red_etc_ } from "../../../../consts/colors.consts";
-import { $txt_ } from "../../../../consts/ui-consts";
-import { makeDivId, makeDivClass } from "../../../../utils/makers";
+import type { TestSummary } from "../../../../tests/tests.types";
+import { $red_etc_ } from "../../../consts/colors.consts";
+import { $txt_ } from "../../../consts/ui-consts";
+import { makeDivId, makeDivClass } from "../../../utils/makers";
 
 
 export type ChipDisplay = Readonly<{
