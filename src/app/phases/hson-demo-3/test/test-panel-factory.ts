@@ -275,7 +275,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       tlog.clear();
 
       // 1) set it first
-      tp.marquee.text.add("running loop test…");
+      tp.marquee.text.set("running loop test…");
 
       // 2) yield AFTER setting it so it can paint
       await next_frame();
@@ -285,7 +285,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       const onEvent = (e: TestEvent): void => {
         tlog.onEvent(e);
         if (!allowMarquee) return;
-        tp.marquee.text.add(tlog.getLastLine());
+        tp.marquee.text.set(tlog.getLastLine());
       };
 
       // allow event-driven marquee after a paint tick
@@ -300,7 +300,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       const res = await run_test_suites(suites, onEvent, { bail: false });
 
       tp.chips.render(res.summary);
-      tp.marquee.text.add(tlog.getLastLine());
+      tp.marquee.text.set(tlog.getLastLine());
 
       inspector.show();
       inspector.render();
