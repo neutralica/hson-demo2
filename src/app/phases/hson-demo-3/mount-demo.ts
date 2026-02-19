@@ -1,6 +1,6 @@
 // mount-demo.ts
 
-import { CssManager, type LiveTree } from "hson-live";
+import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss } from "./demo.css";
@@ -19,6 +19,7 @@ import { demo_get_current_view, demo_set_current_view, demo_subscribe } from "./
 import { mount_parsing_panels } from "./parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./build/build";
+import { mount_build_panels } from "./build/mount-build-panel";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -110,7 +111,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   
   const tp = relay_data(mount_test_panels(test.surface));
   const pp = relay_data(mount_parsing_panels(parse.surface));
-  const bp = bp_factory(build.surface);
+  const bp = relay_data(mount_build_panels(build.surface));
+
+  const htmlString = hson.fromTrustedHtml("<div></div>")
+    .liveTree.asBranch()
+    .id.set("test-string-box");
 
   const applyView = (): void => {
     const view = demo_get_current_view();

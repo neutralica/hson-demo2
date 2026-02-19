@@ -12,7 +12,7 @@ export const MAIN_TEXTcss: CssMap = {
   _hover: {
     fontWeight: "700",
     background: $grn_.muted,
-    color: $cols_.sysInvalid
+    color: $cols_.backdeep
   }
 }
 

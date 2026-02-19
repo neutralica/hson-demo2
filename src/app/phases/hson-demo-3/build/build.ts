@@ -6,12 +6,12 @@ import { BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANE_BODYcss, BUIL
 import { PANELcss } from "../panels/demo-panels.css";
 
 // CHANGED: keep this parallel to pp_factory return shape: root + handles
-export type BuildPanel = Readonly<{
+export type BuildDemo = Readonly<{
   root: LiveTree;
 
   // two panes
-  src: BuildPane;
-  out: BuildPane;
+  src: BuildPanel;
+  out: BuildPanel;
 
   // shared controls
   tabs: {
@@ -39,7 +39,7 @@ export type BuildPanel = Readonly<{
   };
 }>;
 
-export type BuildPane = Readonly<{
+export type BuildPanel = Readonly<{
   panel: LiveTree;
   head: LiveTree;
   body: LiveTree;
@@ -61,7 +61,7 @@ const DEFAULT_SEED = `<div style="display:grid;grid-template-columns:80px 80px 8
   <div style="width:72px;height:72px;background:#ffb36b;border-radius:999px;"></div>
 </div>`;
 
-export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildPanel> {
+export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {
   // CHANGED: idempotent remove like pp_factory
   const old = hostBody.find.byId($BUILD_ROOT);
   if (old) old.removeSelf();
@@ -73,7 +73,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .css.setMany(BUILD_ROOTcss);
 
   // helper: make one pane
-  const makePane = (key: "src" | "out", titleTxt: string): BuildPane => {
+  const makePane = (key: "src" | "out", titleTxt: string): BuildPanel => {
     const panel = root.create.section()
       .classlist.set(`build-pane build-pane--${key}`)
       .css.setMany(PANELcss); // reuse your standard panel surface if desired

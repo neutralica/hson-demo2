@@ -107,7 +107,7 @@ export function attach_error_underline(host: LiveTree, preset = ERROR_UNDERLINE_
     width: w,
     ...preset,
   });
-  const svgBranch = hson.fromTrustedHtml(svgHTML).liveTree().asBranch();
+  const svgBranch = hson.fromTrustedHtml(svgHTML).liveTree.asBranch();
 
   const box = host.create.span()
     .id.set('error-underline')

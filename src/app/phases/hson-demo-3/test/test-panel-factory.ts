@@ -56,7 +56,7 @@ export type TestPanelWidget = ReturnType<typeof test_panel_factory>;
 
 function test_panel_factory(): Outcome<TestPanel> {
   let inited = false;
-  const branch = hson.fromTrustedHtml("<div></div>").liveTree().asBranch().id.set("panel-branch");
+  const branch = hson.fromTrustedHtml("<div></div>").liveTree.asBranch().id.set("panel-branch");
 
   // CHANGED: keep your existing panel branch css hook
   branch.css.setMany(PANEL_BRANCHcss);
@@ -117,11 +117,6 @@ function test_panel_factory(): Outcome<TestPanel> {
   // -------------------------
 
   const chips = create_test_chips(branch);
-
-  // const setStatus = (txt: string): void => {
-  //   if (!mounted) return;
-  //   status.text.set(txt);
-  // };
 
   // CHANGED: simplest possible marquee writer (no strip, no scrollbars)
   const setMarquee = (txt: string): void => {
@@ -231,18 +226,18 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
         gridTemplateRows: "auto 1fr",
       });
 
-      
-      // test chrome
-      const testFrame = root.create.div().css.setMany(PANEL_FRAMEcss);
-      const testSurface = testFrame.create.div().css.setMany(PANEL_SURFACEcss);
-      
-      // inspector chrome
-      const inspFrame = root.create.div().css.setMany(PANEL_FRAMEcss);
-      const inspSurface = inspFrame.create.div().css.setMany({
-        ...PANEL_SURFACEcss,
-        minHeight: "12rem",
-      });
-    
+
+    // test chrome
+    const testFrame = root.create.div().css.setMany(PANEL_FRAMEcss);
+    const testSurface = testFrame.create.div().css.setMany(PANEL_SURFACEcss);
+
+    // inspector chrome
+    const inspFrame = root.create.div().css.setMany(PANEL_FRAMEcss);
+    const inspSurface = inspFrame.create.div().css.setMany({
+      ...PANEL_SURFACEcss,
+      minHeight: "12rem",
+    });
+
     // --- owned dependencies ---
     const tp = relay_data(test_panel_factory());
     tp.mount(testSurface);
@@ -258,8 +253,6 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       async (key) => {
         const fn = captureMap.get(key);
         if (!fn) {
-          // CHANGED: fail visibly inside the inspector, not as a silent “nothing happened”
-          // (Assuming inspector has a “marquee/log” or render-able error path)
           throw new Error(`no capture registered for key: ${String(key)}`);
         }
         return fn();
@@ -274,32 +267,43 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
 
     // --- wire buttons inside the widget ---
     tp.runBtn.listen.onClick(async () => {
-      // (Optional) show inspector when running
-      inspFrame.classlist.remove($PANEL_HIDDEN);
+      const next_frame = (): Promise<void> =>
+        new Promise((r) => requestAnimationFrame(() => r()));
 
-      tlog.clear();
       tp.chips.clear();
-      tp.marquee.text.set("running…");
+      inspFrame.classlist.remove($PANEL_HIDDEN);
+      tlog.clear();
 
-      // IMPORTANT: ensure getMode() returns TestRunMode (not string)
+      // 1) set it first
+      tp.marquee.text.add("running loop test…");
+
+      // 2) yield AFTER setting it so it can paint
+      await next_frame();
+
+      // 3) prevent immediate clobber by onEvent for a moment
+      let allowMarquee = false;
+      const onEvent = (e: TestEvent): void => {
+        tlog.onEvent(e);
+        if (!allowMarquee) return;
+        tp.marquee.text.add(tlog.getLastLine());
+      };
+
+      // allow event-driven marquee after a paint tick
+      await next_frame();
+      allowMarquee = true;
+
       const mode: TestRunMode = tp.getMode();
 
-      // CHANGED: build suites and also populate captureMap here,
-      // so “some fixtures show nothing” can be debugged centrally.
       captureMap.clear();
       const suites = build_suites_for_mode(mode, { _test_full_loop }, captureMap);
 
       const res = await run_test_suites(suites, onEvent, { bail: false });
 
       tp.chips.render(res.summary);
-      tp.marquee.text.set(tlog.getLastLine());
+      tp.marquee.text.add(tlog.getLastLine());
 
-      // render inspector view of the most recent run
       inspector.show();
       inspector.render();
-
-      // If you only want inspector visible on failures:
-      // if (!res.ok) inspFrame.classlist.remove($PANEL_HIDDEN);
     });
 
     tp.clearBtn.listen.onClick(() => {
@@ -307,9 +311,8 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       tp.chips.clear();
       tp.marquee.text.set("idle");
       inspector.clear();
+      inspFrame.classlist.add($PANEL_HIDDEN);
 
-      // If you want “clear hides inspector”
-      // inspFrame.classlist.add($PANEL_HIDDEN);
     });
 
     return relay.data({
