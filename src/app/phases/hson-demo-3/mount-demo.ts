@@ -117,10 +117,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
 
-  const htmlString = hson.fromTrustedHtml("<div></div>")
-    .liveTree.asBranch()
-    .id.set("test-string-box");
-
   const applyView = (): void => {
     const view = demo_get_current_view();
     _hide(parse.panel);

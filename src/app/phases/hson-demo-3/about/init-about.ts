@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-// import README from "../../../../../../hson-live";
+import { $cols_, $grn_, $gry_, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
 
 type AboutInitDeps = Readonly<{
   docs: AboutDocs;
@@ -46,12 +46,15 @@ function render_doc_md(host: LiveTree, src: string): void {
 
   const lines = src.replace(/\r\n/g, "\n").split("\n");
 
+  let codeLang: string | null = null;
   let inCode = false;
   let codeBuf: string[] = [];
 
   let paraBuf: string[] = [];
   let listBuf: string[] = [];
   let inList = false;
+  let listKind: "ul" | "ol" | null = null;
+  let listStart = 1;
 
   const flushPara = (): void => {
     const text = paraBuf.join(" ").trim();
@@ -62,8 +65,9 @@ function render_doc_md(host: LiveTree, src: string): void {
     p.css.setMany({
       whiteSpace: "pre-wrap",
       lineHeight: "1.55",
-      opacity: "0.92",
       marginBottom: "10px",
+      color: $cols_.txtmain,
+      textIndent: "4ch",
     });
     p.text.set(text);
   };
@@ -72,39 +76,100 @@ function render_doc_md(host: LiveTree, src: string): void {
     if (!inList) return;
     inList = false;
 
-    const ul = host.create.div().classlist.add("md-ul");
-    ul.css.setMany({ display: "grid", gap: "6px", marginBottom: "10px" });
+    const kind = listKind ?? "ul";
+    const start = listStart;
 
-    for (const item of listBuf) {
-      const li = ul.create.div().classlist.add("md-li");
-      li.css.setMany({ display: "grid", gridTemplateColumns: "14px 1fr", gap: "8px" });
+    const list = host.create.div().classlist.add(kind === "ul" ? "md-ul" : "md-ol");
+    list.css.setMany({ display: "grid", gap: "6px", marginBottom: "10px" });
 
-      li.create.div().text.set("•").css.setMany({ opacity: "0.7" });
-      li.create.div().text.set(item).css.setMany({ whiteSpace: "pre-wrap", lineHeight: "1.55" });
+    for (let i = 0; i < listBuf.length; i++) {
+      const item = listBuf[i] ?? "";
+      const li = list.create.div().classlist.add("md-li");
+      li.css.setMany({ display: "grid", gridTemplateColumns: "22px 1fr", gap: "8px" });
+
+      const marker =
+        kind === "ul" ? "•" : `${start + i})`;
+
+      li.create.div().text.set(marker).css.setMany({ opacity: "0.7" });
+      li.create.div().text.set(item).css.setMany({
+        whiteSpace: "pre-wrap",
+        lineHeight: "1.55",
+      });
     }
 
     listBuf = [];
+    listKind = null;
+    listStart = 1;
   };
 
   const flushCode = (): void => {
-    const text = codeBuf.join("\n");
+    const lines = codeBuf.slice();
     codeBuf = [];
-    if (!text) return;
+    if (lines.length === 0) return;
+
+    const isLogo = (codeLang ?? "").toLowerCase() === "hson";
 
     const pre = host.create.div().classlist.add("md-pre");
-    pre.css.setMany({
-      whiteSpace: "pre",
-      overflowX: "hidden",
-      padding: "10px 12px",
-      borderRadius: "12px",
-      background: "rgba(0,0,0,0.35)",
-      boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-      marginBottom: "12px",
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-      fontSize: "12px",
-      lineHeight: "1.45",
-    });
-    pre.text.set(text);
+    if (isLogo) pre.classlist.add("md-logo");
+
+    pre.css.setMany(
+      isLogo
+        ? {
+          // ASCII logo: preserve spacing, tighter leading, allow horizontal scroll
+          whiteSpace: "pre",
+          overflowX: "hidden",
+          // overflowY: "auto",
+          padding: "12px 12px",
+          background: $cols_.backdeep,
+          color: $ylw_.candy,
+          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+          marginBottom: "12px",
+          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          fontSize: "12px",
+          lineHeight: "1.1",
+          margin: "auto auto",
+          letterSpacing: "0",
+        }
+        : {
+          // normal code blocks
+          whiteSpace: "pre-line",
+          overflowX: "auto",
+          padding: "10px 12px",
+          background: $cols_.backdeep,
+          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+          marginBottom: "12px",
+          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          fontSize: "16px",
+          lineHeight: "1.45",
+        },
+    );
+    for (const line of lines) {
+      const row = pre.create.div();
+      row.css.setMany({ whiteSpace: "pre" });
+
+      // simple comment detection
+      const commentMatch = /(.*?)(\/\/.*|#.*)$/.exec(line);
+
+      if (commentMatch) {
+        const codePart = commentMatch[1] ?? "";
+        const commentPart = commentMatch[2] ?? "";
+
+        if (codePart.length > 0) {
+          row.create.span().text.set(codePart);
+        }
+
+        row.create.span()
+          .classlist.add("md-comment")
+          .css.setMany({
+            color: $grn_.std,
+          })
+          .text.set(commentPart);
+      } else {
+        row.text.set(line);
+      }
+    }
+
+    codeLang = null;
   };
 
   for (const rawLine of lines) {
@@ -116,6 +181,7 @@ function render_doc_md(host: LiveTree, src: string): void {
         flushPara();
         flushList();
         inCode = true;
+        codeLang = line.trim().slice(3).trim() || null;
         continue;
       } else {
         inCode = false;
@@ -141,25 +207,60 @@ function render_doc_md(host: LiveTree, src: string): void {
 
       const h = host.create.div().classlist.add(`md-h${level}`);
       h.css.setMany({
-        marginTop: level === 1 ? "6px" : "10px",
+        marginTop: level === 1 ? "6px" : "2rem",
         marginBottom: "8px",
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         letterSpacing: "0.06em",
         textTransform: level === 1 ? "uppercase" : "none",
-        opacity: "0.95",
-        fontSize: level === 1 ? "16px" : level === 2 ? "14px" : "13px",
+        fontSize: level === 1 ? "28px" : level === 2 ? "24px" : "18px",
       });
       h.text.set(text);
       continue;
     }
 
     // list item
-    const li = /^-\s+(.*)$/.exec(line);
-    if (li) {
-      flushPara();
-      inList = true;
-      listBuf.push((li[1] ?? "").trim());
-      continue;
+    // list item (supports -, *, +, and 1) style)
+    {
+      const ul = /^([*\-+])\s+(.*)$/.exec(line);
+      const ol = /^(\d+)\)\s+(.*)$/.exec(line);
+
+      if (ul) {
+        flushPara();
+
+        // start or continue UL
+        if (!inList || listKind !== "ul") {
+          flushList(); // if we were in a different list kind
+          inList = true;
+          listKind = "ul";
+        }
+
+        listBuf.push((ul[2] ?? "").trim());
+        continue;
+      }
+
+      if (ol) {
+        flushPara();
+
+        const n = Number.parseInt(ol[1] ?? "1", 10);
+        const item = (ol[2] ?? "").trim();
+
+        // start or continue OL (but reset if numbering jumps backwards)
+        if (!inList || listKind !== "ol") {
+          flushList();
+          inList = true;
+          listKind = "ol";
+          listStart = Number.isFinite(n) ? n : 1;
+        } else if (Number.isFinite(n) && n < listStart) {
+          // defensive: weird numbering, treat as a new list
+          flushList();
+          inList = true;
+          listKind = "ol";
+          listStart = n;
+        }
+
+        listBuf.push(item);
+        continue;
+      }
     }
 
     // blank line splits
@@ -184,10 +285,32 @@ function find_doc(docs: AboutDocs, key: AboutDocKey): AboutDocSpec | undefined {
 
 export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   const { docs } = deps;
-  const initialKey = deps.initialDocKey ?? docs[0]?.key ?? "readme";
+
+  // CHANGED: pick a sane initial key without violating exactOptionalPropertyTypes
+  const initialKey: AboutDocKey =
+    (deps.initialDocKey ?? docs[0]?.key ?? "readme") as AboutDocKey;
 
   let activeKey: AboutDocKey = initialKey;
 
+  // CHANGED: build TOC ONCE and keep handles
+  const tocButtons: Array<{ key: AboutDocKey; btn: LiveTree }> = [];
+
+  t.toc.empty();
+  for (const d of docs) {
+    const btn = t.toc.create.div()
+      .classlist.add("about-doc-btn")
+      .data.set("doc-key", d.key)
+      .css.setMany(DOC_BTNcss);
+
+    btn.text.set(d.title);
+
+    // CHANGED: click uses setActive (defined below)
+    btn.listen.onClick(() => setActive(d.key));
+
+    tocButtons.push({ key: d.key, btn });
+  }
+
+  // CHANGED: single setActive, no nested redefinition, no TOC rebuild
   const setActive = (key: AboutDocKey): void => {
     const docSpec = find_doc(docs, key);
     if (!docSpec) return;
@@ -200,48 +323,12 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     // doc render
     render_doc_md(t.doc, docSpec.body);
 
-    const tocButtons: Array<{ key: AboutDocKey; btn: LiveTree }> = [];
-
-    t.toc.empty();
-    for (const d of docs) {
-      const btn = t.toc.create.div()
-        .classlist.add("about-doc-btn")
-        .data.set("doc-key", d.key)
-        .css.setMany(DOC_BTNcss);
-
-      btn.text.set(d.title);
-      btn.listen.onClick(() => setActive(d.key));
-
-      tocButtons.push({ key: d.key, btn });
+    // highlight
+    for (const x of tocButtons) {
+      x.btn.css.setMany(x.key === activeKey ? DOC_BTN_ACTIVEcss : DOC_BTN_IDLEcss);
     }
-
-    const setActive = (key: AboutDocKey): void => {
-      const docSpec = find_doc(docs, key);
-      if (!docSpec) return;
-
-      activeKey = key;
-      t.title.text.set(docSpec.title);
-      render_doc_md(t.doc, docSpec.body);
-
-      // CHANGED: highlight via tracked handles (no DOM traversal, no LiveTree.children)
-      for (const x of tocButtons) {
-        x.btn.css.setMany(x.key === activeKey ? DOC_BTN_ACTIVEcss : DOC_BTN_IDLEcss);
-      }
-    };
   };
 
-  // build TOC (doc list)
-  t.toc.empty();
-  for (const d of docs) {
-    const b = t.toc.create.div()
-      .classlist.add("about-doc-btn")
-      .data.set("doc-key", d.key)
-      .css.setMany(DOC_BTNcss);
-
-    b.text.set(d.title);
-
-    b.listen.onClick(() => setActive(d.key));
-  }
-
+  // CHANGED: apply initial selection after TOC exists
   setActive(activeKey);
 }
