@@ -56,25 +56,32 @@ type BuildFactoryOpts = Readonly<{
 // IDs / consts
 const $BUILD_ROOT = "build-root" as const;
 
-const DEFAULT_SEED = `
-<div id="panel-branch" style="border: 1px solid dodgerblue; height: 100%; position: relative; width: 100%"
-  <h1 id="build-heading"
+const DEFAULT_SEED = `<div id="build-demo" style="border: 1px solid dodgerblue; box-sizing: border-box; display: grid; height: 100%; padding: 12px; width: 100%"
+  <h1 id="build-heading" style="color: rgba(160,220,255,0.95); font-family: monospace; letter-spacing: 0.06em; margin: 0; text-align: center"
     "HSON BUILD DEMO"
   />
-  <hr />
-  <h2 class="text-box" Ï
-    "<--- EDIT THE HSON..."
+  <div style="color: orange; font-family: monospace; font-size: 1rem; line-height: 1.4; text-align: center"
+    "<------ edit the HSON string..."
   />
-  <div style="background-color: ${$blu_.easter}; border: 12px double ${$grn_.faded}; height: 50%; width: 90%"
-  <div style="display: grid; place-items: center; border-radius: 190px; background: ${$ylw_.muted}; height: 70%; width: 70%; margin: 1em"
-  <div style="color: ${$cols_.backdeep}; font-size: 1.5rem"
-   "...HTML CHANGES IN REALTIME"
-   />
+  <hr style="height: 1px; width: 100%"/>
+  <div style="display: grid; place-items: center"
+    <div style="background-color: dodgerblue; border: 12px solid navy; box-sizing: border-box; height: 300px; position: relative; width: 300px"
+      <div style="display: grid; inset: 0; place-items: center; position: absolute"
+        <div style="color: navy; font-family: Comic Sans MS; font-size: 52px; letter-spacing: -0.04em; line-height: 0.6; text-align: left"
+          <div "hs"/>
+          <div "on"/>
+        />
+      />
+      <div style="background: rgba(189,171,92,1); border-radius: 999px; bottom: 5px; color: navy; display: grid; font-family: monospace; font-size: 26px; height: 60px; left: 5px; place-items: center; position: absolute; transform: rotate(90deg); width: 60px"
+        ":)"
+      />
+    />
+  />
+  <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.35); margin: 0; width: 100%"/>
+  <div style="color: orange; font-family: monospace; font-size: 1rem; letter-spacing: 0.06em; text-align: center"
+    "...change HTML in realtime"
   />
 />
-  <hr />
-/>
-
 `;
 
 export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {

@@ -6,7 +6,7 @@ import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss } from "./demo.css";
 import { $ABOUT, $BUILD, $CONSOLE, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import { LAYOUT_GRIDcss,  UI_ROOTcss } from "./panels/demo-panels.css";
+import { LAYOUT_GRIDcss, UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./test/test-panel-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
@@ -20,6 +20,8 @@ import { mount_parsing_panels } from "./parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./build/build";
 import { mount_build_panels } from "./build/mount-build-panel";
+import { mount_about_panels } from "./about/mount-about";
+import { ABOUT_DOCS } from "./about/about.consts";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -108,7 +110,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const parse = mount_panel_simple(viewSlot, "parse");
   const test = mount_panel_simple(viewSlot, "test");
   const build = mount_panel_simple(viewSlot, "build");
-  
+  const about = mount_panel_simple(viewSlot, "about");
+
+  const ap = relay_data(mount_about_panels(about.surface, ABOUT_DOCS));
   const tp = relay_data(mount_test_panels(test.surface));
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
@@ -122,14 +126,15 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     _hide(parse.panel);
     _hide(test.panel);
     _hide(build.panel);
+    _hide(about.panel)
     if (view === "parse") {
       _unhide(parse.panel)
     } else if (view === "test") {
-    _unhide(test.panel)
-      // inspPanel.panel.classlist.remove($PANEL_HIDDEN); // dock companion
-    }
-    else if (view === "build") {
+      _unhide(test.panel)
+    } else if (view === "build") {
       _unhide(build.panel)
+    } else if (view === "about") {
+      _unhide(about.panel)
     }
   };
   demo_subscribe(() => applyView());

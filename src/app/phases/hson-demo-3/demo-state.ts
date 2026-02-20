@@ -3,6 +3,7 @@
 // ---- types ----
 
 export type DemoView =
+  | null
   | "about"
   | "test"
   | "parse"
@@ -33,7 +34,7 @@ export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;
 
 const state: DemoState = {
   ui: {
-    currentView: "about",
+    currentView: null,
   },
 };
 
