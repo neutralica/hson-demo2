@@ -39,6 +39,49 @@ const DOC_BTN_IDLEcss = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 } as const;
 
+const P_TEXTcss = {
+  whiteSpace: "pre-wrap",
+  lineHeight: "1.55",
+  marginBottom: "10px",
+  color: $cols_.txtmain,
+  textIndent: "4ch",
+}
+
+const LI_TEXTcss = {
+  whiteSpace: "pre-wrap",
+  lineHeight: "1.55",
+}
+
+
+const LOGOcss = {
+  // ASCII logo: preserve spacing, tighter leading, allow horizontal scroll
+  whiteSpace: "pre",
+  overflowX: "hidden",
+  // overflowY: "auto",
+  padding: "12px 12px",
+  background: $cols_.backdeep,
+  color: $ylw_.candy,
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+  marginBottom: "12px",
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontSize: "12px",
+  lineHeight: "1.1",
+  margin: "auto auto",
+  letterSpacing: "0",
+}
+
+const NOT_LOGOcss = {
+  // normal code blocks
+  whiteSpace: "pre-line",
+  overflowX: "auto",
+  padding: "10px 12px",
+  background: $cols_.backdeep,
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+  marginBottom: "12px",
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontSize: "16px",
+  lineHeight: "1.45",
+}
 // ---- markdown-ish renderer (safe: text only) ----
 
 function render_doc_md(host: LiveTree, src: string): void {
@@ -62,14 +105,8 @@ function render_doc_md(host: LiveTree, src: string): void {
     if (!text) return;
 
     const p = host.create.div().classlist.add("md-p");
-    p.css.setMany({
-      whiteSpace: "pre-wrap",
-      lineHeight: "1.55",
-      marginBottom: "10px",
-      color: $cols_.txtmain,
-      textIndent: "4ch",
-    });
-    p.text.set(text);
+    p.css.setMany(P_TEXTcss)
+      .text.set(text);
   };
 
   const flushList = (): void => {
@@ -80,21 +117,18 @@ function render_doc_md(host: LiveTree, src: string): void {
     const start = listStart;
 
     const list = host.create.div().classlist.add(kind === "ul" ? "md-ul" : "md-ol");
-    list.css.setMany({ display: "grid", gap: "6px", marginBottom: "10px" });
+    list.css.setMany({ display: "grid", gap: "6px", marginBottom: "10px", color: $grn_.easter });
 
     for (let i = 0; i < listBuf.length; i++) {
       const item = listBuf[i] ?? "";
       const li = list.create.div().classlist.add("md-li");
-      li.css.setMany({ display: "grid", gridTemplateColumns: "22px 1fr", gap: "8px" });
+      li.css.setMany({ display: "grid", gridTemplateColumns: "22px 1fr", gap: "8px", textIndent: "2rem" });
 
       const marker =
         kind === "ul" ? "•" : `${start + i})`;
 
-      li.create.div().text.set(marker).css.setMany({ opacity: "0.7" });
-      li.create.div().text.set(item).css.setMany({
-        whiteSpace: "pre-wrap",
-        lineHeight: "1.55",
-      });
+      li.create.div().text.set(marker);
+      li.create.div().text.set(item).css.setMany(LI_TEXTcss);
     }
 
     listBuf = [];
@@ -114,34 +148,8 @@ function render_doc_md(host: LiveTree, src: string): void {
 
     pre.css.setMany(
       isLogo
-        ? {
-          // ASCII logo: preserve spacing, tighter leading, allow horizontal scroll
-          whiteSpace: "pre",
-          overflowX: "hidden",
-          // overflowY: "auto",
-          padding: "12px 12px",
-          background: $cols_.backdeep,
-          color: $ylw_.candy,
-          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-          marginBottom: "12px",
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          fontSize: "12px",
-          lineHeight: "1.1",
-          margin: "auto auto",
-          letterSpacing: "0",
-        }
-        : {
-          // normal code blocks
-          whiteSpace: "pre-line",
-          overflowX: "auto",
-          padding: "10px 12px",
-          background: $cols_.backdeep,
-          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-          marginBottom: "12px",
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          fontSize: "16px",
-          lineHeight: "1.45",
-        },
+        ? LOGOcss
+        : NOT_LOGOcss,
     );
     for (const line of lines) {
       const row = pre.create.div();
@@ -160,9 +168,7 @@ function render_doc_md(host: LiveTree, src: string): void {
 
         row.create.span()
           .classlist.add("md-comment")
-          .css.setMany({
-            color: $grn_.std,
-          })
+          .css.set.color( $grn_.std)
           .text.set(commentPart);
       } else {
         row.text.set(line);
@@ -212,7 +218,7 @@ function render_doc_md(host: LiveTree, src: string): void {
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         letterSpacing: "0.06em",
         textTransform: level === 1 ? "uppercase" : "none",
-        fontSize: level === 1 ? "28px" : level === 2 ? "24px" : "18px",
+        fontSize: level === 1 ? "24px" : level === 2 ? "19px" : "15px",
       });
       h.text.set(text);
       continue;

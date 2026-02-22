@@ -7,6 +7,7 @@ export type DemoView =
   | "about"
   | "test"
   | "parse"
+  | "mouse"
   | "build";
 
 export type WidgetList =

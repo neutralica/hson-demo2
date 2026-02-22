@@ -4,7 +4,7 @@ const invalidRed = "rgba(200, 50, 50, 1)"
 
 
 const greenDragon = "rgba(24, 201, 137, 1)";
-const greenEaster = "rgba(120,255,180,0.40)";
+const greenEaster = "rgba(120,255,180,1)";
 const greenBleach = "rgba(228, 244, 228, 1)";
 const greenCandy = "rgba(88, 215, 151, 1)";
 const greenMuted = "rgba(96, 193, 141, 1)";

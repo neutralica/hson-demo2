@@ -22,6 +22,7 @@ import { bp_factory } from "./build/build";
 import { mount_build_panels } from "./build/mount-build-panel";
 import { mount_about_panels } from "./about/mount-about";
 import { ABOUT_DOCS } from "./about/about.consts";
+import { mount_mouse_panel } from "./mouse/mouse-factory";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -106,23 +107,39 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     pointerEvents: "auto",
   });
 
+  const dockSlot = makeDivId(layoutGrid, "dock-slot").css.setMany({
+    position: "relative",
+    bottom: "0",
+    // top: "-110",
+    // left: "0",
+    minHeight: "0",
+    minWidth: "0",
+    width: "100%",
+    maxHeight: "15rem",
+    overflow: "hidden",
+    pointerEvents: "auto",
+  });
+
   // views stack in viewSlot
   const parse = mount_panel_simple(viewSlot, "parse");
   const test = mount_panel_simple(viewSlot, "test");
   const build = mount_panel_simple(viewSlot, "build");
   const about = mount_panel_simple(viewSlot, "about");
+  const mouse = mount_panel_simple(dockSlot, "mouse");
 
   const ap = relay_data(mount_about_panels(about.surface, ABOUT_DOCS));
   const tp = relay_data(mount_test_panels(test.surface));
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
-
+  const mr = relay_data(mount_mouse_panel(mouse.surface));
   const applyView = (): void => {
     const view = demo_get_current_view();
+    console.log(view)
     _hide(parse.panel);
     _hide(test.panel);
     _hide(build.panel);
-    _hide(about.panel)
+    _hide(about.panel);
+    _hide(mouse.panel);
     if (view === "parse") {
       _unhide(parse.panel)
     } else if (view === "test") {
@@ -131,6 +148,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       _unhide(build.panel)
     } else if (view === "about") {
       _unhide(about.panel)
+    } else if (view === "mouse") {
+      _unhide(mouse.panel)
     }
   };
   demo_subscribe(() => applyView());
@@ -155,6 +174,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   menu.buildBtn.listen.onClick(() => {
     demo_set_current_view("build");
+  });
+  menu.mouseBtn.listen.onClick(() => {
+    console.log("CLK")
+    demo_set_current_view("mouse");
   });
   return relay.ok();
 }
