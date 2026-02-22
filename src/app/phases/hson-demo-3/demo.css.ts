@@ -116,18 +116,27 @@ export const MAIN_CONTAINERcss: CssMap = {
   gridColumn: "1 / 2",
   gridRow: "1 / 2",
 };
-
-export const LAYOUT_GRIDcss: CssMap = {
-  width: "100%",
-  height: "100%",
-  minHeight: "0",
-  minWidth: "0",
-  display: "grid",
-  gap: $GRID_GAPstr,
+export const LAYOUT_GRIDcss2: CssMap = {
+    width: "100%",
+    height: "100%",
+    minHeight: "0",
+    display: "grid",
+    gap: $GRID_GAPstr,
+    padding: "12px",
+    boxSizing: "border-box",
+    // gridAutoColumns: "1fr 1fr",
+  } as const;
+  
+  export const LAYOUT_GRIDcss: CssMap = {
+    width: "100%",
+    height: "100%",
+    minHeight: "0",
+    minWidth: "0",
+    display: "grid",
+    gridTemplateRows: "3fr 1fr",
+    gap: $GRID_GAPstr,
   // padding: "12px",
   boxSizing: "border-box",
-
-
   overflow: "hidden", // CHANGED: avoid scrollbars here; panels/surfaces scroll
 } as const;
 
@@ -135,3 +144,26 @@ export const PANEL_SAFETYcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
 };
+
+export const VIEW_SLOTcss={
+    position: "relative",
+    minHeight: "0",
+    minWidth: "0",
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    pointerEvents: "auto",
+  }
+
+export const DOCK_SLOTcss ={
+    position: "relative",
+    bottom: "0",
+    // top: "-110",
+    // left: "0",
+    minHeight: "0",
+    minWidth: "0",
+    width: "100%",
+    maxHeight: "15rem",
+    overflow: "hidden",
+    pointerEvents: "auto",
+  }

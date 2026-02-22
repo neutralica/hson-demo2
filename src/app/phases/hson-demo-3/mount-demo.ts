@@ -3,10 +3,10 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, HEADLINEcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss } from "./demo.css";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DOCK_SLOTcss, HEADLINEcss, LAYOUT_GRIDcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss } from "./demo.css";
 import { $ABOUT, $BUILD, $CONSOLE, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import { LAYOUT_GRIDcss, UI_ROOTcss } from "./panels/demo-panels.css";
+import {  UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./test/test-panel-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
@@ -15,7 +15,7 @@ import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
 import { $blu_, LETTER_COLORcandy } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { demo_get_current_view, demo_set_current_view, demo_subscribe } from "./demo-state";
+import { get_view, set_view, demo_subscribe } from "./demo-state";
 import { mount_parsing_panels } from "./parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./build/build";
@@ -97,61 +97,39 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
   // CHANGED: layoutGrid now has two stable slots
-  const viewSlot = makeDivId(layoutGrid, "view-slot").css.setMany({
-    position: "relative",
-    minHeight: "0",
-    minWidth: "0",
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
-    pointerEvents: "auto",
-  });
+  const demoSlot = makeDivId(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
+  const widgetSlot = makeDivId(layoutGrid, "dock-slot").css.setMany(DOCK_SLOTcss);
 
-  const dockSlot = makeDivId(layoutGrid, "dock-slot").css.setMany({
-    position: "relative",
-    bottom: "0",
-    // top: "-110",
-    // left: "0",
-    minHeight: "0",
-    minWidth: "0",
-    width: "100%",
-    maxHeight: "15rem",
-    overflow: "hidden",
-    pointerEvents: "auto",
-  });
+  const toggleHide = (lt: LiveTree): void => {
+    lt.classlist.toggle($PANEL_HIDDEN);
+  };
 
   // views stack in viewSlot
-  const parse = mount_panel_simple(viewSlot, "parse");
-  const test = mount_panel_simple(viewSlot, "test");
-  const build = mount_panel_simple(viewSlot, "build");
-  const about = mount_panel_simple(viewSlot, "about");
-  const mouse = mount_panel_simple(dockSlot, "mouse");
+  const parse = mount_panel_simple(demoSlot, "parse");
+  const test = mount_panel_simple(demoSlot, "test");
+  const build = mount_panel_simple(demoSlot, "build");
+  const about = mount_panel_simple(demoSlot, "about");
+  const mouse = mount_panel_simple(widgetSlot, "mouse");
 
   const ap = relay_data(mount_about_panels(about.surface, ABOUT_DOCS));
   const tp = relay_data(mount_test_panels(test.surface));
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
   const mr = relay_data(mount_mouse_panel(mouse.surface));
-  const applyView = (): void => {
-    const view = demo_get_current_view();
-    console.log(view)
+   const applyView = (): void => {
+    const view = get_view();
+    // main views
     _hide(parse.panel);
     _hide(test.panel);
     _hide(build.panel);
     _hide(about.panel);
-    _hide(mouse.panel);
-    if (view === "parse") {
-      _unhide(parse.panel)
-    } else if (view === "test") {
-      _unhide(test.panel)
-    } else if (view === "build") {
-      _unhide(build.panel)
-    } else if (view === "about") {
-      _unhide(about.panel)
-    } else if (view === "mouse") {
-      _unhide(mouse.panel)
-    }
-  };
+
+    if (view === "parse") _unhide(parse.panel);
+    else if (view === "test") _unhide(test.panel);
+    else if (view === "build") _unhide(build.panel);
+    else if (view === "about") _unhide(about.panel);
+   };
+  
   demo_subscribe(() => applyView());
   applyView();
 
@@ -161,23 +139,23 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   }
 
   menu.parseBtn.listen.onClick(() => {
-    demo_set_current_view("parse");
+    set_view("parse");
   });
 
   menu.testBtn.listen.onClick(() => {
-    demo_set_current_view("test");
+    set_view("test");
   });
 
   menu.aboutBtn.listen.onClick(() => {
-    demo_set_current_view("about");
+    set_view("about");
   });
 
   menu.buildBtn.listen.onClick(() => {
-    demo_set_current_view("build");
+    set_view("build");
   });
   menu.mouseBtn.listen.onClick(() => {
-    console.log("CLK")
-    demo_set_current_view("mouse");
+    toggleHide(mouse.panel);
   });
+
   return relay.ok();
 }

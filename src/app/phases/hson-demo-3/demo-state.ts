@@ -7,7 +7,6 @@ export type DemoView =
   | "about"
   | "test"
   | "parse"
-  | "mouse"
   | "build";
 
 export type WidgetList =
@@ -58,7 +57,7 @@ export function demo_get_state(): DemoStateRO {
   return state;
 }
 
-export function demo_get_current_view(): DemoView {
+export function get_view(): DemoView {
   return state.ui.currentView;
 }
 
@@ -73,7 +72,7 @@ export function demo_update(mut: (draft: DemoState) => void): void {
   emit(prev);
 }
 
-export function demo_set_current_view(next: DemoView): void {
+export function set_view(next: DemoView): void {
   // implement via demo_update() so all mutations funnel through one path
   demo_update((s) => {
     s.ui.currentView = next;

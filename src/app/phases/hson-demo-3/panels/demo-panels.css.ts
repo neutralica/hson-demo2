@@ -44,18 +44,6 @@ export const PANEL_FRAMEcss = {
     fontFamily: "'Inconsolata'",
 } as const;
 
-export const LAYOUT_GRIDcss: CssMap = {
-    width: "100%",
-    height: "100%",
-    minHeight: "0",
-    display: "grid",
-    gap: $GRID_GAPstr,
-    padding: "12px",
-    boxSizing: "border-box",
-    // gridAutoColumns: "1fr 1fr",
-    // gridTemplateRows: "3fr 1fr"
-} as const;
-
 export const TEST_ACTION_BTN = {
     display: "grid",
     placeItems: "center",
