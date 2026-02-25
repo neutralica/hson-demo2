@@ -1,6 +1,6 @@
 // build.css.ts
 import type { CssMap } from "hson-live/types";
-import { $GRID_GAPstr } from "../../../consts/ui-consts";
+import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
 import { PANEL_TEXTAREAcss, TEST_ACTION_BTN } from "../panels/demo-panels.css";
 
@@ -56,6 +56,8 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 // Input textarea: just reuse PANEL_TEXTAREAcss, add padding back if you want
 export const BUILD_TEXTAREAcss: CssMap = {
   ...PANEL_TEXTAREAcss,
+  color: $blu_.baby,
+  fontSize: $txt_.main,
   padding: "10px", // you had this commented out on PANEL_TEXTAREAcss
 };
 
@@ -156,9 +158,10 @@ export const BUILD_HTMLBOXcss: CssMap = {
 
 export const BUILD_PANEcss: CssMap = {
   display: "grid",
-  gridTemplateRows: "auto 1fr",
+  gridTemplateRows: "1fr",
   minHeight: "0",
   minWidth: "0",
+  height: "100%"
 };
 
 export const BUILD_BODYcss: CssMap = {

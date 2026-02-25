@@ -37,7 +37,7 @@ export const shade_class = (l: string) => {
 export const $PARSE = "parse";
 export const $TEST = "test";
 export const $BUILD = "build";
-export const $CONSOLE = "console";
+export const $FLEURS = "fleurs";
 export const $OKLCH = "oklch";
 export const $MOUSE = "mouse";
 export const $ABOUT = "about";
@@ -46,10 +46,12 @@ export const MENU_OPTIONS = [
   $TEST,
   $PARSE,
   $BUILD,
-  $CONSOLE,
+  $FLEURS,
   $OKLCH,
   $MOUSE,
-] as const;export const $PARSING_PANELS_ROOT = "parsing-panels-root";
+] as const;
+
+export const $PARSING_PANELS_ROOT = "parsing-panels-root";
 
 export const $PP_HEAD = "pp-head";
 

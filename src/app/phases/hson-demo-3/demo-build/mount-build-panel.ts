@@ -48,13 +48,13 @@ export function init_build_panels(bp: BuildDemo): void {
         bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
 
         // simple active affordance (optional)
+        // TODO - change over to .data.set
         bp.tabs.render.setAttrs("data-active", String(showRender));
         bp.tabs.html.setAttrs("data-active", String(!showRender));
     };
 
     const render = (raw: string): void => {
         // NOTE: do not overwrite anything if invalid; just mark invalid.
-        //       do not “helpfully” coerce nonsense into <_obj></_obj>.
         const t = raw.trim();
         const empty = t.length === 0;
 

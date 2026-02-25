@@ -25,7 +25,7 @@ const richCrimson = "rgba(228, 34, 125, 1)"
 const redHeartsBlood = "rgba(161, 49, 49, 1)"
 
 const pinkCandy = "rgba(233, 123, 209, 1)";
-const pinkEaster = "rgba(255,140,200,0.40)";
+const pinkEaster = "rgba(255,140,200,1)";
 const pinkBleach = "rgba(255,225,232,1)";
 const pinkMuted = "rgba(180, 114, 144, 1)";
 const pinkFaded = "rgba(180, 114, 144, 1)";
@@ -33,7 +33,7 @@ const pinkStd = "rgb(255, 100, 170)"
 
 const purpleStoner = "rgba(126, 40, 143, 1)"
 
-const yellowEaster = "rgba(255,210,80,0.45)";
+const yellowEaster = "rgba(255,210,80,1)";
 const yellowBleach = "rgba(255, 252, 233, 1)";
 const yellowStd = "rgb(255, 210, 0)";
 const yellowCandy = "rgba(231, 223, 116, 1)";

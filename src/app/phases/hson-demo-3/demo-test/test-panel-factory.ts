@@ -12,7 +12,7 @@ import type { LoopReport } from "../../../../../../hson-live/dist/diagnostics/lo
 import { build_suites_for_mode } from "../../../../tests/suite-builder";
 import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
-import { create_inspector, type InspectorUi } from "../inspect/test-inspector";
+import { create_inspector, type InspectorUi } from "../demo-inspect/test-inspector";
 
 
 export type TestPanelDeps = Readonly<{
@@ -21,7 +21,7 @@ export type TestPanelDeps = Readonly<{
   onEvent: (e: TestEvent) => void; // optional if you want
 }>;
 
-const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps"
+const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps (expect 8 errors from invalid HTML)"
 
 export type TestPanel = Readonly<{
   branch: LiveTree;

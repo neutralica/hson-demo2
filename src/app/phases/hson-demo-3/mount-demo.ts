@@ -3,11 +3,11 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DOCK_SLOTcss, HEADLINEcss, LAYOUT_GRIDcss, MAIN_CONTAINERcss, MAIN_TEXTcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss } from "./demo.css";
-import { $ABOUT, $BUILD, $CONSOLE, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DOCK_SLOTcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss } from "./demo.css";
+import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import {  UI_ROOTcss } from "./panels/demo-panels.css";
-import { mount_test_panels } from "./test/test-panel-factory";
+import { UI_ROOTcss } from "./panels/demo-panels.css";
+import { mount_test_panels } from "./demo-test/test-panel-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
@@ -16,13 +16,14 @@ import { $blu_, LETTER_COLORcandy } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { get_view, set_view, demo_subscribe } from "./demo-state";
-import { mount_parsing_panels } from "./parse/pp-factory";
+import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
-import { bp_factory } from "./build/build";
-import { mount_build_panels } from "./build/mount-build-panel";
-import { mount_about_panels } from "./about/mount-about";
-import { ABOUT_DOCS } from "./about/about.consts";
+import { bp_factory } from "./demo-build/build";
+import { mount_build_panels } from "./demo-build/mount-build-panel";
+import { mount_about_panels } from "./demo-about/mount-about";
+import { ABOUT_DOCS } from "./demo-about/about.consts";
 import { mount_mouse_panel } from "./mouse/mouse-factory";
+import { mount_motes2 } from "./motes2/mount-motes2";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -47,14 +48,28 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .classlist.add("demo screen fx")
     .css.setMany(DEMO_SCREEN_FXcss);
 
-  const mainContainer = makeDivId(screenFx, "main-container")
-    .css.setMany(MAIN_CONTAINERcss)
 
-  const titleBox = makeDivId(mainContainer, "title-box")
+  const menuContainer = makeDivId(screenFx, "menu-container")
+    .css.setMany(MENU_CONTAINERcss)
+
+
+  const motes = makeDivId(screenFx, "motes")
+    .classlist.add("demo motes")
+    .css.setMany({
+      position: "fixed",
+      left: "0",
+      top: "0",
+      height: "100%",
+      width: "100%",
+      pointerEvents: "none",
+    })
+  mount_motes2(motes);
+  
+  const titleBox = makeDivId(menuContainer, "title-box")
     .css.setMany(TITLE_BOXcss)
 
   const headline = makeDivId(titleBox, "hson-headline")
-    .css.setMany(HEADLINEcss);
+    .css.setMany(DEMO_MAIN_LOGOcss);
 
   const uiRoot = makeDivId(screenFx, "ui-root")
     .css.setMany(UI_ROOTcss);
@@ -62,8 +77,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const layoutGrid = makeDivId(uiRoot, "layout-grid")
     .css.setMany(LAYOUT_GRIDcss);
 
-  const menuBox = makeDivId(mainContainer, "menu-box")
-    .css.setMany(MENU_BOXcss);
+  const menuBox = makeDivId(menuContainer, "menu-box")
+    .css.setMany(MENU_LISTcss);
 
   const menu = {
     aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
@@ -72,13 +87,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     buildBtn: makeDivIdTxt(menuBox, `${$BUILD}-button`, $BUILD),
     oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
     mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button`, `${$MOUSE}`),
-    consoleBtn: makeDivIdTxt(menuBox, `${$CONSOLE}-button`, `${$CONSOLE}`),
+    consoleBtn: makeDivIdTxt(menuBox, `${$FLEURS}-button`, `${$FLEURS}`),
 
   } as const;
 
   keys_of(menu).forEach((k) => {
     menu[k].css.setMany({
-      ...MAIN_TEXTcss,
+      ...MAIN_MENUcss,
       color: $blu_.candy,
     });
   });
@@ -116,7 +131,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
   const mr = relay_data(mount_mouse_panel(mouse.surface));
-   const applyView = (): void => {
+  const applyView = (): void => {
     const view = get_view();
     // main views
     _hide(parse.panel);
@@ -128,8 +143,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     else if (view === "test") _unhide(test.panel);
     else if (view === "build") _unhide(build.panel);
     else if (view === "about") _unhide(about.panel);
-   };
-  
+  };
+
   demo_subscribe(() => applyView());
   applyView();
 

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/x-icon" href="/hson-favicon-dark.ico" />
+        <title>hson-box</title>
+        <style>
+            @font-face {
+                font-family: 'Jacquard12';
+                src: url('/Jacquard12.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            /* single catching edge */
+            #menu-belt::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+
+                /* thin highlight, centered, moved with --belt-glint-x */
+                background: linear-gradient(
+                    to right,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0) 48%,
+                    rgba(255, 255, 255, 0.18) 49.4%,
+                    rgba(255, 255, 255, 0.65) 50%,
+                    rgba(255, 255, 255, 0.18) 50.6%,
+                    rgba(255, 255, 255, 0) 52%,
+                    rgba(255, 255, 255, 0) 100%
+                );
+
+                transform: translateX(var(--belt-glint-x, -6px));
+                opacity: var(--belt-glint, 0);
+                mix-blend-mode: screen;
+            }
+        </style>
+      <script type="module" crossorigin src="/assets/index-CkdgZ6cd.js"></script>
+    </head>
+    <body>
+        <div id="app-container">
+            <x><!-- need for xml parse --></x>
+        </div>
+    </body>
+</html>

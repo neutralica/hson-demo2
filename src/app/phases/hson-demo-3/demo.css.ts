@@ -1,17 +1,21 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $cols_, $grn_ } from "../../consts/colors.consts";
+import { $cols_, $grn_, $ylw_ } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 
-export const MAIN_TEXTcss: CssMap = {
-  fontFamily: "'Inconsolata', monaco, monospace",
+export const MAIN_MENUcss: CssMap = {
+  fontFamily: "monospace",
   fontSize: $txt_.heading,
   fontWeight: "400",
   _hover: {
     fontWeight: "700",
     background: $grn_.muted,
+    color: $cols_.backdeep
+  },
+  _active: {
+    background: $ylw_.muted,
     color: $cols_.backdeep
   }
 }
@@ -79,12 +83,12 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   pointerEvents: "all",
 };
 
-export const MENU_BOXcss: CssMap = {
+export const MENU_LISTcss: CssMap = {
   gridColumn: "1",
   // gridRow: "1 / span 2",
   marginLeft: "2rem",
   position: "relative",
-  lineHeight: "1.5rem",
+  lineHeight: "2.5rem",
 };
 
 export const TITLE_BOXcss: CssMap = {
@@ -93,7 +97,7 @@ export const TITLE_BOXcss: CssMap = {
   flexDirection: "row",
 }
 
-export const HEADLINEcss: CssMap = {
+export const DEMO_MAIN_LOGOcss: CssMap = {
   display: "flex",
   alignContent: "baseline",
   justifyContent: "flex-start",
@@ -101,7 +105,7 @@ export const HEADLINEcss: CssMap = {
 
 }
 
-export const MAIN_CONTAINERcss: CssMap = {
+export const MENU_CONTAINERcss: CssMap = {
   // CHANGED: remove viewport anchoring — let the parent grid do its job
   position: "absolute",
   minWidth: "0",
@@ -116,16 +120,6 @@ export const MAIN_CONTAINERcss: CssMap = {
   gridColumn: "1 / 2",
   gridRow: "1 / 2",
 };
-export const LAYOUT_GRIDcss2: CssMap = {
-    width: "100%",
-    height: "100%",
-    minHeight: "0",
-    display: "grid",
-    gap: $GRID_GAPstr,
-    padding: "12px",
-    boxSizing: "border-box",
-    // gridAutoColumns: "1fr 1fr",
-  } as const;
   
   export const LAYOUT_GRIDcss: CssMap = {
     width: "100%",
@@ -133,7 +127,7 @@ export const LAYOUT_GRIDcss2: CssMap = {
     minHeight: "0",
     minWidth: "0",
     display: "grid",
-    gridTemplateRows: "3fr 1fr",
+    gridTemplateRows: "3fr minmax(auto, 1fr)",
     gap: $GRID_GAPstr,
   // padding: "12px",
   boxSizing: "border-box",

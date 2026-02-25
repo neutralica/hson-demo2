@@ -59,7 +59,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   // header row: coords + angle
   const head = root.create.div().css.setMany({
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateRows: "1fr 1fr",
     gap: "10px",
     alignItems: "center",
     minWidth: "0",
@@ -94,7 +94,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   });
 
   // pointer stage
-  const stage = body.create.div().css.setMany({
+  const tracker = body.create.div().css.setMany({
     position: "relative",
     minWidth: "0",
     minHeight: "0",
@@ -106,7 +106,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     overflow: "hidden",
   });
 
-  const pointer = stage.create.div()
+  const pointer = tracker.create.div()
     .classlist.add("mouse-pointer")
     .css.setMany({
       position: "absolute",
@@ -121,7 +121,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     });
 
   // center dot
-  stage.create.div().css.setMany({
+  tracker.create.div().css.setMany({
     position: "absolute",
     left: "50%",
     top: "50%",
@@ -195,7 +195,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
 
   return {
     root,
-    stage,
+    stage: tracker,
     pointer,
     readout: { xy, angle, rows },
     dispose,
