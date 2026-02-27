@@ -15,8 +15,8 @@
     "vite": "^7.3.0"
   },
  "dependencies": {
-   "hson-live": "workspace:*",
-  "intrastructure": "workspace:*",
+   "hson-live": "file:../hson-demo2",
+  "intrastructure": "file:../intrastructure/",
  "tsx": "^4.21.0"
 }
 }
