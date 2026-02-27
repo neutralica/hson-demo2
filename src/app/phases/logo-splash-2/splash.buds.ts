@@ -1,4 +1,4 @@
-import { make_section, make_div } from "../../config/bud-config";
+import { make_section, make_div } from "../../widgets/buds-deprecate/bud-config";
 import { WORD_CSS } from "../../wordmark/wordmark.css";
 import { SKYanim, FLAREanim, GRADIENTanim, SUN_CARRIERanim, SUN_DISKanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM } from "./splash.anim";
 import { AT_LAYER_FADE, AT_LAYER_MAX, KISSat } from "./splash.consts";

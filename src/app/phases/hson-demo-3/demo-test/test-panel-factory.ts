@@ -2,7 +2,7 @@ import { hson } from "hson-live";
 import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
-import { make_btn } from "../../../widgets/gems/make-gems";
+import { make_btn } from "../../../widgets/gems-deprecate/make-gems";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss, TEST_SELECTcss } from "../panels/demo-panels.css";
 import { PANEL_BRANCHcss, MARQUEE_BOXcss, MARQUEEcss, TEST_STATUS_CHIPcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";

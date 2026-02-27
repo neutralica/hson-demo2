@@ -1,24 +1,26 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
 
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": [],
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "types": [],
 
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
 
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noUncheckedSideEffectImports": true,
-    "skipLibCheck": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "moduleDetection": "force",
+        "noUncheckedSideEffectImports": true,
+        "skipLibCheck": true,
 
-    "noEmit": true
-  },
-  "include": ["src", "src/app/phases/logo-splash-2/splash.css.ts", "_archive-delete/hson-wasm", "src/app/phases/logo-splash-2/splash.keys.ts", "consts"],
-  "exclude": ["dist", "node_modules"]
+        "noEmit": true
+    },
+    "include": [
+        "src",
+    ],
+    "exclude": ["dist", "node_modules", "**/node_modules"]
 }

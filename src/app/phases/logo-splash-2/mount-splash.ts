@@ -13,7 +13,7 @@ import { makeSpanClass } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
-import { bud_node } from "../../config/bud-config";
+import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { LETTER_COLORstd } from "../../consts/colors.consts";
 
