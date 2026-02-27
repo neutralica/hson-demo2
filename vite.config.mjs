@@ -6,12 +6,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "hson-live": path.resolve(__dirname, "../hson-live/dist/index.js"),
-      "hson-live/hson": path.resolve(__dirname, "../hson-live/dist/hson.js"),
-      "hson-live/diagnostics": path.resolve(__dirname, "../hson-live/dist/diagnostics/index.js"),
-      "hson-live/types": path.resolve(__dirname, "../hson-live/dist/types/index.js"),
-      "intrastructure": path.resolve(__dirname, "../intrastructure/dist/index.js"),
-    },
+    alias: [
+      // Put the more specific aliases FIRST
+      { find: "hson-live/diagnostics", replacement: path.resolve(__dirname, "../hson-live/dist/diagnostics/index.js") },
+      { find: "hson-live/types", replacement: path.resolve(__dirname, "../hson-live/dist/types/index.js") },
+      { find: "hson-live/hson", replacement: path.resolve(__dirname, "../hson-live/dist/hson.js") },
+
+      // Then map the package root
+      { find: "hson-live", replacement: path.resolve(__dirname, "../hson-live/dist/index.js") },
+
+      // Same idea for intrastructure (adjust filename if needed)
+      { find: "intrastructure", replacement: path.resolve(__dirname, "../intrastructure/dist/index.js") },
+    ],
   },
 });
