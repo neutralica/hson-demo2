@@ -2,3 +2,12 @@ node_modules/
 # dist/
 .DS_Store
 _archive-delete/
+# deps
+node_modules/
+dist/
+.vite/
+
+# build artifacts
+node_modules/
+dist/
+.vite/
