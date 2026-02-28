@@ -1,7 +1,7 @@
 // palette-board.ts
 import type { LiveTree } from "hson-live";
 import type { Palette } from "./calc-palette";
-import { makeDivClass, makeDivId } from "../../utils/makers";
+import { make_div_class, make_div_id } from "../../utils/makers";
 
 // Render a simple grid of clickable swatches.
 // Click swatch → copies `oklch(...)` string.
@@ -21,7 +21,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
 
 
     // Background helps you see contrast immediately.
-    const pal = makeDivClass(root, "palette-banner")
+    const pal = make_div_class(root, "palette-banner")
         .text.set(`PALETTE seed: ${p.seed}  vol: ${p.opts.volatility.toFixed(2)}`)
         .css.setMany({
             padding: "10px 12px",
@@ -37,7 +37,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
         current browser mode */
     const section = (title: string, mode: "dark" | "light" = "dark") => {
         const isLight = mode === "light";
-        const box = makeDivClass(root, "palette-section");
+        const box = make_div_class(root, "palette-section");
         const background = isLight ? p.bgLight : p.bgDark;
         const modeGrey = isLight ? p.grays[3] : p.grays[2];
         box.css.setMany({
@@ -57,7 +57,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
             fontWeight: "700"
         });
 
-        const grid = makeDivClass(box, "palette-grid");
+        const grid = make_div_class(box, "palette-grid");
         grid.css.setMany({
             display: "grid",
             gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
@@ -68,7 +68,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
     };
 
     const addSwatch = (grid: LiveTree, name: string, value: string) => {
-        const sw = makeDivClass(grid, "swatch");
+        const sw = make_div_class(grid, "swatch");
 
         sw.css.setMany({
             borderRadius: "10px",

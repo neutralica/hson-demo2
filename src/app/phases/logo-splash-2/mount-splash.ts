@@ -9,7 +9,7 @@ import { FLAREanim, NEON_FLASHanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINE
 import { get_letter_key } from "../../utils/helpers";
 import type { LetterCaps, LetterKey } from "../../../types/core.types";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
-import { makeSpanClass } from "../../utils/makers";
+import { make_span_class } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
@@ -58,8 +58,8 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterCaps): readonly [LiveTree, LiveTree] => {
-        const cell = makeSpanClass(wordMark.tree, ["cell", ltr])
-        const l = makeSpanClass(cell, ["letter", ltr]).text.set(ltr)
+        const cell = make_span_class(wordMark.tree, ["cell", ltr])
+        const l = make_span_class(cell, ["letter", ltr]).text.set(ltr)
         return [l, cell];
     }
     const [h, hCell] = createLetter("H")
@@ -69,9 +69,9 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const letters = [h, s, o, n];
     const cells = [hCell, sCell, oCell, nCell];
     /* create semver pop-up */
-    const ver = makeSpanClass(nCell, ["ver"]);
-    makeSpanClass(ver, "ver-a").text.set("2.0.2");
-    const ver6 = makeSpanClass(ver, "ver-6").text.set("6");
+    const ver = make_span_class(nCell, ["ver"]);
+    make_span_class(ver, "ver-a").text.set("2.0.2");
+    const ver6 = make_span_class(ver, "ver-6").text.set("6");
 
 
     /* style letters */

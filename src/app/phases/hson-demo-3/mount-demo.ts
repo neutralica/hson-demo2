@@ -1,7 +1,7 @@
 // mount-demo.ts
 
 import { CssManager, hson, type LiveTree } from "hson-live";
-import { makeDivId, makeDivIdTxt, makeSpanId } from "../../utils/makers";
+import { make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DOCK_SLOTcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
@@ -36,24 +36,24 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.globals.invoke();
 
-  const demo = makeDivId(stage, $DS.demo)
+  const demo = make_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
 
-  const screen = makeDivId(demo, $DS.screen)
+  const screen = make_div_id(demo, $DS.screen)
     .classlist.add("demo screen")
     .css.setMany(DEMO_SCREENcss)
 
-  const screenFx = makeDivId(screen, $DS.screenFx)
+  const screenFx = make_div_id(screen, $DS.screenFx)
     .classlist.add("demo screen fx")
     .css.setMany(DEMO_SCREEN_FXcss);
 
 
-  const menuContainer = makeDivId(screenFx, "menu-container")
+  const menuContainer = make_div_id(screenFx, "menu-container")
     .css.setMany(MENU_CONTAINERcss)
 
 
-  const motes = makeDivId(screenFx, "motes")
+  const motes = make_div_id(screenFx, "motes")
     .classlist.add("demo motes")
     .css.setMany({
       position: "fixed",
@@ -65,29 +65,29 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     })
   mount_motes2(motes);
 
-  const titleBox = makeDivId(menuContainer, "title-box")
+  const titleBox = make_div_id(menuContainer, "title-box")
     .css.setMany(TITLE_BOXcss)
 
-  const headline = makeDivId(titleBox, "hson-headline")
+  const headline = make_div_id(titleBox, "hson-headline")
     .css.setMany(DEMO_MAIN_LOGOcss);
 
-  const uiRoot = makeDivId(screenFx, "ui-root")
+  const uiRoot = make_div_id(screenFx, "ui-root")
     .css.setMany(UI_ROOTcss);
 
-  const layoutGrid = makeDivId(uiRoot, "layout-grid")
+  const layoutGrid = make_div_id(uiRoot, "layout-grid")
     .css.setMany(LAYOUT_GRIDcss);
 
-  const menuBox = makeDivId(menuContainer, "menu-box")
+  const menuBox = make_div_id(menuContainer, "menu-box")
     .css.setMany(MENU_LISTcss);
 
   const menu = {
-    aboutBtn: makeDivIdTxt(menuBox, `${$ABOUT}-button`, $ABOUT),
-    testBtn: makeDivIdTxt(menuBox, `${$TEST}-button`, $TEST),
-    parseBtn: makeDivIdTxt(menuBox, `${$PARSE}-button`, $PARSE),
-    buildBtn: makeDivIdTxt(menuBox, `${$BUILD}-button`, $BUILD),
-    oklchBtn: makeDivIdTxt(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
-    mouseBtn: makeDivIdTxt(menuBox, `${$MOUSE}-button`, `${$MOUSE}`),
-    consoleBtn: makeDivIdTxt(menuBox, `${$FLEURS}-button`, `${$FLEURS}`),
+    aboutBtn: make_div_id_text(menuBox, `${$ABOUT}-button`, $ABOUT),
+    testBtn: make_div_id_text(menuBox, `${$TEST}-button`, $TEST),
+    parseBtn: make_div_id_text(menuBox, `${$PARSE}-button`, $PARSE),
+    buildBtn: make_div_id_text(menuBox, `${$BUILD}-button`, $BUILD),
+    oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
+    mouseBtn: make_div_id_text(menuBox, `${$MOUSE}-button`, `${$MOUSE}`),
+    consoleBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `${$FLEURS}`),
 
   } as const;
 
@@ -102,9 +102,12 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       color: LETTER_COLORcandy[l]
     });
   });
-  gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).set.visibility('hidden');
+  gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
+    visibility: "hidden",
+    height: 0,
+  });
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
-    const span = makeSpanId(headline, `${k}-letter`)
+    const span = make_span_id(headline, `${k}-letter`)
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .css.setMany($T$GHSONcss)
@@ -112,8 +115,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
   // CHANGED: layoutGrid now has two stable slots
-  const demoSlot = makeDivId(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
-  const widgetSlot = makeDivId(layoutGrid, "dock-slot").css.setMany(DOCK_SLOTcss);
+  const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
+  const widgetSlot = make_div_id(layoutGrid, "dock-slot").css.setMany(DOCK_SLOTcss);
 
   const toggleHide = (lt: LiveTree): void => {
     lt.classlist.toggle($PANEL_HIDDEN);

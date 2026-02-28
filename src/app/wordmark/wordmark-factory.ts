@@ -1,16 +1,16 @@
 import type { LiveTree } from "hson-live";
 import type { LetterKey } from "../../types/core.types";
 import type { WordmarkParts } from "./wordmark.types";
-import { makeDivClass, makeSpanClass } from "../utils/makers";
+import { make_div_class, make_span_class } from "../utils/makers";
 
 
 export function build_wordmark(parent: LiveTree): WordmarkParts {
-  const frame = makeDivClass(parent, "frame");
-  const wordbox = makeDivClass(frame, "wordmark");
+  const frame = make_div_class(parent, "frame");
+  const wordbox = make_div_class(frame, "wordmark");
 
   const mk = (ltr: LetterKey): readonly [LiveTree, LiveTree] => {
-    const cell = makeSpanClass(wordbox, ["cell", ltr]);
-    const letter = makeSpanClass(cell, ["letter", ltr]).text.set(ltr);
+    const cell = make_span_class(wordbox, ["cell", ltr]);
+    const letter = make_span_class(cell, ["letter", ltr]).text.set(ltr);
     return [letter, cell] as const;
   };
 
@@ -21,9 +21,9 @@ export function build_wordmark(parent: LiveTree): WordmarkParts {
 
   const letters = { h: h, s: s, o: o, n: n } as const;
   const cells = { h: hCell, s: sCell, o: oCell, n: nCell } as const;
-  const ver = makeSpanClass(nCell, ["ver"]);
-  makeSpanClass(ver, "ver-a").text.set("2.0.2");
-  const ver6 = makeSpanClass(ver, "ver-6").text.set("6");
+  const ver = make_span_class(nCell, ["ver"]);
+  make_span_class(ver, "ver-a").text.set("2.0.2");
+  const ver6 = make_span_class(ver, "ver-6").text.set("6");
   return {
     frame,
     wordbox,
