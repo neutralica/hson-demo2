@@ -93,8 +93,8 @@ export const FRAME_CSS: CssMap = {
     borderRadius: "22px",
     transform: "translate(-50%, -50%)",
     // use the shared var
-    width: "max-content",
-    height: "max-content",
+    width: "var(--frameSize)",
+    height: "var(--frameSize)" ,
     // background: bckColor,
     display: "grid",
     placeItems: "center",
