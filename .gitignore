@@ -1,13 +1,13 @@
+
+# node deps
 node_modules/
-# dist/
+
+# vite caches
+**/.vite/
+
 .DS_Store
 _archive-delete/
-# deps
-node_modules/
-dist/
-.vite/
 
-# build artifacts
-node_modules/
+
+# dist/
 dist/
-.vite/
