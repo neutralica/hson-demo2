@@ -103,10 +103,6 @@ export const FRAME_CSS: CssMap = {
     willChange: "",
 };
 
-export const FRAME_CSS_SPLASH: CssMap = {
-  ...FRAME_CSS,
-};
-
 export const GRADIENT_CSS: CssMap = {
   position: "absolute",
   left: "0%",

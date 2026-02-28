@@ -2,14 +2,14 @@ import type { LiveTree } from "hson-live";
 import type { LetterKey } from "../../../types/core.types";
 import { CELL_CSS, O_ROT } from "../wordmark.css";
 import { LETTER_COLORstd } from "../../consts/colors.consts";
-import { FRAME_CSS_SPLASH } from "../../phases/logo-splash-2/splash.css";
+import { FRAME_CSS } from "../../phases/logo-splash-2/splash.css";
 import type { WordmarkParts } from "../wordmark.types";
 
 
 export function style_wordmark_splash(parts: WordmarkParts): void {
   const { frame, letters, cellList } = parts;
 
-  frame.css.setMany(FRAME_CSS_SPLASH);
+  frame.css.setMany(FRAME_CSS);
 
   for (const c of cellList) c.css.setMany(CELL_CSS);
 
