@@ -64,7 +64,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       pointerEvents: "none",
     })
   mount_motes2(motes);
-  
+
   const titleBox = makeDivId(menuContainer, "title-box")
     .css.setMany(TITLE_BOXcss)
 

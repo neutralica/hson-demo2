@@ -41,7 +41,7 @@ export const PANEL_FRAMEcss = {
     // minHeight: "18rem",
     // outline: `1px solid rgba(10,150,220,1)`,
     color: $blu_.std,
-    fontFamily: "'Inconsolata'",
+    fontFamily: "monospace",
 } as const;
 
 export const TEST_ACTION_BTN = {
