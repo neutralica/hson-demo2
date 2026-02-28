@@ -99,7 +99,7 @@ export const FRAME_CSS: CssMap = {
     display: "grid",
     placeItems: "center",
     overflow: "hidden",
-    padding: "56px 64px",
+    padding: "20px 20px",
     willChange: "",
 };
 

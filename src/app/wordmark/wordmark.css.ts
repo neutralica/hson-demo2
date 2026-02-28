@@ -1,7 +1,8 @@
 import type { CssMap } from "hson-live/types";
 import { $cols_ } from "../consts/colors.consts";
 
-export const HSON_FONT_PX = 96
+export const HSON_FONT_PX = 96;
+export const HSON_O_PX = 87;
 export const HSON_FONT_str = `${HSON_FONT_PX}px`;
 
 export const CELL_CSS: CssMap = {
@@ -57,10 +58,11 @@ export const LOGOBOX_CSS: CssMap = {
 
 
 export const O_ROT: CssMap = {
-  fontSize: "5.7rem",
+  // fontSize: "5.7rem",
   display: "inline-block",
-  transform: "rotate(32deg) translateX(5px) translateY(-6px)",
+  transform: "rotate(32deg) translateX(2px) translateY(-3px)",
   transformOrigin: "50% 55%",
+  fontSize: `${HSON_O_PX}px`,
 };
 
 export const VER6_CSS: CssMap = {
