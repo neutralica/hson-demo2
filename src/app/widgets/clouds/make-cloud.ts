@@ -86,11 +86,11 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
 <svg xmlns="http://www.w3.org/2000/svg"
      width="${wBleed}" height="${h}"
      viewBox="${xMin} 0 ${wBleed} ${h}"
-     preserveAspectRatio="none">  <!-- CHANGED: avoid aspect surprises -->
+     preserveAspectRatio="none">  <!-- avoid aspect surprises -->
   ${filter}
   <g filter="url(#cloud)">
     ${circles}
-    ${slab}  <!-- CHANGED: use slab var, don’t re-inline a second rect -->
+    ${slab}  <!--  use slab var, don’t re-inline a second rect -->
   </g>
 </svg>`;
 

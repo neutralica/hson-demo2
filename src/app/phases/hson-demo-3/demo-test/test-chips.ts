@@ -12,7 +12,7 @@ export type ChipDisplay = Readonly<{
 
 
 export function create_test_chips(host: LiveTree): ChipDisplay {
-  // CHANGED: keep the same grid placement but make it read like a HUD row
+  // keep the same grid placement but make it read like a HUD row
   const box = make_div_id(host, "test-chips").css.setMany({
     display: "grid",
     gridTemplateColumns: "1fr 1fr 1fr 1fr",

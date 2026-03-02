@@ -3,10 +3,10 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DOCK_SLOTcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss } from "./demo.css";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
-import { UI_ROOTcss } from "./panels/demo-panels.css";
+import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./demo-test/test-panel-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
@@ -48,10 +48,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .classlist.add("demo screen fx")
     .css.setMany(DEMO_SCREEN_FXcss);
 
-
   const menuContainer = make_div_id(screenFx, "menu-container")
-    .css.setMany(MENU_CONTAINERcss)
-
+    .css.setMany(MENU_CONTAINERcss);
 
   const motes = make_div_id(screenFx, "motes")
     .classlist.add("demo motes")
@@ -85,9 +83,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     testBtn: make_div_id_text(menuBox, `${$TEST}-button`, $TEST),
     parseBtn: make_div_id_text(menuBox, `${$PARSE}-button`, $PARSE),
     buildBtn: make_div_id_text(menuBox, `${$BUILD}-button`, $BUILD),
-    oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
+    // oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
     mouseBtn: make_div_id_text(menuBox, `${$MOUSE}-button`, `${$MOUSE}`),
-    consoleBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `${$FLEURS}`),
+    // consoleBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `${$FLEURS}`),
 
   } as const;
 
@@ -102,10 +100,12 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       color: LETTER_COLORcandy[l]
     });
   });
+
   gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
     visibility: "hidden",
     height: 0,
   });
+
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
     const span = make_span_id(headline, `${k}-letter`)
       .text.set(HSONlower[k])
@@ -114,9 +114,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     return span;
   });
 
-  // CHANGED: layoutGrid now has two stable slots
+  // layoutGrid now has two stable slots
   const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
-  const widgetSlot = make_div_id(layoutGrid, "dock-slot").css.setMany(DOCK_SLOTcss);
+  const mouseSlot = make_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
 
   const toggleHide = (lt: LiveTree): void => {
     lt.classlist.toggle($PANEL_HIDDEN);
@@ -127,13 +127,29 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const test = mount_panel_simple(demoSlot, "test");
   const build = mount_panel_simple(demoSlot, "build");
   const about = mount_panel_simple(demoSlot, "about");
-  const mouse = mount_panel_simple(widgetSlot, "mouse");
+  const mouseHost = make_div_id(mouseSlot, "mouse-host").css.setMany({
+    width: "100%",
+    minWidth: "0",
+    minHeight: "0",
 
+    // ADDED: keep it from getting absurdly wide or narrow
+    maxWidth: "32rem",
+
+    // ADDED: the old panel frame gave you readable text + vibe
+    color: $blu_.std,
+    fontFamily: "monospace",
+
+    // OPTIONAL: if you want the same glass feel as panels
+    background: "rgba(255,255,255,0.03)",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+    borderRadius: "14px",
+    padding: "12px",
+  });
+  const mr = relay_data(mount_mouse_panel(mouseHost));
   const ap = relay_data(mount_about_panels(about.surface, ABOUT_DOCS));
   const tp = relay_data(mount_test_panels(test.surface));
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
-  const mr = relay_data(mount_mouse_panel(mouse.surface));
   const applyView = (): void => {
     const view = get_view();
     // main views
@@ -172,7 +188,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     set_view("build");
   });
   menu.mouseBtn.listen.onClick(() => {
-    toggleHide(mouse.panel);
+    toggleHide(mouseHost);
   });
 
   return relay.ok();

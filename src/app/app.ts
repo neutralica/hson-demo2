@@ -31,10 +31,10 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     .classlist.add("stage")
     .css.setMany(STAGE_CSS);
 
-  // CHANGED: one skip promise for the whole pre-demo sequence
+  // one skip promise for the whole pre-demo sequence
   const { skip, cancel } = make_skip_promise(stage);
 
-  // CHANGED: local helper — hard cut stage, but DO NOT exit the app
+  // local helper — hard cut stage, but DO NOT exit the app
   const hard_cut = (): void => {
     stage.empty();
   };
@@ -46,7 +46,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
       const res = await Promise.race([introP, skip]); // Outcome<void> | "skip"
       if (res === "skip") {
         hard_cut();
-        // CHANGED: continue to next phase (do not return)
+        // continue to next phase (do not return)
       } else {
         if (outcome.isErr(res)) return res;
       }
@@ -58,13 +58,13 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
       const res = await Promise.race([splashP, skip]); // Outcome<void> | "skip"
       if (res === "skip") {
         hard_cut();
-        // CHANGED: continue to demo
+        // continue to demo
       } else {
         if (outcome.isErr(res)) return res;
       }
     }
 
-    // CHANGED: once we reach demo, disable skip entirely (avoid lingering listener)
+    // once we reach demo, disable skip entirely (avoid lingering listener)
     cancel();
 
     // --- phase 3: feature demo ---
@@ -75,7 +75,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
 
     return relay.ok();
   } finally {
-    // CHANGED: always tear down listener if anything throws/returns early
+    // always tear down listener if anything throws/returns early
     cancel();
   }
 }

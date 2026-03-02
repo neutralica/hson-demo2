@@ -56,7 +56,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .css.setMany(PANELcss);
 
 
-    // CHANGED: keep head handle so we can hide/show focused-only status cleanly
+    // keep head handle so we can hide/show focused-only status cleanly
     const head = panel.create.div()
       .data.set("role", $PP_HEAD)
       .css.setMany(PP_HEADERcss);
@@ -66,7 +66,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
     bytes.data.set("field", `${fmt}-bytes`);
     bytes.text.set("0 bytes");
 
-    // CHANGED: div instead of button (avoid browser button styling)
+    // div instead of button (avoid browser button styling)
     const copyBtn = head.create.div()
       .classlist.set("pp-copy")
       .text.set("copy")
@@ -104,8 +104,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     const chip = textarea.create.span();
     chip.classlist.add("chip", "validity");
-    chip.text.set(""); // CHANGED: focused-only; start empty
-    // chip.css.setMany({ display: "none" }); // CHANGED
+    chip.text.set(""); // focused-only; start empty
+
 
     copyBtn.listen.onClick(() => {
       const txt = textarea.getFormValue();

@@ -11,10 +11,10 @@ export class TestRecorder {
     private msTotal = 0;
     private readonly failures: TestFailure[] = [];
     private readonly metaByCase = new Map<string, Record<string, string> | undefined>();
-
     public ingest(e: TestEvent): void {
         if (e.t === "suite_begin") this.suites += 1;
         if (e.t === "suite_end") this.msTotal += e.ms;
+
         if (e.t === "case_begin") {
             this.cases += 1;
             this.metaByCase.set(this.key(e.suite, e.name), e.meta);
@@ -26,10 +26,19 @@ export class TestRecorder {
             else if (e.status === "fail") this.fail += 1;
             else this.skip += 1;
 
+            // CHANGED: merge metaPatch into stored meta for recorder parity with TestLog/Inspector
+            if (e.metaPatch) {
+                const k = this.key(e.suite, e.name);
+
+                const prev = this.metaByCase.get(k);
+                const next = prev ? { ...prev, ...e.metaPatch } : { ...e.metaPatch };
+
+                this.metaByCase.set(k, next);
+            }
+
             if (e.status === "fail") {
                 const meta = this.metaByCase.get(this.key(e.suite, e.name));
 
-                // with exactOptionalPropertyTypes, do NOT set `meta: undefined`.
                 const base = {
                     suite: e.suite,
                     name: e.name,

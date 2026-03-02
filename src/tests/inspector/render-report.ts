@@ -1,7 +1,7 @@
-import type { LoopReport, Artifact } from "../../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { _freeze } from "../../../../tests/fixtures/generate-fixtures";
-import type { CaseKey, CaseMeta } from "../../../../tests/tests.types";
-import { $cols_ } from "../../../consts/colors.consts";
+import type { LoopReport, Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
+import { $cols_ } from "../../app/consts/colors.consts";
+import  { _freeze } from "../fixtures/generate-fixtures";
+import type { CaseKey, CaseMeta } from "../tests.types";
 
 
 type ReportHtml = Readonly<{ title: string; html: string }>;
@@ -14,7 +14,7 @@ function escape_html(s: string): string {
     .replaceAll(`"`, "&quot;")
     .replaceAll("'", "&#39;");
 }
-// CHANGED: refactor into “model then render” so later we can swap the renderer to HSON-authored
+// refactor into “model then render” so later we can swap the renderer to HSON-authored
 type ReportViewModel = Readonly<{
   title: string;
   pills: readonly string[];
@@ -31,7 +31,7 @@ function build_report_view_model(
 ): ReportViewModel {
   const title = `[HSON capture] ${suite} :: ${name}`;
 
-  // CHANGED: keep summary pills in one place (same info as report_to_text, plus key)
+  // keep summary pills in one place (same info as report_to_text, plus key)
   const pills = _freeze([
     `ok: ${String(report.ok)}`,
     `entry: ${String(report.entry)}`,
@@ -43,7 +43,7 @@ function build_report_view_model(
     `norm: —`,
   ]);
 
-  // CHANGED: trace table rows (same semantics as text)
+  // trace table rows (same semantics as text)
   const trace = report.trace ?? [];
   const traceRowsHtml = trace.map((t, i) => {
     const step = escape_html(String(t.step ?? ""));
@@ -122,7 +122,7 @@ function build_report_view_model(
   const lapKeys = (m: Map<number, Artifact[]>): number[] =>
     [...m.keys()].sort((a, b) => a - b);
 
-  // CHANGED: inside render_report_html(), replace the cards map with this
+  // inside render_report_html(), replace the cards map with this
   // Fixed fmt order inside each lap (optional, but improves readability)
   const fmtRank = (fmt: string): number => {
     if (fmt === "json") return 1;
@@ -141,8 +141,8 @@ function build_report_view_model(
     });
 
     const cards = sorted.map((a) => {
-      // CHANGED: render both views; toggle chooses which is visible.
-      // CHANGED: single copy button copies *current* view (text or node).
+      // render both views; toggle chooses which is visible.
+      // single copy button copies *current* view (text or node).
       const fmt = escape_html(String(a.fmt));
       const text = escape_html(String(a.text ?? ""));
       const nodeRaw = String((a as any).node ?? "");           // keep optional
@@ -206,7 +206,7 @@ export function render_report_html(
   report: LoopReport,
   meta?: CaseMeta,
 ): ReportHtml {
-  // CHANGED: build model first
+  // build model first
   const m = build_report_view_model(key, name, suite, report);
 const failuresRows = (report.failures ?? []).map((f, i) => `
   <tr>
@@ -313,7 +313,7 @@ const failHtml = `
 }
 @media (max-width: 1100px){ .finalGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 720px){ .finalGrid{ grid-template-columns: 1fr; } }
-    /* CHANGED: fixed-ish height so toggling doesn’t explode the layout */
+    /* fixed-ish height so toggling doesn’t explode the layout */
     .pre {
       margin: 0;
       padding: 10px;
@@ -459,7 +459,7 @@ const failHtml = `
 </section>
 `;
 
-  // CHANGED: view now shows trace + failures + artifacts (same “canonical blocks” as copy)
+  // view now shows trace + failures + artifacts (same “canonical blocks” as copy)
   const body = `
   <div class="top">
     <div>
@@ -563,7 +563,7 @@ const mk_art_block = (o: { text: string; node: string }): string => {
   `;
 };
 
-// CHANGED: open HTML report in a separate document via Blob URL
+// open HTML report in a separate document via Blob URL
 export function open_report_window(htmlDoc: string): void {
   // const html = hson.fromHson(hsonDoc).toHtml().serialize();  
   const blob = new Blob([htmlDoc], { type: "text/html;charset=utf-8" });

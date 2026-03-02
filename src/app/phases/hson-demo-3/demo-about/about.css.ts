@@ -5,16 +5,16 @@ import { $txt_ } from "../../../consts/ui-consts";
 // ADDED: list cell styling (prevents baseline + indent issues)
 export const ABOUT_LIST_ROWcss: CssMap = {
   display: "grid",
-  gridTemplateColumns: "3ch 1fr", // CHANGED: stable marker column
+  gridTemplateColumns: "3ch 1fr", //  stable marker column
   columnGap: "10px",
-  alignItems: "start",            // CHANGED: fixes number baseline wobble
+  alignItems: "start",            //  fixes number baseline wobble
   minWidth: "0",
   maxWidth: "70ch",
 };
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
   opacity: "0.85",
-  color: $blu_.std,               // CHANGED: marker color only (no bleed)
+  color: $blu_.std,               //  marker color only (no bleed)
   lineHeight: "1.55",
   textAlign: "right",
   userSelect: "none",
@@ -22,9 +22,9 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
 };
 
 export const LIST_TEXTcss: CssMap = {
-  whiteSpace: "pre-wrap",         // CHANGED: wrap but stay in text column
+  whiteSpace: "pre-wrap",         //  wrap but stay in text column
   lineHeight: "1.55",
-  color: $ylw_.easter,            // CHANGED: list text color here only
+  color: $ylw_.easter,            //  list text color here only
   minWidth: "0",
 };
 

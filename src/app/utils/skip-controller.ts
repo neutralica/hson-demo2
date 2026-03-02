@@ -22,10 +22,10 @@ export function make_skip_controller(stage: LiveTree): SkipController {
   });
 
   const handle = stage.listen.onPointerDown((ev) => {
-    // CHANGED: only left click (or touch)
+    // only left click (or touch)
     if ("button" in ev && (ev as any).button !== 0) return;
 
-    // CHANGED: resolve once, then permanently abort
+    // resolve once, then permanently abort
     resolveSkip?.();
     resolveSkip = undefined;
 
@@ -33,9 +33,9 @@ export function make_skip_controller(stage: LiveTree): SkipController {
   });
 
   const cleanup = () => {
-    // CHANGED: always remove listener
+    // always remove listener
     handle.off();
-    // CHANGED: abort cancels any in-flight waits
+    // abort cancels any in-flight waits
     if (!ac.signal.aborted) ac.abort();
     resolveSkip = undefined;
   };
@@ -43,7 +43,7 @@ export function make_skip_controller(stage: LiveTree): SkipController {
   return { skip, signal: ac.signal, cleanup };
 }
 
-// CHANGED: cancellable sleep
+// cancellable sleep
 export function sleep_ms(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
     if (signal?.aborted) return resolve();
@@ -69,11 +69,11 @@ export async function run_phase2<T>(
   holdMs: number,
   signal: AbortSignal,
 ): OutcomeAsync<T> {
-  // CHANGED: mount receives signal so it can self-cancel listeners/loops if you add that later
+  // mount receives signal so it can self-cancel listeners/loops if you add that later
   const mounted = await mountFn(stage, signal);
   if (outcome.isErr(mounted)) return mounted;
 
-  // CHANGED: cancellable hold
+  // cancellable hold
   await sleep_ms(holdMs, signal);
 
   return mounted;

@@ -4,9 +4,9 @@ import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/jso
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
-import { _freeze, make_html_generated_fixtures } from "./fixtures/generate-fixtures";
-import { make_generated_json_fixtures } from "./fixtures/generate-json";
-import type { Fixture } from "./fixtures/fixtures.types";
+import { _freeze, make_html_generated_fixtures } from "./transform-tests/fixtures/generate-fixtures";
+import { make_generated_json_fixtures } from "./transform-tests/fixtures/generate-json";
+import type { Fixture } from "./transform-tests/fixtures/fixtures.types";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -33,13 +33,13 @@ function preview_atom(atom: FixtureAtom): string {
   return String(atom);
 }
 
-// CHANGED: add an explicit entryFmt param
+// add an explicit entryFmt param
 export function make_legacy_test_suite(
   hson: HsonTestApi,
   fixtures: FixtureBundle,
   suite = "fixtures/basic",
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
-  entryFmt: SourceFormat = "auto", // CHANGED
+  entryFmt: SourceFormat = "auto", 
 ): TestSuite {
   const cases: TestCase[] = [];
 
@@ -47,7 +47,7 @@ export function make_legacy_test_suite(
     for (const [sub, atom] of Object.entries(bundle)) {
       const name = `${group}.${sub}`;
 
-      // CHANGED: no guessing here
+      // no guessing here
       const entry = entryFmt;
 
       const k = `${suite}::${name}` as const;
@@ -71,7 +71,7 @@ export function make_legacy_test_suite(
         run: () => {
           // ADDED: capture the *actual* input text we feed the loop
           const base = { entry, dual: true, times: 3, stopOnFirstFail: false } as const;
-          // CHANGED: preserve strings as-is; stringify objects/arrays; stringify non-string .text
+          // preserve strings as-is; stringify objects/arrays; stringify non-string .text
           const input =
             typeof atom === "string" ? atom :
               (typeof atom === "object" && atom && "text" in atom)
@@ -110,7 +110,7 @@ export function generate_fixture_suite(
   hson: HsonTestApi,
   fixtures: readonly Fixture[],
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
-  runMeta?: Readonly<{ seed: number; genHtmlCount: number; genJsonCount: number }>, // CHANGED
+  runMeta?: Readonly<{ seed: number; genHtmlCount: number; genJsonCount: number }>, 
 ): TestSuite {
   const suite = "fixtures/generated";
 
@@ -129,7 +129,7 @@ export function generate_fixture_suite(
           fmt: fx.fmt,
           preview,
           ...(tags ? { tags } : {}),
-          ...(runMeta ? { seed: seedStr, genHtmlCount: genHtmlStr, genJsonCount: genJsonStr } : {}), // CHANGED
+          ...(runMeta ? { seed: seedStr, genHtmlCount: genHtmlStr, genJsonCount: genJsonStr } : {}), 
         };
 
         const k = `${suite}::${fx.name}` as CaseKey;
@@ -153,7 +153,7 @@ export function generate_fixture_suite(
           meta,
           run: () => {
             // ADDED: capture the *actual* input text we feed the loop
-            // CHANGED: preserve strings as-is; stringify non-string values; pretty-print objects
+            // preserve strings as-is; stringify non-string values; pretty-print objects
             const input =
               typeof fx.atom === "string" ? fx.atom :
                 (typeof fx.atom === "object" && fx.atom && "text" in fx.atom)
@@ -207,7 +207,7 @@ export function build_suites_for_mode(
   const genHtmlCount = o.genHtmlCount ?? 2000;
   const genJsonCount = o.genJsonCount ?? 2000;
 
-  // CHANGED: build generated fixtures here (so seed is part of suite identity)
+  // build generated fixtures here (so seed is part of suite identity)
   const generated: readonly Fixture[] = _freeze([
     ...make_html_generated_fixtures({ seed, count: genHtmlCount }),
     ...make_generated_json_fixtures({ seed, count: genJsonCount }),
@@ -227,7 +227,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map)
+      make_legacy_test_suite(h, {wikipedia: {annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}`}}, "fixtures/dev/json", map)
     ])
   }
 

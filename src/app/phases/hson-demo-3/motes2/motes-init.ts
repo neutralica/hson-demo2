@@ -24,7 +24,7 @@ const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 const randi = (a: number, b: number): number => Math.floor(rand(a, b + 1));
 
 function pick<T>(xs: readonly T[]): T {
-    // CHANGED: strict-safe pick (noUncheckedIndexedAccess)
+    // strict-safe pick (noUncheckedIndexedAccess)
     if (xs.length === 0) throw new Error("pick(): empty array");
     return xs[randi(0, xs.length - 1)]!;
 }
@@ -41,7 +41,7 @@ export function config_mote2(
     return {
         xPx,
 
-        // CHANGED: correct key is sizePx (not fontSizePx)
+        // correct key is sizePx (not fontSizePx)
         sizePx: pickRange(opts.sizePx),
 
         opacity: pickRange(opts.opacity),
@@ -152,7 +152,7 @@ export function motes_init2(rig: MotesRig, opts: MotesOpts): Outcome<void> {
             const below = cy > mouse.y;
 
             // ---- kill on direct touch ----
-            // CHANGED: kill-on-hit uses INK bbox (glyph), not wrap.
+            // kill-on-hit uses INK bbox (glyph), not wrap.
             // This avoids “huge wrapper” problems.
             if (opts.killOnHit) {
                 const inkEl = rt.mote.ink.asDomElement(); // unavoidable for bbox for now
@@ -165,7 +165,7 @@ export function motes_init2(rig: MotesRig, opts: MotesOpts): Outcome<void> {
                     const dy = cy - mouse.y;
                     const d2 = dx * dx + dy * dy;
 
-                    // CHANGED: fixed pixel radius (optionally with small size-based bump)
+                    // fixed pixel radius (optionally with small size-based bump)
                     const killR = opts.killRadiusPx;
                     if (d2 <= killR * killR) {
                         rt.alive = false;

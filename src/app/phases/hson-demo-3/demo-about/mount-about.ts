@@ -6,7 +6,7 @@ import { about_init } from "./init-about";
 
 
 export function mount_about_panels(host: LiveTree, docs: AboutDocs): Outcome<AboutPanel> {
-  const ap = relay_data(about_factory(host)); // CHANGED: use your wrapper
+  const ap = relay_data(about_factory(host)); 
   about_init(
     { toc: ap.toc, doc: ap.doc, title: ap.title },
     { docs },

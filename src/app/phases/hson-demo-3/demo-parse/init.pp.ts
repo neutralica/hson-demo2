@@ -5,11 +5,11 @@ import { PP_FOCUS_PANELcss, PP_MUTEDcss, PP_UNMUTEDcss } from "./pp.css";
 import type { Fmt, Panels, PanelShell } from "../panels/panels.types";
 
 const lockTextarea = (p: PanelShell): void => {
-  // CHANGED: lock via readonly + no selection, but keep focus/click working
+  // lock via readonly + no selection, but keep focus/click working
   p.textarea.setFlags("readonly");
 
   p.textarea.css.setMany({
-    pointerEvents: "auto",   // CHANGED: was none (likely)
+    pointerEvents: "auto",   // was none (likely)
     userSelect: "none",
     caretColor: "transparent",
   });
@@ -26,7 +26,7 @@ const unlockTextarea = (p: PanelShell): void => {
 };
 
 export function init_parsing_panels(pp: Panels): void {
-  // CHANGED: derive fmts from the Panels object that was actually created
+  // derive fmts from the Panels object that was actually created
   const FMTS = Object.keys(pp.panels) as readonly Fmt[];
   let inProgress = false;
   let active: Fmt | null = null;
@@ -137,7 +137,7 @@ export function init_parsing_panels(pp: Panels): void {
   };
 
   // primitive support (same as before)
-  // CHANGED: origin-aware primitive parsing.
+  // origin-aware primitive parsing.
   // - JSON: any JSON primitive is allowed (strings must be quoted because JSON.parse enforces it)
   // - HSON: allow numbers/bool/null unquoted, BUT strings only when explicitly quoted
   type PrimParse =
@@ -210,7 +210,7 @@ export function init_parsing_panels(pp: Panels): void {
 
     try {
       // primitive bypass for json/hson
-      // CHANGED: primitive bypass for json/hson (origin-aware)
+      // primitive bypass for json/hson (origin-aware)
       if (origin === "json" || origin === "hson") {
         const prim = tryParse(origin, raw);
 

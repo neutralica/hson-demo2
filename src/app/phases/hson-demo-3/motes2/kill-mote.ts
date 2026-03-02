@@ -34,14 +34,14 @@ export function kill_mote(m: Mote): void {
   if (m.dead) return;
   (m as unknown as { dead: boolean }).dead = true;
 
-  // CHANGED: freeze motion in-place (don’t clear transforms)
+  // freeze motion in-place (don’t clear transforms)
   m.rise.css.anim.pause();
   m.sway.css.anim.pause();
 
   // Optional: stop spin so “death” feels dead.
   m.ink.css.anim.end("clear-all");
 
-  // CHANGED: run fade/dim on ink (no transform here)
+  // run fade/dim on ink (no transform here)
   m.ink.css.anim.begin({
     name: "ink-die",
     duration: "6000ms",
@@ -50,7 +50,7 @@ export function kill_mote(m: Mote): void {
     fillMode: "forwards",
   });
 
-  // CHANGED: run drop on fall wrapper (starts from current position)
+  // run drop on fall wrapper (starts from current position)
   m.fall.css.anim.begin({
     name: "wrap-die",
     duration: "6000ms",

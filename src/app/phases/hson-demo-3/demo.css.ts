@@ -69,10 +69,10 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   display: "grid",
 
   // left = nav, right = main
-  gridTemplateColumns: "1fr 6fr",
+  gridTemplateColumns: "1fr 4fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
-  gap:$GRID_GAPstr,
+  gap: $GRID_GAPstr,
 
   width: "100%",
   height: "100%",
@@ -84,7 +84,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
 };
 
 export const MENU_LISTcss: CssMap = {
-  gridColumn: "1",
+  // gridColumn: "1",
   // gridRow: "1 / span 2",
   marginLeft: "2rem",
   position: "relative",
@@ -106,58 +106,56 @@ export const DEMO_MAIN_LOGOcss: CssMap = {
 }
 
 export const MENU_CONTAINERcss: CssMap = {
-  // CHANGED: remove viewport anchoring — let the parent grid do its job
-  position: "absolute",
-  minWidth: "0",
-  minHeight: "0",
+  position: "relative", // CHANGED: not absolute
 
   display: "flex",
   flexDirection: "column",
-  alignItems: "flex-start",
-  justifyContent: "flex-start",
 
-  // ADDED: place into left column
-  gridColumn: "1 / 2",
-  gridRow: "1 / 2",
+  alignItems: "flex-stretch",
+
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  height: "100%",
 };
-  
-  export const LAYOUT_GRIDcss: CssMap = {
-    width: "100%",
-    height: "100%",
-    minHeight: "0",
-    minWidth: "0",
-    display: "grid",
-    gridTemplateRows: "3fr minmax(auto, 1fr)",
-    gap: $GRID_GAPstr,
-  // padding: "12px",
+
+export const LAYOUT_GRIDcss: CssMap = {
+  width: "100%",
+  height: "100%",
+  minHeight: "0",
+  minWidth: "0",
+  display: "grid",
+
+  // no dock row anymore
+  gridTemplateRows: "minmax(0, 1fr)",
+
+  gap: $GRID_GAPstr,
   boxSizing: "border-box",
-  overflow: "hidden", // CHANGED: avoid scrollbars here; panels/surfaces scroll
+  overflow: "hidden",
 } as const;
+
+export const MOUSE_SLOTcss: CssMap = {
+  marginTop: "1rem",   // space below menu
+
+  width: "100%",
+  minWidth: "0",
+  minHeight: "0",
+
+  display: "flex",     // so child can size naturally
+  flexDirection: "column",
+};
 
 export const PANEL_SAFETYcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
 };
 
-export const VIEW_SLOTcss={
-    position: "relative",
-    minHeight: "0",
-    minWidth: "0",
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
-    pointerEvents: "auto",
-  }
-
-export const DOCK_SLOTcss ={
-    position: "relative",
-    bottom: "0",
-    // top: "-110",
-    // left: "0",
-    minHeight: "0",
-    minWidth: "0",
-    width: "100%",
-    maxHeight: "15rem",
-    overflow: "hidden",
-    pointerEvents: "auto",
-  }
+export const VIEW_SLOTcss = {
+  position: "relative",
+  minHeight: "0",
+  minWidth: "0",
+  width: "100%",
+  height: "100%",
+  overflow: "hidden",
+  pointerEvents: "auto",
+};

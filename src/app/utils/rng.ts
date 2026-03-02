@@ -3,7 +3,7 @@ export function normalize_seed(seed: number): number {
   return (seed >>> 0);
 }
 
-// CHANGED: mulberry32 PRNG (fast, deterministic, good enough for test gen)
+// mulberry32 PRNG (fast, deterministic, good enough for test gen)
 export function make_rng(seed: number): () => number {
   let a = normalize_seed(seed);
   return () => {

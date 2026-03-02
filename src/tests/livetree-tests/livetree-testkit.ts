@@ -1,0 +1,223 @@
+
+// -----------------------------
+// Types
+// -----------------------------
+
+import { LiveTree, hson } from "hson-live";
+import type { TestSuite, TestCase } from "../tests.types";
+
+export type MetaPatch = Record<string, string>;
+
+export type LiveTreeCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+
+  // "input" is your fixture HTML for inspector
+  html: string;
+
+  // Optional: label shown in inspector meta
+  fixture?: string;
+  sub?: string;
+
+  // Arrange/Act: mutate tree
+  act: (tree: LiveTree) => void | Promise<void>;
+
+  // Assert: use the `t` helper below (pedantic, multi-check)
+  assert: (tree: LiveTree, t: Asserter) => void | Promise<void>;
+
+  // Optional: customize what gets shown in preview
+  preview?: (tree: LiveTree) => string;
+}>;
+
+export type Asserter = Readonly<{
+  ok: (label: string, condition: unknown) => void;
+  eq: (label: string, got: unknown, want: unknown) => void;
+  neq: (label: string, got: unknown, notWant: unknown) => void;
+
+  // Useful for DOM checks without exploding when missing:
+  hasAttr: (label: string, el: Element | null | undefined, attr: string) => void;
+  attrEq: (
+    label: string,
+    el: Element | null | undefined,
+    attr: string,
+    want: string | null,
+  ) => void;
+
+  // If you have Outcome-returning operations in tests:
+  // (we don't construct Outcomes here; we only recognize + throw)
+  outcomeOk: (label: string, maybeOutcome: unknown) => void;
+}>;
+
+// -----------------------------
+// Implementation
+// -----------------------------
+
+export function make_livetree_suite(
+  suiteName: string,
+  cases: readonly LiveTreeCaseSpec[],
+): TestSuite {
+  const suite = suiteName;
+
+  const built: TestCase[] = cases.map((spec) => ({
+    suite,
+    name: spec.name,
+
+    // Optional initial meta (can be overwritten/extended by metaPatch)
+    meta: {
+      fixture: spec.fixture ?? spec.name,
+      sub: spec.sub ?? "",
+    },
+
+    run: async () => {
+      const tree = hson.fromTrustedHtml(spec.html).liveTree.asBranch();
+
+      await spec.act(tree);
+
+      const bag = new FailureBag();
+      const t = bag.asserter();
+
+      await spec.assert(tree, t);
+
+      // If there were any failures, throw ONE error (runner-friendly)
+      bag.throwIfAny({
+        suite,
+        name: spec.name,
+        input: spec.html,
+        preview: (spec.preview ?? default_preview)(tree),
+        fixture: spec.fixture ?? spec.name,
+        sub: spec.sub ?? "",
+      });
+
+      // Return metaPatch for inspector/log.
+      // Runner expects { metaPatch } shape, not raw meta.
+      const metaPatch: MetaPatch = {
+        input: spec.html,
+        preview: (spec.preview ?? default_preview)(tree),
+        fixture: spec.fixture ?? spec.name,
+        sub: spec.sub ?? "",
+      };
+
+      return { metaPatch } as const;
+    },
+  }));
+
+  return { suite, cases: built } as const;
+}
+
+function default_preview(tree: LiveTree): string {
+  // Prefer DOM outerHTML if present; otherwise something stable-ish.
+  const el = tree.dom?.el?.() ?? tree.asDomElement?.();
+  if (el && "outerHTML" in el) return (el as Element).outerHTML;
+  return `<no-dom quids=${tree.quid ?? "?"}>`;
+}
+
+// -----------------------------
+// Failure aggregation
+// -----------------------------
+
+class FailureBag {
+  private readonly lines: string[] = [];
+
+  asserter(): Asserter {
+    return {
+      ok: (label, condition) => {
+        if (!condition) this.lines.push(`${label}: expected truthy, got ${fmt(condition)}`);
+      },
+
+      eq: (label, got, want) => {
+        if (!Object.is(got, want)) {
+          this.lines.push(`${label}: expected ${fmt(want)}, got ${fmt(got)}`);
+        }
+      },
+
+      neq: (label, got, notWant) => {
+        if (Object.is(got, notWant)) {
+          this.lines.push(`${label}: expected != ${fmt(notWant)}, got ${fmt(got)}`);
+        }
+      },
+
+      hasAttr: (label, el, attr) => {
+        const ok = !!el && el.hasAttribute(attr);
+        if (!ok) this.lines.push(`${label}: expected element to have attr "${attr}"`);
+      },
+
+      attrEq: (label, el, attr, want) => {
+        const got = el ? el.getAttribute(attr) : null;
+        if (got !== want) {
+          this.lines.push(
+            `${label}: attr "${attr}" expected ${fmt(want)}, got ${fmt(got)}`,
+          );
+        }
+      },
+
+      // Outcome recognition without constructing Outcomes:
+      // - if your outcome type has outcome.isErr(x), you can adapt here.
+      // For now we do a conservative check: common shapes.
+      outcomeOk: (label, maybeOutcome) => {
+        // CHANGED: conservative - avoids importing outcome/relay APIs here.
+        // You can tighten this later to your canonical Outcome shape.
+        if (!maybeOutcome) {
+          this.lines.push(`${label}: outcome was ${fmt(maybeOutcome)}`);
+          return;
+        }
+
+        const asAny = maybeOutcome as any;
+
+        // Common conventions: { ok: boolean }, { kind: "err"|"ok" }, { tag: ... }
+        if (typeof asAny === "object") {
+          if ("ok" in asAny && asAny.ok === false) {
+            this.lines.push(`${label}: outcome ok=false`);
+            return;
+          }
+          if ("kind" in asAny && asAny.kind === "err") {
+            this.lines.push(`${label}: outcome kind=err`);
+            return;
+          }
+          if ("tag" in asAny && String(asAny.tag).toLowerCase().includes("err")) {
+            this.lines.push(`${label}: outcome tag indicates error`);
+            return;
+          }
+        }
+      },
+    };
+  }
+
+  throwIfAny(meta: {
+    suite: string;
+    name: string;
+    input: string;
+    preview: string;
+    fixture: string;
+    sub: string;
+  }): void {
+    if (this.lines.length === 0) return;
+
+    const header =
+      `[LiveTree FAIL] ${meta.suite} :: ${meta.name}\n` +
+      `fixture=${meta.fixture} sub=${meta.sub}\n`;
+
+    const body = this.lines.map((l) => `- ${l}`).join("\n");
+
+    // Keep preview compact to avoid log blowups
+    const preview = meta.preview.length > 1200 ? meta.preview.slice(0, 1200) + "…" : meta.preview;
+
+    const msg =
+      `${header}\n` +
+      `${body}\n\n` +
+      `--- preview ---\n` +
+      `${preview}\n`;
+
+    throw new Error(msg);
+  }
+}
+
+function fmt(v: unknown): string {
+  if (typeof v === "string") return JSON.stringify(v);
+  if (v === null) return "null";
+  if (v === undefined) return "undefined";
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
+}

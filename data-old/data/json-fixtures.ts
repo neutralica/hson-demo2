@@ -4,7 +4,8 @@ import { json_CARS, json_invertebrae } from "./large-fixtures/json-chunks.mock";
 import { json_homepage } from "./large-fixtures/json-homepage-string.mock";
 
 import type { FixtureBundle } from "../../src/tests/tests.types";
-import { _freeze } from "../../src/tests/fixtures/generate-fixtures";
+import { _freeze } from "../../src/tests/transform-tests/fixtures/generate-fixtures";
+
 
 const jsonRudiments = {
   simpleObject: `{"test_case": "simpleObject", "value": 1}`,

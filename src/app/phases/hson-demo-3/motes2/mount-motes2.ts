@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay, relay_data, relay_void } from "intrastructure";
-import { _freeze } from "../../../../tests/fixtures/generate-fixtures";
+import { _freeze } from "../../../../tests/transform-tests/fixtures/generate-fixtures";
 import { config_mote2, motes_init2 } from "./motes-init";
 import type { Mote, MotesOpts, MoteStyle } from "./motes2.types";
 import type { MotesRig } from "./motes2.types";
@@ -22,7 +22,7 @@ export function mount_motes2(host: LiveTree, optsIn: Partial<MotesOpts> = {}): O
 
 // ---------------------------
 function motes2_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
-  // CHANGED: stable root id so remount doesn’t duplicate
+  // stable root id so remount doesn’t duplicate
   const old = host.find.byId("motes2-root");
   if (old) old.removeSelf();
 

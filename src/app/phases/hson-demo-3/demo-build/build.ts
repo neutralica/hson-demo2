@@ -6,7 +6,7 @@ import { BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANE_BODYcss, BUIL
 import { PANELcss } from "../panels/demo-panels.css";
 import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
 
-// CHANGED: keep this parallel to pp_factory return shape: root + handles
+// keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{
   root: LiveTree;
 
@@ -85,7 +85,7 @@ const DEFAULT_SEED = `<div id="build-demo" style="border: 1px solid dodgerblue; 
 `;
 
 export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {
-  // CHANGED: idempotent remove like pp_factory
+  // idempotent remove like pp_factory
   const old = hostBody.find.byId($BUILD_ROOT);
   if (old) old.removeSelf();
 
@@ -165,7 +165,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .data.set("input", "hson")
     .css.setMany(BUILD_TEXTAREAcss);
 
-  // CHANGED: chip is sibling overlay, not a child of textarea (textarea can’t have children)
+  // chip is sibling overlay, not a child of textarea (textarea can’t have children)
   // const chip = inputWrap.create.div()
   //   .classlist.set("build-chip validity")
   //   .text.set("");

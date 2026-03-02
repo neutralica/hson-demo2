@@ -1,4 +1,5 @@
-import { $cols_ } from "../../../consts/colors.consts";
+import { $cols_ } from "../../app/consts/colors.consts";
+
 
 export const NAME_WIDTH = "38ch"; // standardize width so it doesn’t jump
 

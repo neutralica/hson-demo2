@@ -1,5 +1,6 @@
 // tests.types.ts
 
+import type { LiveTree } from "hson-live";
 import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
 
 
@@ -11,14 +12,14 @@ export type TestEvent =
   | { t: "suite_end"; suite: string; ms: number }
   | { t: "case_begin"; suite: string; name: string; meta?: Record<string, string> }
   | {
-      t: "case_end";
-      suite: string;
-      name: string;
-      status: TestStatus;
-      ms: number;
-      err?: string;
-      metaPatch?: Record<string, string>; // ADDED
-    };
+    t: "case_end";
+    suite: string;
+    name: string;
+    status: TestStatus;
+    ms: number;
+    err?: string;
+    metaPatch?: Record<string, string>; // ADDED
+  };
 
 export type TestFailure = Readonly<{
   suite: string;
@@ -42,7 +43,7 @@ export type TestCase = Readonly<{
   suite: string;
   name: string;
   meta?: Record<string, string>;
-  run: () => void | RunCaseRet | Promise<void | RunCaseRet>; 
+  run: () => void | RunCaseRet | Promise<void | RunCaseRet>;
 }>;
 
 export type RunCaseRet = Readonly<{
@@ -61,7 +62,7 @@ export type TestRunMode =
   | "legacy"
   | "dev"
 
-  export type CaseMeta = Readonly<{
+export type CaseMeta = Readonly<{
   fixture?: string;
   sub?: string;
   preview?: string;      // snipped
@@ -74,6 +75,8 @@ export type RunOptions = Readonly<{
   bail?: boolean; // stop on first failure
   filterSuite?: string; // exact match
   filterCase?: string; // substring match
+  yieldEveryCases?: number;  // e.g. 1 = every case, 5 = every 5 cases
+  yieldBetweenSuites?: boolean;
 }>;
 
 export type RunResult = Readonly<{
@@ -152,6 +155,16 @@ export type CaseReport = Readonly<{
     in_canon?: string;
     out_raw?: string;
     out_canon?: string;
-    
+
   }>;
 }>;
+
+// src/tests/livetree-suite.types.ts
+export type LiveTreeFx = {
+  name: string;
+  html: string;
+  run: (tree: LiveTree) => void | Promise<void>;
+  assert: (tree: LiveTree) => void;
+  preview?: string;           // short inspector snippet
+  inputLabel?: string;        // optional: “attrs / text / append”
+};

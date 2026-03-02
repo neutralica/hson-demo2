@@ -13,7 +13,7 @@ export type MousePanelRig = Readonly<{
         rows: ReadonlyArray<{
             ix: LiveTree;        // index
             tag: LiveTree;       // tag#id.class
-            quid: LiveTree;      // data-_quid
+            // quid: LiveTree;      // data-_quid
         }>;
     };
     dispose: () => void;
@@ -40,29 +40,6 @@ export const DERIV_LABELS: ReadonlyArray<[DerivKey, string]> = [
     ["crackle", "crackle"],
     ["pop", "pop"],
 ] as const;
-
-// mouse.ts (near your math helpers)
-
-// ADDED: deadbands tuned for pixels / frame-ish units.
-// Tweak these by feel.
-const DERIV_DEADBAND: Record<DerivKey, number> = {
-    pos: 0,          // never clamp pos
-    vel: 0.02,       // px / sample
-    acc: 0.08,
-    jerk: 0.20,
-    snap: 0.45,
-    crackle: 0.75,
-    pop: 1.10,
-};
-const SMOOTH_BY_KEY: Record<DerivKey, number> = {
-    pos: 0.35,
-    vel: 0.55,
-    acc: 0.70,
-    jerk: 0.80,
-    snap: 0.86,
-    crackle: 0.90,
-    pop: 0.93,
-};
 
 // ---- tiny math ----
 
@@ -139,7 +116,7 @@ export function mouse_init(rig: MousePanelRig): void {
         const theta = Math.atan2(dy, dx);
         const deg = rad_to_deg(theta);
 
-        // CHANGED: restore angle readout as angle (not bbox)
+        // restore angle readout as angle (not bbox)
         rig.readout.angle.text.set(`θ: ${deg.toFixed(1)}°`);
 
         // ADDED: rotate pointer
@@ -163,7 +140,7 @@ export function mouse_init(rig: MousePanelRig): void {
             if (!el) {
                 row.ix.text.set("");
                 row.tag.text.set("");
-                row.quid.text.set("");
+                // row.quid.text.set("");
                 continue;
             }
 
@@ -178,16 +155,16 @@ export function mouse_init(rig: MousePanelRig): void {
 
             row.ix.text.set(String(i));
             row.tag.text.set(`${tag}${id}${cls}`);
-            row.quid.text.set(get_quid(el));
+            // row.quid.text.set(get_quid(el));
         }
 
         // OPTIONAL: show bbox for the top element only
-        const top = stack[0];
-        if (top instanceof Element) {
-            const r = top.getBoundingClientRect();
-            rig.readout.angle.text.set(`θ: ${deg.toFixed(1)}°   box: ${fmt_box(r)}`);
-            // Or if angle is still used for pointer swivel, put bbox somewhere else.
-        }
+        // const top = stack[0];
+        // if (top instanceof Element) {
+        //     const r = top.getBoundingClientRect();
+        //     rig.readout.angle.text.set(`θ: ${deg.toFixed(1)}°   box: ${fmt_box(r)}`);
+        //     // Or if angle is still used for pointer swivel, put bbox somewhere else.
+        // }
     };
 
     const tick = (): void => {

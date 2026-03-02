@@ -1,16 +1,20 @@
 import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
-import { $GEM_WIDTHstr } from "../../../../tests/tests.consts";
+import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 
 export const UI_ROOTcss: CssMap = {
-    // CHANGED: must be a normal grid item (no absolute overlay)
-    position: "relative",
-    minWidth: "0",
-    minHeight: "0",
-    pointerEvents: "all",
-    gridColumn: "2 / 3",
-    gridRow: "1 / 2",
+  // this is the main content column (right side)
+  gridColumn: "2 / 3",
+  gridRow: "1 / 2",
+
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  height: "100%",
+
+  position: "relative",
+  pointerEvents: "auto",
 };
 
 export const PANEL_OUTERcss: CssMap = {
@@ -132,7 +136,7 @@ export const TEST_STATUS_CHIPcss: CssMap = {
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
     opacity: "0.9",
     color: $gry_.dim,
-    maxWidth: $GEM_WIDTHstr
+    maxWidth: $CHIP_WIDTHstr
 } as const;
 
 export const MARQUEEcss: CssMap = {
@@ -189,7 +193,7 @@ export const ROW_CASE_FAILcss: CssMap = {
 export const TEST_PANELcss: CssMap = {
     display: "grid",
     gap: "6px",
-    gridTemplateColumns: $GEM_WIDTHstr + $GEM_WIDTHstr + $GEM_WIDTHstr,
+    gridTemplateColumns: $CHIP_WIDTHstr + $CHIP_WIDTHstr + $CHIP_WIDTHstr,
     width: "100%",
     boxSizing: "border-box",
 };
@@ -200,8 +204,8 @@ export const PANEL_BRANCHcss: CssMap = {
     padding: "10px",
     width: "420px",
     boxSizing: "border-box",
-    gridTemplateColumns: `${$GEM_WIDTHstr} ${$GEM_WIDTHstr}`,
-    gridTemplateRows: "auto " + $GEM_WIDTHstr,
+    gridTemplateColumns: `${$CHIP_WIDTHstr} ${$CHIP_WIDTHstr}`,
+    gridTemplateRows: "auto " + $CHIP_WIDTHstr,
 };
 
 export const CONTROL_ROWcss: CssMap = {

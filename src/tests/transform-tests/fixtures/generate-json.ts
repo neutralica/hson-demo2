@@ -1,5 +1,4 @@
-
-import { make_rng } from "../../app/utils/rng";
+import { make_rng } from "../../../app/utils/rng";
 import type { Rng, Jsonish, Gen, JArr, JObj, Fixture } from "./fixtures.types";
 import { _freeze } from "./generate-fixtures";
 

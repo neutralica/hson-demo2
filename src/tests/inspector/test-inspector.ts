@@ -1,17 +1,17 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import type { LoopReport } from "../../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { _freeze } from "../../../../tests/fixtures/generate-fixtures";
-import type { TestLog } from "../../../../tests/test-log";
-import  { $GEM_WIDTHstr } from "../../../../tests/tests.consts";
-import type { CaseKey, CaseMeta, TestFailure } from "../../../../tests/tests.types";
-import {  $txt_ } from "../../../consts/ui-consts";
-import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../panels/demo-panels.css";
 import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
+import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
+import { $txt_ } from "../../app/consts/ui-consts";
+import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/hson-demo-3/panels/demo-panels.css";
+import { _freeze } from "../fixtures/generate-fixtures";
+import type { TestLog } from "../test-log";
+import { $CHIP_WIDTHstr } from "../tests.consts";
+import type { CaseKey, CaseMeta } from "../tests.types";
 
 
 export type InspectorUi = Readonly<{
@@ -70,7 +70,7 @@ export function create_inspector(
   host: LiveTree,
   tlog: TestLog,
   opts?: { hideClass?: string },
-  capture?: CaptureFn,                 // CHANGED: optional
+  capture?: CaptureFn,                 // optional
 ): InspectorUi {
   const hideClass = opts?.hideClass ?? "";
 
@@ -228,10 +228,10 @@ export function create_inspector(
 
     // header columns are stable
     const hr = mk_tr(thead, "insp-head-row");
-    mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
+    mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
     mk_th(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
-    mk_th(hr, "c-kb", "kb").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
-    mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss,  width: $GEM_WIDTHstr, maxWidth: $GEM_WIDTHstr });
+    mk_th(hr, "c-kb", "kb").css.setMany({ ...THcss,  width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
+    mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss,  width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
 
     if (!suites.length) {
       const r = mk_tr(tbody, "insp-empty");
@@ -248,7 +248,7 @@ export function create_inspector(
       const sr = mk_tr(tbody, "insp-suite-row");
       sr.css.setMany(ROW_SUITEcss);
 
-      if (s.fail > 0) sr.css.setMany(ROW_SUITE_FAILcss); // CHANGED
+      if (s.fail > 0) sr.css.setMany(ROW_SUITE_FAILcss); 
 
       mk_td(sr, "c-res", caret).css.setMany(TDcss);
       mk_td(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
@@ -311,7 +311,7 @@ export function create_inspector(
         const gr = mk_tr(tbody, "insp-group-row");
         gr.css.setMany(ROW_GROUPcss);
 
-        if (fail > 0) gr.css.setMany(ROW_GROUP_FAILcss); // CHANGED
+        if (fail > 0) gr.css.setMany(ROW_GROUP_FAILcss); 
 
         mk_td(gr, "c-res", gCaret).css.setMany(TDcss);
         mk_td(gr, "c-name", `${gk}  (${pass}/${fail}/${skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
@@ -335,7 +335,7 @@ export function create_inspector(
 
           // case row
           const cr = mk_tr(tbody, "insp-case-row");
-          if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss); // CHANGED
+          if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss); 
 
           mk_td(cr, "c-res", res).css.setMany(TDcss);
 
@@ -360,7 +360,7 @@ export function create_inspector(
             cell.setAttrs("colspan", "4");
             cell.css.setMany(TD_PREVIEW_ROWcss);
 
-            // CHANGED: build composite content; never call cell.text.set after this
+            // build composite content; never call cell.text.set after this
             cell.empty();
 
             // header row
@@ -382,7 +382,7 @@ export function create_inspector(
             });
             metaBox.text.set(`${c.suite} :: ${c.name}`);
 
-            // CHANGED: use div-buttons to avoid focus scroll + default button behavior
+            // use div-buttons to avoid focus scroll + default button behavior
             const mkBtn = (label: string): LiveTree => {
               const b = topRow.create.div().classlist.set("insp-cap-btn");
               b.text.set(label);
@@ -433,7 +433,7 @@ export function create_inspector(
               });
             });
 
-            // CHANGED: wire buttons; always stop propagation; show errors
+            // wire buttons; always stop propagation; show errors
             copyBtn.listen.onClick(async (me) => {
               _stop(me);
               if (!capture) return;
@@ -445,7 +445,7 @@ export function create_inspector(
                 // ADDED: pull stored meta (includes metaPatch.input from your suite builders)
                 const meta = tlog.getCase(c.key)?.meta;
 
-                // CHANGED: pass meta so the report can show input
+                // pass meta so the report can show input
                 const txt = report_to_text(report, meta);
 
                 await navigator.clipboard.writeText(txt);
@@ -469,7 +469,7 @@ export function create_inspector(
                 // ADDED
                 const meta = tlog.getCase(c.key)?.meta;
 
-                // CHANGED: pass meta into HTML renderer
+                // pass meta into HTML renderer
                 const render = render_report_html(c.key, c.name, c.suite, report, meta);
 
                 open_report_window(render.html);

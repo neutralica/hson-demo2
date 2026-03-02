@@ -68,7 +68,7 @@ export const PP_STATUScss: CssMap = {
   right: "12px",
   pointerEvents: "none",
   userSelect: "none",
-  opacity: "0", // CHANGED by JS
+  opacity: "0", // changed by JS
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   fontSize: "14px",
   letterSpacing: "0.10em",

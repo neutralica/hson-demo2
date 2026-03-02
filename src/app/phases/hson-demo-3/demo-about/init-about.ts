@@ -36,7 +36,7 @@ function render_doc_md(host: LiveTree, src: string): void {
   // ADDED: detect list continuation lines ONLY when indented (tabs/spaces)
   const isIndented = (s: string): boolean => /^[\t ]+/.test(s);
 
-  // CHANGED: only append continuation lines when indented
+  // only append continuation lines when indented
   const appendToLastListItem = (txt: string): void => {
     if (!inList) return;
     if (listBuf.length === 0) return;
@@ -63,7 +63,7 @@ function render_doc_md(host: LiveTree, src: string): void {
 
     const list = host.create.div().classlist.add(kind === "ul" ? "md-ul" : "md-ol");
 
-    // CHANGED: remove color from container to prevent inheriting/bleed
+    // remove color from container to prevent inheriting/bleed
     list.css.setMany({
       display: "grid",
       gap: "6px",
@@ -183,7 +183,7 @@ function render_doc_md(host: LiveTree, src: string): void {
 
     // list item (supports -, *, +, • and 1) style)
     {
-      const ul = /^([*\-+•])\s+(.*)$/.exec(line); // CHANGED: requires at least one space
+      const ul = /^([*\-+•])\s+(.*)$/.exec(line); // requires at least one space
       const ol = /^(\d+)\)\s+(.*)$/.exec(line);
 
       if (ul) {
@@ -219,13 +219,13 @@ function render_doc_md(host: LiveTree, src: string): void {
         continue;
       }
 
-      // CHANGED: continuation lines only when indented
+      // continuation lines only when indented
       if (inList && isIndented(line)) {
         appendToLastListItem(line);
         continue;
       }
 
-      // CHANGED: if we're in a list and hit normal (non-indented) text,
+      // if we're in a list and hit normal (non-indented) text,
       // close the list FIRST so we don't "swap" lines or leak list styling/structure.
       if (inList) {
         flushList();
@@ -248,13 +248,13 @@ function find_doc(docs: AboutDocs, key: AboutDocKey): AboutDocSpec | undefined {
 export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   const { docs } = deps;
 
-  // CHANGED: pick a sane initial key without violating exactOptionalPropertyTypes
+  // pick a sane initial key without violating exactOptionalPropertyTypes
   const initialKey: AboutDocKey =
     (deps.initialDocKey ?? docs[0]?.key ?? "readme") as AboutDocKey;
 
   let activeKey: AboutDocKey = initialKey;
 
-  // CHANGED: build TOC ONCE and keep handles
+  // build TOC ONCE and keep handles
   const tocButtons: Array<{ key: AboutDocKey; btn: LiveTree }> = [];
 
   t.toc.empty();
@@ -266,13 +266,13 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
 
     btn.text.set(d.title);
 
-    // CHANGED: click uses setActive (defined below)
+    // click uses setActive (defined below)
     btn.listen.onClick(() => setActive(d.key));
 
     tocButtons.push({ key: d.key, btn });
   }
 
-  // CHANGED: single setActive, no nested redefinition, no TOC rebuild
+  // single setActive, no nested redefinition, no TOC rebuild
   const setActive = (key: AboutDocKey): void => {
     const docSpec = find_doc(docs, key);
     if (!docSpec) return;
@@ -291,6 +291,6 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     }
   };
 
-  // CHANGED: apply initial selection after TOC exists
+  // apply initial selection after TOC exists
   setActive(activeKey);
 }

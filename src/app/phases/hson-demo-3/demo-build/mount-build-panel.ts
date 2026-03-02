@@ -21,7 +21,7 @@ export function init_build_panels(bp: BuildDemo): void {
     const setSrc = (v: string): void => void bp.input.textarea.setFormValue(v, { silent: true });
 
     const setStatus = (k: StatusKind): void => {
-        // CHANGED: keep this tiny + predictable
+        // keep this tiny + predictable
         if (k === "idle") {
             bp.input.status.text.set("");
             bp.input.status.css.setMany({ opacity: "0" });
@@ -44,7 +44,7 @@ export function init_build_panels(bp: BuildDemo): void {
     const syncTabs = (): void => {
         // show/hide the two output panes
         const showRender = activeTab === "render";
-        bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" }); // CHANGED if you use grid
+        bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" }); 
         bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
 
         // simple active affordance (optional)

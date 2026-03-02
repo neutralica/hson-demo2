@@ -1,6 +1,6 @@
 import type { HsonAttrs } from "hson-live/types";
 import type { Gen, Jsonish, Fixture, FixtureBag, Named } from "./fixtures.types";
-import { make_rng } from "../../app/utils/rng";
+import { make_rng } from "../../../app/utils/rng";
 
 
 function el(tag: string, attrs: HsonAttrs, inner: string): string {

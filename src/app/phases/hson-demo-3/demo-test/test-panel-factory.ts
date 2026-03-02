@@ -12,7 +12,7 @@ import type { LoopReport } from "../../../../../../hson-live/dist/diagnostics/lo
 import { build_suites_for_mode } from "../../../../tests/suite-builder";
 import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
-import { create_inspector, type InspectorUi } from "../demo-inspect/test-inspector";
+import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 
 
 export type TestPanelDeps = Readonly<{
@@ -57,7 +57,7 @@ export type TestPanelWidget = ReturnType<typeof test_panel_factory>;
 function test_panel_factory(): Outcome<TestPanel> {
   let inited = false;
   const branch = hson.fromTrustedHtml("<div></div>").liveTree.asBranch().id.set("panel-branch")
-  // CHANGED: keep your existing panel branch css hook
+  // keep your existing panel branch css hook
   branch.css.setMany(PANEL_BRANCHcss);
 
   // -------------------------
@@ -68,7 +68,7 @@ function test_panel_factory(): Outcome<TestPanel> {
     .id.set("test-marquee-box")
     .css.setMany(MARQUEE_BOXcss);
 
-  // CHANGED: marquee is the actual <marquee> tag, no strip / no JS scrolling logic
+  // marquee is the actual <marquee> tag, no strip / no JS scrolling logic
   const marquee = marqueeBox.create.div()
     .id.set("test-marquee")
     .css.setMany({
@@ -93,7 +93,7 @@ function test_panel_factory(): Outcome<TestPanel> {
     .id.set("test-controls")
     .css.setMany(CONTROL_ROWcss);
 
-  // CHANGED: keep your existing helper (toggle gem), but treat it as a “chip”
+  // keep your existing helper (toggle gem), but treat it as a “chip”
   const runChip = make_btn(controlsRow, "test-run", "run");
   const suiteSel = controlsRow.create.select()
     .id.set("test-select")
@@ -117,7 +117,7 @@ function test_panel_factory(): Outcome<TestPanel> {
 
   const chips = create_test_chips(branch);
 
-  // CHANGED: simplest possible marquee writer (no strip, no scrollbars)
+  // simplest possible marquee writer (no strip, no scrollbars)
   const setMarquee = (txt: string): void => {
     if (!mounted) return;
     marquee.text.set(txt);
@@ -147,7 +147,7 @@ function test_panel_factory(): Outcome<TestPanel> {
       mode = (MODES.find(m => m.key === v)?.key ?? "all");
     });
 
-    // CHANGED: pressed affordance (purely visual, no extra machinery)
+    // pressed affordance (purely visual, no extra machinery)
     const press = (b: LiveTree, on: boolean): void => {
       b.css.setMany(on
         ? { transform: "translateY(1px)", filter: "brightness(0.98)" }
@@ -169,7 +169,7 @@ function test_panel_factory(): Outcome<TestPanel> {
     });
   };
 
-  // CHANGED: set initial marquee before mount so it’s ready
+  // set initial marquee before mount so it’s ready
   marquee.text.set(introText);
 
   return relay.data({
@@ -210,7 +210,7 @@ export type TestPanels = Readonly<{
 export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
   try {
     // --- layout owned by the widget ---
-    // CHANGED: widget owns its internal two-up layout; mount_demo no longer does.
+    // widget owns its internal two-up layout; mount_demo no longer does.
     const old = host.find.byId("test-panels-root");
     if (old) old.removeSelf();
 

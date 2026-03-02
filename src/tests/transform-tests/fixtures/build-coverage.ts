@@ -1,5 +1,5 @@
 
-import { make_rng, normalize_seed } from "../../app/utils/rng";
+import { make_rng, normalize_seed } from "../../../app/utils/rng";
 import type { Named } from "./fixtures.types";
 import { _freeze } from "./generate-fixtures";
 

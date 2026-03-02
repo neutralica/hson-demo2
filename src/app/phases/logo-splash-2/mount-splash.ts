@@ -96,7 +96,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     frame.animate()
 
     clouds.forEach((cl, i) => {
-        // 1) per-layer fade runs on the parent layer
         cl.css.anim.begin(CLOUD_LAYER_FADEanim(i));
     });
 
@@ -126,7 +125,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     SPLASHkfs.forEach(kf => {
         sky.tree.css.keyframes.delete(kf.name)
     });
-
+    stage.empty();
     return relay.ok();
 }
 

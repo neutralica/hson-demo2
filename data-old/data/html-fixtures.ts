@@ -2,8 +2,8 @@
 
 // import { html_mdn } from "./html-mdn";
 
-import { _freeze } from "../../src/tests/fixtures/generate-fixtures";
 import type { FixtureBundle } from "../../src/tests/tests.types";
+import { _freeze } from "../../src/tests/transform-tests/fixtures/generate-fixtures";
 import { html_gwern } from "./large-fixtures/html-gwern.mock";
 import { html_hackerNews } from "./large-fixtures/html-hackernews.mock";
 import { html_wikipedia } from "./large-fixtures/html-wikipedia.mock";
