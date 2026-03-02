@@ -127,7 +127,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const test = mount_panel_simple(demoSlot, "test");
   const build = mount_panel_simple(demoSlot, "build");
   const about = mount_panel_simple(demoSlot, "about");
-  const mouseHost = make_div_id(mouseSlot, "mouse-host").css.setMany({
+  const mouseHost = make_div_id(mouseSlot, "mouse-host")
+    .classlist.add($PANEL_HIDDEN)
+    .css.setMany({
     width: "100%",
     minWidth: "0",
     minHeight: "0",
