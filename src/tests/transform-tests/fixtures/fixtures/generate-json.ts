@@ -1,7 +1,8 @@
 
-import { make_rng } from "../../app/utils/rng";
-import type { Rng, Jsonish, Gen, JArr, JObj, Fixture } from "./fixtures.types";
-import { _freeze } from "./generate-fixtures";
+
+import { make_rng } from "../../../../app/utils/rng";
+import { _freeze } from "../../../tests.consts";
+import type { Rng, Jsonish, Gen, JArr, JObj, Fixture } from "../../../tests.types";
 
 const JSON_KEYS_SMALL = ["a", "b", "c", "d"] as const;
 const JSON_KEYS_MED = ["id", "name", "meta", "data", "tags"] as const;

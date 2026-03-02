@@ -15,15 +15,16 @@ import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
 import { $blu_, LETTER_COLORcandy } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { get_view, set_view, demo_subscribe } from "./demo-state";
+import { get_view, set_view, demo_subscribe } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./demo-build/build";
 import { mount_build_panels } from "./demo-build/mount-build-panel";
 import { mount_about_panels } from "./demo-about/mount-about";
 import { ABOUT_DOCS } from "./demo-about/about.consts";
-import { mount_mouse_panel } from "./mouse/mouse-factory";
+import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
 import { mount_motes2 } from "./motes2/mount-motes2";
+import { MOUSE_HOSTcss } from "./demo-mouse/mouse.css";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -95,6 +96,23 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       color: $blu_.candy,
     });
   });
+
+  LETTER_LOWS.forEach(l => {
+    gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
+      color: LETTER_COLORcandy[l]
+    });
+  });
+  gcss.rule("ua:form-fields:transparent", "textarea, input, select, button").setMany({
+    background: "transparent",
+    color: "inherit",
+  });
+  
+  gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
+    visibility: "hidden",
+    height: "0",
+    display: "none",
+  });
+
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
       color: LETTER_COLORcandy[l]
@@ -103,7 +121,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
     visibility: "hidden",
-    height: 0,
+    height: "0",
+    display: "none",
   });
 
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
@@ -129,29 +148,14 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const about = mount_panel_simple(demoSlot, "about");
   const mouseHost = make_div_id(mouseSlot, "mouse-host")
     .classlist.add($PANEL_HIDDEN)
-    .css.setMany({
-    width: "100%",
-    minWidth: "0",
-    minHeight: "0",
-
-    // ADDED: keep it from getting absurdly wide or narrow
-    maxWidth: "32rem",
-
-    // ADDED: the old panel frame gave you readable text + vibe
-    color: $blu_.std,
-    fontFamily: "monospace",
-
-    // OPTIONAL: if you want the same glass feel as panels
-    background: "rgba(255,255,255,0.03)",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-    borderRadius: "14px",
-    padding: "12px",
-  });
+    .css.setMany(MOUSE_HOSTcss);
   const mr = relay_data(mount_mouse_panel(mouseHost));
   const ap = relay_data(mount_about_panels(about.surface, ABOUT_DOCS));
   const tp = relay_data(mount_test_panels(test.surface));
   const pp = relay_data(mount_parsing_panels(parse.surface));
   const bp = relay_data(mount_build_panels(build.surface));
+
+
   const applyView = (): void => {
     const view = get_view();
     // main views

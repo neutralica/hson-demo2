@@ -4,49 +4,7 @@
 // -----------------------------
 
 import { LiveTree, hson } from "hson-live";
-import type { TestSuite, TestCase } from "../tests.types";
-
-export type MetaPatch = Record<string, string>;
-
-export type LiveTreeCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-
-  // "input" is your fixture HTML for inspector
-  html: string;
-
-  // Optional: label shown in inspector meta
-  fixture?: string;
-  sub?: string;
-
-  // Arrange/Act: mutate tree
-  act: (tree: LiveTree) => void | Promise<void>;
-
-  // Assert: use the `t` helper below (pedantic, multi-check)
-  assert: (tree: LiveTree, t: Asserter) => void | Promise<void>;
-
-  // Optional: customize what gets shown in preview
-  preview?: (tree: LiveTree) => string;
-}>;
-
-export type Asserter = Readonly<{
-  ok: (label: string, condition: unknown) => void;
-  eq: (label: string, got: unknown, want: unknown) => void;
-  neq: (label: string, got: unknown, notWant: unknown) => void;
-
-  // Useful for DOM checks without exploding when missing:
-  hasAttr: (label: string, el: Element | null | undefined, attr: string) => void;
-  attrEq: (
-    label: string,
-    el: Element | null | undefined,
-    attr: string,
-    want: string | null,
-  ) => void;
-
-  // If you have Outcome-returning operations in tests:
-  // (we don't construct Outcomes here; we only recognize + throw)
-  outcomeOk: (label: string, maybeOutcome: unknown) => void;
-}>;
+import type { TestSuite, TestCase, LiveTreeCaseSpec, MetaPatch, Asserter } from "../tests.types";
 
 // -----------------------------
 // Implementation
@@ -95,8 +53,8 @@ export function make_livetree_suite(
         preview: (spec.preview ?? default_preview)(tree),
         fixture: spec.fixture ?? spec.name,
         sub: spec.sub ?? "",
+        category: "livetree", // ADD THIS
       };
-
       return { metaPatch } as const;
     },
   }));

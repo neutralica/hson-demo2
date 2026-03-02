@@ -38,7 +38,7 @@ export const PP_WATERMARK_FMTcss: CssMap = {
   placeItems: "center",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "monospace",
   fontSize: $txt_.heading,
   letterSpacing: "0.12px",
   textTransform: "uppercase",
@@ -54,7 +54,7 @@ export const PP_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "monospace",
   fontSize: "14px",
   letterSpacing: "0.06em",
 };
@@ -68,8 +68,8 @@ export const PP_STATUScss: CssMap = {
   right: "12px",
   pointerEvents: "none",
   userSelect: "none",
-  opacity: "0", // changed by JS
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  opacity: "0", // set by JS
+  fontFamily: "monospace",
   fontSize: "14px",
   letterSpacing: "0.10em",
   textTransform: "uppercase",

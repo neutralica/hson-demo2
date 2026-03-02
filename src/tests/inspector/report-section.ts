@@ -1,7 +1,7 @@
 
 import type { LoopReport, Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import { _freeze } from "../fixtures/generate-fixtures";
 import type { CaseReport } from "../tests.types";
+import { _freeze } from "../tests.consts";
 import { get_final_artifacts } from "./inspector.helpers";
 
 type ReportSection = Readonly<{

@@ -3,6 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
 
+export type Named<T> = Readonly<{ name: string; value: T; }>;
 
 export type TestStatus = "pass" | "fail" | "skip";
 
@@ -65,9 +66,10 @@ export type TestRunMode =
 export type CaseMeta = Readonly<{
   fixture?: string;
   sub?: string;
-  preview?: string;      // snipped
-  // later:
-  reportId?: Artifact;  // lookup key into a side-store
+  preview?: string;      // (snipped)
+  input?: string;
+  reportId?: Artifact;  // lookup key
+  category?: string;
 }>;
 
 
@@ -138,6 +140,7 @@ export type StepLog = Readonly<{
   artifacts?: readonly Artifact[];
   err?: string;
 }>;
+
 export type CaseReport = Readonly<{
   key: CaseKey;
   suite: string;
@@ -168,3 +171,77 @@ export type LiveTreeFx = {
   preview?: string;           // short inspector snippet
   inputLabel?: string;        // optional: “attrs / text / append”
 };
+
+export type TransFxtrFmt = "html" | "json" | "hson";
+
+
+export interface JObj {
+  readonly [k: string]: Jsonish;
+}
+
+export interface JArr extends ReadonlyArray<Jsonish> { }
+
+export type FixtureFmt = "html" | "json" | "hson";
+
+export type Fixture = Readonly<{
+  name: string;
+  fmt: FixtureFmt;
+  atom: FixtureAtom;
+  tags?: readonly string[];
+}>;
+
+export type FixtureBag = Readonly<Record<string, Fixture>>;
+export type JPrim = null | boolean | number | string;
+
+export interface JArr extends ReadonlyArray<Jsonish> { }
+
+export type Jsonish = JPrim | JArr | JObj;
+
+export type Rng = () => number;
+
+export type Gen<T> = Readonly<{
+  name: string;
+  sample: (rnd: Rng) => T;
+}>;
+export type MetaPatch = Record<string, string>;
+
+export type LiveTreeCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+
+  // "input" is your fixture HTML for inspector
+  html: string;
+
+  // Optional: label shown in inspector meta
+  fixture?: string;
+  sub?: string;
+
+  // Arrange/Act: mutate tree
+  act: (tree: LiveTree) => void | Promise<void>;
+
+  // Assert: use the `t` helper below (pedantic, multi-check)
+  assert: (tree: LiveTree, t: Asserter) => void | Promise<void>;
+
+  // Optional: customize what gets shown in preview
+  preview?: (tree: LiveTree) => string;
+}>;
+
+export type Asserter = Readonly<{
+  ok: (label: string, condition: unknown) => void;
+  eq: (label: string, got: unknown, want: unknown) => void;
+  neq: (label: string, got: unknown, notWant: unknown) => void;
+
+  // Useful for DOM checks without exploding when missing:
+  hasAttr: (label: string, el: Element | null | undefined, attr: string) => void;
+  attrEq: (
+    label: string,
+    el: Element | null | undefined,
+    attr: string,
+    want: string | null
+  ) => void;
+
+  // If you have Outcome-returning operations in tests:
+  // (we don't construct Outcomes here; we only recognize + throw)
+  outcomeOk: (label: string, maybeOutcome: unknown) => void;
+}>;
+

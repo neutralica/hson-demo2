@@ -1,4 +1,4 @@
-import { _freeze } from "./transform-tests/fixtures/generate-fixtures";
+import { _freeze } from "./tests.consts";
 import type { CaseKey, CaseLog, SuiteLog, TestEvent, TestFailure, TestSummary } from "./tests.types";
 
 export type TestLog = Readonly<{

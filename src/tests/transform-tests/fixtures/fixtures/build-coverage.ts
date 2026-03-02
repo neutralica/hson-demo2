@@ -1,7 +1,8 @@
 
-import { make_rng, normalize_seed } from "../../app/utils/rng";
-import type { Named } from "./fixtures.types";
-import { _freeze } from "./generate-fixtures";
+
+import { normalize_seed, make_rng } from "../../../../app/utils/rng";
+import { _freeze } from "../../../tests.consts";
+import type { Named } from "../../../tests.types";
 
 type PickFn = <T>(xs: readonly T[]) => T;
 

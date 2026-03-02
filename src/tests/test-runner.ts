@@ -2,7 +2,7 @@
 // Purpose: deterministic runner. No DOM, no global state, no “clever” chaining.
 // Emits events to recorder + console via a single callback.
 
-import { _freeze } from "./transform-tests/fixtures/generate-fixtures";
+import { _freeze } from "./tests.consts";
 import { TestRecorder } from "./test-recorder";
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "./tests.types";
 

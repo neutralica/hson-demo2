@@ -3,12 +3,16 @@ import { $cols_ } from "../../app/consts/colors.consts";
 
 export const NAME_WIDTH = "38ch"; // standardize width so it doesn’t jump
 
-export const SCROLL_WRAPcss: Record<string, string> = {
+export const LOG_WRAPcss: Record<string, string> = {
   overflowX: "auto",
   overflowY: "auto",
   width: "100%",
-  maxHeight: "70vh",
+
+  // CHANGED: fill available space in parent panel
+  height: "100%",
+  minHeight: "0",
 };
+
 export const THcss: Record<string, string> = {
   padding: "6px 8px",
   textAlign: "left",

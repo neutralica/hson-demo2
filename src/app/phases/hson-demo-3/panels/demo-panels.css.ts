@@ -34,7 +34,7 @@ export const PANEL_SURFACEcss: CssMap = {
     boxSizing: "border-box",
     display: "grid",
     gap: $GRID_GAPstr,
-    backgroundColor: $cols_.bckgd,
+    // backgroundColor: $cols_.bckgd,
     pointerEvents: "all",
 
 } as const;
@@ -42,7 +42,7 @@ export const PANEL_SURFACEcss: CssMap = {
 export const PANEL_FRAMEcss = {
     // backgroundColor: $cols.backdeep,
     backdropFilter: "blur(8px)",
-    // minHeight: "18rem",
+    maxHeight: "100%",
     // outline: `1px solid rgba(10,150,220,1)`,
     color: $blu_.std,
     fontFamily: "monospace",
@@ -61,7 +61,7 @@ export const TEST_ACTION_BTN = {
     textTransform: "uppercase",
 
     // neutral default
-    background: $cols_.backdeep,
+    // background: $cols_.backdeep,
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 } as const;
 
@@ -78,19 +78,15 @@ export const PANEL_ITEMcss = {
 
 export const PANEL_HIDDENcss = {
     display: "none",
+    height: "0", // added -- good? 
+    visibility: "hidden" // added -- good? 
 } as const;
-
-// export const SCROLLERcss = {
-//     overflow: "auto",
-//     minHeight: "0",
-// } as const;
 
 export const PARSING_PANEL_ROOTcss:CssMap = {
     display: "grid",
     minHeight: "0",
     minWidth: "0",
     gridAutoFlow: "column",
-    
 }
 
 export const PANELcss:CssMap = {
@@ -103,8 +99,8 @@ export const PANELcss:CssMap = {
     padding: "10px",
     borderRadius: "12px",
     boxSizing: "border-box",
-    background: "rgba(255,255,255,0.03)",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+    // background: "rgba(255,255,255,0.03)",
+    // boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 }
 
 export const PANEL_TEXTAREAcss = {
@@ -117,7 +113,7 @@ export const PANEL_TEXTAREAcss = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: "12px",
     lineHeight: "1.35",
-    background: $cols_.backdeep,
+    // background: $cols_.backdeep,
     color: $grn_.std,
     border: `1px solid ${$red_etc_.stonerPurple}`,
     borderRadius: "10px",
@@ -132,19 +128,19 @@ export const TEST_STATUS_CHIPcss: CssMap = {
     fontSize: $txt_.heading,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    background: $cols_.bckgd,
+    // background: $cols_.bckgd,
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
     opacity: "0.9",
     color: $gry_.dim,
     maxWidth: $CHIP_WIDTHstr
 } as const;
 
-export const MARQUEEcss: CssMap = {
+export const TEST_LOGGERcss: CssMap = {
     // ...SCROLLERcss,                  // nah
     borderRadius: "12px",
     padding: "10px",
     boxSizing: "border-box",
-    background: $cols_.backdeep,
+    // background: $cols_.backdeep,
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     fontSize: $txt_.sub,
@@ -172,7 +168,7 @@ export const CLEAR_BTNcss: CssMap = {
     }
 }
 
-export const MARQUEE_BOXcss: CssMap = {
+export const LOG_BOXcss: CssMap = {
     overflow: "hidden",
     gridColumn: "1 / 5",
 
@@ -216,7 +212,7 @@ export const CONTROL_ROWcss: CssMap = {
     gridTemplateColumns: "1fr 2fr 1fr",
     gap: "10px",
     padding: "0",
-    background: "transparent",
+    // background: "transparent",
     border: "none",
     boxShadow: "none",
 };
@@ -242,7 +238,7 @@ export const TEST_SELECTcss = {
     fontSize: $txt_.sub,
     letterSpacing: "0.06em",
 
-    background: $cols_.backdeep,
+    // background: $cols_.backdeep,
     color: $grn_.std,
     border: "1px solid rgba(255,255,255,0.10)",
     outline: "none",

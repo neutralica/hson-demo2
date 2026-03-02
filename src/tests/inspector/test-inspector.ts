@@ -1,17 +1,18 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { SCROLL_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
+import { LOG_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
 import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { $txt_ } from "../../app/consts/ui-consts";
 import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/hson-demo-3/panels/demo-panels.css";
-import { _freeze } from "../fixtures/generate-fixtures";
 import type { TestLog } from "../test-log";
-import { $CHIP_WIDTHstr } from "../tests.consts";
+import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
+import { make_div_class, make_div_id } from "../../app/utils/makers";
+import { PANEL_SAFETYcss } from "../../app/phases/hson-demo-3/demo.css";
 
 
 export type InspectorUi = Readonly<{
@@ -74,24 +75,40 @@ export function create_inspector(
 ): InspectorUi {
   const hideClass = opts?.hideClass ?? "";
 
-  const root = host.create.div().classlist.set("inspector");
-  const header = root.create.div().classlist.set("insp-header");
-  const body = root.create.div().classlist.set("insp-body");
+  const root = make_div_id(host, "inspector").css.setMany({
+    ...PANEL_SAFETYcss,
+    width: "100%",
+    height: "100%",
+    display: "grid",
+    gridTemplateRows: "auto minmax(0, 1fr)",
+    overflow: "hidden",
+  });
+  const header = make_div_class(root, "insp-header").css.setMany({
+    // header is natural height
+    ...PANEL_SAFETYcss,
+  });
+
+  const body = make_div_class(root, "insp-body").css.setMany({
+    // CHANGED: body is the scroll region (or you can put this on tableHost)
+    ...PANEL_SAFETYcss,
+    overflowY: "auto",
+    overflowX: "auto",
+  });
 
   // dynamic 1-col / 2-col
-  const cols = body.create.div().classlist.set("insp-cols");
-  const main = cols.create.div().classlist.set("insp-main");
-  const side = cols.create.div().classlist.set("insp-side");
+  const cols = make_div_class(body, "insp-cols").css.setMany({
+    ...PANEL_SAFETYcss,
+    display: "grid",
+    // whatever your 1/2 col behavior is, keep it here
+  });
+  const main = make_div_class(cols, "insp-main").css.setMany({
+    ...PANEL_SAFETYcss,
+  });
 
   // main table host
-  const tableHost = main.create.div().classlist.set("insp-table-host");
-
-  // failure side
-  const failsBox = side.create.div().classlist.set("insp-fails");
-  const detailBox = side.create.div().classlist.set("insp-detail");
-
-  // header.text.set("inspect");
-  detailBox.text.set("—");
+  const tableHost = make_div_class(main, "insp-table-host").css.setMany({
+    ...PANEL_SAFETYcss
+  });
 
   // ---------------------------
   // UI state (expansion)
@@ -140,54 +157,6 @@ export function create_inspector(
     return name;
   };
 
-  // // ---------------------------
-  // // side panel: failures list + detail
-  // // ---------------------------
-  // const renderFailures = (fails: readonly TestFailure[]): void => {
-  //   clear_box(failsBox);
-
-  //   const head = failsBox.create.div().classlist.set("insp-fails-head");
-  //   head.text.set(fails.length ? "failures" : "no failures");
-  //   head.css.setMany({
-  //     padding: "6px 8px",
-  //     borderBottom: "1px solid rgba(255,255,255,0.12)",
-  //     opacity: "0.8",
-  //     fontFamily: "ui-monospace, monospace",
-  //   });
-
-  //   if (!fails.length) return;
-
-  //   for (const f of fails) {
-  //     const row = failsBox.create.div().classlist.set("insp-fail-row");
-  //     row.text.set(`${f.suite} :: ${f.name}`);
-  //     row.css.setMany({
-  //       padding: "6px 8px",
-  //       borderBottom: "1px solid rgba(255,255,255,0.08)",
-  //       cursor: "pointer",
-  //       fontFamily: "ui-monospace, monospace",
-  //     });
-
-  //     row.listen.onClick((me) => {
-  //       _stop(me);
-  //       renderDetail(f);
-
-  //     });
-  //   }
-  // };
-
-  // const renderDetail = (f: TestFailure): void => {
-  //   const snip = f.err.length > 3000 ? `${f.err.slice(0, 3000)}…` : f.err;
-  //   const meta = f.meta ? `\nmeta: ${JSON.stringify(f.meta)}` : "";
-  //   detailBox.text.set(`${f.suite} :: ${f.name}\n${snip}${meta}\n(${f.ms.toFixed(1)}ms)`);
-  //   detailBox.css.setMany({
-  //     whiteSpace: "pre-wrap",
-  //     overflowWrap: "anywhere",
-  //     padding: "8px",
-  //     fontFamily: "ui-monospace, monospace",
-  //     borderTop: "1px solid rgba(255,255,255,0.12)",
-  //   });
-  // };
-
   // ---------------------------
   // main table: suite->group->case
   // ---------------------------
@@ -212,15 +181,9 @@ export function create_inspector(
       if (!gs) { gs = new Set<string>(); failGroupsBySuite.set(f.suite, gs); }
       gs.add(gk);
     }
-    // cols.css.setMany({
-    //   display: "grid",
-    //   gap: "10px",
-    //   gridTemplateColumns: "1fr",
-    //   alignItems: "start",
-    // });
 
     const wrap = tableHost.create.div().classlist.set("insp-scroll main-scroll");
-    wrap.css.setMany(SCROLL_WRAPcss);
+    wrap.css.setMany(LOG_WRAPcss);
     mainScrollEl = wrap.asDomElement() as HTMLElement;
 
 
@@ -230,8 +193,8 @@ export function create_inspector(
     const hr = mk_tr(thead, "insp-head-row");
     mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
     mk_th(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
-    mk_th(hr, "c-kb", "kb").css.setMany({ ...THcss,  width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
-    mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss,  width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
+    mk_th(hr, "c-kb", "kb").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
+    mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
 
     if (!suites.length) {
       const r = mk_tr(tbody, "insp-empty");
@@ -248,7 +211,7 @@ export function create_inspector(
       const sr = mk_tr(tbody, "insp-suite-row");
       sr.css.setMany(ROW_SUITEcss);
 
-      if (s.fail > 0) sr.css.setMany(ROW_SUITE_FAILcss); 
+      if (s.fail > 0) sr.css.setMany(ROW_SUITE_FAILcss);
 
       mk_td(sr, "c-res", caret).css.setMany(TDcss);
       mk_td(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
@@ -311,7 +274,7 @@ export function create_inspector(
         const gr = mk_tr(tbody, "insp-group-row");
         gr.css.setMany(ROW_GROUPcss);
 
-        if (fail > 0) gr.css.setMany(ROW_GROUP_FAILcss); 
+        if (fail > 0) gr.css.setMany(ROW_GROUP_FAILcss);
 
         mk_td(gr, "c-res", gCaret).css.setMany(TDcss);
         mk_td(gr, "c-name", `${gk}  (${pass}/${fail}/${skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
@@ -335,7 +298,7 @@ export function create_inspector(
 
           // case row
           const cr = mk_tr(tbody, "insp-case-row");
-          if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss); 
+          if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss);
 
           mk_td(cr, "c-res", res).css.setMany(TDcss);
 
@@ -367,7 +330,7 @@ export function create_inspector(
             const topRow = cell.create.div().classlist.set("insp-cap-row");
             topRow.css.setMany({
               display: "grid",
-              gridTemplateColumns: "2rem auto auto",
+              gridTemplateColumns: "auto 12ch 12ch",
               gap: "8px",
               alignItems: "center",
               marginBottom: "8px",
@@ -388,6 +351,7 @@ export function create_inspector(
               b.text.set(label);
               b.setAttrs("role", "button");
               b.css.setMany({
+                maxWidth: "10ch",
                 padding: "4px 8px",
                 borderRadius: "8px",
                 border: "1px solid rgba(255,255,255,0.12)",
@@ -395,6 +359,7 @@ export function create_inspector(
                 userSelect: "none",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
+                margin: "auto"
               });
               return b;
             };
@@ -488,8 +453,6 @@ export function create_inspector(
 
   const clear = (): void => {
     tableHost.empty();
-    failsBox.empty();
-    detailBox.text.set("—");
     expandedSuites.clear();
     expandedGroupsBySuite.clear();
     expandedCasesBySuite.clear();
@@ -509,7 +472,6 @@ export function create_inspector(
   });
 
   main.css.setMany({ display: "grid", gap: "6px" });
-  side.css.setMany({ display: "none" });
 
   return Object.freeze({ render, show, hide, clear });
 }

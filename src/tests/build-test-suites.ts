@@ -4,9 +4,11 @@ import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/jso
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
-import { _freeze, make_html_generated_fixtures } from "./transform-tests/fixtures/generate-fixtures";
+import { make_html_generated_fixtures } from "./transform-tests/fixtures/generate-fixtures";
+import { _freeze } from "./tests.consts";
 import { make_generated_json_fixtures } from "./transform-tests/fixtures/generate-json";
-import type { Fixture } from "./transform-tests/fixtures/fixtures.types";
+import type { Fixture } from "./tests.types";
+import {  all_livetree_suites } from "./livetree-tests/livetree-fixtures-1";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -39,7 +41,7 @@ export function make_legacy_test_suite(
   fixtures: FixtureBundle,
   suite = "fixtures/basic",
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
-  entryFmt: SourceFormat = "auto", 
+  entryFmt: SourceFormat = "auto",
 ): TestSuite {
   const cases: TestCase[] = [];
 
@@ -110,7 +112,7 @@ export function generate_fixture_suite(
   hson: HsonTestApi,
   fixtures: readonly Fixture[],
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
-  runMeta?: Readonly<{ seed: number; genHtmlCount: number; genJsonCount: number }>, 
+  runMeta?: Readonly<{ seed: number; genHtmlCount: number; genJsonCount: number }>,
 ): TestSuite {
   const suite = "fixtures/generated";
 
@@ -129,7 +131,7 @@ export function generate_fixture_suite(
           fmt: fx.fmt,
           preview,
           ...(tags ? { tags } : {}),
-          ...(runMeta ? { seed: seedStr, genHtmlCount: genHtmlStr, genJsonCount: genJsonStr } : {}), 
+          ...(runMeta ? { seed: seedStr, genHtmlCount: genHtmlStr, genJsonCount: genJsonStr } : {}),
         };
 
         const k = `${suite}::${fx.name}` as CaseKey;
@@ -227,7 +229,9 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      make_legacy_test_suite(h, {wikipedia: {annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}`}}, "fixtures/dev/json", map)
+      // ADD:
+      ...all_livetree_suites(),
+      make_legacy_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
     ])
   }
 

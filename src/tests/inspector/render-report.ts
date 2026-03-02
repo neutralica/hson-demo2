@@ -1,6 +1,6 @@
 import type { LoopReport, Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { $cols_ } from "../../app/consts/colors.consts";
-import  { _freeze } from "../fixtures/generate-fixtures";
+import { _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 
 

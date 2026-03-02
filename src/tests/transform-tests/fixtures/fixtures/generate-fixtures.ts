@@ -1,6 +1,8 @@
 import type { HsonAttrs } from "hson-live/types";
-import type { Gen, Jsonish, Fixture, FixtureBag, Named } from "./fixtures.types";
-import { make_rng } from "../../app/utils/rng";
+import type { Gen, Jsonish, Fixture, FixtureBag, Named } from "../../../tests.types";
+import { make_rng } from "../../../../app/utils/rng";
+import { _freeze } from "../../../tests.consts";
+
 
 
 function el(tag: string, attrs: HsonAttrs, inner: string): string {
@@ -154,7 +156,6 @@ export function product(
 }
 
 // typed freeze wrapper preserves generics
-export const _freeze = <T>(x: T): Readonly<T> => Object.freeze(x);
 
 export function product2<A, B>(
   a: readonly Named<A>[],

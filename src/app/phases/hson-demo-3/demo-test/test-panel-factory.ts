@@ -3,16 +3,16 @@ import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/liv
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
 import { make_btn } from "../../../widgets/gems-deprecate/make-gems";
-import { PANEL_FRAMEcss, PANEL_SURFACEcss, TEST_SELECTcss } from "../panels/demo-panels.css";
-import { PANEL_BRANCHcss, MARQUEE_BOXcss, MARQUEEcss, TEST_STATUS_CHIPcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
+import { PANEL_FRAMEcss, PANEL_SURFACEcss, TEST_SELECTcss, PANEL_BRANCHcss, LOG_BOXcss, TEST_LOGGERcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { LoopReport } from "../../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { build_suites_for_mode } from "../../../../tests/suite-builder";
+import { build_suites_for_mode } from "../../../../tests/build-test-suites";
 import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
+import { PANEL_SAFETYcss } from "../demo.css";
 
 
 export type TestPanelDeps = Readonly<{
@@ -64,15 +64,15 @@ function test_panel_factory(): Outcome<TestPanel> {
   // MARQUEE (stays!)
   // -------------------------
   // ADDED: viewport box so marquee reads as “embedded terminal glass”
-  const marqueeBox = branch.create.div()
-    .id.set("test-marquee-box")
-    .css.setMany(MARQUEE_BOXcss);
+  const logBox = branch.create.div()
+    .id.set("test-log-box")
+    .css.setMany(LOG_BOXcss);
 
   // marquee is the actual <marquee> tag, no strip / no JS scrolling logic
-  const marquee = marqueeBox.create.div()
-    .id.set("test-marquee")
+  const logger = logBox.create.div()
+    .id.set("test-logger")
     .css.setMany({
-      ...MARQUEEcss,
+      ...TEST_LOGGERcss,
     });
 
   // -------------------------
@@ -117,15 +117,14 @@ function test_panel_factory(): Outcome<TestPanel> {
 
   const chips = create_test_chips(branch);
 
-  // simplest possible marquee writer (no strip, no scrollbars)
-  const setMarquee = (txt: string): void => {
+  const setLog = (txt: string): void => {
     if (!mounted) return;
-    marquee.text.set(txt);
+    logger.text.add(txt);
   };
 
-  const clearMarquee = (): void => {
+  const clearLogs = (): void => {
     if (!mounted) return;
-    marquee.text.set("");
+    logger.text.set("");
   };
 
   const mount = (hostBody: LiveTree): void => {
@@ -164,13 +163,13 @@ function test_panel_factory(): Outcome<TestPanel> {
 
     // clear should clear the tiny panel surfaces
     clearBtn.listen.onClick(() => {
-      clearMarquee();
-      setMarquee("idle");
+      clearLogs();
+      setLog("idle");
     });
   };
 
   // set initial marquee before mount so it’s ready
-  marquee.text.set(introText);
+  logger.text.set(introText);
 
   return relay.data({
     branch,
@@ -181,15 +180,15 @@ function test_panel_factory(): Outcome<TestPanel> {
     suiteSel,
 
     // status,
-    marquee,
+    marquee: logger,
     chips,
 
     getLevel: () => level,
     getMode: () => mode,
 
     // setStatus,
-    setMarquee,
-    clearMarquee,
+    setMarquee: setLog,
+    clearMarquee: clearLogs,
   } as const);
 }
 
@@ -217,24 +216,37 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     const root = host.create.div()
       .id.set("test-panels-root")
       .css.setMany({
+        ...PANEL_SAFETYcss,
+        width: "100%",
+        height: "100%",
+
         display: "grid",
+        gridTemplateRows: "minmax(0, 1fr) minmax(0, 1fr)", // test + inspector
         gap: "12px",
-        minWidth: "0",
-        minHeight: "0",
-        // simple 2-row: inspector above, test below (tweak to taste)
-        gridTemplateRows: "auto 1fr",
+
+        // CHANGED: if you want scrolling, do it inside, not on this root
+        overflow: "hidden",
       });
 
 
     // test chrome
-    const testFrame = root.create.div().css.setMany(PANEL_FRAMEcss);
-    const testSurface = testFrame.create.div().css.setMany(PANEL_SURFACEcss);
+    const testFrame = root.create.div().css.setMany({ ...PANEL_FRAMEcss, ...PANEL_SAFETYcss });
+    const testSurface = testFrame.create.div().css.setMany({ ...PANEL_SURFACEcss, ...PANEL_SAFETYcss });
 
     // inspector chrome
-    const inspFrame = root.create.div().css.setMany(PANEL_FRAMEcss);
+    const inspFrame = root.create.div().css.setMany({ ...PANEL_FRAMEcss, ...PANEL_SAFETYcss });
     const inspSurface = inspFrame.create.div().css.setMany({
       ...PANEL_SURFACEcss,
-      minHeight: "12rem",
+      ...PANEL_SAFETYcss,
+      // CHANGED: inspector surface becomes a 2-row grid: header + scroll body
+      display: "grid",
+      gridTemplateRows: "auto minmax(0, 1fr)",
+
+      // CHANGED: critical for scroll inside nested grids
+      height: "100%",
+
+      // CHANGED: prevent outer surface from scrolling; inner area will
+      overflow: "hidden",
     });
 
     // --- owned dependencies ---
@@ -249,12 +261,35 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       inspSurface,
       tlog,
       { hideClass: $PANEL_HIDDEN },
+
+      // CHANGED: fallback to metaPatch when no capture is registered
       async (key) => {
         const fn = captureMap.get(key);
-        if (!fn) {
-          throw new Error(`no capture registered for key: ${String(key)}`);
-        }
-        return fn();
+        if (fn) return fn();
+
+        // LiveTree suites don't have LoopReports; use case meta instead.
+        const c = tlog.getCase(key);
+        const m = c?.meta;
+
+        // Return a minimal LoopReport-like object that your section builder can read.
+        // It already uses permissive access (casts / optional fields).
+        return {
+          ok: c?.status === "pass",
+          entry: key,
+          dir: "livetree",
+          times: 1,
+          failures: c?.status === "fail" ? [{ ok: false, step: "assert", error: c.err ?? "fail" }] : [],
+          trace: [
+            { ok: true, step: "setup" },
+            { ok: c?.status !== "fail", step: "assert", error: c?.err },
+          ],
+          artifacts: [
+            m?.fixture ? { lap: 0, fmt: "json", label: "fixture", text: m.fixture } : undefined,
+            m?.sub ? { lap: 0, fmt: "json", label: "sub", text: m.sub } : undefined,
+            m?.preview ? { lap: 0, fmt: "html", label: "preview", text: m.preview } : undefined,
+            m?.input ? { lap: 0, fmt: "html", label: "input", text: m.input } : undefined,
+          ].filter(Boolean),
+        } as unknown as LoopReport;
       },
     );
 

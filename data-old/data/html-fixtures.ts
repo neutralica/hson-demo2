@@ -3,7 +3,7 @@
 // import { html_mdn } from "./html-mdn";
 
 import type { FixtureBundle } from "../../src/tests/tests.types";
-import { _freeze } from "../../src/tests/transform-tests/fixtures/generate-fixtures";
+import { _freeze } from "../../src/tests/tests.consts";
 import { html_gwern } from "./large-fixtures/html-gwern.mock";
 import { html_hackerNews } from "./large-fixtures/html-hackernews.mock";
 import { html_wikipedia } from "./large-fixtures/html-wikipedia.mock";
