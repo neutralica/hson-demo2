@@ -22,7 +22,7 @@ export type TestPanelDeps = Readonly<{
 }>;
 
 const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps (expect 8 errors from invalid HTML)"
-
+const liveTreeText = "LIVETREE TESTS: confirms successful LiveTree operations and expected final node shape";
 export type TestPanel = Readonly<{
   branch: LiveTree;
   mount: (hostBody: LiveTree) => void;
@@ -170,6 +170,7 @@ function test_panel_factory(): Outcome<TestPanel> {
 
   // set initial marquee before mount so it’s ready
   logger.text.set(introText);
+  logger.text.add(liveTreeText);
 
   return relay.data({
     branch,

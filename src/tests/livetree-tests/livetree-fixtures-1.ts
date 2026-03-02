@@ -159,6 +159,7 @@ export function suite_attrs_and_flags(): TestSuite {
 
 export function suite_append_and_create(): TestSuite {
   const SUITE = "livetree/append-and-create";
+  let removedCount = -1; // CHANGED: closure capture for act→assert
 
   const cases: readonly LiveTreeCaseSpec[] = [
     {
@@ -184,9 +185,8 @@ export function suite_append_and_create(): TestSuite {
 
       assert(tree: LiveTree, t: Asserter) {
         const root = tree.find.must.byId("root");
-
-        // IMPORTANT: element-children only (primitives skipped)
-        const kids = root.content.all();
+        const elem = root.content.all()[0];
+        const kids = elem?.content.all() ?? [];
         t.eq("root.content count", kids.length, 3);
 
         const cls = kids.map((k) => String(k.getAttr("class") ?? ""));
@@ -203,9 +203,11 @@ export function suite_append_and_create(): TestSuite {
 
       preview(tree: LiveTree) {
         // DOM may not exist; make preview purely LiveTree-side.
-        const root = tree.find.byId("root");
+        const root = tree.find.must.byId("root");
         if (!root) return "<no root>";
-        const kids = root.content.all();
+        const elem = root.content.all()[0];
+        // IMPORTANT: element-children only (primitives skipped)
+        const kids = elem?.content.all() ?? [];
         const lines = kids.map((k, i) => {
           const cls = String(k.getAttr("class") ?? "");
           const txt = k.text.get();
@@ -214,8 +216,7 @@ export function suite_append_and_create(): TestSuite {
         return lines.join("\n") || "<no kids>";
       },
     },
-
-    {
+     {
       suite: SUITE,
       name: "removeChildren count and empty clears",
       html: `<div id="root"><div id="a"></div><div id="b"></div></div>`,
@@ -224,22 +225,23 @@ export function suite_append_and_create(): TestSuite {
 
       act(tree: LiveTree) {
         const root = tree.find.must.byId("root");
+        const elem = root.content.all()[0]; // "_elem"
+        if (!elem) throw new Error("expected #root to have _elem wrapper");
 
-        const removed = root.removeChildren();
-        root.setAttrs("data-removed", String(removed));
+        // CHANGED: capture return directly, no attrs
+        removedCount = elem.removeChildren();
 
-        root.create.div().id.set("c");
-        root.empty();
+        elem.create.div().id.set("c");
+        elem.empty();
       },
 
       assert(tree: LiveTree, t: Asserter) {
         const root = tree.find.must.byId("root");
+        const elem = root.content.all()[0];
+        if (!elem) throw new Error("expected #root to have _elem wrapper");
 
-        const removed = root.getAttr("data-removed");
-        t.eq('removeChildren removed 2', removed, "2");
-
-        // Again: assert via LiveTree model, not DOM
-        t.eq("root.content count after empty()", root.content.all().length, 0);
+        t.eq("removeChildren removed 2", String(removedCount), "2");
+        t.eq("elem.content count after empty()", elem.content.all().length, 0);
       },
     },
     {
@@ -258,7 +260,9 @@ export function suite_append_and_create(): TestSuite {
       },
       assert(tree, t) {
         const root = tree.find.must.byId("root");
-        const kids = root.content.all();
+        const elem = root.content.all()[0]; // the "_elem" wrapper
+        const kids = elem?.content.all() ?? [];
+        console.log(kids)
         t.eq("count", kids.length, 3);
         const cls = kids.map(k => String(k.getAttr("class") ?? ""));
         t.eq("cls", cls.join(","), "orig,a,b");
