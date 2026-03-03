@@ -7,12 +7,12 @@ import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
 import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { $txt_ } from "../../app/consts/ui-consts";
-import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/hson-demo-3/panels/demo-panels.css";
 import type { TestLog } from "../test-log";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { make_div_class, make_div_id } from "../../app/utils/makers";
-import { PANEL_SAFETYcss } from "../../app/phases/hson-demo-3/demo.css";
+import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
+import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/phase-3-demo/panels/demo-panels.css";
 
 
 export type InspectorUi = Readonly<{
@@ -320,7 +320,7 @@ export function create_inspector(
           if (expandedCases.has(c.key)) {
             const pr = mk_tr(tbody, "insp-case-preview-row");
             const cell = pr.create.td().classlist.set("insp-case-preview-cell");
-            cell.setAttrs("colspan", "4");
+            cell.attr.set("colspan", "4");
             cell.css.setMany(TD_PREVIEW_ROWcss);
 
             // build composite content; never call cell.text.set after this
@@ -349,7 +349,7 @@ export function create_inspector(
             const mkBtn = (label: string): LiveTree => {
               const b = topRow.create.div().classlist.set("insp-cap-btn");
               b.text.set(label);
-              b.setAttrs("role", "button");
+              b.attr.set("role", "button");
               b.css.setMany({
                 maxWidth: "10ch",
                 padding: "4px 8px",

@@ -1,9 +1,8 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import type { CssMap } from "hson-live/types";
-import { PANEL_FRAMEcss, PANEL_OUTERcss, PANEL_SURFACEcss } from "../phases/hson-demo-3/panels/demo-panels.css";
 import { $PANEL_HIDDEN } from "../consts/ui-consts";
+import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "../phases/phase-3-demo/panels/demo-panels.css";
 
 export type BuiltPanel = Readonly<{
   panel: LiveTree;

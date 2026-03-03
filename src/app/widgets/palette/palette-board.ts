@@ -6,7 +6,7 @@ import { make_div_class, make_div_id } from "../../utils/makers";
 // Render a simple grid of clickable swatches.
 // Click swatch → copies `oklch(...)` string.
 export function render_palette_board(host: LiveTree, p: Palette): () => void {
-    const root = host.create.div().setAttrs("class", "palette-board");
+    const root = host.create.div().attr.set("class", "palette-board");
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     // Layout shell
     root.text.set("HSON")

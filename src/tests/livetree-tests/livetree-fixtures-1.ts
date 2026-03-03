@@ -105,30 +105,30 @@ export function suite_attrs_and_flags(): TestSuite {
       act(tree: LiveTree) {
         const btn = tree.find.must.byId("btn");
 
-        btn.setAttrs("data-state", "open");
-        btn.setAttrs("disabled", true);
+        btn.attr.set("data-state", "open");
+        btn.attr.set("disabled", true);
 
         // remove via null
-        btn.setAttrs("data-temp", "x");
-        btn.setAttrs("data-temp", null);
+        btn.attr.set("data-temp", "x");
+        btn.attr.set("data-temp", null);
 
         // remove via false
-        btn.setAttrs("aria-busy", true);
-        btn.setAttrs("aria-busy", false);
+        btn.attr.set("aria-busy", true);
+        btn.attr.set("aria-busy", false);
       },
 
       assert(tree: LiveTree, t) {
         const btn = tree.find.must.byId("btn");
 
         // String attr
-        t.eq(`getAttr("data-state")`, btn.getAttr("data-state"), "open");
+        t.eq(`getAttr("data-state")`, btn.attr.get("data-state"), "open");
 
         // Boolean-present attrs: don't assume representation (true vs "" vs "disabled")
-        t.ok(`getAttr("disabled") is present`, btn.getAttr("disabled") !== undefined);
+        t.ok(`getAttr("disabled") is present`, btn.attr.get("disabled") !== undefined);
 
         // Removals
-        t.eq(`data-temp removed`, btn.getAttr("data-temp"), undefined);
-        t.eq(`aria-busy removed`, btn.getAttr("aria-busy"), undefined);
+        t.eq(`data-temp removed`, btn.attr.get("data-temp"), undefined);
+        t.eq(`aria-busy removed`, btn.attr.get("aria-busy"), undefined);
       },
     },
 
@@ -141,15 +141,16 @@ export function suite_attrs_and_flags(): TestSuite {
 
       act(tree: LiveTree) {
         const i = tree.find.must.byId("i");
-        i.setFlags("disabled", "readonly");
-        i.removeFlags("readonly");
+        i.flag.set("disabled");
+        i.flag.set( "readonly");
+        i.flag.clear("readonly");
       },
 
       assert(tree: LiveTree, t) {
         const i = tree.find.must.byId("i");
 
-        t.ok(`disabled present`, i.getAttr("disabled") !== undefined);
-        t.eq(`readonly removed`, i.getAttr("readonly"), undefined);
+        t.ok(`disabled present`, i.attr.get("disabled") !== undefined);
+        t.eq(`readonly removed`, i.attr.get("readonly"), undefined);
       },
     },
   ];
@@ -159,76 +160,70 @@ export function suite_attrs_and_flags(): TestSuite {
 
 export function suite_append_and_create(): TestSuite {
   const SUITE = "livetree/append-and-create";
-  let removedCount = -1; // CHANGED: closure capture for act→assert
+
+  let removedCount = -1; // ok for now; runner is sequential per case.
 
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "create.at(index) preserves element order (node-children)",
-      html: `<section id="root"><p class="orig">one</p></section>`,
+      name: "create.at(index) inserts among element-children under _elem (preserves order)",
       fixture: "append/create",
       sub: "order",
+      html: `<section id="root"><p class="orig">one</p></section>`,
 
       act(tree: LiveTree) {
-        const root = tree.find.must.byId("root");
+        const elem = tree.find.must.byId("root");
 
-        // append (end)
-        const mid = root.create.p();
-        mid.setAttrs("class", "mid");
+        // append at end: orig, mid
+        const mid = elem.create.p();
+        mid.classlist.add("mid");
         mid.text.overwrite("two");
 
-        // insert at index 1 (between orig and mid)
-        const insert = root.create.at(1).p();
-        insert.setAttrs("class", "insert");
+        // insert at index 1: orig, insert, mid
+        const insert = elem.create.at(1).p();
+        insert.classlist.add("insert");
         insert.text.overwrite("between");
       },
 
       assert(tree: LiveTree, t: Asserter) {
-        const root = tree.find.must.byId("root");
-        const elem = root.content.all()[0];
-        const kids = elem?.content.all() ?? [];
-        t.eq("root.content count", kids.length, 3);
+        const kids = tree.content.all();
+        t.eq("elem child count", kids.length, 3);
 
-        const cls = kids.map((k) => String(k.getAttr("class") ?? ""));
+        const cls = kids.map((k) => String(k.attr.get("class") ?? ""));
         const txt = kids.map((k) => k.text.get());
 
-        t.eq('class[0]', cls[0], "orig");
-        t.eq('class[1]', cls[1], "insert");
-        t.eq('class[2]', cls[2], "mid");
+        t.eq("class[0]", cls[0], "orig");
+        t.eq("class[1]", cls[1], "insert");
+        t.eq("class[2]", cls[2], "mid");
 
-        t.eq('text[0]', txt[0], "one");
-        t.eq('text[1]', txt[1], "between");
-        t.eq('text[2]', txt[2], "two");
+        t.eq("text[0]", txt[0], "one");
+        t.eq("text[1]", txt[1], "between");
+        t.eq("text[2]", txt[2], "two");
       },
 
       preview(tree: LiveTree) {
-        // DOM may not exist; make preview purely LiveTree-side.
-        const root = tree.find.must.byId("root");
-        if (!root) return "<no root>";
-        const elem = root.content.all()[0];
-        // IMPORTANT: element-children only (primitives skipped)
-        const kids = elem?.content.all() ?? [];
-        const lines = kids.map((k, i) => {
-          const cls = String(k.getAttr("class") ?? "");
-          const txt = k.text.get();
-          return `${i}: <${String(k.node?._tag ?? "node")}> class="${cls}" text="${txt}"`;
-        });
-        return lines.join("\n") || "<no kids>";
+        const kids = tree.content.all();
+        return kids
+          .map((k, i) => {
+            const cls = String(k.attr.get("class") ?? "");
+            const txt = k.text.get();
+            return `${i}: <${String(k.node?._tag ?? "node")}> class="${cls}" text="${txt}"`;
+          })
+          .join("\n") || "<no kids>";
       },
     },
-     {
+
+    {
       suite: SUITE,
-      name: "removeChildren count and empty clears",
-      html: `<div id="root"><div id="a"></div><div id="b"></div></div>`,
+      name: "removeChildren returns direct element-child count removed; empty clears",
       fixture: "remove/empty",
       sub: "counts",
+      html: `<div id="root"><div id="a"></div><div id="b"></div></div>`,
 
       act(tree: LiveTree) {
-        const root = tree.find.must.byId("root");
-        const elem = root.content.all()[0]; // "_elem"
-        if (!elem) throw new Error("expected #root to have _elem wrapper");
+        const elem = tree.find.must.byId("root");
 
-        // CHANGED: capture return directly, no attrs
+        // CHANGED: operate at the level where the children actually are.
         removedCount = elem.removeChildren();
 
         elem.create.div().id.set("c");
@@ -236,38 +231,39 @@ export function suite_append_and_create(): TestSuite {
       },
 
       assert(tree: LiveTree, t: Asserter) {
-        const root = tree.find.must.byId("root");
-        const elem = root.content.all()[0];
-        if (!elem) throw new Error("expected #root to have _elem wrapper");
+        const elem = tree.find.must.byId("root");
 
-        t.eq("removeChildren removed 2", String(removedCount), "2");
-        t.eq("elem.content count after empty()", elem.content.all().length, 0);
+        t.eq("removedCount", removedCount, 2);
+        t.eq("elem child count after empty()", elem.content.all().length, 0);
       },
     },
+
     {
       suite: SUITE,
-      name: "create.p creates distinct node-children",
+      name: "create.p appends distinct element-children under _elem",
+      fixture: "create.p",
+      sub: "append",
       html: `<section id="root"><p class="orig">one</p></section>`,
-      act(tree) {
-        const root = tree.find.must.byId("root");
-        const a = root.create.p();
-        a.setAttrs("class", "a");
+
+      act(tree: LiveTree) {
+        const elem = tree.find.must.byId("root");
+        const a = elem.create.p();
+        a.classlist.add("a");
         a.text.overwrite("A");
 
-        const b = root.create.p();
-        b.setAttrs("class", "b");
+        const b = elem.create.p();
+        b.classlist.add("b");
         b.text.overwrite("B");
       },
-      assert(tree, t) {
-        const root = tree.find.must.byId("root");
-        const elem = root.content.all()[0]; // the "_elem" wrapper
-        const kids = elem?.content.all() ?? [];
-        console.log(kids)
+
+      assert(tree: LiveTree, t: Asserter) {
+        const kids = tree.content.all();
         t.eq("count", kids.length, 3);
-        const cls = kids.map(k => String(k.getAttr("class") ?? ""));
+
+        const cls = kids.map((k) => String(k.attr.get("class") ?? ""));
         t.eq("cls", cls.join(","), "orig,a,b");
-      }
-    }
+      },
+    },
   ];
 
   return make_livetree_suite(SUITE, cases);

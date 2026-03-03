@@ -6,7 +6,7 @@ import type { Fmt, Panels, PanelShell } from "../panels/panels.types";
 
 const lockTextarea = (p: PanelShell): void => {
   // lock via readonly + no selection, but keep focus/click working
-  p.textarea.setFlags("readonly");
+  p.textarea.flag.set("readonly");
 
   p.textarea.css.setMany({
     pointerEvents: "auto",   // was none (likely)
@@ -16,7 +16,7 @@ const lockTextarea = (p: PanelShell): void => {
 };
 
 const unlockTextarea = (p: PanelShell): void => {
-  p.textarea.removeFlags("readonly");
+  p.textarea.flag.clear("readonly");
 
   p.textarea.css.setMany({
     pointerEvents: "auto",

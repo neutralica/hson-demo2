@@ -136,13 +136,13 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .classlist.set("build-btn build-btn--clear")
     .text.set("clear")
     .css.setMany(BUILD_BTNcss)
-    .setAttrs({ role: "button", tabindex: "0", "aria-label": "clear input" });
+    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "clear input" });
 
   const copyBtn = src.head.create.div()
     .classlist.set("build-btn build-btn--copy")
     .text.set("copy")
     .css.setMany(BUILD_BTNcss)
-    .setAttrs({ role: "button", tabindex: "0", "aria-label": "copy input" });
+    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "copy input" });
 
   // ---- SRC body: wrap + overlays + textarea ----
 
@@ -185,14 +185,14 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .data.set("tab", "render")
     .text.set("render")
     .css.setMany({ ...BUILD_TABcss, ...BUILD_TAB_ACTIVEcss })
-    .setAttrs({ role: "button", tabindex: "0", "aria-label": "show render preview" });
+    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "show render preview" });
 
   const tabHtml = toggle.create.div()
     .classlist.set("build-tab build-tab--html")
     .data.set("tab", "html")
     .text.set("html")
     .css.setMany(BUILD_TABcss)
-    .setAttrs({ role: "button", tabindex: "0", "aria-label": "show html output" });
+    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "show html output" });
 
   // ---- OUT body: preview host + html box ----
 

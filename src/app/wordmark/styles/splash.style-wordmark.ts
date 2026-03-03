@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 import type { LetterKey } from "../../../types/core.types";
 import { CELL_CSS, O_ROT } from "../wordmark.css";
 import { LETTER_COLORstd } from "../../consts/colors.consts";
-import { FRAME_CSS } from "../../phases/logo-splash-2/splash.css";
+import { FRAME_CSS } from "../../phases/phase-2-splash/splash.css";
 import type { WordmarkParts } from "../wordmark.types";
 
 

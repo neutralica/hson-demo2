@@ -52,8 +52,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const tailC = starWrap.bud(SPLASH_BUDS.starTailC);
     
     /* create clouds */
-    const wrapper = create_clouds(cloudBox.tree, CLOUD_CONFIG).content.mustOnly();
-    const clouds = wrapper.content.all();
+    const clouds = create_clouds(cloudBox.tree, CLOUD_CONFIG).content.all();
     if (!clouds?.length) return relay.err("no clouds created");
     
     /* create H-S-O-N letters */

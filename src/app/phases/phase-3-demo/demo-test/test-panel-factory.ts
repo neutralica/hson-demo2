@@ -136,9 +136,9 @@ function test_panel_factory(): Outcome<TestPanel> {
     suiteSel.empty();
     for (const m of MODES) {
       const opt = suiteSel.create.option();
-      opt.setAttrs("value", m.key);
+      opt.attr.set("value", m.key);
       opt.text.set(m.label);
-      if (m.key === mode) opt.setAttrs("selected", "selected");
+      if (m.key === mode) opt.flag.set("selected");
     }
 
     suiteSel.listen.on("change", () => {

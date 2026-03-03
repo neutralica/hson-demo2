@@ -71,7 +71,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .classlist.set("pp-copy")
       .text.set("copy")
       .css.setMany(PP_COPYBTNcss)
-      .setAttrs({
+      .attr.setMany({
         "role": "button",
         "tabindex": "0",
         "aria-label": `copy ${fmt}`,

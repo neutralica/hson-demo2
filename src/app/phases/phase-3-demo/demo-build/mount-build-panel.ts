@@ -49,8 +49,8 @@ export function init_build_panels(bp: BuildDemo): void {
 
         // simple active affordance (optional)
         // TODO - change over to .data.set
-        bp.tabs.render.setAttrs("data-active", String(showRender));
-        bp.tabs.html.setAttrs("data-active", String(!showRender));
+        bp.tabs.render.attr.set("data-active", String(showRender));
+        bp.tabs.html.attr.set("data-active", String(!showRender));
     };
 
     const render = (raw: string): void => {

@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $ylw_ } from "../../../consts/colors.consts";
 import { $txt_ } from "../../../consts/ui-consts";
 
 // ADDED: list cell styling (prevents baseline + indent issues)
@@ -99,3 +99,22 @@ export const ABOUT_NOT_LOGOcss:CssMap = {
   fontSize: $txt_.sub,
   lineHeight: "1.75",
 }
+
+export const MD_TICKcss: CssMap = {
+  // “third color” for the backticks themselves
+  color: $gry_.dim,
+  fontWeight: "700",
+} as const;
+
+export const MD_CODEcss: CssMap = {
+  // code inner styling (different from surrounding monospace)
+  color: $txt_.main,
+  fontWeight: "650",
+  fontSize: "0.95em",
+} as const;
+
+export const MD_PARENcss: CssMap = {
+  // parens + contents
+  color: $blu_.std, // pick whatever fits your palette
+  fontWeight: "700",
+} as const;
