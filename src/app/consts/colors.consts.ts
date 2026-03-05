@@ -209,7 +209,7 @@ export const ACID_WASH_RGBA = {
 };
 
 export const ACID_WASH_OKLCH = {
-  ash:        "oklch(0.90 0.055 300)",  // soft neutral grey-blue
+  ash:        "oklch(0.83 0.0 300)",  // soft neutral grey-blue
   frost:      "oklch(0.82 0.02 210)",
   mist:       "oklch(0.78 0.018 260)",
 

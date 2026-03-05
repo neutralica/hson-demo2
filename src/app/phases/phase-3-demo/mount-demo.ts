@@ -59,11 +59,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       transform: "translate(-50%, -50%)",
       whiteSpace: "pre",
       fontFamily: "monospace",
-      height: "50%",
-      width: "50%",
-      color: ACID_WASH_OKLCH.bruisedPlum,
+      // height: "50%",
+      // width: "50%",
+      color: ACID_WASH_OKLCH.smokeRose,
+      maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
+      boxSizing: "border-box"
 
-    })
+    });
 
   const menuContainer = make_div_id(screenFx, "menu-container")
     .css.setMany(MENU_CONTAINERcss);

@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { $blu_, $grn_ } from "../../../consts/colors.consts";
-import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_LOGOcss, ABOUT_NOT_LOGOcss, ABOUT_P_TEXTcss, MD_CODEcss, MD_PARENcss, MD_TICKcss, INLINE_TICKcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss } from "./about.css";
+import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_CSS, ABOUT_P_TEXTcss, MD_CODEcss, MD_PARENcss, MD_TICKcss, INLINE_TICKcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 
 // -----------------------------
@@ -314,8 +314,6 @@ function render_doc_md(host: LiveTree, src: string): void {
     const pre = host.create.div().classlist.add("md-pre");
     if (isLogo) return;
 
-    pre.css.setMany(isLogo ? ABOUT_LOGOcss : ABOUT_NOT_LOGOcss);
-
     for (const line of codeLines) {
       const row = pre.create.div();
       row.css.setMany({ whiteSpace: "pre" });
@@ -383,7 +381,7 @@ function render_doc_md(host: LiveTree, src: string): void {
       h.css.setMany({
         marginTop: level === 1 ? "6px" : "2rem",
         marginBottom: "8px",
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontFamily: "Monaco",
         letterSpacing: "0.06em",
         textTransform: level === 1 ? "uppercase" : "none",
         fontSize: level === 1 ? "24px" : level === 2 ? "19px" : level === 3 ? "15px" : "12px",
@@ -492,21 +490,21 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
 // ---- inline renderer (safe: text only; creates spans) ----
 
 const INLINE_CODE_WRAPcss = {
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontWeight: "700",
   opacity: "0.95",
 } as const;
 
 const INLINE_CODE_INNERcss = {
   color: $blu_.sky,
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontWeight: "200",
   fontSize: "18px",
 } as const;
 
 const INLINE_PARENScss = {
   color: $grn_.dragon,
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontWeight: "300",
 } as const;
 

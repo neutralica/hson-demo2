@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../consts/colors.consts";
 import { $txt_ } from "../../../consts/ui-consts";
 
 // ADDED: list cell styling (prevents baseline + indent issues)
@@ -54,33 +54,18 @@ export const DOC_BTN_IDLEcss:CssMap = {
 } as const;
 
 export const ABOUT_P_TEXTcss:CssMap = {
+  padding: "0 10px",
   whiteSpace: "pre-wrap",
-  lineHeight: "1.55",
+  lineHeight: "1.85",
+  letterSpacing: "0.7px",
+  fontSize: "18px",
   marginBottom: "10px",
-  color: $cols_.txtmain,
+  color: ACID_WASH_OKLCH.steel,
+  fontFamily: "Trebuchet MS",
   textIndent: "4ch",
   // maxWidth: "60ch",
 }
-
-
-export const ABOUT_LOGOcss:CssMap = {
-  // ASCII logo: preserve spacing, tighter leading, allow horizontal scroll
-  whiteSpace: "pre",
-  overflowX: "hidden",
-  // overflowY: "auto",
-  padding: "12px 12px",
-  background: $cols_.backdeep,
-  color: $ylw_.candy,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  marginBottom: "12px",
-  fontFamily: "monaco",
-  fontSize: "12px",
-  lineHeight: "1.1",
-  margin: "auto auto",
-  letterSpacing: "0",
-}
-
-export const ABOUT_NOT_LOGOcss:CssMap = {
+export const ABOUT_CSS:CssMap = {
   // normal code blocks
   whiteSpace: "pre-line",
   overflowX: "auto",
@@ -90,7 +75,7 @@ export const ABOUT_NOT_LOGOcss:CssMap = {
   marginBottom: "12px",
   fontweight: 300,
   fontFamily: "monaco",
-  fontSize: $txt_.sub,
+  // fontSize: $txt_.sub,
   lineHeight: "1.75",
 }
 
@@ -114,7 +99,7 @@ export const MD_PARENcss: CssMap = {
 
 // backticks themselves
 export const INLINE_TICKcss: CssMap = {
-  color: $gry_.dimmer,              // muted gray
+  color: ACID_WASH_RGBA.neonGhost,              // muted gray
   fontWeight: "700",
   fontFamily: "monaco",
 } as const;
@@ -136,13 +121,13 @@ export const CODE_PARENcss: CssMap = {
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
-  color: ACID_WASH_OKLCH.amber,
+  color: ACID_WASH_OKLCH.ash,
   fontFamily: "monaco",
   fontWeight: "300",
 } as const;
 
 export const CODE_COMMENTScss = {
-  color: ACID_WASH_OKLCH.seaGlass
+  color: ACID_WASH_OKLCH.sage
 };
 // // CHANGED: render tokens into a container.
 // // This container should be an element you already created (p/li/etc).
@@ -172,7 +157,7 @@ export const CODE_COMMENTScss = {
 //   }
 // }
 export const CODE_QUOTEcss = {
-    color: ACID_WASH_OKLCH.bruisedPlum,              // muted gray
+    color: ACID_WASH_OKLCH.orchid,              // muted gray
   fontWeight: "700",
 };
 export const CODE_EQUALSscss = {

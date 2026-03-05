@@ -44,7 +44,7 @@ const ABOUT_TOCcss: CssMap = {
   overflow: "auto",
   padding: "10px",
   borderRadius: "12px",
-  background: "rgba(255,255,255,0.03)",
+  background: "rgba(0,0,0,0.63)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
@@ -56,6 +56,7 @@ const ABOUT_DOCcss: CssMap = {
   borderRadius: "12px",
   background: $cols_.backdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+  fontSize: "16px",
   // maxWidth: "90ch",
 };
 
