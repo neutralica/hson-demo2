@@ -9,7 +9,6 @@ import type { TestSuite, TestCase, LiveTreeCaseSpec, MetaPatch, Asserter } from 
 // -----------------------------
 // Implementation
 // -----------------------------
-
 export function make_livetree_suite(
   suiteName: string,
   cases: readonly LiveTreeCaseSpec[],
@@ -20,42 +19,66 @@ export function make_livetree_suite(
     suite,
     name: spec.name,
 
-    // Optional initial meta (can be overwritten/extended by metaPatch)
     meta: {
       fixture: spec.fixture ?? spec.name,
       sub: spec.sub ?? "",
     },
 
     run: async () => {
+      // CHANGED: build IR-only tree (detached) first
       const tree = hson.fromTrustedHtml(spec.html).liveTree.asBranch();
 
-      await spec.act(tree);
+      // ADDED: optional DOM mount
+      let sandbox: HTMLDivElement | null = null;
 
-      const bag = new FailureBag();
-      const t = bag.asserter();
+      try {
+        if (spec.dom) {
+          sandbox = document.createElement("div");
+          sandbox.setAttribute("data-test-sandbox", suite);
+          sandbox.style.position = "fixed";
+          sandbox.style.left = "-10000px";
+          sandbox.style.top = "0px";
+          sandbox.style.width = "1px";
+          sandbox.style.height = "1px";
+          sandbox.style.overflow = "hidden";
 
-      await spec.assert(tree, t);
+          document.body.appendChild(sandbox);
 
-      // If there were any failures, throw ONE error (runner-friendly)
-      bag.throwIfAny({
-        suite,
-        name: spec.name,
-        input: spec.html,
-        preview: (spec.preview ?? default_preview)(tree),
-        fixture: spec.fixture ?? spec.name,
-        sub: spec.sub ?? "",
-      });
+          // CHANGED: this is the key — create DOM now
+          // If graft is sync in your implementation, await is harmless.
+          const grafted = hson.fromTrustedHtml(sandbox).liveTree.asBranch()
 
-      // Return metaPatch for inspector/log.
-      // Runner expects { metaPatch } shape, not raw meta.
-      const metaPatch: MetaPatch = {
-        input: spec.html,
-        preview: (spec.preview ?? default_preview)(tree),
-        fixture: spec.fixture ?? spec.name,
-        sub: spec.sub ?? "",
-        category: "livetree", // ADD THIS
-      };
-      return { metaPatch } as const;
+          tree.append(grafted);
+        }
+
+        await spec.act(tree);
+
+        const bag = new FailureBag();
+        const t = bag.asserter();
+
+        await spec.assert(tree, t);
+
+        bag.throwIfAny({
+          suite,
+          name: spec.name,
+          input: spec.html,
+          preview: (spec.preview ?? default_preview)(tree),
+          fixture: spec.fixture ?? spec.name,
+          sub: spec.sub ?? "",
+        });
+
+        const metaPatch: MetaPatch = {
+          input: spec.html,
+          preview: (spec.preview ?? default_preview)(tree),
+          fixture: spec.fixture ?? spec.name,
+          sub: spec.sub ?? "",
+          category: "livetree",
+        };
+        return { metaPatch } as const;
+      } finally {
+        // ADDED: teardown so cases can't leak DOM into later tests
+        if (sandbox) sandbox.remove();
+      }
     },
   }));
 

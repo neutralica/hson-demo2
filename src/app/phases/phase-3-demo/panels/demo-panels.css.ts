@@ -131,7 +131,7 @@ export const TEST_STATUS_CHIPcss: CssMap = {
     // background: $cols_.bckgd,
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
     opacity: "0.9",
-    color: $gry_.dim,
+    color: $gry_.dimmer,
     maxWidth: $CHIP_WIDTHstr
 } as const;
 

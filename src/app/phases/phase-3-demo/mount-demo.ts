@@ -4,7 +4,7 @@ import { CssManager, hson, type LiveTree } from "hson-live";
 import { make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class } from "./demo.consts";
+import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITI } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./demo-test/test-panel-factory";
@@ -12,7 +12,7 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, LETTER_COLORcandy } from "../../consts/colors.consts";
+import { $blu_, $ylw_, ACID_WASH_OKLCH, LETTER_COLORcandy } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { get_view, set_view, demo_subscribe } from "./state";
@@ -25,6 +25,7 @@ import { ABOUT_DOCS } from "./demo-about/about.consts";
 import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
 import { mount_motes2 } from "./motes2/mount-motes2";
 import { MOUSE_HOSTcss } from "./demo-mouse/mouse.css";
+import { JSON_FIXTURES_DEV } from "../../../../data-old/data/json-fixtures";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -48,6 +49,21 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const screenFx = make_div_id(screen, $DS.screenFx)
     .classlist.add("demo screen fx")
     .css.setMany(DEMO_SCREEN_FXcss);
+
+  const graffiti = make_div_id(screenFx, "hson-graffiti")
+    .text.set(HSON_LIVE_GRAFFITI)
+    .css.setMany({
+      position: "fixed",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      whiteSpace: "pre",
+      fontFamily: "monospace",
+      height: "50%",
+      width: "50%",
+      color: ACID_WASH_OKLCH.bruisedPlum,
+
+    })
 
   const menuContainer = make_div_id(screenFx, "menu-container")
     .css.setMany(MENU_CONTAINERcss);
@@ -106,7 +122,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     background: "transparent",
     color: "inherit",
   });
-  
+
   gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
     visibility: "hidden",
     height: "0",

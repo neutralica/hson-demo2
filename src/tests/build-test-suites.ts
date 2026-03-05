@@ -234,11 +234,12 @@ export function build_suites_for_mode(
       make_legacy_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
     ])
   }
-
+  
   return _freeze([
     make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
     make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),
     generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
-    make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map)
+    make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map),
+    ...all_livetree_suites(),
   ]);
 }

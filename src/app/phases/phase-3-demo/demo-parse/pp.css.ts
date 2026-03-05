@@ -33,7 +33,7 @@ export const PP_TEXTWRAPcss: CssMap = {
 export const PP_WATERMARK_FMTcss: CssMap = {
   position: "absolute",
   inset: "0",
-  color: $gry_.dim,
+  color: $gry_.dimmer,
   display: "grid",
   placeItems: "center",
   pointerEvents: "none",

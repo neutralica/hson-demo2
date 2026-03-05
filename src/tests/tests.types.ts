@@ -215,7 +215,7 @@ export type LiveTreeCaseSpec = Readonly<{
   // Optional: label shown in inspector meta
   fixture?: string;
   sub?: string;
-
+  dom?: boolean;
   // Arrange/Act: mutate tree
   act: (tree: LiveTree) => void | Promise<void>;
 

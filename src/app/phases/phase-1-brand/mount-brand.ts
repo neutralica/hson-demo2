@@ -31,7 +31,7 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     backgroundColor: $cols_.bckgd,
     padding: "1rem",
     fontFamily: "monospace",
-    color: $grn_.dragon,
+    color: $grn_.std,
     filter: "blur(0.5px)",
   })
   const noteText = make_div_id(noteBox, "note-text")

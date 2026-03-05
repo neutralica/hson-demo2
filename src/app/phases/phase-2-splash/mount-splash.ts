@@ -1,6 +1,6 @@
 // mount-splash.ts
 
-import { type LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live";
 import { O_ROT, VER_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
 import { CLOUD_LAYER_FADEanim } from "./splash.anim";
 import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
@@ -26,7 +26,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
     stage.empty();
     const b = bud_node(stage)
-   
     /* create structural layers */
     const sky = b.bud(SPLASH_BUDS.sky);
     const logoBox = sky.bud(SPLASH_BUDS.logoBox);

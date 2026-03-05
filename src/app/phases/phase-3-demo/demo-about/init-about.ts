@@ -3,151 +3,226 @@
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { $blu_, $grn_ } from "../../../consts/colors.consts";
-import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_LOGOcss, ABOUT_NOT_LOGOcss, ABOUT_P_TEXTcss, MD_CODEcss, MD_PARENcss, MD_TICKcss } from "./about.css";
+import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_LOGOcss, ABOUT_NOT_LOGOcss, ABOUT_P_TEXTcss, MD_CODEcss, MD_PARENcss, MD_TICKcss, INLINE_TICKcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss } from "./about.css";
+import type { CssMap } from "hson-live/types";
 
-type ListItem = { depth: number; text: string };
+// -----------------------------
+// Types
+// -----------------------------
+
 type AboutInitDeps = Readonly<{
   docs: AboutDocs;
   initialDocKey?: AboutDocKey;
 }>;
+
+type CodeChunk =
+  | { kind: "plain"; text: string }
+  | { kind: "paren"; text: string };
 
 type AboutInitTargets = Readonly<{
   toc: LiveTree;
   doc: LiveTree;
   title: LiveTree;
 }>;
-type InlineSeg =
-  | { kind: "text"; text: string }
-  | { kind: "code"; text: string }; // text INSIDE the backticks
+
+type ListKind = "ul" | "ol";
+type ListItem =
+  | { kind: "ul"; depth: number; marker: string; text: string }
+  | { kind: "ol"; depth: number; n: number; text: string };
+
+// -----------------------------
+// Inline rendering (single entrypoint)
+// - backticks are always code
+// - parens highlighting only happens inside code segments
+// -----------------------------
+type InlineSeg = { kind: "text" | "code"; s: string };
 
 function split_inline_backticks(src: string): InlineSeg[] {
-  // `code` always code. No quotes.
   const out: InlineSeg[] = [];
-  let i = 0;
+  let buf = "";
+  let inCode = false;
 
-  while (i < src.length) {
-    const a = src.indexOf("`", i);
-    if (a === -1) {
-      const tail = src.slice(i);
-      if (tail) out.push({ kind: "text", text: tail });
-      break;
+  for (let i = 0; i < src.length; i += 1) {
+    const ch = src[i] ?? "";
+    if (ch === "`") {
+      if (buf.length > 0) out.push({ kind: inCode ? "code" : "text", s: buf });
+      buf = "";
+      inCode = !inCode;
+      continue;
     }
-
-    // text before `
-    if (a > i) out.push({ kind: "text", text: src.slice(i, a) });
-
-    const b = src.indexOf("`", a + 1);
-    if (b === -1) {
-      // unmatched ` → treat as literal
-      out.push({ kind: "text", text: src.slice(a) });
-      break;
-    }
-
-    // code contents between ticks
-    out.push({ kind: "code", text: src.slice(a + 1, b) });
-    i = b + 1;
+    buf += ch;
   }
 
+  if (buf.length > 0) out.push({ kind: inCode ? "code" : "text", s: buf });
   return out;
 }
 
-type CodeChunk =
-  | { kind: "plain"; text: string }
-  | { kind: "paren"; text: string };
+// CHANGED: one renderer for fenced code lines AND inline code segments.
+// - Handles comments, parens, dot, equals, and double quotes.
+// - Preserves whitespace (assumes container/row has whiteSpace: "pre"; white-space is inherited).
+export function render_inline_code(row: LiveTree, code: string): void {
+  // CHANGED: base “ink” so code isn’t dependent on outer containers.
+  const BASEcss: CssMap = INLINE_CODEcss; // should include a visible color
 
-// paren highlighting ONLY used inside code
-function split_code_parens(src: string): CodeChunk[] {
-  const out: CodeChunk[] = [];
+  // token css
+  const PARENcss: CssMap = CODE_PARENcss;
+  const INNERcss: CssMap = CODE_PAREN_INNERcss;     // inside (...)
+  const DOTcss: CssMap = CODE_PUNCTcss;               // you define
+  const EQcss: CssMap = CODE_EQUALSscss;                 // you define
+  const QUOTEcss: CssMap = CODE_QUOTEcss;           // you define
+  const COMMENTcss: CssMap = CODE_COMMENTScss;      // already exists
+
   let buf = "";
   let depth = 0;
-  let parenBuf = "";
+  let inDq = false; // inside double quotes
 
-  const flushPlain = () => {
-    if (buf) out.push({ kind: "plain", text: buf });
+  const flush = (css: CssMap) => {
+    if (buf.length === 0) return;
+    row.create.span().css.setMany(css).text.set(buf);
     buf = "";
   };
-  const flushParen = () => {
-    if (parenBuf) out.push({ kind: "paren", text: parenBuf });
-    parenBuf = "";
+
+  const emit = (css: CssMap, s: string) => {
+    flush(depth > 0 ? INNERcss : BASEcss);
+    row.create.span().css.setMany(css).text.set(s);
   };
 
-  for (let i = 0; i < src.length; i++) {
-    const ch = src[i] ?? "";
+  for (let i = 0; i < code.length; i += 1) {
+    const ch = code[i] ?? "";
 
-    if (ch === "(") {
-      if (depth === 0) {
-        flushPlain();
+    // ---- comment start (only when NOT in double-quote string) ----
+    if (!inDq) {
+      // // comment
+      if (ch === "/" && (code[i + 1] ?? "") === "/") {
+        flush(depth > 0 ? INNERcss : BASEcss);
+        const rest = code.slice(i); // include the //
+        row.create.span().css.setMany(COMMENTcss).text.set(rest);
+        return; // done with this line
       }
-      depth++;
-      parenBuf += ch;
+
+      // # comment
+      if (ch === "#") {
+        flush(depth > 0 ? INNERcss : BASEcss);
+        const rest = code.slice(i);
+        row.create.span().css.setMany(COMMENTcss).text.set(rest);
+        return;
+      }
+    }
+
+    // ---- string toggle (very simple; ignores escapes on purpose for now) ----
+    if (ch === `"`) {
+      flush(depth > 0 ? INNERcss : BASEcss);
+      row.create.span().css.setMany(QUOTEcss).text.set(`"`);
+      inDq = !inDq;
+      continue;
+    }
+
+    // ---- parens (still operate even inside strings; if you don’t want that, gate on !inDq) ----
+    if (ch === "(") {
+      flush(depth > 0 ? INNERcss : BASEcss);
+      row.create.span().css.setMany(PARENcss).text.set("(");
+      depth += 1;
       continue;
     }
 
     if (ch === ")") {
-      if (depth > 0) {
-        parenBuf += ch;
-        depth--;
-        if (depth === 0) flushParen();
-        continue;
-      }
-      // stray ')'
-      buf += ch;
+      flush(depth > 0 ? INNERcss : BASEcss);
+      row.create.span().css.setMany(PARENcss).text.set(")");
+      depth = Math.max(0, depth - 1);
       continue;
     }
 
-    if (depth > 0) parenBuf += ch;
-    else buf += ch;
+    // ---- dot + equals (only when not in strings is usually nicer) ----
+    if (!inDq && ch === ".") {
+      emit(DOTcss, ".");
+      continue;
+    }
+
+    if (!inDq && ch === "=") {
+      emit(EQcss, "=");
+      continue;
+    }
+
+    // default
+    buf += ch;
   }
 
-  // If we ended inside parens, just treat it as plain (safer)
-  if (depth > 0) {
-    // fold back into plain
-    buf += parenBuf;
-    parenBuf = "";
-  }
-
-  flushPlain();
-  return out;
+  flush(depth > 0 ? INNERcss : BASEcss);
 }
 
-/**
- * Render inline text into spans:
- * - normal text → span
- * - `code` → tick span + code span + tick span
- * - inside code: (...) chunk colored
- */
-function render_inline_md(line: LiveTree, src: string): void {
+export function render_inline(host: LiveTree, src: string): void {
+  // CHANGED: the one true inline renderer.
   const segs = split_inline_backticks(src);
 
   for (const seg of segs) {
+    if (!seg.s) continue;
+
     if (seg.kind === "text") {
-      if (!seg.text) continue;
-      line.create.span().text.set(seg.text);
+      host.create.span().text.set(seg.s);
       continue;
     }
 
-    // code segment
-    // opening tick
-    line.create.span().classlist.add("md-tick").css.setMany(MD_TICKcss).text.set("`");
-
-    const codeWrap = line.create.span().classlist.add("md-code").css.setMany(MD_CODEcss);
-
-    // inner code with paren highlighting
-    for (const ch of split_code_parens(seg.text)) {
-      if (!ch.text) continue;
-      if (ch.kind === "paren") {
-        codeWrap.create.span().classlist.add("md-paren").css.setMany(MD_PARENcss).text.set(ch.text);
-      } else {
-        codeWrap.create.span().text.set(ch.text);
-      }
-    }
-
-    // closing tick
-    line.create.span().classlist.add("md-tick").css.setMany(MD_TICKcss).text.set("`");
+    // seg.kind === "code": render backticks + styled content
+    const wrap = host.create.span().classlist.add("md-icode-wrap");
+    wrap.create.span().css.setMany(INLINE_TICKcss).text.set("`");
+    render_inline_code(wrap, seg.s);
+    wrap.create.span().css.setMany(INLINE_TICKcss).text.set("`");
   }
 }
 
-// ---- markdown-ish renderer (safe: text only) ----
+// -----------------------------
+// List parsing helpers
+// Rules:
+// - top UL: "-", "*", "•"
+// - nested UL: "--", "---", "----" (depth >= 1)
+// - OL: "1) "
+// -----------------------------
+const isIndented = (s: string): boolean => /^[\t ]+/.test(s);
+function parse_list_item(line: string): ListItem | null {
+
+  // 1️⃣ nested UL first
+  const ulNested = /^(\s*)(--+)\s+(.*)$/.exec(line);
+  if (ulNested) {
+    const dashRun = ulNested[2] ?? "--";      // <-- NOT [1]
+    const depth = Math.max(1, dashRun.length); // 
+    const text = (ulNested[3] ?? "").trim();  // <-- NOT [2]
+    return { kind: "ul", depth, marker: "•", text };
+  }
+
+  // 2️⃣ then top-level UL
+  const ulTop = /^([*\-•])\s+(.*)$/.exec(line);
+  if (ulTop) {
+    const marker = "•";
+    const text = (ulTop[2] ?? "").trim();
+
+    return {
+      kind: "ul",
+      depth: 0,
+      marker,
+      text,
+    };
+  }
+
+  // 3️⃣ ordered list
+  const ol = /^(\d+)\)\s+(.*)$/.exec(line);
+  if (ol) {
+    const n = Number.parseInt(ol[1] ?? "1", 10);
+    const text = (ol[2] ?? "").trim();
+
+    return {
+      kind: "ol",
+      depth: 0,
+      n: Number.isFinite(n) ? n : 1,
+      text,
+    };
+  }
+
+  return null;
+}
+
+// -----------------------------
+// Markdown-ish renderer (only touch: flushPara + flushList use render_inline)
+// -----------------------------
 function render_doc_md(host: LiveTree, src: string): void {
   host.empty();
 
@@ -161,17 +236,11 @@ function render_doc_md(host: LiveTree, src: string): void {
 
   let listBuf: ListItem[] = [];
   let inList = false;
-  let listKind: "ul" | "ol" | null = null;
+  let listKind: ListKind | null = null;
   let listStart = 1;
 
-  // ADDED: detect list continuation lines ONLY when indented (tabs/spaces)
-  const isIndented = (s: string): boolean => /^[\t ]+/.test(s);
-
-  // only append continuation lines when indented
   const appendToLastListItem = (txt: string): void => {
     if (!inList) return;
-    if (listBuf.length === 0) return;
-
     const last = listBuf[listBuf.length - 1];
     if (!last) return;
 
@@ -195,29 +264,40 @@ function render_doc_md(host: LiveTree, src: string): void {
     const start = listStart;
 
     const list = host.create.div().classlist.add(kind === "ul" ? "md-ul" : "md-ol");
-
-    // remove color from container to prevent inheriting/bleed
     list.css.setMany({
       display: "grid",
       gap: "6px",
       marginBottom: "10px",
       minWidth: "0",
     });
-    for (let i = 0; i < listBuf.length; i++) {
-      const it = listBuf[i];
-      const item = (it?.text ?? "").trim(); // CHANGED
+
+    for (let i = 0; i < listBuf.length; i += 1) {
+      const item = listBuf[i];
+      if (!item) continue;
 
       const li = list.create.div().classlist.add("md-li");
       li.css.setMany(ABOUT_LIST_ROWcss);
 
-      const marker = kind === "ul" ? "•" : `${start + i})`;
+      // marker
+      const marker =
+        item.kind === "ul" ? item.marker : `${start + i})`;
 
-      li.create.div().text.set(marker).css.setMany(ABOUT_LIST_MARKERcss);
-      const body = li.create.div().css.setMany(LIST_TEXTcss);
-      render_inline(body, item);
+      li.create.div()
+        .text.set(marker)
+        .css.setMany({
+          ...ABOUT_LIST_MARKERcss,
+          // CHANGED: indent marker + body for nested UL
+          marginLeft: item.kind === "ul" ? `${item.depth * 14}px` : "0px",
+        });
+
+      // body
+      const body = li.create.div().css.setMany({
+        ...LIST_TEXTcss,
+        paddingLeft: `${item.depth * 14}px`,
+      });
+      render_inline(body, item.text);
     }
 
-    // reset
     listBuf = [];
     inList = false;
     listKind = null;
@@ -232,7 +312,7 @@ function render_doc_md(host: LiveTree, src: string): void {
     const isLogo = (codeLang ?? "").toLowerCase() === "hson";
 
     const pre = host.create.div().classlist.add("md-pre");
-    if (isLogo) pre.classlist.add("md-logo");
+    if (isLogo) return;
 
     pre.css.setMany(isLogo ? ABOUT_LOGOcss : ABOUT_NOT_LOGOcss);
 
@@ -240,24 +320,29 @@ function render_doc_md(host: LiveTree, src: string): void {
       const row = pre.create.div();
       row.css.setMany({ whiteSpace: "pre" });
 
-      // simple comment detection
       const commentMatch = /(.*?)(\/\/.*|#.*)$/.exec(line);
 
       if (commentMatch) {
         const codePart = commentMatch[1] ?? "";
         const commentPart = commentMatch[2] ?? "";
 
+        // CHANGED: fenced code is code — render with code highlighter
         if (codePart.length > 0) {
-          row.create.span().text.set(codePart);
+          render_inline_code(row, codePart);
+          // or: render_code_parens(row, codePart); (but see note below)
         }
 
         row.create.span()
           .classlist.add("md-comment")
-          .css.set.color($grn_.std)
+          .css.setMany(CODE_COMMENTScss)
           .text.set(commentPart);
-      } else {
-        row.text.set(line);
+
+        continue;
       }
+
+      // CHANGED: whole line is code
+      render_inline_code(row, line);
+      // or: render_code_parens(row, line)
     }
 
     codeLang = null;
@@ -273,12 +358,11 @@ function render_doc_md(host: LiveTree, src: string): void {
         flushList();
         inCode = true;
         codeLang = line.trim().slice(3).trim() || null;
-        continue;
       } else {
         inCode = false;
         flushCode();
-        continue;
       }
+      continue;
     }
     if (inCode) {
       codeBuf.push(line);
@@ -316,76 +400,31 @@ function render_doc_md(host: LiveTree, src: string): void {
       continue;
     }
 
-    // list item (supports -, *, +, • and 1) style)
-    {
-      const ul = /^([*\-+•])\s+(.*)$/.exec(line); // requires at least one space
-      const ol = /^(\d+)\)\s+(.*)$/.exec(line);
-      // UL depth>=1: must be dashes: --, ---, ---- ...
-      const ulNested = /^(--+)\s+(.*)$/.exec(line);
+    // list items
+    const li = parse_list_item(line);
+    if (li) {
+      flushPara();
 
-      // UL depth 0: -, *, • (and you can keep + if you want, but you said dots+asterisks+dashes)
-      const ulTop = /^([*\-•])\s+(.*)$/.exec(line);
-
-      if (ulNested) {
-        flushPara();
-
-        if (!inList || listKind !== "ul") {
-          flushList();
-          inList = true;
-          listKind = "ul";
-          listStart = 1;
-        }
-
-        const dashRun = ulNested[1] ?? "--";
-        const depth = Math.max(1, dashRun.length - 1); // "--" => 1, "---" => 2
-        listBuf.push({ depth, text: (ulNested[2] ?? "").trim() });
-        continue;
-      }
-
-      if (ulTop) {
-        flushPara();
-
-        if (!inList || listKind !== "ul") {
-          flushList();
-          inList = true;
-          listKind = "ul";
-          listStart = 1;
-        }
-
-        listBuf.push({ depth: 0, text: (ulTop[2] ?? "").trim() });
-        continue;
-      }
-
-      if (ol) {
-        flushPara();
-
-        const n = Number.parseInt(ol[1] ?? "1", 10);
-        const start = Number.isFinite(n) ? n : 1;
-
-        // start or continue OL
-        if (!inList || listKind !== "ol") {
-          flushList();
-          inList = true;
-          listKind = "ol";
-          listStart = start;
-        }
-
-        listBuf.push({ depth: 0, text: (ol[2] ?? "").trim() }); // CHANGED
-        continue;
-      }
-
-      // continuation lines only when indented
-      if (inList && isIndented(line)) {
-        appendToLastListItem(line);
-        continue;
-      }
-
-      // if we're in a list and hit normal (non-indented) text,
-      // close the list FIRST so we don't "swap" lines or leak list styling/structure.
-      if (inList) {
+      if (!inList || listKind !== li.kind) {
         flushList();
+        inList = true;
+        listKind = li.kind;
+        if (li.kind === "ol") listStart = (li as { n: number }).n;
+        else listStart = 1;
       }
+
+      listBuf.push(li);
+      continue;
     }
+
+    // continuation lines only when indented
+    if (inList && isIndented(line)) {
+      appendToLastListItem(line);
+      continue;
+    }
+
+    // leaving list
+    if (inList) flushList();
 
     // paragraph continuation
     paraBuf.push(line.trim());
@@ -452,8 +491,6 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
 
 // ---- inline renderer (safe: text only; creates spans) ----
 
-// CHANGED: keep these styles near your existing ABOUT_*css objects.
-// Use whatever palette vars you already have.
 const INLINE_CODE_WRAPcss = {
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   fontWeight: "700",
@@ -559,35 +596,3 @@ function tokenize_inline(src: string, rules: readonly InlineRule[]): InlineToken
   return out;
 }
 
-// CHANGED: render tokens into a container.
-// This container should be an element you already created (p/li/etc).
-function render_inline(container: LiveTree, src: string): void {
-  // important: don’t container.empty() unless you want to blow away other structure.
-  // In your usage below, you’ll call it on a fresh div, so it’s fine either way.
-  // container.empty();
-
-  const tokens = tokenize_inline(src, INLINE_RULES);
-
-  for (const tok of tokens) {
-    if (tok.kind === "text") {
-      container.create.span().text.set(tok.text);
-      continue;
-    }
-
-    if (tok.kind === "code") {
-      // render: `foo` with the wrap and inner styled differently
-      const wrap = container.create.span().css.setMany(INLINE_CODE_WRAPcss);
-
-      // include the backticks, but style inner separately
-      wrap.create.span().text.set("`");
-      wrap.create.span().css.setMany(INLINE_CODE_INNERcss).text.set(tok.inner);
-      wrap.create.span().text.set("`");
-      continue;
-    }
-
-    if (tok.kind === "parens") {
-      container.create.span().css.setMany(INLINE_PARENScss).text.set(tok.text);
-      continue;
-    }
-  }
-}

@@ -11,14 +11,14 @@ const greenMuted = "rgba(96, 193, 141, 1)";
 const greenFaded = "rgba(80, 163, 119, 1)";
 const greenStd = "rgb(0, 255, 120)";
 
-const blueEaster = "rgba(80,200,255,0.55)";
+const blueEaster = "rgba(80,200,255,1)";
 const blueSky = "rgba(68, 149, 255, 1)";
 const blueBaby = "rgba(125, 169, 228, 1)";
 const blueCandy = "rgba(46, 167, 255, 1)";
 const bluePastel = "rgba(146, 193, 255, 1)";
 const blueBleach = "rgba(221, 221, 249, 1)";
 const blueMuted = "rgba(96, 182, 196, 1)";
-const blueFaded = "rgba(77, 150, 161, 1)";
+const blueFaded = "rgba(97, 130, 231, 1)";
 const blueStd = "rgb(0, 220, 255)";
 
 const richCrimson = "rgba(228, 34, 125, 1)"
@@ -41,10 +41,11 @@ const yellowMuted = "rgba(189, 171, 92, 1)";
 const yellowFaded = "rgba(163, 145, 64, 1)";
 
 const greyLite = "rgba(230, 230, 230, 1)"
-const greyMid = "rgba(82, 82, 82, 1)"
-const grey = "rgba(114, 114, 114, 1) 1)"
-const greyDim = "rgba(58, 58, 58, 1)"
-const greyDimmer = "rgba(40, 38, 38, 1)"
+const grey = "rgba(202, 202, 202, 1)"
+const greyMid = "rgba(182, 182, 182, 1)"
+const greyDim = "rgba(134, 134, 134, 1)"
+const greyDimmer = "rgba(58, 58, 58, 1)"
+const greyDark = "rgba(40, 38, 38, 1)"
 const greyBlack = "rgba(26, 26, 26, 1)"
 const deepBack = "#07070a"
 
@@ -54,6 +55,13 @@ const bckColorB = 26;
 
 const bckAlpha = 1;
 const bckColor = `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${bckAlpha})`;
+
+const oddYellow = "rgba(120, 180, 60, 1)"
+const oddPurple = "rgba(170, 100, 230, 1)"
+const oddPeriwinkle = "rgba(120, 180, 230, 1)"
+const oddUmbre = "rgba(205, 145, 130, 1)"
+const oddSeagreen = "rgba(90, 235, 170,1)"
+
 
 export const _setBckgdAlpha = (n: number) => {
   return `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${n <= 1 ? n : 1})`;
@@ -142,6 +150,7 @@ export const $gry_ = {
   mid: greyMid,
   dim: greyDim,
   dimmer: greyDimmer,
+  dark: greyDark,
   black: greyBlack,
 };
 export const $ylw_ = {
@@ -167,13 +176,77 @@ export const $red_etc_ = {
   stonerPurple: purpleStoner,
 }
 
+
+
+export const ACID_WASH_RGBA = {
+  paleGrey:     "rgba(190,200,210,0.85)",
+  coolMist:     "rgba(170,190,205,0.85)",
+  dimIce:       "rgba(160,185,210,0.82)",
+
+  fadedMint:    "rgba(140,200,175,0.88)",
+  oxidized:     "rgba(120,175,155,0.86)",
+  seafoam:      "rgba(150,210,195,0.82)",
+
+  softBlue:     "rgba(135,175,215,0.88)",
+  denimDust:    "rgba(120,155,200,0.85)",
+  slateBlue:    "rgba(140,160,220,0.80)",
+
+  mutedViolet:  "rgba(175,140,215,0.85)",
+  wornPurple:   "rgba(160,130,190,0.83)",
+  fadedMagenta: "rgba(210,140,200,0.82)",
+
+  warmAsh:      "rgba(205,180,150,0.88)",
+  dullAmber:    "rgba(220,185,120,0.85)",
+  strawSmoke:   "rgba(210,205,130,0.80)",
+
+  oxidizedRed:  "rgba(200,140,140,0.84)",
+  brickDust:    "rgba(185,125,115,0.82)",
+
+  neonGhost:    "rgba(120,240,210,0.70)",  // faint phosphor effect
+  terminalGreen:"rgba(150,220,150,0.78)",
+
+  dimWhite:     "rgba(225,230,235,0.90)",
+};
+
+export const ACID_WASH_OKLCH = {
+  ash:        "oklch(0.90 0.055 300)",  // soft neutral grey-blue
+  frost:      "oklch(0.82 0.02 210)",
+  mist:       "oklch(0.78 0.018 260)",
+
+  sage:       "oklch(0.75 0.05 155)",
+  moss:       "oklch(0.72 0.06 145)",
+  fern:       "oklch(0.70 0.055 165)",
+
+  ice:        "oklch(0.80 0.045 220)",
+  sky:        "oklch(0.77 0.06 240)",
+  steel:      "oklch(0.74 0.05 250)",
+
+  lilac:      "oklch(0.78 0.07 300)",
+  orchid:     "oklch(0.75 0.08 320)",
+  smokeRose:  "oklch(0.73 0.06 20)",
+
+  ember:      "oklch(0.74 0.07 35)",
+  amber:      "oklch(0.78 0.08 80)",
+  straw:      "oklch(0.82 0.07 95)",
+
+  cyanDust:   "oklch(0.79 0.055 200)",
+  seaGlass:   "oklch(0.76 0.06 185)",
+
+  mutedRed:   "oklch(0.72 0.07 15)",
+  bruisedPlum:"oklch(0.70 0.06 330)",
+  twilight:   "oklch(0.68 0.045 280)",
+};
+
 export const $cols_ = {
-  txtmain: txtMain,
+  txtmain: ACID_WASH_OKLCH.ash,
   bckgd: bckColor,
   backdeep: deepBack,
   txtarea: $grn_.faded,
   sysInvalid: invalidRed,
-
+  oddPeriwinkle,
+  oddPurple,
+  oddSeagreen,
+  oddUmbre,
+  oddYellow
 
 };
-

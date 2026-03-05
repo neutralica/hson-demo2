@@ -3,6 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
 import { relay, type Outcome } from "intrastructure";
+import { $cols_ } from "../../../consts/colors.consts";
 
 export type AboutPanel = Readonly<{
   root: LiveTree;
@@ -26,7 +27,7 @@ const ABOUT_TITLEcss: CssMap = {
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  opacity: "0.9",
+  opacity: "1",
 };
 
 const ABOUT_BODY_ROWcss: CssMap = {
@@ -53,9 +54,9 @@ const ABOUT_DOCcss: CssMap = {
   overflow: "auto",
   padding: "12px 14px",
   borderRadius: "12px",
-  background: "rgba(0,0,0,0.18)",
+  background: $cols_.backdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  maxWidth: "900ch",
+  // maxWidth: "90ch",
 };
 
 export function about_factory(host: LiveTree): Outcome<AboutPanel> {
