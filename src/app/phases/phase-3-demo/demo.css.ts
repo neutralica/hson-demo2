@@ -111,7 +111,7 @@ export const MENU_CONTAINERcss: CssMap = {
   display: "flex",
   flexDirection: "column",
 
-  alignItems: "flex-stretch",
+  alignItems: "stretch",
 
   minWidth: "0",
   minHeight: "0",

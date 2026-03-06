@@ -54,7 +54,6 @@ export const DOC_BTN_IDLEcss:CssMap = {
 } as const;
 
 export const ABOUT_P_TEXTcss:CssMap = {
-  padding: "0 10px",
   whiteSpace: "pre-wrap",
   lineHeight: "1.85",
   letterSpacing: "0.7px",

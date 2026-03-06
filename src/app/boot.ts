@@ -5,7 +5,7 @@ import { hson, LiveTree } from "hson-live";
 export function boot_livetree(): LiveTree {
     return hson
         .queryBody()
-        .liveTree()
+        .liveTree
         .graft();
 
 }

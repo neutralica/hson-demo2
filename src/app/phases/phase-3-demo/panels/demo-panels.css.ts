@@ -202,6 +202,7 @@ export const PANEL_BRANCHcss: CssMap = {
     boxSizing: "border-box",
     gridTemplateColumns: `${$CHIP_WIDTHstr} ${$CHIP_WIDTHstr}`,
     gridTemplateRows: "auto " + $CHIP_WIDTHstr,
+    background: "rgba(0,0,0, 1)",
 };
 
 export const CONTROL_ROWcss: CssMap = {

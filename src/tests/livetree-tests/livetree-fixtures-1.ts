@@ -8,6 +8,21 @@ import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
 
+
+
+export function all_livetree_suites(): readonly TestSuite[] {
+  return [
+    suite_find(),
+    suite_attrs_and_flags(),
+    suite_append_and_create(),
+    mixedRegression(),
+    ...extraCases(),
+    suite_css_and_content()
+
+  ] as const;
+}
+
+
 export function suite_find(): TestSuite {
   const SUITE = "livetree/find";
 
@@ -1256,16 +1271,4 @@ export function suite_css_and_content(): TestSuite {
   ];
 
   return make_livetree_suite(SUITE, cases);
-}
-
-export function all_livetree_suites(): readonly TestSuite[] {
-  return [
-    suite_find(),
-    suite_attrs_and_flags(),
-    suite_append_and_create(),
-    mixedRegression(),
-    ...extraCases(),
-    suite_css_and_content()
-
-  ] as const;
 }

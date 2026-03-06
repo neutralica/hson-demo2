@@ -61,30 +61,29 @@ function test_panel_factory(): Outcome<TestPanel> {
   branch.css.setMany(PANEL_BRANCHcss);
 
   // -------------------------
-  // MARQUEE (stays!)
+  // small console
   // -------------------------
-  // ADDED: viewport box so marquee reads as “embedded terminal glass”
   const logBox = branch.create.div()
     .id.set("test-log-box")
     .css.setMany(LOG_BOXcss);
 
-  // marquee is the actual <marquee> tag, no strip / no JS scrolling logic
   const logger = logBox.create.div()
     .id.set("test-logger")
     .css.setMany({
       ...TEST_LOGGERcss,
     });
 
-  // -------------------------
-  // MODE SELECT + STATUS
-  // -------------------------
-
-  // -------------------------
-  // state
-  // -------------------------
-  let mounted = false;
-  let level: UiLevel = "normal";
-  let mode: TestRunMode = "all";
+    
+    // -------------------------
+    // state
+    // -------------------------
+    let mounted = false;
+    let level: UiLevel = "normal";
+    let mode: TestRunMode = "all";
+    
+    // -------------------------
+    // CHIPS
+    // -------------------------
 
   // -------------------------
   // BUTTON ROW
