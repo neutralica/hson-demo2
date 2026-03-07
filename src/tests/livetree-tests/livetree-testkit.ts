@@ -34,16 +34,13 @@ export function make_livetree_suite(
       }
 
       const tree = hson.fromTrustedHtml(html).liveTree.asBranch();
-      console.log("TEST HTML RAW:", JSON.stringify(spec.html));
-      console.log("TEST FIXTURE:", spec.fixture, "SUB:", spec.sub, "NAME:", spec.name);
       // ADDED: optional DOM mount
       let sandbox: HTMLDivElement | null = null;
 
       try {
         if (spec.dom) {
-          const wrapper = document.createElement("div");
-          wrapper.id = "hson-sandbox-wrapper"
-          sandbox = wrapper.appendChild(document.createElement("div"));
+          sandbox = document.createElement("div");
+          sandbox.id = "hson-sandbox"
           sandbox.setAttribute("data-test-sandbox", suite);
           sandbox.style.position = "fixed";
           sandbox.style.left = "-10000px";
@@ -52,11 +49,11 @@ export function make_livetree_suite(
           sandbox.style.height = "1px";
           sandbox.style.overflow = "hidden";
 
-          document.body.appendChild(wrapper);
+          document.body.appendChild(sandbox);
 
           // CHANGED: this is the key — create DOM now
           // If graft is sync in your implementation, await is harmless.
-          const host = hson.queryDOM("#hson-sandbox-wrapper").liveTree.graft();
+          const host = hson.queryDOM("#hson-sandbox").liveTree.graft();
 
           host.append(tree);
         }

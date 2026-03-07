@@ -1049,8 +1049,6 @@ export function suite_css_and_content(): TestSuite {
         const el = box.asDomElement();
         t.ok("box dom exists", !!el);
         const snapFn = box.css.devSnapshot;
-        console.log("devSnapshot typeof:", typeof snapFn);
-        console.log("devSnapshot source:", String(snapFn).slice(0, 120));
         const quid = el?.getAttribute("data-_quid") ?? "";
         t.ok("box has data-_quid", quid.length > 0);
 
