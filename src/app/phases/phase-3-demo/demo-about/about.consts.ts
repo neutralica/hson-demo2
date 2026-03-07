@@ -15,10 +15,10 @@ export const ABOUT_DOCS: AboutDocs = [
   { key: "nodes", title: "nodes", body: HSON_SPEC_NODE_GRAPH },
   { key: "json", title: "json", body: HSON_SPEC_JSON },
   { key: "html", title: "html", body: HSON_SPEC_HTML },
-  { key: "transform", title: "transform", body: HSON_LIVETREE_MD },
-  { key: "livetree", title: "liveTree overview", body: HSON_TRANSFORM_MD },
+  { key: "transform", title: "transform", body: HSON_TRANSFORM_MD },
+  { key: "livetree", title: "liveTree", body: HSON_LIVETREE_MD },
   { key: "hson-css", title: "css-manager", body: HSON_CSS_API },
-  { key: "livetree-list", title: "livetree methods", body: LIVETREE_LIST },
+  { key: "livetree-list", title: "livetree api", body: LIVETREE_LIST },
   // later:
   // { key: "api", title: "API", body: API_MD },
 ];

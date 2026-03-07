@@ -15,10 +15,6 @@ type AboutInitDeps = Readonly<{
   initialDocKey?: AboutDocKey;
 }>;
 
-type CodeChunk =
-  | { kind: "plain"; text: string }
-  | { kind: "paren"; text: string };
-
 type AboutInitTargets = Readonly<{
   toc: LiveTree;
   doc: LiveTree;
@@ -204,15 +200,15 @@ function parse_list_item(line: string): ListItem | null {
   }
 
   // 3️⃣ ordered list
-  const ol = /^(\d+)\)\s+(.*)$/.exec(line);
+  const ol = /^(\d+)([.)])\s+(.*)$/.exec(line);
   if (ol) {
     const n = Number.parseInt(ol[1] ?? "1", 10);
-    const text = (ol[2] ?? "").trim();
+    const text = (ol[3] ?? "").trim();
 
     return {
       kind: "ol",
-      depth: 0,
       n: Number.isFinite(n) ? n : 1,
+      depth: 0,
       text,
     };
   }
@@ -225,7 +221,6 @@ function parse_list_item(line: string): ListItem | null {
 // -----------------------------
 function render_doc_md(host: LiveTree, src: string): void {
   host.empty();
-
   const lines = src.replace(/\r\n/g, "\n").split("\n");
 
   let codeLang: string | null = null;
@@ -248,13 +243,19 @@ function render_doc_md(host: LiveTree, src: string): void {
   };
 
   const flushPara = (): void => {
-    const text = paraBuf.join(" ").trim();
+    const lines = paraBuf.slice();
     paraBuf = [];
-    if (!text) return;
+
+    const meaningful = lines.map((s) => s.trim()).filter(Boolean);
+    if (meaningful.length === 0) return;
 
     const p = host.create.div().classlist.add("md-p");
     p.css.setMany(ABOUT_P_TEXTcss);
-    render_inline(p, text);
+
+    for (let i = 0; i < meaningful.length; i += 1) {
+      const row = p.create.div();
+      render_line_with_comment(row, meaningful[i] ?? "", "prose");
+    }
   };
 
   const flushList = (): void => {
@@ -295,7 +296,12 @@ function render_doc_md(host: LiveTree, src: string): void {
         ...LIST_TEXTcss,
         paddingLeft: `${item.depth * 14}px`,
       });
-      render_inline(body, item.text);
+
+      const lines = item.text.split("\n");
+      for (let j = 0; j < lines.length; j += 1) {
+        const row = body.create.div();
+        render_line_with_comment(row, lines[j] ?? "", "prose");
+      }
     }
 
     listBuf = [];
@@ -303,7 +309,6 @@ function render_doc_md(host: LiveTree, src: string): void {
     listKind = null;
     listStart = 1;
   };
-
   const flushCode = (): void => {
     const codeLines = codeBuf.slice();
     codeBuf = [];
@@ -318,29 +323,7 @@ function render_doc_md(host: LiveTree, src: string): void {
       const row = pre.create.div();
       row.css.setMany({ whiteSpace: "pre" });
 
-      const commentMatch = /(.*?)(\/\/.*|#.*)$/.exec(line);
-
-      if (commentMatch) {
-        const codePart = commentMatch[1] ?? "";
-        const commentPart = commentMatch[2] ?? "";
-
-        // CHANGED: fenced code is code — render with code highlighter
-        if (codePart.length > 0) {
-          render_inline_code(row, codePart);
-          // or: render_code_parens(row, codePart); (but see note below)
-        }
-
-        row.create.span()
-          .classlist.add("md-comment")
-          .css.setMany(CODE_COMMENTScss)
-          .text.set(commentPart);
-
-        continue;
-      }
-
-      // CHANGED: whole line is code
-      render_inline_code(row, line);
-      // or: render_code_parens(row, line)
+      render_line_with_comment(row, line, "code");
     }
 
     codeLang = null;
@@ -440,7 +423,7 @@ function find_doc(docs: AboutDocs, key: AboutDocKey): AboutDocSpec | undefined {
 export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   const { docs } = deps;
 
-  // pick a sane initial key without violating exactOptionalPropertyTypes
+  // sane initial key without violating exactOptionalPropertyTypes
   const initialKey: AboutDocKey =
     (deps.initialDocKey ?? docs[0]?.key ?? "readme") as AboutDocKey;
 
@@ -487,110 +470,43 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   setActive(activeKey);
 }
 
-// ---- inline renderer (safe: text only; creates spans) ----
 
-const INLINE_CODE_WRAPcss = {
-  fontFamily: "Monaco",
-  fontWeight: "700",
-  opacity: "0.95",
-} as const;
-
-const INLINE_CODE_INNERcss = {
-  color: $blu_.sky,
-  fontFamily: "Monaco",
-  fontWeight: "200",
-  fontSize: "18px",
-} as const;
-
-const INLINE_PARENScss = {
-  color: $grn_.dragon,
-  fontFamily: "Monaco",
-  fontWeight: "300",
-} as const;
-
-// CHANGED: small declarative rule system.
-// “priority” is handled by order: earlier rules win.
-type InlineToken =
-  | { kind: "text"; text: string }
-  | { kind: "code"; wrap: string; inner: string }
-  | { kind: "parens"; text: string };
-
-type InlineRule = {
-  name: "code" | "parens";
-  tryRead: (src: string, i: number) => { token: InlineToken; next: number } | null;
-};
-
-// CHANGED: backticks rule (single-line, no escapes, no nesting)
-// Includes backticks in output, but exposes inner separately for styling.
-const rule_backticks: InlineRule = {
-  name: "code",
-  tryRead: (src, i) => {
-    if (src[i] !== "`") return null;
-
-    const j = src.indexOf("`", i + 1);
-    if (j === -1) return null; // unmatched; treat as normal text
-
-    const inner = src.slice(i + 1, j);
-    const wrap = src.slice(i, j + 1); // includes both backticks
-    return { token: { kind: "code", wrap, inner }, next: j + 1 };
-  },
-};
-
-// CHANGED: parens rule (simple non-nested)
-// Colors "(...)" including the parentheses.
-// If you want nesting later, that’s a separate upgrade.
-const rule_parens: InlineRule = {
-  name: "parens",
-  tryRead: (src, i) => {
-    if (src[i] !== "(") return null;
-
-    const j = src.indexOf(")", i + 1);
-    if (j === -1) return null;
-
-    const text = src.slice(i, j + 1);
-    return { token: { kind: "parens", text }, next: j + 1 };
-  },
-};
-
-// CHANGED: your declarative registry (easy to extend later)
-const INLINE_RULES: readonly InlineRule[] = [rule_backticks, rule_parens] as const;
-
-function tokenize_inline(src: string, rules: readonly InlineRule[]): InlineToken[] {
-  const out: InlineToken[] = [];
-
-  let i = 0;
-  let buf = "";
-
-  const flushText = () => {
-    if (!buf) return;
-    out.push({ kind: "text", text: buf });
-    buf = "";
-  };
-
-  while (i < src.length) {
-    // Try rules in order (earlier wins).
-    let matched: { token: InlineToken; next: number } | null = null;
-
-    for (const r of rules) {
-      const m = r.tryRead(src, i);
-      if (m) {
-        matched = m;
-        break;
-      }
-    }
-
-    if (!matched) {
-      buf += src[i] ?? "";
-      i += 1;
-      continue;
-    }
-
-    flushText();
-    out.push(matched.token);
-    i = matched.next;
+function split_trailing_comment(line: string): { body: string; comment: string } | null {
+  if (line.startsWith("//")) {
+    return { body: "", comment: line };
   }
 
-  flushText();
-  return out;
+  const ix = line.indexOf(" //");
+  if (ix < 0) return null;
+
+  return {
+    body: line.slice(0, ix),
+    comment: line.slice(ix + 1), // keep the leading //
+  };
 }
 
+function render_line_with_comment(
+  host: LiveTree,
+  line: string,
+  mode: "prose" | "code",
+): void {
+  const split = split_trailing_comment(line);
+
+  if (!split) {
+    if (mode === "code") render_inline_code(host, line);
+    else render_inline(host, line);
+    return;
+  }
+
+  const { body, comment } = split;
+
+  if (body.length > 0) {
+    if (mode === "code") render_inline_code(host, body);
+    else render_inline(host, body);
+  }
+
+  host.create.span()
+    .classlist.add("md-comment")
+    .css.setMany(CODE_COMMENTScss)
+    .text.set(comment);
+}
