@@ -330,7 +330,7 @@ export function create_inspector(
             const topRow = cell.create.div().classlist.set("insp-cap-row");
             topRow.css.setMany({
               display: "grid",
-              gridTemplateColumns: "auto 12ch 12ch",
+              gridTemplateColumns: "auto 12ch",
               gap: "8px",
               alignItems: "center",
               marginBottom: "8px",

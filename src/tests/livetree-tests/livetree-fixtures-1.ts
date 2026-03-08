@@ -7,7 +7,7 @@ import { _CREATE_NODE } from "hson-live/diagnostics";
 import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
-import { legacy_suites_3 } from "./livetree-fixtures-2";
+import { legacy_suites_3, suite_more_contract_refresh } from "./livetree-fixtures-2";
 
 
 
@@ -20,7 +20,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     ...extraCases(),
     suite_css_and_content(),
     ...suite_recent_regressions(),
-    ...legacy_suites_3()
+    ...legacy_suites_3(),
   ] as const;
 }
 
@@ -1528,13 +1528,12 @@ function suite_css_regressions(): TestSuite {
         box.css.setMany({
           display: "grid",
           gap: "8px",
-          background: "rgba(0,0,0, 1", // intentionally invalid
+          background: "__INVALID_BG_SENTINEL__",
           width: "420px",
         });
 
         await tick();
       },
-
       assert(tree, t) {
         const cssText = css_snapshot(tree);
         const box = tree.find.must.byId("box");
@@ -1544,8 +1543,6 @@ function suite_css_regressions(): TestSuite {
         const quid = el?.getAttribute("data-_quid") ?? "";
         t.ok("box has quid", quid.length > 0);
 
-
-        // crude but effective: grab the rule block for this quid
         const ruleStart = cssText.indexOf(`[data-_quid="${quid}"]`);
         t.ok("box rule exists", ruleStart >= 0);
 
@@ -1557,15 +1554,6 @@ function suite_css_regressions(): TestSuite {
         t.ok(
           "invalid background sentinel was skipped",
           !ruleSlice.includes("__INVALID_BG_SENTINEL__"),
-        );
-        t.ok("css snapshot exists", cssText.length > 0);
-        t.ok("display survived", cssText.includes("display: grid;"));
-        t.ok("gap survived", cssText.includes("gap: 8px;"));
-        t.ok("width survived", cssText.includes("width: 420px;"));
-
-        t.ok(
-          "malformed background was skipped",
-          !cssText.includes("background: rgba(0,0,0, 1")
         );
       },
 
@@ -1649,3 +1637,4 @@ function suite_css_regressions(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
+

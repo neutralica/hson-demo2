@@ -56,6 +56,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 // Input textarea: just reuse PANEL_TEXTAREAcss, add padding back if you want
 export const BUILD_TEXTAREAcss: CssMap = {
   ...PANEL_TEXTAREAcss,
+  background: $cols_.backdeep,
   color: $blu_.baby,
   fontSize: $txt_.main,
   padding: "10px", // you had this commented out on PANEL_TEXTAREAcss

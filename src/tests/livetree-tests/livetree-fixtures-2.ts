@@ -1,14 +1,16 @@
 import { hson, LiveTree } from "hson-live";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
+import type { HsonNode } from "hson-live/types";
 
 export function legacy_suites_3(): readonly TestSuite[] {
   return [
     suite_attrs_flags_refresh(),
     suite_empty_append(),
       suite_dataset(),
-      suite_identity_stability(),
-    
+    suite_identity_stability(),
+      ...suite_final_legacy_css(),
+    ...suite_more_contract_refresh(),
   ] as const;
 }
 
@@ -481,6 +483,622 @@ export function suite_identity_stability(): TestSuite {
         const stash = tree as unknown as { __first?: LiveTree };
         const el = stash.__first?.asDomElement?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+export function suite_more_contract_refresh(): readonly TestSuite[] {
+  return [
+    suite_dataset_more(),
+    suite_css_more(),
+    suite_find_more(),
+  ] as const;
+}
+function suite_dataset_more(): TestSuite {
+  const SUITE = "livetree/more-dataset";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "data.setMany: multi-set, overwrite, preserve, and removal stay in sync",
+      fixture: "dataset/setMany",
+      sub: "mixed-types-removals",
+      dom: true,
+      html: `<button id="btn"></button>`,
+
+      act(tree) {
+        const btn = tree.find.must.byId("btn");
+
+        // phase 1
+        btn.data.setMany({
+          state: "open",
+          userId: "123",
+          flag: "true",
+        });
+
+        // phase 2
+        btn.data.setMany({
+          state: "closed",
+          userId: null,
+          // flag omitted -> should remain
+        });
+      },
+
+      assert(tree, t) {
+        const btn = tree.find.must.byId("btn");
+        const node = btn.node;
+        const attrs = node._attrs ?? {};
+        const el = btn.asDomElement();
+
+        t.eq("node data-state updated", attrs["data-state"], "closed");
+        t.eq("node data-user-id removed", attrs["data-user-id"], undefined);
+        t.eq("node data-flag preserved", attrs["data-flag"], "true");
+
+        t.eq("DOM data-state updated", el?.getAttribute("data-state") ?? "", "closed");
+        t.eq("DOM data-user-id removed", el?.getAttribute("data-user-id") ?? null, null);
+        t.eq("DOM data-flag preserved", el?.getAttribute("data-flag") ?? "", "true");
+      },
+
+      preview(tree) {
+        const el = tree.find.byId("btn")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no button dom>";
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+function suite_css_more(): TestSuite {
+  const SUITE = "livetree/more-css";
+
+  const tick = async (): Promise<void> => {
+    await new Promise<void>((r) => setTimeout(() => r(), 0));
+  };
+
+  const css_snapshot = (tree: LiveTree): string => {
+  const snap = tree.css.devSnapshot;
+  return snap ? snap() : "<no devsnapshot>";
+};
+
+  const find_rule_slice = (cssText: string, quid: string): string => {
+    const start = cssText.indexOf(`[data-_quid="${quid}"]`);
+    return start >= 0 ? cssText.slice(start, start + 400) : "";
+  };
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "css.setProp generates a QUID-scoped CSS rule",
+      fixture: "css/setProp",
+      sub: "single-quid-rule",
+      dom: true,
+      html: `
+        <div id="root">
+          <div id="box"></div>
+        </div>
+      `,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+        box.css.setProp("background-color", "red");
+        await tick();
+      },
+
+      assert(tree, t) {
+        const box = tree.find.must.byId("box");
+        const el = box.asDomElement();
+
+        t.ok("box DOM exists", !!el);
+
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        t.ok("box has quid", quid.length > 0);
+
+        const cssText = css_snapshot(tree);
+        const rule = find_rule_slice(cssText, quid);
+
+        t.ok("rule exists for box quid", rule.length > 0);
+        t.ok("rule contains selector", rule.includes(`[data-_quid="${quid}"]`));
+        t.ok("rule contains background-color red", rule.includes("background-color: red"));
+      },
+
+      preview(tree) {
+        const box = tree.find.byId("box");
+        const el = box?.asDomElement?.();
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        const cssText = css_snapshot(tree);
+        return find_rule_slice(cssText, quid) || "<no scoped rule>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "multi-selection css.setProp applies a scoped rule to each selected QUID",
+      fixture: "css/multi",
+      sub: "apply-all-selected",
+      dom: true,
+      html: `
+        <section id="root">
+          <p class="x">one</p>
+          <p class="x">two</p>
+          <p class="y">three</p>
+        </section>
+      `,
+
+      async act(tree) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        multi.css.setProp("color", "red");
+        await tick();
+      },
+
+      assert(tree, t) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        const arr = multi.toArray();
+
+        t.eq("selected .x count", arr.length, 2);
+
+        const cssText = css_snapshot(tree);
+
+        for (let i = 0; i < arr.length; i += 1) {
+          const el = arr[i]?.asDomElement();
+          const quid = el?.getAttribute("data-_quid") ?? "";
+
+          t.ok(`.x[${i}] has quid`, quid.length > 0);
+
+          const rule = find_rule_slice(cssText, quid);
+          t.ok(`rule exists for quid ${quid}`, rule.length > 0);
+          t.ok(`rule contains selector for quid ${quid}`, rule.includes(`[data-_quid="${quid}"]`));
+          t.ok(`rule contains color red for quid ${quid}`, rule.includes("color: red"));
+        }
+      },
+
+      preview(tree) {
+        const cssText = css_snapshot(tree);
+        return cssText || "<no css snapshot>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "css.setProp supports object CssValue { value, unit }",
+      fixture: "css/object-value",
+      sub: "value-unit",
+      dom: true,
+      html: `
+        <div id="root">
+          <div id="box"></div>
+        </div>
+      `,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+        box.css.setProp("margin-left", { value: 12, unit: "px" });
+        await tick();
+      },
+
+      assert(tree, t) {
+        const box = tree.find.must.byId("box");
+        const el = box.asDomElement();
+
+        t.ok("box DOM exists", !!el);
+
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        t.ok("box has quid", quid.length > 0);
+
+        const cssText = css_snapshot(tree);
+        const rule = find_rule_slice(cssText, quid);
+
+        t.ok("rule exists for box quid", rule.length > 0);
+        t.ok("rule contains margin-left 12px", rule.includes("margin-left: 12px"));
+      },
+
+      preview(tree) {
+        const box = tree.find.byId("box");
+        const el = box?.asDomElement?.();
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        const cssText = css_snapshot(tree);
+        return find_rule_slice(cssText, quid) || "<no scoped rule>";
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+function suite_find_more(): TestSuite {
+  const SUITE = "livetree/more-find";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "find / findAll preserve hit-miss semantics and result order",
+      fixture: "find/semantics",
+      sub: "hits-misses-order",
+      html: `
+        <section id="root">
+          <p class="a">one</p>
+          <p class="b">two</p>
+        </section>
+      `,
+
+      act(tree) {
+        void tree;
+      },
+
+      assert(tree, t) {
+        const root = tree.find.must.byId("root");
+
+        const hit = root.find({ tag: "p", attrs: { class: "a" } });
+        t.ok("find hit returns tree", !!hit);
+
+        const miss = root.find({ tag: "p", attrs: { class: "nope" } });
+        t.eq("find miss returns undefined", miss, undefined);
+
+        const allMiss = root.findAll({ tag: "p", attrs: { class: "nope" } });
+        t.eq("findAll miss count is zero", allMiss.count(), 0);
+
+        const allPs = root.findAll({ tag: "p" });
+        t.eq("findAll count is two", allPs.count(), 2);
+
+        const texts: string[] = [];
+        allPs.forEach((branch) => {
+          texts.push(branch.text.get());
+        });
+
+        t.eq("findAll order preserved", texts.join(","), "one,two");
+      },
+
+      preview(tree) {
+        const root = tree.find.byId("root")?.asDomElement?.();
+        return root && "outerHTML" in root ? (root as Element).outerHTML : "<no root dom>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "must throws on miss while findAll stays empty-but-defined",
+      fixture: "find/semantics",
+      sub: "must-vs-findAll",
+      html: `
+        <div id="root">
+          <span class="a"></span>
+          <span class="b"></span>
+        </div>
+      `,
+
+      act(tree) {
+        void tree;
+      },
+
+      assert(tree, t) {
+        const root = tree.find.must.byId("root");
+
+        let threw = false;
+        try {
+          root.find.must(".nope");
+        } catch {
+          threw = true;
+        }
+
+        t.ok("find.must throws on miss", threw);
+
+        const none = root.findAll(".nope");
+        t.eq("findAll miss count is zero", none.count(), 0);
+
+        const allSpans = root.findAll("span");
+        t.eq("findAll span count is two", allSpans.count(), 2);
+
+        const classes: string[] = [];
+        allSpans.forEach((branch) => {
+          classes.push(String(branch.attr.get("class") ?? ""));
+        });
+
+        t.eq("findAll preserves class order", classes.join(","), "a,b");
+      },
+
+      preview(tree) {
+        const root = tree.find.byId("root")?.asDomElement?.();
+        return root && "outerHTML" in root ? (root as Element).outerHTML : "<no root dom>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "tree.node is live while plain JSON snapshot is not",
+      fixture: "node/live",
+      sub: "live-vs-snapshot",
+      html: `
+        <div id="root">
+          <span class="a"></span>
+          <span class="b"></span>
+        </div>
+      `,
+
+      act(tree) {
+        const liveNode = tree.node;
+        const snapshot = JSON.parse(JSON.stringify(liveNode));
+
+        tree.attr.set("data-state", "mutated");
+
+        (tree as unknown as {
+          __liveNode?: HsonNode;
+          __snapshot?: Record<string, unknown>;
+        }).__liveNode = liveNode;
+
+        (tree as unknown as {
+          __liveNode?: HsonNode;
+          __snapshot?: Record<string, unknown>;
+        }).__snapshot = snapshot;
+      },
+
+      assert(tree, t) {
+        const stash = tree as unknown as {
+          __liveNode?: HsonNode;
+          __snapshot?: { _attrs?: Record<string, unknown>; };
+        };
+
+        t.ok("live node captured", !!stash.__liveNode);
+        t.ok("snapshot captured", !!stash.__snapshot);
+
+        t.eq(
+          "live node sees mutation",
+          stash.__liveNode?._attrs?.["data-state"],
+          "mutated"
+        );
+
+        t.eq(
+          "snapshot does not see mutation",
+          stash.__snapshot?._attrs?.["data-state"],
+          undefined
+        );
+      },
+
+      preview(tree) {
+        return JSON.stringify(tree.node._attrs ?? {});
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+
+export function suite_final_legacy_css(): readonly TestSuite[] {
+  return [
+    suite_css_value_and_selection(),
+    suite_css_empty(),
+  ] as const;
+}
+
+function suite_css_value_and_selection(): TestSuite {
+  const SUITE = "livetree/legacy-css-value-selection";
+
+  const tick = async (): Promise<void> => {
+    await new Promise<void>((r) => setTimeout(() => r(), 0));
+  };
+
+  const snapshot_from = (tree: LiveTree, byId: string): string => {
+    const node = tree.find.must.byId(byId);
+    const snap = node.css.devSnapshot;
+    return snap ? snap() : "<no devsnapshot>";
+  };
+
+  const rule_for_quid = (cssText: string, quid: string): string => {
+    const start = cssText.indexOf(`[data-_quid="${quid}"]`);
+    return start >= 0 ? cssText.slice(start, start + 400) : "";
+  };
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "css.setProp supports object CssValue { value, unit } end-to-end",
+      fixture: "css/object-value",
+      sub: "value-unit",
+      dom: true,
+      html: `
+        <div id="root">
+          <div id="box"></div>
+        </div>
+      `,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+        box.css.setProp("margin-left", { value: 12, unit: "px" });
+        await tick();
+      },
+
+      assert(tree, t) {
+        const box = tree.find.must.byId("box");
+        const el = box.asDomElement();
+
+        t.ok("box DOM exists", !!el);
+
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        t.ok("box has quid", quid.length > 0);
+
+        const cssText = snapshot_from(tree, "box");
+        const rule = rule_for_quid(cssText, quid);
+
+        t.ok("rule exists for box quid", rule.length > 0);
+        t.ok("rule contains margin-left 12px", rule.includes("margin-left: 12px"));
+      },
+
+      preview(tree) {
+        const box = tree.find.byId("box");
+        const el = box?.asDomElement?.();
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        const cssText = snapshot_from(tree, "box");
+        return rule_for_quid(cssText, quid) || "<no scoped rule>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "multi-selection css.setProp applies a scoped rule to each selected QUID",
+      fixture: "css/multi",
+      sub: "apply-all-selected",
+      dom: true,
+      html: `
+        <section id="root">
+          <p class="x">one</p>
+          <p class="x">two</p>
+          <p class="y">three</p>
+        </section>
+      `,
+
+      async act(tree) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        multi.css.setProp("color", "red");
+        await tick();
+      },
+
+      assert(tree, t) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        const arr = multi.toArray();
+
+        t.eq("selected .x count", arr.length, 2);
+
+        const first = arr[0];
+        const snap = first?.css.devSnapshot;
+        const cssText = snap ? snap() : "<no devsnapshot>";
+
+        for (let i = 0; i < arr.length; i += 1) {
+          const el = arr[i]?.asDomElement();
+          const quid = el?.getAttribute("data-_quid") ?? "";
+
+          t.ok(`.x[${i}] has quid`, quid.length > 0);
+
+          const rule = rule_for_quid(cssText, quid);
+          t.ok(`rule exists for quid ${quid}`, rule.length > 0);
+          t.ok(`rule contains selector for quid ${quid}`, rule.includes(`[data-_quid="${quid}"]`));
+          t.ok(`rule contains color red for quid ${quid}`, rule.includes("color: red"));
+        }
+      },
+
+      preview(tree) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        const first = multi.toArray()[0];
+        const snap = first?.css.devSnapshot;
+        return snap ? snap() : "<no css snapshot>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "multi-selection emits separate rule blocks per QUID",
+      fixture: "css/multi",
+      sub: "separate-blocks",
+      dom: true,
+      html: `
+        <section id="root">
+          <p class="x">one</p>
+          <p class="x">two</p>
+        </section>
+      `,
+
+      async act(tree) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        multi.css.setProp("color", "red");
+        await tick();
+      },
+
+      assert(tree, t) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        const arr = multi.toArray();
+
+        t.eq("selected .x count", arr.length, 2);
+
+        const first = arr[0];
+        const snap = first?.css.devSnapshot;
+        const cssText = snap ? snap() : "<no devsnapshot>";
+        const flat = cssText.replace(/\s+/g, " ");
+
+        const quids = arr
+          .map((n) => n.asDomElement()?.getAttribute("data-_quid") ?? "")
+          .filter(Boolean);
+
+        for (const quid of quids) {
+          const selector = `[data-_quid="${quid}"]`;
+          const hits = flat.split(`${selector} {`).length - 1;
+          t.eq(`exactly one block for ${selector}`, hits, 1);
+        }
+
+        t.eq(
+          "no merged selector list emitted",
+          flat.includes(`"], [`),
+          false,
+        );
+      },
+
+      preview(tree) {
+        const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
+        const first = multi.toArray()[0];
+        const snap = first?.css.devSnapshot;
+        return snap ? snap() : "<no css snapshot>";
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+
+function suite_css_empty(): TestSuite {
+  const SUITE = "livetree/final-legacy-css-empty";
+
+  const tick = async (): Promise<void> => {
+    await new Promise<void>((r) => setTimeout(() => r(), 0));
+  };
+
+  const snapshot_from_first_real_node = (tree: LiveTree): string => {
+    const root = tree.find.must.byId("root");
+    const snap = root.css.devSnapshot;
+    return snap ? snap() : "<no devsnapshot>";
+  };
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "css operations on empty selection are a no-op",
+      fixture: "css/empty-selection",
+      sub: "noop",
+      dom: true,
+      html: `
+        <div id="root">
+          <p class="x">one</p>
+        </div>
+      `,
+
+      async act(tree) {
+        const root = tree.find.must.byId("root");
+        const emptyMulti = root.findAll({ tag: "span", attrs: { class: "nope" } });
+
+        (tree as unknown as { __before?: string }).__before = snapshot_from_first_real_node(tree);
+
+        emptyMulti.css.setProp("color", "red");
+        emptyMulti.css.setMany({ opacity: "0.5" });
+        emptyMulti.css.clear();
+
+        await tick();
+
+        (tree as unknown as { __after?: string }).__after = snapshot_from_first_real_node(tree);
+      },
+
+      assert(tree, t) {
+        const root = tree.find.must.byId("root");
+        const emptyMulti = root.findAll({ tag: "span", attrs: { class: "nope" } });
+
+        t.eq("empty selection count is zero", emptyMulti.count(), 0);
+
+        const stash = tree as unknown as { __before?: string; __after?: string };
+        t.eq(
+          "css snapshot unchanged after empty-selection ops",
+          stash.__after ?? "",
+          stash.__before ?? "",
+        );
+      },
+
+      preview(tree) {
+        const stash = tree as unknown as { __after?: string };
+        return stash.__after ?? "<no snapshot>";
       },
     },
   ];
