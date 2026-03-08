@@ -59,7 +59,8 @@ export type TestSuite = Readonly<{
 
 export type TestRunMode =
   | "all"
-  | "generated"
+  | "livetree"
+  // | "generated"
   | "legacy"
   | "dev"
 

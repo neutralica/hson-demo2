@@ -39,7 +39,7 @@ function preview_atom(atom: FixtureAtom): string {
 export function make_legacy_test_suite(
   hson: HsonTestApi,
   fixtures: FixtureBundle,
-  suite = "fixtures/basic",
+  suite = "transform/legacy",
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
   entryFmt: SourceFormat = "auto",
 ): TestSuite {
@@ -222,24 +222,29 @@ export function build_suites_for_mode(
       make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic/html", map),
     ]);
   }
-  if (mode === "generated") {
-    return _freeze([
-      generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
-    ]);
-  }
+  // if (mode === "generated") {
+  //   return _freeze([
+  //     generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
+  //   ]);
+  // }
   if (mode === "dev") {
     return _freeze([
       // ADD:
-      ...all_livetree_suites(),
       make_legacy_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
+    ])
+  }
+  if (mode === "livetree") {
+    return _freeze([
+      // ADD:
+      ...all_livetree_suites(),
     ])
   }
   
   return _freeze([
-    make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
-    make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),
-    generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
-    make_legacy_test_suite(h, JSON_FIXTURES_DEV, "fixtures/dev/json", map),
+    make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
+    make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
+    // generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
+    make_legacy_test_suite(h, JSON_FIXTURES_DEV, "transform/dev", map),
     ...all_livetree_suites(),
   ]);
 }

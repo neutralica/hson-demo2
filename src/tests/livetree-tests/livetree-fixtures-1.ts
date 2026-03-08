@@ -7,6 +7,7 @@ import { _CREATE_NODE } from "hson-live/diagnostics";
 import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
+import { legacy_suites_3 } from "./livetree-fixtures-2";
 
 
 
@@ -17,8 +18,9 @@ export function all_livetree_suites(): readonly TestSuite[] {
     suite_append_and_create(),
     mixedRegression(),
     ...extraCases(),
-    suite_css_and_content()
-
+    suite_css_and_content(),
+    ...suite_recent_regressions(),
+    ...legacy_suites_3()
   ] as const;
 }
 
@@ -1183,7 +1185,7 @@ export function suite_css_and_content(): TestSuite {
     // {
     //   suite: SUITE,
     //   name: "set_node_content updates node leaf + DOM textContent",
-      // dom: true,
+    // dom: true,
     //   fixture: "content/set_node_content",
     //   sub: "dom-and-node",
     //   html: `
@@ -1266,6 +1268,383 @@ export function suite_css_and_content(): TestSuite {
     //     return "<no-dom fallback node>";
     //   },
     // },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+
+// recent-regression-suites.ts
+
+export function suite_recent_regressions(): readonly TestSuite[] {
+  return [
+    suite_graft_regressions(),
+    suite_css_regressions(),
+  ] as const;
+}
+
+function suite_graft_regressions(): TestSuite {
+  const SUITE = "livetree/recent-graft-regressions";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "queryDOM.graft returns the queried element itself as root",
+      fixture: "graft/queryDOM",
+      sub: "queried-element-is-root",
+      html: `<div id="root"></div>`,
+
+      act(tree) {
+        const wrapper = document.createElement("div");
+        wrapper.id = "graft-test-wrapper-1";
+        wrapper.style.position = "fixed";
+        wrapper.style.left = "-10000px";
+        wrapper.style.top = "0px";
+
+        const host = document.createElement("div");
+        host.id = "graft-host-1";
+        host.innerHTML = `<section id="child">hello</section>`;
+
+        wrapper.appendChild(host);
+        document.body.appendChild(wrapper);
+
+        const grafted = hson.queryDOM("#graft-host-1").liveTree.graft();
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __grafted?: LiveTree;
+        }).__wrapper = wrapper;
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __grafted?: LiveTree;
+        }).__grafted = grafted;
+      },
+
+      assert(tree, t) {
+        const stash = tree as unknown as {
+          __wrapper?: HTMLElement;
+          __grafted?: LiveTree;
+        };
+
+        try {
+          const grafted = stash.__grafted;
+          t.ok("grafted tree exists", !!grafted);
+          if (!grafted) return;
+
+          t.eq("root tag is queried element tag", grafted.node._tag.toLowerCase(), "div");
+
+          const el = grafted.asDomElement();
+          t.ok("root dom exists", !!el);
+
+          if (el instanceof HTMLElement) {
+            t.eq("root dom id preserved", el.id, "graft-host-1");
+          }
+
+          const child = grafted.find.byId("child");
+          t.ok("existing child content was ingested", !!child);
+        } finally {
+          stash.__wrapper?.remove();
+        }
+      },
+
+      preview(tree) {
+        const stash = tree as unknown as { __grafted?: LiveTree };
+        const el = stash.__grafted?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "queryDOM.graft succeeds on an empty queried element",
+      fixture: "graft/queryDOM",
+      sub: "empty-element-valid",
+      html: `<div id="root"></div>`,
+
+      act(tree) {
+        const wrapper = document.createElement("div");
+        wrapper.id = "graft-test-wrapper-2";
+        wrapper.style.position = "fixed";
+        wrapper.style.left = "-10000px";
+        wrapper.style.top = "0px";
+
+        const host = document.createElement("div");
+        host.id = "graft-host-2";
+
+        wrapper.appendChild(host);
+        document.body.appendChild(wrapper);
+
+        const grafted = hson.queryDOM("#graft-host-2").liveTree.graft();
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __grafted?: LiveTree;
+        }).__wrapper = wrapper;
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __grafted?: LiveTree;
+        }).__grafted = grafted;
+      },
+
+      assert(tree, t) {
+        const stash = tree as unknown as {
+          __wrapper?: HTMLElement;
+          __grafted?: LiveTree;
+        };
+
+        try {
+          const grafted = stash.__grafted;
+          t.ok("grafted tree exists", !!grafted);
+          if (!grafted) return;
+
+          t.eq("root tag is div", grafted.node._tag.toLowerCase(), "div");
+
+          const el = grafted.asDomElement();
+          t.ok("root dom exists", !!el);
+
+          if (el instanceof HTMLElement) {
+            t.eq("root dom id preserved", el.id, "graft-host-2");
+            t.eq("empty element remains empty", el.children.length, 0);
+            t.eq("empty element text remains empty", el.textContent ?? "", "");
+          }
+        } finally {
+          stash.__wrapper?.remove();
+        }
+      },
+
+      preview(tree) {
+        const stash = tree as unknown as { __grafted?: LiveTree };
+        const el = stash.__grafted?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "queryDOM.graft is idempotent for an already-grafted element",
+      fixture: "graft/queryDOM",
+      sub: "double-graft-returns-same-node",
+      html: `<div id="root"></div>`,
+
+      act(tree) {
+        const wrapper = document.createElement("div");
+        wrapper.id = "graft-test-wrapper-3";
+        wrapper.style.position = "fixed";
+        wrapper.style.left = "-10000px";
+        wrapper.style.top = "0px";
+
+        const host = document.createElement("div");
+        host.id = "graft-host-3";
+        host.innerHTML = `<p id="child-3">x</p>`;
+
+        wrapper.appendChild(host);
+        document.body.appendChild(wrapper);
+
+        const first = hson.queryDOM("#graft-host-3").liveTree.graft();
+        const second = hson.queryDOM("#graft-host-3").liveTree.graft();
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __first?: LiveTree;
+          __second?: LiveTree;
+        }).__wrapper = wrapper;
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __first?: LiveTree;
+          __second?: LiveTree;
+        }).__first = first;
+
+        (tree as unknown as {
+          __wrapper?: HTMLElement;
+          __first?: LiveTree;
+          __second?: LiveTree;
+        }).__second = second;
+      },
+
+      assert(tree, t) {
+        const stash = tree as unknown as {
+          __wrapper?: HTMLElement;
+          __first?: LiveTree;
+          __second?: LiveTree;
+        };
+
+        try {
+          const first = stash.__first;
+          const second = stash.__second;
+
+          t.ok("first graft exists", !!first);
+          t.ok("second graft exists", !!second);
+          if (!first || !second) return;
+
+          // CHANGED: harden the new element->node guard behavior
+          t.ok("second graft reuses same underlying node", first.node === second.node);
+
+          const firstEl = first.asDomElement();
+          const secondEl = second.asDomElement();
+          t.ok("dom element is stable across repeated graft", firstEl === secondEl);
+        } finally {
+          stash.__wrapper?.remove();
+        }
+      },
+
+      preview(tree) {
+        const stash = tree as unknown as { __first?: LiveTree };
+        const el = stash.__first?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+
+function suite_css_regressions(): TestSuite {
+  const SUITE = "livetree/recent-css-regressions";
+
+  const tick = async (): Promise<void> => {
+    await new Promise<void>((r) => setTimeout(() => r(), 0));
+  };
+
+  const css_snapshot = (tree: LiveTree): string => {
+    const box = tree.find.must.byId("box");
+    const snap = box.css.devSnapshot;
+    return snap ? snap() : "<no devsnapshot>";
+  };
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "invalid CSS decl is skipped without poisoning valid sibling decls",
+      dom: true,
+      fixture: "css/validator",
+      sub: "invalid-does-not-poison",
+      html: `<main><div id="box">x</div></main>`,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({
+          display: "grid",
+          gap: "8px",
+          background: "rgba(0,0,0, 1", // intentionally invalid
+          width: "420px",
+        });
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const cssText = css_snapshot(tree);
+        const box = tree.find.must.byId("box");
+        const el = box.asDomElement();
+        t.ok("box DOM exists", !!el);
+
+        const quid = el?.getAttribute("data-_quid") ?? "";
+        t.ok("box has quid", quid.length > 0);
+
+
+        // crude but effective: grab the rule block for this quid
+        const ruleStart = cssText.indexOf(`[data-_quid="${quid}"]`);
+        t.ok("box rule exists", ruleStart >= 0);
+
+        const ruleSlice = ruleStart >= 0 ? cssText.slice(ruleStart, ruleStart + 300) : "";
+
+        t.ok("display survived", ruleSlice.includes("display: grid;"));
+        t.ok("gap survived", ruleSlice.includes("gap: 8px;"));
+        t.ok("width survived", ruleSlice.includes("width: 420px;"));
+        t.ok(
+          "invalid background sentinel was skipped",
+          !ruleSlice.includes("__INVALID_BG_SENTINEL__"),
+        );
+        t.ok("css snapshot exists", cssText.length > 0);
+        t.ok("display survived", cssText.includes("display: grid;"));
+        t.ok("gap survived", cssText.includes("gap: 8px;"));
+        t.ok("width survived", cssText.includes("width: 420px;"));
+
+        t.ok(
+          "malformed background was skipped",
+          !cssText.includes("background: rgba(0,0,0, 1")
+        );
+      },
+
+      preview(tree) {
+        const cssText = css_snapshot(tree);
+        return cssText || "<no css snapshot>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "valid camelCase CSS props still serialize after supports-validation",
+      fixture: "css/validator",
+      sub: "camelcase-valid-props-allowed",
+      html: `<main><div id="box">x</div></main>`,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({
+          backgroundColor: "rgba(12, 19, 26, 1)",
+          fontFamily: "monospace",
+          placeItems: "center",
+          overflowX: "hidden",
+        });
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const cssText = css_snapshot(tree);
+
+        t.ok("background-color survived", cssText.includes("background-color: rgba(12, 19, 26, 1);"));
+        t.ok("font-family survived", cssText.includes("font-family: monospace;"));
+        t.ok("place-items survived", cssText.includes("place-items: center;"));
+        t.ok("overflow-x survived", cssText.includes("overflow-x: hidden;"));
+      },
+
+      preview(tree) {
+        const cssText = css_snapshot(tree);
+        return cssText || "<no css snapshot>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "known-invalid CSS values are rejected while valid siblings remain",
+      fixture: "css/validator",
+      sub: "reject-invalid-values-only",
+      html: `<main><div id="box">x</div></main>`,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({
+          color: "light-grey",              // invalid
+          alignItems: "flex-stretch",       // invalid
+          width: "160px",                   // valid
+          height: "40px",                   // valid
+        });
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const cssText = css_snapshot(tree);
+
+        t.ok("valid width survived", cssText.includes("width: 160px;"));
+        t.ok("valid height survived", cssText.includes("height: 40px;"));
+
+        t.ok("invalid color was skipped", !cssText.includes("color: light-grey;"));
+        t.ok("invalid align-items was skipped", !cssText.includes("align-items: flex-stretch;"));
+      },
+
+      preview(tree) {
+        const cssText = css_snapshot(tree);
+        return cssText || "<no css snapshot>";
+      },
+    },
   ];
 
   return make_livetree_suite(SUITE, cases);
