@@ -1067,207 +1067,207 @@ export function suite_css_and_content(): TestSuite {
     // // CssManager: computed style reflects QUID CSS after flush
     // // NOTE: This requires DOM + layout. If your harness sometimes runs headless/no-dom,
     // //       the test will fail. This test *should* scream in that case.
-    // {
-    //   suite: SUITE,
-    //   name: "CssManager: computed style reflects QUID CSS after flush",
-    //   dom: true,
-    //   fixture: "css/computed-style",
-    //   sub: "after-flush",
-    //   html: `
-    //     <main>
-    //       <div id="box">x</div>
-    //     </main>
-    //   `,
-    //   async act(tree: LiveTree) {
-    //     const box = tree.find.must.byId("box");
-    //     box.css.setMany({
-    //       position: "fixed",
-    //       top: "24px",
-    //       left: "24px",
-    //       width: "160px",
-    //       height: "160px",
-    //       backgroundColor: "rgb(0, 255, 0)",
-    //       opacity: "0.5",
-    //     });
+    {
+      suite: SUITE,
+      name: "CssManager: computed style reflects QUID CSS after flush",
+      dom: true,
+      fixture: "css/computed-style",
+      sub: "after-flush",
+      html: `
+        <main>
+          <div id="box">x</div>
+        </main>
+      `,
+      async act(tree: LiveTree) {
+        const box = tree.find.must.byId("box");
+        box.css.setMany({
+          position: "fixed",
+          top: "24px",
+          left: "24px",
+          width: "160px",
+          height: "160px",
+          backgroundColor: "rgb(0, 255, 0)",
+          opacity: "0.5",
+        });
 
-    //     await tick();
-    //   },
-    //   assert(tree: LiveTree, t: Asserter) {
-    //     const el0 = tree.find.must.byId("box").asDomElement();
-    //     t.ok("box dom exists", !!el0);
+        await tick();
+      },
+      assert(tree: LiveTree, t: Asserter) {
+        const el0 = tree.find.must.byId("box").asDomElement();
+        t.ok("box dom exists", !!el0);
 
-    //     // getComputedStyle wants an Element, but you usually care about HTMLElement behavior.
-    //     const el = el0 instanceof HTMLElement ? el0 : null;
-    //     t.ok("box dom is HTMLElement", !!el);
+        // getComputedStyle wants an Element, but you usually care about HTMLElement behavior.
+        const el = el0 instanceof HTMLElement ? el0 : null;
+        t.ok("box dom is HTMLElement", !!el);
 
-    //     if (!el) return;
+        if (!el) return;
 
-    //     const cs = getComputedStyle(el);
-    //     t.eq("opacity", cs.opacity, "0.5");
-    //     t.eq("position", cs.position, "fixed");
-    //     t.eq("backgroundColor", cs.backgroundColor, "rgb(0, 255, 0)");
-    //   },
-    //   preview(tree: LiveTree) {
-    //     const el = tree.find.byId("box")?.asDomElement?.();
-    //     return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
-    //   },
-    // },
+        const cs = getComputedStyle(el);
+        t.eq("opacity", cs.opacity, "0.5");
+        t.eq("position", cs.position, "fixed");
+        t.eq("backgroundColor", cs.backgroundColor, "rgb(0, 255, 0)");
+      },
+      preview(tree: LiveTree) {
+        const el = tree.find.byId("box")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
+      },
+    },
 
     // // -----------------------------------------------------------------------
     // // CssManager: element has non-zero rect after QUID CSS
     // // This one is “layout-ish”: if position/size didn’t apply, rect likely stays 0.
-    // {
-    //   suite: SUITE,
-    //   name: "CssManager: element has non-zero rect after QUID CSS",
-    //   fixture: "css/rect",
-    //   sub: "non-zero",
-    //   html: `
-    //     <main>
-    //       <div id="box">x</div>
-    //     </main>
-    //   `,
-    //   async act(tree: LiveTree) {
-    //     const box = tree.find.must.byId("box");
-    //     box.css.setMany({
-    //       position: "fixed",
-    //       top: "24px",
-    //       left: "24px",
-    //       width: "160px",
-    //       height: "160px",
-    //       backgroundColor: "rgb(255, 0, 0)",
-    //     });
+    {
+      suite: SUITE,
+      name: "CssManager: element has non-zero rect after QUID CSS",
+      fixture: "css/rect",
+      sub: "non-zero",
+      html: `
+        <main>
+          <div id="box">x</div>
+        </main>
+      `,
+      async act(tree: LiveTree) {
+        const box = tree.find.must.byId("box");
+        box.css.setMany({
+          position: "fixed",
+          top: "24px",
+          left: "24px",
+          width: "160px",
+          height: "160px",
+          backgroundColor: "rgb(255, 0, 0)",
+        });
 
-    //     await tick();
-    //   },
-    //   assert(tree: LiveTree, t: Asserter) {
-    //     const box = tree.find.must.byId("box");
-    //     const el0 = box.asDomElement();
-    //     t.ok("box dom exists", !!el0);
+        await tick();
+      },
+      assert(tree: LiveTree, t: Asserter) {
+        const box = tree.find.must.byId("box");
+        const el0 = box.asDomElement();
+        t.ok("box dom exists", !!el0);
 
-    //     const el = el0 instanceof HTMLElement ? el0 : null;
-    //     t.ok("box dom is HTMLElement", !!el);
+        const el = el0 instanceof HTMLElement ? el0 : null;
+        t.ok("box dom is HTMLElement", !!el);
 
-    //     if (!el) return;
+        if (!el) return;
 
-    //     // stylesheet assertions (compile correctness)
-    //     const host = document.querySelector("#css-manager");
-    //     t.ok("css-manager host exists", !!host);
+        // stylesheet assertions (compile correctness)
+        const host = document.querySelector("#css-manager");
+        t.ok("css-manager host exists", !!host);
 
-    //     const styleEl = host?.querySelector("#_hson");
-    //     t.ok("style#_hson exists", !!styleEl);
+        const styleEl = host?.querySelector("#_hson");
+        t.ok("style#_hson exists", !!styleEl);
 
-    //     const cssText = styleEl?.textContent ?? "";
+        const cssText = styleEl?.textContent ?? "";
 
-    //     const quid = el.getAttribute("data-_quid") ?? "";
-    //     t.ok("box has data-_quid", quid.length > 0);
+        const quid = el.getAttribute("data-_quid") ?? "";
+        t.ok("box has data-_quid", quid.length > 0);
 
-    //     t.ok("css includes quid selector", cssText.includes(`[data-_quid="${quid}"]`));
-    //     t.ok("css includes position fixed", cssText.includes("position: fixed;"));
-    //     t.ok("css includes top", cssText.includes("top: 24px;"));
-    //     t.ok("css includes left", cssText.includes("left: 24px;"));
-    //     t.ok("css includes width", cssText.includes("width: 160px;"));
-    //     t.ok("css includes height", cssText.includes("height: 160px;"));
-    //     t.ok("css includes background-color", cssText.includes("background-color: rgb(255, 0, 0);"));
+        t.ok("css includes quid selector", cssText.includes(`[data-_quid="${quid}"]`));
+        t.ok("css includes position fixed", cssText.includes("position: fixed;"));
+        t.ok("css includes top", cssText.includes("top: 24px;"));
+        t.ok("css includes left", cssText.includes("left: 24px;"));
+        t.ok("css includes width", cssText.includes("width: 160px;"));
+        t.ok("css includes height", cssText.includes("height: 160px;"));
+        t.ok("css includes background-color", cssText.includes("background-color: rgb(255, 0, 0);"));
 
-    //     // layout assertion (application correctness)
-    //     const r = el.getBoundingClientRect();
-    //     t.ok("rect width > 0", r.width > 0);
-    //     t.ok("rect height > 0", r.height > 0);
-    //   },
-    //   preview(tree: LiveTree) {
-    //     const el = tree.find.byId("box")?.asDomElement?.();
-    //     return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
-    //   },
-    // },
+        // layout assertion (application correctness)
+        const r = el.getBoundingClientRect();
+        t.ok("rect width > 0", r.width > 0);
+        t.ok("rect height > 0", r.height > 0);
+      },
+      preview(tree: LiveTree) {
+        const el = tree.find.byId("box")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
+      },
+    },
 
-    // // -----------------------------------------------------------------------
-    // // ContentManager / node content: set_node_content updates leaf + DOM textContent
-    // {
-    //   suite: SUITE,
-    //   name: "set_node_content updates node leaf + DOM textContent",
-    // dom: true,
-    //   fixture: "content/set_node_content",
-    //   sub: "dom-and-node",
-    //   html: `
-    //     <main>
-    //       <div id="tgt">old</div>
-    //     </main>
-    //   `,
-    //   act(tree: LiveTree) {
-    //     const tgt = tree.find.must.byId("tgt");
-    //     set_node_text_content(tgt.node, "new-text");
-    //   },
-    //   assert(tree: LiveTree, t: Asserter) {
-    //     const tgt = tree.find.must.byId("tgt");
-    //     const node = tgt.node;
+    // -----------------------------------------------------------------------
+    // ContentManager / node content: set_node_content updates leaf + DOM textContent
+    {
+      suite: SUITE,
+      name: "set_node_content updates node leaf + DOM textContent",
+    dom: true,
+      fixture: "content/set_node_content",
+      sub: "dom-and-node",
+      html: `
+        <main>
+          <div id="tgt">old</div>
+        </main>
+      `,
+      act(tree: LiveTree) {
+        const tgt = tree.find.must.byId("tgt");
+        set_node_text_content(tgt.node, "new-text");
+      },
+      assert(tree: LiveTree, t: Asserter) {
+        const tgt = tree.find.must.byId("tgt");
+        const node = tgt.node;
 
-    //     const el0 = tgt.asDomElement();
-    //     t.ok("tgt dom exists", !!el0);
+        const el0 = tgt.asDomElement();
+        t.ok("tgt dom exists", !!el0);
 
-    //     const el = el0 instanceof HTMLElement ? el0 : null;
-    //     t.ok("tgt dom is HTMLElement", !!el);
+        const el = el0 instanceof HTMLElement ? el0 : null;
+        t.ok("tgt dom is HTMLElement", !!el);
 
-    //     if (el) {
-    //       t.eq("DOM textContent", el.textContent ?? "", "new-text");
-    //     }
+        if (el) {
+          t.eq("DOM textContent", el.textContent ?? "", "new-text");
+        }
 
-    //     t.ok("node._content is array", Array.isArray(node._content));
-    //     t.eq("node._content length == 1", node._content?.length ?? 0, 1);
+        t.ok("node._content is array", Array.isArray(node._content));
+        t.eq("node._content length == 1", node._content?.length ?? 0, 1);
 
-    //     // get_node_text prefers DOM when mounted
-    //     t.eq("get_node_text", get_node_text_content(node), "new-text");
-    //   },
-    //   preview(tree: LiveTree) {
-    //     const el = tree.find.byId("tgt")?.asDomElement?.();
-    //     return el && "outerHTML" in el ? (el as Element).outerHTML : "<no tgt dom>";
-    //   },
-    // },
+        // get_node_text prefers DOM when mounted
+        t.eq("get_node_text", get_node_text_content(node), "new-text");
+      },
+      preview(tree: LiveTree) {
+        const el = tree.find.byId("tgt")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no tgt dom>";
+      },
+    },
 
-    // // -----------------------------------------------------------------------
-    // // get_node_text fallback: no DOM => walk HSON content
-    // // We construct a minimal HsonNode tree with _str leaves.
-    // {
-    //   suite: SUITE,
-    //   name: "get_node_text falls back to HSON when no DOM exists",
-    //   dom: true,
-    //   fixture: "content/get_node_text",
-    //   sub: "no-dom-fallback",
-    //   html: `<main></main>`,
-    //   act(_tree: LiveTree) {
-    //     // no-op
-    //   },
-    //   assert(_tree: LiveTree, t: Asserter) {
-    //     // Minimal structure:
-    //     // <div> "hello " <span>"world"</span> </div>
-    //     const node: HsonNode = _CREATE_NODE({
-    //       _tag: "div",
-    //       _attrs: { id: "x" },
-    //       _content: [_CREATE_NODE(
-    //         {
-    //           _tag: STR_TAG,
-    //           _attrs: {},
-    //           _content: ["hello "]
-    //         }),
-    //       _CREATE_NODE({
-    //         _tag: "span",
-    //         _attrs: {},
-    //         _content: [
-    //           _CREATE_NODE({
-    //             _tag: STR_TAG,
-    //             _attrs: {},
-    //             _content: ["world"]
-    //           })],
-    //       }),
-    //       ],
-    //     });
+    // -----------------------------------------------------------------------
+    // get_node_text fallback: no DOM => walk HSON content
+    // We construct a minimal HsonNode tree with _str leaves.
+    {
+      suite: SUITE,
+      name: "get_node_text falls back to HSON when no DOM exists",
+      dom: true,
+      fixture: "content/get_node_text",
+      sub: "no-dom-fallback",
+      html: `<main></main>`,
+      act(_tree: LiveTree) {
+        // no-op
+      },
+      assert(_tree: LiveTree, t: Asserter) {
+        // Minimal structure:
+        // <div> "hello " <span>"world"</span> </div>
+        const node: HsonNode = _CREATE_NODE({
+          _tag: "div",
+          _attrs: { id: "x" },
+          _content: [_CREATE_NODE(
+            {
+              _tag: STR_TAG,
+              _attrs: {},
+              _content: ["hello "]
+            }),
+          _CREATE_NODE({
+            _tag: "span",
+            _attrs: {},
+            _content: [
+              _CREATE_NODE({
+                _tag: STR_TAG,
+                _attrs: {},
+                _content: ["world"]
+              })],
+          }),
+          ],
+        });
 
-    //     const got = get_node_text_content(node).replace(/\s+/g, " ").trim();
-    //     t.eq("text fallback", got, "hello world");
-    //   },
-    //   preview(_tree: LiveTree) {
-    //     return "<no-dom fallback node>";
-    //   },
-    // },
+        const got = get_node_text_content(node).replace(/\s+/g, " ").trim();
+        t.eq("text fallback", got, "hello world");
+      },
+      preview(_tree: LiveTree) {
+        return "<no-dom fallback node>";
+      },
+    },
   ];
 
   return make_livetree_suite(SUITE, cases);

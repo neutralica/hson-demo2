@@ -63,6 +63,7 @@ export type TestRunMode =
   // | "generated"
   | "legacy"
   | "dev"
+  | "transform"
 
 export type CaseMeta = Readonly<{
   fixture?: string;

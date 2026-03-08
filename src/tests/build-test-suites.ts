@@ -9,6 +9,7 @@ import { _freeze } from "./tests.consts";
 import { make_generated_json_fixtures } from "./transform-tests/fixtures/generate-json";
 import type { Fixture } from "./tests.types";
 import {  all_livetree_suites } from "./livetree-tests/livetree-fixtures-1";
+import { HTML_FIXTURES_NEW } from "./transform-tests/fixtures/fixtures/new-fixtures";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -222,6 +223,12 @@ export function build_suites_for_mode(
       make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic/html", map),
     ]);
   }
+
+  if (mode === "transform") {
+    return _freeze([
+      make_legacy_test_suite(h, HTML_FIXTURES_NEW, "fixtures/new/json", map),
+    ]);
+  }
   // if (mode === "generated") {
   //   return _freeze([
   //     generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
@@ -229,13 +236,11 @@ export function build_suites_for_mode(
   // }
   if (mode === "dev") {
     return _freeze([
-      // ADD:
       make_legacy_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
     ])
   }
   if (mode === "livetree") {
     return _freeze([
-      // ADD:
       ...all_livetree_suites(),
     ])
   }
@@ -243,6 +248,7 @@ export function build_suites_for_mode(
   return _freeze([
     make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
+    make_legacy_test_suite(h, HTML_FIXTURES_NEW, "transform/new/html", map),
     // generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
     make_legacy_test_suite(h, JSON_FIXTURES_DEV, "transform/dev", map),
     ...all_livetree_suites(),

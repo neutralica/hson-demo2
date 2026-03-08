@@ -34,10 +34,11 @@ const _unhide = (lt: LiveTree) => { lt.classlist.remove($PANEL_HIDDEN) };
 
 let _testsWired = false;
 
+
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.globals.invoke();
-
+``
   const demo = make_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
