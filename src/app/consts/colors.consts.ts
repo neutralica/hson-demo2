@@ -17,7 +17,7 @@ const blueBaby = "rgba(125, 169, 228, 1)";
 const blueCandy = "rgba(46, 167, 255, 1)";
 const bluePastel = "rgba(146, 193, 255, 1)";
 const blueBleach = "rgba(221, 221, 249, 1)";
-const blueMuted = "rgba(96, 182, 196, 1)";
+const blueMuted = "rgba(116, 152, 216, 1)";
 const blueFaded = "rgba(97, 130, 231, 1)";
 const blueStd = "rgb(0, 220, 255)";
 
@@ -55,6 +55,8 @@ const bckColorB = 26;
 
 const bckAlpha = 1;
 const bckColor = `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${bckAlpha})`;
+
+export const back_w_alpha = (num: number) => `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${num})`;
 
 const oddYellow = "rgba(120, 180, 60, 1)"
 const oddPurple = "rgba(170, 100, 230, 1)"
@@ -123,6 +125,8 @@ export const LETTER_COLORcandy = {
   o: greenCandy, // bright
   n: pinkCandy, // slightly warm
 } as const;
+
+
 export const $blu_ = {
   sky: blueSky,
   pastel: bluePastel,
@@ -237,6 +241,40 @@ export const ACID_WASH_OKLCH = {
   twilight:   "oklch(0.68 0.045 280)",
 };
 
+export const OKLCH_SOFT_CORE_4 = {
+  blue:   "oklch(0.78 0.065 240)",
+  yellow: "oklch(0.82 0.08 95)",
+  green:  "oklch(0.75 0.06 150)",
+  pink:   "oklch(0.77 0.075 330)",
+};
+
+export const OKLCH_TERMINAL_4 = {
+  blue:   "oklch(0.76 0.09 245)",
+  yellow: "oklch(0.80 0.10 90)",
+  green:  "oklch(0.73 0.085 155)",
+  pink:   "oklch(0.75 0.095 335)",
+};
+
+export const OKLCH_WASHED_NEON_4 = {
+blue:   "oklch(0.79 0.085 235)",
+  yellow: "oklch(0.83 0.09 100)",
+  green:  "oklch(0.76 0.08 145)",
+  pink:   "oklch(0.78 0.09 340)",
+};
+
+export const OKLCH_MUTED_PASTEL = {
+  blue:   "oklch(0.77 0.05 245)",
+  yellow: "oklch(0.81 0.055 95)",
+  green:  "oklch(0.74 0.05 150)",
+  pink:   "oklch(0.76 0.055 335)",
+};
+export const $HSON_COLORS = {
+  ui: OKLCH_SOFT_CORE_4,
+  accent: OKLCH_TERMINAL_4,
+  playful: OKLCH_WASHED_NEON_4,
+  muted: OKLCH_MUTED_PASTEL
+};
+
 export const $cols_ = {
   txtmain: ACID_WASH_OKLCH.ash,
   bckgd: bckColor,
@@ -250,3 +288,12 @@ export const $cols_ = {
   oddYellow
 
 };
+
+
+
+export const LETTER_COLORoklch = {
+  h: $HSON_COLORS.playful.blue,
+  s: $HSON_COLORS.playful.yellow,
+  o: $HSON_COLORS.playful.pink,
+  n: $HSON_COLORS.playful.green,
+}

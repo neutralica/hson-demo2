@@ -8,11 +8,11 @@ type BuildTabKey = "render" | "html";
 export function mount_build_panels(host: LiveTree): Outcome<BuildDemo> {
     const bp = relay_data(bp_factory(host));
 
-    init_build_panels(bp);
+    initBuild(bp);
     return relay.data(bp);
 }
 
-export function init_build_panels(bp: BuildDemo): void {
+export function initBuild(bp: BuildDemo): void {
     let inProgress = false;
     let activeTab: BuildTabKey = "render";
     let touched = false;

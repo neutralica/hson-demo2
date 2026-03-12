@@ -38,6 +38,7 @@ function motes2_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
       overflow: "hidden",
       zIndex: "0", // wallpaper/screen-fx layer
       pointerEvents: opts.pointerEvents === "none" ? "none" : "auto",
+
     });
 
   const layer = root.create.div()

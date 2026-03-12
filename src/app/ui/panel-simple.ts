@@ -3,44 +3,28 @@
 import type { LiveTree } from "hson-live";
 import { $PANEL_HIDDEN } from "../consts/ui-consts";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "../phases/phase-3-demo/panels/demo-panels.css";
+import { $blu_ } from "../consts/colors.consts";
 
 export type BuiltPanel = Readonly<{
   panel: LiveTree;
-  frame: LiveTree;
   head?: LiveTree | undefined;
   surface: LiveTree;
 }>;
-
-export function mount_panel_simple(parent: LiveTree, name: string): BuiltPanel {
-  const panel = parent.create.div()
+export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
+  return parent.create.div()
     .id.set(`${name}-panel`)
-    .classlist.add("panel", name, $PANEL_HIDDEN)
     .css.setMany({
-      position: "absolute",
-      inset: "0",
-      minHeight: "0",
+      width: "100%",
+      height: "100%",
       minWidth: "0",
-      display: "grid",
-      pointerEvents: "auto",
-    });
-
-  const frame = panel.create.div()
-    .classlist.add("panel-frame", `${name}-frame`)
-    .css.setMany({
-      ...PANEL_FRAMEcss,
       minHeight: "0",
-      minWidth: "0",
-      display: "grid",
+      borderRadius: "14px",
+      padding: "12px",
+      boxSizing: "border-box",
+      pointerEvents: "all",
+      maxHeight: "100%",
+      overflow: "hidden", 
+      color: $blu_.std,
+      fontFamily: "monospace",
     });
-
-  const surface = frame.create.div()
-    .classlist.add("panel-body", `${name}-body`)
-    .css.setMany({
-      ...PANEL_SURFACEcss,
-      minHeight: "0",
-      minWidth: "0",
-    });
-  
-
-  return { panel, frame,  surface };
 }

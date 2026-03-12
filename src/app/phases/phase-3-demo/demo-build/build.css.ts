@@ -2,41 +2,43 @@
 import type { CssMap } from "hson-live/types";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
-import { PANEL_TEXTAREAcss, TEST_ACTION_BTN } from "../panels/demo-panels.css";
+import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
+import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
 
-// --- root that lives inside build.surface ---
+// --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
+  // CHANGED: actual two-pane split
   width: "100%",
   height: "100%",
   minWidth: "0",
   minHeight: "0",
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
   gap: $GRID_GAPstr,
 };
 
-// The pane "body" inside each PANELcss panel
-export const BUILD_PANE_BODYcss: CssMap = {
-  minWidth: "0",
-  minHeight: "0",
-  display: "grid",
-};
 
 // Header row pinned at top of each pane
 export const BUILD_HEADcss: CssMap = {
+  // CHANGED: compact header row
   display: "flex",
   alignItems: "center",
   gap: "10px",
   minWidth: "0",
+  minHeight: "0",
+  height: "auto",
+  paddingBottom: "2px",
+  fontSize: "2rem",
+  fontWeight: "700",
 };
 
 export const BUILD_TITLEcss: CssMap = {
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontSize: "12px",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
   color: $blu_.std,
-  opacity: "0.9",
+  flexShrink: "0",
 };
 
 export const BUILD_SPACERcss: CssMap = {
@@ -45,21 +47,36 @@ export const BUILD_SPACERcss: CssMap = {
 
 // Wrap for overlays + textarea/preview
 export const BUILD_TEXTWRAPcss: CssMap = {
+  // CHANGED: wrapper fully fills body
   position: "relative",
   minWidth: "0",
   minHeight: "0",
   width: "100%",
   height: "100%",
-  display: "grid",
+  overflow: "hidden",
+  borderRadius: "10px",
+  background: $cols_.backdeep,
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
 // Input textarea: just reuse PANEL_TEXTAREAcss, add padding back if you want
 export const BUILD_TEXTAREAcss: CssMap = {
   ...PANEL_TEXTAREAcss,
+
+  // CHANGED: truly fill the pane
+  width: "100%",
+  height: "100%",
+  minWidth: "0",
+  minHeight: "0",
+  boxSizing: "border-box",
+  resize: "none",
+  border: "0",
+  outline: "none",
+
   background: $cols_.backdeep,
   color: $blu_.baby,
-  fontSize: $txt_.main,
-  padding: "10px", // you had this commented out on PANEL_TEXTAREAcss
+  fontSize: $txt_.sub,
+  padding: "10px",
 };
 
 // Watermarks (same idea as parse panels)
@@ -71,7 +88,7 @@ export const BUILD_WATERMARK_FMTcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.08",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontSize: "72px",
   letterSpacing: "0.12em",
   textTransform: "uppercase",
@@ -84,7 +101,7 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontSize: "14px",
   letterSpacing: "0.06em",
 };
@@ -97,7 +114,7 @@ export const BUILD_STATUScss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "Monaco",
   fontSize: "12px",
   letterSpacing: "0.12em",
   textTransform: "uppercase",
@@ -111,6 +128,7 @@ export const BUILD_BTNcss: CssMap = {
   background: $cols_.backdeep,
   color: $ylw_.candy,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+  flexShrink: "0",
 };
 
 // Toggle container for Render/HTML
@@ -119,6 +137,7 @@ export const BUILD_TOGGLEcss: CssMap = {
   gridAutoFlow: "column",
   gap: "8px",
   marginLeft: "auto",
+  alignItems: "center",
 };
 
 // Tabs (plain div “buttons”)
@@ -128,6 +147,7 @@ export const BUILD_TABcss: CssMap = {
   borderRadius: "12px",
   background: "rgba(0,0,0,0.18)",
   color: $grn_.faded,
+  flexShrink: "0",
 };
 
 export const BUILD_TAB_ACTIVEcss: CssMap = {
@@ -136,64 +156,61 @@ export const BUILD_TAB_ACTIVEcss: CssMap = {
 };
 
 // Preview host: fills available space and scrolls if content is large
-export const BUILD_PREVIEWHOSTcss: CssMap = {
+export const BUILD_PREVIEWcss: CssMap = {
+  // CHANGED: fill output pane body cleanly
   width: "100%",
   height: "100%",
   minWidth: "0",
   minHeight: "0",
   overflow: "auto",
-  borderRadius: "10px",
   boxSizing: "border-box",
+  padding: "10px",
+  borderRadius: "10px",
   background: $cols_.backdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  padding: "10px",
 };
 
 // HTML output box: same textarea styling
 export const BUILD_HTMLBOXcss: CssMap = {
   ...PANEL_TEXTAREAcss,
+
+  // CHANGED: same fill behavior as source textarea
+  width: "100%",
+  height: "100%",
+  minWidth: "0",
+  minHeight: "0",
+  boxSizing: "border-box",
+  resize: "none",
+  border: "0",
+  outline: "none",
+
   padding: "10px",
   color: $grn_.std,
+  background: $cols_.backdeep,
 };
-
 
 export const BUILD_PANEcss: CssMap = {
+  // CHANGED: stable head/body stack
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  height: "100%",
   display: "grid",
-  gridTemplateRows: "1fr",
-  minHeight: "0",
-  minWidth: "0",
-  height: "100%"
-};
-
-export const BUILD_BODYcss: CssMap = {
-  position: "relative",
-  minHeight: "0",
-  minWidth: "0",
+  gridTemplateRows: "auto minmax(0, 1fr)",
+  gap: "10px",
+  padding: "10px",
+  boxSizing: "border-box",
+  borderRadius: "14px",
+  background: "rgba(0,0,0,0.22)",
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   overflow: "hidden",
 };
 
-export const BUILD_WATERMARKcss: CssMap = {
-  position: "absolute",
-  inset: "0",
-  display: "grid",
-  placeItems: "center",
-  pointerEvents: "none",
-  userSelect: "none",
-  opacity: "0.08",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSize: "72px",
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-};
-
-export const BUILD_EMPTY_SYNTAXcss: CssMap = {
-  position: "absolute",
-  left: "14px",
-  bottom: "12px",
-  pointerEvents: "none",
-  userSelect: "none",
-  opacity: "0.25",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSize: "14px",
-  letterSpacing: "0.06em",
+export const BUILD_BODYcss: CssMap = {
+   position: "relative",
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  height: "100%",
+  overflow: "hidden",
 };

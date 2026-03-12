@@ -1120,6 +1120,7 @@ export function suite_css_and_content(): TestSuite {
       suite: SUITE,
       name: "CssManager: element has non-zero rect after QUID CSS",
       fixture: "css/rect",
+      dom: true,
       sub: "non-zero",
       html: `
         <main>

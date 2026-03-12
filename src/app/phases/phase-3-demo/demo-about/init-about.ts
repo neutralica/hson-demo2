@@ -2,9 +2,10 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { $blu_, $grn_ } from "../../../consts/colors.consts";
-import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_CSS, ABOUT_P_TEXTcss, MD_CODEcss, MD_PARENcss, MD_TICKcss, INLINE_TICKcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss } from "./about.css";
+import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
+import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss,  ABOUT_P_TEXTcss,  INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
+import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
 
 // -----------------------------
 // Types
@@ -160,9 +161,9 @@ export function render_inline(host: LiveTree, src: string): void {
 
     // seg.kind === "code": render backticks + styled content
     const wrap = host.create.span().classlist.add("md-icode-wrap");
-    wrap.create.span().css.setMany(INLINE_TICKcss).text.set("`");
+    // wrap.create.span().css.setMany(INLINE_TICKcss).text.set("`");
     render_inline_code(wrap, seg.s);
-    wrap.create.span().css.setMany(INLINE_TICKcss).text.set("`");
+    // wrap.create.span().css.setMany(INLINE_TICKcss).text.set("`");
   }
 }
 
@@ -364,11 +365,14 @@ function render_doc_md(host: LiveTree, src: string): void {
       h.css.setMany({
         marginTop: level === 1 ? "6px" : "2rem",
         marginBottom: "8px",
+        textDecoration: "underline",
+        textUnderlineOffset: "5px",
         fontFamily: "Monaco",
         letterSpacing: "0.06em",
         textTransform: level === 1 ? "uppercase" : "none",
         fontSize: level === 1 ? "24px" : level === 2 ? "19px" : level === 3 ? "15px" : "12px",
-        fontWeight: level === 4 ? "900" : "400",
+        fontWeight: 700,
+        color: $HSON_COLORS.ui.blue,
       });
       h.text.set(text);
       continue;

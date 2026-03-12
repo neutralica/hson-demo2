@@ -1,7 +1,7 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $cols_, $grn_, $ylw_ } from "../../consts/colors.consts";
+import { $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 
@@ -89,6 +89,7 @@ export const MENU_LISTcss: CssMap = {
   marginLeft: "2rem",
   position: "relative",
   lineHeight: "2.5rem",
+
 };
 
 export const TITLE_BOXcss: CssMap = {
@@ -150,7 +151,7 @@ export const PANEL_SAFETYcss: CssMap = {
   minHeight: "0",
 };
 
-export const VIEW_SLOTcss = {
+export const VIEW_SLOTcss:CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
@@ -159,3 +160,18 @@ export const VIEW_SLOTcss = {
   overflow: "hidden",
   pointerEvents: "auto",
 };
+
+export const HSON_GRAFFITIcss ={
+      position: "fixed",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      whiteSpace: "pre",
+      fontFamily: "monospace",
+      // height: "50%",
+      // width: "50%",
+      color: ACID_WASH_OKLCH.orchid,
+      maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
+      boxSizing: "border-box",
+mixBlendMode: "multiply",
+    }

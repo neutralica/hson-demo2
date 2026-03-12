@@ -1,13 +1,14 @@
 // pp_factory.ts
 import { hson, type LiveTree } from "hson-live";
 import type { Fmt, Panels, PanelShell } from "../panels/panels.types";
-import { PP_HEADERcss } from "./pp.css";
+import { PP_GRIDcss, PP_HEADERcss } from "./pp.css";
 
 import { PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARK_EMPTYcss, PP_WATERMARK_FMTcss } from "./pp.css";
 import { outcome, relay, relay_data, type Outcome, type OutcomeData } from "intrastructure";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { PP_COPYBTNcss } from "./pp.css";
-import { PANEL_TEXTAREAcss, PANELcss, PARSING_PANEL_ROOTcss } from "../panels/demo-panels.css";
+import { PANEL_TEXTAREAcss, PANELcss } from "../panels/demo-panels.css";
+import { PARSING_PANEL_ROOTcss } from "./pp.css";
 import { init_parsing_panels } from "./init.pp";
 
 type PpFactoryOpts = {
@@ -45,19 +46,27 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
   if (old) old.removeSelf();
 
   const root = hostBody.create.div()
-    .id.set($PARSING_PANELS_ROOT)
-    .css.setMany(PARSING_PANEL_ROOTcss);
+  .id.set($PARSING_PANELS_ROOT)
+  .css.setMany(PARSING_PANEL_ROOTcss);
+
+const header = root.create.div()
+  .css.setMany(PP_HEADERcss)
+  .text.set("~parsing panels~");
+
+const panelGrid = root.create.div()
+  .css.setMany(PP_GRIDcss);
 
   const panels = {} as Record<Fmt, PanelShell>;
 
   for (const fmt of fmts) {
-    const panel = root.create.section()
+    const panel = panelGrid.create.section()
       .data.set("role", `panel-${fmt}`)
       .css.setMany(PANELcss);
 
 
     // keep head handle so we can hide/show focused-only status cleanly
     const head = panel.create.div()
+      .id.set("fmt-header")
       .data.set("role", $PP_HEAD)
       .css.setMany(PP_HEADERcss);
 
@@ -87,11 +96,6 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .text.set(WM_LABEL[fmt])
       .css.setMany(PP_WATERMARK_FMTcss);
 
-    const wmEmpty = wrap.create.div()
-      .classlist.set("pp-watermark pp-watermark--empty")
-      // .text.set(EMPTY_SYNTAX[fmt])
-      .css.setMany(PP_WATERMARK_EMPTYcss);
-
     // focused-only status overlay (big “invalid/valid/...” in red/green)
     const status = wrap.create.div()
       .classlist.set("pp-status")
@@ -115,7 +119,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
       void clip.call(navigator.clipboard, txt);
     });
-    panels[fmt] = { fmt, panel, head, textarea, chip, bytes, copyBtn, wrap, wmFmt, wmEmpty, status };
+    panels[fmt] = { fmt, panel, head, textarea, chip, bytes, copyBtn, wrap, wmFmt, status };
   }
 
   return relay.data({ root, panels });

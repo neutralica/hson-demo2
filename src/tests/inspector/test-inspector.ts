@@ -13,6 +13,7 @@ import type { CaseKey, CaseMeta } from "../tests.types";
 import { make_div_class, make_div_id } from "../../app/utils/makers";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/phase-3-demo/panels/demo-panels.css";
+import { $cols_ } from "../../app/consts/colors.consts";
 
 
 export type InspectorUi = Readonly<{
@@ -82,6 +83,7 @@ export function create_inspector(
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
+    background: $cols_.backdeep
   });
   const header = make_div_class(root, "insp-header").css.setMany({
     // header is natural height

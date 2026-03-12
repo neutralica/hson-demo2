@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
-import { BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANE_BODYcss, BUILD_PREVIEWHOSTcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
+import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
 import { PANELcss } from "../panels/demo-panels.css";
 import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
 
@@ -56,50 +56,62 @@ type BuildFactoryOpts = Readonly<{
 // IDs / consts
 const $BUILD_ROOT = "build-root" as const;
 
-const DEFAULT_SEED = `<div id="build-demo" style="border: 1px solid dodgerblue; box-sizing: border-box; display: grid; height: 100%; padding: 12px; width: 100%"
-  <h1 id="build-heading" style="color: rgba(160,220,255,0.95); font-family: monospace; letter-spacing: 0.06em; margin: 0; text-align: center"
-    "HSON BUILD DEMO"
+const DEFAULT_SEED = `
+<div id="build-demo" style="background: #02070d; border-left: 1px solid rgba(120,180,255,0.28); border-right: 1px solid rgba(120,180,255,0.12); box-sizing: border-box; color: white; display: grid; grid-template-rows: auto auto 1fr auto auto; height: 100%; padding: 28px 34px 26px 34px; width: 100%"
+  <div style="align-items: flex-start; display: flex; justify-content: space-between"
+    <div style="background: rgba(160,220,255,0.35); height: 1px; margin-top: 22px; width: 120px"/>
+    <h1 id="build-heading" style="color: rgba(175,220,255,0.96); font-family: monospace; font-size: 1.95rem; font-weight: 700; letter-spacing: 0.16em; margin: 0; text-align: center"
+      "HSON BUILD DEMO"
+    />
+    <div style="background: rgba(160,220,255,0.35); height: 1px; margin-top: 22px; width: 120px"/>
   />
-  <div style="color: orange; font-family: monospace; font-size: 1rem; line-height: 1.4; text-align: center"
-    "<------ edit the HSON string..."
-  />
-  <hr style="height: 1px; width: 100%"/>
-  <div style="display: grid; place-items: center"
-    <div style="background-color: dodgerblue; border: 12px solid navy; box-sizing: border-box; height: 300px; position: relative; width: 300px"
-      <div style="display: grid; inset: 0; place-items: center; position: absolute"
-        <div style="color: navy; font-family: Comic Sans MS; font-size: 52px; letter-spacing: -0.04em; line-height: 0.6; text-align: left"
-          <div "hs"/>
-          <div "on"/>
-        />
-      />
-      <div style="background: rgba(189,171,92,1); border-radius: 999px; bottom: 5px; color: navy; display: grid; font-family: monospace; font-size: 26px; height: 60px; left: 5px; place-items: center; position: absolute; transform: rotate(90deg); width: 60px"
-        ":)"
-      />
+  <div style="display: flex; justify-content: center; margin-top: 10px"
+    <div style="color: rgba(255,180,40,0.96); font-family: monospace; font-size: 1rem; letter-spacing: 0.08em; text-align: center"
+      "<------ edit the HSON string..."
     />
   />
-  <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.35); margin: 0; width: 100%"/>
-  <div style="color: orange; font-family: monospace; font-size: 1rem; letter-spacing: 0.06em; text-align: center"
-    "...change HTML in realtime"
+  <div style="display: grid; padding: 30px 0 24px 0; place-items: center"
+    <div style="align-items: center; column-gap: 26px; display: grid; grid-template-columns: 1fr auto 1fr; max-width: 980px; width: 100%"
+      <div style="background: linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.32)); height: 1px"/>
+      <div style="background-color: dodgerblue; border: 12px solid navy; box-sizing: border-box; height: 300px; position: relative; width: 300px"
+        <div style="display: grid; inset: 0; place-items: center; position: absolute"
+          <div style="color: navy; font-family: Comic Sans MS; font-size: 52px; letter-spacing: -0.04em; line-height: 0.6; text-align: left"
+            <div "hs"/>
+            <div "on"/>
+          />
+        />
+        <div style="background: rgba(189,171,92,1); border-radius: 999px; bottom: 5px; color: navy; display: grid; font-family: monospace; font-size: 26px; height: 60px; left: 5px; place-items: center; position: absolute; transform: rotate(90deg); width: 60px"
+          ":)"
+        />
+      />
+      <div style="background: linear-gradient(90deg,rgba(255,255,255,0.32),rgba(255,255,255,0)); height: 1px"/>
+    />
+  />
+  <div style="background: linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.22),rgba(255,255,255,0)); height: 1px"/>
+  <div style="display: flex; justify-content: center; padding-top: 18px"
+    <div style="color: rgba(255,180,40,0.96); font-family: monospace; font-size: 1rem; letter-spacing: 0.08em; text-align: center"
+      "...change HTML in realtime"
+    />
   />
 />
 `;
 
 export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {
-  // idempotent remove like pp_factory
+  // CHANGED: idempotent remove
   const old = hostBody.find.byId($BUILD_ROOT);
   if (old) old.removeSelf();
 
-  // root: two columns
+  // CHANGED: true two-pane root
   const root = hostBody.create.div()
     .id.set($BUILD_ROOT)
     .classlist.set("build-root")
     .css.setMany(BUILD_ROOTcss);
 
-  // helper: make one pane
+  // CHANGED: pane helper now creates a stable head/body grid
   const makePane = (key: "src" | "out", titleTxt: string): BuildPanel => {
     const panel = root.create.section()
       .classlist.set(`build-pane build-pane--${key}`)
-      .css.setMany(PANELcss); // reuse your standard panel surface if desired
+      .css.setMany(BUILD_PANEcss);
 
     const head = panel.create.div()
       .classlist.set("build-head")
@@ -116,7 +128,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
     const body = panel.create.div()
       .classlist.set("build-body")
-      .css.setMany(BUILD_PANE_BODYcss);
+      .css.setMany(BUILD_BODYcss);
 
     return { panel, head, body, title, spacer };
   };
@@ -124,27 +136,33 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
   const src = makePane("src", "HSON");
   const out = makePane("out", "OUTPUT");
 
-  // ---- SRC head controls (test + clear + copy) ----
-
-  // const testBtn = src.head.create.div()
-  //   .classlist.set("build-btn build-btn--test")
-  //   .text.set("test")
-  //   .css.setMany(BUILD_BTNcss)
-  //   .setAttrs({ role: "button", tabindex: "0", "aria-label": "test build loop" });
+  // --------------------------------------------------
+  // SRC head controls
+  // --------------------------------------------------
 
   const clearBtn = src.head.create.div()
     .classlist.set("build-btn build-btn--clear")
     .text.set("clear")
     .css.setMany(BUILD_BTNcss)
-    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "clear input" });
+    .attr.setMany({
+      role: "button",
+      tabindex: "0",
+      "aria-label": "clear input",
+    });
 
   const copyBtn = src.head.create.div()
     .classlist.set("build-btn build-btn--copy")
     .text.set("copy")
     .css.setMany(BUILD_BTNcss)
-    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "copy input" });
+    .attr.setMany({
+      role: "button",
+      tabindex: "0",
+      "aria-label": "copy input",
+    });
 
-  // ---- SRC body: wrap + overlays + textarea ----
+  // --------------------------------------------------
+  // SRC body
+  // --------------------------------------------------
 
   const inputWrap = src.body.create.div()
     .classlist.set("build-textwrap")
@@ -165,16 +183,12 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .data.set("input", "hson")
     .css.setMany(BUILD_TEXTAREAcss);
 
-  // chip is sibling overlay, not a child of textarea (textarea can’t have children)
-  // const chip = inputWrap.create.div()
-  //   .classlist.set("build-chip validity")
-  //   .text.set("");
-
-  // seed value (optional)
   const seed = opts.seed ?? DEFAULT_SEED;
   void textarea.setFormValue(seed, { silent: true });
 
-  // ---- OUT head: tabs (render/html) ----
+  // --------------------------------------------------
+  // OUT head controls
+  // --------------------------------------------------
 
   const toggle = out.head.create.div()
     .classlist.set("build-toggle")
@@ -185,16 +199,26 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .data.set("tab", "render")
     .text.set("render")
     .css.setMany({ ...BUILD_TABcss, ...BUILD_TAB_ACTIVEcss })
-    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "show render preview" });
+    .attr.setMany({
+      role: "button",
+      tabindex: "0",
+      "aria-label": "show render preview",
+    });
 
   const tabHtml = toggle.create.div()
     .classlist.set("build-tab build-tab--html")
     .data.set("tab", "html")
     .text.set("html")
     .css.setMany(BUILD_TABcss)
-    .attr.setMany({ role: "button", tabindex: "0", "aria-label": "show html output" });
+    .attr.setMany({
+      role: "button",
+      tabindex: "0",
+      "aria-label": "show html output",
+    });
 
-  // ---- OUT body: preview host + html box ----
+  // --------------------------------------------------
+  // OUT body
+  // --------------------------------------------------
 
   const outWrap = out.body.create.div()
     .classlist.set("build-outwrap")
@@ -202,14 +226,14 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
   const previewHost = outWrap.create.div()
     .classlist.set("build-previewHost")
-    .css.setMany(BUILD_PREVIEWHOSTcss);
+    .css.setMany(BUILD_PREVIEWcss);
 
   const htmlBox = outWrap.create.textarea()
     .classlist.set("build-htmlBox")
     .data.set("output", "html")
     .css.setMany(BUILD_HTMLBOXcss);
 
-  // default hidden until tab = html
+  // CHANGED: html hidden by default, preview visible
   htmlBox.css.setMany({ display: "none" });
 
   return relay.data({
@@ -222,10 +246,8 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
       textarea,
       wmFmt,
       status,
-      // chip,
       copyBtn,
       clearBtn,
-      // testBtn,
     },
     output: {
       wrap: outWrap,

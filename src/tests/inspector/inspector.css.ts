@@ -33,7 +33,6 @@ export const TD_PREVIEW_ROWcss: Record<string, string> = {
   overflowWrap: "anywhere",
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
   background: $cols_.backdeep,
-  opacity: "0.95",
 };
 export const CLICKABLEcss: Record<string, string> = { cursor: "pointer", userSelect: "none" };
 export const ROW_SUITEcss: Record<string, string> = {

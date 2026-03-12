@@ -3,7 +3,7 @@ import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/liv
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
 import { make_btn } from "../../../widgets/gems-deprecate/make-gems";
-import { PANEL_FRAMEcss, PANEL_SURFACEcss, TEST_SELECTcss, PANEL_BRANCHcss, LOG_BOXcss, TEST_LOGGERcss, CONTROL_ROWcss, RUN_BUTTONcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
+import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, LOG_BOXcss, TEST_LOGGERcss, CLEAR_BTNcss, TEST_PANELcss } from "../panels/demo-panels.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
 import { _test_full_loop } from "hson-live/diagnostics";
@@ -13,6 +13,8 @@ import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 import { PANEL_SAFETYcss } from "../demo.css";
+import type { CssMap } from "hson-live/types";
+import { $grn_, $cols_ } from "../../../consts/colors.consts";
 
 
 export type TestPanelDeps = Readonly<{
@@ -362,3 +364,58 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     return relay.err(err instanceof Error ? err.message : "unknown error:", err);
   }
 }
+export const TEST_ACTION_BTN = {
+    display: "grid",
+    placeItems: "center",
+    borderRadius: "12px",
+    userSelect: "none",
+    cursor: "pointer",
+
+    fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: $txt_.sub,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+
+    // neutral default
+    // background: $cols_.backdeep,
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+} as const;export const CONTROL_ROWcss: CssMap = {
+    ...TEST_PANELcss,
+    // gridRow: "3",
+    gridColumn: "1 / 5",
+    display: "grid",
+    gridTemplateColumns: "1fr 2fr 1fr",
+    gap: "10px",
+    padding: "0",
+    // background: "transparent",
+    border: "none",
+    boxShadow: "none",
+};
+
+export const RUN_BUTTONcss: CssMap = {
+    ...TEST_ACTION_BTN,
+    borderRadius: "18px",
+    background: "rgba(0,0,0,0.18)",
+    transition: "transform 90ms ease, filter 140ms ease",
+    _hover: {
+        background: $grn_.faded,
+        color: $cols_.backdeep
+    }
+};
+
+export const TEST_SELECTcss = {
+    minWidth: "12ch",
+    padding: "10px 8px",
+    borderRadius: "12px",
+    boxSizing: "border-box",
+
+    fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: $txt_.sub,
+    letterSpacing: "0.06em",
+
+    // background: $cols_.backdeep,
+    color: $grn_.std,
+    border: "1px solid rgba(255,255,255,0.10)",
+    outline: "none",
+} as const;
+

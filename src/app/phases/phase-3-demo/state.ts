@@ -2,22 +2,22 @@
 
 // ---- types ----
 
-export type DemoView =
+export type DemoViews =
   | null
   | "about"
   | "test"
   | "parse"
-  | "build";
+  | "build"
+  | "fleurs";
 
 export type WidgetList =
-  | "fleurs"
   | "oklch"
   | "mouse"
   | "motes";
 
 // Readonly type alias used everywhere 
 export type DemoUiState = {
-  currentView: DemoView;
+  currentView: DemoViews;
   // activeWidget?: WidgetList;
 };
 
@@ -57,7 +57,7 @@ export function demo_get_state(): DemoStateRO {
   return state;
 }
 
-export function get_view(): DemoView {
+export function get_view(): DemoViews {
   return state.ui.currentView;
 }
 
@@ -72,7 +72,7 @@ export function demo_update(mut: (draft: DemoState) => void): void {
   emit(prev);
 }
 
-export function set_view(next: DemoView): void {
+export function set_view(next: DemoViews): void {
   // implement via demo_update() so all mutations funnel through one path
   demo_update((s) => {
     s.ui.currentView = next;
@@ -109,4 +109,9 @@ export function demo_subscribe_sel<T>(
 
   listeners.add(wrapped);
   return () => listeners.delete(wrapped);
+}
+
+export function toggle_view(next: Exclude<DemoViews, null>): void {
+  const current = get_view();
+  set_view(current === next ? null : next);
 }

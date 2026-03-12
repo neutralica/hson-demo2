@@ -11,10 +11,9 @@ export type PanelShell = Readonly<{
   bytes: LiveTree;
   copyBtn: LiveTree;
 
-  wrap: LiveTree;       // ADDED
-  wmFmt: LiveTree;      // ADDED (big "JSON")
-  wmEmpty: LiveTree;    // ADDED ("{}" etc)
-  status: LiveTree;     // ADDED (focused-only "invalid/valid/...")
+  wrap: LiveTree;      
+  wmFmt: LiveTree;     
+  status: LiveTree;    
   textarea: LiveTree;
 }>;
 export type Panels = {

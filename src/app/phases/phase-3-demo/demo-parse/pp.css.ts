@@ -1,8 +1,8 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
-import { $txt_ } from "../../../consts/ui-consts";
+import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 
 //// used
 export const PP_HEADERcss: CssMap = {
@@ -26,6 +26,18 @@ export const PP_TEXTWRAPcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
+  background: $cols_.bckgd,
+
+};
+export const PP_GRIDcss: CssMap = {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    width: "100%",
+    height: "100%",
+    minWidth: "0",
+    minHeight: "0",
+  gap: $GRID_GAPstr,
+      overflow: "hidden", 
 };
 
 //// used
@@ -114,5 +126,14 @@ export const PP_COPYBTNcss: CssMap = {
   userSelect: "none",
 
   mixBlendMode: "screen",
+};
+export const PARSING_PANEL_ROOTcss: CssMap = {
+    // display: "grid",
+    width: "100%",
+    height: "100%",
+    minWidth: "0",
+    minHeight: "0",
+    // gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: $GRID_GAPstr,
 };
 

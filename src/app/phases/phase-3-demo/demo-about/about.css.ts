@@ -24,7 +24,7 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
 export const LIST_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",         //  wrap but stay in text column
   lineHeight: "1.55",
-  color: $gry_.mid,            //  list text color here only
+  color: ACID_WASH_OKLCH.lilac,            //  list text color here only
   minWidth: "0",
 };
 
@@ -60,7 +60,7 @@ export const ABOUT_P_TEXTcss:CssMap = {
   letterSpacing: "0.7px",
   fontSize: "18px",
   marginBottom: "10px",
-  color: ACID_WASH_OKLCH.steel,
+  color: ACID_WASH_OKLCH.frost,
   fontFamily: "Trebuchet MS",
   textIndent: "4ch",
   // maxWidth: "60ch",
@@ -76,33 +76,8 @@ export const ABOUT_CSS:CssMap = {
   fontweight: 300,
   fontFamily: "monaco",
   // fontSize: $txt_.sub,
-  lineHeight: "1.75",
+  lineHeight: "1.75rem",
 }
-
-export const MD_TICKcss: CssMap = {
-  // “third color” for the backticks themselves
-  color: $ylw_.faded,
-  fontWeight: "700",
-} as const;
-
-export const MD_CODEcss: CssMap = {
-  // code inner styling (different from surrounding monospace)
-  color: ACID_WASH_OKLCH.ice,
-  fontWeight: "300",
-} as const;
-
-export const MD_PARENcss: CssMap = {
-  // parens + contents
-  color: $blu_.std, // pick whatever fits your palette
-  fontWeight: "700",
-} as const;
-
-// backticks themselves
-export const INLINE_TICKcss: CssMap = {
-  color: ACID_WASH_RGBA.neonGhost,              // muted gray
-  fontWeight: "700",
-  fontFamily: "monaco",
-} as const;
 
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
@@ -127,7 +102,7 @@ export const CODE_PAREN_INNERcss: CssMap = {
 } as const;
 
 export const CODE_COMMENTScss = {
-  color: ACID_WASH_OKLCH.sage
+  color: ACID_WASH_OKLCH.fern
 };
 // // CHANGED: render tokens into a container.
 // // This container should be an element you already created (p/li/etc).
@@ -157,7 +132,7 @@ export const CODE_COMMENTScss = {
 //   }
 // }
 export const CODE_QUOTEcss = {
-    color: ACID_WASH_OKLCH.orchid,              // muted gray
+    color: ACID_WASH_OKLCH.bruisedPlum,              // muted gray
   fontWeight: "700",
 };
 export const CODE_EQUALSscss = {

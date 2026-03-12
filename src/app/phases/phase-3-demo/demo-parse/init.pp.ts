@@ -97,7 +97,7 @@ export function init_parsing_panels(pp: Panels): void {
   };
 
   // CENTRAL: derive muting + interactivity from (active, activeIsInvalid)
-  const sync_ui_state = (): void => {
+  const syncUiState = (): void => {
     for (const f of FMTS) {
       const p = pp.panels[f];
       const isActive = active === f;
@@ -202,7 +202,7 @@ export function init_parsing_panels(pp: Panels): void {
         activeIsInvalid = true;
         setStatus(origin, "invalid");
         srcParts.bytes.text.set(`INVALID`);
-        sync_ui_state();
+        syncUiState();
       }
       inProgress = false;
       return;
@@ -241,7 +241,7 @@ export function init_parsing_panels(pp: Panels): void {
             activeIsInvalid = false;
             clearTimer();
             setStatus(origin, "valid");
-            sync_ui_state();
+            syncUiState();
           }
 
           inProgress = false;
@@ -256,7 +256,7 @@ export function init_parsing_panels(pp: Panels): void {
             if (active === origin) {
               activeIsInvalid = true;
               setStatus(origin, "invalid");
-              sync_ui_state();
+              syncUiState();
             }
             inProgress = false;
             return;
@@ -292,13 +292,13 @@ export function init_parsing_panels(pp: Panels): void {
         activeIsInvalid = false;
         clearTimer();
         setStatus(origin, "valid");
-        sync_ui_state();
+        syncUiState();
       }
     } catch {
       if (active === origin) {
         activeIsInvalid = true;
         setStatus(origin, "invalid");
-        sync_ui_state();
+        syncUiState();
       }
       // do NOT overwrite other panels on invalid
     } finally {
@@ -325,14 +325,14 @@ export function init_parsing_panels(pp: Panels): void {
 
       // optimistic, but update() will settle it
       activeIsInvalid = false;
-      sync_ui_state();
+      syncUiState();
 
       // now set status
       const v = getValue(p);
       if (v.trim().length === 0) {
         activeIsInvalid = true;
         // setStatus(fmt, "invalid");
-        sync_ui_state();
+        syncUiState();
       } else {
         setStatus(fmt, "typing");
       }
@@ -354,7 +354,7 @@ export function init_parsing_panels(pp: Panels): void {
       // rule: status only visible on focused panel
       setStatus(fmt, "idle");
 
-      sync_ui_state();
+      syncUiState();
     });
 
     p.textarea.listen.onInput( () => update(fmt));
@@ -365,7 +365,7 @@ export function init_parsing_panels(pp: Panels): void {
   activeIsInvalid = false;
   clearTimer();
   setFocusedOnly(null);
-  sync_ui_state();
+  syncUiState();
 
   for (const fmt of FMTS) {
     const parts = pp.panels[fmt];

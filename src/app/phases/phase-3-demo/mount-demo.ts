@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss } from "./demo.css";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITI } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
@@ -12,10 +12,10 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $ylw_, ACID_WASH_OKLCH, LETTER_COLORcandy } from "../../consts/colors.consts";
+import { $blu_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { get_view, set_view, demo_subscribe } from "./state";
+import { get_view, set_view, demo_subscribe, type DemoViews, toggle_view } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./demo-build/build";
@@ -26,6 +26,10 @@ import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
 import { mount_motes2 } from "./motes2/mount-motes2";
 import { MOUSE_HOSTcss } from "./demo-mouse/mouse.css";
 import { JSON_FIXTURES_DEV } from "../../../../data-old/data/json-fixtures";
+import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./fleurs/fleurs.css";
+import { spawn_flower } from "./fleurs/fleurs";
+import { ALL_MOTEScss } from "./motes2/motes.css";
+// import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -38,7 +42,7 @@ let _testsWired = false;
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.globals.invoke();
-``
+
   const demo = make_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
@@ -51,74 +55,69 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .classlist.add("demo screen fx")
     .css.setMany(DEMO_SCREEN_FXcss);
 
-  const graffiti = make_div_id(screenFx, "hson-graffiti")
-    .text.set(HSON_LIVE_GRAFFITI)
-    .css.setMany({
-      position: "fixed",
-      left: "50%",
-      top: "50%",
-      transform: "translate(-50%, -50%)",
-      whiteSpace: "pre",
-      fontFamily: "monospace",
-      // height: "50%",
-      // width: "50%",
-      color: ACID_WASH_OKLCH.smokeRose,
-      maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
-      boxSizing: "border-box"
 
+  const fleurOverlay = make_div_id(screenFx, "fleurs-overlay")
+    .css.setMany(FLOWER_OVERLAYcss);
+
+  const fleurSvg = fleurOverlay.create.tags(["svg"]).first()!;
+  fleurSvg
+    .id.set("fleurs-field")
+    .css.setMany(FLOWER_FIELDcss)
+    .attr.setMany({
+      xmlns: "http://www.w3.org/2000/svg",
+      width: "100%",
+      height: "100%",
+      preserveAspectRatio: "xMidYMid meet",
     });
 
-  const menuContainer = make_div_id(screenFx, "menu-container")
-    .css.setMany(MENU_CONTAINERcss);
+  // create.tags(["g" | "circle" | ...]) currently does not produce rendering
+  // HTML nodes when appended after mount: append SVG-rooted flower branches instead
+  const fleurLayer = fleurSvg;
 
-  const motes = make_div_id(screenFx, "motes")
-    .classlist.add("demo motes")
-    .css.setMany({
-      position: "fixed",
-      left: "0",
-      top: "0",
-      height: "100%",
-      width: "100%",
-      pointerEvents: "none",
-    })
+  function syncFleurViewbox(): void {
+    const rect = fleurOverlay.dom.rect();
+    if (!rect) {
+      console.log("[fleurs] no overlay rect");
+      return;
+    }
+
+    const w = Math.max(1, rect.width);
+    const h = Math.max(1, rect.height);
+    fleurSvg.attr.set("viewbox", `0 0 ${w} ${h}`);
+  }
+  const graffiti = make_div_id(screenFx, "hson-graffiti").text.set(HSON_LIVE_GRAFFITI).css.setMany(HSON_GRAFFITIcss);
+
+  const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
+  const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
   mount_motes2(motes);
-
-  const titleBox = make_div_id(menuContainer, "title-box")
-    .css.setMany(TITLE_BOXcss)
-
-  const headline = make_div_id(titleBox, "hson-headline")
-    .css.setMany(DEMO_MAIN_LOGOcss);
-
-  const uiRoot = make_div_id(screenFx, "ui-root")
-    .css.setMany(UI_ROOTcss);
-
-  const layoutGrid = make_div_id(uiRoot, "layout-grid")
-    .css.setMany(LAYOUT_GRIDcss);
-
-  const menuBox = make_div_id(menuContainer, "menu-box")
-    .css.setMany(MENU_LISTcss);
+  const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
+  const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
+  const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
+  const layoutGrid = make_div_id(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
+  const menuBox = make_div_id(menuContainer, "menu-box").css.setMany(MENU_LISTcss);
 
   const menu = {
-    aboutBtn: make_div_id_text(menuBox, `${$ABOUT}-button`, $ABOUT),
-    testBtn: make_div_id_text(menuBox, `${$TEST}-button`, $TEST),
-    parseBtn: make_div_id_text(menuBox, `${$PARSE}-button`, $PARSE),
-    buildBtn: make_div_id_text(menuBox, `${$BUILD}-button`, $BUILD),
+    aboutBtn: make_div_id_text(menuBox, `${$ABOUT}-button`, `[${$ABOUT}]`),
+    testBtn: make_div_id_text(menuBox, `${$TEST}-button`, `[${$TEST}]`),
+    parseBtn: make_div_id_text(menuBox, `${$PARSE}-button`, `[${$PARSE}]`),
+    buildBtn: make_div_id_text(menuBox, `${$BUILD}-button`, `[${$BUILD}]`),
     // oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
-    mouseBtn: make_div_id_text(menuBox, `${$MOUSE}-button`, `${$MOUSE}`),
-    // consoleBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `${$FLEURS}`),
+    mouseBtn: make_div_id_text(menuBox, `${$MOUSE}-button`, `[${$MOUSE}]`),
+    fleurBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `[${$FLEURS}]`),
 
   } as const;
 
   keys_of(menu).forEach((k) => {
     menu[k].css.setMany({
       ...MAIN_MENUcss,
-      color: $blu_.candy,
+      color: $blu_.muted,
     });
   });
 
   LETTER_LOWS.forEach(l => {
+    console.log(LETTER_COLORoklch[l]);
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: LETTER_COLORcandy[l]
+      color: LETTER_COLORoklch[l]
     });
   });
   gcss.rule("ua:form-fields:transparent", "textarea, input, select, button").setMany({
@@ -132,17 +131,29 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     display: "none",
   });
 
-  LETTER_LOWS.forEach(l => {
-    gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: LETTER_COLORcandy[l]
-    });
+  gcss.rule("global-scrollbar", "*").setMany({
+    scrollbarWidth: "thick",
+    scrollbarColor: "rgba(160,220,255,0.45) rgba(0,0,0,0.35)"
+  });
+  gcss.rule("::-webkit-scrollbar", "::-webkit-scrollbar").setMany({
+    width: "30px",
+    height: "10px"
   });
 
-  gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
-    visibility: "hidden",
-    height: "0",
-    display: "none",
+  gcss.rule("scroll-thumb-hover", "::-webkit-scrollbar-thumb:hover").setMany({
+    background: "rgba(180,230,255,0.65)"
   });
+
+  gcss.rule("scroll-thumb", "::-webkit-scrollbar-thumb").setMany({
+    background: "rgba(160,220,255,0.45)",
+    borderRadius: "6px",
+    border: "2px solid rgba(0,0,0,0.45)"
+  });
+
+  gcss.rule("::-webkit-scrollbar-track", "::-webkit-scrollbar-track",).setMany({
+    background: "rgba(0,0,0,0.35)"
+  });
+
 
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
     const span = make_span_id(headline, `${k}-letter`)
@@ -156,9 +167,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
   const mouseSlot = make_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
 
-  const toggleHide = (lt: LiveTree): void => {
-    lt.classlist.toggle($PANEL_HIDDEN);
-  };
+  const toggleHide = (lt: LiveTree): void => { lt.classlist.toggle($PANEL_HIDDEN); };
 
   // views stack in viewSlot
   const parse = mount_panel_simple(demoSlot, "parse");
@@ -169,52 +178,70 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .classlist.add($PANEL_HIDDEN)
     .css.setMany(MOUSE_HOSTcss);
   const mr = relay_data(mount_mouse_panel(mouseHost));
-  const ap = relay_data(mount_about_panels(about.surface, ABOUT_DOCS));
-  const tp = relay_data(mount_test_panels(test.surface));
-  const pp = relay_data(mount_parsing_panels(parse.surface));
-  const bp = relay_data(mount_build_panels(build.surface));
+  const ap = relay_data(mount_about_panels(about, ABOUT_DOCS));
+  const tp = relay_data(mount_test_panels(test));
+  const pp = relay_data(mount_parsing_panels(parse));
+  const bp = relay_data(mount_build_panels(build));
 
+  syncFleurViewbox();
 
   const applyView = (): void => {
     const view = get_view();
-    // main views
-    _hide(parse.panel);
-    _hide(test.panel);
-    _hide(build.panel);
-    _hide(about.panel);
 
-    if (view === "parse") _unhide(parse.panel);
-    else if (view === "test") _unhide(test.panel);
-    else if (view === "build") _unhide(build.panel);
-    else if (view === "about") _unhide(about.panel);
+    _hide(parse);
+    _hide(test);
+    _hide(build);
+    _hide(about);
+
+    if (view === "parse") { _unhide(parse); }
+    else if (view === "test") { _unhide(test); }
+    else if (view === "build") { _unhide(build); }
+    else if (view === "about") { _unhide(about); }
+
+    apply_menu_active(menu, view);
+
   };
-
+  function after_paint(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+  }
   demo_subscribe(() => applyView());
   applyView();
+  // wait until layout exists before syncing SVG coordinate space
+  await after_paint();
+  syncFleurViewbox();
 
-  if (!_testsWired) {
-    _testsWired = true;
-
+  function apply_menu_active(menu: any, view: DemoViews): void {
+    menu.aboutBtn.data.set("active", view === "about" ? "true" : null);
+    menu.testBtn.data.set("active", view === "test" ? "true" : null);
+    menu.parseBtn.data.set("active", view === "parse" ? "true" : null);
+    menu.buildBtn.data.set("active", view === "build" ? "true" : null);
+    menu.fleurBtn.data.set("active", view === "fleurs" ? "true" : null);
   }
 
-  menu.parseBtn.listen.onClick(() => {
-    set_view("parse");
-  });
+  if (!_testsWired) { _testsWired = true; }
+  menu.parseBtn.listen.stopProp().onClick(() => { toggle_view("parse"); });
+  menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });
+  menu.aboutBtn.listen.stopProp().onClick(() => { toggle_view("about"); });
+  menu.buildBtn.listen.stopProp().onClick(() => { toggle_view("build"); });
+  menu.fleurBtn.listen.stopProp().onClick(() => {
+    if (get_view() === "fleurs") { fleurLayer.empty() }
+    toggle_view("fleurs")
+  })
+  menu.mouseBtn.listen.stopProp().onClick(() => { toggleHide(mouseHost); });
+  screenFx.listen.onClick((ev: MouseEvent) => {
+    if (get_view() !== "fleurs") return;
 
-  menu.testBtn.listen.onClick(() => {
-    set_view("test");
-  });
+    const rect = fleurOverlay.dom.rect();
+    if (!rect) return;
 
-  menu.aboutBtn.listen.onClick(() => {
-    set_view("about");
-  });
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
 
-  menu.buildBtn.listen.onClick(() => {
-    set_view("build");
+    spawn_flower(fleurLayer, x, y);
   });
-  menu.mouseBtn.listen.onClick(() => {
-    toggleHide(mouseHost);
-  });
-
   return relay.ok();
 }
