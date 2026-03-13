@@ -3,6 +3,7 @@ import { type Outcome, relay } from "intrastructure";
 import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { make_div_class, make_div_id } from "../../../utils/makers";
+import { $cols_ } from "../../../consts/colors.consts";
 
 // ---- factory ----
 
@@ -32,14 +33,14 @@ function mouse_factory(host: LiveTree): MousePanelRig {
 
   // reusable monospace baseline for this widget
   const MONOcss: CssMap = {
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontFamily: "Monaco",
     fontSize: "12px",
     letterSpacing: "0.06em",
   } as const;
 
   // grid-cell clamp so long values don't push neighbors
   const CELL_CLAMPcss: CssMap = {
-    minWidth: "0", // CRITICAL: allows overflow/ellipsis inside grid cells
+    minWidth: "0",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
@@ -48,26 +49,15 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   const root = make_div_id(host, "mouse-panel-root")
     .classlist.add("mouse-panel")
     .css.setMany({
-      // CHANGED: was position: "fixed" + bottom/left.
-      // That pins it to the viewport and ignores the menu column layout.
       position: "relative",
 
-      // CHANGED: remove bottom/left so parent controls placement
-      // bottom: "0",
-      // left: "0",
-
       display: "grid",
-
-      // CHANGED: if you want vertical stacking, this is fine,
-      // but it only affects internal layout.
       gridTemplateRows: "auto 1fr",
       gap: "10px",
 
       minWidth: "0",
       minHeight: "0",
       maxHeight: "70vh",
-
-      // Optional: keep it from stretching weirdly
       width: "100%",
       maxWidth: "28rem",
     }
@@ -158,6 +148,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     minWidth: "0",
     minHeight: "0",
     alignContent: "start",
+    background: $cols_.backdeep
   });
 
   const rows: Array<{
@@ -172,7 +163,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
       ...ROW_GRIDcss,
       ...MONOcss,
       opacity: "0.7",
-      letterSpacing: "0.04em",
+      // letterSpacing: "12px",
     });
 
   hdr.create.div().text.set("#").css.setMany({ ...CELL_CLAMPcss, opacity: "0.7" });

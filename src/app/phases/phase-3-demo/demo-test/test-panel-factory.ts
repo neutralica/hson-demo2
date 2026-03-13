@@ -66,7 +66,7 @@ function test_panel_factory(): Outcome<TestPanel> {
   branch.css.setMany(PANEL_BRANCHcss);
 
   // -------------------------
-  // small console
+  // small log/console
   // -------------------------
   const logBox = branch.create.div()
     .id.set("test-log-box")
@@ -374,7 +374,6 @@ export const TEST_ACTION_BTN = {
 
   fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   fontSize: $txt_.sub,
-  letterSpacing: "0.1em",
   textTransform: "uppercase",
 
   // neutral default
@@ -415,7 +414,6 @@ export const TEST_SELECTcss = {
 
   fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   fontSize: $txt_.sub,
-  letterSpacing: "0.06em",
 
   // background: $cols_.backdeep,
   color: $grn_.std,

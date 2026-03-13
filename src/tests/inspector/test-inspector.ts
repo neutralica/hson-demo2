@@ -79,7 +79,8 @@ export function create_inspector(
   const root = make_div_id(host, "inspector").css.setMany({
     ...PANEL_SAFETYcss,
     width: "100%",
-    height: "100%",
+    height: "fit-content",
+    // height: "100%",
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
@@ -467,7 +468,7 @@ export function create_inspector(
 
   // baseline
   root.css.setMany({
-    padding: "10px",
+    // padding: "10px",
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
     fontSize: $txt_.main,
     lineHeight: "1.35",

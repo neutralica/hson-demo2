@@ -1,22 +1,24 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
+export const MENU_TEXT_COL = ACID_WASH_OKLCH.straw;
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: "monospace",
   fontSize: $txt_.heading,
   fontWeight: "400",
   userSelect: "none",
+  color: MENU_TEXT_COL,
   _hover: {
     fontWeight: "700",
-    background: $grn_.muted,
+    background: $blu_.muted,
     color: $cols_.backdeep
   },
   _active: {
-    background: $ylw_.muted,
+    background: $grn_.muted,
     color: $cols_.backdeep
   }
 }
@@ -152,7 +154,7 @@ export const PANEL_SAFETYcss: CssMap = {
   minHeight: "0",
 };
 
-export const VIEW_SLOTcss:CssMap = {
+export const VIEW_SLOTcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
@@ -162,17 +164,18 @@ export const VIEW_SLOTcss:CssMap = {
   pointerEvents: "auto",
 };
 
-export const HSON_GRAFFITIcss ={
-      position: "fixed",
-      left: "50%",
-      top: "50%",
-      transform: "translate(-50%, -50%)",
-      whiteSpace: "pre",
-      fontFamily: "monospace",
-      // height: "50%",
-      // width: "50%",
-      color: ACID_WASH_OKLCH.orchid,
-      maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
-      boxSizing: "border-box",
-mixBlendMode: "multiply",
-    }
+export const HSON_GRAFFITIcss: CssMap = {
+  position: "fixed",
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
+  whiteSpace: "pre",
+  fontFamily: "monospace",
+  // height: "50%",
+  // width: "50%",
+  color: ACID_WASH_OKLCH.orchid,
+  maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
+  boxSizing: "border-box",
+  textShadow: "0 0 1px " + $cols_.backdeep,
+  mixBlendMode: "multiply",
+}

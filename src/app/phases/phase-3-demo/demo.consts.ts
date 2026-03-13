@@ -55,7 +55,7 @@ export const $PARSING_PANELS_ROOT = "parsing-panels-root";
 
 export const $PP_HEAD = "pp-head";
 
-export const HSON_LIVE_GRAFFITI = `
+export const HSON_LIVE_GRAFFITIstr = `
 
                .x+=:.                                        ..      .       _                    
   .uef^"      z'    ^%                                    x .d88"    @88>    u                     

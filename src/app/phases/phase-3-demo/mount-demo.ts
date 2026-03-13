@@ -3,8 +3,8 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITI } from "./demo.consts";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL } from "./demo.css";
+import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./demo-test/test-panel-factory";
@@ -85,7 +85,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     const h = Math.max(1, rect.height);
     fleurSvg.attr.set("viewbox", `0 0 ${w} ${h}`);
   }
-  const graffiti = make_div_id(screenFx, "hson-graffiti").text.set(HSON_LIVE_GRAFFITI).css.setMany(HSON_GRAFFITIcss);
+  const graffiti = make_div_id(screenFx, "hson-graffiti").text.set(HSON_LIVE_GRAFFITIstr).css.setMany(HSON_GRAFFITIcss);
 
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
@@ -112,12 +112,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .classlist.set("view-button")
       .css.setMany({
       ...MAIN_MENUcss,
-      color: ACID_WASH_OKLCH.ember,
     });
   });
 
   LETTER_LOWS.forEach(l => {
-    console.log(LETTER_COLORoklch[l]);
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
       color: LETTER_COLORoklch[l]
     });
@@ -158,7 +156,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   
   gcss.rule("menu-active-view", '.view-button[data-active]',).setMany({
     color: $cols_.backdeep,
-    background: $blu_.muted,
+    background: MENU_TEXT_COL,
     fontWeight: "700",
     
   });

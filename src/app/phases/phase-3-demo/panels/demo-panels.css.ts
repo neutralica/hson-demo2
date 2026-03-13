@@ -95,7 +95,6 @@ export const TEST_STATUS_CHIPcss: CssMap = {
 } as const;
 
 export const TEST_LOGGERcss: CssMap = {
-    // ...SCROLLERcss,                  // nah
     borderRadius: "12px",
     padding: "10px",
     boxSizing: "border-box",
@@ -112,15 +111,16 @@ export const TEST_LOGGERcss: CssMap = {
     whiteSpace: "wrap",
     letterSpacing: "0.1em",
     lineHeight: "1.5rem",
-    opacity: "0.92",
+    // opacity: "0.92",
     
 } as const;
 
 export const CLEAR_BTNcss: CssMap = {
     ...TEST_ACTION_BTN,
     borderRadius: "18px",
-    background: "rgba(0,0,0,0.18)",
+    background: $cols_.bckgd,
     transition: "transform 90ms ease, filter 140ms ease",
+    
     _hover: {
         background: "orange",
         color: $cols_.backdeep,
@@ -130,6 +130,7 @@ export const CLEAR_BTNcss: CssMap = {
 export const LOG_BOXcss: CssMap = {
     overflow: "hidden",
     gridColumn: "1 / 5",
+    background: $cols_.backdeep,
 
 
 };
@@ -161,5 +162,5 @@ export const PANEL_BRANCHcss: CssMap = {
     boxSizing: "border-box",
     gridTemplateColumns: `${$CHIP_WIDTHstr} ${$CHIP_WIDTHstr}`,
     gridTemplateRows: "auto " + $CHIP_WIDTHstr,
-    background: "rgba(0,0,0, 1)",
+    background: back_w_alpha(0.7),
 };
