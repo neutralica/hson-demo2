@@ -12,7 +12,7 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
+import { $blu_, $cols_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { get_view, set_view, demo_subscribe, type DemoViews, toggle_view } from "./state";
@@ -23,7 +23,7 @@ import { mount_build_panels } from "./demo-build/mount-build-panel";
 import { mount_about_panels } from "./demo-about/mount-about";
 import { ABOUT_DOCS } from "./demo-about/about.consts";
 import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
-import { mount_motes2 } from "./motes2/mount-motes2";
+import { mount_motes } from "./motes2/mount-motes2";
 import { MOUSE_HOSTcss } from "./demo-mouse/mouse.css";
 import { JSON_FIXTURES_DEV } from "../../../../data-old/data/json-fixtures";
 import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./fleurs/fleurs.css";
@@ -89,7 +89,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
-  mount_motes2(motes);
+  mount_motes(motes);
   const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
   const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
@@ -108,9 +108,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   } as const;
 
   keys_of(menu).forEach((k) => {
-    menu[k].css.setMany({
+    menu[k]
+      .classlist.set("view-button")
+      .css.setMany({
       ...MAIN_MENUcss,
-      color: $blu_.muted,
+      color: ACID_WASH_OKLCH.ember,
     });
   });
 
@@ -152,6 +154,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   gcss.rule("::-webkit-scrollbar-track", "::-webkit-scrollbar-track",).setMany({
     background: "rgba(0,0,0,0.35)"
+  });
+  
+  gcss.rule("menu-active-view", '.view-button[data-active]',).setMany({
+    color: $cols_.backdeep,
+    background: $blu_.muted,
+    fontWeight: "700",
+    
   });
 
 

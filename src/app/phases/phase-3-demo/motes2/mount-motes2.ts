@@ -3,15 +3,14 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay, relay_data, relay_void } from "intrastructure";
 import { _freeze } from "../../../../tests/tests.consts";
-import { config_mote2, motes_init2 } from "./motes-init";
+import { config_mote, motes_init2 } from "./motes-init";
 import type { Mote, MotesOpts, MoteStyle } from "./motes2.types";
 import type { MotesRig } from "./motes2.types";
 
-export function mount_motes2(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
+export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
   try {
-    const opts = relay_data(normalize_motes_opts2(optsIn));
-
-    const rig = relay_data(motes2_factory(host, opts));
+    const opts = relay_data(normalize_motes_opts(optsIn));
+    const rig = relay_data(mote_factory(host, opts));
     relay_void(motes_init2(rig, opts));
 
     return relay.data(rig);
@@ -21,7 +20,7 @@ export function mount_motes2(host: LiveTree, optsIn: Partial<MotesOpts> = {}): O
 }
 
 // ---------------------------
-function motes2_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
+function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
   // stable root id so remount doesn’t duplicate
   const old = host.find.byId("motes2-root");
   if (old) old.removeSelf();
@@ -59,7 +58,7 @@ function motes2_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
 // ---------------------------
 
 
-export function normalize_motes_opts2(inOpts: Partial<MotesOpts>): Outcome<MotesOpts> {
+export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesOpts> {
   return relay.data({
     char: inOpts.char ?? "*",
 

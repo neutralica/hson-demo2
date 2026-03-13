@@ -43,7 +43,7 @@ export const PANEL_SURFACEcss: CssMap = {
 export const PANEL_FRAMEcss = {
     // backgroundColor: back_w_alpha(0.4),
     // backdropFilter: "blur(8px)",
-    maxHeight: "100%",
+    // maxHeight: "100%",
     // outline: `1px solid rgba(10,150,220,1)`,
     color: $blu_.std,
     fontFamily: "monospace",
@@ -56,10 +56,11 @@ export const PANELcss: CssMap = {
     minHeight: "0",
     minWidth: "0",
     width: "100%",
-    height: "100%",
     padding: "10px",
     borderRadius: "12px",
     boxSizing: "border-box",
+    overflowY: "auto",
+    maxHeight: "100%",
 }
 
 export const PANEL_TEXTAREAcss = {

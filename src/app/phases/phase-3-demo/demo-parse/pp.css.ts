@@ -29,16 +29,20 @@ export const PP_TEXTWRAPcss: CssMap = {
   background: $cols_.bckgd,
 
 };
+
 export const PP_GRIDcss: CssMap = {
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gridTemplateRows: "minmax(0, 1fr)",
+  gridAutoRows: "minmax(0, 1fr)",
   width: "100%",
-  height: "100%",
   minWidth: "0",
   minHeight: "0",
   gap: $GRID_GAPstr,
   overflow: "hidden",
+
+  // CHANGED: fill the available row instead of collapsing
+  alignSelf: "stretch",
+  height: "auto",
 };
 
 //// used
@@ -128,13 +132,14 @@ export const PP_COPYBTNcss: CssMap = {
 
   mixBlendMode: "screen",
 };
+
 export const PARSING_PANEL_ROOTcss: CssMap = {
-  // display: "grid",
+  display: "grid",
+  gridTemplateRows: "auto minmax(0, 1fr)",
   width: "100%",
   height: "100%",
   minWidth: "0",
   minHeight: "0",
-  // gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
   gap: $GRID_GAPstr,
+  overflow: "hidden",
 };
-

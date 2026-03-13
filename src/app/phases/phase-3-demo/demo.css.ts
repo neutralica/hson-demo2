@@ -9,6 +9,7 @@ export const MAIN_MENUcss: CssMap = {
   fontFamily: "monospace",
   fontSize: $txt_.heading,
   fontWeight: "400",
+  userSelect: "none",
   _hover: {
     fontWeight: "700",
     background: $grn_.muted,

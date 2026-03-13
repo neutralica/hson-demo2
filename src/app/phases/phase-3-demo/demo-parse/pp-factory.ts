@@ -54,7 +54,11 @@ const header = root.create.div()
   .text.set("~parsing panels~");
 
 const panelGrid = root.create.div()
-  .css.setMany(PP_GRIDcss);
+  .css.setMany({
+    ...PP_GRIDcss,
+    // gridRow: "2 / 3",
+    
+  });
 
   const panels = {} as Record<Fmt, PanelShell>;
 
@@ -106,7 +110,7 @@ const panelGrid = root.create.div()
     textarea.data.set("input", fmt);
     textarea.css.setMany(PANEL_TEXTAREAcss);
 
-    const chip = textarea.create.span();
+    const chip = status.create.span();
     chip.classlist.add("chip", "validity");
     chip.text.set(""); // focused-only; start empty
 
