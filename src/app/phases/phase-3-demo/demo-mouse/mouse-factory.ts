@@ -3,7 +3,7 @@ import { type Outcome, relay } from "intrastructure";
 import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { make_div_class, make_div_id } from "../../../utils/makers";
-import { $cols_ } from "../../../consts/colors.consts";
+import { $cols_, back_w_alpha } from "../../../consts/colors.consts";
 
 // ---- factory ----
 
@@ -110,7 +110,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     height: "140px",
     borderRadius: "999px",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-    background: "rgba(255,255,255,0.03)",
+    background: back_w_alpha(0.7),
     overflow: "hidden",
   });
 

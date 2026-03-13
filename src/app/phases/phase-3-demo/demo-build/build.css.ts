@@ -1,7 +1,7 @@
 // build.css.ts
 import type { CssMap } from "hson-live/types";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
-import { $blu_, $cols_, $grn_, $ylw_ } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
 import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
 import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
 
@@ -74,7 +74,7 @@ export const BUILD_TEXTAREAcss: CssMap = {
   outline: "none",
 
   background: $cols_.backdeep,
-  color: $blu_.baby,
+  color: $cols_.txtmain,
   fontSize: $txt_.sub,
   padding: "10px",
 };

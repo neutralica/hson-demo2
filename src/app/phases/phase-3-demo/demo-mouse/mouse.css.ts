@@ -13,7 +13,7 @@ export const MOUSE_HOSTcss = {
     fontFamily: "monospace",
     // OPTIONAL: if you want the same glass feel as panels
     // background: $cols_.bckgd,
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+    // boxShadow: "inset 0 0 0 1px rgba(255,255,255,1)",
     borderRadius: "14px",
     padding: "12px",
   }

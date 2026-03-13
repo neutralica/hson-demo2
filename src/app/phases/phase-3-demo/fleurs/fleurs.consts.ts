@@ -1,8 +1,5 @@
-import type { CenterColorName, FlowerColorBank } from "./fleurs.types";
-
 
 export const OKLCH_FLEURS = {
-  petal: {
     fadedGold:   "oklch(0.76 0.11 92)",
     brass:       "oklch(0.70 0.09 82)",
     pollen:      "oklch(0.80 0.12 102)",
@@ -26,29 +23,14 @@ export const OKLCH_FLEURS = {
     limeTint:    "oklch(0.79 0.13 125)",
     sourSage:    "oklch(0.74 0.10 138)",
     mossGlow:    "oklch(0.68 0.09 145)",
-  },
-
-  center: {
     oliveCore:   "oklch(0.44 0.09 110)",
     plumCore:    "oklch(0.38 0.10 315)",
     emberCore:   "oklch(0.46 0.11 28)",
     navyCore:    "oklch(0.33 0.09 255)",
     barkCore:    "oklch(0.40 0.07 55)",
     greenCore:   "oklch(0.41 0.10 135)",
-  },
-
-  leaf: {
     dustyLeaf:   "oklch(0.60 0.08 145)",
     sageLeaf:    "oklch(0.66 0.07 155)",
     dimFern:     "oklch(0.54 0.08 150)",
-  },
+
 };
-
-
-export const CENTER_BY_BANK: Record<FlowerColorBank, readonly CenterColorName[]> = {
-  "rust-warm": ["emberCore", "barkCore", "oliveCore"],
-  "cool-terminal": ["navyCore", "plumCore", "greenCore"],
-  "sickly-garden": ["oliveCore", "greenCore", "barkCore"],
-  "violet-cyan": ["navyCore", "plumCore", "oliveCore"],
-  "mixed-acid": ["oliveCore", "plumCore", "emberCore", "navyCore"],
-} as const;

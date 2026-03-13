@@ -111,8 +111,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     menu[k]
       .classlist.set("view-button")
       .css.setMany({
-      ...MAIN_MENUcss,
-    });
+        ...MAIN_MENUcss,
+      });
   });
 
   LETTER_LOWS.forEach(l => {
@@ -153,12 +153,12 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   gcss.rule("::-webkit-scrollbar-track", "::-webkit-scrollbar-track",).setMany({
     background: "rgba(0,0,0,0.35)"
   });
-  
+
   gcss.rule("menu-active-view", '.view-button[data-active]',).setMany({
     color: $cols_.backdeep,
     background: MENU_TEXT_COL,
     fontWeight: "700",
-    
+
   });
 
 
