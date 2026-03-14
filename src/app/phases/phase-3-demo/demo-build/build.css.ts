@@ -55,7 +55,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   height: "100%",
   overflow: "hidden",
   borderRadius: "10px",
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
@@ -73,7 +73,7 @@ export const BUILD_TEXTAREAcss: CssMap = {
   border: "0",
   outline: "none",
 
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   color: $cols_.txtmain,
   fontSize: $txt_.sub,
   padding: "10px",
@@ -125,7 +125,7 @@ export const BUILD_BTNcss: CssMap = {
   ...TEST_ACTION_BTN,
   padding: "8px 10px",
   borderRadius: "12px",
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   color: $ylw_.candy,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   flexShrink: "0",
@@ -166,7 +166,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   boxSizing: "border-box",
   padding: "10px",
   borderRadius: "10px",
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
@@ -186,7 +186,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
 
   padding: "10px",
   color: $grn_.std,
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
 };
 
 export const BUILD_PANEcss: CssMap = {

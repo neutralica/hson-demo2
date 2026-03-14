@@ -1,7 +1,7 @@
 // mount-demo.ts
 
 import { CssManager, hson, type LiveTree } from "hson-live";
-import { make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
+import { make_div_class, make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
@@ -12,7 +12,7 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $cols_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { get_view, set_view, demo_subscribe, type DemoViews, toggle_view } from "./state";
@@ -29,6 +29,7 @@ import { JSON_FIXTURES_DEV } from "../../../../data-old/data/json-fixtures";
 import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./fleurs/fleurs.css";
 import { spawn_flower } from "./fleurs/fleurs";
 import { ALL_MOTEScss } from "./motes2/motes.css";
+import { PP_TEXTWRAPcss } from "./demo-parse/pp.css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -86,12 +87,32 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     fleurSvg.attr.set("viewbox", `0 0 ${w} ${h}`);
   }
   const graffiti = make_div_id(screenFx, "hson-graffiti").text.set(HSON_LIVE_GRAFFITIstr).css.setMany(HSON_GRAFFITIcss);
-
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
   mount_motes(motes);
   const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
   const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
+  const liveDemoSign = make_div_class(headline, "live-demo sign")
+    .text.set("hson liveDemo")
+    .css.setMany({
+      ...PP_TEXTWRAPcss,
+      fontFamily: "monaco",
+      fontSize: "2rem",
+      textWrap: "nowrap",
+      lineHeight: "3rem",
+      color: ACID_WASH_RGBA.neonGhost,
+    });
+  const pocSign = make_div_class(headline, "proof sign")
+    .text.set("~proof of concept~")
+    .css.setMany({
+      ...PP_TEXTWRAPcss,
+      textAlign: "left",
+      fontFamily: "monaco",
+      fontSize: "1rem",
+      textWrap: "nowrap",
+      marginBottom: "1.5rem",
+      color: $blu_.muted
+    });
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
   const layoutGrid = make_div_id(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
   const menuBox = make_div_id(menuContainer, "menu-box").css.setMany(MENU_LISTcss);
@@ -155,20 +176,26 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
   gcss.rule("menu-active-view", '.view-button[data-active]',).setMany({
-    color: $cols_.backdeep,
-    background: MENU_TEXT_COL,
-    fontWeight: "700",
+    color: $cols_.bckdeep,
+    background: ACID_WASH_RGBA.strawSmoke,
+    fontWeight: "100",
+    _hover: {
+      background: ACID_WASH_RGBA.strawSmoke,
+      fontWeight: "100",
+      color: $cols_.bckdeep,
+
+    },
 
   });
 
 
-  const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
-    const span = make_span_id(headline, `${k}-letter`)
-      .text.set(HSONlower[k])
-      .classlist.add(shade_class(k))
-      .css.setMany($T$GHSONcss)
-    return span;
-  });
+  // const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
+  //   const span = make_span_id(headline, `${k}-letter`)
+  //     .text.set(HSONlower[k])
+  //     .classlist.add(shade_class(k))
+  //     .css.setMany($T$GHSONcss)
+  //   return span;
+  // });
 
   // layoutGrid now has two stable slots
   const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);

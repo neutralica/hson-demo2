@@ -240,7 +240,7 @@ const failHtml = `
       margin: 0; padding: 14px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px; line-height: 1.35;
-      background: ${$cols_.backdeep}; color: #e9e9ee;
+      background: ${$cols_.bckdeep}; color: #e9e9ee;
     }
     .top{
   display:grid;

@@ -9,7 +9,7 @@ const LOGOBOX_KEYF = {
   steps: {
     "0%": { opacity: "0" },
     "02%": { opacity: "0" },
-    "78%": { opacity: "1" },
+    "48%": { opacity: "1" },
     "85%": { opacity: "1" },
     "98%": { opacity: "0" },
     "100%": { opacity: "0" },
@@ -21,9 +21,9 @@ const ZALGO_FADE = {
   name: 'zalgo-fade',
   steps: {
     "0%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
-    "32%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
-    "80%": { opacity: "0.4", transform: "translateX(3px) rotate(2deg) scale(1.05)" },
-    "98%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
+    "78%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
+    "95%": { opacity: "0.4", transform: "translateX(3px) rotate(2deg) scale(1.05)" },
+    "99%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
     "100%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
 
   }

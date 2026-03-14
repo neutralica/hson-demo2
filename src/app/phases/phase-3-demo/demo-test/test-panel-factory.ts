@@ -402,7 +402,7 @@ export const RUN_BUTTONcss: CssMap = {
   transition: "transform 90ms ease, filter 140ms ease",
   _hover: {
     background: $grn_.faded,
-    color: $cols_.backdeep
+    color: $cols_.bckdeep
   }
 };
 

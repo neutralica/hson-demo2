@@ -70,7 +70,7 @@ export const ABOUT_CSS:CssMap = {
   whiteSpace: "pre-line",
   overflowX: "auto",
   padding: "10px 12px",
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   marginBottom: "12px",
   fontweight: 300,

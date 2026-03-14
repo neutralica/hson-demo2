@@ -4,7 +4,8 @@ import { hson, type LiveTree } from "hson-live";
 import type { Rng } from "../../../../tests/tests.types";
 import { _clamp01, _lerp } from "../../../utils/helpers";
 import { make_rng } from "../../../utils/rng";
-import { type FlowerCultivar, type FlowerPaletteSpec, type FlowerSpec, type HueBand, type JitterOpts, type OklchColor } from "./fleurs.types";
+import { type CultivarShape, type FlowerCultivar, type FlowerPaletteSpec, type FlowerSpec, type HueBand, type JitterOpts, type OklchColor } from "./fleurs.types";
+import { DAISY_SHAPE, hueBands, PINWHEEL_SHAPE, ROSETTE_SHAPE, SCISSOR_SHAPE, SUNBURST_SHAPE } from "./fleurs.consts";
 
 type FlowerColorOpts = {
     lMin: number
@@ -14,26 +15,6 @@ type FlowerColorOpts = {
     hSpread: number
     lightnessBias?: number
 }
-
-const hueBands: readonly HueBand[] = [
-    { min: 18, max: 34, weight: 1.3 }, // rust orange
-    { min: 35, max: 55, weight: 1.35 }, // acid gold
-    { min: 56, max: 74, weight: 1.15 }, // chartreuse yellow
-    { min: 75, max: 95, weight: 0.85 }, // yellow-green
-    { min: 96, max: 118, weight: 0.8 },  // sour green
-    { min: 119, max: 142, weight: 0.7 },  // moss green
-    { min: 160, max: 182, weight: 0.55 }, // seafoam
-    { min: 183, max: 198, weight: 0.65 }, // aqua
-    { min: 199, max: 216, weight: 0.8 },  // cyan
-    { min: 217, max: 236, weight: 0.9 },  // sky blue
-    { min: 237, max: 252, weight: 1.0 },  // cornflower
-    { min: 253, max: 270, weight: 1.05 }, // periwinkle
-    { min: 271, max: 292, weight: 1.0 },  // violet
-    { min: 293, max: 314, weight: 0.85 }, // orchid
-    { min: 315, max: 334, weight: 0.95 }, // magenta-pink
-    { min: 335, max: 350, weight: 1.1 },  // bruised pink
-    { min: 351, max: 12, weight: 1.2 },  // salmon / coral
-]
 
 function pickOne<T>(arr: readonly T[], rng: Rng): T { // dead?
     const ix = Math.floor(rng() * arr.length);
@@ -171,7 +152,7 @@ function normalizeHue(h: number): number {
 function trimNum(n: number, places: number): string {
     return Number(n.toFixed(places)).toString();
 }
-function pick_weighted_band(
+function pickWeightedBand(
     arr: readonly HueBand[],
     rng: Rng
 ): HueBand {
@@ -190,7 +171,7 @@ function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
     const rng = make_rng(seed);
 
     const cultivar = pick_cultivar(seed);
-    const shape = sample_cultivar_shape(cultivar, rng);
+    const shape = sampleCultivarShape(cultivar, rng);
     const palette = pickFlowerPalette(seed);
 
     const centerRadius = shape.petalLength * shape.centerRatio;
@@ -199,7 +180,7 @@ function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
         seed,
         x,
         y,
-        scale: lerp(0.78, 1.32, rng()),
+        scale: lerp(1.32, 1.78, rng()),
         rotation: lerp(0, 360, rng()),
         opacity: 1,
 
@@ -264,16 +245,12 @@ export function spawn_flower(layer: LiveTree, x: number, y: number): LiveTree {
 }
 
 
-function randInt(rng: Rng, min: number, max: number): number {
-    return Math.floor(_lerp(min, max + 1, rng()));
-}
-
 function fmtNum(n: number, places: number): string {
     return Number(n.toFixed(places)).toString();
 }
 function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
     // CHANGED: not every flower gets a second hue family
-    if (rng() >= 0.45) return null;
+    if (rng() >= 0.95) return null;
 
     const hueBands: readonly HueBand[] = [
         { min: 18, max: 34, weight: 1.3 },
@@ -297,7 +274,7 @@ function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
 
     // CHANGED: try a few times not to match the primary band exactly
     for (let i = 0; i < 4; i += 1) {
-        const next = pick_weighted_band(hueBands, rng);
+        const next = pickWeightedBand(hueBands, rng);
         if (next.min !== primaryBand.min || next.max !== primaryBand.max) {
             return next;
         }
@@ -310,7 +287,7 @@ function pickFlowerPalette(seed: number): FlowerPaletteSpec {
 
 
 
-    const primaryBand = pick_weighted_band(hueBands, rng)
+    const primaryBand = pickWeightedBand(hueBands, rng)
     const secondaryBand = pickSecondaryBand(primaryBand, rng);
 
     const primaryHue = sampleHueBand(primaryBand.min, primaryBand.max, rng);
@@ -318,12 +295,12 @@ function pickFlowerPalette(seed: number): FlowerPaletteSpec {
     const secondaryHue = secondaryBand
         ? sampleHueBand(secondaryBand.min, secondaryBand.max, rng)
         : null;
-    const centerHue = normalizeHue(primaryHue + (rng() * 80 - 40));
+    const centerHue = normalizeHue(primaryHue + (rng() * 80 - 140));
 
     return {
         primaryPetal: sampleFlowerColor(primaryHue, rng, {
-            lMin: 0.48,
-            lMax: 0.76,
+            lMin: 0.28,
+            lMax: 0.66,
             cMin: 0.10,
             cMax: 0.22,
             hSpread: 16,
@@ -333,8 +310,8 @@ function pickFlowerPalette(seed: number): FlowerPaletteSpec {
         secondaryPetal: secondaryHue === null
             ? null
             : sampleFlowerColor(secondaryHue, rng, {
-                lMin: 0.48,
-                lMax: 0.76,
+                lMin: 0.18,
+                lMax: 0.66,
                 cMin: 0.10,
                 cMax: 0.22,
                 hSpread: 16,
@@ -368,91 +345,17 @@ export function pick_cultivar(seed: number): FlowerCultivar {
     return pickOne(cultivars, rng);
 }
 
-type CultivarShape = {
-    petalCount: number;
-    petalLength: number;
-    petalWidth: number;
-    centerRatio: number;
-    ringCount: number;
-    innerScale: number;
-    stamenCount: number;
-    stamenRadius: number;
-    alternateGeometry: boolean;
-};
-
-export function sample_cultivar_shape(
+function sampleCultivarShape(
     cultivar: FlowerCultivar,
     rng: Rng,
 ): CultivarShape {
 
     console.log(cultivar);
-    if (cultivar === "daisy") {
-        return {
-            petalCount: randInt(rng, 16, 24),
-            petalLength: lerp(26, 44, rng()),
-            petalWidth: lerp(10, 18, rng()),
-            centerRatio: lerp(0.48, 0.68, rng()),
-            ringCount: 1,
-            innerScale: 0.72,
-            stamenCount: 0,
-            stamenRadius: 0,
-            alternateGeometry: false,
-        };
-    }
-
-    if (cultivar === "sunburst") {
-        return {
-            petalCount: randInt(rng, 16, 28),
-            petalLength: lerp(14, 28, rng()),
-            petalWidth: lerp(5, 10, rng()),
-            centerRatio: lerp(0.16, 0.24, rng()),
-            ringCount: randInt(rng, 2, 3),
-            innerScale: lerp(0.58, 0.78, rng()),
-            stamenCount: 0,
-            stamenRadius: 0,
-            alternateGeometry: false,
-        };
-    }
-
-    if (cultivar === "pinwheel") {
-        return {
-            petalCount: randInt(rng, 5, 8),
-            petalLength: lerp(28, 52, rng()),
-            petalWidth: lerp(7, 13, rng()),
-            centerRatio: lerp(0.18, 0.26, rng()),
-            ringCount: 1,
-            innerScale: 0.68,
-            stamenCount: 0,
-            stamenRadius: 0,
-            alternateGeometry: true,
-        };
-    }
-
-    if (cultivar === "scissor") {
-        return {
-            petalCount: randInt(rng, 4, 7),
-            petalLength: lerp(24, 48, rng()),
-            petalWidth: lerp(9, 15, rng()),
-            centerRatio: lerp(0.20, 0.30, rng()),
-            ringCount: 1,
-            innerScale: 0.62,
-            stamenCount: randInt(rng, 10, 20),
-            stamenRadius: lerp(1.8, 3.0, rng()),
-            alternateGeometry: true,
-        };
-    }
-    // rosette fallback
-    return {
-        petalCount: randInt(rng, 14, 22),
-        petalLength: lerp(14, 26, rng()),
-        petalWidth: lerp(7, 12, rng()),
-        centerRatio: lerp(0.12, 0.18, rng()),
-        ringCount: randInt(rng, 3, 5),
-        innerScale: lerp(0.72, 0.84, rng()),
-        stamenCount: 0,
-        stamenRadius: 0,
-        alternateGeometry: false,
-    };
+    if (cultivar === "daisy") { return DAISY_SHAPE(rng); }
+    if (cultivar === "sunburst") { return SUNBURST_SHAPE(rng); }
+    if (cultivar === "pinwheel") { return PINWHEEL_SHAPE(rng); }
+    if (cultivar === "scissor") { return SCISSOR_SHAPE(rng); }
+    return ROSETTE_SHAPE(rng);
 }
 
 function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
@@ -462,9 +365,11 @@ function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
     const ringScale = isInner ? spec.innerScale : 1;
 
     const count =
-        spec.cultivar === "sunburst" && isInner
-            ? Math.max(10, Math.floor(spec.petalCount * 0.9))
-            : spec.petalCount;
+        spec.cultivar === "wild"
+            ? Math.floor(spec.petalCount * 0.55)
+            : spec.cultivar === "sunburst" && isInner
+                ? Math.max(10, Math.floor(spec.petalCount * 0.9))
+                : spec.petalCount;
 
     const step = 360 / count;
 
@@ -499,7 +404,11 @@ function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
     for (let i = 0; i < count; i += 1) {
         // CHANGED: angle must be mutable because pinwheel adds twist
         let angle = (step * i) + phase;
-
+        // add just before writing the ellipse
+        const petalOpacity =
+            spec.cultivar === "daisy"
+                ? lerp(0.82, 0.96, rng())
+                : lerp(0.78, 0.94, rng())
         const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
 
         let length = baseLength;
@@ -514,8 +423,42 @@ function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
         if (spec.cultivar === "pinwheel") {
             angle += i * 4;
         }
+        if (spec.cultivar === "wild") {
+            width *= 0.75;
+            length *= 0.9;
+        }
+        if (spec.cultivar === "daisy") {
+            const spotCount = 5 + Math.floor(rng() * 6);
 
-        out += `<ellipse cx="0" cy="${fmtNum(-length * 0.55, 3)}" rx="${fmtNum(width, 3)}" ry="${fmtNum(length, 3)}" fill="${fill}" transform="rotate(${fmtNum(angle, 3)})" />`;
+            for (let i = 0; i < spotCount; i += 1) {
+                const angDeg = (360 / spotCount) * i;
+                const angRad = (angDeg * Math.PI) / 180;
+
+                const r = spec.centerRadius * lerp(0.4, 0.8, rng());
+
+                const x = Math.cos(angRad) * r;
+                const y = Math.sin(angRad) * r;
+
+                out += `<circle cx="${fmtNum(x, 3)}" cy="${fmtNum(y, 3)}"
+                 r="${fmtNum(spec.centerRadius * 0.08, 3)}"
+                 fill="rgba(0,0,0,0.28)" />`;
+            }
+        }
+        const taper = lerp(1, 0.35, i / count);
+        length *= taper;
+        width *= taper;
+
+        const outline =
+            rng() < 0.14
+                ? ` stroke="rgba(0,0,0,0.18)" stroke-width="${fmtNum(width * 0.08, 3)}"`
+                : "";
+        out += `<ellipse cx="0" cy="${fmtNum(-length * 0.55, 3)}"
+            rx="${fmtNum(width, 3)}"
+            ry="${fmtNum(length, 3)}"
+            fill="${fill}"
+            fill-opacity="${fmtNum(petalOpacity, 3)}"
+            ${outline}
+            transform="rotate(${fmtNum(angle, 3)})" />`;
     }
 
     return out;
@@ -542,33 +485,33 @@ function appendStamensMarkup(spec: FlowerSpec): string {
         const fill = pickStamenColor(spec, rng);
 
         if (spec.cultivar === "scissor") {
+
             const innerDist = dist * 0.72;
             const outerDist = dist * 1.18;
 
             const x1 = Math.cos(angleRad) * innerDist;
             const y1 = Math.sin(angleRad) * innerDist;
+
             const x2 = Math.cos(angleRad) * outerDist;
             const y2 = Math.sin(angleRad) * outerDist;
 
-            // CHANGED: midpoint of the filament
-            const mx = (x1 + x2) * 0.5;
-            const my = (y1 + y2) * 0.5;
-
-            // CHANGED: slight global downward sag in screen space
-            const sagX = 0;
-            const sagY = spec.stamenRadius * 1.5;
-
-            const radialCx = Math.cos(angleRad) * (dist * 1.02);
-            const radialCy = Math.sin(angleRad) * (dist * 1.02);
-
             const ctrlDist = dist * 0.96;
-            const cx = radialCx;
+
+            const cx = Math.cos(angleRad) * ctrlDist;
+
             const sag = spec.stamenRadius * lerp(1.4, 2.1, rng());
-            const cy = (Math.sin(angleRad) * ctrlDist) + sag;
+            const cy = Math.sin(angleRad) * ctrlDist + sag;
 
             const strokeW = spec.stamenRadius * lerp(0.25, 0.6, rng());
 
-            out += `<path d="M ${fmtNum(x1, 3)} ${fmtNum(y1, 3)} Q ${fmtNum(cx, 3)} ${fmtNum(cy, 3)} ${fmtNum(x2, 3)} ${fmtNum(y2, 3)}" stroke="${fill}" stroke-width="${fmtNum(strokeW, 3)}" stroke-linecap="round" fill="none" />`;
+            out += `<path d="M ${fmtNum(x1, 3)} ${fmtNum(y1, 3)}
+             Q ${fmtNum(cx, 3)} ${fmtNum(cy, 3)}
+             ${fmtNum(x2, 3)} ${fmtNum(y2, 3)}"
+             stroke="${fill}"
+             stroke-width="${fmtNum(strokeW, 3)}"
+             stroke-linecap="round"
+             fill="none" />`;
+
             continue;
         }
 

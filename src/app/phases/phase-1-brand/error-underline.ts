@@ -6,7 +6,7 @@ export const ERROR_UNDERLINE_PRESET = {
   amplitude: 6,
   step: 6,
   baselineOffset: 2,
-  strokeWidth: 1.5,
+  strokeWidth: 2,
   stroke: "#e51400",
   pad: 1.75, // NEW
 } as const;

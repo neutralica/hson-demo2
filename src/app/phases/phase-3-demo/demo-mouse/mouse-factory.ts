@@ -148,7 +148,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     minWidth: "0",
     minHeight: "0",
     alignContent: "start",
-    background: $cols_.backdeep
+    background: $cols_.bckdeep
   });
 
   const rows: Array<{

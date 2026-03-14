@@ -1,10 +1,10 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
-export const MENU_TEXT_COL = ACID_WASH_OKLCH.straw;
+export const MENU_TEXT_COL = ACID_WASH_RGBA.strawSmoke;
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: "monospace",
@@ -13,13 +13,14 @@ export const MAIN_MENUcss: CssMap = {
   userSelect: "none",
   color: MENU_TEXT_COL,
   _hover: {
-    fontWeight: "700",
-    background: $blu_.muted,
-    color: $cols_.backdeep
+    fontWeight: "100",
+    background: ACID_WASH_RGBA.mutedViolet,
+    color: $cols_.bckdeep
   },
   _active: {
-    background: $grn_.muted,
-    color: $cols_.backdeep
+    background: $cols_.bckgd,
+    color: ACID_WASH_RGBA.dullAmber,
+    fontWeight: "700",
   }
 }
 
@@ -27,6 +28,7 @@ export const $T$GHSONcss: CssMap = {
   fontSize: $txt_.hsonWord,
   fontFamily: "Jacquard12",
   width: "max-content",
+
 }
 
 export const DEMOcss: CssMap = {
@@ -35,7 +37,7 @@ export const DEMOcss: CssMap = {
   height: "100%",
   inset: "0",
   overflow: "hidden",
-  background: $cols_.bckgd,
+  background: `linear-gradient(${$cols_.bckgd} 99%,${$cols_.bcklight})`,
   pointerEvents: "none",
 };
 
@@ -89,7 +91,8 @@ export const DEMO_SCREEN_FXcss: CssMap = {
 export const MENU_LISTcss: CssMap = {
   // gridColumn: "1",
   // gridRow: "1 / span 2",
-  marginLeft: "2rem",
+  // marginLeft: "2rem",
+  // alignContent: "left",
   position: "relative",
   lineHeight: "2.5rem",
 
@@ -99,6 +102,7 @@ export const TITLE_BOXcss: CssMap = {
   position: "relative",
   display: "flex",
   flexDirection: "row",
+  minWidth: "0",
 }
 
 export const DEMO_MAIN_LOGOcss: CssMap = {
@@ -106,6 +110,7 @@ export const DEMO_MAIN_LOGOcss: CssMap = {
   alignContent: "baseline",
   justifyContent: "flex-start",
   fontFamily: "Jacquard12",
+  flexDirection: "column",
 
 }
 
@@ -121,6 +126,8 @@ export const MENU_CONTAINERcss: CssMap = {
   minHeight: "0",
   width: "100%",
   height: "100%",
+  // marginLeft: "2rem",
+  // marginTop:"2rem"
 };
 
 export const LAYOUT_GRIDcss: CssMap = {
@@ -173,9 +180,9 @@ export const HSON_GRAFFITIcss: CssMap = {
   fontFamily: "monospace",
   // height: "50%",
   // width: "50%",
-  color: ACID_WASH_OKLCH.orchid,
+  color: $cols_.oddPeriwinkle,
   maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
   boxSizing: "border-box",
-  textShadow: "0 0 1px " + $cols_.backdeep,
+  textShadow: "0 0 1px " + $cols_.bckdeep,
   mixBlendMode: "multiply",
 }

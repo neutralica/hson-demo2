@@ -16,7 +16,7 @@ export const LOG_WRAPcss: Record<string, string> = {
 export const THcss: Record<string, string> = {
   padding: "6px 8px",
   textAlign: "left",
-  fontWeight: "600",
+  fontWeight: "300",
   borderBottom: "1px solid rgba(255,255,255,0.12)",
   whiteSpace: "nowrap",
   opacity: "0.85",
@@ -32,15 +32,16 @@ export const TD_PREVIEW_ROWcss: Record<string, string> = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
 };
+
 export const CLICKABLEcss: Record<string, string> = { cursor: "pointer", userSelect: "none" };
 export const ROW_SUITEcss: Record<string, string> = {
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   cursor: "pointer",
 };
 export const ROW_GROUPcss: Record<string, string> = {
-  background: $cols_.backdeep,
+  background: $cols_.bckdeep,
   cursor: "pointer",
 };
 

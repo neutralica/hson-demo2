@@ -4,7 +4,8 @@ export type FlowerCultivar =
   | "sunburst"
   | "pinwheel"
   | "scissor"
-  | "rosette";
+  | "rosette"
+  | "wild";
 
 export type FlowerSpec = {
   seed: number;
@@ -32,26 +33,26 @@ export type FlowerSpec = {
 };
 
 export type FlowerScene = {
-    root: LiveTree;
-    field: LiveTree;
-    layer: LiveTree;
-    spawnAt(x: number, y: number): void;
-    clear(): void;
+  root: LiveTree;
+  field: LiveTree;
+  layer: LiveTree;
+  spawnAt(x: number, y: number): void;
+  clear(): void;
 };
 
 
 
 export type OklchColor = {
-    l: number;
-    c: number;
-    h: number;
+  l: number;
+  c: number;
+  h: number;
 };
 
 
 export type JitterOpts = {
-    l: number;
-    c: number;
-    h: number;
+  l: number;
+  c: number;
+  h: number;
 };
 
 export type FlowerPaletteSpec = {
@@ -61,9 +62,20 @@ export type FlowerPaletteSpec = {
   useAlternatingPetals: boolean;
 };
 
-  
-   export type HueBand = {
+
+export type HueBand = {
   min: number
   max: number
   weight: number
 }
+export type CultivarShape = {
+  petalCount: number;
+  petalLength: number;
+  petalWidth: number;
+  centerRatio: number;
+  ringCount: number;
+  innerScale: number;
+  stamenCount: number;
+  stamenRadius: number;
+  alternateGeometry: boolean;
+};

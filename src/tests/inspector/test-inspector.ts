@@ -84,7 +84,7 @@ export function create_inspector(
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
-    background: $cols_.backdeep
+    background: $cols_.bckdeep
   });
   const header = make_div_class(root, "insp-header").css.setMany({
     // header is natural height
@@ -469,9 +469,10 @@ export function create_inspector(
   // baseline
   root.css.setMany({
     // padding: "10px",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+    fontFamily: "Monaco",
     fontSize: $txt_.main,
     lineHeight: "1.35",
+    color: $cols_.txtarea,
   });
 
   main.css.setMany({ display: "grid", gap: "6px" });

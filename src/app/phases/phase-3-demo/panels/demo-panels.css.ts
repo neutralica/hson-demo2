@@ -123,27 +123,30 @@ export const CLEAR_BTNcss: CssMap = {
     
     _hover: {
         background: "orange",
-        color: $cols_.backdeep,
+        color: $cols_.bckdeep,
     }
 }
 
 export const LOG_BOXcss: CssMap = {
     overflow: "hidden",
     gridColumn: "1 / 5",
-    background: $cols_.backdeep,
+    background: $cols_.bckdeep,
 
 
 };
 export const ROW_SUITE_FAILcss: CssMap = {
     background: "rgba(255, 0, 0, 0.2)",
+    color: $ylw_.std,
 };
 
 export const ROW_GROUP_FAILcss: CssMap = {
     background: "rgba(255, 0, 0, 0.3)",
+    color: $ylw_.std,
 };
 
 export const ROW_CASE_FAILcss: CssMap = {
     background: "rgba(255, 0, 0, 0.4)",
+    color: $ylw_.std,   
 };
 
 export const TEST_PANELcss: CssMap = {
