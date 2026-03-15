@@ -42,7 +42,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     const val = make_div_class(chip, "test-chip-value")
       .text.set("—")
       .css.setMany({
-        fontSize: $txt_.sub,
+        fontSize: $txt_.unter,
         fontWeight: "700",
         lineHeight: "1",
         letterSpacing: "0.01em",
@@ -52,7 +52,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       .text.set(label)
       .css.setMany({
         marginTop: "4px",
-        fontSize: $txt_.sub,
+        fontSize: $txt_.unter,
         lineHeight: "1",
         letterSpacing: "0.06em",
         textTransform: "lowercase",

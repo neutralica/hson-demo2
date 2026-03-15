@@ -373,7 +373,7 @@ export const TEST_ACTION_BTN = {
   cursor: "pointer",
 
   fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSize: $txt_.sub,
+  fontSize: $txt_.unter,
   textTransform: "uppercase",
 
   // neutral default
@@ -413,7 +413,7 @@ export const TEST_SELECTcss = {
   boxSizing: "border-box",
 
   fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSize: $txt_.sub,
+  fontSize: $txt_.unter,
 
   // background: $cols_.backdeep,
   color: $grn_.std,

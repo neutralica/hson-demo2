@@ -59,11 +59,10 @@ export const ABOUT_P_TEXTcss:CssMap = {
   lineHeight: "1.85",
   letterSpacing: "0.7px",
   fontSize: "18px",
-  marginBottom: "10px",
   color: ACID_WASH_OKLCH.frost,
   fontFamily: "Trebuchet MS",
   textIndent: "4ch",
-  // maxWidth: "60ch",
+fontWeight: "300",
 }
 export const ABOUT_CSS:CssMap = {
   // normal code blocks
@@ -101,8 +100,10 @@ export const CODE_PAREN_INNERcss: CssMap = {
   fontWeight: "300",
 } as const;
 
-export const CODE_COMMENTScss = {
-  color: ACID_WASH_OKLCH.fern
+export const CODE_COMMENTScss: CssMap = {
+  color: ACID_WASH_OKLCH.fern,
+  fontFamily: "monaco",
+
 };
 // // CHANGED: render tokens into a container.
 // // This container should be an element you already created (p/li/etc).

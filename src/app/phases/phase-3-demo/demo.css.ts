@@ -26,7 +26,7 @@ export const MAIN_MENUcss: CssMap = {
 
 export const $T$GHSONcss: CssMap = {
   fontSize: $txt_.hsonWord,
-  fontFamily: "Jacquard12",
+  fontFamily: "Inconsolata",
   width: "max-content",
 
 }
@@ -180,7 +180,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   fontFamily: "monospace",
   // height: "50%",
   // width: "50%",
-  color: $cols_.oddPeriwinkle,
+  color: ACID_WASH_OKLCH.bruisedPlum,
   maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
   boxSizing: "border-box",
   textShadow: "0 0 1px " + $cols_.bckdeep,

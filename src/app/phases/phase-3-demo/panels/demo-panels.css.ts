@@ -101,7 +101,7 @@ export const TEST_LOGGERcss: CssMap = {
     // background: $cols_.backdeep,
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    fontSize: $txt_.sub,
+    fontSize: $txt_.unter,
     height: "100%",
     minHeight: "10rem",
     maxHeight: "100%",

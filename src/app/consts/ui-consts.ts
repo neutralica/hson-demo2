@@ -3,10 +3,11 @@
 export const $PANEL_HIDDEN = 'panel-hidden';
 
 export const $txt_ = {
-    hsonWord: "80px",
+    hsonWord: "70px",
     heading: "24px",
+    subhead: "21px",
     main: "18px",
-    sub: "14px",
+    unter: "14px",
     smol: "8px",
 }
 

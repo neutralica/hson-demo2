@@ -79,3 +79,11 @@ export type CultivarShape = {
   stamenRadius: number;
   alternateGeometry: boolean;
 };
+export type FlowerColorOpts = {
+    lMin: number;
+    lMax: number;
+    cMin: number;
+    cMax: number;
+    hSpread: number;
+    lightnessBias?: number;
+};

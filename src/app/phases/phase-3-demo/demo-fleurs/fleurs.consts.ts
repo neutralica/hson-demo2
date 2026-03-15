@@ -41,7 +41,7 @@ export const OKLCH_FLEURS = {
 
 export const DAISY_SHAPE = (rng: Rng) => {
     return {
-        petalCount: randInt(rng, 16, 24),
+        petalCount: randInt(rng, 12, 20),
         petalLength: _lerp(26, 44, rng()),
         petalWidth: _lerp(10, 18, rng()),
         centerRatio: _lerp(0.38, 0.48, rng()),
@@ -52,18 +52,19 @@ export const DAISY_SHAPE = (rng: Rng) => {
         alternateGeometry: false,
     }
 }
+
 export const SUNBURST_SHAPE = (rng: Rng): CultivarShape => {
     return {
-        petalCount: randInt(rng, 16, 28),
-        petalLength: _lerp(14, 28, rng()),
-        petalWidth: _lerp(5, 10, rng()),
-        centerRatio: _lerp(0.26, 0.34, rng()),
-        ringCount: randInt(rng, 2, 3),
-        innerScale: _lerp(0.58, 0.78, rng()),
-        stamenCount: 0,
-        stamenRadius: 0,
-        alternateGeometry: false,
-    }
+    petalCount: randInt(rng, 8, 12),
+    petalLength: _lerp(24, 40, rng()),
+    petalWidth: _lerp(7, 12, rng()),
+    centerRatio: _lerp(0.18, 0.26, rng()),
+    ringCount: 1,
+    innerScale: 0.68,
+    stamenCount: 0,
+    stamenRadius: 0,
+    alternateGeometry: false,
+}
 }
 
 export const SCISSOR_SHAPE = (rng: Rng): CultivarShape => {
@@ -74,37 +75,52 @@ export const SCISSOR_SHAPE = (rng: Rng): CultivarShape => {
         centerRatio: _lerp(0.30, 0.40, rng()),
         ringCount: 1,
         innerScale: 0.62,
-        stamenCount: randInt(rng, 10, 20),
-        stamenRadius: _lerp(1.8, 3.0, rng()),
+        stamenCount: randInt(rng, 8, 12),
+        stamenRadius: _lerp(0.22, 0.42, rng()),
         alternateGeometry: true,
     }
 }
 
-export const PINWHEEL_SHAPE =(rng: Rng):CultivarShape =>{
-    return{
-        petalCount: randInt(rng, 5, 8),
-        petalLength: _lerp(28, 52, rng()),
+export const WILD_SHAPE = (rng: Rng): CultivarShape => {
+    return {
+        petalCount: randInt(rng, 6, 10),
+        petalLength: _lerp(22, 42, rng()),
+        petalWidth: _lerp(6, 10, rng()),
+        centerRatio: _lerp(0.16, 0.24, rng()),
+        ringCount: 1,
+        innerScale: 0.72,
+        stamenCount: randInt(rng, 8, 12),
+        stamenRadius: _lerp(0.62, 1.42, rng()),
+        alternateGeometry: false,
+    };
+}
+
+export const PINWHEEL_SHAPE = (rng: Rng): CultivarShape => {
+    return {
+        petalCount: randInt(rng, 15, 28),
+        petalLength: _lerp(48, 52, rng()),
         petalWidth: _lerp(7, 13, rng()),
         centerRatio: _lerp(0.28, 0.46, rng()),
         ringCount: 1,
         innerScale: 0.68,
         stamenCount: 0,
         stamenRadius: 0,
-        alternateGeometry: true,
+        alternateGeometry: false,
     }
 }
 
 export const ROSETTE_SHAPE = (rng: Rng): CultivarShape => {
     return {
-            petalCount: randInt(rng, 14, 22),
-            petalLength: _lerp(14, 26, rng()),
-            petalWidth: _lerp(7, 12, rng()),
-            centerRatio: _lerp(0.22, 0.28, rng()),
-            ringCount: randInt(rng, 3, 5),
-            innerScale: _lerp(0.72, 0.84, rng()),
-            stamenCount: 0,
-            stamenRadius: 0,
-            alternateGeometry: false,}
+        petalCount: randInt(rng, 14, 22),
+        petalLength: _lerp(14, 26, rng()),
+        petalWidth: _lerp(7, 12, rng()),
+        centerRatio: _lerp(0.4, 0.5, rng()),
+        ringCount: randInt(rng, 3, 5),
+        innerScale: _lerp(0.72, 0.84, rng()),
+        stamenCount: 0,
+        stamenRadius: 0,
+        alternateGeometry: false,
+    }
 }
 function randInt(rng: Rng, min: number, max: number): number {
     return Math.floor(_lerp(min, max + 1, rng()));

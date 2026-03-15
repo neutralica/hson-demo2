@@ -97,17 +97,10 @@ export function render_inline_code(row: LiveTree, code: string): void {
         return; // done with this line
       }
 
-      // # comment
-      if (ch === "#") {
-        flush(depth > 0 ? INNERcss : BASEcss);
-        const rest = code.slice(i);
-        row.create.span().css.setMany(COMMENTcss).text.set(rest);
-        return;
-      }
     }
 
     // ---- string toggle (very simple; ignores escapes on purpose for now) ----
-    if (ch === `"`) {
+    if (ch === `"` || ch === `'`) {
       flush(depth > 0 ? INNERcss : BASEcss);
       row.create.span().css.setMany(QUOTEcss).text.set(`"`);
       inDq = !inDq;
