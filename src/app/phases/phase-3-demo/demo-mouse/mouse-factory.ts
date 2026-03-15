@@ -4,6 +4,7 @@ import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { make_div_class, make_div_id } from "../../../utils/makers";
 import { $cols_, back_w_alpha } from "../../../consts/colors.consts";
+import { MENU_FONT } from "../demo.css";
 
 // ---- factory ----
 
@@ -33,7 +34,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
 
   // reusable monospace baseline for this widget
   const MONOcss: CssMap = {
-    fontFamily: "Monaco",
+   fontFamily: MENU_FONT,
     fontSize: "12px",
     letterSpacing: "0.06em",
   } as const;

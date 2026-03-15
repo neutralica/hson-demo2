@@ -1,5 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { $cols_ } from "../consts/colors.consts";
+import { MENU_FONT } from "../phases/phase-3-demo/demo.css";
 
 export const HSON_FONT_PX = 96;
 export const HSON_O_PX = 87;
@@ -74,7 +75,7 @@ export const VER_CSS: CssMap = {
   position: "absolute",
   right: "8px",
   bottom: "5px",
-  fontFamily: "monospace",
+  fontFamily: MENU_FONT,
   fontSize: "1rem",
   fontWeight: "700",
   letterSpacing: "-0.19em",

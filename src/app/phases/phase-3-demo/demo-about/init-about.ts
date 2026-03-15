@@ -2,10 +2,27 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
-import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss } from "./about.css";
+import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../consts/colors.consts";
+import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
+import { MENU_FONT } from "../demo.css";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+
+
+/**
+ * Markdown extensions
+ * 
+ * This renderer supports a small set of custom constructs:
+ *    -! "anti list" items
+ *    !!! warning blocks
+ *    --- horizontal rule
+ *    ⸻ horizontal rule 
+ *  
+ * Fenced code blocks also support limited syntax highlighting 
+ * for certain punctuation marks (WIP)
+ **/
+
 
 // -----------------------------
 // Types
@@ -261,83 +278,82 @@ function render_doc_md(host: LiveTree, src: string): void {
     p.css.setMany(ABOUT_P_TEXTcss);
 
     for (let i = 0; i < meaningful.length; i += 1) {
-      const row = p.create.div();
+      const row = p.create.div().css.setMany({textIndent: "4ch"});
       render_line_with_comment(row, meaningful[i] ?? "", "prose");
     }
   };
 
-const flushList = (): void => {
-  if (!inList) return;
+  const flushList = (): void => {
+    if (!inList) return;
 
-  const kind = listKind ?? "ul";
-  const start = listStart;
+    const kind = listKind ?? "ul";
+    const start = listStart;
 
-  // CHANGED: support anti-list container styling
-  const listClass =
-    kind === "ol" ? "md-ol"
-    : kind === "anti" ? "md-anti"
-    : "md-ul";
+    const listClass =
+      kind === "ol" ? "md-ol"
+        : kind === "anti" ? "md-anti"
+          : "md-ul";
 
-  const list = host.create.div().classlist.add(listClass);
+    const list = host.create.div().classlist.add(listClass);
 
-  list.css.setMany({
-    display: "grid",
-    gap: "6px",
-    marginBottom: "10px",
-    minWidth: "0",
-  });
-
-  for (let i = 0; i < listBuf.length; i += 1) {
-    const item = listBuf[i];
-    if (!item) continue;
-
-    const li = list.create.div().classlist.add("md-li");
-    li.css.setMany(ABOUT_LIST_ROWcss);
-
-    // CHANGED: choose marker text by list kind
-    const marker =
-      item.kind === "ol" ? `${start + i})`
-      : item.kind === "anti" ? "✗"
-      : item.marker;
-
-    // CHANGED: choose marker css by list kind
-    const markerCss =
-      item.kind === "anti"
-        ? ANTI_LIST_MARKERcss
-        : ABOUT_LIST_MARKERcss;
-
-    li.create.div()
-      .text.set(marker)
-      .css.setMany({
-        ...markerCss,
-        // CHANGED: indent marker for nested UL only
-        marginLeft: item.kind === "ul" ? `${item.depth * 14}px` : "0px",
-      });
-
-    // CHANGED: choose body css by list kind
-    const bodyCss =
-      item.kind === "anti"
-        ? ANTI_LIST_TEXTcss
-        : LIST_TEXTcss;
-
-    const body = li.create.div().css.setMany({
-      ...bodyCss,
-      paddingLeft: `${item.depth * 14}px`,
+    list.css.setMany({
+      display: "grid",
+      gap: "6px",
+      margin: "20px 0",
+      minWidth: "0",
     });
 
-    const lines = item.text.split("\n");
-    for (let j = 0; j < lines.length; j += 1) {
-      const row = body.create.div();
-      render_line_with_comment(row, lines[j] ?? "", "prose");
-    }
-  }
+    for (let i = 0; i < listBuf.length; i += 1) {
+      const item = listBuf[i];
+      if (!item) continue;
 
-  listBuf = [];
-  inList = false;
-  listKind = null;
-  listStart = 1;
-};
-  
+      const li = list.create.div().classlist.add("md-li");
+      li.css.setMany(ABOUT_LIST_ROWcss);
+
+      // CHANGED: choose marker text by list kind
+      const marker =
+        item.kind === "ol" ? `${start + i})`
+          : item.kind === "anti" ? "✗"
+            : item.marker;
+
+      // CHANGED: choose marker css by list kind
+      const markerCss =
+        item.kind === "anti"
+          ? ANTI_LIST_MARKERcss
+          : ABOUT_LIST_MARKERcss;
+
+      li.create.div()
+        .text.set(marker)
+        .css.setMany({
+          ...markerCss,
+          // CHANGED: indent marker for nested UL only
+          marginLeft: item.kind === "ul" ? `${item.depth * 14}px` : "0px",
+        });
+
+      // CHANGED: choose body css by list kind
+      const bodyCss =
+        item.kind === "anti"
+          ? ANTI_LIST_TEXTcss
+          : LIST_TEXTcss;
+
+      const body = li.create.div().css.setMany({
+        ...bodyCss,
+        paddingLeft: `${item.depth * 14}px`,
+      });
+
+      const lines = item.text.split("\n");
+      for (let j = 0; j < lines.length; j += 1) {
+        const row = body.create.div();
+        render_line_with_comment(row, lines[j] ?? "", "prose");
+      }
+    }
+
+    listBuf = [];
+    inList = false;
+    listKind = null;
+    listStart = 1;
+  };
+
   const flushCode = (): void => {
     const codeLines = codeBuf.slice();
     codeBuf = [];
@@ -345,7 +361,15 @@ const flushList = (): void => {
 
     const isLogo = (codeLang ?? "").toLowerCase() === "hson";
 
-    const pre = host.create.div().classlist.add("md-pre");
+    const pre = host.create.div().classlist.add("md-pre").css.setMany({
+      background: $cols_.bckdeep,
+      outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
+      borderRadius: "9px",
+      padding: "10px",
+      overflowWrap: "anywhere",
+      // whiteSpace: "normal",
+
+    });
     if (isLogo) return;
 
     for (const line of codeLines) {
@@ -395,10 +419,10 @@ const flushList = (): void => {
         marginBottom: "8px",
         textDecoration: "underline",
         textUnderlineOffset: "5px",
-        fontFamily: "Monaco",
+        fontFamily: MENU_FONT,
         letterSpacing: "0.06em",
         textTransform: level === 1 ? "uppercase" : "none",
-        fontSize: level === 1 ? "24px" : level === 2 ? "19px" : level === 3 ? "15px" : "12px",
+        fontSize: level === 1 ? "28px" : level === 2 ? "23px" : level === 3 ? "19px" : "16px",
         fontWeight: 700,
         color: $HSON_COLORS.ui.blue,
       });
@@ -406,6 +430,31 @@ const flushList = (): void => {
       continue;
     }
 
+    // hr detection
+    if (/^(-{3,}|⸻)\s*$/.test(line)) {
+      flushPara();
+      flushList();
+
+      const hr = host.create.div().classlist.add("md-hr");
+      hr.css.setMany(HRcss);
+
+      continue;
+    }
+
+    // warning/caution
+    const warn = /^!!!\s*(.*)$/.exec(line);
+    if (warn) {
+      flushPara();
+      flushList();
+
+      const box = host.create.div().classlist.add("md-warning");
+      box.css.setMany(WARNINGcss);
+
+      const body = box.create.div();
+      render_line_with_comment(body, warn[1] ?? "", "prose");
+
+      continue;
+    }
     // blank line splits
     if (line.trim().length === 0) {
       flushPara();

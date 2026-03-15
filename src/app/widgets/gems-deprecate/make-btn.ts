@@ -1,13 +1,13 @@
 import type { LiveTree } from "hson-live";
 
-export type ToggleGem = Readonly<{
+export type ToggleBtn = Readonly<{
   node: LiveTree;
   setActive: (on: boolean) => void;
   setText: (t: string) => void;
 }>;
 
 
-export function make_btn(parent: LiveTree, id: string, label: string): ToggleGem {
+export function make_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
   const node = parent.create.div().id.set(id);
   node.text.set(label);
 

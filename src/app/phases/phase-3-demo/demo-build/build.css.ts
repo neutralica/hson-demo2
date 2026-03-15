@@ -4,6 +4,7 @@ import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
 import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
 import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
+import { MENU_FONT } from "../demo.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
@@ -33,7 +34,7 @@ export const BUILD_HEADcss: CssMap = {
 };
 
 export const BUILD_TITLEcss: CssMap = {
-  fontFamily: "Monaco",
+  fontFamily: MENU_FONT,
   fontSize: "12px",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
@@ -88,7 +89,7 @@ export const BUILD_WATERMARK_FMTcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.08",
-  fontFamily: "Monaco",
+  fontFamily: MENU_FONT,
   fontSize: "72px",
   letterSpacing: "0.12em",
   textTransform: "uppercase",
@@ -101,7 +102,7 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: "Monaco",
+fontFamily: MENU_FONT,
   fontSize: "14px",
   letterSpacing: "0.06em",
 };
@@ -114,7 +115,7 @@ export const BUILD_STATUScss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0",
-  fontFamily: "Monaco",
+  fontFamily: MENU_FONT,
   fontSize: "12px",
   letterSpacing: "0.12em",
   textTransform: "uppercase",

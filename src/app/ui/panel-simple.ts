@@ -4,6 +4,7 @@ import type { LiveTree } from "hson-live";
 import { $PANEL_HIDDEN } from "../consts/ui-consts";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "../phases/phase-3-demo/panels/demo-panels.css";
 import { $blu_ } from "../consts/colors.consts";
+import { MENU_FONT } from "../phases/phase-3-demo/demo.css";
 
 export type BuiltPanel = Readonly<{
   panel: LiveTree;
@@ -25,6 +26,6 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       maxHeight: "100%",
       overflow: "hidden", 
       color: $blu_.std,
-      fontFamily: "monospace",
+   fontFamily: MENU_FONT,
     });
 }

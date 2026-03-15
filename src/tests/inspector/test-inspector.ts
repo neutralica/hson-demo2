@@ -11,7 +11,7 @@ import type { TestLog } from "../test-log";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { make_div_class, make_div_id } from "../../app/utils/makers";
-import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
+import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/phase-3-demo/panels/demo-panels.css";
 import { $cols_ } from "../../app/consts/colors.consts";
 
@@ -469,7 +469,7 @@ export function create_inspector(
   // baseline
   root.css.setMany({
     // padding: "10px",
-    fontFamily: "Monaco",
+    fontFamily: MENU_FONT,
     fontSize: $txt_.main,
     lineHeight: "1.35",
     color: $cols_.txtarea,

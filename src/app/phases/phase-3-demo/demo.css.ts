@@ -180,6 +180,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   fontFamily: "monospace",
   // height: "50%",
   // width: "50%",
+  // color: `linear-gradient(${$ylw_.} 99%,${$blu_.baby})`,
   color: ACID_WASH_OKLCH.bruisedPlum,
   maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
   boxSizing: "border-box",

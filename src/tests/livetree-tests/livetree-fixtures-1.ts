@@ -8,6 +8,7 @@ import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
 import { legacy_suites_3, suite_more_contract_refresh } from "./livetree-fixtures-2";
+import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
 
 
 
@@ -1576,7 +1577,7 @@ function suite_css_regressions(): TestSuite {
 
         box.css.setMany({
           backgroundColor: "rgba(12, 19, 26, 1)",
-          fontFamily: "monospace",
+          fontFamily: MENU_FONT,
           placeItems: "center",
           overflowX: "hidden",
         });

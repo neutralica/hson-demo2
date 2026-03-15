@@ -2,7 +2,7 @@ import { hson } from "hson-live";
 import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
-import { make_btn } from "../../../widgets/gems-deprecate/make-gems";
+import { make_btn } from "../../../widgets/gems-deprecate/make-btn";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, LOG_BOXcss, TEST_LOGGERcss, CLEAR_BTNcss, TEST_PANELcss } from "../panels/demo-panels.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
@@ -12,7 +12,7 @@ import { build_suites_for_mode } from "../../../../tests/build-test-suites";
 import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
-import { PANEL_SAFETYcss } from "../demo.css";
+import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
 import type { CssMap } from "hson-live/types";
 import { $grn_, $cols_ } from "../../../consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
@@ -372,7 +372,7 @@ export const TEST_ACTION_BTN = {
   userSelect: "none",
   cursor: "pointer",
 
-  fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: MENU_FONT,
   fontSize: $txt_.unter,
   textTransform: "uppercase",
 
@@ -412,7 +412,7 @@ export const TEST_SELECTcss = {
   borderRadius: "12px",
   boxSizing: "border-box",
 
-  fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+ fontFamily: MENU_FONT,
   fontSize: $txt_.unter,
 
   // background: $cols_.backdeep,

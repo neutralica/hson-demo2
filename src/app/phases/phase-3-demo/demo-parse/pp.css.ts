@@ -3,6 +3,7 @@ import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
+import { MENU_FONT } from "../demo.css";
 
 //// used
 export const PP_HEADERcss: CssMap = {
@@ -55,7 +56,7 @@ export const PP_WATERMARK_FMTcss: CssMap = {
   placeItems: "center",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: "monospace",
+  fontFamily: MENU_FONT,
   fontSize: $txt_.heading,
   letterSpacing: "0.12px",
   textTransform: "uppercase",
@@ -71,7 +72,7 @@ export const PP_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: "monospace",
+  fontFamily: MENU_FONT,
   fontSize: "14px",
   letterSpacing: "0.06em",
 };
@@ -86,7 +87,7 @@ export const PP_STATUScss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0", // set by JS
-  fontFamily: "monospace",
+  fontFamily: MENU_FONT,
   fontSize: "14px",
   letterSpacing: "0.10em",
   textTransform: "uppercase",

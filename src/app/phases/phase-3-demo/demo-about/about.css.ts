@@ -15,7 +15,7 @@ export const ABOUT_LIST_ROWcss: CssMap = {
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
   opacity: "0.85",
-  color: $blu_.std,               //  marker color only (no bleed)
+  color: $blu_.candy,               //  marker color only
   lineHeight: "1.55",
   textAlign: "right",
   userSelect: "none",
@@ -23,16 +23,19 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
 };
 
 export const LIST_TEXTcss: CssMap = {
-  whiteSpace: "pre-wrap",         //  wrap but stay in text column
+  whiteSpace: "pre-wrap",
   lineHeight: "1.55",
   fontWeight: "300",
-  fontFamily: "Trebuchet MS",
-  color: ACID_WASH_OKLCH.lilac,            //  list text color here only
+  fontFamily: "Trebuchet MS", // DO NOT CHANGE - should NOT be Gill Sans
+  color: ACID_WASH_OKLCH.lilac,
   minWidth: "0",
 };
 
+export const HRcss = {
+  color: ACID_WASH_RGBA.fadedMagenta
+}
 
-export const DOC_BTNcss:CssMap = {
+export const DOC_BTNcss: CssMap = {
   display: "grid",
   alignItems: "center",
   padding: "8px 10px",
@@ -40,23 +43,23 @@ export const DOC_BTNcss:CssMap = {
   cursor: "pointer",
   userSelect: "none",
   fontFamily: MENU_FONT,
-  fontSize: "12px",
+  fontSize: "15px",
   letterSpacing: "0.06em",
   background: "rgba(0,0,0,0.18)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 } as const;
 
-export const DOC_BTN_ACTIVEcss:CssMap = {
+export const DOC_BTN_ACTIVEcss: CssMap = {
   background: "rgba(120,255,210,0.10)",
   boxShadow: "inset 0 0 0 1px rgba(120,255,210,0.22)",
 } as const;
 
-export const DOC_BTN_IDLEcss:CssMap = {
+export const DOC_BTN_IDLEcss: CssMap = {
   background: "rgba(0,0,0,0.18)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 } as const;
 
-export const ABOUT_P_TEXTcss:CssMap = {
+export const ABOUT_P_TEXTcss: CssMap = {
   // padding: "0 30px 0 30px",
   whiteSpace: "pre-wrap",
   lineHeight: "1.85",
@@ -64,12 +67,10 @@ export const ABOUT_P_TEXTcss:CssMap = {
   fontSize: "18px",
   color: ACID_WASH_OKLCH.frost,
   fontFamily: "Gill Sans",
-  textIndent: "4ch",
-fontWeight: "200",
+  fontWeight: "200",
 }
 
-export const ABOUT_CSS:CssMap = {
-  // normal code blocks
+export const ABOUT_CSS: CssMap = {
   whiteSpace: "pre-line",
   overflowX: "auto",
   padding: "10px 12px",
@@ -88,6 +89,10 @@ export const INLINE_CODEcss: CssMap = {
   color: $blu_.pastel,              // same family as method names, but slightly calmer
   fontFamily: MENU_FONT,
   fontWeight: "300",
+  letterSpacing: "0.06em",
+  lineHeight: "1.85rem",
+  overflowWrap: "anywhere",
+  whiteSpace: "pre-wrap",
 } as const;
 
 // parentheses inside inline code
@@ -107,20 +112,23 @@ export const CODE_PAREN_INNERcss: CssMap = {
 export const CODE_COMMENTScss: CssMap = {
   color: ACID_WASH_OKLCH.fern,
   fontFamily: MENU_FONT,
+  fontSize: "16px",
+  overflowWrap: "anywhere",
+  whiteSpace: "normal",
 
 };
 
 export const CODE_QUOTEcss = {
-    color: ACID_WASH_OKLCH.bruisedPlum,              // muted gray
+  color: ACID_WASH_OKLCH.bruisedPlum,              // muted gray
   fontWeight: "700",
 };
 export const CODE_EQUALSscss = {
-    color: ACID_WASH_OKLCH.smokeRose,              // muted gray
+  color: ACID_WASH_OKLCH.smokeRose,              // muted gray
   fontWeight: "700",
 };
 
 export const CODE_PUNCTcss = {
-    color: ACID_WASH_OKLCH.straw,              // muted gray
+  color: ACID_WASH_OKLCH.straw,              // muted gray
   fontWeight: "700",
 };
 
@@ -135,3 +143,10 @@ export const ANTI_LIST_TEXTcss: CssMap = {
   fontSize: "18px",
   // textDecoration: "line-through",
 };
+
+export const WARNINGcss: CssMap = {
+  color: "red",
+  fontSize: "22px",
+  textDecoration: "underline",
+  fontWeight: "700",
+}

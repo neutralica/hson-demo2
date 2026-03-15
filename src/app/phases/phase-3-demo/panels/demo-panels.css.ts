@@ -3,6 +3,7 @@ import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_, back_w_alpha } from "../
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
+import { MENU_FONT } from "../demo.css";
 
 export const UI_ROOTcss: CssMap = {
   // this is the main content column (right side)
@@ -46,7 +47,7 @@ export const PANEL_FRAMEcss = {
     // maxHeight: "100%",
     // outline: `1px solid rgba(10,150,220,1)`,
     color: $blu_.std,
-    fontFamily: "monospace",
+    fontFamily: MENU_FONT,
 } as const;
 
 export const PANELcss: CssMap = {
@@ -69,7 +70,7 @@ export const PANEL_TEXTAREAcss = {
     resize: "none",
     width: "100%",
     boxSizing: "border-box",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontFamily: MENU_FONT,
     fontSize: "12px",
     lineHeight: "1.35",
     // background: $cols_.backdeep,
@@ -83,7 +84,7 @@ export const PANEL_TEXTAREAcss = {
 export const TEST_STATUS_CHIPcss: CssMap = {
     padding: "8px 10px",
     boxSizing: "border-box",
-    fontFamily: "monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: MENU_FONT,
     fontSize: $txt_.heading,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
@@ -100,7 +101,7 @@ export const TEST_LOGGERcss: CssMap = {
     boxSizing: "border-box",
     // background: $cols_.backdeep,
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+   fontFamily: MENU_FONT,
     fontSize: $txt_.unter,
     height: "100%",
     minHeight: "10rem",
