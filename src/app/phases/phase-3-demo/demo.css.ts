@@ -5,11 +5,12 @@ import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } f
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 export const MENU_TEXT_COL = ACID_WASH_RGBA.strawSmoke;
+export const MENU_FONT = "courier new"
 
 export const MAIN_MENUcss: CssMap = {
-  fontFamily: "monospace",
+  fontFamily: MENU_FONT,
   fontSize: $txt_.heading,
-  fontWeight: "400",
+  fontWeight: "500",
   userSelect: "none",
   color: MENU_TEXT_COL,
   _hover: {
@@ -26,7 +27,7 @@ export const MAIN_MENUcss: CssMap = {
 
 export const $T$GHSONcss: CssMap = {
   fontSize: $txt_.hsonWord,
-  fontFamily: "Inconsolata",
+  fontFamily: MENU_FONT,
   width: "max-content",
 
 }
@@ -109,7 +110,6 @@ export const DEMO_MAIN_LOGOcss: CssMap = {
   display: "flex",
   alignContent: "baseline",
   justifyContent: "flex-start",
-  fontFamily: "Jacquard12",
   flexDirection: "column",
 
 }

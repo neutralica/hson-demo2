@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
-import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss,  ABOUT_P_TEXTcss,  INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss } from "./about.css";
+import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
 
@@ -22,10 +22,11 @@ type AboutInitTargets = Readonly<{
   title: LiveTree;
 }>;
 
-type ListKind = "ul" | "ol";
+type ListKind = "ul" | "ol" | "anti";
 type ListItem =
   | { kind: "ul"; depth: number; marker: string; text: string }
-  | { kind: "ol"; depth: number; n: number; text: string };
+  | { kind: "ol"; depth: number; n: number; text: string }
+  | { kind: "anti"; depth: number; marker: string; text: string };
 
 // -----------------------------
 // Inline rendering (single entrypoint)
@@ -170,6 +171,19 @@ export function render_inline(host: LiveTree, src: string): void {
 const isIndented = (s: string): boolean => /^[\t ]+/.test(s);
 function parse_list_item(line: string): ListItem | null {
 
+  // 0️⃣ anti list
+  const anti = /^-!\s+(.*)$/.exec(line);
+  if (anti) {
+    const text = (anti[1] ?? "").trim();
+
+    return {
+      kind: "anti",
+      depth: 0,
+      marker: "x",
+      text,
+    };
+  }
+
   // 1️⃣ nested UL first
   const ulNested = /^(\s*)(--+)\s+(.*)$/.exec(line);
   if (ulNested) {
@@ -252,57 +266,78 @@ function render_doc_md(host: LiveTree, src: string): void {
     }
   };
 
-  const flushList = (): void => {
-    if (!inList) return;
+const flushList = (): void => {
+  if (!inList) return;
 
-    const kind = listKind ?? "ul";
-    const start = listStart;
+  const kind = listKind ?? "ul";
+  const start = listStart;
 
-    const list = host.create.div().classlist.add(kind === "ul" ? "md-ul" : "md-ol");
-    list.css.setMany({
-      display: "grid",
-      gap: "6px",
-      marginBottom: "10px",
-      minWidth: "0",
-    });
+  // CHANGED: support anti-list container styling
+  const listClass =
+    kind === "ol" ? "md-ol"
+    : kind === "anti" ? "md-anti"
+    : "md-ul";
 
-    for (let i = 0; i < listBuf.length; i += 1) {
-      const item = listBuf[i];
-      if (!item) continue;
+  const list = host.create.div().classlist.add(listClass);
 
-      const li = list.create.div().classlist.add("md-li");
-      li.css.setMany(ABOUT_LIST_ROWcss);
+  list.css.setMany({
+    display: "grid",
+    gap: "6px",
+    marginBottom: "10px",
+    minWidth: "0",
+  });
 
-      // marker
-      const marker =
-        item.kind === "ul" ? item.marker : `${start + i})`;
+  for (let i = 0; i < listBuf.length; i += 1) {
+    const item = listBuf[i];
+    if (!item) continue;
 
-      li.create.div()
-        .text.set(marker)
-        .css.setMany({
-          ...ABOUT_LIST_MARKERcss,
-          // CHANGED: indent marker + body for nested UL
-          marginLeft: item.kind === "ul" ? `${item.depth * 14}px` : "0px",
-        });
+    const li = list.create.div().classlist.add("md-li");
+    li.css.setMany(ABOUT_LIST_ROWcss);
 
-      // body
-      const body = li.create.div().css.setMany({
-        ...LIST_TEXTcss,
-        paddingLeft: `${item.depth * 14}px`,
+    // CHANGED: choose marker text by list kind
+    const marker =
+      item.kind === "ol" ? `${start + i})`
+      : item.kind === "anti" ? "✗"
+      : item.marker;
+
+    // CHANGED: choose marker css by list kind
+    const markerCss =
+      item.kind === "anti"
+        ? ANTI_LIST_MARKERcss
+        : ABOUT_LIST_MARKERcss;
+
+    li.create.div()
+      .text.set(marker)
+      .css.setMany({
+        ...markerCss,
+        // CHANGED: indent marker for nested UL only
+        marginLeft: item.kind === "ul" ? `${item.depth * 14}px` : "0px",
       });
 
-      const lines = item.text.split("\n");
-      for (let j = 0; j < lines.length; j += 1) {
-        const row = body.create.div();
-        render_line_with_comment(row, lines[j] ?? "", "prose");
-      }
-    }
+    // CHANGED: choose body css by list kind
+    const bodyCss =
+      item.kind === "anti"
+        ? ANTI_LIST_TEXTcss
+        : LIST_TEXTcss;
 
-    listBuf = [];
-    inList = false;
-    listKind = null;
-    listStart = 1;
-  };
+    const body = li.create.div().css.setMany({
+      ...bodyCss,
+      paddingLeft: `${item.depth * 14}px`,
+    });
+
+    const lines = item.text.split("\n");
+    for (let j = 0; j < lines.length; j += 1) {
+      const row = body.create.div();
+      render_line_with_comment(row, lines[j] ?? "", "prose");
+    }
+  }
+
+  listBuf = [];
+  inList = false;
+  listKind = null;
+  listStart = 1;
+};
+  
   const flushCode = (): void => {
     const codeLines = codeBuf.slice();
     codeBuf = [];
