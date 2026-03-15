@@ -31,9 +31,20 @@ export const LIST_TEXTcss: CssMap = {
   minWidth: "0",
 };
 
-export const HRcss = {
-  color: ACID_WASH_RGBA.fadedMagenta
-}
+export const HRcss: CssMap = {
+  width: "90%",
+  height: "1px",
+  background: `linear-gradient(90deg,
+    transparent 0%,
+    ${ACID_WASH_RGBA.fadedMagenta} 20%,
+    ${ACID_WASH_RGBA.fadedMagenta} 80%,
+    transparent 100%)`,
+  opacity: "0.8",
+  marginTop: "12px",
+  marginBottom: "12px",
+  marginLeft: "auto",
+  marginRight: "auto",
+};
 
 export const DOC_BTNcss: CssMap = {
   display: "grid",
@@ -76,7 +87,7 @@ export const ABOUT_CSS: CssMap = {
   padding: "10px 12px",
   background: $cols_.bckdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  marginBottom: "12px",
+  // marginBottom: "12px",
   fontweight: 300,
   fontFamily: MENU_FONT,
   // fontSize: $txt_.sub,

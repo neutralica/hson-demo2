@@ -6,7 +6,7 @@ import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_R
 import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
-import { MENU_FONT } from "../demo.css";
+import { MD_CODE_PREcss, MENU_FONT } from "../demo.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
@@ -278,7 +278,7 @@ function render_doc_md(host: LiveTree, src: string): void {
     p.css.setMany(ABOUT_P_TEXTcss);
 
     for (let i = 0; i < meaningful.length; i += 1) {
-      const row = p.create.div().css.setMany({textIndent: "4ch"});
+      const row = p.create.div().css.setMany({ textIndent: "4ch" });
       render_line_with_comment(row, meaningful[i] ?? "", "prose");
     }
   };
@@ -361,15 +361,7 @@ function render_doc_md(host: LiveTree, src: string): void {
 
     const isLogo = (codeLang ?? "").toLowerCase() === "hson";
 
-    const pre = host.create.div().classlist.add("md-pre").css.setMany({
-      background: $cols_.bckdeep,
-      outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
-      borderRadius: "9px",
-      padding: "10px",
-      overflowWrap: "anywhere",
-      // whiteSpace: "normal",
-
-    });
+    const pre = host.create.div().classlist.add("md-pre").css.setMany(MD_CODE_PREcss);
     if (isLogo) return;
 
     for (const line of codeLines) {
@@ -403,6 +395,24 @@ function render_doc_md(host: LiveTree, src: string): void {
       continue;
     }
 
+    const t = line.trim();
+
+    if (
+      t === "⸻" ||
+      t === "―" ||
+      t === "—" ||
+      /^-{3,}$/.test(t)
+    ) {
+      console.log("found");
+      flushPara();
+      flushList();
+
+      const hr = host.create.div().classlist.add("md-hr");
+      hr.css.setMany(HRcss);
+
+      continue;
+    }
+
     // headings
     const m = /^(#{1,4})\s+(.*)$/.exec(line);
     if (m) {
@@ -423,21 +433,10 @@ function render_doc_md(host: LiveTree, src: string): void {
         letterSpacing: "0.06em",
         textTransform: level === 1 ? "uppercase" : "none",
         fontSize: level === 1 ? "28px" : level === 2 ? "23px" : level === 3 ? "19px" : "16px",
-        fontWeight: 700,
+        fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
         color: $HSON_COLORS.ui.blue,
       });
       h.text.set(text);
-      continue;
-    }
-
-    // hr detection
-    if (/^(-{3,}|⸻)\s*$/.test(line)) {
-      flushPara();
-      flushList();
-
-      const hr = host.create.div().classlist.add("md-hr");
-      hr.css.setMany(HRcss);
-
       continue;
     }
 
