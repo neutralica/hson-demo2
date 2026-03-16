@@ -1,7 +1,7 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 export const MENU_TEXT_COL = ACID_WASH_RGBA.strawSmoke;
@@ -30,6 +30,8 @@ export const $T$GHSONcss: CssMap = {
   fontFamily: MENU_FONT,
   width: "max-content",
   userSelect: "none",
+  lineHeight: "0.9",
+  verticalAlign: "bottom"
 
 }
 
@@ -90,7 +92,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   pointerEvents: "all",
 };
 
-export const MENU_LISTcss: CssMap = {
+export const MENU_BOXcss: CssMap = {
   // gridColumn: "1",
   // gridRow: "1 / span 2",
   // marginLeft: "2rem",
@@ -105,6 +107,7 @@ export const TITLE_BOXcss: CssMap = {
   display: "flex",
   flexDirection: "row",
   minWidth: "0",
+  marginTop:"1rem",
 }
 
 export const DEMO_MAIN_LOGOcss: CssMap = {
@@ -183,10 +186,16 @@ export const HSON_GRAFFITIcss: CssMap = {
   // width: "50%",
   // color: `linear-gradient(${$ylw_.} 99%,${$blu_.baby})`,
   color: ACID_WASH_OKLCH.bruisedPlum,
-  maxWidth: " calc(100vw - 2rem)",   /* keep 1rem gutters */
+  // maxWidth: "calc(100vw - 2rem)",   /* keep 1rem gutters */
   boxSizing: "border-box",
   textShadow: "0 0 1px " + $cols_.bckdeep,
   mixBlendMode: "multiply",
+  fontSize: "min(16px, calc((100vw) / 84))",
+  lineHeight: "1",
+  width: "100%",
+  textAlign: "center",
+  maxWidth: "calc(100vw)",
+  userSelect: "none",
 }
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px 0",
@@ -198,10 +207,20 @@ export const MD_CODE_PREcss: CssMap = {
   // whiteSpace: "normal",
 
 }
-export const HSON_SUBcss ={
-      fontFamily: MENU_FONT,
-      fontSize: $txt_.heading,
-      textWrap: "nowrap",
-      lineHeight: "3rem",
-      color: ACID_WASH_OKLCH.steel,
-    }
+export const HSON_SUBcss: CssMap = {
+  fontFamily: MENU_FONT,
+  fontSize: $txt_.main,
+  textWrap: "nowrap",
+  color: ACID_WASH_OKLCH.steel,
+  marginBottom: "1rem",
+  lineHeight: "1.6",
+  userSelect: "none",
+}
+
+export const COPYRITEcss: CssMap = {
+  fontFamily: MENU_FONT,
+  position: "fixed",
+  bottom: "1rem",
+  right: "1rem",
+  color: $gry_.dim
+}

@@ -8,8 +8,10 @@ import HSON_SPEC_NODE_GRAPH from "../../../../../../hson-live/docs/hson-spec-1-n
 import HSON_SPEC_JSON from "../../../../../../hson-live/docs/hson-spec-2-json.md?raw";
 import HSON_SPEC_HTML from "../../../../../../hson-live/docs/hson-spec-3-html.md?raw";
 import LIVETREE_LIST from "../../../../../../hson-live/docs/livetree-methods-list.md?raw";
+import LIVEDEMO_README from "../../../../../README.md?raw";
 
 export const ABOUT_DOCS: AboutDocs = [
+  { key: "about", title: "about", body: LIVEDEMO_README },
   { key: "readme", title: "README", body: README },
   { key: "hson-syntax", title: "syntax", body: HSON_SPEC_SYNTAX },
   { key: "nodes", title: "nodes", body: HSON_SPEC_NODE_GRAPH },

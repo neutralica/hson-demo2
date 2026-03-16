@@ -3,7 +3,7 @@
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
 import { $cols_ } from "../../consts/colors.consts";
 
-const LOGOBOX_CSS = {
+const LOGOBOXcss:CssMap = {
   display: "flex",
   placeItems: "center",
   height: "5rem",
@@ -48,5 +48,5 @@ const ZALGO_CSS: CssMap = {
 export const Intro_css = {
   zalgo: ZALGO_CSS,
   brand: BRAND_CSS,
-  logobox: LOGOBOX_CSS,
+  logobox: LOGOBOXcss,
 }

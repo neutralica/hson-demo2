@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { make_div_class, make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_LISTcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss } from "./demo.css";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
@@ -31,6 +31,7 @@ import { spawn_flower } from "./demo-fleurs/fleurs";
 import { ALL_MOTEScss } from "./motes/motes.css";
 import { PP_TEXTWRAPcss } from "./demo-parse/pp.css";
 import type { DemoView } from "./state/state.types";
+import { set_global_css } from "./set-global-css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -62,7 +63,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
-
+  const copyright = screenFx.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
   const fleurSvg = fleurOverlay.create.tags(["svg"]).first()!;
   fleurSvg
@@ -94,9 +95,14 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
   const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
 
-  const hsonBox = make_div_id(headline, "hsonBox")
+  const hsonBox = make_div_id(headline, "hson-box").css.setMany({
+    minHeight: "0",
+    display: "flex",
+    flexDirection: "column",
+  })
+  const letterbox = make_div_id(hsonBox, "letterbox")
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
-    const span = make_span_id(hsonBox, `${k}-letter`)
+    const span = make_span_id(letterbox, `${k}-letter`)
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .classlist.add('demo-wordmark')
@@ -104,11 +110,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     return span;
   });
   const liveDemoSub = make_span_id(hsonBox, "livedemo-subhead")
-    .text.set(` liveDemo`)
-    .css.setMany({ ...PP_TEXTWRAPcss, ...HSON_SUBcss });
+    .text.set(`::liveDemo`)
+    .css.setMany(HSON_SUBcss);
 
   const layoutGrid = make_div_id(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
-  const menuBox = make_div_id(menuContainer, "menu-box").css.setMany(MENU_LISTcss);
+  const menuBox = make_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
 
   const menu = {
     aboutBtn: make_div_id_text(menuBox, `${$ABOUT}-button`, `[${$ABOUT}]`),
@@ -127,7 +133,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .classlist.set(widgetKeys.includes(k) ? "widget-button" : "view-button")
       .css.setMany({
         ...MAIN_MENUcss,
-        color: widgetKeys.includes(k) ? ACID_WASH_RGBA.softBlue : MENU_TEXT_COL,
+        color: widgetKeys.includes(k) ? ACID_WASH_RGBA.brickDust : MENU_TEXT_COL,
       });
   });
 
@@ -136,95 +142,12 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       color: LETTER_COLORoklch[l]
     });
   });
-  gcss.rule("ua:form-fields:transparent", "textarea, input, select, button").setMany({
-    background: "transparent",
-    color: "inherit",
-  });
 
-  gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
-    visibility: "hidden",
-    height: "0",
-    display: "none",
-  });
+  /**
+   * GLOBAL CSS
+   **/
 
-  gcss.rule("global-scrollbar", "*").setMany({
-    scrollbarWidth: "thick",
-    scrollbarColor: "rgba(160,220,255,0.45) rgba(0,0,0,0.35)"
-  });
-  gcss.rule("::-webkit-scrollbar", "::-webkit-scrollbar").setMany({
-    width: "30px",
-    height: "10px"
-  });
-
-  gcss.rule("scroll-thumb-hover", "::-webkit-scrollbar-thumb:hover").setMany({
-    background: "rgba(180,230,255,0.65)"
-  });
-
-  gcss.rule("scroll-thumb", "::-webkit-scrollbar-thumb").setMany({
-    background: "rgba(160,220,255,0.45)",
-    borderRadius: "6px",
-    border: "2px solid rgba(0,0,0,0.45)"
-  });
-
-  gcss.rule("::-webkit-scrollbar-track", "::-webkit-scrollbar-track",).setMany({
-    background: "rgba(0,0,0,0.35)"
-  });
-  const mobile = gcss
-    .media({ maxWidth: 960 })
-
-  mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #mouse-button, #mouse-slot")
-    .setMany({ display: "none" });
-
-  mobile.rule("mobile-about-btn", "#about-button")
-    .setMany({
-      position: "fixed",
-      bottom: "2rem",
-      left: "2rem",
-      fontWeight: "700"
-      // fontSize: $txt_.heading
-    });
-  mobile.rule("mobile-fleurs-btn", "#fleurs-button")
-    .setMany({
-      position: "fixed",
-      bottom: "2rem",
-      right: "2rem",
-      fontSize: $txt_.heading,
-      fontWeight: "700",
-    });
-
-  mobile.rule("hson-smaller", "span.demo-wordmark").setMany({
-    fontSize: $txt_.hsonWordMobile
-  });
-  mobile.rule("/livedemo-subhead", '#livedemo-subhead').setMany({
-    display: "block",
-    lineHeight: "1rem",
-    fontSize: $txt_.main,
-  })
-
-  gcss.rule("menu-active-view", '.view-button[data-active]').setMany({
-    color: $cols_.bckdeep,
-    background: ACID_WASH_RGBA.strawSmoke,
-    fontWeight: "100",
-    _hover: {
-      background: ACID_WASH_RGBA.strawSmoke,
-      fontWeight: "100",
-      color: $cols_.bckdeep,
-    },
-
-  });
-
-  gcss.rule("menu-active-widget", '.widget-button[data-active]').setMany({
-    color: $cols_.bckdeep,
-    background: ACID_WASH_RGBA.softBlue,
-    fontWeight: "100",
-    _hover: {
-      background: ACID_WASH_RGBA.softBlue,
-      boxSizing: "border-box",
-      fontWeight: "100",
-      color: $cols_.bckdeep,
-    },
-
-  });
+  set_global_css();
 
   // layoutGrid now has two stable slots
   const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);

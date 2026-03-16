@@ -4,7 +4,7 @@ import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { make_div_class, make_div_id } from "../../../utils/makers";
 import { $cols_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
-import { MENU_FONT } from "../demo.css";
+import { MONOcss, ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss } from "./mouse.css";
 
 // ---- factory ----
 
@@ -23,30 +23,6 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   const old = host.find.byId("mouse-panel-root");
   if (old) old.removeSelf();
 
-  // unify row layout (header + data rows) so columns line up
-  const ROW_GRIDcss: CssMap = {
-    display: "grid",
-    gridTemplateColumns: "4ch 1fr", // 3 columns only (#, element, _QUID)
-    columnGap: "12px",
-    alignItems: "baseline",
-    minWidth: "0",
-  } as const;
-
-  // reusable monospace baseline for this widget
-  const MONOcss: CssMap = {
-    fontFamily: MENU_FONT,
-    fontSize: "12px",
-    letterSpacing: "0.06em",
-  } as const;
-
-  // grid-cell clamp so long values don't push neighbors
-  const CELL_CLAMPcss: CssMap = {
-    minWidth: "0",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  } as const;
-
   const root = make_div_id(host, "mouse-panel-root")
     .classlist.add("mouse-panel")
     .css.setMany({
@@ -55,7 +31,6 @@ function mouse_factory(host: LiveTree): MousePanelRig {
       display: "grid",
       gridTemplateRows: "1fr 2fr",
       gridTemplateColumns: "2fr 1fr",
-      gap: "10px",
 
       minWidth: "0",
       minHeight: "0",
@@ -66,63 +41,47 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     );
 
   // header row: coords + angle
-  const head = root.create.div().css.setMany({
-    display: "grid",
-    gridTemplateRows: "1fr 1fr 1fr",
-background: $cols_.bckdeep,
-    alignItems: "left",
-    minWidth: "0",
-    gridColumn: "1",
-    gridRow: "1",
-  });
+  // pointer stage
+  const tracker = make_div_id(root, "mouse-tracker").css.setMany(MOUSE_TRACKERcss);
+  const coordbox = make_div_id(root, "mouse-coords").css.setMany(MOUSE_COORDScss);
 
-  const x = head.create.div()
+  const x = coordbox.create.div()
     .classlist.add("mouse-x")
     .css.setMany({
       ...MONOcss,
+      color: "oklch(0.7 0.3 080)",
       whiteSpace: "pre",
+      marginLeft: "0.6rem",
     })
     .text.set("x: —");
 
-  const y = head.create.div()
+  const y = coordbox.create.div()
     .classlist.add("mouse-y")
     .css.setMany({
       ...MONOcss,
+      color: "oklch(0.7 0.3 080)",
       whiteSpace: "pre",
     })
     .text.set("y: —");
 
-  const angle = head.create.div()
+  const angle = coordbox.create.div()
     .classlist.add("mouse-angle")
     .css.setMany({
       ...MONOcss,
-      opacity: "0.78",
+      color: "oklch(0.7 0.3 080)",
       whiteSpace: "pre",
-      // justifySelf: "end",
+      marginLeft: "-0.9rem",
     })
     .text.set("θ: —°");
 
 
-  // pointer stage
-  const tracker = make_div_id(root, "mouse-tracker").css.setMany({
-    position: "relative",
-    width: "140px",
-    height: "140px",
-    borderRadius: "999px",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-    background: back_w_alpha(0.7),
-    gridColumn: "2",
-    gridRow: "1",
-    border: `1px solid ${ACID_WASH_OKLCH.mist}`,
-    // overflow: "hidden",
-  });
   // body: pointer + stack table
-  const body = root.create.div().css.setMany({
+  const stackTable = make_div_id(root, "stack-table").css.setMany({
     display: "grid",
-
     // CHANGED: stack vertically instead of side-by-side
     gridTemplateRows: "auto 1fr",
-gridColumn: "1 / 3",
+    gridColumn: "1 / 3",
+    gridRow: "2 / -1",
     gap: "12px",
     minWidth: "0",
     minHeight: "0",
@@ -155,7 +114,7 @@ gridColumn: "1 / 3",
   });
 
   // table container
-  const table = make_div_class(body, "mouse-stack").css.setMany({
+  const table = make_div_class(stackTable, "mouse-stack").css.setMany({
     position: "relative",
     display: "grid",
     gridAutoRows: "auto",
@@ -216,7 +175,7 @@ gridColumn: "1 / 3",
     root,
     stage: tracker,
     pointer,
-    readout: { x,y, angle, rows },
+    readout: { x, y, angle, rows },
     dispose,
   };
 }

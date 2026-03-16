@@ -294,8 +294,8 @@ export const $cols_ = {
 
 
 export const LETTER_COLORoklch = {
-  h: ACID_WASH_RGBA.softBlue,
-  s: ACID_WASH_RGBA.strawSmoke,
-  o: ACID_WASH_RGBA.fadedMagenta,
-  n: ACID_WASH_RGBA.fadedMint,
+  h: $HSON_COLORS.playful.blue,
+  s: $HSON_COLORS.playful.yellow,
+  o: $HSON_COLORS.playful.pink,
+  n: $HSON_COLORS.playful.green,
 }

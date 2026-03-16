@@ -1,7 +1,4 @@
-#### hson-live 2.0.26 / neutralica @ terminal_gothic / 14MAR2026
-#### www.terminalgothic.com
-
-# hson-live / LiveDemo
+# hson-LiveDemo
 ### hson-live — a unified format for HTML markup and JSON data
 
 LiveDemo is an interactive demonstration environment for hson-live, a glue format that unifies HTML and JSON through a shared intermediate representation.
