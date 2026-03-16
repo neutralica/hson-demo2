@@ -3,7 +3,7 @@ import { type Outcome, relay } from "intrastructure";
 import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { make_div_class, make_div_id } from "../../../utils/makers";
-import { $cols_, back_w_alpha } from "../../../consts/colors.consts";
+import { $cols_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
 import { MENU_FONT } from "../demo.css";
 
 // ---- factory ----
@@ -34,7 +34,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
 
   // reusable monospace baseline for this widget
   const MONOcss: CssMap = {
-   fontFamily: MENU_FONT,
+    fontFamily: MENU_FONT,
     fontSize: "12px",
     letterSpacing: "0.06em",
   } as const;
@@ -53,35 +53,46 @@ function mouse_factory(host: LiveTree): MousePanelRig {
       position: "relative",
 
       display: "grid",
-      gridTemplateRows: "auto 1fr",
+      gridTemplateRows: "1fr 2fr",
+      gridTemplateColumns: "2fr 1fr",
       gap: "10px",
 
       minWidth: "0",
       minHeight: "0",
       maxHeight: "70vh",
       width: "100%",
-      maxWidth: "28rem",
+      maxWidth: "19rem",
     }
     );
 
   // header row: coords + angle
   const head = root.create.div().css.setMany({
     display: "grid",
-    gridTemplateRows: "1fr 1fr",
-    gap: "10px",
-    alignItems: "center",
+    gridTemplateRows: "1fr 1fr 1fr",
+background: $cols_.bckdeep,
+    alignItems: "left",
     minWidth: "0",
+    gridColumn: "1",
+    gridRow: "1",
   });
 
-  const xy = head.create.div()
-    .classlist.add("mouse-xy")
+  const x = head.create.div()
+    .classlist.add("mouse-x")
     .css.setMany({
       ...MONOcss,
       whiteSpace: "pre",
     })
-    .text.set("x: —   y: —");
+    .text.set("x: —");
 
-  const angle = head.create.span()
+  const y = head.create.div()
+    .classlist.add("mouse-y")
+    .css.setMany({
+      ...MONOcss,
+      whiteSpace: "pre",
+    })
+    .text.set("y: —");
+
+  const angle = head.create.div()
     .classlist.add("mouse-angle")
     .css.setMany({
       ...MONOcss,
@@ -91,28 +102,31 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     })
     .text.set("θ: —°");
 
-  // body: pointer + stack table
-  const body = root.create.div().css.setMany({
-    display: "grid",
-
-    // CHANGED: stack vertically instead of side-by-side
-    gridTemplateRows: "auto 1fr",
-
-    gap: "12px",
-    minWidth: "0",
-    minHeight: "0",
-    height: "100%",
-  });
 
   // pointer stage
-  const tracker = make_div_id(body, "mouse-tracker").css.setMany({
+  const tracker = make_div_id(root, "mouse-tracker").css.setMany({
     position: "relative",
     width: "140px",
     height: "140px",
     borderRadius: "999px",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
     background: back_w_alpha(0.7),
-    overflow: "hidden",
+    gridColumn: "2",
+    gridRow: "1",
+    border: `1px solid ${ACID_WASH_OKLCH.mist}`,
+    // overflow: "hidden",
+  });
+  // body: pointer + stack table
+  const body = root.create.div().css.setMany({
+    display: "grid",
+
+    // CHANGED: stack vertically instead of side-by-side
+    gridTemplateRows: "auto 1fr",
+gridColumn: "1 / 3",
+    gap: "12px",
+    minWidth: "0",
+    minHeight: "0",
+    height: "100%",
   });
 
   const pointer = make_div_id(tracker, "mouse-pointer")
@@ -192,7 +206,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     const ix = makeCell(row, { opacity: "0.7" });
     const tag = makeCell(row);
 
-    rows.push({ ix, tag, /* quid  */});
+    rows.push({ ix, tag, /* quid  */ });
   }
 
   // placeholder dispose; init will replace
@@ -202,7 +216,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     root,
     stage: tracker,
     pointer,
-    readout: { xy, angle, rows },
+    readout: { x,y, angle, rows },
     dispose,
   };
 }

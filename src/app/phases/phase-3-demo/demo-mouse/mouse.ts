@@ -8,7 +8,8 @@ export type MousePanelRig = Readonly<{
     stage: LiveTree;
     pointer: LiveTree;
     readout: {
-        xy: LiveTree;
+        x: LiveTree;
+        y: LiveTree;
         angle: LiveTree;
         rows: ReadonlyArray<{
             ix: LiveTree;        // index
@@ -108,7 +109,8 @@ export function mouse_init(rig: MousePanelRig): void {
     const render_stack = (): void => {
         const { x, y } = lastPos;
         // coords line (keep your existing xy/angle fields if you like)
-        rig.readout.xy.text.set(`x: ${fmt_int(x)}   y: ${fmt_int(y)}`);
+        rig.readout.x.text.set(`x: ${fmt_int(x)}`);
+        rig.readout.y.text.set(`y: ${fmt_int(y)}`);
         // ADDED: pointer swivel (stage center -> mouse)
         const c = getStageCenter();
         const dx = x - c.x;

@@ -29,6 +29,7 @@ export const $T$GHSONcss: CssMap = {
   fontSize: $txt_.hsonWord,
   fontFamily: MENU_FONT,
   width: "max-content",
+  userSelect: "none",
 
 }
 
@@ -95,7 +96,7 @@ export const MENU_LISTcss: CssMap = {
   // marginLeft: "2rem",
   // alignContent: "left",
   position: "relative",
-  lineHeight: "3rem",
+  lineHeight: "2.5rem",
 
 };
 
