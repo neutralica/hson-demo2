@@ -1,6 +1,6 @@
 import { type LiveTree } from "hson-live";
 import type { TestSummary } from "../../../../tests/tests.types";
-import { $red_etc_ } from "../../../consts/colors.consts";
+import { $cols_, $red_etc_ } from "../../../consts/colors.consts";
 import { $txt_ } from "../../../consts/ui-consts";
 import { make_div_id, make_div_class } from "../../../utils/makers";
 
@@ -35,7 +35,8 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       minWidth: "44px",
       boxSizing: "border-box",
       overflow: "hidden",
-      border: $red_etc_.stonerPurple,
+      border: `1px solid ${$red_etc_.stonerPurple}`,
+      background: $cols_.bckdeep,
       transition: "transform 90ms ease, filter 140ms ease",
     });
 

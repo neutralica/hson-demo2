@@ -101,7 +101,7 @@ export const INLINE_CODEcss: CssMap = {
   fontFamily: MENU_FONT,
   fontWeight: "300",
   letterSpacing: "0.06em",
-  lineHeight: "1.85rem",
+  lineHeight: "1.55rem",
   overflowWrap: "anywhere",
   whiteSpace: "pre-wrap",
 } as const;

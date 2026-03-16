@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
 import { make_div_class } from "../../../utils/makers";
-import type { Mote, MoteStyle } from "../motes2/motes2.types";
+import type { Mote, MoteStyle } from "./motes.types";
 
 
 export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {

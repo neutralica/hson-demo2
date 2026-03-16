@@ -14,7 +14,7 @@ import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
 import type { CssMap } from "hson-live/types";
-import { $grn_, $cols_ } from "../../../consts/colors.consts";
+import { $grn_, $cols_, ACID_WASH_RGBA, $red_etc_ } from "../../../consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 
 
@@ -365,7 +365,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     return relay.err(err instanceof Error ? err.message : "unknown error:", err);
   }
 }
-export const TEST_ACTION_BTN = {
+export const TEST_ACTION_BTN: CssMap = {
   display: "grid",
   placeItems: "center",
   borderRadius: "12px",
@@ -375,10 +375,9 @@ export const TEST_ACTION_BTN = {
   fontFamily: MENU_FONT,
   fontSize: $txt_.unter,
   textTransform: "uppercase",
-
+  border: `1px solid ${$red_etc_.stonerPurple}`,
   // neutral default
-  // background: $cols_.backdeep,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+  background: $cols_.bckdeep,
 } as const;
 
 export const CONTROL_ROWcss: CssMap = {
@@ -398,25 +397,25 @@ export const CONTROL_ROWcss: CssMap = {
 export const RUN_BUTTONcss: CssMap = {
   ...TEST_ACTION_BTN,
   borderRadius: "18px",
-  background: "rgba(0,0,0,0.18)",
-  transition: "transform 90ms ease, filter 140ms ease",
+  background: $cols_.bckdeep,
+  border: `1px solid ${$red_etc_.stonerPurple}`,
   _hover: {
-    background: $grn_.faded,
+    background: ACID_WASH_RGBA.fadedMint,
     color: $cols_.bckdeep
   }
 };
 
 export const TEST_SELECTcss = {
-  minWidth: "12ch",
+  minWidth: "20ch",
   padding: "10px 8px",
   borderRadius: "12px",
   boxSizing: "border-box",
 
- fontFamily: MENU_FONT,
-  fontSize: $txt_.unter,
+  fontFamily: MENU_FONT,
+  fontSize: $txt_.main,
 
   // background: $cols_.backdeep,
-  color: $grn_.std,
+  color: ACID_WASH_RGBA.fadedMint,
   border: "1px solid rgba(255,255,255,0.10)",
   outline: "none",
 } as const;

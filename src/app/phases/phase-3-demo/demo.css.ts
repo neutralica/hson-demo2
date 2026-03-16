@@ -5,7 +5,7 @@ import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } f
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 export const MENU_TEXT_COL = ACID_WASH_RGBA.strawSmoke;
-export const MENU_FONT = "courier new"
+export const MENU_FONT = "Monaco"
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
@@ -95,7 +95,7 @@ export const MENU_LISTcss: CssMap = {
   // marginLeft: "2rem",
   // alignContent: "left",
   position: "relative",
-  lineHeight: "2.5rem",
+  lineHeight: "3rem",
 
 };
 
@@ -187,13 +187,20 @@ export const HSON_GRAFFITIcss: CssMap = {
   textShadow: "0 0 1px " + $cols_.bckdeep,
   mixBlendMode: "multiply",
 }
-export const MD_CODE_PREcss:CssMap ={
+export const MD_CODE_PREcss: CssMap = {
   margin: "20px 0",
   background: $cols_.bckdeep,
-      outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
-      borderRadius: "9px",
-      padding: "10px",
-      overflowWrap: "anywhere",
-      // whiteSpace: "normal",
+  outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
+  borderRadius: "9px",
+  padding: "10px",
+  overflowWrap: "anywhere",
+  // whiteSpace: "normal",
 
+}
+export const HSON_SUBcss ={
+      fontFamily: MENU_FONT,
+      fontSize: $txt_.heading,
+      textWrap: "nowrap",
+      lineHeight: "3rem",
+      color: ACID_WASH_OKLCH.steel,
     }

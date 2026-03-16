@@ -4,6 +4,7 @@ export const $PANEL_HIDDEN = 'panel-hidden';
 
 export const $txt_ = {
     hsonWord: "70px",
+    hsonWordMobile: "40px",
     heading: "24px",
     subhead: "21px",
     main: "18px",

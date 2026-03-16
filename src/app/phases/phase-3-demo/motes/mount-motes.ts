@@ -3,15 +3,15 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay, relay_data, relay_void } from "intrastructure";
 import { _freeze } from "../../../../tests/tests.consts";
-import { config_mote, motes_init2 } from "./motes-init";
-import type { Mote, MotesOpts, MoteStyle } from "./motes2.types";
-import type { MotesRig } from "./motes2.types";
+import { config_mote, motes_init } from "./motes-init";
+import type { Mote, MotesOpts, MoteStyle } from "./motes.types";
+import type { MotesRig } from "./motes.types";
 
 export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
   try {
     const opts = relay_data(normalize_motes_opts(optsIn));
     const rig = relay_data(mote_factory(host, opts));
-    relay_void(motes_init2(rig, opts));
+    relay_void(motes_init(rig, opts));
 
     return relay.data(rig);
   } catch (err) {

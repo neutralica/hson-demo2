@@ -1,8 +1,8 @@
 import type { LiveTree } from "hson-live";
-import type { MotesRig } from "./motes2.types";
-import type { MotesOpts, MoteStyle } from "./motes2.types";
+import type { MotesRig } from "./motes.types";
+import type { MotesOpts, MoteStyle } from "./motes.types";
 import { kill_mote } from "./kill-mote";
-import { type Mote } from "./motes2.types";
+import { type Mote } from "./motes.types";
 import { make_mote } from "./make-mote";
 import { relay, type Outcome } from "intrastructure";
 import { MOTESkf } from "./motes.keys";
@@ -81,7 +81,7 @@ type MoteRt = {
     alive: boolean;
 };
 
-export function motes_init2(rig: MotesRig, opts: MotesOpts): Outcome<void> {
+export function motes_init(rig: MotesRig, opts: MotesOpts): Outcome<void> {
     let disposed = false;
 
     // mouse state (updated by pointermove only)

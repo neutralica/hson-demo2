@@ -79,7 +79,6 @@ export function create_inspector(
   const root = make_div_id(host, "inspector").css.setMany({
     ...PANEL_SAFETYcss,
     width: "100%",
-    height: "fit-content",
     // height: "100%",
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
@@ -94,7 +93,7 @@ export function create_inspector(
   const body = make_div_class(root, "insp-body").css.setMany({
     // CHANGED: body is the scroll region (or you can put this on tableHost)
     ...PANEL_SAFETYcss,
-    overflowY: "auto",
+    overflowY: "scroll",
     overflowX: "auto",
   });
 

@@ -1,4 +1,4 @@
-import type { Mote } from "./motes2.types";
+import type { Mote } from "./motes.types";
 
 
 function read_translateY_px(el: Element): number {

@@ -1,40 +1,15 @@
 // demo-state.ts
 
+import type { DemoState, Listener, DemoStateRO, DemoView, DemoWidget } from "./state/state.types";
+
 // ---- types ----
-
-export type DemoViews =
-  | null
-  | "about"
-  | "test"
-  | "parse"
-  | "build"
-  | "fleurs";
-
-export type WidgetList =
-  | "oklch"
-  | "mouse"
-  | "motes";
-
-// Readonly type alias used everywhere 
-export type DemoUiState = {
-  currentView: DemoViews;
-  // activeWidget?: WidgetList;
-};
-
-export type DemoState = {
-  ui: DemoUiState;
-};
-
-export type DemoStateRO = Readonly<DemoState>;
-
-//  listeners receive (next, prev) so they can diff
-export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;
 
 // ---- private singleton state ----
 
 const state: DemoState = {
   ui: {
     currentView: null,
+    activeWidgets: [],
   },
 };
 
@@ -48,7 +23,10 @@ const emit = (prev: DemoStateRO): void => {
 
 //  minimal snapshot (shallow) so prev/next diffing is meaningful
 const snapshot = (): DemoStateRO => ({
-  ui: { ...state.ui },
+  ui: {
+    ...state.ui,
+    activeWidgets: [...state.ui.activeWidgets], // CHANGED
+  },
 });
 
 // ---- public API ----
@@ -57,25 +35,56 @@ export function demo_get_state(): DemoStateRO {
   return state;
 }
 
-export function get_view(): DemoViews {
+export function get_view(): DemoView {
   return state.ui.currentView;
 }
+export function get_widgets(): DemoWidget[] | undefined {
+  return state.ui.activeWidgets
+}
 
-// general-purpose update 
+export function has_widget(widget: DemoWidget): boolean {
+  return state.ui.activeWidgets.includes(widget);
+}
+
 export function demo_update(mut: (draft: DemoState) => void): void {
   const prev = snapshot();
   mut(state);
 
-  // avoid emitting when nothing changed 
-  if (prev.ui.currentView === state.ui.currentView) return;
+  const sameView = prev.ui.currentView === state.ui.currentView;
+
+  const prevWidgets = prev.ui.activeWidgets;
+  const nextWidgets = state.ui.activeWidgets;
+
+  const sameWidgets =
+    prevWidgets.length === nextWidgets.length &&
+    prevWidgets.every((w, i) => w === nextWidgets[i]);
+
+  if (sameView && sameWidgets) return;
 
   emit(prev);
 }
 
-export function set_view(next: DemoViews): void {
+export function set_view(next: DemoView): void {
   // implement via demo_update() so all mutations funnel through one path
   demo_update((s) => {
     s.ui.currentView = next;
+  });
+}
+
+export function activate_widget(next: DemoWidget): void {
+  demo_update((s) => {
+    if (!s.ui.activeWidgets.includes(next)) {
+      s.ui.activeWidgets.push(next);
+    }
+  });
+}
+
+export function deactivate_widget(next: DemoWidget): void {
+  demo_update((s) => {
+    const idx = s.ui.activeWidgets.indexOf(next);
+    if (idx >= 0) {
+      s.ui.activeWidgets.splice(idx, 1);
+    }
   });
 }
 
@@ -111,7 +120,15 @@ export function demo_subscribe_sel<T>(
   return () => listeners.delete(wrapped);
 }
 
-export function toggle_view(next: Exclude<DemoViews, null>): void {
+export function toggle_view(next: Exclude<DemoView, null>): void {
   const current = get_view();
   set_view(current === next ? null : next);
+}
+
+export function toggle_widget(widget: DemoWidget): void {
+  if (has_widget(widget)) {
+    deactivate_widget(widget);
+  } else {
+    activate_widget(widget);
+  }
 }

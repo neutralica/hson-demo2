@@ -81,19 +81,6 @@ export const PANEL_TEXTAREAcss = {
 };
 
 
-export const TEST_STATUS_CHIPcss: CssMap = {
-    padding: "8px 10px",
-    boxSizing: "border-box",
-  fontFamily: MENU_FONT,
-    fontSize: $txt_.heading,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    // background: $cols_.bckgd,
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-    opacity: "0.9",
-    color: $gry_.dimmer,
-    maxWidth: $CHIP_WIDTHstr
-} as const;
 
 export const TEST_LOGGERcss: CssMap = {
     borderRadius: "12px",
@@ -119,7 +106,7 @@ export const TEST_LOGGERcss: CssMap = {
 export const CLEAR_BTNcss: CssMap = {
     ...TEST_ACTION_BTN,
     borderRadius: "18px",
-    background: $cols_.bckgd,
+    background: $cols_.bckdeep,
     transition: "transform 90ms ease, filter 140ms ease",
     
     _hover: {
@@ -129,7 +116,7 @@ export const CLEAR_BTNcss: CssMap = {
 }
 
 export const LOG_BOXcss: CssMap = {
-    overflow: "hidden",
+    overflow: "auto",
     gridColumn: "1 / 5",
     background: $cols_.bckdeep,
 
