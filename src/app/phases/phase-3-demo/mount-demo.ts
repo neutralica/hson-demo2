@@ -15,7 +15,7 @@ import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
 import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, toggle_about_toc } from "./state";
+import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, toggle_about_toc, get_about_toc_open } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./demo-build/build";
@@ -63,7 +63,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
-  const mobileDocBtn = make_div_id(menuContainer, "mobile-doc-button")
     .classlist.add($PANEL_HIDDEN);
   const copyright = screenFx.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
@@ -94,6 +93,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     fleurSvg.attr.set("viewbox", `0 0 ${w} ${h}`);
   }
   mount_motes(motes);
+
+
+
+  /* main menu & logo heading */
   const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
   const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
 
@@ -135,9 +138,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .classlist.set(widgetKeys.includes(k) ? "widget-button" : "view-button")
       .css.setMany({
         ...MAIN_MENUcss,
-        color: widgetKeys.includes(k) ? ACID_WASH_RGBA.brickDust : MENU_TEXT_COL,
+        color: widgetKeys.includes(k) ? ACID_WASH_RGBA.warmAsh : MENU_TEXT_COL,
       });
   });
+  const mobileDocBtn = make_div_id(menu.aboutBtn, "mobile-doc-button");
+
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
@@ -215,22 +220,22 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   }
   mobileDocBtn.listen.stopProp().onClick(() => {
-    set_about_toc_open(true);
+    if (get_about_toc_open()) {
+      set_about_toc_open(false)
+    } else {
+      set_about_toc_open(true);
+    }
   })
   if (!_testsWired) { _testsWired = true; }
   menu.parseBtn.listen.stopProp().onClick(() => { toggle_view("parse"); });
   menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });
   menu.aboutBtn.listen.stopProp().onClick(() => {
-  const next = get_view() === "about" ? null : "about";
+    const next = get_view() === "about" ? null : "about";
 
-  set_view(next);
+    set_view(next);
+    set_about_toc_open(next === "about");
+  });
 
-  if (next === "about" && window.innerWidth <= 960) {
-    set_about_toc_open(true);
-  } else {
-    set_about_toc_open(false);
-  }
-});
   menu.buildBtn.listen.stopProp().onClick(() => { toggle_view("build"); });
   menu.fleurBtn.listen.stopProp().onClick(() => {
     if (get_view() === "fleurs") { fleurLayer.empty() }

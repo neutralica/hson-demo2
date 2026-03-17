@@ -185,7 +185,7 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   display: "grid",
-  gridTemplateColumns: "21ch minmax(0, 1fr)", // CHANGED
+  // gridTemplateColumns: "21ch minmax(0, 1fr)",
   gap: "14px",
   boxSizing: "border-box",
 };

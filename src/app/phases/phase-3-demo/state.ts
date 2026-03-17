@@ -27,7 +27,7 @@ const emit = (prev: DemoStateRO): void => {
 const snapshot = (): DemoStateRO => ({
   ui: {
     ...state.ui,
-    activeWidgets: [...state.ui.activeWidgets], // CHANGED
+    activeWidgets: [...state.ui.activeWidgets], 
   },
 });
 
@@ -53,6 +53,7 @@ export function demo_update(mut: (draft: DemoState) => void): void {
   mut(state);
 
   const sameView = prev.ui.currentView === state.ui.currentView;
+  const sameToc = prev.ui.aboutTocOpen === state.ui.aboutTocOpen;
 
   const prevWidgets = prev.ui.activeWidgets;
   const nextWidgets = state.ui.activeWidgets;
@@ -61,7 +62,7 @@ export function demo_update(mut: (draft: DemoState) => void): void {
     prevWidgets.length === nextWidgets.length &&
     prevWidgets.every((w, i) => w === nextWidgets[i]);
 
-  if (sameView && sameWidgets) return;
+  if (sameView && sameToc && sameWidgets) return;
 
   emit(prev);
 }

@@ -57,8 +57,19 @@ type BuildFactoryOpts = Readonly<{
 const $BUILD_ROOT = "build-root" as const;
 
 const DEFAULT_SEED = `
-<div id="build-demo" style="background: #02070d; border-left: 1px solid rgba(120,180,255,0.28); border-right: 1px solid rgba(120,180,255,0.12); box-sizing: border-box; color: white; display: grid; grid-template-rows: auto auto 1fr auto auto; height: 100%; padding: 28px 34px 26px 34px; width: 100%"
-  <div style="align-items: flex-start; display: flex; justify-content: space-between"
+<div id="build-demo" style="
+  background: #02070d;
+  border-left: 1px solid rgba(120,180,255,0.28);
+  border-right: 1px solid rgba(120,180,255,0.12);
+  box-sizing: border-box; color: white; display: grid;
+  grid-template-rows: auto auto 1fr auto auto;
+  padding: 28px 34px 26px 34px; 
+  height: 100%;
+  width: 100%"
+  <div style="
+  display: flex;
+    align-items: flex-start;
+    justify-content: space-between"
     <div style="background: rgba(160,220,255,0.35); height: 1px; margin-top: 22px; width: 120px"/>
     <h1 id="build-heading" style="color: rgba(175,220,255,0.96); font-family: monospace; font-size: 1.95rem; font-weight: 700; letter-spacing: 0.16em; margin: 0; text-align: center"
       "HSON BUILD DEMO"

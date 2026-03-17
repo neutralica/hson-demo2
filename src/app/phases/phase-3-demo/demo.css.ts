@@ -3,8 +3,9 @@
 import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
+import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
-export const MENU_TEXT_COL = ACID_WASH_RGBA.strawSmoke;
+export const MENU_TEXT_COL = OKLCH_FLEURS.rustPink;
 export const MENU_FONT = "Monaco"
 
 export const MAIN_MENUcss: CssMap = {
@@ -13,6 +14,8 @@ export const MAIN_MENUcss: CssMap = {
   fontWeight: "500",
   userSelect: "none",
   color: MENU_TEXT_COL,
+  pointerEvents: "all",
+  cursor: "pointer",
   _hover: {
     fontWeight: "100",
     background: ACID_WASH_RGBA.mutedViolet,
@@ -130,6 +133,7 @@ export const MENU_CONTAINERcss: CssMap = {
   minHeight: "0",
   width: "100%",
   height: "100%",
+  pointerEvents: "none",
   // marginLeft: "2rem",
   // marginTop:"2rem"
 };

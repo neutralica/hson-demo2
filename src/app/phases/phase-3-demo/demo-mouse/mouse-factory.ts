@@ -38,26 +38,27 @@ function mouse_factory(host: LiveTree): MousePanelRig {
       ...MONOcss,
       color: "oklch(0.7 0.3 080)",
       whiteSpace: "pre",
-      marginLeft: "0.6rem",
+      marginLeft: "1.5rem",
     })
     .text.set("x: —");
-
-  const y = coordbox.create.div()
+    
+    const y = coordbox.create.div()
     .classlist.add("mouse-y")
     .css.setMany({
       ...MONOcss,
       color: "oklch(0.7 0.3 080)",
       whiteSpace: "pre",
+      marginLeft: "1rem",
     })
     .text.set("y: —");
-
-  const angle = coordbox.create.div()
+    
+    const angle = coordbox.create.div()
     .classlist.add("mouse-angle")
     .css.setMany({
       ...MONOcss,
       color: "oklch(0.7 0.3 080)",
       whiteSpace: "pre",
-      marginLeft: "-0.9rem",
+      marginLeft: "0.1rem",
     })
     .text.set("θ: —°");
 
