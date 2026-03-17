@@ -146,7 +146,7 @@ Mutations to the graph are synchronously reflected in the DOM, allowing document
 
 The goal of LiveDemo is expose the mechanics of the hson-live library in a visible way, rather than showcase a polished UI; its styling is intentionally minimalist. 
 
-The demos prove at least one of these properties of hson-live:
+Each demo proves at least one of these properties of hson-live:
 
 - data integrity and stability within the transformation system  
 - round-trip, repeated transformation fidelity
