@@ -15,7 +15,7 @@ import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
 import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget } from "./state";
+import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, toggle_about_toc } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./demo-build/build";
@@ -63,6 +63,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
+  const mobileDocBtn = make_div_id(menuContainer, "mobile-doc-button")
+    .classlist.add($PANEL_HIDDEN);
   const copyright = screenFx.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
   const fleurSvg = fleurOverlay.create.tags(["svg"]).first()!;
@@ -196,6 +198,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       });
     });
   }
+
   demo_subscribe(() => applyView());
   applyView();
   // wait until layout exists before syncing SVG coordinate space
@@ -211,11 +214,23 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     menu.mouseBtn.data.set("active", get_widgets()?.includes("mouse") ? "true" : null);
 
   }
-
+  mobileDocBtn.listen.stopProp().onClick(() => {
+    set_about_toc_open(true);
+  })
   if (!_testsWired) { _testsWired = true; }
   menu.parseBtn.listen.stopProp().onClick(() => { toggle_view("parse"); });
   menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });
-  menu.aboutBtn.listen.stopProp().onClick(() => { toggle_view("about"); });
+  menu.aboutBtn.listen.stopProp().onClick(() => {
+  const next = get_view() === "about" ? null : "about";
+
+  set_view(next);
+
+  if (next === "about" && window.innerWidth <= 960) {
+    set_about_toc_open(true);
+  } else {
+    set_about_toc_open(false);
+  }
+});
   menu.buildBtn.listen.stopProp().onClick(() => { toggle_view("build"); });
   menu.fleurBtn.listen.stopProp().onClick(() => {
     if (get_view() === "fleurs") { fleurLayer.empty() }

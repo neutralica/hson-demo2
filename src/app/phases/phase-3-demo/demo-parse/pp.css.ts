@@ -1,6 +1,6 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, set_alpha } from "../../../consts/colors.consts";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
@@ -13,9 +13,9 @@ export const PP_HEADERcss: CssMap = {
   position: "relative",
   zIndex: "5",
   minHeight: "2rem",
-  padding: "6px 8px 8px",
+  padding: "6px",
   borderRadius: "10px",
-  background: "rgba(255,255,255,0.03)",
+  background: set_alpha($cols_.bckdeep, 0.7),
   boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.08)",
   // small halo without skeuo
   textShadow: "0 0 10px rgba(140,210,255,0.10)",
@@ -27,7 +27,7 @@ export const PP_TEXTWRAPcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
-  background: $cols_.bckgd,
+  background: set_alpha($cols_.bckdeep, 0.9),
 
 };
 
@@ -119,7 +119,7 @@ export const PP_MUTEDcss: CssMapBase = {
 export const PP_COPYBTNcss: CssMap = {
   marginLeft: "auto",
   height: "26px",
-  padding: "0 10px",
+  padding: "4px 10px",
   borderRadius: "10px",
 
   background: "rgba(0,0,0,0.14)",

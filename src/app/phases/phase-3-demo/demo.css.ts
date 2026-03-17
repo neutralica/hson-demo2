@@ -1,7 +1,7 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
 
 export const MENU_TEXT_COL = ACID_WASH_RGBA.strawSmoke;
@@ -26,7 +26,7 @@ export const MAIN_MENUcss: CssMap = {
 }
 
 export const $T$GHSONcss: CssMap = {
-  fontSize: $txt_.hsonWord,
+  fontSize: $txt_.hsonWordMarkMain,
   fontFamily: MENU_FONT,
   width: "max-content",
   userSelect: "none",
@@ -41,7 +41,7 @@ export const DEMOcss: CssMap = {
   height: "100%",
   inset: "0",
   overflow: "hidden",
-  background: `linear-gradient(${$cols_.bckgd} 99%,${$cols_.bcklight})`,
+  background: `linear-gradient(${$cols_.bckgd} 60%,${set_alpha($blu_.muted, 0.06)})`,
   pointerEvents: "none",
 };
 
@@ -78,7 +78,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   display: "grid",
 
   // left = nav, right = main
-  gridTemplateColumns: "1fr 4fr",
+  gridTemplateColumns: "200px 4fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
   gap: $GRID_GAPstr,
@@ -219,8 +219,10 @@ export const HSON_SUBcss: CssMap = {
 
 export const COPYRITEcss: CssMap = {
   fontFamily: MENU_FONT,
+  fontSize: $txt_.unter,
   position: "fixed",
-  bottom: "1rem",
-  right: "1rem",
-  color: $gry_.dim
+  bottom: "0.2rem",
+  right: "0.2rem",
+  color: $gry_.dim,
+  zIndex: "-10",
 }

@@ -4,7 +4,7 @@ import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { make_div_class, make_div_id } from "../../../utils/makers";
 import { $cols_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
-import { MONOcss, ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss } from "./mouse.css";
+import { MONOcss, ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss } from "./mouse.css";
 
 // ---- factory ----
 
@@ -25,20 +25,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
 
   const root = make_div_id(host, "mouse-panel-root")
     .classlist.add("mouse-panel")
-    .css.setMany({
-      position: "relative",
-
-      display: "grid",
-      gridTemplateRows: "1fr 2fr",
-      gridTemplateColumns: "2fr 1fr",
-
-      minWidth: "0",
-      minHeight: "0",
-      maxHeight: "70vh",
-      width: "100%",
-      maxWidth: "19rem",
-    }
-    );
+    .css.setMany(MOUSE_ROOTcss);
 
   // header row: coords + angle
   // pointer stage

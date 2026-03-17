@@ -2,6 +2,25 @@
 
 const invalidRed = "rgba(200, 50, 50, 1)"
 
+export function set_alpha(color: string, alpha: number): string {
+  // accept rgb(...) or rgba(...)
+  const m = color.match(
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/
+  );
+
+  if (!m) {
+    throw new Error(`set_alpha: expected rgb(...) or rgba(...), got: ${color}`);
+  }
+
+  const r = m[1];
+  const g = m[2];
+  const b = m[3];
+
+  // clamp alpha just in case
+  const a = Math.min(1, Math.max(0, alpha));
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
 
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,1)";
@@ -47,7 +66,7 @@ const greyDim = "rgba(134, 134, 134, 1)"
 const greyDimmer = "rgba(58, 58, 58, 1)"
 const greyDark = "rgba(40, 38, 38, 1)"
 const greyBlack = "rgba(26, 26, 26, 1)"
-const deepBack = "#07070a"
+const deepBack = "rgba(7, 7, 10, 1)"
 
 const bckColorR = 12;
 const bckColorG = 19;
@@ -126,6 +145,7 @@ export const LETTER_COLORcandy = {
   o: greenCandy, // bright
   n: pinkCandy, // slightly warm
 } as const;
+
 
 
 export const $blu_ = {

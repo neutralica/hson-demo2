@@ -1,7 +1,9 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../consts/colors.consts";
 import { $txt_ } from "../../../consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
+import { MONOcss } from "../demo-mouse/mouse.css";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 // ADDED: list cell styling (prevents baseline + indent issues)
 export const ABOUT_LIST_ROWcss: CssMap = {
@@ -11,6 +13,18 @@ export const ABOUT_LIST_ROWcss: CssMap = {
   alignItems: "start",            //  fixes number baseline wobble
   minWidth: "0",
   maxWidth: "70ch",
+};
+export const ABOUT_DOCcss: CssMap = {
+  minWidth: "0",
+  minHeight: "0",
+  padding: "22px 26px 80px 26px",
+  boxSizing: "border-box",
+  overflowY: "auto",
+  overflowX: "hidden",
+
+  background: set_alpha($cols_.bckdeep, 0.88),
+  borderRadius: "18px",
+  border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
 };
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
@@ -46,29 +60,22 @@ export const HRcss: CssMap = {
   marginRight: "auto",
 };
 
-export const DOC_BTNcss: CssMap = {
-  display: "grid",
-  alignItems: "center",
-  padding: "8px 10px",
-  borderRadius: "10px",
-  cursor: "pointer",
-  userSelect: "none",
-  fontFamily: MENU_FONT,
-  fontSize: "15px",
-  letterSpacing: "0.06em",
-  background: "rgba(0,0,0,0.18)",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-} as const;
-
 export const DOC_BTN_ACTIVEcss: CssMap = {
-  background: "rgba(120,255,210,0.10)",
-  boxShadow: "inset 0 0 0 1px rgba(120,255,210,0.22)",
-} as const;
+  background: $cols_.bckdeep,
+  color: OKLCH_FLEURS.cyanDust,
+  __after: {
+    content: "> ",
+    display: "inline"
+
+  }
+
+};
 
 export const DOC_BTN_IDLEcss: CssMap = {
-  background: "rgba(0,0,0,0.18)",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-} as const;
+  background: set_alpha($cols_.bckdeep, 0.18),
+  color: $blu_.faded,
+  border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
+};
 
 export const ABOUT_P_TEXTcss: CssMap = {
   // padding: "0 30px 0 30px",
@@ -161,3 +168,65 @@ export const WARNINGcss: CssMap = {
   textDecoration: "underline",
   fontWeight: "700",
 }
+
+
+export const ABOUT_ROOTcss: CssMap = {
+  width: "100%",
+  height: "100%",
+  minWidth: "0",
+  minHeight: "0",
+  display: "grid",
+  boxSizing: "border-box",
+};
+
+export const ABOUT_BODY_ROWcss: CssMap = {
+  width: "100%",
+  height: "100%",
+  minWidth: "0",
+  minHeight: "0",
+  display: "grid",
+  gridTemplateColumns: "21ch minmax(0, 1fr)", // CHANGED
+  gap: "14px",
+  boxSizing: "border-box",
+};
+
+export const ABOUT_TOCcss: CssMap = {
+  minWidth: "0",
+  minHeight: "0",
+  gridAutoRows: "min-content",
+  alignContent: "start",
+  gap: "8px",
+  padding: "8px 8px 12px 8px",
+  boxSizing: "border-box",
+  background: set_alpha($cols_.bckdeep, 0.72),
+  borderRadius: "18px",
+  border: `1px solid ${set_alpha($blu_.faded, 0.12)}`,
+  overflowY: "auto",
+  overflowX: "hidden",
+};
+
+export const ABOUT_NAV_TITLEcss: CssMap = {
+  fontFamily: MENU_FONT,
+  fontSize: "12px",
+  letterSpacing: "0.12em",
+  fontWeight: "700",
+  color: OKLCH_FLEURS.navyCore,
+  textTransform: "uppercase",
+  padding: "4px 10px 8px 10px",
+};
+
+export const DOC_BTNcss: CssMap = {
+  ...MONOcss,
+  fontSize: "18px",
+  lineHeight: "1.1",
+  padding: "12px 16px",
+  borderRadius: "10px",
+  boxSizing: "border-box",
+  cursor: "pointer",
+  userSelect: "none",
+  minWidth: "0",
+
+  border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
+  background: set_alpha($cols_.bckdeep, 0.18),
+  color: $blu_.faded,
+};

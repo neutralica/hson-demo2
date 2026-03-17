@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_, back_w_alpha } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
@@ -57,7 +57,7 @@ export const PANELcss: CssMap = {
     minHeight: "0",
     minWidth: "0",
     width: "100%",
-    padding: "10px",
+    padding: "8px",
     borderRadius: "12px",
     boxSizing: "border-box",
     overflowY: "auto",
@@ -71,10 +71,11 @@ export const PANEL_TEXTAREAcss = {
     width: "100%",
     boxSizing: "border-box",
     fontFamily: MENU_FONT,
-    fontSize: "12px",
-    lineHeight: "1.35",
+    fontSize: $txt_.main,
+    lineHeight: "1.85",
     // background: $cols_.backdeep,
-    color: $grn_.std,
+    padding: "10px",
+    color: ACID_WASH_OKLCH.bruisedPlum,
     border: `1px solid ${$red_etc_.stonerPurple}`,
     borderRadius: "10px",
     outline: "none",
@@ -148,10 +149,10 @@ export const TEST_PANELcss: CssMap = {
 export const PANEL_BRANCHcss: CssMap = {
     display: "grid",
     gap: "8px",
-    padding: "10px",
+    // padding: "10px",
     width: "420px",
     boxSizing: "border-box",
     gridTemplateColumns: `${$CHIP_WIDTHstr} ${$CHIP_WIDTHstr}`,
     gridTemplateRows: "auto " + $CHIP_WIDTHstr,
-    background: back_w_alpha(0.7),
+    background: $cols_.bckdeep,
 };

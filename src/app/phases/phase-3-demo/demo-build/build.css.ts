@@ -1,7 +1,7 @@
 // build.css.ts
 import type { CssMap } from "hson-live/types";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
-import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL } from "../../../consts/colors.consts";
 import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
 import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
 import { MENU_FONT } from "../demo.css";
@@ -75,8 +75,9 @@ export const BUILD_TEXTAREAcss: CssMap = {
   outline: "none",
 
   background: $cols_.bckdeep,
-  color: $cols_.txtmain,
-  fontSize: $txt_.unter,
+  color: ACID_WASH_OKLCH.bruisedPlum,
+  fontSize: $txt_.main,
+  lineHeight: "1.8",
   padding: "10px",
 };
 
@@ -127,7 +128,7 @@ export const BUILD_BTNcss: CssMap = {
   padding: "8px 10px",
   borderRadius: "12px",
   background: $cols_.bckdeep,
-  color: $ylw_.candy,
+  color: OKLCH_MUTED_PASTEL.yellow,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   flexShrink: "0",
 };
@@ -147,7 +148,7 @@ export const BUILD_TABcss: CssMap = {
   padding: "8px 10px",
   borderRadius: "12px",
   background: "rgba(0,0,0,0.18)",
-  color: $grn_.faded,
+  color: ACID_WASH_OKLCH.bruisedPlum,
   flexShrink: "0",
 };
 
@@ -186,8 +187,6 @@ export const BUILD_HTMLBOXcss: CssMap = {
   outline: "none",
 
   padding: "10px",
-  color: $grn_.std,
-  background: $cols_.bckdeep,
 };
 
 export const BUILD_PANEcss: CssMap = {
@@ -202,8 +201,6 @@ export const BUILD_PANEcss: CssMap = {
   padding: "10px",
   boxSizing: "border-box",
   borderRadius: "14px",
-  background: "rgba(0,0,0,0.22)",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   // overflow: "hidden",
 };
 

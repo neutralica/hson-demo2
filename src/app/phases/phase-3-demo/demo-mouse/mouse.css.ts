@@ -52,8 +52,10 @@ export const MONOcss: CssMap = {
   fontFamily: MENU_FONT,
   fontSize: "12px",
   letterSpacing: "0.06em",
-  background: $cols_.bckdeep,
-  width: "100%"
+  // background: $cols_.bckdeep,
+  width: "100%",
+  fontWeight: "600"
+
 } as const;
 
 // grid-cell clamp so long values don't push neighbors
@@ -62,4 +64,17 @@ export const CELL_CLAMPcss: CssMap = {
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
+} as const;
+
+export const MOUSE_ROOTcss: CssMap = {
+  position: "relative",
+
+  display: "grid",
+  gridTemplateRows: "1fr 2fr",
+  gridTemplateColumns: "2fr 1fr",
+
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  maxWidth: "19rem",
 } as const;

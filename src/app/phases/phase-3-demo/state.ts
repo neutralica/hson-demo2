@@ -10,6 +10,8 @@ const state: DemoState = {
   ui: {
     currentView: null,
     activeWidgets: [],
+    aboutTocOpen: false, // CHANGED
+
   },
 };
 
@@ -131,4 +133,19 @@ export function toggle_widget(widget: DemoWidget): void {
   } else {
     activate_widget(widget);
   }
+}
+
+
+export function get_about_toc_open(): boolean {
+  return state.ui.aboutTocOpen;
+}
+
+export function set_about_toc_open(next: boolean): void {
+  demo_update((s) => {
+    s.ui.aboutTocOpen = next;
+  });
+}
+
+export function toggle_about_toc(): void {
+  set_about_toc_open(!get_about_toc_open());
 }
