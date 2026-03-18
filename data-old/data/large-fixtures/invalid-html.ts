@@ -4,7 +4,8 @@ export const html_INVALID = {
   simple: `<p>INVALID`,
   // Reserved meta on VSN 
   meta_quid_on_vsn: `<_array data-_quid="qqq"><_ii data-_index="0"><p>one</p></_ii></_array>`,
-
+// Empty unquoted value (edge in HTML, observed in the wild)
+  empty_unquoted: `<div data-flag=>e</div>`,
   // Valid array indices (contiguous 0..n)
   array_indices_ok: `<_array>
     <_ii data-_index="0"><p>A</p></_ii>

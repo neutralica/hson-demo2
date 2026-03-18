@@ -11,6 +11,13 @@ import { legacy_suites_3, suite_more_contract_refresh } from "./livetree-fixture
 import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
 
 
+function after_paint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
+}
 
 export function all_livetree_suites(): readonly TestSuite[] {
   return [
@@ -1094,6 +1101,7 @@ export function suite_css_and_content(): TestSuite {
         await tick();
       },
       assert(tree: LiveTree, t: Asserter) {
+        after_paint();
         const el0 = tree.find.must.byId("box").asDomElement();
         t.ok("box dom exists", !!el0);
 
@@ -1142,6 +1150,7 @@ export function suite_css_and_content(): TestSuite {
         await tick();
       },
       assert(tree: LiveTree, t: Asserter) {
+        after_paint();
         const box = tree.find.must.byId("box");
         const el0 = box.asDomElement();
         t.ok("box dom exists", !!el0);

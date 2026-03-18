@@ -14,8 +14,9 @@ import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
 import type { CssMap } from "hson-live/types";
-import { $grn_, $cols_, ACID_WASH_RGBA, $red_etc_ } from "../../../consts/colors.consts";
+import { $grn_, $cols_, ACID_WASH_RGBA, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
 export type TestPanelDeps = Readonly<{
@@ -121,9 +122,16 @@ function test_panel_factory(): Outcome<TestPanel> {
 
   const chips = create_test_chips(branch);
 
+  let cache: string[] = []
+
   const setLog = (txt: string): void => {
-    if (!mounted) return;
-    logger.text.add(txt);
+    if (mounted) {
+      if (cache.length > 0) {
+        cache.forEach(c => logger.create.div().text.set(c))
+      }
+      logger.create.div().text.set(txt);
+    }
+    else if (!mounted) { cache.push(txt); }
   };
 
   const clearLogs = (): void => {
@@ -173,8 +181,8 @@ function test_panel_factory(): Outcome<TestPanel> {
   };
 
   // set initial marquee before mount so it’s ready
-  logger.text.set(introText);
-  logger.text.add(liveTreeText);
+  setLog(introText);
+  setLog(liveTreeText);
 
   return relay.data({
     branch,
@@ -256,6 +264,38 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
 
     // --- owned dependencies ---
     const tp = relay_data(test_panel_factory());
+    // CHANGED: local append-only console writer
+    const appendLogLine = (line: string): void => {
+      const isFail = /\bFAIL\b|\bERR\b|\berror\b/i.test(line);
+      const isPass = /\bPASS\b|\bOK\b/i.test(line);
+      const isWarn = /\bSKIP\b|\bWARN\b/i.test(line);
+
+      const row = tp.marquee.create.div().css.setMany({
+        whiteSpace: "pre-wrap",
+        overflowWrap: "anywhere",
+        minWidth: "0",
+        fontFamily: MENU_FONT,
+        fontSize: "12px",
+        lineHeight: "1.25",
+        paddingBottom: "2px",
+
+        color:
+          isFail ? "red"
+            : isPass ? $grn_.faded
+              : isWarn ? $ylw_.faded
+                : $cols_.txtmain,
+      });
+
+      row.text.set(line);
+
+      const el = tp.marquee.dom.el();
+      if (el instanceof HTMLElement) {
+        el.scrollTop = el.scrollHeight;
+      }
+    };
+    const clearLogLines = (): void => {
+      tp.marquee.empty();
+    };
     tp.mount(testSurface);
 
     const tlog = create_test_log();
@@ -299,9 +339,9 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     );
 
     // local event sink (no mount_demo involvement)
-    const onEvent = (e: TestEvent): void => {
+    const doLogOnEvent = (e: TestEvent): void => {
       tlog.onEvent(e);
-      tp.marquee.text.set(tlog.getLastLine());
+      appendLogLine(tlog.getLastLine());
     };
 
     // --- wire buttons inside the widget ---
@@ -312,34 +352,20 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       tp.chips.clear();
       inspFrame.classlist.remove($PANEL_HIDDEN);
       tlog.clear();
+      clearLogLines(); // CHANGED
 
-      // 1) set it first
-      tp.marquee.text.set("running loop test…");
-
-      // 2) yield AFTER setting it so it can paint
+      appendLogLine("running loop test…"); // CHANGED
       await next_frame();
-
-      // 3) prevent immediate clobber by onEvent for a moment
-      let allowMarquee = false;
-      const onEvent = (e: TestEvent): void => {
-        tlog.onEvent(e);
-        if (!allowMarquee) return;
-        tp.marquee.text.set(tlog.getLastLine());
-      };
-
-      // allow event-driven marquee after a paint tick
-      await next_frame();
-      allowMarquee = true;
 
       const mode: TestRunMode = tp.getMode();
 
       captureMap.clear();
       const suites = build_suites_for_mode(mode, { _test_full_loop }, captureMap);
 
-      const res = await run_test_suites(suites, onEvent, { bail: false });
+      const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
 
       tp.chips.render(res.summary);
-      tp.marquee.text.set(tlog.getLastLine());
+      appendLogLine(tlog.getLastLine()); // optional; can remove if redundant
 
       inspector.show();
       inspector.render();
@@ -348,10 +374,10 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     tp.clearBtn.listen.onClick(() => {
       tlog.clear();
       tp.chips.clear();
-      tp.marquee.text.set("idle");
+      clearLogLines(); // CHANGED
+      appendLogLine("idle"); // CHANGED
       inspector.clear();
       inspFrame.classlist.add($PANEL_HIDDEN);
-
     });
 
     return relay.data({

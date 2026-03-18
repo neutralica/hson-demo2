@@ -67,29 +67,23 @@ export const set_global_css = (): void => {
       background: $gry_.dim,
       fontWeight: "100",
       color: $cols_.bckdeep,
-      textDecoration: "line-through",
     },
 
   });
-
-  /* table of contents is grid on desktop */
-  // gcss.rule("about-toc-desktop", ".about-toc").setMany({
-  //   display: "grid",
-  // });
-
 
   /* mobile styling */
   const mobile = gcss.media({
     maxWidth: 1100,
     // hover: "none",
     // pointer: "coarse"
-  }
-  )
+  }  )
 
   mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #ui-root, #mouse-button, #about-button, #mouse-slot")
     .setMany({ display: "none" });
 
-mobile.rule("show-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(SIZE_WARNINGcss)
+  mobile.rule("show-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(SIZE_WARNINGcss("on"))
+  
+
   mobile.rule("mobile-about-btn", "#about-button")
     .setMany({
       position: "fixed",
@@ -152,5 +146,5 @@ mobile.rule("show-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(S
 
   /* style "open" table of contents*/
   mobile.rule("about-toc-mobile-open", ".about-toc[data-toc-open='true']").setMany(MOBILE_TOCcss);
+// gcss.rule("hide-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(SIZE_WARNINGcss("off"))
 }
-

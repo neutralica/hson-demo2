@@ -428,13 +428,11 @@ const htmlAttributeCases: { [key: string]: string } = {
   // 17) Attribute containing commas/semicolons/colons that should not split
   punctuation_value: `<meta http-equiv="refresh" content="0; url=https://example.com?a=1,2;mode:x">`,
 
-  // 18) Empty unquoted value (edge in HTML, observed in the wild)
-  empty_unquoted: `<div data-flag=>e</div>`,
 
-  // 19) Unicode in attribute names and values
+  // 18) Unicode in attribute names and values
   unicode_attrs: `<div data–en-dash="–" lang="ja" title="ひらがな">u</div>`,
 
-  // 20) Entity + URL mix inside quoted attribute
+  // 19) Entity + URL mix inside quoted attribute
   attr_url_mix: `<a href="https://example.com/?q=Tom&amp;Jerry&ref=mail">link</a>`
 };
 
@@ -454,12 +452,16 @@ export const HTML_FIXTURES_LEGACY = _freeze({
     html_hackerNews,
     html_gwern,
   },
-  html_INVALID, // expect errors
-
+  
   // parses but loses style & noncompliant attrs etc
-
+  
   // expect error:
-
+  
   // htmlSanitizeFail,
-
+  
 } satisfies FixtureBundle);
+
+export const EXPECT_ERRORS = {
+  html_INVALID, // expect errors
+  
+}

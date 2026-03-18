@@ -3,8 +3,7 @@ import type { BuildSuitesOpts, CaseKey, FixtureBundle, HsonTestApi, TestCase, Te
 import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
-import { HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
-import { make_html_generated_fixtures } from "./transform-tests/fixtures/generate-fixtures";
+import { EXPECT_ERRORS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
 import { make_generated_json_fixtures } from "./transform-tests/fixtures/generate-json";
 import type { Fixture } from "./tests.types";
@@ -203,24 +202,14 @@ export function build_suites_for_mode(
   mode: TestRunMode,
   h: Readonly<{ _test_full_loop: FullLoopFn }>,
   map?: Map<CaseKey, () => Promise<LoopReport>>,
-  o: BuildSuitesOpts = {},
 ): readonly TestSuite[] {
-  const seed = (o.seed ?? (Math.floor(Math.random() * 1e9) >>> 0)) >>> 0;
-
-  const genHtmlCount = o.genHtmlCount ?? 2000;
-  const genJsonCount = o.genJsonCount ?? 2000;
-
-  // build generated fixtures here (so seed is part of suite identity)
-  const generated: readonly Fixture[] = _freeze([
-    ...make_html_generated_fixtures({ seed, count: genHtmlCount }),
-    ...make_generated_json_fixtures({ seed, count: genJsonCount }),
-  ]);
 
 
   if (mode === "legacy") {
     return _freeze([
       make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
       make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic/html", map),
+      make_legacy_test_suite(h, EXPECT_ERRORS, "fixtures/EXPECT_ERRORS", map),
     ]);
   }
 
@@ -229,11 +218,6 @@ export function build_suites_for_mode(
       make_legacy_test_suite(h, HTML_FIXTURES_NEW, "fixtures/new/json", map),
     ]);
   }
-  // if (mode === "generated") {
-  //   return _freeze([
-  //     generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
-  //   ]);
-  // }
   if (mode === "dev") {
     return _freeze([
       make_legacy_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
@@ -246,11 +230,11 @@ export function build_suites_for_mode(
   }
   
   return _freeze([
+    make_legacy_test_suite(h, HTML_FIXTURES_NEW, "transform/new/html", map),
+    ...all_livetree_suites(),
     make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
-    make_legacy_test_suite(h, HTML_FIXTURES_NEW, "transform/new/html", map),
-    // generate_fixture_suite(h, generated, map, { seed, genHtmlCount, genJsonCount }),
     make_legacy_test_suite(h, JSON_FIXTURES_DEV, "transform/dev", map),
-    ...all_livetree_suites(),
+    make_legacy_test_suite(h, EXPECT_ERRORS, "failcase/EXPECT_ERRORS", map),
   ]);
 }

@@ -101,7 +101,7 @@ export function create_test_log(): TestLog {
       const base = { key: k, suite: e.suite, name: e.name } as const;
       cases.set(k, _freeze(meta ? { ...base, meta } : base));
 
-      lastLine = `… ${e.name}`;
+      lastLine = `run ${e.name}`;
       return;
     }
 
@@ -156,7 +156,7 @@ export function create_test_log(): TestLog {
 
         lastLine = `FAIL ${e.suite} :: ${e.name}`;
       } else {
-        lastLine = `${e.status.toUpperCase()} ${e.name}`;
+        lastLine = e.status.toUpperCase();
       }
       return;
     }
