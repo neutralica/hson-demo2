@@ -76,7 +76,7 @@ export const BUILD_TEXTAREAcss: CssMap = {
 
   background: $cols_.bckdeep,
   color: ACID_WASH_OKLCH.bruisedPlum,
-  fontSize: $txt_.main,
+  fontSize: $txt_.unter,
   lineHeight: "1.8",
   padding: "10px",
 };

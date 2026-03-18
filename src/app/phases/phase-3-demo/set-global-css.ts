@@ -52,10 +52,9 @@ export const set_global_css = (): void => {
     background: MENU_TEXT_COL,
     fontWeight: "100",
     _hover: {
-      background: $gry_.dim,
+      background: $gry_.dimmer,
       fontWeight: "100",
       color: $cols_.bckdeep,
-      textDecoration: "line-through",
     },
 
   });
@@ -82,7 +81,7 @@ export const set_global_css = (): void => {
   /* mobile styling */
   const mobile = gcss.media({ maxWidth: 960 })
 
-  mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #mouse-button, #mouse-slot")
+  mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #mouse-button, #about-button, #mouse-slot")
   .setMany({ display: "none" });
   
   mobile.rule("mobile-about-btn", "#about-button")
