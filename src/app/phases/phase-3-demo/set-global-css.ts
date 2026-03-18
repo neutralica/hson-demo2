@@ -4,7 +4,7 @@ import { $PANEL_HIDDEN, $txt_ } from "../../consts/ui-consts";
 import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../consts/colors.consts";
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
-import { MOBILE_DOCcss, MOBILE_TOCcss } from "./global.css";
+import { MOBILE_DOCcss, MOBILE_TOCcss, SIZE_WARNINGcss } from "./global.css";
 
 export const set_global_css = (): void => {
   const gcss = CssManager.globals.invoke();
@@ -12,7 +12,7 @@ export const set_global_css = (): void => {
     background: "transparent",
     color: "inherit",
   });
-/* define panel-hidden behavior */
+  /* define panel-hidden behavior */
   gcss.rule('hide-hidden', `.${$PANEL_HIDDEN}`).setMany({
     visibility: "hidden",
     height: "0",
@@ -46,7 +46,7 @@ export const set_global_css = (): void => {
     gridTemplateColumns: "21ch minmax(0, 1fr)",
   });
 
-/* active button styling */
+  /* active button styling */
   gcss.rule("menu-active-view", '.view-button[data-active]').setMany({
     color: $cols_.bckdeep,
     background: MENU_TEXT_COL,
@@ -61,7 +61,7 @@ export const set_global_css = (): void => {
 
   gcss.rule("menu-active-widget", '.widget-button[data-active]').setMany({
     color: $cols_.bckdeep,
-    background: ACID_WASH_RGBA.warmAsh, 
+    background: ACID_WASH_RGBA.warmAsh,
     fontWeight: "100",
     _hover: {
       background: $gry_.dim,
@@ -72,47 +72,53 @@ export const set_global_css = (): void => {
 
   });
 
-    /* table of contents is grid on desktop */
+  /* table of contents is grid on desktop */
   // gcss.rule("about-toc-desktop", ".about-toc").setMany({
   //   display: "grid",
   // });
-  
+
 
   /* mobile styling */
-  const mobile = gcss.media({ maxWidth: 960 })
+  const mobile = gcss.media({
+    maxWidth: 1100,
+    // hover: "none",
+    // pointer: "coarse"
+  }
+  )
 
   mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #ui-root, #mouse-button, #about-button, #mouse-slot")
-  .setMany({ display: "none" });
-  
+    .setMany({ display: "none" });
+
+mobile.rule("show-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(SIZE_WARNINGcss)
   mobile.rule("mobile-about-btn", "#about-button")
-  .setMany({
-    position: "fixed",
-    bottom: "2rem",
-    left: "2rem",
-    fontWeight: "700",
-    fontSize: $txt_.wordMobile,
-  });
-  
+    .setMany({
+      position: "fixed",
+      bottom: "2rem",
+      left: "2rem",
+      fontWeight: "700",
+      fontSize: $txt_.wordMobile,
+    });
+
   /* fleurs button mobile styling (should match about) */
   mobile.rule("mobile-fleurs-btn", "#fleurs-button")
-  .setMany({
-    position: "fixed",
-    bottom: "2rem",
-    right: "2rem",
-    fontSize: $txt_.wordMobile,
-    fontWeight: "700",
-  });
-  
+    .setMany({
+      position: "fixed",
+      bottom: "3rem",
+      right: "3rem",
+      fontSize: $txt_.wordMobile,
+      fontWeight: "700",
+    });
+
 
   /* hide table of contents on mobile */
   mobile.rule(
-  "about-toc-mobile-closed",
-  "#about-root .about-toc:not([data-toc-open='true'])"
-).setMany({
-  display: "none",
-});
+    "about-toc-mobile-closed",
+    "#about-root .about-toc:not([data-toc-open='true'])"
+  ).setMany({
+    display: "none",
+  });
 
-  
+
   /* one flexible column width on mobile */
   mobile.rule("about-row-mobile-column", ".about-row").setMany({
     gridTemplateColumns: "minmax(0, 1fr)",
@@ -121,25 +127,25 @@ export const set_global_css = (): void => {
     left: "2rem",
     width: "100%",
     height: "100%"
-    
+
   });
-  
+
   /* one flexible column width on mobile */
   // TODO -- make work
-  
+
   gcss.rule("hide-toc-button-fulscreen", "#about-button #mobile-doc-button").setMany({
     display: "none"
   });
   mobile.rule("hide-toc-button-fulscreen", "#mobile-doc-button").setMany({
-        ...MAIN_MENUcss,
-        position: "absolute",
-        bottom: "100%",
-        left: "1rem",
-        height: "40px",
-        width: "100px",
-        // background: "red",
-        // color: "white"
-      });
+    ...MAIN_MENUcss,
+    position: "absolute",
+    bottom: "100%",
+    left: "1rem",
+    height: "40px",
+    width: "100px",
+    // background: "red",
+    // color: "white"
+  });
 
   /* explicit styling for doc view on mobile */
   mobile.rule("about-doc-mobile-full", ".about-doc").setMany(MOBILE_DOCcss);

@@ -32,6 +32,8 @@ import { ALL_MOTEScss } from "./motes/motes.css";
 import { PP_TEXTWRAPcss } from "./demo-parse/pp.css";
 import type { DemoView } from "./state/state.types";
 import { set_global_css } from "./set-global-css";
+import { WARNINGcss } from "./demo-about/about.css";
+import { SIZE_WARNINGcss } from "./global.css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -63,43 +65,43 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
-    
+  // screen.css.setMany(SIZE_WARNINGcss)
   const copyright = screenFx.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
-
+  
   const fleurSvg = fleurOverlay.create.tags(["svg"]).first()!;
   fleurSvg
-    .id.set("fleurs-field")
-    .css.setMany(FLOWER_FIELDcss)
-    .attr.setMany({
-      xmlns: "http://www.w3.org/2000/svg",
-      width: "100%",
-      height: "100%",
-      preserveAspectRatio: "xMidYMid meet",
-    });
-
+  .id.set("fleurs-field")
+  .css.setMany(FLOWER_FIELDcss)
+  .attr.setMany({
+    xmlns: "http://www.w3.org/2000/svg",
+    width: "100%",
+    height: "100%",
+    preserveAspectRatio: "xMidYMid meet",
+  });
+  
   // create.tags(["g" | "circle" | ...]) currently does not produce rendering
   // HTML nodes when appended after mount: append SVG-rooted flower branches instead
   const fleurLayer = fleurSvg;
-
+  
   function syncFleurViewbox(): void {
     const rect = fleurOverlay.dom.rect();
     if (!rect) {
       console.log("[fleurs] no overlay rect");
       return;
     }
-
+    
     const w = Math.max(1, rect.width);
     const h = Math.max(1, rect.height);
     fleurSvg.attr.set("viewbox", `0 0 ${w} ${h}`);
   }
   mount_motes(motes);
-
-
-
+  
+  
+  
   /* main menu & logo heading */
   const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
   const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
-
+  
   const hsonBox = make_div_id(headline, "hson-box").css.setMany({
     minHeight: "0",
     display: "flex",
@@ -108,19 +110,19 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const letterbox = make_div_id(hsonBox, "letterbox")
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
     const span = make_span_id(letterbox, `${k}-letter`)
-      .text.set(HSONlower[k])
-      .classlist.add(shade_class(k))
-      .classlist.add('demo-wordmark')
-      .css.setMany($T$GHSONcss)
+    .text.set(HSONlower[k])
+    .classlist.add(shade_class(k))
+    .classlist.add('demo-wordmark')
+    .css.setMany($T$GHSONcss)
     return span;
   });
   const liveDemoSub = make_span_id(hsonBox, "livedemo-subhead")
-    .text.set(`::liveDemo`)
-    .css.setMany(HSON_SUBcss);
-
+  .text.set(`::liveDemo`)
+  .css.setMany(HSON_SUBcss);
+  
   const layoutGrid = make_div_id(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
   const menuBox = make_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
-
+  
   const menu = {
     aboutBtn: make_div_id_text(menuBox, `${$ABOUT}-button`, `[${$ABOUT}]`),
     testBtn: make_div_id_text(menuBox, `${$TEST}-button`, `[${$TEST}]`),
@@ -129,73 +131,73 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     fleurBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `[${$FLEURS}]`),
     mouseBtn: make_div_id_text(menuBox, `${$MOUSE}-button`, `[${$MOUSE}]`),
     // oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
-
+    
   } as const;
-
+  
   const widgetKeys = ["mouseBtn"]
   keys_of(menu).forEach((k) => {
     menu[k]
-      .classlist.set(widgetKeys.includes(k) ? "widget-button" : "view-button")
-      .css.setMany({
-        ...MAIN_MENUcss,
-        color: widgetKeys.includes(k) ? ACID_WASH_RGBA.warmAsh : MENU_TEXT_COL,
-      });
+    .classlist.set(widgetKeys.includes(k) ? "widget-button" : "view-button")
+    .css.setMany({
+      ...MAIN_MENUcss,
+      color: widgetKeys.includes(k) ? ACID_WASH_RGBA.warmAsh : MENU_TEXT_COL,
+    });
   });
   const mobileDocBtn = make_div_id(menu.aboutBtn, "mobile-doc-button")
-    .classlist.add($PANEL_HIDDEN);
-
-
+  .classlist.add($PANEL_HIDDEN);
+  
+  
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
       color: LETTER_COLORoklch[l]
     });
   });
-
+  
   /**
    * GLOBAL CSS
-   **/
-
-  set_global_css();
-
-  // layoutGrid now has two stable slots
-  const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
-  const mouseSlot = make_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
-
-  // views stack in viewSlot
-  const parse = mount_panel_simple(demoSlot, "parse");
-  const test = mount_panel_simple(demoSlot, "test");
-  const build = mount_panel_simple(demoSlot, "build");
-  const about = mount_panel_simple(demoSlot, "about");
-  const mouseHost = make_div_id(mouseSlot, "mouse-host")
-    .classlist.add($PANEL_HIDDEN)
-    .css.setMany(MOUSE_HOSTcss);
-  const mr = relay_data(mount_mouse_panel(mouseHost));
-  const ap = relay_data(mount_about_panels(about, ABOUT_DOCS));
-  const tp = relay_data(mount_test_panels(test));
-  const pp = relay_data(mount_parsing_panels(parse));
-  const bp = relay_data(mount_build_panels(build));
-
-  syncFleurViewbox();
-
-  const applyView = (): void => {
-    const view = get_view();
-    const widgets = get_widgets() ?? [];
-
-    _hide(parse);
-    _hide(test);
-    _hide(build);
-    _hide(about);
-
-    if (view === "parse") { _unhide(parse); }
-    else if (view === "test") { _unhide(test); }
-    else if (view === "build") { _unhide(build); }
-    else if (view === "about") { _unhide(about); }
-
-    if (widgets.includes("mouse")) { _unhide(mouseHost); }
-    else { _hide(mouseHost); }
-
-    apply_menu_active(menu, view);
-
+  **/
+ 
+ set_global_css();
+ 
+ // layoutGrid now has two stable slots
+ const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
+ const mouseSlot = make_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
+ 
+ // views stack in viewSlot
+ const parse = mount_panel_simple(demoSlot, "parse");
+ const test = mount_panel_simple(demoSlot, "test");
+ const build = mount_panel_simple(demoSlot, "build");
+ const about = mount_panel_simple(demoSlot, "about");
+ const mouseHost = make_div_id(mouseSlot, "mouse-host")
+ .classlist.add($PANEL_HIDDEN)
+ .css.setMany(MOUSE_HOSTcss);
+ const mr = relay_data(mount_mouse_panel(mouseHost));
+ const ap = relay_data(mount_about_panels(about, ABOUT_DOCS));
+ const tp = relay_data(mount_test_panels(test));
+ const pp = relay_data(mount_parsing_panels(parse));
+ const bp = relay_data(mount_build_panels(build));
+ 
+ syncFleurViewbox();
+ 
+ const applyView = (): void => {
+   const view = get_view();
+   const widgets = get_widgets() ?? [];
+   
+   _hide(parse);
+   _hide(test);
+   _hide(build);
+   _hide(about);
+   
+   if (view === "parse") { _unhide(parse); }
+   else if (view === "test") { _unhide(test); }
+   else if (view === "build") { _unhide(build); }
+   else if (view === "about") { _unhide(about); }
+   
+   if (widgets.includes("mouse")) { _unhide(mouseHost); }
+   else { _hide(mouseHost); }
+   
+   apply_menu_active(menu, view);
+   
   };
   function after_paint(): Promise<void> {
     return new Promise((resolve) => {
@@ -204,13 +206,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       });
     });
   }
-
+  
   demo_subscribe(() => applyView());
   applyView();
   // wait until layout exists before syncing SVG coordinate space
   await after_paint();
   syncFleurViewbox();
-
+  
   function apply_menu_active(menu: any, view: DemoView): void {
     menu.aboutBtn.data.set("active", view === "about" ? "true" : null);
     menu.testBtn.data.set("active", view === "test" ? "true" : null);
@@ -218,8 +220,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     menu.buildBtn.data.set("active", view === "build" ? "true" : null);
     menu.fleurBtn.data.set("active", view === "fleurs" ? "true" : null);
     menu.mouseBtn.data.set("active", get_widgets()?.includes("mouse") ? "true" : null);
-
+    
   }
+  
   mobileDocBtn.listen.stopProp().onClick(() => {
     if (get_about_toc_open()) {
       set_about_toc_open(false)
