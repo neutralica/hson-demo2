@@ -1,4 +1,4 @@
-import { hson, type LiveTree } from "hson-live";
+import { CssManager, hson, type LiveTree } from "hson-live";
 import type { LiveTreeCaseSpec, LiveTreeFx, TestSuite, Asserter } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import type { HsonNode, Primitive } from "hson-live/types";
@@ -9,6 +9,7 @@ import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
 import { legacy_suites_3, suite_more_contract_refresh } from "./livetree-fixtures-2";
 import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
+import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
 
 
 function after_paint(): Promise<void> {
@@ -649,10 +650,9 @@ function mixedRegression() {
           t.ok("DOM mode: no #css-manager host (skipping)", true);
           return;
         }
-
+        CssManager.invoke().syncNow()
         const styleEl = host.querySelector("#_hson") as HTMLStyleElement | null;
         t.ok("style#_hson exists", !!styleEl);
-
         const cssText = styleEl?.textContent ?? "";
         t.ok("css includes opacity", cssText.includes("opacity: 0.5;"));
         t.ok("css includes transform", cssText.includes("transform: translate(10px, 20px);"));
@@ -1044,6 +1044,7 @@ export function suite_css_and_content(): TestSuite {
         void box.css.devSnapshot();
 
         await tick();
+        CssManager.invoke().syncNow();
       },
       assert(tree: LiveTree, t: Asserter) {
 
@@ -1099,6 +1100,7 @@ export function suite_css_and_content(): TestSuite {
         });
 
         await tick();
+        CssManager.invoke().syncNow();
       },
       assert(tree: LiveTree, t: Asserter) {
         after_paint();
@@ -1148,6 +1150,7 @@ export function suite_css_and_content(): TestSuite {
         });
 
         await tick();
+        CssManager.invoke().syncNow();
       },
       assert(tree: LiveTree, t: Asserter) {
         after_paint();
@@ -1196,7 +1199,7 @@ export function suite_css_and_content(): TestSuite {
     {
       suite: SUITE,
       name: "set_node_content updates node leaf + DOM textContent",
-    dom: true,
+      dom: true,
       fixture: "content/set_node_content",
       sub: "dom-and-node",
       html: `
@@ -1544,6 +1547,7 @@ function suite_css_regressions(): TestSuite {
         });
 
         await tick();
+        CssManager.invoke().syncNow();
       },
       assert(tree, t) {
         const cssText = css_snapshot(tree);
@@ -1592,6 +1596,7 @@ function suite_css_regressions(): TestSuite {
         });
 
         await tick();
+        CssManager.invoke().syncNow();
       },
 
       assert(tree, t) {
@@ -1627,6 +1632,7 @@ function suite_css_regressions(): TestSuite {
         });
 
         await tick();
+        CssManager.invoke().syncNow();
       },
 
       assert(tree, t) {
