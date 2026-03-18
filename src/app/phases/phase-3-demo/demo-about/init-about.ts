@@ -544,7 +544,7 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     for (const x of tocButtons) {
       x.btn.css.setMany(x.key === activeKey ? DOC_BTN_ACTIVEcss : DOC_BTN_IDLEcss);
     }
-    // CHANGED: collapse TOC after selection
+    // CHANGED: collapse TOC after selection)
     set_about_toc_open(false);
     applyTocOpen();
   };

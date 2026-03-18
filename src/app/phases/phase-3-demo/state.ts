@@ -150,3 +150,6 @@ export function set_about_toc_open(next: boolean): void {
 export function toggle_about_toc(): void {
   set_about_toc_open(!get_about_toc_open());
 }
+export function change_toc_button_label(key: string){
+
+}

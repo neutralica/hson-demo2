@@ -63,7 +63,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
   const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
-    // .classlist.add($PANEL_HIDDEN);
+    
   const copyright = screenFx.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
   const fleurSvg = fleurOverlay.create.tags(["svg"]).first()!;
@@ -141,7 +141,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
         color: widgetKeys.includes(k) ? ACID_WASH_RGBA.warmAsh : MENU_TEXT_COL,
       });
   });
-  const mobileDocBtn = make_div_id(menu.aboutBtn, "mobile-doc-button");
+  const mobileDocBtn = make_div_id(menu.aboutBtn, "mobile-doc-button")
+    .classlist.add($PANEL_HIDDEN);
 
 
   LETTER_LOWS.forEach(l => {

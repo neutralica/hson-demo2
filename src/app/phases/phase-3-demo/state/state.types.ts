@@ -16,7 +16,7 @@ export type DemoWidget =
 export type DemoUiState = {
   currentView: DemoView;
   activeWidgets: DemoWidget[];
-   aboutTocOpen: boolean;
+  aboutTocOpen: boolean;
 
 };
 

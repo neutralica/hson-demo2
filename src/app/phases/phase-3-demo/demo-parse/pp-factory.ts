@@ -10,6 +10,7 @@ import { PP_COPYBTNcss } from "./pp.css";
 import { PANEL_TEXTAREAcss, PANELcss } from "../panels/demo-panels.css";
 import { PARSING_PANEL_ROOTcss } from "./pp.css";
 import { init_parsing_panels } from "./init.pp";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -62,6 +63,12 @@ const panelGrid = root.create.div()
 
   const panels = {} as Record<Fmt, PanelShell>;
 
+  const fmtCol = {
+    json: OKLCH_FLEURS.fadedGold,
+    html: OKLCH_FLEURS.electricIris,
+    hson: OKLCH_FLEURS.orchidAsh
+
+  }
   for (const fmt of fmts) {
     const panel = panelGrid.create.section()
       .data.set("role", `panel-${fmt}`)
@@ -109,6 +116,7 @@ const panelGrid = root.create.div()
     const textarea = wrap.create.textarea();
     textarea.data.set("input", fmt);
     textarea.css.setMany(PANEL_TEXTAREAcss);
+    textarea.css.set.color(fmtCol[fmt])
 
     const chip = status.create.span();
     chip.classlist.add("chip", "validity");

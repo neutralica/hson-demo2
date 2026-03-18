@@ -1,7 +1,7 @@
 // json-chunks.mock.hson-showcase.ts
 
 
-export const json_CARS =`
+export const json_CARS = `
 {
   "lastUpdated": "2025-06-07T15:30:00Z",
   "dataSource": "Internal Market Analysis Group",
@@ -241,7 +241,7 @@ export const json_CARS =`
 `
 
 
-export const json_invertebrae =`
+export const json_invertebrae = `
 {
   "kingdom": "Animalia",
   "invertebrates": [
@@ -350,3 +350,4 @@ export const json_invertebrae =`
   "extinctGroups": "null2222"
 }
   `;
+
