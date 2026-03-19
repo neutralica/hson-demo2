@@ -403,7 +403,6 @@ function render_doc_md(host: LiveTree, src: string): void {
       t === "—" ||
       /^-{3,}$/.test(t)
     ) {
-      console.log("found");
       flushPara();
       flushList();
 

@@ -10,6 +10,7 @@ import { get_node_text_content, set_node_text_content } from "../../../../hson-l
 import { legacy_suites_3, suite_more_contract_refresh } from "./livetree-fixtures-2";
 import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
 import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
+import { css_manager_lifecycle, node_lifecycle, suite_schedules_events } from "./livetree-fixtures-3";
 
 
 function after_paint(): Promise<void> {
@@ -30,6 +31,11 @@ export function all_livetree_suites(): readonly TestSuite[] {
     suite_css_and_content(),
     ...suite_recent_regressions(),
     ...legacy_suites_3(),
+    suite_schedules_events(),
+    css_manager_lifecycle(),
+    node_lifecycle(),
+    
+
   ] as const;
 }
 

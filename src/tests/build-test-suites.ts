@@ -206,15 +206,15 @@ export function build_suites_for_mode(
 
   if (mode === "legacy") {
     return _freeze([
-      make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/basic/json", map),
-      make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/basic/html", map),
-      make_legacy_test_suite(h, EXPECT_ERRORS, "fixtures/EXPECT_ERRORS", map),
+      make_legacy_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/legacy/json", map),
+      make_legacy_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),
+      make_legacy_test_suite(h, EXPECT_ERRORS, "fail_fixtures/EXPECT_ERRORS", map),
     ]);
   }
 
   if (mode === "transform") {
     return _freeze([
-      make_legacy_test_suite(h, HTML_FIXTURES_NEW, "fixtures/new/json", map),
+      make_legacy_test_suite(h, HTML_FIXTURES_NEW, "fixtures/new", map),
     ]);
   }
   if (mode === "dev") {

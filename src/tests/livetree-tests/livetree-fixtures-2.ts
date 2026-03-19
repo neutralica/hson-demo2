@@ -2,14 +2,16 @@ import { hson, LiveTree } from "hson-live";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import type { HsonNode } from "hson-live/types";
+import { tick } from "./livetree-fixtures-3";
+import type { DatasetObj, DatasetValue } from "../../../../hson-live/dist/api/livetree/managers/data-manager";
 
 export function legacy_suites_3(): readonly TestSuite[] {
   return [
     suite_attrs_flags_refresh(),
     suite_empty_append(),
-      suite_dataset(),
+    suite_dataset(),
     suite_identity_stability(),
-      ...suite_final_legacy_css(),
+    ...suite_final_legacy_css(),
     ...suite_more_contract_refresh(),
   ] as const;
 }
@@ -546,10 +548,252 @@ function suite_dataset_more(): TestSuite {
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no button dom>";
       },
     },
+    {
+      suite: SUITE,
+      name: "dataset: camelCase keys serialize to kebab-case data-* attrs",
+      dom: true,
+      fixture: "dataset/normalize",
+      sub: "camel-to-kebab",
+
+      html: `<main><button id="btn"></button></main>`,
+
+      async act(tree) {
+        const btn = tree.find.must.byId("btn");
+
+        btn.data.setMany({
+          userId: 42,
+          longThingName: "abc",
+        });
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const btn = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+
+        t.eq("data-user-id", btn.getAttribute("data-user-id"), "42");
+        t.eq("data-long-thing-name", btn.getAttribute("data-long-thing-name"), "abc");
+      },
+
+      preview(tree) {
+        const el = tree.find.byId("btn")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dataset: null/undefined remove, false stringifies, empty string persists",
+      dom: true,
+      fixture: "dataset/semantics",
+      sub: "nullish-bool-empty",
+
+      html: `<main><button id="btn"></button></main>`,
+
+      async act(tree) {
+        const btn = tree.find.must.byId("btn");
+
+        btn.data.setMany({
+          state: "open",
+          enabled: false,
+          empty: "",
+          killA: "x",
+          killB: "y",
+        });
+
+        btn.data.setMany({
+          killA: null,
+          killB: undefined,
+        } as unknown as Record<string, DatasetValue>);
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const btn = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+
+        t.eq("data-state", btn.getAttribute("data-state"), "open");
+        t.eq("false stringifies", btn.getAttribute("data-enabled"), "false");
+        t.eq("empty string persists", btn.getAttribute("data-empty"), "");
+        t.eq("null removes", btn.hasAttribute("data-kill-a"), false);
+        t.eq("undefined removes", btn.hasAttribute("data-kill-b"), false);
+      },
+
+      preview(tree) {
+        const el = tree.find.byId("btn")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
+      },
+    },
+    {
+      suite: SUITE,
+      name: "dataset: multi-selection setMany applies to all matched nodes",
+      dom: true,
+      fixture: "dataset/multi",
+      sub: "setMany-all",
+
+      html: `
+    <main>
+      <button class="item" id="a"></button>
+      <button class="item" id="b"></button>
+      <button class="item" id="c"></button>
+    </main>
+  `,
+
+      async act(tree) {
+        const items = tree.findAll.byAttribute("class", "item");
+
+        items.data.setMany({
+          state: "closed",
+          flag: true,
+        });
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        for (const id of ["a", "b", "c"] as const) {
+          const el = tree.find.must.byId(id).asDomElement() as HTMLElement;
+          t.eq(`${id}: data-state`, el.getAttribute("data-state"), "closed");
+          t.eq(`${id}: data-flag`, el.getAttribute("data-flag"), "true");
+        }
+      },
+
+      preview(tree) {
+        return (["a", "b", "c"] as const)
+          .map((id) => {
+            const el = tree.find.byId(id)?.asDomElement?.();
+            return el && "outerHTML" in el ? (el as Element).outerHTML : `<missing ${id}>`;
+          })
+          .join("\n");
+      },
+    },
+    {
+      suite: SUITE,
+      name: "dataset: multi-selection remove clears targeted key and preserves siblings",
+      dom: true,
+      fixture: "dataset/multi",
+      sub: "remove-preserve-siblings",
+
+      html: `
+    <main>
+      <button class="item" id="a"></button>
+      <button class="item" id="b"></button>
+    </main>
+  `,
+
+      async act(tree) {
+        const items = tree.findAll.byAttribute("class", "item");
+
+        items.data.setMany({
+          state: "open",
+          userId: 42,
+        });
+
+        items.data.set("state", null);
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        for (const id of ["a", "b"] as const) {
+          const el = tree.find.must.byId(id).asDomElement() as HTMLElement;
+          t.eq(`${id}: state removed`, el.hasAttribute("data-state"), false);
+          t.eq(`${id}: user-id preserved`, el.getAttribute("data-user-id"), "42");
+        }
+      },
+
+      preview(tree) {
+        return (["a", "b"] as const)
+          .map((id) => {
+            const el = tree.find.byId(id)?.asDomElement?.();
+            return el && "outerHTML" in el ? (el as Element).outerHTML : `<missing ${id}>`;
+          })
+          .join("\n");
+      },
+    },
+    {
+      suite: SUITE,
+      name: "dataset: existing DOM data-* attrs survive graft and targeted mutation",
+      dom: true,
+      fixture: "dataset/dom-origin",
+      sub: "read-mutate-existing",
+
+      html: `
+    <main>
+      <button
+        id="btn"
+        data-state="open"
+        data-user-id="42"
+        data-mode="alpha"
+      ></button>
+    </main>
+  `,
+
+      async act(tree) {
+        const btn = tree.find.must.byId("btn");
+
+        btn.data.set("state", "closed");
+        btn.data.set("mode", null);
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const el = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+
+        t.eq("state updated", el.getAttribute("data-state"), "closed");
+        t.eq("user-id preserved", el.getAttribute("data-user-id"), "42");
+        t.eq("mode removed", el.hasAttribute("data-mode"), false);
+      },
+
+      preview(tree) {
+        const el = tree.find.byId("btn")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dataset: values persist across refind",
+      dom: true,
+      fixture: "dataset/refind",
+      sub: "persist-across-refind",
+
+      html: `<main><button id="btn"></button></main>`,
+
+      async act(tree) {
+        const btn = tree.find.must.byId("btn");
+        btn.data.setMany({
+          state: "closed",
+          userId: 42,
+        });
+
+        await tick();
+      },
+
+      assert(tree, t) {
+        const btnA = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+        const btnB = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+
+        t.eq("same DOM node", btnA, btnB);
+        t.eq("state persists", btnB.getAttribute("data-state"), "closed");
+        t.eq("user-id persists", btnB.getAttribute("data-user-id"), "42");
+      },
+
+      preview(tree) {
+        const el = tree.find.byId("btn")?.asDomElement?.();
+        return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
+      },
+    },
+
+
+
   ];
 
   return make_livetree_suite(SUITE, cases);
 }
+
+
 function suite_css_more(): TestSuite {
   const SUITE = "livetree/more-css";
 
@@ -558,9 +802,9 @@ function suite_css_more(): TestSuite {
   };
 
   const css_snapshot = (tree: LiveTree): string => {
-  const snap = tree.css.devSnapshot;
-  return snap ? snap() : "<no devsnapshot>";
-};
+    const snap = tree.css.devSnapshot;
+    return snap ? snap() : "<no devsnapshot>";
+  };
 
   const find_rule_slice = (cssText: string, quid: string): string => {
     const start = cssText.indexOf(`[data-_quid="${quid}"]`);
