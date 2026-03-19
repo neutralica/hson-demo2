@@ -3,6 +3,7 @@ import type { TestSummary } from "../../../../tests/tests.types";
 import { $cols_, $red_etc_ } from "../../../consts/colors.consts";
 import { $txt_ } from "../../../consts/ui-consts";
 import { make_div_id, make_div_class } from "../../../utils/makers";
+import { MAKE_CHIP_DEFAULTcss, TEST_BUTTON_BORDER, TEST_CHIP_ROWcss } from "./tp.css";
 
 
 export type ChipDisplay = Readonly<{
@@ -13,32 +14,11 @@ export type ChipDisplay = Readonly<{
 
 export function create_test_chips(host: LiveTree): ChipDisplay {
   // keep the same grid placement but make it read like a HUD row
-  const box = make_div_id(host, "test-chips").css.setMany({
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr 1fr",
-    gap: "8px",
-    gridRow: "4",
-    gridColumn: "1 / 5",
-    padding: "0",
-  });
+  const box = make_div_id(host, "test-chips").css.setMany(TEST_CHIP_ROWcss);
 
   // ADDED: small helper so all chips share the same visual language
   const makeChip = (label: string) => {
-    const chip = make_div_class(box, "test-chip").css.setMany({
-      padding: "8px 8px",
-      borderRadius: "18px",
-      display: "grid",
-      gridTemplateRows: "auto auto",
-      justifyItems: "center",
-      alignContent: "center",
-      minHeight: "44px",
-      minWidth: "44px",
-      boxSizing: "border-box",
-      overflow: "hidden",
-      border: `1px solid ${$red_etc_.stonerPurple}`,
-      background: $cols_.bckdeep,
-      transition: "transform 90ms ease, filter 140ms ease",
-    });
+    const chip = make_div_class(box, "test-chip").css.setMany(MAKE_CHIP_DEFAULTcss);
 
     const val = make_div_class(chip, "test-chip-value")
       .text.set("—")

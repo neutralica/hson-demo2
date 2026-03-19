@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $red_etc_, $ylw_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $red_etc_, $ylw_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
-import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
+import { TEST_ACTION_BTN } from "../demo-test/tp.css";
 import { MENU_FONT } from "../demo.css";
 
 export const UI_ROOTcss: CssMap = {
@@ -81,32 +81,6 @@ export const PANEL_TEXTAREAcss = {
     outline: "none",
 };
 
-
-
-export const TEST_LOGGERcss: CssMap = {
-    borderRadius: "12px",
-    padding: "10px",
-    boxSizing: "border-box",
-    // background: $cols_.backdeep,
-   fontFamily: MENU_FONT,
-    fontSize: $txt_.unter,
-    height: "100%",
-    minHeight: "10rem",
-    maxHeight: "10rem",
-    overflowY: "scroll",
-    overflowX: "hidden",
-    whitespace: "pre-wrap",
-     overflowWrap: "anywhere", // CHANGED: break long fixture names / error
-    minWidth: "100%",
-    gridColumn: "1 / 5",
-    color: $ylw_.candy,
-    whiteSpace: "wrap",
-    letterSpacing: "0.1em",
-    lineHeight: "1.5rem",
-    // opacity: "0.92",
-    
-} as const;
-
 export const CLEAR_BTNcss: CssMap = {
     ...TEST_ACTION_BTN,
     borderRadius: "18px",
@@ -119,43 +93,12 @@ export const CLEAR_BTNcss: CssMap = {
     }
 }
 
-export const LOG_BOXcss: CssMap = {
-    overflow: "auto",
-    gridColumn: "1 / 5",
-    background: $cols_.bckdeep,
-
-
-};
-export const ROW_SUITE_FAILcss: CssMap = {
-    background: "rgba(255, 0, 0, 0.2)",
-    color: $ylw_.std,
-};
-
-export const ROW_GROUP_FAILcss: CssMap = {
-    background: "rgba(255, 0, 0, 0.3)",
-    color: $ylw_.std,
-};
-
-export const ROW_CASE_FAILcss: CssMap = {
-    background: "rgba(255, 0, 0, 0.4)",
-    color: $ylw_.std,   
-};
-
-export const TEST_PANELcss: CssMap = {
-    display: "grid",
-    gap: "6px",
-    gridTemplateColumns: $CHIP_WIDTHstr + $CHIP_WIDTHstr + $CHIP_WIDTHstr,
-    width: "100%",
-    boxSizing: "border-box",
-};
-
 export const PANEL_BRANCHcss: CssMap = {
     display: "grid",
-    gap: "8px",
     // padding: "10px",
-    width: "420px",
+    width: "100%",
     boxSizing: "border-box",
-    gridTemplateColumns: `${$CHIP_WIDTHstr} ${$CHIP_WIDTHstr}`,
-    gridTemplateRows: "auto " + $CHIP_WIDTHstr,
+    gridTemplateColumns: `1fr 1fr`,
+    // gridTemplateRows: "auto " + $CHIP_WIDTHstr,
     background: $cols_.bckdeep,
 };

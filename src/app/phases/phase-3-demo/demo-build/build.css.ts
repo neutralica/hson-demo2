@@ -3,7 +3,7 @@ import type { CssMap } from "hson-live/types";
 import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
 import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL } from "../../../consts/colors.consts";
 import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
-import { TEST_ACTION_BTN } from "../demo-test/test-panel-factory";
+import { TEST_ACTION_BTN } from "../demo-test/tp.css";
 import { MENU_FONT } from "../demo.css";
 
 // --- root that lives inside build div ---

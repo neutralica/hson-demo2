@@ -1,9 +1,11 @@
 import { hson } from "hson-live";
 import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
-import { $PANEL_HIDDEN, $txt_ } from "../../../consts/ui-consts";
+import { $PANEL_HIDDEN } from "../../../consts/ui-consts";
 import { make_btn } from "../../../widgets/gems-deprecate/make-btn";
-import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, LOG_BOXcss, TEST_LOGGERcss, CLEAR_BTNcss, TEST_PANELcss } from "../panels/demo-panels.css";
+import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
+import { LOG_BOXcss, TEST_PANELcss } from "./tp.css";
+import { TEST_LOGGERcss } from "./tp.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
 import { _test_full_loop } from "hson-live/diagnostics";
@@ -13,10 +15,10 @@ import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
-import type { CssMap } from "hson-live/types";
-import { $grn_, $cols_, ACID_WASH_RGBA, $red_etc_, $ylw_ } from "../../../consts/colors.consts";
+import { $grn_, $cols_, $ylw_ } from "../../../consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { CONTROL_ROWcss, TEST_SELECTcss, RUN_BUTTONcss } from "./tp.css";
 
 
 export type TestPanelDeps = Readonly<{
@@ -50,7 +52,6 @@ export type TestPanel = Readonly<{
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
   { key: "all", label: "all" },
-  // { key: "generated", label: "generated" },
   { key: "transform", label: "transform" },
   { key: "livetree", label: "livetree" },
   { key: "legacy", label: "legacy" },
@@ -94,7 +95,16 @@ function test_panel_factory(): Outcome<TestPanel> {
   // -------------------------
   // BUTTON ROW
   // -------------------------
-  const controlsRow = branch.create.div()
+  const rowContainer = branch.create.div()
+    .id.set("row-container").css.setMany({
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+      gridTemplateRows: "1fr",
+      gridRow: "2",
+    gridColumn:"1 / 3"
+
+  })
+  const controlsRow = rowContainer.create.div()
     .id.set("test-controls")
     .css.setMany(CONTROL_ROWcss);
 
@@ -120,7 +130,7 @@ function test_panel_factory(): Outcome<TestPanel> {
   // chips
   // -------------------------
 
-  const chips = create_test_chips(branch);
+  const chips = create_test_chips(rowContainer);
 
   let cache: string[] = []
 
@@ -391,58 +401,5 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     return relay.err(err instanceof Error ? err.message : "unknown error:", err);
   }
 }
-export const TEST_ACTION_BTN: CssMap = {
-  display: "grid",
-  placeItems: "center",
-  borderRadius: "12px",
-  userSelect: "none",
-  cursor: "pointer",
 
-  fontFamily: MENU_FONT,
-  fontSize: $txt_.unter,
-  textTransform: "uppercase",
-  border: `1px solid ${$red_etc_.stonerPurple}`,
-  // neutral default
-  background: $cols_.bckdeep,
-} as const;
-
-export const CONTROL_ROWcss: CssMap = {
-  width: "100%",
-  boxSizing: "border-box",
-  // gridRow: "3",
-  gridColumn: "1 / 5",
-  display: "grid",
-  gridTemplateColumns: "1fr 2fr 1fr",
-  gap: "10px",
-  padding: "0",
-  // background: "transparent",
-  border: "none",
-  boxShadow: "none",
-};
-
-export const RUN_BUTTONcss: CssMap = {
-  ...TEST_ACTION_BTN,
-  borderRadius: "18px",
-  background: $cols_.bckdeep,
-  border: `1px solid ${$red_etc_.stonerPurple}`,
-  _hover: {
-    background: ACID_WASH_RGBA.fadedMint,
-    color: $cols_.bckdeep
-  }
-};
-
-export const TEST_SELECTcss = {
-  minWidth: "20ch",
-  padding: "10px 8px",
-  borderRadius: "12px",
-  boxSizing: "border-box",
-
-  fontFamily: MENU_FONT,
-  fontSize: $txt_.main,
-
-  // background: $cols_.backdeep,
-  color: ACID_WASH_RGBA.fadedMint,
-  border: "1px solid rgba(255,255,255,0.10)",
-  outline: "none",
-} as const;
 

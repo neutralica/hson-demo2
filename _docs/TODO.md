@@ -24,7 +24,7 @@ Missing:
 	•	memory growth (style element bloat)
 ⸻
  -->
-
+<!-- 
 C) Node lifecycle edge cases
 
 You covered:
@@ -35,8 +35,8 @@ But not:
 	•	removing node with listeners
 	•	orphan cleanup (CSS + listeners)
 
-⸻
-
+⸻ -->
+<!-- 
 D) Event system depth
 
 Currently shallow. Missing:
@@ -45,8 +45,8 @@ Currently shallow. Missing:
 	•	event delegation vs direct binding
 	•	listener identity / duplication
 
-⸻
-
+⸻ -->
+<!-- 
 E) Multi-root / isolation
 
 Everything assumes one tree.
@@ -56,7 +56,7 @@ Not covered:
 	•	CSS isolation between them
 	•	selector collisions
 
-⸻
+⸻ -->
 
 F) Error / invalid input behavior
 
@@ -83,3 +83,29 @@ Not tested:
 	•	“does not flush unnecessarily”
 	•	batching actually reduces writes
 	•	no duplicate rules
+
+
+⸻
+
+The next tier (if you want to keep pushing)
+
+Now you’re into genuinely subtle territory:
+
+1) Stress / scale invariants
+	•	1k nodes with CSS
+	•	rapid churn (append/remove)
+	•	listener attach/remove loops
+
+2) Ordering guarantees
+	•	CSS overrides order
+	•	event ordering under batching
+	•	sync vs async consistency
+
+3) Cross-system interactions
+	•	CSS + removal + reappend
+	•	listeners + graft
+	•	dataset + refind + clone
+
+4) Serialization / projection integrity
+	•	HSON ↔ DOM ↔ LiveTree roundtrips
+	•	partial hydration edge cases

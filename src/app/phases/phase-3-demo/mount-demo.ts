@@ -7,7 +7,7 @@ import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGO
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
-import { mount_test_panels } from "./demo-test/test-panel-factory";
+import { mount_test_panels } from "./demo-test/tp-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../consts/ui-consts";

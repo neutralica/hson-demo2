@@ -7,10 +7,9 @@ import { _CREATE_NODE } from "hson-live/diagnostics";
 import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
-import { legacy_suites_3, suite_more_contract_refresh } from "./livetree-fixtures-2";
+import { suite_more_contract_refresh } from "./livetree-fixtures-2";
 import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
 import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
-import { css_manager_lifecycle, node_lifecycle, suite_schedules_events } from "./livetree-fixtures-3";
 
 
 function after_paint(): Promise<void> {
@@ -20,25 +19,6 @@ function after_paint(): Promise<void> {
     });
   });
 }
-
-export function all_livetree_suites(): readonly TestSuite[] {
-  return [
-    suite_find(),
-    suite_attrs_and_flags(),
-    suite_append_and_create(),
-    mixedRegression(),
-    ...extraCases(),
-    suite_css_and_content(),
-    ...suite_recent_regressions(),
-    ...legacy_suites_3(),
-    suite_schedules_events(),
-    css_manager_lifecycle(),
-    node_lifecycle(),
-    
-
-  ] as const;
-}
-
 
 export function suite_find(): TestSuite {
   const SUITE = "livetree/find";
@@ -365,7 +345,7 @@ export function suite_append_and_create(): TestSuite {
   return make_livetree_suite(SUITE, cases);
 }
 
-function mixedRegression() {
+export function mixedRegression() {
   const SUITE = "livetree/mixed-regression";
 
   const cases: readonly LiveTreeCaseSpec[] = [
@@ -739,7 +719,7 @@ function mixedRegression() {
   return make_livetree_suite(SUITE, cases);
 }
 
-function extraCases(): readonly TestSuite[] {
+export function extraCases(): readonly TestSuite[] {
   const SUITE = 'extra cases';
   const cases: readonly LiveTreeCaseSpec[] = [
     // ------------------------------------------------------------

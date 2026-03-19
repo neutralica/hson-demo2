@@ -314,8 +314,8 @@ export const $cols_ = {
 
 
 export const LETTER_COLORoklch = {
-  h: $HSON_COLORS.playful.blue,
-  s: $HSON_COLORS.playful.yellow,
-  o: $HSON_COLORS.playful.pink,
-  n: $HSON_COLORS.playful.green,
+  h: $HSON_COLORS.muted.blue,
+  s: $HSON_COLORS.muted.yellow,
+  o: $HSON_COLORS.muted.pink,
+  n: $HSON_COLORS.muted.green,
 }

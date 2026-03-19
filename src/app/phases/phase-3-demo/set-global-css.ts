@@ -131,12 +131,12 @@ export const set_global_css = (): void => {
     display: "none"
   });
   mobile.rule("hide-toc-button-fulscreen", "#mobile-doc-button").setMany({
-    ...MAIN_MENUcss,
-    position: "absolute",
-    bottom: "100%",
-    left: "1rem",
-    height: "40px",
-    width: "100px",
+    // ...MAIN_MENUcss,
+    // position: "absolute",
+    // bottom: "100%",
+    // left: "1rem",
+    // height: "40px",
+    // width: "100px",
     // background: "red",
     // color: "white"
   });

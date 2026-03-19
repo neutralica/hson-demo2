@@ -1,7 +1,7 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss } from "./inspector.css";
+import { LOG_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
@@ -12,8 +12,8 @@ import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { make_div_class, make_div_id } from "../../app/utils/makers";
 import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
-import { ROW_SUITE_FAILcss, ROW_GROUP_FAILcss, ROW_CASE_FAILcss } from "../../app/phases/phase-3-demo/panels/demo-panels.css";
-import { $cols_ } from "../../app/consts/colors.consts";
+import { ROW_SUITE_FAILcss,ROW_CASE_FAILcss } from "./inspector.css";
+import { $cols_, $red_etc_, ACID_WASH_RGBA } from "../../app/consts/colors.consts";
 
 
 export type InspectorUi = Readonly<{
@@ -195,7 +195,6 @@ export function create_inspector(
     const hr = mk_tr(thead, "insp-head-row");
     mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
     mk_th(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
-    mk_th(hr, "c-kb", "kb").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
     mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
 
     if (!suites.length) {
@@ -217,7 +216,7 @@ export function create_inspector(
 
       mk_td(sr, "c-res", caret).css.setMany(TDcss);
       mk_td(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
-      mk_td(sr, "c-kb", "—").css.setMany(TDcss);
+      // mk_td(sr, "c-kb", "—").css.setMany(TDcss);
       mk_td(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—").css.setMany(TDcss);
 
       sr.listen.onClick((me) => {
@@ -248,206 +247,168 @@ export function create_inspector(
         arr.push(c);
       }
 
-      const expandedGroups = getExpandedGroups(suiteName);
       const expandedCases = getExpandedCases(suiteName);
 
       for (const gk of order) {
         const members = groups.get(gk)!;
-        const groupIsOpen = expandedGroups.has(gk);
-        const gCaret = groupIsOpen ? "▼" : "▶";
+        const c = members[0];
+        if (!c) continue;
 
-        // group stats + kb sum (based on *snipped previews*, not full reports)
-        let pass = 0, fail = 0, skip = 0;
-        let msTotal = 0;
-        let bytesTotal = 0;
+        const res = c.status ?? "—";
+        const ms = c.ms !== undefined ? c.ms.toFixed(1) : "—";
+        const preview = c.meta?.preview ?? "";
 
-        for (const c of members) {
-          if (c.status === "pass") pass += 1;
-          else if (c.status === "fail") fail += 1;
-          else if (c.status === "skip") skip += 1;
+        // case row
+        const cr = mk_tr(tbody, "insp-case-row");
+        cr.css.setMany(ROW_CASEcss); // CHANGED: always apply a base case-row style first
+        if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss);
 
-          if (c.ms !== undefined) msTotal += c.ms;
+        mk_td(cr, "c-res", res).css.setMany(TDcss);
 
-          const string = c.meta?.fixture ?? "";
-          if (string) bytesTotal += new TextEncoder().encode(string).length;
-        }
+        const nameCell = mk_td(cr, "c-name", c.name);
+        nameCell.css.setMany({ ...TDcss, ...tdNameChildCss, ...CLICKABLEcss });
 
-        // group row
-        const gr = mk_tr(tbody, "insp-group-row");
-        gr.css.setMany(ROW_GROUPcss);
+        // CHANGED: kb column removed
+        mk_td(cr, "c-ms", ms).css.setMany(TDcss);
 
-        if (fail > 0) gr.css.setMany(ROW_GROUP_FAILcss);
-
-        mk_td(gr, "c-res", gCaret).css.setMany(TDcss);
-        mk_td(gr, "c-name", `${gk}  (${pass}/${fail}/${skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
-        mk_td(gr, "c-kb", bytesTotal ? (bytesTotal / 1024).toFixed(1) : "—").css.setMany(TDcss);
-        mk_td(gr, "c-ms", msTotal ? msTotal.toFixed(1) : "—").css.setMany(TDcss);
-
-        gr.listen.onClick((ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          if (groupIsOpen) expandedGroups.delete(gk);
-          else expandedGroups.add(gk);
+        // click case name toggles preview row below
+        nameCell.listen.onClick((me) => {
+          _stop(me);
+          if (expandedCases.has(c.key)) expandedCases.delete(c.key);
+          else expandedCases.add(c.key);
           renderAll();
         });
 
-        if (!groupIsOpen) continue;
-        for (const c of members) {
+        // preview row below
+        if (expandedCases.has(c.key)) {
+          const pr = mk_tr(tbody, "insp-case-preview-row");
+          const cell = pr.create.td().classlist.set("insp-case-preview-cell");
 
-          const res = c.status ?? "—";
-          const ms = c.ms !== undefined ? c.ms.toFixed(1) : "—";
-          const preview = c.meta?.preview ?? "";
+          // CHANGED: kb column removed, so colspan is now 3
+          cell.attr.set("colspan", "3");
+          cell.css.setMany(TD_PREVIEW_ROWcss);
 
-          // case row
-          const cr = mk_tr(tbody, "insp-case-row");
-          if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss);
+          cell.empty();
 
-          mk_td(cr, "c-res", res).css.setMany(TDcss);
+          // header row
+          const topRow = cell.create.div().classlist.set("insp-cap-row");
+          topRow.css.setMany({
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) auto", // CHANGED
+            gap: "8px",
+            alignItems: "center",
+            marginBottom: "8px",
+          });
 
-          const nameCell = mk_td(cr, "c-name", c.name);
-          nameCell.css.setMany({ ...TDcss, ...tdNameChildCss, ...CLICKABLEcss });
+          const metaBox = topRow.create.div().classlist.set("insp-cap-meta");
+          metaBox.css.setMany(PREVIEW_METAcss);
+          if (res === "fail") metaBox.css.setMany(PREVIEW_META_FAILcss);
+          metaBox.text.set(`${c.suite} :: ${c.name}`);
 
-          mk_td(cr, "c-kb", preview ? kbOf(preview) : "—").css.setMany(TDcss);
-          mk_td(cr, "c-ms", ms).css.setMany(TDcss);
+          // CHANGED: dedicated button bar so buttons stay on one line
+          const btnBar = topRow.create.div().classlist.set("insp-cap-btnbar");
+          btnBar.css.setMany({
+            display: "flex",
+            gap: "8px",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          });
 
-          // click case name toggles “preview row below”
-          nameCell.listen.onClick((me) => {
+          const mkBtn = (host: LiveTree, label: string): LiveTree => {
+            const b = host.create.div().classlist.set("insp-cap-btn");
+            b.text.set(label);
+            b.attr.set("role", "button");
+            b.css.setMany(MADE_BUTTONcss);
+            return b;
+          };
+
+          const viewBtn = mkBtn(btnBar, "view");
+          const copyBtn = mkBtn(btnBar, "copy");
+          if (res === "fail") { //// I added thisz
+            viewBtn.css.set.color($red_etc_.heartsBlood);
+            copyBtn.css.set.color($red_etc_.heartsBlood);
+          }
+          const hasCapture = !!capture;
+          if (!hasCapture) {
+            viewBtn.css.setMany({ opacity: "0.45", cursor: "default" });
+            copyBtn.css.setMany({ opacity: "0.45", cursor: "default" });
+          }
+          copyBtn.listen.onClick(async (me) => {
             _stop(me);
-            if (expandedCases.has(c.key)) expandedCases.delete(c.key);
-            else expandedCases.add(c.key);
+            if (!capture) return;
+
+            copyBtn.text.set("copying…");
+
+            try {
+              const report = await capture(c.key);
+
+              // CHANGED: pull stored meta (includes metaPatch.input etc.)
+              const meta = tlog.getCase(c.key)?.meta;
+
+              const txt = report_to_text(report, meta);
+
+              await navigator.clipboard.writeText(txt);
+              copyBtn.text.set("copied");
+            } catch (e) {
+              console.error(e);
+              copyBtn.text.set("failed");
+            } finally {
+              window.setTimeout(() => copyBtn.text.set("copy"), 900);
+            }
+          });
+
+          viewBtn.listen.onClick(async (me) => {
+            _stop(me);
+            if (!capture) return;
+
+            viewBtn.text.set("opening…");
+
+            try {
+              const report = await capture(c.key);
+
+              // CHANGED: pull stored meta for report rendering
+              const meta = tlog.getCase(c.key)?.meta;
+
+              const render = render_report_html(c.key, c.name, c.suite, report, meta);
+
+              open_report_window(render.html);
+              viewBtn.text.set("view");
+            } catch (e) {
+              console.error(e);
+              viewBtn.text.set("failed");
+              window.setTimeout(() => viewBtn.text.set("view"), 900);
+            }
+          });
+          const pre = cell.create.pre().classlist.set("insp-preview-pre");
+          pre.css.setMany({
+            margin: "0",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(0,0,0,0.35)",
+            overflow: "auto",
+            maxHeight: "100%",
+            whiteSpace: "pre-wrap",
+            overflowWrap: "anywhere",
+          });
+          pre.text.set(preview || "—");
+
+          // CHANGED: collapse by clicking preview text, not the old group row
+          pre.css.setMany(CLICKABLEcss);
+          pre.listen.onClick((me) => {
+            _stop(me);
+            expandedCases.delete(c.key);
             renderAll();
           });
 
-          // preview row below (snipped preview only)
-          if (expandedCases.has(c.key)) {
-            const pr = mk_tr(tbody, "insp-case-preview-row");
-            const cell = pr.create.td().classlist.set("insp-case-preview-cell");
-            cell.attr.set("colspan", "4");
-            cell.css.setMany(TD_PREVIEW_ROWcss);
-
-            // build composite content; never call cell.text.set after this
-            cell.empty();
-
-            // header row
-            const topRow = cell.create.div().classlist.set("insp-cap-row");
-            topRow.css.setMany({
-              display: "grid",
-              gridTemplateColumns: "auto 12ch",
-              gap: "8px",
-              alignItems: "center",
-              marginBottom: "8px",
-            });
-
-            const metaBox = topRow.create.div().classlist.set("insp-cap-meta");
-            metaBox.css.setMany({
-              opacity: "0.85",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            });
-            metaBox.text.set(`${c.suite} :: ${c.name}`);
-
-            // use div-buttons to avoid focus scroll + default button behavior
-            const mkBtn = (label: string): LiveTree => {
-              const b = topRow.create.div().classlist.set("insp-cap-btn");
-              b.text.set(label);
-              b.attr.set("role", "button");
-              b.css.setMany({
-                maxWidth: "10ch",
-                padding: "4px 8px",
-                borderRadius: "8px",
-                border: "1px solid rgba(255,255,255,0.12)",
-                background: "rgba(255,255,255,0.06)",
-                userSelect: "none",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                margin: "auto"
-              });
-              return b;
-            };
-
-            const copyBtn = mkBtn("copy");
-            const viewBtn = mkBtn("view");
-
-            const pre = cell.create.pre().classlist.set("insp-preview-pre");
-            pre.css.setMany({
-              margin: "0",
-              padding: "10px",
-              borderRadius: "8px",
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(0,0,0,0.35)",
-              overflow: "auto",
-              maxHeight: "100%",
-              whiteSpace: "pre-wrap",
-              overflowWrap: "anywhere",
-            });
-            pre.text.set(preview || "—");
-
-            // collapse affordance: click the PREVIEW TEXT, not the whole cell
-            pre.css.setMany(CLICKABLEcss);
-            pre.listen.onClick((me) => {
-              _stop(me);
-              expandedCases.delete(c.key);
-              renderAll();
-            });
-
-            queueMicrotask(() => {
-              wrap.asDomElement()!.scrollTop = prevScroll;
-            });
+          queueMicrotask(() => {
+            wrap.asDomElement()!.scrollTop = prevScroll;
+          });
+          requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                if (mainScrollEl) mainScrollEl.scrollTop = prevScroll;
-              });
+              if (mainScrollEl) mainScrollEl.scrollTop = prevScroll;
             });
-
-            // wire buttons; always stop propagation; show errors
-            copyBtn.listen.onClick(async (me) => {
-              _stop(me);
-              if (!capture) return;
-
-              copyBtn.text.set("copying…");
-              try {
-                const report = await capture(c.key);
-
-                // ADDED: pull stored meta (includes metaPatch.input from your suite builders)
-                const meta = tlog.getCase(c.key)?.meta;
-
-                // pass meta so the report can show input
-                const txt = report_to_text(report, meta);
-
-                await navigator.clipboard.writeText(txt);
-                copyBtn.text.set("copied");
-              } catch (e) {
-                console.error(e);
-                copyBtn.text.set("failed");
-              } finally {
-                window.setTimeout(() => copyBtn.text.set("copy"), 900);
-              }
-            });
-
-            viewBtn.listen.onClick(async (me) => {
-              _stop(me);
-              if (!capture) return;
-
-              viewBtn.text.set("opening…");
-              try {
-                const report = await capture(c.key);
-
-                // ADDED
-                const meta = tlog.getCase(c.key)?.meta;
-
-                // pass meta into HTML renderer
-                const render = render_report_html(c.key, c.name, c.suite, report, meta);
-
-                open_report_window(render.html);
-                viewBtn.text.set("view");
-              } catch (e) {
-                console.error(e);
-                viewBtn.text.set("failed");
-                window.setTimeout(() => viewBtn.text.set("view"), 900);
-              }
-            });
-          }
+          });
         }
       }
     }
@@ -466,13 +427,7 @@ export function create_inspector(
   const hide = (): LiveTree => root.classlist.add(hideClass);
 
   // baseline
-  root.css.setMany({
-    // padding: "10px",
-    fontFamily: MENU_FONT,
-    fontSize: $txt_.main,
-    lineHeight: "1.35",
-    color: $cols_.txtarea,
-  });
+  root.css.setMany(INSPECTOR_ROOTcss);
 
   main.css.setMany({ display: "grid", gap: "6px" });
 

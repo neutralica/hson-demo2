@@ -5,7 +5,7 @@ import { make_livetree_suite } from "./livetree-testkit";
 export const tick = async (): Promise<void> => {
     await new Promise<void>((r) => setTimeout(() => r(), 0));
 };
-function get_hson_css_rules(): string[] {
+export function get_hson_css_rules(): string[] {
     const host = document.querySelector("#css-manager");
     const styleEl = host?.querySelector("#_hson") as HTMLStyleElement | null;
     const sheet = styleEl?.sheet as CSSStyleSheet | null;
@@ -14,7 +14,7 @@ function get_hson_css_rules(): string[] {
     return Array.from(sheet.cssRules).map((r) => r.cssText);
 }
 
-function get_rule_for_quid(quid: string): string | undefined {
+export function get_rule_for_quid(quid: string): string | undefined {
     const sel = `[data-_quid="${quid}"]`;
     return get_hson_css_rules().find((r) => r.includes(sel));
 }
@@ -446,7 +446,7 @@ export function css_manager_lifecycle(): TestSuite {
 }
 
 export function node_lifecycle(): TestSuite {
-    const SUITE = "livetree/css-manager-lifecycle";
+    const SUITE = "livetree/node-lifecycle";
 
     const cases: readonly LiveTreeCaseSpec[] = [
         {
