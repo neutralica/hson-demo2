@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $red_etc_, $ylw_, ACID_WASH_OKLCH, back_w_alpha } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $red_etc_, $ylw_, ACID_WASH_OKLCH, back_w_alpha } from "../../../core/consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
-import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
+import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
 import { TEST_ACTION_BTN } from "../demo-test/tp.css";
 import { MENU_FONT } from "../demo.css";
 

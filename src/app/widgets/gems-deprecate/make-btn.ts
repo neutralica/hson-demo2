@@ -7,7 +7,7 @@ export type ToggleBtn = Readonly<{
 }>;
 
 
-export function make_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
+export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
   const node = parent.create.div().id.set(id);
   node.text.set(label);
 
@@ -36,7 +36,7 @@ export function make_btn(parent: LiveTree, id: string, label: string): ToggleBtn
   };
 
   return {
-    node,
+    node: node,
     setActive,
     setText: (t) => node.text.set(t),
   };

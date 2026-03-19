@@ -1,5 +1,5 @@
 import type { PropertyRegistration } from "../../../../../hson-live/dist/types/at-property.types";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../core/consts/colors.consts";
 
 export const CLOUD_TILE_W = 400;
 export const sunColor = "rgb(255, 196, 84)";

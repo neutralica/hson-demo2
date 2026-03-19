@@ -1,7 +1,7 @@
 //css.consts.ts
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../core/consts/colors.consts";
 
 const LOGOBOXcss:CssMap = {
   display: "flex",

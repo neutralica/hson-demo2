@@ -1,8 +1,8 @@
 import { type LiveTree } from "hson-live";
 import type { TestSummary } from "../../../../tests/tests.types";
-import { $cols_, $red_etc_ } from "../../../consts/colors.consts";
-import { $txt_ } from "../../../consts/ui-consts";
-import { make_div_id, make_div_class } from "../../../utils/makers";
+import { $cols_, $red_etc_ } from "../../../core/consts/colors.consts";
+import { $txt_ } from "../../../core/consts/ui-consts";
+import { mk_div_id, mk_div_cls } from "../../../utils/makers";
 import { MAKE_CHIP_DEFAULTcss, TEST_BUTTON_BORDER, TEST_CHIP_ROWcss } from "./tp.css";
 
 
@@ -14,13 +14,13 @@ export type ChipDisplay = Readonly<{
 
 export function create_test_chips(host: LiveTree): ChipDisplay {
   // keep the same grid placement but make it read like a HUD row
-  const box = make_div_id(host, "test-chips").css.setMany(TEST_CHIP_ROWcss);
+  const box = mk_div_id(host, "test-chips").css.setMany(TEST_CHIP_ROWcss);
 
   // ADDED: small helper so all chips share the same visual language
   const makeChip = (label: string) => {
-    const chip = make_div_class(box, "test-chip").css.setMany(MAKE_CHIP_DEFAULTcss);
+    const chip = mk_div_cls(box, "test-chip").css.setMany(MAKE_CHIP_DEFAULTcss);
 
-    const val = make_div_class(chip, "test-chip-value")
+    const val = mk_div_cls(chip, "test-chip-value")
       .text.set("—")
       .css.setMany({
         fontSize: $txt_.unter,
@@ -29,7 +29,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
         letterSpacing: "0.01em",
       });
 
-    const lbl = make_div_class(chip, "test-chip-label")
+    const lbl = mk_div_cls(chip, "test-chip-label")
       .text.set(label)
       .css.setMany({
         marginTop: "4px",

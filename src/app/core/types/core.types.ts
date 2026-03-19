@@ -1,6 +1,6 @@
 // core.types.ts
 
-import type { LETTER_CAPS, LETTER_LOWS } from "../app/consts/config.consts";
+import type { LETTER_CAPS, LETTER_LOWS } from "../consts/config.consts";
 
 
 export type PhaseId = "intro" | "splash";

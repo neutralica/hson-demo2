@@ -1,9 +1,9 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import { $PANEL_HIDDEN } from "../consts/ui-consts";
+import { $PANEL_HIDDEN } from "../core/consts/ui-consts";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss } from "../phases/phase-3-demo/panels/demo-panels.css";
-import { $blu_ } from "../consts/colors.consts";
+import { $blu_ } from "../core/consts/colors.consts";
 import { MENU_FONT } from "../phases/phase-3-demo/demo.css";
 
 export type BuiltPanel = Readonly<{

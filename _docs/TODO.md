@@ -57,7 +57,7 @@ Not covered:
 	•	selector collisions
 
 ⸻ -->
-
+<!-- 
 F) Error / invalid input behavior
 
 You covered CSS invalids, but not:
@@ -65,7 +65,7 @@ You covered CSS invalids, but not:
 	•	invalid tree operations
 	•	malformed inputs to APIs
 
-⸻
+⸻ -->
 
 G) Serialization / hydration edges
 

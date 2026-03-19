@@ -3,8 +3,8 @@
 import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
 import { relay, type Outcome } from "intrastructure";
-import { $blu_, $cols_, set_alpha } from "../../../consts/colors.consts";
-import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_DOCcss, ABOUT_TOCcss } from "./about.css";
+import { $blu_, $cols_, set_alpha } from "../../../core/consts/colors.consts";
+import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_DOCcss, ABOUT_TOCcss, DATA_TOC_OPENcss } from "./about.css";
 
 export type AboutPanel = Readonly<{
   root: LiveTree;
@@ -74,16 +74,7 @@ export function about_factory(host: LiveTree): Outcome<AboutPanel> {
   const toc = row.create.div()
     .classlist.add("about-toc")
     .css.setMany(ABOUT_TOCcss)
-    .css.selector("#about-root[data-toc-open='true'] &").setMany({
-      display: "grid",
-      position: "fixed",
-      left: "2rem",
-      bottom: "6.5rem",
-      width: "min(22rem, calc(100vw - 4rem))",
-      maxHeight: "55vh",
-      zIndex: "9998",
-      background: "red",
-    });
+    .css.selector("#about-root[data-toc-open='true'] &").setMany(DATA_TOC_OPENcss);
 
   const doc = row.create.div()
     .classlist.add("about-doc")

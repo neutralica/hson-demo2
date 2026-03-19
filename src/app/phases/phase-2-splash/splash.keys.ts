@@ -1,5 +1,5 @@
 
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../core/consts/colors.consts";
 import { CLOUD_BAND_LOOPstr as CLOUD_LOOPstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
 
 // keyframes.ts 

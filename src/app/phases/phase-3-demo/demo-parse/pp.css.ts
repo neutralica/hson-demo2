@@ -1,8 +1,8 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, set_alpha } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, set_alpha } from "../../../core/consts/colors.consts";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
-import { $GRID_GAPstr, $txt_ } from "../../../consts/ui-consts";
+import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
 
 //// used

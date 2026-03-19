@@ -1,10 +1,10 @@
 import { CssManager, type LiveTree } from "hson-live";
-import { make_div_class, make_div_id } from "../../utils/makers";
+import { mk_div_cls, mk_div_id } from "../../utils/makers";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/phase-2-splash/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/phase-2-splash/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { make_rng } from "../../utils/rng";
-import { $cols_, bckRGB } from "../../consts/colors.consts";
+import { $cols_, bckRGB } from "../../core/consts/colors.consts";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
@@ -137,7 +137,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
     ...tune,
   };
 
-  const wrapper = make_div_id(tree, "cloud-wrapper");
+  const wrapper = mk_div_id(tree, "cloud-wrapper");
 
   for (let i = 0; i < t.layers; i++) {
     const u = i / Math.max(1, t.layers - 1);
@@ -162,7 +162,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       blur,
     });
 
-    const layer = make_div_class(wrapper, ["cloud-layer", `cloud-${i}`]);
+    const layer = mk_div_cls(wrapper, ["cloud-layer", `cloud-${i}`]);
 
     // deterministic phase per layer; var lives on parent
     const phasePx = Math.round(make_rng(seed)() * t.w);
@@ -191,7 +191,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // Child does the mask scud and holds the “ink” color
     const paintIxClass = `cloud-paint-${i}`;
-    const paint = make_div_class(layer, paintIxClass)
+    const paint = mk_div_cls(layer, paintIxClass)
     paint.css.setMany({
       position: "absolute",
       inset: "0",

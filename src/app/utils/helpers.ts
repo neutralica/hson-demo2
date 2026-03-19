@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import type { LetterKey } from "../../types/core.types";
+import type { LetterKey } from "../core/types/core.types";
 
 // export type LetterKey = keyof typeof LETTER_COLOR; // "H" | "S" | "O" | "N"
 // utils/keys-of.ts

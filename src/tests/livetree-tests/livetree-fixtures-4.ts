@@ -843,88 +843,88 @@ export function error_handling(): TestSuite {
   const SUITE = "livetree/error-handling";
 
   const cases: readonly LiveTreeCaseSpec[] = [
-   {
-  suite: SUITE,
-  name: "invalid input: find.byId with empty string fails softly",
-  dom: true,
-  fixture: "invalid/find",
-  sub: "byId-empty",
+    {
+      suite: SUITE,
+      name: "invalid input: find.byId with empty string fails softly",
+      dom: true,
+      fixture: "invalid/find",
+      sub: "byId-empty",
 
-  html: `<main><div id="box"></div></main>`,
+      html: `<main><div id="box"></div></main>`,
 
-  async act(tree) {
-    let threw = false;
-    let out: unknown;
+      async act(tree) {
+        let threw = false;
+        let out: unknown;
 
-    try {
-      out = (tree.find.byId as any)("");
-    } catch {
-      threw = true;
-    }
+        try {
+          out = (tree.find.byId as any)("");
+        } catch {
+          threw = true;
+        }
 
-    (tree as any).__result = { threw, out };
-  },
+        (tree as any).__result = { threw, out };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
-    t.eq("does not throw", r.threw, false);
-    t.eq("returns undefined", r.out, undefined);
-  },
-},
-   {
-  suite: SUITE,
-  name: "invalid input: must.byId with empty string throws",
-  dom: true,
-  fixture: "invalid/find",
-  sub: "must-byId-empty",
-
-  html: `<main><div id="box"></div></main>`,
-
-  async act(tree) {
-    let threw = false;
-
-    try {
-      (tree.find.must.byId as any)("");
-    } catch {
-      threw = true;
-    }
-
-    (tree as any).__threw = threw;
-  },
-
-  assert(tree, t) {
-    t.eq("must path throws", (tree as any).__threw, true);
-  },
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("does not throw", r.threw, false);
+        t.eq("returns undefined", r.out, undefined);
+      },
     },
-{
-  suite: SUITE,
-  name: "invalid input: findAll.byClass with empty string fails softly",
-  dom: true,
-  fixture: "invalid/find",
-  sub: "byClass-empty",
+    {
+      suite: SUITE,
+      name: "invalid input: must.byId with empty string throws",
+      dom: true,
+      fixture: "invalid/find",
+      sub: "must-byId-empty",
 
-  html: `<main><div class="box"></div></main>`,
+      html: `<main><div id="box"></div></main>`,
 
-  async act(tree) {
-    let threw = false;
-    let count = -1;
+      async act(tree) {
+        let threw = false;
 
-    try {
-      const xs = tree.findAll.byAttribute("class", "");
-      count = xs.count();
-    } catch {
-      threw = true;
-    }
+        try {
+          (tree.find.must.byId as any)("");
+        } catch {
+          threw = true;
+        }
 
-    (tree as any).__result = { threw, count };
-  },
+        (tree as any).__threw = threw;
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
-    t.eq("does not throw", r.threw, false);
-    t.eq("returns empty result", r.count, 0);
-  },
-},
+      assert(tree, t) {
+        t.eq("must path throws", (tree as any).__threw, true);
+      },
+    },
+    {
+      suite: SUITE,
+      name: "invalid input: findAll.byClass with empty string fails softly",
+      dom: true,
+      fixture: "invalid/find",
+      sub: "byClass-empty",
+
+      html: `<main><div class="box"></div></main>`,
+
+      async act(tree) {
+        let threw = false;
+        let count = -1;
+
+        try {
+          const xs = tree.findAll.byAttribute("class", "");
+          count = xs.count();
+        } catch {
+          threw = true;
+        }
+
+        (tree as any).__result = { threw, count };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("does not throw", r.threw, false);
+        t.eq("returns empty result", r.count, 0);
+      },
+    },
     {
       suite: SUITE,
       name: "invalid tree op: removing same node twice is safe",

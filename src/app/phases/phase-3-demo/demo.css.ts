@@ -1,8 +1,8 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../consts/colors.consts";
-import { $GRID_GAPstr, $txt_ } from "../../consts/ui-consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../core/consts/colors.consts";
+import { $GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
 export const MENU_TEXT_COL = OKLCH_FLEURS.rustPink;

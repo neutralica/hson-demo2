@@ -7,15 +7,15 @@ import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
 import { SPLASHkfs } from "./splash.keys";
 import { FLAREanim, NEON_FLASHanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_DISKanim, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM, VERanim } from "./splash.anim";
 import { get_letter_key } from "../../utils/helpers";
-import type { LetterCaps, LetterKey } from "../../../types/core.types";
+import type { LetterCaps, LetterKey } from "../../core/types/core.types";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
-import { make_span_class } from "../../utils/makers";
+import { mk_span_cls } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
-import { LETTER_COLORstd } from "../../consts/colors.consts";
+import { LETTER_COLORstd } from "../../core/consts/colors.consts";
 
 
 
@@ -56,8 +56,8 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterCaps): readonly [LiveTree, LiveTree] => {
-        const cell = make_span_class(wordMark.tree, ["cell", ltr])
-        const l = make_span_class(cell, ["letter", ltr]).text.set(ltr)
+        const cell = mk_span_cls(wordMark.tree, ["cell", ltr])
+        const l = mk_span_cls(cell, ["letter", ltr]).text.set(ltr)
         return [l, cell];
     }
     const [h, hCell] = createLetter("H")
@@ -67,9 +67,9 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const letters = [h, s, o, n];
     const cells = [hCell, sCell, oCell, nCell];
     /* create semver pop-up */
-    const ver = make_span_class(nCell, ["ver"]);
-    make_span_class(ver, "ver-a").text.set("2.0.2");
-    const ver6 = make_span_class(ver, "ver-6").text.set("6");
+    const ver = mk_span_cls(nCell, ["ver"]);
+    mk_span_cls(ver, "ver-a").text.set("2.0.2");
+    const ver6 = mk_span_cls(ver, "ver-6").text.set("6");
 
 
     /* style letters */

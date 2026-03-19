@@ -6,14 +6,14 @@ import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
 import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import { $txt_ } from "../../app/consts/ui-consts";
+import { $txt_ } from "../../app/core/consts/ui-consts";
 import type { TestLog } from "../test-log";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
-import { make_div_class, make_div_id } from "../../app/utils/makers";
+import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss,ROW_CASE_FAILcss } from "./inspector.css";
-import { $cols_, $red_etc_, ACID_WASH_RGBA } from "../../app/consts/colors.consts";
+import { $cols_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 
 
 export type InspectorUi = Readonly<{
@@ -76,7 +76,7 @@ export function create_inspector(
 ): InspectorUi {
   const hideClass = opts?.hideClass ?? "";
 
-  const root = make_div_id(host, "inspector").css.setMany({
+  const root = mk_div_id(host, "inspector").css.setMany({
     ...PANEL_SAFETYcss,
     width: "100%",
     // height: "100%",
@@ -85,12 +85,12 @@ export function create_inspector(
     overflow: "hidden",
     background: $cols_.bckdeep
   });
-  const header = make_div_class(root, "insp-header").css.setMany({
+  const header = mk_div_cls(root, "insp-header").css.setMany({
     // header is natural height
     ...PANEL_SAFETYcss,
   });
 
-  const body = make_div_class(root, "insp-body").css.setMany({
+  const body = mk_div_cls(root, "insp-body").css.setMany({
     // CHANGED: body is the scroll region (or you can put this on tableHost)
     ...PANEL_SAFETYcss,
     overflowY: "scroll",
@@ -98,17 +98,17 @@ export function create_inspector(
   });
 
   // dynamic 1-col / 2-col
-  const cols = make_div_class(body, "insp-cols").css.setMany({
+  const cols = mk_div_cls(body, "insp-cols").css.setMany({
     ...PANEL_SAFETYcss,
     display: "grid",
     // whatever your 1/2 col behavior is, keep it here
   });
-  const main = make_div_class(cols, "insp-main").css.setMany({
+  const main = mk_div_cls(cols, "insp-main").css.setMany({
     ...PANEL_SAFETYcss,
   });
 
   // main table host
-  const tableHost = make_div_class(main, "insp-table-host").css.setMany({
+  const tableHost = mk_div_cls(main, "insp-table-host").css.setMany({
     ...PANEL_SAFETYcss
   });
 

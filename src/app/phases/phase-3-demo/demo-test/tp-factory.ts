@@ -1,10 +1,10 @@
 import { hson } from "hson-live";
 import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
-import { $PANEL_HIDDEN } from "../../../consts/ui-consts";
-import { make_btn } from "../../../widgets/gems-deprecate/make-btn";
+import { $PANEL_HIDDEN } from "../../../core/consts/ui-consts";
+import { mk_btn } from "../../../widgets/gems-deprecate/make-btn";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
-import { LOG_BOXcss, TEST_PANELcss } from "./tp.css";
+import { LOG_BOXcss, ROW_CONTAINERcss, TEST_PANELcss } from "./tp.css";
 import { TEST_LOGGERcss } from "./tp.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
@@ -15,10 +15,11 @@ import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
-import { $grn_, $cols_, $ylw_ } from "../../../consts/colors.consts";
+import { $grn_, $cols_, $ylw_ } from "../../../core/consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { CONTROL_ROWcss, TEST_SELECTcss, RUN_BUTTONcss } from "./tp.css";
+import { mk_div_id } from "../../../utils/makers";
 
 
 export type TestPanelDeps = Readonly<{
@@ -95,25 +96,17 @@ function test_panel_factory(): Outcome<TestPanel> {
   // -------------------------
   // BUTTON ROW
   // -------------------------
-  const rowContainer = branch.create.div()
-    .id.set("row-container").css.setMany({
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-      gridTemplateRows: "1fr",
-      gridRow: "2",
-    gridColumn:"1 / 3"
-
-  })
+  const rowContainer = mk_div_id(branch, "row-container").css.setMany(ROW_CONTAINERcss)
   const controlsRow = rowContainer.create.div()
     .id.set("test-controls")
     .css.setMany(CONTROL_ROWcss);
 
   // keep your existing helper (toggle gem), but treat it as a “chip”
-  const runChip = make_btn(controlsRow, "test-run", "run");
+  const runChip = mk_btn(controlsRow, "test-run", "run");
   const suiteSel = controlsRow.create.select()
     .id.set("test-select")
     .css.setMany(TEST_SELECTcss);
-  const clearChip = make_btn(controlsRow, "test-clear", "clear");
+  const clearChip = mk_btn(controlsRow, "test-clear", "clear");
 
   const runBtn = runChip.node.css.setMany(RUN_BUTTONcss);
 
@@ -131,7 +124,6 @@ function test_panel_factory(): Outcome<TestPanel> {
   // -------------------------
 
   const chips = create_test_chips(rowContainer);
-
   let cache: string[] = []
 
   const setLog = (txt: string): void => {

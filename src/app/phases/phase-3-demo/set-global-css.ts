@@ -1,7 +1,7 @@
 import { CssManager } from "hson-live";
 import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/managers/global-css";
-import { $PANEL_HIDDEN, $txt_ } from "../../consts/ui-consts";
-import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../consts/colors.consts";
+import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
+import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../core/consts/colors.consts";
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 import { MOBILE_DOCcss, MOBILE_TOCcss, SIZE_WARNINGcss } from "./global.css";

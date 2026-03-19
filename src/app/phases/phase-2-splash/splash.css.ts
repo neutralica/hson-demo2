@@ -2,7 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { sunColor, sunFade, SKY_GRADIENT } from "./splash.consts";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../core/consts/colors.consts";
 
 
 

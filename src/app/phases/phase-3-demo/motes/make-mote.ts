@@ -1,11 +1,11 @@
 import type { LiveTree } from "hson-live";
-import { make_div_class } from "../../../utils/makers";
+import { mk_div_cls } from "../../../utils/makers";
 import type { Mote, MoteStyle } from "./motes.types";
 
 
 export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {
-  const wrap = make_div_class(host, "mote-wrap");
-  const rise = make_div_class(wrap, "mote-rise");
+  const wrap = mk_div_cls(host, "mote-wrap");
+  const rise = mk_div_cls(wrap, "mote-rise");
   rise.css.setMany({
     position: "absolute",
     top: "0px",
@@ -14,12 +14,12 @@ export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {
     pointerEvents: "auto",
   });
 
-  const sway = make_div_class(rise, "mote-sway");
+  const sway = mk_div_cls(rise, "mote-sway");
   sway.css.setMany({
     willChange: "transform",
   });
 
-  const fall = make_div_class(sway, "mote-fall");
+  const fall = mk_div_cls(sway, "mote-fall");
   fall.css.setMany({
     willChange: "transform",
   });

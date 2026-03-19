@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../consts/colors.consts";
+import { $blu_, $cols_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
 import { MENU_FONT } from "../demo.css";
 
 export const MOUSE_HOSTcss: CssMap = {
@@ -45,17 +45,6 @@ export const MOUSE_COORDScss: CssMap = {
   marginLeft: "-1.5rem",
   alignContent: "end",              // CHANGED
   justifyItems: "start",
-} as const;
-
-// reusable monospace baseline for this widget
-export const MONOcss: CssMap = {
-  fontFamily: MENU_FONT,
-  fontSize: "12px",
-  letterSpacing: "0.06em",
-  // background: $cols_.bckdeep,
-  width: "100%",
-  fontWeight: "600"
-
 } as const;
 
 // grid-cell clamp so long values don't push neighbors

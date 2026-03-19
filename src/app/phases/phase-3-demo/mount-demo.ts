@@ -1,7 +1,7 @@
 // mount-demo.ts
 
 import { CssManager, hson, type LiveTree } from "hson-live";
-import { make_div_class, make_div_id, make_div_id_text, make_span_id } from "../../utils/makers";
+import { mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
@@ -10,9 +10,9 @@ import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./demo-test/tp-factory";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
-import { $PANEL_HIDDEN, $txt_ } from "../../consts/ui-consts";
-import { HSONlower, LETTER_LOWS } from "../../consts/config.consts";
-import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../consts/colors.consts";
+import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
+import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
+import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../core/consts/colors.consts";
 import { create_test_log } from "../../../tests/test-log";
 import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
 import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, toggle_about_toc, get_about_toc_open } from "./state";
@@ -48,23 +48,23 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.globals.invoke();
 
-  const demo = make_div_id(stage, $DS.demo)
+  const demo = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
 
-  const screen = make_div_id(demo, $DS.screen)
+  const screen = mk_div_id(demo, $DS.screen)
     .classlist.add("demo screen")
     .css.setMany(DEMO_SCREENcss)
 
-  const screenFx = make_div_id(screen, $DS.screenFx)
+  const screenFx = mk_div_id(screen, $DS.screenFx)
     .classlist.add("demo screen fx")
     .css.setMany(DEMO_SCREEN_FXcss);
 
-  const fleurOverlay = make_div_id(screenFx, "fleurs-overlay").css.setMany(FLOWER_OVERLAYcss);
-  const graffiti = make_div_id(screenFx, "hson-graffiti").text.set(HSON_LIVE_GRAFFITIstr).css.setMany(HSON_GRAFFITIcss);
-  const uiRoot = make_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
-  const menuContainer = make_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
-  const motes = make_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
+  const fleurOverlay = mk_div_id(screenFx, "fleurs-overlay").css.setMany(FLOWER_OVERLAYcss);
+  const graffiti = mk_div_id(screenFx, "hson-graffiti").text.set(HSON_LIVE_GRAFFITIstr).css.setMany(HSON_GRAFFITIcss);
+  const uiRoot = mk_div_id(screenFx, "ui-root").css.setMany(UI_ROOTcss);
+  const menuContainer = mk_div_id(screenFx, "menu-container").css.setMany(MENU_CONTAINERcss);
+  const motes = mk_div_id(screenFx, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
   // screen.css.setMany(SIZE_WARNINGcss)
   const copyright = screenFx.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
@@ -99,37 +99,37 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
 
   /* main menu & logo heading */
-  const titleBox = make_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
-  const headline = make_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
+  const titleBox = mk_div_id(menuContainer, "title-box").css.setMany(TITLE_BOXcss)
+  const headline = mk_div_id(titleBox, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
 
-  const hsonBox = make_div_id(headline, "hson-box").css.setMany({
+  const hsonBox = mk_div_id(headline, "hson-box").css.setMany({
     minHeight: "0",
     display: "flex",
     flexDirection: "column",
   })
-  const letterbox = make_div_id(hsonBox, "letterbox")
+  const letterbox = mk_div_id(hsonBox, "letterbox")
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
-    const span = make_span_id(letterbox, `${k}-letter`)
+    const span = mk_span_id(letterbox, `${k}-letter`)
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .classlist.add('demo-wordmark')
       .css.setMany($T$GHSONcss)
     return span;
   });
-  make_div_id(hsonBox, "livedemo-subhead")
+  mk_div_id(hsonBox, "livedemo-subhead")
     .text.set(`::liveDemo`)
     .css.setMany(HSON_SUBcss);
 
-  const layoutGrid = make_div_id(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
-  const menuBox = make_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
+  const layoutGrid = mk_div_id(uiRoot, "layout-grid").css.setMany(LAYOUT_GRIDcss);
+  const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
 
   const menu = {
-    aboutBtn: make_div_id_text(menuBox, `${$ABOUT}-button`, `[${$ABOUT}]`),
-    testBtn: make_div_id_text(menuBox, `${$TEST}-button`, `[${$TEST}]`),
-    parseBtn: make_div_id_text(menuBox, `${$PARSE}-button`, `[${$PARSE}]`),
-    buildBtn: make_div_id_text(menuBox, `${$BUILD}-button`, `[${$BUILD}]`),
-    fleurBtn: make_div_id_text(menuBox, `${$FLEURS}-button`, `[${$FLEURS}]`),
-    mouseBtn: make_div_id_text(menuBox, `${$MOUSE}-button`, `[${$MOUSE}]`),
+    aboutBtn: mk_div_id_txt(menuBox, `${$ABOUT}-button`, `[${$ABOUT}]`),
+    testBtn: mk_div_id_txt(menuBox, `${$TEST}-button`, `[${$TEST}]`),
+    parseBtn: mk_div_id_txt(menuBox, `${$PARSE}-button`, `[${$PARSE}]`),
+    buildBtn: mk_div_id_txt(menuBox, `${$BUILD}-button`, `[${$BUILD}]`),
+    fleurBtn: mk_div_id_txt(menuBox, `${$FLEURS}-button`, `[${$FLEURS}]`),
+    mouseBtn: mk_div_id_txt(menuBox, `${$MOUSE}-button`, `[${$MOUSE}]`),
     // oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
 
   } as const;
@@ -143,7 +143,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
         color: widgetKeys.includes(k) ? ACID_WASH_RGBA.warmAsh : MENU_TEXT_COL,
       });
   });
-  const mobileDocBtn = make_div_id(menu.aboutBtn, "mobile-doc-button")
+  const mobileDocBtn = mk_div_id(menu.aboutBtn, "mobile-doc-button")
     .classlist.add($PANEL_HIDDEN);
 
 
@@ -160,15 +160,15 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   set_global_css();
 
   // layoutGrid now has two stable slots
-  const demoSlot = make_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
-  const mouseSlot = make_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
+  const demoSlot = mk_div_id(layoutGrid, "view-slot").css.setMany(VIEW_SLOTcss);
+  const mouseSlot = mk_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
 
   // views stack in viewSlot
   const parse = mount_panel_simple(demoSlot, "parse");
   const test = mount_panel_simple(demoSlot, "test");
   const build = mount_panel_simple(demoSlot, "build");
   const about = mount_panel_simple(demoSlot, "about");
-  const mouseHost = make_div_id(mouseSlot, "mouse-host")
+  const mouseHost = mk_div_id(mouseSlot, "mouse-host")
     .classlist.add($PANEL_HIDDEN)
     .css.setMany(MOUSE_HOSTcss);
   const mr = relay_data(mount_mouse_panel(mouseHost));

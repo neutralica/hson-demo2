@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../consts/colors.consts";
-import { $txt_ } from "../../../consts/ui-consts";
+import { $blu_, $cols_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../core/consts/colors.consts";
+import { $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
-import { MONOcss } from "../demo-mouse/mouse.css";
+import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 // ADDED: list cell styling (prevents baseline + indent issues)
@@ -21,7 +21,6 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "auto",
   overflowX: "hidden",
-
   background: set_alpha($cols_.bckdeep, 0.88),
   borderRadius: "18px",
   border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
@@ -194,7 +193,8 @@ export const ABOUT_TOCcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   gridAutoRows: "min-content",
-  alignContent: "start",
+  alignContent: "end",
+  // justifyContent: "right",
   gap: "8px",
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
@@ -203,6 +203,17 @@ export const ABOUT_TOCcss: CssMap = {
   border: `1px solid ${set_alpha($blu_.faded, 0.12)}`,
   overflowY: "auto",
   overflowX: "hidden",
+};
+
+export const DATA_TOC_OPENcss = {
+  display: "grid",
+  position: "fixed",
+  left: "2rem",
+  bottom: "6.5rem",
+  width: "min(22rem, calc(100vw - 4rem))",
+  maxHeight: "55vh",
+  zIndex: "9998",
+  background: "red",
 };
 
 export const ABOUT_NAV_TITLEcss: CssMap = {

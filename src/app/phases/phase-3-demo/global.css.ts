@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
-import { $cols_ } from "../../consts/colors.consts"
+import { $cols_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
 
 
 export const MOBILE_TOCcss = {
@@ -22,17 +22,17 @@ export const MOBILE_DOCcss = {
 export const SIZE_WARNINGcss = (onoff: "on" | "off" = "on"): CssMap => {
   return {
     __after: {
-      content: `"*please use a larger device to fully explore hson::liveDemo*"`,
+      content: `"please use a larger device to fully explore hson::liveDemo"`,
       position: "fixed",
       left: "2rem",
       right: "2rem",
-      bottom: "6rem",
+      top: "10rem",
       zIndex: "9997",
-      padding: "0.75rem 1rem",
-      fontSize: "2rem",
+      fontSize: "1.3rem",
       fontFamily: "Monaco",
-      background: OKLCH_FLEURS.rustPink,
-      color: $cols_.bckdeep,
+      color:ACID_WASH_RGBA.strawSmoke,
+      background: $cols_.bckdeep,
+      border:`10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
       textAlign: "center",
       transition: "opacity 5s ease-in",

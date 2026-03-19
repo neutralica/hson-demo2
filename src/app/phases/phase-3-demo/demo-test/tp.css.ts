@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../consts/colors.consts";
-import { $txt_ } from "../../../consts/ui-consts";
+import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/colors.consts";
+import { $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
@@ -28,8 +28,7 @@ export const CONTROL_ROWcss: CssMap = {
   boxSizing: "border-box",
   display: "grid",
   gridTemplateColumns: "1fr 2fr 1fr",
-  gap: "10px",
-  padding: "0",
+  gap: "8px",
   gridColumn: "1 / 2",
   gridRow: "2",
   // background: "transparent",
@@ -90,7 +89,15 @@ export const LOG_BOXcss: CssMap = {
   display: "grid",
   background: $cols_.bckdeep,
 };
+export const ROW_CONTAINERcss = {
+  display: "grid",
+  gap: "8px",
+  gridTemplateColumns: "1fr 1fr",
+  gridTemplateRows: "1fr",
+  gridRow: "2",
+  gridColumn: "1 / 3"
 
+};
 export const TEST_PANELcss: CssMap = {
   display: "grid",
   gap: "6px",

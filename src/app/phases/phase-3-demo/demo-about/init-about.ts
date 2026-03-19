@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../consts/colors.consts";
+import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
 import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_NAV_TITLEcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";

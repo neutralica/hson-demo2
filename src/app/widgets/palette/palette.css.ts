@@ -1,7 +1,7 @@
 // palette.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $cols_ } from "../../consts/colors.consts";
+import { $cols_ } from "../../core/consts/colors.consts";
 
 export const PALETTE_TAB_CSS: CssMap = {
     position: "fixed",

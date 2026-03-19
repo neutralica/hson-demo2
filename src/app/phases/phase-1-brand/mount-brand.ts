@@ -3,12 +3,12 @@
 import type { LiveTree } from "hson-live";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
-import { make_div_id } from "../../utils/makers";
+import { mk_div_id } from "../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
-import { $blu_, $cols_, $grn_ } from "../../consts/colors.consts";
+import { $blu_, $cols_, $grn_ } from "../../core/consts/colors.consts";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
@@ -23,7 +23,7 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
   const stage = s;
   stage.empty();
   const introNote = "// created with hson-live"
-  const noteBox = make_div_id(stage, "note-box");
+  const noteBox = mk_div_id(stage, "note-box");
   noteBox.css.setMany({
     position: "fixed",
     top: "1rem",
@@ -34,23 +34,23 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     color: $grn_.std,
     filter: "blur(0.5px)",
   })
-  const noteText = make_div_id(noteBox, "note-text")
+  const noteText = mk_div_id(noteBox, "note-text")
   noteText.text.set(introNote);
 
-  const logoBox = make_div_id(stage, "logo-box")
+  const logoBox = mk_div_id(stage, "logo-box")
     .css.setMany(Intro_css.logobox);
 
-  const zalgo1 = make_div_id(logoBox, 'z-logo')
+  const zalgo1 = mk_div_id(logoBox, 'z-logo')
     .text.set(zalgo_unicode(LOGO_TEXT, zConfig))
     .css.setMany(Intro_css.zalgo)
     .css.set.color(zalgoCol);
 
-  const zalgo2 = make_div_id(logoBox, 'z2-logo')
+  const zalgo2 = mk_div_id(logoBox, 'z2-logo')
     .text.set(zalgo_unicode(LOGO_TEXT, zConfig2))
     .css.setMany(Intro_css.zalgo)
     .css.set.color(zalgoCol2);
 
-  const brand = make_div_id(logoBox, 'logo-text')
+  const brand = mk_div_id(logoBox, 'logo-text')
     .text.set(LOGO_TEXT)
     .css.setMany(Intro_css.brand);
 
