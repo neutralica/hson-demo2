@@ -4,7 +4,7 @@ import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../core/consts/colors.consts";
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
-import { MOBILE_DOCcss, MOBILE_TOCcss, SIZE_WARNINGcss } from "./global.css";
+import { MOBILE_DOCcss, MOBILE_TOCcss, DISP_SIZE_ALERTcss } from "./global.css";
 
 export const set_global_css = (): void => {
   const gcss = CssManager.globals.invoke();
@@ -81,7 +81,7 @@ export const set_global_css = (): void => {
   mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #ui-root, #mouse-button, #about-button, #mouse-slot")
     .setMany({ display: "none" });
 
-  mobile.rule("show-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(SIZE_WARNINGcss("on"))
+  mobile.rule("show-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(DISP_SIZE_ALERTcss("on"))
   
 
   mobile.rule("mobile-about-btn", "#about-button")

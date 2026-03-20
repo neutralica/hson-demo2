@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
-import { DOC_BTN_ACTIVEcss, DOC_BTN_IDLEcss, DOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_NAV_TITLEcss } from "./about.css";
+import { TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss, TOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_TOC_TITLEcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
 import { MD_CODE_PREcss, MENU_FONT } from "../demo.css";
@@ -517,14 +517,14 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
 
   t.toc.create.div()
     .classlist.add("about-nav-title")
-    .css.setMany(ABOUT_NAV_TITLEcss)
+    .css.setMany(ABOUT_TOC_TITLEcss)
     .text.set("docs");
 
   for (const d of docs) {
     const btn = t.toc.create.div()
       .classlist.add("about-doc-btn")
       .data.set("doc-key", d.key)
-      .css.setMany(DOC_BTNcss);
+      .css.setMany(TOC_BTNcss);
 
     btn.text.set(d.title);
     btn.listen.onClick(() => setActive(d.key));
@@ -541,7 +541,7 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     render_doc_md(t.doc, docSpec.body);
 
     for (const x of tocButtons) {
-      x.btn.css.setMany(x.key === activeKey ? DOC_BTN_ACTIVEcss : DOC_BTN_IDLEcss);
+      x.btn.css.setMany(x.key === activeKey ? TOC_BTN_ACTIVEcss : TOC_BTN_IDLEcss);
     }
     // CHANGED: collapse TOC after selection)
     set_about_toc_open(false);

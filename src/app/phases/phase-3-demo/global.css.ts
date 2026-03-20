@@ -19,7 +19,7 @@ export const MOBILE_DOCcss = {
   width: "100%",
 }
 
-export const SIZE_WARNINGcss = (onoff: "on" | "off" = "on"): CssMap => {
+export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
   return {
     __after: {
       content: `"please use a larger device to fully explore hson::liveDemo"`,

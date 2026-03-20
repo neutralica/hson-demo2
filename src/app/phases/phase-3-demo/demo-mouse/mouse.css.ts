@@ -10,6 +10,7 @@ export const MOUSE_HOSTcss: CssMap = {
   color: ACID_WASH_RGBA.terminalGreen,
   fontFamily: MENU_FONT,
   borderRadius: "14px",
+  justifySelf:"flex-end",
   
 }
 
@@ -56,8 +57,8 @@ export const CELL_CLAMPcss: CssMap = {
 } as const;
 
 export const MOUSE_ROOTcss: CssMap = {
-  position: "relative",
-
+  position: "absolute",
+alignSelf: "bottom",
   display: "grid",
   gridTemplateRows: "1fr 2fr",
   gridTemplateColumns: "2fr 1fr",

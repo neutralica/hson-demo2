@@ -58,22 +58,17 @@ export const HRcss: CssMap = {
   marginLeft: "auto",
   marginRight: "auto",
 };
-
-export const DOC_BTN_ACTIVEcss: CssMap = {
-  background: $cols_.bckdeep,
-  color: OKLCH_FLEURS.cyanDust,
-  __after: {
-    content: "> ",
-    display: "inline"
-
-  }
-
+export const TOC_BTN_ACTIVEcss: CssMap = {
+  textDecoration: "underline",
+  textUnderlineOffset: "6px",
+  background:set_alpha(ACID_WASH_RGBA.dimIce,0.2),
+  color: OKLCH_FLEURS.pollen,
 };
 
-export const DOC_BTN_IDLEcss: CssMap = {
-  background: set_alpha($cols_.bckdeep, 0.18),
-  color: $blu_.faded,
-  border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
+export const TOC_BTN_IDLEcss: CssMap = {
+  background: "transparent",
+  textDecoration: "none",
+  color: OKLCH_FLEURS.brass,
 };
 
 export const ABOUT_P_TEXTcss: CssMap = {
@@ -216,7 +211,7 @@ export const DATA_TOC_OPENcss = {
   background: "red",
 };
 
-export const ABOUT_NAV_TITLEcss: CssMap = {
+export const ABOUT_TOC_TITLEcss: CssMap = {
   fontFamily: MENU_FONT,
   fontSize: "12px",
   letterSpacing: "0.12em",
@@ -226,18 +221,20 @@ export const ABOUT_NAV_TITLEcss: CssMap = {
   padding: "4px 10px 8px 10px",
 };
 
-export const DOC_BTNcss: CssMap = {
+export const TOC_BTNcss: CssMap = {
   ...MONOcss,
   fontSize: "18px",
   lineHeight: "1.1",
-  padding: "12px 16px",
+  padding: "12px 26px",
   borderRadius: "10px",
   boxSizing: "border-box",
   cursor: "pointer",
   userSelect: "none",
   minWidth: "0",
-
-  border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
+  textAlign: "right",
   background: set_alpha($cols_.bckdeep, 0.18),
-  color: $blu_.faded,
+  color: ACID_WASH_RGBA.brickDust,
+  __after: {
+    content: '',
+  }
 };

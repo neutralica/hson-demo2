@@ -33,7 +33,7 @@ import { PP_TEXTWRAPcss } from "./demo-parse/pp.css";
 import type { DemoView } from "./state/state.types";
 import { set_global_css } from "./set-global-css";
 import { WARNINGcss } from "./demo-about/about.css";
-import { SIZE_WARNINGcss } from "./global.css";
+import { DISP_SIZE_ALERTcss } from "./global.css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -224,6 +224,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   }
 
   screenFx.css.setMany({
+    /* this overwrites the opacity setting above, starting a 15s fade out transition.
+     We need to let the first opacity render, otherwise this overwrites first value
+     immediately and the warning never displays */
     __after: {
     opacity: "0 !IMPORTANT"
   }})
