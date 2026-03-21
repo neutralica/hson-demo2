@@ -116,16 +116,7 @@ export function create_inspector(
   // UI state (expansion)
   // ---------------------------
   const expandedSuites = new Set<string>();
-  const expandedGroupsBySuite = new Map<string, Set<string>>();
   const expandedCasesBySuite = new Map<string, Set<CaseKey>>();
-
-  const getExpandedGroups = (suite: string): Set<string> => {
-    const s = expandedGroupsBySuite.get(suite);
-    if (s) return s;
-    const ns = new Set<string>();
-    expandedGroupsBySuite.set(suite, ns);
-    return ns;
-  };
 
   const getExpandedCases = (suite: string): Set<CaseKey> => {
     const s = expandedCasesBySuite.get(suite);
@@ -168,21 +159,6 @@ export function create_inspector(
     clear_box(tableHost);
 
     const suites = tlog.listSuites();
-    const fails = tlog.listFailures();
-    const failKeys = new Set<CaseKey>();
-    const failGroupsBySuite = new Map<string, Set<string>>();
-    const failSuites = new Set<string>();
-
-    for (const f of fails) {
-      const key = `${f.suite}::${f.name}` as CaseKey;
-      failKeys.add(key);
-      failSuites.add(f.suite);
-
-      const gk = groupKeyFor(f.name);
-      let gs = failGroupsBySuite.get(f.suite);
-      if (!gs) { gs = new Set<string>(); failGroupsBySuite.set(f.suite, gs); }
-      gs.add(gk);
-    }
 
     const wrap = tableHost.create.div().classlist.set("insp-scroll main-scroll");
     wrap.css.setMany(LOG_WRAPcss);
@@ -232,35 +208,18 @@ export function create_inspector(
       if (!cases.length) continue;
 
       // group cases
-      type CaseRow = (typeof cases)[number];
-      const groups = new Map<string, CaseRow[]>();
-      const order: string[] = [];
-
-      for (const c of cases) {
-        const gk = groupKeyFor(c.name);
-        let arr = groups.get(gk);
-        if (!arr) {
-          arr = [];
-          groups.set(gk, arr);
-          order.push(gk);
-        }
-        arr.push(c);
-      }
-
+      
+            // CHANGED: render every case directly; no grouping during debug
       const expandedCases = getExpandedCases(suiteName);
 
-      for (const gk of order) {
-        const members = groups.get(gk)!;
-        const c = members[0];
-        if (!c) continue;
-
+      for (const c of cases) {
         const res = c.status ?? "—";
         const ms = c.ms !== undefined ? c.ms.toFixed(1) : "—";
         const preview = c.meta?.preview ?? "";
 
         // case row
         const cr = mk_tr(tbody, "insp-case-row");
-        cr.css.setMany(ROW_CASEcss); // CHANGED: always apply a base case-row style first
+        cr.css.setMany(ROW_CASEcss);
         if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss);
 
         mk_td(cr, "c-res", res).css.setMany(TDcss);
@@ -268,10 +227,9 @@ export function create_inspector(
         const nameCell = mk_td(cr, "c-name", c.name);
         nameCell.css.setMany({ ...TDcss, ...tdNameChildCss, ...CLICKABLEcss });
 
-        // CHANGED: kb column removed
         mk_td(cr, "c-ms", ms).css.setMany(TDcss);
 
-        // click case name toggles preview row below
+        // CHANGED: click case name toggles this exact case
         nameCell.listen.onClick((me) => {
           _stop(me);
           if (expandedCases.has(c.key)) expandedCases.delete(c.key);
@@ -284,17 +242,15 @@ export function create_inspector(
           const pr = mk_tr(tbody, "insp-case-preview-row");
           const cell = pr.create.td().classlist.set("insp-case-preview-cell");
 
-          // CHANGED: kb column removed, so colspan is now 3
           cell.attr.set("colspan", "3");
           cell.css.setMany(TD_PREVIEW_ROWcss);
 
           cell.empty();
 
-          // header row
           const topRow = cell.create.div().classlist.set("insp-cap-row");
           topRow.css.setMany({
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) auto", // CHANGED
+            gridTemplateColumns: "minmax(0, 1fr) auto",
             gap: "8px",
             alignItems: "center",
             marginBottom: "8px",
@@ -305,7 +261,6 @@ export function create_inspector(
           if (res === "fail") metaBox.css.setMany(PREVIEW_META_FAILcss);
           metaBox.text.set(`${c.suite} :: ${c.name}`);
 
-          // CHANGED: dedicated button bar so buttons stay on one line
           const btnBar = topRow.create.div().classlist.set("insp-cap-btnbar");
           btnBar.css.setMany({
             display: "flex",
@@ -324,15 +279,19 @@ export function create_inspector(
 
           const viewBtn = mkBtn(btnBar, "view");
           const copyBtn = mkBtn(btnBar, "copy");
-          if (res === "fail") { //// I added thisz
+
+          // CHANGED: keep fail tint on the actual case row's buttons
+          if (res === "fail") {
             viewBtn.css.set.color($red_etc_.heartsBlood);
             copyBtn.css.set.color($red_etc_.heartsBlood);
           }
+
           const hasCapture = !!capture;
           if (!hasCapture) {
             viewBtn.css.setMany({ opacity: "0.45", cursor: "default" });
             copyBtn.css.setMany({ opacity: "0.45", cursor: "default" });
           }
+
           copyBtn.listen.onClick(async (me) => {
             _stop(me);
             if (!capture) return;
@@ -341,10 +300,7 @@ export function create_inspector(
 
             try {
               const report = await capture(c.key);
-
-              // CHANGED: pull stored meta (includes metaPatch.input etc.)
               const meta = tlog.getCase(c.key)?.meta;
-
               const txt = report_to_text(report, meta);
 
               await navigator.clipboard.writeText(txt);
@@ -365,10 +321,7 @@ export function create_inspector(
 
             try {
               const report = await capture(c.key);
-
-              // CHANGED: pull stored meta for report rendering
               const meta = tlog.getCase(c.key)?.meta;
-
               const render = render_report_html(c.key, c.name, c.suite, report, meta);
 
               open_report_window(render.html);
@@ -379,6 +332,7 @@ export function create_inspector(
               window.setTimeout(() => viewBtn.text.set("view"), 900);
             }
           });
+
           const pre = cell.create.pre().classlist.set("insp-preview-pre");
           pre.css.setMany({
             margin: "0",
@@ -393,7 +347,6 @@ export function create_inspector(
           });
           pre.text.set(preview || "—");
 
-          // CHANGED: collapse by clicking preview text, not the old group row
           pre.css.setMany(CLICKABLEcss);
           pre.listen.onClick((me) => {
             _stop(me);
@@ -417,7 +370,6 @@ export function create_inspector(
   const clear = (): void => {
     tableHost.empty();
     expandedSuites.clear();
-    expandedGroupsBySuite.clear();
     expandedCasesBySuite.clear();
   };
 
