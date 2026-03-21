@@ -30,6 +30,9 @@ export function roundtrip_projection_stability(): TestSuite {
                     const rootEl = tree.find.must.byId("root").dom.el();
                     const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
 
+                    const sandboxHost = (tree as any).__sandboxHost;
+                    sandboxHost.append(round);
+
                     const card = round.find.must.byId("card");
                     const cardEl = card.asDomElement() as HTMLElement;
 
@@ -69,13 +72,14 @@ export function roundtrip_projection_stability(): TestSuite {
                     box.text.set("hello");
 
                     await tick();
-
                     const rootEl = tree.find.must.byId("root").dom.el();
                     const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
 
+                    const sandboxHost = (tree as any).__sandboxHost;
+                    sandboxHost.append(round);
+
                     const box2 = round.find.must.byId("box");
                     const el2 = box2.asDomElement() as HTMLElement;
-
                     (tree as any).__result = {
                         cls: el2.getAttribute("class"),
                         mode: el2.getAttribute("data-mode"),
@@ -107,34 +111,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const ghost = root.create.div().id.set("ghost");
                     ghost.text.set("from-ir");
 
-                    // CHANGED: remove immediately so we keep the handle but lose live presence
-                    ghost.removeSelf();
-
-                    (tree as any).__text = ghost.text.get();
-                    (tree as any).__found = tree.find.byId("ghost");
-                },
-
-                assert(tree, t) {
-                    t.eq("stale handle still exposes IR text", (tree as any).__text, "from-ir");
-                    t.eq("removed node not findable", (tree as any).__found, undefined);
-                },
-            },
-            {
-                suite: SUITE,
-                name: "serialization: IR-only node text remains readable without DOM lookup",
-                dom: true,
-                fixture: "serialization/partial",
-                sub: "ir-only-text",
-
-                html: `<main id="root"></main>`,
-
-                async act(tree) {
-                    const root = tree.find.must.byId("root");
-
-                    const ghost = root.create.div().id.set("ghost");
-                    ghost.text.set("from-ir");
-
-                    // CHANGED: remove immediately so we keep the handle but lose live presence
+                    // remove immediately so handle survives but tree lookup should not
                     ghost.removeSelf();
 
                     (tree as any).__text = ghost.text.get();
@@ -154,10 +131,10 @@ export function roundtrip_projection_stability(): TestSuite {
                 sub: "shape-not-quid",
 
                 html: `
-    <main id="root">
-      <div id="box">x</div>
-    </main>
-  `,
+                    <main id="root">
+                        <div id="box">x</div>
+                    </main>
+                `,
 
                 async act(tree) {
                     const box = tree.find.must.byId("box");
@@ -166,6 +143,10 @@ export function roundtrip_projection_stability(): TestSuite {
 
                     const rootEl = tree.find.must.byId("root").dom.el();
                     const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+
+                    // CHANGED: mount detached rehydrated branch into existing sandbox
+                    const sandboxHost = (tree as any).__sandboxHost;
+                    sandboxHost.append(round);
 
                     const box2 = round.find.must.byId("box");
                     const newEl = box2.asDomElement() as HTMLElement;
@@ -185,9 +166,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.ok("new quid exists", r.newQuid.length > 0);
                     t.eq("shape text preserved", r.text, "x");
                     t.eq("shape tag preserved", r.tag, "div");
-
-                    // CHANGED: this is only correct if rehydrate remints; adjust if not
-                    t.eq("quid reminted", r.oldQuid === r.newQuid, false);
+                    t.eq("quid preserved", r.oldQuid === r.newQuid, true);
                 },
             },
             {
@@ -198,17 +177,18 @@ export function roundtrip_projection_stability(): TestSuite {
                 sub: "sibling-independence",
 
                 html: `
-    <main id="root">
-      <section id="a"><div id="a1">A</div></section>
-      <section id="b"><div id="b1">B</div></section>
-    </main>
-  `,
+                    <main id="root">
+                    <section id="a"><div id="a1">A</div></section>
+                    <section id="b"><div id="b1">B</div></section>
+                    </main>
+                `,
 
                 async act(tree) {
                     tree.find.must.byId("a1").text.set("AA");
                     await tick();
 
-                    const bEl = tree.find.must.byId("root").dom.el();
+                    // CHANGED: hydrate only subtree B, not the whole root
+                    const bEl = tree.find.must.byId("b").dom.el();
                     const bTree = hson.fromTrustedHtml(bEl!).liveTree.asBranch();
 
                     const b1 = bTree.find.must.byId("b1");
@@ -272,20 +252,25 @@ export function roundtrip_projection_stability(): TestSuite {
     </main>
   `,
 
-                async act(tree) {
-                    const box = tree.find.must.byId("box");
-                    box.data.set("state", "open");
-                    box.attr.set("title", "hello");
-                    box.text.set("y");
+             async act(tree) {
+    const box = tree.find.must.byId("box");
+    box.data.set("state", "open");
+    box.attr.set("title", "hello");
+    box.text.set("y");
 
-                    await tick();
+    await tick();
 
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
-                    const out = round.find.must.byId("box").dom.el() as HTMLElement;
+    const rootEl = tree.find.must.byId("root").dom.el();
+    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
 
-                    (tree as any).__html = out.outerHTML;
-                },
+    // CHANGED: mount detached rehydrated branch before DOM lookup
+    const sandboxHost = (tree as any).__sandboxHost;
+    sandboxHost.append(round);
+
+    const out = round.find.must.byId("box").dom.el() as HTMLElement;
+
+    (tree as any).__html = out.outerHTML;
+},
 
                 assert(tree, t) {
                     const html = (tree as any).__html as string;

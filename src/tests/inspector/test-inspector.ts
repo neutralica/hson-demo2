@@ -61,7 +61,7 @@ export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>)
   const secs = loopreport_to_sections(r);
 
   const inputSec = _freeze({
-    title: "Input",
+    title: "Input fmt",
     bodyText: input.length ? input : "—",
   });
 

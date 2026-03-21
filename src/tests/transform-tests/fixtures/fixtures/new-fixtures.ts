@@ -1,5 +1,7 @@
 // new-fixtures.ts
 
+import { _freeze } from "../../../tests.consts";
+
 
 const htmlStructureCases: { [key: string]: string } = {
   singleLeaf: `<p>hello</p>`,
@@ -141,6 +143,99 @@ const x = 1;</script>`,
   styleWithAtRule: `<style>@media screen { .x { display:block; } }</style>`,
 };
 
+const hsonTestsA = {
+  a:`<img alt="x" style="
+color: red; font-size: 10px
+"/>`,
+  1: `<figure
+  <img alt="x" src="x.png"/>
+/>`,
+  c: `<img alt="x" style="color: red;
+font-size: 10px
+"/>`,
+  2: `<figure
+  <img alt="x" style="color: red; font-size: 10px"/>
+/>`,
+  3: `<figure
+  <img alt="x" style="color: red;
+  font-size: 10px
+  "/>
+/>`,
+  4: `<figure
+  <img alt="x" style="
+  color: red; font-size: 10px"/>
+/>`,
+  5: `<figure
+  <img alt="x" style="
+  color: red;
+  font-size: 10px"/>
+/>`,
+  6: `<figure
+  <img alt="x" style="
+  color: red;
+  font-size: 10px
+  "/>
+/>`,
+}
+
+ const HTML_ATTR_ESCAPE_FIXTURES = _freeze({
+    plainJsonAttr: `
+      <main id="root">
+        <div id="t1" data-json='{"token":"abc123"}'></div>
+      </main>
+    `,
+
+    quotedJsonAttr: `
+      <main id="root">
+        <div id="t2" data-json="{&quot;token&quot;:&quot;abc123&quot;}"></div>
+      </main>
+    `,
+
+    cfBeaconLike: `
+      <main id="root">
+        <script
+          id="t3"
+          data-cf-beacon='{"token":"216309cffb464db4b0e02daf0b8e8060"}'
+        ></script>
+      </main>
+    `,
+
+    cfBeaconLikeEscaped: `
+      <main id="root">
+        <script
+          id="t4"
+          data-cf-beacon="{&quot;token&quot;: &quot;216309cffb464db4b0e02daf0b8e8060&quot;}"
+        ></script>
+      </main>
+    `,
+
+    backslashQuoteRuns: `
+      <main id="root">
+        <div
+          id="t5"
+          data-payload='{\"a\":\"x\",\"b\":\"y\"}'
+        ></div>
+      </main>
+    `,
+
+    mixedSlashes: `
+      <main id="root">
+        <div
+          id="t6"
+          data-payload='{"path":"C:\\\\temp\\\\file.txt","quote":"\\"hi\\""}'
+        ></div>
+      </main>
+    `,
+
+    rawScriptTextPlusAttr: `
+      <main id="root">
+        <script
+          id="t7"
+          data-cf-beacon='{"token":"abc123"}'
+        >console.log("x")</script>
+      </main>
+    `,
+});
 
 export const HTML_FIXTURES_NEW = {
     htmlStructureCases,
@@ -148,5 +243,10 @@ export const HTML_FIXTURES_NEW = {
     htmlAttributeCases,
     htmlRawTextCases,
     htmlTextEntityCases,
-    htmlVoidCommentCases
+  htmlVoidCommentCases, 
+    HTML_ATTR_ESCAPE_FIXTURES
+}
+
+export const HSON_FIXTURES = {
+  hson: hsonTestsA
 }

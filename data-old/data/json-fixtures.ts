@@ -163,7 +163,7 @@ export const JSON_FIXTURES_DEV = _freeze({
     empty: {
       "objectEmpty": {}
     },
-    label: "xml-escape-regression-sentry",
+    label: ["xml-escape-regression-sentry"],
     notes: [
       "If XML parse fails, search emitted HTML for raw '&', '<', ']]>' or invalid control chars in text nodes.",
       "Backslashes are usually fine; '&' and '<' are the classic killers."
