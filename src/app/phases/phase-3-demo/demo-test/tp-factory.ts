@@ -2,9 +2,9 @@ import { hson } from "hson-live";
 import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/livetree";
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../../core/consts/ui-consts";
-import { mk_btn } from "../../../widgets/gems-deprecate/make-btn";
+import { mk_btn } from "../../../widgets/chips-deprecate/make-btn";
 import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
-import { LOG_BOXcss, ROW_CONTAINERcss, TEST_PANELcss } from "./tp.css";
+import { LOG_BOXcss, ROW_CONTAINERcss, TEST_PANELcss, TP_ROOTcss } from "./tp.css";
 import { TEST_LOGGERcss } from "./tp.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
@@ -28,9 +28,10 @@ export type TestPanelDeps = Readonly<{
   onEvent: (e: TestEvent) => void; // optional if you want
 }>;
 
-const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps (expect 8 errors from invalid HTML)"
+const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps ";
 const liveTreeText = "LIVETREE TESTS: confirms successful LiveTree operations and expected final node shape";
-const errorDisclaimer = "EXPECT ERRORS IN HTML_INVALID (15 fixtures)"
+const errorDisclaimer = "EXPECT ERRORS IN HTML_INVALID (15 fixtures)";
+
 export type TestPanel = Readonly<{
   branch: LiveTree;
   mount: (hostBody: LiveTree) => void;
@@ -227,23 +228,12 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
 
     const root = host.create.div()
       .id.set("test-panels-root")
-      .css.setMany({
-        ...PANEL_SAFETYcss,
-        width: "100%",
-        height: "100%",
-
-        display: "grid",
-        gridTemplateRows: "minmax(0, 1fr) minmax(0, 1fr)", // test + inspector
-        gap: "12px",
-
-        // CHANGED: if you want scrolling, do it inside, not on this root
-        overflow: "hidden",
-      });
+      .css.setMany(TP_ROOTcss);
 
 
     // test chrome
-    const testFrame = root.create.div().css.setMany({ ...PANEL_FRAMEcss, ...PANEL_SAFETYcss });
-    const testSurface = testFrame.create.div().css.setMany({ ...PANEL_SURFACEcss, ...PANEL_SAFETYcss });
+    const testFrame = mk_div_id(root, "test-frame").css.setMany({ ...PANEL_FRAMEcss, ...PANEL_SAFETYcss });
+    const testSurface = mk_div_id(testFrame, "test-surface").css.setMany({ ...PANEL_SURFACEcss, ...PANEL_SAFETYcss, padding: "0", margin: "0" });
 
     // inspector chrome
     const inspFrame = root.create.div().css.setMany({ ...PANEL_FRAMEcss, ...PANEL_SAFETYcss });

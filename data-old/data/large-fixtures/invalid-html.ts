@@ -1,10 +1,14 @@
-// bulk-samples.mock.hson-showcase.ts
+
+export const json_INVALID = {
+  invalidJsonShouldFail: `{"a":1,}`,
+}
+
 
 export const html_INVALID = {
   simple: `<p>INVALID`,
   // Reserved meta on VSN 
   meta_quid_on_vsn: `<_array data-_quid="qqq"><_ii data-_index="0"><p>one</p></_ii></_array>`,
-// Empty unquoted value (edge in HTML, observed in the wild)
+  // Empty unquoted value (edge in HTML, observed in the wild)
   empty_unquoted: `<div data-flag=>e</div>`,
   // Valid array indices (contiguous 0..n)
   array_indices_ok: `<_array>
@@ -43,6 +47,6 @@ export const html_INVALID = {
 
   // Unquoted numeric attribute (HTML5-legal)
   unquoted_numeric_attr: `<input value=42>`,
-  
+
   malformed_attr: `<a href="https://ok" onclick="1" <b>>link</a>`,
 };

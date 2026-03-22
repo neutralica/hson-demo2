@@ -1,4 +1,5 @@
 import type { LiveTree } from "hson-live";
+import { mk_div_id } from "../../utils/makers";
 
 export type ToggleBtn = Readonly<{
   node: LiveTree;
@@ -8,7 +9,7 @@ export type ToggleBtn = Readonly<{
 
 
 export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
-  const node = parent.create.div().id.set(id);
+  const node = mk_div_id(parent, id);
   node.text.set(label);
 
   const base: Record<string, string> = {
@@ -16,7 +17,7 @@ export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
     borderRadius: "10px",
     userSelect: "none",
     cursor: "pointer",
-    fontFamily: "monospace, SFMono-Regular, Menlo, monospace",
+    fontFamily: "Monaco, monospace",
     fontSize: "20px",
     letterSpacing: "0.02em",
     textAlign: "center",

@@ -7,7 +7,7 @@ import { _freeze } from "../../src/tests/tests.consts";
 import { html_gwern } from "./large-fixtures/html-gwern.mock";
 import { html_hackerNews } from "./large-fixtures/html-hackernews.mock";
 import { html_wikipedia } from "./large-fixtures/html-wikipedia.mock";
-import { html_INVALID } from "./large-fixtures/invalid-html";
+import { html_INVALID, json_INVALID } from "./large-fixtures/invalid-html";
 import { html_homepage } from "./large-fixtures/json-homepage-string.mock";
 
 
@@ -463,5 +463,6 @@ export const HTML_FIXTURES_LEGACY = _freeze({
 
 export const EXPECT_ERRORS = {
   html_INVALID, // expect errors
+  json_INVALID,
   
 }

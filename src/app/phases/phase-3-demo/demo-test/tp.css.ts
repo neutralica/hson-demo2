@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/colors.consts";
 import { $txt_ } from "../../../core/consts/ui-consts";
-import { MENU_FONT } from "../demo.css";
+import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -21,7 +21,6 @@ export const TEST_ACTION_BTN: CssMap = {
   placeItems: "center",
   userSelect: "none",
   cursor: "pointer",
-
   fontFamily: MENU_FONT,
   fontSize: $txt_.unter,
   textTransform: "uppercase",
@@ -88,10 +87,9 @@ export const TEST_LOGGERcss: CssMap = {
   // background: $cols_.backdeep,
   fontFamily: MENU_FONT,
   fontSize: $txt_.main,
-  height: "100%",
+  height: "10rem",
+  maxHeight: "10rem",
   width: "100%",
-  minHeight: "15rem",
-  maxHeight: "15rem",
   overflowY: "scroll",
   overflowX: "hidden",
   overflowWrap: "anywhere",
@@ -128,6 +126,15 @@ export const TEST_PANELcss: CssMap = {
   boxSizing: "border-box",
 };
 
+export const TP_ROOTcss={
+        ...PANEL_SAFETYcss,
+        width: "100%",
+        height: "100%",
+
+        display: "grid",
+        gridTemplateRows: "auto 1fr", // test + inspector
+        overflow: "hidden",
+      }
 export const TEST_CHIP_ROWcss = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr 1fr",

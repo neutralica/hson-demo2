@@ -3,7 +3,7 @@ import { suite_find, suite_attrs_and_flags, suite_append_and_create, mixedRegres
 import { legacy_suites_3 } from "./livetree-fixtures-2";
 import { suite_schedules_events, css_manager_lifecycle, node_lifecycle } from "./livetree-fixtures-3";
 import { document_question, error_handling, listeners_teardown, root_multi_isolation } from "./livetree-fixtures-4";
-import { roundtrip_projection_stability } from "./livetree-fixtures-5";
+import { livetree_completionist, livetree_sync_perf, roundtrip_projection_stability } from "./livetree-fixtures-5";
 import { make_livetree_suite } from "./livetree-testkit";
 
 
@@ -44,6 +44,8 @@ export function all_livetree_suites(): readonly TestSuite[] {
     document_question(),
     error_handling(),
     roundtrip_projection_stability(),
+    livetree_sync_perf(),
+    livetree_completionist(),
 
   ] as const;
 }

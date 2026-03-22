@@ -8,6 +8,7 @@ import { _freeze } from "./tests.consts";
 import type { Fixture } from "./tests.types";
 import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
 import { HSON_FIXTURES, HTML_FIXTURES_NEW } from "./transform-tests/fixtures/fixtures/new-fixtures";
+import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -119,15 +120,16 @@ export function build_suites_for_mode(
 
   if (mode === "legacy") {
     return _freeze([
-      make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "fixtures/legacy/json", map),
-      make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "fixtures/legacy/html", map),
-      make_transform_test_suite(h, EXPECT_ERRORS, "fail_fixtures/EXPECT_ERRORS", map),
+      make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
+      make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     ]);
   }
-
+  
   if (mode === "transform") {
     return _freeze([
-      make_transform_test_suite(h, HTML_FIXTURES_NEW, "fixtures/new", map),
+      make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
+      make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
+      make_transform_test_suite(h, EXPECT_ERRORS, "transform/fail_fixtures/EXPECT_ERRORS", map),
     ]);
   }
   if (mode === "dev") {
@@ -143,6 +145,7 @@ export function build_suites_for_mode(
   
   return _freeze([
     make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new/html", map),
+    make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
     ...all_livetree_suites(),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),

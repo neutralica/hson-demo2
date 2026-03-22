@@ -144,7 +144,7 @@ Mutations to the graph are synchronously reflected in the DOM, allowing document
 
 ## Purpose of this demo
 
-The goal of LiveDemo is expose the mechanics of the hson-live library in a visible way, rather than showcase a polished UI; its styling is intentionally minimalist. 
+The goal of LiveDemo is expose the mechanics of the hson-live library in a visible way; its styling is intentionally minimalist. 
 
 Each demo proves at least one of these properties of hson-live:
 

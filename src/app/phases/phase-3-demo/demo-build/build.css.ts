@@ -1,10 +1,11 @@
 // build.css.ts
 import type { CssMap } from "hson-live/types";
 import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
-import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, OKLCH_MUTED_PASTEL } from "../../../core/consts/colors.consts";
 import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
 import { TEST_ACTION_BTN } from "../demo-test/tp.css";
 import { MENU_FONT } from "../demo.css";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
@@ -35,10 +36,10 @@ export const BUILD_HEADcss: CssMap = {
 
 export const BUILD_TITLEcss: CssMap = {
   fontFamily: MENU_FONT,
-  fontSize: "12px",
+  fontSize: "22px",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
-  color: $blu_.std,
+  color: OKLCH_FLEURS.cyanDust,
   flexShrink: "0",
 };
 
@@ -75,8 +76,7 @@ export const BUILD_TEXTAREAcss: CssMap = {
   outline: "none",
 
   background: $cols_.bckdeep,
-  color: ACID_WASH_OKLCH.bruisedPlum,
-  fontSize: $txt_.unter,
+  color: ACID_WASH_OKLCH.straw,
   lineHeight: "1.8",
   padding: "10px",
 };
@@ -128,7 +128,7 @@ export const BUILD_BTNcss: CssMap = {
   padding: "8px 10px",
   borderRadius: "12px",
   background: $cols_.bckdeep,
-  color: OKLCH_MUTED_PASTEL.yellow,
+  color: OKLCH_FLEURS.sourSage,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   flexShrink: "0",
 };
@@ -154,7 +154,7 @@ export const BUILD_TABcss: CssMap = {
 
 export const BUILD_TAB_ACTIVEcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(120,255,210,0.22)",
-  color: $grn_.std,
+  color: ACID_WASH_OKLCH.cyanDust,
 };
 
 // Preview host: fills available space and scrolls if content is large

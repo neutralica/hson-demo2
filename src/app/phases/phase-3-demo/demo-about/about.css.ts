@@ -238,3 +238,12 @@ export const TOC_BTNcss: CssMap = {
     content: '',
   }
 };
+export const MD_CODE_PREcss: CssMap = {
+  margin: "20px 0",
+  background: $cols_.bckdeep,
+  outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
+  borderRadius: "9px",
+  padding: "10px",
+  overflowWrap: "anywhere",
+  // whiteSpace: "normal",
+};

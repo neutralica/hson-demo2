@@ -3,11 +3,11 @@
 <!-- 
 A) Scheduling model (lightly covered)
 
-You tested:
+tested:
 	•	batching
 	•	“after tick”
 
-But not:
+ not:
 	•	multiple rapid writes collapsing into one flush
 	•	interleaving reads/writes
 	•	ordering guarantees
@@ -59,25 +59,19 @@ Not covered:
 ⸻ -->
 <!-- 
 F) Error / invalid input behavior
-
-You covered CSS invalids, but not:
 	•	invalid selectors
 	•	invalid tree operations
 	•	malformed inputs to APIs
 
 ⸻ -->
-
+<!-- 
 G) Serialization / hydration edges
-
-Given your system:
 	•	IR → DOM → IR roundtrip not deeply tested
 	•	partial DOM presence vs IR-only nodes
 
-⸻
-
+⸻ -->
+<!-- 
 H) Performance-sensitive invariants (behavioral, not benchmarks)
-
-You already felt this with syncNow().
 
 Not tested:
 	•	“does not flush unnecessarily”
@@ -86,10 +80,7 @@ Not tested:
 
 
 ⸻
-
-The next tier (if you want to keep pushing)
-
-Now you’re into genuinely subtle territory:
+ -->
 
 1) Stress / scale invariants
 	•	1k nodes with CSS

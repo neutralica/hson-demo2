@@ -147,8 +147,6 @@ export const LAYOUT_GRIDcss: CssMap = {
 
   // no dock row anymore
   gridTemplateRows: "minmax(0, 1fr)",
-
-  gap: $GRID_GAPstr,
   boxSizing: "border-box",
   overflow: "hidden",
 } as const;
@@ -186,16 +184,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   maxWidth: "calc(100vw)",
   userSelect: "none",
 }
-export const MD_CODE_PREcss: CssMap = {
-  margin: "20px 0",
-  background: $cols_.bckdeep,
-  outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
-  borderRadius: "9px",
-  padding: "10px",
-  overflowWrap: "anywhere",
-  // whiteSpace: "normal",
 
-}
 export const HSON_SUBcss: CssMap = {
   fontFamily: MENU_FONT,
   fontSize: $txt_.main,
