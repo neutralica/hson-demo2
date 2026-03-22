@@ -7,7 +7,12 @@ import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 export const TEST_BUTTON_BORDER: CssMap = {
   borderRadius: "18px",
-  border: `4px solid ${OKLCH_FLEURS.violet}`
+  border: `4px solid ${OKLCH_FLEURS.electricIris}`
+}
+
+export const CHIP_BUTTON_BORDER: CssMap = {
+  borderRadius: "18px",
+  border: `4px solid ${OKLCH_FLEURS.oliveCore}`
 }
 
 export const TEST_ACTION_BTN: CssMap = {
@@ -23,6 +28,13 @@ export const TEST_ACTION_BTN: CssMap = {
   background: $cols_.bckdeep,
 } as const;
 
+export const TEST_CHIP_VALUEcss={
+        fontSize: $txt_.unter,
+        fontWeight: "700",
+        lineHeight: "1",
+        letterSpacing: "0.01em",
+}
+      
 export const CONTROL_ROWcss: CssMap = {
   width: "100%",
   boxSizing: "border-box",
@@ -35,6 +47,16 @@ export const CONTROL_ROWcss: CssMap = {
   border: "none",
   boxShadow: "none",
 };
+
+export const TEST_CHIP_LABELcss = {
+  marginTop: "4px",
+  fontSize: $txt_.unter,
+  lineHeight: "1",
+  letterSpacing: "0.06em",
+  textTransform: "lowercase",
+  whiteSpace: "nowrap",
+}
+
 
 export const RUN_BUTTONcss: CssMap = {
   ...TEST_ACTION_BTN,
@@ -65,7 +87,7 @@ export const TEST_LOGGERcss: CssMap = {
   boxSizing: "border-box",
   // background: $cols_.backdeep,
   fontFamily: MENU_FONT,
-  fontSize: $txt_.unter,
+  fontSize: $txt_.main,
   height: "100%",
   width: "100%",
   minHeight: "15rem",
@@ -74,10 +96,10 @@ export const TEST_LOGGERcss: CssMap = {
   overflowX: "hidden",
   overflowWrap: "anywhere",
   minWidth: "100%",
-  color: $gry_.mid,
+  color: OKLCH_FLEURS.mauve,
   whiteSpace: "pre-wrap",
-  letterSpacing: "0.14em",
-  lineHeight: "1.85rem",
+  // letterSpacing: "0.14em",
+  lineHeight: "1.75rem",
 } as const;
 
 export const LOG_BOXcss: CssMap = {
@@ -117,7 +139,7 @@ export const TEST_CHIP_ROWcss = {
 
 export const MAKE_CHIP_DEFAULTcss = {
   padding: "8px 8px",
-  ...TEST_BUTTON_BORDER,
+  ...CHIP_BUTTON_BORDER,
   display: "grid",
   gridTemplateRows: "auto auto",
   justifyItems: "center",

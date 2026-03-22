@@ -1,19 +1,92 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
 import { MENU_FONT } from "../demo.css";
+import { MONOcss } from "../../../core/core.css";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
-export const MOUSE_HOSTcss: CssMap = {
+
+export const MOUSE_ROOTcss: CssMap = {
+  display: "grid",
+  gridTemplateRows: "150px 150px",
+  gridTemplateColumns: "2fr 1fr",
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  maxWidth: "19rem",
+  marginBottom: "1rem",
+  overflow: "hidden",
+} as const;
+
+export const MOUSE_SLOTcss: CssMap = {
+  marginTop: "1rem",   // space below menu
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "end",
   width: "100%",
   minWidth: "0",
   minHeight: "0",
+};
+
+export const MOUSE_HOSTcss: CssMap = {
+  width: "100%",
+  height: "100%",
+  minWidth: "0",
+  minHeight: "0",
   maxWidth: "40ch",
-  color: ACID_WASH_RGBA.terminalGreen,
+  color: ACID_WASH_RGBA.softBlue,
   fontFamily: MENU_FONT,
   borderRadius: "14px",
-  justifySelf:"flex-end",
-  
+  // justifySelf: "flex-end",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "flex-end",
+};
+
+export const MOUSE_POINTERcss = {
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  width: "64px",
+  height: "2px",
+  background: "rgba(255,255,255,0.75)",
+  transformOrigin: "0% 50%",
+  transform: "translate(0, -50%) rotate(0deg)",
+  boxShadow: "0 0 10px rgba(140,210,255,0.20)",
 }
 
+export const MOUSE_POINTER_ORIGINcss = {
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  width: "6px",
+  height: "6px",
+  borderRadius: "99px",
+  background: "rgba(255,255,255,0.6)",
+  transform: "translate(-50%, -50%)",
+}
+
+
+export const MOUSE_COORD_Xcss = {
+  ...MONOcss,
+  color: OKLCH_FLEURS.clayCoral,
+  whiteSpace: "pre",
+  marginLeft: "1.5rem",
+}
+
+export const MOUSE_COORD_Ycss = {
+  ...MONOcss,
+  color: OKLCH_FLEURS.clayCoral,
+  whiteSpace: "pre",
+  marginLeft: "1rem",
+}
+
+export const MOUSE_THETAcss = {
+  ...MONOcss,
+  color: OKLCH_FLEURS.clayCoral,
+  whiteSpace: "pre",
+  marginLeft: "0.1rem",
+}
 
 // unify row layout (header + data rows) so columns line up
 export const ROW_GRIDcss: CssMap = {
@@ -30,12 +103,34 @@ export const MOUSE_TRACKERcss: CssMap = {
   height: "140px",
   borderRadius: "999px",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  background: back_w_alpha(0.7),
   gridColumn: "1",
   gridRow: "1",
-  border: `1px solid ${ACID_WASH_OKLCH.mist}`,
-  // overflow: "hidden",
+  border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
+  alignSelf: "end",
+  justifySelf: "start",
 } as const;
+
+export const STACK_TABLEcss = {
+  display: "grid",
+  gridTemplateRows: "auto 1fr",
+  gridColumn: "1 / 3",
+  gridRow: "2 / -1",
+  gap: "12px",
+  minWidth: "0",
+  minHeight: "0",
+  height: "100%",
+  background: $cols_.bckdeep
+}
+
+export const MOUSE_STACKcss = {
+  position: "relative",
+  display: "grid",
+  gridAutoRows: "auto",
+  gap: "6px",
+  minWidth: "0",
+  minHeight: "0",
+  alignContent: "start",
+}
 
 export const MOUSE_COORDScss: CssMap = {
   display: "grid",
@@ -54,17 +149,4 @@ export const CELL_CLAMPcss: CssMap = {
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-} as const;
-
-export const MOUSE_ROOTcss: CssMap = {
-  position: "absolute",
-alignSelf: "bottom",
-  display: "grid",
-  gridTemplateRows: "1fr 2fr",
-  gridTemplateColumns: "2fr 1fr",
-
-  minWidth: "0",
-  minHeight: "0",
-  width: "100%",
-  maxWidth: "19rem",
 } as const;

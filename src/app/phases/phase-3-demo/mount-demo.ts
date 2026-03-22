@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss, MOUSE_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
+import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss,  HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
@@ -24,7 +24,7 @@ import { mount_about_panels } from "./demo-about/mount-about";
 import { ABOUT_DOCS } from "./demo-about/about.consts";
 import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
 import { mount_motes } from "./motes/mount-motes";
-import { MOUSE_HOSTcss } from "./demo-mouse/mouse.css";
+import { MOUSE_HOSTcss, MOUSE_SLOTcss } from "./demo-mouse/mouse.css";
 import { JSON_FIXTURES_DEV } from "../../../../data-old/data/json-fixtures";
 import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./demo-fleurs/fleurs.css";
 import { spawn_flower } from "./demo-fleurs/fleurs";

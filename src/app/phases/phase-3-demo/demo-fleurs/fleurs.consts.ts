@@ -36,6 +36,7 @@ export const OKLCH_FLEURS = {
     dustyLeaf: "oklch(0.60 0.08 145)",
     sageLeaf: "oklch(0.66 0.07 155)",
     dimFern: "oklch(0.54 0.08 150)",
+    blazeOrange: "oklch(0.7 0.3 080)",
 
 };
 

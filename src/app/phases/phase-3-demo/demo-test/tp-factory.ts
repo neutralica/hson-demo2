@@ -30,6 +30,7 @@ export type TestPanelDeps = Readonly<{
 
 const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps (expect 8 errors from invalid HTML)"
 const liveTreeText = "LIVETREE TESTS: confirms successful LiveTree operations and expected final node shape";
+const errorDisclaimer = "EXPECT ERRORS IN HTML_INVALID (15 fixtures)"
 export type TestPanel = Readonly<{
   branch: LiveTree;
   mount: (hostBody: LiveTree) => void;
@@ -40,15 +41,15 @@ export type TestPanel = Readonly<{
   suiteSel: LiveTree;
 
   // status: LiveTree;
-  marquee: LiveTree;
+  logger: LiveTree;
   chips: ChipDisplay,
   // state accessors (so callsite doesn’t poke DOM attrs directly)
   getLevel: () => UiLevel;
   getMode: () => TestRunMode;
 
   // setStatus: (txt: string) => void;
-  setMarquee: (txt: string) => void;
-  clearMarquee: () => void;
+  setLog: (txt: string) => void;
+  clearLogs: () => void;
 }>;
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
@@ -182,10 +183,6 @@ function test_panel_factory(): Outcome<TestPanel> {
     });
   };
 
-  // set initial marquee before mount so it’s ready
-  setLog(introText);
-  setLog(liveTreeText);
-
   return relay.data({
     branch,
     mount,
@@ -195,15 +192,15 @@ function test_panel_factory(): Outcome<TestPanel> {
     suiteSel,
 
     // status,
-    marquee: logger,
+    logger,
     chips,
 
     getLevel: () => level,
     getMode: () => mode,
 
     // setStatus,
-    setMarquee: setLog,
-    clearMarquee: clearLogs,
+    setLog,
+    clearLogs
   } as const);
 }
 
@@ -272,7 +269,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       const isPass = /\bPASS\b|\bOK\b/i.test(line);
       const isWarn = /\bSKIP\b|\bWARN\b/i.test(line);
 
-      const row = tp.marquee.create.div().css.setMany({
+      const row = tp.logger.create.div().css.setMany({
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
         minWidth: "0",
@@ -290,16 +287,19 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
 
       row.text.set(line);
 
-      const el = tp.marquee.dom.el();
+      const el = tp.logger.dom.el();
       if (el instanceof HTMLElement) {
         el.scrollTop = el.scrollHeight;
       }
     };
     const clearLogLines = (): void => {
-      tp.marquee.empty();
+      tp.logger.empty();
     };
     tp.mount(testSurface);
-
+    tp.setLog(introText)
+    tp.setLog(liveTreeText)
+    tp.setLog(errorDisclaimer)
+    
     const tlog = create_test_log();
     const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
 

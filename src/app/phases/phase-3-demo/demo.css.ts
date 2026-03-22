@@ -6,7 +6,7 @@ import { $GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
 export const MENU_TEXT_COL = OKLCH_FLEURS.rustPink;
-export const MENU_FONT = "Monaco"
+export const MENU_FONT = "Monaco, mono"
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
@@ -153,16 +153,6 @@ export const LAYOUT_GRIDcss: CssMap = {
   overflow: "hidden",
 } as const;
 
-export const MOUSE_SLOTcss: CssMap = {
-  marginTop: "1rem",   // space below menu
-
-  width: "100%",
-  minWidth: "0",
-  minHeight: "0",
-
-  display: "flex",     // so child can size naturally
-  flexDirection: "column",
-};
 
 export const PANEL_SAFETYcss: CssMap = {
   minWidth: "0",

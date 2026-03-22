@@ -3,7 +3,7 @@ import type { TestSummary } from "../../../../tests/tests.types";
 import { $cols_, $red_etc_ } from "../../../core/consts/colors.consts";
 import { $txt_ } from "../../../core/consts/ui-consts";
 import { mk_div_id, mk_div_cls } from "../../../utils/makers";
-import { MAKE_CHIP_DEFAULTcss, TEST_BUTTON_BORDER, TEST_CHIP_ROWcss } from "./tp.css";
+import { MAKE_CHIP_DEFAULTcss, TEST_BUTTON_BORDER, TEST_CHIP_LABELcss, TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "./tp.css";
 
 
 export type ChipDisplay = Readonly<{
@@ -22,23 +22,11 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
 
     const val = mk_div_cls(chip, "test-chip-value")
       .text.set("—")
-      .css.setMany({
-        fontSize: $txt_.unter,
-        fontWeight: "700",
-        lineHeight: "1",
-        letterSpacing: "0.01em",
-      });
+      .css.setMany(TEST_CHIP_VALUEcss);
 
     const lbl = mk_div_cls(chip, "test-chip-label")
       .text.set(label)
-      .css.setMany({
-        marginTop: "4px",
-        fontSize: $txt_.unter,
-        lineHeight: "1",
-        letterSpacing: "0.06em",
-        textTransform: "lowercase",
-        whiteSpace: "nowrap",
-      });
+      .css.setMany(TEST_CHIP_LABELcss);
 
     // ADDED: pressed feedback without global CSS manager dependency
     const press = (on: boolean): void => {

@@ -107,93 +107,6 @@ export function make_transform_test_suite(
   return _freeze({ suite, cases: _freeze(cases) });
 }
 
-export function generate_fixture_suite(
-  hson: HsonTestApi,
-  fixtures: readonly Fixture[],
-  captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
-  runMeta?: Readonly<{ seed: number; genHtmlCount: number; genJsonCount: number }>,
-): TestSuite {
-  const suite = "fixtures/generated";
-
-  const seedStr = runMeta ? String(runMeta.seed >>> 0) : "";
-  const genHtmlStr = runMeta ? String(runMeta.genHtmlCount) : "";
-  const genJsonStr = runMeta ? String(runMeta.genJsonCount) : "";
-
-  return _freeze({
-    suite,
-    cases: _freeze(
-      fixtures.map((fx) => {
-        const preview = preview_atom(fx.atom);
-        const tags = fx.tags?.length ? fx.tags.join(",") : "";
-
-        const meta: Record<string, string> = {
-          fmt: fx.fmt,
-          preview,
-          ...(tags ? { tags } : {}),
-          ...(runMeta ? { seed: seedStr, genHtmlCount: genHtmlStr, genJsonCount: genJsonStr } : {}),
-        };
-
-        const k = `${suite}::${fx.name}` as CaseKey;
-
-        if (captureMap) {
-          captureMap.set(k, async () => {
-            return hson._test_full_loop(fx.atom, {
-              entry: fx.fmt,
-              dual: true,
-              times: 3,
-              verbose: false,
-              capture: false,
-              stopOnFirstFail: false,
-            });
-          });
-        }
-
-        return _freeze({
-          suite,
-          name: fx.name,
-          meta,
-          run: () => {
-            // ADDED: capture the *actual* input text we feed the loop
-            // preserve strings as-is; stringify non-string values; pretty-print objects
-            const input =
-              typeof fx.atom === "string" ? fx.atom :
-                (typeof fx.atom === "object" && fx.atom && "text" in fx.atom)
-                  ? JSON.stringify((fx.atom as { text?: unknown }).text ?? "", null, 2)
-                  : JSON.stringify(fx.atom, null, 2);
-
-
-            const report = hson._test_full_loop(fx.atom, {
-              entry: fx.fmt,              // IMPORTANT: keep entry explicit here
-              dual: true,
-              times: 3,
-              stopOnFirstFail: false,
-              verbose: false,
-              capture: false,
-            });
-
-            // ADDED: propagate failure to runner/recorder
-            if (!report.ok) {
-              const f0 = report.failures?.[0];
-              const msg =
-                f0?.error
-                  ? `${f0.step}: ${f0.error}`
-                  : `loop failed (ok=false)`;
-              throw new Error(msg);
-            }
-
-            return {
-              metaPatch: _freeze({
-                input,
-                preview: input.length ? _snip(input) : "—",
-              }),
-            };
-          }
-        });
-      }),
-    ),
-  });
-}
-
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
 
@@ -219,7 +132,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      make_transform_test_suite(h, HSON_FIXTURES , "fixtures/dev/hson", map)
+      make_transform_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
     ])
   }
   if (mode === "livetree") {

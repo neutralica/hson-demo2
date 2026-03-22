@@ -4,16 +4,17 @@ import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { mk_div_cls, mk_div_id } from "../../../utils/makers";
 import { $cols_, ACID_WASH_OKLCH, back_w_alpha } from "../../../core/consts/colors.consts";
-import { ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss } from "./mouse.css";
+import { ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss, STACK_TABLEcss, MOUSE_POINTERcss, MOUSE_POINTER_ORIGINcss, MOUSE_STACKcss, MOUSE_COORD_Xcss, MOUSE_COORD_Ycss, MOUSE_THETAcss } from "./mouse.css";
 import { MONOcss } from "../../../core/core.css";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 // ---- factory ----
 
 export function mount_mouse_panel(host: LiveTree): Outcome<MousePanelRig> {
   try {
-    const rig = mouse_factory(host);
-    mouse_init(rig);
-    return relay.data(rig);
+    const mousePanel = mouse_factory(host);
+    mouse_init(mousePanel);
+    return relay.data(mousePanel);
   } catch (err) {
     return relay.err(err instanceof Error ? err.message : "unknown error");
   }
@@ -35,84 +36,31 @@ function mouse_factory(host: LiveTree): MousePanelRig {
 
   const x = coordbox.create.div()
     .classlist.add("mouse-x")
-    .css.setMany({
-      ...MONOcss,
-      color: "oklch(0.7 0.3 080)",
-      whiteSpace: "pre",
-      marginLeft: "1.5rem",
-    })
+    .css.setMany(MOUSE_COORD_Xcss)
     .text.set("x: —");
     
     const y = coordbox.create.div()
     .classlist.add("mouse-y")
-    .css.setMany({
-      ...MONOcss,
-      color: "oklch(0.7 0.3 080)",
-      whiteSpace: "pre",
-      marginLeft: "1rem",
-    })
+    .css.setMany(MOUSE_COORD_Ycss)
     .text.set("y: —");
     
     const angle = coordbox.create.div()
     .classlist.add("mouse-angle")
-    .css.setMany({
-      ...MONOcss,
-      color: "oklch(0.7 0.3 080)",
-      whiteSpace: "pre",
-      marginLeft: "0.1rem",
-    })
+    .css.setMany(MOUSE_THETAcss)
     .text.set("θ: —°");
 
 
   // body: pointer + stack table
-  const stackTable = mk_div_id(root, "stack-table").css.setMany({
-    display: "grid",
-    // CHANGED: stack vertically instead of side-by-side
-    gridTemplateRows: "auto 1fr",
-    gridColumn: "1 / 3",
-    gridRow: "2 / -1",
-    gap: "12px",
-    minWidth: "0",
-    minHeight: "0",
-    height: "100%",
-  });
+  const stackTable = mk_div_id(root, "stack-table").css.setMany(STACK_TABLEcss);
 
   const pointer = mk_div_id(tracker, "mouse-pointer")
-    .classlist.add("mouse-pointer").css.setMany({
-      position: "absolute",
-      left: "50%",
-      top: "50%",
-      width: "64px",
-      height: "2px",
-      background: "rgba(255,255,255,0.75)",
-      transformOrigin: "0% 50%",
-      transform: "translate(0, -50%) rotate(0deg)",
-      boxShadow: "0 0 10px rgba(140,210,255,0.20)",
-    });
+    .classlist.add("mouse-pointer").css.setMany(MOUSE_POINTERcss);
 
   // center dot
-  mk_div_id(tracker, "pointer-origin").css.setMany({
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    width: "6px",
-    height: "6px",
-    borderRadius: "99px",
-    background: "rgba(255,255,255,0.6)",
-    transform: "translate(-50%, -50%)",
-  });
+  mk_div_id(tracker, "pointer-origin").css.setMany(MOUSE_POINTER_ORIGINcss);
 
   // table container
-  const table = mk_div_cls(stackTable, "mouse-stack").css.setMany({
-    position: "relative",
-    display: "grid",
-    gridAutoRows: "auto",
-    gap: "6px",
-    minWidth: "0",
-    minHeight: "0",
-    alignContent: "start",
-    background: $cols_.bckdeep
-  });
+  const table = mk_div_cls(stackTable, "mouse-stack").css.setMany(MOUSE_STACKcss);
 
   const rows: Array<{
     ix: LiveTree;
@@ -125,7 +73,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     .css.setMany({
       ...ROW_GRIDcss,
       ...MONOcss,
-      opacity: "0.7",
+      opacity: "0.8",
       // letterSpacing: "12px",
     });
 
