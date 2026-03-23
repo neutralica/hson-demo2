@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $red_etc_, $ylw_, ACID_WASH_OKLCH, back_w_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
 import { TEST_ACTION_BTN } from "../demo-test/tp.css";
@@ -76,7 +76,7 @@ export const PANEL_TEXTAREAcss = {
     // background: $cols_.backdeep,
     padding: "10px",
     color: ACID_WASH_OKLCH.bruisedPlum,
-    border: `1px solid ${$red_etc_.stonerPurple}`,
+    border: `1px solid ${ACID_WASH_RGBA.oxidizedRed}`,
     borderRadius: "10px",
     outline: "none",
 };

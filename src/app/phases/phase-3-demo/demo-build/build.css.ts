@@ -72,8 +72,7 @@ export const BUILD_TEXTAREAcss: CssMap = {
   minHeight: "0",
   boxSizing: "border-box",
   resize: "none",
-  border: "0",
-  outline: "none",
+  border: `1px solid ${OKLCH_FLEURS.bruisedPlum}`,
 
   background: $cols_.bckdeep,
   color: ACID_WASH_OKLCH.straw,
@@ -169,6 +168,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   padding: "10px",
   borderRadius: "10px",
   background: $cols_.bckdeep,
+  border: `2px solid ${OKLCH_FLEURS.bruisedPlum}`,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
