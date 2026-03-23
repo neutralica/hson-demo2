@@ -50,8 +50,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   const svg = stage.create.svg()
   const svg2 = stage.create.svg(DEBUG_TEST_SVG)
-
-
   const gcss = CssManager.globals.invoke();
 
   const demo = mk_div_id(stage, $DS.demo)
