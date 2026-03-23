@@ -9,6 +9,7 @@ import type { Fixture } from "./tests.types";
 import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
 import { HSON_FIXTURES, HTML_FIXTURES_NEW } from "./transform-tests/fixtures/fixtures/new-fixtures";
 import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
+import { livetree_svg_basic } from "./livetree-tests/livetree-fixtures-5";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -134,7 +135,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      make_transform_test_suite(h, { wikipedia: { annoying_required_wrapper: `${HTML_FIXTURES_LEGACY.html__largeFormat.html_wikipedia}` } }, "fixtures/dev/json", map)
+     livetree_svg_basic(),
     ])
   }
   if (mode === "livetree") {
