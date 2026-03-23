@@ -4,9 +4,12 @@
 
 import { _freeze } from "./tests.consts";
 import { TestRecorder } from "./test-recorder";
-import type { RunOptions, RunResult, TestEvent, TestSuite } from "./tests.types";
+import type { RunOptions, RunResult, TestAssertRow, TestEvent, TestSuite } from "./tests.types";
 
-
+type TestRunReturn = Readonly<{
+  metaPatch?: Record<string, string>;
+  assertRows?: readonly TestAssertRow[];
+}>;
 
 // cooperative yield so the browser can paint + process input.
 // - requestAnimationFrame - "UI-friendly" yield.
@@ -67,10 +70,15 @@ export async function run_test_suites(
       try {
         const ret = await tc.run();
 
-        const metaPatch =
-          ret && typeof ret === "object" && "metaPatch" in ret
-            ? (ret as { metaPatch?: Record<string, string> }).metaPatch
-            : undefined;
+        const runRet = (ret && typeof ret === "object")
+          ? ret as {
+            metaPatch?: Record<string, string>;
+            assertRows?: readonly TestAssertRow[];
+          }
+          : undefined;
+
+        const metaPatch = runRet?.metaPatch;
+        const assertRows = runRet?.assertRows;
 
         const endBase = {
           t: "case_end",
@@ -80,7 +88,17 @@ export async function run_test_suites(
           ms: now() - c0,
         } as const;
 
-        emit(rec, onEvent, metaPatch ? { ...endBase, metaPatch } : endBase);
+        emit(
+          rec,
+          onEvent,
+          metaPatch || assertRows?.length
+            ? {
+              ...endBase,
+              ...(metaPatch ? { metaPatch } : {}),
+              ...(assertRows?.length ? { assertRows } : {}),
+            }
+            : endBase
+        );
       } catch (err) {
         const msg = asErrMsg(err);
 

@@ -1,3 +1,4 @@
+import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
 
 const invalidRed = "rgba(200, 50, 50, 1)"
@@ -314,8 +315,12 @@ export const $cols_ = {
 
 
 export const LETTER_COLORoklch = {
-  h: $HSON_COLORS.muted.blue,
-  s: $HSON_COLORS.muted.yellow,
-  o: $HSON_COLORS.muted.pink,
-  n: $HSON_COLORS.muted.green,
+  h: OKLCH_FLEURS.cyanDust,
+  s: OKLCH_FLEURS.pollen,
+  o: OKLCH_FLEURS.bruisedPlum,
+  n:  OKLCH_FLEURS.seaGlass,
+  // h: $HSON_COLORS.muted.blue,
+  // s: $HSON_COLORS.muted.yellow,
+  // o: $HSON_COLORS.muted.pink,
+  // n: $HSON_COLORS.muted.green,
 }

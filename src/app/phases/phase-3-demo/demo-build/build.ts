@@ -105,9 +105,8 @@ const DEFAULT_SEED = `
       font-size: 1rem; 
       letter-spacing: 0.08em; 
       text-align: center
-  
-        "
-      "<------ edit the HSON string..."
+    "
+      "<- edit the HSON string"
     />
   />
   <div style="

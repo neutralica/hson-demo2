@@ -4,7 +4,7 @@
 // -----------------------------
 
 import { LiveTree, hson } from "hson-live";
-import type { TestSuite, TestCase, LiveTreeCaseSpec, MetaPatch, Asserter } from "../tests.types";
+import type { TestSuite, TestCase, LiveTreeCaseSpec, MetaPatch, Asserter, TestAssertRow } from "../tests.types";
 
 // -----------------------------
 // Implementation
@@ -65,7 +65,6 @@ export function make_livetree_suite(
         const t = bag.asserter();
 
         await spec.assert(tree, t);
-
         bag.throwIfAny({
           suite,
           name: spec.name,
@@ -74,6 +73,7 @@ export function make_livetree_suite(
           fixture: spec.fixture ?? spec.name,
           sub: spec.sub ?? "",
         });
+        const assertRows = bag.getRows();
 
         const metaPatch: MetaPatch = {
           input: spec.html,
@@ -81,8 +81,10 @@ export function make_livetree_suite(
           fixture: spec.fixture ?? spec.name,
           sub: spec.sub ?? "",
           category: "livetree",
+          assertRows: JSON.stringify(assertRows), // CHANGED
         };
-        return { metaPatch } as const;
+
+        return { metaPatch, assertRows } as const;
       } finally {
         // ADDED: teardown so cases can't leak DOM into later tests
         if (sandbox) sandbox.remove();
@@ -106,65 +108,146 @@ function default_preview(tree: LiveTree): string {
 
 class FailureBag {
   private readonly lines: string[] = [];
+  private readonly rows: TestAssertRow[] = [];
+
+  private pushRow(row: TestAssertRow): void {
+    this.rows.push(Object.freeze(row));
+  }
+
+  public getRows(): readonly TestAssertRow[] {
+    return Object.freeze([...this.rows]);
+  }
 
   asserter(): Asserter {
     return {
       ok: (label, condition) => {
-        if (!condition) this.lines.push(`${label}: expected truthy, got ${fmt(condition)}`);
+        const pass = !!condition;
+
+        this.pushRow({
+          ok: pass,
+          label,
+          actual: fmt(condition),
+          expected: "truthy",
+        });
+
+        if (!pass) {
+          this.lines.push(`${label}: expected truthy, got ${fmt(condition)}`);
+        }
       },
 
       eq: (label, got, want) => {
-        if (!Object.is(got, want)) {
+        const pass = Object.is(got, want);
+
+        this.pushRow({
+          ok: pass,
+          label,
+          actual: fmt(got),
+          expected: fmt(want),
+        });
+
+        if (!pass) {
           this.lines.push(`${label}: expected ${fmt(want)}, got ${fmt(got)}`);
         }
       },
 
       neq: (label, got, notWant) => {
-        if (Object.is(got, notWant)) {
+        const pass = !Object.is(got, notWant);
+
+        this.pushRow({
+          ok: pass,
+          label,
+          actual: fmt(got),
+          expected: `!= ${fmt(notWant)}`,
+        });
+
+        if (!pass) {
           this.lines.push(`${label}: expected != ${fmt(notWant)}, got ${fmt(got)}`);
         }
       },
 
       hasAttr: (label, el, attr) => {
-        const ok = !!el && el.hasAttribute(attr);
-        if (!ok) this.lines.push(`${label}: expected element to have attr "${attr}"`);
+        const pass = !!el && el.hasAttribute(attr);
+
+        this.pushRow({
+          ok: pass,
+          label,
+          actual: el ? String(el.getAttribute(attr)) : "null-el",
+          expected: `has attr "${attr}"`,
+        });
+
+        if (!pass) {
+          this.lines.push(`${label}: expected element to have attr "${attr}"`);
+        }
       },
 
       attrEq: (label, el, attr, want) => {
         const got = el ? el.getAttribute(attr) : null;
-        if (got !== want) {
+        const pass = got === want;
+
+        this.pushRow({
+          ok: pass,
+          label,
+          actual: fmt(got),
+          expected: fmt(want),
+        });
+
+        if (!pass) {
           this.lines.push(
             `${label}: attr "${attr}" expected ${fmt(want)}, got ${fmt(got)}`,
           );
         }
       },
 
-      // Outcome recognition without constructing Outcomes:
-      // - if your outcome type has outcome.isErr(x), you can adapt here.
-      // For now we do a conservative check: common shapes.
       outcomeOk: (label, maybeOutcome) => {
-        // CHANGED: conservative - avoids importing outcome/relay APIs here.
-        // You can tighten this later to your canonical Outcome shape.
+        let pass = true;
+        let actual = fmt(maybeOutcome);
+
         if (!maybeOutcome) {
-          this.lines.push(`${label}: outcome was ${fmt(maybeOutcome)}`);
-          return;
+          pass = false;
+        } else {
+          const asAny = maybeOutcome as any;
+
+          if (typeof asAny === "object") {
+            if ("ok" in asAny && asAny.ok === false) {
+              pass = false;
+              actual = "ok=false";
+            } else if ("kind" in asAny && asAny.kind === "err") {
+              pass = false;
+              actual = "kind=err";
+            } else if ("tag" in asAny && String(asAny.tag).toLowerCase().includes("err")) {
+              pass = false;
+              actual = `tag=${String(asAny.tag)}`;
+            }
+          }
         }
 
-        const asAny = maybeOutcome as any;
+        this.pushRow({
+          ok: pass,
+          label,
+          actual,
+          expected: "outcome ok",
+        });
 
-        // Common conventions: { ok: boolean }, { kind: "err"|"ok" }, { tag: ... }
-        if (typeof asAny === "object") {
-          if ("ok" in asAny && asAny.ok === false) {
-            this.lines.push(`${label}: outcome ok=false`);
+        if (!pass) {
+          if (!maybeOutcome) {
+            this.lines.push(`${label}: outcome was ${fmt(maybeOutcome)}`);
             return;
           }
-          if ("kind" in asAny && asAny.kind === "err") {
-            this.lines.push(`${label}: outcome kind=err`);
-            return;
-          }
-          if ("tag" in asAny && String(asAny.tag).toLowerCase().includes("err")) {
-            this.lines.push(`${label}: outcome tag indicates error`);
-            return;
+
+          const asAny = maybeOutcome as any;
+          if (typeof asAny === "object") {
+            if ("ok" in asAny && asAny.ok === false) {
+              this.lines.push(`${label}: outcome ok=false`);
+              return;
+            }
+            if ("kind" in asAny && asAny.kind === "err") {
+              this.lines.push(`${label}: outcome kind=err`);
+              return;
+            }
+            if ("tag" in asAny && String(asAny.tag).toLowerCase().includes("err")) {
+              this.lines.push(`${label}: outcome tag indicates error`);
+              return;
+            }
           }
         }
       },
@@ -187,7 +270,6 @@ class FailureBag {
 
     const body = this.lines.map((l) => `- ${l}`).join("\n");
 
-    // Keep preview compact to avoid log blowups
     const preview = meta.preview.length > 1200 ? meta.preview.slice(0, 1200) + "…" : meta.preview;
 
     const msg =

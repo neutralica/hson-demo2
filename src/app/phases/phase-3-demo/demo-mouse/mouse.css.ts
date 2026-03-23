@@ -49,7 +49,7 @@ export const MOUSE_POINTERcss = {
   top: "50%",
   width: "64px",
   height: "2px",
-  background: "rgba(255,255,255,0.75)",
+  background: OKLCH_FLEURS.clayCoral,
   transformOrigin: "0% 50%",
   transform: "translate(0, -50%) rotate(0deg)",
   boxShadow: "0 0 10px rgba(140,210,255,0.20)",
@@ -62,7 +62,7 @@ export const MOUSE_POINTER_ORIGINcss = {
   width: "6px",
   height: "6px",
   borderRadius: "99px",
-  background: "rgba(255,255,255,0.6)",
+  background: ACID_WASH_OKLCH.mutedRed,
   transform: "translate(-50%, -50%)",
 }
 

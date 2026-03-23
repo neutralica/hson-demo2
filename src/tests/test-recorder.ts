@@ -1,6 +1,7 @@
 import { hson } from "hson-live";
-import type { TestEvent, TestFailure, TestSummary } from "./tests.types";
+import type { TestAssertRow, TestEvent, TestFailure, TestSummary } from "./tests.types";
 import { _test_full_loop } from "hson-live/diagnostics";
+
 
 export class TestRecorder {
     private suites = 0;
@@ -11,6 +12,8 @@ export class TestRecorder {
     private msTotal = 0;
     private readonly failures: TestFailure[] = [];
     private readonly metaByCase = new Map<string, Record<string, string> | undefined>();
+    private readonly assertsByCase = new Map<string, TestAssertRow[]>();
+
     public ingest(e: TestEvent): void {
         if (e.t === "suite_begin") this.suites += 1;
         if (e.t === "suite_end") this.msTotal += e.ms;
@@ -22,23 +25,31 @@ export class TestRecorder {
         }
 
         if (e.t === "case_end") {
+            const k = this.key(e.suite, e.name);
+
+            if (e.assertRows?.length) {
+                this.assertsByCase.set(k, [...e.assertRows]);
+            }
+
+
             if (e.status === "pass") this.pass += 1;
             else if (e.status === "fail") this.fail += 1;
             else this.skip += 1;
 
-            // CHANGED: merge metaPatch into stored meta for recorder parity with TestLog/Inspector
+            // CHANGED: merge metaPatch into stored meta
             if (e.metaPatch) {
-                const k = this.key(e.suite, e.name);
-
                 const prev = this.metaByCase.get(k);
                 const next = prev ? { ...prev, ...e.metaPatch } : { ...e.metaPatch };
-
                 this.metaByCase.set(k, next);
             }
 
-            if (e.status === "fail") {
-                const meta = this.metaByCase.get(this.key(e.suite, e.name));
+            // CHANGED: store assert rows when present
+            if (e.assertRows?.length) {
+                this.assertsByCase.set(k, [...e.assertRows]);
+            }
 
+            if (e.status === "fail") {
+                const meta = this.metaByCase.get(k);
                 const base = {
                     suite: e.suite,
                     name: e.name,
@@ -50,7 +61,7 @@ export class TestRecorder {
             }
         }
     }
-
+    
     public summary(): TestSummary {
         return Object.freeze({
             suites: this.suites,
@@ -61,6 +72,11 @@ export class TestRecorder {
             msTotal: this.msTotal,
             failures: Object.freeze([...this.failures]),
         });
+    }
+
+    // CHANGED: small accessor for report rendering
+    public getAsserts(suite: string, name: string): readonly TestAssertRow[] {
+        return Object.freeze([...(this.assertsByCase.get(this.key(suite, name)) ?? [])]);
     }
 
     private key(suite: string, name: string): string {

@@ -2,11 +2,12 @@ import type { LoopReport, Artifact } from "../../../../hson-live/dist/diagnostic
 import { $cols_ } from "../../app/core/consts/colors.consts";
 import { _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
+import { render_livetree_report } from "./report-livetree";
 
 
 type ReportHtml = Readonly<{ title: string; html: string }>;
 
-function escape_html(s: string): string {
+export function escape_html(s: string): string {
   return s
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -206,9 +207,21 @@ export function render_report_html(
   report: LoopReport,
   meta?: CaseMeta,
 ): ReportHtml {
+  if (suite.startsWith("livetree/")) {
+    return render_livetree_report(key, name, suite, report, meta);
+  }
+  return render_transform_report(key, name, suite, report, meta);
+}
+export function render_transform_report(
+  key: CaseKey,
+  name: string,
+  suite: string,
+  report: LoopReport,
+  meta?: CaseMeta,
+): ReportHtml {
   // build model first
   const m = build_report_view_model(key, name, suite, report);
-const failuresRows = (report.failures ?? []).map((f, i) => `
+  const failuresRows = (report.failures ?? []).map((f, i) => `
   <tr>
     <td class="idx">${i}</td>
     <td class="step">${escape_html(String(f.step ?? ""))}</td>
@@ -216,7 +229,7 @@ const failuresRows = (report.failures ?? []).map((f, i) => `
   </tr>
 `).join("");
 
-const failHtml = `
+  const failHtml = `
 <div class="traceWrap">
   <details ${(report.failures?.length ?? 0) ? "open" : ""}>
     <summary>failures (${report.failures?.length ?? 0})</summary>
@@ -229,7 +242,7 @@ const failHtml = `
   </details>
 </div>
 `;
-  
+
   const head = `
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />

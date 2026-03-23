@@ -86,7 +86,7 @@ export const TEST_LOGGERcss: CssMap = {
   boxSizing: "border-box",
   // background: $cols_.backdeep,
   fontFamily: MENU_FONT,
-  fontSize: $txt_.main,
+  fontSize: $txt_.unter,
   height: "10rem",
   maxHeight: "10rem",
   width: "100%",

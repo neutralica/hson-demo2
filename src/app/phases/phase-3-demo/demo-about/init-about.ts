@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
-import { TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss, TOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_TOC_TITLEcss } from "./about.css";
+import { TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss, TOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_TOC_TITLEcss, ABOUT_HEADERcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
 import { MENU_FONT } from "../demo.css";
@@ -424,18 +424,7 @@ function render_doc_md(host: LiveTree, src: string): void {
       const text = (m[2] ?? "").trim();
 
       const h = host.create.div().classlist.add(`md-h${level}`);
-      h.css.setMany({
-        marginTop: level === 1 ? "6px" : "2rem",
-        marginBottom: "8px",
-        textDecoration: "underline",
-        textUnderlineOffset: "5px",
-        fontFamily: MENU_FONT,
-        letterSpacing: "0.06em",
-        textTransform: level === 1 ? "uppercase" : "none",
-        fontSize: level === 1 ? "28px" : level === 2 ? "23px" : level === 3 ? "19px" : "16px",
-        fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
-        color: $HSON_COLORS.ui.blue,
-      });
+      h.css.setMany(ABOUT_HEADERcss(level));
       h.text.set(text);
       continue;
     }

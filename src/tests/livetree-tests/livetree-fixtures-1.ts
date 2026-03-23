@@ -720,7 +720,7 @@ export function mixedRegression() {
 }
 
 export function extraCases(): readonly TestSuite[] {
-  const SUITE = 'extra cases';
+  const SUITE = 'livetree/extra cases';
   const cases: readonly LiveTreeCaseSpec[] = [
     // ------------------------------------------------------------
     // remove + reappend + refind (ID collision sanity)

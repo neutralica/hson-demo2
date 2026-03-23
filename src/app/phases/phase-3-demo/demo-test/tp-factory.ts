@@ -28,7 +28,7 @@ export type TestPanelDeps = Readonly<{
   onEvent: (e: TestEvent) => void; // optional if you want
 }>;
 
-const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over n iterations, diffs steps ";
+const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over 3 full iterations, diffs steps ";
 const liveTreeText = "LIVETREE TESTS: confirms successful LiveTree operations and expected final node shape";
 const errorDisclaimer = "EXPECT ERRORS IN HTML_INVALID (15 fixtures)";
 

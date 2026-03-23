@@ -19,6 +19,7 @@ export type TestEvent =
     status: TestStatus;
     ms: number;
     err?: string;
+    assertRows?: readonly TestAssertRow[];
     metaPatch?: Record<string, string>; // ADDED
   };
 
@@ -72,6 +73,7 @@ export type CaseMeta = Readonly<{
   input?: string;
   reportId?: Artifact;  // lookup key
   category?: string;
+  assertRows?: string;
 }>;
 
 
@@ -247,3 +249,9 @@ export type Asserter = Readonly<{
   outcomeOk: (label: string, maybeOutcome: unknown) => void;
 }>;
 
+export type TestAssertRow = Readonly<{
+  ok: boolean;
+  label: string;
+  actual?: string;
+  expected?: string;
+}>;

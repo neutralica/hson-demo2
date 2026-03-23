@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../core/consts/colors.consts";
 import { $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
 import { MONOcss } from "../../../core/core.css";
@@ -33,6 +33,8 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   textAlign: "right",
   userSelect: "none",
   whiteSpace: "pre",
+  fontSize: "0.5rem",
+  alignSelf: "center",
 };
 
 export const LIST_TEXTcss: CssMap = {
@@ -61,7 +63,7 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "6px",
-  background:set_alpha(ACID_WASH_RGBA.dimIce,0.2),
+  background: set_alpha(ACID_WASH_RGBA.dimIce, 0.2),
   color: OKLCH_FLEURS.pollen,
 };
 
@@ -247,3 +249,18 @@ export const MD_CODE_PREcss: CssMap = {
   overflowWrap: "anywhere",
   // whiteSpace: "normal",
 };
+
+export const ABOUT_HEADERcss = (level: number) => {
+  return {
+    marginTop: level === 1 ? "6px" : "2rem",
+    marginBottom: "8px",
+    textDecoration: "underline",
+    textUnderlineOffset: "5px",
+    fontFamily: MENU_FONT,
+    letterSpacing: "0.06em",
+    textTransform: level === 1 ? "uppercase" : "none",
+    fontSize: level === 1 ? "28px" : level === 2 ? "23px" : level === 3 ? "19px" : "16px",
+    fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
+    color: ACID_WASH_RGBA.neonGhost,
+  }
+}
