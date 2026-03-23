@@ -17,8 +17,6 @@ export const html_INVALID = {
     <_ii data-_index="2"><p>C</p></_ii>
   </_array>`,
 
-  style_edge_values: `<div style="background-image:url('a&b.png'); content:'•' !important">x</div>`,
-
   // INVALID: non-contiguous indices (should throw)
   array_indices_gap_INVALID: `<_array>
     <_ii data-_index="0"><p>A</p></_ii>
@@ -34,19 +32,7 @@ export const html_INVALID = {
   unknown_vsn_tag_INVALID: `<_foo><p>x</p></_foo>`,
 
   // Reserved meta “looks like attr” on standard tag: must map to _meta['data-index'] (not _attrs)
-  meta_index_on_standard: `<div data-_index="7">x</div>`,
-
-  // Attribute ordering shouldn’t matter; class tokens reorder too
-  attr_order_irrelevant: `<a id="x" class="c b a" href="#">link</a>`,
-
-  // Void handling (confirm serializer form and parse invariants)
-  void_img_attrs: `<img src="logo.png" alt="Company Logo" />`,
-
-  // Comment in the middle of inline content (ignored)
-  comment_between_inline: `<span>a<!--c-->b</span>`,
-
-  // Unquoted numeric attribute (HTML5-legal)
-  unquoted_numeric_attr: `<input value=42>`,
+ 
 
   malformed_attr: `<a href="https://ok" onclick="1" <b>>link</a>`,
 };

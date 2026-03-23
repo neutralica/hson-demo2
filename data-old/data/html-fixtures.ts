@@ -154,6 +154,20 @@ const html_edge_cases: { [name: string]: string } = {
   // 19) Textarea newline normalization (CRLF vs LF)
   textarea_crlf: `<textarea>Line1\r\nLine2\nLine3</textarea>`,
 
+  style_edge_values: `<div style="background-image:url('a&b.png'); content:'•' !important">x</div>`,
+ meta_index_on_standard: `<div data-_index="7">x</div>`,
+
+  // Attribute ordering shouldn’t matter; class tokens reorder too
+  attr_order_irrelevant: `<a id="x" class="c b a" href="#">link</a>`,
+
+  // Void handling (confirm serializer form and parse invariants)
+  void_img_attrs: `<img src="logo.png" alt="Company Logo" />`,
+
+  // Comment in the middle of inline content (ignored)
+  comment_between_inline: `<span>a<!--c-->b</span>`,
+
+  // Unquoted numeric attribute (HTML5-legal)
+  unquoted_numeric_attr: `<input value=42>`,
 };
 
 

@@ -30,7 +30,7 @@ export type TestPanelDeps = Readonly<{
 
 const introText = "TRANSFORMER LOOP TEST: parses & serializes an input string through JSON->HSON->HTML->JSON (and the opposite direction) over 3 full iterations, diffs steps ";
 const liveTreeText = "LIVETREE TESTS: confirms successful LiveTree operations and expected final node shape";
-const errorDisclaimer = "EXPECT ERRORS IN HTML_INVALID (15 fixtures)";
+
 
 export type TestPanel = Readonly<{
   branch: LiveTree;
@@ -286,9 +286,8 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       tp.logger.empty();
     };
     tp.mount(testSurface);
-    tp.setLog(introText)
-    tp.setLog(liveTreeText)
-    tp.setLog(errorDisclaimer)
+    tp.setLog(introText);
+    tp.setLog(liveTreeText);
     
     const tlog = create_test_log();
     const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();

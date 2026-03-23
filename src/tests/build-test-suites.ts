@@ -44,16 +44,14 @@ export function make_transform_test_suite(
   suite = "transform/",
   captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
   entryFmt: SourceFormat = "auto",
+  expected: "pass" | "fail" = "pass",
 ): TestSuite {
   const cases: TestCase[] = [];
 
   for (const [group, bundle] of Object.entries(fixtures)) {
     for (const [sub, atom] of Object.entries(bundle)) {
       const name = `${group}.${sub}`;
-
-      // no guessing here
       const entry = entryFmt;
-
       const k = `${suite}::${name}` as const;
 
       if (captureMap) {
@@ -68,29 +66,47 @@ export function make_transform_test_suite(
           });
         });
       }
+
       cases.push(_freeze({
         suite,
         name,
-        meta: { fixture: group, sub, preview: preview_atom(atom) },
+        meta: {
+          fixture: group,
+          sub,
+          preview: preview_atom(atom),
+        },
+
         run: () => {
-          // ADDED: capture the *actual* input text we feed the loop
-          const base = { entry, dual: true, times: 3, stopOnFirstFail: false } as const;
-          // preserve strings as-is; stringify objects/arrays; stringify non-string .text
+          const base = {
+            entry,
+            dual: true,
+            times: 3,
+            stopOnFirstFail: false,
+          } as const;
+
           const input =
-            typeof atom === "string" ? atom :
-              (typeof atom === "object" && atom && "text" in atom)
+            typeof atom === "string"
+              ? atom
+              : (typeof atom === "object" && atom && "text" in atom)
                 ? JSON.stringify((atom as { text?: unknown }).text ?? "", null, 2)
                 : JSON.stringify(atom, null, 2);
 
-          const report = hson._test_full_loop(atom, { ...base, verbose: true, capture: true });
+          const report = hson._test_full_loop(atom, {
+            ...base,
+            verbose: true,
+            capture: true,
+          });
 
-          // ADDED: propagate failure to runner/recorder
-          if (!report.ok) {
+          const didPass = report.ok;
+          const shouldPass = expected === "pass";
+
+          if (didPass !== shouldPass) {
             const f0 = report.failures?.[0];
             const msg =
-              f0?.error
-                ? `${f0.step}: ${f0.error}`
-                : `loop failed (ok=false)`;
+              expected === "pass"
+                ? (f0?.error ? `${f0.step}: ${f0.error}` : `loop failed (ok=false)`)
+                : `expected failure, but loop passed`;
+
             throw new Error(msg);
           }
 
@@ -100,9 +116,10 @@ export function make_transform_test_suite(
               input,
               sub,
               preview: input.length ? _snip(input) : "—",
+              expected,
             }),
           };
-        }
+        },
       }));
     }
   }
@@ -126,12 +143,12 @@ export function build_suites_for_mode(
       make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     ]);
   }
-  
+
   if (mode === "transform") {
     return _freeze([
       make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
       make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
-      make_transform_test_suite(h, EXPECT_ERRORS, "transform/fail_fixtures/EXPECT_ERRORS", map),
+      make_transform_test_suite(h, EXPECT_ERRORS, "transform/fail_fixtures", map, "auto", "fail"),
     ]);
   }
   if (mode === "dev") {
@@ -145,14 +162,14 @@ export function build_suites_for_mode(
       ...all_livetree_suites(),
     ])
   }
-  
+
   return _freeze([
-    make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new/html", map),
+    make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
     make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
     ...all_livetree_suites(),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/dev", map),
-    make_transform_test_suite(h, EXPECT_ERRORS, "failcase/EXPECT_ERRORS", map),
+    make_transform_test_suite(h, EXPECT_ERRORS, "transform/failcase", map, "auto", "fail"),
   ]);
 }

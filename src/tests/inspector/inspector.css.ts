@@ -85,7 +85,7 @@ export const ROW_CASEcss: Record<string, string> = {
 export const ROW_CASE_FAILcss: CssMap = {
   color: $red_etc_.heartsBlood,
   background: $cols_.bckdeep,
-  fontWeight: "700 !important",
+  fontWeight: "700 /* !important */",
   // filter: "saturate(1.3) brightness(1.3)"
 };
 

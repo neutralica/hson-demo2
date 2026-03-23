@@ -300,6 +300,320 @@ export function livetree_svg_ingermediate(): TestSuite {
                     t.eq("malformed g markup throws", r.threw, true);
                 },
             },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects empty string",
+                fixture: "create/markup-guards",
+                sub: "html-empty-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(``);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("empty string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects whitespace string",
+                fixture: "create/markup-guards",
+                sub: "html-whitespace-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`   
+        
+      `);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("whitespace string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects multiple roots",
+                fixture: "create/markup-guards",
+                sub: "html-multiple-roots",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`<div id="a"></div><div id="b"></div>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("multiple roots rejected", r.msg.includes(`expected exactly one <div> root`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects mismatched root tag",
+                fixture: "create/markup-guards",
+                sub: "html-mismatched-root",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`<section id="wrong"></section>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("mismatched root rejected", r.msg.includes(`expected exactly one <div> root`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects malformed markup",
+                fixture: "create/markup-guards",
+                sub: "html-malformed",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`<div><span></div>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("malformed markup rejected", r.msg.includes(`failed to parse markup`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "svg: g(string) rejects empty string",
+                fixture: "svg/create-placement",
+                sub: "g-empty-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg();
+                    let msg = "";
+
+                    try {
+                        (svg.create as any).g(``);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("empty g string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "svg: g(string) rejects whitespace string",
+                fixture: "svg/create-placement",
+                sub: "g-whitespace-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg();
+                    let msg = "";
+
+                    try {
+                        (svg.create as any).g(`   
+      
+      `);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("whitespace g string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "svg: g(string) rejects multiple roots",
+                fixture: "svg/create-placement",
+                sub: "g-multiple-roots",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg();
+                    let msg = "";
+
+                    try {
+                        (svg.create as any).g(`<g id="a"></g><g id="b"></g>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("multiple g roots rejected", r.msg.includes(`expected exactly one <g> root`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "svg: g(string) rejects mismatched root tag",
+                fixture: "svg/create-placement",
+                sub: "g-mismatched-root",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg();
+                    let msg = "";
+
+                    try {
+                        (svg.create as any).g(`<circle id="wrong"></circle>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("mismatched g root rejected", r.msg.includes(`expected exactly one <g> root`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "svg: g(string) rejects malformed markup",
+                fixture: "svg/create-placement",
+                sub: "g-malformed",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg();
+                    let msg = "";
+
+                    try {
+                        (svg.create as any).g(`<g><circle></g>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("malformed g markup rejected", r.msg.includes(`failed to parse markup`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "svg: svg(string) rejects multiple roots",
+                fixture: "svg/create-placement",
+                sub: "svg-multiple-roots",
+                html: `<main id="thisroot"></main>`,
+
+                act: async (root) => {
+                    let msg = "";
+                    let threw = false;
+
+                    try {
+                        root.create.svg(`<svg id="a"></svg><svg id="b"></svg>`);
+                    } catch (err) {
+                        threw = true;
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { threw, msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("multiple svg roots rejected", r.threw, true);
+                    t.ok(
+                        "message indicates parse/root failure",
+                        r.msg.includes("failed to parse markup") ||
+                        r.msg.includes("parsererror") ||
+                        r.msg.includes("expected exactly one <svg> root"),
+                    );
+                },
+            },
+
+            {
+                suite: SUITE,
+                name: "svg: svg(string) rejects whitespace string",
+                fixture: "svg/create-placement",
+                sub: "svg-whitespace-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    let msg = "";
+
+                    try {
+                        root.create.svg(`   
+      
+      `);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("whitespace svg string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+
 
 
         ];
