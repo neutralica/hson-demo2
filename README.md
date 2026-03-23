@@ -5,14 +5,16 @@ LiveDemo is an interactive demonstration environment for hson-live, a glue forma
 
 The demo is intentionally lightweight and exists primarily to provide documentation and interactive examples of hson-live's capabilities.
 
-### Live demo
+### Live demo (this site)
 `https://terminalgothic.com/hson`
 
 ### Main project repository
 `https://github.com/neutralica/hson-live`
 
 ### npm package
+```
 npm install hson-live
+```
 
 
 ---

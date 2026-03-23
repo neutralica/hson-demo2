@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../core/consts/colors.consts";
 import { $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
 import { MONOcss } from "../../../core/core.css";
@@ -263,4 +263,17 @@ export const ABOUT_HEADERcss = (level: number) => {
     fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
     color: ACID_WASH_RGBA.neonGhost,
   }
+}
+
+export const MD_COPY_LINEcss: CssMap = {
+  ...ABOUT_P_TEXTcss,
+  fontSize: $txt_.reg,
+  color:$gry_.mid,
+  marginTop: "2rem",
+}
+export const MD_LINK_LINEcss: CssMap = {
+  ...ABOUT_P_TEXTcss,
+  color: ACID_WASH_RGBA.softBlue,
+  fontSize: $txt_.main,
+  textDecoration:"underline",
 }

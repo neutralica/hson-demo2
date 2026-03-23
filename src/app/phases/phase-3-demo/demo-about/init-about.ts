@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { $blu_, $cols_, $grn_, $HSON_COLORS, $pnk_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
-import { TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss, TOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_TOC_TITLEcss, ABOUT_HEADERcss } from "./about.css";
+import { TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss, TOC_BTNcss, ABOUT_LIST_MARKERcss, ABOUT_LIST_ROWcss, LIST_TEXTcss, ABOUT_P_TEXTcss, INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ANTI_LIST_MARKERcss, ANTI_LIST_TEXTcss, HRcss, WARNINGcss, ABOUT_TOC_TITLEcss, ABOUT_HEADERcss, MD_LINK_LINEcss, MD_COPY_LINEcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
 import { MENU_FONT } from "../demo.css";
@@ -377,7 +377,35 @@ function render_doc_md(host: LiveTree, src: string): void {
 
   for (const rawLine of lines) {
     const line = rawLine ?? "";
+    // standalone url line → anchor block
+    const url = extractUrl(line);
+    if (url) {
+      flushPara();
+      flushList();
 
+      const a = host.create.a()
+        .classlist.add("md-link-line")
+        .attr.set("href", url)
+        .attr.set("target", "_blank")
+        .attr.set("rel", "noopener noreferrer");
+
+      a.text.set(url);
+      a.css.setMany(MD_LINK_LINEcss);
+
+      continue;
+    }
+
+    if (line.trim().startsWith("©")) {
+      flushPara();
+      flushList();
+
+      const box = host.create.div().classlist.add("md-at-line");
+      box.css.setMany(MD_COPY_LINEcss);
+
+      render_line_with_comment(box, line.trim(), "prose");
+
+      continue;
+    }
     // fenced code
     if (line.trim().startsWith("```")) {
       if (!inCode) {
@@ -584,4 +612,20 @@ function render_line_with_comment(
     .classlist.add("md-comment")
     .css.setMany(CODE_COMMENTScss)
     .text.set(comment);
+}
+
+function extractUrl(line: string): string | null {
+  const t = line.trim();
+
+  // strip surrounding backticks if present
+  const unwrapped =
+    (t.startsWith("`") && t.endsWith("`"))
+      ? t.slice(1, -1).trim()
+      : t;
+
+  if (/^https?:\/\/\S+$/i.test(unwrapped)) {
+    return unwrapped;
+  }
+
+  return null;
 }

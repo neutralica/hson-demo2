@@ -71,7 +71,7 @@ export const PANEL_TEXTAREAcss = {
     width: "100%",
     boxSizing: "border-box",
     fontFamily: MENU_FONT,
-    fontSize: $txt_.main,
+    fontSize: $txt_.unter,
     lineHeight: "1.85",
     // background: $cols_.backdeep,
     padding: "10px",

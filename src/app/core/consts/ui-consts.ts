@@ -8,6 +8,7 @@ export const $txt_ = {
     heading: "24px",
     subhead: "21px",
     main: "18px",
+    mid: "16px",
     unter: "14px",
     reg: "12px",
     smol: "8px",
