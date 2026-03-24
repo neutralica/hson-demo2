@@ -660,6 +660,201 @@ export function livetree_svg_ingermediate(): TestSuite {
                     t.eq("inserted tag preserved", r.tags[1], "section");
                 },
             },
+            {
+                suite: SUITE,
+                name: "attr: svg attr.set preserves svg scope for chaining",
+                fixture: "attr/scope",
+                sub: "svg-set-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg = root.create.svg()
+                        .attr.set("viewBox", "0 0 10 10");
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        svgTag: svg.asDomElement()?.tagName,
+                        gTag: g.asDomElement()?.tagName,
+                        viewBox: svg.asDomElement()?.getAttribute("viewBox"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("svg tag preserved", r.svgTag?.toLowerCase(), "svg");
+                    t.eq("svg create still available after attr.set", r.gTag?.toLowerCase(), "g");
+                    t.eq("viewBox preserved", r.viewBox, "0 0 10 10");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "attr: svg attr.setMany preserves svg scope for chaining",
+                fixture: "attr/scope",
+                sub: "svg-setMany-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg = root.create.svg()
+                        .attr.setMany({
+                            viewBox: "0 0 20 20",
+                            preserveAspectRatio: "xMidYMid meet",
+                        });
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        gTag: g.asDomElement()?.tagName,
+                        viewBox: svg.asDomElement()?.getAttribute("viewBox"),
+                        preserveAspectRatio: svg.asDomElement()?.getAttribute("preserveAspectRatio"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("svg create still available after attr.setMany", r.gTag?.toLowerCase(), "g");
+                    t.eq("viewBox preserved", r.viewBox, "0 0 20 20");
+                    t.eq("preserveAspectRatio preserved", r.preserveAspectRatio, "xMidYMid meet");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "flag: svg flag.set preserves svg scope for chaining",
+                fixture: "attr/scope",
+                sub: "svg-flag-set-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg = root.create.svg().flag.set("data-active");
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        gTag: g.asDomElement()?.tagName,
+                        flagVal: svg.asDomElement()?.getAttribute("data-active"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("svg create still available after flag.set", r.gTag?.toLowerCase(), "g");
+                    t.eq("flag present", r.flagVal, "data-active");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "flag: svg flag.clear preserves svg scope for chaining",
+                fixture: "attr/scope",
+                sub: "svg-flag-clear-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg0 = root.create.svg().flag.set("data-active");
+                    const svg = svg0.flag.clear("data-active");
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        gTag: g.asDomElement()?.tagName,
+                        flagVal: svg.asDomElement()?.getAttribute("data-active"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("svg create still available after flag.clear", r.gTag?.toLowerCase(), "g");
+                    t.eq("flag removed", r.flagVal, null);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "attr: html attr.setMany preserves html scope for chaining",
+                fixture: "attr/scope",
+                sub: "html-setMany-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root")
+                        .attr.setMany({
+                            title: "hello",
+                            "data-x": "1",
+                        });
+
+                    const section = host.create.section().id.set("s1");
+
+                    (root as any).__result = {
+                        title: host.asDomElement()?.getAttribute("title"),
+                        dataX: host.asDomElement()?.getAttribute("data-x"),
+                        sectionTag: section.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("title preserved", r.title, "hello");
+                    t.eq("data-x preserved", r.dataX, "1");
+                    t.eq("html create still available", r.sectionTag?.toLowerCase(), "section");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "attr: svg read path matches svg canonicalization",
+                fixture: "attr/scope",
+                sub: "svg-read-canonicalization",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg()
+                        .attr.set("viewBox", "0 0 30 30")
+                        .attr.set("preserveAspectRatio", "none");
+
+                    (root as any).__result = {
+                        viewBox: svg.attr.get("viewBox"),
+                        preserveAspectRatio: svg.attr.get("preserveAspectRatio"),
+                        hasViewBox: svg.attr.has("viewBox"),
+                        hasPreserveAspectRatio: svg.attr.has("preserveAspectRatio"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("viewBox read matches", r.viewBox, "0 0 30 30");
+                    t.eq("preserveAspectRatio read matches", r.preserveAspectRatio, "none");
+                    t.eq("has viewBox", r.hasViewBox, true);
+                    t.eq("has preserveAspectRatio", r.hasPreserveAspectRatio, true);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "attr: svg drop preserves svg scope for chaining",
+                fixture: "attr/scope",
+                sub: "svg-drop-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg0 = root.create.svg().attr.set("viewBox", "0 0 40 40");
+                    const svg = svg0.attr.drop("viewBox");
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        gTag: g.asDomElement()?.tagName,
+                        viewBox: svg.asDomElement()?.getAttribute("viewBox"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("svg create still available after drop", r.gTag?.toLowerCase(), "g");
+                    t.eq("viewBox removed", r.viewBox, null);
+                },
+            },
 
 
 
