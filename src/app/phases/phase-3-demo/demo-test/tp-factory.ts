@@ -15,7 +15,7 @@ import { create_test_log } from "../../../../tests/test-log";
 import { run_test_suites } from "../../../../tests/test-runner";
 import { create_inspector, type InspectorUi } from "../../../../tests/inspector/test-inspector";
 import { MENU_FONT, PANEL_SAFETYcss } from "../demo.css";
-import { $grn_, $cols_, $ylw_ } from "../../../core/consts/colors.consts";
+import { $grn_, $cols_, $ylw_, ACID_WASH_RGBA, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
 import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { CONTROL_ROWcss, TEST_SELECTcss, RUN_BUTTONcss } from "./tp.css";
@@ -254,11 +254,22 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     // --- owned dependencies ---
     const tp = relay_data(test_panel_factory());
     // CHANGED: local append-only console writer
-    const appendLogLine = (line: string): void => {
-      const isFail = /\bFAIL\b|\bERR\b|\berror\b/i.test(line);
-      const isPass = /\bPASS\b|\bOK\b/i.test(line);
-      const isWarn = /\bSKIP\b|\bWARN\b/i.test(line);
+    function get_line_color(line: string): string {
+      const head = line.trim().split(/\s+/, 1)[0]?.toUpperCase() ?? "";
 
+      switch (head) {
+        case "FAIL": return "red";
+        case "PASS":
+        case "OK": return $grn_.faded;
+        case "SKIP":
+        case "WARN": return $ylw_.faded;
+        case "RUN": return OKLCH_FLEURS.blazeOrange;
+        case "DONE": return ACID_WASH_RGBA.wornPurple;
+        case "SUITE": return ACID_WASH_OKLCH.steel;
+        default: return ACID_WASH_OKLCH.steel;
+      }
+    }
+    const appendLogLine = (line: string): void => {
       const row = tp.logger.create.div().css.setMany({
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
@@ -268,11 +279,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
         lineHeight: "1.25",
         paddingBottom: "2px",
 
-        color:
-          isFail ? "red"
-            : isPass ? $grn_.faded
-              : isWarn ? $ylw_.faded
-                : $cols_.txtmain,
+        color: get_line_color(line),
       });
 
       row.text.set(line);
@@ -288,7 +295,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     tp.mount(testSurface);
     tp.setLog(introText);
     tp.setLog(liveTreeText);
-    
+
     const tlog = create_test_log();
     const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
 
@@ -307,8 +314,8 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
         const c = tlog.getCase(key);
         const m = c?.meta;
 
-        // Return a minimal LoopReport-like object that your section builder can read.
-        // It already uses permissive access (casts / optional fields).
+        /*  return a minimal LoopReport-like object that the section builder can read
+         uses permissive access (casts / optional fields). */
         return {
           ok: c?.status === "pass",
           entry: key,
@@ -356,7 +363,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
       const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
 
       tp.chips.render(res.summary);
-      appendLogLine(tlog.getLastLine()); // optional; can remove if redundant
+      appendLogLine(tlog.getLastLine());
 
       inspector.show();
       inspector.render();

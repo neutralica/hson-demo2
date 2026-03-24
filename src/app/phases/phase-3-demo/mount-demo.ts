@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { $T$GHSONcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss,  HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
+import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, PANEL_SAFETYcss, TITLE_BOXcss, VIEW_SLOTcss,  HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
@@ -12,10 +12,8 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORcandy, LETTER_COLORoklch } from "../../core/consts/colors.consts";
-import { create_test_log } from "../../../tests/test-log";
-import type { LoopReport } from "../../../../../hson-live/dist/diagnostics/loop-3.test";
-import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, toggle_about_toc, get_about_toc_open } from "./state";
+import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA,  LETTER_COLORoklch } from "../../core/consts/colors.consts";
+import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, get_about_toc_open } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_panel_simple } from "../../ui/panel-simple";
 import { bp_factory } from "./demo-build/build";
@@ -117,7 +115,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .classlist.add('demo-wordmark')
-      .css.setMany($T$GHSONcss)
+      .css.setMany(HSON_WORDcss)
     return span;
   });
   mk_div_id(hsonBox, "livedemo-subhead")

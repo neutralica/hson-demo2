@@ -28,7 +28,7 @@ export const MAIN_MENUcss: CssMap = {
   }
 }
 
-export const $T$GHSONcss: CssMap = {
+export const HSON_WORDcss: CssMap = {
   fontSize: $txt_.hsonWordMarkMain,
   fontFamily: MENU_FONT,
   width: "max-content",

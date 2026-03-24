@@ -338,7 +338,135 @@ export function suite_append_and_create(): TestSuite {
         const kids = (elem?._content ?? []) as unknown[];
         return `<root _elem kids=${kids.map(x => (is_Node(x) ? `<${x._tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
-    }
+    },
+  {
+                suite: SUITE,
+                name: "create: html markup insertion rejects empty string",
+                fixture: "create/markup-guards",
+                sub: "html-empty-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(``);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("empty string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            }, 
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects whitespace string",
+                fixture: "create/markup-guards",
+                sub: "html-whitespace-string",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`   
+                
+                        `); /* ^^^ this space intentionally left blank */
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("whitespace string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects multiple roots",
+                fixture: "create/markup-guards",
+                sub: "html-multiple-roots",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`<div id="a"></div><div id="b"></div>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("multiple roots rejected", r.msg.includes(`expected exactly one <div> root`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects mismatched root tag",
+                fixture: "create/markup-guards",
+                sub: "html-mismatched-root",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`<section id="wrong"></section>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("mismatched root rejected", r.msg.includes(`expected exactly one <div> root`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "create: html markup insertion rejects malformed markup",
+                fixture: "create/markup-guards",
+                sub: "html-malformed",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        (host.create as any).div(`<div><span></div>`);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("malformed markup rejected", r.msg.includes(`failed to parse markup`));
+                },
+            },
+
   ];
 
 
