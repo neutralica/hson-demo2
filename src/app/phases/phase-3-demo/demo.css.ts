@@ -91,33 +91,20 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   minHeight: "0",
   minWidth: "0",
   paddingLeft: "1rem",
+  maxWidth: "100vw",
 
   pointerEvents: "all",
 };
 
 export const MENU_BOXcss: CssMap = {
-  // gridColumn: "1",
-  // gridRow: "1 / span 2",
-  // marginLeft: "2rem",
-  // alignContent: "left",
   position: "relative",
   lineHeight: "2.5rem",
 
 };
 
-export const TITLE_BOXcss: CssMap = {
-  position: "relative",
-  display: "flex",
-  flexDirection: "row",
-  minWidth: "0",
-  marginTop:"1rem",
-}
-
 export const DEMO_MAIN_LOGOcss: CssMap = {
   display: "flex",
-  alignContent: "baseline",
-  justifyContent: "flex-start",
-  flexDirection: "column",
+  alignContent: "end",
 
 }
 
@@ -157,7 +144,7 @@ export const PANEL_SAFETYcss: CssMap = {
   minHeight: "0",
 };
 
-export const VIEW_SLOTcss: CssMap = {
+export const DEMO_SLOTcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
@@ -188,10 +175,10 @@ export const HSON_GRAFFITIcss: CssMap = {
 export const HSON_SUBcss: CssMap = {
   fontFamily: MENU_FONT,
   fontSize: $txt_.main,
+  position: "relative",
   textWrap: "nowrap",
   color: ACID_WASH_OKLCH.steel,
   marginBottom: "1rem",
-  lineHeight: "1.6",
   userSelect: "none",
 }
 

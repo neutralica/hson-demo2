@@ -1,3 +1,4 @@
+import { hson } from "hson-live";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
@@ -300,7 +301,7 @@ export function livetree_svg_ingermediate(): TestSuite {
                     t.eq("malformed g markup throws", r.threw, true);
                 },
             },
-          
+
             {
                 suite: SUITE,
                 name: "svg: g(string) rejects empty string",
@@ -485,6 +486,178 @@ export function livetree_svg_ingermediate(): TestSuite {
                 assert: async (root, t) => {
                     const r = (root as any).__result;
                     t.ok("whitespace svg string rejected", r.msg.includes(`expected non-empty markup string`));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "append: html append preserves html scope for chaining",
+                fixture: "append/scope",
+                sub: "html-preserves-html",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    const branch = hson.fromTrustedHtml(`<div id="a"></div>`).liveTree.asBranch();
+
+                    const out = host.append(branch);
+                    const child = out.create.section().id.set("b");
+
+                    const el = host.asDomElement();
+
+                    (root as any).__result = {
+                        ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
+                        childTag: child.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("first appended id", r.ids[0], "a");
+                    t.eq("chained create still html", r.childTag?.toLowerCase(), "section");
+                    t.eq("second created id", r.ids[1], "b");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "append: svg append preserves svg scope for chaining",
+                fixture: "append/scope",
+                sub: "svg-preserves-svg",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const field = root.create.svg().id.set("field");
+                    const branch = hson.fromTrustedHtml(`<g id="g1"><circle id="c1"></circle></g>`).liveTree.asBranch();
+
+                    const out = field.append(branch as any);
+                    const child = (out.create as any).g().id.set("g2");
+
+                    const el = field.asDomElement();
+
+                    (root as any).__result = {
+                        ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
+                        childTag: child.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("first appended id", r.ids[0], "g1");
+                    t.eq("chained create still svg", r.childTag?.toLowerCase(), "g");
+                    t.eq("second created id", r.ids[1], "g2");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "append: html target accepts svg root subtree",
+                fixture: "append/scope",
+                sub: "html-accepts-svg-root",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    const svgBranch = hson.fromTrustedHtml(`<svg id="s"><g id="g1"></g></svg>`).liveTree.asBranch();
+
+                    host.append(svgBranch as any);
+
+                    const el = host.asDomElement();
+
+                    (root as any).__result = {
+                        firstTag: el?.children[0]?.tagName,
+                        firstId: el?.children[0]?.getAttribute("id"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("svg root appended to html target", r.firstTag?.toLowerCase(), "svg");
+                    t.eq("svg id preserved", r.firstId, "s");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "append: html target rejects bare svg child subtree",
+                fixture: "append/scope",
+                sub: "html-rejects-bare-svg-child",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    const gBranch = hson.fromTrustedHtml(`<g id="g1"><circle id="c1"></circle></g>`).liveTree.asBranch();
+
+                    let msg = "";
+
+                    try {
+                        host.append(gBranch as any);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("html target rejects bare svg child", r.msg.length > 0);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "append: svg target rejects html subtree",
+                fixture: "append/scope",
+                sub: "svg-rejects-html",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const field = root.create.svg().id.set("field");
+                    const divBranch = hson.fromTrustedHtml(`<div id="x"></div>`).liveTree.asBranch();
+
+                    let msg = "";
+
+                    try {
+                        field.append(divBranch as any);
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("svg target rejects html subtree", r.msg.length > 0);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "append: index insertion still works",
+                fixture: "append/scope",
+                sub: "append-index",
+                html: `<main id="root"><div id="a"></div><div id="b"></div></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    const branch = hson.fromTrustedHtml(`<section id="mid"></section>`).liveTree.asBranch();
+
+                    host.append(branch, 1);
+
+                    const el = host.asDomElement();
+
+                    (root as any).__result = {
+                        ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
+                        tags: Array.from(el?.children ?? []).map((k) => k.tagName.toLowerCase()),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("index 0 unchanged", r.ids[0], "a");
+                    t.eq("inserted at index 1", r.ids[1], "mid");
+                    t.eq("old second shifted", r.ids[2], "b");
+                    t.eq("inserted tag preserved", r.tags[1], "section");
                 },
             },
 

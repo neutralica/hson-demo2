@@ -59,5 +59,5 @@ export function bud_node(parent: LiveTree) {
 
   return { bud: newBud } as const;
 }
-export const make_div = (parent: LiveTree): LiveTree => parent.create.div();
-export const make_section = (parent: LiveTree): LiveTree => parent.create.section();
+// export const mk_div = (parent: LiveTree): LiveTree => parent.create.div();
+// export const mk_section = (parent: LiveTree): LiveTree => parent.create.section();

@@ -1,7 +1,7 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_WRAPcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss } from "./inspector.css";
+import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
@@ -12,7 +12,7 @@ import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
-import { ROW_SUITE_FAILcss,ROW_CASE_FAILcss } from "./inspector.css";
+import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $cols_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 
 
@@ -97,18 +97,9 @@ export function create_inspector(
     overflowX: "auto",
   });
 
-  // dynamic 1-col / 2-col
-  const cols = mk_div_cls(body, "insp-cols").css.setMany({
-    ...PANEL_SAFETYcss,
-    display: "grid",
-    // whatever your 1/2 col behavior is, keep it here
-  });
-  const main = mk_div_cls(cols, "insp-main").css.setMany({
-    ...PANEL_SAFETYcss,
-  });
 
   // main table host
-  const tableHost = mk_div_cls(main, "insp-table-host").css.setMany({
+  const tableHost = mk_div_cls(body, "insp-table-host").css.setMany({
     ...PANEL_SAFETYcss
   });
 
@@ -160,13 +151,13 @@ export function create_inspector(
 
     const suites = tlog.listSuites();
 
-    const wrap = tableHost.create.div().classlist.set("insp-scroll main-scroll");
-    wrap.css.setMany(LOG_WRAPcss);
-    mainScrollEl = wrap.asDomElement() as HTMLElement;
+    const scroll = tableHost.create.div().classlist.set("insp-scroll main-scroll");
+    scroll.css.setMany(LOG_SCROLLcss);
+    mainScrollEl = scroll.asDomElement() as HTMLElement;
 
 
-    const { thead, tbody } = mk_table(wrap, "insp-main");
-
+    const { table, thead, tbody } = mk_table(scroll, "insp-main");
+    table.css.set.overflowY("scroll");
     // header columns are stable
     const hr = mk_tr(thead, "insp-head-row");
     mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
@@ -208,8 +199,8 @@ export function create_inspector(
       if (!cases.length) continue;
 
       // group cases
-      
-            // CHANGED: render every case directly; no grouping during debug
+
+      // CHANGED: render every case directly; no grouping during debug
       const expandedCases = getExpandedCases(suiteName);
 
       for (const c of cases) {
@@ -355,7 +346,7 @@ export function create_inspector(
           });
 
           queueMicrotask(() => {
-            wrap.asDomElement()!.scrollTop = prevScroll;
+            scroll.asDomElement()!.scrollTop = prevScroll;
           });
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -381,7 +372,7 @@ export function create_inspector(
   // baseline
   root.css.setMany(INSPECTOR_ROOTcss);
 
-  main.css.setMany({ display: "grid", gap: "6px" });
+  body.css.setMany({ display: "grid", gap: "6px" });
 
   return Object.freeze({ render, show, hide, clear });
 }

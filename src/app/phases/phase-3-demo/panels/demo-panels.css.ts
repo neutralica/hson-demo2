@@ -6,7 +6,13 @@ import { TEST_ACTION_BTN } from "../demo-test/tp.css";
 import { MENU_FONT } from "../demo.css";
 
 export const UI_ROOTcss: CssMap = {
-  // this is the main content column (right side)
+
+  display: "grid",
+
+  // no dock row anymore
+  gridTemplateRows: "minmax(0, 1fr)",
+  boxSizing: "border-box",
+  overflow: "hidden",
   gridColumn: "2 / 3",
   gridRow: "1 / 2",
 

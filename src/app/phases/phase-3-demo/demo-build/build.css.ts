@@ -15,7 +15,7 @@ export const BUILD_ROOTcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+  gridTemplateColumns: "1fr 1fr",
   gap: $GRID_GAPstr,
 };
 

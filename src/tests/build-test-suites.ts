@@ -153,7 +153,6 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_svg_basic(),
       livetree_svg_ingermediate()
     ])
   }
@@ -166,10 +165,10 @@ export function build_suites_for_mode(
   return _freeze([
     make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
     make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
-    ...all_livetree_suites(),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
-    make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/dev", map),
+    ...all_livetree_suites(),
+    make_transform_test_suite(h, JSON_FIXTURES_DEV, "dev/test", map),
     make_transform_test_suite(h, EXPECT_ERRORS, "transform/failcase", map, "auto", "fail"),
   ]);
 }

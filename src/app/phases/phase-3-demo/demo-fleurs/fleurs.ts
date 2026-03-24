@@ -81,7 +81,7 @@ function renderFlower(host: LiveTree, spec: FlowerSpec): LiveTree {
 <svg xmlns="http://www.w3.org/2000/svg"
      width="100%"
      height="100%"
-     viewbox="0 0 1000 1000"
+     
      preserveAspectRatio="none"
      overflow="visible">
   <g transform="translate(${fmtNum(spec.x, 3)} ${fmtNum(spec.y, 3)}) rotate(${fmtNum(spec.rotation, 3)}) scale(${fmtNum(spec.scale, 4)})"
@@ -92,6 +92,28 @@ function renderFlower(host: LiveTree, spec: FlowerSpec): LiveTree {
     ${stamens}
   </g>
 </svg>`;
+    const svg = host.create.svg();
+    svg.attr.setMany({
+        width: "100%",
+        height: "100%",
+        preserveAspectRatio: "none",
+        overflow: "visible",
+    });
+    const g = svg.create.g();
+    g.attr.setMany({
+        transform: `translate(${fmtNum(spec.x, 3)} ${fmtNum(spec.y, 3)}) 
+        rotate(${fmtNum(spec.rotation, 3)}) 
+        scale(${fmtNum(spec.scale, 4)})`,
+        opacity: "${fmtNum(spec.opacity, 4)}",
+
+    }).text.set(petals);
+    g.create.circle().attr.setMany({
+        cx: "0",
+        cy: "0",
+        r: "${fmtNum(spec.centerRadius, 3)}",
+        fill: "${centerFill}"
+
+    })
 
     const branch = hson.fromTrustedHtml(markup).liveTree.asBranch();
     host.append(branch);

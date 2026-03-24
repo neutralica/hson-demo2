@@ -14,7 +14,7 @@ export const INSPECTOR_ROOTcss = {
   color: ACID_WASH_RGBA.dullAmber,
 }
 
-export const LOG_WRAPcss: Record<string, string> = {
+export const LOG_SCROLLcss: CssMap = {
   overflowX: "auto",
   overflowY: "auto",
   width: "100%",
@@ -24,7 +24,7 @@ export const LOG_WRAPcss: Record<string, string> = {
   minHeight: "0",
 };
 
-export const THcss: Record<string, string> = {
+export const THcss: CssMap = {
   padding: "6px 8px",
   textAlign: "left",
   fontWeight: "300",
@@ -33,13 +33,13 @@ export const THcss: Record<string, string> = {
   opacity: "0.85",
 };
 
-export const TDcss: Record<string, string> = {
+export const TDcss: CssMap = {
   padding: "6px 8px",
   verticalAlign: "top",
   borderBottom: "1px solid rgba(255,255,255,0.08)",
   whiteSpace: "nowrap",
 };
-export const TD_PREVIEW_ROWcss: Record<string, string> = {
+export const TD_PREVIEW_ROWcss: CssMap = {
   padding: "8px 12px",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
@@ -47,37 +47,39 @@ export const TD_PREVIEW_ROWcss: Record<string, string> = {
   background: $cols_.bckdeep,
 };
 
-export const CLICKABLEcss: Record<string, string> = { cursor: "pointer", userSelect: "none" };
+export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 
-export const ROW_SUITEcss: Record<string, string> = {
+export const ROW_SUITEcss: CssMap = {
   background: $cols_.bckdeep,
   cursor: "pointer",
 };
-export const ROW_GROUPcss: Record<string, string> = {
+export const ROW_GROUPcss: CssMap = {
   background: $cols_.bckdeep,
   cursor: "pointer",
 };
 
-export const tdNameCssBase: Record<string, string> = {
+export const tdNameCssBase: CssMap = {
   width: NAME_WIDTH,
   maxWidth: NAME_WIDTH,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
+  userSelect: "any",
 };
 
-export const tdNameChildCss: Record<string, string> = {
+export const tdNameChildCss: CssMap = {
   ...tdNameCssBase,
   paddingLeft: "18px",
   opacity: "0.95",
 };
+
 export const ROW_SUITE_FAILcss: CssMap = {
   background: "rgba(190, 20, 20, 0.3)",
   color: ACID_WASH_OKLCH.ash,
 };
 
 
-export const ROW_CASEcss: Record<string, string> = {
+export const ROW_CASEcss: CssMap = {
   background: "transparent",
   color: $grn_.faded,
 };
