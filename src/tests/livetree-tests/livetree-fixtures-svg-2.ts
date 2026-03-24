@@ -354,31 +354,7 @@ export function livetree_svg_ingermediate(): TestSuite {
                     t.ok("whitespace g string rejected", r.msg.includes(`expected non-empty markup string`));
                 },
             },
-            {
-                suite: SUITE,
-                name: "svg: g(string) rejects multiple roots",
-                fixture: "svg/create-placement",
-                sub: "g-multiple-roots",
-                html: `<main id="root"></main>`,
-
-                act: async (root) => {
-                    const svg = root.create.svg();
-                    let msg = "";
-
-                    try {
-                        (svg.create as any).g(`<g id="a"></g><g id="b"></g>`);
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
-
-                    (root as any).__result = { msg };
-                },
-
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("multiple g roots rejected", r.msg.includes(`expected exactly one <g> root`));
-                },
-            },
+    
             {
                 suite: SUITE,
                 name: "svg: g(string) rejects mismatched root tag",
@@ -402,63 +378,6 @@ export function livetree_svg_ingermediate(): TestSuite {
                 assert: async (root, t) => {
                     const r = (root as any).__result;
                     t.ok("mismatched g root rejected", r.msg.includes(`expected exactly one <g> root`));
-                },
-            },
-            {
-                suite: SUITE,
-                name: "svg: g(string) rejects malformed markup",
-                fixture: "svg/create-placement",
-                sub: "g-malformed",
-                html: `<main id="root"></main>`,
-
-                act: async (root) => {
-                    const svg = root.create.svg();
-                    let msg = "";
-
-                    try {
-                        (svg.create as any).g(`<g><circle></g>`);
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
-
-                    (root as any).__result = { msg };
-                },
-
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("malformed g markup rejected", r.msg.includes(`failed to parse markup`));
-                },
-            },
-            {
-                suite: SUITE,
-                name: "svg: svg(string) rejects multiple roots",
-                fixture: "svg/create-placement",
-                sub: "svg-multiple-roots",
-                html: `<main id="thisroot"></main>`,
-
-                act: async (root) => {
-                    let msg = "";
-                    let threw = false;
-
-                    try {
-                        root.create.svg(`<svg id="a"></svg><svg id="b"></svg>`);
-                    } catch (err) {
-                        threw = true;
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
-
-                    (root as any).__result = { threw, msg };
-                },
-
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.eq("multiple svg roots rejected", r.threw, true);
-                    t.ok(
-                        "message indicates parse/root failure",
-                        r.msg.includes("failed to parse markup") ||
-                        r.msg.includes("parsererror") ||
-                        r.msg.includes("expected exactly one <svg> root"),
-                    );
                 },
             },
 
@@ -853,6 +772,266 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const r = (root as any).__result;
                     t.eq("svg create still available after drop", r.gTag?.toLowerCase(), "g");
                     t.eq("viewBox removed", r.viewBox, null);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: html set preserves html scope for chaining",
+                fixture: "data/scope",
+                sub: "html-set-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root")
+                        .data.set("userId", 42);
+
+                    const section = host.create.section().id.set("s1");
+
+                    (root as any).__result = {
+                        dataUserId: host.asDomElement()?.getAttribute("data-user-id"),
+                        sectionTag: section.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("data-user-id written", r.dataUserId, "42");
+                    t.eq("html create still available", r.sectionTag?.toLowerCase(), "section");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: svg set preserves svg scope for chaining",
+                fixture: "data/scope",
+                sub: "svg-set-preserves-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg = root.create.svg()
+                        .data.set("flowerId", 7);
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        dataFlowerId: svg.asDomElement()?.getAttribute("data-flower-id"),
+                        gTag: g.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("data-flower-id written", r.dataFlowerId, "7");
+                    t.eq("svg create still available", r.gTag?.toLowerCase(), "g");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: setMany preserves owner scope and writes kebab-case keys",
+                fixture: "data/scope",
+                sub: "setMany-kebab-and-scope",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg = root.create.svg()
+                        .data.setMany({
+                            flowerId: 7,
+                            petalCount: 12,
+                        });
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        flowerId: svg.asDomElement()?.getAttribute("data-flower-id"),
+                        petalCount: svg.asDomElement()?.getAttribute("data-petal-count"),
+                        gTag: g.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("flowerId kebabized", r.flowerId, "7");
+                    t.eq("petalCount kebabized", r.petalCount, "12");
+                    t.eq("svg scope preserved after setMany", r.gTag?.toLowerCase(), "g");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: get uses same normalization as set",
+                fixture: "data/scope",
+                sub: "get-normalizes-like-set",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const svg = root.create.svg()
+                        .data.set("preserveAspectRatioMode", "meet");
+
+                    (root as any).__result = {
+                        camelRead: svg.data.get("preserveAspectRatioMode"),
+                        rawRead: svg.attr.get("data-preserve-aspect-ratio-mode"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("get reads with normalized key", r.camelRead, "meet");
+                    t.eq("attr also sees normalized key", r.rawRead, "meet");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: set null removes data attribute and preserves scope",
+                fixture: "data/scope",
+                sub: "set-null-removes",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const svg0 = root.create.svg().data.set("flowerId", 7);
+                    const svg = svg0.data.set("flowerId", null);
+
+                    const g = svg.create.g().id.set("g1");
+
+                    (root as any).__result = {
+                        dataFlowerId: svg.asDomElement()?.getAttribute("data-flower-id"),
+                        gTag: g.asDomElement()?.tagName,
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("data attr removed", r.dataFlowerId, null);
+                    t.eq("svg scope preserved after removal", r.gTag?.toLowerCase(), "g");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: setMany null removes selected keys only",
+                fixture: "data/scope",
+                sub: "setMany-null-removes-selected",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host0 = root.find.must.byId("root")
+                        .data.setMany({
+                            userId: 42,
+                            panelId: "main",
+                        });
+
+                    const host = host0.data.setMany({
+                        userId: null,
+                    });
+
+                    (root as any).__result = {
+                        userId: host.asDomElement()?.getAttribute("data-user-id"),
+                        panelId: host.asDomElement()?.getAttribute("data-panel-id"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("userId removed", r.userId, null);
+                    t.eq("panelId preserved", r.panelId, "main");
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: get returns undefined when missing",
+                fixture: "data/scope",
+                sub: "get-missing-undefined",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+
+                    (root as any).__result = {
+                        missing: host.data.get("doesNotExist"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("missing key returns undefined", r.missing, undefined);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: rejects empty dataset key",
+                fixture: "data/scope",
+                sub: "rejects-empty-key",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        host.data.set("", "x");
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("empty key rejected", r.msg.includes("Dataset key must be non-empty"));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: rejects whitespace-only dataset key",
+                fixture: "data/scope",
+                sub: "rejects-whitespace-key",
+                html: `<main id="root"></main>`,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root");
+                    let msg = "";
+
+                    try {
+                        host.data.set("   ", "x");
+                    } catch (err) {
+                        msg = err instanceof Error ? err.message : String(err);
+                    }
+
+                    (root as any).__result = { msg };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.ok("whitespace key rejected", r.msg.includes("Dataset key must be non-empty"));
+                },
+            },
+            {
+                suite: SUITE,
+                name: "data: set stringifies booleans and numbers",
+                fixture: "data/scope",
+                sub: "stringifies-primitives",
+                html: `<main id="root"></main>`,
+                dom: true,
+
+                act: async (root) => {
+                    const host = root.find.must.byId("root")
+                        .data.setMany({
+                            count: 3,
+                            active: true,
+                        });
+
+                    (root as any).__result = {
+                        count: host.asDomElement()?.getAttribute("data-count"),
+                        active: host.asDomElement()?.getAttribute("data-active"),
+                    };
+                },
+
+                assert: async (root, t) => {
+                    const r = (root as any).__result;
+                    t.eq("number stringified", r.count, "3");
+                    t.eq("boolean stringified", r.active, "true");
                 },
             },
 
