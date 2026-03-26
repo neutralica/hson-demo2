@@ -1,4 +1,4 @@
-import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
+
 import { suite_find, suite_attrs_and_flags, suite_append_and_create, mixedRegression, extraCases, suite_css_and_content, suite_recent_regressions } from "./livetree-fixtures-1";
 import { legacy_suites_3 } from "./livetree-fixtures-2";
 import { suite_schedules_events, css_manager_lifecycle, node_lifecycle } from "./livetree-fixtures-3";
@@ -6,7 +6,7 @@ import { document_question, error_handling, listeners_teardown, root_multi_isola
 import { livetree_completionist, livetree_sync_perf, roundtrip_projection_stability } from "./livetree-fixtures-5";
 import { livetree_svg_basic } from "./livetree-fixtures-svg-1";
 import { livetree_svg_ingermediate } from "./livetree-fixtures-svg-2";
-import { make_livetree_suite } from "./livetree-testkit";
+
 
 
 
@@ -15,7 +15,10 @@ import { make_livetree_suite } from "./livetree-testkit";
  **  TEMPLATE FOR NEW FIXTURE OBJECTS - DO NOT EDIT  **
  ******************************************************/
 
- 
+ import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
+import { make_livetree_suite } from "./livetree-testkit";
+import { livetree_gnarly_svg } from "./livetree-fixtures-svg-3";
+
 export function TEMPLATE_SUITE_OBJECT_RETURN(): TestSuite {
   const SUITE = "[CHANGE THIS FIELD AND CHANGE FUNCTION NAME]";
   const cases: readonly LiveTreeCaseSpec[] =
@@ -49,6 +52,8 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_sync_perf(),
     livetree_completionist(),
     livetree_svg_basic(),
-livetree_svg_ingermediate()
+    livetree_svg_ingermediate(),
+    livetree_gnarly_svg(),
+
   ] as const;
 }

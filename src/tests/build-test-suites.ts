@@ -3,7 +3,7 @@ import type { BuildSuitesOpts, CaseKey, FixtureBundle, HsonTestApi, TestCase, Te
 import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
-import { EXPECT_ERRORS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
+import { FAIL_IS_PASS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
 import type { Fixture } from "./tests.types";
 import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
@@ -11,6 +11,7 @@ import { HSON_FIXTURES, HTML_FIXTURES_NEW } from "./transform-tests/fixtures/fix
 import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
 import { livetree_svg_basic } from "./livetree-tests/livetree-fixtures-svg-1";
 import { livetree_svg_ingermediate } from "./livetree-tests/livetree-fixtures-svg-2";
+import { livetree_gnarly_svg } from "./livetree-tests/livetree-fixtures-svg-3";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -148,12 +149,12 @@ export function build_suites_for_mode(
     return _freeze([
       make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
       make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
-      make_transform_test_suite(h, EXPECT_ERRORS, "transform/fail_fixtures", map, "auto", "fail"),
+      make_transform_test_suite(h, FAIL_IS_PASS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
     ]);
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_svg_ingermediate()
+      livetree_gnarly_svg()
     ])
   }
   if (mode === "livetree") {
@@ -169,6 +170,6 @@ export function build_suites_for_mode(
     make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     ...all_livetree_suites(),
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "dev/test", map),
-    make_transform_test_suite(h, EXPECT_ERRORS, "transform/failcase", map, "auto", "fail"),
+    make_transform_test_suite(h, FAIL_IS_PASS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
   ]);
 }

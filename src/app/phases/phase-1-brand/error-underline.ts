@@ -101,7 +101,13 @@ export function attach_error_underline(host: LiveTree, preset = ERROR_UNDERLINE_
   // ensure host is positioning context
   // host.css.set.position("relative");
 
-  const el = host.asDomElement() as HTMLElement;
+  console.log("underline tree", host);
+  console.log("underline node tag", host?.node?._tag);
+  const el = host.dom.must.el();
+console.log("underline el", el);
+console.log("underline in dom?", !!el?.isConnected);
+const rect = el?.getBoundingClientRect();
+console.log("underline rect", rect);
   const w = Math.ceil(el.getBoundingClientRect().width);
   const svgHTML = makeSvgErrUnderline({
     width: w,

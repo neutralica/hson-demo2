@@ -3,7 +3,7 @@ import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_svg_basic(): TestSuite {
-  const SUITE = "livetree/svg-create-basic";
+  const SUITE = "livetree/svg/basic";
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
@@ -720,7 +720,7 @@ export function livetree_svg_basic(): TestSuite {
 
         svg.create.g().id.set("tail");
 
-        const g = svg.create.prepend().g(0).id.set("first"); // removed string in g
+        const g = svg.create.prepend().g().id.set("first"); // removed string in g
         // really though the index should go in prepend, for everything, and then 'g' should accept a svg string
         const circle = g.create.circle().id.set("c1");
         /* 

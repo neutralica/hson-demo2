@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss,  DEMO_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
+import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
@@ -47,7 +47,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   const screen = mk_div_id(demo, $DS.screen)
     .classlist.add("demo screen")
-    .css.setMany({...DEMO_SCREENcss, ...DEMO_SCREEN_FXcss});
+    .css.setMany({ ...DEMO_SCREENcss, ...DEMO_SCREEN_FXcss });
 
   // const screenFx = mk_div_id(screen, $DS.screenFx)
   //   .classlist.add("demo screen fx")
@@ -61,19 +61,15 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   // screen.css.setMany(SIZE_WARNINGcss)
   const copyright = screen.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
-  const fleurSvg = fleurOverlay.create.svg()
+  const fleurField = fleurOverlay.create.svg()
     .id.set("fleurs-field")
-    .css.setMany(FLOWER_FIELDcss)
     .attr.setMany({
       xmlns: "http://www.w3.org/2000/svg",
       width: "100%",
       height: "100%",
       preserveAspectRatio: "xMidYMid meet",
-    });
-
-  // create.tags(["g" | "circle" | ...]) currently does not produce rendering
-  // HTML nodes when appended after mount: append SVG-rooted flower branches instead
-  const fleurLayer = fleurSvg;
+    })
+    .css.setMany(FLOWER_FIELDcss)
 
   function syncFleurViewbox(): void {
     const rect = fleurOverlay.dom.rect();
@@ -84,7 +80,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     const w = Math.max(1, rect.width);
     const h = Math.max(1, rect.height);
-    fleurSvg.attr.set("viewbox", `0 0 ${w} ${h}`);
+
+    fleurField.attr.set("viewBox", `0 0 ${w} ${h}`);
   }
   mount_motes(motes);
 
@@ -234,11 +231,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
   menu.buildBtn.listen.stopProp().onClick(() => { toggle_view("build"); });
   menu.fleurBtn.listen.stopProp().onClick(() => {
-    if (get_view() === "fleurs") { fleurLayer.empty() }
+    if (get_view() === "fleurs") { fleurField.empty() }
     toggle_view("fleurs")
   })
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
-  
+
   screen.listen.onClick((ev: MouseEvent) => {
     if (get_view() !== "fleurs") return;
 
@@ -248,7 +245,18 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
 
-    spawn_flower(fleurLayer, x, y);
+    spawn_flower(fleurField, x, y);
+    const flower = spawn_flower(fleurField, x, y);
+
+    const el = flower.dom.el();
+    console.log("flower", el?.tagName, el?.namespaceURI);
+
+    const c1 = el?.firstElementChild;
+    console.log("child 1", c1?.tagName, c1?.namespaceURI);
+
+    const c2 = c1?.firstElementChild;
+    console.log("child 2", c2?.tagName, c2?.namespaceURI);
+
   });
   return relay.ok();
 }

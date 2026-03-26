@@ -10,6 +10,7 @@ import { normalizeHue, pickCenterColor, pickStamenColor } from "./fleurs-cols";
 import { fmtNum, pickFlowerPalette } from "./fleurs-cols";
 import { getStamenDistance, pick_cultivar, sampleCultivarShape } from "./fleurs-cultivars";
 import { formatOklch, jitterOklch } from "./fleurs-cols";
+import type { SvgLiveTree } from "../../../../../../hson-live/dist/types/livetree.types";
 
 function pickPetalColor(
     palette: FlowerPaletteSpec,
@@ -60,67 +61,55 @@ function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
     };
 }
 
-function renderFlower(host: LiveTree, spec: FlowerSpec): LiveTree {
-    // CHANGED: stable rng for flower-local variation
-    const rng = make_rng(spec.seed);
-    const daisySpots = appendDaisySpotsMarkup(spec);
-    // CHANGED: build rings using cultivar-aware helper
-    let petals = "";
+function renderFlower(host: SvgLiveTree, spec: FlowerSpec): SvgLiveTree {
+  const rng = make_rng(spec.seed);
+  const daisySpots = appendDaisySpotsMarkup(spec);
 
-    for (let ringIx = 0; ringIx < spec.ringCount; ringIx += 1) {
-        petals += appendPetalRingMarkup(spec, ringIx);
-    }
+  let petals = "";
+  for (let ringIx = 0; ringIx < spec.ringCount; ringIx += 1) {
+    petals += appendPetalRingMarkup(spec, ringIx);
+  }
 
-    // CHANGED: optional stamens for the cultivars that call for them
-    const stamens = appendStamensMarkup(spec);
+  const stamens = appendStamensMarkup(spec);
+  const centerFill = pickCenterColor(spec.palette, rng);
 
-    const centerFill = pickCenterColor(spec.palette, rng);
-
-    // CHANGED: keep the working per-flower SVG wrapper, but use the real spec
-    const markup = `
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="100%"
-     height="100%"
-     
-     preserveAspectRatio="none"
-     overflow="visible">
-  <g transform="translate(${fmtNum(spec.x, 3)} ${fmtNum(spec.y, 3)}) rotate(${fmtNum(spec.rotation, 3)}) scale(${fmtNum(spec.scale, 4)})"
-     opacity="${fmtNum(spec.opacity, 4)}">
-    ${petals}
-    <circle cx="0" cy="0" r="${fmtNum(spec.centerRadius, 3)}" fill="${centerFill}" />
-    ${daisySpots}
-    ${stamens}
-  </g>
-</svg>`;
-    const svg = host.create.svg();
-    svg.attr.setMany({
-        width: "100%",
-        height: "100%",
-        preserveAspectRatio: "none",
-        overflow: "visible",
+  const g = host.create.g()
+    .attr.setMany({
+      transform: `translate(${fmtNum(spec.x, 3)} ${fmtNum(spec.y, 3)}) rotate(${fmtNum(spec.rotation, 3)}) scale(${fmtNum(spec.scale, 4)})`,
+      opacity: fmtNum(spec.opacity, 4),
     });
-    const g = svg.create.g();
-    g.attr.setMany({
-        transform: `translate(${fmtNum(spec.x, 3)} ${fmtNum(spec.y, 3)}) 
-        rotate(${fmtNum(spec.rotation, 3)}) 
-        scale(${fmtNum(spec.scale, 4)})`,
-        opacity: "${fmtNum(spec.opacity, 4)}",
 
-    }).text.set(petals);
+  if (petals.trim()) {
+    g.create.g(`<g>${petals}</g>`);
+  }
+
+  
+  if (daisySpots.trim()) {
+      g.create.g(`<g>${daisySpots}</g>`);
+    }
+    
+    if (stamens.trim()) {
+        g.create.g(`<g>${stamens}</g>`);
+    }
     g.create.circle().attr.setMany({
-        cx: "0",
-        cy: "0",
-        r: "${fmtNum(spec.centerRadius, 3)}",
-        fill: "${centerFill}"
-
-    })
-
-    const branch = hson.fromTrustedHtml(markup).liveTree.asBranch();
-    host.append(branch);
-    return branch;
+      cx: "0",
+      cy: "0",
+      r: fmtNum(spec.centerRadius, 3),
+      fill: centerFill,
+    });
+console.log(
+  Array.from(g.dom.el()?.children ?? []).map((el, ix) => ({
+    ix,
+    tag: el.tagName,
+    fill: el.getAttribute("fill"),
+    d: el.getAttribute("d"),
+    class: el.getAttribute("class"),
+  }))
+);
+  return g;
 }
 
-export function spawn_flower(layer: LiveTree, x: number, y: number): LiveTree {
+export function spawn_flower(layer: SvgLiveTree, x: number, y: number): SvgLiveTree {
     const seed = Date.now() ^ ((x * 73856093) | 0) ^ ((y * 19349663) | 0);
     const spec = makeFlowerSpec(seed, x, y);
     return renderFlower(layer, spec);

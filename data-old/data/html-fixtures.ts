@@ -467,15 +467,9 @@ export const HTML_FIXTURES_LEGACY = _freeze({
     html_gwern,
   },
   
-  // parses but loses style & noncompliant attrs etc
-  
-  // expect error:
-  
-  // htmlSanitizeFail,
-  
 } satisfies FixtureBundle);
 
-export const EXPECT_ERRORS = {
+export const FAIL_IS_PASS = {
   html_INVALID, // expect errors
   json_INVALID,
   

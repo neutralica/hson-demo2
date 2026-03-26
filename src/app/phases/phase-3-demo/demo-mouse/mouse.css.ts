@@ -105,6 +105,7 @@ export const MOUSE_TRACKERcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "1",
+  background: $cols_.bckgd,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
@@ -141,6 +142,8 @@ export const MOUSE_COORDScss: CssMap = {
   marginLeft: "-1.5rem",
   alignContent: "end",              // CHANGED
   justifyItems: "start",
+  background: $cols_.bckgd,
+  height: "auto",
 } as const;
 
 // grid-cell clamp so long values don't push neighbors

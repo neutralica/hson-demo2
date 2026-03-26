@@ -5,7 +5,7 @@ import { make_livetree_suite } from "./livetree-testkit";
 
 
 export function livetree_svg_ingermediate(): TestSuite {
-    const SUITE = "livetree/svg-intermediate";
+    const SUITE = "livetree/svg/intermediate";
     const cases: readonly LiveTreeCaseSpec[] =
         [
             {
