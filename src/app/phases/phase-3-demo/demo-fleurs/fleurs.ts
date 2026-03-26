@@ -36,7 +36,40 @@ function pickPetalColor(
 
     return jitterOklch(base, rng, { l: 0.015, c: 0.015, h: 8 });
 }
+function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
+    const rng = makeRingRng(spec, ringIx);
 
+    // CHANGED: dense, compact, many petals
+    const count = Math.max(14, spec.petalCount + (ringIx * 2));
+    const step = 360 / count;
+
+    // CHANGED: shrink from ring 0, not ring 1
+    const ringShrink = Math.pow(0.80, ringIx);
+    const widthGrow = Math.pow(1.08, ringIx);
+
+    let baseLength = spec.petalLength * 0.92 * ringShrink;
+    let baseWidth = spec.petalWidth * 0.92 * widthGrow;
+
+    // CHANGED: strong per-ring phase so layers interleave
+    const phase = step * 0.5 * ringIx;
+
+    let out = "";
+
+    for (let i = 0; i < count; i += 1) {
+        const angle = (step * i) + phase;
+
+        let length = baseLength * lerp(0.96, 1.04, rng());
+        let width = baseWidth * lerp(0.96, 1.04, rng());
+
+        const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
+        const opacity = lerp(0.72, 0.90, rng());
+        const outline = makeOutline(width, rng);
+
+        out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
+    }
+
+    return out;
+}
 function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
     const rng = make_rng(seed);
 
@@ -150,6 +183,9 @@ function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
 
         case "pinwheel":
             return renderPinwheelRing(spec, ringIx);
+        
+        case "dandy":
+            return renderDandyRing(spec, ringIx);
 
         default:
             return renderDefaultRing(spec, ringIx);
@@ -348,7 +384,7 @@ function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
     // CHANGED: scissor should be sparse and prominent
-    const count = Math.max(4, Math.floor(spec.petalCount * (ringIx === 0 ? 0.34 : 0.20)));
+    const count = Math.random() * spec.petalCount + 3;
     const step = 360 / count;
     const phase = step * 0.5 * ringIx;
 

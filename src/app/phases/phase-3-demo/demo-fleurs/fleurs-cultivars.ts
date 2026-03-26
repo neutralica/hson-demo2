@@ -1,7 +1,7 @@
 import type { Rng } from "../../../../tests/tests.types";
 import { make_rng } from "../../../utils/rng";
 import { pickOne } from "./fleurs-helpers";
-import { DAISY_SHAPE, SUNBURST_SHAPE, PINWHEEL_SHAPE, SCISSOR_SHAPE, ROSETTE_SHAPE, WILD_SHAPE, DANDY_SHAPE } from "./fleurs.consts";
+import { DAISYshape, SUNBURSTshape, PINWHEELshape, SCISSORshape, ROSETTEshape, WILDshape, DANDYshape } from "./fleurs.consts";
 import type { FlowerCultivar, CultivarShape, FlowerSpec } from "./fleurs.types";
 
 export function pick_cultivar(seed: number): FlowerCultivar {
@@ -24,14 +24,14 @@ export function sampleCultivarShape(
     rng: Rng): CultivarShape {
 
     console.log(cultivar);
-    if (cultivar === "daisy") { return DAISY_SHAPE(rng); }
-    if (cultivar === "sunburst") { return SUNBURST_SHAPE(rng); }
-    if (cultivar === "pinwheel") { return PINWHEEL_SHAPE(rng); }
-    if (cultivar === "scissor") { return SCISSOR_SHAPE(rng); }
-    if (cultivar === "wild") { return WILD_SHAPE(rng); }
-    if (cultivar === "dandy") { return DANDY_SHAPE(rng); }
+    if (cultivar === "daisy") { return DAISYshape(rng); }
+    if (cultivar === "sunburst") { return SUNBURSTshape(rng); }
+    if (cultivar === "pinwheel") { return PINWHEELshape(rng); }
+    if (cultivar === "scissor") { return SCISSORshape(rng); }
+    if (cultivar === "wild") { return WILDshape(rng); }
+    if (cultivar === "dandy") { return DANDYshape(rng); }
 
-    return ROSETTE_SHAPE(rng);
+    return ROSETTEshape(rng);
 }
 
 export function getStamenDistance(spec: FlowerSpec): number {

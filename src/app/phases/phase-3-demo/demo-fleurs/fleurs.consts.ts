@@ -40,7 +40,7 @@ export const OKLCH_FLEURS = {
 
 };
 
-export const DAISY_SHAPE = (rng: Rng) => {
+export const DAISYshape = (rng: Rng) => {
     return {
         petalCount: randInt(rng, 12, 20),
         petalLength: _lerp(26, 44, rng()),
@@ -54,7 +54,7 @@ export const DAISY_SHAPE = (rng: Rng) => {
     }
 }
 
-export const SUNBURST_SHAPE = (rng: Rng): CultivarShape => {
+export const SUNBURSTshape = (rng: Rng): CultivarShape => {
     return {
         petalCount: randInt(rng, 9, 13),
         petalLength: _lerp(28, 42, rng()),
@@ -68,9 +68,9 @@ export const SUNBURST_SHAPE = (rng: Rng): CultivarShape => {
     }
 }
 
-export const SCISSOR_SHAPE = (rng: Rng): CultivarShape => {
+export const SCISSORshape = (rng: Rng): CultivarShape => {
     return {
-        petalCount: randInt(rng, 6, 9),
+        petalCount: randInt(rng, 4, 7),
         petalLength: _lerp(24, 48, rng()),
         petalWidth: _lerp(9, 15, rng()),
         centerRatio: _lerp(0.30, 0.40, rng()),
@@ -82,7 +82,7 @@ export const SCISSOR_SHAPE = (rng: Rng): CultivarShape => {
     }
 }
 
-export const WILD_SHAPE = (rng: Rng): CultivarShape => {
+export const WILDshape = (rng: Rng): CultivarShape => {
     return {
         petalCount: randInt(rng, 6, 10),
         petalLength: _lerp(22, 42, rng()),
@@ -96,7 +96,7 @@ export const WILD_SHAPE = (rng: Rng): CultivarShape => {
     };
 }
 
-export const PINWHEEL_SHAPE = (rng: Rng): CultivarShape => {
+export const PINWHEELshape = (rng: Rng): CultivarShape => {
     return {
         petalCount: randInt(rng, 14, 22),
         petalLength: _lerp(24, 40, rng()),
@@ -110,7 +110,7 @@ export const PINWHEEL_SHAPE = (rng: Rng): CultivarShape => {
     }
 }
 
-export const ROSETTE_SHAPE = (rng: Rng): CultivarShape => {
+export const ROSETTEshape = (rng: Rng): CultivarShape => {
     return {
         petalCount: randInt(rng, 20, 28),
         petalLength: _lerp(26, 38, rng()),
@@ -124,10 +124,10 @@ export const ROSETTE_SHAPE = (rng: Rng): CultivarShape => {
     }
 }
 
-export const DANDY_SHAPE = (rng: Rng): CultivarShape => {
+export const DANDYshape = (rng: Rng): CultivarShape => {
     return {
         petalCount: randInt(rng, 20, 28),
-        petalLength: _lerp(8, 14, rng()),
+        petalLength: _lerp(18, 24, rng()),
         petalWidth: _lerp(10, 16, rng()),
         centerRatio: _lerp(0.18, 0.26, rng()),
         ringCount: randInt(rng, 15, 17),
