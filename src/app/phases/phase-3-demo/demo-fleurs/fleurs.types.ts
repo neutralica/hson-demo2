@@ -5,7 +5,8 @@ export type FlowerCultivar =
   | "pinwheel"
   | "scissor"
   | "rosette"
-  | "wild";
+  | "wild"
+  |"dandy";
 
 export type FlowerSpec = {
   seed: number;
@@ -17,18 +18,21 @@ export type FlowerSpec = {
   cultivar: FlowerCultivar;
 
   petalCount: number;
+  
+  ringCount: number;
   petalLength: number;
   petalWidth: number;
   centerRadius: number;
-  opacity: number;
-
-  palette: FlowerPaletteSpec;
-
-  // optional extras
-  ringCount: number;
   innerScale: number;
+  
+  opacity: number;
+  palette: FlowerPaletteSpec;
+  
   stamenCount: number;
   stamenRadius: number;
+  
+  randomColor?: boolean;
+
   alternateGeometry: boolean;
 };
 

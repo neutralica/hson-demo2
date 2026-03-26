@@ -56,16 +56,16 @@ export const DAISY_SHAPE = (rng: Rng) => {
 
 export const SUNBURST_SHAPE = (rng: Rng): CultivarShape => {
     return {
-    petalCount: randInt(rng, 8, 12),
-    petalLength: _lerp(24, 40, rng()),
-    petalWidth: _lerp(7, 12, rng()),
-    centerRatio: _lerp(0.18, 0.26, rng()),
-    ringCount: 1,
-    innerScale: 0.68,
-    stamenCount: 0,
-    stamenRadius: 0,
-    alternateGeometry: false,
-}
+        petalCount: randInt(rng, 9, 13),
+        petalLength: _lerp(28, 42, rng()),
+        petalWidth: _lerp(6, 10, rng()),
+        centerRatio: _lerp(0.22, 0.30, rng()),
+        ringCount: 1,
+        innerScale: 0.68,
+        stamenCount: 0,
+        stamenRadius: 0,
+        alternateGeometry: false,
+    }
 }
 
 export const SCISSOR_SHAPE = (rng: Rng): CultivarShape => {
@@ -98,12 +98,12 @@ export const WILD_SHAPE = (rng: Rng): CultivarShape => {
 
 export const PINWHEEL_SHAPE = (rng: Rng): CultivarShape => {
     return {
-        petalCount: randInt(rng, 15, 28),
-        petalLength: _lerp(18, 42, rng()),
-        petalWidth: _lerp(7, 13, rng()),
-        centerRatio: _lerp(0.18, 0.36, rng()),
-        ringCount: 12,
-        innerScale: 0.68,
+        petalCount: randInt(rng, 14, 22),
+        petalLength: _lerp(24, 40, rng()),
+        petalWidth: _lerp(8, 14, rng()),
+        centerRatio: _lerp(0.30, 0.42, rng()),
+        ringCount: randInt(rng, 8, 11),
+        innerScale: _lerp(0.82, 0.90, rng()),
         stamenCount: 0,
         stamenRadius: 0,
         alternateGeometry: false,
@@ -112,17 +112,32 @@ export const PINWHEEL_SHAPE = (rng: Rng): CultivarShape => {
 
 export const ROSETTE_SHAPE = (rng: Rng): CultivarShape => {
     return {
-        petalCount: randInt(rng, 14, 22),
-        petalLength: _lerp(30, 34, rng()),
-        petalWidth: _lerp(7, 12, rng()),
-        centerRatio: _lerp(0.2, 0.4, rng()),
-        ringCount: randInt(rng, 3, 5),
-        innerScale: _lerp(0.72, 0.94, rng()),
+        petalCount: randInt(rng, 20, 28),
+        petalLength: _lerp(26, 38, rng()),
+        petalWidth: _lerp(25, 20, rng()),
+        centerRatio: _lerp(0.38, 0.44, rng()),
+        ringCount: randInt(rng, 5, 7),
+        innerScale: _lerp(0.82, 0.88, rng()),
         stamenCount: 0,
         stamenRadius: 0,
         alternateGeometry: false,
     }
 }
+
+export const DANDY_SHAPE = (rng: Rng): CultivarShape => {
+    return {
+        petalCount: randInt(rng, 20, 28),
+        petalLength: _lerp(8, 14, rng()),
+        petalWidth: _lerp(10, 16, rng()),
+        centerRatio: _lerp(0.18, 0.26, rng()),
+        ringCount: randInt(rng, 15, 17),
+        innerScale: _lerp(0.82, 0.88, rng()),
+        stamenCount: 0,
+        stamenRadius: 0,
+        alternateGeometry: false,
+    }
+}
+
 function randInt(rng: Rng, min: number, max: number): number {
     return Math.floor(_lerp(min, max + 1, rng()));
 } export const hueBands: readonly HueBand[] = [

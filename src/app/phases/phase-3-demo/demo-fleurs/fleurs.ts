@@ -16,16 +16,27 @@ function pickPetalColor(
     palette: FlowerPaletteSpec,
     petalIx: number,
     rng: Rng,
+    randomize: boolean = false,
 ): string {
-    const base =
+    let base =
         palette.useAlternatingPetals &&
-            palette.secondaryPetal !== null &&
-            petalIx % 2 === 1
+        palette.secondaryPetal !== null &&
+        petalIx % 2 === 1
             ? palette.secondaryPetal
             : palette.primaryPetal;
+    if (
+        randomize &&
+        palette.secondaryPetal !== null &&
+        rng() < 0.78
+    ) {
+        base = rng() < 0.5
+            ? palette.primaryPetal
+            : palette.secondaryPetal;
+    }
 
     return jitterOklch(base, rng, { l: 0.015, c: 0.015, h: 8 });
 }
+
 function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
     const rng = make_rng(seed);
 
@@ -307,24 +318,24 @@ function renderRosetteRing(spec: FlowerSpec, ringIx: number): string {
     const step = 360 / count;
 
     // CHANGED: shrink from ring 0, not ring 1
-    const ringShrink = Math.pow(0.80, ringIx);
-    const widthGrow = Math.pow(1.08, ringIx);
+    const ringShrink = Math.pow(0.75, ringIx);
+    const widthShrink = Math.pow(0.96, ringIx);
 
-    let baseLength = spec.petalLength * 0.92 * ringShrink;
-    let baseWidth = spec.petalWidth * 0.92 * widthGrow;
+    let baseLength = spec.petalLength * 0.78 * ringShrink;
+    let baseWidth = spec.petalWidth * 0.72 * widthShrink;
 
     // CHANGED: strong per-ring phase so layers interleave
-    const phase = step * 0.5 * ringIx;
+    const phase = step * 0.14 * ringIx;
 
     let out = "";
 
     for (let i = 0; i < count; i += 1) {
-        const angle = (step * i) + phase;
+        const angle = (step * i) + phase + lerp(-3.5, 3.5, rng());
 
-        let length = baseLength * lerp(0.96, 1.04, rng());
+        let length = baseLength * lerp(0.98, 1.04, rng());
         let width = baseWidth * lerp(0.96, 1.04, rng());
 
-        const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
+        const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng, true);
         const opacity = lerp(0.72, 0.90, rng());
         const outline = makeOutline(width, rng);
 

@@ -1,7 +1,7 @@
 import type { Rng } from "../../../../tests/tests.types";
 import { make_rng } from "../../../utils/rng";
 import { pickOne } from "./fleurs-helpers";
-import { DAISY_SHAPE, SUNBURST_SHAPE, PINWHEEL_SHAPE, SCISSOR_SHAPE, ROSETTE_SHAPE, WILD_SHAPE } from "./fleurs.consts";
+import { DAISY_SHAPE, SUNBURST_SHAPE, PINWHEEL_SHAPE, SCISSOR_SHAPE, ROSETTE_SHAPE, WILD_SHAPE, DANDY_SHAPE } from "./fleurs.consts";
 import type { FlowerCultivar, CultivarShape, FlowerSpec } from "./fleurs.types";
 
 export function pick_cultivar(seed: number): FlowerCultivar {
@@ -14,9 +14,10 @@ export function pick_cultivar(seed: number): FlowerCultivar {
         "scissor",
         "rosette",
         "wild",
+        "dandy"
     ];
 
-    return pickOne(cultivars, rng);
+    return pickOne( cultivars, rng);
 }
 export function sampleCultivarShape(
     cultivar: FlowerCultivar,
@@ -28,6 +29,7 @@ export function sampleCultivarShape(
     if (cultivar === "pinwheel") { return PINWHEEL_SHAPE(rng); }
     if (cultivar === "scissor") { return SCISSOR_SHAPE(rng); }
     if (cultivar === "wild") { return WILD_SHAPE(rng); }
+    if (cultivar === "dandy") { return DANDY_SHAPE(rng); }
 
     return ROSETTE_SHAPE(rng);
 }
