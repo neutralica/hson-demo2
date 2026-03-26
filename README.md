@@ -71,7 +71,6 @@ Demonstrates
 - round-trip stability across formats  
 - realtime updating as input changes  
 
-This panel also hints at the possibilities for interactive tooling built on top of the system.
 
 
 ---

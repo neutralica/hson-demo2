@@ -82,6 +82,7 @@ export const ABOUT_P_TEXTcss: CssMap = {
   color: ACID_WASH_OKLCH.frost,
   fontFamily: "Gill Sans",
   fontWeight: "200",
+  fontsize: $txt_.main,
 }
 
 export const ABOUT_CSS: CssMap = {

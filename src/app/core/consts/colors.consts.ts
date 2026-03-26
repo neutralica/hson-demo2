@@ -315,10 +315,10 @@ export const $cols_ = {
 
 
 export const LETTER_COLORoklch = {
-  h: OKLCH_FLEURS.cyanDust,
-  s: OKLCH_FLEURS.pollen,
-  o: OKLCH_FLEURS.bruisedPlum,
-  n:  OKLCH_FLEURS.seaGlass,
+  h: $blu_.faded,
+  s: $ylw_.faded,
+  o: $pnk_.faded,
+  n:  $grn_.faded,
   // h: $HSON_COLORS.muted.blue,
   // s: $HSON_COLORS.muted.yellow,
   // o: $HSON_COLORS.muted.pink,

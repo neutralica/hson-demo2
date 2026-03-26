@@ -245,17 +245,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
 
-    spawn_flower(fleurField, x, y);
     const flower = spawn_flower(fleurField, x, y);
 
     const el = flower.dom.el();
-    console.log("flower", el?.tagName, el?.namespaceURI);
 
     const c1 = el?.firstElementChild;
-    console.log("child 1", c1?.tagName, c1?.namespaceURI);
 
     const c2 = c1?.firstElementChild;
-    console.log("child 2", c2?.tagName, c2?.namespaceURI);
 
   });
   return relay.ok();
