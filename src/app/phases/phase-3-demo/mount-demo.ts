@@ -4,7 +4,7 @@ import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr } from "./demo.consts";
+import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { PANELcss, UI_ROOTcss } from "./panels/demo-panels.css";
 import { mount_test_panels } from "./demo-test/tp-factory";
@@ -158,7 +158,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const bp = relay_data(mount_build_panels(buildHost));
 
   syncFleurViewbox();
-
+  function isMobileDemoWidth(): boolean {
+    const rect = stage.dom.rect();
+    if (!rect) return false;
+    return rect.width <= MIN_DESKTOP_WIDTH;
+  }
   const applyView = (): void => {
     const view = get_view();
     const widgets = get_widgets() ?? [];
@@ -191,6 +195,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   applyView();
   // wait until layout exists before syncing SVG coordinate space
   await after_paint();
+  if (isMobileDemoWidth()) {
+    set_view("fleurs");
+  }
   syncFleurViewbox();
 
   function apply_menu_active(menu: any, view: DemoView): void {
@@ -245,13 +252,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
 
-    const flower = spawn_flower(fleurField, x, y);
+    spawn_flower(fleurField, x, y);
 
-    const el = flower.dom.el();
+    // const el = flower.dom.el();
 
-    const c1 = el?.firstElementChild;
+    // const c1 = el?.firstElementChild;
 
-    const c2 = c1?.firstElementChild;
+    // const c2 = c1?.firstElementChild;
 
   });
   return relay.ok();

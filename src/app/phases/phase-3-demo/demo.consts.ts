@@ -1,6 +1,6 @@
 // demo.consts.ts
 
-
+export const MIN_DESKTOP_WIDTH =1100
 /* GOOD SEEDS: 1129, 3577 */
 export const PAL_SEED = "3577";
 export const PAL_CONFIG = { volatility: 1, grayWarmth: 0.35 };

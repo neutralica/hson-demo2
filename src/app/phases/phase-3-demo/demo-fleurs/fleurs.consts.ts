@@ -73,7 +73,7 @@ export const SCISSORshape = (rng: Rng): CultivarShape => {
         petalCount: randInt(rng, 4, 7),
         petalLength: _lerp(24, 48, rng()),
         petalWidth: _lerp(9, 15, rng()),
-        centerRatio: _lerp(0.30, 0.40, rng()),
+        centerRatio: _lerp(0.15, 0.25, rng()),
         ringCount: 1,
         innerScale: 0.62,
         stamenCount: randInt(rng, 8, 12),

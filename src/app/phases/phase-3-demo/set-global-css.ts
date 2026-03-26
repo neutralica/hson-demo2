@@ -5,6 +5,7 @@ import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../core/cons
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 import { MOBILE_DOCcss, MOBILE_TOCcss, DISP_SIZE_ALERTcss } from "./global.css";
+import { MIN_DESKTOP_WIDTH } from "./demo.consts";
 
 export const set_global_css = (): void => {
   const gcss = CssManager.globals.invoke();
@@ -73,7 +74,7 @@ export const set_global_css = (): void => {
 
   /* mobile styling */
   const mobile = gcss.media({
-    maxWidth: 1100,
+    maxWidth: MIN_DESKTOP_WIDTH,
     // hover: "none",
     // pointer: "coarse"
   }  )
