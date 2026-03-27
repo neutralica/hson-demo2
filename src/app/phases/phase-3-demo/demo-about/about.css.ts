@@ -8,12 +8,23 @@ import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 // ADDED: list cell styling (prevents baseline + indent issues)
 export const ABOUT_LIST_ROWcss: CssMap = {
   display: "grid",
-  gridTemplateColumns: "3ch 1fr", //  stable marker column
-  columnGap: "10px",
-  alignItems: "start",            //  fixes number baseline wobble
+  gridTemplateColumns: "max-content 1fr",
+  columnGap: "1rem",
+  alignItems: "start",
   minWidth: "0",
   maxWidth: "70ch",
 };
+
+export const ABOUT_LIST_MARKERcss: CssMap = {
+  color: OKLCH_FLEURS.brass,
+  lineHeight: "1",
+  textAlign: "left",
+  userSelect: "none",
+  whiteSpace: "pre",
+  // fontSize: "0.5rem",
+  paddingTop: "0.45em",
+};
+
 export const ABOUT_DOCcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
@@ -26,24 +37,13 @@ export const ABOUT_DOCcss: CssMap = {
   border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
 };
 
-export const ABOUT_LIST_MARKERcss: CssMap = {
-  opacity: "0.85",
-  color: $blu_.candy,               //  marker color only
-  lineHeight: "1.55",
-  textAlign: "right",
-  userSelect: "none",
-  whiteSpace: "pre",
-  fontSize: "0.5rem",
-  alignSelf: "center",
-};
-
 export const LIST_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",
-  lineHeight: "1.55",
   fontWeight: "300",
   fontFamily: "Trebuchet MS", // DO NOT CHANGE - should NOT be Gill Sans
   color: ACID_WASH_OKLCH.lilac,
   minWidth: "0",
+  lineHeight: "1.75",
 };
 
 export const HRcss: CssMap = {
@@ -90,11 +90,10 @@ export const ABOUT_CSS: CssMap = {
   padding: "10px 12px",
   background: $cols_.bckdeep,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  // marginBottom: "12px",
   fontweight: 300,
   fontFamily: MENU_FONT,
-  // fontSize: $txt_.sub,
   lineHeight: "1.75rem",
+  fontSize: $txt_.main,
 }
 
 // inline code wrapper
@@ -160,7 +159,7 @@ export const ANTI_LIST_TEXTcss: CssMap = {
 
 export const WARNINGcss: CssMap = {
   color: "red",
-  fontSize: "22px",
+  fontSize: $txt_.subhead,
   textDecoration: "underline",
   fontWeight: "700",
 }
@@ -173,6 +172,7 @@ export const ABOUT_ROOTcss: CssMap = {
   minHeight: "0",
   display: "grid",
   boxSizing: "border-box",
+  fontSize: $txt_.main,
 };
 
 export const ABOUT_BODY_ROWcss: CssMap = {
@@ -215,7 +215,7 @@ export const DATA_TOC_OPENcss = {
 
 export const ABOUT_TOC_TITLEcss: CssMap = {
   fontFamily: MENU_FONT,
-  fontSize: $txt_.main,
+  fontSize: $txt_.subhead,
   letterSpacing: "0.12em",
   fontWeight: "700",
   color: OKLCH_FLEURS.navyCore,
@@ -245,8 +245,10 @@ export const MD_CODE_PREcss: CssMap = {
   background: $cols_.bckdeep,
   outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
   borderRadius: "9px",
-  padding: "10px",
   overflowWrap: "anywhere",
+  fontSize: $txt_.main,
+  lineHeight: "1.85",
+padding: "1rem",
   // whiteSpace: "normal",
 };
 
@@ -259,7 +261,7 @@ export const ABOUT_HEADERcss = (level: number) => {
     fontFamily: MENU_FONT,
     letterSpacing: "0.06em",
     textTransform: level === 1 ? "uppercase" : "none",
-    fontSize: level === 1 ? "28px" : level === 2 ? "23px" : level === 3 ? "19px" : "16px",
+    fontSize: level === 1 ? $txt_.wordMobile : level === 2 ? $txt_.heading : level === 3 ? $txt_.subhead : $txt_.main,
     fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
     color: ACID_WASH_RGBA.neonGhost,
   }

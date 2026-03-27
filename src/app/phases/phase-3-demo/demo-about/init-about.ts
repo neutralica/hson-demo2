@@ -141,7 +141,7 @@ export function render_inline_code(row: LiveTree, code: string): void {
       continue;
     }
 
-    // ---- dot + equals (only when not in strings is usually nicer) ----
+    // ---- dot + equals (only when not in strings) ----
     if (!inDq && ch === ".") {
       emit(DOTcss, ".");
       continue;
@@ -205,9 +205,9 @@ function parse_list_item(line: string): ListItem | null {
   // 1️⃣ nested UL first
   const ulNested = /^(\s*)(--+)\s+(.*)$/.exec(line);
   if (ulNested) {
-    const dashRun = ulNested[2] ?? "--";      // <-- NOT [1]
-    const depth = Math.max(1, dashRun.length); // 
-    const text = (ulNested[3] ?? "").trim();  // <-- NOT [2]
+    const dashRun = ulNested[2] ?? "--";     
+    const depth = Math.max(1, dashRun.length);
+    const text = (ulNested[3] ?? "").trim(); 
     return { kind: "ul", depth, marker: "•", text };
   }
 
@@ -299,7 +299,7 @@ function render_doc_md(host: LiveTree, src: string): void {
 
     list.css.setMany({
       display: "grid",
-      gap: "6px",
+      gap: "1rem",
       margin: "20px 0",
       minWidth: "0",
     });
@@ -328,7 +328,7 @@ function render_doc_md(host: LiveTree, src: string): void {
         .css.setMany({
           ...markerCss,
           // CHANGED: indent marker for nested UL only
-          marginLeft: item.kind === "ul" ? `${item.depth * 14}px` : "0px",
+          marginLeft: "1rem",
         });
 
       // CHANGED: choose body css by list kind

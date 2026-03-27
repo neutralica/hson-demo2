@@ -1,6 +1,5 @@
 // fleurs.ts
 
-import { hson, type LiveTree } from "hson-live";
 import { _lerp } from "../../../utils/helpers";
 import { make_rng } from "../../../utils/rng";
 import { type FlowerSpec } from "./fleurs.types";
@@ -8,9 +7,8 @@ import { lerp, randSigned } from "./fleurs-helpers";
 import { normalizeHue, pickCenterColor } from "./fleurs-cols";
 import { fmtNum, pickFlowerPalette } from "./fleurs-cols";
 import { pick_cultivar, sampleCultivarShape } from "./fleurs-cultivars";
-import { formatOklch } from "./fleurs-cols";
-import type { SvgLiveTree } from "../../../../../../hson-live/dist/types/livetree.types";
 import { appendDaisySpotsMarkup, appendPetalRingMarkup, appendStamensMarkup } from "./render-fleurs";
+import type { SvgLiveTree } from "../../../../../../hson-live/dist/types/svg.types";
 
 
 function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
