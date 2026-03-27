@@ -177,7 +177,9 @@ export const HSON_SUBcss: CssMap = {
   fontSize: $txt_.main,
   position: "relative",
   textWrap: "nowrap",
-  color: ACID_WASH_OKLCH.steel,
+  color: OKLCH_FLEURS.violet,
+  // color: ACID_WASH_RGBA.wornPurple,
+  // color: ACID_WASH_OKLCH.steel,
   marginBottom: "1rem",
   userSelect: "none",
 }

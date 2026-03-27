@@ -11,9 +11,9 @@ export const FLOWER_OVERLAYcss: CssMap = {
 };
 
 export const FLOWER_FIELDcss: CssMap = {
-  width: "100%",
-  height: "100%",
-    display: "block",
-  preserveAspectRatio: "none",
+  position: "absolute",
+  left: "50%",
+  transform: "translateX(-50%)",
+  display: "block",
 };
 

@@ -28,6 +28,7 @@ import { spawn_flower } from "./demo-fleurs/fleurs";
 import { ALL_MOTEScss } from "./motes/motes.css";
 import type { DemoView } from "./state/state.types";
 import { set_global_css } from "./set-global-css";
+import { fmtNum } from "./demo-fleurs/fleurs-cols";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -70,19 +71,33 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       preserveAspectRatio: "xMidYMid meet",
     })
     .css.setMany(FLOWER_FIELDcss)
-
-  function syncFleurViewbox(): void {
-    const rect = fleurOverlay.dom.rect();
-    if (!rect) {
-      console.log("[fleurs] no overlay rect");
-      return;
-    }
-
+  const rect = fleurOverlay.dom.rect();
+  if (rect) {
     const w = Math.max(1, rect.width);
     const h = Math.max(1, rect.height);
 
-    fleurField.attr.set("viewBox", `0 0 ${w} ${h}`);
+    fleurField.attr.setMany({
+      width: fmtNum(w, 0),
+      height: fmtNum(h, 0),
+      viewBox: `0 0 ${w} ${h}`,
+      preserveAspectRatio: "xMidYMid meet",
+    });
   }
+
+  function initFleurViewbox(): void {
+  const rect = fleurOverlay.dom.rect();
+  if (!rect) return;
+
+  const w = Math.max(1, rect.width);
+  const h = Math.max(1, rect.height);
+
+  fleurField.attr.setMany({
+    width: fmtNum(w, 0),
+    height: fmtNum(h, 0),
+    viewBox: `0 0 ${w} ${h}`,
+    preserveAspectRatio: "xMidYMid meet",
+  });
+}
   mount_motes(motes);
 
 
@@ -157,7 +172,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const pp = relay_data(mount_parsing_panels(parse));
   const bp = relay_data(mount_build_panels(buildHost));
 
-  syncFleurViewbox();
+  initFleurViewbox();
   function isMobileDemoWidth(): boolean {
     const rect = stage.dom.rect();
     if (!rect) return false;
@@ -198,7 +213,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   if (isMobileDemoWidth()) {
     set_view("fleurs");
   }
-  syncFleurViewbox();
+  initFleurViewbox();
 
   function apply_menu_active(menu: any, view: DemoView): void {
     menu.aboutBtn.data.set("active", view === "about" ? "true" : null);
@@ -252,7 +267,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
 
-    spawn_flower(fleurField, x, y);
+    void spawn_flower(fleurField, x, y);
 
     // const el = flower.dom.el();
 

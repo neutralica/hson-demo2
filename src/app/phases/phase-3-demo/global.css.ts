@@ -22,14 +22,14 @@ export const MOBILE_DOCcss = {
 export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
   return {
     __after: {
-      content: `"please use a larger device to fully explore hson::liveDemo in the meantime, tap to create flowers!!!"`,
+      content: `"please use a larger device to fully explore hson::liveDemo -- for now: tap to create flowers!"`,
       position: "fixed",
       left: "2rem",
       right: "2rem",
       top: "10rem",
       zIndex: "9997",
       fontSize: "1.3rem",
-      width: "60ch",
+      width: "auto",
       fontFamily: "Monaco",
       color:ACID_WASH_RGBA.strawSmoke,
       background: $cols_.bckdeep,

@@ -16,7 +16,7 @@ export const OKLCH_FLEURS = {
     bruisedPlum: "oklch(0.64 0.11 315)",
     orchidAsh: "oklch(0.74 0.08 300)",
 
-    violet: "oklch(0.63 0.14 285)",
+    violet: "oklch(0.63 0.14 315)",
     electricIris: "oklch(0.68 0.13 275)",
     indigoWash: "oklch(0.59 0.11 255)",
 

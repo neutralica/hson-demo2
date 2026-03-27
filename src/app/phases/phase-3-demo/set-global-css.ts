@@ -53,7 +53,7 @@ export const set_global_css = (): void => {
     background: MENU_TEXT_COL,
     fontWeight: "100",
     _hover: {
-      background: $gry_.dimmer,
+      background: $gry_.dark,
       fontWeight: "100",
       color: $cols_.bckdeep,
     },
@@ -65,7 +65,7 @@ export const set_global_css = (): void => {
     background: ACID_WASH_RGBA.warmAsh,
     fontWeight: "100",
     _hover: {
-      background: $gry_.dim,
+      background: $gry_.dark,
       fontWeight: "100",
       color: $cols_.bckdeep,
     },

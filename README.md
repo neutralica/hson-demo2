@@ -115,8 +115,8 @@ This demo clears the interface and, when the background is clicked, renders an S
 
 Demonstrates
 
-- SVG support within hson-live  
-- realtime DOM mutation  
+- native typed SVG handling within liveTree
+- realtime DOM mutation
 - interactive graphics driven directly by the node graph  
 
 

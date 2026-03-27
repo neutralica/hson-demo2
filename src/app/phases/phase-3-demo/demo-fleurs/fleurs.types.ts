@@ -14,24 +14,25 @@ export type FlowerSpec = {
   y: number;
   scale: number;
   rotation: number;
+  opacity: number;
 
   cultivar: FlowerCultivar;
 
   petalCount: number;
-  
-  ringCount: number;
   petalLength: number;
   petalWidth: number;
   centerRadius: number;
-  innerScale: number;
-  
-  opacity: number;
+
   palette: FlowerPaletteSpec;
-  
+
+  ringCount: number;
+  innerScale: number;
   stamenCount: number;
   stamenRadius: number;
-  
+
   randomColor?: boolean;
+  bitmap?: boolean;
+  bitmapSize?: number;
 
   alternateGeometry: boolean;
 };

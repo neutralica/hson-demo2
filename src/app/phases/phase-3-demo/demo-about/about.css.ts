@@ -78,11 +78,10 @@ export const ABOUT_P_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",
   lineHeight: "1.85",
   letterSpacing: "0.7px",
-  fontSize: "18px",
   color: ACID_WASH_OKLCH.frost,
   fontFamily: "Gill Sans",
   fontWeight: "200",
-  fontsize: $txt_.main,
+  fontSize: $txt_.main,
 }
 
 export const ABOUT_CSS: CssMap = {
@@ -127,7 +126,7 @@ export const CODE_PAREN_INNERcss: CssMap = {
 export const CODE_COMMENTScss: CssMap = {
   color: ACID_WASH_OKLCH.fern,
   fontFamily: MENU_FONT,
-  fontSize: "16px",
+  fontSize: $txt_.main,
   overflowWrap: "anywhere",
   whiteSpace: "normal",
 
@@ -155,7 +154,7 @@ export const ANTI_LIST_MARKERcss: CssMap = {
 export const ANTI_LIST_TEXTcss: CssMap = {
   ...LIST_TEXTcss,
   color: "#b44",
-  fontSize: "18px",
+  fontSize: $txt_.main,
   // textDecoration: "line-through",
 };
 
@@ -216,7 +215,7 @@ export const DATA_TOC_OPENcss = {
 
 export const ABOUT_TOC_TITLEcss: CssMap = {
   fontFamily: MENU_FONT,
-  fontSize: "12px",
+  fontSize: $txt_.main,
   letterSpacing: "0.12em",
   fontWeight: "700",
   color: OKLCH_FLEURS.navyCore,
