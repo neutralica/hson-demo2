@@ -1,9 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
-import { $CHIP_WIDTHstr } from "../../../../tests/tests.consts";
-import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
-import { TEST_ACTION_BTN } from "../demo-test/tp.css";
-import { MENU_FONT } from "../demo.css";
+import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, $cols_ } from "../../core/consts/colors.consts";
+import { $GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
+import { MENU_FONT } from "../../phases/phase-3-demo/demo.css";
 
 export const UI_ROOTcss: CssMap = {
 
@@ -91,8 +89,10 @@ export const PANEL_BRANCHcss: CssMap = {
     display: "grid",
     // padding: "10px",
     width: "100%",
+    height: "100%",
     boxSizing: "border-box",
     gridTemplateColumns: `1fr 1fr`,
+    gridTemplateRows: "auto 1fr",
     // gridTemplateRows: "auto " + $CHIP_WIDTHstr,
     background: $cols_.bckdeep,
 };

@@ -3,8 +3,6 @@
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
 import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
-import { PANELcss } from "../panels/demo-panels.css";
-import { $blu_, $cols_, $grn_, $ylw_ } from "../../../core/consts/colors.consts";
 import { DEFAULT_SEED } from "./build-seed.consts";
 
 // keep this parallel to pp_factory return shape: root + handles

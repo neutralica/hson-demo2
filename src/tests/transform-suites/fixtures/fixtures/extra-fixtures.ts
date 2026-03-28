@@ -1,4 +1,4 @@
-import { _freeze } from "../tests.consts";
+import { _freeze } from "../../../tests.consts";
 
 const AUTO_FIXTURES = _freeze({
     explicitHtmlCloser: `

@@ -1,11 +1,12 @@
 // build.css.ts
+
 import type { CssMap } from "hson-live/types";
-import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
-import { $blu_, $cols_, $grn_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, OKLCH_MUTED_PASTEL } from "../../../core/consts/colors.consts";
-import { PANEL_TEXTAREAcss } from "../panels/demo-panels.css";
-import { TEST_ACTION_BTN } from "../demo-test/tp.css";
-import { MENU_FONT } from "../demo.css";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import  { TEST_ACTION_BTN } from "../../../../tests/demo-test/tp.css";
+import { $cols_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { $GRID_GAPstr } from "../../../core/consts/ui-consts";
+import  { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import  { MENU_FONT } from "../demo.css";
+import { PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {

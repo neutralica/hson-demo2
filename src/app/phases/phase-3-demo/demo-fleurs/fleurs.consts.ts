@@ -115,7 +115,7 @@ export const ROSETTEshape = (rng: Rng): CultivarShape => {
         petalCount: randInt(rng, 20, 28),
         petalLength: _lerp(26, 38, rng()),
         petalWidth: _lerp(25, 20, rng()),
-        centerRatio: _lerp(0.38, 0.44, rng()),
+        centerRatio: _lerp(0.28, 0.34, rng()),
         ringCount: randInt(rng, 5, 7),
         innerScale: _lerp(0.82, 0.88, rng()),
         stamenCount: 0,

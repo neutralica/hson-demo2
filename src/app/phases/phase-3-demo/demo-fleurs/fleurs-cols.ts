@@ -27,7 +27,8 @@ export function jitterOklch(base: string, rng: Rng, opts: Partial<JitterOpts> = 
     };
 
     return formatOklch(next);
-}function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
+}
+function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
     // CHANGED: not every flower gets a second hue family
     if (rng() >= 0.95) return null;
 
@@ -75,8 +76,8 @@ export function pickFlowerPalette(seed: number): FlowerPaletteSpec {
 
     return {
         primaryPetal: sampleFlowerColor(primaryHue, make_rng(seed * Math.random()), {
-            lMin: 0.28,
-            lMax: 0.66,
+            lMin: 0.38,
+            lMax: 0.86,
             cMin: 0.10,
             cMax: 0.22,
             hSpread: 16,
@@ -199,10 +200,10 @@ export function pickCenterColor(
     if (cultivar === "rosette") {
         const src = parseOklch(palette.primaryPetal);
 
-        // CHANGED: nudge center away from petal family
-         const h = normalizeHue(src.h + 140 + (rng() * 60 - 30));
-        const l = clamp(src.l * 0.78, 0.26, 0.62);
-        const c = clamp(src.c * 0.68, 0.03, 0.14);
+        // CHANGED: keep same hue family, but darker and slightly duller
+        const h = normalizeHue(src.h + (rng() * 6 - 3));
+        const l = clamp(src.l * 0.42, 0.12, 0.26);
+        const c = clamp(src.c * 0.55, 0.015, 0.09);
 
         return formatOklch({ l, c, h });
     }

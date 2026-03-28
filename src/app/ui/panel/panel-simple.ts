@@ -1,8 +1,8 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import { $blu_ } from "../../../core/consts/colors.consts";
-import { MENU_FONT } from "../demo.css";
+import { $blu_ } from "../../core/consts/colors.consts";
+import { MENU_FONT } from "../../phases/phase-3-demo/demo.css";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
   return parent.create.div()

@@ -41,18 +41,16 @@ export function renderDefaultRing(spec: FlowerSpec, ringIx: number): string {
 export function renderRosetteRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
-    // CHANGED: dense, compact, many petals
-    const count = Math.max(14, spec.petalCount + (ringIx * 2));
+    const innerness = ringIx / Math.max(1, spec.ringCount - 1);
+const count = Math.max(10, Math.round(lerp(spec.petalCount, spec.petalCount * 0.72, innerness)));
     const step = 360 / count;
 
-    // CHANGED: shrink from ring 0, not ring 1
     const ringShrink = Math.pow(0.75, ringIx);
     const widthShrink = Math.pow(0.96, ringIx);
 
     let baseLength = spec.petalLength * 0.78 * ringShrink;
     let baseWidth = spec.petalWidth * 0.72 * widthShrink;
 
-    // CHANGED: strong per-ring phase so layers interleave
     const phase = step * 0.14 * ringIx;
 
     let out = "";
@@ -63,7 +61,13 @@ export function renderRosetteRing(spec: FlowerSpec, ringIx: number): string {
         let length = baseLength * lerp(0.98, 1.04, rng());
         let width = baseWidth * lerp(0.96, 1.04, rng());
 
-        const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng, true);
+        const fillBase = pickPetalColor(spec.palette, i + (ringIx * 100), rng, true);
+
+        // CHANGED: slightly darker inward to suggest puckering/shadow
+        const fill = adjustOklch(fillBase, {
+            l: lerp(0, -0.155, innerness),
+        });
+
         const opacity = lerp(0.72, 0.90, rng());
         const outline = makeOutline(width, rng);
 
@@ -72,6 +76,7 @@ export function renderRosetteRing(spec: FlowerSpec, ringIx: number): string {
 
     return out;
 }
+
 export function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
@@ -221,7 +226,8 @@ export function renderPinwheelRing(spec: FlowerSpec, ringIx: number): string {
     }
 
     return out;
-}export function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
+}
+export function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
     switch (spec.cultivar) {
         case "rosette":
             return renderRosetteRing(spec, ringIx);
@@ -423,3 +429,58 @@ export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
     return out;
 }
 
+// CHANGED: small deterministic OKLCH adjuster for already-OKLCH color strings.
+// Supports:
+//   oklch(L C H)
+//   oklch(L C H / A)
+// If parsing fails, returns the original color unchanged.
+export function adjustOklch(
+    color: string,
+    delta: {
+        l?: number;
+        c?: number;
+        h?: number;
+        a?: number;
+    },
+): string {
+    const src = color.trim();
+
+    const m = /^oklch\(\s*([^\s/]+)\s+([^\s/]+)\s+([^\s/)]+)(?:\s*\/\s*([^)]+))?\s*\)$/i.exec(src);
+    if (!m) return color;
+
+    const l0 = Number.parseFloat(m[1] ?? "");
+    const c0 = Number.parseFloat(m[2] ?? "");
+    const h0 = Number.parseFloat(m[3] ?? "");
+    const a0 = m[4] != null ? Number.parseFloat(m[4]) : undefined;
+
+    if (!Number.isFinite(l0) || !Number.isFinite(c0) || !Number.isFinite(h0)) {
+        return color;
+    }
+
+    // CHANGED: clamp inline; no external helpers needed
+    let l = l0 + (delta.l ?? 0);
+    let c = c0 + (delta.c ?? 0);
+    let h = h0 + (delta.h ?? 0);
+    let a = a0 != null ? a0 + (delta.a ?? 0) : undefined;
+
+    l = Math.max(0, Math.min(1, l));
+    c = Math.max(0, c);
+
+    // CHANGED: wrap hue into [0, 360)
+    h = ((h % 360) + 360) % 360;
+
+    if (a != null && Number.isFinite(a)) {
+        a = Math.max(0, Math.min(1, a));
+    }
+
+    const lStr = l.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+    const cStr = c.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+    const hStr = h.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+
+    if (a != null && Number.isFinite(a)) {
+        const aStr = a.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+        return `oklch(${lStr} ${cStr} ${hStr} / ${aStr})`;
+    }
+
+    return `oklch(${lStr} ${cStr} ${hStr})`;
+}

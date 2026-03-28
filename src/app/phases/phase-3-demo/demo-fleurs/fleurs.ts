@@ -60,7 +60,7 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
     }
 
     const stamens = appendStamensMarkup(spec);
-    const centerFill = pickCenterColor(spec.palette, rng);
+    const centerFill = pickCenterColor(spec.palette, rng, spec.cultivar);
 
     const g = host.create.g()
         .attr.setMany({

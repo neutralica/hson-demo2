@@ -1,8 +1,8 @@
 import { type LiveTree } from "hson-live";
-import type { TestSummary } from "../../../../tests/tests.types";
-import { $cols_, $red_etc_ } from "../../../core/consts/colors.consts";
-import { $txt_ } from "../../../core/consts/ui-consts";
-import { mk_div_id, mk_div_cls } from "../../../utils/makers";
+import type { TestSummary } from "../tests.types";
+import { $cols_, $red_etc_ } from "../../app/core/consts/colors.consts";
+import { $txt_ } from "../../app/core/consts/ui-consts";
+import { mk_div_id, mk_div_cls } from "../../app/utils/makers";
 import { MAKE_CHIP_DEFAULTcss, TEST_BUTTON_BORDER, TEST_CHIP_LABELcss, TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "./tp.css";
 
 

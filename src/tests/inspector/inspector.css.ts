@@ -4,7 +4,7 @@ import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
 import { $txt_ } from "../../app/core/consts/ui-consts";
 
 
-export const NAME_WIDTH = "38ch"; // standardize width so it doesn’t jump
+export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
 export const INSPECTOR_ROOTcss = {
   // padding: "10px",
@@ -30,7 +30,6 @@ export const THcss: CssMap = {
   fontWeight: "300",
   borderBottom: "1px solid rgba(255,255,255,0.12)",
   whiteSpace: "nowrap",
-  opacity: "0.85",
 };
 
 export const TDcss: CssMap = {
@@ -69,8 +68,7 @@ export const tdNameCssBase: CssMap = {
 
 export const tdNameChildCss: CssMap = {
   ...tdNameCssBase,
-  paddingLeft: "18px",
-  opacity: "0.95",
+  // paddingLeft: "18px",
 };
 
 export const ROW_SUITE_FAILcss: CssMap = {

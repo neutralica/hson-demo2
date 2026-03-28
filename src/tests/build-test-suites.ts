@@ -6,12 +6,12 @@ import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { FAIL_IS_PASS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
 import type { Fixture } from "./tests.types";
-import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
-import { HSON_FIXTURES, HTML_FIXTURES_NEW } from "./transform-tests/fixtures/fixtures/new-fixtures";
-import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
-import { livetree_svg_basic } from "./livetree-tests/livetree-fixtures-svg-1";
-import { livetree_svg_ingermediate } from "./livetree-tests/livetree-fixtures-svg-2";
-import { livetree_gnarly_svg } from "./livetree-tests/livetree-fixtures-svg-3";
+import { all_livetree_suites } from "./livetree-suites/all-livetree-suites";
+import { HSON_FIXTURES, HTML_FIXTURES_NEW } from "./transform-suites/fixtures/fixtures/new-fixtures";
+import { EXTRA_FIXTURES } from "./transform-suites/fixtures/fixtures/extra-fixtures";
+import { livetree_svg_basic } from "./livetree-suites/livetree-fixtures-svg-1";
+import { livetree_svg_ingermediate } from "./livetree-suites/livetree-fixtures-svg-2";
+import { livetree_gnarly_svg } from "./livetree-suites/livetree-fixtures-svg-3";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.

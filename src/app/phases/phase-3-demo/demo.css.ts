@@ -42,12 +42,14 @@ export const HSON_WORDcss: CssMap = {
 
 export const DEMOcss: CssMap = {
   position: "fixed",
+  maxWidth: "100%",
   width: "100%",
   height: "100%",
   inset: "0",
   overflow: "hidden",
   background: `linear-gradient(${$cols_.bckgd} 60%,${set_alpha($blu_.muted, 0.06)})`,
   pointerEvents: "none",
+  boxSizing: "border-box"
 };
 
 
@@ -60,7 +62,7 @@ export const DEMO_STAGEcss: CssMap = {
   "--myp": "40%",
   backgroundColor: $cols_.bckgd,
   pointerEvents: "none",
-
+boxSizing: "border-box"
 };
 
 /**
@@ -76,9 +78,11 @@ export const DEMO_SCREENcss: CssMap = {
   isolation: "isolate",
   pointerEvents: "all",
   minHeight: "0",
+  boxSizing: "border-box"
 }
 
 export const DEMO_SCREEN_FXcss: CssMap = {
+  boxSizing: "border-box",
   position: "relative",
   display: "grid",
 
@@ -92,7 +96,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   height: "100%",
   minHeight: "0",
   minWidth: "0",
-  paddingLeft: "1rem",
+  padding: "1rem",
   maxWidth: "100vw",
 
   pointerEvents: "all",
@@ -142,6 +146,7 @@ export const LAYOUT_GRIDcss: CssMap = {
 
 
 export const PANEL_SAFETYcss: CssMap = {
+  //// this is often redundant since we set it on so many other css objects
   minWidth: "0",
   minHeight: "0",
 };

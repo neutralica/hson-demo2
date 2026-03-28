@@ -1,16 +1,16 @@
 // pp_factory.ts
 import { hson, type LiveTree } from "hson-live";
-import type { Fmt, Panels, PanelShell } from "../panels/panels.types";
 import { PP_GRIDcss, PP_HEADERcss } from "./pp.css";
 
 import { PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARK_EMPTYcss, PP_WATERMARK_FMTcss } from "./pp.css";
 import { outcome, relay, relay_data, type Outcome, type OutcomeData } from "intrastructure";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { PP_COPYBTNcss } from "./pp.css";
-import { PANEL_TEXTAREAcss, PANELcss } from "../panels/demo-panels.css";
 import { PARSING_PANEL_ROOTcss } from "./pp.css";
 import { init_parsing_panels } from "./init.pp";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import type { Fmt, Panels, PanelShell } from "../../../ui/panel/panels.types";
+import { PANELcss, PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
 
 type PpFactoryOpts = {
   fmts?: readonly Fmt[];

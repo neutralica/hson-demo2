@@ -60,11 +60,10 @@ export type TestSuite = Readonly<{
 
 export type TestRunMode =
   | "all"
+  | "transform"
   | "livetree"
-  // | "generated"
   | "legacy"
   | "dev"
-  | "transform"
 
 export type CaseMeta = Readonly<{
   fixture?: string;
