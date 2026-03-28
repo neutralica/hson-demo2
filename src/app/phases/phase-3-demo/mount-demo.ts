@@ -15,7 +15,7 @@ import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
 import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORoklch } from "../../core/consts/colors.consts";
 import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, get_about_toc_open } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
-import { mount_panel_simple } from "../../ui/panel-simple";
+import { mount_panel_simple } from "./panels/panel-simple";
 import { bp_factory } from "./demo-build/build";
 import { mount_build_panels } from "./demo-build/mount-build-panel";
 import { mount_about_panels } from "./demo-about/mount-about";

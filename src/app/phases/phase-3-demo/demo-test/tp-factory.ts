@@ -3,8 +3,8 @@ import type { LiveTree } from "../../../../../../hson-live/dist/api/livetree/liv
 import type { UiLevel, TestRunMode, TestEvent, CaseKey } from "../../../../tests/tests.types";
 import { $PANEL_HIDDEN } from "../../../core/consts/ui-consts";
 import { mk_btn } from "../../../widgets/chips-deprecate/make-btn";
-import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss, CLEAR_BTNcss } from "../panels/demo-panels.css";
-import { LOG_BOXcss, ROW_CONTAINERcss, TEST_PANELcss, TP_ROOTcss } from "./tp.css";
+import { PANEL_FRAMEcss, PANEL_SURFACEcss, PANEL_BRANCHcss } from "../panels/demo-panels.css";
+import { CLEAR_BTNcss, LOG_BOXcss, ROW_CONTAINERcss, TEST_PANELcss, TP_ROOTcss } from "./tp.css";
 import { TEST_LOGGERcss } from "./tp.css";
 import { type ChipDisplay, create_test_chips } from "./test-chips";
 import { relay, relay_data, type Outcome, type OutcomeData, type OutcomeMaybeData } from "intrastructure";
@@ -66,9 +66,9 @@ export type TestPanelWidget = ReturnType<typeof test_panel_factory>;
 
 function test_panel_factory(): Outcome<TestPanel> {
   let inited = false;
-  const branch = hson.fromTrustedHtml("<div></div>").liveTree.asBranch().id.set("panel-branch")
-  // keep your existing panel branch css hook
-  branch.css.setMany(PANEL_BRANCHcss);
+  const branch = hson.liveTree.create.div()
+    .id.set("panel-branch")
+    .css.setMany(PANEL_BRANCHcss);
 
   // -------------------------
   // small log/console
@@ -110,9 +110,9 @@ function test_panel_factory(): Outcome<TestPanel> {
     .css.setMany(TEST_SELECTcss);
   const clearChip = mk_btn(controlsRow, "test-clear", "clear");
 
-  const runBtn = runChip.node.css.setMany(RUN_BUTTONcss);
+  const runBtn = runChip.tree.css.setMany(RUN_BUTTONcss);
 
-  const clearBtn = clearChip.node.css.setMany(CLEAR_BTNcss);
+  const clearBtn = clearChip.tree.css.setMany(CLEAR_BTNcss);
 
   const init = (deps: TestPanelDeps): void => {
     if (inited) return;

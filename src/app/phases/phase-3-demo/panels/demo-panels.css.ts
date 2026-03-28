@@ -87,18 +87,6 @@ export const PANEL_TEXTAREAcss = {
     outline: "none",
 };
 
-export const CLEAR_BTNcss: CssMap = {
-    ...TEST_ACTION_BTN,
-    borderRadius: "18px",
-    background: $cols_.bckdeep,
-    transition: "transform 90ms ease, filter 140ms ease",
-    
-    _hover: {
-        background: "orange",
-        color: $cols_.bckdeep,
-    }
-}
-
 export const PANEL_BRANCHcss: CssMap = {
     display: "grid",
     // padding: "10px",

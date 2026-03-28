@@ -33,7 +33,7 @@ export const ABOUT_DOCcss: CssMap = {
   overflowY: "auto",
   overflowX: "hidden",
   background: set_alpha($cols_.bckdeep, 0.88),
-  borderRadius: "18px",
+  // borderRadius: "18px",
   border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
 };
 
@@ -117,7 +117,7 @@ export const CODE_PARENcss: CssMap = {
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
-  color: ACID_WASH_OKLCH.ash,
+  color: ACID_WASH_OKLCH.bruisedPlum,
   fontFamily: MENU_FONT,
   fontWeight: "300",
 } as const;
@@ -196,7 +196,7 @@ export const ABOUT_TOCcss: CssMap = {
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
   background: set_alpha($cols_.bckdeep, 0.72),
-  borderRadius: "18px",
+  // borderRadius: "18px",
   border: `1px solid ${set_alpha($blu_.faded, 0.12)}`,
   overflowY: "auto",
   overflowX: "hidden",

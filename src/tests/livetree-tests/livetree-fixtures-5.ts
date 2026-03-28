@@ -28,7 +28,7 @@ export function roundtrip_projection_stability(): TestSuite {
 
                 async act(tree) {
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
@@ -73,7 +73,7 @@ export function roundtrip_projection_stability(): TestSuite {
 
                     await tick();
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
@@ -142,7 +142,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const oldQuid = oldEl.getAttribute("data-_quid") ?? "";
 
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                     // CHANGED: mount detached rehydrated branch into existing sandbox
                     const sandboxHost = (tree as any).__sandboxHost;
@@ -189,7 +189,7 @@ export function roundtrip_projection_stability(): TestSuite {
 
                     // CHANGED: hydrate only subtree B, not the whole root
                     const bEl = tree.find.must.byId("b").dom.el();
-                    const bTree = hson.fromTrustedHtml(bEl!).liveTree.asBranch();
+                    const bTree = hson.liveTree.fromTrustedHtml(bEl!);
 
                     const b1 = bTree.find.must.byId("b1");
 
@@ -224,7 +224,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     await tick();
 
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
 
                     (tree as any).__result = {
@@ -261,7 +261,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     await tick();
 
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                     // CHANGED: mount detached rehydrated branch before DOM lookup
                     const sandboxHost = (tree as any).__sandboxHost;
@@ -642,7 +642,7 @@ export function livetree_sync_perf(): TestSuite {
 
             async act(tree) {
                 const rootEl = tree.find.must.byId("root").dom.el();
-                const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                 const sandboxHost = (tree as any).__sandboxHost;
                 sandboxHost.append(round);
@@ -750,7 +750,7 @@ export function livetree_completionist(): TestSuite {
                     });
 
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
@@ -788,7 +788,7 @@ export function livetree_completionist(): TestSuite {
 
                 async act(tree) {
                     const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.fromTrustedHtml(rootEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
@@ -841,7 +841,7 @@ export function livetree_completionist(): TestSuite {
 
                     // CHANGED: hydrate only the nested right subtree
                     const rightEl = tree.find.must.byId("right").dom.el();
-                    const round = hson.fromTrustedHtml(rightEl!).liveTree.asBranch();
+                    const round = hson.liveTree.fromTrustedHtml(rightEl!);
 
                     const rightInner = round.find.must.byId("right-inner");
 

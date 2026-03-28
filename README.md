@@ -49,9 +49,9 @@ LiveDemo is built to provde the viability of this new approach.
 
 ## Getting started
 
-The fastest way to understand hson-live is to explore the interactive showcase:
+The fastest way to understand hson-live is to explore the interactive showcase, LiveDemo:
 
-https://terminalgothic.com/hson
+`https://terminalgothic.com/hson`
 
 Each demo demonstrates various features and properties of hson-live.
 

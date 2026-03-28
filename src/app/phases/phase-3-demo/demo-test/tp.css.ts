@@ -7,7 +7,7 @@ import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 export const TEST_BUTTON_BORDER: CssMap = {
   borderRadius: "18px",
-  border: `4px solid ${OKLCH_FLEURS.electricIris}`
+  border: `4px solid ${ACID_WASH_RGBA.fadedMint}`
 }
 
 export const CHIP_BUTTON_BORDER: CssMap = {
@@ -27,13 +27,13 @@ export const TEST_ACTION_BTN: CssMap = {
   background: $cols_.bckdeep,
 } as const;
 
-export const TEST_CHIP_VALUEcss={
-        fontSize: $txt_.unter,
-        fontWeight: "700",
-        lineHeight: "1",
-        letterSpacing: "0.01em",
+export const TEST_CHIP_VALUEcss = {
+  fontSize: $txt_.unter,
+  fontWeight: "700",
+  lineHeight: "1",
+  letterSpacing: "0.01em",
 }
-      
+
 export const CONTROL_ROWcss: CssMap = {
   width: "100%",
   boxSizing: "border-box",
@@ -57,17 +57,32 @@ export const TEST_CHIP_LABELcss = {
 }
 
 
+export const CLEAR_BTNcss: CssMap = {
+    ...TEST_ACTION_BTN,
+    borderRadius: "18px",
+    background: $cols_.bckdeep,
+    transition: "transform 90ms ease, filter 140ms ease",
+    
+    _hover: {
+        background: "orange",
+      color: $cols_.bckdeep,
+        border: "10px solid " + $cols_.bckgd,
+    }
+}
+
+
 export const RUN_BUTTONcss: CssMap = {
   ...TEST_ACTION_BTN,
   _hover: {
     background: ACID_WASH_RGBA.fadedMint,
-    color: $cols_.bckdeep
+    color: $cols_.bckdeep,
+    border: "10px solid " + $cols_.bckgd,
   }
 };
 
 export const TEST_SELECTcss = {
   minWidth: "20ch",
-  padding: "10px 8px",
+  padding: "10px 8px 10px 20px",
   borderRadius: "12px",
   boxSizing: "border-box",
 
@@ -75,7 +90,7 @@ export const TEST_SELECTcss = {
   fontSize: $txt_.main,
 
   // background: $cols_.backdeep,
-  color: ACID_WASH_RGBA.fadedMint,
+  color: OKLCH_FLEURS.blazeOrange,
   border: "1px solid rgba(255,255,255,0.2)",
   outline: "none",
 } as const;
@@ -101,8 +116,8 @@ export const TEST_LOGGERcss: CssMap = {
 } as const;
 
 export const LOG_BOXcss: CssMap = {
-  gridRow: "1",
-  gridColumn: "1 / 3",
+  gridRow: "2",
+  gridColumn: "2 / 3",
   overflow: "auto",
   width: "100%",
   height: "100%",
@@ -112,9 +127,9 @@ export const LOG_BOXcss: CssMap = {
 export const ROW_CONTAINERcss = {
   display: "grid",
   gap: "8px",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "1fr 1fr auto",
   gridTemplateRows: "1fr",
-  gridRow: "2",
+  gridRow: "1",
   gridColumn: "1 / 3"
 
 };
@@ -126,15 +141,15 @@ export const TEST_PANELcss: CssMap = {
   boxSizing: "border-box",
 };
 
-export const TP_ROOTcss={
-        ...PANEL_SAFETYcss,
-        width: "100%",
-        height: "100%",
+export const TP_ROOTcss = {
+  ...PANEL_SAFETYcss,
+  width: "100%",
+  height: "100%",
 
-        display: "grid",
-        gridTemplateRows: "auto 1fr", // test + inspector
-        overflow: "hidden",
-      }
+  display: "grid",
+  gridTemplateRows: "auto 1fr", // test + inspector
+  overflow: "hidden",
+}
 export const TEST_CHIP_ROWcss = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr 1fr",

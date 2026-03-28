@@ -417,7 +417,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const host = root.find.must.byId("root");
-                    const branch = hson.fromTrustedHtml(`<div id="a"></div>`).liveTree.asBranch();
+                    const branch = hson.liveTree.fromTrustedHtml(`<div id="a"></div>`);
 
                     const out = host.append(branch);
                     const child = out.create.section().id.set("b");
@@ -447,7 +447,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const field = root.create.svg().id.set("field");
-                    const branch = hson.fromTrustedHtml(`<g id="g1"><circle id="c1"></circle></g>`).liveTree.asBranch();
+                    const branch = hson.liveTree.fromTrustedHtml(`<g id="g1"><circle id="c1"></circle></g>`);
 
                     const out = field.append(branch as any);
                     const child = (out.create as any).g().id.set("g2");
@@ -477,7 +477,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const host = root.find.must.byId("root");
-                    const svgBranch = hson.fromTrustedHtml(`<svg id="s"><g id="g1"></g></svg>`).liveTree.asBranch();
+                    const svgBranch = hson.liveTree.fromTrustedHtml(`<svg id="s"><g id="g1"></g></svg>`);
 
                     host.append(svgBranch as any);
 
@@ -504,7 +504,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const host = root.find.must.byId("root");
-                    const gBranch = hson.fromTrustedHtml(`<g id="g1"><circle id="c1"></circle></g>`).liveTree.asBranch();
+                    const gBranch = hson.fromTrustedHtml(`<g id="g1"><circle id="c1"></circle></g>`);
 
                     let msg = "";
 
@@ -531,7 +531,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const field = root.create.svg().id.set("field");
-                    const divBranch = hson.fromTrustedHtml(`<div id="x"></div>`).liveTree.asBranch();
+                    const divBranch = hson.liveTree.fromTrustedHtml(`<div id="x"></div>`);
 
                     let msg = "";
 
@@ -559,7 +559,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const host = root.find.must.byId("root");
-                    const branch = hson.fromTrustedHtml(`<section id="mid"></section>`).liveTree.asBranch();
+                    const branch = hson.liveTree.fromTrustedHtml(`<section id="mid"></section>`)
 
                     host.append(branch, 1);
 

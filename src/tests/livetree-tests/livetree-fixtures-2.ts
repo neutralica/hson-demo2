@@ -124,9 +124,8 @@ function suite_empty_append(): TestSuite {
         root.empty();
 
         const branch = hson
-          .fromTrustedHtml(`<p class="new">hello</p>`)
           .liveTree
-          .asBranch();
+          .fromTrustedHtml(`<p class="new">hello</p>`);
 
         root.append(branch);
       },
@@ -386,10 +385,7 @@ export function suite_identity_stability(): TestSuite {
       act(tree) {
         const root = tree.find.must.byId("root");
 
-        const branch = hson
-          .fromTrustedHtml(`<div id="child">hello</div>`)
-          .liveTree
-          .asBranch();
+        const branch = hson.liveTree.fromTrustedHtml(`<div id="child">hello</div>`);
 
         root.append(branch);
       },
@@ -434,8 +430,8 @@ export function suite_identity_stability(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const first = hson.queryDOM("#identity-graft-host").liveTree.graft();
-        const second = hson.queryDOM("#identity-graft-host").liveTree.graft();
+        const first = hson.liveTree.queryDom("#identity-graft-host").graft();
+        const second = hson.liveTree.queryDom("#identity-graft-host").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;

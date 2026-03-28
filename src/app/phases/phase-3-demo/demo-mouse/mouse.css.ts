@@ -105,7 +105,7 @@ export const MOUSE_TRACKERcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "1",
-  background: $cols_.bckgd,
+  backgroundColor: $cols_.bckgd,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",

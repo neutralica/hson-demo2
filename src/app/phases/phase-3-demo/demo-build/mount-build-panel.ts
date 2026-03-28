@@ -82,7 +82,7 @@ export function initBuild(bp: BuildDemo): void {
 
             // 2) output preview tree
             // Prefer LiveTree path (no DOM string parse). If your API differs, swap this line.
-            const branch = doc.liveTree.asBranch();
+            const branch = hson.liveTree.fromHson(raw);
 
             // Update output panes
             bp.output.previewHost.empty();

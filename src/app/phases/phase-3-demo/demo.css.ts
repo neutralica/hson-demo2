@@ -11,11 +11,13 @@ export const MENU_FONT = "Monaco, mono"
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
   fontSize: $txt_.heading,
-  fontWeight: "500",
+  fontWeight: "400",
   userSelect: "none",
   color: MENU_TEXT_COL,
   pointerEvents: "all",
   cursor: "pointer",
+  lineHeight: "2",
+  letterSpacing: "6%",
   _hover: {
     fontWeight: "100",
     background: ACID_WASH_RGBA.mutedViolet,

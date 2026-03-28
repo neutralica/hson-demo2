@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 import { mk_div_id } from "../../utils/makers";
 
 export type ToggleBtn = Readonly<{
-  node: LiveTree;
+  tree: LiveTree;
   setActive: (on: boolean) => void;
   setText: (t: string) => void;
 }>;
@@ -37,7 +37,7 @@ export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
   };
 
   return {
-    node: node,
+    tree: node,
     setActive,
     setText: (t) => node.text.set(t),
   };

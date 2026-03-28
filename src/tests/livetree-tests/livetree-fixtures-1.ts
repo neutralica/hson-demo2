@@ -292,8 +292,8 @@ export function suite_append_and_create(): TestSuite {
       act(tree) {
         const root = tree.find.must.byId("root");
 
-        root.append(hson.fromTrustedHtml(`<div id="a"></div>`).liveTree.asBranch());
-        root.append(hson.fromTrustedHtml(`<div id="b"></div>`).liveTree.asBranch());
+        root.append(hson.liveTree.fromTrustedHtml(`<div id="a"></div>`));
+        root.append(hson.liveTree.fromTrustedHtml(`<div id="b"></div>`));
 
         // CHANGED: inject a primitive into the semantic content container (_elem)
         // (works in no-dom mode; matches your “_elem is invisible” rule)
@@ -492,9 +492,8 @@ export function mixedRegression() {
 
         // 1) append a layer
         const layer1 = hson
-          .fromTrustedHtml(`<layer id="layer"></layer>`)
           .liveTree
-          .asBranch();
+          .fromTrustedHtml(`<layer id="layer"></layer>`);
 
         root.append(layer1);
 
@@ -504,9 +503,8 @@ export function mixedRegression() {
 
         // 2) append a new one with same id
         const layer2 = hson
-          .fromTrustedHtml(`<layer id="layer"></layer>`)
           .liveTree
-          .asBranch();
+          .fromTrustedHtml(`<layer id="layer"></layer>`);
 
         root.append(layer2);
       },
@@ -864,7 +862,7 @@ export function extraCases(): readonly TestSuite[] {
         const root = tree.find.must.byId("root");
 
         root.append(
-          hson.fromTrustedHtml(`<layer id="layer"></layer>`).liveTree.asBranch()
+          hson.liveTree.fromTrustedHtml(`<layer id="layer"></layer>`)
         );
 
         const first = root.find.must.byId("layer");
@@ -873,7 +871,7 @@ export function extraCases(): readonly TestSuite[] {
         first.removeSelf();
 
         root.append(
-          hson.fromTrustedHtml(`<layer id="layer"></layer>`).liveTree.asBranch()
+          hson.liveTree.fromTrustedHtml(`<layer id="layer"></layer>`)
         );
 
         const second = root.find.must.byId("layer");
@@ -1011,9 +1009,8 @@ export function extraCases(): readonly TestSuite[] {
 
       act(tree) {
         const branch = hson
-          .fromTrustedHtml(`<section id="box"></section>`)
           .liveTree
-          .asBranch();
+          .fromTrustedHtml(`<section id="box"></section>`);
 
         const child = branch.create.div();
         child.attr.set("class", "child");
@@ -1416,8 +1413,8 @@ function suite_graft_regressions(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "queryDOM.graft returns the queried element itself as root",
-      fixture: "graft/queryDOM",
+      name: "liveTree.queryDom.graft returns the queried element itself as root",
+      fixture: "graft/liveTree.queryDom",
       sub: "queried-element-is-root",
       html: `<div id="root"></div>`,
 
@@ -1435,7 +1432,7 @@ function suite_graft_regressions(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const grafted = hson.queryDOM("#graft-host-1").liveTree.graft();
+        const grafted = hson.liveTree.queryDom("#graft-host-1").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;
@@ -1484,8 +1481,8 @@ function suite_graft_regressions(): TestSuite {
 
     {
       suite: SUITE,
-      name: "queryDOM.graft succeeds on an empty queried element",
-      fixture: "graft/queryDOM",
+      name: "liveTree.queryDom.graft succeeds on an empty queried element",
+      fixture: "graft/liveTree.queryDom",
       sub: "empty-element-valid",
       html: `<div id="root"></div>`,
 
@@ -1502,7 +1499,7 @@ function suite_graft_regressions(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const grafted = hson.queryDOM("#graft-host-2").liveTree.graft();
+        const grafted = hson.liveTree.queryDom("#graft-host-2").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;
@@ -1550,8 +1547,8 @@ function suite_graft_regressions(): TestSuite {
 
     {
       suite: SUITE,
-      name: "queryDOM.graft is idempotent for an already-grafted element",
-      fixture: "graft/queryDOM",
+      name: "liveTree.queryDom.graft is idempotent for an already-grafted element",
+      fixture: "graft/liveTree.queryDom",
       sub: "double-graft-returns-same-node",
       html: `<div id="root"></div>`,
 
@@ -1569,8 +1566,8 @@ function suite_graft_regressions(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const first = hson.queryDOM("#graft-host-3").liveTree.graft();
-        const second = hson.queryDOM("#graft-host-3").liveTree.graft();
+        const first = hson.liveTree.queryDom("#graft-host-3").graft();
+        const second = hson.liveTree.queryDom("#graft-host-3").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;

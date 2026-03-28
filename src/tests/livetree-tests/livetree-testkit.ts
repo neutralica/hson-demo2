@@ -33,7 +33,7 @@ export function make_livetree_suite(
         );
       }
 
-      const tree = hson.fromTrustedHtml(html).liveTree.asBranch();
+      const tree = hson.liveTree.fromTrustedHtml(html);
       // ADDED: optional DOM mount
       let sandbox: HTMLDivElement | null = null;
 
@@ -53,7 +53,7 @@ export function make_livetree_suite(
 
           // CHANGED: this is the key — create DOM now
           // If graft is sync in your implementation, await is harmless.
-          const host = hson.queryDOM("#hson-sandbox").liveTree.graft();
+          const host = hson.liveTree.queryDom("#hson-sandbox").graft();
           (tree as any).__sandboxHost = host;
           (tree as any).__sandboxEl = sandbox;
           host.append(tree);

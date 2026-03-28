@@ -138,7 +138,7 @@ export const DEFAULT_SEED = `
       letter-spacing: 0.08em; 
       text-align: center
     "
-      "...change HTML in realtime"
+      "^ changes rendered synchronously"
     />
   />
 

@@ -1,6 +1,7 @@
 // error-underline.ts
 
 import { hson, type LiveTree } from "hson-live";
+import type { SvgLiveTree } from "../../../../../hson-live/dist/types/svg.types";
 
 export const ERROR_UNDERLINE_PRESET = {
   amplitude: 6,
@@ -46,7 +47,7 @@ function calcZigzagPath(opts: {
   return d;
 }
 
-function makeSvgErrUnderline(opts: {
+export function makeSvgErrUnderline(opts: {
   width: number;
   amplitude: number;
   step: number;
@@ -54,7 +55,7 @@ function makeSvgErrUnderline(opts: {
   stroke: string;
   strokeWidth: number;
   pad?: number;
-}): string {
+}): SvgLiveTree {
   const w = Math.max(1, Math.ceil(opts.width));
   const h = Math.max(3, Math.ceil(opts.amplitude + opts.baselineOffset + 2));
   const baselineY = h - 1;
@@ -68,52 +69,63 @@ function makeSvgErrUnderline(opts: {
     step: opts.step,
   });
 
-  // IMPORTANT: keep IDs super boring: letters + digits only
+  // CHANGED: keep IDs simple and DOM-safe
   const clipId = `errClip${Math.floor(Math.random() * 1e9)}`;
 
   const clipY = pad;
   const clipH = Math.max(1, h - pad * 2);
 
-  return `
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="${w}" height="${h}"
-     viewBox="0 0 ${w} ${h}"
-     overflow="hidden"
-     aria-hidden="true" focusable="false">
-  <defs>
-    <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
-      <rect x="0" y="${clipY + 2}" width="${w}" height="${clipH - 2}" />
-    </clipPath>
-  </defs>
+  // CHANGED: create a detached svg root directly
+  const svg = hson.liveTree.create.svg();
 
-  <path d="${d}"
-        clip-path="url(#${clipId})"
-        fill="none"
-        stroke="${opts.stroke}"
-        stroke-width="${opts.strokeWidth}"
-        vector-effect="non-scaling-stroke"
-        stroke-linejoin="miter"
-        stroke-linecap="butt" />
-</svg>`.trim();
+  svg.attr.setMany({
+    xmlns: "http://www.w3.org/2000/svg",
+    width: String(w),
+    height: String(h),
+    viewBox: `0 0 ${w} ${h}`,
+    overflow: "hidden",
+    "aria-hidden": "true",
+    focusable: "false",
+  });
+
+  // CHANGED: build defs/clipPath/rect natively
+  const defs = svg.create.defs();
+  const clipPath = defs.create.clipPath().attr.setMany({
+    id: clipId,
+    clipPathUnits: "userSpaceOnUse",
+  });
+
+  clipPath.create.rect().attr.setMany({
+    x: "0",
+    y: String(clipY + 2),
+    width: String(w),
+    height: String(Math.max(1, clipH - 2)),
+  });
+
+  // CHANGED: build underline path natively
+  svg.create.path().attr.setMany({
+    d,
+    "clip-path": `url(#${clipId})`,
+    fill: "none",
+    stroke: opts.stroke,
+    "stroke-width": String(opts.strokeWidth),
+    "vector-effect": "non-scaling-stroke",
+    "stroke-linejoin": "miter",
+    "stroke-linecap": "butt",
+  });
+
+  return svg;
 }
 
 export function attach_error_underline(host: LiveTree, preset = ERROR_UNDERLINE_PRESET): void {
-  // ensure host is positioning context
-  // host.css.set.position("relative");
 
-  console.log("underline tree", host);
-  console.log("underline node tag", host?.node?._tag);
   const el = host.dom.must.el();
-console.log("underline el", el);
-console.log("underline in dom?", !!el?.isConnected);
-const rect = el?.getBoundingClientRect();
-console.log("underline rect", rect);
-  const w = Math.ceil(el.getBoundingClientRect().width);
+  const w = Math.ceil(host.dom.must.rect().width);
   const svgHTML = makeSvgErrUnderline({
     width: w,
     ...preset,
   });
-  const svgBranch = hson.fromTrustedHtml(svgHTML).liveTree.asBranch();
+  // const svgBranch = hson.liveTree.fromTrustedHtml(svgHTML);
 
   const box = host.create.span()
     .id.set('error-underline')
@@ -131,67 +143,5 @@ console.log("underline rect", rect);
     placeItems: "center",
   });
 
-  box.append(svgBranch);
-}
-function calcZigzagPathSegmented(opts: {
-  x0?: number;
-  x1: number;
-  baselineY: number;
-  amplitude: number;
-  step: number;
-  trim: number; // px shaved off near corners (try 0.75–1.5)
-}): string {
-  const x0 = opts.x0 ?? 0;
-  const x1 = Math.max(x0 + 1, opts.x1);
-  const y0 = opts.baselineY;
-  const a = Math.max(0.5, opts.amplitude);
-  const s = Math.max(2, opts.step);
-  const trim = Math.max(0, opts.trim);
-
-  // --- 1) raw zigzag points ---
-  const pts: Array<{ x: number; y: number }> = [];
-  let x = x0;
-  let up = true;
-  pts.push({ x, y: y0 });
-
-  while (x < x1) {
-    x = Math.min(x + s, x1);
-    pts.push({ x, y: up ? (y0 - a) : y0 });
-    up = !up;
-  }
-
-  // drop back to baseline if we ended on a peak
-  const last = pts[pts.length - 1]!;
-  if (last.y !== y0) pts.push({ x: last.x, y: y0 });
-
-  if (pts.length < 2) return `M ${x0} ${y0}`;
-
-  // --- 2) emit independent trimmed segments ---
-  let d = "";
-
-  for (let i = 0; i < pts.length - 1; i += 1) {
-    const p = pts[i]!;
-    const q = pts[i + 1]!;
-    const dx = q.x - p.x;
-    const dy = q.y - p.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const ux = dx / len;
-    const uy = dy / len;
-
-    // don’t trim the very start/end so we don’t “float” off the bounds
-    const t0 = (i === 0) ? 0 : Math.min(trim, len * 0.45);
-    const t1 = (i === pts.length - 2) ? 0 : Math.min(trim, len * 0.45);
-
-    const sx = p.x + ux * t0;
-    const sy = p.y + uy * t0;
-    const ex = q.x - ux * t1;
-    const ey = q.y - uy * t1;
-
-    // skip degenerate segments
-    if (Math.hypot(ex - sx, ey - sy) < 0.25) continue;
-
-    d += `M ${sx} ${sy} L ${ex} ${ey} `;
-  }
-
-  return d.trim();
+  box.append(svgHTML);
 }
