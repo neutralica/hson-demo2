@@ -10,7 +10,7 @@ export const MENU_FONT = "Monaco, mono"
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
-  fontSize: $txt_.heading,
+  fontSize: $txt_.subhead,
   fontWeight: "400",
   userSelect: "none",
   color: MENU_TEXT_COL,
@@ -76,7 +76,7 @@ export const DEMO_SCREENcss: CssMap = {
   height: "100%",
   overflow: "hidden",
   isolation: "isolate",
-  pointerEvents: "all",
+  pointerEvents: "none",
   minHeight: "0",
   boxSizing: "border-box"
 }
@@ -99,7 +99,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   padding: "1rem",
   maxWidth: "100vw",
 
-  pointerEvents: "all",
+  pointerEvents: "none",
 };
 
 export const MENU_BOXcss: CssMap = {

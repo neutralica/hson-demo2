@@ -4,7 +4,7 @@ import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../core/consts/colors.consts";
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
-import { MOBILE_DOCcss, MOBILE_TOCcss, DISP_SIZE_ALERTcss } from "./global.css";
+import {  DISP_SIZE_ALERTcss } from "./global.css";
 import { MIN_DESKTOP_WIDTH } from "./demo.consts";
 
 export const set_global_css = (): void => {
@@ -46,7 +46,10 @@ export const set_global_css = (): void => {
   gcss.rule("about-row-base", ".about-row").setMany({
     gridTemplateColumns: "21ch minmax(0, 1fr)",
   });
-
+gcss.rule("mobile-fleurs-btn", "#fleurs-button")
+    .setMany({
+      display: "block"
+    });
   /* active button styling */
   gcss.rule("menu-active-view", '.view-button[data-active]').setMany({
     color: $cols_.bckdeep,
@@ -97,55 +100,8 @@ export const set_global_css = (): void => {
   /* fleurs button mobile styling (should match about) */
   mobile.rule("mobile-fleurs-btn", "#fleurs-button")
     .setMany({
-      position: "fixed",
-      bottom: "3rem",
-      right: "3rem",
-      fontSize: $txt_.wordMobile,
-      fontWeight: "700",
+      display: "none"
     });
 
 
-  /* hide table of contents on mobile */
-  mobile.rule(
-    "about-toc-mobile-closed",
-    "#about-root .about-toc:not([data-toc-open='true'])"
-  ).setMany({
-    display: "none",
-  });
-
-
-  /* one flexible column width on mobile */
-  mobile.rule("about-row-mobile-column", ".about-row").setMany({
-    gridTemplateColumns: "minmax(0, 1fr)",
-    position: "fixed",
-    top: "2rem",
-    left: "2rem",
-    width: "100%",
-    height: "100%"
-
-  });
-
-  /* one flexible column width on mobile */
-  // TODO -- make work
-
-  gcss.rule("hide-toc-button-fulscreen", "#about-button #mobile-doc-button").setMany({
-    display: "none"
-  });
-  mobile.rule("hide-toc-button-fulscreen", "#mobile-doc-button").setMany({
-    // ...MAIN_MENUcss,
-    // position: "absolute",
-    // bottom: "100%",
-    // left: "1rem",
-    // height: "40px",
-    // width: "100px",
-    // background: "red",
-    // color: "white"
-  });
-
-  /* explicit styling for doc view on mobile */
-  mobile.rule("about-doc-mobile-full", ".about-doc").setMany(MOBILE_DOCcss);
-
-  /* style "open" table of contents*/
-  mobile.rule("about-toc-mobile-open", ".about-toc[data-toc-open='true']").setMany(MOBILE_TOCcss);
-// gcss.rule("hide-disp-size-warning", "#demo #demo-screen #screen-fx").setMany(SIZE_WARNINGcss("off"))
 }

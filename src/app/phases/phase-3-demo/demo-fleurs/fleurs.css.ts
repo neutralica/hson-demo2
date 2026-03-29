@@ -6,7 +6,7 @@ export const FLOWER_OVERLAYcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  pointerEvents: "none",
+  pointerEvents: "all",
   zIndex: "0",
 };
 

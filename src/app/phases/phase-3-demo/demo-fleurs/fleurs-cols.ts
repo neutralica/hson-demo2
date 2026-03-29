@@ -202,7 +202,7 @@ export function pickCenterColor(
 
         // CHANGED: keep same hue family, but darker and slightly duller
         const h = normalizeHue(src.h + (rng() * 6 - 3));
-        const l = clamp(src.l * 0.42, 0.12, 0.26);
+        const l = clamp(src.l * 0.42, 0.2, 0.26);
         const c = clamp(src.c * 0.55, 0.015, 0.09);
 
         return formatOklch({ l, c, h });
