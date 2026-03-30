@@ -56,17 +56,17 @@ type BuildFactoryOpts = Readonly<{
 const $BUILD_ROOT = "build-root" as const;
 
 export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {
-  // CHANGED: idempotent remove
+  // idempotent remove
   const old = hostBody.find.byId($BUILD_ROOT);
   if (old) old.removeSelf();
 
-  // CHANGED: true two-pane root
+  // true two-pane root
   const root = hostBody.create.div()
     .id.set($BUILD_ROOT)
     .classlist.set("build-root")
     .css.setMany(BUILD_ROOTcss);
 
-  // CHANGED: pane helper now creates a stable head/body grid
+  // pane helper now creates a stable head/body grid
   const makePane = (key: "src" | "out", titleTxt: string): BuildPanel => {
     const panel = root.create.section()
       .classlist.set(`build-pane build-pane--${key}`)
@@ -193,7 +193,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .data.set("output", "html")
     .css.setMany(BUILD_HTMLBOXcss);
 
-  // CHANGED: html hidden by default, preview visible
+  // html hidden by default, preview visible
   htmlBox.css.setMany({ display: "none" });
 
   return relay.data({

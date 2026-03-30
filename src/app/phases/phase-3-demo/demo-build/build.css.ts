@@ -10,7 +10,7 @@ import { PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
-  // CHANGED: actual two-pane split
+  // actual two-pane split
   width: "100%",
   height: "100%",
   minWidth: "0",
@@ -23,7 +23,7 @@ export const BUILD_ROOTcss: CssMap = {
 
 // Header row pinned at top of each pane
 export const BUILD_HEADcss: CssMap = {
-  // CHANGED: compact header row
+  // compact header row
   display: "flex",
   alignItems: "center",
   gap: "10px",
@@ -50,7 +50,7 @@ export const BUILD_SPACERcss: CssMap = {
 
 // Wrap for overlays + textarea/preview
 export const BUILD_TEXTWRAPcss: CssMap = {
-  // CHANGED: wrapper fully fills body
+  // wrapper fully fills body
   position: "relative",
   minWidth: "0",
   minHeight: "0",
@@ -66,7 +66,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 export const BUILD_TEXTAREAcss: CssMap = {
   ...PANEL_TEXTAREAcss,
 
-  // CHANGED: truly fill the pane
+  // truly fill the pane
   width: "100%",
   height: "100%",
   minWidth: "0",
@@ -159,7 +159,7 @@ export const BUILD_TAB_ACTIVEcss: CssMap = {
 
 // Preview host: fills available space and scrolls if content is large
 export const BUILD_PREVIEWcss: CssMap = {
-  // CHANGED: fill output pane body cleanly
+  // fill output pane body cleanly
   width: "100%",
   height: "100%",
   minWidth: "0",
@@ -177,7 +177,7 @@ export const BUILD_PREVIEWcss: CssMap = {
 export const BUILD_HTMLBOXcss: CssMap = {
   ...PANEL_TEXTAREAcss,
 
-  // CHANGED: same fill behavior as source textarea
+  // same fill behavior as source textarea
   width: "100%",
   height: "100%",
   minWidth: "0",
@@ -191,7 +191,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
 };
 
 export const BUILD_PANEcss: CssMap = {
-  // CHANGED: stable head/body stack
+  // stable head/body stack
   minWidth: "0",
   minHeight: "0",
   width: "100%",

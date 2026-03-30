@@ -1,6 +1,7 @@
 // pp.terminal.css.ts
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, set_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
 import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
@@ -41,7 +42,7 @@ export const PP_GRIDcss: CssMap = {
   gap: $GRID_GAPstr,
   overflow: "hidden",
 
-  // CHANGED: fill the available row instead of collapsing
+  // fill the available row instead of collapsing
   alignSelf: "stretch",
   height: "auto",
 };

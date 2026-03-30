@@ -3,26 +3,6 @@ import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.const
 
 const invalidRed = "rgba(200, 50, 50, 1)"
 
-export function set_alpha(color: string, alpha: number): string {
-  // accept rgb(...) or rgba(...)
-  const m = color.match(
-    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/
-  );
-
-  if (!m) {
-    throw new Error(`set_alpha: expected rgb(...) or rgba(...), got: ${color}`);
-  }
-
-  const r = m[1];
-  const g = m[2];
-  const b = m[3];
-
-  // clamp alpha just in case
-  const a = Math.min(1, Math.max(0, alpha));
-
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
-
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,1)";
 const greenBleach = "rgba(228, 244, 228, 1)";
@@ -100,8 +80,8 @@ const txtMain = greyLite;
 export const LETTER_COLORstd = {
   h: blueStd,
   s: yellowStd,
-  o: greenStd,
-  n: pinkStd,
+  o: pinkStd,
+  n: greenStd,
 };
 
 

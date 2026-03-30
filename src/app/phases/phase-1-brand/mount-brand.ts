@@ -13,7 +13,7 @@ import { $blu_, $cols_, $grn_ } from "../../core/consts/colors.consts";
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
 
-const zalgoCol = $blu_.sky;
+const zalgoCol = $blu_.candy;
 const zalgoCol2 = $grn_.dragon;
 
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };

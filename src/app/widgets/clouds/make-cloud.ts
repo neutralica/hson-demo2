@@ -1,4 +1,4 @@
-import { CssManager, type LiveTree } from "hson-live";
+import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/phase-2-splash/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/phase-2-splash/splash.consts";
@@ -28,7 +28,6 @@ export type CloudSvgOpts = {
   blur?: number;
   fillBelowPct?: number;
 };
-
 export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   const rnd = make_rng(o.seed);
 
@@ -42,59 +41,76 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   const ySpan = (o.ySpreadPct / 100) * h;
   const blur = o.blur ?? 0;
 
-  const filter = `
-  <filter id="cloud" x="-20%" y="-20%" width="140%" height="140%">
-    <feGaussianBlur in="SourceGraphic" stdDeviation="${blur.toFixed(2)}" result="b"/>
-    <feColorMatrix in="b" type="matrix"
-      values="
-        1 0 0 0 0
-        0 1 0 0 0
-        0 0 1 0 0
-        0 0 0 35 -12
-      " result="t"/>
-    <feComposite in="t" in2="t" operator="over"/>
-  </filter>
-`;
+  // CHANGED: build detached SVG via LiveTree
+  const svg = hson.liveTree.create.svg().attr.setMany({
+    xmlns: "http://www.w3.org/2000/svg",
+    width: String(wBleed),
+    height: String(h),
+    viewBox: `${xMin} 0 ${wBleed} ${h}`,
+    preserveAspectRatio: "none",
+  });
 
-  // mask-only clouds (white = coverage)
-  let circles = "";
-  for (let i = 0; i < o.circles; i++) {
+  // CHANGED: filter block as string fallback.
+  // If you already have filter/feGaussianBlur/feColorMatrix/feComposite in SVG_TAGS,
+  // this can be rewritten natively too.
+  svg.create.defs(`
+      <defs>
+        <filter id="cloud" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="${blur.toFixed(2)}" result="b"/>
+          <feColorMatrix in="b" type="matrix"
+            values="
+              1 0 0 0 0
+              0 1 0 0 0
+              0 0 1 0 0
+              0 0 0 35 -12
+            " result="t"/>
+          <feComposite in="t" in2="t" operator="over"/>
+        </filter>
+      </defs>
+    `.trim());
+
+  const cloudGroup = svg.create.g().attr.set("filter", "url(#cloud)");
+
+  // CHANGED: circles created natively
+  for (let i = 0; i < o.circles; i += 1) {
     const r = o.rMin + rnd() * (o.rMax - o.rMin);
     const x = xMin + rnd() * (wBleed + r * 2) - r;
     const y = yMid + (rnd() - 0.5) * ySpan;
-    circles += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r.toFixed(2)}" fill="white"/>`;
+
+    cloudGroup.create.circle().attr.setMany({
+      cx: x.toFixed(2),
+      cy: y.toFixed(2),
+      r: r.toFixed(2),
+      fill: "white",
+    });
   }
 
-  // ADDED: solid slab fill under the cloud line
-  // Default start: a little above the band so you don’t get a thin “gap” under some silhouettes.
-  // ADDED: solid slab fill under the cloud line
-  // derive from band geometry instead of a percent knob.
-  const bulkRadius = o.rMin + 0.55 * (o.rMax - o.rMin);     // “typical” circle size
-  const fillStartY =
-    Math.min(
-      h,
-      Math.max(
-        0,
-        // start just below the densest part of the band
-        (yMid + ySpan * 0.25) - bulkRadius * 0.20
-      )
-    );
+  const bulkRadius = o.rMin + 0.55 * (o.rMax - o.rMin);
+  const fillStartY = Math.min(
+    h,
+    Math.max(
+      0,
+      (yMid + ySpan * 0.25) - bulkRadius * 0.20,
+    ),
+  );
 
-  const slab = `<rect x="${xMin}" y="${fillStartY.toFixed(2)}" width="${wBleed}" height="${(h - fillStartY).toFixed(2)}" fill="white"/>`;
+  // CHANGED: slab created natively
+  cloudGroup.create.rect().attr.setMany({
+    x: xMin.toFixed(2),
+    y: fillStartY.toFixed(2),
+    width: String(wBleed),
+    height: (h - fillStartY).toFixed(2),
+    fill: "white",
+  });
 
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="${wBleed}" height="${h}"
-     viewBox="${xMin} 0 ${wBleed} ${h}"
-     preserveAspectRatio="none">  <!-- avoid aspect surprises -->
-  ${filter}
-  <g filter="url(#cloud)">
-    ${circles}
-    ${slab}  <!--  use slab var, don’t re-inline a second rect -->
-  </g>
-</svg>`;
+  //  serialize from node instead of hand-building the whole SVG string.
+  // Adjust the final render method name here if your render terminal differs.
+  const svgMarkup = hson
+    .fromNode(svg.node)
+    .toHtml()
+    .serialize();
 
-  const encoded = encodeURIComponent(svg)
+  const encoded = encodeURIComponent(svgMarkup)
     .replace(/'/g, "%27")
     .replace(/"/g, "%22");
 
@@ -212,8 +228,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // Work around WebKit-prefixed mask properties being canonicalized incorrectly
     // by pushing the mask declarations through raw global CSS text.
-    const cssgl = CssManager.globals.invoke()
-    cssgl.sel(`.${paintIxClass}`)
+    const gcss = CssManager.globals.invoke()
+    gcss.sel(`.${paintIxClass}`)
       .setMany({
         maskImage: `${bg}, ${fade}`,
         WebkitMaskImage: `${bg}, ${fade}`,
@@ -234,7 +250,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     const far = 1 - u;
 
-    cssgl.sel(`.${paintIxClass}`)
+    gcss.sel(`.${paintIxClass}`)
       .setMany({
         animationName: `${CLOUD_BAND_LOOPstr}, ${CLOUD_SUN_KISSstr}`,
         animationDuration: `${CLOUD_DURnum}ms, ${CLOUD_DURnum}ms`,

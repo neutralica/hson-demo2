@@ -1,7 +1,8 @@
 import { CssManager } from "hson-live";
 import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/managers/global-css";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
-import { $blu_, $cols_, $gry_, ACID_WASH_RGBA, set_alpha } from "../../core/consts/colors.consts";
+import { $blu_, $cols_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { set_alpha } from "../../core/helpers/color-helpers";
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 import {  DISP_SIZE_ALERTcss } from "./global.css";
@@ -86,7 +87,7 @@ gcss.rule("mobile-fleurs-btn", "#fleurs-button")
     .setMany({ display: "none" });
 
   mobile.rule("show-disp-size-warning", "#demo #demo-screen").setMany(DISP_SIZE_ALERTcss("on"))
-  
+  mobile.rule("small-copyright-msg", "#copyright-footer").set.fontSize($txt_.smol)
 
   mobile.rule("mobile-about-btn", "#about-button")
     .setMany({

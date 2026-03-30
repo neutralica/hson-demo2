@@ -1,5 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
 import { $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../demo.css";
 import { MONOcss } from "../../../core/core.css";
@@ -21,8 +22,8 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   textAlign: "left",
   userSelect: "none",
   whiteSpace: "pre",
-  // fontSize: "0.5rem",
-  paddingTop: "0.45em",
+  fontSize: "0.5rem",
+  paddingTop: "1.7em",
 };
 
 export const ABOUT_DOCcss: CssMap = {
@@ -34,13 +35,14 @@ export const ABOUT_DOCcss: CssMap = {
   overflowX: "hidden",
   background: set_alpha($cols_.bckdeep, 0.88),
   // borderRadius: "18px",
+  maxWidth: "80ch",
   border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
 };
 
 export const LIST_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",
   fontWeight: "300",
-  fontFamily: "Trebuchet MS", // DO NOT CHANGE - should NOT be Gill Sans
+  fontFamily: "Gill Sans", // DO NOT CHANGE - should NOT be Gill Sans
   color: ACID_WASH_OKLCH.lilac,
   minWidth: "0",
   lineHeight: "1.75",
@@ -63,7 +65,6 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "6px",
-  background: set_alpha(ACID_WASH_RGBA.dimIce, 0.2),
   color: OKLCH_FLEURS.pollen,
 };
 
@@ -248,21 +249,23 @@ export const MD_CODE_PREcss: CssMap = {
   overflowWrap: "anywhere",
   fontSize: $txt_.main,
   lineHeight: "1.85",
-padding: "1rem",
+  padding: "1rem",
   // whiteSpace: "normal",
 };
 
-export const ABOUT_HEADERcss = (level: number) => {
+export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
   return {
     marginTop: level === 1 ? "6px" : "2rem",
     marginBottom: "8px",
-    textDecoration: "underline",
+    textDecoration: level <= 3 ? "underline" : "",
     textUnderlineOffset: "5px",
     fontFamily: MENU_FONT,
     letterSpacing: "0.06em",
-    textTransform: level === 1 ? "uppercase" : "none",
-    fontSize: level === 1 ? $txt_.wordMobile : level === 2 ? $txt_.heading : level === 3 ? $txt_.subhead : $txt_.main,
+    textTransform: level === 2 ? "uppercase" : "none",
+    fontSize: level === 1 ? $txt_.heading : level === 2 ? $txt_.subhead : level === 3 ? $txt_.subhead : $txt_.main,
     fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
+    justifySelf: level <= 2  ? "center" : "start",
+
     color: ACID_WASH_RGBA.neonGhost,
   }
 }
@@ -270,12 +273,12 @@ export const ABOUT_HEADERcss = (level: number) => {
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   fontSize: $txt_.reg,
-  color:$gry_.mid,
+  color: $gry_.mid,
   marginTop: "2rem",
 }
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   color: ACID_WASH_RGBA.softBlue,
   fontSize: $txt_.main,
-  textDecoration:"underline",
+  textDecoration: "underline",
 }

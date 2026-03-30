@@ -106,7 +106,7 @@ function test_panel_factory(): Outcome<TestPanel> {
             } as unknown as LoopReport;
         },
     );
-    // CHANGED: keep track of the current "run ..." row so PASS/FAIL can append inline
+    // keep track of the current "run ..." row so PASS/FAIL can append inline
     let currentCaseLine: LiveTree | null = null;
 
     function get_line_color(line: string): string {

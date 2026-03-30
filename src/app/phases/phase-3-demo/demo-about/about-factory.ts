@@ -3,7 +3,8 @@
 import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
 import { relay, type Outcome } from "intrastructure";
-import { $blu_, $cols_, set_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_ } from "../../../core/consts/colors.consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
 import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_DOCcss, ABOUT_TOCcss, DATA_TOC_OPENcss } from "./about.css";
 
 export type AboutPanel = Readonly<{

@@ -29,16 +29,16 @@ export function suite_find(): TestSuite {
       name: "find.byId hit/miss + must throws",
       html: `<div id="root"><button id="btn">click</button></div>`,
 
-      // CHANGED: inputLabel -> fixture/sub (these feed meta + metaPatch)
+      // inputLabel -> fixture/sub (these feed meta + metaPatch)
       fixture: "find/byId",
       sub: "hit-miss-must",
 
-      // CHANGED: run -> act
+      // run -> act
       act(tree) {
         void tree; // no-op
       },
 
-      // CHANGED: assert now receives (tree, t) and uses t.* instead of throwing
+      // assert now receives (tree, t) and uses t.* instead of throwing
       assert(tree, t) {
         const hit = tree.find.byId("btn");
         t.ok(`find.byId("btn") returns a tree`, !!hit);
@@ -55,7 +55,7 @@ export function suite_find(): TestSuite {
         t.ok(`find.must.byId("nope") throws on miss`, threw);
       },
 
-      // CHANGED: preview should be a function, not a computed string
+      // preview should be a function, not a computed string
       preview(tree) {
         const btn = tree.find.byId("btn");
         const el = btn?.asDomElement?.();
@@ -75,16 +75,13 @@ export function suite_find(): TestSuite {
       </section>
       `,
 
-      // CHANGED
       fixture: "find/findAll",
       sub: "count-must",
 
-      // CHANGED
       act(tree) {
         void tree; // no-op
       },
 
-      // CHANGED
       assert(tree, t) {
         const items = tree.findAll(".item");
         t.eq(`findAll(".item").count() === 3`, items.count(), 3);
@@ -241,7 +238,7 @@ export function suite_append_and_create(): TestSuite {
       act(tree: LiveTree) {
         const elem = tree.find.must.byId("root");
 
-        // CHANGED: operate at the level where the children actually are.
+        // operate at the level where the children actually are.
         removedCount = elem.removeChildren();
 
         elem.create.div().id.set("c");
@@ -295,7 +292,7 @@ export function suite_append_and_create(): TestSuite {
         root.append(hson.liveTree.fromTrustedHtml(`<div id="a"></div>`));
         root.append(hson.liveTree.fromTrustedHtml(`<div id="b"></div>`));
 
-        // CHANGED: inject a primitive into the semantic content container (_elem)
+        // inject a primitive into the semantic content container (_elem)
         // (works in no-dom mode; matches your “_elem is invisible” rule)
         const raw = (root.node._content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode =>
@@ -323,7 +320,7 @@ export function suite_append_and_create(): TestSuite {
         // node-children are gone
         t.eq("content.all().length (node children)", root.content.all().length, 0);
 
-        // CHANGED: primitive survived under _elem
+        // primitive survived under _elem
         const raw = (root.node._content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === "_elem");
         const elemKids = (elem?._content ?? []) as unknown[];
@@ -745,13 +742,13 @@ export function mixedRegression() {
       fixture: "css/setMany",
       sub: "writes-rule",
 
-      // CHANGED: act is async and waits for flush
+      // act is async and waits for flush
       async act(tree) {
         const box = tree.find.must.byId("box");
         box.css.setMany({ opacity: "0.5" });
         box.css.setMany({ transform: "translate(10px, 20px)" });
 
-        // CHANGED: let batching flush
+        // let batching flush
         await Promise.resolve();
         await new Promise<void>((r) => { setTimeout(() => r(), 0); });
       },
@@ -1603,7 +1600,7 @@ function suite_graft_regressions(): TestSuite {
           t.ok("second graft exists", !!second);
           if (!first || !second) return;
 
-          // CHANGED: harden the new element->node guard behavior
+          // harden the new element->node guard behavior
           t.ok("second graft reuses same underlying node", first.node === second.node);
 
           const firstEl = first.asDomElement();

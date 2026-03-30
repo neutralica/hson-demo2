@@ -13,6 +13,7 @@ import { PHASE_LINGER } from "./core/consts/config.consts";
 import { $cols_ } from "./core/consts/colors.consts";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
+import { debug_state_smoke_test } from "./state/state-smoke-test";
 
 
 const _pause = () => _sleep(PHASE_LINGER);

@@ -91,7 +91,7 @@ export function create_inspector(
   });
 
   const body = mk_div_cls(root, "insp-body").css.setMany({
-    // CHANGED: body is the scroll region (or you can put this on tableHost)
+    // body is the scroll region (or you can put this on tableHost)
     ...PANEL_SAFETYcss,
     overflowY: "scroll",
     overflowX: "auto",
@@ -200,7 +200,7 @@ export function create_inspector(
 
       // group cases
 
-      // CHANGED: render every case directly; no grouping during debug
+      // render every case directly; no grouping during debug
       const expandedCases = getExpandedCases(suiteName);
 
       for (const c of cases) {
@@ -220,7 +220,7 @@ export function create_inspector(
 
         mk_td(cr, "c-ms", ms).css.setMany(TDcss);
 
-        // CHANGED: click case name toggles this exact case
+        // click case name toggles this exact case
         nameCell.listen.onClick((me) => {
           _stop(me);
           if (expandedCases.has(c.key)) expandedCases.delete(c.key);
@@ -271,7 +271,7 @@ export function create_inspector(
           const viewBtn = mkBtn(btnBar, "view");
           const copyBtn = mkBtn(btnBar, "copy");
 
-          // CHANGED: keep fail tint on the actual case row's buttons
+          // keep fail tint on the actual case row's buttons
           if (res === "fail") {
             viewBtn.css.set.color($red_etc_.heartsBlood);
             copyBtn.css.set.color($red_etc_.heartsBlood);

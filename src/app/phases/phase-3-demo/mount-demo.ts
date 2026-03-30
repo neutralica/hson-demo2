@@ -11,7 +11,6 @@ import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
 import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORoklch } from "../../core/consts/colors.consts";
-import { get_view, set_view, demo_subscribe, toggle_view, get_widgets, toggle_widget, set_about_toc_open, get_about_toc_open } from "./state";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/mount-build-panel";
 import { mount_about_panels } from "./demo-about/mount-about";
@@ -22,12 +21,14 @@ import { MOUSE_HOSTcss, MOUSE_SLOTcss } from "./demo-mouse/mouse.css";
 import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./demo-fleurs/fleurs.css";
 import { spawn_flower } from "./demo-fleurs/fleurs";
 import { ALL_MOTEScss } from "./motes/motes.css";
-import type { DemoView } from "./state/state.types";
+import type { DemoView } from "../../state/state.types";
 import { set_global_css } from "./set-global-css";
 import { fmtNum } from "./demo-fleurs/fleurs-cols";
 import { mount_test_panels } from "../../../tests/demo-test/tp-factory2";
 import { mount_panel_simple } from "../../ui/panel/panel-simple";
 import { UI_ROOTcss } from "../../ui/panel/tp-panels.css";
+import { debug_state_smoke_test } from "../../state/state-smoke-test";
+import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -59,7 +60,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const menuContainer = mk_div_id(screen, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = mk_div_id(screen, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
   // screen.css.setMany(SIZE_WARNINGcss)
-  const copyright = screen.create.footer().text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
+  const copyright = screen.create.footer().id.set("copyright-footer").text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
 
   const fleurField = fleurOverlay.create.svg()
     .id.set("fleurs-field")
@@ -275,5 +276,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     // const c2 = c1?.firstElementChild;
 
   });
+  const smoke = debug_state_smoke_test();
+console.log(smoke.steps.join("\n"));
   return relay.ok();
 }

@@ -25,7 +25,7 @@ export function make_livetree_suite(
     },
 
     run: async () => {
-      // CHANGED: build IR-only tree (detached) first
+      // build IR-only tree (detached) first
       const html = spec.html?.trim() ?? "";
       if (!html) {
         throw new Error(
@@ -51,7 +51,7 @@ export function make_livetree_suite(
 
           document.body.appendChild(sandbox);
 
-          // CHANGED: this is the key — create DOM now
+          // this is the key — create DOM now
           // If graft is sync in your implementation, await is harmless.
           const host = hson.liveTree.queryDom("#hson-sandbox").graft();
           (tree as any).__sandboxHost = host;

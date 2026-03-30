@@ -69,13 +69,13 @@ export function makeSvgErrUnderline(opts: {
     step: opts.step,
   });
 
-  // CHANGED: keep IDs simple and DOM-safe
+  //  keep IDs simple and DOM-safe
   const clipId = `errClip${Math.floor(Math.random() * 1e9)}`;
 
   const clipY = pad;
   const clipH = Math.max(1, h - pad * 2);
 
-  // CHANGED: create a detached svg root directly
+  //  create a detached svg root directly
   const svg = hson.liveTree.create.svg();
 
   svg.attr.setMany({
@@ -88,7 +88,7 @@ export function makeSvgErrUnderline(opts: {
     focusable: "false",
   });
 
-  // CHANGED: build defs/clipPath/rect natively
+  //  build defs/clipPath/rect natively
   const defs = svg.create.defs();
   const clipPath = defs.create.clipPath().attr.setMany({
     id: clipId,
@@ -102,7 +102,7 @@ export function makeSvgErrUnderline(opts: {
     height: String(Math.max(1, clipH - 2)),
   });
 
-  // CHANGED: build underline path natively
+  //  build underline path natively
   svg.create.path().attr.setMany({
     d,
     "clip-path": `url(#${clipId})`,
@@ -125,7 +125,6 @@ export function attach_error_underline(host: LiveTree, preset = ERROR_UNDERLINE_
     width: w,
     ...preset,
   });
-  // const svgBranch = hson.liveTree.fromTrustedHtml(svgHTML);
 
   const box = host.create.span()
     .id.set('error-underline')

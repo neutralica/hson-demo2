@@ -211,20 +211,20 @@
 //     const inspSurface = inspFrame.create.div().css.setMany({
 //       ...PANEL_SURFACEcss,
 //       ...PANEL_SAFETYcss,
-//       // CHANGED: inspector surface becomes a 2-row grid: header + scroll body
+//       // inspector surface becomes a 2-row grid: header + scroll body
 //       display: "grid",
 //       gridTemplateRows: "auto minmax(0, 1fr)",
 
-//       // CHANGED: critical for scroll inside nested grids
+//       // critical for scroll inside nested grids
 //       height: "100%",
 
-//       // CHANGED: prevent outer surface from scrolling; inner area will
+//       // prevent outer surface from scrolling; inner area will
 //       overflow: "hidden",
 //     });
 
 //     // --- owned dependencies ---
 //     const tp = relay_data(test_panel_factory());
-//     // CHANGED: local append-only console writer
+//     // local append-only console writer
 //     function get_line_color(line: string): string {
 //       const head = line.trim().split(/\s+/, 1)[0]?.toUpperCase() ?? "";
 
@@ -276,7 +276,7 @@
 //       tlog,
 //       { hideClass: $PANEL_HIDDEN },
 
-//       // CHANGED: fallback to metaPatch when no capture is registered
+//       // fallback to metaPatch when no capture is registered
 //       async (key) => {
 //         const fn = captureMap.get(key);
 //         if (fn) return fn();

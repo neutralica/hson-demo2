@@ -9,7 +9,8 @@ import { $HSON } from "../../../../../../hson-live/dist/consts/constants";
 import { MENU_FONT } from "../demo.css";
 import { MD_CODE_PREcss } from "./about.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { demo_subscribe, get_about_toc_open, set_about_toc_open } from "../state";
+import { get_about_toc_open, set_about_toc_open, demo_subscribe } from "../../../state/store2";
+
 
 
 /**
@@ -73,11 +74,11 @@ function split_inline_backticks(src: string): InlineSeg[] {
   return out;
 }
 
-// CHANGED: one renderer for fenced code lines AND inline code segments.
+// one renderer for fenced code lines AND inline code segments.
 // - Handles comments, parens, dot, equals, and double quotes.
 // - Preserves whitespace (assumes container/row has whiteSpace: "pre"; white-space is inherited).
 export function render_inline_code(row: LiveTree, code: string): void {
-  // CHANGED: base “ink” so code isn’t dependent on outer containers.
+  // base “ink” so code isn’t dependent on outer containers.
   const BASEcss: CssMap = INLINE_CODEcss; // should include a visible color
 
   // token css
@@ -160,7 +161,7 @@ export function render_inline_code(row: LiveTree, code: string): void {
 }
 
 export function render_inline(host: LiveTree, src: string): void {
-  // CHANGED: the one true inline renderer.
+  // the one true inline renderer.
   const segs = split_inline_backticks(src);
 
   for (const seg of segs) {
@@ -311,13 +312,13 @@ function render_doc_md(host: LiveTree, src: string): void {
       const li = list.create.div().classlist.add("md-li");
       li.css.setMany(ABOUT_LIST_ROWcss);
 
-      // CHANGED: choose marker text by list kind
+      // choose marker text by list kind
       const marker =
         item.kind === "ol" ? `${start + i})`
           : item.kind === "anti" ? "✗"
             : item.marker;
 
-      // CHANGED: choose marker css by list kind
+      // choose marker css by list kind
       const markerCss =
         item.kind === "anti"
           ? ANTI_LIST_MARKERcss
@@ -327,11 +328,11 @@ function render_doc_md(host: LiveTree, src: string): void {
         .text.set(marker)
         .css.setMany({
           ...markerCss,
-          // CHANGED: indent marker for nested UL only
+          // indent marker for nested UL only
           marginLeft: "1rem",
         });
 
-      // CHANGED: choose body css by list kind
+      // choose body css by list kind
       const bodyCss =
         item.kind === "anti"
           ? ANTI_LIST_TEXTcss
@@ -561,12 +562,12 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     for (const x of tocButtons) {
       x.btn.css.setMany(x.key === activeKey ? TOC_BTN_ACTIVEcss : TOC_BTN_IDLEcss);
     }
-    // CHANGED: collapse TOC after selection)
+    // collapse TOC after selection)
     set_about_toc_open(false);
     applyTocOpen();
   };
 
-  // CHANGED: keep root data attr in sync with state
+  // keep root data attr in sync with state
   applyTocOpen();
   demo_subscribe(applyTocOpen);
 

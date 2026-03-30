@@ -476,7 +476,7 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        // CHANGED: replace with your real constructor / branch API
+        // replace with your real constructor / branch API
         const treeA = hson.liveTree.fromNode(hostA);
         const treeB = hson.liveTree.fromNode(hostB);
 
@@ -687,7 +687,7 @@ export function document_question(): TestSuite {
         await tick();
         gcss.syncNow();
 
-        // CHANGED: replace with your actual instance teardown/removal path
+        // replace with your actual instance teardown/removal path
         treeA.removeSelf();
 
         await tick();

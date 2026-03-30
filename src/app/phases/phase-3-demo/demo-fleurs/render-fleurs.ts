@@ -3,6 +3,7 @@ import { make_rng } from "../../../utils/rng";
 import { pickStamenColor, fmtNum, jitterOklch } from "./fleurs-cols";
 import { getStamenDistance } from "./fleurs-cultivars";
 import { lerp } from "./fleurs-helpers";
+import { adjustOklch } from "../../../core/helpers/color-helpers";
 import type { FlowerPaletteSpec, FlowerSpec } from "./fleurs.types";
 
 export function renderDefaultRing(spec: FlowerSpec, ringIx: number): string {
@@ -63,7 +64,7 @@ const count = Math.max(10, Math.round(lerp(spec.petalCount, spec.petalCount * 0.
 
         const fillBase = pickPetalColor(spec.palette, i + (ringIx * 100), rng, true);
 
-        // CHANGED: slightly darker inward to suggest puckering/shadow
+        // slightly darker inward to suggest puckering/shadow
         const fill = adjustOklch(fillBase, {
             l: lerp(0, -0.155, innerness),
         });
@@ -80,7 +81,7 @@ const count = Math.max(10, Math.round(lerp(spec.petalCount, spec.petalCount * 0.
 export function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
-    // CHANGED: scissor should be sparse and prominent
+    // scissor should be sparse and prominent
     const count = Math.random() * spec.petalCount + 3;
     const step = 360 / count;
     const phase = step * 0.5 * ringIx;
@@ -93,7 +94,7 @@ export function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
     for (let i = 0; i < count; i += 1) {
         let angle = (step * i) + phase;
 
-        // CHANGED: blade-like asymmetry
+        // blade-like asymmetry
         angle += (i % 2 === 0 ? -4 : 4);
 
         let length = baseLength * lerp(0.95, 1.08, rng());
@@ -111,7 +112,7 @@ export function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
 export function renderDaisyRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
-    // CHANGED: daisies should not keep accumulating surprise back-rings
+    // daisies should not keep accumulating surprise back-rings
     const count = ringIx === 0
         ? Math.max(10, spec.petalCount)
         : Math.max(8, Math.floor(spec.petalCount * 0.55));
@@ -176,7 +177,7 @@ export function renderWildRing(spec: FlowerSpec, ringIx: number): string {
     const count = Math.max(5, Math.floor(spec.petalCount * 0.55));
     const step = 360 / count;
 
-    // CHANGED: this is the important bit for wild
+    // this is the important bit for wild
     const phase = step * 0.5 * ringIx;
 
     let baseLength = spec.petalLength * 0.90 * Math.pow(0.88, ringIx);
@@ -325,7 +326,7 @@ export function appendDaisySpotsMarkup(spec: FlowerSpec): string {
     for (let i = 0; i < spotCount; i += 1) {
         const t = (i + 0.5) / spotCount;
 
-        // CHANGED: even distribution across the head, biased naturally outward
+        // even distribution across the head, biased naturally outward
         const r = spec.centerRadius * 0.78 * Math.sqrt(t);
         const ang = i * golden;
 
@@ -397,18 +398,18 @@ export function pickPetalColor(
 export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
-    // CHANGED: dense, compact, many petals
+    // dense, compact, many petals
     const count = Math.max(14, spec.petalCount + (ringIx * 2));
     const step = 360 / count;
 
-    // CHANGED: shrink from ring 0, not ring 1
+    // shrink from ring 0, not ring 1
     const ringShrink = Math.pow(0.80, ringIx);
     const widthGrow = Math.pow(1.08, ringIx);
 
     let baseLength = spec.petalLength * 0.92 * ringShrink;
     let baseWidth = spec.petalWidth * 0.92 * widthGrow;
 
-    // CHANGED: strong per-ring phase so layers interleave
+    // strong per-ring phase so layers interleave
     const phase = step * 0.5 * ringIx;
 
     let out = "";
@@ -429,58 +430,3 @@ export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
     return out;
 }
 
-// CHANGED: small deterministic OKLCH adjuster for already-OKLCH color strings.
-// Supports:
-//   oklch(L C H)
-//   oklch(L C H / A)
-// If parsing fails, returns the original color unchanged.
-export function adjustOklch(
-    color: string,
-    delta: {
-        l?: number;
-        c?: number;
-        h?: number;
-        a?: number;
-    },
-): string {
-    const src = color.trim();
-
-    const m = /^oklch\(\s*([^\s/]+)\s+([^\s/]+)\s+([^\s/)]+)(?:\s*\/\s*([^)]+))?\s*\)$/i.exec(src);
-    if (!m) return color;
-
-    const l0 = Number.parseFloat(m[1] ?? "");
-    const c0 = Number.parseFloat(m[2] ?? "");
-    const h0 = Number.parseFloat(m[3] ?? "");
-    const a0 = m[4] != null ? Number.parseFloat(m[4]) : undefined;
-
-    if (!Number.isFinite(l0) || !Number.isFinite(c0) || !Number.isFinite(h0)) {
-        return color;
-    }
-
-    // CHANGED: clamp inline; no external helpers needed
-    let l = l0 + (delta.l ?? 0);
-    let c = c0 + (delta.c ?? 0);
-    let h = h0 + (delta.h ?? 0);
-    let a = a0 != null ? a0 + (delta.a ?? 0) : undefined;
-
-    l = Math.max(0, Math.min(1, l));
-    c = Math.max(0, c);
-
-    // CHANGED: wrap hue into [0, 360)
-    h = ((h % 360) + 360) % 360;
-
-    if (a != null && Number.isFinite(a)) {
-        a = Math.max(0, Math.min(1, a));
-    }
-
-    const lStr = l.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-    const cStr = c.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-    const hStr = h.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
-
-    if (a != null && Number.isFinite(a)) {
-        const aStr = a.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-        return `oklch(${lStr} ${cStr} ${hStr} / ${aStr})`;
-    }
-
-    return `oklch(${lStr} ${cStr} ${hStr})`;
-}

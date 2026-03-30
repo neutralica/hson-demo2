@@ -21,29 +21,44 @@ npm install hson-live
 
 ## What is HSON?
 
-HSON stands for Hypertext Structured Object Notation. Its syntax expresses both JSON and HTML in a single notation, allowing each format to be converted to the other and back faithfully.  
+HSON stands for Hypertext Structured Object Notation. Its syntax expresses both JSON and HTML in a single notation, allowing each format to be faithfully converted to the other and back.
+
+In HSON, UI is not a function of state. By combining markup and data in a single bilingual syntax, HSON proposes a new paradigm: 
+```
+
+view ≡ data
+
+```
+
+hson-live explores this paradigm.
+
 
 ## What is hson-live?
 
-hson-live is a Typescript library that provies tooling for data transformation and the functionality that HSON enables. hson-live provides two core systems:
+hson-live is a Typescript library that transforms from JSON or HTML to HSON and, leveraging the unity of data and markup, extends an API for a new way of DOM authoring. 
+
+hson-live provides two core systems:
+
+## hson.transform
+
+hson-live's core is a set of 7 transformers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
+
+LiveDemo offers a growing set of test fixtures that showcase hson-live's transformation chain and prove its stability (see: [test]).
 
 
-### hson.transform
+## hson.liveTree
 
-A set of 7 parsers and serializers that convert HTML, JSON, SVG, XML, and HSON into a HsonNode intermediate representation and back again.
-
-These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
-
-LiveDemo offers a growing set of test fixtures that showcase this transformation chain and its stability (see: [test]).
-
-
-### hson.liveTree
-
-LiveTree is an interface that projects live DOM elements from the HsonNode graph. It extends many conventional web-creation operations in its API, enabling typed element-scoped CSS, managed event listener handling and teardown, native SVG creation and animation, complex document construction, and integration of JS, CSS, and HTML in a single frictionless ecosystem.
+LiveTree is an interface that projects live DOM elements from the HsonNode graph. It extends many conventional DOM-creation operations in its API, enabling: 
+- typed, element-scoped CSS 
+- managed event listener handling and teardown
+- native SVG creation
+- native support for keyframes, animation, and @property
+- complex document construction and manipulation 
+- integration of JS, CSS, and HTML all within a single frictionless ecosystem
 
 Mutations to LiveTree's HsonNode graph are synchronously reflected in the DOM, allowing documents to be created and manipulated without templates, reconciliation layers, or framework abstractions.
 
-LiveDemo is built to provde the viability of this new approach.  
+LiveDemo is built to prove the viability of liveTree's web authoring potential. 
 
 ---
 
@@ -53,7 +68,7 @@ The fastest way to understand hson-live is to explore the interactive showcase, 
 
 `https://terminalgothic.com/hson`
 
-Each demo demonstrates various features and properties of hson-live.
+Each demo demonstrates various features and properties of HSON and LiveTree.
 
 
 ### about

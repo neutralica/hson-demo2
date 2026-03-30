@@ -45,7 +45,7 @@ export async function run_test_suites(
   const rec = new TestRecorder();
   const t0 = now();
 
-  // CHANGED
+
   const yieldEvery = opts.yieldEveryCases ?? 1;
   let caseCounter = 0;
 
@@ -114,7 +114,7 @@ export async function run_test_suites(
         if (opts.bail) break;
       }
 
-      // CHANGED: yield periodically so UI can paint + pointer events can run
+      // yield periodically so UI can paint + pointer events can run
       caseCounter += 1;
       if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
         await yield_to_ui();
@@ -123,7 +123,7 @@ export async function run_test_suites(
 
     emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
 
-    // CHANGED: optional suite-level yield
+    // optional suite-level yield
     if (opts.yieldBetweenSuites) {
       await yield_to_ui();
     }

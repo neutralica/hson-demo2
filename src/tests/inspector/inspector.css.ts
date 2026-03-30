@@ -1,5 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { $cols_, $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../app/core/consts/colors.consts";
+import { $cols_, $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
 import { $txt_ } from "../../app/core/consts/ui-consts";
 
@@ -19,7 +20,7 @@ export const LOG_SCROLLcss: CssMap = {
   overflowY: "auto",
   width: "100%",
 
-  // CHANGED: fill available space in parent panel
+  // fill available space in parent panel
   height: "100%",
   minHeight: "0",
 };

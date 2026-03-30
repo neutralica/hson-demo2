@@ -1,7 +1,8 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, set_alpha } from "../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { set_alpha } from "../../core/helpers/color-helpers";
 import { $GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
@@ -10,7 +11,7 @@ export const MENU_FONT = "Monaco, mono"
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
-  fontSize: $txt_.subhead,
+  fontSize: $txt_.main,
   fontWeight: "400",
   userSelect: "none",
   color: MENU_TEXT_COL,
@@ -115,7 +116,7 @@ export const DEMO_MAIN_LOGOcss: CssMap = {
 }
 
 export const MENU_CONTAINERcss: CssMap = {
-  position: "relative", // CHANGED: not absolute
+  position: "relative", // not absolute
 
   display: "flex",
   flexDirection: "column",

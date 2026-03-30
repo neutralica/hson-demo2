@@ -27,4 +27,3 @@ export function pickOne<T>(arr: readonly T[], rng: Rng): T {
     return v;
 }
 
-

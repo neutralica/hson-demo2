@@ -42,7 +42,7 @@ const ZALGO_CSS: CssMap = {
   whiteSpace: "pre",
   pointerEvents: "none",
   opacity: "0",
-  // removed filter: blur here
+
 }
 
 export const Intro_css = {

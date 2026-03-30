@@ -117,7 +117,7 @@ async function make_bitmapped_effect(
 
     const clone = el.cloneNode(true) as SVGGElement;
 
-    // CHANGED: strip transform/opacity from the cloned root because the live outer <g>
+    // strip transform/opacity from the cloned root because the live outer <g>
     // will keep those; otherwise they get applied twice inside the bitmap
     clone.removeAttribute("transform");
     clone.removeAttribute("opacity");
@@ -132,7 +132,7 @@ async function make_bitmapped_effect(
 
     const href =  svg_to_data_url(standaloneSvg);
 
-    // CHANGED: keep the outer flower <g>; only replace its children
+    // keep the outer flower <g>; only replace its children
     while (el.firstChild) {
         el.removeChild(el.firstChild);
     }

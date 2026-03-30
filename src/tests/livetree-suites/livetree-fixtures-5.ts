@@ -144,7 +144,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const rootEl = tree.find.must.byId("root").dom.el();
                     const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
-                    // CHANGED: mount detached rehydrated branch into existing sandbox
+                    // mount detached rehydrated branch into existing sandbox
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
 
@@ -187,7 +187,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     tree.find.must.byId("a1").text.set("AA");
                     await tick();
 
-                    // CHANGED: hydrate only subtree B, not the whole root
+                    // hydrate only subtree B, not the whole root
                     const bEl = tree.find.must.byId("b").dom.el();
                     const bTree = hson.liveTree.fromTrustedHtml(bEl!);
 
@@ -263,7 +263,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const rootEl = tree.find.must.byId("root").dom.el();
                     const round = hson.liveTree.fromTrustedHtml(rootEl!);
 
-                    // CHANGED: mount detached rehydrated branch before DOM lookup
+                    // mount detached rehydrated branch before DOM lookup
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
 
@@ -288,7 +288,7 @@ export function roundtrip_projection_stability(): TestSuite {
 }
 
 
-// CHANGED: helper — adjust this to however HSON-Live exposes/injects its style text in tests.
+// helper — adjust this to however HSON-Live exposes/injects its style text in tests.
 function get_style_text_for_test(tree: LiveTree): string {
     const sandboxEl = (tree as any).__sandboxEl as HTMLElement | undefined;
 
@@ -305,7 +305,7 @@ function get_style_text_for_test(tree: LiveTree): string {
     return joined;
 }
 
-// CHANGED: helper — exact substring count, good enough for selector/rule duplication checks.
+// helper — exact substring count, good enough for selector/rule duplication checks.
 function count_occurrences(haystack: string, needle: string): number {
     if (!needle) return 0;
 
@@ -341,19 +341,19 @@ export function livetree_sync_perf(): TestSuite {
             async act(tree) {
                 const box = tree.find.must.byId("box");
 
-                // CHANGED: establish one concrete style so there is something to sync
+                // establish one concrete style so there is something to sync
                 box.css.setMany({
                     width: "10px",
                     height: "10px",
                 });
 
-                // CHANGED: first flush
+                // first flush
 
                 CssManager.invoke().syncNow?.();
 
                 const before = get_style_text_for_test(tree);
 
-                // CHANGED: second flush with no mutations
+                // second flush with no mutations
                 gcss.syncNow?.();
 
                 const after = get_style_text_for_test(tree);
@@ -385,7 +385,7 @@ export function livetree_sync_perf(): TestSuite {
                 const boxEl = box.dom.el() as HTMLElement;
                 const quid = boxEl.getAttribute("data-_quid") ?? "";
 
-                // CHANGED: selector guess based on your emitted CSS shape seen in devtools
+                // selector guess based on your emitted CSS shape seen in devtools
                 const selector = quid ? `[data-_quid="${quid}"]` : "";
 
                 box.css.setMany({
@@ -394,7 +394,7 @@ export function livetree_sync_perf(): TestSuite {
                 });
                 gcss.syncNow?.();
 
-                // CHANGED: repeat exact same write + flush
+                // repeat exact same write + flush
                 box.css.setMany({
                     width: "12px",
                     height: "12px",
@@ -459,12 +459,12 @@ export function livetree_sync_perf(): TestSuite {
             assert(tree, t) {
                 const r = (tree as any).__result;
 
-                // CHANGED: don't assume deferred batching semantics before sync
+                // don't assume deferred batching semantics before sync
                 t.eq("final width is the settled rule value before/after sync", r.after, "30px");
             },
         },
 
-        // CHANGED: bonus fixture; this belongs with the same family and catches append-only leaks.
+        // bonus fixture; this belongs with the same family and catches append-only leaks.
         {
             suite: SUITE,
             name: "css: removed node does not leave stale rule behind after sync",
@@ -769,7 +769,7 @@ export function livetree_completionist(): TestSuite {
                 assert(tree, t) {
                     const r = (tree as any).__result;
 
-                    // CHANGED: only the rehydrated branch listener should fire from clicking grafted btn2
+                    // only the rehydrated branch listener should fire from clicking grafted btn2
                     t.eq("grafted listener fires once", r.count, 10);
                 },
             },
@@ -796,7 +796,7 @@ export function livetree_completionist(): TestSuite {
                     const original = tree.find.must.byId("box");
                     const cloned = round.find.must.byId("box");
 
-                    // CHANGED: mutate only the clone
+                    // mutate only the clone
                     cloned.data.set("mode", "warm");
                     cloned.text.set("y");
 
@@ -839,7 +839,7 @@ export function livetree_completionist(): TestSuite {
                     tree.find.must.byId("left-inner").text.set("LL");
                     await tick();
 
-                    // CHANGED: hydrate only the nested right subtree
+                    // hydrate only the nested right subtree
                     const rightEl = tree.find.must.byId("right").dom.el();
                     const round = hson.liveTree.fromTrustedHtml(rightEl!);
 
