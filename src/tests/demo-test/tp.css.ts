@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../app/core/consts/colors.consts";
+import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
 import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { $CHIP_WIDTHstr } from "../tests.consts";
@@ -59,16 +59,16 @@ export const TEST_CHIP_LABELcss = {
 
 export const CLEAR_BTNcss: CssMap = {
   ...TEST_ACTION_BTN,
-  borderColor:OKLCH_FLEURS.brass,
-    borderRadius: "18px",
-    background: $cols_.bckdeep,
-    transition: "transform 90ms ease, filter 140ms ease",
-    color: OKLCH_FLEURS.brass,
-    _hover: {
-        background: "orange",
-      color: $cols_.bckdeep,
-        border: "4px solid " + $cols_.bckgd,
-    }
+  borderColor: OKLCH_FLEURS.brass,
+  borderRadius: "18px",
+  background: $cols_.bckdeep,
+  transition: "transform 90ms ease, filter 140ms ease",
+  color: OKLCH_FLEURS.brass,
+  _hover: {
+    background: "orange",
+    color: $cols_.bckdeep,
+    border: "4px solid " + $cols_.bckgd,
+  }
 }
 
 
@@ -82,7 +82,7 @@ export const RUN_BUTTONcss: CssMap = {
   }
 };
 
-export const TEST_SELECTcss:CssMap = {
+export const TEST_SELECTcss: CssMap = {
   minWidth: "20ch",
   padding: "10px 8px 10px 20px",
   borderRadius: "12px",
@@ -141,7 +141,7 @@ export const TEST_PANELcss: CssMap = {
   boxSizing: "border-box",
 };
 export const TEST_CONTENTcss: CssMap = {
-  padding: "1rem",
+  padding: "1rem 1rem 0 0",
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr) 360px",
   gridColumn: "1 /3",
@@ -159,21 +159,24 @@ export const TEST_INSPECTOR_PANEcss: CssMap = {
   overflow: "hidden",
   display: "grid",
   gridTemplateRows: "minmax(0, 1fr)",
+  margin: "0 1rem 1rem 0",
   gridColumn: "1",
+  borderRadius: "20px",
+  border: "2px solid " + ACID_WASH_RGBA.slateBlue
 };
 
 export const TEST_LOG_PANEcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   maxWidth: "100%",
-  margin:"1rem",
+  margin: "0 1rem 1rem 0",
   overflow: "hidden",
   display: "grid",
   gridTemplateRows: "minmax(0, 1fr)",
   gridColumn: "2",
   padding: "5px",
   borderRadius: "20px",
-  border: "2px solid pink"
+  border: "2px solid " + ACID_WASH_OKLCH.seaGlass
 };
 
 export const TP_ROOTcss: CssMap = {

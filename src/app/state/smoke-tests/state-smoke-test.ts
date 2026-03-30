@@ -1,25 +1,14 @@
 import { hson } from "hson-live";
 import type { JsonValue, HsonNode } from "hson-live/types";
-import { make_state_slot } from "./make-state";
-import  { assert_json_eq } from "./state-helpers";
-import { run_state_smoke } from "./smoke-tests/state-smoke-runner";
+import { make_state_slot } from "../make-state";
+import  { assert_json_eq, parse_root_from_json } from "../state-helpers";
+import { run_state_smoke } from "./state-smoke-runner";
 
 type StateSmokeResult = {
   ok: boolean;
   steps: string[];
 };
 
-
-function parse_root_from_json(input: JsonValue): HsonNode {
-  const parsed = hson.fromJson(input).toHson().parse();
-  const root = Array.isArray(parsed) ? parsed[0] : parsed;
-
-  if (!root) {
-    throw new Error("[state smoke] no root node returned from parse");
-  }
-
-  return root;
-}
 
 // tiny explicit smoke test for path/get/set/remove
 export function debug_state_smoke_test(): StateSmokeResult {

@@ -14,6 +14,8 @@ import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $cols_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
+import { set_alpha } from "../../app/core/helpers/color-helpers";
 
 
 export type InspectorUi = Readonly<{
@@ -91,7 +93,7 @@ export function create_inspector(
   });
 
   const body = mk_div_cls(root, "insp-body").css.setMany({
-    // body is the scroll region (or you can put this on tableHost)
+    // body is the scroll region
     ...PANEL_SAFETYcss,
     overflowY: "scroll",
     overflowX: "auto",
@@ -100,8 +102,14 @@ export function create_inspector(
 
   // main table host
   const tableHost = mk_div_cls(body, "insp-table-host").css.setMany({
-    ...PANEL_SAFETYcss
-  });
+    ...PANEL_SAFETYcss,
+    display: "flex",
+    placeItems: "center",
+    textAlign: "center",
+    fontSize: $txt_.subhead,
+    color: set_alpha( OKLCH_FLEURS.mossGlow, 0.5)
+  }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
+
 
   // ---------------------------
   // UI state (expansion)
@@ -327,7 +335,7 @@ export function create_inspector(
           const pre = cell.create.pre().classlist.set("insp-preview-pre");
           pre.css.setMany({
             margin: "0",
-            padding: "10px",
+            // padding: "10px",
             borderRadius: "8px",
             border: "1px solid rgba(255,255,255,0.08)",
             background: "rgba(0,0,0,0.35)",

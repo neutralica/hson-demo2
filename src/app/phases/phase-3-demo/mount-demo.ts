@@ -24,10 +24,10 @@ import { ALL_MOTEScss } from "./motes/motes.css";
 import type { DemoView } from "../../state/state.types";
 import { set_global_css } from "./set-global-css";
 import { fmtNum } from "./demo-fleurs/fleurs-cols";
-import { mount_test_panels } from "../../../tests/demo-test/tp-factory2";
+import { mount_test_panels } from "../../../tests/demo-test/mount-tp";
 import { mount_panel_simple } from "../../ui/panel/panel-simple";
 import { UI_ROOTcss } from "../../ui/panel/tp-panels.css";
-import { debug_state_smoke_test } from "../../state/state-smoke-test";
+import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 // import { spawn_flower } from "./fleurs/fleurs";
 
@@ -235,13 +235,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   })
 
   /* listeners */
-  mobileDocBtn.listen.stopProp().onClick(() => {
-    if (get_about_toc_open()) {
-      set_about_toc_open(false)
-    } else {
-      set_about_toc_open(true);
-    }
-  })
+  // mobileDocBtn.listen.stopProp().onClick(() => {
+  //   if (get_about_toc_open()) {
+  //     set_about_toc_open(false)
+  //   } else {
+  //     set_about_toc_open(true);
+  //   }
+  // })
   if (!_testsWired) { _testsWired = true; }
   menu.parseBtn.listen.stopProp().onClick(() => { toggle_view("parse"); });
   menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });

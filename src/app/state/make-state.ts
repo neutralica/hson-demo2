@@ -46,6 +46,20 @@ export function make_state(input: StateRootInput): NodeState {
       return make_state_slot(rootNode, path, listeners);
     },
     replace(next: JsonValue): void {
+      // CHANGED: current root contract only supports object/array payloads
+      const isObj =
+        next !== null &&
+        typeof next === "object" &&
+        !Array.isArray(next);
+
+      const isArr = Array.isArray(next);
+
+      if (!isObj && !isArr) {
+        throw new Error(
+          `replace(): root replacement currently requires object or array, got ${JSON.stringify(next)}`
+        );
+      }
+
       const prev = clone_node(rootNode);
       const payload = json_value_to_payload_node(next);
 

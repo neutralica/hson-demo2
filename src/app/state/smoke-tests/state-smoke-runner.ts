@@ -1,11 +1,6 @@
 import type { JsonValue } from "hson-live/types";
 import { assert_json_eq } from "../state-helpers";
-import type { NodeStateSlot } from "../state.types";
-
-type StateSmokeResult = {
-    ok: boolean;
-    steps: string[];
-};
+import type { NodeStateSlot, StateSmokeResult } from "../state.types";
 
 type SmokeCtx = {
     steps: string[];

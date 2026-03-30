@@ -2,7 +2,7 @@ import { CssManager } from "hson-live";
 import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/managers/global-css";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { $blu_, $cols_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
-import { set_alpha } from "../../core/helpers/color-helpers";
+import { adjustOklch, set_alpha } from "../../core/helpers/color-helpers";
 import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 import {  DISP_SIZE_ALERTcss } from "./global.css";
@@ -54,7 +54,7 @@ gcss.rule("mobile-fleurs-btn", "#fleurs-button")
   /* active button styling */
   gcss.rule("menu-active-view", '.view-button[data-active]').setMany({
     color: $cols_.bckdeep,
-    background: MENU_TEXT_COL,
+    background: set_alpha(MENU_TEXT_COL,  0.6),
     fontWeight: "100",
     _hover: {
       background: $gry_.dark,
@@ -66,7 +66,7 @@ gcss.rule("mobile-fleurs-btn", "#fleurs-button")
 
   gcss.rule("menu-active-widget", '.widget-button[data-active]').setMany({
     color: $cols_.bckdeep,
-    background: ACID_WASH_RGBA.warmAsh,
+    background: set_alpha(ACID_WASH_RGBA.warmAsh,  0.6),
     fontWeight: "100",
     _hover: {
       background: $gry_.dark,

@@ -39,14 +39,14 @@ hson-live is a Typescript library that transforms from JSON or HTML to HSON and,
 
 hson-live provides two core systems:
 
-## hson.transform
+### hson.transform
 
 hson-live's core is a set of 7 transformers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
 
 LiveDemo offers a growing set of test fixtures that showcase hson-live's transformation chain and prove its stability (see: [test]).
 
 
-## hson.liveTree
+### hson.liveTree
 
 LiveTree is an interface that projects live DOM elements from the HsonNode graph. It extends many conventional DOM-creation operations in its API, enabling: 
 - typed, element-scoped CSS 

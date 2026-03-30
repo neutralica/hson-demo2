@@ -1,22 +1,60 @@
+
+
 export function set_alpha(color: string, alpha: number): string {
-  // accept rgb(...) or rgba(...)
-  const m = color.match(
-    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/
-  );
-
-  if (!m) {
-    throw new Error(`set_alpha: expected rgb(...) or rgba(...), got: ${color}`);
-  }
-
-  const r = m[1];
-  const g = m[2];
-  const b = m[3];
-
-  // clamp alpha just in case
   const a = Math.min(1, Math.max(0, alpha));
 
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
+  const c = color.trim().toLowerCase();
+
+  // -------------------------
+  // rgba / rgb
+  // -------------------------
+  if (c.startsWith("rgb")) {
+    const m = color.match(
+      /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/i
+    );
+
+    if (!m) {
+      console.warn(`set_alpha(): invalid rgb/rgba format: ${color}`);
+      return color;
+    }
+
+    const r = m[1];
+    const g = m[2];
+    const b = m[3];
+
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  }
+
+  // -------------------------
+  // oklch
+  // supports:
+  //   oklch(L C H)
+  //   oklch(L C H / A)
+  // -------------------------
+  if (c.startsWith("oklch")) {
+    const m = color.match(
+      /^oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+))?\s*\)$/i
+    );
+
+    if (!m) {
+      console.warn(`set_alpha(): invalid oklch format: ${color}`);
+      return color;
+    }
+
+    const l = m[1]; // may include %
+    const cVal = m[2];
+    const h = m[3];
+
+    return `oklch(${l} ${cVal} ${h} / ${a})`;
+  }
+
+  // -------------------------
+  // fallback
+  // -------------------------
+  console.warn(`set_alpha(): unsupported color format: ${color}`);
+  return color;
 }
+
 // small deterministic OKLCH adjuster for already-OKLCH color strings.
 // Supports:
 //   oklch(L C H)

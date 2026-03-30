@@ -219,7 +219,9 @@ export const ABOUT_TOC_TITLEcss: CssMap = {
   fontSize: $txt_.subhead,
   letterSpacing: "0.12em",
   fontWeight: "700",
-  color: OKLCH_FLEURS.navyCore,
+  alignSelf: "start",
+  justifySelf: "end",
+  color: OKLCH_FLEURS.brass,
   textTransform: "uppercase",
   padding: "4px 10px 8px 10px",
 };

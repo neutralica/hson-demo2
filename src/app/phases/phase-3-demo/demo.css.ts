@@ -11,7 +11,7 @@ export const MENU_FONT = "Monaco, mono"
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
-  fontSize: $txt_.main,
+  fontSize: $txt_.subhead,
   fontWeight: "400",
   userSelect: "none",
   color: MENU_TEXT_COL,

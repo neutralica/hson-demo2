@@ -51,4 +51,8 @@ export type DemoState = {
 export type DemoStateRO = Readonly<DemoState>;
 //  listeners receive (next, prev) so they can diff
 
-export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;
+export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;export type StateSmokeResult = {
+    ok: boolean;
+    steps: string[];
+};
+

@@ -142,3 +142,13 @@ export function json_value_to_payload_node(value: JsonValue): HsonNode {
 
   return clone_node(child);
 }
+export function parse_root_from_json(input: JsonValue): HsonNode {
+  const parsed = hson.fromJson(input).toHson().parse();
+  const root = Array.isArray(parsed) ? parsed[0] : parsed;
+
+  if (!root) {
+    throw new Error("[state smoke] no root node returned from parse");
+  }
+
+  return root;
+}

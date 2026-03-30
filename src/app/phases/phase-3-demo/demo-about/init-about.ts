@@ -206,9 +206,9 @@ function parse_list_item(line: string): ListItem | null {
   // 1️⃣ nested UL first
   const ulNested = /^(\s*)(--+)\s+(.*)$/.exec(line);
   if (ulNested) {
-    const dashRun = ulNested[2] ?? "--";     
+    const dashRun = ulNested[2] ?? "--";
     const depth = Math.max(1, dashRun.length);
-    const text = (ulNested[3] ?? "").trim(); 
+    const text = (ulNested[3] ?? "").trim();
     return { kind: "ul", depth, marker: "•", text };
   }
 
@@ -534,10 +534,10 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
 
   t.toc.empty();
 
-  t.toc.create.div()
-    .classlist.add("about-nav-title")
-    .css.setMany(ABOUT_TOC_TITLEcss)
-    .text.set("docs");
+  // t.toc.create.div()
+  //   .classlist.add("about-toc-title")
+  //   .css.setMany(ABOUT_TOC_TITLEcss)
+  //   .text.set("docs");
 
   for (const d of docs) {
     const btn = t.toc.create.div()

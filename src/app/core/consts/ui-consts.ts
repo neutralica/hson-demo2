@@ -8,7 +8,7 @@ export const $txt_ = {
     wordMobile: "2.5rem" /*  "2.5rem" */,         // 40px
     heading: "2.5rem"/*  "1.625rem" */,          // 26px
     subhead: "1.5rem"/*  "1.375rem" */,          // 22px
-    main: "1.5rem"/*  "1.25rem" */,             // 20??px
+    main: "1.25rem"/*  "1.25rem" */,             // 20??px
     mid: "1rem"/*  "1rem" */,                // 16px
     unter: "1rem" /*  "0.875rem" */,            // 14px
     reg: "1rem" /*  "0.75rem" */,               // 12px
