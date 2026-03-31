@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { $cols_, $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
-import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { $txt_ } from "../../app/core/consts/ui-consts";
 
 

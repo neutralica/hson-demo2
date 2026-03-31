@@ -4,7 +4,7 @@ import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH }
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
 import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
-import { MENU_FONT } from "../demo.css";
+import { MENU_FONT } from "../../../core/consts/ui-consts";
 
 //// used
 export const PP_HEADERcss: CssMap = {
@@ -17,9 +17,6 @@ export const PP_HEADERcss: CssMap = {
   padding: "6px",
   borderRadius: "10px",
   background: set_alpha($cols_.bckdeep, 0.7),
-  boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.08)",
-  // small halo without skeuo
-  textShadow: "0 0 10px rgba(140,210,255,0.10)",
 };
 
 //// used:
@@ -29,7 +26,9 @@ export const PP_TEXTWRAPcss: CssMap = {
   minHeight: "0",
   minWidth: "0",
   background: set_alpha($cols_.bckdeep, 0.9),
-
+  borderRadius: "20px",
+  // border: "2px ridge blue",
+outline: "none",
 };
 
 export const PP_GRIDcss: CssMap = {

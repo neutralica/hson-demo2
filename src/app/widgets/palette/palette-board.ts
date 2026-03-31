@@ -2,7 +2,7 @@
 import type { LiveTree } from "hson-live";
 import type { Palette } from "./calc-palette";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";
-import { MENU_FONT } from "../../phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../core/consts/ui-consts";
 
 // Render a simple grid of clickable swatches.
 // Click swatch → copies `oklch(...)` string.

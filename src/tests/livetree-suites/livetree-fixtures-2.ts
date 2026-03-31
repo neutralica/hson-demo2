@@ -874,7 +874,7 @@ function suite_css_more(): TestSuite {
 
       assert(tree, t) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const arr = multi.toArray();
+        const arr = multi.items();
 
         t.eq("selected .x count", arr.length, 2);
 
@@ -981,7 +981,7 @@ function suite_find_more(): TestSuite {
         t.eq("findAll count is two", allPs.count(), 2);
 
         const texts: string[] = [];
-        allPs.forEach((branch) => {
+        allPs.each((branch) => {
           texts.push(branch.text.get());
         });
 
@@ -1029,7 +1029,7 @@ function suite_find_more(): TestSuite {
         t.eq("findAll span count is two", allSpans.count(), 2);
 
         const classes: string[] = [];
-        allSpans.forEach((branch) => {
+        allSpans.each((branch) => {
           classes.push(String(branch.attr.get("class") ?? ""));
         });
 
@@ -1193,7 +1193,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       assert(tree, t) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const arr = multi.toArray();
+        const arr = multi.items();
 
         t.eq("selected .x count", arr.length, 2);
 
@@ -1216,7 +1216,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       preview(tree) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const first = multi.toArray()[0];
+        const first = multi.items()[0];
         const snap = first?.css.devSnapshot;
         return snap ? snap() : "<no css snapshot>";
       },
@@ -1243,7 +1243,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       assert(tree, t) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const arr = multi.toArray();
+        const arr = multi.items();
 
         t.eq("selected .x count", arr.length, 2);
 
@@ -1271,7 +1271,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       preview(tree) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const first = multi.toArray()[0];
+        const first = multi.items()[0];
         const snap = first?.css.devSnapshot;
         return snap ? snap() : "<no css snapshot>";
       },

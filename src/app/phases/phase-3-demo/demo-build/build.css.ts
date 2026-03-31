@@ -5,7 +5,7 @@ import  { TEST_ACTION_BTN } from "../../../../tests/demo-test/tp.css";
 import { $cols_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
 import { $GRID_GAPstr } from "../../../core/consts/ui-consts";
 import  { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import  { MENU_FONT } from "../demo.css";
+import { MENU_FONT } from "../../../core/consts/ui-consts";
 import { PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
 
 // --- root that lives inside build div ---

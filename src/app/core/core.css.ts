@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { MENU_FONT } from "../phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "./consts/ui-consts";
 
 
 // reusable monospace baseline for this widget

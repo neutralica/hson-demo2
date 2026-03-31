@@ -1,65 +1,76 @@
+import { _clampLoHi, _clamp01, _wrap360 } from "../../utils/helpers";
 
+export function parse_oklch(src: string) {
+  const m = /^oklch\(\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+))?\s*\)$/i.exec(src.trim());
+  if (!m) {
+    throw new Error(`parse_oklch(): invalid OKLCH string: ${src}`);
+  }
 
-export function set_alpha(color: string, alpha: number): string {
-  const a = Math.min(1, Math.max(0, alpha));
+  return {
+    l: Number(m[1]),
+    c: Number(m[2]),
+    h: Number(m[3]),
+    a: m[4] != null ? Number(m[4]) : undefined,
+  };
+}
+export function format_oklch(color: { l: number; c: number; h: number; a?: number }): string {
+  const l = _clamp01(color.l);
+  const c = Math.max(0, color.c);
+  const h = _wrap360(color.h);
 
-  const c = color.trim().toLowerCase();
+  if (color.a != null) {
+    const a = _clamp01(color.a);
+    return `oklch(${l} ${c} ${h} / ${a})`;
+  }
 
-  // -------------------------
-  // rgba / rgb
-  // -------------------------
-  if (c.startsWith("rgb")) {
-    const m = color.match(
-      /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/i
-    );
+  return `oklch(${l} ${c} ${h})`;
+}
 
-    if (!m) {
-      console.warn(`set_alpha(): invalid rgb/rgba format: ${color}`);
-      return color;
-    }
+export function parse_rgba(src: string) {
+  const m = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/i.exec(src.trim());
+  if (!m) {
+    throw new Error(`parse_rgba(): invalid rgb/rgba string: ${src}`);
+  }
 
-    const r = m[1];
-    const g = m[2];
-    const b = m[3];
+  return {
+    r: _clampLoHi(Number(m[1]), 0, 255),
+    g: _clampLoHi(Number(m[2]), 0, 255),
+    b: _clampLoHi(Number(m[3]), 0, 255),
+    a: m[4] != null ? _clamp01(Number(m[4])) : undefined,
+  };
+}
 
+export function format_rgba(color: { r: number; g: number; b: number; a?: number }): string {
+  const r = Math.round(_clampLoHi(color.r, 0, 255));
+  const g = Math.round(_clampLoHi(color.g, 0, 255));
+  const b = Math.round(_clampLoHi(color.b, 0, 255));
+
+  if (color.a != null) {
+    const a = _clamp01(color.a);
     return `rgba(${r}, ${g}, ${b}, ${a})`;
   }
 
-  // -------------------------
-  // oklch
-  // supports:
-  //   oklch(L C H)
-  //   oklch(L C H / A)
-  // -------------------------
-  if (c.startsWith("oklch")) {
-    const m = color.match(
-      /^oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+))?\s*\)$/i
-    );
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
-    if (!m) {
-      console.warn(`set_alpha(): invalid oklch format: ${color}`);
-      return color;
-    }
+export function set_alpha(color: string, alpha: number): string {
+  const a = _clamp01(alpha);
+  const src = color.trim().toLowerCase();
 
-    const l = m[1]; // may include %
-    const cVal = m[2];
-    const h = m[3];
-
-    return `oklch(${l} ${cVal} ${h} / ${a})`;
+  if (src.startsWith("rgb")) {
+    const rgb = parse_rgba(color);
+    return format_rgba({ ...rgb, a });
   }
 
-  // -------------------------
-  // fallback
-  // -------------------------
+  if (src.startsWith("oklch")) {
+    const oklch = parse_oklch(color);
+    return format_oklch({ ...oklch, a });
+  }
+
   console.warn(`set_alpha(): unsupported color format: ${color}`);
   return color;
 }
 
-// small deterministic OKLCH adjuster for already-OKLCH color strings.
-// Supports:
-//   oklch(L C H)
-//   oklch(L C H / A)
-// If parsing fails, returns the original color unchanged.
 export function adjustOklch(
   color: string,
   delta: {
@@ -69,44 +80,20 @@ export function adjustOklch(
     a?: number;
   }
 ): string {
-  const src = color.trim();
+  let src;
 
-  const m = /^oklch\(\s*([^\s/]+)\s+([^\s/]+)\s+([^\s/)]+)(?:\s*\/\s*([^)]+))?\s*\)$/i.exec(src);
-  if (!m) return color;
-
-  const l0 = Number.parseFloat(m[1] ?? "");
-  const c0 = Number.parseFloat(m[2] ?? "");
-  const h0 = Number.parseFloat(m[3] ?? "");
-  const a0 = m[4] != null ? Number.parseFloat(m[4]) : undefined;
-
-  if (!Number.isFinite(l0) || !Number.isFinite(c0) || !Number.isFinite(h0)) {
+  try {
+    src = parse_oklch(color);
+  } catch {
     return color;
   }
 
-  //  clamp inline; no external helpers needed
-  let l = l0 + (delta.l ?? 0);
-  let c = c0 + (delta.c ?? 0);
-  let h = h0 + (delta.h ?? 0);
-  let a = a0 != null ? a0 + (delta.a ?? 0) : undefined;
-
-  l = Math.max(0, Math.min(1, l));
-  c = Math.max(0, c);
-
-  //  wrap hue into [0, 360)
-  h = ((h % 360) + 360) % 360;
-
-  if (a != null && Number.isFinite(a)) {
-    a = Math.max(0, Math.min(1, a));
-  }
-
-  const lStr = l.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-  const cStr = c.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-  const hStr = h.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
-
-  if (a != null && Number.isFinite(a)) {
-    const aStr = a.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-    return `oklch(${lStr} ${cStr} ${hStr} / ${aStr})`;
-  }
-
-  return `oklch(${lStr} ${cStr} ${hStr})`;
+  return format_oklch({
+    l: _clamp01(src.l + (delta.l ?? 0)),
+    c: Math.max(0, src.c + (delta.c ?? 0)),
+    h: _wrap360(src.h + (delta.h ?? 0)),
+    a: src.a != null || delta.a != null
+      ? _clamp01((src.a ?? 1) + (delta.a ?? 0))
+      : 1,
+  });
 }

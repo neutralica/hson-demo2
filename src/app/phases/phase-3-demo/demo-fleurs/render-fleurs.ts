@@ -1,6 +1,6 @@
 import type { Rng } from "../../../../tests/tests.types";
 import { make_rng } from "../../../utils/rng";
-import { pickStamenColor, fmtNum, jitterOklch } from "./fleurs-cols";
+import { pickStamenColor, fmtNum, jitter_oklch } from "./fleurs-cols";
 import { getStamenDistance } from "./fleurs-cultivars";
 import { lerp } from "./fleurs-helpers";
 import { adjustOklch } from "../../../core/helpers/color-helpers";
@@ -393,7 +393,7 @@ export function pickPetalColor(
             : palette.secondaryPetal;
     }
 
-    return jitterOklch(base, rng, { l: 0.015, c: 0.015, h: 8 });
+    return jitter_oklch(base, rng, { l: 0.015, c: 0.015, h: 8 });
 }
 export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);

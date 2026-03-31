@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, $gry_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { $txt_ } from "../../../core/consts/ui-consts";
-import { MENU_FONT } from "../demo.css";
+import { MENU_FONT } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -29,14 +29,30 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
 export const ABOUT_DOCcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
-  padding: "22px 26px 80px 26px",
+  padding: "10px",
   boxSizing: "border-box",
+  overflowY: "scroll",
+  overflowX: "hidden",
+  background: set_alpha($cols_.bckdeep, 0.86),
+  borderRadius: "18px",
+  maxWidth: "80ch",
+  border: `2px ridge ${OKLCH_FLEURS.clayCoral}`,
+  
+};
+
+export const ABOUT_TOCcss: CssMap = {
+  minWidth: "0",
+  minHeight: "0",
+  gridAutoRows: "min-content",
+  alignContent: "end",
+  gap: "8px",
+  padding: "8px 8px 12px 8px",
+  boxSizing: "border-box",
+  background: set_alpha($cols_.bckdeep, 0.86),
+  borderRadius: "18px",
+  border: `2px ridge ${OKLCH_FLEURS.clayCoral}`,
   overflowY: "auto",
   overflowX: "hidden",
-  background: set_alpha($cols_.bckdeep, 0.88),
-  // borderRadius: "18px",
-  maxWidth: "80ch",
-  border: `1px solid ${set_alpha($blu_.faded, 0.08)}`,
 };
 
 export const LIST_TEXTcss: CssMap = {
@@ -90,7 +106,6 @@ export const ABOUT_CSS: CssMap = {
   overflowX: "auto",
   padding: "10px 12px",
   background: $cols_.bckdeep,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   fontweight: 300,
   fontFamily: MENU_FONT,
   lineHeight: "1.75rem",
@@ -187,21 +202,6 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   boxSizing: "border-box",
 };
 
-export const ABOUT_TOCcss: CssMap = {
-  minWidth: "0",
-  minHeight: "0",
-  gridAutoRows: "min-content",
-  alignContent: "end",
-  // justifyContent: "right",
-  gap: "8px",
-  padding: "8px 8px 12px 8px",
-  boxSizing: "border-box",
-  background: set_alpha($cols_.bckdeep, 0.72),
-  // borderRadius: "18px",
-  border: `1px solid ${set_alpha($blu_.faded, 0.12)}`,
-  overflowY: "auto",
-  overflowX: "hidden",
-};
 
 export const DATA_TOC_OPENcss = {
   display: "grid",
@@ -237,7 +237,7 @@ export const TOC_BTNcss: CssMap = {
   userSelect: "none",
   minWidth: "0",
   textAlign: "right",
-  background: set_alpha($cols_.bckdeep, 0.18),
+  // background: set_alpha($cols_.bckdeep, 0.18),
   color: ACID_WASH_RGBA.brickDust,
   __after: {
     content: '',

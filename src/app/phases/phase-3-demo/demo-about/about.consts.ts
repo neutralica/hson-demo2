@@ -24,3 +24,5 @@ export const ABOUT_DOCS: AboutDocs = [
   // later:
   // { key: "api", title: "API", body: API_MD },
 ];
+
+export const MD_TERM_RE = /(hson-live|LiveDemo|hson |LiveTree|HSON)/g;

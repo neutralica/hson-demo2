@@ -17,13 +17,6 @@ type PpFactoryOpts = {
   // includeNodeOutput?: boolean;
 };
 
-
-// const EMPTY_SYNTAX: Record<Fmt, string> = {
-//   json: "{}",
-//   hson: "<>",
-//   html: "<></>",
-// } as const;
-
 const WM_LABEL: Record<Fmt, string> = {
   json: "{JSON}",
   hson: "<HSON>",
@@ -57,7 +50,6 @@ const header = root.create.div()
 const panelGrid = root.create.div()
   .css.setMany({
     ...PP_GRIDcss,
-    // gridRow: "2 / 3",
     
   });
 
@@ -117,6 +109,7 @@ const panelGrid = root.create.div()
     textarea.data.set("input", fmt);
     textarea.css.setMany(PANEL_TEXTAREAcss);
     textarea.css.set.color(fmtCol[fmt])
+    textarea.css.set.borderColor(fmtCol[fmt])
 
     const chip = status.create.span();
     chip.classlist.add("chip", "validity");

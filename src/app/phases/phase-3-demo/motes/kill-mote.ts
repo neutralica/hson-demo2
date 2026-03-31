@@ -24,12 +24,6 @@ function read_translateY_px(el: Element): number {
   return 0;
 }
 
-// ADDED: read numeric px from inline/computed top
-function read_top_px(el: HTMLElement): number {
-  const top = getComputedStyle(el).top;
-  const n = Number.parseFloat(top);
-  return Number.isFinite(n) ? n : 0;
-}
 export function kill_mote(m: Mote): void {
   if (m.dead) return;
   (m as unknown as { dead: boolean }).dead = true;

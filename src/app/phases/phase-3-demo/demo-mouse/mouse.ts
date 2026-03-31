@@ -1,7 +1,9 @@
 
 // ---- types ----
 
-import { LiveTree } from "hson-live";
+import { LiveTree, make_tree_selector } from "hson-live";
+import type { TreeSelector } from "../../../../../../hson-live/dist/api/livetree/tree-selector";
+import { _DATA_QUID } from "../../../../../../hson-live/dist/consts/constants";
 
 export type MousePanelRig = Readonly<{
     root: LiveTree;
@@ -94,9 +96,10 @@ export function mouse_init(rig: MousePanelRig): void {
     };
     // ADDED: stable center for pointer math
     const getStageCenter = (): { x: number; y: number } => {
-        const el = rig.stage.asDomElement();
-        if (!el) return { x: 0, y: 0 };
-        const r = el.getBoundingClientRect();
+        // const el = rig.stage.asDomElement();
+        // if (!el) return { x: 0, y: 0 };
+        // const r = el.getBoundingClientRect();
+        const r = rig.root.dom.must.rect()
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     };
 
@@ -108,65 +111,50 @@ export function mouse_init(rig: MousePanelRig): void {
 
     const render_stack = (): void => {
         const { x, y } = lastPos;
-        // coords line (keep your existing xy/angle fields if you like)
+
         rig.readout.x.text.set(`x: ${fmt_int(x)}`);
         rig.readout.y.text.set(`y: ${fmt_int(y)}`);
-        // ADDED: pointer swivel (stage center -> mouse)
+
         const c = getStageCenter();
         const dx = x - c.x;
         const dy = y - c.y;
         const theta = Math.atan2(dy, dx);
         const deg = rad_to_deg(theta);
 
-        // restore angle readout as angle (not bbox)
         rig.readout.angle.text.set(`θ: ${deg.toFixed(1)}°`);
 
-        // ADDED: rotate pointer
         rig.pointer.css.setMany({
             transform: `translate(0, -50%) rotate(${deg}deg)`,
         });
-        const els = document.elementsFromPoint(x, y);
+        const hitStack = rig.root.dom.doc.elementsFromPoint(x, y);
+        const orderedHits = [...hitStack].reverse();
+        const ghostStack = find_visual_only_elements(rig.root, x, y, hitStack);
 
-        // OPTIONAL: constrain to your demo root so you don’t list the entire app chrome.
-        // If you have a known root element for the demo panel, filter by containment.
-        // const demoRoot = rig.root.asDomElement()?.closest(`#${$DS.demo}`) ?? null;
-        // const stack = demoRoot ? els.filter(e => demoRoot.contains(e)) : els;
-        const stack = els;
+        const stack = [...orderedHits, ...ghostStack];
 
-        for (let i = 0; i < MAX; i++) {
+        for (let i = 0; i < MAX; i += 1) {
             const row = rig.readout.rows[i];
-            const el = stack[i];
+            const item = stack[i];
 
             if (!row) continue;
 
-            if (!el) {
+            if (!item) {
                 row.ix.text.set("");
                 row.tag.text.set("");
-                // row.quid.text.set("");
                 continue;
             }
 
-            const tag = el.tagName.toLowerCase();
-            const id = (el instanceof HTMLElement && el.id) ? `#${el.id}` : "";
-            const cls =
-                el instanceof HTMLElement && el.classList.length
-                    ? "." + Array.from(el.classList).slice(0, 2).join(".")
-                    : "";
 
-            const cs = (el instanceof Element) ? getComputedStyle(el) : null;
+            const tag = item.tagName.toLowerCase();
+            const id = (item instanceof HTMLElement && item.id) ? `#${item.id}` : "";
+            const cls =
+                item instanceof HTMLElement && item.classList.length
+                    ? "." + Array.from(item.classList).slice(0, 2).join(".")
+                    : "";
 
             row.ix.text.set(String(i));
             row.tag.text.set(`${tag}${id}${cls}`);
-            // row.quid.text.set(get_quid(el));
         }
-
-        // OPTIONAL: show bbox for the top element only
-        // const top = stack[0];
-        // if (top instanceof Element) {
-        //     const r = top.getBoundingClientRect();
-        //     rig.readout.angle.text.set(`θ: ${deg.toFixed(1)}°   box: ${fmt_box(r)}`);
-        //     // Or if angle is still used for pointer swivel, put bbox somewhere else.
-        // }
     };
 
     const tick = (): void => {
@@ -187,4 +175,53 @@ export function mouse_init(rig: MousePanelRig): void {
         cancelAnimationFrame(raf);
         window.removeEventListener("pointermove", onMove);
     };
+}
+
+function find_visual_only_elements(
+    root: LiveTree,
+    x: number,
+    y: number,
+    hitStack: Element[],
+): Element[] {
+    const rootEl = root.dom.el();
+    if (!(rootEl instanceof Element)) return [];
+
+    const hitSet = new Set<Element>(hitStack);
+    const out: Element[] = [];
+
+    // include root itself plus descendants
+    const candidates: Element[] = [rootEl, ...Array.from(rootEl.querySelectorAll("*"))];
+
+    for (const el of candidates) {
+        if (hitSet.has(el)) continue;
+
+        const cs = getComputedStyle(el);
+
+        // only ghosts
+        if (cs.pointerEvents !== "none") continue;
+        if (cs.display === "none") continue;
+        if (cs.visibility === "hidden") continue;
+
+        const r = el.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) continue;
+
+        const inside =
+            x >= r.left &&
+            x <= r.right &&
+            y >= r.top &&
+            y <= r.bottom;
+
+        if (!inside) continue;
+
+        out.push(el);
+    }
+
+    // smaller first tends to surface local overlays before giant containers
+    out.sort((a, b) => {
+        const ar = a.getBoundingClientRect();
+        const br = b.getBoundingClientRect();
+        return (ar.width * ar.height) - (br.width * br.height);
+    });
+
+    return out;
 }

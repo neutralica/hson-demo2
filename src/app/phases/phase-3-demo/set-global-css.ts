@@ -3,7 +3,8 @@ import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/manag
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { $blu_, $cols_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
 import { adjustOklch, set_alpha } from "../../core/helpers/color-helpers";
-import { MAIN_MENUcss, MENU_TEXT_COL } from "./demo.css";
+import { MAIN_MENUcss } from "./demo.css";
+import { MENU_TEXT_COL } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 import {  DISP_SIZE_ALERTcss } from "./global.css";
 import { MIN_DESKTOP_WIDTH } from "./demo.consts";

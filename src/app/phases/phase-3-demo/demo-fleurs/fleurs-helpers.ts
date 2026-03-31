@@ -7,6 +7,7 @@ export function randSigned(rng: Rng): number {
 // HELPERS
 // ---------------------------------------------
 
+// TODO - consolidate all lerps clamps hashes and picks
 export function lerp(a: number, b: number, t: number): number {
     return a + (b - a) * t;
 }

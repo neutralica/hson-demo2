@@ -3,8 +3,9 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, MENU_TEXT_COL, MENU_FONT, HSON_SUBcss, COPYRITEcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH } from "./demo.consts";
+import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
+import { MENU_TEXT_COL, MENU_FONT } from "../../core/consts/ui-consts";
+import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
@@ -60,7 +61,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const menuContainer = mk_div_id(screen, "menu-container").css.setMany(MENU_CONTAINERcss);
   const motes = mk_div_id(screen, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
   // screen.css.setMany(SIZE_WARNINGcss)
-  const copyright = screen.create.footer().id.set("copyright-footer").text.set("© 2026 terminal_gothic — hson-live (Public Parity License 7.0)").css.setMany(COPYRITEcss);
+  const copyright = screen.create.footer().id.set("copyright-footer").text.set(COPY_TEXTstr).css.setMany(COPYRITEcss);
 
   const fleurField = fleurOverlay.create.svg()
     .id.set("fleurs-field")
@@ -85,19 +86,19 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   }
 
   function initFleurViewbox(): void {
-  const rect = fleurOverlay.dom.rect();
-  if (!rect) return;
+    const rect = fleurOverlay.dom.rect();
+    if (!rect) return;
 
-  const w = Math.max(1, rect.width);
-  const h = Math.max(1, rect.height);
+    const w = Math.max(1, rect.width);
+    const h = Math.max(1, rect.height);
 
-  fleurField.attr.setMany({
-    width: fmtNum(w, 0),
-    height: fmtNum(h, 0),
-    viewBox: `0 0 ${w} ${h}`,
-    preserveAspectRatio: "xMidYMid meet",
-  });
-}
+    fleurField.attr.setMany({
+      width: fmtNum(w, 0),
+      height: fmtNum(h, 0),
+      viewBox: `0 0 ${w} ${h}`,
+      preserveAspectRatio: "xMidYMid meet",
+    });
+  }
   mount_motes(motes);
 
 
@@ -234,14 +235,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     }
   })
 
-  /* listeners */
-  // mobileDocBtn.listen.stopProp().onClick(() => {
-  //   if (get_about_toc_open()) {
-  //     set_about_toc_open(false)
-  //   } else {
-  //     set_about_toc_open(true);
-  //   }
-  // })
+
   if (!_testsWired) { _testsWired = true; }
   menu.parseBtn.listen.stopProp().onClick(() => { toggle_view("parse"); });
   menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });
@@ -257,7 +251,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     toggle_view("fleurs")
   })
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
-
+  demo.listen.onKeyDown((ke) => {
+    console.log("key pressed")
+   
+    if (ke.key === "s") {
+      console.log("s pressed")
+    }
+  })
   screen.listen.onClick((ev: MouseEvent) => {
     if (get_view() !== "fleurs") return;
 
@@ -277,6 +277,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   });
   const smoke = debug_state_smoke_test();
-console.log(smoke.steps.join("\n"));
+  console.log(smoke.steps.join("\n"));
   return relay.ok();
 }

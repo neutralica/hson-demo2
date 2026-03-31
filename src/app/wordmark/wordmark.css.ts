@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { $cols_ } from "../core/consts/colors.consts";
-import { MENU_FONT } from "../phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../core/consts/ui-consts";
 
 export const HSON_FONT_PX = 96;
 export const HSON_O_PX = 87;

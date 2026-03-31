@@ -1,7 +1,17 @@
 // ui-consts.ts
 
+import { set_alpha } from "../helpers/color-helpers";
+import { ACID_WASH_OKLCH, ACID_WASH_RGBA } from "./colors.consts";
+
+
+export const MENU_TEXT_COL = ACID_WASH_OKLCH.bruisedPlum;
+export const GRAFFITI_COLOR = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.4);
+export const MENU_FONT = "Monaco, monospace";
+
+export const $GRID_GAPstr = "2px";
+
 export const $PANEL_HIDDEN = 'panel-hidden';
-export const $GRID_GAPstr = "1px";
+export const ABOUT_ROOT_ID = "about-root";
 
 export const $txt_ = {
     hsonWordMarkMain: "4.375rem", // 70px
@@ -15,3 +25,4 @@ export const $txt_ = {
     smol: "0.75rem" /*  "0.625rem" */,             // 10px
     wee: "0.75rem" /*  "0.5rem" */,                // 8px
 } as const;
+

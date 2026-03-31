@@ -12,7 +12,7 @@ import { $PANEL_HIDDEN } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
 import { ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTcss, RUN_BUTTONcss, CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";

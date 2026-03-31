@@ -1,13 +1,10 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { $GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
+import { $GRID_GAPstr, $txt_, GRAFFITI_COLOR, MENU_FONT, MENU_TEXT_COL } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
-
-export const MENU_TEXT_COL = OKLCH_FLEURS.rustPink;
-export const MENU_FONT = "Monaco, mono"
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MENU_FONT,
@@ -169,7 +166,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   transform: "translate(-50%, -50%)",
   whiteSpace: "pre",
   fontFamily: "monospace",
-  color: ACID_WASH_OKLCH.bruisedPlum,
+  color: GRAFFITI_COLOR,
   boxSizing: "border-box",
   mixBlendMode: "multiply",
   fontSize: "min(16px, calc((100vw) / 84))",
@@ -197,7 +194,7 @@ export const COPYRITEcss: CssMap = {
   fontSize: $txt_.unter,
   position: "fixed",
   bottom: "0.2rem",
-  right: "0.2rem",
+  right: "1rem",
   color: $gry_.dim,
   zIndex: "-10",
 }

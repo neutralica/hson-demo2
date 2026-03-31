@@ -1,7 +1,8 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
-import { MENU_FONT, PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
+import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
@@ -162,7 +163,7 @@ export const TEST_INSPECTOR_PANEcss: CssMap = {
   margin: "0 1rem 1rem 0",
   gridColumn: "1",
   borderRadius: "20px",
-  border: "2px solid " + ACID_WASH_RGBA.slateBlue
+  border: "2px ridge " + ACID_WASH_RGBA.slateBlue
 };
 
 export const TEST_LOG_PANEcss: CssMap = {
@@ -176,7 +177,7 @@ export const TEST_LOG_PANEcss: CssMap = {
   gridColumn: "2",
   padding: "5px",
   borderRadius: "20px",
-  border: "2px solid " + ACID_WASH_OKLCH.seaGlass
+  border: "2px ridge " + ACID_WASH_RGBA.slateBlue
 };
 
 export const TP_ROOTcss: CssMap = {

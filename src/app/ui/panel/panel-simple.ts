@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { $blu_ } from "../../core/consts/colors.consts";
-import { MENU_FONT } from "../../phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../core/consts/ui-consts";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
   return parent.create.div()

@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 import { about_factory, type AboutPanel } from "./about-factory";
 import { type Outcome, relay, relay_data } from "intrastructure";
 import type { AboutDocs } from "./about.types";
-import { about_init } from "./init-about";
+import { about_init } from "./about-init";
 
 
 export function mount_about_panels(host: LiveTree, docs: AboutDocs): Outcome<AboutPanel> {

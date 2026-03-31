@@ -1,20 +1,13 @@
 import type { Rng } from "../../../../tests/tests.types";
-import { _clamp01 } from "../../../utils/helpers";
+import { format_oklch, parse_oklch } from "../../../core/helpers/color-helpers";
 import { make_rng } from "../../../utils/rng";
-import { trimNum, clamp, lerp } from "./fleurs-helpers";
+import { clamp, lerp } from "./fleurs-helpers";
 import { randSigned } from "./fleurs-helpers";
 import { hueBands } from "./fleurs.consts";
 import type { OklchColor, JitterOpts, FlowerPaletteSpec, HueBand, FlowerSpec, FlowerColorOpts, FlowerCultivar } from "./fleurs.types";
 
-export function formatOklch(color: OklchColor): string {
-    const l = _clamp01(color.l);
-    const c = Math.max(0, color.c);
-    const h = normalizeHue(color.h);
-
-    return `oklch(${trimNum(l, 3)} ${trimNum(c, 3)} ${trimNum(h, 1)})`;
-}
-export function jitterOklch(base: string, rng: Rng, opts: Partial<JitterOpts> = {}): string {
-    const src = parseOklch(base);
+export function jitter_oklch(base: string, rng: Rng, opts: Partial<JitterOpts> = {}): string {
+    const src = parse_oklch(base);
 
     const jl = opts.l ?? 0.03;
     const jc = opts.c ?? 0.015;
@@ -26,7 +19,7 @@ export function jitterOklch(base: string, rng: Rng, opts: Partial<JitterOpts> = 
         h: normalizeHue(src.h + randSigned(rng) * jh),
     };
 
-    return formatOklch(next);
+    return format_oklch(next);
 }
 function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
     // not every flower gets a second hue family
@@ -140,7 +133,7 @@ export function normalizeHue(h: number): number {
     return out;
 }
 export function pickStamenColor(spec: FlowerSpec, rng: Rng): string {
-    const petal = parseOklch(spec.palette.primaryPetal);
+    const petal = parse_oklch(spec.palette.primaryPetal);
 
     // darker flowers can take lighter stamens; lighter flowers need darker stamens
     if (petal.l > 0.68) {
@@ -198,31 +191,18 @@ export function pickCenterColor(
     cultivar?: FlowerCultivar,
 ): string {
     if (cultivar === "rosette") {
-        const src = parseOklch(palette.primaryPetal);
+        const src = parse_oklch(palette.primaryPetal);
 
         // keep same hue family, but darker and slightly duller
         const h = normalizeHue(src.h + (rng() * 6 - 3));
         const l = clamp(src.l * 0.42, 0.2, 0.26);
         const c = clamp(src.c * 0.55, 0.015, 0.09);
 
-        return formatOklch({ l, c, h });
+        return format_oklch({ l, c, h });
     }
 
-    return jitterOklch(palette.center, rng, { l: 0.01, c: 0.008, h: 5 });
+    return jitter_oklch(palette.center, rng, { l: 0.01, c: 0.008, h: 5 });
 }
-export function parseOklch(src: string): OklchColor {
-    const m = /oklch\(\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*\)/i.exec(src);
-    if (!m) {
-        throw new Error(`parse_oklch: invalid OKLCH string: ${src}`);
-    }
-
-    return {
-        l: Number(m[1]),
-        c: Number(m[2]),
-        h: Number(m[3]),
-    };
-}
-
 
 export function sampleFlowerColor(
     hueCenter: number,
@@ -252,5 +232,5 @@ export function sampleFlowerColor(
     const l = lerp(lMin, lMax, t)
     const c = lerp(cMin, cMax, rng())
 
-    return formatOklch({ l, c, h })
+    return format_oklch({ l, c, h })
 }

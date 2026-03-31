@@ -35,7 +35,7 @@ hson-live explores this paradigm.
 
 ## What is hson-live?
 
-hson-live is a Typescript library that transforms from JSON or HTML to HSON and, leveraging the unity of data and markup, extends an API for a new way of DOM authoring. 
+hson-live is a Typescript library that transforms data from JSON or HTML to HSON and, leveraging the union of data and markup, extends an API for a new way of DOM authoring. 
 
 hson-live provides two core systems:
 
@@ -43,22 +43,22 @@ hson-live provides two core systems:
 
 hson-live's core is a set of 7 transformers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
 
-LiveDemo offers a growing set of test fixtures that showcase hson-live's transformation chain and prove its stability (see: [test]).
+LiveDemo's test suites demonstrate the stability of hson-live's transformater chain across multiple round-trip conversions (see: [test]).
 
 
 ### hson.liveTree
 
-LiveTree is an interface that projects live DOM elements from the HsonNode graph. It extends many conventional DOM-creation operations in its API, enabling: 
-- typed, element-scoped CSS 
+LiveTree is an interface that projects live DOM elements from a HsonNode graph. It extends many conventional DOM-creation operations in its API, enabling: 
+- typed, element-scoped CSS without Shadow DOM
 - managed event listener handling and teardown
 - native SVG creation
 - native support for keyframes, animation, and @property
 - complex document construction and manipulation 
-- integration of JS, CSS, and HTML all within a single frictionless ecosystem
+- integration of JS, CSS, and HTML within a single frictionless ecosystem
 
 Mutations to LiveTree's HsonNode graph are synchronously reflected in the DOM, allowing documents to be created and manipulated without templates, reconciliation layers, or framework abstractions.
 
-LiveDemo is built to prove the viability of liveTree's web authoring potential. 
+LiveDemo has been built to prove the viability of LiveTree's web authoring potential.
 
 ---
 
@@ -166,9 +166,9 @@ Each demo proves at least one of these properties of hson-live:
 - data integrity and stability within the transformation system  
 - round-trip, repeated transformation fidelity
 - locally scoped and typed CSS without Shadow DOM  
-- realtime DOM mutation in response to IR changes  
+- realtime DOM creation and mutation in response to IR changes  
 - unified representation of markup and data  
-- creation of document elements using hson as viable markup 
+- HSON as viable markup format
 
 Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data.
 

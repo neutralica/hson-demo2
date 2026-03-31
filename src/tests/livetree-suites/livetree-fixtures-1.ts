@@ -8,7 +8,7 @@ import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
 import { suite_more_contract_refresh } from "./livetree-fixtures-2";
-import { MENU_FONT } from "../../app/phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
 
 
@@ -598,7 +598,7 @@ export function mixedRegression() {
         const items = tree.findAll({ attrs: { class: "item" } });
         t.eq("count", items.count(), 2);
 
-        items.forEach((node, i) => {
+        items.each((node, i) => {
           // IR attrs should include data-row
           const attrs = node.node._attrs ?? {};
           t.eq(`IR data-row [${i}]`, attrs["data-row"], "42");
@@ -643,7 +643,7 @@ export function mixedRegression() {
         selector.listen.onClick(() => { clickCount += 1; });
 
         // Only meaningful when DOM exists
-        selector.forEach((btn) => {
+        selector.each((btn) => {
           const el = btn.asDomElement() as HTMLButtonElement | null;
           if (el) el.click();
         });
@@ -924,7 +924,7 @@ export function extraCases(): readonly TestSuite[] {
         const items = (tree as any).__refind;
         t.eq("selector count", items.count(), 2);
 
-        items.forEach((node: LiveTree, i: number) => {
+        items.each((node: LiveTree, i: number) => {
           const attrs = node.node._attrs ?? {};
           t.eq(`data-row persisted [${i}]`, attrs["data-row"], "42");
 
@@ -963,14 +963,14 @@ export function extraCases(): readonly TestSuite[] {
         let count = 0;
         const sub = items.listen.onClick(() => { count++; });
 
-        items.forEach((btn: LiveTree) => {
+        items.each((btn: LiveTree) => {
           const el = btn.asDomElement();
           if (el instanceof HTMLButtonElement) el.click();
         })
 
         sub.off();
 
-        items.forEach((btn: LiveTree) => {
+        items.each((btn: LiveTree) => {
           const el = btn.asDomElement();
           if (el instanceof HTMLButtonElement) el.click();
         });

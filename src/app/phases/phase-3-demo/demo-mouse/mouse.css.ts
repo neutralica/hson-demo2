@@ -1,13 +1,13 @@
 import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
-import { MENU_FONT } from "../demo.css";
+import { MENU_FONT } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
 export const MOUSE_ROOTcss: CssMap = {
   display: "grid",
-  gridTemplateRows: "150px 150px",
+  gridTemplateRows: "150px 200px",
   gridTemplateColumns: "2fr 1fr",
   minWidth: "0",
   minHeight: "0",
@@ -22,7 +22,7 @@ export const MOUSE_SLOTcss: CssMap = {
   height: "100%",
   display: "flex",
   flexDirection: "column",
-  justifyContent: "end",
+  justifyItems: "flex-end",
   width: "100%",
   minWidth: "0",
   minHeight: "0",

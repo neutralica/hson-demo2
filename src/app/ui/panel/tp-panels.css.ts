@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, $cols_ } from "../../core/consts/colors.consts";
 import { $GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
-import { MENU_FONT } from "../../phases/phase-3-demo/demo.css";
+import { MENU_FONT } from "../../core/consts/ui-consts";
 
 export const UI_ROOTcss: CssMap = {
 
@@ -35,7 +35,7 @@ export const PANEL_SURFACEcss: CssMap = {
     height: "100%",
     minWidth: "0",
     minHeight: "0",
-    borderRadius: "14px",
+    // borderRadius: "14px",
     // padding: "12px",
     boxSizing: "border-box",
     // display: "grid",
@@ -62,7 +62,7 @@ export const PANELcss: CssMap = {
     minWidth: "0",
     width: "100%",
     padding: "8px",
-    borderRadius: "12px",
+    // borderRadius: "12px",
     boxSizing: "border-box",
     overflowY: "auto",
     maxHeight: "100%",
@@ -80,8 +80,8 @@ export const PANEL_TEXTAREAcss = {
     // background: $cols_.backdeep,
     padding: "10px",
     color: ACID_WASH_OKLCH.bruisedPlum,
-    border: `1px solid ${ACID_WASH_RGBA.oxidizedRed}`,
-    borderRadius: "10px",
+    border: `2px ridge ${ACID_WASH_RGBA.oxidizedRed}`,
+    borderRadius: "20px",
     outline: "none",
 };
 
