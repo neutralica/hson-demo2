@@ -6,11 +6,6 @@ import { _freeze } from "./tests.consts";
 import { TestRecorder } from "./test-recorder";
 import type { RunOptions, RunResult, TestAssertRow, TestEvent, TestSuite } from "./tests.types";
 
-type TestRunReturn = Readonly<{
-  metaPatch?: Record<string, string>;
-  assertRows?: readonly TestAssertRow[];
-}>;
-
 // cooperative yield so the browser can paint + process input.
 // - requestAnimationFrame - "UI-friendly" yield.
 // - fallback to setTimeout for non-DOM contexts.

@@ -1,18 +1,15 @@
 import type { FixtureAtom, LoopOpts, LoopReport, SourceFormat } from "../../../hson-live/dist/diagnostics/loop-3.test";
-import type { BuildSuitesOpts, CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
+import type {  CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
 import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { FAIL_IS_PASS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
-import type { Fixture } from "./tests.types";
-import { all_livetree_suites } from "./livetree-suites/all-livetree-suites";
-import { HSON_FIXTURES, HTML_FIXTURES_NEW } from "./transform-suites/fixtures/fixtures/new-fixtures";
-import { EXTRA_FIXTURES } from "./transform-suites/fixtures/fixtures/extra-fixtures";
-import { livetree_svg_basic } from "./livetree-suites/livetree-fixtures-svg-1";
-import { livetree_svg_ingermediate } from "./livetree-suites/livetree-fixtures-svg-2";
-import { livetree_gnarly_svg } from "./livetree-suites/livetree-fixtures-svg-3";
-import { make_unit_test_suite } from "./livetree-suites/livetree-unit-tests-1";
+import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
+import { unit_test_css, unit_test_pseudo_els } from "./unit-tests/livetree-unit-tests-1";
+import { HTML_FIXTURES_NEW } from "./transform-tests/new-fixtures";
+import { all_unit_tests } from "./unit-tests/make-unit-case";
+import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -155,7 +152,14 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      make_unit_test_suite()
+      ...all_unit_tests(),
+
+    ])
+  }
+  if (mode === "unit") {
+    return _freeze([
+      ...all_unit_tests(),
+
     ])
   }
   if (mode === "livetree") {
@@ -169,9 +173,9 @@ export function build_suites_for_mode(
     make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
-    ...all_livetree_suites(),
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "dev/test", map),
     make_transform_test_suite(h, FAIL_IS_PASS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
-    make_unit_test_suite(),
+    ...all_livetree_suites(),
+    ...all_unit_tests(),
   ]);
 }

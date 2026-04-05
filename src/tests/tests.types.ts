@@ -64,6 +64,7 @@ export type TestRunMode =
   | "livetree"
   | "legacy"
   | "dev"
+  | "unit"
 
 export type CaseMeta = Readonly<{
   fixture?: string;

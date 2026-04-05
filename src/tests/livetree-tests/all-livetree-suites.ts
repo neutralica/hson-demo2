@@ -8,9 +8,6 @@ import { livetree_svg_basic } from "./livetree-fixtures-svg-1";
 import { livetree_svg_ingermediate } from "./livetree-fixtures-svg-2";
 
 
-
-
-
 /******************************************************
  **  TEMPLATE FOR NEW FIXTURE OBJECTS - DO NOT EDIT  **
  ******************************************************/

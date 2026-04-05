@@ -16,7 +16,6 @@ export function livetree_svg_basic(): TestSuite {
 
       async act(tree) {
         const root = tree.find.must.byId("root");
-
         const svg = root.create.svg();
 
         (tree as any).__result = {

@@ -25,6 +25,7 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "transform", label: "transform" },
     { key: "livetree", label: "livetree" },
     { key: "legacy", label: "legacy" },
+    { key: "unit", label: "unit" },
     { key: "dev", label: "dev" },
 ] as const;
 
