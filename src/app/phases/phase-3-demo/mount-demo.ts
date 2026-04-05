@@ -4,14 +4,15 @@ import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
-import { MENU_TEXT_COL, MENU_FONT } from "../../core/consts/ui-consts";
+import { TXTcol_MENU} from "../../core/consts/ui-consts";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, LETTER_COLORoklch } from "../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
+import { HSON_COLOR_ } from "../../core/consts/hson-letter-color";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/mount-build-panel";
 import { mount_about_panels } from "./demo-about/mount-about";
@@ -135,10 +136,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   keys_of(menu).forEach((k) => {
     menu[k]
       .classlist.set(widgetKeys.includes(k) ? "widget-button" : "view-button")
-      .css.setMany({
-        ...MAIN_MENUcss,
-        color: widgetKeys.includes(k) ? ACID_WASH_RGBA.warmAsh : MENU_TEXT_COL,
-      });
+      .css.setMany(MAIN_MENUcss);
   });
   const mobileDocBtn = mk_div_id(menu.aboutBtn, "mobile-doc-button")
     .classlist.add($PANEL_HIDDEN);
@@ -146,7 +144,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: LETTER_COLORoklch[l]
+      color: HSON_COLOR_[l]
     });
   });
 
@@ -167,11 +165,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const mouseHost = mk_div_id(mouseSlot, "mouse-host")
     .classlist.add($PANEL_HIDDEN)
     .css.setMany(MOUSE_HOSTcss);
-  const mr = relay_data(mount_mouse_panel(mouseHost));
-  const ap = relay_data(mount_about_panels(aboutHost, ABOUT_DOCS));
-  const tp = relay_data(mount_test_panels(testHost));
-  const pp = relay_data(mount_parsing_panels(parse));
-  const bp = relay_data(mount_build_panels(buildHost));
+  relay_data(mount_mouse_panel(mouseHost));
+  relay_data(mount_about_panels(aboutHost, ABOUT_DOCS));
+  relay_data(mount_test_panels(testHost));
+  relay_data(mount_parsing_panels(parse));
+  relay_data(mount_build_panels(buildHost));
 
   initFleurViewbox();
   function isMobileDemoWidth(): boolean {
@@ -253,7 +251,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
   demo.listen.onKeyDown((ke) => {
     console.log("key pressed")
-   
+
     if (ke.key === "s") {
       console.log("s pressed")
     }
@@ -269,14 +267,14 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     void spawn_flower(fleurField, x, y);
 
-    // const el = flower.dom.el();
 
-    // const c1 = el?.firstElementChild;
-
-    // const c2 = c1?.firstElementChild;
 
   });
-  const smoke = debug_state_smoke_test();
-  console.log(smoke.steps.join("\n"));
+
+  // DEBUG - delete
+  // demoSlot.append(make_test_swatch())
+  debug_state_smoke_test();
+
+
   return relay.ok();
 }

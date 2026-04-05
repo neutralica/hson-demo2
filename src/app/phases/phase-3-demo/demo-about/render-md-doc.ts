@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss } from "./about.css";
+import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
 import { type ListItem,type ListKind, render_line_with_comment, extractUrl, parse_list_item, isIndented } from "./init-helpers";
 
 // -----------------------------
@@ -57,12 +57,7 @@ export function render_md_doc(host: LiveTree, src: string): void {
 
     const list = host.create.div().classlist.add(listClass);
 
-    list.css.setMany({
-      display: "grid",
-      gap: "1rem",
-      margin: "20px 0",
-      minWidth: "0",
-    });
+    list.css.setMany(FLUSH_LISTcss);
 
     for (let i = 0; i < listBuf.length; i += 1) {
       const item = listBuf[i];

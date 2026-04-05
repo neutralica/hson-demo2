@@ -3,7 +3,7 @@
 import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { $GRID_GAPstr, $txt_, GRAFFITI_COLOR, MENU_FONT, MENU_TEXT_COL } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, $txt_, GRAFFITIcol, MENU_FONT, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
 export const MAIN_MENUcss: CssMap = {
@@ -11,22 +11,49 @@ export const MAIN_MENUcss: CssMap = {
   fontSize: $txt_.subhead,
   fontWeight: "400",
   userSelect: "none",
-  color: MENU_TEXT_COL,
+  color: TXTcol_MENU,
   pointerEvents: "all",
   cursor: "pointer",
-  lineHeight: "2",
+  lineHeight: "1.6",
   letterSpacing: "6%",
   _hover: {
     fontWeight: "100",
-    background: ACID_WASH_RGBA.mutedViolet,
+    background: BLUELIKEcol,
     color: $cols_.bckdeep
   },
   _active: {
     background: $cols_.bckgd,
-    color: ACID_WASH_RGBA.dullAmber,
+    color: GREENLIKEcol,
     fontWeight: "700",
   }
 }
+
+
+export const MENU_BOXcss: CssMap = {
+  position: "relative",
+  lineHeight: "2.5rem",
+};
+
+export const DEMO_MAIN_LOGOcss: CssMap = {
+  display: "flex",
+  alignContent: "end",
+
+}
+
+export const MENU_CONTAINERcss: CssMap = {
+  position: "relative", // not absolute
+
+  display: "flex",
+  flexDirection: "column",
+
+  alignItems: "stretch",
+  width: "auto",
+  height: "100%",
+  pointerEvents: "none",
+  marginLeft: "2rem",
+  marginTop:"2rem"
+};
+
 
 export const HSON_WORDcss: CssMap = {
   fontSize: $txt_.hsonWordMarkMain,
@@ -88,7 +115,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   gridTemplateColumns: "200px 4fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
-  gap: $GRID_GAPstr,
+  gap: GRID_GAPstr,
 
   width: "100%",
   height: "100%",
@@ -98,35 +125,6 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   maxWidth: "100vw",
 
   pointerEvents: "none",
-};
-
-export const MENU_BOXcss: CssMap = {
-  position: "relative",
-  lineHeight: "2.5rem",
-
-};
-
-export const DEMO_MAIN_LOGOcss: CssMap = {
-  display: "flex",
-  alignContent: "end",
-
-}
-
-export const MENU_CONTAINERcss: CssMap = {
-  position: "relative", // not absolute
-
-  display: "flex",
-  flexDirection: "column",
-
-  alignItems: "stretch",
-
-  minWidth: "0",
-  minHeight: "0",
-  width: "100%",
-  height: "100%",
-  pointerEvents: "none",
-  // marginLeft: "2rem",
-  // marginTop:"2rem"
 };
 
 export const LAYOUT_GRIDcss: CssMap = {
@@ -166,7 +164,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   transform: "translate(-50%, -50%)",
   whiteSpace: "pre",
   fontFamily: "monospace",
-  color: GRAFFITI_COLOR,
+  color: GRAFFITIcol,
   boxSizing: "border-box",
   mixBlendMode: "multiply",
   fontSize: "min(16px, calc((100vw) / 84))",
@@ -182,7 +180,7 @@ export const HSON_SUBcss: CssMap = {
   fontSize: $txt_.main,
   position: "relative",
   textWrap: "nowrap",
-  color: OKLCH_FLEURS.violet,
+  color: FADE_1col,
   // color: ACID_WASH_RGBA.wornPurple,
   // color: ACID_WASH_OKLCH.steel,
   marginBottom: "1rem",
@@ -195,6 +193,6 @@ export const COPYRITEcss: CssMap = {
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",
-  color: $gry_.dim,
+  color: COPYRITEcol,
   zIndex: "-10",
 }

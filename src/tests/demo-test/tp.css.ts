@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
-import { $GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
+import { GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
@@ -86,7 +86,6 @@ export const RUN_BUTTONcss: CssMap = {
 export const TEST_SELECTcss: CssMap = {
   minWidth: "20ch",
   padding: "10px 8px 10px 20px",
-  borderRadius: "12px",
   boxSizing: "border-box",
 
   fontFamily: MENU_FONT,
@@ -102,7 +101,6 @@ export const TEST_SELECTcss: CssMap = {
 } as const;
 
 export const TEST_LOGGERcss: CssMap = {
-  borderRadius: "18px",
   padding: "5px",
   boxSizing: "border-box",
   // background: $cols_.backdeep,
@@ -146,7 +144,7 @@ export const TEST_CONTENTcss: CssMap = {
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr) 360px",
   gridColumn: "1 /3",
-  gap: $GRID_GAPstr,
+  gap: GRID_GAPstr,
   minWidth: "0",
   minHeight: "0",
   width: "100%",
@@ -162,8 +160,6 @@ export const TEST_INSPECTOR_PANEcss: CssMap = {
   gridTemplateRows: "minmax(0, 1fr)",
   margin: "0 1rem 1rem 0",
   gridColumn: "1",
-  borderRadius: "20px",
-  border: "2px ridge " + ACID_WASH_RGBA.slateBlue
 };
 
 export const TEST_LOG_PANEcss: CssMap = {
@@ -176,8 +172,6 @@ export const TEST_LOG_PANEcss: CssMap = {
   gridTemplateRows: "minmax(0, 1fr)",
   gridColumn: "2",
   padding: "5px",
-  borderRadius: "20px",
-  border: "2px ridge " + ACID_WASH_RGBA.slateBlue
 };
 
 export const TP_ROOTcss: CssMap = {

@@ -3,7 +3,7 @@ import type { CssMap } from "hson-live/types";
 import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
-import { $GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
+import { GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../../../core/consts/ui-consts";
 
 //// used
@@ -15,7 +15,6 @@ export const PP_HEADERcss: CssMap = {
   zIndex: "5",
   minHeight: "2rem",
   padding: "6px",
-  borderRadius: "10px",
   background: set_alpha($cols_.bckdeep, 0.7),
 };
 
@@ -26,9 +25,6 @@ export const PP_TEXTWRAPcss: CssMap = {
   minHeight: "0",
   minWidth: "0",
   background: set_alpha($cols_.bckdeep, 0.9),
-  borderRadius: "20px",
-  // border: "2px ridge blue",
-outline: "none",
 };
 
 export const PP_GRIDcss: CssMap = {
@@ -38,7 +34,7 @@ export const PP_GRIDcss: CssMap = {
   width: "100%",
   minWidth: "0",
   minHeight: "0",
-  gap: $GRID_GAPstr,
+  gap: GRID_GAPstr,
   overflow: "hidden",
 
   // fill the available row instead of collapsing
@@ -141,6 +137,6 @@ export const PARSING_PANEL_ROOTcss: CssMap = {
   height: "100%",
   minWidth: "0",
   minHeight: "0",
-  gap: $GRID_GAPstr,
+  gap: GRID_GAPstr,
   overflow: "hidden",
 };

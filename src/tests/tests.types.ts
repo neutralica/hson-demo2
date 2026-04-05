@@ -243,8 +243,6 @@ export type Asserter = Readonly<{
     want: string | null
   ) => void;
 
-  // If you have Outcome-returning operations in tests:
-  // (we don't construct Outcomes here; we only recognize + throw)
   outcomeOk: (label: string, maybeOutcome: unknown) => void;
 }>;
 

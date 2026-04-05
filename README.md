@@ -1,15 +1,13 @@
-# hson-LiveDemo
-### hson-live — a unified format for HTML markup and JSON data
+# hson::LiveDemo
+### HSON — a unified notation for HTML and JSON
 
-LiveDemo is an interactive demonstration environment for HSON, a "glue format" that unifies HTML and JSON through a shared intermediate representation, and hson-live, a library that explores the possibilities this unlocks. 
-
-LiveDemo is the first website built entirely with hson-live. Its interactive demos showcase the features and functionality of the hson-live library and propose a new way of authoring the web.
+LiveDemo is an interactive showcase environment for HSON and the hson-live library. It is the first website built with hson-live; its purpose is to demonstrate the features and functionality that HSON enables.
 
 
-### Live demo (this site)
+### LiveDemo (this site)
 `https://terminalgothic.com/hson`
 
-### Main project repository
+### main project repository
 `https://github.com/neutralica/hson-live`
 
 ### npm package
@@ -21,21 +19,18 @@ npm install hson-live
 
 ## What is HSON?
 
-HSON stands for Hypertext Structured Object Notation. Its syntax expresses both JSON and HTML in a single notation, allowing each format to be faithfully converted to the other and back.
+HSON stands for Hypertext Structured Object Notation. It expresses both JSON and HTML in a single notation, allowing these formats to be faithfully converted to the other and back.
 
-In HSON, UI is not a function of state. By combining markup and data in a single bilingual syntax, HSON proposes a new paradigm: 
-```
+HSON suggests an alternative to "view = f(state)":
 
-view ≡ data
+`view ≡ state`
 
-```
-
-hson-live explores this paradigm.
+hson-live is a runtime built on that equivalence.
 
 
 ## What is hson-live?
 
-hson-live is a Typescript library that transforms data from JSON or HTML to HSON and, leveraging the union of data and markup, extends an API for a new way of DOM authoring. 
+hson-live is a Typescript library that transforms data from JSON or HTML to HSON and, leveraging the union of data and markup, extends an API for a new approach to DOM authoring. 
 
 hson-live provides two core systems:
 
@@ -58,29 +53,19 @@ LiveTree is an interface that projects live DOM elements from a HsonNode graph. 
 
 Mutations to LiveTree's HsonNode graph are synchronously reflected in the DOM, allowing documents to be created and manipulated without templates, reconciliation layers, or framework abstractions.
 
-LiveDemo has been built to prove the viability of LiveTree's web authoring potential.
-
----
-
-## Getting started
-
-The fastest way to understand hson-live is to explore the interactive showcase, LiveDemo:
-
-`https://terminalgothic.com/hson`
-
-Each demo demonstrates various features and properties of HSON and LiveTree.
+LiveDemo has been built to prove the viability of LiveTree. It is entirely built using the hson-live library and does not call any conventional DOM-creation methods. Its various demos showcase the features and functionality that HSON enables:
 
 
-### about
+### [about]
 
-Displays the README and comprehensive documentation for hson-live and its subsystems.
+Builds and renders from markdown the README and other documentation for hson-live and its subsystems.
 
-This section contains detailed information about the architecture, structural syntax decisions, and a complete LiveTree API reference.
+This section contains detailed information about the architecture, structural syntax decisions, and a complete LiveTree API reference (may be out of date).
 
 
 ---
 
-### test
+### [test]
 
 Runs test suites for hson.transform and hson.livetree. Each transformation step is captures and serialized for inspection.
 
@@ -90,12 +75,12 @@ Demonstrates
 - consistent round-trip transformations  
 - resilience across mixed HTML / JSON / SVG inputs  
 
-This panel demonstrates that the transformation system behaves deterministically and preserves the integrity of user data.
+This panel shows that the transformation system behaves deterministically and preserves the integrity of user data.
 
 
 ---
 
-### parse
+### [parse]
 
 Users may paste HTML, JSON, or HSON strings and immediately view their equivalent representations in the other formats.
 
@@ -111,7 +96,7 @@ Demonstrates
 
 ---
 
-### build
+### [build]
 
 The left panel contains a textarea with an editable HSON document.
 
@@ -126,7 +111,7 @@ Demonstrates
 
 ---
 
-### mouse
+### [mouse]
 
 A diagnostic widget that tracks the mouse pointer across the browser window.
 
@@ -139,13 +124,13 @@ The panel displays and continuously updates:
 Demonstrates
 
 - realtime DOM updates  
-- simple access to pointer coordinates  
+- simple access to pointer coordinates
 - direct interaction with and mutation of the node graph without traditional DOM queries  
 
 
 ---
 
-### fleurs
+### [fleurs]
 
 This demo clears the interface and, when the background is clicked, renders an SVG flower at the current pointer position.
 
@@ -154,6 +139,8 @@ Demonstrates
 - native typed SVG handling within liveTree
 - realtime DOM mutation
 - interactive graphics driven directly by the node graph  
+
+On mobile, only [fleurs] is available
 
 ---
 

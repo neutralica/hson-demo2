@@ -7,7 +7,7 @@ import { outcome, relay, relay_data, type Outcome, type OutcomeData } from "intr
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { PP_COPYBTNcss } from "./pp.css";
 import { PARSING_PANEL_ROOTcss } from "./pp.css";
-import { init_parsing_panels } from "./init.pp";
+import { init_parsing_panels } from "./init-pp";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import type { Fmt, Panels, PanelShell } from "../../../ui/panel/panels.types";
 import { PANELcss, PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";

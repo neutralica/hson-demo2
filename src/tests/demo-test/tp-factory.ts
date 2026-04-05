@@ -17,6 +17,7 @@ import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
 import { ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTcss, RUN_BUTTONcss, CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
 import { PANEL_BRANCHcss } from "../../app/ui/panel/tp-panels.css";
+import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
@@ -259,8 +260,6 @@ export function tp_factory(): Outcome<TestPanel> {
         clearBtn.listen.onPointerLeave(() => press(clearBtn, false));
 
         runBtn.listen.onClick(async () => {
-            const next_frame = (): Promise<void> =>
-                new Promise((r) => requestAnimationFrame(() => r()));
 
             chips.clear();
             tlog.clear();
@@ -268,7 +267,7 @@ export function tp_factory(): Outcome<TestPanel> {
             captureMap.clear();
 
             appendLogLine("running loop test…");
-            await next_frame();
+            await flush_dom();
 
             const suites = build_suites_for_mode(mode, { _test_full_loop }, captureMap);
             const res = await run_test_suites(suites, doLogOnEvent, { bail: false });

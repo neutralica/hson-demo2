@@ -107,7 +107,7 @@ export function create_inspector(
     display: "flex",
     placeItems: "center",
     textAlign: "center",
-    fontSize: $txt_.subhead,
+    fontSize: $txt_.unter,
     color: set_alpha( OKLCH_FLEURS.mossGlow, 0.5)
   }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
 
@@ -337,8 +337,6 @@ export function create_inspector(
           pre.css.setMany({
             margin: "0",
             // padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid rgba(255,255,255,0.08)",
             background: "rgba(0,0,0,0.35)",
             overflow: "auto",
             maxHeight: "100%",

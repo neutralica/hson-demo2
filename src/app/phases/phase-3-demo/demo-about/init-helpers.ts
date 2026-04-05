@@ -2,8 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
-import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ABOUT_TOC_TITLEcss } from "./about.css";
+import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ABOUT_TOC_TITLEcss, SPECIAL_WORDScss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 
@@ -315,7 +314,7 @@ function render_prose_text(host: LiveTree, text: string): void {
 
     host.create.span()
       .classlist.add("md-term")
-      .css.setMany(MD_TERMcss)
+      .css.setMany(SPECIAL_WORDScss)
       .text.set(hit);
 
     lastIx = ix + hit.length;
@@ -325,7 +324,5 @@ function render_prose_text(host: LiveTree, text: string): void {
     host.create.span().text.set(text.slice(lastIx));
   }
 }
-export const MD_TERMcss: CssMap = {
-  color: ACID_WASH_OKLCH.sky,
-  fontWeight: "500",
-};
+
+

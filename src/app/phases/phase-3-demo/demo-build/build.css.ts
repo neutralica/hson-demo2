@@ -3,7 +3,7 @@
 import type { CssMap } from "hson-live/types";
 import  { TEST_ACTION_BTN } from "../../../../tests/demo-test/tp.css";
 import { $cols_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
-import { $GRID_GAPstr } from "../../../core/consts/ui-consts";
+import { GRID_GAPstr } from "../../../core/consts/ui-consts";
 import  { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { MENU_FONT } from "../../../core/consts/ui-consts";
 import { PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
@@ -17,7 +17,7 @@ export const BUILD_ROOTcss: CssMap = {
   minHeight: "0",
   display: "grid",
   gridTemplateColumns: "1fr 1fr",
-  gap: $GRID_GAPstr,
+  gap: GRID_GAPstr,
 };
 
 
@@ -57,9 +57,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  borderRadius: "10px",
   background: $cols_.bckdeep,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
 // Input textarea: just reuse PANEL_TEXTAREAcss, add padding back if you want
@@ -73,7 +71,6 @@ export const BUILD_TEXTAREAcss: CssMap = {
   minHeight: "0",
   boxSizing: "border-box",
   resize: "none",
-  border: `1px solid ${OKLCH_FLEURS.bruisedPlum}`,
 
   background: $cols_.bckdeep,
   color: ACID_WASH_OKLCH.straw,
@@ -167,10 +164,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  borderRadius: "10px",
   background: $cols_.bckdeep,
-  border: `2px solid ${OKLCH_FLEURS.bruisedPlum}`,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
 };
 
 // HTML output box: same textarea styling
@@ -184,7 +178,6 @@ export const BUILD_HTMLBOXcss: CssMap = {
   minHeight: "0",
   boxSizing: "border-box",
   resize: "none",
-  border: "0",
   outline: "none",
 
   padding: "10px",
@@ -201,7 +194,6 @@ export const BUILD_PANEcss: CssMap = {
   gap: "10px",
   padding: "10px",
   boxSizing: "border-box",
-  borderRadius: "14px",
   // overflow: "hidden",
 };
 

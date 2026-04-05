@@ -1,33 +1,15 @@
 import type { LiveTree } from "hson-live";
 import type { Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import type { CaseReport } from "../tests.types";
+import { tick } from "../livetree-suites/livetree-fixtures-3";
 
+export async function flush_dom(): Promise<void> {
+  await tick();
+  await new Promise(r => requestAnimationFrame(r));
+}
 
-
-/**
- *TO EXTRACT:
- 1.	DOM table builders
-
-   ~~•mkTable, mkTr, mkTd, mkTh~~
-    •	clearBox
-    •	kbOf / bytes_of / snip
-    -->inspector.dom.ts.
-
-    2.	Formatting and report rendering
-
-    •	report_to_text
-    •	render_report_html
-    •	open_report_window (or “blob window” helper)
-     -->inspector.report.ts.
-
-    3.	State helpers
-
-    •	groupKeyFor
-    •	getExpandedSuites/getExpandedGroups/getExpandedCases
-    •	any Map<string, Set<...>> helpers
-    -->inspector.state.ts.
- 
- **/
+export const next_frame = (): Promise<void> =>
+                new Promise((r) => requestAnimationFrame(() => r()));
 // ---------------------------
 // table helpers
 // ---------------------------

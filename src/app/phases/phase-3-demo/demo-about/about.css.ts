@@ -1,10 +1,21 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $HSON_COLORS, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
+import { $blu_, $cols_, $grn_, $HSON_COLORS, ACID_WASH_RGBA, CYBERPUNK_2060_OKLCH } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { $txt_ } from "../../../core/consts/ui-consts";
+import { $txt_, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+
+export const ABOUT_P_TEXTcss: CssMap = {
+  // padding: "0 30px 0 30px",
+  whiteSpace: "pre-wrap",
+  lineHeight: "1.85",
+  letterSpacing: "1px",
+  color: TXTcol_MAIN,
+  textShadow:"0 0 5px oklch(0.85 0.03 260 / 0.25)",
+  fontFamily: "sans-serif",
+  fontWeight: "100",
+  fontSize: $txt_.main,
+}
 
 // ADDED: list cell styling (prevents baseline + indent issues)
 export const ABOUT_LIST_ROWcss: CssMap = {
@@ -17,7 +28,6 @@ export const ABOUT_LIST_ROWcss: CssMap = {
 };
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
-  color: OKLCH_FLEURS.brass,
   lineHeight: "1",
   textAlign: "left",
   userSelect: "none",
@@ -34,10 +44,8 @@ export const ABOUT_DOCcss: CssMap = {
   overflowY: "scroll",
   overflowX: "hidden",
   background: set_alpha($cols_.bckdeep, 0.86),
-  borderRadius: "18px",
   maxWidth: "80ch",
-  border: `2px ridge ${OKLCH_FLEURS.clayCoral}`,
-  
+
 };
 
 export const ABOUT_TOCcss: CssMap = {
@@ -49,8 +57,6 @@ export const ABOUT_TOCcss: CssMap = {
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
   background: set_alpha($cols_.bckdeep, 0.86),
-  borderRadius: "18px",
-  border: `2px ridge ${OKLCH_FLEURS.clayCoral}`,
   overflowY: "auto",
   overflowX: "hidden",
 };
@@ -59,9 +65,9 @@ export const LIST_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",
   fontWeight: "300",
   fontFamily: "Gill Sans", // DO NOT CHANGE - should NOT be Gill Sans
-  color: ACID_WASH_OKLCH.lilac,
+  letterSpacing: "1px",
   minWidth: "0",
-  lineHeight: "1.75",
+  lineHeight: "1.55",
 };
 
 export const HRcss: CssMap = {
@@ -81,25 +87,15 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "6px",
-  color: OKLCH_FLEURS.pollen,
+  color: TOCcol,
 };
 
 export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
-  color: OKLCH_FLEURS.brass,
+  color: set_alpha(TOCcol, 0.7),
 };
 
-export const ABOUT_P_TEXTcss: CssMap = {
-  // padding: "0 30px 0 30px",
-  whiteSpace: "pre-wrap",
-  lineHeight: "1.85",
-  letterSpacing: "0.7px",
-  color: ACID_WASH_OKLCH.frost,
-  fontFamily: "Gill Sans",
-  fontWeight: "200",
-  fontSize: $txt_.main,
-}
 
 export const ABOUT_CSS: CssMap = {
   whiteSpace: "pre-line",
@@ -115,7 +111,6 @@ export const ABOUT_CSS: CssMap = {
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
   // fontSize: $txt_.main,
-  color: $blu_.pastel,              // same family as method names, but slightly calmer
   fontFamily: MENU_FONT,
   fontWeight: "300",
   letterSpacing: "0.06em",
@@ -126,20 +121,20 @@ export const INLINE_CODEcss: CssMap = {
 
 // parentheses inside inline code
 export const CODE_PARENcss: CssMap = {
-  color: ACID_WASH_OKLCH.ember, // choose something distinct but harmonious
+  color: CODE_PARENScol, // choose something distinct but harmonious
   fontFamily: MENU_FONT,
   fontWeight: "600",
 
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
-  color: ACID_WASH_OKLCH.bruisedPlum,
+  color: CODE_PARENS_INNERcol,
   fontFamily: MENU_FONT,
   fontWeight: "300",
 } as const;
 
 export const CODE_COMMENTScss: CssMap = {
-  color: ACID_WASH_OKLCH.fern,
+  color: COMMENTScol,
   fontFamily: MENU_FONT,
   fontSize: $txt_.main,
   overflowWrap: "anywhere",
@@ -148,27 +143,27 @@ export const CODE_COMMENTScss: CssMap = {
 };
 
 export const CODE_QUOTEcss = {
-  color: ACID_WASH_OKLCH.bruisedPlum,              // muted gray
+  color: CODQ_QUOTEcol,              // muted gray
   fontWeight: "700",
 };
 export const CODE_EQUALSscss = {
-  color: ACID_WASH_OKLCH.smokeRose,              // muted gray
+  color: CODE_EQUALScol,              // muted gray
   fontWeight: "700",
 };
 
 export const CODE_PUNCTcss = {
-  color: ACID_WASH_OKLCH.straw,              // muted gray
+  color: CODE_PUNCTcol,              // muted gray
   fontWeight: "700",
 };
 
 export const ANTI_LIST_MARKERcss: CssMap = {
-  color: "#b44",
+  color: set_alpha(REDLIKEcol, 0.8),
   fontWeight: "700",
 };
 
 export const ANTI_LIST_TEXTcss: CssMap = {
   ...LIST_TEXTcss,
-  color: "#b44",
+  color: REDLIKEcol,
   fontSize: $txt_.main,
   // textDecoration: "line-through",
 };
@@ -197,7 +192,6 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   display: "grid",
-  // gridTemplateColumns: "21ch minmax(0, 1fr)",
   gap: "14px",
   boxSizing: "border-box",
 };
@@ -221,33 +215,24 @@ export const ABOUT_TOC_TITLEcss: CssMap = {
   fontWeight: "700",
   alignSelf: "start",
   justifySelf: "end",
-  color: OKLCH_FLEURS.brass,
   textTransform: "uppercase",
   padding: "4px 10px 8px 10px",
 };
 
 export const TOC_BTNcss: CssMap = {
   ...MONOcss,
-  fontSize: "18px",
+  fontSize: $txt_.main,
   lineHeight: "1.1",
   padding: "12px 26px",
-  borderRadius: "10px",
   boxSizing: "border-box",
   cursor: "pointer",
   userSelect: "none",
   minWidth: "0",
   textAlign: "right",
-  // background: set_alpha($cols_.bckdeep, 0.18),
-  color: ACID_WASH_RGBA.brickDust,
-  __after: {
-    content: '',
-  }
 };
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px 0",
   background: $cols_.bckdeep,
-  outline: `1px solid ${ACID_WASH_RGBA.denimDust}`,
-  borderRadius: "9px",
   overflowWrap: "anywhere",
   fontSize: $txt_.main,
   lineHeight: "1.85",
@@ -266,21 +251,34 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
     textTransform: level === 2 ? "uppercase" : "none",
     fontSize: level === 1 ? $txt_.heading : level === 2 ? $txt_.subhead : level === 3 ? $txt_.subhead : $txt_.main,
     fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
-    justifySelf: level <= 2  ? "center" : "start",
+    justifySelf: level <= 2 ? "center" : "start",
 
-    color: ACID_WASH_RGBA.neonGhost,
+    color: HEADERcol,
   }
 }
 
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   fontSize: $txt_.reg,
-  color: $gry_.mid,
+  color: COPYRITEcol,
   marginTop: "2rem",
 }
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
-  color: ACID_WASH_RGBA.softBlue,
-  fontSize: $txt_.main,
+  color: URLcol,
+  fontSize: $txt_.subhead,
   textDecoration: "underline",
+  marginLeft: "2rem"
 }
+
+export const FLUSH_LISTcss = {
+  display: "grid",
+  gap: "1rem",
+  margin: "20px 0",
+  minWidth: "0",
+};
+
+
+export const SPECIAL_WORDScss: CssMap = {
+  fontWeight: "300",
+};

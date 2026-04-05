@@ -54,6 +54,4 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   demo_subscribe(applyTocOpen);
 
   setActive(activeKey);
-  console.log(t.toc.dom.rect())
-  console.log(t.doc.dom.rect())
 }

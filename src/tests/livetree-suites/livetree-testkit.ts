@@ -95,13 +95,24 @@ export function make_livetree_suite(
   return { suite, cases: built } as const;
 }
 
-function default_preview(tree: LiveTree): string {
-  // Prefer DOM outerHTML if present; otherwise something stable-ish.
-  const el = tree.dom?.el?.() ?? tree.asDomElement?.();
-  if (el && "outerHTML" in el) return (el as Element).outerHTML;
+export function default_preview(tree: LiveTree): string {
+  try {
+    const domApi = tree.dom;
+    const el = domApi.el?.();
+    if (el && "outerHTML" in el) return (el as Element).outerHTML;
+  } catch {
+    // ignore
+  }
+
+  try {
+    const el = tree.asDomElement?.();
+    if (el && "outerHTML" in el) return (el as Element).outerHTML;
+  } catch {
+    // ignore
+  }
+
   return `<no-dom quids=${tree.quid ?? "?"}>`;
 }
-
 // -----------------------------
 // Failure aggregation
 // -----------------------------

@@ -1,7 +1,8 @@
 //css.consts.ts
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
-import { $cols_ } from "../../core/consts/colors.consts";
+import { $cols_, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
+import { FADE_1col } from "../../core/consts/ui-consts";
 
 const LOGOBOXcss:CssMap = {
   display: "flex",
@@ -12,7 +13,7 @@ const LOGOBOXcss:CssMap = {
   right: "2rem",
   overflowX: "hidden",
   overflowY: "hidden",
-  color: "white",
+  color: CYBERPUNK_2060_NEUTRALS.ash,
   width: "25ch",
   backgroundColor: $cols_.bckgd,
   fontFamily: `monospace`,
@@ -27,7 +28,7 @@ const BRAND_CSS: CssMap = {
   placeItems: "center",
   zIndex: 50,
   width: "15ch",
-  color: "lightgrey",
+  color: FADE_1col,
   overflowX: "hidden",
   filter: `drop-shadow(0 1px 0 rgba(0,0,0,.7))
           drop-shadow(0 0 6px rgba(0,0,0,.35))`

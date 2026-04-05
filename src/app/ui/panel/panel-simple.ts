@@ -1,8 +1,9 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import { $blu_ } from "../../core/consts/colors.consts";
-import { MENU_FONT } from "../../core/consts/ui-consts";
+import { $blu_, CYBERPUNK_2060_NEUTRALS } from "../../core/consts/colors.consts";
+import { MENU_FONT, TXTcol_MAIN } from "../../core/consts/ui-consts";
+import { set_alpha } from "../../core/helpers/color-helpers";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
   return parent.create.div()
@@ -14,16 +15,12 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       gridTemplateRows: "minmax(0, 1fr)",
       width: "100%",
       height: "100%",
-      // minWidth: "0",
-      // minHeight: "0",
-      borderRadius: "14px",
       padding: "12px",
       boxSizing: "border-box",
       pointerEvents: "all",
       maxHeight: "100%",
       overflow: "hidden",
-      color: $blu_.std,
+      color: TXTcol_MAIN,
       fontFamily: MENU_FONT,
-      // background: "red",
     });
 }

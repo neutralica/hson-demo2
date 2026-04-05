@@ -18,6 +18,7 @@ import { livetree_svg_ingermediate } from "./livetree-fixtures-svg-2";
  import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import { livetree_gnarly_svg } from "./livetree-fixtures-svg-3";
+import { livetree_fixtures_6 } from "./livetree-fixtures-6";
 
 export function TEMPLATE_SUITE_OBJECT_RETURN(): TestSuite {
   const SUITE = "[CHANGE THIS FIELD AND CHANGE FUNCTION NAME]";
@@ -54,6 +55,6 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_svg_basic(),
     livetree_svg_ingermediate(),
     livetree_gnarly_svg(),
-
+    livetree_fixtures_6(),
   ] as const;
 }

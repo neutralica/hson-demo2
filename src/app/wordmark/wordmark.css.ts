@@ -22,13 +22,11 @@ export const LETTER_CSS: CssMap = {
   fontFamily: "'Times New Roman', Georgia, Iowan Old Style, Palatino, serif, ui-serif",
   fontWeight: "700",
   color: $cols_.bckgd,
-  textShadow: "0 0 0 transparent",
 };
 
 
 export const LETTER_CSS_FINAL: CssMap = {
   color: "var(--final)",
-  textShadow: "0 0 0 transparent",
   filter: "brightness(1)",
 };
 

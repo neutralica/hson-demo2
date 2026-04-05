@@ -1,7 +1,6 @@
 import type { LiveTree } from "hson-live";
 import type { LetterKey } from "../core/types/core.types";
 
-// export type LetterKey = keyof typeof LETTER_COLOR; // "H" | "S" | "O" | "N"
 // utils/keys-of.ts
 export function keys_of<T extends object>(o: T): Array<keyof T> {
   return Object.keys(o) as Array<keyof T>;

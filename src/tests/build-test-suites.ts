@@ -12,6 +12,7 @@ import { EXTRA_FIXTURES } from "./transform-suites/fixtures/fixtures/extra-fixtu
 import { livetree_svg_basic } from "./livetree-suites/livetree-fixtures-svg-1";
 import { livetree_svg_ingermediate } from "./livetree-suites/livetree-fixtures-svg-2";
 import { livetree_gnarly_svg } from "./livetree-suites/livetree-fixtures-svg-3";
+import { make_unit_test_suite } from "./livetree-suites/livetree-unit-tests-1";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -154,7 +155,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_gnarly_svg()
+      make_unit_test_suite()
     ])
   }
   if (mode === "livetree") {
@@ -171,5 +172,6 @@ export function build_suites_for_mode(
     ...all_livetree_suites(),
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "dev/test", map),
     make_transform_test_suite(h, FAIL_IS_PASS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
+    make_unit_test_suite(),
   ]);
 }

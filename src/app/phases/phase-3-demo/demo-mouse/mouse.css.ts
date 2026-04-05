@@ -36,7 +36,6 @@ export const MOUSE_HOSTcss: CssMap = {
   maxWidth: "40ch",
   color: ACID_WASH_RGBA.softBlue,
   fontFamily: MENU_FONT,
-  borderRadius: "14px",
   // justifySelf: "flex-end",
   display: "flex",
   flexDirection: "column",
