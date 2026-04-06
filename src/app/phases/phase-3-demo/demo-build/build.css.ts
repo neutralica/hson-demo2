@@ -2,11 +2,12 @@
 
 import type { CssMap } from "hson-live/types";
 import { COLORS, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
-import { $txt_, GRID_GAPstr, TXTcol_ALT, TXTcol_MAIN } from "../../../core/consts/ui-consts";
-import  { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { $txt_, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_MAIN } from "../../../core/consts/ui-consts";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { MENU_FONT } from "../../../core/consts/ui-consts";
 import { PANEL_TEXTAREAcss } from "../../../ui/panels/tp-panels.css";
 import { UI_BUTTONcss } from "../../../ui/panels/ui-panels.css";
+import { set_alpha } from "../../../core/helpers/color-helpers";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
@@ -64,10 +65,10 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 export const BUILD_TEXTAREAcss: CssMap = {
   ...PANEL_TEXTAREAcss,
 
-  background: COLORS.bckdeep,
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
   color: TXTcol_ALT,
-  caretColor:"auto",
-  fontSize:$txt_.mid
+  caretColor: "auto",
+  fontSize: $txt_.reg
 };
 
 // Watermarks (same idea as parse panels)
@@ -92,7 +93,7 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-fontFamily: MENU_FONT,
+  fontFamily: MENU_FONT,
   fontSize: "14px",
   letterSpacing: "0.06em",
 };
@@ -172,7 +173,11 @@ export const BUILD_HTMLBOXcss: CssMap = {
   resize: "none",
   outline: "none",
 
-  padding: "10px",
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
+  color: TXTcol_ALT,
+  caretColor: "auto",
+  fontSize: $txt_.reg
+
 };
 
 export const BUILD_PANEcss: CssMap = {
@@ -190,7 +195,7 @@ export const BUILD_PANEcss: CssMap = {
 };
 
 export const BUILD_BODYcss: CssMap = {
-   position: "relative",
+  position: "relative",
   minWidth: "0",
   minHeight: "0",
   width: "100%",

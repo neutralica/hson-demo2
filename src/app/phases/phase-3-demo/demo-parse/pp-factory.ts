@@ -9,7 +9,7 @@ import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { PARSING_PANEL_ROOTcss, PP_COPYBTNcss, PP_GRIDcss, PP_HEADERcss, PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { PANEL_TEXTAREAcss, PANELcss } from "../../../ui/panels/tp-panels.css";
-import { WATERMARK_FMT_ } from "../../../core/consts/ui-consts";
+import { COLOR_FOR_FMT_, WATERMARK_FMT_ } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 
 export type PpFactoryOpts = {
@@ -49,11 +49,6 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
   const panels = {} as Record<Fmt, PanelShell>;
 
-  const fmtCol = {
-    json: OKLCH_FLEURS.fadedGold,
-    html: OKLCH_FLEURS.electricIris,
-    hson: OKLCH_FLEURS.orchidAsh
-  };
   for (const fmt of fmts) {
     const panel = panelGrid.create.section()
       .data.set("role", `panel-${fmt}`)
@@ -101,8 +96,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .data.set("input", fmt)
       .css.setMany({
         ...PANEL_TEXTAREAcss,
-        color: fmtCol[fmt],
-        background: set_alpha(fmtCol[fmt], 0.2),
+        color: COLOR_FOR_FMT_[fmt],
       });
 
 

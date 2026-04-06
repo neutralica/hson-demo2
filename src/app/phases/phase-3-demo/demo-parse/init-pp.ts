@@ -1,7 +1,7 @@
 // init.pp.ts
 import { hson } from "hson-live";
 
-import { PP_FOCUS_PANELcss, PP_MUTEDcss, PP_UNMUTEDcss } from "./pp.css";
+import { PP_MUTEDcss, PP_UNMUTEDcss } from "./pp.css";
 import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
 import type { Fmt } from "../../../core/types/core.types";
 
@@ -71,7 +71,6 @@ export function init_parsing_panels(pp: Panels): void {
       const on = fmt === f;
 
       p.status.css.setMany({ opacity: on ? "1" : "0" });
-      p.panel.css.setMany(on ? PP_FOCUS_PANELcss : { boxShadow: null });
     }
   };
 
@@ -105,7 +104,7 @@ export function init_parsing_panels(pp: Panels): void {
 
       if (isActive) {
         // focused panel is always interactive
-        p.wrap.css.setMany(PP_UNMUTEDcss);
+        p.wrap.css.setMany(PP_UNMUTEDcss(f));
         unlockTextarea(p);
         continue;
       }
@@ -117,14 +116,14 @@ export function init_parsing_panels(pp: Panels): void {
         lockTextarea(p);
       } else {
         // normal + interactive
-        p.wrap.css.setMany(PP_UNMUTEDcss);
+        p.wrap.css.setMany(PP_UNMUTEDcss(f));
         unlockTextarea(p);
       }
     }
   };
   for (const f of FMTS) {
     const p = pp.panels[f];
-    p.wrap.css.setMany(PP_UNMUTEDcss);
+    p.wrap.css.setMany(PP_UNMUTEDcss(f));
     unlockTextarea(p);
   }
   const clearOthers = (origin: Fmt): void => {

@@ -14,6 +14,11 @@ export const HSON_COLOR_ = {
   n: ACID_WASH_OKLCH.fern,
 };
 
+export const COLOR_FOR_FMT_ = {
+    json: OKLCH_FLEURS.fadedGold,
+    html: OKLCH_FLEURS.electricIris,
+    hson: OKLCH_FLEURS.orchidAsh
+  };
 
 export const REDLIKEcol = CYBERPUNK_2060_OKLCH.redSignal;
 export const BLUELIKEcol = CYBERPUNK_2060_OKLCH.blueCobalt;
@@ -40,14 +45,13 @@ export const CODE_EQUALScol = ACID_WASH_OKLCH.smokeRose;
 
 // export const TXTcol_MENU = CYBERPUNK_2060_OKLCH.mintIce;
 export const TXTcol_MENU = ACID_WASH_RGBA.softBlue;
-export const TXTcol_MENU1 ="oklch(0.65 0.03 240 / 1)"
 
 export const TXTcol_MAIN = CYBERPUNK_2060_NEUTRALS.paper;
 export const TXTcol_ALT = CYBERPUNK_2060_NEUTRALS.silver;
 export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
 
 export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
-export const MENU_FONT = "Monaco, monospace";
+export const MENU_FONT = "Trebuchet, Monaco, monospace";
 
 export const GRID_GAPstr = "2px";
 
@@ -64,9 +68,9 @@ export const $txt_ = {
     main: "1rem"/*  "1.25rem" */,             // 20??px
     mid: "1rem"/*  "1rem" */,                // 16px
     unter: "1rem" /*  "0.875rem" */,            // 14px
-    reg: "1rem" /*  "0.75rem" */,               // 12px
-    smol: "0.75rem" /*  "0.625rem" */,             // 10px
-    wee: "0.75rem" /*  "0.5rem" */,                // 8px
+    reg: "0.75rem" /*  "0.75rem" */,               // 12px
+    smol: "0.65rem" /*  "0.625rem" */,             // 10px
+    wee: "0.55rem" /*  "0.5rem" */,                // 8px
 } as const;
 
 export const make_test_swatch = (): LiveTree => {

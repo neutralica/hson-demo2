@@ -72,7 +72,7 @@ export const PANEL_TEXTAREAcss = {
     lineHeight: "1.55",
     // background: $cols_.backdeep,
     border: "none",
-    padding: "10px",
+    padding: "1rem",
     color: TXTcol_ALT,
 };
 

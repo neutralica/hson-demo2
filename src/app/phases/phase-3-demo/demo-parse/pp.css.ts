@@ -3,8 +3,9 @@
 import type { CssMap } from "hson-live/types";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
 import { COLORS, $gry_ } from "../../../core/consts/colors.consts";
-import { MENU_FONT, $txt_, GRID_GAPstr } from "../../../core/consts/ui-consts";
-import  { set_alpha } from "../../../core/helpers/color-helpers";
+import { MENU_FONT, $txt_, GRID_GAPstr, COLOR_FOR_FMT_ } from "../../../core/consts/ui-consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
+import type { Fmt } from "../../../core/types/core.types";
 
 //// used
 export const PP_HEADERcss: CssMap = {
@@ -54,7 +55,6 @@ export const PP_WATERMARKcss: CssMap = {
   userSelect: "none",
   fontFamily: MENU_FONT,
   fontSize: $txt_.heading,
-  letterSpacing: "0.12px",
   textTransform: "uppercase",
   overflow: "hidden"
 };
@@ -75,24 +75,20 @@ export const PP_STATUScss: CssMap = {
   textTransform: "uppercase",
 };
 
-//// used
-// helper: allow focusing panel to pop slightly (optional, low-risk)
-export const PP_FOCUS_PANELcss: CssMap = {
-  // keep subtle; typography is the decoration
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
-};
-
-//// used
-export const PP_UNMUTEDcss: CssMapBase = {
-  opacity: "1",
-  filter: "none",
-  pointerEvents: "auto",
-  userSelect: "auto",
+export const PP_UNMUTEDcss = (f: Fmt) => {
+  return {
+    opacity: "1",
+    filter: "none",
+    pointerEvents: "auto",
+    userSelect: "auto",
+    boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.6),
+  } as CssMap;
 };
 
 //// used
 export const PP_MUTEDcss: CssMapBase = {
   filter: "saturate(0.9) brightness(0.8)",
+
   pointerEvents: "auto",
   userSelect: "none",
 };

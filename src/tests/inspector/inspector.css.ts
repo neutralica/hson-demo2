@@ -8,11 +8,9 @@ import { $txt_ } from "../../app/core/consts/ui-consts";
 export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
 export const INSPECTOR_ROOTcss = {
-  // padding: "10px",
   fontFamily: MENU_FONT,
   fontSize: $txt_.unter,
   lineHeight: "1.35",
-  color: ACID_WASH_RGBA.dullAmber,
 }
 
 export const LOG_SCROLLcss: CssMap = {
