@@ -15,8 +15,8 @@ import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.c
 import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
-import { ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTcss, RUN_BUTTONcss, CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
-import { PANEL_BRANCHcss } from "../../app/ui/panel/tp-panels.css";
+import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
+import { PANEL_BRANCHcss } from "../../app/ui/panels/tp-panels.css";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 
 
@@ -41,7 +41,7 @@ export function tp_factory(): Outcome<TestPanel> {
         .css.setMany(PANEL_BRANCHcss);
 
     // top row
-    const rowContainer = mk_div_id(branch, "row-container").css.setMany(ROW_CONTAINERcss);
+    const rowContainer = mk_div_id(branch, "row-container").css.setMany(TEST_ROW_CONTAINERcss);
     const controlsRow = rowContainer.create.div()
         .id.set("test-controls")
         .css.setMany(CONTROL_ROWcss);
@@ -49,10 +49,10 @@ export function tp_factory(): Outcome<TestPanel> {
     const runChip = mk_btn(controlsRow, "test-run", "run");
     const suiteSel = controlsRow.create.select()
         .id.set("test-select")
-        .css.setMany(TEST_SELECTcss);
+        .css.setMany(TEST_SELECTORcss);
     const clearChip = mk_btn(controlsRow, "test-clear", "clear");
 
-    const runBtn = runChip.tree.css.setMany(RUN_BUTTONcss);
+    const runBtn = runChip.tree.css.setMany(TEST_RUN_BTNcss);
     const clearBtn = clearChip.tree.css.setMany(CLEAR_BTNcss);
 
     const chips = create_test_chips(rowContainer);

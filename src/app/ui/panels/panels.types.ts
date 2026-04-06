@@ -1,7 +1,6 @@
 // panels.types.ts
 import type { LiveTree } from "hson-live";
-
-export type Fmt = "json" | "hson" | "html";
+import type { Fmt } from "../../core/types/core.types";
 
 export type PanelShell = Readonly<{
   fmt: Fmt;
@@ -16,6 +15,7 @@ export type PanelShell = Readonly<{
   status: LiveTree;    
   textarea: LiveTree;
 }>;
+
 export type Panels = {
   root: LiveTree;
   panels: Record<Fmt, PanelShell>;

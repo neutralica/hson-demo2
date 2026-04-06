@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, $cols_ } from "../../core/consts/colors.consts";
-import { GRID_GAPstr, $txt_ } from "../../core/consts/ui-consts";
+import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS } from "../../core/consts/colors.consts";
+import { GRID_GAPstr, $txt_, TXTcol_ALT } from "../../core/consts/ui-consts";
 import { MENU_FONT } from "../../core/consts/ui-consts";
 
 export const UI_ROOTcss: CssMap = {
@@ -69,10 +69,11 @@ export const PANEL_TEXTAREAcss = {
     boxSizing: "border-box",
     fontFamily: MENU_FONT,
     fontSize: $txt_.unter,
-    lineHeight: "1.85",
+    lineHeight: "1.55",
     // background: $cols_.backdeep,
+    border: "none",
     padding: "10px",
-    color: ACID_WASH_OKLCH.bruisedPlum,
+    color: TXTcol_ALT,
 };
 
 export const PANEL_BRANCHcss: CssMap = {
@@ -83,5 +84,5 @@ export const PANEL_BRANCHcss: CssMap = {
     boxSizing: "border-box",
     gridTemplateColumns: `1fr 1fr`,
     gridTemplateRows: "auto 1fr",
-    background: $cols_.bckdeep,
+    background: COLORS.bckdeep,
 };

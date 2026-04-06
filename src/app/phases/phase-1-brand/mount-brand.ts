@@ -8,7 +8,7 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
-import { $blu_, $cols_, $grn_ } from "../../core/consts/colors.consts";
+import { $blu_, COLORS, $grn_ } from "../../core/consts/colors.consts";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
@@ -28,7 +28,7 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     position: "fixed",
     top: "1rem",
     left: "1rem",
-    backgroundColor: $cols_.bckgd,
+    backgroundColor: COLORS.bckgd,
     padding: "1rem",
     fontFamily: "monospace",
     color: $grn_.std,

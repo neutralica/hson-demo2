@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $cols_, $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { COLORS, $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { $txt_ } from "../../app/core/consts/ui-consts";
@@ -44,17 +44,17 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   fontFamily: "Monaco",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
 };
 
 export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 
 export const ROW_SUITEcss: CssMap = {
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   cursor: "pointer",
 };
 export const ROW_GROUPcss: CssMap = {
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   cursor: "pointer",
 };
 
@@ -85,7 +85,7 @@ export const ROW_CASEcss: CssMap = {
 
 export const ROW_CASE_FAILcss: CssMap = {
   color: $red_etc_.heartsBlood,
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   fontWeight: "700 /* !important */",
   // filter: "saturate(1.3) brightness(1.3)"
 };
@@ -110,7 +110,7 @@ export const PREVIEW_METAcss: CssMap = {
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   color: ACID_WASH_OKLCH.mutedRed,
   // filter: "saturate(1.3) brightness(1.3)"
 };

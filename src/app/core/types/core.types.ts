@@ -27,3 +27,4 @@ export type App = {
 
 export type LetterKey = (typeof LETTER_LOWS)[number];
 export type LetterCaps = (typeof LETTER_CAPS)[number];
+export type Fmt = "json" | "hson" | "html";

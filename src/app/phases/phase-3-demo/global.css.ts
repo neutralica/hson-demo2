@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
-import { $cols_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
+import { COLORS, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { $txt_, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
 
@@ -25,7 +25,7 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       width: "auto",
       fontFamily: "Monaco",
       color: REDLIKEcol,
-      background: $cols_.bckdeep,
+      background: COLORS.bckdeep,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
       textAlign: "center",
@@ -63,7 +63,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   textUnderlineOffset: "0.3em",
   _hover: {
     background: set_alpha(TXTcol_MENU, 0.6),
-    color: $cols_.bckdeep,
+    color: COLORS.bckdeep,
     fontWeight: "100",
   },
 };
@@ -73,7 +73,7 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
   fontWeight: "700",
   _hover: {
     background: set_alpha(TXTcol_MENU, 0.6),
-    color: $cols_.bckdeep,
+    color: COLORS.bckdeep,
     fontWeight: "100",
   },
 

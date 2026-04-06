@@ -1,6 +1,7 @@
 import { LiveTree, hson } from "hson-live";
 import { outcome, relay, relay_data, type Outcome } from "intrastructure";
 import { bp_factory, type BuildDemo } from "./build";
+import { render_hson_highlight_html } from "../../../ui/hson-highlighter";
 
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";
@@ -12,7 +13,7 @@ export function mount_build_panels(host: LiveTree): Outcome<BuildDemo> {
     return relay.data(bp);
 }
 
-export function initBuild(bp: BuildDemo): void {
+function initBuild(bp: BuildDemo): void {
     let inProgress = false;
     let activeTab: BuildTabKey = "render";
     let touched = false;
@@ -44,13 +45,12 @@ export function initBuild(bp: BuildDemo): void {
     const syncTabs = (): void => {
         // show/hide the two output panes
         const showRender = activeTab === "render";
-        bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" }); 
+        bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" });
         bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
 
         // simple active affordance (optional)
-        // TODO - change over to .data.set
-        bp.tabs.render.attr.set("data-active", String(showRender));
-        bp.tabs.html.attr.set("data-active", String(!showRender));
+        bp.tabs.render.data.set("active", String(showRender));
+        bp.tabs.html.data.set("active", String(!showRender));
     };
 
     const render = (raw: string): void => {
@@ -120,7 +120,6 @@ export function initBuild(bp: BuildDemo): void {
             inProgress = false;
         }
     });
-
     // Buttons
 
     bp.input.clearBtn.listen.onClick(() => {

@@ -265,14 +265,14 @@ export const OKLCH_MUTED_PASTEL = {
   green: "oklch(0.74 0.05 150)",
   pink: "oklch(0.76 0.055 335)",
 };
-export const $HSON_COLORS = {
+export const COLOR_4WAY = {
   ui: OKLCH_SOFT_CORE_4,
   accent: OKLCH_TERMINAL_4,
   playful: OKLCH_WASHED_NEON_4,
   muted: OKLCH_MUTED_PASTEL
 };
 
-export const $cols_ = {
+export const COLORS = {
   bckgd: bckColor,
   bckdeep: deepBack,
   bcklight,

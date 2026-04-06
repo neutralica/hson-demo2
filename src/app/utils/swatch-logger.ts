@@ -1,5 +1,6 @@
-import { $cols_ } from "../core/consts/colors.consts";
-export function log_oklch_palette(palette: Record<string, string>): void {
+import { COLORS } from "../core/consts/colors.consts";
+
+export function log_oklch_palette(palette: Record<string, string>, label?: string): void {
 
   // ADDED: extract OKLCH lightness (first channel)
   function get_oklch_lightness(color: string): number | null {
@@ -19,28 +20,24 @@ export function log_oklch_palette(palette: Record<string, string>): void {
     return Number(raw);
   }
 
-  // ADDED: choose readable text color
   function get_contrast_text(color: string): "black" | "white" {
     const l = get_oklch_lightness(color);
 
     if (l === null) return "white";
 
-    // ADJUSTED: threshold tuned for your palette
+
     return l >= 0.72 ? "black" : "white";
   }
 
-  // EXISTING LOOP (kept structure minimal)
+  console.groupCollapsed("color swatches: " + label);
+
   Object.entries(palette).forEach(([name, color]) => {
-
-    // ADDED: compute contrast text color
     const textColor = get_contrast_text(color);
-
-    // CHANGED: apply background + dynamic text color
     console.log(
       `%c ${name}: ${color} `,
       [
-        `background: ${color}`,     // your swatch
-        `color: ${textColor}`,     // computed contrast
+        `background: ${color}`,     
+        `color: ${textColor}`,     
         `padding: 2px 6px`,
         `margin: 1px`,
         `display: inline-block`,
@@ -48,4 +45,5 @@ export function log_oklch_palette(palette: Record<string, string>): void {
       ].join("; ")
     );
   });
+  console.groupEnd()
 }

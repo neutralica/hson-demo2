@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $HSON_COLORS, ACID_WASH_RGBA, CYBERPUNK_2060_OKLCH } from "../../../core/consts/colors.consts";
+import { $blu_, COLORS, $grn_, COLOR_4WAY, ACID_WASH_RGBA, CYBERPUNK_2060_OKLCH } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { $txt_, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { MENU_FONT } from "../../../core/consts/ui-consts";
@@ -43,7 +43,7 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
-  background: set_alpha($cols_.bckdeep, 0.86),
+  background: set_alpha(COLORS.bckdeep, 0.86),
   maxWidth: "80ch",
 
 };
@@ -56,7 +56,7 @@ export const ABOUT_TOCcss: CssMap = {
   gap: "8px",
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
-  background: set_alpha($cols_.bckdeep, 0.86),
+  background: set_alpha(COLORS.bckdeep, 0.86),
   overflowY: "auto",
   overflowX: "hidden",
 };
@@ -101,7 +101,7 @@ export const ABOUT_CSS: CssMap = {
   whiteSpace: "pre-line",
   overflowX: "auto",
   padding: "10px 12px",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   fontweight: 300,
   fontFamily: MENU_FONT,
   lineHeight: "1.75rem",
@@ -232,7 +232,7 @@ export const TOC_BTNcss: CssMap = {
 };
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px 0",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   overflowWrap: "anywhere",
   fontSize: $txt_.main,
   lineHeight: "1.85",

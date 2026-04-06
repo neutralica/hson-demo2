@@ -1,7 +1,7 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $blu_, COLORS, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { GRID_GAPstr, $txt_, GRAFFITIcol, MENU_FONT, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
@@ -19,10 +19,10 @@ export const MAIN_MENUcss: CssMap = {
   _hover: {
     fontWeight: "100",
     background: BLUELIKEcol,
-    color: $cols_.bckdeep
+    color: COLORS.bckdeep
   },
   _active: {
-    background: $cols_.bckgd,
+    background: COLORS.bckgd,
     color: GREENLIKEcol,
     fontWeight: "700",
   }
@@ -34,7 +34,7 @@ export const MENU_BOXcss: CssMap = {
   lineHeight: "2.5rem",
 };
 
-export const DEMO_MAIN_LOGOcss: CssMap = {
+export const DEMO_HEADLINEcss: CssMap = {
   display: "flex",
   alignContent: "end",
 
@@ -57,8 +57,9 @@ export const MENU_CONTAINERcss: CssMap = {
 
 export const HSON_WORDcss: CssMap = {
   fontSize: $txt_.hsonWordMarkMain,
-  fontFamily: MENU_FONT,
-  width: "max-content",
+  fontFamily: "Trebuchet" + MENU_FONT,
+  fontWeight: "100",
+  width: "0.45em",
   userSelect: "none",
   lineHeight: "0.9",
   verticalAlign: "bottom"
@@ -72,7 +73,7 @@ export const DEMOcss: CssMap = {
   height: "100%",
   inset: "0",
   overflow: "hidden",
-  background: `linear-gradient(${$cols_.bckgd} 60%,${set_alpha($blu_.muted, 0.06)})`,
+  background: `linear-gradient(${COLORS.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
   pointerEvents: "none",
   boxSizing: "border-box"
 };
@@ -85,7 +86,7 @@ export const DEMO_STAGEcss: CssMap = {
   // default vars (even if unused initially)
   "--mxp": "50%",
   "--myp": "40%",
-  backgroundColor: $cols_.bckgd,
+  backgroundColor: COLORS.bckgd,
   pointerEvents: "none",
 boxSizing: "border-box"
 };

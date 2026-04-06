@@ -5,6 +5,14 @@ import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.const
 import { set_alpha } from "../helpers/color-helpers";
 import { $gry_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "./colors.consts";
 import type { CssMap } from "hson-live/types";
+import type { Fmt } from "../types/core.types";
+
+export const HSON_COLOR_ = {
+  h: ACID_WASH_RGBA.softBlue,
+  s: ACID_WASH_OKLCH.amber,
+  o: ACID_WASH_OKLCH.smokeRose,
+  n: ACID_WASH_OKLCH.fern,
+};
 
 
 export const REDLIKEcol = CYBERPUNK_2060_OKLCH.redSignal;
@@ -31,8 +39,8 @@ export const CODE_EQUALScol = ACID_WASH_OKLCH.smokeRose;
 
 
 // export const TXTcol_MENU = CYBERPUNK_2060_OKLCH.mintIce;
-export const TXTcol_MENU1 = BLUELIKEcol;
-export const TXTcol_MENU ="oklch(0.65 0.03 240 / 1)"
+export const TXTcol_MENU = ACID_WASH_RGBA.softBlue;
+export const TXTcol_MENU1 ="oklch(0.65 0.03 240 / 1)"
 
 export const TXTcol_MAIN = CYBERPUNK_2060_NEUTRALS.paper;
 export const TXTcol_ALT = CYBERPUNK_2060_NEUTRALS.silver;
@@ -80,3 +88,10 @@ export const make_test_swatch = (): LiveTree => {
     baseGreen.listen.onClick(() => { console.error("hi");  baseGrid.removeSelf()})
     return baseGrid;
 };
+
+export const WATERMARK_FMT_: Record<Fmt, string> = {
+  json: "{JSON}",
+  hson: "<HSON>",
+  html: "<HTML/>",
+} as const;
+

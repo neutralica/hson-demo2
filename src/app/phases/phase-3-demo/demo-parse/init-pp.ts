@@ -2,7 +2,8 @@
 import { hson } from "hson-live";
 
 import { PP_FOCUS_PANELcss, PP_MUTEDcss, PP_UNMUTEDcss } from "./pp.css";
-import type { Fmt, Panels, PanelShell } from "../../../ui/panel/panels.types";
+import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
+import type { Fmt } from "../../../core/types/core.types";
 
 const lockTextarea = (p: PanelShell): void => {
   // lock via readonly + no selection, but keep focus/click working

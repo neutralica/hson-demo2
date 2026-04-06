@@ -1,29 +1,21 @@
 // pp_factory.ts
 import { hson, type LiveTree } from "hson-live";
-import { PP_GRIDcss, PP_HEADERcss } from "./pp.css";
 
-import { PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARK_EMPTYcss, PP_WATERMARK_FMTcss } from "./pp.css";
-import { outcome, relay, relay_data, type Outcome, type OutcomeData } from "intrastructure";
-import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
-import { PP_COPYBTNcss } from "./pp.css";
-import { PARSING_PANEL_ROOTcss } from "./pp.css";
+import {  relay, relay_data, type Outcome } from "intrastructure";
 import { init_parsing_panels } from "./init-pp";
+import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
+import type { Fmt } from "../../../core/types/core.types";
+import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
+import { PARSING_PANEL_ROOTcss, PP_COPYBTNcss, PP_GRIDcss, PP_HEADERcss, PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import type { Fmt, Panels, PanelShell } from "../../../ui/panel/panels.types";
-import { PANELcss, PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
+import { PANEL_TEXTAREAcss, PANELcss } from "../../../ui/panels/tp-panels.css";
+import { WATERMARK_FMT_ } from "../../../core/consts/ui-consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
 
-type PpFactoryOpts = {
+export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
   // includeNodeOutput?: boolean;
 };
-
-const WM_LABEL: Record<Fmt, string> = {
-  json: "{JSON}",
-  hson: "<HSON>",
-  html: "<HTML/>",
-} as const;
-
-
 
 export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
   const pp = relay_data(pp_factory(host));
@@ -32,7 +24,10 @@ export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
 }
 
 
+
 // --- pp_factory ---
+
+
 export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcome<Panels> {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
 
@@ -40,18 +35,17 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
   if (old) old.removeSelf();
 
   const root = hostBody.create.div()
-  .id.set($PARSING_PANELS_ROOT)
-  .css.setMany(PARSING_PANEL_ROOTcss);
+    .id.set($PARSING_PANELS_ROOT)
+    .css.setMany(PARSING_PANEL_ROOTcss);
 
-const header = root.create.div()
-  .css.setMany(PP_HEADERcss)
-  .text.set("~parsing panels~");
+  const header = root.create.div()
+    .css.setMany(PP_HEADERcss)
+    .text.set("~parsing panels~");
 
-const panelGrid = root.create.div()
-  .css.setMany({
-    ...PP_GRIDcss,
-    
-  });
+  const panelGrid = root.create.div()
+    .css.setMany({
+      ...PP_GRIDcss,
+    });
 
   const panels = {} as Record<Fmt, PanelShell>;
 
@@ -59,8 +53,7 @@ const panelGrid = root.create.div()
     json: OKLCH_FLEURS.fadedGold,
     html: OKLCH_FLEURS.electricIris,
     hson: OKLCH_FLEURS.orchidAsh
-
-  }
+  };
   for (const fmt of fmts) {
     const panel = panelGrid.create.section()
       .data.set("role", `panel-${fmt}`)
@@ -74,9 +67,9 @@ const panelGrid = root.create.div()
       .css.setMany(PP_HEADERcss);
 
 
-    const bytes = head.create.span();
-    bytes.data.set("field", `${fmt}-bytes`);
-    bytes.text.set("0 bytes");
+    const bytes = head.create.span()
+      .data.set("field", `${fmt}-bytes`)
+      .text.set("0 bytes");
 
     // div instead of button (avoid browser button styling)
     const copyBtn = head.create.div()
@@ -87,7 +80,6 @@ const panelGrid = root.create.div()
         "role": "button",
         "tabindex": "0",
         "aria-label": `copy ${fmt}`,
-
       });
     // ADDED: wrapper + overlays
     const wrap = panel.create.div()
@@ -96,8 +88,8 @@ const panelGrid = root.create.div()
 
     const wmFmt = wrap.create.div()
       .classlist.set("pp-watermark pp-watermark--fmt")
-      .text.set(WM_LABEL[fmt])
-      .css.setMany(PP_WATERMARK_FMTcss);
+      .text.set(WATERMARK_FMT_[fmt])
+      .css.setMany(PP_WATERMARKcss);
 
     // focused-only status overlay (big “invalid/valid/...” in red/green)
     const status = wrap.create.div()
@@ -105,15 +97,18 @@ const panelGrid = root.create.div()
       .text.set("")
       .css.setMany(PP_STATUScss);
 
-    const textarea = wrap.create.textarea();
-    textarea.data.set("input", fmt);
-    textarea.css.setMany(PANEL_TEXTAREAcss);
-    textarea.css.set.color(fmtCol[fmt])
-    textarea.css.set.borderColor(fmtCol[fmt])
+    const textarea = wrap.create.textarea()
+      .data.set("input", fmt)
+      .css.setMany({
+        ...PANEL_TEXTAREAcss,
+        color: fmtCol[fmt],
+        background: set_alpha(fmtCol[fmt], 0.2),
+      });
 
-    const chip = status.create.span();
-    chip.classlist.add("chip", "validity");
-    chip.text.set(""); // focused-only; start empty
+
+    const chip = status.create.span()
+      .classlist.add("chip", "validity")
+      .text.set(""); // focused-only; start empty
 
 
     copyBtn.listen.onClick(() => {

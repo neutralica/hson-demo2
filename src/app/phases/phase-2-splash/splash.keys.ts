@@ -1,5 +1,5 @@
 
-import { $cols_ } from "../../core/consts/colors.consts";
+import { COLORS } from "../../core/consts/colors.consts";
 import { CLOUD_BAND_LOOPstr as CLOUD_LOOPstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
 
 // keyframes.ts 
@@ -7,11 +7,11 @@ export const SPLASHkfs = [
   {
     name: "hson_sky",
     steps: {
-      "0%": { background: $cols_.bckgd },
-      "02%": { background: $cols_.bckgd },
+      "0%": { background: COLORS.bckgd },
+      "02%": { background: COLORS.bckgd },
       "57%": { background: "rgba(0,89,255,1)" },
       "92%": { background: "rgba(0, 128, 255, 1)" },
-      "100%": { background: $cols_.bckgd },
+      "100%": { background: COLORS.bckgd },
     },
   },
   {
@@ -46,7 +46,7 @@ export const SPLASHkfs = [
 
       // snap/pulse on
       "18%": {
-        color: $cols_.bckgd,
+        color: COLORS.bckgd,
         textShadow:
           "0 0 2px var(--glow), 0 0 6px var(--glow), 0 0 12px rgba(255,255,255,0.18)",
         filter: "brightness(1.25)",
@@ -54,25 +54,25 @@ export const SPLASHkfs = [
 
       // settle slightly dimmer but still outline-y
       "30%": {
-        color: $cols_.bckgd,
+        color: COLORS.bckgd,
         textShadow:
           "0 0 1px var(--glow), 0 0 5px var(--glow), 0 0 10px rgba(255,255,255,0.12)",
         filter: "brightness(1)",
       },
 
       "50%": {
-        color: $cols_.bckgd,
+        color: COLORS.bckgd,
         textShadow:
           "0 0 1px var(--glow), 0 0 6px var(--glow), 0 0 14px rgba(255,255,255,0.10)",
       },
       "65%": {
-        color: $cols_.bckgd,
+        color: COLORS.bckgd,
         textShadow:
           "0 0 1px var(--glow), 0 0 12px var(--glow), 0 0 20px rgba(255,255,255,0.12)",
         filter: "brightness(1)",
       },
       "75%": {
-        color: $cols_.bckgd,
+        color: COLORS.bckgd,
         textShadow:
           "0 0 1px var(--glow), 0 0 2px var(--glow), 0 0 04px rgba(255,255,255,0.12)",
         filter: "brightness(1)",

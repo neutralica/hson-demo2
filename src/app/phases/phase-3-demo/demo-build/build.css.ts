@@ -1,12 +1,12 @@
 // build.css.ts
 
 import type { CssMap } from "hson-live/types";
-import  { TEST_ACTION_BTN } from "../../../../tests/demo-test/tp.css";
-import { $cols_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
-import { GRID_GAPstr } from "../../../core/consts/ui-consts";
+import { COLORS, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { $txt_, GRID_GAPstr, TXTcol_ALT, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import  { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { MENU_FONT } from "../../../core/consts/ui-consts";
-import { PANEL_TEXTAREAcss } from "../../../ui/panel/tp-panels.css";
+import { PANEL_TEXTAREAcss } from "../../../ui/panels/tp-panels.css";
+import { UI_BUTTONcss } from "../../../ui/panels/ui-panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
@@ -33,6 +33,7 @@ export const BUILD_HEADcss: CssMap = {
   paddingBottom: "2px",
   fontSize: "2rem",
   fontWeight: "700",
+  background: COLORS.bckdeep
 };
 
 export const BUILD_TITLEcss: CssMap = {
@@ -57,25 +58,16 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
 };
 
-// Input textarea: just reuse PANEL_TEXTAREAcss, add padding back if you want
 export const BUILD_TEXTAREAcss: CssMap = {
   ...PANEL_TEXTAREAcss,
 
-  // truly fill the pane
-  width: "100%",
-  height: "100%",
-  minWidth: "0",
-  minHeight: "0",
-  boxSizing: "border-box",
-  resize: "none",
-
-  background: $cols_.bckdeep,
-  color: ACID_WASH_OKLCH.straw,
-  lineHeight: "1.8",
-  padding: "10px",
+  background: COLORS.bckdeep,
+  color: TXTcol_ALT,
+  caretColor:"auto",
+  fontSize:$txt_.mid
 };
 
 // Watermarks (same idea as parse panels)
@@ -121,11 +113,11 @@ export const BUILD_STATUScss: CssMap = {
 
 // Buttons: reuse TEST_ACTION_BTN so the look stays coherent
 export const BUILD_BTNcss: CssMap = {
-  ...TEST_ACTION_BTN,
+  ...UI_BUTTONcss,
   padding: "8px 10px",
   borderRadius: "12px",
-  background: $cols_.bckdeep,
-  color: OKLCH_FLEURS.sourSage,
+  background: COLORS.bckdeep,
+  color: TXTcol_ALT,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   flexShrink: "0",
 };
@@ -141,7 +133,7 @@ export const BUILD_TOGGLEcss: CssMap = {
 
 // Tabs (plain div “buttons”)
 export const BUILD_TABcss: CssMap = {
-  ...TEST_ACTION_BTN,
+  ...UI_BUTTONcss,
   padding: "8px 10px",
   borderRadius: "12px",
   background: "rgba(0,0,0,0.18)",
@@ -164,7 +156,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
 };
 
 // HTML output box: same textarea styling

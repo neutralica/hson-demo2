@@ -537,7 +537,7 @@ export function livetree_sync_perf(): TestSuite {
                 });
 
                 gcss.syncNow?.();
-                const snap = gcss.devSnapshot?.() ?? "";
+                const snap = gcss.snapshot?.() ?? "";
                 const after = gcss.getForQuid?.(quid, "content");
 
                 (tree as any).__result = { snap, after, quid };
@@ -574,7 +574,7 @@ export function livetree_sync_perf(): TestSuite {
                 gcss.syncNow?.();
 
                 const after = gcss.getAllForQuid(quid);
-                const snap = gcss.devSnapshot?.() ?? "";
+                const snap = gcss.snapshot?.() ?? "";
 
                 (tree as any).__result = { before, after, snap, quid };
             },
@@ -615,7 +615,7 @@ export function livetree_sync_perf(): TestSuite {
                 gcss.syncNow?.();
 
                 const quidB = (b.dom.el() as HTMLElement).getAttribute("data-_quid") ?? "";
-                const snap = CssManager.invoke().devSnapshot?.() ?? "";
+                const snap = CssManager.invoke().snapshot?.() ?? "";
 
                 (tree as any).__result = { quidA, quidB, snap };
             },
@@ -709,7 +709,7 @@ export function livetree_completionist(): TestSuite {
                     const secondEl = second.dom.el() as HTMLElement;
                     const secondQuid = secondEl.getAttribute("data-_quid") ?? "";
 
-                    const cssText = CssManager.invoke().devSnapshot?.() ?? "";
+                    const cssText = CssManager.invoke().snapshot?.() ?? "";
 
                     (tree as any).__result = {
                         firstQuid,

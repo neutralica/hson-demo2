@@ -6,9 +6,8 @@ import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { FAIL_IS_PASS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
 import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
-import { unit_test_css, unit_test_pseudo_els } from "./unit-tests/livetree-unit-tests-1";
 import { HTML_FIXTURES_NEW } from "./transform-tests/new-fixtures";
-import { all_unit_tests } from "./unit-tests/make-unit-case";
+import { all_unit_tests } from "./unit-tests/all-unit-tests";
 import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
 
 function preview_atom(atom: FixtureAtom): string {

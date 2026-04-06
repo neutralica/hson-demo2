@@ -1,32 +1,11 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, $cols_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
+import { $red_etc_, COLORS, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
 import { GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { MENU_FONT } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-
-export const TEST_BUTTON_BORDER: CssMap = {
-  borderRadius: "18px",
-  border: `4px solid ${ACID_WASH_RGBA.fadedMint}`
-}
-
-export const CHIP_BUTTON_BORDER: CssMap = {
-  borderRadius: "18px",
-  border: `4px solid ${OKLCH_FLEURS.oliveCore}`
-}
-
-export const TEST_ACTION_BTN: CssMap = {
-  ...TEST_BUTTON_BORDER,
-  display: "grid",
-  placeItems: "center",
-  userSelect: "none",
-  cursor: "pointer",
-  fontFamily: MENU_FONT,
-  fontSize: $txt_.unter,
-  textTransform: "uppercase",
-  background: $cols_.bckdeep,
-} as const;
+import { UI_BUTTONcss, UI_CHIP_BORDERcss } from "../../app/ui/panels/ui-panels.css";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: $txt_.unter,
@@ -59,31 +38,31 @@ export const TEST_CHIP_LABELcss = {
 
 
 export const CLEAR_BTNcss: CssMap = {
-  ...TEST_ACTION_BTN,
+  ...UI_BUTTONcss,
   borderColor: OKLCH_FLEURS.brass,
   borderRadius: "18px",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   transition: "transform 90ms ease, filter 140ms ease",
   color: OKLCH_FLEURS.brass,
   _hover: {
     background: "orange",
-    color: $cols_.bckdeep,
-    border: "4px solid " + $cols_.bckgd,
+    color: COLORS.bckdeep,
+    border: "1px solid " + COLORS.bckgd,
   }
 }
 
 
-export const RUN_BUTTONcss: CssMap = {
-  ...TEST_ACTION_BTN,
+export const TEST_RUN_BTNcss: CssMap = {
+  ...UI_BUTTONcss,
   color: ACID_WASH_RGBA.fadedMint,
   _hover: {
     background: ACID_WASH_RGBA.fadedMint,
-    color: $cols_.bckdeep,
-    border: "4px solid " + $cols_.bckgd,
+    color: COLORS.bckdeep,
+    border: "1px solid " + COLORS.bckgd,
   }
 };
 
-export const TEST_SELECTcss: CssMap = {
+export const TEST_SELECTORcss: CssMap = {
   minWidth: "20ch",
   padding: "10px 8px 10px 20px",
   boxSizing: "border-box",
@@ -117,14 +96,14 @@ export const TEST_LOGGERcss: CssMap = {
   lineHeight: "1.75rem",
 } as const;
 
-export const LOG_BOXcss: CssMap = {
+export const TEST_LOG_BOXcss: CssMap = {
   gridColumn: "2 / 3",
   overflow: "auto",
   height: "100%",
   display: "grid",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
 };
-export const ROW_CONTAINERcss = {
+export const TEST_ROW_CONTAINERcss = {
   display: "grid",
   gap: "8px",
   gridTemplateColumns: "1fr 1fr auto",
@@ -133,12 +112,7 @@ export const ROW_CONTAINERcss = {
   gridColumn: "1 / 3"
 
 };
-export const TEST_PANELcss: CssMap = {
-  display: "grid",
-  gridTemplateColumns: $CHIP_WIDTHstr + $CHIP_WIDTHstr + $CHIP_WIDTHstr,
-  width: "100%",
-  boxSizing: "border-box",
-};
+
 export const TEST_CONTENTcss: CssMap = {
   padding: "1rem 1rem 0 0",
   display: "grid",
@@ -191,7 +165,7 @@ export const TEST_CHIP_ROWcss = {
 
 export const MAKE_CHIP_DEFAULTcss = {
   padding: "8px 8px",
-  ...CHIP_BUTTON_BORDER,
+  ...UI_CHIP_BORDERcss,
   display: "grid",
   gridTemplateRows: "auto auto",
   justifyItems: "center",
@@ -200,6 +174,6 @@ export const MAKE_CHIP_DEFAULTcss = {
   minWidth: "44px",
   boxSizing: "border-box",
   overflow: "hidden",
-  background: $cols_.bckdeep,
+  background: COLORS.bckdeep,
   transition: "transform 90ms ease, filter 140ms ease",
 };

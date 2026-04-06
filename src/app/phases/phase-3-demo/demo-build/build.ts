@@ -4,6 +4,7 @@ import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
 import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
 import { DEFAULT_SEED } from "./build-seed.consts";
+import { mk_div_cls, mk_section_cls } from "../../../utils/makers";
 
 // keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{
@@ -68,25 +69,20 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
   // pane helper now creates a stable head/body grid
   const makePane = (key: "src" | "out", titleTxt: string): BuildPanel => {
-    const panel = root.create.section()
-      .classlist.set(`build-pane build-pane--${key}`)
+    const panel = mk_section_cls(root, `build-pane build-pane--${key}`)
       .css.setMany(BUILD_PANEcss);
 
-    const head = panel.create.div()
-      .classlist.set("build-head")
+    const head = mk_div_cls(panel, "build-head")
       .css.setMany(BUILD_HEADcss);
 
-    const title = head.create.div()
-      .classlist.set("build-title")
+    const title = mk_div_cls(head, "build-title")
       .text.set(titleTxt)
       .css.setMany(BUILD_TITLEcss);
 
-    const spacer = head.create.div()
-      .classlist.set("build-spacer")
+    const spacer = mk_div_cls(head,"build-spacer")
       .css.setMany(BUILD_SPACERcss);
 
-    const body = panel.create.div()
-      .classlist.set("build-body")
+    const body = mk_div_cls(panel, "build-body")
       .css.setMany(BUILD_BODYcss);
 
     return { panel, head, body, title, spacer };
@@ -99,8 +95,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
   // SRC head controls
   // --------------------------------------------------
 
-  const clearBtn = src.head.create.div
-  ()
+  const clearBtn = src.head.create.div()
     .classlist.set("build-btn build-btn--clear")
     .text.set("clear")
     .css.setMany(BUILD_BTNcss)

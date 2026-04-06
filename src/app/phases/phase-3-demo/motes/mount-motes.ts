@@ -26,8 +26,8 @@ function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
   if (old) old.removeSelf();
 
   const root = host.create.div()
-    .id.set("motes2-root")
-    .classlist.add("motes2-root")
+    .id.set("motes-root")
+    .classlist.add("motes-root")
     .css.setMany({
       position: "fixed",
       left: "0",
@@ -35,14 +35,14 @@ function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
       width: "100%",
       height: "100%",
       overflow: "hidden",
-      zIndex: "0", // wallpaper/screen-fx layer
+      zIndex: "0", 
       pointerEvents: opts.pointerEvents === "none" ? "none" : "auto",
 
     });
 
   const layer = root.create.div()
-    .id.set("motes2-layer")
-    .classlist.add("motes2-layer")
+    .id.set("motes-layer")
+    .classlist.add("motes-layer")
     .css.setMany({
       position: "absolute",
       inset: "0",

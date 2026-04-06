@@ -1,10 +1,10 @@
 // pp.terminal.css.ts
+
 import type { CssMap } from "hson-live/types";
-import { $blu_, $cols_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
-import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
-import { GRID_GAPstr, $txt_ } from "../../../core/consts/ui-consts";
-import { MENU_FONT } from "../../../core/consts/ui-consts";
+import { COLORS, $gry_ } from "../../../core/consts/colors.consts";
+import { MENU_FONT, $txt_, GRID_GAPstr } from "../../../core/consts/ui-consts";
+import  { set_alpha } from "../../../core/helpers/color-helpers";
 
 //// used
 export const PP_HEADERcss: CssMap = {
@@ -15,7 +15,7 @@ export const PP_HEADERcss: CssMap = {
   zIndex: "5",
   minHeight: "2rem",
   padding: "6px",
-  background: set_alpha($cols_.bckdeep, 0.7),
+  background: set_alpha(COLORS.bckdeep, 0.7),
 };
 
 //// used:
@@ -24,7 +24,7 @@ export const PP_TEXTWRAPcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
-  background: set_alpha($cols_.bckdeep, 0.9),
+  background: set_alpha(COLORS.bckdeep, 0.9),
 };
 
 export const PP_GRIDcss: CssMap = {
@@ -34,7 +34,7 @@ export const PP_GRIDcss: CssMap = {
   width: "100%",
   minWidth: "0",
   minHeight: "0",
-  gap: GRID_GAPstr,
+  gap: "12px",
   overflow: "hidden",
 
   // fill the available row instead of collapsing
@@ -44,7 +44,7 @@ export const PP_GRIDcss: CssMap = {
 
 //// used
 //  faint format label (“JSON”)
-export const PP_WATERMARK_FMTcss: CssMap = {
+export const PP_WATERMARKcss: CssMap = {
   position: "absolute",
   inset: "0",
   color: $gry_.dimmer,
@@ -57,20 +57,6 @@ export const PP_WATERMARK_FMTcss: CssMap = {
   letterSpacing: "0.12px",
   textTransform: "uppercase",
   overflow: "hidden"
-};
-
-//// used
-// smaller empty-syntax overlay (“{}”, “<>”, “</>”)
-export const PP_WATERMARK_EMPTYcss: CssMap = {
-  position: "absolute",
-  left: "14px",
-  bottom: "12px",
-  pointerEvents: "none",
-  userSelect: "none",
-  opacity: "0.25",
-  fontFamily: MENU_FONT,
-  fontSize: "14px",
-  letterSpacing: "0.06em",
 };
 
 

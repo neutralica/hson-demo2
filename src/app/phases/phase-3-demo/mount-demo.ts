@@ -3,7 +3,7 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_MAIN_LOGOcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
+import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { TXTcol_MENU} from "../../core/consts/ui-consts";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
@@ -11,8 +11,8 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, $cols_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
-import { HSON_COLOR_ } from "../../core/consts/hson-letter-color";
+import { $blu_, COLORS, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
+import { HSON_COLOR_ } from "../../core/consts/ui-consts";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/mount-build-panel";
 import { mount_about_panels } from "./demo-about/mount-about";
@@ -27,8 +27,8 @@ import type { DemoView } from "../../state/state.types";
 import { set_global_css } from "./set-global-css";
 import { fmtNum } from "./demo-fleurs/fleurs-cols";
 import { mount_test_panels } from "../../../tests/demo-test/mount-tp";
-import { mount_panel_simple } from "../../ui/panel/panel-simple";
-import { UI_ROOTcss } from "../../ui/panel/tp-panels.css";
+import { mount_panel_simple } from "../../ui/panels/panel-simple";
+import { UI_ROOTcss } from "../../ui/panels/tp-panels.css";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 // import { spawn_flower } from "./fleurs/fleurs";
@@ -43,7 +43,6 @@ let _testsWired = false;
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.globals.invoke();
-
   const demo = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
@@ -52,9 +51,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .classlist.add("demo screen")
     .css.setMany({ ...DEMO_SCREENcss, ...DEMO_SCREEN_FXcss });
 
-  // const screenFx = mk_div_id(screen, $DS.screenFx)
-  //   .classlist.add("demo screen fx")
-  //   .css.setMany(DEMO_SCREEN_FXcss);
 
   const fleurOverlay = mk_div_id(screen, "fleurs-overlay").css.setMany(FLOWER_OVERLAYcss);
   const graffiti = mk_div_id(screen, "hson-graffiti").text.set(HSON_LIVE_GRAFFITIstr).css.setMany(HSON_GRAFFITIcss);
@@ -105,7 +101,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
 
   /* main menu & logo heading */
-  const headline = mk_div_id(menuContainer, "hson-headline").css.setMany(DEMO_MAIN_LOGOcss);
+  const headline = mk_div_id(menuContainer, "hson-headline")
+    .css.setMany(DEMO_HEADLINEcss);
 
   const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
     const span = mk_span_id(headline, `${k}-letter`)

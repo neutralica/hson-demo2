@@ -1,7 +1,7 @@
 //css.consts.ts
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
-import { $cols_, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
+import { COLORS, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
 import { FADE_1col } from "../../core/consts/ui-consts";
 
 const LOGOBOXcss:CssMap = {
@@ -15,7 +15,7 @@ const LOGOBOXcss:CssMap = {
   overflowY: "hidden",
   color: CYBERPUNK_2060_NEUTRALS.ash,
   width: "25ch",
-  backgroundColor: $cols_.bckgd,
+  backgroundColor: COLORS.bckgd,
   fontFamily: `monospace`,
 }
 
