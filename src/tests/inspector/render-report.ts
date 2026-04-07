@@ -1,5 +1,5 @@
 import type { LoopReport, Artifact } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import { COLORS } from "../../app/core/consts/colors.consts";
+import { COLORS_ } from "../../app/core/consts/colors.consts";
 import { _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { render_livetree_report } from "./report-livetree";
@@ -253,7 +253,7 @@ export function render_transform_report(
       margin: 0; padding: 14px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px; line-height: 1.35;
-      background: ${COLORS.bckdeep}; color: #e9e9ee;
+      background: ${COLORS_.bckdeep}; color: #e9e9ee;
     }
     .top{
   display:grid;

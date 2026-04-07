@@ -4,7 +4,7 @@ import { CLOUD_LAYER_BASE_CSS } from "../../phases/phase-2-splash/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/phase-2-splash/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { make_rng } from "../../utils/rng";
-import { COLORS, bckRGB } from "../../core/consts/colors.consts";
+import { COLORS_, bckRGB } from "../../core/consts/colors.consts";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
@@ -12,8 +12,8 @@ const FADE_MID_PCT = 10;      // start thinning here
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  ${COLORS.bckgd} ${FADE_MID_PCT}%,
-  ${COLORS.bckgd} 100%
+  ${COLORS_.bckgd} ${FADE_MID_PCT}%,
+  ${COLORS_.bckgd} 100%
 )`;
 export type CloudSvgOpts = {
   seed: number;

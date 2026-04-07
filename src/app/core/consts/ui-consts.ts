@@ -20,46 +20,6 @@ export const COLOR_FOR_FMT_ = {
     hson: OKLCH_FLEURS.orchidAsh
   };
 
-export const REDLIKEcol = CYBERPUNK_2060_OKLCH.redSignal;
-export const BLUELIKEcol = CYBERPUNK_2060_OKLCH.blueCobalt;
-export const GREENLIKEcol = CYBERPUNK_2060_OKLCH.mossToxic;
-export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
-
-export const FADE_1col = CYBERPUNK_2060_NEUTRALS.silver;
-
-
-const fullPanelCss: CssMap = { height: "100%", width: "100%", pointerEvent: "none" };
-
-
-export const CODE_PARENScol = "ACID_WASH_OKLCH.straw";
-export const CODE_PARENS_INNERcol = "ACID_WASH_OKLCH.bruisedPlum";
-export const URLcol = ACID_WASH_RGBA.softBlue;
-export const COPYRITEcol = $gry_.dim;
-export const HEADERcol = OKLCH_FLEURS.clayCoral;
-export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
-export const TOCcol = OKLCH_FLEURS.clayCoral;
-export const COMMENTScol = ACID_WASH_OKLCH.fern;
-export const CODQ_QUOTEcol = ACID_WASH_OKLCH.bruisedPlum;
-export const CODE_EQUALScol = ACID_WASH_OKLCH.smokeRose;
-
-
-// export const TXTcol_MENU = CYBERPUNK_2060_OKLCH.mintIce;
-export const TXTcol_MENU = ACID_WASH_RGBA.softBlue;
-
-export const TXTcol_MAIN = CYBERPUNK_2060_NEUTRALS.paper;
-export const TXTcol_ALT = CYBERPUNK_2060_NEUTRALS.silver;
-export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
-
-export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
-export const MENU_FONT = "Trebuchet, Monaco, monospace";
-
-export const GRID_GAPstr = "2px";
-
-export const $PANEL_HIDDEN = 'panel-hidden';
-
-// either do this or don't:
-export const ABOUT_ROOT_ID = "about-root";
-
 export const $txt_ = {
     hsonWordMarkMain: "4.375rem", // 70px
     wordMobile: "2.5rem" /*  "2.5rem" */,         // 40px
@@ -73,25 +33,38 @@ export const $txt_ = {
     wee: "0.55rem" /*  "0.5rem" */,                // 8px
 } as const;
 
-export const make_test_swatch = (): LiveTree => {
-    const baseGrid = hson.liveTree.create.div().css.setMany({
-        top: "5rem",
-        left: "5rem",
-        height: "80%",
-        width: "80%",
-        zIndex: "100",
-        display: "grid",
-        gridTemplateColumns: "4fr 1fr",
-        gridTemplateRows: "1.7fr 1fr",
-        pointerEvents: "all",
-    });
-    const baseBlue = baseGrid.create.div().css.setMany({...fullPanelCss, background: BLUELIKEcol});
-    const baseGreen = baseGrid.create.div().css.setMany({...fullPanelCss, background: GREENLIKEcol});
-    const baseRed = baseGrid.create.div().css.setMany({...fullPanelCss, background: REDLIKEcol});
-    const baseYellow = baseGrid.create.div().css.setMany({ ...fullPanelCss, background: YELLOWLIKEcol });
-    baseGreen.listen.onClick(() => { console.error("hi");  baseGrid.removeSelf()})
-    return baseGrid;
-};
+
+const fullPanelCss: CssMap = { height: "100%", width: "100%", pointerEvent: "none" };
+
+
+export const CODE_PARENScol = ACID_WASH_OKLCH.straw;
+export const CODE_PARENS_INNERcol = ACID_WASH_OKLCH.bruisedPlum;
+export const URLcol = ACID_WASH_RGBA.softBlue;
+export const COPYRITEcol = $gry_.dimmer;
+export const HEADERcol = ACID_WASH_OKLCH.moss;
+export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
+export const TOCcol = HSON_COLOR_.s;
+export const COMMENTScol = ACID_WASH_OKLCH.fern;
+export const CODQ_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
+export const CODE_EQUALScol = OKLCH_FLEURS.brass;
+
+
+// export const TXTcol_MENU = CYBERPUNK_2060_OKLCH.mintIce;
+export const TXTcol_MENU = ACID_WASH_RGBA.softBlue;
+export const TXTcol_MAIN = CYBERPUNK_2060_NEUTRALS.paper;
+export const TXTcol_CODE = CYBERPUNK_2060_OKLCH.blueGlacier;
+export const TXTcol_ALT = CYBERPUNK_2060_NEUTRALS.silver;
+export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
+
+export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
+export const MONO_MAINfont = "Monaco, monospace";
+export const SANS_MAINfont = ""
+export const GRID_GAPstr = "2px";
+export const $CODE_FONT_SIZE = $txt_.reg;
+export const $PANEL_HIDDEN = 'panel-hidden';
+
+// either do this or don't:
+export const ABOUT_ROOT_ID = "about-root";
 
 export const WATERMARK_FMT_: Record<Fmt, string> = {
   json: "{JSON}",
@@ -99,3 +72,11 @@ export const WATERMARK_FMT_: Record<Fmt, string> = {
   html: "<HTML/>",
 } as const;
 
+
+
+export const REDLIKEcol = CYBERPUNK_2060_OKLCH.redSignal;
+export const BLUELIKEcol = CYBERPUNK_2060_OKLCH.blueCobalt;
+export const GREENLIKEcol = CYBERPUNK_2060_OKLCH.mossToxic;
+export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
+
+export const FADE_1col = CYBERPUNK_2060_NEUTRALS.silver;

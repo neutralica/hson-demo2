@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS } from "../../core/consts/colors.consts";
+import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS_ } from "../../core/consts/colors.consts";
 import { GRID_GAPstr, $txt_, TXTcol_ALT } from "../../core/consts/ui-consts";
-import { MENU_FONT } from "../../core/consts/ui-consts";
+import { MONO_MAINfont } from "../../core/consts/ui-consts";
 
 export const UI_ROOTcss: CssMap = {
 
@@ -45,7 +45,7 @@ export const PANEL_SURFACEcss: CssMap = {
 
 export const PANEL_FRAMEcss = {
     color: $blu_.std,
-    fontFamily: MENU_FONT,
+    fontFamily: MONO_MAINfont,
 } as const;
 
 export const PANELcss: CssMap = {
@@ -67,8 +67,8 @@ export const PANEL_TEXTAREAcss = {
     resize: "none",
     width: "100%",
     boxSizing: "border-box",
-    fontFamily: MENU_FONT,
-    fontSize: $txt_.unter,
+    fontFamily: MONO_MAINfont,
+    fontSize: $txt_.reg,
     lineHeight: "1.55",
     // background: $cols_.backdeep,
     border: "none",
@@ -84,5 +84,5 @@ export const PANEL_BRANCHcss: CssMap = {
     boxSizing: "border-box",
     gridTemplateColumns: `1fr 1fr`,
     gridTemplateRows: "auto 1fr",
-    background: COLORS.bckdeep,
+    background: COLORS_.bckdeep,
 };

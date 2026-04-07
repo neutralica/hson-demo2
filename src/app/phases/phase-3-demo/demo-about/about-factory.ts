@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
-import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_DOCcss, ABOUT_TOCcss, DATA_TOC_OPENcss } from "./about.css";
+import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_DOCcss, ABOUT_TOCcss, DOC_CONTAINER } from "./about.css";
 import { ABOUT_ROOT_ID } from "../../../core/consts/ui-consts";
 
 export type AboutPanel = Readonly<{
@@ -26,10 +26,14 @@ export function about_factory(host: LiveTree): Outcome<AboutPanel> {
   const toc = row.create.div()
     .classlist.add("about-toc")
     .css.setMany(ABOUT_TOCcss)
-    .css.selector("#about-root[data-toc-open='true'] &").setMany(DATA_TOC_OPENcss);
 
   const doc = row.create.div()
     .classlist.add("about-doc")
     .css.setMany(ABOUT_DOCcss);
-  return relay.data({ root, toc, doc });
+
+  const docContainer = doc.create.div()
+    .classlist.add("doc-container")
+    .css.setMany(DOC_CONTAINER)
+  
+  return relay.data({ root, toc, doc: docContainer });
 }

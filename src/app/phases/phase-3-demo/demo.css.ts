@@ -1,13 +1,13 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, COLORS, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $blu_, COLORS_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { GRID_GAPstr, $txt_, GRAFFITIcol, MENU_FONT, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, $txt_, GRAFFITIcol, MONO_MAINfont, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
 export const MAIN_MENUcss: CssMap = {
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: $txt_.subhead,
   fontWeight: "400",
   userSelect: "none",
@@ -19,11 +19,11 @@ export const MAIN_MENUcss: CssMap = {
   _hover: {
     fontWeight: "100",
     background: BLUELIKEcol,
-    color: COLORS.bckdeep
+    color: COLORS_.bckdeep
   },
   _active: {
-    background: COLORS.bckgd,
-    color: GREENLIKEcol,
+    background: COLORS_.bckdeep,
+    color: BLUELIKEcol,
     fontWeight: "700",
   }
 }
@@ -49,17 +49,19 @@ export const MENU_CONTAINERcss: CssMap = {
   alignItems: "stretch",
   width: "auto",
   height: "100%",
-  pointerEvents: "none",
+  // pointerEvents: "none",
   marginLeft: "2rem",
-  marginTop:"2rem"
+  marginTop: "2rem",
+  zIndex: "50",
+
 };
 
 
 export const HSON_WORDcss: CssMap = {
   fontSize: $txt_.hsonWordMarkMain,
-  fontFamily: "Trebuchet" + MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontWeight: "100",
-  width: "0.45em",
+  width: "0.5em",
   userSelect: "none",
   lineHeight: "0.9",
   verticalAlign: "bottom"
@@ -73,7 +75,7 @@ export const DEMOcss: CssMap = {
   height: "100%",
   inset: "0",
   overflow: "hidden",
-  background: `linear-gradient(${COLORS.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
+  background: `linear-gradient(${COLORS_.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
   pointerEvents: "none",
   boxSizing: "border-box"
 };
@@ -86,7 +88,7 @@ export const DEMO_STAGEcss: CssMap = {
   // default vars (even if unused initially)
   "--mxp": "50%",
   "--myp": "40%",
-  backgroundColor: COLORS.bckgd,
+  backgroundColor: COLORS_.bckgd,
   pointerEvents: "none",
 boxSizing: "border-box"
 };
@@ -104,7 +106,9 @@ export const DEMO_SCREENcss: CssMap = {
   isolation: "isolate",
   pointerEvents: "none",
   minHeight: "0",
-  boxSizing: "border-box"
+  boxSizing: "border-box",
+  overscrollBehaviorY:"none", // not sure it will do what I want
+
 }
 
 export const DEMO_SCREEN_FXcss: CssMap = {
@@ -177,7 +181,7 @@ export const HSON_GRAFFITIcss: CssMap = {
 }
 
 export const HSON_SUBcss: CssMap = {
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: $txt_.main,
   position: "relative",
   textWrap: "nowrap",
@@ -189,7 +193,7 @@ export const HSON_SUBcss: CssMap = {
 }
 
 export const COPYRITEcss: CssMap = {
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: $txt_.unter,
   position: "fixed",
   bottom: "0.2rem",

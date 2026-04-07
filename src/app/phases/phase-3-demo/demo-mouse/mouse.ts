@@ -126,9 +126,9 @@ export function mouse_init(rig: MousePanelRig): void {
         rig.pointer.css.setMany({
             transform: `translate(0, -50%) rotate(${deg}deg)`,
         });
-        const hitStack = rig.root.dom.doc.elementsFromPoint(x, y);
-        const orderedHits = [...hitStack].reverse();
-        const ghostStack = find_visual_only_elements(rig.root, x, y, hitStack);
+        const hitStack = rig.root.dom.doc?.elementsFromPoint(x, y) ?? [];
+        const orderedHits = [...hitStack].reverse() ?? [];
+        const ghostStack = find_visual_only_elements(rig.root, x, y, hitStack ?? []) ;
 
         const stack = [...orderedHits, ...ghostStack];
 

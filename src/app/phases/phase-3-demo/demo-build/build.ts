@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
 import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
-import { DEFAULT_SEED } from "./build-seed.consts";
+import { BUILD_STRINGhson } from "./build-hson.consts";
 import { mk_div_cls, mk_section_cls } from "../../../utils/makers";
 
 // keep this parallel to pp_factory return shape: root + handles
@@ -138,7 +138,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .data.set("input", "hson")
     .css.setMany(BUILD_TEXTAREAcss);
 
-  const seed = opts.seed ?? DEFAULT_SEED;
+  const seed = opts.seed ?? BUILD_STRINGhson;
   void textarea.setFormValue(seed, { silent: true });
 
   // --------------------------------------------------

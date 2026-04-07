@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, COLORS, $grn_, COLOR_4WAY, ACID_WASH_RGBA, CYBERPUNK_2060_OKLCH } from "../../../core/consts/colors.consts";
+import { $blu_, COLORS_, $grn_, COLOR_4WAY, ACID_WASH_RGBA, CYBERPUNK_2060_OKLCH, ACID_WASH_OKLCH, $gry_ } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { $txt_, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN } from "../../../core/consts/ui-consts";
-import { MENU_FONT } from "../../../core/consts/ui-consts";
+import { $txt_, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_ALT_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
+import { MONO_MAINfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 
 export const ABOUT_P_TEXTcss: CssMap = {
@@ -11,7 +11,7 @@ export const ABOUT_P_TEXTcss: CssMap = {
   lineHeight: "1.85",
   letterSpacing: "1px",
   color: TXTcol_MAIN,
-  textShadow:"0 0 5px oklch(0.85 0.03 260 / 0.25)",
+  textShadow: "0 0 5px oklch(0.85 0.03 260 / 0.25)",
   fontFamily: "sans-serif",
   fontWeight: "100",
   fontSize: $txt_.main,
@@ -25,6 +25,8 @@ export const ABOUT_LIST_ROWcss: CssMap = {
   alignItems: "start",
   minWidth: "0",
   maxWidth: "70ch",
+  color: TXTcol_MAIN,
+  fontFamily: MONO_MAINfont
 };
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
@@ -32,8 +34,9 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   textAlign: "left",
   userSelect: "none",
   whiteSpace: "pre",
-  fontSize: "0.5rem",
-  paddingTop: "1.7em",
+  fontSize: "0.75rem",
+  color: set_alpha(TXTcol_MAIN, 0.6),
+  paddingTop: "0.7em",
 };
 
 export const ABOUT_DOCcss: CssMap = {
@@ -43,10 +46,14 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
-  background: set_alpha(COLORS.bckdeep, 0.86),
-  maxWidth: "80ch",
+  background: set_alpha(COLORS_.bckdeep, 0.86),
 
 };
+
+export const DOC_CONTAINER = {
+  maxWidth: "80ch", 
+  
+}
 
 export const ABOUT_TOCcss: CssMap = {
   minWidth: "0",
@@ -56,7 +63,7 @@ export const ABOUT_TOCcss: CssMap = {
   gap: "8px",
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
-  background: set_alpha(COLORS.bckdeep, 0.86),
+  background: set_alpha(COLORS_.bckdeep, 0.86),
   overflowY: "auto",
   overflowX: "hidden",
 };
@@ -88,6 +95,10 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "6px",
   color: TOCcol,
+  _hover: {
+    color: "black",
+    background:$gry_.dark,
+  }
 };
 
 export const TOC_BTN_IDLEcss: CssMap = {
@@ -101,17 +112,16 @@ export const ABOUT_CSS: CssMap = {
   whiteSpace: "pre-line",
   overflowX: "auto",
   padding: "10px 12px",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
   fontweight: 300,
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   lineHeight: "1.75rem",
   fontSize: $txt_.main,
 }
 
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
-  // fontSize: $txt_.main,
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontWeight: "300",
   letterSpacing: "0.06em",
   lineHeight: "1.55rem",
@@ -122,21 +132,21 @@ export const INLINE_CODEcss: CssMap = {
 // parentheses inside inline code
 export const CODE_PARENcss: CssMap = {
   color: CODE_PARENScol, // choose something distinct but harmonious
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontWeight: "600",
 
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
   color: CODE_PARENS_INNERcol,
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontWeight: "300",
 } as const;
 
 export const CODE_COMMENTScss: CssMap = {
   color: COMMENTScol,
-  fontFamily: MENU_FONT,
-  fontSize: $txt_.main,
+  fontFamily: MONO_MAINfont,
+  // fontSize: $txt_.main,
   overflowWrap: "anywhere",
   whiteSpace: "normal",
 
@@ -164,13 +174,15 @@ export const ANTI_LIST_MARKERcss: CssMap = {
 export const ANTI_LIST_TEXTcss: CssMap = {
   ...LIST_TEXTcss,
   color: REDLIKEcol,
-  fontSize: $txt_.main,
+  // fontSize: $txt_.main,
   // textDecoration: "line-through",
 };
 
 export const WARNINGcss: CssMap = {
   color: "red",
   fontSize: $txt_.subhead,
+  textTransform: "uppercase",
+  textAlign: "center",
   textDecoration: "underline",
   fontWeight: "700",
 }
@@ -197,47 +209,33 @@ export const ABOUT_BODY_ROWcss: CssMap = {
 };
 
 
-export const DATA_TOC_OPENcss = {
-  display: "grid",
-  position: "fixed",
-  left: "2rem",
-  bottom: "6.5rem",
-  width: "min(22rem, calc(100vw - 4rem))",
-  maxHeight: "55vh",
-  zIndex: "9998",
-  background: "red",
-};
-
-export const ABOUT_TOC_TITLEcss: CssMap = {
-  fontFamily: MENU_FONT,
-  fontSize: $txt_.subhead,
-  letterSpacing: "0.12em",
-  fontWeight: "700",
-  alignSelf: "start",
-  justifySelf: "end",
-  textTransform: "uppercase",
-  padding: "4px 10px 8px 10px",
-};
-
 export const TOC_BTNcss: CssMap = {
   ...MONOcss,
   fontSize: $txt_.main,
-  lineHeight: "1.1",
-  padding: "12px 26px",
+  // lineHeight: "1.1",
+  // padding: "12px 26px",
   boxSizing: "border-box",
   cursor: "pointer",
   userSelect: "none",
   minWidth: "0",
   textAlign: "right",
+  _hover: {
+    background: TOCcol,
+    color: COLORS_.bckgd
+  }
 };
+
 export const MD_CODE_PREcss: CssMap = {
-  margin: "20px 0",
-  background: COLORS.bckdeep,
+  margin: "20px",
+  background: COLORS_.bckdeep,
   overflowWrap: "anywhere",
-  fontSize: $txt_.main,
+  fontSize: $CODE_FONT_SIZE,
   lineHeight: "1.85",
   padding: "1rem",
   // whiteSpace: "normal",
+  border: "1px solid " + set_alpha(ACID_WASH_OKLCH.lilac, 0.5),
+  color: TXTcol_CODE,
+
 };
 
 export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
@@ -246,7 +244,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
     marginBottom: "8px",
     textDecoration: level <= 3 ? "underline" : "",
     textUnderlineOffset: "5px",
-    fontFamily: MENU_FONT,
+    fontFamily: MONO_MAINfont,
     letterSpacing: "0.06em",
     textTransform: level === 2 ? "uppercase" : "none",
     fontSize: level === 1 ? $txt_.heading : level === 2 ? $txt_.subhead : level === 3 ? $txt_.subhead : $txt_.main,

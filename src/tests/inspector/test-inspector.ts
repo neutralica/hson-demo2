@@ -12,9 +12,9 @@ import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
-import { MENU_FONT } from "../../app/core/consts/ui-consts";
+import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
-import { COLORS, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { COLORS_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 
@@ -86,7 +86,7 @@ export function create_inspector(
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
-    background: COLORS.bckdeep
+    background: COLORS_.bckdeep
   });
   const header = mk_div_cls(root, "insp-header").css.setMany({
     // header is natural height

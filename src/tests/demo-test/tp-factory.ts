@@ -12,7 +12,7 @@ import { $PANEL_HIDDEN } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { MENU_FONT } from "../../app/core/consts/ui-consts";
+import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
 import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
@@ -131,7 +131,7 @@ export function tp_factory(): Outcome<TestPanel> {
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             minWidth: "0",
-            fontFamily: MENU_FONT,
+            fontFamily: MONO_MAINfont,
             fontSize: "12px",
             lineHeight: "1.25",
             paddingBottom: "2px",
@@ -156,7 +156,7 @@ export function tp_factory(): Outcome<TestPanel> {
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             minWidth: "0",
-            fontFamily: MENU_FONT,
+            fontFamily: MONO_MAINfont,
             fontSize: "12px",
             lineHeight: "1.25",
             color: get_line_color(line),

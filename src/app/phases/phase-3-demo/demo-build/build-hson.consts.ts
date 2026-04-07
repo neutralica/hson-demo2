@@ -1,4 +1,4 @@
-export const DEFAULT_SEED = `
+export const BUILD_STRINGhson = `
 <div id="build-demo" style="
   background: #02070d;
   border-left: 1px solid rgba(120,180,255,0.28);

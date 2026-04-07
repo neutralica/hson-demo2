@@ -1,5 +1,5 @@
 import type { PropertyRegistration } from "../../../../../hson-live/dist/types/at-property.types";
-import { COLORS } from "../../core/consts/colors.consts";
+import { COLORS_ } from "../../core/consts/colors.consts";
 
 export const CLOUD_TILE_W = 400;
 export const sunColor = "rgb(255, 196, 84)";
@@ -65,7 +65,7 @@ export const KISS_COLat: PropertyRegistration = {
   name: "--kissCol",
   syn: "<color>",
   inh: false,
-  init: COLORS.bckgd, // ok if this is a valid CSS color string
+  init: COLORS_.bckgd, // ok if this is a valid CSS color string
 };
 
 export const AT_LAYER_MAX: PropertyRegistration = {

@@ -272,7 +272,7 @@ export const COLOR_4WAY = {
   muted: OKLCH_MUTED_PASTEL
 };
 
-export const COLORS = {
+export const COLORS_ = {
   bckgd: bckColor,
   bckdeep: deepBack,
   bcklight,

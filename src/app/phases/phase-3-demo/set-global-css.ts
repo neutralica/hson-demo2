@@ -1,7 +1,7 @@
 import { CssManager } from "hson-live";
 import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/managers/global-css";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
-import { $blu_, COLORS, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $blu_, COLORS_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
 import { adjustOklch, set_alpha } from "../../core/helpers/color-helpers";
 import { MAIN_MENUcss } from "./demo.css";
 import { TXTcol_MENU } from "../../core/consts/ui-consts";

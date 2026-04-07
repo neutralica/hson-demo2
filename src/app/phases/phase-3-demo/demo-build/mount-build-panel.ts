@@ -1,7 +1,6 @@
 import { LiveTree, hson } from "hson-live";
 import { outcome, relay, relay_data, type Outcome } from "intrastructure";
 import { bp_factory, type BuildDemo } from "./build";
-import { render_hson_highlight_html } from "../../../ui/hson-highlighter";
 
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";

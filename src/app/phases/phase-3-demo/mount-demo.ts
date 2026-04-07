@@ -11,7 +11,7 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, COLORS, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
+import { $blu_, COLORS_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
 import { HSON_COLOR_ } from "../../core/consts/ui-consts";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/mount-build-panel";
@@ -31,6 +31,7 @@ import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { UI_ROOTcss } from "../../ui/panels/tp-panels.css";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
+import { mount_prairie } from "../phase-4-grass/mount-prairie";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -246,13 +247,19 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     toggle_view("fleurs")
   })
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
-  demo.listen.onKeyDown((ke) => {
+  
+  demo.listen.document.onKeyDown((ke) => {
     console.log("key pressed")
 
     if (ke.key === "s") {
       console.log("s pressed")
     }
-  })
+    if (ke.key === "p") {
+      mount_prairie(stage);
+    }
+  });
+
+
   screen.listen.onClick((ev: MouseEvent) => {
     if (get_view() !== "fleurs") return;
 

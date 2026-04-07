@@ -15,10 +15,6 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
 
   const tocButtons: Array<{ key: AboutDocKey; btn: LiveTree; }> = [];
 
-  const applyTocOpen = (): void => {
-    t.toc.data.set("toc-open", get_about_toc_open() ? "true" : null);
-  };
-
   t.toc.empty();
 
   for (const d of docs) {
@@ -44,14 +40,8 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     for (const x of tocButtons) {
       x.btn.css.setMany(x.key === activeKey ? TOC_BTN_ACTIVEcss : TOC_BTN_IDLEcss);
     }
-    // collapse TOC after selection)
-    set_about_toc_open(false);
-    applyTocOpen();
   };
 
-  // keep root data attr in sync with state
-  applyTocOpen();
-  demo_subscribe(applyTocOpen);
 
   setActive(activeKey);
 }

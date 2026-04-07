@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, COLORS, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
+import { $red_etc_, COLORS_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
 import { GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
-import { MENU_FONT } from "../../app/core/consts/ui-consts";
+import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { UI_BUTTONcss, UI_CHIP_BORDERcss } from "../../app/ui/panels/ui-panels.css";
@@ -41,13 +41,13 @@ export const CLEAR_BTNcss: CssMap = {
   ...UI_BUTTONcss,
   borderColor: OKLCH_FLEURS.brass,
   borderRadius: "18px",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
   transition: "transform 90ms ease, filter 140ms ease",
   color: OKLCH_FLEURS.brass,
   _hover: {
     background: "orange",
-    color: COLORS.bckdeep,
-    border: "1px solid " + COLORS.bckgd,
+    color: COLORS_.bckdeep,
+    border: "1px solid " + COLORS_.bckgd,
   }
 }
 
@@ -57,8 +57,8 @@ export const TEST_RUN_BTNcss: CssMap = {
   color: ACID_WASH_RGBA.fadedMint,
   _hover: {
     background: ACID_WASH_RGBA.fadedMint,
-    color: COLORS.bckdeep,
-    border: "1px solid " + COLORS.bckgd,
+    color: COLORS_.bckdeep,
+    border: "1px solid " + COLORS_.bckgd,
   }
 };
 
@@ -67,7 +67,7 @@ export const TEST_SELECTORcss: CssMap = {
   padding: "10px 8px 10px 20px",
   boxSizing: "border-box",
 
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: $txt_.main,
 
   // background: $cols_.backdeep,
@@ -83,7 +83,7 @@ export const TEST_LOGGERcss: CssMap = {
   padding: "5px",
   boxSizing: "border-box",
   // background: $cols_.backdeep,
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: $txt_.unter,
   width: "100%",
   overflowY: "scroll",
@@ -101,7 +101,7 @@ export const TEST_LOG_BOXcss: CssMap = {
   overflow: "auto",
   height: "100%",
   display: "grid",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
 };
 export const TEST_ROW_CONTAINERcss = {
   display: "grid",
@@ -174,6 +174,6 @@ export const MAKE_CHIP_DEFAULTcss = {
   minWidth: "44px",
   boxSizing: "border-box",
   overflow: "hidden",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
   transition: "transform 90ms ease, filter 140ms ease",
 };

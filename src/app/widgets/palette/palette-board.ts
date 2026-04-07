@@ -2,7 +2,7 @@
 import type { LiveTree } from "hson-live";
 import type { Palette } from "./calc-palette";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";
-import { MENU_FONT } from "../../core/consts/ui-consts";
+import { MONO_MAINfont } from "../../core/consts/ui-consts";
 
 // Render a simple grid of clickable swatches.
 // Click swatch → copies `oklch(...)` string.
@@ -15,7 +15,7 @@ export function render_palette_board(host: LiveTree, p: Palette): () => void {
             display: "grid",
             gridTemplateColumns: "1fr",
             gap: "10px",
-          fontFamily: MENU_FONT,
+          fontFamily: MONO_MAINfont,
             fontSize: "12px",
             color: p.textOnDark,
         });

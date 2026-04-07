@@ -2,8 +2,8 @@
 
 import type { CssMap } from "hson-live/types";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
-import { COLORS, $gry_ } from "../../../core/consts/colors.consts";
-import { MENU_FONT, $txt_, GRID_GAPstr, COLOR_FOR_FMT_ } from "../../../core/consts/ui-consts";
+import { COLORS_, $gry_ } from "../../../core/consts/colors.consts";
+import { MONO_MAINfont, $txt_, GRID_GAPstr, COLOR_FOR_FMT_ } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
 
@@ -16,7 +16,7 @@ export const PP_HEADERcss: CssMap = {
   zIndex: "5",
   minHeight: "2rem",
   padding: "6px",
-  background: set_alpha(COLORS.bckdeep, 0.7),
+  background: set_alpha(COLORS_.bckdeep, 0.7),
 };
 
 //// used:
@@ -25,7 +25,7 @@ export const PP_TEXTWRAPcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
-  background: set_alpha(COLORS.bckdeep, 0.9),
+  background: set_alpha(COLORS_.bckdeep, 0.9),
 };
 
 export const PP_GRIDcss: CssMap = {
@@ -53,7 +53,7 @@ export const PP_WATERMARKcss: CssMap = {
   placeItems: "center",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: $txt_.heading,
   textTransform: "uppercase",
   overflow: "hidden"
@@ -69,7 +69,7 @@ export const PP_STATUScss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0", // set by JS
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: "14px",
   letterSpacing: "0.10em",
   textTransform: "uppercase",
@@ -81,7 +81,8 @@ export const PP_UNMUTEDcss = (f: Fmt) => {
     filter: "none",
     pointerEvents: "auto",
     userSelect: "auto",
-    boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.6),
+    boxShadow: "inset 0 0 15px 1px " + COLOR_FOR_FMT_[f],
+    border: "none",
   } as CssMap;
 };
 

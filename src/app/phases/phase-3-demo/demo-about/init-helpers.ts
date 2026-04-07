@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, ABOUT_TOC_TITLEcss, SPECIAL_WORDScss } from "./about.css";
+import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss,  SPECIAL_WORDScss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 

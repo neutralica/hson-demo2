@@ -1,10 +1,10 @@
 // build.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { COLORS, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { COLORS_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
 import { $txt_, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { MENU_FONT } from "../../../core/consts/ui-consts";
+import { MONO_MAINfont } from "../../../core/consts/ui-consts";
 import { PANEL_TEXTAREAcss } from "../../../ui/panels/tp-panels.css";
 import { UI_BUTTONcss } from "../../../ui/panels/ui-panels.css";
 import { set_alpha } from "../../../core/helpers/color-helpers";
@@ -34,11 +34,11 @@ export const BUILD_HEADcss: CssMap = {
   paddingBottom: "2px",
   fontSize: "2rem",
   fontWeight: "700",
-  background: COLORS.bckdeep
+  background: COLORS_.bckdeep
 };
 
 export const BUILD_TITLEcss: CssMap = {
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: "22px",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
@@ -59,7 +59,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
@@ -68,7 +68,12 @@ export const BUILD_TEXTAREAcss: CssMap = {
   boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
   color: TXTcol_ALT,
   caretColor: "auto",
-  fontSize: $txt_.reg
+  fontSize: $txt_.reg,
+  _focus: {
+    boxShadow: "inset 0 0 25px 1px " + COLOR_FOR_FMT_["hson"],
+    
+  }
+  
 };
 
 // Watermarks (same idea as parse panels)
@@ -80,7 +85,7 @@ export const BUILD_WATERMARK_FMTcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.08",
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: "72px",
   letterSpacing: "0.12em",
   textTransform: "uppercase",
@@ -93,7 +98,7 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: "14px",
   letterSpacing: "0.06em",
 };
@@ -106,7 +111,7 @@ export const BUILD_STATUScss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0",
-  fontFamily: MENU_FONT,
+  fontFamily: MONO_MAINfont,
   fontSize: "12px",
   letterSpacing: "0.12em",
   textTransform: "uppercase",
@@ -117,7 +122,7 @@ export const BUILD_BTNcss: CssMap = {
   ...UI_BUTTONcss,
   padding: "8px 10px",
   borderRadius: "12px",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
   color: TXTcol_ALT,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   flexShrink: "0",
@@ -157,7 +162,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: COLORS.bckdeep,
+  background: COLORS_.bckdeep,
 };
 
 // HTML output box: same textarea styling
