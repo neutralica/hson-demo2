@@ -4,7 +4,7 @@ import { _lerp } from "../../../utils/helpers";
 import { make_rng } from "../../../utils/rng";
 import { type FlowerSpec } from "./fleurs.types";
 import { lerp, randSigned } from "./fleurs-helpers";
-import { normalizeHue, pickCenterColor } from "./fleurs-cols";
+import { normalizeHue, pick_center_color } from "./fleurs-cols";
 import { fmtNum, pickFlowerPalette } from "./fleurs-cols";
 import { pick_cultivar, sampleCultivarShape } from "./fleurs-cultivars";
 import { appendDaisySpotsMarkup, appendPetalRingMarkup, appendStamensMarkup } from "./render-fleurs";
@@ -60,7 +60,7 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
     }
 
     const stamens = appendStamensMarkup(spec);
-    const centerFill = pickCenterColor(spec.palette, rng, spec.cultivar);
+    const centerFill = pick_center_color(spec.palette, rng, spec.cultivar);
 
     const g = host.create.g()
         .attr.setMany({

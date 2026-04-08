@@ -1,13 +1,13 @@
 // mount-prairie-phase.ts
-import { outcome, relay, type OutcomeAsync } from "intrastructure";
+import {  relay, type OutcomeAsync } from "intrastructure";
 import { LiveTree } from "hson-live";
 import { prairie_factory } from "./prairie.js";
 import { mk_div_id } from "../../utils/makers.js";
 import { $txt_ } from "../../core/consts/ui-consts.js";
-import { OKLCH_FLEURS } from "../phase-3-demo/demo-fleurs/fleurs.consts.js";
-import { ACID_WASH_OKLCH, CYBERPUNK_2060_NEUTRALS } from "../../core/consts/colors.consts.js";
-import { set_alpha } from "../../core/helpers/color-helpers.js";
+import { ACID_WASH_OKLCH } from "../../core/consts/colors.consts.js";
 
+
+const skyColor = "hsl(210 45% 12%)";
 export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
 
@@ -18,7 +18,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
       width: "100%",
       height: "100%",
       overflow: "hidden",
-      background: "hsl(210 45% 12%)", // sky placeholder
+      background: skyColor, // sky placeholder
     });
 
   prairie_factory(host);
@@ -49,16 +49,17 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
     .create.span().text.set("visit").css.set.margin("6rem")
     .create.span().text.set("tours").css.set.margin("6rem")
     .create.span().text.set("find").css.set.margin("6rem")
-  const brand = stage.create.div().text.set("// created entirely in hson-live").css.setMany({
+
+  stage.create.div().text.set("// made in hson-live").css.setMany({
     position: "fixed",
-    top: "1rem",
+    bottom: "1rem",
     right: "1rem",
     display: "flex",
     alignSelf: "end",
     marginLeft: "6rem",
-    fontSize: $txt_.wee,
+    fontSize: $txt_.mid,
     fontFamily: "Courier",
-    color: ACID_WASH_OKLCH.straw,
+    color: skyColor,
   })
 
   return relay.ok();

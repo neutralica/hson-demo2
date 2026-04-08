@@ -6,14 +6,17 @@ import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
 export const MOUSE_ROOTcss: CssMap = {
+  position: "fixed",
+  bottom: "0.5rem",
+  left: "1rem",
   display: "grid",
   gridTemplateRows: "150px 200px",
   gridTemplateColumns: "2fr 1fr",
   minWidth: "0",
   minHeight: "0",
-  width: "100%",
-  maxWidth: "19rem",
-  marginBottom: "1rem",
+  width: "20 0px",
+  maxWidth: "200px",
+  // marginBottom: "1rem",
   overflow: "hidden",
 } as const;
 

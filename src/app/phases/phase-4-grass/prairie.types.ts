@@ -36,7 +36,17 @@ export type PrairieConfig = Readonly<{
 
   // CHANGED: deterministic seed
   seed: number;
+
+  // flowers
+  flowerChance: number;
+  flowerRadiusNear: number;
+  flowerRadiusFar: number;
+  flowerSwayNear: number;
+  flowerSwayFar: number;
+  flowerBloomWindowSec: number;
+
 }>;
+
 export type PrairieRowStatic = Readonly<{
   rowIndex: number;
   t: number; // 0 = near, 1 = far
@@ -66,11 +76,41 @@ export type PrairieRowStatic = Readonly<{
   // CHANGED: paint
   fill: string;
 }>;
+
+
 export type PrairieRuntime = Readonly<{
   host: LiveTree;
   svg: SvgLiveTree;
   paths: SvgLiveTree[];
+  flowerPaths: SvgLiveTree[]; // ADDED
   rows: PrairieRowStatic[];
+  flowers: PrairieFlowerStatic[]; // ADDED
   config: PrairieConfig;
   stop: () => void;
+}>;
+
+export type PrairieFlowerBud = Readonly<{
+  dx: number;
+  dy: number;
+  rMul: number;
+}>;
+
+export type PrairieFlowerStatic = Readonly<{
+  rowIndex: number;
+  t: number;
+
+  xBase: number;
+  yBase: number;
+
+  radius: number;
+  color: string;
+  buds: readonly PrairieFlowerBud[];
+
+  bloomAtSec: number;
+  bloomDurSec: number;
+
+  // tiny independent wobble, layered on top of row wind
+  phase: number;
+  wobbleAmp: number;
+  wobbleSpeed: number;
 }>;

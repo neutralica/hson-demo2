@@ -3,60 +3,16 @@
 // CHANGED: keeps static row data cached; only path geometry updates per frame
 
 import { hson, type LiveTree } from "hson-live";
-import type { LogLevel } from "vite";
 import type { SvgLiveTree } from "../../../../../hson-live/dist/types/svg.types";
-import { _lerp } from "../../utils/helpers";
-import type { PrairieConfig, PrairieRowStatic, PrairieRuntime } from "./prairie.types";
+import { _clamp01, _clampLoHi, _lerp } from "../../utils/helpers";
+import type { PrairieConfig, PrairieFlowerStatic, PrairieRowStatic, PrairieRuntime } from "./prairie.types";
 import { make_rng } from "../../utils/rng";
+import { depth_ease, hsl, default_prairie_config, row_wind_x } from "./prairie-helpers";
+import { build_flower_cluster_path, ease_out_back, make_row_flowers } from "./prairie-flowers";
+
+
 
 const svgNs = "http://www.w3.org/2000/svg";
-
-/**
- * default  config
- **/
-export function default_prairie_config(width: number, height: number): PrairieConfig {
-  return {
-    width,
-    height,
-    horizonY: Math.round(height * 0.34),
-
-    rowCount: 56,
-
-    nearBladeHeight: 75,
-    farBladeHeight: 3.5,
-
-    nearSampleStep: 2,
-    farSampleStep: 4,
-
-    nearSwayAmp: 17,
-    farSwayAmp: 0.8,
-
-    curvePower: 2.8,
-
-    hueBase: 108,
-    hueJitter: 10,
-    satNear: 56,
-    satFar: 6,
-    lightNear: 44,
-    lightFar: 12,
-
-    seed: 1337,
-  };
-}
-
-// -----------------------------
-// tiny math helpers
-// -----------------------------
-
-// CHANGED: stronger compression toward horizon => curved-slope feel
-function depth_ease(t: number, power: number): number {
-  return 1 - Math.pow(1 - t, power);
-}
-
-
-function hsl(h: number, s: number, l: number): string {
-  return `hsl(${h} ${s}% ${l}%)`;
-}
 
 // -----------------------------
 // row construction
@@ -140,17 +96,8 @@ function build_row_path_d(
 
     const local = row.jitter[i] ?? 0;
 
-    const windA =
-      Math.sin(timeSec * row.swaySpeed + x * row.swayFreq + row.phase) * row.swayAmp;
-
-    const windB =
-      Math.sin(
-        timeSec * (row.swaySpeed * 0.63) +
-        x * (row.swayFreq * 1.8) +
-        row.phase * 0.7
-      ) * (row.swayAmp * 0.35);
-
-    const blade = Math.max(0.5, row.bladeHeight + local + windA + windB);
+    const wind = row_wind_x(row, x, timeSec);
+    const blade = Math.max(0.5, row.bladeHeight + local + wind);
     const yTop = row.yBase - blade;
 
     points.push({ x, y: yTop });
@@ -248,7 +195,39 @@ export function prairie_factory(host: LiveTree, config?: Partial<PrairieConfig>)
     svg.append(path);
     paths.push(path);
   }
+  const flowerPaths: SvgLiveTree[] = [];
+  const flowers: PrairieFlowerStatic[] = [];
 
+  // far rows first, near rows last
+  for (let i = cfg.rowCount - 1; i >= 0; i--) {
+    const row = make_row_static(cfg, i, rand);
+    rows.push(row);
+
+    const rowPath = svg.create.path()
+      .attr.setMany({
+        xmlns: svgNs,
+        fill: row.fill,
+      });
+
+    svg.append(rowPath);
+    paths.push(rowPath);
+
+    // ADDED: flowers for this row
+    const rowFlowers = make_row_flowers(row, cfg, rand);
+
+    for (const flower of rowFlowers) {
+      const flowerPath = svg.create.path()
+        .attr.setMany({
+          xmlns: svgNs,
+          fill: flower.color,
+          opacity: "0",
+        });
+
+      svg.append(flowerPath);
+      flowers.push(flower);
+      flowerPaths.push(flowerPath);
+    }
+  }
   host.empty();
   host.append(svg);
 
@@ -268,6 +247,35 @@ export function prairie_factory(host: LiveTree, config?: Partial<PrairieConfig>)
       if (d) { path.attr.set("d", d); }
     }
 
+    for (let i = 0; i < flowers.length; i++) {
+      const flower = flowers[i] as PrairieFlowerStatic;
+      const flowerPath = flowerPaths[i];
+
+      const rowByIndex = new Map<number, PrairieRowStatic>();
+      for (const row of rows) rowByIndex.set(row.rowIndex, row);
+      const row = rowByIndex.get(flower.rowIndex);
+      if (!flowerPath || !row) continue;
+
+      const bloomRaw = (timeSec - flower.bloomAtSec) / flower.bloomDurSec;
+      const bloom = _clamp01(bloomRaw);
+
+      if (bloom <= 0) {
+        flowerPath.attr.setMany({
+          opacity: "0",
+          d: "",
+        });
+        continue;
+      }
+
+      const bloomScale = _clampLoHi(ease_out_back(bloom), 0, 1.14);
+
+      const d = build_flower_cluster_path(flower, row, timeSec, bloomScale);
+
+      flowerPath.attr.setMany({
+        d,
+        opacity: String(_lerp(0, 1, _clampLoHi(bloom * 1.25, 0, 1))),
+      });
+    }
     rafId = requestAnimationFrame(frame);
   };
 
@@ -276,8 +284,10 @@ export function prairie_factory(host: LiveTree, config?: Partial<PrairieConfig>)
   return {
     host,
     svg,
-    rows,
     paths,
+    flowerPaths,
+    rows,
+    flowers,
     config: cfg,
     stop: (): void => {
       stopped = true;

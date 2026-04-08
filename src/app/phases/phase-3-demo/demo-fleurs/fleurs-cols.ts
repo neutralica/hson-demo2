@@ -185,7 +185,7 @@ export function pickStamenColor(spec: FlowerSpec, rng: Rng): string {
         lightnessBias: 0.9,
     });
 }
-export function pickCenterColor(
+export function pick_center_color(
     palette: FlowerPaletteSpec,
     rng: Rng,
     cultivar?: FlowerCultivar,
