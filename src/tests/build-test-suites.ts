@@ -9,6 +9,7 @@ import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
 import { HTML_FIXTURES_NEW } from "./transform-tests/new-fixtures";
 import { all_unit_tests } from "./unit-tests/all-unit-tests";
 import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
+import { livetree_create_size } from "./livetree-tests/livetree-fixtures-6";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -151,7 +152,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      ...all_unit_tests(),
+      livetree_create_size(),
 
     ])
   }

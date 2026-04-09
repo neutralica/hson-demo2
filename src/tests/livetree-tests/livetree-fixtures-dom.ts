@@ -3,7 +3,7 @@ import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { tick } from "./livetree-fixtures-3";
 import { make_livetree_suite } from "./livetree-testkit";
 
-export function livetree_fixtures_doc(): TestSuite {
+export function livetree_new_dom_doc(): TestSuite {
     const SUITE = "livetree/document";
 
     const cases: readonly LiveTreeCaseSpec[] = [

@@ -11,16 +11,16 @@ import LIVETREE_LIST from "../../../../../../hson-live/docs/livetree-methods-lis
 import LIVEDEMO_README from "../../../../../README.md?raw";
 
 export const ABOUT_DOCS: AboutDocs = [
-  { key: "livedemo", title: "livedemo", body: LIVEDEMO_README },
+  { key: "livedemo", title: "liveDemo", body: LIVEDEMO_README },
   { key: "readme", title: "README", body: README },
   { key: "hson-syntax", title: "syntax", body: HSON_SPEC_SYNTAX },
   { key: "nodes", title: "nodes", body: HSON_SPEC_NODE_GRAPH },
   { key: "json", title: "json", body: HSON_SPEC_JSON },
   { key: "html", title: "html", body: HSON_SPEC_HTML },
-  { key: "transform", title: "transform", body: HSON_TRANSFORM_MD },
-  { key: "livetree", title: "liveTree", body: HSON_LIVETREE_MD },
-  { key: "hson-css", title: "css-manager", body: HSON_CSS_API },
-  { key: "livetree-list", title: "livetree api", body: LIVETREE_LIST },
+  { key: "transform", title: ".transform", body: HSON_TRANSFORM_MD },
+  { key: "livetree", title: ".liveTree", body: HSON_LIVETREE_MD },
+  { key: "hson-css", title: "css", body: HSON_CSS_API },
+  { key: "livetree-api", title: "liveTree api", body: LIVETREE_LIST },
   // later:
   // { key: "api", title: "API", body: API_MD },
 ];

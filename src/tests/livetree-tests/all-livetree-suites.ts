@@ -6,27 +6,27 @@ import { document_question, error_handling, listeners_teardown, root_multi_isola
 import { livetree_completionist, livetree_sync_perf, roundtrip_projection_stability } from "./livetree-fixtures-5";
 import { livetree_svg_basic } from "./livetree-fixtures-svg-1";
 import { livetree_svg_ingermediate } from "./livetree-fixtures-svg-2";
+import { livetree_gnarly_svg } from "./livetree-fixtures-svg-3";
+import { livetree_create_size, livetree_css_pseudo, livetree_recent_api } from "./livetree-fixtures-6";
+import { livetree_new_dom_doc } from "./livetree-fixtures-dom";
+import type { TestSuite } from "../tests.types";
 
 
 /******************************************************
  **  TEMPLATE FOR NEW FIXTURE OBJECTS - DO NOT EDIT  **
  ******************************************************/
 
- import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
-import { make_livetree_suite } from "./livetree-testkit";
-import { livetree_gnarly_svg } from "./livetree-fixtures-svg-3";
-import { livetree_fixtures_6 } from "./livetree-fixtures-6";
-import { livetree_fixtures_doc } from "./livetree-fixtures-dom";
+//  import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
 
-export function TEMPLATE_SUITE_OBJECT_RETURN(): TestSuite {
-  const SUITE = "[CHANGE THIS FIELD AND CHANGE FUNCTION NAME]";
-  const cases: readonly LiveTreeCaseSpec[] =
-    [
-            /* [fixtures] */
-    ];
+// export function TEMPLATE_SUITE_OBJECT_RETURN(): TestSuite {
+//   const SUITE = "[CHANGE THIS FIELD AND CHANGE FUNCTION NAME]";
+//   const cases: readonly LiveTreeCaseSpec[] =
+//     [
+//             /* [fixtures] */
+//     ];
 
-  return make_livetree_suite(SUITE, cases);
-}
+//   return make_livetree_suite(SUITE, cases);
+// }
 
 
 
@@ -53,8 +53,12 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_svg_basic(),
     livetree_svg_ingermediate(),
     livetree_gnarly_svg(),
-    livetree_fixtures_6(),
-    livetree_fixtures_doc(),
-    
+    livetree_css_pseudo(),
+    livetree_new_dom_doc(),
+    livetree_recent_api(),
+    livetree_create_size(),
+
+
+
   ] as const;
 }

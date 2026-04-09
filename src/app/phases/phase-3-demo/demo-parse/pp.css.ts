@@ -81,18 +81,21 @@ export const PP_UNMUTEDcss = (f: Fmt) => {
     filter: "none",
     pointerEvents: "auto",
     userSelect: "auto",
-    boxShadow: "inset 0 0 15px 1px " + COLOR_FOR_FMT_[f],
+    boxShadow: "inset 0 0 45px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.6),
     border: "none",
   } as CssMap;
 };
 
 //// used
-export const PP_MUTEDcss: CssMapBase = {
-  filter: "saturate(0.9) brightness(0.8)",
+export const PP_MUTEDcss= (f: Fmt) => {
+  return {
+    filter: "saturate(0.9) brightness(0.8)",
 
-  pointerEvents: "auto",
-  userSelect: "none",
-};
+    boxShadow: "inset 0 0 45px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.3),
+    pointerEvents: "auto",
+    userSelect: "none",
+  };
+}
 
 //// used
 export const PP_COPYBTNcss: CssMap = {

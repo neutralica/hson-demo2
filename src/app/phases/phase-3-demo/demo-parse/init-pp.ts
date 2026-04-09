@@ -31,7 +31,7 @@ export function init_parsing_panels(pp: Panels): void {
   const FMTS = Object.keys(pp.panels) as readonly Fmt[];
   let inProgress = false;
   let active: Fmt | null = null;
-  let activeIsInvalid = false;
+  let activeIsInvalid = true;
 
   // timer to clear invalid text after blur
   let invalidClearTimer: ReturnType<typeof setTimeout> | null = null;
@@ -97,35 +97,38 @@ export function init_parsing_panels(pp: Panels): void {
   };
 
   // CENTRAL: derive muting + interactivity from (active, activeIsInvalid)
+  // TODO-- this is a mess 
   const syncUiState = (): void => {
     for (const f of FMTS) {
       const p = pp.panels[f];
       const isActive = active === f;
 
+      // p.wrap.css.setMany(PP_MUTEDcss(f));
       if (isActive) {
+        console.log(f + " is ACTIVE")
         // focused panel is always interactive
         p.wrap.css.setMany(PP_UNMUTEDcss(f));
         unlockTextarea(p);
         continue;
       }
-
-      // non-active panels:
-      if (active && activeIsInvalid) {
-        // muted + locked
-        p.wrap.css.setMany(PP_MUTEDcss);
-        lockTextarea(p);
-      } else {
-        // normal + interactive
+      else if (!activeIsInvalid) {
+        console.log(f + " NOT active is invalid")
         p.wrap.css.setMany(PP_UNMUTEDcss(f));
+        lockTextarea(p);
+      }
+      else {
+        console.log(f + " NORMAL")
+        // normal + interactive
+        p.wrap.css.setMany(PP_MUTEDcss(f));
         unlockTextarea(p);
       }
     }
   };
-  for (const f of FMTS) {
-    const p = pp.panels[f];
-    p.wrap.css.setMany(PP_UNMUTEDcss(f));
-    unlockTextarea(p);
-  }
+  // for (const f of FMTS) {
+  //   const p = pp.panels[f];
+  //   p.wrap.css.setMany(PP_MUTEDcss);
+  //   unlockTextarea(p);
+  // }
   const clearOthers = (origin: Fmt): void => {
     for (const f of FMTS) {
       if (f === origin) continue;
@@ -238,7 +241,7 @@ export function init_parsing_panels(pp: Panels): void {
           pp.panels.html.bytes.text.set(`${encBytes(outX)} bytes`);
 
           if (active === origin) {
-            activeIsInvalid = false;
+            activeIsInvalid = true;
             clearTimer();
             setStatus(origin, "valid");
             syncUiState();
@@ -310,7 +313,7 @@ export function init_parsing_panels(pp: Panels): void {
   for (const fmt of FMTS) {
     const p = pp.panels[fmt];
 
-    p.textarea.listen.onFocus( () => {
+    p.textarea.listen.onFocus(() => {
       // clear previous invalid on focus switch (your rule #4)
       if (active && active !== fmt && activeIsInvalid) {
         const prev = active;
@@ -357,12 +360,12 @@ export function init_parsing_panels(pp: Panels): void {
       syncUiState();
     });
 
-    p.textarea.listen.onInput( () => update(fmt));
+    p.textarea.listen.onInput(() => update(fmt));
   }
 
   // initial state
   active = null;
-  activeIsInvalid = false;
+  activeIsInvalid = true;
   clearTimer();
   setFocusedOnly(null);
   syncUiState();
