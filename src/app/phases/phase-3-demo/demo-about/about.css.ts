@@ -46,7 +46,7 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
-  background: set_alpha(COLORS_.bckdeep, 0.86),
+  background: COLORS_.bckdeep,
 
 };
 
@@ -63,7 +63,7 @@ export const ABOUT_TOCcss: CssMap = {
   gap: "8px",
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
-  background: set_alpha(COLORS_.bckdeep, 0.86),
+  background:COLORS_.bckdeep,
   overflowY: "auto",
   overflowX: "hidden",
 };

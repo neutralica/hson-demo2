@@ -11,7 +11,7 @@ import LIVETREE_LIST from "../../../../../../hson-live/docs/livetree-methods-lis
 import LIVEDEMO_README from "../../../../../README.md?raw";
 
 export const ABOUT_DOCS: AboutDocs = [
-  { key: "about", title: "about", body: LIVEDEMO_README },
+  { key: "livedemo", title: "livedemo", body: LIVEDEMO_README },
   { key: "readme", title: "README", body: README },
   { key: "hson-syntax", title: "syntax", body: HSON_SPEC_SYNTAX },
   { key: "nodes", title: "nodes", body: HSON_SPEC_NODE_GRAPH },
