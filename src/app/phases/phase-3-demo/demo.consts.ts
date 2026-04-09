@@ -2,7 +2,7 @@
 
 export const MIN_DESKTOP_WIDTH =1100
 
-export const COPY_TEXTstr ="© 2026 terminal_gothic LLC — hson-live (Public Parity License 7.0)"
+export const COPY_TEXTstr ="© 2026 terminal_gothic — hson-live (Public Parity License 7.0)"
 
 const DEMO_STRINGS = {
   stage: "stage",

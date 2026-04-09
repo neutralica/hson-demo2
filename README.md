@@ -162,4 +162,4 @@ Taken together, these demos sketch an approach for building lightweight interact
 LiveDemo will expand alongside future versions of hson-live.
 
 
-© 2026 terminal_gothic LLC. All rights reserved except as granted under the Public Parity License 7.0.
+© 2026 terminal_gothic. All rights reserved except as granted under the Public Parity License 7.0.

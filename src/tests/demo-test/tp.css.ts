@@ -90,7 +90,7 @@ export const TEST_LOGGERcss: CssMap = {
   overflowX: "hidden",
   overflowWrap: "anywhere",
   minWidth: "100%",
-  color: OKLCH_FLEURS.mauve,
+  color: OKLCH_FLEURS.pollen,
   whiteSpace: "pre-wrap",
   // letterSpacing: "0.14em",
   lineHeight: "1.75rem",

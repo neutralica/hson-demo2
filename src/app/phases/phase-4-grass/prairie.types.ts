@@ -51,7 +51,6 @@ export type PrairieRowStatic = Readonly<{
   rowIndex: number;
   t: number; // 0 = near, 1 = far
 
-
   // CHANGED: baseline y for this row
   yBase: number;
 

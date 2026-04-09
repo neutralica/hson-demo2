@@ -25,7 +25,7 @@ export const PP_TEXTWRAPcss: CssMap = {
   position: "relative",
   minHeight: "0",
   minWidth: "0",
-  background: set_alpha(COLORS_.bckdeep, 0.9),
+  background: COLORS_.bckdeep,
 };
 
 export const PP_GRIDcss: CssMap = {

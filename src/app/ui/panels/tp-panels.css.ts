@@ -70,7 +70,7 @@ export const PANEL_TEXTAREAcss = {
     fontFamily: MONO_MAINfont,
     fontSize: $txt_.reg,
     lineHeight: "1.55",
-    // background: $cols_.backdeep,
+    // background: COLORS_.bckdeep,
     border: "none",
     padding: "1rem",
     color: TXTcol_ALT,

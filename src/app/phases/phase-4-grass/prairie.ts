@@ -256,7 +256,7 @@ export function prairie_factory(host: LiveTree, config?: Partial<PrairieConfig>)
       const row = rowByIndex.get(flower.rowIndex);
       if (!flowerPath || !row) continue;
 
-      const bloomRaw = (timeSec - flower.bloomAtSec) / flower.bloomDurSec;
+      const bloomRaw = 1;
       const bloom = _clamp01(bloomRaw);
 
       if (bloom <= 0) {

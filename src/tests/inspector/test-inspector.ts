@@ -7,7 +7,7 @@ import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
 import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { $txt_ } from "../../app/core/consts/ui-consts";
-import type { TestLog } from "../test-log";
+import type { TestLog } from "../test-logger";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
@@ -108,7 +108,7 @@ export function create_inspector(
     placeItems: "center",
     textAlign: "center",
     fontSize: $txt_.unter,
-    color: set_alpha( OKLCH_FLEURS.mossGlow, 0.5)
+    color:OKLCH_FLEURS.mossGlow,
   }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
 
 

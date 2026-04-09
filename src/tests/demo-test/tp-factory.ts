@@ -4,10 +4,10 @@ import { type Outcome, relay } from "intrastructure";
 import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { build_suites_for_mode } from "../build-test-suites";
 import { create_inspector } from "../inspector/test-inspector";
-import { create_test_log } from "../test-log";
+import { create_test_log } from "../test-logger";
 import { run_test_suites } from "../test-runner";
 import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
-import { $grn_, $ylw_, ACID_WASH_RGBA, ACID_WASH_OKLCH, $blu_ } from "../../app/core/consts/colors.consts";
+import { $grn_, $ylw_, ACID_WASH_RGBA, ACID_WASH_OKLCH, $blu_, CYBERPUNK_2060_OKLCH } from "../../app/core/consts/colors.consts";
 import { $PANEL_HIDDEN } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
@@ -116,10 +116,10 @@ export function tp_factory(): Outcome<TestPanel> {
         switch (head) {
             case "FAIL": return "red";
             case "PASS":
-            case "OK": return $grn_.faded;
+            case "OK": return ACID_WASH_OKLCH.fern;
             case "SKIP":
             case "WARN": return $ylw_.faded;
-            case "RUN": return OKLCH_FLEURS.blazeOrange;
+            case "RUN": return OKLCH_FLEURS.pollen;
             case "DONE": return $blu_.std;
             case "SUITE": return ACID_WASH_OKLCH.steel;
             default: return ACID_WASH_OKLCH.steel;

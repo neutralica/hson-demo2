@@ -4,56 +4,66 @@ import { row_wind_x } from "./prairie-helpers";
 import type { PrairieRowStatic, PrairieConfig, PrairieFlowerStatic, PrairieFlowerBud } from "./prairie.types";
 
 export function make_row_flowers(
-  row: PrairieRowStatic,
-  cfg: PrairieConfig,
-  rand: () => number,
+    row: PrairieRowStatic,
+    cfg: PrairieConfig,
+    rand: () => number,
 ): PrairieFlowerStatic[] {
-  const out: PrairieFlowerStatic[] = [];
+    const out: PrairieFlowerStatic[] = [];
 
-  // same attempt count for every row
-  const tries = 12;
+    // same attempt count for every row
+    const tries = 12;
 
-  for (let k = 0; k < tries; k++) {
-    if (rand() > cfg.flowerChance) continue;
+    for (let k = 0; k < tries; k++) {
+        if (rand() > cfg.flowerChance) continue;
 
-    const xPad = 12;
-    const xBase = _lerp(xPad, cfg.width - xPad, rand());
+        const xPad = 12;
+        const xBase = _lerp(xPad, cfg.width - xPad, rand());
 
-    const scale = flower_depth_scale(row.t);
-    const radius = _lerp(cfg.flowerRadiusFar, cfg.flowerRadiusNear, scale);
+        const scale = flower_depth_scale(row.t);
+        const radius = _lerp(cfg.flowerRadiusFar, cfg.flowerRadiusNear, scale);
 
-    out.push({
-      rowIndex: row.rowIndex,
-      t: row.t,
+        out.push({
+            rowIndex: row.rowIndex,
+            t: row.t,
 
-      xBase,
-      yBase: row.yBase - row.bladeHeight * _lerp(0.62, 0.94, rand()),
+            xBase,
+            yBase: row.yBase - row.bladeHeight * _lerp(0.62, 0.94, rand()),
 
-      radius,
-      color: set_alpha(pick_flower_color(rand),0.6),
-      buds: make_flower_buds(row.t, rand),
+            radius,
+            color: set_alpha(pick_flower_color(rand), 0.4),
+            buds: make_flower_buds(row.t, rand),
 
-      bloomAtSec: rand() < 0.22 ? 0 : rand() * cfg.flowerBloomWindowSec,
-      bloomDurSec: _lerp(30.35, 60.95, rand()),
+            bloomAtSec: cfg.flowerBloomWindowSec,
+            bloomDurSec: _lerp(30.35, 60.95, rand()),
 
-      phase: rand() * Math.PI * 2,
-      wobbleAmp: _lerp(0.05, 0.02, row.t),
-      wobbleSpeed: _lerp(13.4, 12.9, rand()),
-    });
-  }
+            phase: rand() * Math.PI * 2,
+            wobbleAmp: _lerp(0.05, 0.02, rand()),
+            wobbleSpeed: _lerp(18.4, 15.9, rand()),
+        });
+    }
 
-  return out;
+    return out;
 }
 
 function pick_flower_color(rand: () => number): string {
-    const roll = rand();
+  // lightness: soft pastel band
+  const l = 0.78 + rand() * 0.12;      // 0.78–0.90
 
-    if (roll < 0.28) return "rgba(255,232,120,0.96)"; // yellow
-    if (roll < 0.52) return "rgba(0,246,238,0.98)"; // white
-    if (roll < 0.72) return "rgba(255,176,198,0.96)"; // pink
-    if (roll < 0.88) return "rgba(197,210,255,0.96)"; // pale blue-violet
+  // chroma: keep it gentle, avoid neon
+  const c = 0.16 + rand() * 0.16;      // 0.06–0.12
 
-    return "rgba(255,210,150,0.96)"; // peach
+  // hue: spring spectrum bias (greens → yellows → pinks → lilac)
+  const hueBands = [
+    [90, 140],   // greens
+    [140, 190],  // yellow-green → yellow
+    [300, 340],  // pink
+    [40, 70],    // warm yellow/orange
+  ];
+
+  const band = hueBands[Math.floor(rand() * hueBands.length)];
+  const h = band![0]! + rand() * (band![1]! - band![0]!);
+
+  return `oklch(${l} ${c} ${h})`;
 }
 
 export function ease_out_back(t: number): number {
@@ -76,7 +86,7 @@ export function build_circle_path(cx: number, cy: number, r: number): string {
 
 function flower_depth_scale(t: number): number {
     // near = 1, far collapses aggressively
-    return Math.pow(1 - t, 1.9);
+    return Math.pow(1 - t, 1.1);
 }
 function make_flower_buds(t: number, rand: () => number): PrairieFlowerBud[] {
     const near = t < 0.35;
@@ -108,12 +118,13 @@ export function build_flower_cluster_path(
     bloomScale: number,
 ): string {
     const rowWind = row_wind_x(row, flower.xBase, timeSec);
+    const phase = timeSec * flower.wobbleSpeed + flower.phase;
 
-    const wobble =
-        Math.sin(timeSec * flower.wobbleSpeed + flower.phase) * flower.wobbleAmp;
+    const wobbleX = Math.sin(phase /2) * (flower.wobbleAmp * 21);
+    const wobbleY = Math.cos(phase) * flower.wobbleAmp *10;
 
-    const cx = flower.xBase + rowWind + wobble;
-    const cy = flower.yBase;
+    const cx = flower.xBase + wobbleX;
+    const cy = flower.yBase - wobbleY;
 
     const rCore = flower.radius * bloomScale;
 

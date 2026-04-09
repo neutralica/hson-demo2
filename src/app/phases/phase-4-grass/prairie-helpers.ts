@@ -38,7 +38,7 @@ export function default_prairie_config(width: number, height: number): PrairieCo
     flowerSwayNear: 1.1,
     flowerSwayFar: 0.3,
 
-    flowerBloomWindowSec: 10,
+    flowerBloomWindowSec: 1,
 
     seed: 1337,
   };
