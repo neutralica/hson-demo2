@@ -28,10 +28,10 @@ import { set_global_css } from "./set-global-css";
 import { fmtNum } from "./demo-fleurs/fleurs-cols";
 import { mount_test_panels } from "../../../tests/demo-test/mount-tp";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
-import { UI_ROOTcss } from "../../ui/panels/tp-panels.css";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 import { mount_prairie } from "../phase-4-grass/mount-prairie";
+import { UI_ROOTcss } from "../../../tests/demo-test/tp-panels.css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];

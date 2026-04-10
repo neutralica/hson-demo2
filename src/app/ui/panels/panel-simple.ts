@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { $blu_, CYBERPUNK_2060_NEUTRALS } from "../../core/consts/colors.consts";
-import { MONO_MAINfont, TXTcol_MAIN } from "../../core/consts/ui-consts";
+import { MONO_MAINfont, TXTcol_MAIN, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
@@ -20,7 +20,7 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       pointerEvents: "all",
       maxHeight: "100%",
       overflow: "hidden",
-      color: TXTcol_MAIN,
+      color: TXTcol_MENU,
       fontFamily: MONO_MAINfont,
     });
 }

@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, COLORS_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
-import { GRID_GAPstr, $txt_ } from "../../app/core/consts/ui-consts";
+import { GRID_GAPstr, $txt_, TXTcol_CODE, TXTcol_MENU, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
@@ -39,13 +39,13 @@ export const TEST_CHIP_LABELcss = {
 
 export const CLEAR_BTNcss: CssMap = {
   ...UI_BUTTONcss,
-  borderColor: OKLCH_FLEURS.brass,
+  borderColor: TXTcol_MENU,
   borderRadius: "18px",
   background: COLORS_.bckdeep,
   transition: "transform 90ms ease, filter 140ms ease",
-  color: OKLCH_FLEURS.brass,
+  color: TXTcol_MENU,
   _hover: {
-    background: "orange",
+    background: TXTcol_MENU,
     color: COLORS_.bckdeep,
     border: "1px solid " + COLORS_.bckgd,
   }
@@ -58,7 +58,6 @@ export const TEST_RUN_BTNcss: CssMap = {
   _hover: {
     background: ACID_WASH_RGBA.fadedMint,
     color: COLORS_.bckdeep,
-    border: "1px solid " + COLORS_.bckgd,
   }
 };
 
@@ -71,11 +70,11 @@ export const TEST_SELECTORcss: CssMap = {
   fontSize: $txt_.main,
 
   // background: $cols_.backdeep,
-  color: OKLCH_FLEURS.blazeOrange,
+  color: OKLCH_FLEURS.fadedGold,
   border: "1px solid rgba(255,255,255,0.2)",
   outline: "none",
   _hover: {
-    outline: `2px solid ${OKLCH_FLEURS.blazeOrange}`
+    outline: `2px solid ${OKLCH_FLEURS.fadedGold}`
   }
 } as const;
 
@@ -90,7 +89,7 @@ export const TEST_LOGGERcss: CssMap = {
   overflowX: "hidden",
   overflowWrap: "anywhere",
   minWidth: "100%",
-  color: OKLCH_FLEURS.blazeOrange,
+  color: HSON_COLOR_.s,
   whiteSpace: "pre-wrap",
   // letterSpacing: "0.14em",
   lineHeight: "1.75rem",

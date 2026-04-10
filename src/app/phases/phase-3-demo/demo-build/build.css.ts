@@ -5,9 +5,9 @@ import { COLORS_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
 import { $txt_, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { MONO_MAINfont } from "../../../core/consts/ui-consts";
-import { PANEL_TEXTAREAcss } from "../../../ui/panels/tp-panels.css";
 import { UI_BUTTONcss } from "../../../ui/panels/ui-panels.css";
 import { set_alpha } from "../../../core/helpers/color-helpers";
+import { PANEL_TEXTAREAcss } from "../../../../tests/demo-test/tp-panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {

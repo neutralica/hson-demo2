@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS_ } from "../../core/consts/colors.consts";
-import { GRID_GAPstr, $txt_, TXTcol_ALT } from "../../core/consts/ui-consts";
-import { MONO_MAINfont } from "../../core/consts/ui-consts";
+import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS_ } from "../../app/core/consts/colors.consts";
+import { GRID_GAPstr, $txt_, TXTcol_ALT } from "../../app/core/consts/ui-consts";
+import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 
 export const UI_ROOTcss: CssMap = {
 

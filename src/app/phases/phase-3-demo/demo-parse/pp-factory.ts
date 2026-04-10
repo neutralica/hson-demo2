@@ -7,10 +7,8 @@ import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
 import type { Fmt } from "../../../core/types/core.types";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { PARSING_PANEL_ROOTcss, PP_COPYBTNcss, PP_GRIDcss, PP_HEADERcss, PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { PANEL_TEXTAREAcss, PANELcss } from "../../../ui/panels/tp-panels.css";
 import { COLOR_FOR_FMT_, WATERMARK_FMT_ } from "../../../core/consts/ui-consts";
-import { set_alpha } from "../../../core/helpers/color-helpers";
+import { PANEL_TEXTAREAcss, PANELcss } from "../../../../tests/demo-test/tp-panels.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];

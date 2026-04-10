@@ -1,17 +1,17 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA, COLORS_ } from "../../core/consts/colors.consts";
-import { MONO_MAINfont, $txt_ } from "../../core/consts/ui-consts";
+import { MONO_MAINfont, $txt_, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
 
 export const UI_BUTTON_BORDERcss: CssMap = {
   borderRadius: "18px",
-  border: `1px solid ${ACID_WASH_RGBA.fadedMint}`
+  border: `1px solid ${TXTcol_MENU}`
 };
 
 export const UI_CHIP_BORDERcss: CssMap = {
   borderRadius: "18px",
-  border: `1px solid ${OKLCH_FLEURS.oliveCore}`
+  border: `1px solid ${TXTcol_MENU}`
 };
 
 export const UI_BUTTONcss: CssMap = {

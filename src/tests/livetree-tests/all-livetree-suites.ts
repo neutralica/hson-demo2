@@ -10,6 +10,7 @@ import { livetree_gnarly_svg } from "./livetree-fixtures-svg-3";
 import { livetree_create_size, livetree_css_pseudo, livetree_recent_api } from "./livetree-fixtures-6";
 import { livetree_new_dom_doc } from "./livetree-fixtures-dom";
 import type { TestSuite } from "../tests.types";
+import { livetree_more_listeners } from "./livetree-fixtures-7";
 
 
 /******************************************************
@@ -57,6 +58,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_new_dom_doc(),
     livetree_recent_api(),
     livetree_create_size(),
+    livetree_more_listeners(),
 
 
 
