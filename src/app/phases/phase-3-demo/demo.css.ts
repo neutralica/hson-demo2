@@ -70,10 +70,10 @@ export const HSON_WORDcss: CssMap = {
 
 export const DEMOcss: CssMap = {
   position: "fixed",
+  inset: "0",
   maxWidth: "100%",
   width: "100%",
   height: "100%",
-  inset: "0",
   overflow: "hidden",
   background: `linear-gradient(${COLORS_.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
   pointerEvents: "none",
@@ -81,25 +81,15 @@ export const DEMOcss: CssMap = {
 };
 
 
-export const DEMO_STAGEcss: CssMap = {
-  position: "relative",
-  minHeight: "100vh",
-  overflow: "hidden",
-  // default vars (even if unused initially)
-  "--mxp": "50%",
-  "--myp": "40%",
-  backgroundColor: COLORS_.bckgd,
-  pointerEvents: "none",
-boxSizing: "border-box"
-};
-
 /**
  * GLASS (screen)
  * - keep your greyBlack
  * - stop huge bloom that reads like a seal / fog
  */
 export const DEMO_SCREENcss: CssMap = {
-  position: "relative",
+  position: "fixed",
+  inset: "0",
+  maxWidth: "100%",
   width: "100%",
   height: "100%",
   overflow: "hidden",

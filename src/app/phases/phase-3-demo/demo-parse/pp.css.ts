@@ -2,10 +2,22 @@
 
 import type { CssMap } from "hson-live/types";
 import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
-import { COLORS_, $gry_ } from "../../../core/consts/colors.consts";
-import { MONO_MAINfont, $txt_, GRID_GAPstr, COLOR_FOR_FMT_ } from "../../../core/consts/ui-consts";
+import { COLORS_, $gry_, ACID_WASH_OKLCH, CYBERPUNK_2060_NEUTRALS } from "../../../core/consts/colors.consts";
+import { MONO_MAINfont, $txt_, GRID_GAPstr, COLOR_FOR_FMT_, HSON_COLOR_ } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+
+function darkenOklch(oklch: string, factor: number): string {
+  const match = oklch.match(/oklch\(([^ ]+) ([^ ]+) ([^)]+)\)/);
+  if (!match) return oklch;
+  let [_, l, c, h] = match;
+  if (!l) return oklch;
+
+  const newL = Math.max(0, parseFloat(l) * factor);
+
+  return `oklch(${newL} ${c} ${h})`;
+}
 
 //// used
 export const PP_HEADERcss: CssMap = {
@@ -21,11 +33,15 @@ export const PP_HEADERcss: CssMap = {
 
 //// used:
 // overlay wrapper
-export const PP_TEXTWRAPcss: CssMap = {
-  position: "relative",
-  minHeight: "0",
-  minWidth: "0",
-  background: COLORS_.bckdeep,
+export const PP_TEXTWRAPcss = (f: Fmt | null) => {
+  const color = (f === null) ? CYBERPUNK_2060_NEUTRALS.silver : COLOR_FOR_FMT_[f];
+  return {
+    position: "relative",
+    minHeight: "0",
+    minWidth: "0",
+    background: darkenOklch(color, 0.2),
+    color: color,
+  }
 };
 
 export const PP_GRIDcss: CssMap = {
@@ -56,7 +72,9 @@ export const PP_WATERMARKcss: CssMap = {
   fontFamily: MONO_MAINfont,
   fontSize: $txt_.heading,
   textTransform: "uppercase",
-  overflow: "hidden"
+  overflow: "hidden",
+  zIndex: -50,
+
 };
 
 
@@ -75,25 +93,46 @@ export const PP_STATUScss: CssMap = {
   textTransform: "uppercase",
 };
 
-export const PP_UNMUTEDcss = (f: Fmt) => {
+export const PP_ACTIVE_VALIDcss = (f: Fmt) => {
+  return {
+    opacity: "1",
+    filter: "saturate(1.1) brightness(1.1)",
+    pointerEvents: "auto",
+    userSelect: "auto",
+    boxShadow: "inset 0 0 15px 1px " + COLOR_FOR_FMT_[f],
+    border: "none",
+    color: COLOR_FOR_FMT_[f]
+  } as CssMap;
+};
+export const PP_ACTIVE_INVALIDcss = (f: Fmt) => {
   return {
     opacity: "1",
     filter: "none",
     pointerEvents: "auto",
     userSelect: "auto",
-    boxShadow: "inset 0 0 45px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.6),
+    boxShadow: "inset 0 0 15px 1px " + set_alpha(CYBERPUNK_2060_NEUTRALS.silver, 0.4), // + set_alpha(COLOR_FOR_FMT_[f], 0.1),
     border: "none",
+    color: "red",
   } as CssMap;
 };
 
 //// used
-export const PP_MUTEDcss= (f: Fmt) => {
+export const PP_IDLEcss = (f: Fmt) => {
   return {
     filter: "saturate(0.9) brightness(0.8)",
-
-    boxShadow: "inset 0 0 45px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.3),
     pointerEvents: "auto",
     userSelect: "none",
+    boxShadow: "inset 0 0 5px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.1),
+    color: "darkred",
+  };
+}
+export const PP_INACTIVE_VALIDcss = (f: Fmt) => {
+  return {
+    filter: "saturate(0.9) brightness(0.8)",
+    pointerEvents: "auto",
+    userSelect: "none",
+    boxShadow: "inset 0 0 5px 1px " + set_alpha(COLOR_FOR_FMT_[f], 1),
+    color: COLOR_FOR_FMT_[f],
   };
 }
 

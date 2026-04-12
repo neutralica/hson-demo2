@@ -10,9 +10,10 @@ export type PanelShell = Readonly<{
   bytes: LiveTree;
   copyBtn: LiveTree;
 
-  wrap: LiveTree;      
-  wmFmt: LiveTree;     
-  status: LiveTree;    
+  nodeBox: LiveTree
+  wrap: LiveTree;
+  wmFmt: LiveTree;
+  status: LiveTree;
   textarea: LiveTree;
 }>;
 

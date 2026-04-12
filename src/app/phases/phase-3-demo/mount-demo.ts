@@ -44,22 +44,32 @@ let _testsWired = false;
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.globals.invoke();
-  const demo = mk_div_id(stage, $DS.demo)
+  const demoBox = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
 
-  const screen = mk_div_id(demo, $DS.screen)
+  const demoScreen = mk_div_id(demoBox, $DS.screen)
     .classlist.add("demo screen")
     .css.setMany({ ...DEMO_SCREENcss, ...DEMO_SCREEN_FXcss });
 
 
-  const fleurOverlay = mk_div_id(screen, "fleurs-overlay").css.setMany(FLOWER_OVERLAYcss);
-  const graffiti = mk_div_id(screen, "hson-graffiti").text.set(HSON_LIVE_GRAFFITIstr).css.setMany(HSON_GRAFFITIcss);
-  const uiRoot = mk_div_id(screen, "ui-root").css.setMany(UI_ROOTcss);
-  const menuContainer = mk_div_id(screen, "menu-container").css.setMany(MENU_CONTAINERcss);
-  const motes = mk_div_id(screen, "motes").classlist.add("demo motes").css.setMany(ALL_MOTEScss)
+  const fleurOverlay = mk_div_id(demoScreen, "fleurs-overlay")
+    .css.setMany(FLOWER_OVERLAYcss);
+  const graffiti = mk_div_id(demoScreen, "hson-graffiti")
+    .text.set(HSON_LIVE_GRAFFITIstr)
+    .css.setMany(HSON_GRAFFITIcss);
+  const uiRoot = mk_div_id(demoScreen, "ui-root")
+    .css.setMany(UI_ROOTcss);
+  const menuContainer = mk_div_id(demoScreen, "menu-container")
+    .css.setMany(MENU_CONTAINERcss);
+  const motes = mk_div_id(demoScreen, "motes")
+    .classlist.add("demo motes")
+    .css.setMany(ALL_MOTEScss);
   // screen.css.setMany(SIZE_WARNINGcss)
-  const copyright = screen.create.footer().id.set("copyright-footer").text.set(COPY_TEXTstr).css.setMany(COPYRITEcss);
+  const copyright = demoScreen.create.footer()
+    .id.set("copyright-footer")
+    .text.set(COPY_TEXTstr)
+    .css.setMany(COPYRITEcss);
 
   const fleurField = fleurOverlay.create.svg()
     .id.set("fleurs-field")
@@ -222,7 +232,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   }
 
-  screen.css.setMany({
+  demoScreen.css.setMany({
     /* this overwrites the opacity setting above, starting a 15s fade out transition.
      We need to let the first opacity render, otherwise this overwrites first value
      immediately and the warning never displays */
@@ -248,7 +258,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   })
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
   
-  demo.listen.document.onKeyDown((ke) => {
+  demoBox.listen.document.onKeyDown((ke) => {
     console.log("key pressed")
 
     if (ke.key === "s") {
@@ -260,7 +270,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
 
-  screen.listen.onClick((ev: MouseEvent) => {
+  demoScreen.listen.onClick((ev: MouseEvent) => {
     if (get_view() !== "fleurs") return;
 
     const rect = fleurOverlay.dom.rect();

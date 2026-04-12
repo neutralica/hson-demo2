@@ -2,6 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS_ } from "../../app/core/consts/colors.consts";
 import { GRID_GAPstr, $txt_, TXTcol_ALT } from "../../app/core/consts/ui-consts";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
+import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
 export const UI_ROOTcss: CssMap = {
 
@@ -22,31 +23,6 @@ export const UI_ROOTcss: CssMap = {
   position: "relative",
   pointerEvents: "auto",
 };
-
-export const PANEL_OUTERcss: CssMap = {
-    // minHeight: "200px",
-    minWidth: "0",
-    // display: "grid",
-    pointerEvents: "all",
-} as const;
-
-export const PANEL_SURFACEcss: CssMap = {
-    width: "100%",
-    height: "100%",
-    minWidth: "0",
-    minHeight: "0",
-    boxSizing: "border-box",
-    // display: "grid",
-    gap: GRID_GAPstr,
-    // backgroundColor: $cols_.bckgd,
-    pointerEvents: "all",
-
-} as const;
-
-export const PANEL_FRAMEcss = {
-    color: $blu_.std,
-    fontFamily: MONO_MAINfont,
-} as const;
 
 export const PANELcss: CssMap = {
     display: "grid",
@@ -73,7 +49,8 @@ export const PANEL_TEXTAREAcss = {
     // background: COLORS_.bckdeep,
     border: "none",
     padding: "1rem",
-    color: TXTcol_ALT,
+    color: OKLCH_FLEURS.cyanDust,
+    outline: "none"
 };
 
 export const PANEL_BRANCHcss: CssMap = {

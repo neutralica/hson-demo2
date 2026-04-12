@@ -19,55 +19,50 @@ npm install hson-live
 
 ## What is HSON?
 
-HSON stands for Hypertext Structured Object Notation. It expresses both JSON and HTML in a single notation, allowing these formats to be faithfully converted to the other and back.
-
-HSON suggests an alternative to "view = f(state)":
-
-`view ≡ state`
-
-hson-live is a runtime built on that equivalence.
+HSON (Hypertext Structured Object Notation) is a glue format. It is capable of fully expressing both JSON and HTML in a single notation, making them interchangeable.
 
 
 ## What is hson-live?
 
-hson-live is a Typescript library that transforms data from JSON or HTML to HSON and, leveraging the union of data and markup, extends an API for a new approach to DOM authoring. 
+hson-live is a Typescript library with two main functions. 
 
-hson-live provides two core systems:
 
 ### hson.transform
 
-hson-live's core is a set of 7 transformers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
+hson-live is built around a core of 7 transformers: parsers and serializers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
 
-LiveDemo's test suites demonstrate the stability of hson-live's transformater chain across multiple round-trip conversions (see: [test]).
+LiveDemo's [test] showcase features an array of test suites that prove the stability of hson-live's transformater chain across round-trip conversions (see: [test]).
 
 
 ### hson.liveTree
 
-LiveTree is an interface that projects live DOM elements from a HsonNode graph. It extends many conventional DOM-creation operations in its API, enabling: 
+LiveTree is an interface based on HSON that projects live DOM elements from a HsonNode graph and extends DOM-manipulation methods via its API. By operating on a structure that both HTML and JSON share, HSON allows DOM HTML to be directly accessible in Typescript, enabling: 
 - typed, element-scoped CSS without Shadow DOM
 - managed event listener handling and teardown
 - native SVG creation
 - native support for keyframes, animation, and @property
-- complex document construction and manipulation 
+- construction, manipulation, and cleanup of complex documents
 - integration of JS, CSS, and HTML within a single frictionless ecosystem
 
-Mutations to LiveTree's HsonNode graph are synchronously reflected in the DOM, allowing documents to be created and manipulated without templates, reconciliation layers, or framework abstractions.
+Mutations to LiveTree's HsonNode graph are synchronously reflected in the DOM, allowing documents to be created, manipulated, and automatically re-rendered without reconciliation layers, templates, or framework abstractions. 
 
-LiveDemo has been built to prove the viability of LiveTree. It is entirely built using the hson-live library and does not call any conventional DOM-creation methods. Its various demos showcase the features and functionality that HSON enables:
+---
+
+LiveDemo has been built to prove the viability of HSON. The entire site is built using only the hson-live library and does not use any conventional DOM-creation methods. Its various demos showcase the features and functionality that HSON enables:
 
 
 ### [about]
 
-Builds and renders from markdown the README and other documentation for hson-live and its subsystems.
+Full documentation for hson-live and its subsystems.
 
-This section contains detailed information about the architecture, structural syntax decisions, and a complete LiveTree API reference (may be out of date).
+This section contains detailed information about the architecture, structural syntax decisions, and API.
 
 
 ---
 
 ### [test]
 
-Runs test suites for hson.transform and hson.livetree. Each transformation step is captures and serialized for inspection.
+A growing set of transform, liveTree, and unit tests. Transformation tests provide full string and node logs for inspection.
 
 Demonstrates
 
@@ -150,10 +145,9 @@ The goal of LiveDemo is expose the mechanics of the hson-live library in a visib
 
 Each demo proves at least one of these properties of hson-live:
 
-- data integrity and stability within the transformation system  
-- round-trip, repeated transformation fidelity
-- locally scoped and typed CSS without Shadow DOM  
-- realtime DOM creation and mutation in response to IR changes  
+- data integrity and stability within the transformation system across repeated loops
+- locally scoped and typed CSS without Shadow DOM 
+- realtime DOM creation and mutation in response to IR changes 
 - unified representation of markup and data  
 - HSON as viable markup format
 

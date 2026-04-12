@@ -155,9 +155,8 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_completionist(),
-      // livetree_create_size(),
-      // livetree_more_listeners(),
+      livetree_create_size(),
+      livetree_more_listeners(),
     ])
   }
   if (mode === "unit") {
