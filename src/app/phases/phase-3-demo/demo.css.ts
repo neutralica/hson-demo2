@@ -1,14 +1,15 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, COLORS_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $blu_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { _COLS } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { GRID_GAPstr, $txt_, GRAFFITIcol, MONO_MAINfont, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, _TXT, GRAFFITIcol, MONO_MAINfont, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MONO_MAINfont,
-  fontSize: $txt_.subhead,
+  fontSize: _TXT.subhead,
   fontWeight: "400",
   userSelect: "none",
   color: TXTcol_MENU,
@@ -19,10 +20,10 @@ export const MAIN_MENUcss: CssMap = {
   _hover: {
     fontWeight: "100",
     background: BLUELIKEcol,
-    color: COLORS_.bckdeep
+    color: _COLS.bckdeep
   },
   _active: {
-    background: COLORS_.bckdeep,
+    background: _COLS.bckdeep,
     color: BLUELIKEcol,
     fontWeight: "700",
   }
@@ -58,7 +59,7 @@ export const MENU_CONTAINERcss: CssMap = {
 
 
 export const HSON_WORDcss: CssMap = {
-  fontSize: $txt_.hsonWordMarkMain,
+  fontSize: _TXT.hsonWordMarkMain,
   fontFamily: MONO_MAINfont,
   fontWeight: "100",
   width: "0.5em",
@@ -75,7 +76,7 @@ export const DEMOcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: `linear-gradient(${COLORS_.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
+  background: `linear-gradient(${_COLS.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
   pointerEvents: "none",
   boxSizing: "border-box"
 };
@@ -172,7 +173,7 @@ export const HSON_GRAFFITIcss: CssMap = {
 
 export const HSON_SUBcss: CssMap = {
   fontFamily: MONO_MAINfont,
-  fontSize: $txt_.main,
+  fontSize: _TXT.main,
   position: "relative",
   textWrap: "nowrap",
   color: FADE_1col,
@@ -184,7 +185,7 @@ export const HSON_SUBcss: CssMap = {
 
 export const COPYRITEcss: CssMap = {
   fontFamily: MONO_MAINfont,
-  fontSize: $txt_.unter,
+  fontSize: _TXT.unter,
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",

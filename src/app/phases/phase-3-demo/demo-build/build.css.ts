@@ -1,13 +1,15 @@
 // build.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { COLORS_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
-import { $txt_, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_MAIN } from "../../../core/consts/ui-consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { _COLS } from "../../../core/consts/ui-consts";
+import { _TXT, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { MONO_MAINfont } from "../../../core/consts/ui-consts";
-import { UI_BUTTONcss } from "../../../ui/panels/ui-panels.css";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { PANEL_TEXTAREAcss } from "../../../../tests/demo-test/tp-panels.css";
+import { OKLCH_VIBRANT } from "../../../core/consts/vibrant-oklch";
+import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
@@ -21,33 +23,27 @@ export const BUILD_ROOTcss: CssMap = {
   gap: GRID_GAPstr,
 };
 
-
-// Header row pinned at top of each pane
 export const BUILD_HEADcss: CssMap = {
-  // compact header row
+  position: "relative",
+  zIndex: "5",
+  minHeight: "2rem",
+  padding: "6px",
+  background: _COLS.bckdeep,
   display: "flex",
+  justifyContent: "center",
   alignItems: "center",
-  gap: "10px",
-  minWidth: "0",
-  minHeight: "0",
-  height: "auto",
-  paddingBottom: "2px",
-  fontSize: "2rem",
-  fontWeight: "700",
-  background: COLORS_.bckdeep
+  // gap: "2ch",
 };
 
 export const BUILD_TITLEcss: CssMap = {
+  position: "relative",
   fontFamily: MONO_MAINfont,
-  fontSize: "22px",
+  fontSize: _TXT.main,
   letterSpacing: "0.14em",
-  textTransform: "uppercase",
-  color: OKLCH_FLEURS.cyanDust,
+  textTransform: "lowercase",
+  alignSelf: "flex-end",
+  color: OKLCH_VIBRANT.cyanSeaLaser,
   flexShrink: "0",
-};
-
-export const BUILD_SPACERcss: CssMap = {
-  marginLeft: "auto",
 };
 
 // Wrap for overlays + textarea/preview
@@ -59,7 +55,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
@@ -68,12 +64,12 @@ export const BUILD_TEXTAREAcss: CssMap = {
   boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
   color: TXTcol_ALT,
   caretColor: "auto",
-  fontSize: $txt_.reg,
+  fontSize: _TXT.reg,
   _focus: {
     boxShadow: "inset 0 0 25px 1px " + COLOR_FOR_FMT_["hson"],
-    
+
   }
-  
+
 };
 
 // Watermarks (same idea as parse panels)
@@ -105,27 +101,23 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
 
 // Focused-only status ("valid/invalid/...")
 export const BUILD_STATUScss: CssMap = {
-  position: "absolute",
-  top: "10px",
-  right: "12px",
+  position: "relative",
   pointerEvents: "none",
   userSelect: "none",
-  opacity: "0",
+  // opacity: "0",
   fontFamily: MONO_MAINfont,
-  fontSize: "12px",
+  fontSize: _TXT.reg,
   letterSpacing: "0.12em",
   textTransform: "uppercase",
 };
 
-// Buttons: reuse TEST_ACTION_BTN so the look stays coherent
+
 export const BUILD_BTNcss: CssMap = {
-  ...UI_BUTTONcss,
-  padding: "8px 10px",
-  borderRadius: "12px",
-  background: COLORS_.bckdeep,
-  color: TXTcol_ALT,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-  flexShrink: "0",
+  ...UI_BTN_STDcss,
+  padding: "4px 4px",
+  background: _COLS.bckdeep,
+  color: TXTcol_CODE,
+  flex: "0 0 auto",
 };
 
 // Toggle container for Render/HTML
@@ -133,22 +125,18 @@ export const BUILD_TOGGLEcss: CssMap = {
   display: "grid",
   gridAutoFlow: "column",
   gap: "8px",
-  marginLeft: "auto",
-  alignItems: "center",
+  // marginLeft: "auto",
+  // alignItems: "baseline",
 };
 
 // Tabs (plain div “buttons”)
 export const BUILD_TABcss: CssMap = {
-  ...UI_BUTTONcss,
-  padding: "8px 10px",
-  borderRadius: "12px",
-  background: "rgba(0,0,0,0.18)",
-  color: ACID_WASH_OKLCH.bruisedPlum,
+  ...UI_BTN_STDcss,
+  padding: "8px 4px",
   flexShrink: "0",
 };
 
 export const BUILD_TAB_ACTIVEcss: CssMap = {
-  boxShadow: "inset 0 0 0 1px rgba(120,255,210,0.22)",
   color: ACID_WASH_OKLCH.cyanDust,
 };
 
@@ -162,7 +150,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
 };
 
 // HTML output box: same textarea styling
@@ -181,7 +169,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
   boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
   color: TXTcol_ALT,
   caretColor: "auto",
-  fontSize: $txt_.reg
+  fontSize: _TXT.reg
 
 };
 

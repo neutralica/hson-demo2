@@ -6,15 +6,16 @@ export type PanelShell = Readonly<{
   fmt: Fmt;
   panel: LiveTree;
   head: LiveTree;
-  chip: LiveTree;
+  // chip: LiveTree;
   bytes: LiveTree;
   copyBtn: LiveTree;
 
   nodeBox: LiveTree
-  wrap: LiveTree;
+  textBox: LiveTree;
   wmFmt: LiveTree;
   status: LiveTree;
   textarea: LiveTree;
+  viewMode: "text" | "node";
 }>;
 
 export type Panels = {
@@ -22,3 +23,5 @@ export type Panels = {
   panels: Record<Fmt, PanelShell>;
   // nodeOut?: LiveTree; // add later if you bring it back
 };
+
+export type PanelViewMode = "text" | "node";

@@ -7,7 +7,8 @@ import { create_inspector } from "../inspector/test-inspector";
 import { create_test_log } from "../test-logger";
 import { run_test_suites } from "../test-runner";
 import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
-import { $grn_, $ylw_, ACID_WASH_RGBA, ACID_WASH_OKLCH, $blu_, CYBERPUNK_2060_OKLCH } from "../../app/core/consts/colors.consts";
+import { $grn_, $ylw_, ACID_WASH_RGBA, ACID_WASH_OKLCH, $blu_ } from "../../app/core/consts/colors.consts";
+import { OKLCH_VIBRANT } from "../../app/core/consts/vibrant-oklch";
 import { $PANEL_HIDDEN, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
@@ -15,7 +16,7 @@ import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.c
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
-import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
+import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 import { PANEL_BRANCHcss } from "./tp-panels.css";
 
@@ -53,7 +54,7 @@ export function tp_factory(): Outcome<TestPanel> {
     const clearChip = mk_btn(controlsRow, "test-clear", "clear");
 
     const runBtn = runChip.tree.css.setMany(TEST_RUN_BTNcss);
-    const clearBtn = clearChip.tree.css.setMany(CLEAR_BTNcss);
+    const clearBtn = clearChip.tree.css.setMany(TEST_CLEAR_BTNcss);
 
     const chips = create_test_chips(rowContainer);
 

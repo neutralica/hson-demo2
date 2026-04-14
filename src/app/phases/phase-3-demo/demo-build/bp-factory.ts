@@ -2,9 +2,11 @@
 
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
-import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_SPACERcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
+import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
 import { BUILD_STRINGhson } from "./build-hson.consts";
-import { mk_div_cls, mk_section_cls } from "../../../utils/makers";
+import { mk_div_cls, mk_div_id, mk_section_cls, mk_span_cls } from "../../../utils/makers";
+import { PP_HEADERcss } from "../demo-parse/pp.css";
+import { UI_2STACK_CHIPcss, PP_BTNcss, PP_HEADcss, PP_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
 
 // keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{
@@ -44,8 +46,7 @@ export type BuildPanel = Readonly<{
   panel: LiveTree;
   head: LiveTree;
   body: LiveTree;
-  title: LiveTree;
-  spacer: LiveTree;
+  // spacer: LiveTree;
 }>;
 
 type BuildFactoryOpts = Readonly<{
@@ -62,58 +63,77 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
   if (old) old.removeSelf();
 
   // true two-pane root
-  const root = hostBody.create.div()
-    .id.set($BUILD_ROOT)
+  const root = mk_div_id(hostBody, $BUILD_ROOT)
     .classlist.set("build-root")
     .css.setMany(BUILD_ROOTcss);
 
   // pane helper now creates a stable head/body grid
-  const makePane = (key: "src" | "out", titleTxt: string): BuildPanel => {
+  const makePane = (key: "src" | "out"): BuildPanel => {
     const panel = mk_section_cls(root, `build-pane build-pane--${key}`)
       .css.setMany(BUILD_PANEcss);
 
     const head = mk_div_cls(panel, "build-head")
-      .css.setMany(BUILD_HEADcss);
+      .css.setMany(PP_HEADcss);
 
-    const title = mk_div_cls(head, "build-title")
-      .text.set(titleTxt)
-      .css.setMany(BUILD_TITLEcss);
-
-    const spacer = mk_div_cls(head,"build-spacer")
-      .css.setMany(BUILD_SPACERcss);
+    // const spacer = mk_div_cls(head,"build-spacer")
+    //   .css.setMany(BUILD_SPACERcss);
 
     const body = mk_div_cls(panel, "build-body")
       .css.setMany(BUILD_BODYcss);
 
-    return { panel, head, body, title, spacer };
+    return { panel, head, body, /* spacer */ };
   };
 
-  const src = makePane("src", "HSON");
-  const out = makePane("out", "OUTPUT");
+  const src = makePane("src");
+  const out = makePane("out");
 
   // --------------------------------------------------
   // SRC head controls
   // --------------------------------------------------
 
-  const clearBtn = src.head.create.div()
-    .classlist.set("build-btn build-btn--clear")
+  const clearBtn = mk_span_cls(src.head, "build-btn build-btn--clear")
     .text.set("clear")
-    .css.setMany(BUILD_BTNcss)
+    .css.setMany(PP_BTNcss)
     .attr.setMany({
       role: "button",
       tabindex: "0",
       "aria-label": "clear input",
     });
+  const title = mk_span_cls(src.head, "build-title")
+    .text.set("HSON:")
+    .css.setMany(BUILD_TITLEcss);
 
-  const copyBtn = src.head.create.div()
-    .classlist.set("build-btn build-btn--copy")
+
+  const copyBtn = mk_span_cls(src.head, "build-btn build-btn--copy")
     .text.set("copy")
-    .css.setMany(BUILD_BTNcss)
+    .css.setMany(PP_BTNcss)
     .attr.setMany({
       role: "button",
       tabindex: "0",
       "aria-label": "copy input",
     });
+  const statusBox = mk_span_cls(src.head, "status-box")
+    .css.setMany({
+      ...UI_2STACK_CHIPcss,
+      position: "relative",
+      justifySelf: "end",
+      // right: "0px",
+      // top: "0px",
+    })
+
+  const status = mk_div_cls(statusBox, "status-number")
+    .css.setMany({
+      ...UI_2STACK_VALcss,
+      top: "0px",
+    });
+
+  mk_div_cls(statusBox, "status-label")
+    .text.set("status")
+    .css.setMany({
+      ...PP_LABELcss,
+      bottom: "0",
+    }
+    );
 
   // --------------------------------------------------
   // SRC body
@@ -128,10 +148,10 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .text.set("HSON")
     .css.setMany(BUILD_WATERMARK_FMTcss);
 
-  const status = inputWrap.create.div()
-    .classlist.set("build-status")
-    .text.set("")
-    .css.setMany(BUILD_STATUScss);
+  // const status = inputWrap.create.div()
+  //   .classlist.set("build-status")
+  //   .text.set("")
+  //   .css.setMany(BUILD_STATUScss);
 
   const textarea = inputWrap.create.textarea()
     .classlist.set("build-textarea")

@@ -9,12 +9,14 @@ import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIO
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
-import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, _TXT } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, COLORS_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "../../core/consts/colors.consts";
+import { $blu_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { _COLS } from "../../core/consts/ui-consts";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/vibrant-oklch";
 import { HSON_COLOR_ } from "../../core/consts/ui-consts";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
-import { mount_build_panels } from "./demo-build/mount-build-panel";
+import { mount_build_panels } from "./demo-build/build-mount-init";
 import { mount_about_panels } from "./demo-about/mount-about";
 import { ABOUT_DOCS } from "./demo-about/about.consts";
 import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
@@ -108,8 +110,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     });
   }
   mount_motes(motes);
-
-
 
   /* main menu & logo heading */
   const headline = mk_div_id(menuContainer, "hson-headline")
@@ -259,12 +259,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
   
   demoBox.listen.document.onKeyDown((ke) => {
-    console.log("key pressed")
-
-    if (ke.key === "s") {
-      console.log("s pressed")
-    }
-    if (ke.key === "p") {
+    if (ke.key === "ƒ") {
       mount_prairie(stage);
     }
   });

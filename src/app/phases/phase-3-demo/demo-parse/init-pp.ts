@@ -3,7 +3,7 @@ import { hson } from "hson-live";
 
 import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
 import type { Fmt } from "../../../core/types/core.types";
-import { PP_IDLEcss, PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss } from "./pp.css";
+import { PP_IDLEcss, PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss } from "./pp.css";
 
 // origin-aware primitive parsing.
 // - JSON: any JSON primitive is allowed (strings must be quoted because JSON.parse enforces it)
@@ -81,6 +81,7 @@ const unlockTextarea = (p: PanelShell): void => {
     caretColor: "auto",
   });
 };
+
 export function init_parsing_panels(pp: Panels): void {
   const FMTS = Object.keys(pp.panels) as readonly Fmt[];
 
@@ -143,7 +144,7 @@ export function init_parsing_panels(pp: Panels): void {
       if (invalidOwner !== fmt) return;
 
       setValue(pp.panels[fmt], "");
-      pp.panels[fmt].bytes.text.set("0 bytes");
+      pp.panels[fmt].bytes.text.set("0");
       invalidOwner = null;
       invalidClearTimer = null;
     }, 30000);
@@ -152,7 +153,7 @@ export function init_parsing_panels(pp: Panels): void {
   function setFocusedOnly(fmt: Fmt | null): void {
     for (const f of FMTS) {
       const p = pp.panels[f];
-      p.status.css.setMany({ opacity: fmt === f ? "1" : "0" });
+      // p.status.css.setMany({ opacity: fmt === f ? "1" : "0" });
     }
   }
 
@@ -161,7 +162,7 @@ export function init_parsing_panels(pp: Panels): void {
 
     if (kind === "idle") {
       p.status.text.set("");
-      p.status.css.setMany({ opacity: "0" });
+      // p.status.css.setMany({ opacity: "0" });
       return;
     }
 
@@ -172,12 +173,12 @@ export function init_parsing_panels(pp: Panels): void {
     }
 
     if (kind === "valid") {
-      p.status.text.set("valid");
+      p.status.text.set("OK");
       p.status.css.setMany({ opacity: "1", color: "lime" });
       return;
     }
 
-    p.status.text.set("invalid");
+    p.status.text.set("XX");
     p.status.css.setMany({ opacity: "1", color: "red" });
   }
 
@@ -186,31 +187,34 @@ export function init_parsing_panels(pp: Panels): void {
       const p = pp.panels[f];
 
       if (isThisActiveInvalid(f)) {
-        p.wrap.css.setMany(PP_ACTIVE_INVALIDcss(f));
+        p.textBox.css.setMany(PP_ACTIVE_INVALIDcss(f));
         unlockTextarea(p);
         continue;
       }
 
       if (isThisActiveValid(f)) {
-        p.wrap.css.setMany(PP_ACTIVE_VALIDcss(f));
+        p.textBox.css.setMany(PP_ACTIVE_VALIDcss(f));
         unlockTextarea(p);
         continue;
       }
-
+      
       if (isActiveValid()) {
-        p.wrap.css.setMany(PP_INACTIVE_VALIDcss(f));
+        p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
         lockTextarea(p);
         continue;
       }
-
+      if (isIdleInvalid()) {
+        p.textBox.css.setMany(PP_INACTIVE_INVALIDcss(f));
+        unlockTextarea(p);
+}
       if (isIdleValid()) {
-        p.wrap.css.setMany(PP_INACTIVE_VALIDcss(f));
+        p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
         unlockTextarea(p);
         continue;
       }
 
       // idle invalid, or inactive while another panel is invalid
-      p.wrap.css.setMany(PP_IDLEcss(f));
+      p.textBox.css.setMany(PP_IDLEcss(f));
       if (active === null) {
         unlockTextarea(p);
       } else {
@@ -223,13 +227,13 @@ export function init_parsing_panels(pp: Panels): void {
     for (const f of FMTS) {
       if (f === origin) continue;
       setValue(pp.panels[f], "");
-      pp.panels[f].bytes.text.set("0 bytes");
+      pp.panels[f].bytes.text.set("0");
     }
   }
 
   function setPanelValueAndBytes(fmt: Fmt, value: string): void {
     setValue(pp.panels[fmt], value);
-    pp.panels[fmt].bytes.text.set(`${encBytes(value)} bytes`);
+    pp.panels[fmt].bytes.text.set(`${encBytes(value)}`);
   }
 
   function markActiveValid(fmt: Fmt): void {
@@ -254,7 +258,7 @@ export function init_parsing_panels(pp: Panels): void {
 
     const srcParts = pp.panels[origin];
     const raw = getValue(srcParts);
-    srcParts.bytes.text.set(`${encBytes(raw)} bytes`);
+    srcParts.bytes.text.set(`${encBytes(raw)}`);
 
     if (active === origin) setStatus(origin, "typing");
 
@@ -342,7 +346,7 @@ export function init_parsing_panels(pp: Panels): void {
     // if another panel still owns invalid content, clear it now on switch
     if (invalidOwner && invalidOwner !== fmt) {
       setValue(pp.panels[invalidOwner], "");
-      pp.panels[invalidOwner].bytes.text.set("0 bytes");
+      pp.panels[invalidOwner].bytes.text.set("0");
       clearInvalidOwner();
     }
 
@@ -403,8 +407,8 @@ export function init_parsing_panels(pp: Panels): void {
 
   for (const fmt of FMTS) {
     const parts = pp.panels[fmt];
-    parts.bytes.text.set(`${encBytes(getValue(parts))} bytes`);
+    parts.bytes.text.set(`${encBytes(getValue(parts))}`);
     parts.status.text.set("");
-    parts.status.css.setMany({ opacity: "0" });
+    // parts.status.css.setMany({ opacity: "0" });
   }
 }

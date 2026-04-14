@@ -3,7 +3,8 @@
 import { hson, LiveTree } from "hson-live";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
-import { $gry_, ACID_WASH_OKLCH, ACID_WASH_RGBA, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "./colors.consts";
+import { $gry_, ACID_WASH_OKLCH, ACID_WASH_RGBA, bckColor, bcklight, deepBack } from "./colors.consts";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./vibrant-oklch";
 import type { CssMap } from "hson-live/types";
 import type { Fmt } from "../types/core.types";
 
@@ -20,14 +21,14 @@ export const COLOR_FOR_FMT_ = {
     hson: OKLCH_FLEURS.orchidAsh
   };
 
-export const $txt_ = {
+export const _TXT = {
     hsonWordMarkMain: "4.375rem", // 70px
     wordMobile: "2.5rem" /*  "2.5rem" */,         // 40px
     heading: "1.75rem"/*  "1.625rem" */,          // 26px
     subhead: "1.25rem"/*  "1.375rem" */,          // 22px
     main: "1rem"/*  "1.25rem" */,             // 20??px
     mid: "1rem"/*  "1rem" */,                // 16px
-    unter: "1rem" /*  "0.875rem" */,            // 14px
+    unter: "0.75rem" /*  "0.875rem" */,            // 14px
     reg: "0.75rem" /*  "0.75rem" */,               // 12px
     smol: "0.65rem" /*  "0.625rem" */,             // 10px
     wee: "0.55rem" /*  "0.5rem" */,                // 8px
@@ -51,16 +52,16 @@ export const CODE_EQUALScol = OKLCH_FLEURS.brass;
 
 // export const TXTcol_MENU = CYBERPUNK_2060_OKLCH.mintIce;
 export const TXTcol_MENU = ACID_WASH_RGBA.softBlue;
-export const TXTcol_MAIN = CYBERPUNK_2060_NEUTRALS.paper;
-export const TXTcol_CODE = CYBERPUNK_2060_OKLCH.blueGlacier;
-export const TXTcol_ALT = CYBERPUNK_2060_NEUTRALS.silver;
+export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
+export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
+export const TXTcol_ALT = OKLCH_NEUTRALS.silver;
 export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
 
 export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
 export const MONO_MAINfont = "Monaco, monospace";
 export const SANS_MAINfont = ""
 export const GRID_GAPstr = "2px";
-export const $CODE_FONT_SIZE = $txt_.reg;
+export const $CODE_FONT_SIZE = _TXT.reg;
 export const $PANEL_HIDDEN = 'panel-hidden';
 
 // either do this or don't:
@@ -74,9 +75,16 @@ export const WATERMARK_FMT_: Record<Fmt, string> = {
 
 
 
-export const REDLIKEcol = CYBERPUNK_2060_OKLCH.redSignal;
-export const BLUELIKEcol = CYBERPUNK_2060_OKLCH.blueCobalt;
-export const GREENLIKEcol = CYBERPUNK_2060_OKLCH.mossToxic;
+export const REDLIKEcol = OKLCH_VIBRANT.redSignal;
+export const BLUELIKEcol = OKLCH_VIBRANT.blueCobalt;
+export const GREENLIKEcol = OKLCH_VIBRANT.mossToxic;
 export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
 
-export const FADE_1col = CYBERPUNK_2060_NEUTRALS.silver;
+export const FADE_1col = OKLCH_NEUTRALS.silver;
+
+export const _COLS = {
+  bckgd: bckColor,
+  bckdeep: deepBack,
+  bcklight,
+};
+

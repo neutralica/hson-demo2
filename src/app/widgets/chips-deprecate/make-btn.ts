@@ -1,9 +1,12 @@
 import type { LiveTree } from "hson-live";
 import { mk_div_id } from "../../utils/makers";
+import { UI_BTN_STDcss, UI_BUTTON_BORDERcss, UI_BUTTON_HOVERcss } from "../../ui/panels/panels.css";
+import type { CssMap } from "hson-live/types";
+import { _COLS } from "../../core/consts/ui-consts";
 
 export type ToggleBtn = Readonly<{
   tree: LiveTree;
-  setActive: (on: boolean) => void;
+  // setActive: (on: boolean) => void;
   setText: (t: string) => void;
 }>;
 
@@ -12,33 +15,30 @@ export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
   const node = mk_div_id(parent, id);
   node.text.set(label);
 
-  const base: Record<string, string> = {
-    padding: "6px 8px",
-    borderRadius: "10px",
-    userSelect: "none",
-    cursor: "pointer",
-    fontFamily: "Monaco, monospace",
+  const base: CssMap = {
+    ...UI_BTN_STDcss,
+    background: _COLS.bckdeep,
+    // padding: "6px 8px",
+    // userSelect: "none",
+    // cursor: "pointer",
+    // fontFamily: "Monaco, monospace",
     fontSize: "20px",
-    letterSpacing: "0.02em",
-    textAlign: "center",
-    whiteSpace: "nowrap",
-    boxSizing: "border-box",
+    // letterSpacing: "0.02em",
+    // textAlign: "center",
+    // whiteSpace: "nowrap",
+    // boxSizing: "border-box",
   };
 
-  const onCss: Record<string, string> = {
-    background: "rgba(255,255,255,0.12)",
-    border: "1px solid rgba(255,255,255,0.18)",
-  };
 
   node.css.setMany(base);
 
-  const setActive = (on: boolean): void => {
-    node.css.setMany(on ? { ...base, ...onCss } : base);
-  };
+  // const setActive = (on: boolean): void => {
+  //   node.css.setMany(base);
+  // };
 
   return {
     tree: node,
-    setActive,
+    // setActive,
     setText: (t) => node.text.set(t),
   };
 }

@@ -1,6 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA, COLORS_ } from "../../app/core/consts/colors.consts";
-import { GRID_GAPstr, $txt_, TXTcol_ALT } from "../../app/core/consts/ui-consts";
+import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { _COLS } from "../../app/core/consts/ui-consts";
+import { GRID_GAPstr, _TXT, TXTcol_ALT } from "../../app/core/consts/ui-consts";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
@@ -35,6 +36,7 @@ export const PANELcss: CssMap = {
     boxSizing: "border-box",
     overflowY: "auto",
     maxHeight: "100%",
+    background: _COLS.bckdeep,
 }
 
 export const PANEL_TEXTAREAcss = {
@@ -44,7 +46,7 @@ export const PANEL_TEXTAREAcss = {
     width: "100%",
     boxSizing: "border-box",
     fontFamily: MONO_MAINfont,
-    fontSize: $txt_.reg,
+    fontSize: _TXT.reg,
     lineHeight: "1.55",
     // background: COLORS_.bckdeep,
     border: "none",
@@ -61,5 +63,5 @@ export const PANEL_BRANCHcss: CssMap = {
     boxSizing: "border-box",
     gridTemplateColumns: `1fr 1fr`,
     gridTemplateRows: "auto 1fr",
-    background: COLORS_.bckdeep,
+    background: _COLS.bckdeep,
 };

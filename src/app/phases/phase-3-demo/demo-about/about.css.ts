@@ -1,7 +1,9 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, COLORS_, $grn_, COLOR_4WAY, ACID_WASH_RGBA, CYBERPUNK_2060_OKLCH, ACID_WASH_OKLCH, $gry_ } from "../../../core/consts/colors.consts";
+import { $blu_, $grn_, COLOR_4WAY, ACID_WASH_RGBA, ACID_WASH_OKLCH, $gry_ } from "../../../core/consts/colors.consts";
+import { _COLS } from "../../../core/consts/ui-consts";
+import { OKLCH_VIBRANT } from "../../../core/consts/vibrant-oklch";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { $txt_, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_ALT_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
+import { _TXT, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_ALT_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
 import { MONO_MAINfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 
@@ -14,7 +16,7 @@ export const ABOUT_P_TEXTcss: CssMap = {
   textShadow: "0 0 5px oklch(0.85 0.03 260 / 0.25)",
   fontFamily: "sans-serif",
   fontWeight: "100",
-  fontSize: $txt_.main,
+  fontSize: _TXT.main,
 }
 
 // ADDED: list cell styling (prevents baseline + indent issues)
@@ -46,7 +48,7 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
 
 };
 
@@ -63,7 +65,7 @@ export const ABOUT_TOCcss: CssMap = {
   gap: "8px",
   padding: "8px 8px 12px 8px",
   boxSizing: "border-box",
-  background:COLORS_.bckdeep,
+  background:_COLS.bckdeep,
   overflowY: "auto",
   overflowX: "hidden",
 };
@@ -112,11 +114,11 @@ export const ABOUT_CSS: CssMap = {
   whiteSpace: "pre-line",
   overflowX: "auto",
   padding: "10px 12px",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   fontweight: 300,
   fontFamily: MONO_MAINfont,
   lineHeight: "1.75rem",
-  fontSize: $txt_.main,
+  fontSize: _TXT.main,
 }
 
 // inline code wrapper
@@ -180,7 +182,7 @@ export const ANTI_LIST_TEXTcss: CssMap = {
 
 export const WARNINGcss: CssMap = {
   color: "red",
-  fontSize: $txt_.subhead,
+  fontSize: _TXT.subhead,
   textTransform: "uppercase",
   textAlign: "center",
   textDecoration: "underline",
@@ -195,7 +197,7 @@ export const ABOUT_ROOTcss: CssMap = {
   minHeight: "0",
   display: "grid",
   boxSizing: "border-box",
-  fontSize: $txt_.main,
+  fontSize: _TXT.main,
 };
 
 export const ABOUT_BODY_ROWcss: CssMap = {
@@ -211,7 +213,7 @@ export const ABOUT_BODY_ROWcss: CssMap = {
 
 export const TOC_BTNcss: CssMap = {
   ...MONOcss,
-  fontSize: $txt_.main,
+  fontSize: _TXT.main,
   // lineHeight: "1.1",
   // padding: "12px 26px",
   boxSizing: "border-box",
@@ -221,13 +223,13 @@ export const TOC_BTNcss: CssMap = {
   textAlign: "right",
   _hover: {
     background: TOCcol,
-    color: COLORS_.bckgd
+    color: _COLS.bckgd
   }
 };
 
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   overflowWrap: "anywhere",
   fontSize: $CODE_FONT_SIZE,
   lineHeight: "1.85",
@@ -241,30 +243,29 @@ export const MD_CODE_PREcss: CssMap = {
 export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
   return {
     marginTop: level === 1 ? "6px" : "2rem",
-    marginBottom: "8px",
+    marginBottom: "18px",
     textDecoration: level <= 3 ? "underline" : "",
     textUnderlineOffset: "5px",
     fontFamily: MONO_MAINfont,
     letterSpacing: "0.06em",
     textTransform: level === 2 ? "uppercase" : "none",
-    fontSize: level === 1 ? $txt_.heading : level === 2 ? $txt_.subhead : level === 3 ? $txt_.subhead : $txt_.main,
+    fontSize: level === 1 ? _TXT.heading : level === 2 ? _TXT.subhead : level === 3 ? _TXT.subhead : _TXT.main,
     fontWeight: level === 1 ? 700 : level === 2 ? 600 : 400,
     justifySelf: level <= 2 ? "center" : "start",
-
     color: HEADERcol,
   }
 }
 
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
-  fontSize: $txt_.reg,
+  fontSize: _TXT.reg,
   color: COPYRITEcol,
   marginTop: "2rem",
 }
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   color: URLcol,
-  fontSize: $txt_.subhead,
+  fontSize: _TXT.subhead,
   textDecoration: "underline",
   marginLeft: "2rem"
 }

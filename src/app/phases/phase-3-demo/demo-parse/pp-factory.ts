@@ -1,16 +1,16 @@
 // pp_factory.ts
-import { hson, type LiveTree } from "hson-live";
 
-import { relay, relay_data, type Outcome } from "intrastructure";
-import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
+import type { LiveTree } from "hson-live";
+import { type Outcome, relay_data, relay } from "intrastructure";
+import { PANELcss, PANEL_TEXTAREAcss } from "../../../../tests/demo-test/tp-panels.css";
+import { TXTcol_CODE, _TXT, WATERMARK_FMT_, _COLS } from "../../../core/consts/ui-consts";
 import type { Fmt } from "../../../core/types/core.types";
+import { PP_HEADcss, PP_BTNcss, UI_BUTTON_HOVERcss, UI_2STACK_CHIPcss, UI_2STACK_VALcss, PP_LABELcss } from "../../../ui/panels/panels.css";
+import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
+import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
-import { PARSING_PANEL_ROOTcss, PP_COPYBTNcss, PP_GRIDcss, PP_HEADERcss, PP_STATUScss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
-import { COLOR_FOR_FMT_, WATERMARK_FMT_ } from "../../../core/consts/ui-consts";
-import { PANEL_TEXTAREAcss, PANELcss } from "../../../../tests/demo-test/tp-panels.css";
-import { set_alpha } from "../../../core/helpers/color-helpers";
 import { init_parsing_panels } from "./init-pp";
-import { COLORS_ } from "../../../core/consts/colors.consts";
+import { PARSING_PANEL_ROOTcss, PP_HEADERcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -30,7 +30,7 @@ export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
 
 export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcome<Panels> {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
-
+  let viewMode: PanelViewMode = "text";
   const old = hostBody.find.byId($PARSING_PANELS_ROOT);
   if (old) old.removeSelf();
 
@@ -54,71 +54,64 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .data.set("role", `panel-${fmt}`)
       .css.setMany(PANELcss);
 
-    const head = panel.create.div()
-      .id.set("fmt-header")
+    const head = mk_div_id(panel, fmt + "-head")
       .data.set("role", $PP_HEAD)
-      .css.setMany(PP_HEADERcss);
+      .css.setMany(PP_HEADcss);
 
-    const bytes = head.create.span()
-      .data.set("field", `${fmt}-bytes`)
-      .text.set("0 bytes");
-
-    // NEW: view toggle group
-    const modeGroup = head.create.div()
-      .classlist.set("pp-mode-group")
-      .css.setMany({
-        display: "flex",
-        gap: "6px",
-        alignItems: "center",
-      });
-
-    const modeTextBtn = modeGroup.create.div()
-      .classlist.set("pp-mode pp-mode--text")
-      .text.set("text")
-      .css.setMany(PP_COPYBTNcss)
-      .attr.setMany({
-        "role": "button",
-        "tabindex": "0",
-        "aria-label": `show ${fmt} text view`,
-      });
-
-    const modeNodeBtn = modeGroup.create.div()
-      .classlist.set("pp-mode pp-mode--nodes")
-      .text.set("nodes")
-      .css.setMany(PP_COPYBTNcss)
-      .attr.setMany({
-        "role": "button",
-        "tabindex": "0",
-        "aria-label": `show ${fmt} node view`,
-      });
-
-    const copyBtn = head.create.div()
-      .classlist.set("pp-copy")
+    const copyBtn = mk_div_cls(head, "pp-copy")
       .text.set("copy")
-      .css.setMany(PP_COPYBTNcss)
+      .css.setMany({
+        ...PP_BTNcss,
+        ...UI_BUTTON_HOVERcss(TXTcol_CODE),
+      })
       .attr.setMany({
         "role": "button",
         "tabindex": "0",
         "aria-label": `copy ${fmt}`,
       });
 
+    const bytesBox = mk_span_cls(head, "bytes-box")
+      .css.setMany({
+        ...UI_2STACK_CHIPcss,
+      });
+    
+    const bytesNum = bytesBox.create.div()
+      .data.set("field", `${fmt}-bytes`)
+      .css.setMany({
+        ...UI_2STACK_VALcss,
+        fontSize: _TXT.reg,
+      })
+      .text.set("0");
+
+    bytesBox.create.div()
+      .data.set("field", `${fmt}-label`)
+      .css.setMany(PP_LABELcss)
+      .text.set("bytes");
+
+    const statusBox = mk_span_cls(head, "status-box")
+      .css.setMany({
+        ...UI_2STACK_CHIPcss,
+      });
+
+    const status = mk_div_cls(statusBox, "status-number")
+      .css.setMany(UI_2STACK_VALcss);
+
+    mk_div_cls(statusBox, "status-label")
+      .text.set("status")
+      .css.setMany(PP_LABELcss);
+    
     const wrap = panel.create.div()
       .classlist.set("pp-textwrap")
       .css.setMany({
         ...PP_TEXTWRAPcss(fmt),
-        display: "block", 
+        display: "block",
       });
 
     const wmFmt = wrap.create.div()
       .classlist.set("pp-watermark pp-watermark--fmt")
       .text.set(WATERMARK_FMT_[fmt])
       .css.setMany(PP_WATERMARKcss);
-      
 
-    const status = wrap.create.div()
-      .classlist.set("pp-status")
-      .text.set("")
-      .css.setMany(PP_STATUScss);
 
     const textarea = wrap.create.textarea()
       .data.set("input", fmt)
@@ -137,34 +130,47 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         margin: "0",
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
-        background: COLORS_.bckdeep,
+        background: _COLS.bckdeep,
         color: "inherit",
-      })
-      .text.set("");
-    
-    const nodeText = nodeBox.create.textarea()
+      });
+
+    const nodeText = nodeBox.create.div()
+      .css.setMany({ ...PANEL_TEXTAREAcss, })
+
+    const toggleBtn = head.create.div()
+      .classlist.set("pp-toggle")
+      .text.set("text")
       .css.setMany({
-        ...PANEL_TEXTAREAcss,
-        
+        ...PP_BTNcss,
+        ...UI_BUTTON_HOVERcss(TXTcol_CODE),
+      })
+      .attr.setMany({
+        "role": "button",
+        "tabindex": "0",
+        "aria-label": `toggle ${fmt} panel view mode`,
+      });
+
+    toggleBtn.listen.onClick(() => {
+      const nextView: PanelViewMode = (viewMode !== "text") ? "text" : "node"
+      setPanelViewMode(nextView);
+
     })
 
-    const chip = status.create.span()
-      .classlist.add("chip", "validity")
-      .text.set("");
 
-    // NEW: simple local toggle helpers
-    function showTextView(): void {
-      wrap.css.setMany({ display: "block" });
-      nodeBox.css.setMany({ display: "none" });
+    function syncPanelViewMode(): void {
+      const isText = viewMode === "text";
+
+      toggleBtn.data.set("mode", viewMode)
+        .text.set(viewMode);
+
+      wrap.css.setMany({ display: isText ? "block" : "none" });
+      nodeBox.css.setMany({ display: isText ? "none" : "block" });
     }
 
-    function showNodeView(): void {
-      wrap.css.setMany({ display: "none" });
-      nodeBox.css.setMany({ display: "block" });
+    function setPanelViewMode(mode: PanelViewMode): void {
+      viewMode = mode;
+      syncPanelViewMode();
     }
-
-    modeTextBtn.listen.onClick(() => showTextView());
-    modeNodeBtn.listen.onClick(() => showNodeView());
 
     copyBtn.listen.onClick(() => {
       const clip = globalThis.navigator?.clipboard?.writeText;
@@ -183,15 +189,13 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       panel,
       head,
       textarea,
-      chip,
-      bytes,
+      bytes: bytesNum,
       copyBtn,
-      wrap,
+      textBox: wrap,
       wmFmt,
       status,
 
-      // modeTextBtn,
-      // modeNodeBtn,
+      viewMode: "text",
       nodeBox: nodeText,
     };
   }

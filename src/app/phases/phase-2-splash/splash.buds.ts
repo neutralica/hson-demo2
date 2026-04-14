@@ -1,6 +1,6 @@
 
 import { mk_div, mk_div_cls, mk_section } from "../../utils/makers";
-import { WORD_CSS } from "../../wordmark/wordmark.css";
+import { WORD_CSS } from "../../ui/wordmark/wordmark.css";
 import { SKYanim, FLAREanim, GRADIENTanim, SUN_CARRIERanim, SUN_DISKanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM } from "./splash.anim";
 import { AT_LAYER_FADE, AT_LAYER_MAX, KISSat } from "./splash.consts";
 import { SKY_CSS, FRAME_CSS, FLARE_BOX_CSS, FLARE_CSS, GRADIENT_CSS, CLOUD_BOX_CSS, SUN_CARRIER_CSS, SUN_CSS, STAR_CARRIER_CSS, STAR_WRAP_CSS, STAR_HEAD_CSS, STAR_TAIL_A_CSS, STAR_TAIL_B_CSS, STAR_TAIL_C_CSS } from "./splash.css";

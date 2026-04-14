@@ -10,7 +10,8 @@ import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from 
 import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "intrastructure";
 
 import { PHASE_LINGER } from "./core/consts/config.consts";
-import { COLORS_, CYBERPUNK_2060_NEUTRALS, CYBERPUNK_2060_OKLCH } from "./core/consts/colors.consts";
+import { _COLS } from "./core/consts/ui-consts";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/vibrant-oklch";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
 import { debug_state_smoke_test } from "./state/smoke-tests/state-smoke-test";
@@ -22,12 +23,12 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 
 export async function run_app(root: LiveTree): OutcomeAsync<void> {
   root.empty();
-  log_oklch_palette(CYBERPUNK_2060_NEUTRALS, "neutrals");
-  log_oklch_palette(CYBERPUNK_2060_OKLCH, "brighter");
+  log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
+  log_oklch_palette(OKLCH_VIBRANT, "brighter");
 
   const app = mk_div_id(root, "app")
     .classlist.set("app")
-    .css.set.backgroundColor(COLORS_.bckgd);
+    .css.set.backgroundColor(_COLS.bckgd);
 
   const stage = mk_div_id(app, "stage")
     .classlist.add("stage")

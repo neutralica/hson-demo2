@@ -6,7 +6,7 @@ import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
 import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
-import { $txt_ } from "../../app/core/consts/ui-consts";
+import { _TXT } from "../../app/core/consts/ui-consts";
 import type { TestLog } from "../test-logger";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
@@ -14,7 +14,8 @@ import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
-import { COLORS_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { _COLS } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 
@@ -86,7 +87,7 @@ export function create_inspector(
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
-    background: COLORS_.bckdeep
+    background: _COLS.bckdeep
   });
   const header = mk_div_cls(root, "insp-header").css.setMany({
     // header is natural height
@@ -107,7 +108,7 @@ export function create_inspector(
     display: "flex",
     placeItems: "center",
     textAlign: "center",
-    fontSize: $txt_.unter,
+    fontSize: _TXT.unter,
     color:OKLCH_FLEURS.mossGlow,
   }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
 

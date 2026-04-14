@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live";
-import type { LetterKey } from "../core/types/core.types";
+import type { LetterKey } from "../../core/types/core.types";
 import type { WordmarkParts } from "./wordmark.types";
-import { mk_div_cls, mk_span_cls } from "../utils/makers";
+import { mk_div_cls, mk_span_cls } from "../../utils/makers";
 
 
 export function build_wordmark(parent: LiveTree): WordmarkParts {

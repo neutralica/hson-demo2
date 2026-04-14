@@ -1,15 +1,16 @@
 import type { CssMap } from "hson-live/types";
-import { COLORS_, $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { _COLS } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
-import { $txt_ } from "../../app/core/consts/ui-consts";
+import { _TXT } from "../../app/core/consts/ui-consts";
 
 
 export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
 export const INSPECTOR_ROOTcss = {
   fontFamily: MONO_MAINfont,
-  fontSize: $txt_.unter,
+  fontSize: _TXT.unter,
   lineHeight: "1.35",
 }
 
@@ -42,17 +43,17 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   fontFamily: "Monaco",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
 };
 
 export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 
 export const ROW_SUITEcss: CssMap = {
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   cursor: "pointer",
 };
 export const ROW_GROUPcss: CssMap = {
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   cursor: "pointer",
 };
 
@@ -83,7 +84,7 @@ export const ROW_CASEcss: CssMap = {
 
 export const ROW_CASE_FAILcss: CssMap = {
   color: $red_etc_.heartsBlood,
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   fontWeight: "700 /* !important */",
   // filter: "saturate(1.3) brightness(1.3)"
 };
@@ -108,7 +109,7 @@ export const PREVIEW_METAcss: CssMap = {
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   color: ACID_WASH_OKLCH.mutedRed,
   // filter: "saturate(1.3) brightness(1.3)"
 };

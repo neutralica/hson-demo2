@@ -1,14 +1,15 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, COLORS_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
-import { GRID_GAPstr, $txt_, TXTcol_CODE, TXTcol_MENU, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
+import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
+import { _COLS } from "../../app/core/consts/ui-consts";
+import { GRID_GAPstr, _TXT, TXTcol_CODE, TXTcol_MENU, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { UI_BUTTONcss, UI_CHIP_BORDERcss } from "../../app/ui/panels/ui-panels.css";
+import { UI_BTN_STDcss, UI_BUTTON_HOVERcss, UI_CHIP_BORDERcss } from "../../app/ui/panels/panels.css";
 
 export const TEST_CHIP_VALUEcss = {
-  fontSize: $txt_.unter,
+  fontSize: _TXT.unter,
   fontWeight: "700",
   lineHeight: "1",
   letterSpacing: "0.01em",
@@ -29,7 +30,7 @@ export const CONTROL_ROWcss: CssMap = {
 
 export const TEST_CHIP_LABELcss = {
   marginTop: "4px",
-  fontSize: $txt_.unter,
+  fontSize: _TXT.unter,
   lineHeight: "1",
   letterSpacing: "0.06em",
   textTransform: "lowercase",
@@ -37,28 +38,20 @@ export const TEST_CHIP_LABELcss = {
 }
 
 
-export const CLEAR_BTNcss: CssMap = {
-  ...UI_BUTTONcss,
-  borderColor: TXTcol_MENU,
-  borderRadius: "18px",
-  background: COLORS_.bckdeep,
-  transition: "transform 90ms ease, filter 140ms ease",
+export const TEST_CLEAR_BTNcss: CssMap = {
+  ...UI_BTN_STDcss,
+  ...UI_BUTTON_HOVERcss(TXTcol_MENU),
+  background: _COLS.bckdeep,
   color: TXTcol_MENU,
-  _hover: {
-    background: TXTcol_MENU,
-    color: COLORS_.bckdeep,
-    border: "1px solid " + COLORS_.bckgd,
-  }
+  fontSize: _TXT.subhead,
 }
 
 
 export const TEST_RUN_BTNcss: CssMap = {
-  ...UI_BUTTONcss,
+  ...UI_BTN_STDcss,
+  ...UI_BUTTON_HOVERcss(ACID_WASH_RGBA.fadedMint),
   color: ACID_WASH_RGBA.fadedMint,
-  _hover: {
-    background: ACID_WASH_RGBA.fadedMint,
-    color: COLORS_.bckdeep,
-  }
+  fontSize: _TXT.subhead,
 };
 
 export const TEST_SELECTORcss: CssMap = {
@@ -67,7 +60,7 @@ export const TEST_SELECTORcss: CssMap = {
   boxSizing: "border-box",
 
   fontFamily: MONO_MAINfont,
-  fontSize: $txt_.main,
+  fontSize: _TXT.main,
 
   // background: $cols_.backdeep,
   color: OKLCH_FLEURS.fadedGold,
@@ -83,7 +76,7 @@ export const TEST_LOGGERcss: CssMap = {
   boxSizing: "border-box",
   // background: $cols_.backdeep,
   fontFamily: MONO_MAINfont,
-  fontSize: $txt_.unter,
+  fontSize: _TXT.unter,
   width: "100%",
   overflowY: "scroll",
   overflowX: "hidden",
@@ -100,7 +93,7 @@ export const TEST_LOG_BOXcss: CssMap = {
   overflow: "auto",
   height: "100%",
   display: "grid",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
 };
 export const TEST_ROW_CONTAINERcss = {
   display: "grid",
@@ -173,6 +166,6 @@ export const MAKE_CHIP_DEFAULTcss = {
   minWidth: "44px",
   boxSizing: "border-box",
   overflow: "hidden",
-  background: COLORS_.bckdeep,
+  background: _COLS.bckdeep,
   transition: "transform 90ms ease, filter 140ms ease",
 };

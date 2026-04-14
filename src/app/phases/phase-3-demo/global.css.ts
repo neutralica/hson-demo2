@@ -1,8 +1,9 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
-import { COLORS_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
+import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
+import { _COLS } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { $txt_, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { _TXT, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
 
 export const SCROLL_HOVER_COLcss = {
   background: "rgba(180,230,255,0.65)"
@@ -25,7 +26,7 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       width: "auto",
       fontFamily: "Monaco",
       color: REDLIKEcol,
-      background: COLORS_.bckdeep,
+      background: _COLS.bckdeep,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
       textAlign: "center",
@@ -63,7 +64,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   textUnderlineOffset: "0.3em",
   _hover: {
     background: $gry_.dark,
-    color: COLORS_.bckdeep,
+    color: _COLS.bckdeep,
     fontWeight: "100",
   },
 };
@@ -73,7 +74,7 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
   fontWeight: "700",
   _hover: {
     background: set_alpha(TXTcol_MENU, 0.6),
-    color: COLORS_.bckdeep,
+    color: _COLS.bckdeep,
     fontWeight: "100",
   },
 
@@ -84,5 +85,5 @@ export const ABOUT_BTN_MOBcss = {
   bottom: "2rem",
   left: "2rem",
   fontWeight: "700",
-  fontSize: $txt_.wordMobile,
+  fontSize: _TXT.wordMobile,
 };

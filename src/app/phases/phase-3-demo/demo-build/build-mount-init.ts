@@ -1,6 +1,7 @@
 import { LiveTree, hson } from "hson-live";
 import { outcome, relay, relay_data, type Outcome } from "intrastructure";
-import { bp_factory, type BuildDemo } from "./build";
+import { bp_factory, type BuildDemo } from "./bp-factory";
+import { _TXT, TXTcol_CODE } from "../../../core/consts/ui-consts";
 
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";
@@ -29,16 +30,19 @@ function initBuild(bp: BuildDemo): void {
         }
         if (k === "typing") {
             bp.input.status.text.set("...");
-            bp.input.status.css.setMany({ opacity: "1" });
+            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1" });
             return;
         }
         if (k === "valid") {
-            bp.input.status.text.set("valid");
-            bp.input.status.css.setMany({ opacity: "1" });
+            bp.input.status.text.set("OK")
+            bp.input.status.css.setMany({
+                color: "green",
+                opacity: "1"
+            });
             return;
         }
-        bp.input.status.text.set("invalid");
-        bp.input.status.css.setMany({ opacity: "1" });
+        bp.input.status.text.set("XX");
+        bp.input.status.css.setMany({ color: "red", opacity: "1" });
     };
 
     const syncTabs = (): void => {

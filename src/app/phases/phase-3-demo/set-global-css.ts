@@ -1,7 +1,8 @@
 import { CssManager } from "hson-live";
 import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/managers/global-css";
-import { $PANEL_HIDDEN, $txt_ } from "../../core/consts/ui-consts";
-import { $blu_, COLORS_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $PANEL_HIDDEN, _TXT } from "../../core/consts/ui-consts";
+import { $blu_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { _COLS } from "../../core/consts/ui-consts";
 import { adjustOklch, set_alpha } from "../../core/helpers/color-helpers";
 import { MAIN_MENUcss } from "./demo.css";
 import { TXTcol_MENU } from "../../core/consts/ui-consts";
@@ -63,7 +64,7 @@ export const set_global_css = (): void => {
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
-    .set.fontSize($txt_.wee)
+    .set.fontSize(_TXT.wee)
 
   mobile.rule("mobile-about-btn", "#about-button")
     .setMany(ABOUT_BTN_MOBcss);

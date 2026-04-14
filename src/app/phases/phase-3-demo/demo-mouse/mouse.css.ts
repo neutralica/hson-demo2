@@ -1,5 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, COLORS_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
+import { _COLS } from "../../../core/consts/ui-consts";
 import { MONO_MAINfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
@@ -107,7 +108,7 @@ export const MOUSE_TRACKERcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "1",
-  backgroundColor: COLORS_.bckgd,
+  backgroundColor: _COLS.bckgd,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
@@ -122,7 +123,7 @@ export const STACK_TABLEcss = {
   minWidth: "0",
   minHeight: "0",
   height: "100%",
-  background: COLORS_.bckdeep
+  background: _COLS.bckdeep
 }
 
 export const MOUSE_STACKcss = {
@@ -144,7 +145,7 @@ export const MOUSE_COORDScss: CssMap = {
   marginLeft: "-1.5rem",
   alignContent: "end",              // CHANGED
   justifyItems: "start",
-  background: COLORS_.bckgd,
+  background: _COLS.bckgd,
   height: "auto",
 } as const;
 

@@ -1,14 +1,14 @@
 // mount-splash.ts
 
 import { CssManager, type LiveTree } from "hson-live";
-import { O_ROT, VER_CSS, VER6_CSS } from "../../wordmark/wordmark.css";
+import { O_ROT, VER_CSS, VER6_CSS } from "../../ui/wordmark/wordmark.css";
 import { CLOUD_LAYER_FADEanim } from "./splash.anim";
 import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
 import { SPLASHkfs } from "./splash.keys";
 import { FLAREanim, NEON_FLASHanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_DISKanim, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM, VERanim } from "./splash.anim";
 import { get_letter_key } from "../../utils/helpers";
 import type { LetterCaps, LetterKey } from "../../core/types/core.types";
-import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../wordmark/wordmark.css";
+import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../ui/wordmark/wordmark.css";
 import { mk_span_cls } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
