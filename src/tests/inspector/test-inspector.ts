@@ -106,9 +106,9 @@ export function create_inspector(
   const tableHost = mk_div_cls(body, "insp-table-host").css.setMany({
     ...PANEL_SAFETYcss,
     display: "flex",
-    placeItems: "center",
+    placeItems: "top",
     textAlign: "center",
-    fontSize: _TXT.unter,
+    fontSize: _TXT.main,
     color:OKLCH_FLEURS.mossGlow,
   }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
 

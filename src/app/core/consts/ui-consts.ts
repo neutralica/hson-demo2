@@ -16,22 +16,22 @@ export const HSON_COLOR_ = {
 };
 
 export const COLOR_FOR_FMT_ = {
-    json: OKLCH_FLEURS.fadedGold,
-    html: OKLCH_FLEURS.electricIris,
-    hson: OKLCH_FLEURS.orchidAsh
-  };
+  json: OKLCH_FLEURS.fadedGold,
+  html: OKLCH_FLEURS.electricIris,
+  hson: OKLCH_FLEURS.orchidAsh
+};
 
 export const _TXT = {
-    hsonWordMarkMain: "4.375rem", // 70px
-    wordMobile: "2.5rem" /*  "2.5rem" */,         // 40px
-    heading: "1.75rem"/*  "1.625rem" */,          // 26px
-    subhead: "1.25rem"/*  "1.375rem" */,          // 22px
-    main: "1rem"/*  "1.25rem" */,             // 20??px
-    mid: "1rem"/*  "1rem" */,                // 16px
-    unter: "0.75rem" /*  "0.875rem" */,            // 14px
-    reg: "0.75rem" /*  "0.75rem" */,               // 12px
-    smol: "0.65rem" /*  "0.625rem" */,             // 10px
-    wee: "0.55rem" /*  "0.5rem" */,                // 8px
+  hsonWordMarkMain: "4.375rem", // 70px
+  wordMobile: "2.5rem" /*  "2.5rem" */,         // 40px
+  heading: "1.75rem"/*  "1.625rem" */,          // 26px
+  subhead: "1.25rem"/*  "1.375rem" */,          // 22px
+  main: "1rem"/*  "1.25rem" */,             // 20??px
+  mid: "1rem"/*  "1rem" */,                // 16px
+  unter: "0.75rem" /*  "0.875rem" */,            // 14px
+  reg: "0.75rem" /*  "0.75rem" */,               // 12px
+  smol: "0.65rem" /*  "0.625rem" */,             // 10px
+  wee: "0.55rem" /*  "0.5rem" */,                // 8px
 } as const;
 
 

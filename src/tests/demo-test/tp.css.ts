@@ -6,7 +6,7 @@ import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { UI_BTN_STDcss, UI_BUTTON_HOVERcss, UI_CHIP_BORDERcss } from "../../app/ui/panels/panels.css";
+import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: _TXT.unter,
@@ -40,7 +40,7 @@ export const TEST_CHIP_LABELcss = {
 
 export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
-  ...UI_BUTTON_HOVERcss(TXTcol_MENU),
+  ...UI_BTN_HOVERcss(TXTcol_MENU),
   background: _COLS.bckdeep,
   color: TXTcol_MENU,
   fontSize: _TXT.subhead,
@@ -49,7 +49,7 @@ export const TEST_CLEAR_BTNcss: CssMap = {
 
 export const TEST_RUN_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
-  ...UI_BUTTON_HOVERcss(ACID_WASH_RGBA.fadedMint),
+  ...UI_BTN_HOVERcss(ACID_WASH_RGBA.fadedMint),
   color: ACID_WASH_RGBA.fadedMint,
   fontSize: _TXT.subhead,
 };
@@ -157,7 +157,6 @@ export const TEST_CHIP_ROWcss = {
 
 export const MAKE_CHIP_DEFAULTcss = {
   padding: "8px 8px",
-  ...UI_CHIP_BORDERcss,
   display: "grid",
   gridTemplateRows: "auto auto",
   justifyItems: "center",

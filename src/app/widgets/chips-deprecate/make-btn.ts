@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
 import { mk_div_id } from "../../utils/makers";
-import { UI_BTN_STDcss, UI_BUTTON_BORDERcss, UI_BUTTON_HOVERcss } from "../../ui/panels/panels.css";
+import { UI_BTN_STDcss, UI_BUTTON_BORDERcss, UI_BTN_HOVERcss } from "../../ui/panels/panels.css";
 import type { CssMap } from "hson-live/types";
 import { _COLS } from "../../core/consts/ui-consts";
 

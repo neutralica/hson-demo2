@@ -2,15 +2,15 @@
 
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { PANELcss, PANEL_TEXTAREAcss } from "../../../../tests/demo-test/tp-panels.css";
+import { UI_PANELcss, UI_TEXTcss } from "../../../../tests/demo-test/tp-panels.css";
 import { TXTcol_CODE, _TXT, WATERMARK_FMT_, _COLS } from "../../../core/consts/ui-consts";
 import type { Fmt } from "../../../core/types/core.types";
-import { PP_HEADcss, PP_BTNcss, UI_BUTTON_HOVERcss, UI_2STACK_CHIPcss, UI_2STACK_VALcss, PP_LABELcss } from "../../../ui/panels/panels.css";
+import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
 import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
 import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { init_parsing_panels } from "./init-pp";
-import { PARSING_PANEL_ROOTcss, PP_HEADERcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
+import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -36,11 +36,11 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
   const root = hostBody.create.div()
     .id.set($PARSING_PANELS_ROOT)
-    .css.setMany(PARSING_PANEL_ROOTcss);
+    .css.setMany(PP_ROOTcss);
 
   const header = root.create.div()
-    .css.setMany(PP_HEADERcss)
-    .text.set("~parsing panels~");
+    .css.setMany(UI_PANEL_HEADERcss)
+    .text.set("~ parsing panels ~");
 
   const panelGrid = root.create.div()
     .css.setMany({
@@ -52,17 +52,16 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
   for (const fmt of fmts) {
     const panel = panelGrid.create.section()
       .data.set("role", `panel-${fmt}`)
-      .css.setMany(PANELcss);
+      .css.setMany(UI_PANELcss);
 
     const head = mk_div_id(panel, fmt + "-head")
       .data.set("role", $PP_HEAD)
-      .css.setMany(PP_HEADcss);
+      .css.setMany(UI_PANEL_HEADcss);
 
     const copyBtn = mk_div_cls(head, "pp-copy")
       .text.set("copy")
       .css.setMany({
-        ...PP_BTNcss,
-        ...UI_BUTTON_HOVERcss(TXTcol_CODE),
+        ...UI_BTNcss,
       })
       .attr.setMany({
         "role": "button",
@@ -72,9 +71,9 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     const bytesBox = mk_span_cls(head, "bytes-box")
       .css.setMany({
-        ...UI_2STACK_CHIPcss,
+        ...UI_2STACKcss,
       });
-    
+
     const bytesNum = bytesBox.create.div()
       .data.set("field", `${fmt}-bytes`)
       .css.setMany({
@@ -85,12 +84,12 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     bytesBox.create.div()
       .data.set("field", `${fmt}-label`)
-      .css.setMany(PP_LABELcss)
+      .css.setMany(UI_STACK_LABELcss)
       .text.set("bytes");
 
     const statusBox = mk_span_cls(head, "status-box")
       .css.setMany({
-        ...UI_2STACK_CHIPcss,
+        ...UI_2STACKcss,
       });
 
     const status = mk_div_cls(statusBox, "status-number")
@@ -98,8 +97,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     mk_div_cls(statusBox, "status-label")
       .text.set("status")
-      .css.setMany(PP_LABELcss);
-    
+      .css.setMany(UI_STACK_LABELcss);
+
     const wrap = panel.create.div()
       .classlist.set("pp-textwrap")
       .css.setMany({
@@ -116,7 +115,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
     const textarea = wrap.create.textarea()
       .data.set("input", fmt)
       .css.setMany({
-        ...PANEL_TEXTAREAcss,
+        ...UI_TEXTcss,
         background: "transparent",
         color: "inherit",
       });
@@ -135,14 +134,14 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       });
 
     const nodeText = nodeBox.create.div()
-      .css.setMany({ ...PANEL_TEXTAREAcss, })
+      .css.setMany({ ...UI_TEXTcss, })
 
     const toggleBtn = head.create.div()
       .classlist.set("pp-toggle")
       .text.set("text")
       .css.setMany({
-        ...PP_BTNcss,
-        ...UI_BUTTON_HOVERcss(TXTcol_CODE),
+        ...UI_BTNcss,
+        ...UI_BTN_HOVERcss(TXTcol_CODE),
       })
       .attr.setMany({
         "role": "button",

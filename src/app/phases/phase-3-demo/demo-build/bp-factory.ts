@@ -2,11 +2,13 @@
 
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
-import { BUILD_BODYcss, BUILD_BTNcss, BUILD_HEADcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss, BUILD_STATUScss, BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss, BUILD_WATERMARK_EMPTYcss, BUILD_WATERMARK_FMTcss } from "./build.css";
+import { BUILD_BODYcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss,  BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss } from "./build.css";
 import { BUILD_STRINGhson } from "./build-hson.consts";
 import { mk_div_cls, mk_div_id, mk_section_cls, mk_span_cls } from "../../../utils/makers";
-import { PP_HEADERcss } from "../demo-parse/pp.css";
-import { UI_2STACK_CHIPcss, PP_BTNcss, PP_HEADcss, PP_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
+import { UI_2STACKcss, UI_BTNcss, UI_PANEL_HEADcss, UI_STACK_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
+import { UI_PANEL_HEADERcss } from "../../../ui/panels/panels.css";
+import { _TXT } from "../../../core/consts/ui-consts";
+import { UI_PANELcss } from "../../../../tests/demo-test/tp-panels.css";
 
 // keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{
@@ -66,14 +68,23 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
   const root = mk_div_id(hostBody, $BUILD_ROOT)
     .classlist.set("build-root")
     .css.setMany(BUILD_ROOTcss);
-
+  const header = mk_div_cls(root, "panel header")
+    .text.set("~ BUILD ~")
+    .css.setMany({
+      ...UI_PANEL_HEADERcss,
+      gridColumn: "1 / 3",
+    });
+  
+  
   // pane helper now creates a stable head/body grid
   const makePane = (key: "src" | "out"): BuildPanel => {
     const panel = mk_section_cls(root, `build-pane build-pane--${key}`)
-      .css.setMany(BUILD_PANEcss);
+      .css.setMany(UI_PANELcss);
 
     const head = mk_div_cls(panel, "build-head")
-      .css.setMany(PP_HEADcss);
+      .css.setMany({
+        ...UI_PANEL_HEADcss,
+      });
 
     // const spacer = mk_div_cls(head,"build-spacer")
     //   .css.setMany(BUILD_SPACERcss);
@@ -93,47 +104,36 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
   const clearBtn = mk_span_cls(src.head, "build-btn build-btn--clear")
     .text.set("clear")
-    .css.setMany(PP_BTNcss)
+    .css.setMany(UI_BTNcss)
     .attr.setMany({
       role: "button",
       tabindex: "0",
       "aria-label": "clear input",
     });
-  const title = mk_span_cls(src.head, "build-title")
-    .text.set("HSON:")
-    .css.setMany(BUILD_TITLEcss);
 
-
-  const copyBtn = mk_span_cls(src.head, "build-btn build-btn--copy")
-    .text.set("copy")
-    .css.setMany(PP_BTNcss)
-    .attr.setMany({
-      role: "button",
-      tabindex: "0",
-      "aria-label": "copy input",
-    });
   const statusBox = mk_span_cls(src.head, "status-box")
-    .css.setMany({
-      ...UI_2STACK_CHIPcss,
-      position: "relative",
-      justifySelf: "end",
-      // right: "0px",
-      // top: "0px",
-    })
+    .css.setMany(UI_2STACKcss);
 
   const status = mk_div_cls(statusBox, "status-number")
     .css.setMany({
       ...UI_2STACK_VALcss,
-      top: "0px",
     });
 
   mk_div_cls(statusBox, "status-label")
     .text.set("status")
     .css.setMany({
-      ...PP_LABELcss,
+      ...UI_STACK_LABELcss,
       bottom: "0",
-    }
-    );
+    });
+
+  const copyBtn = mk_span_cls(src.head, "build-btn build-btn--copy")
+    .text.set("copy")
+    .css.setMany(UI_BTNcss)
+    .attr.setMany({
+      role: "button",
+      tabindex: "0",
+      "aria-label": "copy input",
+    });
 
   // --------------------------------------------------
   // SRC body
@@ -142,11 +142,6 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
   const inputWrap = src.body.create.div()
     .classlist.set("build-textwrap")
     .css.setMany(BUILD_TEXTWRAPcss);
-
-  const wmFmt = inputWrap.create.div()
-    .classlist.set("build-watermark build-watermark--fmt")
-    .text.set("HSON")
-    .css.setMany(BUILD_WATERMARK_FMTcss);
 
   // const status = inputWrap.create.div()
   //   .classlist.set("build-status")
@@ -219,7 +214,6 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     input: {
       wrap: inputWrap,
       textarea,
-      wmFmt,
       status,
       copyBtn,
       clearBtn,

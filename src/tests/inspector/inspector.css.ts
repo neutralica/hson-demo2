@@ -38,6 +38,7 @@ export const TDcss: CssMap = {
   borderBottom: "1px solid rgba(255,255,255,0.08)",
   whiteSpace: "nowrap",
 };
+
 export const TD_PREVIEW_ROWcss: CssMap = {
   padding: "8px 12px",
   whiteSpace: "pre-wrap",

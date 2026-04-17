@@ -6,10 +6,7 @@ import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
 export const UI_ROOTcss: CssMap = {
-
   display: "grid",
-
-  // no dock row anymore
   gridTemplateRows: "minmax(0, 1fr)",
   boxSizing: "border-box",
   overflow: "hidden",
@@ -25,7 +22,7 @@ export const UI_ROOTcss: CssMap = {
   pointerEvents: "auto",
 };
 
-export const PANELcss: CssMap = {
+export const UI_PANELcss: CssMap = {
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     gap: GRID_GAPstr,
@@ -39,7 +36,7 @@ export const PANELcss: CssMap = {
     background: _COLS.bckdeep,
 }
 
-export const PANEL_TEXTAREAcss = {
+export const UI_TEXTcss = {
     height:"100%",
     minWidth: "0",
     resize: "none",
@@ -50,7 +47,7 @@ export const PANEL_TEXTAREAcss = {
     lineHeight: "1.55",
     // background: COLORS_.bckdeep,
     border: "none",
-    padding: "1rem",
+    padding: "10px",
     color: OKLCH_FLEURS.cyanDust,
     outline: "none"
 };

@@ -1,14 +1,14 @@
 // pp.terminal.css.ts
 
 import type { CssMap } from "hson-live/types";
-import type { CssMapBase } from "../../../../../../hson-live/dist/types/css.types";
+
 import { $gry_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
 import { _COLS } from "../../../core/consts/ui-consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/vibrant-oklch";
 import { MONO_MAINfont, _TXT, GRID_GAPstr, COLOR_FOR_FMT_, HSON_COLOR_, TXTcol_ALT } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+
 
 
 export const VIEW_TOGGLEcss: CssMap = {
@@ -16,20 +16,6 @@ export const VIEW_TOGGLEcss: CssMap = {
   //   maxHeight: "3rem",
   // maxWidth: "4rem",
 }
-
-export const PP_HEADERcss: CssMap = {
-  // gap: "10px",
-  position: "relative",
-  zIndex: "5",
-  minHeight: "2rem",
-  padding: "6px",
-  background: _COLS.bckdeep,
-  // columnGap: "0.5ch",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 
 // text container
 export const PP_TEXTWRAPcss = (f: Fmt | null) => {
@@ -135,7 +121,7 @@ export const PP_INACTIVE_INVALIDcss = (f: Fmt) => {
   };
 }
 
-export const PARSING_PANEL_ROOTcss: CssMap = {
+export const PP_ROOTcss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   width: "100%",

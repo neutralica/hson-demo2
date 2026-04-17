@@ -21,7 +21,7 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       pointerEvents: "all",
       maxHeight: "100%",
       overflow: "hidden",
-      color: TXTcol_MENU,
+      color: TXTcol_MAIN,
       fontFamily: MONO_MAINfont,
     });
 }

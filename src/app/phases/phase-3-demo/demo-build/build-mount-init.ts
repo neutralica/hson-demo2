@@ -30,13 +30,13 @@ function initBuild(bp: BuildDemo): void {
         }
         if (k === "typing") {
             bp.input.status.text.set("...");
-            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1" });
+            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: _TXT.reg });
             return;
         }
         if (k === "valid") {
             bp.input.status.text.set("OK")
             bp.input.status.css.setMany({
-                color: "green",
+                color: "lime",
                 opacity: "1"
             });
             return;

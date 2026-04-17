@@ -7,32 +7,19 @@ import { _TXT, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { MONO_MAINfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { PANEL_TEXTAREAcss } from "../../../../tests/demo-test/tp-panels.css";
+import { UI_TEXTcss } from "../../../../tests/demo-test/tp-panels.css";
 import { OKLCH_VIBRANT } from "../../../core/consts/vibrant-oklch";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
-  // actual two-pane split
+  display: "grid",
+  gridTemplateRows: "auto minmax(0, 1fr)",
   width: "100%",
   height: "100%",
   minWidth: "0",
   minHeight: "0",
-  display: "grid",
   gridTemplateColumns: "1fr 1fr",
-  gap: GRID_GAPstr,
-};
-
-export const BUILD_HEADcss: CssMap = {
-  position: "relative",
-  zIndex: "5",
-  minHeight: "2rem",
-  padding: "6px",
-  background: _COLS.bckdeep,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  // gap: "2ch",
 };
 
 export const BUILD_TITLEcss: CssMap = {
@@ -41,7 +28,10 @@ export const BUILD_TITLEcss: CssMap = {
   fontSize: _TXT.main,
   letterSpacing: "0.14em",
   textTransform: "lowercase",
-  alignSelf: "flex-end",
+  height: "100%",
+  width: "25%",
+  textAlign: "center",  
+  alignContent: "flex-end",
   color: OKLCH_VIBRANT.cyanSeaLaser,
   flexShrink: "0",
 };
@@ -59,32 +49,14 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
-  ...PANEL_TEXTAREAcss,
-
-  boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
+  ...UI_TEXTcss,
   color: TXTcol_ALT,
-  caretColor: "auto",
   fontSize: _TXT.reg,
   _focus: {
-    boxShadow: "inset 0 0 25px 1px " + COLOR_FOR_FMT_["hson"],
+    boxShadow: "inset 0 0 15px 1px " + COLOR_FOR_FMT_["hson"],
 
   }
 
-};
-
-// Watermarks (same idea as parse panels)
-export const BUILD_WATERMARK_FMTcss: CssMap = {
-  position: "absolute",
-  inset: "0",
-  display: "grid",
-  placeItems: "center",
-  pointerEvents: "none",
-  userSelect: "none",
-  opacity: "0.08",
-  fontFamily: MONO_MAINfont,
-  fontSize: "72px",
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
 };
 
 export const BUILD_WATERMARK_EMPTYcss: CssMap = {
@@ -97,27 +69,6 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   fontFamily: MONO_MAINfont,
   fontSize: "14px",
   letterSpacing: "0.06em",
-};
-
-// Focused-only status ("valid/invalid/...")
-export const BUILD_STATUScss: CssMap = {
-  position: "relative",
-  pointerEvents: "none",
-  userSelect: "none",
-  // opacity: "0",
-  fontFamily: MONO_MAINfont,
-  fontSize: _TXT.reg,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-};
-
-
-export const BUILD_BTNcss: CssMap = {
-  ...UI_BTN_STDcss,
-  padding: "4px 4px",
-  background: _COLS.bckdeep,
-  color: TXTcol_CODE,
-  flex: "0 0 auto",
 };
 
 // Toggle container for Render/HTML
@@ -155,7 +106,7 @@ export const BUILD_PREVIEWcss: CssMap = {
 
 // HTML output box: same textarea styling
 export const BUILD_HTMLBOXcss: CssMap = {
-  ...PANEL_TEXTAREAcss,
+  ...UI_TEXTcss,
 
   // same fill behavior as source textarea
   width: "100%",
@@ -175,8 +126,8 @@ export const BUILD_HTMLBOXcss: CssMap = {
 
 export const BUILD_PANEcss: CssMap = {
   // stable head/body stack
-  minWidth: "0",
-  minHeight: "0",
+  // minWidth: "0",
+  // minHeight: "0",
   width: "100%",
   height: "100%",
   display: "grid",

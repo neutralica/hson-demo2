@@ -100,3 +100,19 @@ Not tested:
 4) Serialization / projection integrity
 	•	HSON ↔ DOM ↔ LiveTree roundtrips
 	•	partial hydration edge cases
+
+
+
+5. Recent API regression unit tests
+
+• detached create: HTML vs SVG namespace dispatch
+• find.byQuid subtree membership behavior
+• dom.treeFromEl soft vs must behavior
+• ambient listener owner cleanup registry behavior
+• array CSS value normalization to comma lists
+• owner registry add/remove/off behavior
+• array CSS value normalization
+• detached create dispatch logic if there are pure helpers underneath
+
+1) fallback helpers
+5) parser / serializer micro-seams TODO / verify
