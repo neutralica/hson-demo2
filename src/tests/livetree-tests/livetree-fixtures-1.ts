@@ -58,7 +58,7 @@ export function suite_find(): TestSuite {
       // preview should be a function, not a computed string
       preview(tree) {
         const btn = tree.find.byId("btn");
-        const el = btn?.asDomElement?.();
+        const el = btn?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
       },
     },
@@ -98,7 +98,7 @@ export function suite_find(): TestSuite {
       preview(tree) {
         const items = tree.findAll(".item");
         const first = items.first();
-        const el = first?.asDomElement?.();
+        const el = first?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no .item dom>";
       },
     },
@@ -516,7 +516,7 @@ export function mixedRegression() {
         t.eq("IR: exactly one #layer", hits.count(), 1);
 
         // DOM sanity (optional): only assert if mounted
-        const rootEl = root.asDomElement() as HTMLElement | null;
+        const rootEl = root.dom.el() as HTMLElement | null;
         if (!rootEl) {
           t.ok("DOM mode: root not mounted (skipping DOM assertions)", true);
           return;
@@ -528,7 +528,7 @@ export function mixedRegression() {
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.() as Element | null;
+        const el = root?.dom.el?.() as Element | null;
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -557,7 +557,7 @@ export function mixedRegression() {
         t.eq("IR text", txt, "goodbye");
 
         // DOM if mounted
-        const el = msg.asDomElement() as HTMLElement | null;
+        const el = msg.dom.el() as HTMLElement | null;
         if (!el) {
           t.ok("DOM mode: msg not mounted (skipping DOM text)", true);
           return;
@@ -568,7 +568,7 @@ export function mixedRegression() {
 
       preview(tree) {
         const msg = tree.find.byId("msg");
-        const el = msg?.asDomElement?.() as Element | null;
+        const el = msg?.dom.el?.() as Element | null;
         return el ? el.outerHTML : "<no msg dom>";
       },
     },
@@ -604,7 +604,7 @@ export function mixedRegression() {
           t.eq(`IR data-row [${i}]`, attrs["data-row"], "42");
 
           // DOM check if mounted
-          const el = node.asDomElement() as HTMLElement | null;
+          const el = node.dom.el() as HTMLElement | null;
           if (!el) return;
 
           const styleText = el.getAttribute("style") ?? "";
@@ -615,7 +615,7 @@ export function mixedRegression() {
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.() as Element | null;
+        const el = root?.dom.el?.() as Element | null;
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -644,7 +644,7 @@ export function mixedRegression() {
 
         // Only meaningful when DOM exists
         selector.each((btn) => {
-          const el = btn.asDomElement() as HTMLButtonElement | null;
+          const el = btn.dom.el() as HTMLButtonElement | null;
           if (el) el.click();
         });
 
@@ -655,7 +655,7 @@ export function mixedRegression() {
         const selector = tree.findAll({ attrs: { class: "item" } });
         t.eq("matched 3 items", selector.count(), 3);
 
-        const anyDom = !!selector.first()?.asDomElement?.();
+        const anyDom = !!selector.first()?.dom.el?.();
         if (!anyDom) {
           t.ok("DOM mode: no button DOM (skipping click count assertion)", true);
           return;
@@ -667,7 +667,7 @@ export function mixedRegression() {
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.() as Element | null;
+        const el = root?.dom.el?.() as Element | null;
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -705,7 +705,7 @@ export function mixedRegression() {
         t.ok("IR can refind .created", !!created);
 
         // DOM if mounted
-        const partEl = part.asDomElement() as HTMLElement | null;
+        const partEl = part.dom.el() as HTMLElement | null;
         if (!partEl) {
           t.ok("DOM mode: section not mounted (skipping DOM child checks)", true);
           return;
@@ -723,7 +723,7 @@ export function mixedRegression() {
 
       preview(tree) {
         const part = tree.find.byId("part");
-        const el = part?.asDomElement?.() as Element | null;
+        const el = part?.dom.el?.() as Element | null;
         return el ? el.outerHTML : "<no part dom>";
       },
     },
@@ -767,7 +767,7 @@ export function mixedRegression() {
         t.ok("css includes transform", cssText.includes("transform: translate(10px, 20px);"));
 
         const box = tree.find.must.byId("box");
-        const el = box.asDomElement() as HTMLElement | null;
+        const el = box.dom.el() as HTMLElement | null;
         if (!el) {
           t.ok("DOM mode: box not mounted (skipping quid selector assertion)", true);
           return;
@@ -820,7 +820,7 @@ export function mixedRegression() {
 
         const cssText = styleEl?.textContent ?? "";
         const box = tree.find.must.byId("box");
-        const quid = box.asDomElement()?.getAttribute("data-_quid") ?? "";
+        const quid = box.dom.el()?.getAttribute("data-_quid") ?? "";
 
         if (!quid) {
           t.ok("DOM mode: no quid (skipping)", true);
@@ -891,7 +891,7 @@ export function extraCases(): readonly TestSuite[] {
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.();
+        const el = root?.dom.el?.();
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -928,7 +928,7 @@ export function extraCases(): readonly TestSuite[] {
           const attrs = node.node._attrs ?? {};
           t.eq(`data-row persisted [${i}]`, attrs["data-row"], "42");
 
-          const el = node.asDomElement();
+          const el = node.dom.el();
           if (el instanceof HTMLElement) {
             t.eq(`dataset persisted [${i}]`, el.dataset["row"], "42");
           }
@@ -937,7 +937,7 @@ export function extraCases(): readonly TestSuite[] {
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.();
+        const el = root?.dom.el?.();
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -964,14 +964,14 @@ export function extraCases(): readonly TestSuite[] {
         const sub = items.listen.onClick(() => { count++; });
 
         items.each((btn: LiveTree) => {
-          const el = btn.asDomElement();
+          const el = btn.dom.el();
           if (el instanceof HTMLButtonElement) el.click();
         })
 
         sub.off();
 
         items.each((btn: LiveTree) => {
-          const el = btn.asDomElement();
+          const el = btn.dom.el();
           if (el instanceof HTMLButtonElement) el.click();
         });
 
@@ -989,7 +989,7 @@ export function extraCases(): readonly TestSuite[] {
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.();
+        const el = root?.dom.el?.();
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -1021,13 +1021,13 @@ export function extraCases(): readonly TestSuite[] {
 
         t.ok("child exists in IR", !!found);
 
-        const el = found?.asDomElement?.();
+        const el = found?.dom.el?.();
         t.eq("child has no DOM element yet", el ?? null, null);
       },
 
       preview(tree) {
         const root = tree.find.byId("root");
-        const el = root?.asDomElement?.();
+        const el = root?.dom.el?.();
         return el ? el.outerHTML : "<no root dom>";
       },
     },
@@ -1165,7 +1165,7 @@ export function suite_css_and_content(): TestSuite {
         const cssText = styleEl?.textContent ?? "";
 
         const box = tree.find.must.byId("box");
-        const el = box.asDomElement();
+        const el = box.dom.el();
         t.ok("box dom exists", !!el);
         const snapFn = box.css.devSnapshot;
         const quid = el?.getAttribute("data-_quid") ?? "";
@@ -1175,7 +1175,7 @@ export function suite_css_and_content(): TestSuite {
         t.ok("css includes opacity", cssText.includes("opacity: 0.5;"));
       },
       preview(tree: LiveTree) {
-        const el = tree.find.byId("box")?.asDomElement?.();
+        const el = tree.find.byId("box")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
       },
     },
@@ -1212,7 +1212,7 @@ export function suite_css_and_content(): TestSuite {
       },
       assert(tree: LiveTree, t: Asserter) {
         after_paint();
-        const el0 = tree.find.must.byId("box").asDomElement();
+        const el0 = tree.find.must.byId("box").dom.el();
         t.ok("box dom exists", !!el0);
 
         // getComputedStyle wants an Element, but you usually care about HTMLElement behavior.
@@ -1227,7 +1227,7 @@ export function suite_css_and_content(): TestSuite {
         t.eq("backgroundColor", cs.backgroundColor, "rgb(0, 255, 0)");
       },
       preview(tree: LiveTree) {
-        const el = tree.find.byId("box")?.asDomElement?.();
+        const el = tree.find.byId("box")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
       },
     },
@@ -1263,7 +1263,7 @@ export function suite_css_and_content(): TestSuite {
       assert(tree: LiveTree, t: Asserter) {
         after_paint();
         const box = tree.find.must.byId("box");
-        const el0 = box.asDomElement();
+        const el0 = box.dom.el();
         t.ok("box dom exists", !!el0);
 
         const el = el0 instanceof HTMLElement ? el0 : null;
@@ -1297,7 +1297,7 @@ export function suite_css_and_content(): TestSuite {
         t.ok("rect height > 0", r.height > 0);
       },
       preview(tree: LiveTree) {
-        const el = tree.find.byId("box")?.asDomElement?.();
+        const el = tree.find.byId("box")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
       },
     },
@@ -1323,7 +1323,7 @@ export function suite_css_and_content(): TestSuite {
         const tgt = tree.find.must.byId("tgt");
         const node = tgt.node;
 
-        const el0 = tgt.asDomElement();
+        const el0 = tgt.dom.el();
         t.ok("tgt dom exists", !!el0);
 
         const el = el0 instanceof HTMLElement ? el0 : null;
@@ -1340,7 +1340,7 @@ export function suite_css_and_content(): TestSuite {
         t.eq("get_node_text", get_node_text_content(node), "new-text");
       },
       preview(tree: LiveTree) {
-        const el = tree.find.byId("tgt")?.asDomElement?.();
+        const el = tree.find.byId("tgt")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no tgt dom>";
       },
     },
@@ -1455,7 +1455,7 @@ function suite_graft_regressions(): TestSuite {
 
           t.eq("root tag is queried element tag", grafted.node._tag.toLowerCase(), "div");
 
-          const el = grafted.asDomElement();
+          const el = grafted.dom.el();
           t.ok("root dom exists", !!el);
 
           if (el instanceof HTMLElement) {
@@ -1471,7 +1471,7 @@ function suite_graft_regressions(): TestSuite {
 
       preview(tree) {
         const stash = tree as unknown as { __grafted?: LiveTree };
-        const el = stash.__grafted?.asDomElement?.();
+        const el = stash.__grafted?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
       },
     },
@@ -1522,7 +1522,7 @@ function suite_graft_regressions(): TestSuite {
 
           t.eq("root tag is div", grafted.node._tag.toLowerCase(), "div");
 
-          const el = grafted.asDomElement();
+          const el = grafted.dom.el();
           t.ok("root dom exists", !!el);
 
           if (el instanceof HTMLElement) {
@@ -1537,7 +1537,7 @@ function suite_graft_regressions(): TestSuite {
 
       preview(tree) {
         const stash = tree as unknown as { __grafted?: LiveTree };
-        const el = stash.__grafted?.asDomElement?.();
+        const el = stash.__grafted?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
       },
     },
@@ -1603,8 +1603,8 @@ function suite_graft_regressions(): TestSuite {
           // harden the new element->node guard behavior
           t.ok("second graft reuses same underlying node", first.node === second.node);
 
-          const firstEl = first.asDomElement();
-          const secondEl = second.asDomElement();
+          const firstEl = first.dom.el();
+          const secondEl = second.dom.el();
           t.ok("dom element is stable across repeated graft", firstEl === secondEl);
         } finally {
           stash.__wrapper?.remove();
@@ -1613,7 +1613,7 @@ function suite_graft_regressions(): TestSuite {
 
       preview(tree) {
         const stash = tree as unknown as { __first?: LiveTree };
-        const el = stash.__first?.asDomElement?.();
+        const el = stash.__first?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
       },
     },
@@ -1660,7 +1660,7 @@ function suite_css_regressions(): TestSuite {
       assert(tree, t) {
         const cssText = css_snapshot(tree);
         const box = tree.find.must.byId("box");
-        const el = box.asDomElement();
+        const el = box.dom.el();
         t.ok("box DOM exists", !!el);
 
         const quid = el?.getAttribute("data-_quid") ?? "";

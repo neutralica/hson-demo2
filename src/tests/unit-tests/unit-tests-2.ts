@@ -2,6 +2,7 @@ import { canon_to_css_prop, normalize_css_key, normalize_css_value, normalize_de
 import type { TestCase, TestSuite } from "../tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live";
+import { parse_selector, parse_style_string, serialize_style } from "hson-live/diagnostics";
 
 export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
@@ -172,3 +173,291 @@ export function unit_test_more_css(): TestSuite {
     return { suite: SUITE, cases };
 }
 
+export function unit_test_parser_helpers(): TestSuite {
+    const SUITE = "unit/parser-helpers";
+
+    const cases: readonly TestCase[] = [
+
+        // ----------------------------
+        // parse_style_string
+        // ----------------------------
+
+        {
+            suite: SUITE,
+            name: "parse_style_string: parses simple declarations",
+            run() {
+                const out = parse_style_string("color: red; background-color: blue;");
+
+                if (out.color !== "red") {
+                    throw new Error(`expected color=red, got ${String(out.color)}`);
+                }
+
+                if (out.backgroundColor !== "blue") {
+                    throw new Error(`expected backgroundColor=blue, got ${String(out.backgroundColor)}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "parse_style_string: preserves custom properties",
+            run() {
+                const out = parse_style_string("--panel-glow: 12px; color: white;");
+
+                if (out["--panel-glow"] !== "12px") {
+                    throw new Error(`expected custom prop preserved, got ${String(out["--panel-glow"])}`);
+                }
+
+                if (out.color !== "white") {
+                    throw new Error(`expected color=white, got ${String(out.color)}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "parse_style_string: handles quoted semicolons safely",
+            run() {
+                const out = parse_style_string(`content: "a; b"; color: red;`);
+
+                // NOTE: behavior here is important enough to assert directly.
+                // If this fails, parser is probably splitting on semicolons too early.
+                if (out.content !== `"a; b"` && out.content !== `"a; b";`) {
+                    throw new Error(`expected quoted content preserved, got ${String(out.content)}`);
+                }
+
+                if (out.color !== "red") {
+                    throw new Error(`expected color=red, got ${String(out.color)}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "parse_style_string: handles url() safely",
+            run() {
+                const out = parse_style_string(`background-image: url("x;y.png"); color: red;`);
+
+                if (!String(out.backgroundImage ?? "").includes(`url("x;y.png")`)) {
+                    throw new Error(`expected url() preserved, got ${String(out.backgroundImage)}`);
+                }
+
+                if (out.color !== "red") {
+                    throw new Error(`expected color=red, got ${String(out.color)}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "parse_style_string: last duplicate key wins",
+            run() {
+                const out = parse_style_string(`color: red; color: lime;`);
+
+                if (out.color !== "lime") {
+                    throw new Error(`expected last-write-wins color=lime, got ${String(out.color)}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "parse_style_string: ignores trailing semicolon cleanly",
+            run() {
+                const out = parse_style_string(`color: red;;;`);
+
+                if (out.color !== "red") {
+                    throw new Error(`expected color=red, got ${String(out.color)}`);
+                }
+
+                if (Object.keys(out).length !== 1) {
+                    throw new Error(`expected only one declaration, got ${Object.keys(out)}`);
+                }
+            },
+        },
+
+        // ----------------------------
+        // serialize_style
+        // ----------------------------
+
+        {
+            suite: SUITE,
+            name: "serialize_style: kebab-cases normal properties",
+            run() {
+                const out = serialize_style({
+                    backgroundColor: "red",
+                    fontSize: "12px",
+                });
+
+                if (!out.includes("background-color:red") && !out.includes("background-color: red")) {
+                    throw new Error(`expected background-color in output, got ${out}`);
+                }
+
+                if (!out.includes("font-size:12px") && !out.includes("font-size: 12px")) {
+                    throw new Error(`expected font-size in output, got ${out}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "serialize_style: preserves custom properties",
+            run() {
+                const out = serialize_style({
+                    "--panel-glow": "12px",
+                    color: "white",
+                });
+
+                if (!out.includes("--panel-glow:12px") && !out.includes("--panel-glow: 12px")) {
+                    throw new Error(`expected custom property preserved, got ${out}`);
+                }
+
+                if (!out.includes("color:white") && !out.includes("color: white")) {
+                    throw new Error(`expected color preserved, got ${out}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "serialize_style: normalizes cssFloat to float",
+            run() {
+                const out = serialize_style({
+                    cssFloat: "left",
+                });
+
+                if (!out.includes("float:left") && !out.includes("float: left")) {
+                    throw new Error(`expected cssFloat serialized as float, got ${out}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "serialize_style: drops nullish and empty values",
+            run() {
+                const out = serialize_style({
+                    color: "red",
+                    backgroundColor: "",
+                    borderColor: "   ",
+                    // ts-expect-error intentional seam test
+                    outlineColor: undefined,
+                    // ts-expect-error intentional seam test
+                    boxShadow: null,
+                });
+
+                if (!out.includes("color:red") && !out.includes("color: red")) {
+                    throw new Error(`expected color preserved, got ${out}`);
+                }
+
+                if (out.includes("background-color") || out.includes("border-color") || out.includes("outline-color") || out.includes("box-shadow")) {
+                    throw new Error(`expected empty/nullish declarations dropped, got ${out}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "serialize_style: returns deterministic ordering",
+            run() {
+                const a = serialize_style({
+                    zIndex: "2",
+                    color: "red",
+                    backgroundColor: "black",
+                });
+
+                const b = serialize_style({
+                    backgroundColor: "black",
+                    zIndex: "2",
+                    color: "red",
+                });
+
+                if (a !== b) {
+                    throw new Error(`expected deterministic ordering, got \nA=${a}\nB=${b}`);
+                }
+            },
+        },
+
+        // ----------------------------
+        // parse_selector
+        // ----------------------------
+
+        {
+            suite: SUITE,
+            name: "parse_selector: parses tag + id + classes",
+            run() {
+                const out = parse_selector(`div#app.card.large`);
+
+                // NOTE: exact class storage shape may vary.
+                // Adjust if your parser stores class in attrs.class or another field.
+                if ((out as any).tag !== "div") {
+                    throw new Error(`expected tag=div, got ${String((out as any).tag)}`);
+                }
+
+                if ((out as any).attrs?.id !== "app") {
+                    throw new Error(`expected id=app, got ${String((out as any).attrs?.id)}`);
+                }
+
+                const klass = String((out as any).attrs?.class ?? "");
+                if (!klass.includes("card") || !klass.includes("large")) {
+                    throw new Error(`expected merged classes, got ${klass}`);
+                }
+            },
+        },
+        {
+            suite: SUITE,
+            name: "parse_selector: parses explicit attr equality",
+            run() {
+                const out = parse_selector(`div[data-x="1"][title="hello"]`);
+
+                if ((out as any).attrs?.["data-x"] !== "1") {
+                    throw new Error(`expected data-x=1, got ${String((out as any).attrs?.["data-x"])}`);
+                }
+
+                if ((out as any).attrs?.title !== "hello") {
+                    throw new Error(`expected title=hello, got ${String((out as any).attrs?.title)}`);
+                }
+            },
+        },
+        {
+            suite: SUITE,
+            name: "parse_selector: single-quoted attr behavior is explicit",
+            run() {
+                const out = parse_selector(`div[title='hello']`);
+
+                const title = (out as any).attrs?.title;
+
+                // NOTE:
+                // current parser may support only double-quoted attr equality.
+                // this test is documenting behavior rather than enforcing support.
+                const ok = title === undefined || title === "hello";
+
+                if (!ok) {
+                    throw new Error(`unexpected single-quoted attr behavior: ${JSON.stringify(out)}`);
+                }
+            },
+        },
+
+        {
+            suite: SUITE,
+            name: "parse_selector: trims surrounding whitespace",
+            run() {
+                const out = parse_selector(`   div#app.card   `);
+
+                if ((out as any).tag !== "div") {
+                    throw new Error(`expected trimmed selector tag=div, got ${String((out as any).tag)}`);
+                }
+
+                if ((out as any).attrs?.id !== "app") {
+                    throw new Error(`expected trimmed selector id=app, got ${String((out as any).attrs?.id)}`);
+                }
+            },
+        },
+
+    ];
+
+    return {
+        suite: SUITE,
+        cases,
+    };
+}

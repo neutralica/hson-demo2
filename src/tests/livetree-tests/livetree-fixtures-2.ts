@@ -48,7 +48,7 @@ function suite_attrs_flags_refresh(): TestSuite {
       assert(tree, t) {
         const spanX = tree.find.must.byId("x");
         const node = spanX.node;
-        const el = spanX.asDomElement();
+        const el = spanX.dom.el();
 
         t.ok("spanX DOM exists", !!el);
         t.eq("node data-test cleared", node._attrs?.["data-test"], undefined);
@@ -57,7 +57,7 @@ function suite_attrs_flags_refresh(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("x")?.asDomElement?.();
+        const el = tree.find.byId("x")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no span dom>";
       },
     },
@@ -83,7 +83,7 @@ function suite_attrs_flags_refresh(): TestSuite {
       assert(tree, t) {
         const spanX = tree.find.must.byId("x");
         const node = spanX.node;
-        const el = spanX.asDomElement();
+        const el = spanX.dom.el();
 
         t.ok("spanX DOM exists", !!el);
         t.eq("node data-test set", node._attrs?.["data-test"], "ok");
@@ -93,7 +93,7 @@ function suite_attrs_flags_refresh(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("x")?.asDomElement?.();
+        const el = tree.find.byId("x")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no span dom>";
       },
     },
@@ -132,7 +132,7 @@ function suite_empty_append(): TestSuite {
 
       assert(tree, t) {
         const root = tree.find.must.byId("root");
-        const el = root.asDomElement();
+        const el = root.dom.el();
 
         t.ok("root DOM exists", !!el);
 
@@ -150,7 +150,7 @@ function suite_empty_append(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("root")?.asDomElement?.();
+        const el = tree.find.byId("root")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no root dom>";
       },
     },
@@ -175,7 +175,7 @@ function suite_empty_append(): TestSuite {
 
       assert(tree, t) {
         const root = tree.find.must.byId("root");
-        const el = root.asDomElement();
+        const el = root.dom.el();
 
         t.ok("root DOM exists", !!el);
         t.eq("root content count is zero", root.content.all().length, 0);
@@ -184,7 +184,7 @@ function suite_empty_append(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("root")?.asDomElement?.();
+        const el = tree.find.byId("root")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no root dom>";
       },
     },
@@ -223,7 +223,7 @@ function suite_dataset(): TestSuite {
       assert(tree, t) {
         const btn = tree.find.must.byId("btn");
         const node = btn.node;
-        const el = btn.asDomElement();
+        const el = btn.dom.el();
 
         t.eq("manager get(state)", btn.data.get("state"), "closed");
         t.eq("node data-state", node._attrs?.["data-state"], "closed");
@@ -239,7 +239,7 @@ function suite_dataset(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no button dom>";
       },
     },
@@ -271,7 +271,7 @@ function suite_dataset(): TestSuite {
       assert(tree, t) {
         const btn = tree.find.must.byId("btn");
         const node = btn.node;
-        const el = btn.asDomElement();
+        const el = btn.dom.el();
 
         t.eq("data-state present in manager", btn.data.get("state"), "open");
         t.eq("data-user-id present in manager", btn.data.get("user-id"), "42");
@@ -287,7 +287,7 @@ function suite_dataset(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no button dom>";
       },
     },
@@ -302,8 +302,8 @@ export function suite_identity_stability(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "asDomElement is stable across repeated lookups on same handle",
-      fixture: "identity/asDomElement",
+      name: "dom.el is stable across repeated lookups on same handle",
+      fixture: "identity/dom.el",
       sub: "same-handle-stable",
       dom: true,
       html: `
@@ -319,8 +319,8 @@ export function suite_identity_stability(): TestSuite {
       assert(tree, t) {
         const box = tree.find.must.byId("box");
 
-        const el1 = box.asDomElement();
-        const el2 = box.asDomElement();
+        const el1 = box.dom.el();
+        const el2 = box.dom.el();
 
         t.ok("first DOM lookup exists", !!el1);
         t.ok("second DOM lookup exists", !!el2);
@@ -328,7 +328,7 @@ export function suite_identity_stability(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("box")?.asDomElement?.();
+        const el = tree.find.byId("box")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
       },
     },
@@ -353,8 +353,8 @@ export function suite_identity_stability(): TestSuite {
         const a = tree.find.must.byId("box");
         const b = tree.find.must.byId("box");
 
-        const elA = a.asDomElement();
-        const elB = b.asDomElement();
+        const elA = a.dom.el();
+        const elB = b.dom.el();
 
         t.ok("first find has DOM", !!elA);
         t.ok("second find has DOM", !!elB);
@@ -365,7 +365,7 @@ export function suite_identity_stability(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("box")?.asDomElement?.();
+        const el = tree.find.byId("box")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no box dom>";
       },
     },
@@ -394,8 +394,8 @@ export function suite_identity_stability(): TestSuite {
         const child1 = tree.find.must.byId("child");
         const child2 = tree.find.must.byId("child");
 
-        const el1 = child1.asDomElement();
-        const el2 = child2.asDomElement();
+        const el1 = child1.dom.el();
+        const el2 = child2.dom.el();
 
         t.ok("child DOM exists after append", !!el1);
         t.ok("re-found child DOM exists", !!el2);
@@ -404,7 +404,7 @@ export function suite_identity_stability(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("root")?.asDomElement?.();
+        const el = tree.find.byId("root")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no root dom>";
       },
     },
@@ -470,7 +470,7 @@ export function suite_identity_stability(): TestSuite {
           t.ok("same host re-graft returns same underlying node", first.node === second.node);
           t.ok(
             "same host re-graft returns same DOM element",
-            first.asDomElement() === second.asDomElement(),
+            first.dom.el() === second.dom.el(),
           );
         } finally {
           stash.__wrapper?.remove();
@@ -479,7 +479,7 @@ export function suite_identity_stability(): TestSuite {
 
       preview(tree) {
         const stash = tree as unknown as { __first?: LiveTree };
-        const el = stash.__first?.asDomElement?.();
+        const el = stash.__first?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no grafted dom>";
       },
     },
@@ -528,7 +528,7 @@ function suite_dataset_more(): TestSuite {
         const btn = tree.find.must.byId("btn");
         const node = btn.node;
         const attrs = node._attrs ?? {};
-        const el = btn.asDomElement();
+        const el = btn.dom.el();
 
         t.eq("node data-state updated", attrs["data-state"], "closed");
         t.eq("node data-user-id removed", attrs["data-user-id"], undefined);
@@ -540,7 +540,7 @@ function suite_dataset_more(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no button dom>";
       },
     },
@@ -565,14 +565,14 @@ function suite_dataset_more(): TestSuite {
       },
 
       assert(tree, t) {
-        const btn = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+        const btn = tree.find.must.byId("btn").dom.el() as HTMLElement;
 
         t.eq("data-user-id", btn.getAttribute("data-user-id"), "42");
         t.eq("data-long-thing-name", btn.getAttribute("data-long-thing-name"), "abc");
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
       },
     },
@@ -606,7 +606,7 @@ function suite_dataset_more(): TestSuite {
       },
 
       assert(tree, t) {
-        const btn = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+        const btn = tree.find.must.byId("btn").dom.el() as HTMLElement;
 
         t.eq("data-state", btn.getAttribute("data-state"), "open");
         t.eq("false stringifies", btn.getAttribute("data-enabled"), "false");
@@ -616,7 +616,7 @@ function suite_dataset_more(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
       },
     },
@@ -648,7 +648,7 @@ function suite_dataset_more(): TestSuite {
 
       assert(tree, t) {
         for (const id of ["a", "b", "c"] as const) {
-          const el = tree.find.must.byId(id).asDomElement() as HTMLElement;
+          const el = tree.find.must.byId(id).dom.el() as HTMLElement;
           t.eq(`${id}: data-state`, el.getAttribute("data-state"), "closed");
           t.eq(`${id}: data-flag`, el.getAttribute("data-flag"), "true");
         }
@@ -657,7 +657,7 @@ function suite_dataset_more(): TestSuite {
       preview(tree) {
         return (["a", "b", "c"] as const)
           .map((id) => {
-            const el = tree.find.byId(id)?.asDomElement?.();
+            const el = tree.find.byId(id)?.dom.el?.();
             return el && "outerHTML" in el ? (el as Element).outerHTML : `<missing ${id}>`;
           })
           .join("\n");
@@ -692,7 +692,7 @@ function suite_dataset_more(): TestSuite {
 
       assert(tree, t) {
         for (const id of ["a", "b"] as const) {
-          const el = tree.find.must.byId(id).asDomElement() as HTMLElement;
+          const el = tree.find.must.byId(id).dom.el() as HTMLElement;
           t.eq(`${id}: state removed`, el.hasAttribute("data-state"), false);
           t.eq(`${id}: user-id preserved`, el.getAttribute("data-user-id"), "42");
         }
@@ -701,7 +701,7 @@ function suite_dataset_more(): TestSuite {
       preview(tree) {
         return (["a", "b"] as const)
           .map((id) => {
-            const el = tree.find.byId(id)?.asDomElement?.();
+            const el = tree.find.byId(id)?.dom.el?.();
             return el && "outerHTML" in el ? (el as Element).outerHTML : `<missing ${id}>`;
           })
           .join("\n");
@@ -735,7 +735,7 @@ function suite_dataset_more(): TestSuite {
       },
 
       assert(tree, t) {
-        const el = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+        const el = tree.find.must.byId("btn").dom.el() as HTMLElement;
 
         t.eq("state updated", el.getAttribute("data-state"), "closed");
         t.eq("user-id preserved", el.getAttribute("data-user-id"), "42");
@@ -743,7 +743,7 @@ function suite_dataset_more(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
       },
     },
@@ -768,8 +768,8 @@ function suite_dataset_more(): TestSuite {
       },
 
       assert(tree, t) {
-        const btnA = tree.find.must.byId("btn").asDomElement() as HTMLElement;
-        const btnB = tree.find.must.byId("btn").asDomElement() as HTMLElement;
+        const btnA = tree.find.must.byId("btn").dom.el() as HTMLElement;
+        const btnB = tree.find.must.byId("btn").dom.el() as HTMLElement;
 
         t.eq("same DOM node", btnA, btnB);
         t.eq("state persists", btnB.getAttribute("data-state"), "closed");
@@ -777,7 +777,7 @@ function suite_dataset_more(): TestSuite {
       },
 
       preview(tree) {
-        const el = tree.find.byId("btn")?.asDomElement?.();
+        const el = tree.find.byId("btn")?.dom.el?.();
         return el && "outerHTML" in el ? (el as Element).outerHTML : "<no btn dom>";
       },
     },
@@ -828,7 +828,7 @@ function suite_css_more(): TestSuite {
 
       assert(tree, t) {
         const box = tree.find.must.byId("box");
-        const el = box.asDomElement();
+        const el = box.dom.el();
 
         t.ok("box DOM exists", !!el);
 
@@ -845,7 +845,7 @@ function suite_css_more(): TestSuite {
 
       preview(tree) {
         const box = tree.find.byId("box");
-        const el = box?.asDomElement?.();
+        const el = box?.dom.el?.();
         const quid = el?.getAttribute("data-_quid") ?? "";
         const cssText = css_snapshot(tree);
         return find_rule_slice(cssText, quid) || "<no scoped rule>";
@@ -881,7 +881,7 @@ function suite_css_more(): TestSuite {
         const cssText = css_snapshot(tree);
 
         for (let i = 0; i < arr.length; i += 1) {
-          const el = arr[i]?.asDomElement();
+          const el = arr[i]?.dom.el();
           const quid = el?.getAttribute("data-_quid") ?? "";
 
           t.ok(`.x[${i}] has quid`, quid.length > 0);
@@ -919,7 +919,7 @@ function suite_css_more(): TestSuite {
 
       assert(tree, t) {
         const box = tree.find.must.byId("box");
-        const el = box.asDomElement();
+        const el = box.dom.el();
 
         t.ok("box DOM exists", !!el);
 
@@ -935,7 +935,7 @@ function suite_css_more(): TestSuite {
 
       preview(tree) {
         const box = tree.find.byId("box");
-        const el = box?.asDomElement?.();
+        const el = box?.dom.el?.();
         const quid = el?.getAttribute("data-_quid") ?? "";
         const cssText = css_snapshot(tree);
         return find_rule_slice(cssText, quid) || "<no scoped rule>";
@@ -989,7 +989,7 @@ function suite_find_more(): TestSuite {
       },
 
       preview(tree) {
-        const root = tree.find.byId("root")?.asDomElement?.();
+        const root = tree.find.byId("root")?.dom.el?.();
         return root && "outerHTML" in root ? (root as Element).outerHTML : "<no root dom>";
       },
     },
@@ -1037,7 +1037,7 @@ function suite_find_more(): TestSuite {
       },
 
       preview(tree) {
-        const root = tree.find.byId("root")?.asDomElement?.();
+        const root = tree.find.byId("root")?.dom.el?.();
         return root && "outerHTML" in root ? (root as Element).outerHTML : "<no root dom>";
       },
     },
@@ -1148,7 +1148,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       assert(tree, t) {
         const box = tree.find.must.byId("box");
-        const el = box.asDomElement();
+        const el = box.dom.el();
 
         t.ok("box DOM exists", !!el);
 
@@ -1164,7 +1164,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       preview(tree) {
         const box = tree.find.byId("box");
-        const el = box?.asDomElement?.();
+        const el = box?.dom.el?.();
         const quid = el?.getAttribute("data-_quid") ?? "";
         const cssText = snapshot_from(tree, "box");
         return rule_for_quid(cssText, quid) || "<no scoped rule>";
@@ -1202,7 +1202,7 @@ function suite_css_value_and_selection(): TestSuite {
         const cssText = snap ? snap() : "<no devsnapshot>";
 
         for (let i = 0; i < arr.length; i += 1) {
-          const el = arr[i]?.asDomElement();
+          const el = arr[i]?.dom.el();
           const quid = el?.getAttribute("data-_quid") ?? "";
 
           t.ok(`.x[${i}] has quid`, quid.length > 0);
@@ -1253,7 +1253,7 @@ function suite_css_value_and_selection(): TestSuite {
         const flat = cssText.replace(/\s+/g, " ");
 
         const quids = arr
-          .map((n) => n.asDomElement()?.getAttribute("data-_quid") ?? "")
+          .map((n) => n.dom.el()?.getAttribute("data-_quid") ?? "")
           .filter(Boolean);
 
         for (const quid of quids) {

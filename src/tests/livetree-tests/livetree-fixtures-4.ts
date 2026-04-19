@@ -25,7 +25,7 @@ export function listeners_teardown(): TestSuite {
         let hits = 0;
         const handle = btn.listen.onClick(() => { hits += 1; });
 
-        const el = btn.asDomElement() as HTMLElement;
+        const el = btn.dom.el() as HTMLElement;
         el.click();
         handle.off(); // or off.dispose(), off.off(), etc
         el.click();
@@ -53,7 +53,7 @@ export function listeners_teardown(): TestSuite {
         btnA.listen.onClick(() => { hits += 1; });
 
         const btnB = tree.find.must.byId("btn");
-        const el = btnB.asDomElement() as HTMLElement;
+        const el = btnB.dom.el() as HTMLElement;
         el.click();
 
         (tree as any).__hits = hits;
@@ -79,7 +79,7 @@ export function listeners_teardown(): TestSuite {
         btn.listen.onClick(() => { hits += 1; });
         btn.listen.onClick(() => { hits += 1; });
 
-        const el = btn.asDomElement() as HTMLElement;
+        const el = btn.dom.el() as HTMLElement;
         el.click();
 
         (tree as any).__hits = hits;
@@ -106,7 +106,7 @@ export function listeners_teardown(): TestSuite {
         btn.listen.onClick(fn);
         btn.listen.onClick(fn);
 
-        const el = btn.asDomElement() as HTMLElement;
+        const el = btn.dom.el() as HTMLElement;
         el.click();
 
         (tree as any).__hits = hits;
@@ -135,7 +135,7 @@ export function listeners_teardown(): TestSuite {
         btnA.listen.onClick(() => { hits += 1; });
 
         const btnB = tree.find.must.byId("btn");
-        const el = btnB.asDomElement() as HTMLElement;
+        const el = btnB.dom.el() as HTMLElement;
         el.click();
 
         (tree as any).__hits = hits;
@@ -169,7 +169,7 @@ export function listeners_teardown(): TestSuite {
         parent.listen.onClick(() => { seen.push("parent"); });
         child.listen.onClick(() => { seen.push("child"); });
 
-        const el = child.asDomElement() as HTMLElement;
+        const el = child.dom.el() as HTMLElement;
         el.click();
 
         (tree as any).__seen = seen;
@@ -205,7 +205,7 @@ export function listeners_teardown(): TestSuite {
         parent.listen.onClick(() => { seen.push("parent"); });
         child.listen.stopProp().onClick(() => { seen.push("child"); });
 
-        const el = child.asDomElement() as HTMLElement;
+        const el = child.dom.el() as HTMLElement;
         el.click();
 
         (tree as any).__seen = seen;
@@ -286,8 +286,8 @@ export function root_multi_isolation(): TestSuite {
         const a = rootA.create.div();
         const b = rootB.create.div();
 
-        const elA = a.asDomElement() as HTMLElement;
-        const elB = b.asDomElement() as HTMLElement;
+        const elA = a.dom.el() as HTMLElement;
+        const elB = b.dom.el() as HTMLElement;
 
         (tree as any).__quids = [
           elA.getAttribute("data-_quid"),
@@ -327,8 +327,8 @@ export function root_multi_isolation(): TestSuite {
         await tick();
         gcss.syncNow();
 
-        const elA = boxA.asDomElement() as HTMLElement;
-        const elB = boxB.asDomElement() as HTMLElement;
+        const elA = boxA.dom.el() as HTMLElement;
+        const elB = boxB.dom.el() as HTMLElement;
 
         (tree as any).__computed = [
           getComputedStyle(elA).opacity,
@@ -363,7 +363,7 @@ export function root_multi_isolation(): TestSuite {
         const found = rootA.findAll.byAttribute("class", "box");
 
         (tree as any).__ids = found.map(n => {
-          const el = n.asDomElement() as HTMLElement;
+          const el = n.dom.el() as HTMLElement;
           return el.id;
         });
       },
@@ -404,7 +404,7 @@ export function root_multi_isolation(): TestSuite {
         await tick();
         gcss.syncNow();
 
-        const elB = tree.find.must.byId("b").asDomElement() as HTMLElement;
+        const elB = tree.find.must.byId("b").dom.el() as HTMLElement;
 
         (tree as any).__opacity = getComputedStyle(elB).opacity;
       },
@@ -437,7 +437,7 @@ export function root_multi_isolation(): TestSuite {
         a.listen.onClick(() => { hitsA += 1; });
         b.listen.onClick(() => { hitsB += 1; });
 
-        (a.asDomElement() as HTMLElement).click();
+        (a.dom.el() as HTMLElement).click();
 
         (tree as any).__hits = [hitsA, hitsB];
       },
@@ -590,8 +590,8 @@ export function document_question(): TestSuite {
         const treeA = hson.liveTree.fromNode(hostA);
         const treeB = hson.liveTree.fromNode(hostB);
 
-        const elA = treeA.find.must.byAttrs("class", "box").asDomElement() as HTMLElement;
-        const elB = treeB.find.must.byAttrs("class", "box").asDomElement() as HTMLElement;
+        const elA = treeA.find.must.byAttrs("class", "box").dom.el() as HTMLElement;
+        const elB = treeB.find.must.byAttrs("class", "box").dom.el() as HTMLElement;
 
         (tree as any).__quids = [
           elA.getAttribute("data-_quid"),
@@ -639,8 +639,8 @@ export function document_question(): TestSuite {
         await tick();
         gcss.syncNow();
 
-        const elA = boxA.asDomElement() as HTMLElement;
-        const elB = boxB.asDomElement() as HTMLElement;
+        const elA = boxA.dom.el() as HTMLElement;
+        const elB = boxB.dom.el() as HTMLElement;
 
         (tree as any).__computed = {
           aOpacity: getComputedStyle(elA).opacity,
@@ -693,7 +693,7 @@ export function document_question(): TestSuite {
         await tick();
         gcss.syncNow();
 
-        const bEl = b.asDomElement() as HTMLElement;
+        const bEl = b.dom.el() as HTMLElement;
         (tree as any).__bOpacity = getComputedStyle(bEl).opacity;
       },
 
@@ -728,7 +728,7 @@ export function document_question(): TestSuite {
         treeA.find.must.byId("a").listen.onClick(() => { hitsA += 1; });
         treeB.find.must.byId("b").listen.onClick(() => { hitsB += 1; });
 
-        (treeA.find.must.byId("a").asDomElement() as HTMLElement).click();
+        (treeA.find.must.byId("a").dom.el() as HTMLElement).click();
 
         (tree as any).__hits = { hitsA, hitsB };
       },
@@ -761,12 +761,12 @@ export function document_question(): TestSuite {
         const treeB = hson.liveTree.fromNode(hostB);
 
         const aIds = treeA.findAll.byAttribute("class", "box").map((n: any) => {
-          const el = n.asDomElement() as HTMLElement;
+          const el = n.dom.el() as HTMLElement;
           return el.id;
         });
 
         const bIds = treeB.findAll.byAttribute("class", "box").map((n: any) => {
-          const el = n.asDomElement() as HTMLElement;
+          const el = n.dom.el() as HTMLElement;
           return el.id;
         });
 
@@ -809,8 +809,8 @@ export function document_question(): TestSuite {
         gcss.syncNow();
 
         const cssRules = get_hson_css_rules().join("\n");
-        const aEl = a.asDomElement() as HTMLElement;
-        const bEl = b.asDomElement() as HTMLElement;
+        const aEl = a.dom.el() as HTMLElement;
+        const bEl = b.dom.el() as HTMLElement;
 
         (tree as any).__result = {
           cssRules,

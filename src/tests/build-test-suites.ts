@@ -13,6 +13,7 @@ import { livetree_create_size } from "./livetree-tests/livetree-fixtures-6";
 import { livetree_more_listeners } from "./livetree-tests/livetree-fixtures-7";
 import { listeners_teardown } from "./livetree-tests/livetree-fixtures-4";
 import { livetree_completionist } from "./livetree-tests/livetree-fixtures-5";
+import { HSON_FIXTURES } from "./transform-tests/hson-tests";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -155,8 +156,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_create_size(),
-      livetree_more_listeners(),
+      make_transform_test_suite(h, HSON_FIXTURES, "transform/invalid/fail_is_pass", map, "auto", "fail"),
     ])
   }
   if (mode === "unit") {

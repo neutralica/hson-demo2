@@ -34,7 +34,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     sandboxHost.append(round);
 
                     const card = round.find.must.byId("card");
-                    const cardEl = card.asDomElement() as HTMLElement;
+                    const cardEl = card.dom.el() as HTMLElement;
 
                     (tree as any).__result = {
                         tag: cardEl.tagName.toLowerCase(),
@@ -79,7 +79,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     sandboxHost.append(round);
 
                     const box2 = round.find.must.byId("box");
-                    const el2 = box2.asDomElement() as HTMLElement;
+                    const el2 = box2.dom.el() as HTMLElement;
                     (tree as any).__result = {
                         cls: el2.getAttribute("class"),
                         mode: el2.getAttribute("data-mode"),
@@ -138,7 +138,7 @@ export function roundtrip_projection_stability(): TestSuite {
 
                 async act(tree) {
                     const box = tree.find.must.byId("box");
-                    const oldEl = box.asDomElement() as HTMLElement;
+                    const oldEl = box.dom.el() as HTMLElement;
                     const oldQuid = oldEl.getAttribute("data-_quid") ?? "";
 
                     const rootEl = tree.find.must.byId("root").dom.el();
@@ -149,7 +149,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     sandboxHost.append(round);
 
                     const box2 = round.find.must.byId("box");
-                    const newEl = box2.asDomElement() as HTMLElement;
+                    const newEl = box2.dom.el() as HTMLElement;
                     const newQuid = newEl.getAttribute("data-_quid") ?? "";
 
                     (tree as any).__result = {

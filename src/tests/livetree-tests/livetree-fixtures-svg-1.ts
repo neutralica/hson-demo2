@@ -19,8 +19,8 @@ export function livetree_svg_basic(): TestSuite {
         const svg = root.create.svg();
 
         (tree as any).__result = {
-          tag: svg.asDomElement()?.tagName.toLowerCase(),
-          hasChildren: svg.asDomElement()?.children.length,
+          tag: svg.dom.el()?.tagName.toLowerCase(),
+          hasChildren: svg.dom.el()?.children.length,
         };
       },
 
@@ -46,8 +46,8 @@ export function livetree_svg_basic(): TestSuite {
         const c = svg.create.circle();
 
         (tree as any).__result = {
-          tag: c.asDomElement()?.tagName.toLowerCase(),
-          parent: c.asDomElement()?.parentElement?.tagName.toLowerCase(),
+          tag: c.dom.el()?.tagName.toLowerCase(),
+          parent: c.dom.el()?.parentElement?.tagName.toLowerCase(),
         };
       },
 
@@ -75,7 +75,7 @@ export function livetree_svg_basic(): TestSuite {
       </svg>
     `);
 
-        const el = svg.asDomElement() as SVGElement;
+        const el = svg.dom.el() as SVGElement;
 
         (tree as any).__result = {
           tag: el.tagName.toLowerCase(),
@@ -188,7 +188,7 @@ export function livetree_svg_basic(): TestSuite {
         sandboxHost.append(round);
 
         const svg = round.find.must.byId("s");
-        const el = svg.asDomElement() as Element;
+        const el = svg.dom.el() as Element;
 
         (tree as any).__result = {
           tag: el.tagName.toLowerCase(),
@@ -217,18 +217,18 @@ export function livetree_svg_basic(): TestSuite {
         const defs = svg.create.defs().id.set("defs");
         const clip = defs.create.clipPath().id.set("clip");
         const circle = g.create.circle().id.set("c");
-        console.log(svg.asDomElement()?.tagName,
-          g.asDomElement()?.tagName,
-          defs.asDomElement()?.tagName,
-          clip.asDomElement()?.tagName,
-          circle.asDomElement()?.tagName);
+        console.log(svg.dom.el()?.tagName,
+          g.dom.el()?.tagName,
+          defs.dom.el()?.tagName,
+          clip.dom.el()?.tagName,
+          circle.dom.el()?.tagName);
         (root as any).__result = {
           tags: [
-            svg.asDomElement()?.tagName,
-            g.asDomElement()?.tagName,
-            defs.asDomElement()?.tagName,
-            clip.asDomElement()?.tagName,
-            circle.asDomElement()?.tagName,
+            svg.dom.el()?.tagName,
+            g.dom.el()?.tagName,
+            defs.dom.el()?.tagName,
+            clip.dom.el()?.tagName,
+            circle.dom.el()?.tagName,
           ],
         };
       },
@@ -261,8 +261,8 @@ export function livetree_svg_basic(): TestSuite {
         const circle2 = g2.create.circle().id.set("c2");
 
         (root as any).__result = {
-          parent: g2.asDomElement()?.tagName,
-          child: circle2.asDomElement()?.tagName,
+          parent: g2.dom.el()?.tagName,
+          child: circle2.dom.el()?.tagName,
         };
       },
 
@@ -322,7 +322,7 @@ export function livetree_svg_basic(): TestSuite {
         </g>
       `);
 
-        const el = g.asDomElement();
+        const el = g.dom.el();
 
         (root as any).__result = {
           tag: el?.tagName,
@@ -390,11 +390,11 @@ export function livetree_svg_basic(): TestSuite {
         const c = g.create.circle().id.set("c");
 
         (root as any).__result = {
-          svgTag: svg.asDomElement()?.tagName,
-          gTag: g.asDomElement()?.tagName,
-          cTag: c.asDomElement()?.tagName,
-          viewBox: svg.asDomElement()?.getAttribute("viewBox"),
-          cls: svg.asDomElement()?.getAttribute("class"),
+          svgTag: svg.dom.el()?.tagName,
+          gTag: g.dom.el()?.tagName,
+          cTag: c.dom.el()?.tagName,
+          viewBox: svg.dom.el()?.getAttribute("viewBox"),
+          cls: svg.dom.el()?.getAttribute("class"),
         };
       },
 
@@ -425,10 +425,10 @@ export function livetree_svg_basic(): TestSuite {
         const c = g.create.circle().id.set("c");
 
         (root as any).__result = {
-          gTag: g.asDomElement()?.tagName,
-          gClass: g.asDomElement()?.getAttribute("class"),
-          cTag: c.asDomElement()?.tagName,
-          cParent: c.asDomElement()?.parentElement?.tagName,
+          gTag: g.dom.el()?.tagName,
+          gClass: g.dom.el()?.getAttribute("class"),
+          cTag: c.dom.el()?.tagName,
+          cParent: c.dom.el()?.parentElement?.tagName,
         };
       },
 
@@ -458,7 +458,7 @@ export function livetree_svg_basic(): TestSuite {
       </defs>
     `);
 
-        const el = defs.asDomElement();
+        const el = defs.dom.el();
 
         (root as any).__result = {
           tag: el?.tagName,
@@ -516,7 +516,7 @@ export function livetree_svg_basic(): TestSuite {
       <circle id="c1" cx="5" cy="5" r="4"></circle>
     `);
 
-        const el = circle.asDomElement();
+        const el = circle.dom.el();
 
         (root as any).__result = {
           tag: el?.tagName,
@@ -562,7 +562,7 @@ export function livetree_svg_basic(): TestSuite {
         sandboxHost.append(round);
 
         const g = round.find.must.byId("g1");
-        const el = g.asDomElement();
+        const el = g.dom.el();
 
         (root as any).__result = {
           gTag: el?.tagName,
@@ -648,7 +648,7 @@ export function livetree_svg_basic(): TestSuite {
         const created = sel.map((k) => (k.create as any).circle());
 
         const circles = created.map((tree: LiveTree) => {
-          const el = tree.asDomElement();
+          const el = tree.dom.el();
           return {
             tag: el?.tagName,
             parent: el?.parentElement?.tagName,
@@ -685,8 +685,8 @@ export function livetree_svg_basic(): TestSuite {
           .attr.set("cy", "8")
           .attr.set("r", "9");
 
-        const svgEl = svg.asDomElement();
-        const cEl = circle.asDomElement();
+        const svgEl = svg.dom.el();
+        const cEl = circle.dom.el();
 
         (root as any).__result = {
           viewBox: svgEl?.getAttribute("viewBox"),
@@ -731,12 +731,12 @@ export function livetree_svg_basic(): TestSuite {
          */
 
 
-        const svgEl = svg.asDomElement();
+        const svgEl = svg.dom.el();
 
         (root as any).__result = {
           firstId: svgEl?.children[0]?.getAttribute("id"),
           firstTag: svgEl?.children[0]?.tagName,
-          childTag: g.asDomElement()?.children[0]?.tagName,
+          childTag: g.dom.el()?.children[0]?.tagName,
         };
       },
 
@@ -770,11 +770,11 @@ export function livetree_svg_basic(): TestSuite {
          </g>
        ` */
 
-        const svgEl = svg.asDomElement();
+        const svgEl = svg.dom.el();
 
         (root as any).__result = {
           ids: Array.from(svgEl?.children ?? []).map((el) => el.getAttribute("id")),
-          midChild: mid.asDomElement()?.children[0]?.tagName,
+          midChild: mid.dom.el()?.children[0]?.tagName,
         };
       },
 

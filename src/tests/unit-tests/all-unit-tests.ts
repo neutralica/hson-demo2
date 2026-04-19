@@ -7,6 +7,7 @@ export const all_unit_tests = () => [
     unit_test_internals_2(),
     unit_test_css_manager(),
     unit_test_more_css(),
+    unit_test_parser_helpers(),
     
 
 ];
@@ -36,7 +37,7 @@ export function make_unit_case(
 
 import type { TestCase, TestSuite } from "../tests.types";
 import type { CssManager } from "hson-live";
-import { unit_test_more_css } from "./unit-tests-2";
+import { unit_test_more_css, unit_test_parser_helpers } from "./unit-tests-2";
 
 export function UNIT_TEST_TEMPLATE(): TestSuite {
   const SUITE = "[INSERT NAME]";

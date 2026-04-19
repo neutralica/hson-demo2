@@ -3,8 +3,6 @@
 import { _freeze } from "../tests.consts";
 
 
-
-
 const htmlStructureCases: { [key: string]: string } = {
   singleLeaf: `<p>hello</p>`,
   singleNested: `<div><p>hello</p></div>`,
@@ -145,55 +143,20 @@ const x = 1;</script>`,
   styleWithAtRule: `<style>@media screen { .x { display:block; } }</style>`,
 };
 
-const hsonTestsA = {
-  a:`<img alt="x" style="
-color: red; font-size: 10px
-"/>`,
-  1: `<figure
-  <img alt="x" src="x.png"/>
-/>`,
-  c: `<img alt="x" style="color: red;
-font-size: 10px
-"/>`,
-  2: `<figure
-  <img alt="x" style="color: red; font-size: 10px"/>
-/>`,
-  3: `<figure
-  <img alt="x" style="color: red;
-  font-size: 10px
-  "/>
-/>`,
-  4: `<figure
-  <img alt="x" style="
-  color: red; font-size: 10px"/>
-/>`,
-  5: `<figure
-  <img alt="x" style="
-  color: red;
-  font-size: 10px"/>
-/>`,
-  6: `<figure
-  <img alt="x" style="
-  color: red;
-  font-size: 10px
-  "/>
-/>`,
-}
-
- const HTML_ATTR_ESCAPE_FIXTURES = _freeze({
-    plainJsonAttr: `
+const HTML_ATTR_ESCAPE_FIXTURES = _freeze({
+  plainJsonAttr: `
       <main id="root">
         <div id="t1" data-json='{"token":"abc123"}'></div>
       </main>
     `,
 
-    quotedJsonAttr: `
+  quotedJsonAttr: `
       <main id="root">
         <div id="t2" data-json="{&quot;token&quot;:&quot;abc123&quot;}"></div>
       </main>
     `,
 
-    cfBeaconLike: `
+  cfBeaconLike: `
       <main id="root">
         <script
           id="t3"
@@ -202,7 +165,7 @@ font-size: 10px
       </main>
     `,
 
-    cfBeaconLikeEscaped: `
+  cfBeaconLikeEscaped: `
       <main id="root">
         <script
           id="t4"
@@ -211,7 +174,7 @@ font-size: 10px
       </main>
     `,
 
-    backslashQuoteRuns: `
+  backslashQuoteRuns: `
       <main id="root">
         <div
           id="t5"
@@ -220,7 +183,7 @@ font-size: 10px
       </main>
     `,
 
-    mixedSlashes: `
+  mixedSlashes: `
       <main id="root">
         <div
           id="t6"
@@ -229,7 +192,7 @@ font-size: 10px
       </main>
     `,
 
-    rawScriptTextPlusAttr: `
+  rawScriptTextPlusAttr: `
       <main id="root">
         <script
           id="t7"
@@ -240,15 +203,12 @@ font-size: 10px
 });
 
 export const HTML_FIXTURES_NEW = {
-    htmlStructureCases,
-    htmlNormalizationCases, 
-    htmlAttributeCases,
-    htmlRawTextCases,
-    htmlTextEntityCases,
-  htmlVoidCommentCases, 
-    HTML_ATTR_ESCAPE_FIXTURES
+  htmlStructureCases,
+  htmlNormalizationCases,
+  htmlAttributeCases,
+  htmlRawTextCases,
+  htmlTextEntityCases,
+  htmlVoidCommentCases,
+  HTML_ATTR_ESCAPE_FIXTURES
 }
 
-export const HSON_FIXTURES = {
-  hson: hsonTestsA
-}

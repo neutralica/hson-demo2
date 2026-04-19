@@ -105,7 +105,7 @@ export function default_preview(tree: LiveTree): string {
   }
 
   try {
-    const el = tree.asDomElement?.();
+    const el = tree.dom.el?.();
     if (el && "outerHTML" in el) return (el as Element).outerHTML;
   } catch {
     // ignore

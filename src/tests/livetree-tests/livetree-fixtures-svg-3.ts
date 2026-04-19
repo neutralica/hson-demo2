@@ -18,9 +18,9 @@ export function livetree_gnarly_svg(): TestSuite {
           const g1 = field.create.g().id.set("g1");
           const c1 = g1.create.circle().id.set("c1");
 
-          const fieldEl = field.asDomElement() as Element | undefined;
-          const gEl = g1.asDomElement() as Element | undefined;
-          const cEl = c1.asDomElement() as Element | undefined;
+          const fieldEl = field.dom.el() as Element | undefined;
+          const gEl = g1.dom.el() as Element | undefined;
+          const cEl = c1.dom.el() as Element | undefined;
 
           (root as any).__result = {
             fieldTag: fieldEl?.tagName?.toLowerCase() ?? null,
@@ -73,13 +73,13 @@ export function livetree_gnarly_svg(): TestSuite {
           const e1 = g1.create.ellipse().id.set("e1");
           const r1 = g1.create.rect().id.set("r1");
 
-          const gEl = g1.asDomElement() as Element | undefined;
+          const gEl = g1.dom.el() as Element | undefined;
 
           (root as any).__result = {
             childTags: Array.from(gEl?.children ?? []).map((el) => el.tagName.toLowerCase()),
             childIds: Array.from(gEl?.children ?? []).map((el) => el.getAttribute("id")),
-            childParents: [c1, e1, r1].map((tree) => tree.asDomElement()?.parentElement?.tagName?.toLowerCase() ?? null),
-            childNs: [c1, e1, r1].map((tree) => tree.asDomElement()?.namespaceURI ?? null),
+            childParents: [c1, e1, r1].map((tree) => tree.dom.el()?.parentElement?.tagName?.toLowerCase() ?? null),
+            childNs: [c1, e1, r1].map((tree) => tree.dom.el()?.namespaceURI ?? null),
             nestedSvgCount: gEl ? gEl.querySelectorAll("svg").length : -1,
           };
         },
@@ -125,7 +125,7 @@ export function livetree_gnarly_svg(): TestSuite {
           const field = root.create.svg().id.set("field");
           const outer = field.create.g(`<g id="outer"><circle id="c1"></circle></g>`);
 
-          const outerEl = outer.asDomElement() as Element | undefined;
+          const outerEl = outer.dom.el() as Element | undefined;
           const circleEl = outerEl?.querySelector("#c1") as Element | null;
 
           (root as any).__result = {
@@ -137,7 +137,7 @@ export function livetree_gnarly_svg(): TestSuite {
             circleNs: circleEl?.namespaceURI ?? null,
             circleParent: circleEl?.parentElement?.tagName?.toLowerCase() ?? null,
 
-            fieldChildren: Array.from((field.asDomElement()?.children ?? []) as HTMLCollection).map((el) => ({
+            fieldChildren: Array.from((field.dom.el()?.children ?? []) as HTMLCollection).map((el) => ({
               tag: el.tagName.toLowerCase(),
               id: el.getAttribute("id"),
             })),
@@ -178,7 +178,7 @@ export function livetree_gnarly_svg(): TestSuite {
             `<g id="outer"><g id="inner"><circle id="c1"></circle></g></g>`
           );
 
-          const outerEl = outer.asDomElement() as Element | undefined;
+          const outerEl = outer.dom.el() as Element | undefined;
           const innerEl = outerEl?.querySelector("#inner") as Element | null;
           const circleEl = outerEl?.querySelector("#c1") as Element | null;
 
@@ -223,7 +223,7 @@ export function livetree_gnarly_svg(): TestSuite {
           field.create.g().id.set("b");
           field.create.at(1).g().id.set("mid");
 
-          const fieldEl = field.asDomElement() as Element | undefined;
+          const fieldEl = field.dom.el() as Element | undefined;
 
           (root as any).__result = {
             childTags: Array.from(fieldEl?.children ?? []).map((el) => el.tagName.toLowerCase()),

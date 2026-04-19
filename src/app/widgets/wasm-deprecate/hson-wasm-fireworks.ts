@@ -86,7 +86,7 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
       zIndex: "1",
     });
 
-  const canvas = canvasLt.asDomElement() as HTMLCanvasElement;
+  const canvas = canvasLt.dom.el() as HTMLCanvasElement;
 
   const ctx0 = canvas.getContext("2d");
   if (!ctx0) {

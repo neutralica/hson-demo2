@@ -104,7 +104,7 @@ async function make_bitmapped_effect(
     flower: SvgLiveTree,
     spec: FlowerSpec,
 ): Promise<SvgLiveTree> {
-    const el = flower.asDomElement() as SVGGElement | undefined;
+    const el = flower.dom.el() as SVGGElement | undefined;
     const el2 = flower.cloneBranch();
     if (!el) return flower;
 

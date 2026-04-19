@@ -163,7 +163,7 @@ export function create_inspector(
 
     const scroll = tableHost.create.div().classlist.set("insp-scroll main-scroll");
     scroll.css.setMany(LOG_SCROLLcss);
-    mainScrollEl = scroll.asDomElement() as HTMLElement;
+    mainScrollEl = scroll.dom.el() as HTMLElement;
 
 
     const { table, thead, tbody } = mk_table(scroll, "insp-main");
@@ -354,7 +354,7 @@ export function create_inspector(
           });
 
           queueMicrotask(() => {
-            scroll.asDomElement()!.scrollTop = prevScroll;
+            scroll.dom.el()!.scrollTop = prevScroll;
           });
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {

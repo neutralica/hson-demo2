@@ -20,11 +20,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const host = root.find.must.byId("root");
                     const mid = host.create.prepend().section().id.set("first");
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        tag: mid.asDomElement()?.tagName,
+                        tag: mid.dom.el()?.tagName,
                     };
                 },
 
@@ -47,11 +47,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const host = root.find.must.byId("root");
                     const mid = host.create.at(1).section().id.set("mid");
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        tag: mid.asDomElement()?.tagName,
+                        tag: mid.dom.el()?.tagName,
                     };
                 },
 
@@ -75,11 +75,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const host = root.find.must.byId("root");
                     const box = (host.create.prepend() as any).div(`<div id="first"><span id="child"></span></div>`);
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        childTag: box.asDomElement()?.children[0]?.tagName,
+                        childTag: box.dom.el()?.children[0]?.tagName,
                     };
                 },
 
@@ -102,11 +102,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const host = root.find.must.byId("root");
                     const box = (host.create.at(1) as any).div(`<div id="mid"><span id="child"></span></div>`);
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        childTag: box.asDomElement()?.children[0]?.tagName,
+                        childTag: box.dom.el()?.children[0]?.tagName,
                     };
                 },
 
@@ -206,11 +206,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     svg.create.g().id.set("tail");
 
                     const g = (svg.create.prepend() as any).g(`<g id="first"><circle id="c1"></circle></g>`);
-                    const el = svg.asDomElement();
+                    const el = svg.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        childTag: g.asDomElement()?.children[0]?.tagName,
+                        childTag: g.dom.el()?.children[0]?.tagName,
                     };
                 },
 
@@ -235,11 +235,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     svg.create.g().id.set("b");
 
                     const g = (svg.create.at(1) as any).g(`<g id="mid"><circle id="c1"></circle></g>`);
-                    const el = svg.asDomElement();
+                    const el = svg.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        childTag: g.asDomElement()?.children[0]?.tagName,
+                        childTag: g.dom.el()?.children[0]?.tagName,
                     };
                 },
 
@@ -422,11 +422,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const out = host.append(branch);
                     const child = out.create.section().id.set("b");
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        childTag: child.asDomElement()?.tagName,
+                        childTag: child.dom.el()?.tagName,
                     };
                 },
 
@@ -452,11 +452,11 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const out = field.append(branch as any);
                     const child = (out.create as any).g().id.set("g2");
 
-                    const el = field.asDomElement();
+                    const el = field.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
-                        childTag: child.asDomElement()?.tagName,
+                        childTag: child.dom.el()?.tagName,
                     };
                 },
 
@@ -481,7 +481,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                     host.append(svgBranch as any);
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         firstTag: el?.children[0]?.tagName,
@@ -563,7 +563,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                     host.append(branch, 1);
 
-                    const el = host.asDomElement();
+                    const el = host.dom.el();
 
                     (root as any).__result = {
                         ids: Array.from(el?.children ?? []).map((k) => k.getAttribute("id")),
@@ -594,9 +594,9 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        svgTag: svg.asDomElement()?.tagName,
-                        gTag: g.asDomElement()?.tagName,
-                        viewBox: svg.asDomElement()?.getAttribute("viewBox"),
+                        svgTag: svg.dom.el()?.tagName,
+                        gTag: g.dom.el()?.tagName,
+                        viewBox: svg.dom.el()?.getAttribute("viewBox"),
                     };
                 },
 
@@ -625,9 +625,9 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        gTag: g.asDomElement()?.tagName,
-                        viewBox: svg.asDomElement()?.getAttribute("viewBox"),
-                        preserveAspectRatio: svg.asDomElement()?.getAttribute("preserveAspectRatio"),
+                        gTag: g.dom.el()?.tagName,
+                        viewBox: svg.dom.el()?.getAttribute("viewBox"),
+                        preserveAspectRatio: svg.dom.el()?.getAttribute("preserveAspectRatio"),
                     };
                 },
 
@@ -652,8 +652,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        gTag: g.asDomElement()?.tagName,
-                        flagVal: svg.asDomElement()?.getAttribute("data-active"),
+                        gTag: g.dom.el()?.tagName,
+                        flagVal: svg.dom.el()?.getAttribute("data-active"),
                     };
                 },
 
@@ -678,8 +678,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        gTag: g.asDomElement()?.tagName,
-                        flagVal: svg.asDomElement()?.getAttribute("data-active"),
+                        gTag: g.dom.el()?.tagName,
+                        flagVal: svg.dom.el()?.getAttribute("data-active"),
                     };
                 },
 
@@ -707,9 +707,9 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const section = host.create.section().id.set("s1");
 
                     (root as any).__result = {
-                        title: host.asDomElement()?.getAttribute("title"),
-                        dataX: host.asDomElement()?.getAttribute("data-x"),
-                        sectionTag: section.asDomElement()?.tagName,
+                        title: host.dom.el()?.getAttribute("title"),
+                        dataX: host.dom.el()?.getAttribute("data-x"),
+                        sectionTag: section.dom.el()?.tagName,
                     };
                 },
 
@@ -763,8 +763,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        gTag: g.asDomElement()?.tagName,
-                        viewBox: svg.asDomElement()?.getAttribute("viewBox"),
+                        gTag: g.dom.el()?.tagName,
+                        viewBox: svg.dom.el()?.getAttribute("viewBox"),
                     };
                 },
 
@@ -789,8 +789,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const section = host.create.section().id.set("s1");
 
                     (root as any).__result = {
-                        dataUserId: host.asDomElement()?.getAttribute("data-user-id"),
-                        sectionTag: section.asDomElement()?.tagName,
+                        dataUserId: host.dom.el()?.getAttribute("data-user-id"),
+                        sectionTag: section.dom.el()?.tagName,
                     };
                 },
 
@@ -815,8 +815,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        dataFlowerId: svg.asDomElement()?.getAttribute("data-flower-id"),
-                        gTag: g.asDomElement()?.tagName,
+                        dataFlowerId: svg.dom.el()?.getAttribute("data-flower-id"),
+                        gTag: g.dom.el()?.tagName,
                     };
                 },
 
@@ -844,9 +844,9 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        flowerId: svg.asDomElement()?.getAttribute("data-flower-id"),
-                        petalCount: svg.asDomElement()?.getAttribute("data-petal-count"),
-                        gTag: g.asDomElement()?.tagName,
+                        flowerId: svg.dom.el()?.getAttribute("data-flower-id"),
+                        petalCount: svg.dom.el()?.getAttribute("data-petal-count"),
+                        gTag: g.dom.el()?.tagName,
                     };
                 },
 
@@ -895,8 +895,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     const g = svg.create.g().id.set("g1");
 
                     (root as any).__result = {
-                        dataFlowerId: svg.asDomElement()?.getAttribute("data-flower-id"),
-                        gTag: g.asDomElement()?.tagName,
+                        dataFlowerId: svg.dom.el()?.getAttribute("data-flower-id"),
+                        gTag: g.dom.el()?.tagName,
                     };
                 },
 
@@ -926,8 +926,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                     });
 
                     (root as any).__result = {
-                        userId: host.asDomElement()?.getAttribute("data-user-id"),
-                        panelId: host.asDomElement()?.getAttribute("data-panel-id"),
+                        userId: host.dom.el()?.getAttribute("data-user-id"),
+                        panelId: host.dom.el()?.getAttribute("data-panel-id"),
                     };
                 },
 
@@ -1023,8 +1023,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                         });
 
                     (root as any).__result = {
-                        count: host.asDomElement()?.getAttribute("data-count"),
-                        active: host.asDomElement()?.getAttribute("data-active"),
+                        count: host.dom.el()?.getAttribute("data-count"),
+                        active: host.dom.el()?.getAttribute("data-active"),
                     };
                 },
 

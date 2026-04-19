@@ -57,7 +57,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
 
                 t.eq("final opacity wins", cs.opacity, "0.9");
@@ -84,7 +84,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
 
                 t.eq("opacity", cs.opacity, "0.5");
@@ -118,8 +118,8 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const a = tree.find.must.byId("a").asDomElement() as HTMLElement;
-                const b = tree.find.must.byId("b").asDomElement() as HTMLElement;
+                const a = tree.find.must.byId("a").dom.el() as HTMLElement;
+                const b = tree.find.must.byId("b").dom.el() as HTMLElement;
 
                 const csA = getComputedStyle(a);
                 const csB = getComputedStyle(b);
@@ -144,7 +144,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
 
                 // this is intentionally "wrong" from user POV but correct for system
@@ -169,7 +169,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
 
                 t.eq("opacity applied", cs.opacity, "0.5");
@@ -190,7 +190,7 @@ export function suite_schedules_events(): TestSuite {
                 box.css.setMany({ opacity: "0.2" });
 
                 // read mid-cycle (should not force flush)
-                const el = box.asDomElement() as HTMLElement;
+                const el = box.dom.el() as HTMLElement;
                 void getComputedStyle(el).opacity;
 
                 box.css.setMany({ opacity: "0.8" });
@@ -200,7 +200,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
 
                 t.eq("final opacity wins", cs.opacity, "0.8");
@@ -242,7 +242,7 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cssText = get_hson_css_text();
 
                 t.eq("computed opacity", getComputedStyle(el).opacity, "0.8");
@@ -276,7 +276,7 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
                 const quid = el.getAttribute("data-_quid") ?? "";
                 const cssText = get_hson_css_text();
@@ -309,7 +309,7 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const quid = el.getAttribute("data-_quid") ?? "";
                 const cssText = get_hson_css_text();
 
@@ -347,8 +347,8 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const aEl = tree.find.must.byId("a").asDomElement() as HTMLElement;
-                const bEl = tree.find.must.byId("b").asDomElement() as HTMLElement;
+                const aEl = tree.find.must.byId("a").dom.el() as HTMLElement;
+                const bEl = tree.find.must.byId("b").dom.el() as HTMLElement;
                 const cssText = get_hson_css_text();
 
                 const aQuid = aEl.getAttribute("data-_quid") ?? "";
@@ -382,7 +382,7 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const quid = el.getAttribute("data-_quid") ?? "";
 
                 t.ok("box has quid", quid.length > 0);
@@ -418,7 +418,7 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").asDomElement() as HTMLElement;
+                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const quid = el.getAttribute("data-_quid") ?? "";
                 const cs = getComputedStyle(el);
 
@@ -460,7 +460,7 @@ export function node_lifecycle(): TestSuite {
 
             async act(tree) {
                 const box = tree.find.must.byId("box");
-                const el = box.asDomElement() as HTMLElement;
+                const el = box.dom.el() as HTMLElement;
 
                 (tree as any).__removedQuid = el.getAttribute("data-_quid") ?? "";
 
@@ -508,7 +508,7 @@ export function node_lifecycle(): TestSuite {
                 const a = tree.find.must.byId("a");
                 const b = tree.find.must.byId("b");
 
-                const aEl = a.asDomElement() as HTMLElement;
+                const aEl = a.dom.el() as HTMLElement;
                 (tree as any).__aQuid = aEl.getAttribute("data-_quid") ?? "";
 
                 a.css.setMany({ opacity: "0.2" });
@@ -526,7 +526,7 @@ export function node_lifecycle(): TestSuite {
             assert(tree, t) {
                 const a = tree.find.byId("a");
                 const b = tree.find.must.byId("b");
-                const bEl = b.asDomElement() as HTMLElement;
+                const bEl = b.dom.el() as HTMLElement;
                 const bQuid = bEl.getAttribute("data-_quid") ?? "";
                 const bRule = get_rule_for_quid(bQuid) ?? "";
 
@@ -555,7 +555,7 @@ export function node_lifecycle(): TestSuite {
                 let hits = 0;
                 btn.listen.onClick(() => { hits += 1; });
 
-                const el = btn.asDomElement() as HTMLElement;
+                const el = btn.dom.el() as HTMLElement;
                 el.click();       // should count
                 btn.removeSelf();
                 el.click();       // stale ref click after removal
@@ -587,7 +587,7 @@ export function node_lifecycle(): TestSuite {
                 const oldBtn = tree.find.must.byId("btn");
                 oldBtn.listen.onClick(() => { oldHits += 1; });
 
-                const oldEl = oldBtn.asDomElement() as HTMLElement;
+                const oldEl = oldBtn.dom.el() as HTMLElement;
                 oldEl.click();
 
                 oldBtn.removeSelf();
@@ -596,7 +596,7 @@ export function node_lifecycle(): TestSuite {
                 const newBtn = host.create.button().id.set("btn").text.set("new");
                 newBtn.listen.onClick(() => { newHits += 1; });
 
-                const newEl = newBtn.asDomElement() as HTMLElement;
+                const newEl = newBtn.dom.el() as HTMLElement;
                 newEl.click();
 
                 (tree as any).__oldHits = oldHits;
@@ -641,13 +641,13 @@ export function node_lifecycle(): TestSuite {
                 await tick();
                 gcss.syncNow();
 
-                const newEl = newBox.asDomElement() as HTMLElement;
+                const newEl = newBox.dom.el() as HTMLElement;
                 (tree as any).__newQuid = newEl.getAttribute("data-_quid") ?? "";
             },
 
             assert(tree, t) {
                 const box = tree.find.must.byId("box");
-                const el = box.asDomElement() as HTMLElement;
+                const el = box.dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
                 const quid = (tree as any).__newQuid as string;
                 const rule = get_rule_for_quid(quid) ?? "";
@@ -674,7 +674,7 @@ export function node_lifecycle(): TestSuite {
 
             async act(tree) {
                 const child = tree.find.must.byId("child");
-                const childEl = child.asDomElement() as HTMLElement;
+                const childEl = child.dom.el() as HTMLElement;
 
                 (tree as any).__childQuid = childEl.getAttribute("data-_quid") ?? "";
 

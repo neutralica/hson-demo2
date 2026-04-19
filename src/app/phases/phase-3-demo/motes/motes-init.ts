@@ -153,7 +153,7 @@ export function motes_init(rig: MotesRig, opts: MotesOpts): Outcome<void> {
             const rt = motes[i];
             if (!rt || !rt.alive) continue;
 
-            const wrapEl = rt.mote.wrap.asDomElement();
+            const wrapEl = rt.mote.wrap.dom.el();
             if (!wrapEl) continue;
 
             const r = wrapEl.getBoundingClientRect();
@@ -170,7 +170,7 @@ export function motes_init(rig: MotesRig, opts: MotesOpts): Outcome<void> {
             // kill-on-hit uses INK bbox (glyph), not wrap.
             // This avoids “huge wrapper” problems.
             if (opts.killOnHit) {
-                const inkEl = rt.mote.ink.asDomElement(); // unavoidable for bbox for now
+                const inkEl = rt.mote.ink.dom.el(); // unavoidable for bbox for now
                 if (inkEl) {
                     const r = inkEl.getBoundingClientRect();
                     const cx = r.left + r.width / 2;

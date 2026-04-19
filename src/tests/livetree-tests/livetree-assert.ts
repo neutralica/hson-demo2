@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live";
 
 export function must_el<T extends Element = HTMLElement>(lt: LiveTree): T {
-  const el = lt.asDomElement() as T | null;
+  const el = lt.dom.el() as T | null;
   if (!el) throw new Error("Expected DOM element to exist");
   return el;
 }
