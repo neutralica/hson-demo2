@@ -100,8 +100,7 @@ As valid input is produced, the HSON is parsed and the resulting HTML is rendere
 Demonstrates
 
 - realtime parsing and rendering  
-- HSON's viability as a markup format  
-- fine-grained document construction without templates or frameworks  
+- HSON's viability as a markup format
 
 
 ---
@@ -151,7 +150,9 @@ Each demo proves at least one of these properties of hson-live:
 - unified representation of markup and data  
 - HSON as viable markup format
 
-Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data.
+Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data. Rather than `ui = ƒ(state)`, hson-live proposes a new paradigm:
+
+### view ≡ state
 
 LiveDemo will expand alongside future versions of hson-live.
 
