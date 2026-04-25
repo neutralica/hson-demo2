@@ -83,8 +83,8 @@ export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 
 export const _COLS = {
-  bckgd: bckColor,
-  bckdeep: deepBack,
+  bckgd: deepBack,
+  bckdeep: bckColor,
   bcklight,
 };
 

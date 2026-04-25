@@ -4,7 +4,7 @@ import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_more_listeners(): TestSuite {
-    console.error ("testing more listeners")
+    console.error("testing more listeners")
     const SUITE = "livetree/listener-cleanup";
 
     const cases: readonly LiveTreeCaseSpec[] = [
@@ -72,8 +72,9 @@ export function livetree_more_listeners(): TestSuite {
           <div id="owner">hello</div>
         </main>
       `,
-
             async act(tree) {
+                _listeners_debug_hard_reset();
+
                 const owner = tree.find.must.byId("owner");
 
                 let count = 0;
@@ -85,19 +86,28 @@ export function livetree_more_listeners(): TestSuite {
                 window.dispatchEvent(new KeyboardEvent("keydown", { key: "w" }));
                 await flush_dom();
 
+                const beforeRemove = count;
+
                 owner.removeSelf();
+                await flush_dom();
 
                 window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
                 await flush_dom();
 
+                const afterRemove = count;
+
+                _listeners_debug_hard_reset();
+
                 (tree as any).__result = {
-                    count,
+                    beforeRemove,
+                    afterRemove,
                 };
             },
 
             assert(tree, t) {
                 const r = (tree as any).__result;
-                t.eq("window listener fires before remove and not after", r.count, 1);
+                t.eq("window listener fired before remove", r.beforeRemove, 1);
+                t.eq("window listener did not fire after remove", r.afterRemove, 1);
             },
         },
 
