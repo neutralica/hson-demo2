@@ -469,7 +469,7 @@ export const HTML_FIXTURES_LEGACY = _freeze({
   
 } satisfies FixtureBundle);
 
-export const FAIL_IS_PASS = {
+export const TRANSFORM_FAILS = {
   html_INVALID, // expect errors
   json_INVALID,
   

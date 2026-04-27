@@ -3,7 +3,7 @@ import type {  CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestS
 import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
-import { FAIL_IS_PASS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
+import { TRANSFORM_FAILS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
 import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
 import { HTML_FIXTURES_NEW } from "./transform-tests/new-fixtures";
@@ -13,7 +13,7 @@ import { livetree_create_size } from "./livetree-tests/livetree-fixtures-6";
 import { livetree_more_listeners } from "./livetree-tests/livetree-fixtures-7";
 import { listeners_teardown } from "./livetree-tests/livetree-fixtures-4";
 import { livetree_completionist } from "./livetree-tests/livetree-fixtures-5";
-import { HSON_FIXTURES } from "./transform-tests/hson-tests";
+import { HSON_FIXTURES, HSON_FXT_INVALID } from "./transform-tests/hson-tests";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -151,18 +151,21 @@ export function build_suites_for_mode(
     return _freeze([
       make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
       make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
-      make_transform_test_suite(h, FAIL_IS_PASS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
+      make_transform_test_suite(h, HSON_FIXTURES, "transform/hson/fixtures", map),
+      make_transform_test_suite(h, TRANSFORM_FAILS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
+      make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
     ]);
   }
   if (mode === "dev") {
     return _freeze([
-      make_transform_test_suite(h, HSON_FIXTURES, "transform/invalid/fail_is_pass", map, "auto", "fail"),
+      make_transform_test_suite(h, HSON_FIXTURES, "transform/hson/fixtures", map),
+      make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
     ])
   }
   if (mode === "unit") {
     return _freeze([
       ...all_unit_tests(),
-
+      
     ])
   }
   if (mode === "livetree") {
@@ -170,14 +173,16 @@ export function build_suites_for_mode(
       ...all_livetree_suites(),
     ])
   }
-
+  
   return _freeze([
     make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
+    make_transform_test_suite(h, HSON_FIXTURES, "transform/hson/fixtures", map),
     make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
     make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "dev/test", map),
-    make_transform_test_suite(h, FAIL_IS_PASS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
+    make_transform_test_suite(h, TRANSFORM_FAILS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
+    make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
     ...all_livetree_suites(),
     ...all_unit_tests(),
   ]);

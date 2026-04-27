@@ -401,8 +401,8 @@ export function render_transform_report(
     </details>
   </section>
 `;
-
-  const input = meta?.fixture ?? "";
+  console.warn(meta);
+  const input = meta?.fixture ?? "unk";
 
   const finalsBlock = `
 <section class="traceWrap" style="margin: 12px 0;">
