@@ -1,32 +1,32 @@
 
 const hsonTestsA = {
-    a: `<img alt="x" style="
+  a: `<img alt="x" style="
 color: red; font-size: 10px
 "/>`,
-    1: `<figure
+  1: `<figure
   <img alt="x" src="x.png"/>
 />`,
-    c: `<img alt="x" style="color: red;
+  c: `<img alt="x" style="color: red;
 font-size: 10px
 "/>`,
-    2: `<figure
+  2: `<figure
   <img alt="x" style="color: red; font-size: 10px"/>
 />`,
-    3: `<figure
+  3: `<figure
   <img alt="x" style="color: red;
   font-size: 10px
   "/>
 />`,
-    4: `<figure
+  4: `<figure
   <img alt="x" style="
   color: red; font-size: 10px"/>
 />`,
-    5: `<figure
+  5: `<figure
   <img alt="x" style="
   color: red;
   font-size: 10px"/>
 />`,
-    6: `<figure
+  6: `<figure
   <img alt="x" style="
   color: red;
   font-size: 10px
@@ -42,7 +42,7 @@ const hsonShouldFail: Record<string, string> = {
   just_angles: `><`,
   lone_open_angle: `<`,
   lone_close_angle: `>`,
-//   empty_tag_open: `<>`,
+  //   empty_tag_open: `<>`,
   empty_tag_close: `</>`,
 
   // ----------------------------
@@ -117,7 +117,17 @@ const hsonShouldFail: Record<string, string> = {
   newline_inside_unclosed_quote: `<div id="x\n/>`,
 };
 
+const tricksyFlagsAttrs = {
+  attr_name_with_digits_after_first: `<div x000="111"/>`,
+  flag_name_with_digits_after_first: `<div x000/>`,
+  underscore_digit_flag: `<div _000/>`,
+  data_numeric_suffix: `<div data-000="111"/>`,
+};
 
+const tricksyAttrsINVALID = {
+  numeric_begin_flag: `<div 000/>`,
+  numeric_begin_attr: `<div 000="111"/>`,
+};
 
 
 
@@ -126,7 +136,11 @@ const hsonShouldFail: Record<string, string> = {
 
 
 export const HSON_FIXTURES = {
-    hson: hsonTestsA,
-    negative: hsonShouldFail
+  hson: hsonTestsA,
+  negative: hsonShouldFail,
+  attrsFlags: tricksyFlagsAttrs,
 };
 
+export const HSON_FXT_INVALID = {
+  attrsFlags: tricksyAttrsINVALID
+}
