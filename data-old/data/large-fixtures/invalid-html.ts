@@ -22,8 +22,8 @@ export const html_INVALID = {
     <_ii data-_index="0"><p>A</p></_ii>
     <_ii data-_index="2"><p>C</p></_ii>
   </_array>`,
-  // INVALID: literal _elem must not appear in HTML
-  literal__elem_INVALID: `<_elem><p>x</p></_elem>`,
+  // INVALID: literal _-elem must not appear in HTML
+  literal__elem_INVALID: `<_-elem><p>x</p></_-elem>`,
 
   // INVALID: VSN with _attrs (only _meta allowed on VSN; _ii may carry index meta)
   vsn_with_attrs_INVALID: `<_ii class="x" data-_index="0"><p>x</p></_ii>`,

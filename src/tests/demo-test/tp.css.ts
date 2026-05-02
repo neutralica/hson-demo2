@@ -41,6 +41,7 @@ export const TEST_CHIP_LABELcss = {
 export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
   ...UI_BTN_HOVERcss(TXTcol_MENU),
+  alignItems: "center",
   background: _COLS.bckdeep,
   color: TXTcol_MENU,
   fontSize: _TXT.subhead,
@@ -50,6 +51,7 @@ export const TEST_CLEAR_BTNcss: CssMap = {
 export const TEST_RUN_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
   ...UI_BTN_HOVERcss(ACID_WASH_RGBA.fadedMint),
+  alignItems: "center",
   color: ACID_WASH_RGBA.fadedMint,
   fontSize: _TXT.subhead,
 };

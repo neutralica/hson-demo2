@@ -5,7 +5,7 @@ import type { HsonNode, Primitive } from "hson-live/types";
 import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
 import { _CREATE_NODE } from "hson-live/diagnostics";
 import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
-import { STR_TAG } from "../../../../hson-live/dist/consts/constants";
+import { ELEM_TAG, STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
 import { suite_more_contract_refresh } from "./livetree-fixtures-2";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
@@ -181,7 +181,7 @@ export function suite_append_and_create(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "create.at(index) inserts among element-children under _elem (preserves order)",
+      name: "create.at(index) inserts among element-children under _-elem (preserves order)",
       fixture: "append/create",
       sub: "order",
       html: `<section id="root"><p class="orig">one</p></section>`,
@@ -255,7 +255,7 @@ export function suite_append_and_create(): TestSuite {
 
     {
       suite: SUITE,
-      name: "create.p appends distinct element-children under _elem",
+      name: "create.p appends distinct element-children under _-elem",
       fixture: "create.p",
       sub: "append",
       html: `<section id="root"><p class="orig">one</p></section>`,
@@ -281,7 +281,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "removeChildren: removes only direct node-children; leaves primitives under _elem; returns count",
+      name: "removeChildren: removes only direct node-children; leaves primitives under _-elem; returns count",
       html: `<div id="root"></div>`,
       fixture: "remove/children",
       sub: "ignore-primitives-count",
@@ -292,11 +292,11 @@ export function suite_append_and_create(): TestSuite {
         root.append(hson.liveTree.fromTrustedHtml(`<div id="a"></div>`));
         root.append(hson.liveTree.fromTrustedHtml(`<div id="b"></div>`));
 
-        // inject a primitive into the semantic content container (_elem)
-        // (works in no-dom mode; matches your “_elem is invisible” rule)
+        // inject a primitive into the semantic content container (_-elem)
+        // (works in no-dom mode; matches your “_-elem is invisible” rule)
         const raw = (root.node._content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode =>
-          is_Node(x) && x._tag === "_elem"
+          is_Node(x) && x._tag === ELEM_TAG
         );
 
         if (elem) {
@@ -304,8 +304,8 @@ export function suite_append_and_create(): TestSuite {
           kids.push("Z");
           elem._content = kids as unknown as (HsonNode | Primitive)[];
         } else {
-          // if a root ever lacks _elem, keep test honest rather than silently passing
-          throw new Error(`test invariant: expected #root to have a single _elem child`);
+          // if a root ever lacks _-elem, keep test honest rather than silently passing
+          throw new Error(`test invariant: expected #root to have a single _-elem child`);
         }
 
         (tree as unknown as { __removed?: number }).__removed = root.removeChildren();
@@ -320,20 +320,20 @@ export function suite_append_and_create(): TestSuite {
         // node-children are gone
         t.eq("content.all().length (node children)", root.content.all().length, 0);
 
-        // primitive survived under _elem
+        // primitive survived under _-elem
         const raw = (root.node._content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === "_elem");
+        const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === ELEM_TAG);
         const elemKids = (elem?._content ?? []) as unknown[];
-        t.ok(`primitive "Z" remains under _elem`, elemKids.includes("Z"));
+        t.ok(`primitive "Z" remains under _-elem`, elemKids.includes("Z"));
       },
 
       preview(tree) {
         const root = tree.find.byId("root");
         if (!root) return "<no root tree>";
         const raw = (root.node._content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === "_elem");
+        const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === ELEM_TAG);
         const kids = (elem?._content ?? []) as unknown[];
-        return `<root _elem kids=${kids.map(x => (is_Node(x) ? `<${x._tag}>` : JSON.stringify(x))).join(", ")}>`;
+        return `<root _-elem kids=${kids.map(x => (is_Node(x) ? `<${x._tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
     },
   {
@@ -1347,7 +1347,7 @@ export function suite_css_and_content(): TestSuite {
 
     // -----------------------------------------------------------------------
     // get_node_text fallback: no DOM => walk HSON content
-    // We construct a minimal HsonNode tree with _str leaves.
+    // We construct a minimal HsonNode tree with _-str leaves.
     {
       suite: SUITE,
       name: "get_node_text falls back to HSON when no DOM exists",

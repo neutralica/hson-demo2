@@ -4,6 +4,7 @@ import { _COLS } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { _TXT } from "../../app/core/consts/ui-consts";
+import { OKLCH_VIBRANT } from "../../app/core/consts/vibrant-oklch";
 
 
 export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
@@ -80,7 +81,8 @@ export const ROW_SUITE_FAILcss: CssMap = {
 
 export const ROW_CASEcss: CssMap = {
   background: "transparent",
-  color: $grn_.faded,
+  color: OKLCH_VIBRANT.mintIce,
+  fontWeight: "100",
 };
 
 export const ROW_CASE_FAILcss: CssMap = {

@@ -56,7 +56,7 @@ const tryParse = (origin: Fmt, raw: string): PrimParse => {
     }
   }
 
-  // Bare words are NEVER primitives for HSON in this widget (prevents empty _obj nonsense)
+  // Bare words are NEVER primitives for HSON in this widget (prevents empty _-obj nonsense)
   // JSON.parse would throw anyway, so we just reject.
   return { ok: false };
 };
