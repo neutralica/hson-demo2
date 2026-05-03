@@ -1,4 +1,55 @@
 
+
+LiveDemo TODO
+03MAY2026
+
+* test JSON keys:
+	"a b"
+	"_id"
+	"__typename"
+	""
+	"000"
+	"test:colon"
+	"test...elps"
+* test HSON more extensively
+	<test+plus  "">
+	<test:colon  "">
+	<test...elps "">
+	<...>
+		these should not work
+
+* unit tests--which did we do?  
+	parser / serializer micro-seams
+	selector/scoping helpers
+	style parsing/serialization helpers
+	DataManager
+	ContentManager
+	TreeSelector filter/removeAll
+	applyAttrToNode
+	search_nodes
+	cloneBranch / QUID isolation
+	listener attach/remove loops
+	CSS + removal + reappend
+	dataset + refind + clone
+
+* Parsing panel / demo TODOs
+	Node-view bug: Panel node view may show the wrong graph/source. Need per-format graph tracking, not one shared “last tree.”
+	Validity checks potential improvement:
+		parse source
+		serialize target
+		reparse target
+		compare normalized node
+
+* Parsing panel UI - Mostly closed, but earlier QoL items included:
+	node/text toggle clarity
+	mode switch indicator
+	per-panel node view
+	styling polish
+
+
+
+
+past; some incomplete:
 ⸻
 <!-- 
 A) Scheduling model (lightly covered)
@@ -26,11 +77,6 @@ Missing:
  -->
 <!-- 
 C) Node lifecycle edge cases
-
-You covered:
-	•	remove + reappend
-
-But not:
 	•	removing node with active CSS
 	•	removing node with listeners
 	•	orphan cleanup (CSS + listeners)

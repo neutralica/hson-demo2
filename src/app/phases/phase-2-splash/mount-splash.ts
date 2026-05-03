@@ -71,7 +71,6 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     mk_span_cls(ver, "ver-a").text.set("2.0.2");
     const ver6 = mk_span_cls(ver, "ver-6").text.set("6");
 
-
     /* style letters */
     cells.forEach(c => c.css.setMany(CELL_CSS));
     letters.forEach(l => {
