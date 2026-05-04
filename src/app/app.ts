@@ -34,10 +34,8 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     .classlist.add("stage")
     .css.setMany(STAGE_CSS);
 
-  // one skip promise for the whole pre-demo sequence
   const { skip, cancel } = make_skip_promise(stage);
 
-  // local helper — hard cut stage, but DO NOT exit the app
   const hard_cut = (): void => {
     stage.empty();
   };
@@ -82,46 +80,3 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
     cancel();
   }
 }
-
-// export async function run_app(root: LiveTree): OutcomeAsync<void> {
-//     root.empty();
-//     const app = make_div_id(root, "app").classlist.set("app").css.set.backgroundColor($cols_.bckgd);
-//     const stage = make_div_id(app, "stage")
-//         .classlist.add("stage")
-//         .css.setMany(STAGE_CSS);
-
-
-//     const { skip, cancel } = make_skip_promise(stage);
-
-//     try {
-//         // --- phase 1: intro ---
-//         {
-//             const introP = run_phase(stage, mount_brand, _shortpause); // OutcomeAsync<void>
-//             const res = await Promise.race([introP, skip]);       // "skip" | Outcome<void>
-//             cancel();
-//             if (res === "skip") {
-//                 stage.empty();
-//             }
-
-//         }
-//         // --- phase 2: splash ---
-//         let wordMark: LiveTree | undefined = undefined;
-//         {
-//             const splashP = run_phase(stage, mount_splash, _shortpause);
-//             const res = await Promise.race([splashP, skip]);
-//             if (res === "skip") {
-//                 stage.empty(); //  hard cut
-//             }
-//         }
-//         // --- phase 3: feature demo ---
-//         {
-//             const demo = run_phase(stage, mount_demo, _shortpause);
-//         }
-
-//         return relay.ok();
-//     } finally {
-//         // tear down the global skip listener (avoid it lingering into demo)
-//         cancel();
-//     }
-// }
-

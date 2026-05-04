@@ -1,23 +1,22 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, ROW_GROUPcss, tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss } from "./inspector.css";
+import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
-import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
 import { _TXT } from "../../app/core/consts/ui-consts";
 import type { TestLog } from "../test-logger";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
-import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { _COLS } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { set_alpha } from "../../app/core/helpers/color-helpers";
+import type { LoopReport } from "hson-live/diagnostics";
+import { OKLCH_NEUTRALS } from "../../app/core/consts/vibrant-oklch";
 
 
 export type InspectorUi = Readonly<{
@@ -109,7 +108,7 @@ export function create_inspector(
     placeItems: "top",
     textAlign: "center",
     fontSize: _TXT.main,
-    color:OKLCH_FLEURS.mossGlow,
+    color: OKLCH_NEUTRALS.frost,
   }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
 
 

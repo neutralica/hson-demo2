@@ -2,7 +2,7 @@ import { canon_to_css_prop, normalize_css_key, normalize_css_value, normalize_de
 import type { TestCase, TestSuite } from "../tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live";
-import { parse_selector, parse_style_string, serialize_style } from "hson-live/diagnostics";
+import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
 
 export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
@@ -186,7 +186,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_style_string: parses simple declarations",
             run() {
-                const out = parse_style_string("color: red; background-color: blue;");
+                const out = _parse_style_string("color: red; background-color: blue;");
 
                 if (out.color !== "red") {
                     throw new Error(`expected color=red, got ${String(out.color)}`);
@@ -202,7 +202,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_style_string: preserves custom properties",
             run() {
-                const out = parse_style_string("--panel-glow: 12px; color: white;");
+                const out = _parse_style_string("--panel-glow: 12px; color: white;");
 
                 if (out["--panel-glow"] !== "12px") {
                     throw new Error(`expected custom prop preserved, got ${String(out["--panel-glow"])}`);
@@ -218,7 +218,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_style_string: handles quoted semicolons safely",
             run() {
-                const out = parse_style_string(`content: "a; b"; color: red;`);
+                const out = _parse_style_string(`content: "a; b"; color: red;`);
 
                 // NOTE: behavior here is important enough to assert directly.
                 // If this fails, parser is probably splitting on semicolons too early.
@@ -236,7 +236,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_style_string: handles url() safely",
             run() {
-                const out = parse_style_string(`background-image: url("x;y.png"); color: red;`);
+                const out = _parse_style_string(`background-image: url("x;y.png"); color: red;`);
 
                 if (!String(out.backgroundImage ?? "").includes(`url("x;y.png")`)) {
                     throw new Error(`expected url() preserved, got ${String(out.backgroundImage)}`);
@@ -252,7 +252,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_style_string: last duplicate key wins",
             run() {
-                const out = parse_style_string(`color: red; color: lime;`);
+                const out = _parse_style_string(`color: red; color: lime;`);
 
                 if (out.color !== "lime") {
                     throw new Error(`expected last-write-wins color=lime, got ${String(out.color)}`);
@@ -264,7 +264,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_style_string: ignores trailing semicolon cleanly",
             run() {
-                const out = parse_style_string(`color: red;;;`);
+                const out = _parse_style_string(`color: red;;;`);
 
                 if (out.color !== "red") {
                     throw new Error(`expected color=red, got ${String(out.color)}`);
@@ -284,7 +284,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "serialize_style: kebab-cases normal properties",
             run() {
-                const out = serialize_style({
+                const out = _serialize_style({
                     backgroundColor: "red",
                     fontSize: "12px",
                 });
@@ -303,7 +303,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "serialize_style: preserves custom properties",
             run() {
-                const out = serialize_style({
+                const out = _serialize_style({
                     "--panel-glow": "12px",
                     color: "white",
                 });
@@ -322,7 +322,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "serialize_style: normalizes cssFloat to float",
             run() {
-                const out = serialize_style({
+                const out = _serialize_style({
                     cssFloat: "left",
                 });
 
@@ -336,7 +336,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "serialize_style: drops nullish and empty values",
             run() {
-                const out = serialize_style({
+                const out = _serialize_style({
                     color: "red",
                     backgroundColor: "",
                     borderColor: "   ",
@@ -360,13 +360,13 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "serialize_style: returns deterministic ordering",
             run() {
-                const a = serialize_style({
+                const a = _serialize_style({
                     zIndex: "2",
                     color: "red",
                     backgroundColor: "black",
                 });
 
-                const b = serialize_style({
+                const b = _serialize_style({
                     backgroundColor: "black",
                     zIndex: "2",
                     color: "red",
@@ -386,7 +386,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_selector: parses tag + id + classes",
             run() {
-                const out = parse_selector(`div#app.card.large`);
+                const out = _parse_selector(`div#app.card.large`);
 
                 // NOTE: exact class storage shape may vary.
                 // Adjust if your parser stores class in attrs.class or another field.
@@ -408,7 +408,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_selector: parses explicit attr equality",
             run() {
-                const out = parse_selector(`div[data-x="1"][title="hello"]`);
+                const out = _parse_selector(`div[data-x="1"][title="hello"]`);
 
                 if ((out as any).attrs?.["data-x"] !== "1") {
                     throw new Error(`expected data-x=1, got ${String((out as any).attrs?.["data-x"])}`);
@@ -423,7 +423,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_selector: single-quoted attr behavior is explicit",
             run() {
-                const out = parse_selector(`div[title='hello']`);
+                const out = _parse_selector(`div[title='hello']`);
 
                 const title = (out as any).attrs?.title;
 
@@ -442,7 +442,7 @@ export function unit_test_parser_helpers(): TestSuite {
             suite: SUITE,
             name: "parse_selector: trims surrounding whitespace",
             run() {
-                const out = parse_selector(`   div#app.card   `);
+                const out = _parse_selector(`   div#app.card   `);
 
                 if ((out as any).tag !== "div") {
                     throw new Error(`expected trimmed selector tag=div, got ${String((out as any).tag)}`);

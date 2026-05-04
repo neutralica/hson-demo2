@@ -53,6 +53,7 @@ export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 export const ROW_SUITEcss: CssMap = {
   background: _COLS.bckdeep,
   cursor: "pointer",
+  textAlign: "left",
 };
 export const ROW_GROUPcss: CssMap = {
   background: _COLS.bckdeep,
@@ -66,6 +67,7 @@ export const tdNameCssBase: CssMap = {
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   userSelect: "any",
+  textAlign: "left",
 };
 
 export const tdNameChildCss: CssMap = {

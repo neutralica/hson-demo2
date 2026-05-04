@@ -1,4 +1,6 @@
-import type { LoopReport } from "../../../../hson-live/dist/diagnostics/loop-3.test";
+
+
+import type { LoopReport } from "hson-live/diagnostics";
 import type { CaseKey, CaseMeta, TestAssertRow } from "../tests.types";
 import { escape_html } from "./render-report";
 

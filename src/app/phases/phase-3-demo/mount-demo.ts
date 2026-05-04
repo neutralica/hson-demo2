@@ -146,8 +146,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .classlist.set(widgetKeys.includes(k) ? "widget-button" : "view-button")
       .css.setMany(MAIN_MENUcss);
   });
-  const mobileDocBtn = mk_div_id(menu.aboutBtn, "mobile-doc-button")
-    .classlist.add($PANEL_HIDDEN);
 
 
   LETTER_LOWS.forEach(l => {
@@ -259,7 +257,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
   
   demoBox.listen.document.onKeyDown((ke) => {
-    if (ke.key === "ƒ") {
+    if (ke.key === "~") {
       mount_prairie(stage);
     }
   });
@@ -276,12 +274,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     void spawn_flower(fleurField, x, y);
 
-
-
   });
 
-  // DEBUG - delete
-  // demoSlot.append(make_test_swatch())
   debug_state_smoke_test();
 
 

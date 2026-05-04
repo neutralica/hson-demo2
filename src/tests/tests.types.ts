@@ -1,7 +1,8 @@
 // tests.types.ts
 
 import type { LiveTree } from "hson-live";
-import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "../../../hson-live/dist/diagnostics/loop-3.test";
+import type { Artifact, LoopReport } from "hson-live/diagnostics";
+import type { FixtureAtom, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 

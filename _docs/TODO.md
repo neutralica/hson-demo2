@@ -40,7 +40,7 @@ LiveDemo TODO
 		reparse target
 		compare normalized node
 
-* Parsing panel UI - Mostly closed, but earlier QoL items included:
+* Parsing panel UI - Mostly closed except:
 	node/text toggle clarity
 	mode switch indicator
 	per-panel node view

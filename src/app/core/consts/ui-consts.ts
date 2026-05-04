@@ -22,20 +22,18 @@ export const COLOR_FOR_FMT_ = {
 };
 
 export const _TXT = {
-  hsonWordMarkMain: "4.375rem", // 70px
-  wordMobile: "2.5rem" /*  "2.5rem" */,         // 40px
-  heading: "1.75rem"/*  "1.625rem" */,          // 26px
-  subhead: "1.25rem"/*  "1.375rem" */,          // 22px
-  main: "1rem"/*  "1.25rem" */,             // 20??px
-  mid: "1rem"/*  "1rem" */,                // 16px
-  unter: "0.75rem" /*  "0.875rem" */,            // 14px
-  reg: "0.75rem" /*  "0.75rem" */,               // 12px
-  smol: "0.65rem" /*  "0.625rem" */,             // 10px
-  wee: "0.55rem" /*  "0.5rem" */,                // 8px
+  hsonWordMarkMain: "4.375rem", 
+  wordMobile: "2.5rem",
+  heading: "1.75rem",
+  subhead: "1.25rem",
+  main: "1rem",
+  mid: "1rem",
+  unter: "0.75rem",
+  reg: "0.75rem" ,
+  smol: "0.65rem",
+  wee: "0.55rem" ,
 } as const;
 
-
-const fullPanelCss: CssMap = { height: "100%", width: "100%", pointerEvent: "none" };
 
 
 export const CODE_PARENScol = ACID_WASH_OKLCH.straw;
@@ -50,8 +48,7 @@ export const CODQ_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
 export const CODE_EQUALScol = OKLCH_FLEURS.brass;
 
 
-// export const TXTcol_MENU = CYBERPUNK_2060_OKLCH.mintIce;
-export const TXTcol_MENU = ACID_WASH_RGBA.softBlue;
+export const TXTcol_MENU = OKLCH_NEUTRALS.silver;
 export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
 export const TXTcol_ALT = OKLCH_NEUTRALS.silver;

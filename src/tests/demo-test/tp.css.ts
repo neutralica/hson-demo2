@@ -7,6 +7,7 @@ import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
+import { OKLCH_VIBRANT } from "../../app/core/consts/vibrant-oklch";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: _TXT.unter,
@@ -84,7 +85,7 @@ export const TEST_LOGGERcss: CssMap = {
   overflowX: "hidden",
   overflowWrap: "anywhere",
   minWidth: "100%",
-  color: HSON_COLOR_.s,
+  color: OKLCH_VIBRANT.blueCobalt,
   whiteSpace: "pre-wrap",
   // letterSpacing: "0.14em",
   lineHeight: "1.75rem",
