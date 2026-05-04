@@ -117,8 +117,8 @@ export function tp_factory(): Outcome<TestPanel> {
 
         switch (head) {
             case "FAIL": return "red";
-            case "PASS": return OKLCH_NEUTRALS.greenTint;
-            case "OK": return OKLCH_NEUTRALS.greenTint;
+            case "PASS": 
+            case "OK": return OKLCH_VIBRANT.mossToxic;
             case "SKIP":
             case "WARN": return HSON_COLOR_.s;
             case "RUN": return OKLCH_FLEURS.cyanDust;
@@ -198,14 +198,14 @@ export function tp_factory(): Outcome<TestPanel> {
             const statusText = e.status.toUpperCase();
 
             if (currentCaseLine) {
-                appendLogSpan(currentCaseLine, statusText);
+                appendLogLine(statusText);
 
                 if (typeof e.ms === "number") {
                     appendLogSpan(currentCaseLine, `(${e.ms.toFixed(1)}ms)`);
                 }
 
                 if (e.status === "fail" && e.err) {
-                    appendLogSpan(currentCaseLine, _snip(`— ${e.err}`, 2000));
+                    appendLogLine(_snip(`— ${e.err}`, 2000));
                 }
             } else {
                 const fallback = appendLogLine(statusText);

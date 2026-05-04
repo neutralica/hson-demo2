@@ -44,11 +44,12 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
 export const ABOUT_DOCcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
-  padding: "10px",
+  padding: "10px 10px 10px 2rem ",
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
   background: _COLS.bckdeep,
+  
 
 };
 
