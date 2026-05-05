@@ -1,11 +1,41 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $grn_, COLOR_4WAY, ACID_WASH_RGBA, ACID_WASH_OKLCH, $gry_ } from "../../../core/consts/colors.consts";
+import { $blu_, $grn_, COLOR_4WAY, ACID_WASH_RGBA, ACID_WASH_OKLCH, $gry_, OKLCH_MUTED_PASTEL } from "../../../core/consts/colors.consts";
 import { _COLS } from "../../../core/consts/ui-consts";
-import { OKLCH_VIBRANT } from "../../../core/consts/vibrant-oklch";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/vibrant-oklch";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { _TXT, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, GREENLIKEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_ALT_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
 import { MONO_MAINfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
+
+
+
+export const ABOUT_DOCcss: CssMap = {
+  minWidth: "0",
+  minHeight: "0",
+  padding: "10px 10px 10px 2rem ",
+  boxSizing: "border-box",
+  overflowY: "scroll",
+  overflowX: "hidden",
+  background: _COLS.backhi,
+
+
+};
+
+export const DOC_CONTAINER = {
+  maxWidth: "80ch",
+}
+
+export const ABOUT_TOCcss: CssMap = {
+  alignContent: "end",
+
+  lineHeight: "2rem",
+  padding: "1em",
+  boxSizing: "border-box",
+  background: _COLS.backhi,
+  overflowY: "auto",
+  overflowX: "hidden",
+  fontSize: _TXT.subhead,
+};
 
 export const ABOUT_P_TEXTcss: CssMap = {
   // padding: "0 30px 0 30px",
@@ -13,16 +43,16 @@ export const ABOUT_P_TEXTcss: CssMap = {
   lineHeight: "1.85",
   letterSpacing: "1px",
   color: TXTcol_MAIN,
-  textShadow: "0 0 5px oklch(0.85 0.03 260 / 0.25)",
+  // textShadow: "0 0 5px oklch(0.85 0.03 260 / 0.25)",
   fontFamily: "sans-serif",
   fontWeight: "100",
   fontSize: _TXT.main,
 }
 
-// ADDED: list cell styling (prevents baseline + indent issues)
+
 export const ABOUT_LIST_ROWcss: CssMap = {
-  display: "grid",
-  gridTemplateColumns: "max-content 1fr",
+   display: "grid",
+  gridTemplateColumns: "5ch 1fr",
   columnGap: "1rem",
   alignItems: "start",
   minWidth: "0",
@@ -32,62 +62,44 @@ export const ABOUT_LIST_ROWcss: CssMap = {
 };
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
-  lineHeight: "1",
+  display: "inline",
   textAlign: "left",
   userSelect: "none",
   whiteSpace: "pre",
-  fontSize: "0.75rem",
-  color: set_alpha(TXTcol_MAIN, 0.6),
-  paddingTop: "0.7em",
-};
-
-export const ABOUT_DOCcss: CssMap = {
-  minWidth: "0",
-  minHeight: "0",
-  padding: "10px 10px 10px 2rem ",
-  boxSizing: "border-box",
-  overflowY: "scroll",
-  overflowX: "hidden",
-  background: _COLS.bckdeep,
-  
-
-};
-
-export const DOC_CONTAINER = {
-  maxWidth: "80ch", 
-  
-}
-
-export const ABOUT_TOCcss: CssMap = {
-  minWidth: "0",
-  minHeight: "0",
-  gridAutoRows: "min-content",
-  alignContent: "end",
-  gap: "8px",
-  padding: "8px 8px 12px 8px",
-  boxSizing: "border-box",
-  background:_COLS.bckdeep,
-  overflowY: "auto",
-  overflowX: "hidden",
+  // fontSize: "1rem",
+  verticalAlign: "center",
+  color: TXTcol_ALT,
 };
 
 export const LIST_TEXTcss: CssMap = {
-  whiteSpace: "pre-wrap",
   fontWeight: "300",
-  fontFamily: MONO_MAINfont, 
+  fontFamily: MONO_MAINfont,
+  fontSize: _TXT.main,
+  color: TXTcol_ALT,
   letterSpacing: "1px",
-  minWidth: "0",
-  lineHeight: "1.55",
+};
+
+
+export const ANTI_LIST_MARKERcss: CssMap = {
+  color: set_alpha(REDLIKEcol, 0.8),
+  fontWeight: "700",
+};
+
+export const ANTI_LIST_TEXTcss: CssMap = {
+  ...LIST_TEXTcss,
+  color: REDLIKEcol,
+  // fontSize: $txt_.main,
+  // textDecoration: "line-through",
 };
 
 export const HRcss: CssMap = {
   width: "90%",
   height: "1px",
   background: `linear-gradient(90deg,
-    transparent 0%,
-    ${ACID_WASH_RGBA.fadedMagenta} 20%,
-    ${ACID_WASH_RGBA.fadedMagenta} 80%,
-    transparent 100%)`,
+  transparent 0%,
+  ${ACID_WASH_RGBA.fadedMagenta} 10%,
+  ${ACID_WASH_RGBA.fadedMagenta} 90%,
+  transparent 100%)`,
   opacity: "0.8",
   marginTop: "12px",
   marginBottom: "12px",
@@ -97,39 +109,28 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "6px",
-  color: TOCcol,
+  color: OKLCH_MUTED_PASTEL.blue,
   _hover: {
     color: "black",
-    background:$gry_.dark,
+    background: $gry_.dark,
   }
 };
 
 export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
-  color: set_alpha(TOCcol, 0.7),
+  color: TOCcol,
+  fontSize: _TXT.subhead,
 };
-
-
-export const ABOUT_CSS: CssMap = {
-  whiteSpace: "pre-line",
-  overflowX: "auto",
-  padding: "10px 12px",
-  background: _COLS.bckdeep,
-  fontweight: 300,
-  fontFamily: MONO_MAINfont,
-  lineHeight: "1.75rem",
-  fontSize: _TXT.main,
-}
 
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
   fontFamily: MONO_MAINfont,
   fontWeight: "300",
   letterSpacing: "0.06em",
-  lineHeight: "1.55rem",
-  overflowWrap: "anywhere",
+  lineHeight: "1.55em",
   whiteSpace: "pre-wrap",
+  overflowWrap: "break-word",
 } as const;
 
 // parentheses inside inline code
@@ -152,6 +153,9 @@ export const CODE_COMMENTScss: CssMap = {
   // fontSize: $txt_.main,
   overflowWrap: "anywhere",
   whiteSpace: "normal",
+  // display: "inline-block",
+  // paddingLeft: "2rem",
+  // textIndent: "-2rem",
 
 };
 
@@ -169,17 +173,6 @@ export const CODE_PUNCTcss = {
   fontWeight: "700",
 };
 
-export const ANTI_LIST_MARKERcss: CssMap = {
-  color: set_alpha(REDLIKEcol, 0.8),
-  fontWeight: "700",
-};
-
-export const ANTI_LIST_TEXTcss: CssMap = {
-  ...LIST_TEXTcss,
-  color: REDLIKEcol,
-  // fontSize: $txt_.main,
-  // textDecoration: "line-through",
-};
 
 export const WARNINGcss: CssMap = {
   color: "red",
@@ -207,6 +200,7 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   display: "grid",
+  gridTemplateColumns: "1fr 3fr",
   gap: "14px",
   boxSizing: "border-box",
 };
@@ -214,24 +208,24 @@ export const ABOUT_BODY_ROWcss: CssMap = {
 
 export const TOC_BTNcss: CssMap = {
   ...MONOcss,
-  fontSize: _TXT.main,
+  fontSize: _TXT.subhead,
   // lineHeight: "1.1",
   // padding: "12px 26px",
   boxSizing: "border-box",
   cursor: "pointer",
   userSelect: "none",
-  minWidth: "0",
   textAlign: "right",
   _hover: {
     background: TOCcol,
-    color: _COLS.bckgd
+    color: _COLS.backlo
   }
 };
 
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px",
-  background: _COLS.bckdeep,
-  overflowWrap: "anywhere",
+  background: _COLS.backhi,
+  whiteSpace: "pre-wrap",
+  overflowWrap: "break-word", // not anywhere
   fontSize: $CODE_FONT_SIZE,
   lineHeight: "1.85",
   padding: "1rem",
@@ -267,6 +261,7 @@ export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   color: URLcol,
   fontSize: _TXT.subhead,
+  fontFamily: MONO_MAINfont,
   textDecoration: "underline",
   marginLeft: "2rem"
 }

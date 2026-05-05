@@ -45,7 +45,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
@@ -101,7 +101,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
 };
 
 // HTML output box: same textarea styling

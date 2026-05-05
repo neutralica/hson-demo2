@@ -245,7 +245,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });
   menu.aboutBtn.listen.stopProp().onClick(() => {
     const next = get_view() === "about" ? null : "about";
-
     set_view(next);
     set_about_toc_open(next === "about");
   });

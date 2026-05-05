@@ -1,11 +1,11 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, $grn_, $gry_, $pnk_, $red_etc_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
-import { _COLS } from "../../core/consts/ui-consts";
+import { $blu_, } from "../../core/consts/colors.consts";
+import { _COLS} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { GRID_GAPstr, _TXT, GRAFFITIcol, MONO_MAINfont, TXTcol_MENU, GREENLIKEcol, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
-import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
+import { GRID_GAPstr, _TXT, GRAFFITIcol, MONO_MAINfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+
 
 export const MAIN_MENUcss: CssMap = {
   fontFamily: MONO_MAINfont,
@@ -20,10 +20,10 @@ export const MAIN_MENUcss: CssMap = {
   _hover: {
     fontWeight: "100",
     background: BLUELIKEcol,
-    color: _COLS.bckdeep
+    color: _COLS.backhi
   },
   _active: {
-    background: _COLS.bckdeep,
+    background: _COLS.backhi,
     color: BLUELIKEcol,
     fontWeight: "700",
   }
@@ -76,7 +76,7 @@ export const DEMOcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: `linear-gradient(${_COLS.bckgd} 80%,${set_alpha($blu_.muted, 0.03)})`,
+  background: `linear-gradient(${_COLS.backlo} 80%,${set_alpha($blu_.muted, 0.03)})`,
   pointerEvents: "none",
   boxSizing: "border-box"
 };
@@ -98,7 +98,7 @@ export const DEMO_SCREENcss: CssMap = {
   pointerEvents: "none",
   minHeight: "0",
   boxSizing: "border-box",
-  overscrollBehaviorY:"none", // not sure it will do what I want
+  overscrollBehaviorY: "none", // not sure it will do what I want
 
 }
 
@@ -106,7 +106,6 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   boxSizing: "border-box",
   position: "relative",
   display: "grid",
-
   // left = nav, right = main
   gridTemplateColumns: "200px 4fr",
   gridTemplateRows: "minmax(0, 1fr)",

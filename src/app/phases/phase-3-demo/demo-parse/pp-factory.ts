@@ -129,7 +129,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         margin: "0",
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
-        background: _COLS.bckdeep,
+        background: _COLS.backhi,
         color: "inherit",
       });
 

@@ -16,7 +16,7 @@ const LOGOBOXcss:CssMap = {
   overflowY: "hidden",
   color: OKLCH_NEUTRALS.ash,
   width: "25ch",
-  backgroundColor: _COLS.bckgd,
+  backgroundColor: _COLS.backlo,
   fontFamily: MONO_MAINfont,
 }
 

@@ -43,7 +43,7 @@ export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
   ...UI_BTN_HOVERcss(TXTcol_MENU),
   alignItems: "center",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   color: TXTcol_MENU,
   fontSize: _TXT.subhead,
 }
@@ -96,7 +96,7 @@ export const TEST_LOG_BOXcss: CssMap = {
   overflow: "auto",
   height: "100%",
   display: "grid",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
 };
 export const TEST_ROW_CONTAINERcss = {
   display: "grid",
@@ -168,6 +168,6 @@ export const MAKE_CHIP_DEFAULTcss = {
   minWidth: "44px",
   boxSizing: "border-box",
   overflow: "hidden",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   transition: "transform 90ms ease, filter 140ms ease",
 };

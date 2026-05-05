@@ -105,7 +105,7 @@ export const PP_IDLEcss = (f: Fmt) => {
     pointerEvents: "auto",
     userSelect: "none",
     boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
-    background: _COLS.bckdeep,
+    background: _COLS.backhi,
     color: "darkred",
   };
 }
@@ -115,7 +115,7 @@ export const PP_INACTIVE_INVALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: _COLS.bckdeep,
+    background: _COLS.backhi,
     boxShadow: "inset 0 0 9px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.9),
     color: "darkred",
   };

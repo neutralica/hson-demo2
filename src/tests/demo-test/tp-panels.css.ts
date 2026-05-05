@@ -33,7 +33,7 @@ export const UI_PANELcss: CssMap = {
     boxSizing: "border-box",
     overflowY: "auto",
     maxHeight: "100%",
-    background: _COLS.bckdeep,
+    background: _COLS.backhi,
 }
 
 export const UI_TEXTcss = {
@@ -60,5 +60,5 @@ export const PANEL_BRANCHcss: CssMap = {
     boxSizing: "border-box",
     gridTemplateColumns: `1fr 1fr`,
     gridTemplateRows: "auto 1fr",
-    background: _COLS.bckdeep,
+    background: _COLS.backhi,
 };

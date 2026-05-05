@@ -108,7 +108,7 @@ export const MOUSE_TRACKERcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "1",
-  backgroundColor: _COLS.bckgd,
+  backgroundColor: _COLS.backlo,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
@@ -123,7 +123,7 @@ export const STACK_TABLEcss = {
   minWidth: "0",
   minHeight: "0",
   height: "100%",
-  background: _COLS.bckdeep
+  background: _COLS.backhi
 }
 
 export const MOUSE_STACKcss = {
@@ -145,7 +145,7 @@ export const MOUSE_COORDScss: CssMap = {
   marginLeft: "-1.5rem",
   alignContent: "end",              // CHANGED
   justifyItems: "start",
-  background: _COLS.bckgd,
+  background: _COLS.backlo,
   height: "auto",
 } as const;
 

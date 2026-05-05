@@ -38,7 +38,7 @@ export const _TXT = {
 export const TXTcol_MENU = HSON_COLOR_.h;
 export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
-export const TXTcol_ALT = OKLCH_NEUTRALS.silver;
+export const TXTcol_ALT = OKLCH_FLEURS.fadedGold;
 export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
 
 export const CODE_PARENScol = ACID_WASH_OKLCH.straw;
@@ -47,7 +47,7 @@ export const URLcol = ACID_WASH_RGBA.softBlue;
 export const COPYRITEcol = $gry_.dimmer;
 export const HEADERcol = OKLCH_VIBRANT.mintIce;
 export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
-export const TOCcol = ACID_WASH_OKLCH.moss;
+export const TOCcol = OKLCH_VIBRANT.mintIce;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
 export const CODQ_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
 export const CODE_EQUALScol = OKLCH_FLEURS.brass;
@@ -58,7 +58,7 @@ export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
 export const MONO_MAINfont = "'Inconsolata', Monaco, monospace";
 export const SANS_MAINfont = ""
 export const GRID_GAPstr = "2px";
-export const $CODE_FONT_SIZE = _TXT.reg;
+export const $CODE_FONT_SIZE = _TXT.main;
 export const $PANEL_HIDDEN = 'panel-hidden';
 
 // either do this or don't:
@@ -73,15 +73,15 @@ export const WATERMARK_FMT_: Record<Fmt, string> = {
 
 
 export const REDLIKEcol = OKLCH_VIBRANT.redSignal;
-export const BLUELIKEcol = OKLCH_VIBRANT.blueCobalt;
+export const BLUELIKEcol = HSON_COLOR_.h;
 export const GREENLIKEcol = OKLCH_VIBRANT.mossToxic;
 export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
 
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 
 export const _COLS = {
-  bckgd: deepBack,
-  bckdeep: bckColor,
+  backlo: deepBack,
+  backhi: bckColor,
   bcklight,
 };
 

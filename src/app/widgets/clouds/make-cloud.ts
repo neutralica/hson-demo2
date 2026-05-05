@@ -13,8 +13,8 @@ const FADE_MID_PCT = 10;      // start thinning here
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  ${_COLS.bckgd} ${FADE_MID_PCT}%,
-  ${_COLS.bckgd} 100%
+  ${_COLS.backlo} ${FADE_MID_PCT}%,
+  ${_COLS.backlo} 100%
 )`;
 export type CloudSvgOpts = {
   seed: number;

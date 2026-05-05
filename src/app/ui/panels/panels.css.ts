@@ -16,7 +16,7 @@ export const UI_BUTTON_BORDERcss: CssMap = {
 
   }
 };
-export const UI_BTN_HOVERcss = (col: string = TXTcol_MENU, back: string = _COLS.bckdeep): CssMap => {
+export const UI_BTN_HOVERcss = (col: string = TXTcol_MENU, back: string = _COLS.backhi): CssMap => {
   return {
     _hover: {
       background: col,
@@ -40,7 +40,7 @@ export const UI_BTN_STDcss: CssMap = {
   fontFamily: MONO_MAINfont,
   fontSize: _TXT.reg,
   textTransform: "lowercase",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
 } as const;
 
 
@@ -54,7 +54,7 @@ export const UI_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(TXTcol_CODE),
   height: "100%",
   padding: "4px 4px",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   color: TXTcol_CODE,
   width: "25%",
 // justifyContent: "flex-end",
@@ -89,7 +89,7 @@ export const UI_PANEL_HEADcss: CssMap = {
   height: "2rem",
   maxHeight: "2rem",
   padding: "6px",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -101,7 +101,7 @@ export const UI_PANEL_HEADERcss: CssMap = {
   zIndex: "5",
   height: "2rem",
   maxHeight: "2rem",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   // columnGap: "0.5ch",
   width: "100%",
   display: "inline-flex",

@@ -23,8 +23,8 @@ export const OKLCH_VIBRANT = {
   orangeTangerine: "oklch(0.76 0.145 45)", // bright synthetic orange
   amberPulse: "oklch(0.82 0.125 75)", // warm amber accent
   yellowBrass: "oklch(0.70 0.090 85)", // darker metallic yellow
-  yellowPollen: "oklch(0.82 0.110 90)", // softened warm yellow
-  yellowSodium: "oklch(0.9 0.170 100)", // streetlight yellow
+  yellowPollen: "oklch(0.79 0.110 90)", // softened warm yellow
+  yellowSodium: "oklch(0.8 0.170 100)", // streetlight yellow
   yellowCanary: "oklch(0.90 0.160 100)", // bright signal yellow
   yellowVolt: "oklch(0.86 0.200 105)", // electric yellow spike
 
@@ -34,7 +34,7 @@ export const OKLCH_VIBRANT = {
   limeAcid: "oklch(0.84 0.175 125)", // synthetic acid lime
   mossToxic: "oklch(0.72 0.100 145)", // murky cyberpunk green
   fernStatic: "oklch(0.76 0.095 160)", // greener cool accent
-  mintIce: "oklch(0.80 0.090 175)", // pale mint-green
+  mintIce: "oklch(0.70 0.10 175)", // pale mint-green
 
 
   // --- cyans ---

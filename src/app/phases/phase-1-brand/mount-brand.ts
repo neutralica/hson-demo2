@@ -29,7 +29,7 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     position: "fixed",
     top: "1rem",
     left: "1rem",
-    backgroundColor: _COLS.bckgd,
+    backgroundColor: _COLS.backlo,
     padding: "1rem",
     fontFamily: MONO_MAINfont,
     color: $grn_.std,

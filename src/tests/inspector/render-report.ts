@@ -254,7 +254,7 @@ export function render_transform_report(
       margin: 0; padding: 14px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px; line-height: 1.35;
-      background: ${_COLS.bckdeep}; color: #e9e9ee;
+      background: ${_COLS.backhi}; color: #e9e9ee;
     }
     .top{
   display:grid;

@@ -156,9 +156,9 @@ Each demo proves at least one of these properties of hson-live:
 - unified representation of markup and data  
 - HSON as viable markup format
 
-Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data. Rather than `ui = ƒ(state)`, hson-live proposes a new paradigm:
+Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data. Rather than "`ui = ƒ(state)`", hson-live proposes a new paradigm:
 
-### view ≡ state
+## view === state
 
 LiveDemo will expand alongside future versions of hson-live.
 

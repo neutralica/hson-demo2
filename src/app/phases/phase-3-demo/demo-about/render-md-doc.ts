@@ -63,7 +63,7 @@ export function render_md_doc(host: LiveTree, src: string): void {
       const item = listBuf[i];
       if (!item) continue;
 
-      const li = list.create.div().classlist.add("md-li");
+      const li = list.create.div().classlist.add("md-li"); //// div is correct here, seems like
       li.css.setMany(ABOUT_LIST_ROWcss);
 
       // choose marker text by list kind
@@ -76,11 +76,10 @@ export function render_md_doc(host: LiveTree, src: string): void {
         ? ANTI_LIST_MARKERcss
         : ABOUT_LIST_MARKERcss;
 
-      li.create.div()
+      li.create.span() //// this was div, but this also used to work before when it was div
         .text.set(marker)
         .css.setMany({
           ...markerCss,
-          // indent marker for nested UL only
           marginLeft: "1rem",
         });
 
@@ -89,14 +88,14 @@ export function render_md_doc(host: LiveTree, src: string): void {
         ? ANTI_LIST_TEXTcss
         : LIST_TEXTcss;
 
-      const body = li.create.div().css.setMany({
-        ...bodyCss,
-        paddingLeft: `${item.depth * 14}px`,
-      });
+      // const body = li.create.span().css.setMany({
+      //   ...bodyCss,
+      //   paddingLeft: `${item.depth * 14}px`,
+      // }); //// the rendered line was appended to this; I have appended it directly to the li element since that intermediary wrapper seemed pointless? due to the aforementioned complexity of the element for what should be a pretty simple shape
 
       const lines = item.text.split("\n");
       for (let j = 0; j < lines.length; j += 1) {
-        const row = body.create.div();
+        const row = li.create.span().css.setMany(bodyCss); //// this is the text itself, and this was a div. But it also worked previously as a div. 
         render_line_with_comment(row, lines[j] ?? "", "prose");
       }
     }

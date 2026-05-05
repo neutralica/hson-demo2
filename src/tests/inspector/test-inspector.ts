@@ -86,7 +86,7 @@ export function create_inspector(
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
-    background: _COLS.bckdeep
+    background: _COLS.backhi
   });
   const header = mk_div_cls(root, "insp-header").css.setMany({
     // header is natural height

@@ -45,18 +45,18 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   fontFamily: "Monaco",
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
 };
 
 export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 
 export const ROW_SUITEcss: CssMap = {
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   cursor: "pointer",
   textAlign: "left",
 };
 export const ROW_GROUPcss: CssMap = {
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   cursor: "pointer",
 };
 
@@ -89,7 +89,7 @@ export const ROW_CASEcss: CssMap = {
 
 export const ROW_CASE_FAILcss: CssMap = {
   color: $red_etc_.heartsBlood,
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   fontWeight: "700 /* !important */",
   // filter: "saturate(1.3) brightness(1.3)"
 };
@@ -114,7 +114,7 @@ export const PREVIEW_METAcss: CssMap = {
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {
-  background: _COLS.bckdeep,
+  background: _COLS.backhi,
   color: ACID_WASH_OKLCH.mutedRed,
   // filter: "saturate(1.3) brightness(1.3)"
 };

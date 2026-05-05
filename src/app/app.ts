@@ -28,7 +28,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
 
   const app = mk_div_id(root, "app")
     .classlist.set("app")
-    .css.set.backgroundColor(_COLS.bckgd);
+    .css.set.backgroundColor(_COLS.backlo);
 
   const stage = mk_div_id(app, "stage")
     .classlist.add("stage")

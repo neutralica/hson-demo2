@@ -17,7 +17,7 @@ export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
 
   const base: CssMap = {
     ...UI_BTN_STDcss,
-    background: _COLS.bckdeep,
+    background: _COLS.backhi,
     // padding: "6px 8px",
     // userSelect: "none",
     // cursor: "pointer",

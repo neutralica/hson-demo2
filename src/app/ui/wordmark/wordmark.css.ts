@@ -21,7 +21,7 @@ export const LETTER_CSS: CssMap = {
   lineHeight: "0.88",
   fontFamily: "'Times New Roman', Georgia, Iowan Old Style, Palatino, serif, ui-serif",
   fontWeight: "700",
-  color: _COLS.bckgd,
+  color: _COLS.backlo,
 };
 
 

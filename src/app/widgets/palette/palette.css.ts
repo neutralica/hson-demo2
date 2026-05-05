@@ -15,6 +15,6 @@ export const PALETTE_TAB_CSS: CssMap = {
     minHeight: "200px",
     maxHeight: "700px",
     overflowY: "scroll",
-    backgroundColor: _COLS.bckgd,
+    backgroundColor: _COLS.backlo,
 
 }

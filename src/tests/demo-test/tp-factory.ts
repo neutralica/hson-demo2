@@ -201,11 +201,11 @@ export function tp_factory(): Outcome<TestPanel> {
                 appendLogLine(statusText);
 
                 if (typeof e.ms === "number") {
-                    appendLogSpan(currentCaseLine, `(${e.ms.toFixed(1)}ms)`);
+                    appendLogLine( `(${e.ms.toFixed(1)}ms)`);
                 }
 
                 if (e.status === "fail" && e.err) {
-                    appendLogLine(_snip(`— ${e.err}`, 2000));
+                    appendLogSpan(currentCaseLine, _snip(`— ${e.err}`, 2000));
                 }
             } else {
                 const fallback = appendLogLine(statusText);
