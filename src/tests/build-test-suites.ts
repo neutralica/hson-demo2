@@ -1,4 +1,4 @@
-import type {  CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
+import type { CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
 import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
 import { _snip } from "../app/utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
@@ -71,14 +71,23 @@ export function make_transform_test_suite(
         });
       }
 
+      const input =
+        typeof atom === "string"
+          ? atom
+          : (typeof atom === "object" && atom && "text" in atom)
+            ? JSON.stringify((atom as { text?: unknown }).text ?? "", null, 2)
+            : JSON.stringify(atom, null, 2);
+
       cases.push(_freeze({
         suite,
         name,
         meta: {
           fixture: group,
+          input,
           sub,
-          preview: preview_atom(atom),
+          preview: input.length ? _snip(input) : "—",
         },
+
 
         run: () => {
           const base = {
@@ -87,13 +96,6 @@ export function make_transform_test_suite(
             times: 3,
             stopOnFirstFail: false,
           } as const;
-
-          const input =
-            typeof atom === "string"
-              ? atom
-              : (typeof atom === "object" && atom && "text" in atom)
-                ? JSON.stringify((atom as { text?: unknown }).text ?? "", null, 2)
-                : JSON.stringify(atom, null, 2);
 
           const report = hson._test_full_loop(atom, {
             ...base,
@@ -155,18 +157,18 @@ export function build_suites_for_mode(
       make_transform_test_suite(h, HSON_FIXTURES, "transform/hson/fixtures", map),
       make_transform_test_suite(h, TRANSFORM_FAILS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
       make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
-      make_transform_test_suite(h, { level2: JSON_FIXTURES_LEVEL2 }, "transform/json/level-2", map)
+      make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
     ]);
   }
   if (mode === "dev") {
     return _freeze([
-      make_transform_test_suite(h, { level2: JSON_FIXTURES_LEVEL2 }, "transform/json/level-2", map)
+      make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
     ])
   }
   if (mode === "unit") {
     return _freeze([
       ...all_unit_tests(),
-      
+
     ])
   }
   if (mode === "livetree") {
@@ -174,7 +176,7 @@ export function build_suites_for_mode(
       ...all_livetree_suites(),
     ])
   }
-  
+
   return _freeze([
     make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
     make_transform_test_suite(h, HSON_FIXTURES, "transform/hson/fixtures", map),
@@ -184,7 +186,7 @@ export function build_suites_for_mode(
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "dev/test", map),
     make_transform_test_suite(h, TRANSFORM_FAILS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
     make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
-    make_transform_test_suite(h, { level2: JSON_FIXTURES_LEVEL2 }, "transform/json/level-2", map),
+    make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
     ...all_livetree_suites(),
     ...all_unit_tests(),
   ]);

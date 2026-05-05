@@ -1,18 +1,17 @@
 // ui-consts.ts
 
-import { hson, LiveTree } from "hson-live";
+
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
-import { $gry_, ACID_WASH_OKLCH, ACID_WASH_RGBA, bckColor, bcklight, deepBack } from "./colors.consts";
+import { $gry_, ACID_WASH_OKLCH, ACID_WASH_RGBA, bckColor, bcklight, deepBack, OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4 } from "./colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./vibrant-oklch";
-import type { CssMap } from "hson-live/types";
 import type { Fmt } from "../types/core.types";
 
 export const HSON_COLOR_ = {
-  h: ACID_WASH_RGBA.softBlue,
-  s: ACID_WASH_OKLCH.amber,
-  o: ACID_WASH_OKLCH.smokeRose,
-  n: ACID_WASH_OKLCH.fern,
+  h: OKLCH_VIBRANT.blueElecky,
+  s: OKLCH_VIBRANT.yellowSodium,
+  o: OKLCH_VIBRANT.roseNeon,
+  n: OKLCH_VIBRANT.mintIce,
 };
 
 export const COLOR_FOR_FMT_ = {
@@ -35,12 +34,18 @@ export const _TXT = {
 } as const;
 
 
+// export const TXTcol_MENU = OKLCH_VIBRANT.blueCobalt;
+export const TXTcol_MENU = HSON_COLOR_.h;
+export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
+export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
+export const TXTcol_ALT = OKLCH_NEUTRALS.silver;
+export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
 
 export const CODE_PARENScol = ACID_WASH_OKLCH.straw;
 export const CODE_PARENS_INNERcol = ACID_WASH_OKLCH.bruisedPlum;
 export const URLcol = ACID_WASH_RGBA.softBlue;
 export const COPYRITEcol = $gry_.dimmer;
-export const HEADERcol = ACID_WASH_OKLCH.steel;
+export const HEADERcol = OKLCH_VIBRANT.mintIce;
 export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
 export const TOCcol = ACID_WASH_OKLCH.moss;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
@@ -48,14 +53,9 @@ export const CODQ_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
 export const CODE_EQUALScol = OKLCH_FLEURS.brass;
 
 
-export const TXTcol_MENU = OKLCH_NEUTRALS.silver;
-export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
-export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
-export const TXTcol_ALT = OKLCH_NEUTRALS.silver;
-export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
 
 export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
-export const MONO_MAINfont = "Monaco, monospace";
+export const MONO_MAINfont = "'Inconsolata', Monaco, monospace";
 export const SANS_MAINfont = ""
 export const GRID_GAPstr = "2px";
 export const $CODE_FONT_SIZE = _TXT.reg;

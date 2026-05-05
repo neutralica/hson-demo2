@@ -256,13 +256,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   })
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
   
-  demoBox.listen.document.onKeyDown((ke) => {
-    if (ke.key === "~") {
-      mount_prairie(stage);
-    }
-  });
-
-
   demoScreen.listen.onClick((ev: MouseEvent) => {
     if (get_view() !== "fleurs") return;
 
@@ -281,3 +274,4 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   return relay.ok();
 }
+

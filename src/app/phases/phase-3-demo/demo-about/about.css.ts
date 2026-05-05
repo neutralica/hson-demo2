@@ -74,7 +74,7 @@ export const ABOUT_TOCcss: CssMap = {
 export const LIST_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",
   fontWeight: "300",
-  fontFamily: "Gill Sans", // DO NOT CHANGE - should NOT be Gill Sans
+  fontFamily: MONO_MAINfont, 
   letterSpacing: "1px",
   minWidth: "0",
   lineHeight: "1.55",

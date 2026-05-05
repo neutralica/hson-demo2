@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
 import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
-import { _COLS } from "../../core/consts/ui-consts";
+import { _COLS, MONO_MAINfont } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { _TXT, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
 
@@ -24,7 +24,7 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       zIndex: "9997",
       fontSize: "1.3rem",
       width: "auto",
-      fontFamily: "Monaco",
+      fontFamily: MONO_MAINfont,
       color: REDLIKEcol,
       background: _COLS.bckdeep,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,

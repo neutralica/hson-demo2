@@ -48,7 +48,11 @@ Mutations to LiveTree's HsonNode graph are synchronously reflected in the DOM, a
 
 ---
 
-LiveDemo has been built to prove the viability of HSON. The entire site is built using only the hson-live library and does not use any conventional DOM-creation methods. Its various demos showcase the features and functionality that HSON enables:
+## LiveDemo
+
+LiveDemo (www.terminalgothic.com/hson) has been built to prove the viability of HSON. The entire site is built using only the hson-live library and does not use any conventional DOM-creation methods except where e.g. test verification requires external confirmation of truth. 
+
+The various demos in LiveDemo showcase the features and functionality that HSON enables:
 
 
 ### [about]
@@ -62,7 +66,7 @@ This section contains detailed information about the architecture, structural sy
 
 ### [test]
 
-A growing set of transform, liveTree, and unit tests. Transformation tests provide full string and node logs for inspection.
+An expanding set of transform, liveTree, and unit tests. Transformation tests provide full string and node logs for inspection. 
 
 Demonstrates
 
@@ -77,7 +81,7 @@ This panel shows that the transformation system behaves deterministically and pr
 
 ### [parse]
 
-Users may paste HTML, JSON, or HSON strings and immediately view their equivalent representations in the other formats.
+Users may paste HTML, JSON, or HSON strings into their respective panels and immediately receive their equivalent representations in the other formats. With each change the parsing panels auto-update synchronously while input remains valid.
 
 Demonstrates
 
@@ -95,21 +99,22 @@ Demonstrates
 
 The left panel contains a textarea with an editable HSON document.
 
-As valid input is produced, the HSON is parsed and the resulting HTML is rendered in the right panel.
+While input is valid, changes to the HSON are parsed and the resulting HTML is rendered in the right panel in realtime.
 
 Demonstrates
 
 - realtime parsing and rendering  
 - HSON's viability as a markup format
+- HsonNode graph as markup source of truth
 
 
 ---
 
 ### [mouse]
 
-A diagnostic widget that tracks the mouse pointer across the browser window.
+A diagnostic widget that tracks the mouse pointer while in the browser window.
 
-The panel displays and continuously updates:
+The panel displays in realtime:
 
 - screen coordinates  
 - the current HTMLElement stack  
@@ -117,9 +122,9 @@ The panel displays and continuously updates:
 
 Demonstrates
 
-- realtime DOM updates  
+- direct interaction with and mutation of the HsonNode graph
 - simple access to pointer coordinates
-- direct interaction with and mutation of the node graph without traditional DOM queries  
+- responsive DOM updates
 
 
 ---
@@ -132,9 +137,10 @@ Demonstrates
 
 - native typed SVG handling within liveTree
 - realtime DOM mutation
-- interactive graphics driven directly by the node graph  
+- interactive graphics driven directly by the node graph
+- dynamic markup and CSS integration
 
-On mobile, only [fleurs] is available
+On mobile, only [fleurs] is available.
 
 ---
 

@@ -471,6 +471,5 @@ export const HTML_FIXTURES_LEGACY = _freeze({
 
 export const TRANSFORM_FAILS = {
   html_INVALID, // expect errors
-  json_INVALID,
-  
+  json_INVALID,  
 }
