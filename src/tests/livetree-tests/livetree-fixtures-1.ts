@@ -10,6 +10,7 @@ import { get_node_text_content, set_node_text_content } from "../../../../hson-l
 import { suite_more_contract_refresh } from "./livetree-fixtures-2";
 import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
 import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
+import { flush_dom } from "../inspector/inspector.helpers";
 
 
 function after_paint(): Promise<void> {
@@ -336,133 +337,133 @@ export function suite_append_and_create(): TestSuite {
         return `<root _-elem kids=${kids.map(x => (is_Node(x) ? `<${x._tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
     },
-  {
-                suite: SUITE,
-                name: "create: html markup insertion rejects empty string",
-                fixture: "create/markup-guards",
-                sub: "html-empty-string",
-                html: `<main id="root"></main>`,
+    {
+      suite: SUITE,
+      name: "create: html markup insertion rejects empty string",
+      fixture: "create/markup-guards",
+      sub: "html-empty-string",
+      html: `<main id="root"></main>`,
 
-                act: async (root) => {
-                    const host = root.find.must.byId("root");
-                    let msg = "";
+      act: async (root) => {
+        const host = root.find.must.byId("root");
+        let msg = "";
 
-                    try {
-                        (host.create as any).div(``);
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
+        try {
+          (host.create as any).div(``);
+        } catch (err) {
+          msg = err instanceof Error ? err.message : String(err);
+        }
 
-                    (root as any).__result = { msg };
-                },
+        (root as any).__result = { msg };
+      },
 
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("empty string rejected", r.msg.includes(`expected non-empty markup string`));
-                },
-            }, 
-            {
-                suite: SUITE,
-                name: "create: html markup insertion rejects whitespace string",
-                fixture: "create/markup-guards",
-                sub: "html-whitespace-string",
-                html: `<main id="root"></main>`,
+      assert: async (root, t) => {
+        const r = (root as any).__result;
+        t.ok("empty string rejected", r.msg.includes(`expected non-empty markup string`));
+      },
+    },
+    {
+      suite: SUITE,
+      name: "create: html markup insertion rejects whitespace string",
+      fixture: "create/markup-guards",
+      sub: "html-whitespace-string",
+      html: `<main id="root"></main>`,
 
-                act: async (root) => {
-                    const host = root.find.must.byId("root");
-                    let msg = "";
+      act: async (root) => {
+        const host = root.find.must.byId("root");
+        let msg = "";
 
-                    try {
-                        (host.create as any).div(`   
+        try {
+          (host.create as any).div(`   
                 
                         `); /* ^^^ this space intentionally left blank */
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
+        } catch (err) {
+          msg = err instanceof Error ? err.message : String(err);
+        }
 
-                    (root as any).__result = { msg };
-                },
+        (root as any).__result = { msg };
+      },
 
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("whitespace string rejected", r.msg.includes(`expected non-empty markup string`));
-                },
-            },
-            {
-                suite: SUITE,
-                name: "create: html markup insertion rejects multiple roots",
-                fixture: "create/markup-guards",
-                sub: "html-multiple-roots",
-                html: `<main id="root"></main>`,
+      assert: async (root, t) => {
+        const r = (root as any).__result;
+        t.ok("whitespace string rejected", r.msg.includes(`expected non-empty markup string`));
+      },
+    },
+    {
+      suite: SUITE,
+      name: "create: html markup insertion rejects multiple roots",
+      fixture: "create/markup-guards",
+      sub: "html-multiple-roots",
+      html: `<main id="root"></main>`,
 
-                act: async (root) => {
-                    const host = root.find.must.byId("root");
-                    let msg = "";
+      act: async (root) => {
+        const host = root.find.must.byId("root");
+        let msg = "";
 
-                    try {
-                        (host.create as any).div(`<div id="a"></div><div id="b"></div>`);
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
+        try {
+          (host.create as any).div(`<div id="a"></div><div id="b"></div>`);
+        } catch (err) {
+          msg = err instanceof Error ? err.message : String(err);
+        }
 
-                    (root as any).__result = { msg };
-                },
+        (root as any).__result = { msg };
+      },
 
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("multiple roots rejected", r.msg.includes(`expected exactly one <div> root`));
-                },
-            },
-            {
-                suite: SUITE,
-                name: "create: html markup insertion rejects mismatched root tag",
-                fixture: "create/markup-guards",
-                sub: "html-mismatched-root",
-                html: `<main id="root"></main>`,
+      assert: async (root, t) => {
+        const r = (root as any).__result;
+        t.ok("multiple roots rejected", r.msg.includes(`expected exactly one <div> root`));
+      },
+    },
+    {
+      suite: SUITE,
+      name: "create: html markup insertion rejects mismatched root tag",
+      fixture: "create/markup-guards",
+      sub: "html-mismatched-root",
+      html: `<main id="root"></main>`,
 
-                act: async (root) => {
-                    const host = root.find.must.byId("root");
-                    let msg = "";
+      act: async (root) => {
+        const host = root.find.must.byId("root");
+        let msg = "";
 
-                    try {
-                        (host.create as any).div(`<section id="wrong"></section>`);
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
+        try {
+          (host.create as any).div(`<section id="wrong"></section>`);
+        } catch (err) {
+          msg = err instanceof Error ? err.message : String(err);
+        }
 
-                    (root as any).__result = { msg };
-                },
+        (root as any).__result = { msg };
+      },
 
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("mismatched root rejected", r.msg.includes(`expected exactly one <div> root`));
-                },
-            },
-            {
-                suite: SUITE,
-                name: "create: html markup insertion rejects malformed markup",
-                fixture: "create/markup-guards",
-                sub: "html-malformed",
-                html: `<main id="root"></main>`,
+      assert: async (root, t) => {
+        const r = (root as any).__result;
+        t.ok("mismatched root rejected", r.msg.includes(`expected exactly one <div> root`));
+      },
+    },
+    {
+      suite: SUITE,
+      name: "create: html markup insertion rejects malformed markup",
+      fixture: "create/markup-guards",
+      sub: "html-malformed",
+      html: `<main id="root"></main>`,
 
-                act: async (root) => {
-                    const host = root.find.must.byId("root");
-                    let msg = "";
+      act: async (root) => {
+        const host = root.find.must.byId("root");
+        let msg = "";
 
-                    try {
-                        (host.create as any).div(`<div><span></div>`);
-                    } catch (err) {
-                        msg = err instanceof Error ? err.message : String(err);
-                    }
+        try {
+          (host.create as any).div(`<div><span></div>`);
+        } catch (err) {
+          msg = err instanceof Error ? err.message : String(err);
+        }
 
-                    (root as any).__result = { msg };
-                },
+        (root as any).__result = { msg };
+      },
 
-                assert: async (root, t) => {
-                    const r = (root as any).__result;
-                    t.ok("malformed markup rejected", r.msg.includes(`failed to parse markup`));
-                },
-            },
+      assert: async (root, t) => {
+        const r = (root as any).__result;
+        t.ok("malformed markup rejected", r.msg.includes(`failed to parse markup`));
+      },
+    },
 
   ];
 
@@ -1048,25 +1049,44 @@ export function extraCases(): readonly TestSuite[] {
         box.css.setMany({ opacity: "0.5" });
         box.css.setMany({ opacity: "0.6" });
 
-        await Promise.resolve();
-        await new Promise(r => setTimeout(r, 0));
+        await flush_dom();
       },
-
       assert(tree, t) {
-        const host = document.querySelector("#css-manager") as HTMLElement | null;
-        if (!host) {
-          t.ok("DOM not mounted, skipping css check", true);
-          return;
-        }
+        const box = tree.find.must.byId("box");
+        const quid = box.quid;
 
-        const styleEl = host.querySelector("#_hson") as HTMLStyleElement | null;
+        t.ok("box has quid", typeof quid === "string" && quid.length > 0);
+
+        // LiveTree-level assertion
+        const opacity = box.css.get.property("opacity");
+
+        t.eq("LiveTree css opacity is latest", opacity, "0.6");
+
+        // DOM stylesheet assertion
+        const host = document.querySelector("#css-manager") as HTMLElement | null;
+        const styleEl = host?.querySelector("#_hson") as HTMLStyleElement | null;
         const css = styleEl?.textContent ?? "";
 
-        t.ok("contains latest opacity", css.includes("opacity: 0.6"));
+        console.log("quid:", box.quid);
+        console.log("css state:", box.css.get.property("opacity"));
+        console.log("node:", box.node);
+
+        t.eq(
+          "LiveTree opacity is latest",
+          box.css.get.property("opacity"),
+          "0.6"
+        );
+
+        t.ok(
+          "stylesheet contains latest opacity",
+          /opacity\s*:\s*0\.6\b/.test(css)
+        );
       },
 
       preview() {
-        const styleEl = document.querySelector("#_hson") as HTMLStyleElement | null;
+        const styleEl = document
+          .querySelector("#css-manager")
+          ?.querySelector("#_hson") as HTMLStyleElement | null;
         return styleEl?.textContent?.slice(0, 200) ?? "<no css>";
       },
     },
@@ -1758,6 +1778,93 @@ function suite_css_regressions(): TestSuite {
         return cssText || "<no css snapshot>";
       },
     },
+    {
+      suite: SUITE,
+      name: "css.setMany readback returns latest property value",
+      html: `<main><div id="box"></div></main>`,
+      fixture: "css/setmany",
+      sub: "readback",
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({ opacity: "0.5" });
+        box.css.setMany({ opacity: "0.6" });
+
+        (tree as any).__result = {
+          opacity: box.css.get.property("opacity"),
+          quid: box.quid,
+        };
+      },
+
+      assert(tree, t) {
+        const result = (tree as any).__result;
+
+        t.eq("readback opacity is latest", result.opacity, "0.6");
+        t.ok("box has quid", typeof result.quid === "string" && result.quid.length > 0);
+      },
+    },
+    {
+      suite: SUITE,
+      name: "css.setMany projects single property to stylesheet",
+      html: `<main><div id="box"></div></main>`,
+      fixture: "css/setmany",
+      sub: "project-single",
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({ opacity: "0.6" });
+
+        await Promise.resolve();
+        await new Promise(r => setTimeout(r, 0));
+
+        (tree as any).__result = {
+          quid: box.quid,
+          opacity: box.css.get.property("opacity"),
+        };
+      },
+
+      assert(tree, t) {
+        const result = (tree as any).__result;
+        const css = document
+          .querySelector("#css-manager")
+          ?.querySelector("#_hson")
+          ?.textContent ?? "";
+
+        t.eq("readback opacity is set", result.opacity, "0.6");
+        t.ok("stylesheet contains opacity somewhere", /opacity\s*:\s*0\.6\b/.test(css));
+      },
+    },
+    {
+      suite: SUITE,
+      name: "css.setMany writes multiple properties",
+      html: `<main><div id="box"></div></main>`,
+      fixture: "css/setmany",
+      sub: "multi-prop",
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({
+          opacity: "0.6",
+          color: "red",
+        });
+
+        (tree as any).__result = {
+          opacity: box.css.get.property("opacity"),
+          color: box.css.get.property("color"),
+        };
+      },
+
+      assert(tree, t) {
+        const result = (tree as any).__result;
+
+        t.eq("opacity readback", result.opacity, "0.6");
+        t.eq("color readback", result.color, "red");
+      },
+    },
+
   ];
 
   return make_livetree_suite(SUITE, cases);
