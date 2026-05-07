@@ -29,7 +29,7 @@ export const html_INVALID = {
   vsn_with_attrs_INVALID: `<_-ii class="x" data-_index="0"><p>x</p></_-ii>`,
 
   // INVALID: unknown VSN-like tag (starts with '_' but not recognized)
-  unknown_vsn_tag_INVALID: `<_foo><p>x</p></_foo>`,
+  unknown_vsn_tag_INVALID: `<_-foo><p>x</p></_-foo>`,
 
   // Reserved meta “looks like attr” on standard tag: must map to _meta['data-index'] (not _attrs)
   malformed_attr: `<a href="https://ok" onclick="1" <b>>link</a>`,
