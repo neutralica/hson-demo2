@@ -1,16 +1,17 @@
 import type { CssMap } from "hson-live/types";
-import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { _COLS } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
-import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
+import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { _TXT } from "../../app/core/consts/ui-consts";
-import { OKLCH_VIBRANT } from "../../app/core/consts/vibrant-oklch";
+import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
 
 
 export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
 export const INSPECTOR_ROOTcss = {
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.unter,
   lineHeight: "1.35",
 }
@@ -44,7 +45,7 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   padding: "8px 12px",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
-  fontFamily: "Monaco",
+  fontFamily: SYS_MONOfont,
   background: _COLS.backhi,
 };
 

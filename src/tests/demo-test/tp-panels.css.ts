@@ -1,8 +1,9 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { $blu_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { _COLS } from "../../app/core/consts/ui-consts";
 import { GRID_GAPstr, _TXT, TXTcol_ALT } from "../../app/core/consts/ui-consts";
-import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
+import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
 export const UI_ROOTcss: CssMap = {
@@ -42,7 +43,7 @@ export const UI_TEXTcss = {
     resize: "none",
     width: "100%",
     boxSizing: "border-box",
-    fontFamily: MONO_MAINfont,
+    fontFamily: SYS_MONOfont,
     fontSize: _TXT.reg,
     lineHeight: "1.55",
     // background: COLORS_.bckdeep,

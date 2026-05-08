@@ -2,8 +2,8 @@
 
 import type { LiveTree } from "hson-live";
 import { $blu_ } from "../../core/consts/colors.consts";
-import { OKLCH_NEUTRALS } from "../../core/consts/vibrant-oklch";
-import { MONO_MAINfont, TXTcol_MAIN, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
+import { SYS_MONOfont, TXTcol_MAIN, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
@@ -22,6 +22,6 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       maxHeight: "100%",
       overflow: "hidden",
       color: TXTcol_MAIN,
-      fontFamily: MONO_MAINfont,
+      fontFamily: SYS_MONOfont,
     });
 }

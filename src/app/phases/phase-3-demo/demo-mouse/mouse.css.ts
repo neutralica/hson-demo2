@@ -1,7 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $grn_, ACID_WASH_OKLCH, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
+import { $blu_, $grn_, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
 import { _COLS } from "../../../core/consts/ui-consts";
-import { MONO_MAINfont } from "../../../core/consts/ui-consts";
+import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -39,7 +40,7 @@ export const MOUSE_HOSTcss: CssMap = {
   minHeight: "0",
   maxWidth: "40ch",
   color: ACID_WASH_RGBA.softBlue,
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   // justifySelf: "flex-end",
   display: "flex",
   flexDirection: "column",

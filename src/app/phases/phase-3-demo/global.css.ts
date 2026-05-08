@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
 import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
-import { _COLS, MONO_MAINfont } from "../../core/consts/ui-consts";
+import { _COLS, SYS_MONOfont } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { _TXT, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
 
@@ -22,9 +22,9 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       right: "2rem",
       top: "10rem",
       zIndex: "9997",
-      fontSize: "1.3rem",
+      fontSize: _TXT.heading,
       width: "auto",
-      fontFamily: MONO_MAINfont,
+      fontFamily: SYS_MONOfont,
       color: REDLIKEcol,
       background: _COLS.backhi,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
@@ -64,7 +64,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   textUnderlineOffset: "0.3em",
   _hover: {
     background: $gry_.dark,
-    color: _COLS.backhi,
+    color: TXTcol_MENU,
     fontWeight: "100",
   },
 };

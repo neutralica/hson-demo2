@@ -4,12 +4,12 @@ import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../core/consts/colors.consts";
 import { _COLS} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { GRID_GAPstr, _TXT, GRAFFITIcol, MONO_MAINfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, _TXT, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 
 
 export const MAIN_MENUcss: CssMap = {
-  fontFamily: MONO_MAINfont,
-  fontSize: _TXT.subhead,
+  fontFamily: SYS_MONOfont,
+  fontSize: _TXT.main,
   fontWeight: "400",
   userSelect: "none",
   color: TXTcol_MENU,
@@ -59,8 +59,8 @@ export const MENU_CONTAINERcss: CssMap = {
 
 
 export const HSON_WORDcss: CssMap = {
-  fontSize: _TXT.hsonWordMarkMain,
-  fontFamily: MONO_MAINfont,
+  fontSize: "4rem",
+  fontFamily: SYS_MONOfont,
   fontWeight: "100",
   width: "0.5em",
   userSelect: "none",
@@ -158,7 +158,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   top: "50%",
   transform: "translate(-50%, -50%)",
   whiteSpace: "pre",
-  fontFamily: "monospace",
+  fontFamily: "monospace", // best density; do not change to system mono
   color: GRAFFITIcol,
   boxSizing: "border-box",
   mixBlendMode: "multiply",
@@ -171,7 +171,7 @@ export const HSON_GRAFFITIcss: CssMap = {
 }
 
 export const HSON_SUBcss: CssMap = {
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.main,
   position: "relative",
   textWrap: "nowrap",
@@ -183,7 +183,7 @@ export const HSON_SUBcss: CssMap = {
 }
 
 export const COPYRITEcss: CssMap = {
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.unter,
   position: "fixed",
   bottom: "0.2rem",

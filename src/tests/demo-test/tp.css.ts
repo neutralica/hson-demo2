@@ -1,13 +1,14 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_, ACID_WASH_OKLCH } from "../../app/core/consts/colors.consts";
+import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../app/core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { _COLS } from "../../app/core/consts/ui-consts";
 import { GRID_GAPstr, _TXT, TXTcol_CODE, TXTcol_MENU, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
-import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
+import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
-import { OKLCH_VIBRANT } from "../../app/core/consts/vibrant-oklch";
+import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: _TXT.unter,
@@ -62,7 +63,7 @@ export const TEST_SELECTORcss: CssMap = {
   padding: "10px 8px 10px 20px",
   boxSizing: "border-box",
 
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.main,
 
   // background: $cols_.backdeep,
@@ -78,7 +79,7 @@ export const TEST_LOGGERcss: CssMap = {
   padding: "5px",
   boxSizing: "border-box",
   // background: $cols_.backdeep,
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.unter,
   width: "100%",
   overflowY: "scroll",

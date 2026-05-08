@@ -1,7 +1,7 @@
 {
   "name": "hson-demo2",
   "version": "1.0.0",
-  "description": "demo site showcasing hson-live and liveTree",
+  "description": "interactive demo for hson-live and liveTree",
   "main": "index.js",
   "scripts": {
     "dev": "vite",

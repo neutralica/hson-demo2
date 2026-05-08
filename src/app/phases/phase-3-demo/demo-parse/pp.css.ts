@@ -2,10 +2,11 @@
 
 import type { CssMap } from "hson-live/types";
 
-import { $gry_, ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { $gry_ } from "../../../core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
 import { _COLS } from "../../../core/consts/ui-consts";
-import { OKLCH_NEUTRALS } from "../../../core/consts/vibrant-oklch";
-import { MONO_MAINfont, _TXT, GRID_GAPstr, COLOR_FOR_FMT_, HSON_COLOR_, TXTcol_ALT } from "../../../core/consts/ui-consts";
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
+import { SYS_MONOfont, _TXT, GRID_GAPstr, COLOR_FOR_FMT_, HSON_COLOR_, TXTcol_ALT } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
 
@@ -52,7 +53,7 @@ export const PP_WATERMARKcss: CssMap = {
   placeItems: "center",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.heading,
   textTransform: "uppercase",
   overflow: "hidden",
@@ -93,7 +94,7 @@ export const PP_INACTIVE_VALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: set_alpha(COLOR_FOR_FMT_[f], 0.1),
+    background: set_alpha(COLOR_FOR_FMT_[f], 0.05),
     boxShadow: "inset 0 0 9px 1px " + set_alpha(COLOR_FOR_FMT_[f], 0.1),
     color: COLOR_FOR_FMT_[f],
   };

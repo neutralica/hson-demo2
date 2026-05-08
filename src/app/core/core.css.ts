@@ -1,12 +1,12 @@
 import type { CssMap } from "hson-live/types";
-import { MONO_MAINfont } from "./consts/ui-consts";
+import { _TXT, SYS_MONOfont } from "./consts/ui-consts";
 
 
 // reusable monospace baseline
 
 export const MONOcss: CssMap = {
-  fontFamily: MONO_MAINfont,
-  fontSize: "12px",
+  fontFamily: SYS_MONOfont,
+  fontSize: _TXT.main,
   letterSpacing: "0.06em",
   // background: $cols_.bckdeep,
   width: "100%",

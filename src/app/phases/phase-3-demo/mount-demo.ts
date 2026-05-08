@@ -11,9 +11,10 @@ import { _test_full_loop } from "hson-live/diagnostics";
 import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, _TXT } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, $grn_, $pnk_, $ylw_, ACID_WASH_OKLCH, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { $blu_, $grn_, $pnk_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../core/consts/oklch";
 import { _COLS } from "../../core/consts/ui-consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/vibrant-oklch";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch";
 import { HSON_COLOR_ } from "../../core/consts/ui-consts";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/build-mount-init";
@@ -120,11 +121,14 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .classlist.add('demo-wordmark')
-      .css.setMany(HSON_WORDcss)
+      .css.setMany({
+        ...HSON_WORDcss,
+        // color: OKLCH_VIBRANT.mintIce,
+      })
     return span;
   });
   mk_div_id(menuContainer, "livedemo-subhead")
-    .text.set(`::liveDemo`)
+    .text.set(`liveDemo`)
     .css.setMany(HSON_SUBcss);
 
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);

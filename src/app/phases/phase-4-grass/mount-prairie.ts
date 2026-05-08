@@ -4,7 +4,7 @@ import { LiveTree } from "hson-live";
 import { prairie_factory } from "./prairie.js";
 import { mk_div_id } from "../../utils/makers.js";
 import { _TXT } from "../../core/consts/ui-consts.js";
-import { ACID_WASH_OKLCH } from "../../core/consts/colors.consts.js";
+import { ACID_WASH_OKLCH } from "../../core/consts/oklch.js";
 
 
 const skyColor = "hsl(210 45% 12%)";

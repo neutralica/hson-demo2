@@ -1,3 +1,4 @@
+import { OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4, OKLCH_MUTED_PASTEL } from "./oklch";
 
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,1)";
@@ -209,62 +210,6 @@ export const ACID_WASH_RGBA = {
   dimWhite: "rgba(225,230,235,0.90)",
 };
 
-export const ACID_WASH_OKLCH = {
-  ash: "oklch(0.83 0.0 300)",  // soft neutral grey-blue
-  frost: "oklch(0.82 0.02 210)",
-  mist: "oklch(0.78 0.018 260)",
-
-  sage: "oklch(0.75 0.05 155)",
-  moss: "oklch(0.72 0.06 145)",
-  fern: "oklch(0.70 0.055 165)",
-
-  ice: "oklch(0.80 0.045 220)",
-  sky: "oklch(0.77 0.06 240)",
-  steel: "oklch(0.74 0.05 250)",
-
-  lilac: "oklch(0.78 0.07 300)",
-  orchid: "oklch(0.75 0.08 320)",
-  smokeRose: "oklch(0.73 0.06 20)",
-
-  ember: "oklch(0.74 0.07 35)",
-  amber: "oklch(0.68 0.08 80)",
-  straw: "oklch(0.82 0.07 95)",
-
-  cyanDust: "oklch(0.79 0.055 200)",
-  seaGlass: "oklch(0.76 0.06 185)",
-
-  mutedRed: "oklch(0.72 0.07 15)",
-  bruisedPlum: "oklch(0.70 0.06 330)",
-  twilight: "oklch(0.68 0.045 280)",
-};
-
-export const OKLCH_SOFT_CORE_4 = {
-  blue: "oklch(0.78 0.065 240)",
-  yellow: "oklch(0.82 0.08 95)",
-  green: "oklch(0.75 0.06 150)",
-  pink: "oklch(0.77 0.075 330)",
-};
-
-export const OKLCH_TERMINAL_4 = {
-  blue: "oklch(0.76 0.09 245)",
-  yellow: "oklch(0.80 0.10 90)",
-  green: "oklch(0.73 0.085 155)",
-  pink: "oklch(0.75 0.095 335)",
-};
-
-export const OKLCH_WASHED_NEON_4 = {
-  blue: "oklch(0.79 0.085 235)",
-  yellow: "oklch(0.83 0.09 100)",
-  green: "oklch(0.76 0.08 145)",
-  pink: "oklch(0.78 0.09 340)",
-};
-
-export const OKLCH_MUTED_PASTEL = {
-  blue: "oklch(0.77 0.05 245)",
-  yellow: "oklch(0.81 0.055 95)",
-  green: "oklch(0.74 0.05 150)",
-  pink: "oklch(0.76 0.055 335)",
-};
 export const COLOR_4WAY = {
   ui: OKLCH_SOFT_CORE_4,
   accent: OKLCH_TERMINAL_4,

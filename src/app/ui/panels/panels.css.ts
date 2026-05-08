@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
 import { _COLS } from "../../core/consts/ui-consts";
-import { MONO_MAINfont, _TXT, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { SYS_MONOfont, _TXT, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { OKLCH_VIBRANT } from "../../core/consts/vibrant-oklch";
+import { OKLCH_VIBRANT } from "../../core/consts/oklch";
 
 
 export const UI_BUTTON_BORDERcss: CssMap = {
@@ -37,7 +37,7 @@ export const UI_BTN_STDcss: CssMap = {
   justifyContent: "center",
   userSelect: "none",
   cursor: "pointer",
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.reg,
   textTransform: "lowercase",
   background: _COLS.backhi,
@@ -77,7 +77,7 @@ export const UI_2STACK_VALcss: CssMap = {
   position: "relative",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.unter,
   justifySelf: "flex-end",
   color: OKLCH_VIBRANT.mintIce

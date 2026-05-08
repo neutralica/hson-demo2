@@ -1,8 +1,8 @@
 //css.consts.ts
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
-import { _COLS, MONO_MAINfont } from "../../core/consts/ui-consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/vibrant-oklch";
+import { _COLS, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch";
 import { FADE_1col } from "../../core/consts/ui-consts";
 
 const LOGOBOXcss:CssMap = {
@@ -17,7 +17,7 @@ const LOGOBOXcss:CssMap = {
   color: OKLCH_NEUTRALS.ash,
   width: "25ch",
   backgroundColor: _COLS.backlo,
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
 }
 
 

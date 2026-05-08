@@ -16,7 +16,7 @@ import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { _COLS } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
-import { OKLCH_NEUTRALS } from "../../app/core/consts/vibrant-oklch";
+import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch";
 
 
 export type InspectorUi = Readonly<{

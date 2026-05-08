@@ -6,13 +6,14 @@ import { create_inspector } from "../inspector/test-inspector";
 import { create_test_log } from "../test-logger";
 import { run_test_suites } from "../test-runner";
 import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
-import { $grn_, $ylw_, ACID_WASH_RGBA, ACID_WASH_OKLCH, $blu_ } from "../../app/core/consts/colors.consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../app/core/consts/vibrant-oklch";
-import { $PANEL_HIDDEN, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
+import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../app/core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../app/core/consts/oklch";
+import { $PANEL_HIDDEN, _TXT, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { MONO_MAINfont } from "../../app/core/consts/ui-consts";
+import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
 import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
@@ -133,8 +134,8 @@ export function tp_factory(): Outcome<TestPanel> {
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             minWidth: "0",
-            fontFamily: MONO_MAINfont,
-            fontSize: "12px",
+            fontFamily: SYS_MONOfont,
+            fontSize: _TXT.main,
             lineHeight: "1.25",
             paddingBottom: "2px",
             color: get_line_color(line),
@@ -158,8 +159,8 @@ export function tp_factory(): Outcome<TestPanel> {
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             minWidth: "0",
-            fontFamily: MONO_MAINfont,
-            fontSize: "12px",
+            fontFamily: SYS_MONOfont,
+            fontSize: _TXT.main,
             lineHeight: "1.25",
             color: get_line_color(line),
             marginLeft: "1ch",

@@ -14,7 +14,7 @@ export const MOTEcss = {
   left: "0",
   top: "0",
   willChange: "transform, opacity",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: "monospace",
   fontSize: "14px",
   lineHeight: "14px",
   userSelect: "none",

@@ -1,14 +1,14 @@
 // build.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { ACID_WASH_OKLCH } from "../../../core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
 import { _COLS } from "../../../core/consts/ui-consts";
 import { _TXT, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { MONO_MAINfont } from "../../../core/consts/ui-consts";
+import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { UI_TEXTcss } from "../../../../tests/demo-test/tp-panels.css";
-import { OKLCH_VIBRANT } from "../../../core/consts/vibrant-oklch";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
 
 // --- root that lives inside build div ---
@@ -24,7 +24,7 @@ export const BUILD_ROOTcss: CssMap = {
 
 export const BUILD_TITLEcss: CssMap = {
   position: "relative",
-  fontFamily: MONO_MAINfont,
+  fontFamily: SYS_MONOfont,
   fontSize: _TXT.main,
   letterSpacing: "0.14em",
   textTransform: "lowercase",
@@ -66,8 +66,8 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: MONO_MAINfont,
-  fontSize: "14px",
+  fontFamily: SYS_MONOfont,
+  fontSize: _TXT.main,
   letterSpacing: "0.06em",
 };
 

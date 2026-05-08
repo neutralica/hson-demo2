@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { _COLS } from "../../core/consts/ui-consts";
-import { MONO_MAINfont } from "../../core/consts/ui-consts";
+import { _COLS, _TXT } from "../../core/consts/ui-consts";
+import { SYS_MONOfont } from "../../core/consts/ui-consts";
 
 export const HSON_FONT_PX = 96;
 export const HSON_O_PX = 87;
@@ -73,8 +73,8 @@ export const VER_CSS: CssMap = {
   position: "absolute",
   right: "8px",
   bottom: "5px",
-  fontFamily: MONO_MAINfont,
-  fontSize: "1rem",
+  fontFamily: SYS_MONOfont,
+  fontSize: _TXT.main,
   fontWeight: "700",
   letterSpacing: "-0.19em",
   color: "white",
