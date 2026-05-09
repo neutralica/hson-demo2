@@ -16,9 +16,9 @@ export const HSON_COLOR_ = {
 };
 
 export const COLOR_FOR_FMT_ = {
-  json: OKLCH_FLEURS.fadedGold,
-  html: OKLCH_FLEURS.electricIris,
-  hson: OKLCH_FLEURS.orchidAsh
+  json:HSON_COLOR_.h,
+  html: HSON_COLOR_.o,
+  hson: HSON_COLOR_.h
 };
 
 export const _TXT = {
@@ -32,17 +32,9 @@ export const _TXT = {
   // reg: "0.75rem" ,
   // smol: "0.65rem",
   // wee: "0.55rem" ,
-  sansMain: "1rem",
-  hsonWordMarkMain: "1.25rem",
-  wordMobile: "1.25rem",
-  heading: "1.25rem",
-  subhead: "1.25rem",
+  smol: "14px",
+  sansMain: "1.15rem",
   main: "1.25rem",
-  mid: "1.25rem",
-  unter: "1.25rem",
-  reg: "1.25rem",
-  smol: "1.25rem",
-  wee: "1.25rem",
 } as const;
 
 
@@ -69,7 +61,7 @@ export const COPYRITEcol = $gry_.dimmer;
 export const URLcol = ACID_WASH_RGBA.softBlue;
 
 
-
+export const SYS_SMOLfont = "'Tiny5', Trebuchet MS"
 export const SYS_MONOfont = "'Inconsolata', Monaco, monospace";
 export const SYS_SANSfont = "'IBM Plex Sans', sans-serif";
 
@@ -90,7 +82,7 @@ export const WATERMARK_FMT_: Record<Fmt, string> = {
 
 export const REDLIKEcol = OKLCH_VIBRANT.redSignal;
 export const BLUELIKEcol = HSON_COLOR_.h;
-export const GREENLIKEcol = OKLCH_VIBRANT.mossToxic;
+export const GREENLIKEcol = HSON_COLOR_.n;
 export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
 
 export const FADE_1col = OKLCH_NEUTRALS.silver;

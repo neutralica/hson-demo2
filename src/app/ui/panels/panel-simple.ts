@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import { $blu_ } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
-import { SYS_MONOfont, TXTcol_MAIN, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { _COLS, SYS_MONOfont, TXTcol_MAIN, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
@@ -16,12 +16,12 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       gridTemplateRows: "minmax(0, 1fr)",
       width: "100%",
       height: "100%",
-      padding: "12px",
       boxSizing: "border-box",
       pointerEvents: "all",
       maxHeight: "100%",
       overflow: "hidden",
       color: TXTcol_MAIN,
       fontFamily: SYS_MONOfont,
+      background: _COLS.backlo
     });
 }

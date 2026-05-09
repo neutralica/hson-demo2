@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { $blu_, $grn_, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
-import { _COLS } from "../../../core/consts/ui-consts";
+import { _COLS, _TXT, SYS_SMOLfont } from "../../../core/consts/ui-consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
@@ -40,7 +40,6 @@ export const MOUSE_HOSTcss: CssMap = {
   minHeight: "0",
   maxWidth: "40ch",
   color: ACID_WASH_RGBA.softBlue,
-  fontFamily: SYS_MONOfont,
   // justifySelf: "flex-end",
   display: "flex",
   flexDirection: "column",
@@ -71,22 +70,25 @@ export const MOUSE_POINTER_ORIGINcss = {
 }
 
 
-export const MOUSE_COORD_Xcss = {
-  ...MONOcss,
+export const MOUSE_COORD_Xcss: CssMap = {
+  FontFamily: SYS_SMOLfont,
+  fontSize: _TXT.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1.5rem",
 }
 
 export const MOUSE_COORD_Ycss = {
-  ...MONOcss,
+  FontFamily: SYS_SMOLfont,
+  fontSize: _TXT.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1rem",
 }
 
 export const MOUSE_THETAcss = {
-  ...MONOcss,
+  FontFamily: SYS_SMOLfont,
+  fontSize: _TXT.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "0.1rem",
@@ -96,9 +98,11 @@ export const MOUSE_THETAcss = {
 export const ROW_GRIDcss: CssMap = {
   display: "grid",
   gridTemplateColumns: "4ch 1fr", // 3 columns only (#, element, _QUID)
-  columnGap: "12px",
+  columnGap: "2px",
   alignItems: "baseline",
   minWidth: "0",
+  FontFamily: SYS_SMOLfont,
+  fontSize: _TXT.smol,
 } as const;
 
 export const MOUSE_TRACKERcss: CssMap = {
@@ -113,6 +117,7 @@ export const MOUSE_TRACKERcss: CssMap = {
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
+
 } as const;
 
 export const STACK_TABLEcss = {
@@ -124,7 +129,8 @@ export const STACK_TABLEcss = {
   minWidth: "0",
   minHeight: "0",
   height: "100%",
-  background: _COLS.backhi
+  background: _COLS.backlo,
+
 }
 
 export const MOUSE_STACKcss = {
@@ -135,6 +141,7 @@ export const MOUSE_STACKcss = {
   minWidth: "0",
   minHeight: "0",
   alignContent: "start",
+
 }
 
 export const MOUSE_COORDScss: CssMap = {

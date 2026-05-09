@@ -78,7 +78,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .data.set("field", `${fmt}-bytes`)
       .css.setMany({
         ...UI_2STACK_VALcss,
-        fontSize: _TXT.reg,
+        fontSize: _TXT.main,
       })
       .text.set("0");
 

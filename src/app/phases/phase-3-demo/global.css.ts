@@ -4,6 +4,7 @@ import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
 import { _COLS, SYS_MONOfont } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { _TXT, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { ACID_WASH_OKLCH } from "../../core/consts/oklch";
 
 export const SCROLL_HOVER_COLcss = {
   background: "rgba(180,230,255,0.65)"
@@ -22,7 +23,7 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       right: "2rem",
       top: "10rem",
       zIndex: "9997",
-      fontSize: _TXT.heading,
+      fontSize: _TXT.main,
       width: "auto",
       fontFamily: SYS_MONOfont,
       color: REDLIKEcol,
@@ -70,7 +71,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
-  color: OKLCH_FLEURS.dimFern,
+  color: ACID_WASH_OKLCH.mutedRed,
   fontWeight: "700",
   _hover: {
     background: set_alpha(TXTcol_MENU, 0.6),
@@ -85,5 +86,5 @@ export const ABOUT_BTN_MOBcss = {
   bottom: "2rem",
   left: "2rem",
   fontWeight: "700",
-  fontSize: _TXT.wordMobile,
+  fontSize: _TXT.main,
 };

@@ -31,7 +31,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
   })
   const prairie = box.create.div().text.set("spp.").css.setMany({
     alignSelf: "end",
-    fontSize: _TXT.hsonWordMarkMain,
+    fontSize: _TXT.main,
     fontFamily: "Serif",
     color: ACID_WASH_OKLCH.straw,
     // borderBottom: "5px double " + ACID_WASH_OKLCH.straw,
@@ -42,7 +42,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
     alignSelf: "end",
     marginLeft: "6rem",
     marginBottom: "0.7rem",
-    fontSize: _TXT.subhead,
+    fontSize: _TXT.main,
     fontFamily: "Serif",
     color: ACID_WASH_OKLCH.straw,
   })
@@ -57,7 +57,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
     display: "flex",
     alignSelf: "end",
     marginLeft: "6rem",
-    fontSize: _TXT.mid,
+    fontSize: _TXT.main,
     fontFamily: "Courier",
     color: skyColor,
   })

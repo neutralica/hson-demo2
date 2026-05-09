@@ -74,7 +74,6 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   const hdr = mk_div_cls(table, "mouse-stack-head")
     .css.setMany({
       ...ROW_GRIDcss,
-      ...MONOcss,
       opacity: "0.8",
       // letterSpacing: "12px",
     });
@@ -98,7 +97,6 @@ function mouse_factory(host: LiveTree): MousePanelRig {
       .classlist.add("mouse-stack-row")
       .css.setMany({
         ...ROW_GRIDcss, // same grid as header
-        ...MONOcss,
       });
 
     const ix = makeCell(row, { opacity: "0.7" });

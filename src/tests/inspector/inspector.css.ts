@@ -12,7 +12,7 @@ export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
 export const INSPECTOR_ROOTcss = {
   fontFamily: SYS_MONOfont,
-  fontSize: _TXT.unter,
+  fontSize: _TXT.main,
   lineHeight: "1.35",
 }
 

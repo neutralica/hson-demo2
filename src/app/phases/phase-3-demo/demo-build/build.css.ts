@@ -45,13 +45,13 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
   color: TXTcol_ALT,
-  fontSize: _TXT.reg,
+  fontSize: _TXT.main,
   _focus: {
     boxShadow: "inset 0 0 15px 1px " + COLOR_FOR_FMT_["hson"],
 
@@ -101,7 +101,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
 };
 
 // HTML output box: same textarea styling
@@ -120,7 +120,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
   boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
   color: TXTcol_ALT,
   caretColor: "auto",
-  fontSize: _TXT.reg
+  fontSize: _TXT.main
 
 };
 

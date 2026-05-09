@@ -38,7 +38,7 @@ export const UI_BTN_STDcss: CssMap = {
   userSelect: "none",
   cursor: "pointer",
   fontFamily: SYS_MONOfont,
-  fontSize: _TXT.reg,
+  fontSize: _TXT.main,
   textTransform: "lowercase",
   background: _COLS.backhi,
 } as const;
@@ -46,7 +46,7 @@ export const UI_BTN_STDcss: CssMap = {
 
 export const UI_STACK_LABELcss: CssMap = {
   position: "relative",
-  fontSize: _TXT.reg,
+  fontSize: _TXT.main,
 };
 
 export const UI_BTNcss: CssMap = {
@@ -67,7 +67,7 @@ export const UI_2STACKcss: CssMap = {
   placeItems: "center",
   width: "15%",
   height: "100%",
-  fontSize: _TXT.unter,
+  fontSize: _TXT.main,
   padding: "4px",
   justifyContent: "flex-end",
 };
@@ -78,7 +78,7 @@ export const UI_2STACK_VALcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   fontFamily: SYS_MONOfont,
-  fontSize: _TXT.unter,
+  fontSize: _TXT.main,
   justifySelf: "flex-end",
   color: OKLCH_VIBRANT.mintIce
 };

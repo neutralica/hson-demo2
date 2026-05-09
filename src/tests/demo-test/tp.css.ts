@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../app/core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
-import { _COLS } from "../../app/core/consts/ui-consts";
+import { _COLS, SYS_SMOLfont } from "../../app/core/consts/ui-consts";
 import { GRID_GAPstr, _TXT, TXTcol_CODE, TXTcol_MENU, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
@@ -11,7 +11,7 @@ import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
 
 export const TEST_CHIP_VALUEcss = {
-  fontSize: _TXT.unter,
+  fontSize: _TXT.main,
   fontWeight: "700",
   lineHeight: "1",
   letterSpacing: "0.01em",
@@ -32,7 +32,7 @@ export const CONTROL_ROWcss: CssMap = {
 
 export const TEST_CHIP_LABELcss = {
   marginTop: "4px",
-  fontSize: _TXT.unter,
+  fontSize: _TXT.main,
   lineHeight: "1",
   letterSpacing: "0.06em",
   textTransform: "lowercase",
@@ -44,9 +44,9 @@ export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
   ...UI_BTN_HOVERcss(TXTcol_MENU),
   alignItems: "center",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
   color: TXTcol_MENU,
-  fontSize: _TXT.subhead,
+  fontSize: _TXT.main,
 }
 
 
@@ -55,7 +55,7 @@ export const TEST_RUN_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(ACID_WASH_RGBA.fadedMint),
   alignItems: "center",
   color: ACID_WASH_RGBA.fadedMint,
-  fontSize: _TXT.subhead,
+  fontSize: _TXT.main,
 };
 
 export const TEST_SELECTORcss: CssMap = {
@@ -78,9 +78,6 @@ export const TEST_SELECTORcss: CssMap = {
 export const TEST_LOGGERcss: CssMap = {
   padding: "5px",
   boxSizing: "border-box",
-  // background: $cols_.backdeep,
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.unter,
   width: "100%",
   overflowY: "scroll",
   overflowX: "hidden",
@@ -89,7 +86,7 @@ export const TEST_LOGGERcss: CssMap = {
   color: OKLCH_VIBRANT.blueCobalt,
   whiteSpace: "pre-wrap",
   // letterSpacing: "0.14em",
-  lineHeight: "1.75rem",
+  // lineHeight: "1.75rem",
 } as const;
 
 export const TEST_LOG_BOXcss: CssMap = {
@@ -97,7 +94,7 @@ export const TEST_LOG_BOXcss: CssMap = {
   overflow: "auto",
   height: "100%",
   display: "grid",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
 };
 export const TEST_ROW_CONTAINERcss = {
   display: "grid",
@@ -145,7 +142,6 @@ export const TEST_LOG_PANEcss: CssMap = {
 };
 
 export const TP_ROOTcss: CssMap = {
-  ...PANEL_SAFETYcss,
   width: "100%",
   height: "100%",
 
@@ -169,6 +165,6 @@ export const MAKE_CHIP_DEFAULTcss = {
   minWidth: "44px",
   boxSizing: "border-box",
   overflow: "hidden",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
   transition: "transform 90ms ease, filter 140ms ease",
 };

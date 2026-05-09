@@ -30,7 +30,7 @@ function initBuild(bp: BuildDemo): void {
         }
         if (k === "typing") {
             bp.input.status.text.set("...");
-            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: _TXT.reg });
+            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: _TXT.main });
             return;
         }
         if (k === "valid") {

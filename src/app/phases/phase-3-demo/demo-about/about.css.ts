@@ -1,9 +1,9 @@
 import type { CssMap } from "hson-live/types";
-import {  ACID_WASH_RGBA, $gry_ } from "../../../core/consts/colors.consts";
+import { ACID_WASH_RGBA, $gry_ } from "../../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL } from "../../../core/consts/oklch";
-import { _COLS, SYS_SANSfont } from "../../../core/consts/ui-consts";
+import { _COLS, HSON_COLOR_, SYS_SANSfont, SYS_SMOLfont, TXTcol_MENU } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { _TXT, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol,  HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN, TXTcol_ALT,  TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
+import { _TXT, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODQ_QUOTEcol, COPYRITEcol, HEADERcol, URLcol, REDLIKEcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { MONOcss } from "../../../core/core.css";
 
@@ -16,8 +16,8 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
-  background: _COLS.backhi,
-
+  background: _COLS.backlo,
+  width: "80ch",
 
 };
 
@@ -27,11 +27,11 @@ export const DOC_CONTAINER = {
 
 export const ABOUT_TOCcss: CssMap = {
   alignContent: "end",
-
+  width: "fit-content",
   lineHeight: "2rem",
   padding: "1em",
   boxSizing: "border-box",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
   overflowY: "auto",
   overflowX: "hidden",
   fontSize: _TXT.main,
@@ -42,7 +42,7 @@ export const ABOUT_P_TEXTcss: CssMap = {
   whiteSpace: "pre-wrap",
   lineHeight: "1.85",
   letterSpacing: "1px",
-  color: TXTcol_MAIN,
+  color: TXTcol_MENU,
   // textShadow: "0 0 5px oklch(0.85 0.03 260 / 0.25)",
   fontFamily: SYS_SANSfont,
   fontWeight: "100",
@@ -57,7 +57,7 @@ export const ABOUT_LIST_ROWcss: CssMap = {
   alignItems: "start",
   minWidth: "0",
   maxWidth: "70ch",
-  color: TXTcol_MAIN,
+  color: HSON_COLOR_.o,
   fontFamily: SYS_MONOfont
 };
 
@@ -68,15 +68,15 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   whiteSpace: "pre",
   // fontSize: "1rem",
   verticalAlign: "center",
-  color: TXTcol_ALT,
+  color: HSON_COLOR_.o,
 };
 
 export const LIST_TEXTcss: CssMap = {
-  fontWeight: "300",
+  fontWeight: "100",
   fontFamily: SYS_MONOfont,
   fontSize: _TXT.main,
-  color: TXTcol_ALT,
-  letterSpacing: "1px",
+  color: HSON_COLOR_.o,
+  letterSpacing: "0.6px",
 };
 
 
@@ -95,12 +95,13 @@ export const ANTI_LIST_TEXTcss: CssMap = {
 export const HRcss: CssMap = {
   width: "90%",
   height: "1px",
-  background: `linear-gradient(90deg,
+  background: `linear-gradient(
+  90deg,
   transparent 0%,
-  ${ACID_WASH_RGBA.fadedMagenta} 10%,
+  ${ACID_WASH_RGBA.fadedMagenta} 10%, 
   ${ACID_WASH_RGBA.fadedMagenta} 90%,
   transparent 100%)`,
-  opacity: "0.8",
+  // opacity: "0.8",
   marginTop: "12px",
   marginBottom: "12px",
   marginLeft: "auto",
@@ -180,7 +181,7 @@ export const CODE_PUNCTcss = {
 
 export const WARNINGcss: CssMap = {
   color: "red",
-  fontSize: _TXT.subhead,
+  fontSize: _TXT.main,
   textTransform: "uppercase",
   textAlign: "center",
   textDecoration: "underline",
@@ -204,8 +205,8 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   display: "grid",
-  gridTemplateColumns: "1fr 3fr",
-  gap: "14px",
+  gridTemplateColumns: "auto 1fr",
+  gap: "0",
   boxSizing: "border-box",
 };
 
@@ -258,7 +259,8 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
 
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
-  fontSize: _TXT.main,
+  fontFamily: SYS_SMOLfont,
+  fontSize: "14px",
   color: COPYRITEcol,
   marginTop: "2rem",
 }

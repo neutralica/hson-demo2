@@ -64,7 +64,7 @@ export const set_global_css = (): void => {
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
-    .set.fontSize(_TXT.wee)
+    .set.fontSize(_TXT.main)
 
   mobile.rule("mobile-about-btn", "#about-button")
     .setMany(ABOUT_BTN_MOBcss);

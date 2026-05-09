@@ -9,7 +9,7 @@ import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
 import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../app/core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../app/core/consts/oklch";
-import { $PANEL_HIDDEN, _TXT, HSON_COLOR_ } from "../../app/core/consts/ui-consts";
+import { $PANEL_HIDDEN, _TXT, HSON_COLOR_, SYS_SMOLfont } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
@@ -119,7 +119,7 @@ export function tp_factory(): Outcome<TestPanel> {
         switch (head) {
             case "FAIL": return "red";
             case "PASS": 
-            case "OK": return OKLCH_VIBRANT.mossToxic;
+            case "OK": return OKLCH_VIBRANT.mintIce;
             case "SKIP":
             case "WARN": return HSON_COLOR_.s;
             case "RUN": return OKLCH_FLEURS.cyanDust;
@@ -134,8 +134,8 @@ export function tp_factory(): Outcome<TestPanel> {
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             minWidth: "0",
-            fontFamily: SYS_MONOfont,
-            fontSize: _TXT.main,
+            fontFamily: SYS_SMOLfont,
+            fontSize: _TXT.smol,
             lineHeight: "1.25",
             paddingBottom: "2px",
             color: get_line_color(line),

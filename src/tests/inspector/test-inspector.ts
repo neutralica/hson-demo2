@@ -86,7 +86,7 @@ export function create_inspector(
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     overflow: "hidden",
-    background: _COLS.backhi
+    background: _COLS.backlo
   });
   const header = mk_div_cls(root, "insp-header").css.setMany({
     // header is natural height
@@ -105,7 +105,7 @@ export function create_inspector(
   const tableHost = mk_div_cls(body, "insp-table-host").css.setMany({
     ...PANEL_SAFETYcss,
     display: "flex",
-    placeItems: "top",
+    placeItems: "center",
     textAlign: "center",
     fontSize: _TXT.main,
     color: OKLCH_NEUTRALS.frost,

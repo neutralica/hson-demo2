@@ -2,7 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../core/consts/colors.consts";
-import { _COLS} from "../../core/consts/ui-consts";
+import { _COLS, SYS_SANSfont, SYS_SMOLfont} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { GRID_GAPstr, _TXT, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 
@@ -107,17 +107,16 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   position: "relative",
   display: "grid",
   // left = nav, right = main
-  gridTemplateColumns: "200px 4fr",
+  gridTemplateColumns: "170px 4fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
   gap: GRID_GAPstr,
 
   width: "100%",
   height: "100%",
-  minHeight: "0",
-  minWidth: "0",
-  padding: "1rem",
-  maxWidth: "100vw",
+  // minHeight: "0",
+  // minWidth: "0",
+  // maxWidth: "100vw",
 
   pointerEvents: "none",
 };
@@ -183,8 +182,8 @@ export const HSON_SUBcss: CssMap = {
 }
 
 export const COPYRITEcss: CssMap = {
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.unter,
+  fontFamily: SYS_SMOLfont,
+  fontSize: _TXT.smol,
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",
