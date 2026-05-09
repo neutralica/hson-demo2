@@ -5,18 +5,16 @@ import { $blu_, } from "../../core/consts/colors.consts";
 import { _COLS, SYS_SANSfont, SYS_SMOLfont} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { GRID_GAPstr, _TXT, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 
 export const MAIN_MENUcss: CssMap = {
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
-  fontWeight: "400",
+  ...FONT_FAM_MONO,
   userSelect: "none",
   color: TXTcol_MENU,
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "1.6",
-  letterSpacing: "6%",
   _hover: {
     fontWeight: "100",
     background: BLUELIKEcol,
@@ -170,8 +168,7 @@ export const HSON_GRAFFITIcss: CssMap = {
 }
 
 export const HSON_SUBcss: CssMap = {
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
+  ...FONT_FAM_MONO,
   position: "relative",
   textWrap: "nowrap",
   color: FADE_1col,
@@ -182,7 +179,7 @@ export const HSON_SUBcss: CssMap = {
 }
 
 export const COPYRITEcss: CssMap = {
-  fontFamily: SYS_SMOLfont,
+  fontFamily: SYS_SANSfont,
   fontSize: _TXT.smol,
   position: "fixed",
   bottom: "0.2rem",

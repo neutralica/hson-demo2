@@ -21,6 +21,7 @@ import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 import { PANEL_BRANCHcss } from "./tp-panels.css";
 import { _snip } from "../../app/utils/helpers";
 import type { LoopReport } from "../../../../hson-live/dist/types/diagnostics.types";
+import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
@@ -159,9 +160,7 @@ export function tp_factory(): Outcome<TestPanel> {
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             minWidth: "0",
-            fontFamily: SYS_MONOfont,
-            fontSize: _TXT.main,
-            lineHeight: "1.25",
+            ...FONT_FAM_MONO,
             color: get_line_color(line),
             marginLeft: "1ch",
         });

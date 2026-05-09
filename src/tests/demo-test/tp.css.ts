@@ -9,6 +9,7 @@ import { $CHIP_WIDTHstr } from "../tests.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
+import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: _TXT.main,
@@ -63,8 +64,7 @@ export const TEST_SELECTORcss: CssMap = {
   padding: "10px 8px 10px 20px",
   boxSizing: "border-box",
 
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
+  ...FONT_FAM_MONO,
 
   // background: $cols_.backdeep,
   color: OKLCH_FLEURS.fadedGold,

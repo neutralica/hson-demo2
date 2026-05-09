@@ -9,6 +9,7 @@ import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
 import { SYS_MONOfont, _TXT, GRID_GAPstr, COLOR_FOR_FMT_, HSON_COLOR_, TXTcol_ALT } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
+import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 
 
@@ -53,8 +54,7 @@ export const PP_WATERMARKcss: CssMap = {
   placeItems: "center",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
+  ...FONT_FAM_MONO,
   textTransform: "uppercase",
   overflow: "hidden",
   zIndex: -50,

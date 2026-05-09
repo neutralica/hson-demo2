@@ -1,9 +1,7 @@
 import type { CssMap } from "hson-live/types";
-import { $blu_, $grn_, ACID_WASH_RGBA, back_w_alpha } from "../../../core/consts/colors.consts";
+import { ACID_WASH_RGBA} from "../../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
 import { _COLS, _TXT, SYS_SMOLfont } from "../../../core/consts/ui-consts";
-import { SYS_MONOfont } from "../../../core/consts/ui-consts";
-import { MONOcss } from "../../../core/core.css";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 

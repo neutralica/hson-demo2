@@ -3,7 +3,6 @@
 
 LiveDemo is an interactive showcase environment for HSON and the hson-live library. It is the first website built with hson-live; its purpose is to demonstrate the features and functionality that HSON enables.
 
-
 ### LiveDemo (this site)
 `https://terminalgothic.com/hson`
 

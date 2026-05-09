@@ -7,6 +7,7 @@ import { $gry_, ACID_WASH_RGBA, bckColor, bcklight, deepBack } from "./colors.co
 import { ACID_WASH_OKLCH, OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4 } from "./oklch";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./oklch";
 import type { Fmt } from "../types/core.types";
+import type { CssMap } from "hson-live/types";
 
 export const HSON_COLOR_ = {
   h: OKLCH_VIBRANT.blueElecky,
@@ -33,8 +34,8 @@ export const _TXT = {
   // smol: "0.65rem",
   // wee: "0.55rem" ,
   smol: "14px",
-  sansMain: "1.15rem",
-  main: "1.25rem",
+  sansMain: "1rem",
+  main: "1.05rem",
 } as const;
 
 
@@ -43,27 +44,31 @@ export const TXTcol_MENU = OKLCH_FLEURS.electricCyan;
 export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
 export const TXTcol_ALT = OKLCH_FLEURS.electricCyan;
-// export const TXTcol_ALT_ALT = OKLCH_FLEURS.navyCore;
+
 
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
 export const TOCcol = OKLCH_VIBRANT.mintIce;
 
+/* code markdown */
 export const CODE_PARENScol = ACID_WASH_OKLCH.straw;
 export const CODE_PARENS_INNERcol = ACID_WASH_OKLCH.bruisedPlum;
 export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
-export const CODQ_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
+export const CODE_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
 export const CODE_EQUALScol = OKLCH_FLEURS.brass;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
 
+/* misc markdown */
 export const COPYRITEcol = $gry_.dimmer;
 export const URLcol = ACID_WASH_RGBA.softBlue;
 
 
-export const SYS_SMOLfont = "'Tiny5', Trebuchet MS"
+export const SYS_SMOLfont = "'IBM Plex Sans', sans-serif";
+// export const SYS_SMOLfont = "'Tiny5', Trebuchet MS"
 export const SYS_MONOfont = "'Inconsolata', Monaco, monospace";
 export const SYS_SANSfont = "'IBM Plex Sans', sans-serif";
+
 
 export const GRID_GAPstr = "2px";
 export const $CODE_FONT_SIZE = _TXT.main;
@@ -80,14 +85,16 @@ export const WATERMARK_FMT_: Record<Fmt, string> = {
 
 
 
-export const REDLIKEcol = OKLCH_VIBRANT.redSignal;
+export const REDcol = OKLCH_VIBRANT.redSignal;
 export const BLUELIKEcol = HSON_COLOR_.h;
 export const GREENLIKEcol = HSON_COLOR_.n;
-export const YELLOWLIKEcol = ACID_WASH_OKLCH.ember;
+export const YELLOWLIKEcol = HSON_COLOR_.s;
+export const PINKLIKEcol = HSON_COLOR_.o;
 
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 
 export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
+
 export const _COLS = {
   backlo: deepBack,
   backhi: bckColor,

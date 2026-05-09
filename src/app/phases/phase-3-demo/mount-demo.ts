@@ -167,6 +167,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const demoSlot = mk_div_id(uiRoot, "demo-slot").css.setMany(DEMO_SLOTcss);
   const mouseSlot = mk_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
 
+
   // views stack in viewSlot
   const parse = mount_panel_simple(demoSlot, "parse");
   const testHost = mount_panel_simple(demoSlot, "test");

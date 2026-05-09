@@ -5,6 +5,7 @@ import { $blu_ } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
 import { _COLS, SYS_MONOfont, TXTcol_MAIN, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
+import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
   return parent.create.div()
@@ -21,7 +22,7 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       maxHeight: "100%",
       overflow: "hidden",
       color: TXTcol_MAIN,
-      fontFamily: SYS_MONOfont,
+      ...FONT_FAM_MONO,
       background: _COLS.backlo
     });
 }

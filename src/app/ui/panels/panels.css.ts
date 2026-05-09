@@ -3,6 +3,7 @@ import { _COLS } from "../../core/consts/ui-consts";
 import { SYS_MONOfont, _TXT, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch";
+import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 
 export const UI_BUTTON_BORDERcss: CssMap = {
@@ -37,10 +38,9 @@ export const UI_BTN_STDcss: CssMap = {
   justifyContent: "center",
   userSelect: "none",
   cursor: "pointer",
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
+  ...FONT_FAM_MONO,
   textTransform: "lowercase",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
 } as const;
 
 
@@ -77,8 +77,7 @@ export const UI_2STACK_VALcss: CssMap = {
   position: "relative",
   pointerEvents: "none",
   userSelect: "none",
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
+  ...FONT_FAM_MONO,
   justifySelf: "flex-end",
   color: OKLCH_VIBRANT.mintIce
 };

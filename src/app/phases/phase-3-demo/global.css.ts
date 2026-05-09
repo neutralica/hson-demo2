@@ -1,10 +1,11 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
 import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
-import { _COLS, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { _COLS, HSON_COLOR_, SYS_MONOfont } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { _TXT, REDLIKEcol, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { _TXT, REDcol, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { ACID_WASH_OKLCH } from "../../core/consts/oklch";
+import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 export const SCROLL_HOVER_COLcss = {
   background: "rgba(180,230,255,0.65)"
@@ -23,10 +24,9 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       right: "2rem",
       top: "10rem",
       zIndex: "9997",
-      fontSize: _TXT.main,
       width: "auto",
-      fontFamily: SYS_MONOfont,
-      color: REDLIKEcol,
+      ...FONT_FAM_MONO,
+      color: REDcol,
       background: _COLS.backhi,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
@@ -61,13 +61,14 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 };
 
 export const MENU_ACTIVE_VIEWcss: CssMap = {
-  color: "oklch(0.80 0.02 260)",
+  color: HSON_COLOR_.n,
   fontWeight: "100",
   textDecoration: "underline",
   textUnderlineOffset: "0.3em",
   _hover: {
     background: $gry_.dark,
-    color: TXTcol_MENU,
+    color: HSON_COLOR_.n,
+    // color: TXTcol_MENU,
     fontWeight: "100",
   },
 };

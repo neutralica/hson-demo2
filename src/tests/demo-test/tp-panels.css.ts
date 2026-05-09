@@ -5,6 +5,7 @@ import { _COLS } from "../../app/core/consts/ui-consts";
 import { GRID_GAPstr, _TXT, TXTcol_ALT } from "../../app/core/consts/ui-consts";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
+import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 export const UI_ROOTcss: CssMap = {
   display: "grid",
@@ -43,9 +44,7 @@ export const UI_TEXTcss = {
     resize: "none",
     width: "100%",
     boxSizing: "border-box",
-    fontFamily: SYS_MONOfont,
-    fontSize: _TXT.main,
-    lineHeight: "1.55",
+    ...FONT_FAM_MONO,
     // background: COLORS_.bckdeep,
     border: "none",
     padding: "10px",

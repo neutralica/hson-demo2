@@ -6,6 +6,7 @@ import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { _TXT } from "../../app/core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
+import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 
 export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
@@ -45,7 +46,7 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   padding: "8px 12px",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
-  fontFamily: SYS_MONOfont,
+  ...FONT_FAM_MONO,
   background: _COLS.backhi,
 };
 

@@ -10,6 +10,7 @@ import { set_alpha } from "../../../core/helpers/color-helpers";
 import { UI_TEXTcss } from "../../../../tests/demo-test/tp-panels.css";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
+import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
@@ -24,13 +25,11 @@ export const BUILD_ROOTcss: CssMap = {
 
 export const BUILD_TITLEcss: CssMap = {
   position: "relative",
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
-  letterSpacing: "0.14em",
+  ...FONT_FAM_MONO,
   textTransform: "lowercase",
   height: "100%",
   width: "25%",
-  textAlign: "center",  
+  textAlign: "center",
   alignContent: "flex-end",
   color: OKLCH_VIBRANT.cyanSeaLaser,
   flexShrink: "0",
@@ -52,8 +51,9 @@ export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
   color: TXTcol_ALT,
   fontSize: _TXT.main,
+  padding: "15px",
   _focus: {
-    boxShadow: "inset 0 0 15px 1px " + COLOR_FOR_FMT_["hson"],
+    boxShadow: "inset 0 0 15px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.5),
 
   }
 
@@ -66,9 +66,7 @@ export const BUILD_WATERMARK_EMPTYcss: CssMap = {
   pointerEvents: "none",
   userSelect: "none",
   opacity: "0.25",
-  fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
-  letterSpacing: "0.06em",
+  ...FONT_FAM_MONO,
 };
 
 // Toggle container for Render/HTML

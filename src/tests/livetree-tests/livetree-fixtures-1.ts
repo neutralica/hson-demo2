@@ -1718,7 +1718,7 @@ function suite_css_regressions(): TestSuite {
 
         box.css.setMany({
           backgroundColor: "rgba(12, 19, 26, 1)",
-          fontFamily: SYS_MONOfont,
+          fontFamily: "monospace",
           placeItems: "center",
           overflowX: "hidden",
         });
