@@ -107,7 +107,7 @@ export const DEMO_SCREEN_FXcss: CssMap = {
   position: "relative",
   display: "grid",
   // left = nav, right = main
-  gridTemplateColumns: "170px 4fr",
+  gridTemplateColumns: "210px 1fr",
   gridTemplateRows: "minmax(0, 1fr)",
 
   gap: GRID_GAPstr,

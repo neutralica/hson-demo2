@@ -53,9 +53,11 @@ export const GLOB_WEBKIT_SCROLLcss = {
   height: "10px"
 };
 
-export const GLOB_SCROLL_THUMBcss = {
-  background: "rgba(160,220,255,0.45)",
-  border: "2px solid rgba(0,0,0,0.45)"
+export const GLOB_SCROLL_THUMBcss: CssMap = {
+  _hover: {
+    background: "rgba(160,220,255,0.45)",
+    border: "2px solid rgba(0,0,0,0.45)"
+  }
 };
 
 export const MENU_ACTIVE_VIEWcss: CssMap = {
