@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
 import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
-import { type ListItem,type ListKind, render_line_with_comment, extractUrl, parse_list_item, isIndented } from "./init-helpers";
+import { type ListItem, type ListKind, render_line_with_comment, extractUrl, parse_list_item, isIndented } from "./init-helpers";
 
 // -----------------------------
 // Markdown-ish renderer (only touch: flushPara + flushList use render_inline)
@@ -76,7 +76,7 @@ export function render_md_doc(host: LiveTree, src: string): void {
         ? ANTI_LIST_MARKERcss
         : ABOUT_LIST_MARKERcss;
 
-      li.create.span() 
+      const block = li.create.span()
         .text.set(marker)
         .css.setMany({
           ...markerCss,
@@ -87,10 +87,13 @@ export function render_md_doc(host: LiveTree, src: string): void {
       const bodyCss = item.kind === "anti"
         ? ANTI_LIST_TEXTcss
         : LIST_TEXTcss;
-
+      
+      const body = li.create.span()
+        .css.setMany(bodyCss);
+      
       const lines = item.text.split("\n");
       for (let j = 0; j < lines.length; j += 1) {
-        const row = li.create.span().css.setMany(bodyCss);
+        const row = body.create.div();
         render_line_with_comment(row, lines[j] ?? "", "prose");
       }
     }

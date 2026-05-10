@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss,  SPECIAL_WORDScss } from "./about.css";
+import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, SPECIAL_WORDScss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 
@@ -74,19 +74,27 @@ export function split_inline_backticks(src: string): InlineSeg[] {
 // - Preserves whitespace (assumes container/row has whiteSpace: "pre"; white-space is inherited).
 export function render_inline_code(row: LiveTree, code: string): void {
   // base “ink” so code isn’t dependent on outer containers.
-  const BASEcss: CssMap = INLINE_CODEcss; // should include a visible color
-
+  const BASEcss: CssMap = INLINE_CODEcss;
+  const BRACEcss: CssMap = CODE_BRACEcss;
   // token css
   const PARENcss: CssMap = CODE_PARENcss;
-  const INNERcss: CssMap = CODE_PAREN_INNERcss;     // inside (...)
-  const DOTcss: CssMap = CODE_PUNCTcss;               // you define
-  const EQcss: CssMap = CODE_EQUALSscss;                 // you define
-  const QUOTEcss: CssMap = CODE_QUOTEcss;           // you define
-  const COMMENTcss: CssMap = CODE_COMMENTScss;      // already exists
+  const INNERcss: CssMap = CODE_PAREN_INNERcss;
+  const DOTcss: CssMap = CODE_PUNCTcss;
+  const EQcss: CssMap = CODE_EQUALSscss;
+  const QUOTEcss: CssMap = CODE_QUOTEcss;
+  const COMMENTcss: CssMap = CODE_COMMENTScss;
+
+  // CHANGED: new syntax buckets for TypeScript-ish signatures.
+  const COLONcss: CssMap = CODE_COLONcss;
+  const TYPEcss: CssMap = CODE_TYPEcss;
+  const COMMAcss: CssMap = CODE_PUNCTcss;
 
   let buf = "";
   let depth = 0;
-  let inDq = false; // inside double quotes
+  let inQuote: `"` | `'` | null = null;
+
+  // CHANGED: after ":" we treat the next run as type-ish text.
+  let inType = false;
 
   const flush = (css: CssMap) => {
     if (buf.length === 0) return;
@@ -94,57 +102,132 @@ export function render_inline_code(row: LiveTree, code: string): void {
     buf = "";
   };
 
+  // CHANGED: centralizes the current default text color.
+  const currentTextCss = (): CssMap => {
+    if (inType) return TYPEcss;
+    if (depth > 0) return INNERcss;
+    return BASEcss;
+  };
+
   const emit = (css: CssMap, s: string) => {
-    flush(depth > 0 ? INNERcss : BASEcss);
+    flush(currentTextCss());
     row.create.span().css.setMany(css).text.set(s);
   };
 
   for (let i = 0; i < code.length; i += 1) {
     const ch = code[i] ?? "";
 
-    // ---- comment start (only when NOT in double-quote string) ----
-    if (!inDq) {
-      // // comment
+    // ---- comment start: only when not inside a quoted string ----
+    if (inQuote === null) {
       if (ch === "/" && (code[i + 1] ?? "") === "/") {
-        flush(depth > 0 ? INNERcss : BASEcss);
-        const rest = code.slice(i); // include the //
-        row.create.span().css.setMany(COMMENTcss).text.set(rest);
-        return; // done with this line
-      }
+        flush(currentTextCss());
 
+        const rest = code.slice(i);
+        row.create.span().css.setMany(COMMENTcss).text.set(rest);
+        return;
+      }
     }
 
-    // ---- string toggle (very simple; ignores escapes on purpose for now) ----
+    // ---- string quote handling ----
     if (ch === `"` || ch === `'`) {
-      flush(depth > 0 ? INNERcss : BASEcss);
-      row.create.span().css.setMany(QUOTEcss).text.set(`"`);
-      inDq = !inDq;
+      flush(currentTextCss());
+
+      // CHANGED: emit the actual quote char, not always `"`.
+      row.create.span().css.setMany(QUOTEcss).text.set(ch);
+
+      // CHANGED: only close the matching quote type.
+      if (inQuote === ch) {
+        inQuote = null;
+      } else if (inQuote === null) {
+        inQuote = ch;
+      }
+
       continue;
     }
 
-    // ---- parens (still operate even inside strings; if you don’t want that, gate on !inDq) ----
+    // ---- type-signature colon: only outside strings ----
+    if (inQuote === null && ch === ":") {
+      flush(currentTextCss());
+
+      row.create.span()
+        .css.setMany(COLONcss)
+        .text.set(":");
+
+      // CHANGED: after a colon, following text is styled as a type
+      // until a delimiter such as comma, close paren, equals, etc.
+      inType = true;
+      continue;
+    }
+    
+    if (inQuote === null && (ch === "{" || ch === "}")) {
+      flush(currentTextCss());
+      row.create.span()
+        .css.setMany(BRACEcss)
+        .text.set(ch);
+      
+      inType = false;
+      continue;
+    }
+    // ---- delimiters that end a type-ish run ----
+    if (inQuote === null && ch === ",") {
+      flush(currentTextCss());
+
+      row.create.span()
+        .css.setMany(COMMAcss)
+        .text.set(",");
+
+      // CHANGED: after a comma, we're back to parameter-name mode.
+      inType = false;
+      continue;
+    }
+
     if (ch === "(") {
-      flush(depth > 0 ? INNERcss : BASEcss);
+      flush(currentTextCss());
+
       row.create.span().css.setMany(PARENcss).text.set("(");
+
       depth += 1;
+
+      // CHANGED: opening paren should not remain in return-type mode.
+      inType = false;
       continue;
     }
 
     if (ch === ")") {
-      flush(depth > 0 ? INNERcss : BASEcss);
+      flush(currentTextCss());
+
       row.create.span().css.setMany(PARENcss).text.set(")");
+
       depth = Math.max(0, depth - 1);
+
+      // CHANGED: closing paren ends parameter-type mode.
+      // A following ":" will start return-type mode.
+      inType = false;
       continue;
     }
 
-    // ---- dot + equals (only when not in strings) ----
-    if (!inDq && ch === ".") {
+    // ---- dot + equals: only when not in strings ----
+    if (inQuote === null && ch === ".") {
       emit(DOTcss, ".");
+      inType = false;
       continue;
     }
 
-    if (!inDq && ch === "=") {
+    if (inQuote === null && ch === "=") {
       emit(EQcss, "=");
+      inType = false;
+      continue;
+    }
+
+    // CHANGED: common type-ending punctuation.
+    // This prevents something like `foo: Bar - words` from styling forever.
+    if (
+      inQuote === null &&
+      inType &&
+      (ch === ";" || ch === "{")
+    ) {
+      emit(CODE_PUNCTcss, ch);
+      inType = false;
       continue;
     }
 
@@ -152,7 +235,7 @@ export function render_inline_code(row: LiveTree, code: string): void {
     buf += ch;
   }
 
-  flush(depth > 0 ? INNERcss : BASEcss);
+  flush(currentTextCss());
 }
 
 export function render_inline(host: LiveTree, src: string): void {

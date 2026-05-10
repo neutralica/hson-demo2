@@ -1,11 +1,12 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA, $gry_ } from "../../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL } from "../../../core/consts/oklch";
-import { _COLS, HSON_COLOR_, SYS_SANSfont, SYS_SMOLfont, TXTcol_MENU } from "../../../core/consts/ui-consts";
+import { ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL, OKLCH_TERMINAL_4 } from "../../../core/consts/oklch";
+import { _COLS, CODE_BRACEcol, HSON_COLOR_, LISTcol, SYS_SANSfont, SYS_SMOLfont, TXTcol_MENU } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { _TXT, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODE_QUOTEcol, COPYRITEcol, HEADERcol, URLcol, REDcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { FONT_FAM_MONO, FONT_FAM_SANS } from "../../../core/consts/css.consts";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
 
@@ -53,7 +54,7 @@ export const ABOUT_LIST_ROWcss: CssMap = {
   alignItems: "start",
   minWidth: "0",
   maxWidth: "70ch",
-  color: HSON_COLOR_.o,
+  color: OKLCH_FLEURS.mauve,
   ...FONT_FAM_MONO,
 };
 
@@ -64,11 +65,12 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   whiteSpace: "pre",
   // fontSize: "1rem",
   verticalAlign: "center",
-  color: HSON_COLOR_.o,
+  color: LISTcol,
 };
 
 export const LIST_TEXTcss: CssMap = {
   ...FONT_FAM_MONO,
+  color: LISTcol,
 };
 
 
@@ -124,20 +126,29 @@ export const TOC_BTN_IDLEcss: CssMap = {
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
   ...FONT_FAM_MONO,
+  color: TXTcol_CODE,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word",
 } as const;
 
 // parentheses inside inline code
 export const CODE_PARENcss: CssMap = {
+  ...FONT_FAM_MONO,
   color: CODE_PARENScol, // choose something distinct but harmonious
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
+  ...FONT_FAM_MONO,
   color: CODE_PARENS_INNERcol,
 } as const;
 
+export const CODE_BRACEcss: CssMap = {
+  ...FONT_FAM_MONO,
+  color: CODE_BRACEcol
+}
+
 export const CODE_COMMENTScss: CssMap = {
+  ...FONT_FAM_MONO,
   color: COMMENTScol,
   overflowWrap: "anywhere",
   whiteSpace: "normal",
@@ -209,9 +220,17 @@ export const MD_CODE_PREcss: CssMap = {
   padding: "1rem",
   // whiteSpace: "normal",
   border: "1px solid " + set_alpha(ACID_WASH_OKLCH.lilac, 0.5),
-  color: TXTcol_CODE,
 
 };
+export const CODE_COLONcss = {
+  ...FONT_FAM_MONO,
+  color: OKLCH_FLEURS.brass
+};
+
+export const CODE_TYPEcss = {
+  ...FONT_FAM_MONO,
+  color: OKLCH_TERMINAL_4.pink
+}
 
 export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
   return {
@@ -237,6 +256,7 @@ export const MD_COPY_LINEcss: CssMap = {
   color: COPYRITEcol,
   marginTop: "2rem",
 }
+
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   color: URLcol,

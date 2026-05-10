@@ -42,7 +42,7 @@ export const _TXT = {
 // export const TXTcol_MENU = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_MENU = OKLCH_FLEURS.electricCyan;
 export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
-export const TXTcol_CODE = OKLCH_VIBRANT.blueGlacier;
+export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_ALT = OKLCH_FLEURS.electricCyan;
 
 
@@ -52,12 +52,14 @@ export const HEADERcol = OKLCH_FLEURS.greyLilac;
 export const TOCcol = OKLCH_VIBRANT.mintIce;
 
 /* code markdown */
-export const CODE_PARENScol = ACID_WASH_OKLCH.straw;
-export const CODE_PARENS_INNERcol = ACID_WASH_OKLCH.bruisedPlum;
+export const CODE_PARENScol = ACID_WASH_OKLCH.amber;
+export const CODE_PARENS_INNERcol = OKLCH_VIBRANT.blueHorizon;
 export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
 export const CODE_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
-export const CODE_EQUALScol = OKLCH_FLEURS.brass;
+export const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
+export const CODE_BRACEcol = ACID_WASH_OKLCH.orchid;
+export const LISTcol = OKLCH_FLEURS.greyLilac;
 
 /* misc markdown */
 export const COPYRITEcol = $gry_.dimmer;
