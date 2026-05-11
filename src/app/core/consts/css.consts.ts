@@ -11,6 +11,7 @@ export const FONT_FAM_MONO: CssMap = {
 export const FONT_FAM_SANS: CssMap = {
     fontFamily: SYS_SANSfont,
     fontSize: _TXT.sansMain,
-    fontWeight: "100",
-    letterSpacing: "0.5px",
+    fontWeight: "500",
+    letterSpacing: "0.2px",
+    lineHeight: "2em",
 }

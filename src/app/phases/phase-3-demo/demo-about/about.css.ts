@@ -39,11 +39,10 @@ export const ABOUT_TOCcss: CssMap = {
 
 export const ABOUT_P_TEXTcss: CssMap = {
   // padding: "0 30px 0 30px",
-  whiteSpace: "pre-wrap",
-  lineHeight: "1.85",
-  color: TXTcol_MAIN,
-  // textShadow: "0 0 5px oklch(0.85 0.03 260 / 0.25)",
   ...FONT_FAM_SANS,
+  whiteSpace: "pre-wrap",
+  lineHeight: "2em",
+  color: TXTcol_MAIN,
 }
 
 
