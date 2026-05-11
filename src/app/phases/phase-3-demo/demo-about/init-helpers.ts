@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, SPECIAL_WORDScss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss } from "./about.css";
+import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, SPECIAL_WORDScss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 
@@ -145,6 +145,36 @@ export function render_inline_code(row: LiveTree, code: string): void {
       continue;
     }
 
+    if (inQuote === null && (ch === "<" || ch === ">")) {
+      flush(currentTextCss());
+      row.create.span()
+        .css.setMany(ANGLEcss)
+        .text.set(ch);
+      continue;
+    };
+
+    if (
+      inQuote === null &&
+      ch === "/" &&
+      ((code[i - 1] ?? "") === "<" || (code[i + 1] ?? "") === ">")
+    ) {
+      flush(currentTextCss());
+      row.create.span()
+        .css.setMany(SLASHcss)
+        .text.set("/");
+      continue;
+    }
+
+    if (inQuote === null && ch === "|") {
+      flush(currentTextCss());
+      row.create.span()
+        .css.setMany(PIPEcss)
+        .text.set("|");
+      // Keep type mode active. This lets `string | undefined`
+      // keep the type coloring on both sides of the pipe.
+      continue;
+    }
+    
     // ---- type-signature colon: only outside strings ----
     if (inQuote === null && ch === ":") {
       flush(currentTextCss());
@@ -158,13 +188,13 @@ export function render_inline_code(row: LiveTree, code: string): void {
       inType = true;
       continue;
     }
-    
+
     if (inQuote === null && (ch === "{" || ch === "}")) {
       flush(currentTextCss());
       row.create.span()
         .css.setMany(BRACEcss)
         .text.set(ch);
-      
+
       inType = false;
       continue;
     }

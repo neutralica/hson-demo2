@@ -155,6 +155,7 @@ export function render_md_doc(host: LiveTree, src: string): void {
 
       continue;
     }
+
     // fenced code
     if (line.trim().startsWith("```")) {
       if (!inCode) {

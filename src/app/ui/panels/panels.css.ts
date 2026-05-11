@@ -54,7 +54,7 @@ export const UI_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(TXTcol_CODE),
   height: "100%",
   padding: "4px 4px",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
   color: TXTcol_CODE,
   width: "25%",
 // justifyContent: "flex-end",
@@ -85,15 +85,16 @@ export const UI_2STACK_VALcss: CssMap = {
 export const UI_PANEL_HEADcss: CssMap = {
   position: "relative",
   zIndex: "5",
-  height: "2rem",
-  maxHeight: "2rem",
+  height: "3rem",
+  maxHeight: "3rem",
   padding: "6px",
-  background: _COLS.backhi,
+  background: _COLS.backlo,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   // gap: "2ch",
 };
+
 export const UI_PANEL_HEADERcss: CssMap = {
   // gap: "10px",
   position: "relative",

@@ -93,7 +93,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       });
 
     const status = mk_div_cls(statusBox, "status-number")
-      .css.setMany(UI_2STACK_VALcss);
+      .css.setMany(UI_2STACK_VALcss)
+      .text.set("--");
 
     mk_div_cls(statusBox, "status-label")
       .text.set("status")

@@ -161,19 +161,22 @@ export function init_parsing_panels(pp: Panels): void {
     const p = pp.panels[fmt];
 
     if (kind === "idle") {
-      p.status.text.set("");
+      // p.status.text.set("--");
       // p.status.css.setMany({ opacity: "0" });
       return;
     }
 
     if (kind === "typing") {
-      p.status.text.set("•••");
+      p.status.text.set("••");
       p.status.css.setMany({ opacity: "1", color: "dodgerblue" });
       return;
     }
 
     if (kind === "valid") {
-      p.status.text.set("OK");
+      for (const f of FMTS) {
+        const fmtt = pp.panels[f];
+        fmtt.status.text.set("OK");
+      }
       p.status.css.setMany({ opacity: "1", color: "lime" });
       return;
     }
@@ -197,7 +200,7 @@ export function init_parsing_panels(pp: Panels): void {
         unlockTextarea(p);
         continue;
       }
-      
+
       if (isActiveValid()) {
         p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
         lockTextarea(p);
@@ -206,7 +209,7 @@ export function init_parsing_panels(pp: Panels): void {
       if (isIdleInvalid()) {
         p.textBox.css.setMany(PP_INACTIVE_INVALIDcss(f));
         unlockTextarea(p);
-}
+      }
       if (isIdleValid()) {
         p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
         unlockTextarea(p);
@@ -228,6 +231,7 @@ export function init_parsing_panels(pp: Panels): void {
       if (f === origin) continue;
       setValue(pp.panels[f], "");
       pp.panels[f].bytes.text.set("0");
+      setStatus(f, "idle")
     }
   }
 
@@ -267,7 +271,7 @@ export function init_parsing_panels(pp: Panels): void {
         isValid = false;
         markInvalidOwner(origin);
         setStatus(origin, "invalid");
-        srcParts.bytes.text.set("INVALID");
+        srcParts.bytes.text.set("0");
         syncUiState();
       }
       inProgress = false;
@@ -408,7 +412,7 @@ export function init_parsing_panels(pp: Panels): void {
   for (const fmt of FMTS) {
     const parts = pp.panels[fmt];
     parts.bytes.text.set(`${encBytes(getValue(parts))}`);
-    parts.status.text.set("");
+    parts.status.text.set("--");
     // parts.status.css.setMany({ opacity: "0" });
   }
 }

@@ -1,7 +1,7 @@
 // build.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
+import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch";
 import { _COLS } from "../../../core/consts/ui-consts";
 import { _TXT, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
@@ -45,6 +45,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   height: "100%",
   overflow: "hidden",
   background: _COLS.backlo,
+
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
@@ -52,6 +53,7 @@ export const BUILD_TEXTAREAcss: CssMap = {
   color: TXTcol_ALT,
   fontSize: _TXT.main,
   padding: "15px",
+  boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
     boxShadow: "inset 0 0 15px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.5),
 
@@ -100,6 +102,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   boxSizing: "border-box",
   padding: "10px",
   background: _COLS.backlo,
+  boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
 };
 
 // HTML output box: same textarea styling
@@ -115,7 +118,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
   resize: "none",
   outline: "none",
 
-  boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.6),
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["html"], 0.6),
   color: TXTcol_ALT,
   caretColor: "auto",
   fontSize: _TXT.main

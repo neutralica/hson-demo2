@@ -35,13 +35,13 @@ export const _TXT = {
   // wee: "0.55rem" ,
   smol: "14px",
   sansMain: "1rem",
-  main: "1.05rem",
+  main: "1.1rem",
 } as const;
 
 
 // export const TXTcol_MENU = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_MENU = OKLCH_FLEURS.electricCyan;
-export const TXTcol_MAIN = OKLCH_NEUTRALS.paper;
+export const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_ALT = OKLCH_FLEURS.electricCyan;
 
@@ -58,8 +58,9 @@ export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
 export const CODE_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
 export const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
-export const CODE_BRACEcol = ACID_WASH_OKLCH.orchid;
+export const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
 export const LISTcol = OKLCH_FLEURS.greyLilac;
+
 
 /* misc markdown */
 export const COPYRITEcol = $gry_.dimmer;

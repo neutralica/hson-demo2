@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA, $gry_ } from "../../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL, OKLCH_TERMINAL_4 } from "../../../core/consts/oklch";
+import { ACID_WASH_OKLCH, OKLCH_MUTED_PASTEL, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch";
 import { _COLS, CODE_BRACEcol, HSON_COLOR_, LISTcol, SYS_SANSfont, SYS_SMOLfont, TXTcol_MENU } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { _TXT, COMMENTScol, CODE_EQUALScol, CODE_PARENScol, CODE_PARENS_INNERcol, CODE_PUNCTcol, CODE_QUOTEcol, COPYRITEcol, HEADERcol, URLcol, REDcol, TOCcol, TXTcol_MAIN, TXTcol_ALT, TXTcol_CODE, $CODE_FONT_SIZE } from "../../../core/consts/ui-consts";
@@ -96,8 +96,8 @@ export const HRcss: CssMap = {
   ${ACID_WASH_RGBA.fadedMagenta} 90%,
   transparent 100%)`,
   // opacity: "0.8",
-  marginTop: "12px",
-  marginBottom: "12px",
+  marginTop: "2em",
+  marginBottom: "3em",
   marginLeft: "auto",
   marginRight: "auto",
 };
@@ -224,9 +224,27 @@ export const MD_CODE_PREcss: CssMap = {
 };
 export const CODE_COLONcss = {
   ...FONT_FAM_MONO,
-  color: OKLCH_FLEURS.brass
+  color: OKLCH_FLEURS.blazeOrange
 };
+/* export const SLASHcss = OKLCH_FLEURS.blazeOrange;
+export const PIPEcss = OKLCH_NEUTRALS.slate;
+export const ANGLEcss = OKLCH_VIBRANT.roseNeon;
 
+*/
+
+
+export const ANGLEcss = {
+  ...FONT_FAM_MONO,
+  color: OKLCH_VIBRANT.roseNeon
+}
+export const PIPEcss = {
+  ...FONT_FAM_MONO,
+  color: OKLCH_NEUTRALS.slate
+}
+export const SLASHcss = {
+  ...FONT_FAM_MONO,
+  color: OKLCH_FLEURS.blazeOrange
+}
 export const CODE_TYPEcss = {
   ...FONT_FAM_MONO,
   color: OKLCH_TERMINAL_4.pink
