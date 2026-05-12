@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "keywords": [],
-  "author": "",
+  "author": "terminal_gothic",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.5.2",
