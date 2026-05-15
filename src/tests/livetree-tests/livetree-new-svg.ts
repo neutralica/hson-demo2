@@ -2,7 +2,7 @@ import { flush_dom } from "../inspector/inspector.helpers";
 import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
-export function livetree_new_svg(): TestSuite {
+export function livetree_svg_lvl2(): TestSuite {
     const SUITE = "livetree/new-svg/";
     const cases: readonly LiveTreeCaseSpec[] =
         [
