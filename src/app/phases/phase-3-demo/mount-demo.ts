@@ -4,17 +4,12 @@ import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
 import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
-import { TXTcol_MENU} from "../../core/consts/ui-consts";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
-import type { CaseKey } from "../../../tests/tests.types";
 import { $PANEL_HIDDEN, _TXT } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { $blu_, $grn_, $pnk_, $ylw_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH } from "../../core/consts/oklch";
 import { _COLS } from "../../core/consts/ui-consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch";
 import { HSON_COLOR_ } from "../../core/consts/ui-consts";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/build-mount-init";
@@ -32,7 +27,7 @@ import { fmtNum } from "./demo-fleurs/fleurs-cols";
 import { mount_test_panels } from "../../../tests/demo-test/mount-tp";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
-import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
+import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 import { mount_prairie } from "../phase-4-grass/mount-prairie";
 import { UI_ROOTcss } from "../../../tests/demo-test/tp.css";
 // import { spawn_flower } from "./fleurs/fleurs";
@@ -50,7 +45,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const demoBox = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
-
+  
   const demoScreen = mk_div_id(demoBox, $DS.screen)
     .classlist.add("demo screen")
     .css.setMany({ ...DEMO_SCREENcss, ...DEMO_SCREEN_FXcss });
@@ -281,8 +276,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
   debug_state_smoke_test();
-
-
   return relay.ok();
 }
 

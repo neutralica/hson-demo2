@@ -17,6 +17,7 @@ import { JSON_FIXTURES_LEVEL2 } from "./transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
 import { livetree_svg_lvl2 } from "./livetree-tests/livetree-new-svg";
 import { livetree_new_form_api } from "./livetree-tests/livetree-new-form";
+import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "./json-tests/json-test-builder";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -137,6 +138,7 @@ export function make_transform_test_suite(
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
+const GENERATED_JSON_SEED = random_seed();
 
 export function build_suites_for_mode(
   mode: TestRunMode,
@@ -160,12 +162,36 @@ export function build_suites_for_mode(
       make_transform_test_suite(h, TRANSFORM_FAILS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
       make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
       make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
+      make_transform_test_suite(
+        h,
+        make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+        `transform/json/generated/seed_${GENERATED_JSON_SEED}`,
+        map,
+      )
     ]);
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_new_form_api(),
-      
+      make_transform_test_suite(
+        h,
+        make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+        `transform/json/generated/seed_${GENERATED_JSON_SEED}`,
+        map,
+      )
+
+    ])
+  }
+  if (mode === "fuzz-json") {
+    const GENERATED_JSON_SEED = random_seed();
+    return _freeze([
+
+      make_transform_test_suite(
+        h,
+        make_json_fixture_bundle(200, GENERATED_JSON_SEED),
+        `transform/json/generated/seed_${GENERATED_JSON_SEED}`,
+        map,
+      )
+
     ])
   }
   if (mode === "unit") {

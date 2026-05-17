@@ -12,13 +12,11 @@ export function livetree_new_form_api(): TestSuite {
             html: `<div id="root"><input id="field" /></div>`,
             fixture: "form/value",
             sub: "input-set-get",
-
             act(tree: LiveTree) {
                 const field = tree.find.must.byId("field");
 
                 field.form.setValue("abc");
             },
-
             assert(tree: LiveTree, t) {
                 const field = tree.find.must.byId("field");
 
@@ -26,7 +24,6 @@ export function livetree_new_form_api(): TestSuite {
                 t.eq(`form.getValue() reads value`, field.form.getValue(), "abc");
             },
         },
-
         {
             suite: SUITE,
             name: "setValue returns tree for chaining",
@@ -39,7 +36,6 @@ export function livetree_new_form_api(): TestSuite {
 
                 field.form.setValue("abc").attr.set("data-after", "ok");
             },
-
             assert(tree: LiveTree, t) {
                 const field = tree.find.must.byId("field");
 
@@ -47,7 +43,6 @@ export function livetree_new_form_api(): TestSuite {
                 t.eq(`value retained`, field.form.getValue(), "abc");
             },
         },
-
         {
             suite: SUITE,
             name: "getValue reads existing input value attr",
@@ -65,7 +60,6 @@ export function livetree_new_form_api(): TestSuite {
                 t.eq(`existing value read`, field.form.getValue(), "preset");
             },
         },
-
         {
             suite: SUITE,
             name: "textarea setValue roundtrips through form api",
@@ -78,27 +72,23 @@ export function livetree_new_form_api(): TestSuite {
 
                 field.form.setValue("hello textarea");
             },
-
             assert(tree: LiveTree, t) {
                 const field = tree.find.must.byId("field");
 
                 t.eq(`textarea form value`, field.form.getValue(), "hello textarea");
             },
         },
-
         {
             suite: SUITE,
             name: "setChecked true writes checked state",
             html: `<div id="root"><input id="check" type="checkbox" /></div>`,
             fixture: "form/checked",
             sub: "checkbox-true",
-
             act(tree: LiveTree) {
                 const check = tree.find.must.byId("check");
 
                 check.form.setChecked(true);
             },
-
             assert(tree: LiveTree, t) {
                 const check = tree.find.must.byId("check");
 
@@ -118,7 +108,6 @@ export function livetree_new_form_api(): TestSuite {
 
                 check.form.setChecked(false);
             },
-
             assert(tree: LiveTree, t) {
                 const check = tree.find.must.byId("check");
 
@@ -137,7 +126,6 @@ export function livetree_new_form_api(): TestSuite {
 
                 check.form.setChecked(true).attr.set("data-after", "ok");
             },
-
             assert(tree: LiveTree, t) {
                 const check = tree.find.must.byId("check");
 
@@ -163,14 +151,12 @@ export function livetree_new_form_api(): TestSuite {
             act(_tree: LiveTree) {
                 // read-only case
             },
-
             assert(tree: LiveTree, t) {
                 const choice = tree.find.must.byId("choice");
 
                 t.eq(`selected value read`, choice.form.getSelected(), "b");
             },
         },
-
         {
             suite: SUITE,
             name: "setSelected writes single select value",
@@ -184,13 +170,11 @@ export function livetree_new_form_api(): TestSuite {
   `,
             fixture: "form/selected",
             sub: "select-set",
-
             act(tree: LiveTree) {
                 const choice = tree.find.must.byId("choice");
 
                 choice.form.setSelected("b");
             },
-
             assert(tree: LiveTree, t) {
                 const choice = tree.find.must.byId("choice");
                 const selected = choice.form.getSelected();
@@ -203,7 +187,6 @@ export function livetree_new_form_api(): TestSuite {
                 }
             },
         },
-
         {
             suite: SUITE,
             name: "setSelected writes multiple select values",
@@ -224,7 +207,6 @@ export function livetree_new_form_api(): TestSuite {
 
                 choice.form.setSelected(["a", "c"]);
             },
-
             assert(tree: LiveTree, t) {
                 const choice = tree.find.must.byId("choice");
                 const selected = choice.form.getSelected();
@@ -239,6 +221,5 @@ export function livetree_new_form_api(): TestSuite {
             }
         },
     ];
-
     return make_livetree_suite(SUITE, cases);
 }

@@ -10,7 +10,7 @@ import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panel
 import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { init_parsing_panels } from "./init-pp";
-import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
+import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss, PP_HOVERcss } from "./pp.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -105,6 +105,14 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .css.setMany({
         ...PP_TEXTWRAPcss(fmt),
         display: "block",
+        color: "blue",
+        _hover: {
+          color: "green",
+        }
+      })
+      .css.selector(":hover > div.pp-watermark").setMany({
+        color: "hotpink",
+
       });
 
     const wmFmt = wrap.create.div()

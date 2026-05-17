@@ -3,7 +3,7 @@
 import type { CssMap } from "hson-live/types";
 
 import { $gry_ } from "../../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
+import { ACID_WASH_OKLCH, OKLCH_SOFT_CORE_4 } from "../../../core/consts/oklch";
 import { _COLS } from "../../../core/consts/ui-consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
 import { SYS_MONOfont, _TXT, GRID_GAPstr, COLOR_FOR_FMT_, HSON_COLOR_, TXTcol_ALT } from "../../../core/consts/ui-consts";
@@ -28,6 +28,9 @@ export const PP_TEXTWRAPcss = (f: Fmt | null) => {
     minWidth: "0",
     background: set_alpha(color, 0.1),
     color: color,
+    _hover: {
+      color: OKLCH_SOFT_CORE_4.yellow
+    }
   }
 };
 
@@ -52,7 +55,7 @@ export const PP_WATERMARKcss: CssMap = {
   color: $gry_.dimmer,
   display: "grid",
   placeItems: "center",
-  pointerEvents: "none",
+  pointerEvents: "all",
   userSelect: "none",
   ...FONT_FAM_MONO,
   textTransform: "uppercase",
@@ -60,7 +63,11 @@ export const PP_WATERMARKcss: CssMap = {
   zIndex: -50,
 
 };
-
+export const PP_HOVERcss = {
+  _hover: {
+    color: OKLCH_SOFT_CORE_4.yellow + " !Important",
+  }
+}
 
 export const PP_ACTIVE_VALIDcss = (f: Fmt) => {
   return {

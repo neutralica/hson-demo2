@@ -346,7 +346,19 @@ export const jsonMostHeinous: Record<string, string> = {
         "snake_case": true
       }
     }
-  }`
+  }`,
+
+  objectsWithinArrays: `
+  {"user":
+{"name":"bo",
+  "age": "32",
+  "children": 
+[
+    {"name":"mo"},
+    {"name":"jo"}
+  ]
+}
+}`
 };
 
 const json2_INVALID = {
@@ -364,5 +376,5 @@ const json2_INVALID = {
     }
   }`,
 }
-export const JSON_FAIL_FIXTURES = {json2: json2_INVALID}
+export const JSON_FAIL_FIXTURES = { json2: json2_INVALID }
 export const JSON_FIXTURES_LEVEL2 = { level2: { ...jsonKeyEdgeCases, ...jsonMostHeinous } };

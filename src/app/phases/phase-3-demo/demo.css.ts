@@ -15,6 +15,7 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "1.6",
+  textShadow: "1px 1px 55px hotpink",
   _hover: {
     fontWeight: "100",
     background: BLUELIKEcol,
@@ -34,6 +35,7 @@ export const MENU_BOXcss: CssMap = {
 };
 
 export const DEMO_HEADLINEcss: CssMap = {
+  textShadow: "1px 1px 62px hotpink",
   display: "flex",
   alignContent: "end",
 
