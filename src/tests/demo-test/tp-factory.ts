@@ -18,7 +18,7 @@ import { create_test_chips } from "./test-chips";
 import type { TestPanel } from "./tp.types";
 import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";
-import { PANEL_BRANCHcss } from "./tp-panels.css";
+import { PANEL_BRANCHcss } from "./tp.css";
 import { _snip } from "../../app/utils/helpers";
 import type { LoopReport } from "../../../../hson-live/dist/types/diagnostics.types";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
@@ -46,14 +46,10 @@ export function tp_factory(): Outcome<TestPanel> {
 
     // top row
     const rowContainer = mk_div_id(branch, "row-container").css.setMany(TEST_ROW_CONTAINERcss);
-    const controlsRow = rowContainer.create.div()
-        .id.set("test-controls")
-        .css.setMany(CONTROL_ROWcss);
+    const controlsRow = mk_div_id(rowContainer, "test-controls").css.setMany(CONTROL_ROWcss);
 
     const runChip = mk_btn(controlsRow, "test-run", "run");
-    const suiteSel = controlsRow.create.select()
-        .id.set("test-select")
-        .css.setMany(TEST_SELECTORcss);
+    const suiteSel = controlsRow.create.select().id.set("test-select").css.setMany(TEST_SELECTORcss);
     const clearChip = mk_btn(controlsRow, "test-clear", "clear");
 
     const runBtn = runChip.tree.css.setMany(TEST_RUN_BTNcss);
@@ -62,20 +58,15 @@ export function tp_factory(): Outcome<TestPanel> {
     const chips = create_test_chips(rowContainer);
 
     // main two-column content
-    const content = branch.create.div()
-        .id.set("test-content")
-        .css.setMany(TEST_CONTENTcss);
+    const content = mk_div_id(branch, "test-content") .css.setMany(TEST_CONTENTcss);
 
-    const inspectorPane = content.create.div()
-        .id.set("test-inspector-pane")
+    const inspectorPane = mk_div_id(content, "test-inspector-pane")
         .css.setMany(TEST_INSPECTOR_PANEcss);
 
-    const logPane = content.create.div()
-        .id.set("test-log-pane")
+    const logPane =mk_div_id(content, "test-log-pane")
         .css.setMany(TEST_LOG_PANEcss);
 
-    const logger = logPane.create.div()
-        .id.set("test-logger")
+    const logger = mk_div_id(logPane, "test-logger")
         .css.setMany(TEST_LOGGERcss);
 
     const tlog = create_test_log();
@@ -244,7 +235,7 @@ export function tp_factory(): Outcome<TestPanel> {
         }
 
         suiteSel.listen.on("change", () => {
-            const v = suiteSel.getFormValue() ?? "all";
+            const v = suiteSel.form.getValue() ?? "all";
             mode = (MODES.find(m => m.key === v)?.key ?? "all");
         });
 

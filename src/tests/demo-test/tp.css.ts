@@ -25,7 +25,7 @@ export const CONTROL_ROWcss: CssMap = {
   gridTemplateColumns: "1fr 2fr 1fr",
   gap: "8px",
   gridColumn: "1 / 2",
-  gridRow: "2",
+  gridRow: "1",
   // background: "transparent",
   border: "none",
   boxShadow: "none",
@@ -101,7 +101,7 @@ export const TEST_ROW_CONTAINERcss = {
   gap: "8px",
   gridTemplateColumns: "1fr 1fr auto",
   gridTemplateRows: "1fr",
-  gridRow: "1",
+  gridRow: "2",
   gridColumn: "1 / 3"
 
 };
@@ -111,6 +111,7 @@ export const TEST_CONTENTcss: CssMap = {
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr) 360px",
   gridColumn: "1 /3",
+  gridRow: "1",
   gap: GRID_GAPstr,
   minWidth: "0",
   minHeight: "0",
@@ -150,7 +151,7 @@ export const TEST_CHIP_ROWcss = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr 1fr",
   gap: "8px",
-  gridRow: "2",
+  gridRow: "1",
   gridColumn: "2 / 3",
   padding: "0",
 }
@@ -167,4 +168,59 @@ export const MAKE_CHIP_DEFAULTcss = {
   overflow: "hidden",
   background: _COLS.backlo,
   transition: "transform 90ms ease, filter 140ms ease",
+};
+export const UI_ROOTcss: CssMap = {
+    display: "grid",
+    gridTemplateRows: "minmax(0, 1fr)",
+    boxSizing: "border-box",
+    overflow: "hidden",
+    gridColumn: "2 / 3",
+    gridRow: "1 / 2",
+
+    minWidth: "0",
+    minHeight: "0",
+    width: "100%",
+    height: "100%",
+
+    position: "relative",
+    pointerEvents: "auto",
+};
+
+export const UI_PANELcss: CssMap = {
+    display: "grid",
+    gridTemplateRows: "auto minmax(0, 1fr)",
+    gap: GRID_GAPstr,
+    minHeight: "0",
+    minWidth: "0",
+    width: "100%",
+    padding: "8px",
+    boxSizing: "border-box",
+    overflowY: "auto",
+    maxHeight: "100%",
+    background: _COLS.backlo,
+};
+
+export const UI_TEXTcss = {
+    height: "100%",
+    minWidth: "0",
+    resize: "none",
+    width: "100%",
+    boxSizing: "border-box",
+    ...FONT_FAM_MONO,
+    // background: COLORS_.bckdeep,
+    border: "none",
+    padding: "10px",
+    color: OKLCH_FLEURS.cyanDust,
+    outline: "none"
+};
+
+export const PANEL_BRANCHcss: CssMap = {
+    display: "grid",
+    // padding: "10px",
+    width: "100%",
+    height: "100%",
+    boxSizing: "border-box",
+    gridTemplateColumns: `1fr 1fr`,
+    gridTemplateRows: "6fr auto",
+    background: _COLS.backlo,
 };

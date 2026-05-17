@@ -7,7 +7,7 @@ import { _TXT, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { UI_TEXTcss } from "../../../../tests/demo-test/tp-panels.css";
+import { UI_TEXTcss } from "../../../../tests/demo-test/tp.css";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";

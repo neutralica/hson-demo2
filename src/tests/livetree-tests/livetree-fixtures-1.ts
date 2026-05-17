@@ -107,6 +107,7 @@ export function suite_find(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
+
 export function suite_attrs_and_flags(): TestSuite {
   const SUITE = "livetree/attrs-and-flags";
 

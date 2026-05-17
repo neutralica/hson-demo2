@@ -22,21 +22,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       .text.set("—")
       .css.setMany(TEST_CHIP_VALUEcss);
 
-    const lbl = mk_div_cls(chip, "test-chip-label")
-      .text.set(label)
-      .css.setMany(TEST_CHIP_LABELcss);
-
-    // ADDED: pressed feedback without global CSS manager dependency
-    const press = (on: boolean): void => {
-      chip.css.setMany(on
-        ? { transform: "translateY(1px)", filter: "brightness(0.98)" }
-        : { transform: "translateY(0px)", filter: "brightness(1.0)" });
-    };
-
-    chip.listen.onPointerDown(() => press(true));
-    chip.listen.onPointerUp(() => press(false));
-    chip.listen.onPointerLeave(() => press(false));
-    chip.listen.onPointerCancel(() => press(false));
+    const lbl = mk_div_cls(chip, "test-chip-label").text.set(label) .css.setMany(TEST_CHIP_LABELcss);
 
     return {
       set: (v: string | number) => val.text.set(String(v)),

@@ -34,7 +34,7 @@ import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, get_about_toc_open, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 import { mount_prairie } from "../phase-4-grass/mount-prairie";
-import { UI_ROOTcss } from "../../../tests/demo-test/tp-panels.css";
+import { UI_ROOTcss } from "../../../tests/demo-test/tp.css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];

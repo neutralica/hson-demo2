@@ -16,6 +16,7 @@ import { HSON_FIXTURES, HSON_FXT_INVALID } from "./transform-tests/hson-tests";
 import { JSON_FIXTURES_LEVEL2 } from "./transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
 import { livetree_svg_lvl2 } from "./livetree-tests/livetree-new-svg";
+import { livetree_new_form_api } from "./livetree-tests/livetree-new-form";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -163,7 +164,8 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-     livetree_svg_lvl2()
+      livetree_new_form_api(),
+      
     ])
   }
   if (mode === "unit") {

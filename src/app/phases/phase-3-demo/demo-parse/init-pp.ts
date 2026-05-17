@@ -22,9 +22,9 @@ const isScalarLiteral = (s: string): boolean =>
 
 const encBytes = (s: string) => new TextEncoder().encode(s).length;
 
-const getValue = (p: PanelShell): string => p.textarea.getFormValue() ?? "";
+const getValue = (p: PanelShell): string => p.textarea.form.getValue() ?? "";
 const setValue = (p: PanelShell, v: string): void =>
-  void p.textarea.setFormValue(v, { silent: true });
+  void p.textarea.form.setValue(v, { silent: true });
 
 
 const tryParse = (origin: Fmt, raw: string): PrimParse => {

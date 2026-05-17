@@ -8,7 +8,7 @@ import { mk_div_cls, mk_div_id, mk_section_cls, mk_span_cls } from "../../../uti
 import { UI_2STACKcss, UI_BTNcss, UI_PANEL_HEADcss, UI_STACK_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
 import { UI_PANEL_HEADERcss } from "../../../ui/panels/panels.css";
 import { _TXT } from "../../../core/consts/ui-consts";
-import { UI_PANELcss } from "../../../../tests/demo-test/tp-panels.css";
+import { UI_PANELcss } from "../../../../tests/demo-test/tp.css";
 
 // keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{
@@ -154,7 +154,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .css.setMany(BUILD_TEXTAREAcss);
 
   const seed = opts.seed ?? BUILD_STRINGhson;
-  void textarea.setFormValue(seed, { silent: true });
+  void textarea.form.setValue(seed, { silent: true });
 
   // --------------------------------------------------
   // OUT head controls

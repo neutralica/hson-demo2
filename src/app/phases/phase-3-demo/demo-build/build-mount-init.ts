@@ -18,8 +18,8 @@ function initBuild(bp: BuildDemo): void {
     let activeTab: BuildTabKey = "render";
     let touched = false;
 
-    const getSrc = (): string => bp.input.textarea.getFormValue() ?? "";
-    const setSrc = (v: string): void => void bp.input.textarea.setFormValue(v, { silent: true });
+    const getSrc = (): string => bp.input.textarea.form.getValue() ?? "";
+    const setSrc = (v: string): void => void bp.input.textarea.form.setValue(v, { silent: true });
 
     const setStatus = (k: StatusKind): void => {
         // keep this tiny + predictable

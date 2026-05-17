@@ -91,7 +91,7 @@ export const UI_PANEL_HEADcss: CssMap = {
   background: _COLS.backlo,
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
+  justifyContent: "space-between",
   // gap: "2ch",
 };
 

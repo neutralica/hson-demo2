@@ -12,6 +12,7 @@ import { livetree_new_dom_doc } from "./livetree-fixtures-dom";
 import type { TestSuite } from "../tests.types";
 import { livetree_more_listeners } from "./livetree-fixtures-7";
 import { livetree_svg_lvl2 } from "./livetree-new-svg";
+import { livetree_new_form_api } from "./livetree-new-form";
 
 
 /******************************************************
@@ -61,7 +62,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_create_size(),
     livetree_more_listeners(),
     livetree_svg_lvl2(),
-
+livetree_new_form_api(),
 
 
 

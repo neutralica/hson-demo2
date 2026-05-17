@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { UI_PANELcss, UI_TEXTcss } from "../../../../tests/demo-test/tp-panels.css";
+import { UI_PANELcss, UI_TEXTcss } from "../../../../tests/demo-test/tp.css";
 import { TXTcol_CODE, _TXT, WATERMARK_FMT_, _COLS } from "../../../core/consts/ui-consts";
 import type { Fmt } from "../../../core/types/core.types";
 import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
@@ -178,7 +178,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
       const textVisible = textarea.css.get.property("display") !== "none";
       const txt = textVisible
-        ? (textarea.getFormValue() ?? "")
+        ? (textarea.form.getValue() ?? "")
         : (nodeBox.text.get() ?? "");
 
       void clip.call(navigator.clipboard, txt);
