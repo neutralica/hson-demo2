@@ -257,7 +257,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   
   demoBox.listen.document.onKeyDown((ke) => {
     if (ke.key === "~") {
-      mount_prairie(stage);
+        window.location.assign("https://spp.terminalgothic.com/hson");
     }
   });
 
