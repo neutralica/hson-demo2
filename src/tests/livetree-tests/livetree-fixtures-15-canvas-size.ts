@@ -332,3 +332,215 @@ export function livetree_canvas_display(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
+
+export function livetree_canvas_clear(): TestSuite {
+  const SUITE = "livetree/canvas-clear";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "canvas.clear clears full backing bitmap",
+      dom: true,
+      fixture: "canvas/clear",
+      sub: "full-clear",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        const ctx = target.canvas.must.ctx2d();
+
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.fillRect(0, 0, 20, 20);
+
+        target.canvas.clear();
+
+        const pixel = ctx.getImageData(10, 10, 1, 1).data;
+
+        (tree as any).__result = {
+          r: pixel[0],
+          g: pixel[1],
+          b: pixel[2],
+          a: pixel[3],
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("red channel cleared", r.r, 0);
+        t.eq("green channel cleared", r.g, 0);
+        t.eq("blue channel cleared", r.b, 0);
+        t.eq("alpha channel cleared", r.a, 0);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.clear rectangle clears only requested region",
+      dom: true,
+      fixture: "canvas/clear",
+      sub: "rect-clear",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        const ctx = target.canvas.must.ctx2d();
+
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.fillRect(0, 0, 20, 20);
+
+        target.canvas.clear(0, 0, 10, 10);
+
+        const cleared = ctx.getImageData(5, 5, 1, 1).data;
+        const untouched = ctx.getImageData(15, 15, 1, 1).data;
+
+        (tree as any).__result = {
+          cleared: {
+            r: cleared[0],
+            g: cleared[1],
+            b: cleared[2],
+            a: cleared[3],
+          },
+          untouched: {
+            r: untouched[0],
+            g: untouched[1],
+            b: untouched[2],
+            a: untouched[3],
+          },
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("cleared alpha", r.cleared.a, 0);
+
+        t.eq("untouched red", r.untouched.r, 255);
+        t.eq("untouched green", r.untouched.g, 0);
+        t.eq("untouched blue", r.untouched.b, 0);
+        t.eq("untouched alpha", r.untouched.a, 255);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.clear returns tree for chaining",
+      dom: true,
+      fixture: "canvas/clear",
+      sub: "clear-chain",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        target.canvas
+          .clear()
+          .attr.set("data-after", "ok");
+
+        (tree as any).__result = {
+          after: target.attr.get("data-after"),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("chain continued after clear", r.after, "ok");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.clear is harmless before mount",
+      fixture: "canvas/clear",
+      sub: "clear-unmounted",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+
+        target.canvas.clear();
+
+        (tree as any).__result = {
+          width: target.canvas.width.get(),
+          height: target.canvas.height.get(),
+          inScope: target.canvas.inScope(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("width unchanged", r.width, 20);
+        t.eq("height unchanged", r.height, 20);
+        t.eq("still canvas-scoped", r.inScope, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.clear is harmless on non-canvas node",
+      dom: true,
+      fixture: "canvas/clear",
+      sub: "clear-non-canvas",
+
+      html: `
+        <main id="root">
+          <div id="target"></div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        target.canvas
+          .clear()
+          .attr.set("data-after", "ok");
+
+        (tree as any).__result = {
+          after: target.attr.get("data-after"),
+          inScope: target.canvas.inScope(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("chain continued after no-op clear", r.after, "ok");
+        t.eq("non-canvas still not in scope", r.inScope, false);
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}

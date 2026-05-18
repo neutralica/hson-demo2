@@ -112,12 +112,13 @@ export function tp_factory(): Outcome<TestPanel> {
         switch (head) {
             case "FAIL": return "red";
             case "PASS": 
-            case "OK": return OKLCH_VIBRANT.mintIce;
+            case "OK": return HSON_COLOR_.n;
             case "SKIP":
-            case "WARN": return HSON_COLOR_.s;
-            case "RUN": return OKLCH_FLEURS.cyanDust;
-            case "DONE": return OKLCH_NEUTRALS.slate;
-            case "SUITE": return OKLCH_FLEURS.clayCoral;
+                case "WARN": return HSON_COLOR_.s;
+                case "RUN": return HSON_COLOR_.s;
+            case "DONE": return HSON_COLOR_.h;
+            case "===":return HSON_COLOR_.o;
+            case "SUITE:":return HSON_COLOR_.o;
             default: return OKLCH_NEUTRALS.silver;
         }
     }
@@ -153,6 +154,7 @@ export function tp_factory(): Outcome<TestPanel> {
             overflowWrap: "anywhere",
             minWidth: "0",
             ...FONT_FAM_MONO,
+            fontSize: _TXT.smol,
             color: get_line_color(line),
             marginLeft: "1ch",
         });
@@ -177,7 +179,7 @@ export function tp_factory(): Outcome<TestPanel> {
 
         if (e.t === "suite_begin") {
             currentCaseLine = null;
-            appendLogLine(`suite ${e.suite}`);
+            appendLogLine(`suite: beginning ${e.suite}`);
             return;
         }
 
@@ -190,10 +192,10 @@ export function tp_factory(): Outcome<TestPanel> {
             const statusText = e.status.toUpperCase();
 
             if (currentCaseLine) {
-                appendLogLine(statusText);
+            const t =     appendLogLine(statusText);
 
                 if (typeof e.ms === "number") {
-                    appendLogLine( `(${e.ms.toFixed(1)}ms)`);
+                    appendLogSpan(t, `(${e.ms.toFixed(1)}ms)`);
                 }
 
                 if (e.status === "fail" && e.err) {
