@@ -2,7 +2,7 @@ import { hson, LiveTree } from "hson-live";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import type { HsonNode } from "hson-live/types";
-import { tick } from "./livetree-fixtures-3";
+import { tick } from "./livetree-fixtures-03";
 import type {  DatasetValue } from "../../../../hson-live/dist/api/livetree/managers/data-manager";
 
 export function legacy_suites_3(): readonly TestSuite[] {

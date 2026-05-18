@@ -1,7 +1,7 @@
 import { CssManager, hson } from "hson-live";
 import { LiveTree } from "../../../../hson-live/dist/api/livetree/livetree";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
-import { tick } from "./livetree-fixtures-3";
+import { tick } from "./livetree-fixtures-03";
 import { make_livetree_suite } from "./livetree-testkit";
 
 const gcss = CssManager.invoke();

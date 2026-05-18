@@ -8,17 +8,18 @@ import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
 import { HTML_FIXTURES_NEW } from "./transform-tests/new-html-fixtures";
 import { all_unit_tests } from "./unit-tests/all-unit-tests";
 import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
-import { livetree_create_size } from "./livetree-tests/livetree-fixtures-6";
-import { livetree_more_listeners } from "./livetree-tests/livetree-fixtures-7";
-import { listeners_teardown } from "./livetree-tests/livetree-fixtures-4";
-import { livetree_completionist } from "./livetree-tests/livetree-fixtures-5";
+import { livetree_create_size } from "./livetree-tests/livetree-fixtures-06";
+import { livetree_more_listeners } from "./livetree-tests/livetree-fixtures-07";
+import { listeners_teardown } from "./livetree-tests/livetree-fixtures-04";
+import { livetree_completionist } from "./livetree-tests/livetree-fixtures-05";
 import { HSON_FIXTURES, HSON_FXT_INVALID } from "./transform-tests/hson-tests";
 import { JSON_FIXTURES_LEVEL2 } from "./transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
-import { livetree_svg_lvl2 } from "./livetree-tests/livetree-new-svg";
-import { livetree_new_form_api } from "./livetree-tests/livetree-new-form";
+import { livetree_svg_lvl2 } from "./livetree-tests/livetree-fixtures-12-svg-new";
+import { livetree_new_form_api } from "./livetree-tests/livetree-fixtures-13-form";
 import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "./json-tests/json-test-builder";
-import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetree_13_canvas";
+import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetree-fixtures-14-canvas";
+import { livetree_canvas_display } from "./livetree-tests/livetree-fixtures-15-canvas-size";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -175,6 +176,7 @@ export function build_suites_for_mode(
     return _freeze([
       livetree_canvas(),
       livetree_canvas_stress(),
+      livetree_canvas_display(),
 
     ])
   }

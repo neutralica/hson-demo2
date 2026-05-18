@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
 import type { CaseReport } from "../tests.types";
-import { tick } from "../livetree-tests/livetree-fixtures-3";
+import { tick } from "../livetree-tests/livetree-fixtures-03";
 import type { Artifact } from "hson-live/diagnostics";
 
 export async function flush_dom(): Promise<void> {
