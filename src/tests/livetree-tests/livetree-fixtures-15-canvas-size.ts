@@ -544,3 +544,411 @@ export function livetree_canvas_clear(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
+
+export function livetree_canvas_plot(): TestSuite {
+  const SUITE = "livetree/canvas-plot";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "canvas.plot runs callback with native 2d context when mounted",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "plot-mounted",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        let called = false;
+
+        target.canvas.plot((ctx, cvs) => {
+          called = true;
+
+          ctx.fillStyle = "rgb(255, 0, 0)";
+          ctx.fillRect(0, 0, cvs.width, cvs.height);
+        });
+
+        const ctx = target.canvas.must.ctx2d();
+        const pixel = ctx.getImageData(10, 10, 1, 1).data;
+
+        (tree as any).__result = {
+          called,
+          r: pixel[0],
+          g: pixel[1],
+          b: pixel[2],
+          a: pixel[3],
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("plot callback called", r.called, true);
+        t.eq("red channel written", r.r, 255);
+        t.eq("green channel written", r.g, 0);
+        t.eq("blue channel written", r.b, 0);
+        t.eq("alpha channel written", r.a, 255);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.plot returns tree for chaining",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "plot-chain",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        target.canvas
+          .plot((ctx) => {
+            ctx.fillStyle = "rgb(0, 0, 255)";
+            ctx.fillRect(0, 0, 10, 10);
+          })
+          .attr.set("data-after", "ok");
+
+        (tree as any).__result = {
+          after: target.attr.get("data-after"),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("chain continued after plot", r.after, "ok");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.plot is harmless before mount",
+      fixture: "canvas/plot",
+      sub: "plot-unmounted",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+
+        let called = false;
+
+        target.canvas
+          .plot(() => {
+            called = true;
+          })
+          .attr.set("data-after", "ok");
+
+        (tree as any).__result = {
+          called,
+          after: target.attr.get("data-after"),
+          inScope: target.canvas.inScope(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("plot callback not called before mount", r.called, false);
+        t.eq("chain continued after no-op plot", r.after, "ok");
+        t.eq("still canvas-scoped", r.inScope, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.plot is harmless on non-canvas node",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "plot-non-canvas",
+
+      html: `
+        <main id="root">
+          <div id="target"></div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        let called = false;
+
+        target.canvas
+          .plot(() => {
+            called = true;
+          })
+          .attr.set("data-after", "ok");
+
+        (tree as any).__result = {
+          called,
+          after: target.attr.get("data-after"),
+          inScope: target.canvas.inScope(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("plot callback not called on non-canvas", r.called, false);
+        t.eq("chain continued after non-canvas plot", r.after, "ok");
+        t.eq("non-canvas not in scope", r.inScope, false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.must.plot runs callback with native 2d context when mounted",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "must-plot-mounted",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        let called = false;
+
+        target.canvas.must.plot((ctx, cvs) => {
+          called = true;
+
+          ctx.fillStyle = "rgb(0, 255, 0)";
+          ctx.fillRect(0, 0, cvs.width, cvs.height);
+        });
+
+        const ctx = target.canvas.must.ctx2d();
+        const pixel = ctx.getImageData(10, 10, 1, 1).data;
+
+        (tree as any).__result = {
+          called,
+          r: pixel[0],
+          g: pixel[1],
+          b: pixel[2],
+          a: pixel[3],
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("must.plot callback called", r.called, true);
+        t.eq("red channel written", r.r, 0);
+        t.eq("green channel written", r.g, 255);
+        t.eq("blue channel written", r.b, 0);
+        t.eq("alpha channel written", r.a, 255);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.must.plot returns tree for chaining",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "must-plot-chain",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        target.canvas.must
+          .plot((ctx) => {
+            ctx.fillStyle = "rgb(0, 0, 0)";
+            ctx.fillRect(0, 0, 1, 1);
+          })
+          .attr.set("data-after", "ok");
+
+        (tree as any).__result = {
+          after: target.attr.get("data-after"),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("chain continued after must.plot", r.after, "ok");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.must.plot throws before mount",
+      fixture: "canvas/plot",
+      sub: "must-plot-unmounted-throws",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+
+        let threw = false;
+        let called = false;
+        let message = "";
+
+        try {
+          target.canvas.must.plot(
+            () => {
+              called = true;
+            },
+            undefined,
+            "unmounted plot",
+          );
+        } catch (err) {
+          threw = true;
+          message = err instanceof Error ? err.message : String(err);
+        }
+
+        (tree as any).__result = {
+          threw,
+          called,
+          message,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("must.plot throws before mount", r.threw, true);
+        t.eq("must.plot callback not called after throw", r.called, false);
+        t.ok("must.plot error includes label", String(r.message).includes("unmounted plot"));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.must.plot throws on non-canvas node",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "must-plot-non-canvas-throws",
+
+      html: `
+        <main id="root">
+          <div id="target"></div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        let threw = false;
+        let called = false;
+        let message = "";
+
+        try {
+          target.canvas.must.plot(
+            () => {
+              called = true;
+            },
+            undefined,
+            "not canvas plot",
+          );
+        } catch (err) {
+          threw = true;
+          message = err instanceof Error ? err.message : String(err);
+        }
+
+        (tree as any).__result = {
+          threw,
+          called,
+          message,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("must.plot throws on non-canvas", r.threw, true);
+        t.eq("must.plot callback not called on non-canvas", r.called, false);
+        t.ok("must.plot error includes label", String(r.message).includes("not canvas plot"));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.plot accepts context settings",
+      dom: true,
+      fixture: "canvas/plot",
+      sub: "plot-settings",
+
+      html: `
+        <main id="root">
+          <canvas id="target" width="20" height="20"></canvas>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        let called = false;
+        let hasCtx = false;
+
+        target.canvas.plot(
+          (ctx) => {
+            called = true;
+            hasCtx = ctx instanceof CanvasRenderingContext2D;
+          },
+          {
+            alpha: false,
+            desynchronized: false,
+          },
+        );
+
+        (tree as any).__result = {
+          called,
+          hasCtx,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("plot with settings called", r.called, true);
+        t.eq("plot with settings received context", r.hasCtx, true);
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}

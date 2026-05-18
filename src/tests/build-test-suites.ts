@@ -19,7 +19,7 @@ import { livetree_svg_lvl2 } from "./livetree-tests/livetree-fixtures-12-svg-new
 import { livetree_new_form_api } from "./livetree-tests/livetree-fixtures-13-form";
 import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "./json-tests/json-test-builder";
 import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetree-fixtures-14-canvas";
-import { livetree_canvas_clear, livetree_canvas_display } from "./livetree-tests/livetree-fixtures-15-canvas-size";
+import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-tests/livetree-fixtures-15-canvas-size";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -178,6 +178,7 @@ export function build_suites_for_mode(
       livetree_canvas_stress(),
       livetree_canvas_display(),
       livetree_canvas_clear(),
+      livetree_canvas_plot(),
     ])
   }
   if (mode === "fuzz-json") {

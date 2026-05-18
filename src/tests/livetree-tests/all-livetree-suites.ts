@@ -14,7 +14,7 @@ import { livetree_more_listeners } from "./livetree-fixtures-07";
 import { livetree_svg_lvl2 } from "./livetree-fixtures-12-svg-new";
 import { livetree_new_form_api } from "./livetree-fixtures-13-form";
 import { livetree_canvas, livetree_canvas_stress } from "./livetree-fixtures-14-canvas";
-import { livetree_canvas_clear, livetree_canvas_display } from "./livetree-fixtures-15-canvas-size";
+import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-fixtures-15-canvas-size";
 
 
 /******************************************************
@@ -69,7 +69,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_canvas_stress(),
     livetree_canvas_display(),
     livetree_canvas_clear(),
-
+    livetree_canvas_plot(),
 
 
   ] as const;
