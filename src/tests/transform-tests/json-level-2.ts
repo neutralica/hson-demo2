@@ -1,3 +1,4 @@
+import type { FixtureBag, FixtureBundle } from "../tests.types";
 
 
 const jsonKeyEdgeCases: Record<string, string> = {
@@ -377,4 +378,4 @@ const json2_INVALID = {
   }`,
 }
 export const JSON_FAIL_FIXTURES = { json2: json2_INVALID }
-export const JSON_FIXTURES_LEVEL2 = { level2: { ...jsonKeyEdgeCases, ...jsonMostHeinous } };
+export const JSON_FIXTURES_LEVEL2: FixtureBundle = { level2: { ...jsonKeyEdgeCases, ...jsonMostHeinous } };

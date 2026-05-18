@@ -497,24 +497,21 @@ export function livetree_recent_api(): TestSuite {
           <div id="target">hello</div>
         </main>
       `,
-
       async act(tree) {
-        const target = tree.find.must.byId("target");
-
         let count = 0;
-
-        const sub = target.listen.window.onKeyDown(() => {
+        const target = tree.find.must.byId("target");
+        const TEST_KEY = "__hson_window_off_sentinel__";
+        const sub = target.listen.window.onKeyDown((ev) => {
+          if (ev.key !== TEST_KEY) {
+            return;
+          }
           count++;
         });
-
-        window.dispatchEvent(new KeyboardEvent("keydown", { key: "w" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: TEST_KEY }));
         await tick();
-
         sub.off();
-
-        window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: TEST_KEY }));
         await tick();
-
         (tree as any).__result = { count };
       },
 

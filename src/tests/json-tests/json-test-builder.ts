@@ -1,4 +1,4 @@
-import type { FixtureBundle, Jsonish } from "../tests.types";
+import type { FixtureBundle, FixtureMap, Jsonish } from "../tests.types";
 
 export type JsonFixtureMap = Record<string, string>;
 type JsonPrimitive = string | number | boolean | null;
@@ -249,18 +249,27 @@ export function random_seed(): number {
 }
 
 
-
 export function make_json_fixture_bundle(
-    count: number,
-    seedBase: number,
-    opts: GenOpts = {
-        maxDepth: 4,
-        maxWidth: 4,
-    },
+  count: number,
+  seedBase: number,
+  opts: GenOpts = {
+    maxDepth: 4,
+    maxWidth: 4,
+  },
 ): FixtureBundle {
-    return {
-        generatedJson: make_json_fixture_map(count, seedBase, opts),
+  const bundle: Record<string, FixtureMap> = {};
+
+  for (let i = 0; i < count; i += 1) {
+    const seed = seedBase + i;
+    const key = `seed_${seed}_ix_${String(i).padStart(3, "0")}`;
+    const value = make_json_fixture(seed, opts);
+
+    bundle[key] = {
+      json: value,
     };
+  }
+
+  return bundle;
 }
 
 function make_key_base(rng: Rng): string {

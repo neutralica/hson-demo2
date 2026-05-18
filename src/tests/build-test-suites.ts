@@ -165,9 +165,9 @@ export function build_suites_for_mode(
       make_transform_test_suite(
         h,
         make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-        `transform/json/generated/seed_${GENERATED_JSON_SEED}`,
+        `generated/json/seed_${GENERATED_JSON_SEED}`,
         map,
-      )
+      ),
     ]);
   }
   if (mode === "dev") {
@@ -175,7 +175,7 @@ export function build_suites_for_mode(
       make_transform_test_suite(
         h,
         make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-        `transform/json/generated/seed_${GENERATED_JSON_SEED}`,
+        `generated/json/seed_${GENERATED_JSON_SEED}`,
         map,
       )
 
@@ -188,7 +188,7 @@ export function build_suites_for_mode(
       make_transform_test_suite(
         h,
         make_json_fixture_bundle(200, GENERATED_JSON_SEED),
-        `transform/json/generated/seed_${GENERATED_JSON_SEED}`,
+        `generated/json/seed_${GENERATED_JSON_SEED}`,
         map,
       )
 
@@ -218,5 +218,11 @@ export function build_suites_for_mode(
     make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
     ...all_livetree_suites(),
     ...all_unit_tests(),
+    make_transform_test_suite(
+      h,
+      make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+      `generated/json/seed_${GENERATED_JSON_SEED}`,
+      map,
+    ),
   ]);
 }

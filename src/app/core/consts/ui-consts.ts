@@ -34,7 +34,7 @@ export const _TXT = {
   // smol: "0.65rem",
   // wee: "0.55rem" ,
   smol: "14px",
-  sansMain: "1.1rem",
+  sansMain: "1rem",
   main: "1.1rem",
 } as const;
 
