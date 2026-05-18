@@ -13,6 +13,7 @@ import type { TestSuite } from "../tests.types";
 import { livetree_more_listeners } from "./livetree-fixtures-7";
 import { livetree_svg_lvl2 } from "./livetree-new-svg";
 import { livetree_new_form_api } from "./livetree-new-form";
+import { livetree_canvas, livetree_canvas_stress } from "./livetree_13_canvas";
 
 
 /******************************************************
@@ -63,7 +64,8 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_more_listeners(),
     livetree_svg_lvl2(),
 livetree_new_form_api(),
-
+    livetree_canvas(),
+livetree_canvas_stress(),
 
 
   ] as const;

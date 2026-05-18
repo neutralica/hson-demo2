@@ -18,6 +18,7 @@ import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../h
 import { livetree_svg_lvl2 } from "./livetree-tests/livetree-new-svg";
 import { livetree_new_form_api } from "./livetree-tests/livetree-new-form";
 import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "./json-tests/json-test-builder";
+import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetree_13_canvas";
 
 function preview_atom(atom: FixtureAtom): string {
   // small, safe, non-throwy preview for inspector.
@@ -172,12 +173,8 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      make_transform_test_suite(
-        h,
-        make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-        `generated/json/seed_${GENERATED_JSON_SEED}`,
-        map,
-      )
+      livetree_canvas(),
+      livetree_canvas_stress(),
 
     ])
   }
