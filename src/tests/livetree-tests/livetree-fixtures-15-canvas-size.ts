@@ -1,6 +1,8 @@
+import { _disposables_count_for_owner } from "hson-live/diagnostics";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
+import { tick } from "./livetree-fixtures-03";
 
 export function livetree_canvas_display(): TestSuite {
   const SUITE = "livetree/canvas-display";
@@ -328,6 +330,459 @@ export function livetree_canvas_display(): TestSuite {
         t.eq("unmounted match leaves height alone", r.size.height, 20);
       },
     },
+
+
+    {
+      suite: SUITE,
+      name: "canvas.display.match.watch stops after removeSelf",
+      dom: true,
+      html: `
+    <main id="root">
+      <section id="host">
+        <canvas id="target"></canvas>
+      </section>
+    </main>
+  `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        target.css.setMany({
+          display: "block",
+          width: "80px",
+          height: "40px",
+        });
+
+        await flush_dom();
+
+        target.canvas.display.match.watch({ dpr: 1 });
+
+        await flush_dom();
+
+        target.removeSelf();
+
+        // If cleanup is broken, this usually won't be directly observable unless
+        // you expose dev counts. So this test may need a devSnapshot/count helper.
+        (tree as any).__result = {
+          removed: tree.find.byId("target") === undefined,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("target removed", r.removed, true);
+      },
+    },
+    {
+  suite: SUITE,
+  name: "canvas.display.match.watch registers owner disposable",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-registers-owner-disposable",
+
+  html: `
+    <main id="root">
+      <canvas id="target"></canvas>
+    </main>
+  `,
+
+  async act(tree) {
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const before = _disposables_count_for_owner(target.quid);
+    const watcher = target.canvas.display.match.watch({ dpr: 1 });
+    const after = _disposables_count_for_owner(target.quid);
+
+    watcher.off();
+
+    (tree as any).__result = {
+      before,
+      after,
+      final: _disposables_count_for_owner(target.quid),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("owner starts with no disposables", r.before, 0);
+    t.eq("watch registers one disposable", r.after, 1);
+    t.eq("manual off removes disposable", r.final, 0);
+  },
+    },
+    {
+  suite: SUITE,
+  name: "canvas.display.match.watch manual off is idempotent",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-off-idempotent",
+
+  html: `
+    <main id="root">
+      <canvas id="target"></canvas>
+    </main>
+  `,
+
+  async act(tree) {
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const watcher = target.canvas.display.match.watch({ dpr: 1 });
+
+    watcher.off();
+    watcher.off();
+    watcher.off();
+
+    (tree as any).__result = {
+      count: _disposables_count_for_owner(target.quid),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("repeated off leaves no registered disposable", r.count, 0);
+  },
+    },
+    {
+  suite: SUITE,
+  name: "canvas.display.match.watch manual off is idempotent",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-off-idempotent",
+
+  html: `
+    <main id="root">
+      <canvas id="target"></canvas>
+    </main>
+  `,
+
+  async act(tree) {
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const watcher = target.canvas.display.match.watch({ dpr: 1 });
+
+    watcher.off();
+    watcher.off();
+    watcher.off();
+
+    (tree as any).__result = {
+      count: _disposables_count_for_owner(target.quid),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("repeated off leaves no registered disposable", r.count, 0);
+  },
+    },
+    {
+  suite: SUITE,
+  name: "canvas.display.match.watch auto-cleans on parent removeChildren",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-cleans-remove-children",
+
+  html: `
+    <main id="root">
+      <section id="host">
+        <canvas id="target"></canvas>
+      </section>
+    </main>
+  `,
+
+  async act(tree) {
+    const host = tree.find.must.byId("host");
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const q = target.quid;
+
+    target.canvas.display.match.watch({ dpr: 1 });
+
+    const beforeRemove = _disposables_count_for_owner(q);
+    const removed = host.removeChildren();
+    const afterRemove = _disposables_count_for_owner(q);
+
+    (tree as any).__result = {
+      removed,
+      beforeRemove,
+      afterRemove,
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("watch registered before removeChildren", r.beforeRemove, 1);
+    t.eq("removeChildren removed one child", r.removed, 1);
+    t.eq("removeChildren cleaned child owner disposable", r.afterRemove, 0);
+  },
+},
+{
+  suite: SUITE,
+  name: "canvas.display.match.watch auto-cleans on parent removeChildren",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-cleans-remove-children",
+
+  html: `
+    <main id="root">
+      <section id="host">
+        <canvas id="target"></canvas>
+      </section>
+    </main>
+  `,
+
+  async act(tree) {
+    const host = tree.find.must.byId("host");
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const q = target.quid;
+
+    target.canvas.display.match.watch({ dpr: 1 });
+
+    const beforeRemove = _disposables_count_for_owner(q);
+    const removed = host.removeChildren();
+    const afterRemove = _disposables_count_for_owner(q);
+
+    (tree as any).__result = {
+      removed,
+      beforeRemove,
+      afterRemove,
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("watch registered before removeChildren", r.beforeRemove, 1);
+    t.eq("removeChildren removed one child", r.removed, 1);
+    t.eq("removeChildren cleaned child owner disposable", r.afterRemove, 0);
+  },
+},
+{
+  suite: SUITE,
+  name: "canvas.display.match.watch auto-cleans deep child canvas on ancestor removeSelf",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-cleans-ancestor-remove-self",
+
+  html: `
+    <main id="root">
+      <section id="outer">
+        <div id="inner">
+          <canvas id="target"></canvas>
+        </div>
+      </section>
+    </main>
+  `,
+
+  async act(tree) {
+    const outer = tree.find.must.byId("outer");
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const q = target.quid;
+
+    target.canvas.display.match.watch({ dpr: 1 });
+
+    const beforeRemove = _disposables_count_for_owner(q);
+    const removed = outer.removeSelf();
+    const afterRemove = _disposables_count_for_owner(q);
+
+    (tree as any).__result = {
+      removed,
+      beforeRemove,
+      afterRemove,
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("deep canvas watch registered before ancestor remove", r.beforeRemove, 1);
+    t.eq("ancestor removeSelf removed one subtree root", r.removed, 1);
+    t.eq("ancestor removeSelf cleaned deep canvas disposable", r.afterRemove, 0);
+  },
+    },
+{
+  suite: SUITE,
+  name: "canvas.display.match.watch multiple watchers clean independently",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-multiple-clean-independent",
+
+  html: `
+    <main id="root">
+      <canvas id="target"></canvas>
+    </main>
+  `,
+
+  async act(tree) {
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "100px",
+      height: "50px",
+    });
+
+    await flush_dom();
+
+    const q = target.quid;
+
+    const a = target.canvas.display.match.watch({ dpr: 1 });
+    const b = target.canvas.display.match.watch({ dpr: 1 });
+
+    const both = _disposables_count_for_owner(q);
+
+    a.off();
+
+    const afterOne = _disposables_count_for_owner(q);
+
+    b.off();
+
+    const afterBoth = _disposables_count_for_owner(q);
+
+    (tree as any).__result = {
+      both,
+      afterOne,
+      afterBoth,
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("two watchers register two disposables", r.both, 2);
+    t.eq("one off leaves one disposable", r.afterOne, 1);
+    t.eq("both off leaves no disposables", r.afterBoth, 0);
+  },
+},
+{
+  suite: SUITE,
+  name: "canvas.display.match.watch removed node does not keep matching after detach",
+  dom: true,
+  fixture: "canvas/lifecycle",
+  sub: "watch-no-match-after-detach",
+
+  html: `
+    <main id="root">
+      <section id="host">
+        <canvas id="target"></canvas>
+      </section>
+    </main>
+  `,
+
+  async act(tree) {
+    const host = tree.find.must.byId("host");
+    const target = tree.find.must.byId("target");
+
+    target.css.setMany({
+      display: "block",
+      width: "80px",
+      height: "40px",
+    });
+
+    await flush_dom();
+
+    const q = target.quid;
+
+    target.canvas.display.match.watch({ dpr: 1 });
+
+    await flush_dom();
+    await tick();
+
+    const beforeWidth = target.attr.get("width");
+    const beforeHeight = target.attr.get("height");
+
+    host.removeChildren();
+
+    const afterCount = _disposables_count_for_owner(q);
+
+    // Mutate the old LiveTree handle after detach. If the watcher was not
+    // cleaned, this kind of stale handle is exactly what could keep work alive.
+    target.css.setMany({
+      width: "160px",
+      height: "80px",
+    });
+
+    await flush_dom();
+    await tick();
+    await tick();
+
+    (tree as any).__result = {
+      beforeWidth,
+      beforeHeight,
+      afterCount,
+      afterWidth: target.attr.get("width"),
+      afterHeight: target.attr.get("height"),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("initial watch wrote width", r.beforeWidth, "80");
+    t.eq("initial watch wrote height", r.beforeHeight, "40");
+    t.eq("detach cleaned disposable count", r.afterCount, 0);
+
+    // These should remain the old attrs; the detached watcher should not keep
+    // observing and rewriting backing dimensions.
+    t.eq("detached stale handle did not rematch width", r.afterWidth, "80");
+    t.eq("detached stale handle did not rematch height", r.afterHeight, "40");
+  },
+    },
+
+
+
   ];
 
   return make_livetree_suite(SUITE, cases);
@@ -948,6 +1403,7 @@ export function livetree_canvas_plot(): TestSuite {
         t.eq("plot with settings received context", r.hasCtx, true);
       },
     },
+
   ];
 
   return make_livetree_suite(SUITE, cases);
