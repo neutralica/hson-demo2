@@ -6,6 +6,7 @@ import { _COLS, SYS_SANSfont, SYS_SMOLfont} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { GRID_GAPstr, _TXT, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
+import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 
 
 export const MAIN_MENUcss: CssMap = {
@@ -173,7 +174,7 @@ export const HSON_SUBcss: CssMap = {
   ...FONT_FAM_MONO,
   position: "relative",
   textWrap: "nowrap",
-  color: FADE_1col,
+  color: OKLCH_FLEURS.violet,
   // color: ACID_WASH_RGBA.wornPurple,
   // color: ACID_WASH_OKLCH.steel,
   marginBottom: "1rem",
