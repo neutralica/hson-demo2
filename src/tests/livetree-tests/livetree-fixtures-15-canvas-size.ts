@@ -753,7 +753,6 @@ export function livetree_canvas_display(): TestSuite {
       width: "160px",
       height: "80px",
     });
-
     await flush_dom();
     await tick();
     await tick();
