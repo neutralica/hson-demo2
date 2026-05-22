@@ -1,7 +1,7 @@
 import { _listeners_debug_hard_reset } from "../../../../hson-live/dist/api/livetree/managers/listener-builder";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
-import { tick } from "./livetree-fixtures-03";
+import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_new_dom_doc(): TestSuite {
@@ -444,7 +444,7 @@ export function livetree_new_dom_doc(): TestSuite {
         t.eq("path d preserved", r.d, "M 0 0 L 10 10 Z");
       },
     },
-
+  
   ];
 
   return make_livetree_suite(SUITE, cases);

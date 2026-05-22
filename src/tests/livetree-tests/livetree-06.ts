@@ -1,8 +1,8 @@
 
 import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
-import { livetree_gnarly_svg } from "./livetree-fixtures-11-svg-3";
-import { tick } from "./livetree-fixtures-03";
+import { livetree_gnarly_svg } from "./livetree-11-svg-3";
+import { tick } from "./livetree-03";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 import { hson } from "hson-live";
 

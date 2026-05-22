@@ -1,6 +1,7 @@
+import { hson } from "hson-live";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite, LiveTreeCaseSpec } from "../tests.types";
-import { tick } from "./livetree-fixtures-03";
+import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_canvas_pointer(): TestSuite {
@@ -268,7 +269,7 @@ export function livetree_canvas_pointer(): TestSuite {
         let message = "";
 
         try {
-          target.canvas.must.pointer(ev, "unmounted pointer" );
+          target.canvas.must.pointer(ev, "unmounted pointer");
         } catch (err) {
           threw = true;
           message = err instanceof Error ? err.message : String(err);
@@ -315,7 +316,7 @@ export function livetree_canvas_pointer(): TestSuite {
         let message = "";
 
         try {
-          target.canvas.must.pointer(ev , "non-canvas pointer" );
+          target.canvas.must.pointer(ev, "non-canvas pointer");
         } catch (err) {
           threw = true;
           message = err instanceof Error ? err.message : String(err);
@@ -393,395 +394,394 @@ export function livetree_canvas_pointer(): TestSuite {
         t.ok("backing height is at least display height", r.backingHeight >= 90);
       },
     },
-{
-  suite: SUITE,
-  name: "canvas.display.match.watch runs initial match immediately",
-  dom: true,
-  fixture: "canvas/pointer",
-  sub: "match-watch-initial",
+    {
+      suite: SUITE,
+      name: "canvas.display.match.watch runs initial match immediately",
+      dom: true,
+      fixture: "canvas/pointer",
+      sub: "match-watch-initial",
 
-  html: `
+      html: `
     <main id="root">
       <canvas id="target"></canvas>
     </main>
   `,
 
-  async act(tree) {
-    const target = tree.find.must.byId("target");
+      async act(tree) {
+        const target = tree.find.must.byId("target");
 
-    target.css.setMany({
-      display: "block",
-      width: "111px",
-      height: "57px",
-    });
+        target.css.setMany({
+          display: "block",
+          width: "111px",
+          height: "57px",
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
 
-    const cvs = target.canvas.must.el();
+        const cvs = target.canvas.must.el();
 
-    watcher.off();
+        watcher.off();
 
-    (tree as any).__result = {
-      attrWidth: target.attr.get("width"),
-      attrHeight: target.attr.get("height"),
-      width: cvs.width,
-      height: cvs.height,
-    };
-  },
+        (tree as any).__result = {
+          attrWidth: target.attr.get("width"),
+          attrHeight: target.attr.get("height"),
+          width: cvs.width,
+          height: cvs.height,
+        };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+      assert(tree, t) {
+        const r = (tree as any).__result;
 
-    t.eq("watch initial match writes width attr", r.attrWidth, "111");
-    t.eq("watch initial match writes height attr", r.attrHeight, "57");
-    t.eq("watch initial match writes canvas width", r.width, 111);
-    t.eq("watch initial match writes canvas height", r.height, 57);
-  },
-    },
-
-{
-  suite: SUITE,
-  name: "canvas.display.match.watch updates backing size after display resize",
-  dom: true,
-  fixture: "canvas/pointer",
-  sub: "match-watch-resize",
-
-  html: `
-    <main id="root">
-      <canvas id="target"></canvas>
-    </main>
-  `,
-
-  async act(tree) {
-    const target = tree.find.must.byId("target");
-
-    target.css.setMany({
-      display: "block",
-      width: "80px",
-      height: "40px",
-    });
-
-    await flush_dom();
-
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
-
-    await flush_dom();
-
-    target.css.setMany({
-      width: "140px",
-      height: "70px",
-    });
-
-    // ResizeObserver callbacks are async. Two turns makes this less brittle.
-    await flush_dom();
-    await tick();
-    await tick();
-
-    const cvs = target.canvas.must.el();
-
-    watcher.off();
-
-    (tree as any).__result = {
-      attrWidth: target.attr.get("width"),
-      attrHeight: target.attr.get("height"),
-      width: cvs.width,
-      height: cvs.height,
-    };
-  },
-
-  assert(tree, t) {
-    const r = (tree as any).__result;
-
-    t.eq("watch resize writes width attr", r.attrWidth, "140");
-    t.eq("watch resize writes height attr", r.attrHeight, "70");
-    t.eq("watch resize writes canvas width", r.width, 140);
-    t.eq("watch resize writes canvas height", r.height, 70);
-  },
+        t.eq("watch initial match writes width attr", r.attrWidth, "111");
+        t.eq("watch initial match writes height attr", r.attrHeight, "57");
+        t.eq("watch initial match writes canvas width", r.width, 111);
+        t.eq("watch initial match writes canvas height", r.height, 57);
+      },
     },
 
     {
-  suite: SUITE,
-  name: "canvas.display.match.watch updates backing size after display resize",
-  dom: true,
-  fixture: "canvas/pointer",
-  sub: "match-watch-resize",
+      suite: SUITE,
+      name: "canvas.display.match.watch updates backing size after display resize",
+      dom: true,
+      fixture: "canvas/pointer",
+      sub: "match-watch-resize",
 
-  html: `
+      html: `
     <main id="root">
       <canvas id="target"></canvas>
     </main>
   `,
 
-  async act(tree) {
-    const target = tree.find.must.byId("target");
+      async act(tree) {
+        const target = tree.find.must.byId("target");
 
-    target.css.setMany({
-      display: "block",
-      width: "80px",
-      height: "40px",
-    });
+        target.css.setMany({
+          display: "block",
+          width: "80px",
+          height: "40px",
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    target.css.setMany({
-      width: "140px",
-      height: "70px",
-    });
+        target.css.setMany({
+          width: "140px",
+          height: "70px",
+        });
 
-    // ResizeObserver callbacks are async. Two turns makes this less brittle.
-    await flush_dom();
-    await tick();
-    await tick();
+        // ResizeObserver callbacks are async. Two turns makes this less brittle.
+        await flush_dom();
+        await tick();
+        await tick();
 
-    const cvs = target.canvas.must.el();
+        const cvs = target.canvas.must.el();
 
-    watcher.off();
+        watcher.off();
 
-    (tree as any).__result = {
-      attrWidth: target.attr.get("width"),
-      attrHeight: target.attr.get("height"),
-      width: cvs.width,
-      height: cvs.height,
-    };
-  },
+        (tree as any).__result = {
+          attrWidth: target.attr.get("width"),
+          attrHeight: target.attr.get("height"),
+          width: cvs.width,
+          height: cvs.height,
+        };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+      assert(tree, t) {
+        const r = (tree as any).__result;
 
-    t.eq("watch resize writes width attr", r.attrWidth, "140");
-    t.eq("watch resize writes height attr", r.attrHeight, "70");
-    t.eq("watch resize writes canvas width", r.width, 140);
-    t.eq("watch resize writes canvas height", r.height, 70);
-  },
+        t.eq("watch resize writes width attr", r.attrWidth, "140");
+        t.eq("watch resize writes height attr", r.attrHeight, "70");
+        t.eq("watch resize writes canvas width", r.width, 140);
+        t.eq("watch resize writes canvas height", r.height, 70);
+      },
     },
-    
-    {
-  suite: SUITE,
-  name: "canvas.display.match.watch off stops further resize matching",
-  dom: true,
-  fixture: "canvas/pointer",
-  sub: "match-watch-off",
 
-  html: `
+    {
+      suite: SUITE,
+      name: "canvas.display.match.watch updates backing size after display resize",
+      dom: true,
+      fixture: "canvas/pointer",
+      sub: "match-watch-resize",
+
+      html: `
     <main id="root">
       <canvas id="target"></canvas>
     </main>
   `,
 
-  async act(tree) {
-    const target = tree.find.must.byId("target");
+      async act(tree) {
+        const target = tree.find.must.byId("target");
 
-    target.css.setMany({
-      display: "block",
-      width: "90px",
-      height: "45px",
-    });
+        target.css.setMany({
+          display: "block",
+          width: "80px",
+          height: "40px",
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    watcher.off();
+        target.css.setMany({
+          width: "140px",
+          height: "70px",
+        });
 
-    target.css.setMany({
-      width: "160px",
-      height: "80px",
-    });
+        // ResizeObserver callbacks are async. Two turns makes this less brittle.
+        await flush_dom();
+        await tick();
+        await tick();
 
-    await flush_dom();
-    await tick();
-    await tick();
+        const cvs = target.canvas.must.el();
 
-    const cvs = target.canvas.must.el();
+        watcher.off();
 
-    (tree as any).__result = {
-      attrWidth: target.attr.get("width"),
-      attrHeight: target.attr.get("height"),
-      width: cvs.width,
-      height: cvs.height,
-    };
-  },
+        (tree as any).__result = {
+          attrWidth: target.attr.get("width"),
+          attrHeight: target.attr.get("height"),
+          width: cvs.width,
+          height: cvs.height,
+        };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+      assert(tree, t) {
+        const r = (tree as any).__result;
 
-    t.eq("watch off preserves prior width attr", r.attrWidth, "90");
-    t.eq("watch off preserves prior height attr", r.attrHeight, "45");
-    t.eq("watch off preserves prior canvas width", r.width, 90);
-    t.eq("watch off preserves prior canvas height", r.height, 45);
-  },
+        t.eq("watch resize writes width attr", r.attrWidth, "140");
+        t.eq("watch resize writes height attr", r.attrHeight, "70");
+        t.eq("watch resize writes canvas width", r.width, 140);
+        t.eq("watch resize writes canvas height", r.height, 70);
+      },
     },
-    
-    {
-  suite: SUITE,
-  name: "canvas.display.match.watch is harmless before mount",
-  fixture: "canvas/pointer",
-  sub: "match-watch-unmounted",
 
-  html: `
+    {
+      suite: SUITE,
+      name: "canvas.display.match.watch off stops further resize matching",
+      dom: true,
+      fixture: "canvas/pointer",
+      sub: "match-watch-off",
+
+      html: `
     <main id="root">
       <canvas id="target"></canvas>
     </main>
   `,
 
-  act(tree) {
-    const target = tree.find.must.byId("target");
+      async act(tree) {
+        const target = tree.find.must.byId("target");
 
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
+        target.css.setMany({
+          display: "block",
+          width: "90px",
+          height: "45px",
+        });
 
-    watcher.off();
+        await flush_dom();
 
-    (tree as any).__result = {
-      width: target.attr.get("width"),
-      height: target.attr.get("height"),
-      inScope: target.canvas.inScope(),
-    };
-  },
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+        await flush_dom();
 
-    t.eq("watch before mount does not write width", r.width, undefined);
-    t.eq("watch before mount does not write height", r.height, undefined);
-    t.eq("unmounted target is still canvas-scoped", r.inScope, true);
-  },
+        watcher.off();
+
+        target.css.setMany({
+          width: "160px",
+          height: "80px",
+        });
+
+        await flush_dom();
+        await tick();
+        await tick();
+
+        const cvs = target.canvas.must.el();
+
+        (tree as any).__result = {
+          attrWidth: target.attr.get("width"),
+          attrHeight: target.attr.get("height"),
+          width: cvs.width,
+          height: cvs.height,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("watch off preserves prior width attr", r.attrWidth, "90");
+        t.eq("watch off preserves prior height attr", r.attrHeight, "45");
+        t.eq("watch off preserves prior canvas width", r.width, 90);
+        t.eq("watch off preserves prior canvas height", r.height, 45);
+      },
     },
-    
-    {
-  suite: SUITE,
-  name: "canvas.display.match.watch is harmless on non-canvas node",
-  dom: true,
-  fixture: "canvas/pointer",
-  sub: "match-watch-non-canvas",
 
-  html: `
+    {
+      suite: SUITE,
+      name: "canvas.display.match.watch is harmless before mount",
+      fixture: "canvas/pointer",
+      sub: "match-watch-unmounted",
+
+      html: `
+    <main id="root">
+      <canvas id="target"></canvas>
+    </main>
+  `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
+
+        watcher.off();
+
+        (tree as any).__result = {
+          width: target.attr.get("width"),
+          height: target.attr.get("height"),
+          inScope: target.canvas.inScope(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("watch before mount does not write width", r.width, undefined);
+        t.eq("watch before mount does not write height", r.height, undefined);
+        t.eq("unmounted target is still canvas-scoped", r.inScope, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "canvas.display.match.watch is harmless on non-canvas node",
+      dom: true,
+      fixture: "canvas/pointer",
+      sub: "match-watch-non-canvas",
+
+      html: `
     <main id="root">
       <div id="target"></div>
     </main>
   `,
 
-  async act(tree) {
-    const target = tree.find.must.byId("target");
+      async act(tree) {
+        const target = tree.find.must.byId("target");
 
-    target.css.setMany({
-      display: "block",
-      width: "100px",
-      height: "50px",
-    });
+        target.css.setMany({
+          display: "block",
+          width: "100px",
+          height: "50px",
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
 
-    watcher.off();
+        watcher.off();
 
-    (tree as any).__result = {
-      width: target.attr.get("width"),
-      height: target.attr.get("height"),
-      inScope: target.canvas.inScope(),
-    };
-  },
+        (tree as any).__result = {
+          width: target.attr.get("width"),
+          height: target.attr.get("height"),
+          inScope: target.canvas.inScope(),
+        };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+      assert(tree, t) {
+        const r = (tree as any).__result;
 
-    t.eq("watch on non-canvas does not write width", r.width, undefined);
-    t.eq("watch on non-canvas does not write height", r.height, undefined);
-    t.eq("target is not canvas-scoped", r.inScope, false);
-  },
+        t.eq("watch on non-canvas does not write width", r.width, undefined);
+        t.eq("watch on non-canvas does not write height", r.height, undefined);
+        t.eq("target is not canvas-scoped", r.inScope, false);
+      },
     },
-    
-    {
-  suite: SUITE,
-  name: "canvas.pointer remains display-local after match.watch resize",
-  dom: true,
-  fixture: "canvas/pointer",
-  sub: "pointer-after-watch-resize",
 
-  html: `
+    {
+      suite: SUITE,
+      name: "canvas.pointer remains display-local after match.watch resize",
+      dom: true,
+      fixture: "canvas/pointer",
+      sub: "pointer-after-watch-resize",
+
+      html: `
     <main id="root">
       <canvas id="target"></canvas>
     </main>
   `,
 
-  async act(tree) {
-    const target = tree.find.must.byId("target");
+      async act(tree) {
+        const target = tree.find.must.byId("target");
 
-    target.css.setMany({
-      display: "block",
-      width: "100px",
-      height: "50px",
-    });
+        target.css.setMany({
+          display: "block",
+          width: "100px",
+          height: "50px",
+        });
 
-    await flush_dom();
+        await flush_dom();
 
-    const watcher = target.canvas.display.match.watch({
-      dpr: 1,
-    });
+        const watcher = target.canvas.display.match.watch({
+          dpr: 1,
+        });
 
-    target.css.setMany({
-      width: "180px",
-      height: "90px",
-    });
+        target.css.setMany({
+          width: "180px",
+          height: "90px",
+        });
 
-    await flush_dom();
-    await tick();
-    await tick();
+        await flush_dom();
+        await tick();
+        await tick();
 
-    const cvs = target.canvas.must.el();
-    const rect = cvs.getBoundingClientRect();
+        const cvs = target.canvas.must.el();
+        const rect = cvs.getBoundingClientRect();
 
-    const ev = new PointerEvent("pointermove", {
-      clientX: rect.left + 72,
-      clientY: rect.top + 33,
-    });
+        const ev = new PointerEvent("pointermove", {
+          clientX: rect.left + 72,
+          clientY: rect.top + 33,
+        });
 
-    const pt = target.canvas.must.pointer(ev);
+        const pt = target.canvas.must.pointer(ev);
 
-    watcher.off();
+        watcher.off();
 
-    (tree as any).__result = {
-      x: pt.x,
-      y: pt.y,
-      width: pt.width,
-      height: pt.height,
-      backingWidth: cvs.width,
-      backingHeight: cvs.height,
-    };
-  },
+        (tree as any).__result = {
+          x: pt.x,
+          y: pt.y,
+          width: pt.width,
+          height: pt.height,
+          backingWidth: cvs.width,
+          backingHeight: cvs.height,
+        };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+      assert(tree, t) {
+        const r = (tree as any).__result;
 
-    t.eq("pointer x remains local after watched resize", Math.round(r.x), 72);
-    t.eq("pointer y remains local after watched resize", Math.round(r.y), 33);
-    t.eq("pointer width reflects resized display width", Math.round(r.width), 180);
-    t.eq("pointer height reflects resized display height", Math.round(r.height), 90);
-    t.eq("backing width reflects watched resize", r.backingWidth, 180);
-    t.eq("backing height reflects watched resize", r.backingHeight, 90);
-  },
+        t.eq("pointer x remains local after watched resize", Math.round(r.x), 72);
+        t.eq("pointer y remains local after watched resize", Math.round(r.y), 33);
+        t.eq("pointer width reflects resized display width", Math.round(r.width), 180);
+        t.eq("pointer height reflects resized display height", Math.round(r.height), 90);
+        t.eq("backing width reflects watched resize", r.backingWidth, 180);
+        t.eq("backing height reflects watched resize", r.backingHeight, 90);
+      },
     },
-    
 
 
 
@@ -789,6 +789,291 @@ export function livetree_canvas_pointer(): TestSuite {
 
 
 
+
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+
+export function livetree_document_ownership(): TestSuite {
+  const SUITE = "livetree/document-ownership";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "dom.doc returns mounted element ownerDocument",
+      dom: true,
+      fixture: "document/ownership",
+      sub: "dom-doc-owner-document",
+
+      html: `
+        <main id="root">
+          <div id="target">hello</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        const el = target.dom.must.el();
+        const nativeDoc = el.ownerDocument;
+
+        (tree as any).__result = {
+          hasDoc: nativeDoc !== undefined,
+          sameDocument: nativeDoc === el.ownerDocument,
+          sameAsGlobal: nativeDoc === document,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("dom.doc returned a document", r.hasDoc, true);
+        t.eq("dom.doc matches element ownerDocument", r.sameDocument, true);
+        t.eq("test-mounted doc is global document in normal DOM suite", r.sameAsGlobal, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "created child uses same ownerDocument as mounted parent",
+      dom: true,
+      fixture: "document/ownership",
+      sub: "created-child-owner-document",
+
+      html: `
+        <main id="root">
+          <section id="host"></section>
+        </main>
+      `,
+      async act(tree) {
+        const host = tree.find.must.byId("host");
+
+        await flush_dom();
+
+        const child = host.create.div()
+          .attr.set("id", "created-child")
+          .text.set("created");
+
+        await flush_dom();
+
+        const hostEl = host.dom.must.el();
+        const childEl = child.dom.must.el();
+
+        (tree as any).__result = {
+          childExists: childEl.id === "created-child",
+          sameDocument: childEl.ownerDocument === hostEl.ownerDocument,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("created child exists", r.childExists, true);
+        t.eq("created child shares parent ownerDocument", r.sameDocument, true);
+      }
+    },
+
+    {
+      suite: SUITE,
+      name: "nested created descendants keep mounted ownerDocument",
+      dom: true,
+      fixture: "document/ownership",
+      sub: "nested-created-owner-document",
+
+      html: `
+        <main id="root">
+          <section id="host"></section>
+        </main>
+      `,
+
+      async act(tree) {
+        const host = tree.find.must.byId("host");
+
+        await flush_dom();
+
+        const outer = host.create.div().attr.set("id", "outer-created");
+        const inner = outer.create.div().attr.set("id", "inner-created");
+        const leaf = inner.create.span().attr.set("id", "leaf-created").text.set("leaf");
+
+        await flush_dom();
+
+        const hostDoc = host.dom.must.el().ownerDocument;
+        const outerDoc = outer.dom.must.el().ownerDocument;
+        const innerDoc = inner.dom.must.el().ownerDocument;
+        const leafDoc = leaf.dom.must.el().ownerDocument;
+
+        (tree as any).__result = {
+          outerSame: outerDoc === hostDoc,
+          innerSame: innerDoc === hostDoc,
+          leafSame: leafDoc === hostDoc,
+          leafDomDocSame: leaf.dom.must.el().ownerDocument === hostDoc,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("outer created node shares host document", r.outerSame, true);
+        t.eq("inner created node shares host document", r.innerSame, true);
+        t.eq("leaf created node shares host document", r.leafSame, true);
+        t.eq("leaf dom.doc shares host document", r.leafDomDocSame, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "detached tree has no resolved DOM document before mount",
+      fixture: "document/ownership",
+      sub: "detached-no-doc-before-mount",
+
+      html: `
+        <main id="root">
+          <section id="host"></section>
+        </main>
+      `,
+      act(tree) {
+        const host = tree.find.must.byId("host");
+
+        const el = host.dom.el();
+
+        (tree as any).__result = {
+          hostEl: el,
+          hostDoc: el?.ownerDocument,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("detached host has no DOM element", r.hostEl, undefined);
+        t.eq("detached host has no DOM document", r.hostDoc, undefined);
+      }
+    },
+
+    {
+      suite: SUITE,
+      name: "removed node drops DOM element and document access",
+      dom: true,
+      fixture: "document/ownership",
+      sub: "removed-node-no-doc",
+
+      html: `
+        <main id="root">
+          <section id="host">
+            <div id="target">hello</div>
+          </section>
+        </main>
+      `,
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        await flush_dom();
+
+        const beforeEl = target.dom.el();
+        const beforeDoc = beforeEl?.ownerDocument;
+
+        const removed = target.removeSelf();
+
+        const afterEl = target.dom.el();
+        const afterDoc = afterEl?.ownerDocument;
+
+        (tree as any).__result = {
+          hadDoc: beforeDoc !== undefined,
+          hadEl: beforeEl !== undefined,
+          removed,
+          afterDoc,
+          afterEl,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("target had document before removal", r.hadDoc, true);
+        t.eq("target had element before removal", r.hadEl, true);
+        t.eq("removeSelf removed one node", r.removed, 1);
+        t.eq("removed target has no DOM document", r.afterDoc, undefined);
+        t.eq("removed target has no DOM element", r.afterEl, undefined);
+      }
+    },
+    {
+      suite: SUITE,
+      name: "queryBody grafts document.body as mounted root",
+      dom: true,
+      fixture: "document/ownership",
+      sub: "query-body-root-is-body",
+
+      html: `
+    <main id="root"></main>
+  `,
+
+      async act(tree) {
+        await flush_dom();
+
+        const bodyTree = hson.liveTree.queryBody().graft();
+        const bodyEl = bodyTree.dom.must.el();
+
+        (tree as any).__result = {
+          isBody: bodyEl === document.body,
+          ownerIsGlobal: bodyEl.ownerDocument === document,
+          tag: bodyEl.tagName.toLowerCase(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("queryBody root element is document.body", r.isBody, true);
+        t.eq("queryBody body owner is global document", r.ownerIsGlobal, true);
+        t.eq("queryBody root tag is body", r.tag, "body");
+      },
+    },
+    {
+      suite: SUITE,
+      name: "DOM lookup stays scoped to mounted ownerDocument after creation",
+      dom: true,
+      fixture: "document/ownership",
+      sub: "lookup-owner-document-after-create",
+
+      html: `
+        <main id="root">
+          <section id="host"></section>
+        </main>
+      `,
+
+      async act(tree) {
+        const host = tree.find.must.byId("host");
+
+        await flush_dom();
+
+        const created = host.create.div()
+          .attr.set("id", "created-target")
+          .text.set("created target");
+
+        await flush_dom();
+
+        const createdEl = created.dom.must.el();
+        const foundAgain = tree.find.must.byId("created-target");
+        const foundEl = foundAgain.dom.must.el();
+
+        (tree as any).__result = {
+          sameElement: createdEl === foundEl,
+          sameDocument: createdEl.ownerDocument === foundEl.ownerDocument,
+          foundText: foundEl.textContent,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("created element found again is same element", r.sameElement, true);
+        t.eq("created/found element share document", r.sameDocument, true);
+        t.eq("found created element text", r.foundText, "created target");
+      },
+    },
   ];
 
   return make_livetree_suite(SUITE, cases);

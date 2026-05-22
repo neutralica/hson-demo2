@@ -1,21 +1,21 @@
 
-import { suite_find, suite_attrs_and_flags, suite_append_and_create, mixedRegression, extraCases, suite_css_and_content, suite_recent_regressions } from "./livetree-fixtures-01";
-import { legacy_suites_3 } from "./livetree-fixtures-02";
-import { suite_schedules_events, css_manager_lifecycle, node_lifecycle } from "./livetree-fixtures-03";
-import { document_question, error_handling, listeners_teardown, root_multi_isolation } from "./livetree-fixtures-04";
-import { livetree_completionist, livetree_sync_perf, roundtrip_projection_stability } from "./livetree-fixtures-05";
-import { livetree_svg_basic } from "./livetree-fixtures-09-svg";
-import { livetree_svg_ingermediate } from "./livetree-fixtures-10-svg-2";
-import { livetree_gnarly_svg } from "./livetree-fixtures-11-svg-3";
-import { livetree_create_size, livetree_css_pseudo, livetree_recent_api } from "./livetree-fixtures-06";
-import { livetree_new_dom_doc } from "./livetree-fixtures-08-dom";
+import { suite_find, suite_attrs_and_flags, suite_append_and_create, mixedRegression, extraCases, suite_css_and_content, suite_recent_regressions } from "./livetree-01";
+import { legacy_suites_3 } from "./livetree-02";
+import { suite_schedules_events, css_manager_lifecycle, node_lifecycle } from "./livetree-03";
+import { document_question, error_handling, listeners_teardown, root_multi_isolation } from "./livetree-04";
+import { livetree_completionist, livetree_sync_perf, roundtrip_projection_stability } from "./livetree-05";
+import { livetree_svg_basic } from "./livetree-09-svg";
+import { livetree_svg_ingermediate } from "./livetree-10-svg-2";
+import { livetree_gnarly_svg } from "./livetree-11-svg-3";
+import { livetree_create_size, livetree_css_pseudo, livetree_recent_api } from "./livetree-06";
+import { livetree_new_dom_doc } from "./livetree-08-dom";
 import type { TestSuite } from "../tests.types";
-import { livetree_more_listeners } from "./livetree-fixtures-07";
-import { livetree_svg_lvl2 } from "./livetree-fixtures-12-svg-new";
-import { livetree_new_form_api } from "./livetree-fixtures-13-form";
-import { livetree_canvas, livetree_canvas_stress } from "./livetree-fixtures-14-canvas";
-import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-fixtures-15-canvas-size";
-import { livetree_canvas_pointer } from "./livetree-16-canvas-3";
+import { livetree_more_listeners } from "./livetree-07";
+import { livetree_svg_lvl2 } from "./livetree-12-svg-new";
+import { livetree_new_form_api } from "./livetree-13-form";
+import { livetree_canvas, livetree_canvas_stress } from "./livetree-14-canvas";
+import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-15-canvas-size";
+import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-16-canvas-3";
 
 
 /******************************************************
@@ -72,6 +72,6 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_canvas_clear(),
     livetree_canvas_plot(),
 livetree_canvas_pointer(),
-
+livetree_document_ownership(),
   ] as const;
 }

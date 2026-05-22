@@ -7,7 +7,7 @@ import { _CREATE_NODE } from "hson-live/diagnostics";
 import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
 import { ELEM_TAG, STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
-import { suite_more_contract_refresh } from "./livetree-fixtures-02";
+import { suite_more_contract_refresh } from "./livetree-02";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
 import { flush_dom } from "../inspector/inspector.helpers";
