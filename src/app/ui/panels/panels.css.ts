@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { _COLS } from "../../core/consts/ui-consts";
-import { SYS_MONOfont, _TXT, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { øCOLS } from "../../core/consts/ui-consts";
+import { SYS_MONOfont, øtextSize, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
@@ -17,7 +17,7 @@ export const UI_BUTTON_BORDERcss: CssMap = {
 
   }
 };
-export const UI_BTN_HOVERcss = (col: string = TXTcol_MENU, back: string = _COLS.backhi): CssMap => {
+export const UI_BTN_HOVERcss = (col: string = TXTcol_MENU, back: string = øCOLS.backhi): CssMap => {
   return {
     _hover: {
       background: col,
@@ -40,13 +40,13 @@ export const UI_BTN_STDcss: CssMap = {
   cursor: "pointer",
   ...FONT_FAM_MONO,
   textTransform: "lowercase",
-  background: _COLS.backlo,
+  background: øCOLS.backlo,
 } as const;
 
 
 export const UI_STACK_LABELcss: CssMap = {
   position: "relative",
-  fontSize: _TXT.main,
+  fontSize: øtextSize.main,
 };
 
 export const UI_BTNcss: CssMap = {
@@ -54,7 +54,7 @@ export const UI_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(TXTcol_CODE),
   height: "100%",
   padding: "4px 4px",
-  background: _COLS.backlo,
+  background: øCOLS.backlo,
   color: TXTcol_CODE,
   width: "25%",
 // justifyContent: "flex-end",
@@ -67,7 +67,7 @@ export const UI_2STACKcss: CssMap = {
   placeItems: "center",
   width: "15%",
   height: "100%",
-  fontSize: _TXT.main,
+  fontSize: øtextSize.main,
   padding: "4px",
   justifyContent: "flex-end",
 };
@@ -88,7 +88,7 @@ export const UI_PANEL_HEADcss: CssMap = {
   height: "3rem",
   maxHeight: "3rem",
   padding: "6px",
-  background: _COLS.backlo,
+  background: øCOLS.backlo,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -101,7 +101,7 @@ export const UI_PANEL_HEADERcss: CssMap = {
   zIndex: "5",
   height: "2rem",
   maxHeight: "2rem",
-  background: _COLS.backhi,
+  background: øCOLS.backhi,
   // columnGap: "0.5ch",
   width: "100%",
   display: "inline-flex",

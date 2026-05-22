@@ -9,7 +9,7 @@ import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
 import { $blu_, $grn_ } from "../../core/consts/colors.consts";
-import { _COLS, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { øCOLS, SYS_MONOfont } from "../../core/consts/ui-consts";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
@@ -29,7 +29,7 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     position: "fixed",
     top: "1rem",
     left: "1rem",
-    backgroundColor: _COLS.backlo,
+    backgroundColor: øCOLS.backlo,
     padding: "1rem",
     fontFamily: SYS_MONOfont,
     color: $grn_.std,

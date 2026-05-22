@@ -99,7 +99,7 @@ export function assert_json_eq(
     );
   }
 
-  steps.push(`OK  ${label}`);
+  steps.push(`OK: ${label}`);
 }
 
 export function node_equal(a: HsonNode, b: HsonNode): boolean {

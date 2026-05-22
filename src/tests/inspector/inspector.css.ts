@@ -1,10 +1,10 @@
 import type { CssMap } from "hson-live/types";
 import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
-import { _COLS } from "../../app/core/consts/ui-consts";
+import { øCOLS, øfontWeight } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
-import { _TXT } from "../../app/core/consts/ui-consts";
+import { øtextSize } from "../../app/core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
@@ -13,7 +13,7 @@ export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
 export const INSPECTOR_ROOTcss = {
   fontFamily: SYS_MONOfont,
-  fontSize: _TXT.main,
+  fontSize: øtextSize.main,
   lineHeight: "1.35",
 }
 
@@ -27,10 +27,18 @@ export const LOG_SCROLLcss: CssMap = {
   minHeight: "0",
 };
 
+export const INSPECTORcss = {
+  // width: "100%",
+  // height: "100%",
+  display: "grid",
+  gridTemplateRows: "auto minmax(0, 1fr)",
+  overflow: "hidden",
+  background: øCOLS.backlo
+};
+
 export const THcss: CssMap = {
   padding: "6px 8px",
   textAlign: "left",
-  fontWeight: "300",
   borderBottom: "1px solid rgba(255,255,255,0.12)",
   whiteSpace: "nowrap",
 };
@@ -47,18 +55,18 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   ...FONT_FAM_MONO,
-  background: _COLS.backhi,
+  background: øCOLS.backhi,
 };
 
 export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 
 export const ROW_SUITEcss: CssMap = {
-  background: _COLS.backhi,
+  background: øCOLS.backhi,
   cursor: "pointer",
   textAlign: "left",
 };
 export const ROW_GROUPcss: CssMap = {
-  background: _COLS.backhi,
+  background: øCOLS.backhi,
   cursor: "pointer",
 };
 
@@ -86,13 +94,13 @@ export const ROW_SUITE_FAILcss: CssMap = {
 export const ROW_CASEcss: CssMap = {
   background: "transparent",
   color: OKLCH_VIBRANT.mintIce,
-  fontWeight: "100",
+  fontWeight: øfontWeight.main,
 };
 
 export const ROW_CASE_FAILcss: CssMap = {
   color: $red_etc_.heartsBlood,
-  background: _COLS.backhi,
-  fontWeight: "700 /* !important */",
+  background: øCOLS.backhi,
+  fontWeight: øfontWeight.fat,
   // filter: "saturate(1.3) brightness(1.3)"
 };
 
@@ -116,7 +124,7 @@ export const PREVIEW_METAcss: CssMap = {
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {
-  background: _COLS.backhi,
+  background: øCOLS.backhi,
   color: ACID_WASH_OKLCH.mutedRed,
   // filter: "saturate(1.3) brightness(1.3)"
 };

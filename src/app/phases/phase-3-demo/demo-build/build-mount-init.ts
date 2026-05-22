@@ -1,7 +1,7 @@
 import { LiveTree, hson } from "hson-live";
 import { outcome, relay, relay_data, type Outcome } from "intrastructure";
 import { bp_factory, type BuildDemo } from "./bp-factory";
-import { _TXT, TXTcol_CODE } from "../../../core/consts/ui-consts";
+import { øtextSize, TXTcol_CODE, øHSON_COL } from "../../../core/consts/ui-consts";
 
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";
@@ -30,13 +30,13 @@ function initBuild(bp: BuildDemo): void {
         }
         if (k === "typing") {
             bp.input.status.text.set("...");
-            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: _TXT.main });
+            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: øtextSize.main });
             return;
         }
         if (k === "valid") {
             bp.input.status.text.set("OK")
             bp.input.status.css.setMany({
-                color: "lime",
+                color: øHSON_COL.n,
                 opacity: "1"
             });
             return;
@@ -146,15 +146,6 @@ function initBuild(bp: BuildDemo): void {
 
         void clip.call(navigator.clipboard, txt);
     });
-
-    // bp.input.testBtn.listen.onClick(() => {
-    //     // Simple starter payload; tweak anytime.
-    //     const starter = bp.input.textarea.text.get();
-
-    //     setSrc(starter);
-    //     touched = true;
-    //     render(starter);
-    // });
 
     // Initial paint
     syncTabs();

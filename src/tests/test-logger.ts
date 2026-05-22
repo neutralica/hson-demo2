@@ -101,7 +101,7 @@ export function create_test_log(): TestLog {
       const base = { key: k, suite: e.suite, name: e.name } as const;
       cases.set(k, _freeze(meta ? { ...base, meta } : base));
 
-      lastLine = `run ${e.name}`;
+      lastLine = `run: ${e.name}`;
       return;
     }
 

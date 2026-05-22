@@ -1,13 +1,6 @@
 import { CssManager } from "hson-live";
-import type { GlobalCss } from "../../../../../hson-live/dist/api/livetree/managers/global-css";
-import { $PANEL_HIDDEN, _TXT } from "../../core/consts/ui-consts";
-import { $blu_, $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts";
-import { _COLS } from "../../core/consts/ui-consts";
-import { adjustOklch, set_alpha } from "../../core/helpers/color-helpers";
-import { MAIN_MENUcss } from "./demo.css";
-import { TXTcol_MENU } from "../../core/consts/ui-consts";
-import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
-import { ABOUT_BTN_MOBcss, DISP_SIZE_ALERTcss, GLOB_HIDEcss, GLOB_SCROLL_THUMBcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, SCROLL_HOVER_COLcss, WEBKIT_SCROLL_TRKcss } from "./global.css";
+import { $PANEL_HIDDEN, øtextSize } from "../../core/consts/ui-consts";
+import {  DISP_SIZE_ALERTcss, GLOB_HIDEcss, GLOB_SCROLL_THUMBcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, SCROLL_HOVER_COLcss, WEBKIT_SCROLL_TRKcss } from "./global.css";
 import { MIN_DESKTOP_WIDTH } from "./demo.consts";
 
 export const set_global_css = (): void => {
@@ -64,10 +57,7 @@ export const set_global_css = (): void => {
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
-    .set.fontSize(_TXT.main)
-
-  mobile.rule("mobile-about-btn", "#about-button")
-    .setMany(ABOUT_BTN_MOBcss);
+    .set.fontSize(øtextSize.main)
 
   /* fleurs button mobile styling (should match about) */
   mobile.rule("mobile-fleurs-btn", "#fleurs-button")

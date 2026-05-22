@@ -3,14 +3,14 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
 import { UI_PANELcss, UI_TEXTcss } from "../../../../tests/demo-test/tp.css";
-import { TXTcol_CODE, _TXT, WATERMARK_FMT_, _COLS } from "../../../core/consts/ui-consts";
+import { TXTcol_CODE, øtextSize, øWATERMARK_FMT_, øCOLS, øHSON_COL } from "../../../core/consts/ui-consts";
 import type { Fmt } from "../../../core/types/core.types";
 import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
 import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
 import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { init_parsing_panels } from "./init-pp";
-import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss, PP_HOVERcss } from "./pp.css";
+import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
@@ -78,7 +78,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .data.set("field", `${fmt}-bytes`)
       .css.setMany({
         ...UI_2STACK_VALcss,
-        fontSize: _TXT.main,
+        fontSize: øtextSize.main,
       })
       .text.set("0");
 
@@ -105,28 +105,27 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .css.setMany({
         ...PP_TEXTWRAPcss(fmt),
         display: "block",
-        color: "blue",
-        _hover: {
-          color: "green",
-        }
+        color: øWATERMARK_FMT_[fmt],
       })
       .css.selector(":hover > div.pp-watermark").setMany({
-        color: "hotpink",
-
+        color: øHSON_COL.n,
+        
       });
 
     const wmFmt = wrap.create.div()
       .classlist.set("pp-watermark pp-watermark--fmt")
-      .text.set(WATERMARK_FMT_[fmt])
-      .css.setMany(PP_WATERMARKcss);
-
-
-    const textarea = wrap.create.textarea()
+      .text.set(øWATERMARK_FMT_[fmt])
+      .css.setMany({
+        ...PP_WATERMARKcss,
+      });
+      
+      
+      const textarea = wrap.create.textarea()
       .data.set("input", fmt)
       .css.setMany({
         ...UI_TEXTcss,
         background: "transparent",
-        color: "inherit",
+        color: øWATERMARK_FMT_[fmt],
       });
 
     // NEW: node view box
@@ -138,8 +137,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         margin: "0",
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
-        background: _COLS.backhi,
-        color: "inherit",
+        background: øCOLS.backhi,
+        color: øWATERMARK_FMT_[fmt],
       });
 
     const nodeText = nodeBox.create.div()

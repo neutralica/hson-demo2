@@ -3,7 +3,7 @@ import { type Outcome, relay } from "intrastructure";
 import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { mk_div_cls, mk_div_id } from "../../../utils/makers";
-import { _COLS } from "../../../core/consts/ui-consts";
+import { øCOLS } from "../../../core/consts/ui-consts";
 import { ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss, STACK_TABLEcss, MOUSE_POINTERcss, MOUSE_POINTER_ORIGINcss, MOUSE_STACKcss, MOUSE_COORD_Xcss, MOUSE_COORD_Ycss, MOUSE_THETAcss } from "./mouse.css";
 
 // ---- factory ----

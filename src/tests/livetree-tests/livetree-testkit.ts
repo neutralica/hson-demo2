@@ -294,11 +294,11 @@ class FailureBag {
 }
 
 function fmt(v: unknown): string {
-  if (typeof v === "string") return JSON.stringify(v);
+  if (typeof v === "string") return JSON.stringify(v, null, 2);
   if (v === null) return "null";
   if (v === undefined) return "undefined";
   try {
-    return JSON.stringify(v);
+    return JSON.stringify(v, null, 2);
   } catch {
     return String(v);
   }

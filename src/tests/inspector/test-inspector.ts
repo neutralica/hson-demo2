@@ -1,11 +1,11 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss } from "./inspector.css";
+import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
-import { _TXT } from "../../app/core/consts/ui-consts";
+import { TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, øHSON_COL, øtextSize } from "../../app/core/consts/ui-consts";
 import type { TestLog } from "../test-logger";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
@@ -13,7 +13,7 @@ import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
-import { _COLS } from "../../app/core/consts/ui-consts";
+import { øCOLS } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
 import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch";
@@ -70,305 +70,351 @@ export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>)
 
   return [inputSec, ...secs].map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
 }
-
 export function create_inspector(
   host: LiveTree,
   tlog: TestLog,
   opts?: { hideClass?: string },
-  capture?: CaptureFn,                 // optional
+  capture?: CaptureFn,
 ): InspectorUi {
   const hideClass = opts?.hideClass ?? "";
 
-  const root = mk_div_id(host, "inspector").css.setMany({
-    ...PANEL_SAFETYcss,
-    width: "100%",
-    // height: "100%",
-    display: "grid",
-    gridTemplateRows: "auto minmax(0, 1fr)",
-    overflow: "hidden",
-    background: _COLS.backlo
-  });
-  const header = mk_div_cls(root, "insp-header").css.setMany({
-    // header is natural height
-    ...PANEL_SAFETYcss,
-  });
+  const root = mk_div_id(host, "inspector")
+    .css.setMany(INSPECTORcss)
+    .css.setMany(INSPECTOR_ROOTcss);
 
+  // changed: body now actually owns the inspector content
   const body = mk_div_cls(root, "insp-body").css.setMany({
-    // body is the scroll region
-    ...PANEL_SAFETYcss,
-    overflowY: "scroll",
-    overflowX: "auto",
+    display: "grid",
+    gridTemplateRows: "minmax(0, 1fr)",
+    overflow: "hidden",
+    minWidth: "0",
+    minHeight: "0",
   });
 
-
-  // main table host
+  // changed: tableHost is now inside body, not floating beside it
   const tableHost = mk_div_cls(body, "insp-table-host").css.setMany({
-    ...PANEL_SAFETYcss,
-    display: "flex",
-    placeItems: "center",
-    textAlign: "center",
-    fontSize: _TXT.main,
-    color: OKLCH_NEUTRALS.frost,
-  }).text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations");
+    display: "grid",
+    minWidth: "0",
+    minHeight: "0",
+    overflow: "hidden",
+    fontSize: øtextSize.main,
+    color: TXTcol_MAIN,
+  });
 
-
-  // ---------------------------
-  // UI state (expansion)
-  // ---------------------------
   const expandedSuites = new Set<string>();
   const expandedCasesBySuite = new Map<string, Set<CaseKey>>();
 
   const getExpandedCases = (suite: string): Set<CaseKey> => {
-    const s = expandedCasesBySuite.get(suite);
-    if (s) return s;
-    const ns = new Set<CaseKey>();
-    expandedCasesBySuite.set(suite, ns);
-    return ns;
+    const found = expandedCasesBySuite.get(suite);
+    if (found) return found;
+
+    const created = new Set<CaseKey>();
+    expandedCasesBySuite.set(suite, created);
+    return created;
   };
 
+  // changed: one tiny helper keeps pass/fail coloring local to result text
+  const applyResultColor = (cell: LiveTree, res: string): void => {
+    if (res === "pass") {
+      cell.css.set.color(øHSON_COL.n);
+      return;
+    }
 
-  // ---------------------------
-  // component styles (no selectors)
-  // ---------------------------
+    if (res === "fail") {
+      cell.css.set.color($red_etc_.heartsBlood);
+      return;
+    }
 
-
-  // byte->kb helper (approx, UTF-8)
-  const kbOf = (txt: string): string => {
-    if (!txt) return "—";
-    const bytes = new TextEncoder().encode(txt).length;
-    return (bytes / 1024).toFixed(1);
+    cell.css.set.color(TXTcol_MAIN);
   };
 
-  // grouping: you already have this logic; keep it deterministic
-  const groupKeyFor = (name: string): string => {
-    const dot = name.indexOf(".");
-    if (dot > 0) return name.slice(0, dot);
-
-    const parts = name.split("__").filter(Boolean);
-    if (parts.length >= 3) return parts.slice(0, 3).join("__");
-    if (parts.length >= 2) return parts.slice(0, 2).join("__");
-    return name;
+  // changed: simpler text-button helper
+  const mkTextButton = (host: LiveTree, label: string): LiveTree => {
+    return host.create.div()
+      .classlist.set("insp-text-btn")
+      .attr.set("role", "button")
+      .text.set(label)
+      .css.setMany({
+        color: TXTcol_CODE,
+        cursor: "pointer",
+        userSelect: "none",
+        padding: "0 0.5ch",
+      });
   };
 
-  // ---------------------------
-  // main table: suite->group->case
-  // ---------------------------
+  const renderEmpty = (): void => {
+    tableHost.empty();
+
+    tableHost.create.div()
+      .classlist.set("insp-empty-message")
+      .text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations")
+      .css.setMany({
+        display: "grid",
+        placeItems: "center",
+        minHeight: "100%",
+        color: TXTcol_CODE,
+        textAlign: "center",
+      });
+  };
 
   const renderAll = (): void => {
     const prevScroll = mainScrollEl?.scrollTop ?? 0;
-    clear_box(tableHost);
+
+    tableHost.empty();
 
     const suites = tlog.listSuites();
-
-    const scroll = tableHost.create.div().classlist.set("insp-scroll main-scroll");
-    scroll.css.setMany(LOG_SCROLLcss);
-    mainScrollEl = scroll.dom.el() as HTMLElement;
-
-
-    const { table, thead, tbody } = mk_table(scroll, "insp-main");
-    table.css.set.overflowY("scroll");
-    // header columns are stable
-    const hr = mk_tr(thead, "insp-head-row");
-    mk_th(hr, "c-res", "res").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
-    mk_th(hr, "c-name", "suite / group / case").css.setMany({ ...THcss, ...tdNameCssBase });
-    mk_th(hr, "c-ms", "ms").css.setMany({ ...THcss, width: $CHIP_WIDTHstr, maxWidth: $CHIP_WIDTHstr });
-
     if (!suites.length) {
-      const r = mk_tr(tbody, "insp-empty");
-      mk_td(r, "c-empty", "no suites").css.setMany(TDcss);
+      renderEmpty();
       return;
     }
+
+    const scroll = tableHost.create.div().classlist.set("insp-scroll main-scroll");
+    scroll.css.setMany({
+      ...LOG_SCROLLcss,
+      minWidth: "0",
+      minHeight: "0",
+      overflowY: "auto",
+      overflowX: "hidden",
+    });
+
+    mainScrollEl = scroll.dom.el() as HTMLElement;
+
+    const { table, thead, tbody } = mk_table(scroll, "insp-main");
+
+    // changed: table owns width; scroll owns scrolling
+    table.css.setMany({
+      width: "100%",
+      borderCollapse: "collapse",
+      tableLayout: "fixed",
+    });
+
+    const hr = mk_tr(thead, "insp-head-row");
+
+    mk_th(hr, "c-res", "res").css.setMany({
+      ...THcss,
+      width: $CHIP_WIDTHstr,
+      maxWidth: $CHIP_WIDTHstr,
+      color: TXTcol_CODE,
+    });
+
+    mk_th(hr, "c-name", "suite / group / case").css.setMany({
+      ...THcss,
+      ...tdNameCssBase,
+      color: TXTcol_CODE,
+    });
+
+    mk_th(hr, "c-ms", "ms").css.setMany({
+      ...THcss,
+      width: $CHIP_WIDTHstr,
+      maxWidth: $CHIP_WIDTHstr,
+      color: TXTcol_CODE,
+    });
 
     for (const s of suites) {
       const suiteName = s.suite;
       const suiteIsOpen = expandedSuites.has(suiteName);
       const caret = suiteIsOpen ? "▼" : "▶";
 
-      // suite row
       const sr = mk_tr(tbody, "insp-suite-row");
-      sr.css.setMany(ROW_SUITEcss);
+      sr.css.setMany({
+        ...ROW_SUITEcss,
+        cursor: "pointer",
+      });
 
       if (s.fail > 0) sr.css.setMany(ROW_SUITE_FAILcss);
 
       mk_td(sr, "c-res", caret).css.setMany(TDcss);
-      mk_td(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`).css.setMany({ ...TDcss, ...tdNameCssBase });
-      // mk_td(sr, "c-kb", "—").css.setMany(TDcss);
-      mk_td(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—").css.setMany(TDcss);
 
+      mk_td(sr, "c-name", `${suiteName}  (${s.pass}/${s.fail}/${s.skip})`)
+        .css.setMany({
+          ...TDcss,
+          ...tdNameCssBase,
+          color: TXTcol_MAIN,
+        });
+
+      mk_td(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—")
+        .css.setMany({
+          ...TDcss,
+          color: TXTcol_MAIN,
+        });
+
+      // changed: whole suite row toggles
       sr.listen.onClick((me) => {
-        _stop(me)
+        _stop(me);
+
         if (suiteIsOpen) expandedSuites.delete(suiteName);
         else expandedSuites.add(suiteName);
+
         renderAll();
       });
 
       if (!suiteIsOpen) continue;
 
-      const cases = tlog.listCases(suiteName);
-      if (!cases.length) continue;
-
-      // group cases
-
-      // render every case directly; no grouping during debug
       const expandedCases = getExpandedCases(suiteName);
 
-      for (const c of cases) {
+      for (const c of tlog.listCases(suiteName)) {
         const res = c.status ?? "—";
         const ms = c.ms !== undefined ? c.ms.toFixed(1) : "—";
         const preview = c.meta?.preview ?? "";
+        const caseIsOpen = expandedCases.has(c.key);
 
-        // case row
         const cr = mk_tr(tbody, "insp-case-row");
-        cr.css.setMany(ROW_CASEcss);
+        cr.css.setMany({
+          ...ROW_CASEcss,
+          cursor: "pointer",
+        });
+
         if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss);
 
-        mk_td(cr, "c-res", res).css.setMany(TDcss);
+        const resCell = mk_td(cr, "c-res", res);
+        resCell.css.setMany(TDcss);
+        applyResultColor(resCell, res);
 
-        const nameCell = mk_td(cr, "c-name", c.name);
-        nameCell.css.setMany({ ...TDcss, ...tdNameChildCss, ...CLICKABLEcss });
+        mk_td(cr, "c-name", c.name).css.setMany({
+          ...TDcss,
+          ...tdNameChildCss,
+          color: TXTcol_MAIN,
+        });
 
-        mk_td(cr, "c-ms", ms).css.setMany(TDcss);
+        mk_td(cr, "c-ms", ms).css.setMany({
+          ...TDcss,
+          color: TXTcol_MAIN,
+        });
 
-        // click case name toggles this exact case
-        nameCell.listen.onClick((me) => {
+        // changed: whole case row toggles, not only the name cell
+        cr.listen.onClick((me) => {
           _stop(me);
-          if (expandedCases.has(c.key)) expandedCases.delete(c.key);
+
+          if (caseIsOpen) expandedCases.delete(c.key);
           else expandedCases.add(c.key);
+
           renderAll();
         });
 
-        // preview row below
-        if (expandedCases.has(c.key)) {
-          const pr = mk_tr(tbody, "insp-case-preview-row");
-          const cell = pr.create.td().classlist.set("insp-case-preview-cell");
+        if (!caseIsOpen) continue;
 
-          cell.attr.set("colspan", "3");
-          cell.css.setMany(TD_PREVIEW_ROWcss);
+        const pr = mk_tr(tbody, "insp-case-preview-row");
+        const cell = pr.create.td().classlist.set("insp-case-preview-cell");
 
-          cell.empty();
+        cell.attr.set("colspan", "3");
+        cell.css.setMany(TD_PREVIEW_ROWcss);
+        cell.empty();
 
-          const topRow = cell.create.div().classlist.set("insp-cap-row");
-          topRow.css.setMany({
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) auto",
-            gap: "8px",
-            alignItems: "center",
-            marginBottom: "8px",
-          });
+        const topRow = cell.create.div().classlist.set("insp-cap-row");
+        topRow.css.setMany({
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) auto",
+          gap: "1ch",
+          alignItems: "center",
+          marginBottom: "0.5rem",
+        });
 
-          const metaBox = topRow.create.div().classlist.set("insp-cap-meta");
-          metaBox.css.setMany(PREVIEW_METAcss);
-          if (res === "fail") metaBox.css.setMany(PREVIEW_META_FAILcss);
-          metaBox.text.set(`${c.suite} :: ${c.name}`);
+        const metaBox = topRow.create.div().classlist.set("insp-cap-meta");
+        metaBox.css.setMany({
+          ...PREVIEW_METAcss,
+          color: TXTcol_MAIN,
+        });
 
-          const btnBar = topRow.create.div().classlist.set("insp-cap-btnbar");
-          btnBar.css.setMany({
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          });
+        if (res === "fail") metaBox.css.setMany(PREVIEW_META_FAILcss);
 
-          const mkBtn = (host: LiveTree, label: string): LiveTree => {
-            const b = host.create.div().classlist.set("insp-cap-btn");
-            b.text.set(label);
-            b.attr.set("role", "button");
-            b.css.setMany(MADE_BUTTONcss);
-            return b;
-          };
+        metaBox.text.set(`${c.suite} :: ${c.name}`);
 
-          const viewBtn = mkBtn(btnBar, "view");
-          const copyBtn = mkBtn(btnBar, "copy");
+        const btnBar = topRow.create.div().classlist.set("insp-cap-btnbar");
+        btnBar.css.setMany({
+          display: "flex",
+          gap: "1ch",
+          alignItems: "center",
+          justifyContent: "flex-end",
+        });
 
-          // keep fail tint on the actual case row's buttons
-          if (res === "fail") {
-            viewBtn.css.set.color($red_etc_.heartsBlood);
-            copyBtn.css.set.color($red_etc_.heartsBlood);
-          }
+        const viewBtn = mkTextButton(btnBar, "view");
+        const copyBtn = mkTextButton(btnBar, "copy");
 
-          const hasCapture = !!capture;
-          if (!hasCapture) {
-            viewBtn.css.setMany({ opacity: "0.45", cursor: "default" });
-            copyBtn.css.setMany({ opacity: "0.45", cursor: "default" });
-          }
-
-          copyBtn.listen.onClick(async (me) => {
-            _stop(me);
-            if (!capture) return;
-
-            copyBtn.text.set("copying…");
-
-            try {
-              const report = await capture(c.key);
-              const meta = tlog.getCase(c.key)?.meta;
-              const txt = report_to_text(report, meta);
-
-              await navigator.clipboard.writeText(txt);
-              copyBtn.text.set("copied");
-            } catch (e) {
-              console.error(e);
-              copyBtn.text.set("failed");
-            } finally {
-              window.setTimeout(() => copyBtn.text.set("copy"), 900);
-            }
-          });
-
-          viewBtn.listen.onClick(async (me) => {
-            _stop(me);
-            if (!capture) return;
-
-            viewBtn.text.set("opening…");
-
-            try {
-              const report = await capture(c.key);
-              const meta = tlog.getCase(c.key)?.meta;
-              const render = render_report_html(c.key, c.name, c.suite, report, meta);
-
-              open_report_window(render.html);
-              viewBtn.text.set("view");
-            } catch (e) {
-              console.error(e);
-              viewBtn.text.set("failed");
-              window.setTimeout(() => viewBtn.text.set("view"), 900);
-            }
-          });
-
-          const pre = cell.create.pre().classlist.set("insp-preview-pre");
-          pre.css.setMany({
-            margin: "0",
-            // padding: "10px",
-            background: "rgba(0,0,0,0.35)",
-            overflow: "auto",
-            maxHeight: "100%",
-            whiteSpace: "pre-wrap",
-            overflowWrap: "anywhere",
-          });
-          pre.text.set(preview || "—");
-
-          pre.css.setMany(CLICKABLEcss);
-          pre.listen.onClick((me) => {
-            _stop(me);
-            expandedCases.delete(c.key);
-            renderAll();
-          });
-
-          queueMicrotask(() => {
-            scroll.dom.el()!.scrollTop = prevScroll;
-          });
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              if (mainScrollEl) mainScrollEl.scrollTop = prevScroll;
-            });
-          });
+        if (!capture) {
+          viewBtn.css.setMany({ opacity: "0.45", cursor: "default" });
+          copyBtn.css.setMany({ opacity: "0.45", cursor: "default" });
         }
+
+        copyBtn.listen.onClick(async (me) => {
+          _stop(me);
+          if (!capture) return;
+
+          copyBtn.text.set("copying");
+
+          try {
+            const report = await capture(c.key);
+            const meta = tlog.getCase(c.key)?.meta;
+            const txt = report_to_text(report, meta);
+
+            await navigator.clipboard.writeText(txt);
+            copyBtn.text.set("copied");
+          } catch (e) {
+            console.error(e);
+            copyBtn.text.set("failed");
+          } finally {
+            window.setTimeout(() => copyBtn.text.set("copy"), 900);
+          }
+        });
+
+        viewBtn.listen.onClick(async (me) => {
+          _stop(me);
+          if (!capture) return;
+
+          viewBtn.text.set("opening");
+
+          try {
+            const report = await capture(c.key);
+            const meta = tlog.getCase(c.key)?.meta;
+            const render = render_report_html(c.key, c.name, c.suite, report, meta);
+
+            open_report_window(render.html);
+            viewBtn.text.set("view");
+          } catch (e) {
+            console.error(e);
+            viewBtn.text.set("failed");
+            window.setTimeout(() => viewBtn.text.set("view"), 900);
+          }
+        });
+
+        const pre = cell.create.pre().classlist.set("insp-preview-pre");
+        pre.css.setMany({
+          margin: "0",
+          background: "rgba(0,0,0,0.35)",
+          overflow: "auto",
+          maxHeight: "100%",
+          whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
+          color: TXTcol_CODE,
+        });
+
+        pre.text.set(preview || "—");
+
+        // changed: preview itself collapses the case, preserving old behavior
+        pre.css.setMany(CLICKABLEcss);
+        pre.listen.onClick((me) => {
+          _stop(me);
+          expandedCases.delete(c.key);
+          renderAll();
+        });
       }
     }
+
+    queueMicrotask(() => {
+      scroll.dom.el()!.scrollTop = prevScroll;
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (mainScrollEl) mainScrollEl.scrollTop = prevScroll;
+      });
+    });
   };
 
   const clear = (): void => {
     tableHost.empty();
     expandedSuites.clear();
     expandedCasesBySuite.clear();
+    renderEmpty();
   };
 
   const render = (): void => renderAll();
@@ -376,10 +422,7 @@ export function create_inspector(
   const show = (): LiveTree => root.classlist.remove(hideClass);
   const hide = (): LiveTree => root.classlist.add(hideClass);
 
-  // baseline
-  root.css.setMany(INSPECTOR_ROOTcss);
-
-  body.css.setMany({ display: "grid", gap: "6px" });
+  renderEmpty();
 
   return Object.freeze({ render, show, hide, clear });
 }

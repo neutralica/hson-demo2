@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA} from "../../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
-import { _COLS, _TXT, SYS_SMOLfont } from "../../../core/consts/ui-consts";
+import { øCOLS, øtextSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
@@ -48,7 +48,7 @@ export const MOUSE_POINTERcss = {
   position: "absolute",
   left: "50%",
   top: "50%",
-  width: "64px",
+  width: "44px",
   height: "2px",
   background: OKLCH_FLEURS.clayCoral,
   transformOrigin: "0% 50%",
@@ -70,7 +70,7 @@ export const MOUSE_POINTER_ORIGINcss = {
 
 export const MOUSE_COORD_Xcss: CssMap = {
   FontFamily: SYS_SMOLfont,
-  fontSize: _TXT.smol,
+  fontSize: øtextSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1.5rem",
@@ -78,7 +78,7 @@ export const MOUSE_COORD_Xcss: CssMap = {
 
 export const MOUSE_COORD_Ycss = {
   FontFamily: SYS_SMOLfont,
-  fontSize: _TXT.smol,
+  fontSize: øtextSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1rem",
@@ -86,7 +86,7 @@ export const MOUSE_COORD_Ycss = {
 
 export const MOUSE_THETAcss = {
   FontFamily: SYS_SMOLfont,
-  fontSize: _TXT.smol,
+  fontSize: øtextSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "0.1rem",
@@ -100,18 +100,18 @@ export const ROW_GRIDcss: CssMap = {
   alignItems: "baseline",
   minWidth: "0",
   FontFamily: SYS_SMOLfont,
-  fontSize: _TXT.smol,
+  fontSize: øtextSize.smol,
 } as const;
 
 export const MOUSE_TRACKERcss: CssMap = {
   position: "relative",
-  width: "140px",
-  height: "140px",
+  width: "90px",
+  height: "90px",
   borderRadius: "999px",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "1",
-  backgroundColor: _COLS.backlo,
+  backgroundColor: øCOLS.backlo,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
@@ -127,7 +127,7 @@ export const STACK_TABLEcss = {
   minWidth: "0",
   minHeight: "0",
   height: "100%",
-  background: _COLS.backlo,
+  background: øCOLS.backlo,
 
 }
 
@@ -151,8 +151,8 @@ export const MOUSE_COORDScss: CssMap = {
   marginLeft: "-1.5rem",
   alignContent: "end",              // CHANGED
   justifyItems: "start",
-  background: _COLS.backlo,
   height: "auto",
+  width: "15ch",
 } as const;
 
 // grid-cell clamp so long values don't push neighbors

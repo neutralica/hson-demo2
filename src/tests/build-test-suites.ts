@@ -22,30 +22,9 @@ import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetr
 import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-tests/livetree-15-canvas-size";
 import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-tests/livetree-16-canvas-3";
 
-function preview_atom(atom: FixtureAtom): string {
-  // small, safe, non-throwy preview for inspector.
-  // We do NOT stringify huge objects or do deep serialization here.
 
-  if (atom === null) return "null";
+type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
-  const t = typeof atom;
-  if (t === "string") return _snip(atom as string);
-  if (t === "number" || t === "boolean") return String(atom);
-
-  // HTMLElement
-  if (typeof HTMLElement !== "undefined" && atom instanceof HTMLElement) {
-    return _snip(atom.outerHTML);
-  }
-
-  // HsonNode / object (cheap tag hint if present)
-  if (atom && t === "object") {
-    const a = atom as Record<string, unknown>;
-    if (typeof a["_tag"] === "string") return `[HsonNode ${a["_tag"]}]`;
-    return "[object]";
-  }
-
-  return String(atom);
-}
 
 // add an explicit entryFmt param
 export function make_transform_test_suite(
@@ -138,8 +117,6 @@ export function make_transform_test_suite(
 
   return _freeze({ suite, cases: _freeze(cases) });
 }
-
-type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
 const GENERATED_JSON_SEED = random_seed();
 

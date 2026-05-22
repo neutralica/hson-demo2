@@ -2,8 +2,8 @@
 
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch";
-import { _COLS } from "../../../core/consts/ui-consts";
-import { _TXT, COLOR_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
+import { øCOLS } from "../../../core/consts/ui-consts";
+import { øtextSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
@@ -44,18 +44,18 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: _COLS.backlo,
+  background: øCOLS.backlo,
 
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
-  color: TXTcol_ALT,
-  fontSize: _TXT.main,
+  color: øCOL_FOR_FMT_.hson,
+  fontSize: øtextSize.main,
   padding: "15px",
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
-    boxShadow: "inset 0 0 15px 1px " + set_alpha(COLOR_FOR_FMT_["hson"], 0.5),
+    boxShadow: "inset 0 0 15px 1px " + set_alpha(øCOL_FOR_FMT_["hson"], 0.5),
 
   }
 
@@ -101,7 +101,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: _COLS.backlo,
+  background: øCOLS.backlo,
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
 };
 
@@ -118,10 +118,10 @@ export const BUILD_HTMLBOXcss: CssMap = {
   resize: "none",
   outline: "none",
 
-  boxShadow: "inset 0 0 25px 1px " + set_alpha(COLOR_FOR_FMT_["html"], 0.6),
-  color: TXTcol_ALT,
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(øCOL_FOR_FMT_["html"], 0.6),
+  color: øCOL_FOR_FMT_.html,
   caretColor: "auto",
-  fontSize: _TXT.main
+  fontSize: øtextSize.main
 
 };
 

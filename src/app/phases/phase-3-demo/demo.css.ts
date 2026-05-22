@@ -2,12 +2,30 @@
 
 import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../core/consts/colors.consts";
-import { _COLS, SYS_SANSfont, SYS_SMOLfont} from "../../core/consts/ui-consts";
+import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $LAYOUT_COLUMN_WIDTH} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { GRID_GAPstr, _TXT, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, øtextSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
+import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
 
+
+export const UI_ROOTcss: CssMap = {
+  // display: "grid",
+  // gridTemplateRows: "minmax(0, 1fr)",
+  boxSizing: "border-box",
+  overflow: "hidden",
+  gridColumn: "2 / 3",
+  gridRow: "1 / 2",
+
+  minWidth: "0",
+  minHeight: "0",
+  width: "100%",
+  height: "100%",
+
+  position: "relative",
+  pointerEvents: "auto",
+};
 
 export const MAIN_MENUcss: CssMap = {
   ...FONT_FAM_MONO,
@@ -15,17 +33,18 @@ export const MAIN_MENUcss: CssMap = {
   color: TXTcol_MENU,
   pointerEvents: "all",
   cursor: "pointer",
-  lineHeight: "1.6",
-  textShadow: "1px 1px 55px hotpink",
+  lineHeight: "2",
+  textShadow: $MENU_SHADOW + TXTcol_MENU,
+  fontWeight: øfontWeight.main,
   _hover: {
-    fontWeight: "100",
+    fontWeight: øfontWeight.main,
     background: BLUELIKEcol,
-    color: _COLS.backhi
+    color: øCOLS.backhi
   },
   _active: {
-    background: _COLS.backhi,
+    background: øCOLS.backhi,
     color: BLUELIKEcol,
-    fontWeight: "700",
+    fontWeight: øfontWeight.fat,
   }
 }
 
@@ -62,7 +81,7 @@ export const MENU_CONTAINERcss: CssMap = {
 export const HSON_WORDcss: CssMap = {
   fontSize: "4rem",
   fontFamily: SYS_MONOfont,
-  fontWeight: "100",
+  fontWeight: øfontWeight.main,
   width: "0.5em",
   userSelect: "none",
   lineHeight: "0.9",
@@ -77,7 +96,7 @@ export const DEMOcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: `linear-gradient(${_COLS.backlo} 80%,${set_alpha($blu_.muted, 0.03)})`,
+  background: `linear-gradient(${øCOLS.backlo} 80%,${set_alpha($blu_.muted, 0.03)})`,
   pointerEvents: "none",
   boxSizing: "border-box"
 };
@@ -100,27 +119,13 @@ export const DEMO_SCREENcss: CssMap = {
   minHeight: "0",
   boxSizing: "border-box",
   overscrollBehaviorY: "none", // not sure it will do what I want
-
-}
-
-export const DEMO_SCREEN_FXcss: CssMap = {
-  boxSizing: "border-box",
-  position: "relative",
   display: "grid",
-  // left = nav, right = main
-  gridTemplateColumns: "210px 1fr",
+  gridTemplateColumns: $LAYOUT_COLUMN_WIDTH + " auto",
   gridTemplateRows: "minmax(0, 1fr)",
-
+  
   gap: GRID_GAPstr,
 
-  width: "100%",
-  height: "100%",
-  // minHeight: "0",
-  // minWidth: "0",
-  // maxWidth: "100vw",
-
-  pointerEvents: "none",
-};
+}
 
 export const LAYOUT_GRIDcss: CssMap = {
   width: "100%",
@@ -154,6 +159,7 @@ export const DEMO_SLOTcss: CssMap = {
 
 export const HSON_GRAFFITIcss: CssMap = {
   position: "fixed",
+  margin: "2rem",
   left: "50%",
   top: "50%",
   transform: "translate(-50%, -50%)",
@@ -174,7 +180,7 @@ export const HSON_SUBcss: CssMap = {
   ...FONT_FAM_MONO,
   position: "relative",
   textWrap: "nowrap",
-  color: OKLCH_FLEURS.violet,
+  color: OKLCH_NEUTRALS.ash,
   // color: ACID_WASH_RGBA.wornPurple,
   // color: ACID_WASH_OKLCH.steel,
   marginBottom: "1rem",
@@ -183,10 +189,10 @@ export const HSON_SUBcss: CssMap = {
 
 export const COPYRITEcss: CssMap = {
   fontFamily: SYS_SANSfont,
-  fontSize: _TXT.smol,
+  fontSize: øtextSize.smol,
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",
   color: COPYRITEcol,
   zIndex: "-10",
-}
+};

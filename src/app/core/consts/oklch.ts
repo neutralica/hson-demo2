@@ -45,7 +45,7 @@ export const OKLCH_VIBRANT = {
 
   // --- blues ---
   blueGlacier: "oklch(0.82 0.060 220)", // pale icy blue
-  blueHorizon: "oklch(0.76 0.080 230)", // soft mid blue
+  blueHorizon: "oklch(0.62 0.280 230)", // soft mid blue
   blueSignal: "oklch(0.70 0.135 240)", // bright UI blue
   blueCobalt: "oklch(0.68 0.120 255)", // richer anchor blue
   blueNavyVoid: "oklch(0.42 0.090 250)", // deep structural blue
@@ -60,6 +60,7 @@ export const OKLCH_VIBRANT = {
   plumBruised: "oklch(0.62 0.115 305)", // darker purple-plum
   orchidWire: "oklch(0.76 0.145 320)", // bright orchid-magenta
 };
+
 
 export const OKLCH_NEUTRALS = {
   // --- absolute anchors ---
@@ -85,6 +86,19 @@ export const OKLCH_NEUTRALS = {
   frost: "oklch(0.82 0.010 260)", // bright UI text
   paper: "oklch(0.82 0.02 260)", // light surfaces
 
+  /* beige-brown conteingent */
+ pearlIvory: "oklch(.94 0.025 92)",
+  oldPaper: "oklch(.90 0.035 88)",
+  strawWash: "oklch(.86 0.052 86)",
+  paleVellum: "oklch(.82 0.040 78)",
+  champagneAsh: "oklch(.76 0.045 78)",
+  mothTaupe: "oklch(.68 0.035 70)",
+  dryReed: "oklch(.82 0.055 75)",
+  mutedOchre: "oklch(.56 0.072 72)",
+  tarnishedBrass: "oklch(.50 0.070 77)",
+  tobaccoBrown: "oklch(.6 0.16 64)",
+  smokedUmber: "oklch(.34 0.045 58)",
+  walnutBlack: "oklch(.24 0.030 55)",
 
   // --- tinted neutrals (subtle personality) ---
   blueTint: "oklch(0.70 0.020 240)", // cool UI wash
@@ -96,6 +110,47 @@ export const OKLCH_NEUTRALS = {
   border: "oklch(0.30 0.015 255)", // consistent border tone
   overlay: "oklch(0.04 0.010 260 / 0.65)", // modal overlays
 };
+
+export const OKLCH_ACID_WASHED = {
+  ash: "oklch(0.83 0.0 300)", // soft neutral grey-blue
+  frost: "oklch(0.82 0.02 210)",
+  mist: "oklch(0.78 0.018 260)",
+
+  sage: "oklch(0.75 0.05 155)",
+  moss: "oklch(0.72 0.06 145)",
+  fern: "oklch(0.70 0.055 165)",
+
+  ice: "oklch(0.80 0.045 220)",
+  sky: "oklch(0.77 0.06 240)",
+  steel: "oklch(0.74 0.05 250)",
+
+  lilac: "oklch(0.78 0.07 300)",
+  orchid: "oklch(0.75 0.08 320)",
+  smokeRose: "oklch(0.73 0.06 20)",
+
+  ember: "oklch(0.74 0.07 35)",
+  amber: "oklch(0.68 0.08 80)",
+  straw: "oklch(0.82 0.07 95)",
+
+  cyanDust: "oklch(0.79 0.055 200)",
+  seaGlass: "oklch(0.76 0.06 185)",
+
+  mutedRed: "oklch(0.72 0.07 15)",
+  bruisedPlum: "oklch(0.70 0.06 330)",
+  twilight: "oklch(0.68 0.045 280)",
+};
+
+export const OKLCH_FOREST = {
+  blackPine: "oklch(13 0.025 155)",
+  deepMossBlack: "oklch(16 0.035 145)",
+  spruceNight: "oklch(18 0.040 158)",
+  laurelShadow: "oklch(20 0.035 135)",
+  bottleGlass: "oklch(22 0.045 165)",
+  wetFern: "oklch(25 0.050 148)",
+  oldHedge: "oklch(28 0.045 138)",
+  cypressInk: "oklch(17 0.030 172)",
+} as const;
+
 
 export const ACID_WASH_OKLCH = {
   ash: "oklch(0.83 0.0 300)", // soft neutral grey-blue

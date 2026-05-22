@@ -9,14 +9,14 @@ import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
 import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../app/core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../app/core/consts/oklch";
-import { $PANEL_HIDDEN, _TXT, HSON_COLOR_, SYS_SMOLfont } from "../../app/core/consts/ui-consts";
+import { $PANEL_HIDDEN, øtextSize, øHSON_COL, SYS_SMOLfont, TXTcol_MAIN, TXTcol_MENU } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
-import { create_test_chips } from "./test-chips";
+import { create_test_chips, get_line_color } from "./test-chips";
 import type { TestPanel } from "./tp.types";
-import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss } from "./tp.css";
+import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, LOG_SPANcss } from "./tp.css";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 import { PANEL_BRANCHcss } from "./tp.css";
 import { _snip } from "../../app/utils/helpers";
@@ -42,7 +42,7 @@ export function tp_factory(): Outcome<TestPanel> {
     let mode: TestRunMode = "all";
 
     const branch = hson.liveTree.create.div()
-        .id.set("panel-branch")
+        .id.set("test-panel-branch")
         .css.setMany(PANEL_BRANCHcss);
 
     // top row
@@ -106,32 +106,15 @@ export function tp_factory(): Outcome<TestPanel> {
     // keep track of the current "run ..." row so PASS/FAIL can append inline
     let currentCaseLine: LiveTree | null = null;
 
-    function get_line_color(line: string): string {
-        const head = line.trim().split(/\s+/, 1)[0]?.toUpperCase() ?? "";
-
-        switch (head) {
-            case "FAIL": return "red";
-            case "PASS": 
-            case "OK": return HSON_COLOR_.n;
-            case "SKIP":
-                case "WARN": return HSON_COLOR_.s;
-                case "RUN": return HSON_COLOR_.s;
-            case "DONE": return HSON_COLOR_.h;
-            case "===":return HSON_COLOR_.o;
-            case "SUITE:":return HSON_COLOR_.o;
-            default: return OKLCH_NEUTRALS.silver;
-        }
-    }
-
     const mkLogRow = (line: string): LiveTree => {
         return logger.create.div().css.setMany({
             whiteSpace: "pre-wrap",
-            overflowWrap: "anywhere",
+            overflowWrap: "normal",
             minWidth: "0",
             fontFamily: SYS_SMOLfont,
-            fontSize: _TXT.smol,
-            lineHeight: "1.25",
-            paddingBottom: "2px",
+            fontSize: øtextSize.smol,
+            // lineHeight: "0.8",
+            // paddingBottom: "2px",
             color: get_line_color(line),
         });
     };
@@ -149,15 +132,7 @@ export function tp_factory(): Outcome<TestPanel> {
     };
 
     const appendLogSpan = (host: LiveTree, line: string): LiveTree => {
-        const span = host.create.span().css.setMany({
-            whiteSpace: "pre-wrap",
-            overflowWrap: "anywhere",
-            minWidth: "0",
-            ...FONT_FAM_MONO,
-            fontSize: _TXT.smol,
-            color: get_line_color(line),
-            marginLeft: "1ch",
-        });
+        const span = host.create.span().css.setMany(LOG_SPANcss(line));
 
         span.text.set(line);
 

@@ -3,14 +3,14 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
 import { relay, relay_data, type OutcomeAsync } from "intrastructure";
-import { HSON_WORDcss, DEMO_SCREEN_FXcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
+import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { $PANEL_HIDDEN, _TXT } from "../../core/consts/ui-consts";
+import { $MENU_SHADOW, $PANEL_HIDDEN, øtextSize } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { _COLS } from "../../core/consts/ui-consts";
-import { HSON_COLOR_ } from "../../core/consts/ui-consts";
+import { øCOLS } from "../../core/consts/ui-consts";
+import { øHSON_COL } from "../../core/consts/ui-consts";
 import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/build-mount-init";
 import { mount_about_panels } from "./demo-about/mount-about";
@@ -28,8 +28,7 @@ import { mount_test_panels } from "../../../tests/demo-test/mount-tp";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
-import { mount_prairie } from "../phase-4-grass/mount-prairie";
-import { UI_ROOTcss } from "../../../tests/demo-test/tp.css";
+import { UI_ROOTcss } from "./demo.css";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -48,7 +47,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   
   const demoScreen = mk_div_id(demoBox, $DS.screen)
     .classlist.add("demo screen")
-    .css.setMany({ ...DEMO_SCREENcss, ...DEMO_SCREEN_FXcss });
+    .css.setMany(DEMO_SCREENcss);
 
 
   const fleurOverlay = mk_div_id(demoScreen, "fleurs-overlay")
@@ -118,7 +117,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .classlist.add('demo-wordmark')
       .css.setMany({
         ...HSON_WORDcss,
-        // color: OKLCH_VIBRANT.mintIce,
+        textShadow: $MENU_SHADOW + øHSON_COL[k] + ", 0 0 158px white",
       })
     return span;
   });
@@ -149,7 +148,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: HSON_COLOR_[l]
+      color: øHSON_COL[l]
     });
   });
 
@@ -159,15 +158,19 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   set_global_css();
 
-  const demoSlot = mk_div_id(uiRoot, "demo-slot").css.setMany(DEMO_SLOTcss);
+
+  /*************************
+   * BUILD DEMOS 
+   ************************/
+  // const demoSlot = mk_div_id(uiRoot, "demo-slot").css.setMany(DEMO_SLOTcss);
   const mouseSlot = mk_div_id(menuContainer, "mouse-slot").css.setMany(MOUSE_SLOTcss);
 
 
   // views stack in viewSlot
-  const parse = mount_panel_simple(demoSlot, "parse");
-  const testHost = mount_panel_simple(demoSlot, "test");
-  const buildHost = mount_panel_simple(demoSlot, "build");
-  const aboutHost = mount_panel_simple(demoSlot, "about");
+  const parse = mount_panel_simple(uiRoot, "parse");
+  const testHost = mount_panel_simple(uiRoot, "test");
+  const buildHost = mount_panel_simple(uiRoot, "build");
+  const aboutHost = mount_panel_simple(uiRoot, "about");
   const mouseHost = mk_div_id(mouseSlot, "mouse-host")
     .classlist.add($PANEL_HIDDEN)
     .css.setMany(MOUSE_HOSTcss);

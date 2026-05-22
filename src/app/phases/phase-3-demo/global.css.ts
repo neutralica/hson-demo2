@@ -1,9 +1,9 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
 import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
-import { _COLS, HSON_COLOR_, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { _TXT, REDcol, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { øtextSize, REDcol, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { ACID_WASH_OKLCH } from "../../core/consts/oklch";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
@@ -27,7 +27,7 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       width: "auto",
       ...FONT_FAM_MONO,
       color: REDcol,
-      background: _COLS.backhi,
+      background: øCOLS.backhi,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
       textAlign: "center",
@@ -61,33 +61,26 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 };
 
 export const MENU_ACTIVE_VIEWcss: CssMap = {
-  color: HSON_COLOR_.n,
-  fontWeight: "100",
+  color: øHSON_COL.n,
   textDecoration: "underline",
   textUnderlineOffset: "0.3em",
+  fontWeight: øfontWeight.fat,
   _hover: {
     background: $gry_.dark,
-    color: HSON_COLOR_.n,
+    color: TXTcol_CODE,
     // color: TXTcol_MENU,
-    fontWeight: "100",
+    fontWeight: øfontWeight.main,
   },
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
   color: ACID_WASH_OKLCH.mutedRed,
-  fontWeight: "700",
+  fontWeight: øfontWeight.fat,
   _hover: {
     background: set_alpha(TXTcol_MENU, 0.6),
-    color: _COLS.backhi,
-    fontWeight: "100",
+    color: øCOLS.backhi,
+    fontWeight: øfontWeight.main,
   },
 
 };
 
-export const ABOUT_BTN_MOBcss = {
-  position: "fixed",
-  bottom: "2rem",
-  left: "2rem",
-  fontWeight: "700",
-  fontSize: _TXT.main,
-};
