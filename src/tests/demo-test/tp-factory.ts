@@ -14,7 +14,7 @@ import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
-import { create_test_chips, get_line_color } from "./test-chips";
+import { create_test_chips, get_line_color } from "./test-helpers";
 import type { TestPanel } from "./tp.types";
 import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, LOG_SPANcss } from "./tp.css";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";

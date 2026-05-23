@@ -1,7 +1,7 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, INSPECTOR_ROOTcss, MADE_BUTTONcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss } from "./inspector.css";
+import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss } from "./inspector.css";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
@@ -78,24 +78,22 @@ export function create_inspector(
 ): InspectorUi {
   const hideClass = opts?.hideClass ?? "";
 
-  const root = mk_div_id(host, "inspector")
-    .css.setMany(INSPECTORcss)
-    .css.setMany(INSPECTOR_ROOTcss);
+  const root = mk_div_id(host, "inspector-root")
+    .css.setMany(INSPECTORcss);
 
-  // changed: body now actually owns the inspector content
-  const body = mk_div_cls(root, "insp-body").css.setMany({
-    display: "grid",
-    gridTemplateRows: "minmax(0, 1fr)",
-    overflow: "hidden",
-    minWidth: "0",
-    minHeight: "0",
-  });
+  // const body = mk_div_cls(root, "insp-body").css.setMany({
+  //   display: "flex",
+  //   overflow: "hidden",
+  //   minWidth: "0",
+  //   minHeight: "0",
+  // });
 
-  // changed: tableHost is now inside body, not floating beside it
-  const tableHost = mk_div_cls(body, "insp-table-host").css.setMany({
-    display: "grid",
-    minWidth: "0",
-    minHeight: "0",
+  const tableHost = mk_div_cls(root, "insp-table-host").css.setMany({
+    position: "absolute",
+    inset:"0",
+    height: "100%",
+    width:"100%",
+    display: "flex",
     overflow: "hidden",
     fontSize: øtextSize.main,
     color: TXTcol_MAIN,
@@ -149,9 +147,10 @@ export function create_inspector(
       .classlist.set("insp-empty-message")
       .text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations")
       .css.setMany({
-        display: "grid",
-        placeItems: "center",
-        minHeight: "100%",
+        // justifySelf: "center",
+        alignSelf: "center",
+        inset: "0",
+        // minHeight: "100%",
         color: TXTcol_CODE,
         textAlign: "center",
       });

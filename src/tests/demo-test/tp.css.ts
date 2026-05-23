@@ -6,7 +6,7 @@ import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.c
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
-import { get_line_color } from "./test-chips";
+import { get_line_color } from "./test-helpers";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: øtextSize.main,
@@ -188,8 +188,6 @@ export const LOG_SPANcss = (line: string) => {
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
     minWidth: "0",
-    ...FONT_FAM_MONO,
-    fontSize: øtextSize.main,
     color: get_line_color(line),
     marginLeft: "1ch",
   }

@@ -11,11 +11,6 @@ import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
 
-export const INSPECTOR_ROOTcss = {
-  fontFamily: SYS_MONOfont,
-  fontSize: øtextSize.main,
-  lineHeight: "1.35",
-}
 
 export const LOG_SCROLLcss: CssMap = {
   overflowX: "auto",
@@ -28,12 +23,15 @@ export const LOG_SCROLLcss: CssMap = {
 };
 
 export const INSPECTORcss = {
-  // width: "100%",
-  // height: "100%",
+  position: "relative",
+  width: "100%",
+  height: "100%",
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   overflow: "hidden",
-  background: øCOLS.backlo
+  background: øCOLS.backlo,
+  fontFamily: SYS_MONOfont,
+  fontSize: øtextSize.main,
 };
 
 export const THcss: CssMap = {
