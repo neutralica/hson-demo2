@@ -7,7 +7,7 @@ import { BUILD_STRINGhson } from "./build-hson.consts";
 import { mk_div_cls, mk_div_id, mk_section_cls, mk_span_cls } from "../../../utils/makers";
 import { UI_2STACKcss, UI_BTNcss, UI_PANEL_HEADcss, UI_STACK_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
 import { UI_PANEL_HEADERcss } from "../../../ui/panels/panels.css";
-import { øtextSize } from "../../../core/consts/ui-consts";
+import { øfontSize } from "../../../core/consts/ui-consts";
 import { UI_PANELcss } from "../../../../tests/demo-test/tp.css";
 
 // keep this parallel to pp_factory return shape: root + handles

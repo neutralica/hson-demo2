@@ -3,7 +3,7 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch";
 import { øCOLS } from "../../../core/consts/ui-consts";
-import { øtextSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
+import { øfontSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
@@ -51,7 +51,7 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
   color: øCOL_FOR_FMT_.hson,
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   padding: "15px",
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
@@ -121,7 +121,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
   boxShadow: "inset 0 0 25px 1px " + set_alpha(øCOL_FOR_FMT_["html"], 0.6),
   color: øCOL_FOR_FMT_.html,
   caretColor: "auto",
-  fontSize: øtextSize.main
+  fontSize: øfontSize.main
 
 };
 

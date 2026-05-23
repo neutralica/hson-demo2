@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { øCOLS } from "../../core/consts/ui-consts";
-import { SYS_MONOfont, øtextSize, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
+import { SYS_MONOfont, øfontSize, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
@@ -46,7 +46,7 @@ export const UI_BTN_STDcss: CssMap = {
 
 export const UI_STACK_LABELcss: CssMap = {
   position: "relative",
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
 };
 
 export const UI_BTNcss: CssMap = {
@@ -67,7 +67,7 @@ export const UI_2STACKcss: CssMap = {
   placeItems: "center",
   width: "15%",
   height: "100%",
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   padding: "4px",
   justifyContent: "flex-end",
 };

@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { øCOLS, øfontWeight, øtextSize } from "../../core/consts/ui-consts";
+import { øCOLS, øfontWeight, øfontSize } from "../../core/consts/ui-consts";
 import { SYS_MONOfont } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 

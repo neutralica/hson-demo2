@@ -5,7 +5,7 @@ import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildC
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
-import { TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, øHSON_COL, øtextSize } from "../../app/core/consts/ui-consts";
+import { TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, øHSON_COL, øfontSize } from "../../app/core/consts/ui-consts";
 import type { TestLog } from "../test-logger";
 import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
 import type { CaseKey, CaseMeta } from "../tests.types";
@@ -95,7 +95,7 @@ export function create_inspector(
     width:"100%",
     display: "flex",
     overflow: "hidden",
-    fontSize: øtextSize.main,
+    fontSize: øfontSize.main,
     color: TXTcol_MAIN,
   });
 

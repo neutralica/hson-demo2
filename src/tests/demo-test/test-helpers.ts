@@ -2,7 +2,7 @@ import { type LiveTree } from "hson-live";
 import type { TestSummary } from "../tests.types";
 import { mk_div_id, mk_div_cls } from "../../app/utils/makers";
 import { MAKE_CHIP_DEFAULTcss, TEST_CHIP_LABELcss, TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "./tp.css";
-import  { øHSON_COL, TXTcol_MAIN } from "../../app/core/consts/ui-consts";
+import  { øHSON_COL, TXTcol_MAIN, TXTcol_ALT } from "../../app/core/consts/ui-consts";
 
 
 export type ChipDisplay = Readonly<{
@@ -64,10 +64,10 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
             case "OK": return øHSON_COL.n;
             case "SKIP":
                 case "WARN": return øHSON_COL.s;
-                case "RUN": return TXTcol_MAIN;
+                case "RUN": return TXTcol_ALT;
             case "DONE": return TXTcol_MAIN;
             case "===":return TXTcol_MAIN;
             case "SUITE:":return TXTcol_MAIN;
-            default: return TXTcol_MAIN;
+            default: return TXTcol_ALT;
         }
     }

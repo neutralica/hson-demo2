@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../app/core/consts/colors.consts";
-import { øCOLS, SYS_SMOLfont, TXTcol_MAIN, øfontWeight, $LAYOUT_COLUMN_WIDTH } from "../../app/core/consts/ui-consts";
-import { GRID_GAPstr, øtextSize, TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../app/core/consts/ui-consts";
+import { øCOLS, SYS_SMOLfont, TXTcol_MAIN, øfontWeight, $SIDEBAR_WIDTH } from "../../app/core/consts/ui-consts";
+import { GRID_GAPstr, øfontSize, TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
@@ -9,7 +9,7 @@ import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 import { get_line_color } from "./test-helpers";
 
 export const TEST_CHIP_VALUEcss = {
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   fontWeight: øfontWeight.fat,
   lineHeight: "1",
   letterSpacing: "0.01em",
@@ -30,7 +30,7 @@ export const CONTROL_ROWcss: CssMap = {
 
 export const TEST_CHIP_LABELcss = {
   marginTop: "4px",
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   lineHeight: "1",
   letterSpacing: "0.06em",
   textTransform: "lowercase",
@@ -44,7 +44,7 @@ export const TEST_CLEAR_BTNcss: CssMap = {
   alignItems: "center",
   background: øCOLS.backlo,
   color: TXTcol_MENU,
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
 }
 
 
@@ -53,7 +53,7 @@ export const TEST_RUN_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(ACID_WASH_RGBA.fadedMint),
   alignItems: "center",
   color: ACID_WASH_RGBA.fadedMint,
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
 };
 
 export const TEST_SELECTORcss: CssMap = {
@@ -94,7 +94,7 @@ export const TEST_ROW_CONTAINERcss = {
 export const TEST_CONTENTcss: CssMap = {
   marginTop: "1rem",
   display: "grid",
-  gridTemplateColumns: "auto " + $LAYOUT_COLUMN_WIDTH,
+  gridTemplateColumns: "auto " + $SIDEBAR_WIDTH,
   gridColumn: "1 /3",
   gridRow: "1",
   overflow: "hidden",

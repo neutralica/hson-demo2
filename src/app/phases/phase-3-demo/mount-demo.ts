@@ -7,7 +7,7 @@ import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss
 import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { $MENU_SHADOW, $PANEL_HIDDEN, øtextSize } from "../../core/consts/ui-consts";
+import { $MENU_SHADOW, $PANEL_HIDDEN, øfontSize } from "../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
 import { øCOLS } from "../../core/consts/ui-consts";
 import { øHSON_COL } from "../../core/consts/ui-consts";
@@ -29,6 +29,8 @@ import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
 import { UI_ROOTcss } from "./demo.css";
+import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
+import { set_alpha } from "../../core/helpers/color-helpers";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -117,7 +119,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
       .classlist.add('demo-wordmark')
       .css.setMany({
         ...HSON_WORDcss,
-        textShadow: $MENU_SHADOW + øHSON_COL[k] + ", 0 0 158px white",
+        textShadow: $MENU_SHADOW + set_alpha(øHSON_COL[k], 0.4)
+          + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       })
     return span;
   });

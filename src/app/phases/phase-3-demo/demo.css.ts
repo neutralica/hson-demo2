@@ -2,9 +2,9 @@
 
 import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../core/consts/colors.consts";
-import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $LAYOUT_COLUMN_WIDTH} from "../../core/consts/ui-consts";
+import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $SIDEBAR_WIDTH} from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import { GRID_GAPstr, øtextSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, øfontSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
@@ -34,7 +34,8 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",
-  textShadow: $MENU_SHADOW + TXTcol_MENU,
+  textShadow: $MENU_SHADOW + set_alpha(TXTcol_MENU, 0.4)
+          + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
   fontWeight: øfontWeight.main,
   _hover: {
     fontWeight: øfontWeight.main,
@@ -120,7 +121,7 @@ export const DEMO_SCREENcss: CssMap = {
   boxSizing: "border-box",
   overscrollBehaviorY: "none", // not sure it will do what I want
   display: "grid",
-  gridTemplateColumns: $LAYOUT_COLUMN_WIDTH + " auto",
+  gridTemplateColumns: $SIDEBAR_WIDTH + " auto",
   gridTemplateRows: "minmax(0, 1fr)",
   
   gap: GRID_GAPstr,
@@ -189,7 +190,7 @@ export const HSON_SUBcss: CssMap = {
 
 export const COPYRITEcss: CssMap = {
   fontFamily: SYS_SANSfont,
-  fontSize: øtextSize.smol,
+  fontSize: øfontSize.smol,
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",

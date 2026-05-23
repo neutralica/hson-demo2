@@ -3,7 +3,7 @@ import {  relay, type OutcomeAsync } from "intrastructure";
 import { LiveTree } from "hson-live";
 import { prairie_factory } from "./prairie.js";
 import { mk_div_id } from "../../utils/makers.js";
-import { øtextSize } from "../../core/consts/ui-consts.js";
+import { øfontSize } from "../../core/consts/ui-consts.js";
 import { ACID_WASH_OKLCH } from "../../core/consts/oklch.js";
 
 
@@ -31,7 +31,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
   })
   const prairie = box.create.div().text.set("spp.").css.setMany({
     alignSelf: "end",
-    fontSize: øtextSize.main,
+    fontSize: øfontSize.main,
     fontFamily: "Serif",
     color: ACID_WASH_OKLCH.straw,
     // borderBottom: "5px double " + ACID_WASH_OKLCH.straw,
@@ -42,7 +42,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
     alignSelf: "end",
     marginLeft: "6rem",
     marginBottom: "0.7rem",
-    fontSize: øtextSize.main,
+    fontSize: øfontSize.main,
     fontFamily: "Serif",
     color: ACID_WASH_OKLCH.straw,
   })
@@ -57,7 +57,7 @@ export async function mount_prairie(stage: LiveTree): OutcomeAsync<void> {
     display: "flex",
     alignSelf: "end",
     marginLeft: "6rem",
-    fontSize: øtextSize.main,
+    fontSize: øfontSize.main,
     fontFamily: "Courier",
     color: skyColor,
   })

@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch";
-import { $LAYOUT_COLUMN_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øtextSize } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -107,7 +107,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
   color: TOCcol,
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   _hover: {
     color: øCOLS.backlo,
     background: TOCcol,
@@ -160,7 +160,7 @@ export const CODE_PUNCTcss = {
 
 export const WARNINGcss: CssMap = {
   color: "red",
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   textTransform: "uppercase",
   textAlign: "center",
   textDecoration: "underline",
@@ -183,9 +183,10 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   display: "grid",
-  gridTemplateColumns: $LAYOUT_COLUMN_WIDTH + " 1fr",
+  gridTemplateColumns: $SIDEBAR_WIDTH + " 1fr",
   gap: "0",
   boxSizing: "border-box",
+  maxWidth: $SIDEBAR_WIDTH + $CONTENT_WIDTH
 };
 
 
@@ -207,7 +208,7 @@ export const MD_CODE_PREcss: CssMap = {
   background: øCOLS.backhi,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word", // not anywhere
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
   // lineHeight: "1.85",
   padding: "1rem",
   // whiteSpace: "normal",
@@ -251,7 +252,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
     fontFamily: SYS_MONOfont,
     letterSpacing: "0.06em",
     textTransform: level === 2 ? "uppercase" : "none",
-    fontSize: øtextSize.main,
+    fontSize: øfontSize.main,
     // fontSize: level === 1 ? _TXT.heading : level === 2 ? _TXT.subhead : level === 3 ? _TXT.subhead : _TXT.main,
     fontWeight: level === 1 ? øfontWeight.fat : level === 2 ? 600 : 400,
     justifySelf: level <= 2 ? "center" : "start",
@@ -262,7 +263,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   fontFamily: SYS_SANSfont,
-  fontSize: øtextSize.smol,
+  fontSize: øfontSize.smol,
   color: COPYRITEcol,
   marginTop: "2rem",
 }

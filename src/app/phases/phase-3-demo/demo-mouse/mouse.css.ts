@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA} from "../../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
-import { øCOLS, øtextSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
+import { øCOLS, øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
@@ -70,7 +70,7 @@ export const MOUSE_POINTER_ORIGINcss = {
 
 export const MOUSE_COORD_Xcss: CssMap = {
   FontFamily: SYS_SMOLfont,
-  fontSize: øtextSize.smol,
+  fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1.5rem",
@@ -78,7 +78,7 @@ export const MOUSE_COORD_Xcss: CssMap = {
 
 export const MOUSE_COORD_Ycss = {
   FontFamily: SYS_SMOLfont,
-  fontSize: øtextSize.smol,
+  fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1rem",
@@ -86,7 +86,7 @@ export const MOUSE_COORD_Ycss = {
 
 export const MOUSE_THETAcss = {
   FontFamily: SYS_SMOLfont,
-  fontSize: øtextSize.smol,
+  fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "0.1rem",
@@ -100,7 +100,7 @@ export const ROW_GRIDcss: CssMap = {
   alignItems: "baseline",
   minWidth: "0",
   FontFamily: SYS_SMOLfont,
-  fontSize: øtextSize.smol,
+  fontSize: øfontSize.smol,
 } as const;
 
 export const MOUSE_TRACKERcss: CssMap = {

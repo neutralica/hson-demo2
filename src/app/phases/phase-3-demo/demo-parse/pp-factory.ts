@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
 import { UI_PANELcss, UI_TEXTcss } from "../../../../tests/demo-test/tp.css";
-import { TXTcol_CODE, øtextSize, øWATERMARK_FMT_, øCOLS, øHSON_COL } from "../../../core/consts/ui-consts";
+import { TXTcol_CODE, øfontSize, øWATERMARK_FMT_, øCOLS, øHSON_COL } from "../../../core/consts/ui-consts";
 import type { Fmt } from "../../../core/types/core.types";
 import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
 import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
@@ -78,7 +78,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .data.set("field", `${fmt}-bytes`)
       .css.setMany({
         ...UI_2STACK_VALcss,
-        fontSize: øtextSize.main,
+        fontSize: øfontSize.main,
       })
       .text.set("0");
 

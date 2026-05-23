@@ -33,7 +33,7 @@ export const øfontWeight = {
   fat: "900",
 }
 
-export const øtextSize = {
+export const øfontSize = {
   smol: "12px",
   sansMain: "1rem",
   main: "1rem",
@@ -74,10 +74,11 @@ export const SYS_MONOfont = "'DM Mono', Monaco, monospace";
 export const SYS_SANSfont =  /*"'IBM Plex Sans', sans-serif"; // */ "'DM Mono', Monaco, monospace";
 
 
-export const GRID_GAPstr = "2px";
 // export const $CODE_FONT_SIZE = øTXT.main;
 
-export const $LAYOUT_COLUMN_WIDTH = "18vw";
+export const GRID_GAPstr = "2px";
+export const $SIDEBAR_WIDTH = "15vw";
+export const $CONTENT_WIDTH = "90ch";
 
 /* queryable consts */
 export const ABOUT_ROOT_ID = "about-root";
@@ -93,7 +94,7 @@ export const YELLOWLIKEcol = øHSON_COL.s;
 export const PINKLIKEcol = øHSON_COL.o;
 
 export const FADE_1col = OKLCH_NEUTRALS.silver;
-export const $MENU_SHADOW = "1px 1px 105px ";
+export const $MENU_SHADOW = "1px 1px 25px ";
 export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
 
 export const øCOLS = {

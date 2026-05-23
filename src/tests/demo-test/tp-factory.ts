@@ -9,7 +9,7 @@ import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
 import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../app/core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../app/core/consts/oklch";
-import { $PANEL_HIDDEN, øtextSize, øHSON_COL, SYS_SMOLfont, TXTcol_MAIN, TXTcol_MENU } from "../../app/core/consts/ui-consts";
+import { $PANEL_HIDDEN, øfontSize, øHSON_COL, SYS_SMOLfont, TXTcol_MAIN, TXTcol_MENU } from "../../app/core/consts/ui-consts";
 import { mk_div_id } from "../../app/utils/makers";
 import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
@@ -23,6 +23,8 @@ import { _snip } from "../../app/utils/helpers";
 import type { LoopReport } from "../../../../hson-live/dist/types/diagnostics.types";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
+const dividerMajor = "+===============+"
+const dividerMinor = " •-----•"
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "all", label: "all" },
@@ -112,7 +114,7 @@ export function tp_factory(): Outcome<TestPanel> {
             overflowWrap: "normal",
             minWidth: "0",
             fontFamily: SYS_SMOLfont,
-            fontSize: øtextSize.smol,
+            fontSize: øfontSize.smol,
             // lineHeight: "0.8",
             // paddingBottom: "2px",
             color: get_line_color(line),
@@ -154,35 +156,39 @@ export function tp_factory(): Outcome<TestPanel> {
 
         if (e.t === "suite_begin") {
             currentCaseLine = null;
+            appendLogLine(dividerMajor);
             appendLogLine(`suite: beginning ${e.suite}`);
+            appendLogLine(dividerMajor);
             return;
         }
-
+        
         if (e.t === "case_begin") {
-            currentCaseLine = appendLogLine(`run ${e.name}`);
+            appendLogLine(dividerMinor);
+            currentCaseLine = appendLogLine(`run - ${e.name}`);
             return;
         }
-
+        
         if (e.t === "case_end") {
             const statusText = e.status.toUpperCase();
-
+            
             if (currentCaseLine) {
-            const t =     appendLogLine(statusText);
-
+                const t =     appendLogLine(statusText);
+                
                 if (typeof e.ms === "number") {
                     appendLogSpan(t, `(${e.ms.toFixed(1)}ms)`);
                 }
-
+                
                 if (e.status === "fail" && e.err) {
                     appendLogSpan(currentCaseLine, _snip(`— ${e.err}`, 2000));
+                    appendLogLine(dividerMajor);
                 }
             } else {
                 const fallback = appendLogLine(statusText);
-
+                
                 if (typeof e.ms === "number") {
                     appendLogSpan(fallback, `(${e.ms.toFixed(1)}ms)`);
                 }
-
+                
                 if (e.status === "fail" && e.err) {
                     appendLogSpan(fallback, _snip(`— ${e.err}`, 2000));
                 }

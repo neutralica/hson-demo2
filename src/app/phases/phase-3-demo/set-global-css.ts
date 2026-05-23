@@ -1,5 +1,5 @@
 import { CssManager } from "hson-live";
-import { $PANEL_HIDDEN, øtextSize } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, øfontSize } from "../../core/consts/ui-consts";
 import {  DISP_SIZE_ALERTcss, GLOB_HIDEcss, GLOB_SCROLL_THUMBcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, SCROLL_HOVER_COLcss, WEBKIT_SCROLL_TRKcss } from "./global.css";
 import { MIN_DESKTOP_WIDTH } from "./demo.consts";
 
@@ -57,7 +57,7 @@ export const set_global_css = (): void => {
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
-    .set.fontSize(øtextSize.main)
+    .set.fontSize(øfontSize.main)
 
   /* fleurs button mobile styling (should match about) */
   mobile.rule("mobile-fleurs-btn", "#fleurs-button")

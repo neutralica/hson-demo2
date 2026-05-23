@@ -4,7 +4,7 @@ import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
 import { øCOLS, øfontWeight } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
-import { øtextSize } from "../../app/core/consts/ui-consts";
+import { øfontSize } from "../../app/core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
@@ -31,7 +31,7 @@ export const INSPECTORcss = {
   overflow: "hidden",
   background: øCOLS.backlo,
   fontFamily: SYS_MONOfont,
-  fontSize: øtextSize.main,
+  fontSize: øfontSize.main,
 };
 
 export const THcss: CssMap = {

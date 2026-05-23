@@ -3,6 +3,7 @@ import type { TestCase, TestSuite } from "../tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
+import { øfontSize } from "../../app/core/consts/ui-consts";
 
 export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
@@ -286,7 +287,7 @@ export function unit_test_parser_helpers(): TestSuite {
             run() {
                 const out = _serialize_style({
                     backgroundColor: "red",
-                    fontSize: "12px",
+                    fontSize: øfontSize.smol,
                 });
 
                 if (!out.includes("background-color:red") && !out.includes("background-color: red")) {

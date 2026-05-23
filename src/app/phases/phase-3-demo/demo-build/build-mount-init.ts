@@ -1,7 +1,7 @@
 import { LiveTree, hson } from "hson-live";
 import { outcome, relay, relay_data, type Outcome } from "intrastructure";
 import { bp_factory, type BuildDemo } from "./bp-factory";
-import { øtextSize, TXTcol_CODE, øHSON_COL } from "../../../core/consts/ui-consts";
+import { øfontSize, TXTcol_CODE, øHSON_COL } from "../../../core/consts/ui-consts";
 
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";
@@ -30,7 +30,7 @@ function initBuild(bp: BuildDemo): void {
         }
         if (k === "typing") {
             bp.input.status.text.set("...");
-            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: øtextSize.main });
+            bp.input.status.css.setMany({ color: TXTcol_CODE, opacity: "1", fontSize: øfontSize.main });
             return;
         }
         if (k === "valid") {
