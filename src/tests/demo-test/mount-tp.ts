@@ -19,7 +19,9 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
         const tp = relay_data(tp_factory());
         tp.mount(root);
         try {
-            tp.setLog("=== state - smoke test on init ===");
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            tp.setLog("=- init: smoke test -=#");
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
             const stateSmoke = debug_state_smoke_test();
             for (const line of stateSmoke.steps) tp.setLog(line);
 
@@ -28,19 +30,21 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
 
             const stateFind = debug_state_find_test();
             for (const line of stateFind.steps) tp.setLog(line);
-        
+
             const removeFind = debug_state_remove_test();
             for (const line of removeFind.steps) tp.setLog(line);
-            
+
             const replaceFind = debug_state_replace_test();
             for (const line of replaceFind.steps) tp.setLog(line);
-            
+
             const storeFind = debug_store_facade_test();
             for (const line of storeFind.steps) tp.setLog(line);
-
-            tp.setLog("=== state - smoke test successful ===");
-            tp.setLog("=== state - false positive test (fail is pass) ===");
-
+            
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            tp.setLog("=-   smoke negative  -=");
+            tp.setLog("=    (fail is good)   =");
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            
             const fail = debug_state_intentional_fail_test();
             for (const line of fail.steps) {
                 tp.setLog(line);

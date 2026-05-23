@@ -1,18 +1,18 @@
 import type { LiveTree } from "hson-live";
-import { type Outcome, relay } from "intrastructure";
+import { type Outcome, type OutcomeMaybeVoid, relay } from "intrastructure";
 import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { mk_div_cls, mk_div_id } from "../../../utils/makers";
 import { øCOLS } from "../../../core/consts/ui-consts";
-import { ROW_GRIDcss, CELL_CLAMPcss, MOUSE_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss, STACK_TABLEcss, MOUSE_POINTERcss, MOUSE_POINTER_ORIGINcss, MOUSE_STACKcss, MOUSE_COORD_Xcss, MOUSE_COORD_Ycss, MOUSE_THETAcss } from "./mouse.css";
+import { ROW_GRIDcss, CELL_CLAMPcss, POINTER_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss, STACK_TABLEcss, MOUSE_POINTERcss, MOUSE_POINTER_ORIGINcss, ELEMENT_STACKcss, MOUSE_COORD_Xcss, MOUSE_COORD_Ycss, MOUSE_THETAcss } from "./mouse.css";
 
 // ---- factory ----
 
-export function mount_mouse_panel(host: LiveTree): Outcome<MousePanelRig> {
+export function mount_mouse_panel(host: LiveTree): OutcomeMaybeVoid {
   try {
     const mousePanel = mouse_factory(host);
     mouse_init(mousePanel);
-    return relay.data(mousePanel);
+    return relay.ok();
   } catch (err) {
     return relay.err(err instanceof Error ? err.message : "unknown error");
   }
@@ -20,30 +20,30 @@ export function mount_mouse_panel(host: LiveTree): Outcome<MousePanelRig> {
 
 function mouse_factory(host: LiveTree): MousePanelRig {
   // widget owns its own root container under host
-  const old = host.find.byId("mouse-panel-root");
+  const old = host.find.byId("pointer-panel-root");
   if (old) old.removeSelf();
 
-  const root = mk_div_id(host, "mouse-panel-root")
-    .classlist.add("mouse-panel")
+  const root = mk_div_id(host, "pointer-panel-root")
+    .classlist.add("pointer-panel")
     .css.setMany(MOUSE_ROOTcss);
 
   // header row: coords + angle
   // pointer stage
-  const tracker = mk_div_id(root, "mouse-tracker").css.setMany(MOUSE_TRACKERcss);
-  const coordbox = mk_div_id(root, "mouse-coords").css.setMany(MOUSE_COORDScss);
+  const tracker = mk_div_id(root, "pointer-tracker").css.setMany(POINTER_TRACKERcss);
+  const coordbox = mk_div_id(root, "pointer-coords").css.setMany(MOUSE_COORDScss);
 
   const x = coordbox.create.div()
-    .classlist.add("mouse-x")
+    .classlist.add("pointer-x")
     .css.setMany(MOUSE_COORD_Xcss)
     .text.set("x: —");
     
     const y = coordbox.create.div()
-    .classlist.add("mouse-y")
+    .classlist.add("pointer-y")
     .css.setMany(MOUSE_COORD_Ycss)
     .text.set("y: —");
     
     const angle = coordbox.create.div()
-    .classlist.add("mouse-angle")
+    .classlist.add("pointer-angle")
     .css.setMany(MOUSE_THETAcss)
     .text.set("θ: —°");
 
@@ -51,14 +51,14 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   // body: pointer + stack table
   const stackTable = mk_div_id(root, "stack-table").css.setMany(STACK_TABLEcss);
 
-  const pointer = mk_div_id(tracker, "mouse-pointer")
-    .classlist.add("mouse-pointer").css.setMany(MOUSE_POINTERcss);
+  const pointer = mk_div_id(tracker, "pointer-pointer")
+    .classlist.add("pointer-pointer").css.setMany(MOUSE_POINTERcss);
 
   // center dot
   mk_div_id(tracker, "pointer-origin").css.setMany(MOUSE_POINTER_ORIGINcss);
 
   // table container
-  const table = mk_div_cls(stackTable, "mouse-stack").css.setMany(MOUSE_STACKcss);
+  const table = mk_div_cls(stackTable, "pointer-stack").css.setMany(ELEMENT_STACKcss);
 
   const rows: Array<{
     ix: LiveTree;
@@ -67,7 +67,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   }> = [];
 
   // header row (must match ROW_GRIDcss)
-  const hdr = mk_div_cls(table, "mouse-stack-head")
+  const hdr = mk_div_cls(table, "pointer-stack-head")
     .css.setMany({
       ...ROW_GRIDcss,
       opacity: "0.8",
@@ -90,7 +90,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   // rows count matches your rig rows (keep using DERIV_LABELS length as "max stack lines")
   for (let i = 0; i < DERIV_LABELS.length; i++) {
     const row = table.create.div()
-      .classlist.add("mouse-stack-row")
+      .classlist.add("pointer-stack-row")
       .css.setMany({
         ...ROW_GRIDcss, // same grid as header
       });

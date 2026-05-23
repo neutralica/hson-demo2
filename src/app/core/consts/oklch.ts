@@ -27,7 +27,7 @@ export const OKLCH_VIBRANT = {
   yellowSodium: "oklch(0.8 0.170 100)", // streetlight yellow
   yellowCanary: "oklch(0.90 0.160 100)", // bright signal yellow
   yellowVolt: "oklch(0.86 0.200 105)", // electric yellow spike
-  yellowSunStaringEyesBright: "oklch(0.75 0.01 100)", // electric yellow spike
+  yellowSunStaringEyesBright: "oklch(0.7 0.001 101)", // electric yellow spike
 
 
   // --- yellow-greens / greens ---
@@ -50,7 +50,7 @@ export const OKLCH_VIBRANT = {
   blueCobalt: "oklch(0.68 0.120 255)", // richer anchor blue
   blueNavyVoid: "oklch(0.42 0.090 250)", // deep structural blue
   blueYves: "oklch(0.52 0.10 250)", // richer anchor blue
-  blueElecky: "oklch(0.82 0.410 250)", // richer anchor blue
+  blueElecky: "oklch(0.82 0.210 250)", // richer anchor blue
 
 
   // --- indigo / violet ---

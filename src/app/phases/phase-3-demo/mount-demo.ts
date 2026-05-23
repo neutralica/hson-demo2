@@ -2,9 +2,9 @@
 
 import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
-import { relay, relay_data, type OutcomeAsync } from "intrastructure";
+import { relay, relay_data, relay_void, type OutcomeAsync } from "intrastructure";
 import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $DS, $MOUSE, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
+import { $ABOUT, $BUILD, $FLEURS, $DS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { $MENU_SHADOW, $PANEL_HIDDEN, øfontSize } from "../../core/consts/ui-consts";
@@ -15,9 +15,9 @@ import { mount_parsing_panels } from "./demo-parse/pp-factory";
 import { mount_build_panels } from "./demo-build/build-mount-init";
 import { mount_about_panels } from "./demo-about/mount-about";
 import { ABOUT_DOCS } from "./demo-about/about.consts";
-import { mount_mouse_panel } from "./demo-mouse/mouse-factory";
+import { mount_mouse_panel } from "./demo-pointer/mouse-factory";
 import { mount_motes } from "./motes/mount-motes";
-import { MOUSE_HOSTcss, MOUSE_SLOTcss } from "./demo-mouse/mouse.css";
+import { MOUSE_HOSTcss, MOUSE_SLOTcss } from "./demo-pointer/mouse.css";
 import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./demo-fleurs/fleurs.css";
 import { spawn_flower } from "./demo-fleurs/fleurs";
 import { ALL_MOTEScss } from "./motes/motes.css";
@@ -136,7 +136,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     parseBtn: mk_div_id_txt(menuBox, `${$PARSE}-button`, `[${$PARSE}]`),
     buildBtn: mk_div_id_txt(menuBox, `${$BUILD}-button`, `[${$BUILD}]`),
     fleurBtn: mk_div_id_txt(menuBox, `${$FLEURS}-button`, `[${$FLEURS}]`),
-    mouseBtn: mk_div_id_txt(menuBox, `${$MOUSE}-button`, `[${$MOUSE}]`),
+    mouseBtn: mk_div_id_txt(menuBox, `${$POINT}-button`, `[${$POINT}]`),
     // oklchBtn: make_div_id_text(menuBox, `${$OKLCH}-button`, `${$OKLCH}`),
 
   } as const;
@@ -177,7 +177,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const mouseHost = mk_div_id(mouseSlot, "mouse-host")
     .classlist.add($PANEL_HIDDEN)
     .css.setMany(MOUSE_HOSTcss);
-  relay_data(mount_mouse_panel(mouseHost));
+  relay_void(mount_mouse_panel(mouseHost));
   relay_data(mount_about_panels(aboutHost, ABOUT_DOCS));
   relay_data(mount_test_panels(testHost));
   relay_data(mount_parsing_panels(parse));

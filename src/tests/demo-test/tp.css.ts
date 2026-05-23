@@ -44,7 +44,6 @@ export const TEST_CLEAR_BTNcss: CssMap = {
   alignItems: "center",
   background: øCOLS.backlo,
   color: TXTcol_MENU,
-  fontSize: øfontSize.main,
 }
 
 
@@ -53,7 +52,7 @@ export const TEST_RUN_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(ACID_WASH_RGBA.fadedMint),
   alignItems: "center",
   color: ACID_WASH_RGBA.fadedMint,
-  fontSize: øfontSize.main,
+
 };
 
 export const TEST_SELECTORcss: CssMap = {

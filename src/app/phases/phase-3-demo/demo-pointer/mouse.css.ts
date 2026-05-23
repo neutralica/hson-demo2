@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { ACID_WASH_RGBA} from "../../../core/consts/colors.consts";
+import { ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
 import { øCOLS, øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
@@ -10,7 +10,7 @@ export const MOUSE_ROOTcss: CssMap = {
   bottom: "0.5rem",
   left: "1rem",
   display: "grid",
-  gridTemplateRows: "150px 200px",
+  gridTemplateRows: "200px 100px",
   gridTemplateColumns: "2fr 1fr",
   minWidth: "0",
   minHeight: "0",
@@ -95,7 +95,7 @@ export const MOUSE_THETAcss = {
 // unify row layout (header + data rows) so columns line up
 export const ROW_GRIDcss: CssMap = {
   display: "grid",
-  gridTemplateColumns: "4ch 1fr", // 3 columns only (#, element, _QUID)
+  gridTemplateColumns: "2ch 1fr",
   columnGap: "2px",
   alignItems: "baseline",
   minWidth: "0",
@@ -103,14 +103,14 @@ export const ROW_GRIDcss: CssMap = {
   fontSize: øfontSize.smol,
 } as const;
 
-export const MOUSE_TRACKERcss: CssMap = {
+export const POINTER_TRACKERcss: CssMap = {
   position: "relative",
   width: "90px",
   height: "90px",
   borderRadius: "999px",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
-  gridRow: "1",
+  gridRow: "2",
   backgroundColor: øCOLS.backlo,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
@@ -118,27 +118,29 @@ export const MOUSE_TRACKERcss: CssMap = {
 
 } as const;
 
-export const STACK_TABLEcss = {
+export const STACK_TABLEcss: CssMap = {
   display: "grid",
-  gridTemplateRows: "auto 1fr",
+  gridTemplateRows: "fit-content auto",
   gridColumn: "1 / 3",
-  gridRow: "2 / -1",
-  gap: "12px",
+  gridRow: "1",
+  // gap: "12px",
   minWidth: "0",
   minHeight: "0",
   height: "100%",
   background: øCOLS.backlo,
+  alignContent: "end",
 
 }
 
-export const MOUSE_STACKcss = {
+export const ELEMENT_STACKcss: CssMap = {
   position: "relative",
-  display: "grid",
+  display: "flex",
   gridAutoRows: "auto",
   gap: "6px",
   minWidth: "0",
   minHeight: "0",
-  alignContent: "start",
+  alignContent: "end",
+  flexDirection: "column-reverse",
 
 }
 
@@ -147,7 +149,7 @@ export const MOUSE_COORDScss: CssMap = {
   gridTemplateRows: "auto auto auto", // CHANGED
   minWidth: "0",
   gridColumn: "2",
-  gridRow: "1",
+  gridRow: "2",
   marginLeft: "-1.5rem",
   alignContent: "end",              // CHANGED
   justifyItems: "start",

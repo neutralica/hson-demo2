@@ -96,9 +96,10 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "4px",
-  color: HEADERcol,
+  color: TXTcol_CODE,
+  fontWeight: øfontWeight.fat,
   _hover: {
-    color: HEADERcol,
+    color: TXTcol_CODE,
     background: $gry_.dark,
   }
 };

@@ -38,7 +38,7 @@ export const $TEST = "test";
 export const $BUILD = "build";
 export const $FLEURS = "fleurs";
 export const $OKLCH = "oklch";
-export const $MOUSE = "mouse";
+export const $POINT = "point";
 export const $ABOUT = "about";
 export const MENU_OPTIONS = [
   $ABOUT,
@@ -47,7 +47,7 @@ export const MENU_OPTIONS = [
   $BUILD,
   $FLEURS,
   $OKLCH,
-  $MOUSE,
+  $POINT,
 ] as const;
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";

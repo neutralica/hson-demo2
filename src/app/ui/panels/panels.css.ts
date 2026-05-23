@@ -41,6 +41,7 @@ export const UI_BTN_STDcss: CssMap = {
   ...FONT_FAM_MONO,
   textTransform: "lowercase",
   background: øCOLS.backlo,
+  fontSize: øfontSize.main,
 } as const;
 
 

@@ -35,23 +35,23 @@ export const øfontWeight = {
 
 export const øfontSize = {
   smol: "12px",
-  sansMain: "1rem",
-  main: "1rem",
+  sansMain: "16px",
+  main: "16px",
 } as const;
 
 
 // export const TXTcol_MENU = OKLCH_VIBRANT.blueCobalt;
-export const TXTcol_MENU = OKLCH_FLEURS.violet;
+export const TXTcol_MENU = OKLCH_FLEURS.greyLilac;
 export const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_ALT = OKLCH_NEUTRALS.steel;
-export const TXTcol_REAL = OKLCH_NEUTRALS.steel;
+export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 
 
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
-export const TOCcol = OKLCH_VIBRANT.mintIce;
+export const TOCcol = TXTcol_GREY;
 
 /* code markdown */
 export const CODE_PARENScol = ACID_WASH_OKLCH.amber;
@@ -65,8 +65,8 @@ export const LISTcol = OKLCH_FLEURS.greyLilac;
 
 
 /* misc markdown */
-export const COPYRITEcol = $gry_.dim;
-export const URLcol = OKLCH_VIBRANT.blueHorizon;
+export const COPYRITEcol = TXTcol_ALT;
+export const URLcol = øHSON_COL.h;
 
 
 export const SYS_SMOLfont = /* "'IBM Plex Sans', sans-serif"; // */ "'DM Mono', Monaco, monospace";

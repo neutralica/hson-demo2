@@ -151,7 +151,7 @@ export function create_inspector(
         alignSelf: "center",
         inset: "0",
         // minHeight: "100%",
-        color: TXTcol_CODE,
+        color: TXTcol_ALT,
         textAlign: "center",
       });
   };
