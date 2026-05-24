@@ -42,7 +42,7 @@ let _testsWired = false;
 
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
-  const gcss = CssManager.globals.invoke();
+  const gcss = CssManager.api();
   const demoBox = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);

@@ -4,7 +4,7 @@ import {  DISP_SIZE_ALERTcss, GLOB_HIDEcss, GLOB_SCROLL_THUMBcss, GLOB_SCROLLBAR
 import { MIN_DESKTOP_WIDTH } from "./demo.consts";
 
 export const set_global_css = (): void => {
-  const gcss = CssManager.globals.invoke();
+  const gcss =CssManager.api();
   gcss.rule("ua:form-fields:transparent", "textarea, input, select, button").setMany({
     background: "transparent",
     color: "inherit",

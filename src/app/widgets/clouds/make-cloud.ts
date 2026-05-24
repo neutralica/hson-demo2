@@ -229,7 +229,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // Work around WebKit-prefixed mask properties being canonicalized incorrectly
     // by pushing the mask declarations through raw global CSS text.
-    const gcss = CssManager.globals.invoke()
+    const gcss = CssManager.api();
     gcss.sel(`.${paintIxClass}`)
       .setMany({
         maskImage: `${bg}, ${fade}`,
