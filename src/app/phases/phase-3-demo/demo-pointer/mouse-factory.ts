@@ -1,9 +1,8 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, type OutcomeMaybeVoid, relay } from "intrastructure";
-import { type MousePanelRig, mouse_init, DERIV_LABELS } from "./mouse";
+import { type MousePanelRig, mouse_init } from "./mouse";
 import type { CssMap } from "hson-live/types";
 import { mk_div_cls, mk_div_id } from "../../../utils/makers";
-import { øCOLS } from "../../../core/consts/ui-consts";
 import { ROW_GRIDcss, CELL_CLAMPcss, POINTER_TRACKERcss, MOUSE_COORDScss, MOUSE_ROOTcss, STACK_TABLEcss, MOUSE_POINTERcss, MOUSE_POINTER_ORIGINcss, ELEMENT_STACKcss, MOUSE_COORD_Xcss, MOUSE_COORD_Ycss, MOUSE_THETAcss } from "./mouse.css";
 
 // ---- factory ----
@@ -51,11 +50,11 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   // body: pointer + stack table
   const stackTable = mk_div_id(root, "stack-table").css.setMany(STACK_TABLEcss);
 
-  const pointer = mk_div_id(tracker, "pointer-pointer")
+  const pointer = mk_div_id(tracker, "mouse-pointer")
     .classlist.add("pointer-pointer").css.setMany(MOUSE_POINTERcss);
 
   // center dot
-  mk_div_id(tracker, "pointer-origin").css.setMany(MOUSE_POINTER_ORIGINcss);
+  const origin = mk_div_id(tracker, "pointer-origin").css.setMany(MOUSE_POINTER_ORIGINcss);
 
   // table container
   const table = mk_div_cls(stackTable, "pointer-stack").css.setMany(ELEMENT_STACKcss);
@@ -74,8 +73,8 @@ function mouse_factory(host: LiveTree): MousePanelRig {
       // letterSpacing: "12px",
     });
 
-  hdr.create.div().text.set("#").css.setMany({ ...CELL_CLAMPcss, opacity: "0.7" });
-  hdr.create.div().text.set("element").css.setMany(CELL_CLAMPcss);
+  hdr.create.div().text.set("#").css.setMany({ ...CELL_CLAMPcss, opacity: "0.6" });
+  hdr.create.div().text.set("elementsAtPoint").css.setMany(CELL_CLAMPcss);
 
   // cell helper
   const makeCell = (row: LiveTree, css?: CssMap): LiveTree => {
@@ -88,7 +87,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
   };
 
   // rows count matches your rig rows (keep using DERIV_LABELS length as "max stack lines")
-  for (let i = 0; i < DERIV_LABELS.length; i++) {
+  for (let i = 0; i < 8; i++) {
     const row = table.create.div()
       .classlist.add("pointer-stack-row")
       .css.setMany({
@@ -108,6 +107,7 @@ function mouse_factory(host: LiveTree): MousePanelRig {
     root,
     stage: tracker,
     pointer,
+    origin,
     readout: { x, y, angle, rows },
     dispose,
   };

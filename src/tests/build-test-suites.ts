@@ -11,7 +11,7 @@ import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
 import { livetree_create_size } from "./livetree-tests/livetree-06";
 import { livetree_more_listeners } from "./livetree-tests/livetree-07";
 import { listeners_teardown } from "./livetree-tests/livetree-04";
-import { livetree_completionist } from "./livetree-tests/livetree-05";
+import { livetree_completionist, roundtrip_projection_stability } from "./livetree-tests/livetree-05";
 import { HSON_FIXTURES, HSON_FXT_INVALID } from "./transform-tests/hson-tests";
 import { JSON_FIXTURES_LEVEL2 } from "./transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
@@ -21,6 +21,7 @@ import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "./
 import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetree-14-canvas";
 import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-tests/livetree-15-canvas-size";
 import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-tests/livetree-16-canvas-3";
+import { livetree_css_surfaces_new } from "./livetree-tests/livetree-17-new-vars";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -152,7 +153,9 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_document_ownership()
+      livetree_document_ownership(),
+      livetree_css_surfaces_new(),
+      
     ])
   }
   if (mode === "fuzz-json") {

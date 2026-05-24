@@ -16,6 +16,7 @@ import { create_clouds } from "../../widgets/clouds/make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { LETTER_COLORstd } from "../../core/consts/colors.consts";
+import { øHSON_COL } from "../../core/consts/ui-consts";
 
 
 
@@ -37,7 +38,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const flareBox = frame.bud(SPLASH_BUDS.flareBox);
     const flare = flareBox.bud(SPLASH_BUDS.flare);
     const gradient = frame.bud(SPLASH_BUDS.gradient);
-   
+   stage.css.get.var
     /* create sun elements */
     const sunCarrier = wordMark.bud(SPLASH_BUDS.sunCarrier);
     const sun = sunCarrier.bud(SPLASH_BUDS.sun);
@@ -76,7 +77,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     letters.forEach(l => {
         const k = get_letter_key(l);
         if (!k) return;
-        const col = LETTER_COLORstd[k]
+        const col = øHSON_COL[k]
         l.css.set.var("--glow", col);
         l.css.set.var("--final", col);
         l.css.set.var("--starshine", col);

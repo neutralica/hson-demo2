@@ -9,6 +9,7 @@ export type MousePanelRig = Readonly<{
     root: LiveTree;
     stage: LiveTree;
     pointer: LiveTree;
+    origin: LiveTree;
     readout: {
         x: LiveTree;
         y: LiveTree;
@@ -22,59 +23,11 @@ export type MousePanelRig = Readonly<{
     dispose: () => void;
 }>;
 
-type DerivKey =
-    | "pos"
-    | "vel"
-    | "acc"
-    | "jerk"
-    | "snap"
-    | "crackle"
-    | "pop";
-
-type Vec = { x: number; y: number };
-type Chain = Record<DerivKey, Vec>;
-
-export const DERIV_LABELS: ReadonlyArray<[DerivKey, string]> = [
-    ["pos", "pos"],
-    ["vel", "vel"],
-    ["acc", "acc"],
-    ["jerk", "jerk"],
-    ["snap", "snap"],
-    ["crackle", "crackle"],
-    ["pop", "pop"],
-] as const;
 
 // ---- tiny math ----
 
-const mag = (v: Vec): number => Math.hypot(v.x, v.y);
-
-const fmt = (n: number, d = 2): string => {
-    if (!Number.isFinite(n)) return "—";
-
-    // ADDED: normalize -0 to +0 (after rounding decision)
-    const p = Math.pow(10, d);
-    const rounded = Math.round(n * p) / p;
-    const clean = Object.is(rounded, -0) ? 0 : rounded;
-
-    return clean.toFixed(d);
-};
 const fmt_int = (n: number): string => String(Math.round(n));
 
-const fmt_box = (r: DOMRect): string =>
-    `${fmt_int(r.left)},${fmt_int(r.top)}  ${fmt_int(r.width)}×${fmt_int(r.height)}`;
-
-const fmt_zn = (s: string): string => (s === "auto" ? "auto" : s);
-
-const get_quid = (el: Element): string =>
-    (el instanceof HTMLElement ? (el.dataset?._quid ?? "") : "");
-
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-
-// Small EMA smoothing. t near 1 = heavy smoothing, near 0 = raw.
-const smoothVec = (prev: Vec, next: Vec, t: number): Vec => ({
-    x: lerp(next.x, prev.x, t),
-    y: lerp(next.y, prev.y, t),
-});
 
 // ---- init (behavior) ----
 export function mouse_init(rig: MousePanelRig): void {
@@ -82,28 +35,21 @@ export function mouse_init(rig: MousePanelRig): void {
     let mounted = true;
 
     let lastPos: { x: number; y: number } = { x: 0, y: 0 };
-    let dirty = true;
+    let changed = true;
 
-    // If your widget should not interfere with hit testing:
-    // make sure its root/panel has pointerEvents: "none"
-    // OR at least the overlay portions do.
-    // (Otherwise elementsFromPoint will just return your widget.)
     rig.root.css.setMany({ pointerEvents: "none" });
 
     const onMove = (ev: PointerEvent): void => {
         lastPos = { x: ev.clientX, y: ev.clientY };
-        dirty = true;
+        changed = true;
     };
     // ADDED: stable center for pointer math
     const getStageCenter = (): { x: number; y: number } => {
-        // const el = rig.stage.asDomElement();
-        // if (!el) return { x: 0, y: 0 };
-        // const r = el.getBoundingClientRect();
-        const r = rig.root.dom.must.rect()
+        const r = rig.origin.dom.must.rect()
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     };
 
-    // ADDED: radians -> degrees
+    // radians -> degrees
     const rad_to_deg = (rad: number): number => (rad * 180) / Math.PI;
     window.addEventListener("pointermove", onMove, { passive: true });
 
@@ -160,8 +106,8 @@ export function mouse_init(rig: MousePanelRig): void {
     const tick = (): void => {
         if (!mounted) return;
 
-        if (dirty) {
-            dirty = false;
+        if (changed) {
+            changed = false;
             render_stack();
         }
 

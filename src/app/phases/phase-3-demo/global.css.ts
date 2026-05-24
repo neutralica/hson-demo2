@@ -74,7 +74,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
-  color: ACID_WASH_OKLCH.mutedRed,
+  color: øHSON_COL.o,
   fontWeight: øfontWeight.fat,
   _hover: {
     background: set_alpha(TXTcol_MENU, 0.6),
