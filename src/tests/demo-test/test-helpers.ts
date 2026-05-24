@@ -56,7 +56,6 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
 
    export  function get_line_color(line: string): string {
         const head = line.trim().split(/\s+/, 1)[0]?.toUpperCase() ?? "";
-     console.log(head);
         switch (head) {
             case "FAIL": return "red";
             case "PASS": 
