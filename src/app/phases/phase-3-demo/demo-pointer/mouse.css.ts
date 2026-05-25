@@ -22,7 +22,7 @@ export const MOUSE_ROOTcss: CssMap = {
 
 export const MOUSE_SLOTcss: CssMap = {
   // space below menu
-  height: "400pz",
+  height: "400px",
   display: "flex",
   flexDirection: "column",
   justifyItems: "flex-end",

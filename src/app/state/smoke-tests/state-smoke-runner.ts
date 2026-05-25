@@ -28,14 +28,19 @@ export function run_state_smoke(name: string, body: (t: SmokeCtx) => void): Stat
                     `[state smoke] ${label}${detail ? `\n${detail}` : ""}`
                 );
             }
-            
-            steps.push(`OK: ${label}`);
+
+            steps.push(`>> ${label}: `);
+            steps.push(`OK `);
+steps.push("|=•=-~-");
+
         },
 
         step(label, fn) {
             try {
                 fn();
-                steps.push(`OK: ${label}`);
+                steps.push(`>> ${label}: `);
+                steps.push(`OK `);
+steps.push("|=•=-~-");
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 throw new Error(`[state smoke] ${label}\n${msg}`);
@@ -49,6 +54,6 @@ export function run_state_smoke(name: string, body: (t: SmokeCtx) => void): Stat
 
     return {
         ok: true,
-        steps: [`RUN: ${name}`, ...steps],
+        steps: [`run - ${name}`, ...steps],
     };
 }

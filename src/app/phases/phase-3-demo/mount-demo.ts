@@ -31,6 +31,7 @@ import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, to
 import { UI_ROOTcss } from "./demo.css";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
 import { set_alpha } from "../../core/helpers/color-helpers";
+// import { mount_hson_logo_letter_glow, mount_menu_label_glow } from "./logo-menu-glow";
 // import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -46,7 +47,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const demoBox = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
-  
+
   const demoScreen = mk_div_id(demoBox, $DS.screen)
     .classlist.add("demo screen")
     .css.setMany(DEMO_SCREENcss);
@@ -111,19 +112,19 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   /* main menu & logo heading */
   const headline = mk_div_id(menuContainer, "hson-headline")
     .css.setMany(DEMO_HEADLINEcss);
-
-  const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
-    const span = mk_span_id(headline, `${k}-letter`)
+    const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
+      const span = mk_span_id(headline, `${k}-letter`)
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .classlist.add('demo-wordmark')
       .css.setMany({
         ...HSON_WORDcss,
         textShadow: $MENU_SHADOW + set_alpha(øHSON_COL[k], 0.4)
-          + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
+        + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       })
-    return span;
-  });
+      return span;
+    });
+  const letters = [$h, $s, $o, $n];
   mk_div_id(menuContainer, "livedemo-subhead")
     .text.set(`liveDemo`)
     .css.setMany(HSON_SUBcss);
@@ -260,10 +261,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     toggle_view("fleurs")
   })
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
-  
+
   demoBox.listen.document.onKeyDown((ke) => {
     if (ke.key === "~") {
-        window.location.assign("https://spp.terminalgothic.com/hson");
+      window.location.assign("https://spp.terminalgothic.com/hson");
     }
   });
 
@@ -282,6 +283,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
   debug_state_smoke_test();
+
   return relay.ok();
 }
-

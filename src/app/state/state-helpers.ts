@@ -95,15 +95,20 @@ export function assert_json_eq(
 ): void {
   if (!json_equal(actual, expected)) {
     throw new Error(
-     `Xx.•.•.•.•.•FAIL•.•.•.•.•.xX
-      [state smoke] ${label}\nexpected: ${JSON.stringify(expected)}\nactual:   ${JSON.stringify(actual)}
-      Xx•.•.•.•.•.•.•.•.•.•.•.•.xX
+     `
+Xx.•.•..FAIL..•.•.xX
+[state smoke]
+${label}
+expected: ${JSON.stringify(expected)}
+actual:   ${JSON.stringify(actual)}
+Xx•.•.•......•.•.•xX
       `
     );
   }
 
-steps.push(`OK: ${label}`);
-steps.push("      -~-=•=-~-");
+steps.push(`>> ${label} :`);
+steps.push(`OK `);
+steps.push("|=•=-~-");
 }
 
 export function node_equal(a: HsonNode, b: HsonNode): boolean {

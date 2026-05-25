@@ -6,6 +6,6 @@ export const FONT_FAM_MONO: CssMap = {
     fontSize: øfontSize.main,
     fontWeight: øfontWeight.main,
     // letterSpacing: "0.5px",
-    // letterSpacing: "0.2px",
+    // letterSpacing: "0.1px",
     // lineHeight: "1.6rem",
 }

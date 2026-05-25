@@ -22,6 +22,7 @@ import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetr
 import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-tests/livetree-15-canvas-size";
 import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-tests/livetree-16-canvas-3";
 import { livetree_css_surfaces_new } from "./livetree-tests/livetree-17-new-vars";
+import { livetree_css_refinements } from "./livetree-tests/livetree-18-css-refinements";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -155,6 +156,7 @@ export function build_suites_for_mode(
     return _freeze([
       livetree_document_ownership(),
       livetree_css_surfaces_new(),
+      livetree_css_refinements(),
       
     ])
   }

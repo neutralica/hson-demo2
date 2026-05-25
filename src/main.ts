@@ -10,9 +10,9 @@ import { run_app } from "./app/app";
 export function main(): boolean {
   const rootOc = graft_livetree();
   run_app(rootOc);
+  
+  
   return true;
-
-
 }
 
 // --- rendering helpers ---

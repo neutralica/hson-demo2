@@ -17,6 +17,7 @@ import { livetree_canvas, livetree_canvas_stress } from "./livetree-14-canvas";
 import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-15-canvas-size";
 import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-16-canvas-3";
 import { livetree_css_surfaces_new } from "./livetree-17-new-vars";
+import { livetree_css_refinements } from "./livetree-18-css-refinements";
 
 
 /******************************************************
@@ -74,6 +75,6 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_canvas_plot(),
 livetree_canvas_pointer(),
     livetree_document_ownership(),
-livetree_css_surfaces_new(),
+    livetree_css_refinements(),
   ] as const;
 }

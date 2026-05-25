@@ -100,6 +100,13 @@ const STRESS_KEYS = [
     " leading",
     "trailing ",
     " both ",
+      "feFuncR",
+  "feGaussianBlur",
+  "feImage",
+  "feMerge",
+  "feMergeNode",
+  "feMorphology",
+  "feOffset",
 ] as const;
 
 

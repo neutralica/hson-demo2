@@ -9,7 +9,8 @@ import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css } from "./brand.css";
 import { $blu_, $grn_ } from "../../core/consts/colors.consts";
-import { øCOLS, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { øCOLS, SYS_MONOfont, øHSON_COL, øfontWeight } from "../../core/consts/ui-consts";
+import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 
 const LOGO_TEXT = "TERMINAL_GOTHIC"
@@ -31,12 +32,10 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
     left: "1rem",
     backgroundColor: øCOLS.backlo,
     padding: "1rem",
-    fontFamily: SYS_MONOfont,
-    color: $grn_.std,
-    filter: "blur(0.5px)",
-  })
-  const noteText = mk_div_id(noteBox, "note-text")
-  noteText.text.set(introNote);
+    ...FONT_FAM_MONO,
+    color: øHSON_COL.n,
+  });
+  mk_div_id(noteBox, "note-text").text.set(introNote);
 
   const logoBox = mk_div_id(stage, "logo-box")
     .css.setMany(Intro_css.logobox);
