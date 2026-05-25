@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { Artifact, LoopReport } from "hson-live/diagnostics";
-import type { FixtureAtom, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
+import type { FixtureAtom, LoopOpts } from "../../../../../../hson-live/dist/types/diagnostics.types";
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 

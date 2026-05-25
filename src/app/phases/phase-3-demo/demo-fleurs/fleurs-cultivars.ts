@@ -1,4 +1,4 @@
-import type { Rng } from "../../../../tests/tests.types";
+import type { Rng } from "../demo-test/tests.types";
 import { make_rng } from "../../../utils/rng";
 import { pickOne } from "./fleurs-helpers";
 import { DAISYshape, SUNBURSTshape, PINWHEELshape, SCISSORshape, ROSETTEshape, WILDshape, DANDYshape } from "./fleurs.consts";

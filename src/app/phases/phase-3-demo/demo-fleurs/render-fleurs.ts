@@ -1,4 +1,4 @@
-import type { Rng } from "../../../../tests/tests.types";
+import type { Rng } from "../demo-test/tests.types";
 import { make_rng } from "../../../utils/rng";
 import { pickStamenColor, fmtNum, jitter_oklch } from "./fleurs-cols";
 import { getStamenDistance } from "./fleurs-cultivars";

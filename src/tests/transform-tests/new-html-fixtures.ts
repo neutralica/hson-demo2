@@ -1,6 +1,6 @@
 // new-fixtures.ts
 
-import { _freeze } from "../tests.consts";
+import { _freeze } from "../../app/phases/phase-3-demo/demo-test/tests.consts";
 
 
 const htmlStructureCases: { [key: string]: string } = {

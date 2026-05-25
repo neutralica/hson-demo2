@@ -2,7 +2,6 @@
 
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { UI_PANELcss, UI_TEXTcss } from "../../../../tests/demo-test/tp.css";
 import { TXTcol_CODE, øfontSize, øWATERMARK_FMT_, øCOLS, øHSON_COL } from "../../../core/consts/ui-consts";
 import type { Fmt } from "../../../core/types/core.types";
 import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
@@ -11,6 +10,7 @@ import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
 import { init_parsing_panels } from "./init-pp";
 import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
+import { UI_PANELcss, UI_TEXTcss } from "../demo-test/tp.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];

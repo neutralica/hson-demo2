@@ -1,5 +1,5 @@
 
-import type { LiveTreeCaseSpec, TestSuite } from "../tests.types";
+import type { LiveTreeCaseSpec, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import { livetree_gnarly_svg } from "./livetree-11-svg-3";
 import { tick } from "./livetree-03";

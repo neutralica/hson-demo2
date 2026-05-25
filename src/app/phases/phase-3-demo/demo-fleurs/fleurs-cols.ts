@@ -1,4 +1,4 @@
-import type { Rng } from "../../../../tests/tests.types";
+import type { Rng } from "../demo-test/tests.types";
 import { format_oklch, parse_oklch } from "../../../core/helpers/color-helpers";
 import { make_rng } from "../../../utils/rng";
 import { clamp, lerp } from "./fleurs-helpers";

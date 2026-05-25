@@ -9,7 +9,7 @@ import { livetree_svg_ingermediate } from "./livetree-10-svg-2";
 import { livetree_gnarly_svg } from "./livetree-11-svg-3";
 import { livetree_create_size, livetree_css_pseudo, livetree_recent_api } from "./livetree-06";
 import { livetree_new_dom_doc } from "./livetree-08-dom";
-import type { TestSuite } from "../tests.types";
+import type { TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { livetree_more_listeners } from "./livetree-07";
 import { livetree_svg_lvl2 } from "./livetree-12-svg-new";
 import { livetree_new_form_api } from "./livetree-13-form";

@@ -1,28 +1,28 @@
 import type { CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
-import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../data-old/data/json-fixtures"
-import { _snip } from "../app/utils/helpers";
+import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../../../../data-old/data/json-fixtures"
+import { _snip } from "../../../utils/helpers";
 import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
-import { TRANSFORM_FAILS, HTML_FIXTURES_LEGACY } from "../../data-old/data/html-fixtures";
+import { TRANSFORM_FAILS, HTML_FIXTURES_LEGACY } from "../../../../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
-import { all_livetree_suites } from "./livetree-tests/all-livetree-suites";
-import { HTML_FIXTURES_NEW } from "./transform-tests/new-html-fixtures";
-import { all_unit_tests } from "./unit-tests/all-unit-tests";
-import { EXTRA_FIXTURES } from "./transform-tests/extra-fixtures";
-import { livetree_create_size } from "./livetree-tests/livetree-06";
-import { livetree_more_listeners } from "./livetree-tests/livetree-07";
-import { listeners_teardown } from "./livetree-tests/livetree-04";
-import { livetree_completionist, roundtrip_projection_stability } from "./livetree-tests/livetree-05";
-import { HSON_FIXTURES, HSON_FXT_INVALID } from "./transform-tests/hson-tests";
-import { JSON_FIXTURES_LEVEL2 } from "./transform-tests/json-level-2";
-import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../hson-live/dist/types/diagnostics.types";
-import { livetree_svg_lvl2 } from "./livetree-tests/livetree-12-svg-new";
-import { livetree_new_form_api } from "./livetree-tests/livetree-13-form";
-import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "./json-tests/json-test-builder";
-import { livetree_canvas, livetree_canvas_stress } from "./livetree-tests/livetree-14-canvas";
-import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-tests/livetree-15-canvas-size";
-import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-tests/livetree-16-canvas-3";
-import { livetree_css_surfaces_new } from "./livetree-tests/livetree-17-new-vars";
-import { livetree_css_refinements } from "./livetree-tests/livetree-18-css-refinements";
+import { all_livetree_suites } from "../../../../tests/livetree-tests/all-livetree-suites";
+import { HTML_FIXTURES_NEW } from "../../../../tests/transform-tests/new-html-fixtures";
+import { all_unit_tests } from "../../../../tests/unit-tests/all-unit-tests";
+import { EXTRA_FIXTURES } from "../../../../tests/transform-tests/extra-fixtures";
+import { livetree_create_size } from "../../../../tests/livetree-tests/livetree-06";
+import { livetree_more_listeners } from "../../../../tests/livetree-tests/livetree-07";
+import { listeners_teardown } from "../../../../tests/livetree-tests/livetree-04";
+import { livetree_completionist, roundtrip_projection_stability } from "../../../../tests/livetree-tests/livetree-05";
+import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../../tests/transform-tests/hson-tests";
+import { JSON_FIXTURES_LEVEL2 } from "../../../../tests/transform-tests/json-level-2";
+import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../../../../hson-live/dist/types/diagnostics.types";
+import { livetree_svg_lvl2 } from "../../../../tests/livetree-tests/livetree-12-svg-new";
+import { livetree_new_form_api } from "../../../../tests/livetree-tests/livetree-13-form";
+import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "../../../../tests/json-tests/json-test-builder";
+import { livetree_canvas, livetree_canvas_stress } from "../../../../tests/livetree-tests/livetree-14-canvas";
+import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "../../../../tests/livetree-tests/livetree-15-canvas-size";
+import { livetree_canvas_pointer, livetree_document_ownership } from "../../../../tests/livetree-tests/livetree-16-canvas-3";
+import { livetree_css_surfaces_new } from "../../../../tests/livetree-tests/livetree-17-new-vars";
+import { livetree_css_refinements } from "../../../../tests/livetree-tests/livetree-18-css-refinements";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;

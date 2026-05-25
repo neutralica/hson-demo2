@@ -1,4 +1,4 @@
-import type { Rng } from "../../../../tests/tests.types";
+import type { Rng } from "../demo-test/tests.types";
 
 export function randSigned(rng: Rng): number {
     return (rng() * 2) - 1;

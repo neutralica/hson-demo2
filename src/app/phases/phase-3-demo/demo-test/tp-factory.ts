@@ -1,27 +1,26 @@
 import { hson, LiveTree } from "hson-live";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { type Outcome, relay } from "intrastructure";
-import { build_suites_for_mode } from "../build-test-suites";
-import { create_inspector } from "../inspector/test-inspector";
-import { create_test_log } from "../test-logger";
-import { run_test_suites } from "../test-runner";
-import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "../tests.types";
-import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../app/core/consts/colors.consts";
-import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../app/core/consts/oklch";
-import { $PANEL_HIDDEN, øfontSize, øHSON_COL, SYS_SMOLfont, TXTcol_MAIN, TXTcol_MENU } from "../../app/core/consts/ui-consts";
-import { mk_div_id } from "../../app/utils/makers";
-import { mk_btn } from "../../app/widgets/chips-deprecate/make-btn";
-import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
+import { build_suites_for_mode } from "./build-test-suites";
+import { create_inspector } from "../../../../tests/inspector/test-inspector";
+import { create_test_log } from "./test-logger";
+import { run_test_suites } from "./test-runner";
+import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "./tests.types";
+import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../../core/consts/colors.consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch";
+import { $PANEL_HIDDEN, øfontSize, øHSON_COL, SYS_SMOLfont, TXTcol_MAIN, TXTcol_MENU } from "../../../core/consts/ui-consts";
+import { mk_div_id } from "../../../utils/makers";
+import { mk_btn } from "../../../widgets/chips-deprecate/make-btn";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { create_test_chips, get_line_color } from "./test-helpers";
 import type { TestPanel } from "./tp.types";
-import { TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_LOGGERcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, LOG_SPANcss } from "./tp.css";
-import { flush_dom, next_frame } from "../inspector/inspector.helpers";
-import { PANEL_BRANCHcss } from "./tp.css";
-import { _snip } from "../../app/utils/helpers";
-import type { LoopReport } from "../../../../hson-live/dist/types/diagnostics.types";
-import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
+import { flush_dom, next_frame } from "../../../../tests/inspector/inspector.helpers";
+import { _snip } from "../../../utils/helpers";
+import type { LoopReport } from "../../../../../../hson-live/dist/types/diagnostics.types";
+import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
+import { PANEL_BRANCHcss, TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss } from "./tp.css";
 
 const dividerMajor = "+===============+"
 const dividerMinor = " •-----•"

@@ -1,8 +1,8 @@
 import { type LiveTree } from "hson-live";
-import type { TestSummary } from "../tests.types";
-import { mk_div_id, mk_div_cls } from "../../app/utils/makers";
-import { MAKE_CHIP_DEFAULTcss, TEST_CHIP_LABELcss, TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "./tp.css";
-import  { øHSON_COL, TXTcol_MAIN, TXTcol_ALT } from "../../app/core/consts/ui-consts";
+import type { TestSummary } from "./tests.types";
+import { mk_div_id, mk_div_cls } from "../../../utils/makers";
+import  { øHSON_COL, TXTcol_MAIN, TXTcol_ALT } from "../../../core/consts/ui-consts";
+import { TEST_CHIP_ROWcss, MAKE_CHIP_DEFAULTcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
 
 
 export type ChipDisplay = Readonly<{

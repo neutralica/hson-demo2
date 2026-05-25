@@ -3,8 +3,8 @@
 import { json_CARS, json_invertebrae } from "./large-fixtures/json-chunks.mock";
 import { json_homepage } from "./large-fixtures/json-homepage-string.mock";
 
-import type { FixtureBundle } from "../../src/tests/tests.types";
-import { _freeze } from "../../src/tests/tests.consts";
+import type { FixtureBundle } from "../../src/app/phases/phase-3-demo/demo-test/tests.types";
+import { _freeze } from "../../src/app/phases/phase-3-demo/demo-test/tests.consts";
 
 
 const jsonRudiments = {

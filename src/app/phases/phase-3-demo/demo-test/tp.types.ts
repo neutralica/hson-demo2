@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
-import type { create_inspector, InspectorUi } from "../inspector/test-inspector";
-import type { UiLevel, TestRunMode } from "../tests.types";
+import type { create_inspector, InspectorUi } from "../../../../tests/inspector/test-inspector";
+import type { UiLevel, TestRunMode } from "./tests.types";
 import type { ChipDisplay } from "./test-helpers";
 
 

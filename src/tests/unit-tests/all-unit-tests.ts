@@ -35,7 +35,7 @@ export function make_unit_case(
  **/
 
 
-import type { TestCase, TestSuite } from "../tests.types";
+import type { TestCase, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import type { CssManager } from "hson-live";
 import { unit_test_more_css, unit_test_parser_helpers } from "./unit-tests-2";
 

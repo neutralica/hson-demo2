@@ -1,12 +1,12 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../app/core/consts/colors.consts";
-import { øCOLS, SYS_SMOLfont, TXTcol_MAIN, øfontWeight, $SIDEBAR_WIDTH } from "../../app/core/consts/ui-consts";
-import { GRID_GAPstr, øfontSize, TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../app/core/consts/ui-consts";
-import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../app/ui/panels/panels.css";
-import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
-import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
+import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/colors.consts";
+import { øCOLS, SYS_SMOLfont, TXTcol_MAIN, øfontWeight, $SIDEBAR_WIDTH } from "../../../core/consts/ui-consts";
+import { GRID_GAPstr, øfontSize, TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../../core/consts/ui-consts";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch";
+import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { get_line_color } from "./test-helpers";
+import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../../ui/panels/panels.css";
 
 export const TEST_CHIP_VALUEcss = {
   fontSize: øfontSize.main,

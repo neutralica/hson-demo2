@@ -6,9 +6,8 @@ import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
 import { TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, øHSON_COL, øfontSize } from "../../app/core/consts/ui-consts";
-import type { TestLog } from "../test-logger";
-import { $CHIP_WIDTHstr, _freeze } from "../tests.consts";
-import type { CaseKey, CaseMeta } from "../tests.types";
+import { $CHIP_WIDTHstr, _freeze } from "../../app/phases/phase-3-demo/demo-test/tests.consts";
+import type { CaseKey, CaseMeta } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
@@ -17,6 +16,7 @@ import { øCOLS } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
 import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch";
+import type { TestLog } from "../../app/phases/phase-3-demo/demo-test/test-logger";
 
 
 export type InspectorUi = Readonly<{

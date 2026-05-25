@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay, relay_data, relay_void } from "intrastructure";
-import { _freeze } from "../../../../tests/tests.consts";
+import { _freeze } from "../demo-test/tests.consts";
 import { config_mote, motes_init } from "./motes-init";
 import type { Mote, MotesOpts, MoteStyle } from "./motes.types";
 import type { MotesRig } from "./motes.types";

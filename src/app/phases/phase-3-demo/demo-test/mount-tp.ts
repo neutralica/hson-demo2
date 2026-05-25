@@ -1,10 +1,10 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { debug_state_path_test, debug_state_find_test, debug_state_intentional_fail_test, debug_state_remove_test, debug_state_replace_test, debug_store_facade_test } from "../../app/state/smoke-tests/state-path-test";
-import { debug_state_smoke_test } from "../../app/state/smoke-tests/state-smoke-test";
+import { debug_state_path_test, debug_state_find_test, debug_state_intentional_fail_test, debug_state_remove_test, debug_state_replace_test, debug_store_facade_test } from "../../../state/smoke-tests/state-path-test";
+import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
 import { tp_factory } from "./tp-factory";
-import { TP_ROOTcss } from "./tp.css";
 import type { TestPanels } from "./tp.types";
+import { TP_ROOTcss } from "./tp.css";
 
 
 export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
