@@ -7,7 +7,7 @@ import type { Fmt } from "../../../core/types/core.types";
 import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
 import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
 import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
-import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../demo.consts";
+import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../mount/demo.consts";
 import { init_parsing_panels } from "./init-pp";
 import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 import { UI_PANELcss, UI_TEXTcss } from "../demo-test/tp.css";

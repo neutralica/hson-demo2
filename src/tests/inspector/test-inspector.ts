@@ -9,7 +9,6 @@ import { TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, øHSON_COL, øfontSize } from "..
 import { $CHIP_WIDTHstr, _freeze } from "../../app/phases/phase-3-demo/demo-test/tests.consts";
 import type { CaseKey, CaseMeta } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
-import { PANEL_SAFETYcss } from "../../app/phases/phase-3-demo/demo.css";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
 import { øCOLS } from "../../app/core/consts/ui-consts";

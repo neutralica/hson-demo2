@@ -2,6 +2,7 @@ import type { LiveTree } from "hson-live";
 
 export const mk_div = (lt: LiveTree) => lt.create.div();
 export const mk_div_cls = (lt: LiveTree, cls: string | string[]) => lt.create.div().classlist.set(cls);
+export const mk_div_cls_txt = (lt: LiveTree, cls: string | string[], txt: string) => lt.create.div().classlist.set(cls).text.set(txt);
 export const mk_div_id = (lt: LiveTree, id: string) => lt.create.div().id.set(id);
 export const mk_div_id_txt = (lt: LiveTree, id: string, txt: string) => lt.create.div().id.set(id).text.set(txt);
 

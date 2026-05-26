@@ -13,7 +13,7 @@ import { PHASE_LINGER } from "./core/consts/config.consts";
 import { øCOLS } from "./core/consts/ui-consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { mount_demo } from "./phases/phase-3-demo/mount-demo";
+import { mount_demo } from "./phases/phase-3-demo/mount/mount-demo";
 import { debug_state_smoke_test } from "./state/smoke-tests/state-smoke-test";
 import { log_oklch_palette } from "./utils/swatch-logger";
 

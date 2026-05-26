@@ -1,11 +1,11 @@
 import type { CssMap } from "hson-live/types"
-import { OKLCH_FLEURS } from "./demo-fleurs/fleurs.consts"
-import { $gry_, ACID_WASH_RGBA } from "../../core/consts/colors.consts"
-import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE } from "../../core/consts/ui-consts";
-import { set_alpha } from "../../core/helpers/color-helpers";
-import { øfontSize, REDcol, TXTcol_MENU } from "../../core/consts/ui-consts";
-import { ACID_WASH_OKLCH } from "../../core/consts/oklch";
-import { FONT_FAM_MONO } from "../../core/consts/css.consts";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts"
+import { $gry_, ACID_WASH_RGBA } from "../../../core/consts/colors.consts"
+import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE } from "../../../core/consts/ui-consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
+import { øfontSize, REDcol, TXTcol_MENU } from "../../../core/consts/ui-consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
+import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 export const SCROLL_HOVER_COLcss = {
   background: "rgba(180,230,255,0.65)"

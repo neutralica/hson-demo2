@@ -1,7 +1,7 @@
 import { CssManager } from "hson-live";
-import { $PANEL_HIDDEN, øfontSize } from "../../core/consts/ui-consts";
-import {  DISP_SIZE_ALERTcss, GLOB_HIDEcss, GLOB_SCROLL_THUMBcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, SCROLL_HOVER_COLcss, WEBKIT_SCROLL_TRKcss } from "./global.css";
+import { $PANEL_HIDDEN, øfontSize } from "../../../core/consts/ui-consts";
 import { MIN_DESKTOP_WIDTH } from "./demo.consts";
+import { GLOB_HIDEcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, SCROLL_HOVER_COLcss, GLOB_SCROLL_THUMBcss, WEBKIT_SCROLL_TRKcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, DISP_SIZE_ALERTcss } from "./global.css";
 
 export const set_global_css = (): void => {
   const gcss =CssManager.api();

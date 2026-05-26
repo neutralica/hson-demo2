@@ -1,36 +1,37 @@
 // mount-demo.ts
 
 import { CssManager, hson, type LiveTree } from "hson-live";
-import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../utils/makers";
+import { mk_div, mk_div_cls, mk_div_id, mk_div_id_txt, mk_span_id } from "../../../utils/makers";
 import { relay, relay_data, relay_void, type OutcomeAsync } from "intrastructure";
 import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, DEMO_SLOTcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $DS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
-import { _clamp01, _clampN1P1, keys_of } from "../../utils/helpers";
+import { _clamp01, _clampN1P1, keys_of } from "../../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { $MENU_SHADOW, $PANEL_HIDDEN, øfontSize } from "../../core/consts/ui-consts";
-import { HSONlower, LETTER_LOWS } from "../../core/consts/config.consts";
-import { øCOLS } from "../../core/consts/ui-consts";
-import { øHSON_COL } from "../../core/consts/ui-consts";
-import { mount_parsing_panels } from "./demo-parse/pp-factory";
-import { mount_build_panels } from "./demo-build/build-mount-init";
-import { mount_about_panels } from "./demo-about/mount-about";
-import { ABOUT_DOCS } from "./demo-about/about.consts";
-import { mount_mouse_panel } from "./demo-pointer/mouse-factory";
-import { mount_motes } from "./motes/mount-motes";
-import { MOUSE_HOSTcss, MOUSE_SLOTcss } from "./demo-pointer/mouse.css";
-import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "./demo-fleurs/fleurs.css";
-import { spawn_flower } from "./demo-fleurs/fleurs";
-import { ALL_MOTEScss } from "./motes/motes.css";
-import type { DemoView } from "../../state/state.types";
+import { $MENU_SHADOW, $PANEL_HIDDEN, øfontSize } from "../../../core/consts/ui-consts";
+import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
+import { øCOLS } from "../../../core/consts/ui-consts";
+import { øHSON_COL } from "../../../core/consts/ui-consts";
+import { mount_parsing_panels } from "../demo-parse/pp-factory";
+import { mount_build_panels } from "../demo-build/build-mount-init";
+import { mount_about_panels } from "../demo-about/mount-about";
+import { ABOUT_DOCS } from "../demo-about/about.consts";
+import { mount_mouse_panel } from "../demo-pointer/mouse-factory";
+import { mount_motes } from "../demo-motes/mount-motes";
+import { spawn_flower } from "../demo-fleurs/fleurs";
+import type { DemoView } from "../../../state/state.types";
 import { set_global_css } from "./set-global-css";
-import { fmtNum } from "./demo-fleurs/fleurs-cols";
-import { mount_test_panels } from "./demo-test/mount-tp";
-import { mount_panel_simple } from "../../ui/panels/panel-simple";
-import { debug_state_smoke_test } from "../../state/smoke-tests/state-smoke-test";
-import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, toggle_view, toggle_widget } from "../../state/store2";
+import { fmtNum } from "../demo-fleurs/fleurs-cols";
+import { mount_test_panels } from "../demo-test/mount-tp";
+import { mount_panel_simple } from "../../../ui/panels/panel-simple";
+import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
+import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, toggle_view, toggle_widget } from "../../../state/store2";
 import { UI_ROOTcss } from "./demo.css";
-import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
-import { set_alpha } from "../../core/helpers/color-helpers";
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
+import { set_alpha } from "../../../core/helpers/color-helpers";
+import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "../demo-fleurs/fleurs.css";
+import { MOUSE_SLOTcss, MOUSE_HOSTcss } from "../demo-pointer/mouse.css";
+import { ALL_MOTEScss } from "../demo-motes/motes.css";
+import { mount_oklch } from "../demo-oklch/mount-oklch";
 // import { mount_hson_logo_letter_glow, mount_menu_label_glow } from "./logo-menu-glow";
 // import { spawn_flower } from "./fleurs/fleurs";
 
@@ -112,18 +113,18 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   /* main menu & logo heading */
   const headline = mk_div_id(menuContainer, "hson-headline")
     .css.setMany(DEMO_HEADLINEcss);
-    const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
-      const span = mk_span_id(headline, `${k}-letter`)
+  const [$h, $s, $o, $n] = LETTER_LOWS.map((k) => {
+    const span = mk_span_id(headline, `${k}-letter`)
       .text.set(HSONlower[k])
       .classlist.add(shade_class(k))
       .classlist.add('demo-wordmark')
       .css.setMany({
         ...HSON_WORDcss,
         textShadow: $MENU_SHADOW + set_alpha(øHSON_COL[k], 0.4)
-        + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
+          + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       })
-      return span;
-    });
+    return span;
+  });
   const letters = [$h, $s, $o, $n];
   mk_div_id(menuContainer, "livedemo-subhead")
     .text.set(`liveDemo`)
@@ -263,8 +264,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("mouse"); });
 
   demoBox.listen.document.onKeyDown((ke) => {
-    if (ke.key === "~") {
-      window.location.assign("https://spp.terminalgothic.com/hson");
+    if (ke.key === "ƒ") {
+      mount_oklch(stage);
     }
   });
 
@@ -281,7 +282,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     void spawn_flower(fleurField, x, y);
 
   });
-
   debug_state_smoke_test();
 
   return relay.ok();
