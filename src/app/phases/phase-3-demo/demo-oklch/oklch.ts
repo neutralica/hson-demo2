@@ -37,7 +37,7 @@ export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: Oklch
     const row = rig.targetRows[i];
     if (!row) continue;
 
-    row.text.set(`${target!.label}: ${css.var.ref(target!.varName)}`);
+    row.text.set(`${target!.label}: ${css.var.get(target!.varName)}`);
   }
 };
 

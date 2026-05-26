@@ -36,7 +36,7 @@ export const ROW_CSS: CssMap = {
 export const PREVIEW_CSS: CssMap = {
   height: "5rem",
   width: "5rem",
-  background: cssVars.ref("oklch-demo-current"),
+  background: cssVars.get("oklch-demo-current"),
 };
 export const RANGE_CSS: CssMap = {
   appearance: "none",
@@ -64,7 +64,7 @@ export const RANGE_CSS: CssMap = {
     marginTop: "-0.32rem",
 
     border: `1px solid ${TXTcol_CODE}`,
-    background: cssVars.ref("oklch-demo-current"),
+    background: cssVars.get("oklch-demo-current"),
     borderRadius: "0",
   },
 
@@ -78,7 +78,7 @@ export const RANGE_CSS: CssMap = {
     width: "0.75rem",
     height: "0.75rem",
     border: `1px solid ${TXTcol_CODE}`,
-    background: cssVars.ref("oklch-demo-current"),
+    background: cssVars.get("oklch-demo-current"),
     borderRadius: "0",
   },
 };
