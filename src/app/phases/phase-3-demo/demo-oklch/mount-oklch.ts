@@ -1,6 +1,6 @@
-import { LiveTree } from "hson-live";
+import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
-import { mk_div_cls, mk_div_cls_txt } from "../../../utils/makers";
+import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
 import { TXTcol_ALT } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS } from "./oklch.css";
 import { make_range_attrs, render_prev, read_input_number, apply_to_target } from "./oklch";
@@ -20,8 +20,6 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   const root = mk_div_cls(stage, "oklch-demo-root").css.setMany(ROOT_CSS);
   const controls = mk_div_cls(root, "oklch-demo-controls").css.setMany(PANEL_CSS);
   mk_div_cls(controls, "oklch-demo-title").text.set("OKLCH color picker");
-
-
   for (const channel of channels) {
     const row = mk_div_cls_txt(controls, `oklch-row-${channel}`, channel).css.setMany(ROW_CSS);
     // changed: make the native range input less stock before pseudo-track styling is added globally.
@@ -41,6 +39,16 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   });
   const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PANEL_CSS);
   const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
+
+  mk_div_id(root, "test-div").css.setMany({
+    position: "absolute",
+    top: "0",
+    left: "0",
+    height: "100%",
+    width: "100%",
+    zIndex: "100",
+  });
+
   return Object.freeze({ root, preview, code, inputs, targetRows });
 }
 

@@ -383,6 +383,7 @@ export function create_inspector(
           whiteSpace: "pre-wrap",
           overflowWrap: "anywhere",
           color: TXTcol_CODE,
+          fontSize: øfontSize.smol
         });
 
         pre.text.set(preview || "—");

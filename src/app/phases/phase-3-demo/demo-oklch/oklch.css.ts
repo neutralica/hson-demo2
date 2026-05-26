@@ -11,14 +11,17 @@ export const ROOT_CSS: CssMap = {
   bottom: "0",
   right: "0",
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) minmax(20rem, 2rem)",
+  gridTemplateColumns: "minmax(0, 1fr) 7rem",
   color: TXTcol_CODE,
   ...FONT_FAM_MONO,
-  fontSize: øfontSize.smol
+  fontSize: øfontSize.smol,
   // gap: "1rem",
   // minWidth: "0",
   // minHeight: "0",
   // height: "100%",
+  "& div#test-div": {
+    background: "red",
+  },
 };
 export const PANEL_CSS: CssMap = {
   display: "grid",
@@ -56,15 +59,15 @@ export const RANGE_CSS: CssMap = {
   },
 
   // draggable handle
-  "&::-webkit-slider-thumb": {
+  "::-webkit-slider-thumb": {
     WebkitAppearance: "none",
 
     width: "0.75rem",
     height: "0.75rem",
     marginTop: "-0.32rem",
 
-    border: `1px solid ${TXTcol_CODE}`,
-    background: cssVars.get("oklch-demo-current"),
+    border: `10px solid ${TXTcol_CODE}`,
+    background: "hotpink",
     borderRadius: "0",
   },
 

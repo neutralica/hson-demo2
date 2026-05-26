@@ -78,6 +78,8 @@ export const TEST_LOGGERcss: CssMap = {
   overflowX: "hidden",
   overflowWrap: "anywhere",
   whiteSpace: "pre-wrap",
+  fontSize: øfontSize.smol,
+  color: OKLCH_FLEURS.blazeOrange
 } as const;
 
 export const TEST_ROW_CONTAINERcss = {
