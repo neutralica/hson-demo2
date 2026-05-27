@@ -1,16 +1,18 @@
 import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
-import { TXTcol_ALT } from "../../../core/consts/ui-consts";
+import { CURRENT_OKLCHname, TXTcol_ALT, TXTcol_MENU } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS } from "./oklch.css";
 import { make_range_attrs, render_prev, read_input_number, apply_to_target } from "./oklch";
+import { parse_oklch } from "../../../core/helpers/color-helpers";
 
-
+const defOk = parse_oklch(TXTcol_MENU);
+console.log(defOk);
 export const OKLCH_DEFAULT_STATE: OklchValues = Object.freeze({
-  l: 82,
-  c: 0.055,
-  h: 82,
-  a: 1,
+  l: defOk.l,
+  c: defOk.c,
+  h: defOk.h,
+  a: defOk.a || 1,
 });
 
 export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRig {
@@ -22,11 +24,11 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   mk_div_cls(controls, "oklch-demo-title").text.set("OKLCH color picker");
   for (const channel of channels) {
     const row = mk_div_cls_txt(controls, `oklch-row-${channel}`, channel).css.setMany(ROW_CSS);
-    // changed: make the native range input less stock before pseudo-track styling is added globally.
     const input = row.create.input()
-      .attr.setMany(make_range_attrs(channel))
-      .css.setMany(RANGE_CSS);
-    const value = mk_div_cls(row, `oklch-value-${channel}`);
+    .attr.setMany(make_range_attrs(channel))
+    .form.setValue(String(defOk[channel]))
+    .css.setMany(RANGE_CSS);
+    const value = mk_div_cls(row, `oklch-value-${channel}`)
     inputs.push({ channel, input, value });
   }
 
@@ -39,15 +41,6 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   });
   const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PANEL_CSS);
   const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
-
-  mk_div_id(root, "test-div").css.setMany({
-    position: "absolute",
-    top: "0",
-    left: "0",
-    height: "100%",
-    width: "100%",
-    zIndex: "100",
-  });
 
   return Object.freeze({ root, preview, code, inputs, targetRows });
 }
@@ -135,8 +128,10 @@ export function make_oklch_model(targets?: readonly OklchTarget[]): OklchPickerM
 
 
 export function mount_oklch(stage: LiveTree, opts: OklchDemoOpts = {}): void {
-
   const model = make_oklch_model(opts.targets);
   const rig = oklch_factory(stage, model);
   oklch_init(rig, model);
+  
+  // because I can't figure where it's overwriting to black in the above:
+  CssManager.api().var.set(CURRENT_OKLCHname, TXTcol_MENU);
 }

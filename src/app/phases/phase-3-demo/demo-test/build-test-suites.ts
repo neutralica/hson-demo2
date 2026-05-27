@@ -8,19 +8,11 @@ import { all_livetree_suites } from "../../../../tests/livetree-tests/all-livetr
 import { HTML_FIXTURES_NEW } from "../../../../tests/transform-tests/new-html-fixtures";
 import { all_unit_tests } from "../../../../tests/unit-tests/all-unit-tests";
 import { EXTRA_FIXTURES } from "../../../../tests/transform-tests/extra-fixtures";
-import { livetree_create_size } from "../../../../tests/livetree-tests/livetree-06";
-import { livetree_more_listeners } from "../../../../tests/livetree-tests/livetree-07";
-import { listeners_teardown } from "../../../../tests/livetree-tests/livetree-04";
-import { livetree_completionist, roundtrip_projection_stability } from "../../../../tests/livetree-tests/livetree-05";
 import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../../tests/transform-tests/hson-tests";
 import { JSON_FIXTURES_LEVEL2 } from "../../../../tests/transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../../../../hson-live/dist/types/diagnostics.types";
-import { livetree_svg_lvl2 } from "../../../../tests/livetree-tests/livetree-12-svg-new";
-import { livetree_new_form_api } from "../../../../tests/livetree-tests/livetree-13-form";
 import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "../../../../tests/json-tests/json-test-builder";
-import { livetree_canvas, livetree_canvas_stress } from "../../../../tests/livetree-tests/livetree-14-canvas";
-import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "../../../../tests/livetree-tests/livetree-15-canvas-size";
-import { livetree_canvas_pointer, livetree_document_ownership } from "../../../../tests/livetree-tests/livetree-16-canvas-3";
+import {  livetree_document_ownership } from "../../../../tests/livetree-tests/livetree-16-canvas-3";
 import { livetree_css_surfaces_new } from "../../../../tests/livetree-tests/livetree-17-new-vars";
 import { livetree_css_refinements } from "../../../../tests/livetree-tests/livetree-18-css-refinements";
 

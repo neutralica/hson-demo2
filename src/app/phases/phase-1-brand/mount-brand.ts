@@ -7,7 +7,7 @@ import { mk_div_id } from "../../utils/makers";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
-import { Intro_css } from "./brand.css";
+import { Intro_css, NOTEBOXcss } from "./brand.css";
 import { $blu_, $grn_ } from "../../core/consts/colors.consts";
 import { øCOLS, SYS_MONOfont, øHSON_COL, øfontWeight } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
@@ -24,18 +24,10 @@ const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
 export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
   const stage = s;
   stage.empty();
-  const introNote = "// created with hson-live"
-  const noteBox = mk_div_id(stage, "note-box");
-  noteBox.css.setMany({
-    position: "fixed",
-    top: "1rem",
-    left: "1rem",
-    backgroundColor: øCOLS.backlo,
-    padding: "1rem",
-    ...FONT_FAM_MONO,
-    color: øHSON_COL.n,
-  });
-  mk_div_id(noteBox, "note-text").text.set(introNote);
+
+  const noteBox = mk_div_id(stage, "note-box")
+    .css.setMany(NOTEBOXcss);
+  mk_div_id(noteBox, "note-text").text.set("// created with hson-live");
 
   const logoBox = mk_div_id(stage, "logo-box")
     .css.setMany(Intro_css.logobox);

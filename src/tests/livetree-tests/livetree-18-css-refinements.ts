@@ -223,6 +223,221 @@ t.eq("durable keyframes survive former owner release", r.survivesOwnerRelease, t
 t.eq("durable keyframes source is global", r.sourceAfterGlobalSet, "global");
             },
         },
+{
+  suite: SUITE,
+  name: "css surface: setMany nested selector key with ampersand writes selector rule",
+  dom: true,
+  fixture: "css-selectors",
+  sub: "setmany-nested-selector-ampersand",
+
+  html: `
+    <main id="root">
+      <div id="test-div">target</div>
+    </main>
+  `,
+
+  async act(tree) {
+    const root = tree.find.must.byId("root");
+
+    root.css.setMany({
+      color: "white",
+
+      "& > #test-div": {
+        background: "red",
+        color: "black",
+      },
+    });
+
+    (tree as any).__result = {
+      baseColor: root.css.get.color(),
+      childBackground: root.css.selector("& > #test-div").get.background(),
+      childColor: root.css.selector("& > #test-div").get.color(),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("base declaration still applies normally", r.baseColor, "white");
+    t.eq("nested selector background is readable through selector getter", r.childBackground, "red");
+    t.eq("nested selector color is readable through selector getter", r.childColor, "black");
+  },
+},
+{
+  suite: SUITE,
+  name: "css surface: selector method works without ampersand using appended pattern",
+  dom: true,
+  fixture: "css-selectors",
+  sub: "selector-method-no-ampersand",
+
+  html: `
+    <main id="root">
+      <div id="test-div">target</div>
+    </main>
+  `,
+
+  async act(tree) {
+    const root = tree.find.must.byId("root");
+
+    root.css.selector(" > #test-div").setMany({
+      background: "blue",
+      color: "yellow",
+    });
+
+    (tree as any).__result = {
+      childBackground: root.css.selector(" > #test-div").get.background(),
+      childColor: root.css.selector(" > #test-div").get.color(),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("selector getter reads no-ampersand background", r.childBackground, "blue");
+    t.eq("selector getter reads no-ampersand color", r.childColor, "yellow");
+  },
+},
+{
+  suite: SUITE,
+  name: "css surface: setMany nested selector key without ampersand is ignored",
+  dom: true,
+  fixture: "css-selectors",
+  sub: "setmany-nested-selector-no-ampersand-ignored",
+
+  html: `
+    <main id="root">
+      <div id="test-div">target</div>
+    </main>
+  `,
+
+  async act(tree) {
+    const root = tree.find.must.byId("root");
+
+    root.css.setMany({
+      " > #test-div": {
+        background: "purple",
+      },
+    });
+
+    (tree as any).__result = {
+      childBackground: root.css.selector(" > #test-div").get.background(),
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("setMany selector keys require ampersand", r.childBackground, undefined);
+  },
+},
+{
+  suite: SUITE,
+  name: "css surface: setMany nested pseudo-element selector writes vendor range thumb rule",
+  dom: true,
+  fixture: "css-selectors",
+  sub: "setmany-webkit-slider-thumb-selector",
+
+  html: `
+    <main id="root">
+      <input id="range" type="range" />
+    </main>
+  `,
+
+  async act(tree) {
+    const range = tree.find.must.byId("range");
+
+    range.css.setMany({
+      appearance: "none",
+
+      "&::-webkit-slider-thumb": {
+        "-webkit-appearance": "none",
+        appearance: "none",
+        background: "red",
+        border: "1px solid white",
+        borderRadius: "0",
+      },
+    });
+
+    const thumb = range.css.selector("&::-webkit-slider-thumb");
+    // changed: diagnostic instrumentation for selector rule rendering.
+    const css = CssManager.api();
+    const renderedAll = css.renderAll();
+    const rules = css.list();
+
+    (tree as any).__result = {
+      baseAppearance: range.css.get.appearance(),
+      thumbWebkitAppearance: thumb.get.property("-webkit-appearance"),
+      thumbAppearance: thumb.get.appearance(),
+      thumbBackground: thumb.get.background(),
+      thumbBorder: thumb.get.border(),
+      thumbBorderRadius: thumb.get.borderRadius(),
+      renderedAll,
+      rules,
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+    // changed: temporary diagnostic output.
+    console.log("[selector diagnostics] rules:", r.rules);
+    console.log("[selector diagnostics] rendered css:\n", r.renderedAll);
+
+    t.eq("base range appearance is stored", r.baseAppearance, "none");
+    t.eq("webkit thumb appearance is readable", r.thumbWebkitAppearance, "none");
+    t.eq("thumb appearance is readable", r.thumbAppearance, "none");
+    t.eq("thumb background is readable", r.thumbBackground, "red");
+    t.eq("thumb border is readable", r.thumbBorder, "1px solid white");
+    t.eq("thumb border radius is readable", r.thumbBorderRadius, "0");
+  },
+},
+{
+  suite: SUITE,
+  name: "css surface: selector getter sees values written after getter creation",
+  dom: true,
+  fixture: "css-selectors",
+  sub: "selector-getter-live-read",
+
+  html: `
+    <main id="root">
+      <div id="test-div">target</div>
+    </main>
+  `,
+
+  async act(tree) {
+    const root = tree.find.must.byId("root");
+    const selected = root.css.selector("& > #test-div");
+
+    const before = selected.get.background();
+
+    selected.setMany({
+      background: "orange",
+    });
+
+    const afterFirstSet = selected.get.background();
+
+    root.css.setMany({
+      "& > #test-div": {
+        background: "green",
+      },
+    });
+
+    const afterSetMany = selected.get.background();
+
+    (tree as any).__result = {
+      before,
+      afterFirstSet,
+      afterSetMany,
+    };
+  },
+
+  assert(tree, t) {
+    const r = (tree as any).__result;
+
+    t.eq("selector getter starts empty", r.before, undefined);
+    t.eq("selector getter sees selector().setMany write", r.afterFirstSet, "orange");
+    t.eq("selector getter sees later nested setMany overwrite", r.afterSetMany, "green");
+  },
+        },
 
 
 

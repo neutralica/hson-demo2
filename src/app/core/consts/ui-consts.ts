@@ -8,6 +8,7 @@ import { ACID_WASH_OKLCH, OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./oklch";
 import type { Fmt } from "../types/core.types";
 import type { CssMap } from "hson-live/types";
+import { CssManager } from "hson-live";
 
 export const øWATERMARK_FMT_: Record<Fmt, string> = {
   json: "{JSON}",
@@ -47,7 +48,9 @@ export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_ALT = OKLCH_NEUTRALS.steel;
 export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 
-
+const gcss = CssManager.api();
+export const CURRENT_OKLCHname = "oklch-demo-current";
+export const CURRENT_OKLCH = CssManager.api().var.get(CURRENT_OKLCHname);
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;

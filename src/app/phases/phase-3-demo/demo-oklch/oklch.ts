@@ -1,7 +1,10 @@
 import { LiveTree, CssManager } from "hson-live";
 import { oklch_to_css } from "./mount-oklch";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget } from "./oklch.types";
+import { CURRENT_OKLCH, CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
 
+
+const css = CssManager.api();
 
 export const make_range_attrs = (channel: OklchChannel): Record<string, string> => {
   if (channel === "l") return { type: "range", min: "0", max: "100", step: "0.1" };
@@ -20,10 +23,10 @@ const write_input_number = (input: LiveTree, n: number): void => {
 };
 
 export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues): void => {
-  const css = CssManager.api();
   const value = oklch_to_css(state);
 
-  css.var.set("oklch-demo-current", value);
+  
+  css.var.set(CURRENT_OKLCHname, value);
   rig.code.text.set(value);
 
   for (const item of rig.inputs) {

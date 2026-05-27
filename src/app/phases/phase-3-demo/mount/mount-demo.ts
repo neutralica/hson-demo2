@@ -7,7 +7,7 @@ import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss
 import { $ABOUT, $BUILD, $FLEURS, $DS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { $MENU_SHADOW, $PANEL_HIDDEN, øfontSize } from "../../../core/consts/ui-consts";
+import { $MENU_SHADOW, $PANEL_HIDDEN, CURRENT_OKLCH, CURRENT_OKLCHname, TXTcol_MENU, øfontSize } from "../../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
 import { øCOLS } from "../../../core/consts/ui-consts";
 import { øHSON_COL } from "../../../core/consts/ui-consts";
@@ -32,8 +32,6 @@ import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "../demo-fleurs/fleurs.css";
 import { MOUSE_SLOTcss, MOUSE_HOSTcss } from "../demo-pointer/mouse.css";
 import { ALL_MOTEScss } from "../demo-motes/motes.css";
 import { mount_oklch } from "../demo-oklch/mount-oklch";
-// import { mount_hson_logo_letter_glow, mount_menu_label_glow } from "./logo-menu-glow";
-// import { spawn_flower } from "./fleurs/fleurs";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -45,6 +43,8 @@ let _testsWired = false;
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.api();
+
+  gcss.var.set(CURRENT_OKLCHname, TXTcol_MENU);
   const demoBox = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);
@@ -283,6 +283,5 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   });
   debug_state_smoke_test();
-
   return relay.ok();
 }

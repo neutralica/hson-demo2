@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
-import { TXTcol_CODE, øfontSize, øCOLS, TXTcol_MENU } from "../../../core/consts/ui-consts";
+import { TXTcol_CODE, øfontSize, øCOLS, TXTcol_MENU, CURRENT_OKLCH } from "../../../core/consts/ui-consts";
 import { CssManager } from "hson-live";
 
 
@@ -39,21 +39,22 @@ export const ROW_CSS: CssMap = {
 export const PREVIEW_CSS: CssMap = {
   height: "5rem",
   width: "5rem",
-  background: cssVars.get("oklch-demo-current"),
+  background: CURRENT_OKLCH,
 };
+
 export const RANGE_CSS: CssMap = {
   appearance: "none",
-  WebkitAppearance: "none",
-
+  // "-webkit-appearance": "none",
+  
+  height: "1rem",
   width: "100%",
-  height: "1rem", // overall clickable region
   margin: "0",
-  background: "transparent",
+  background: øCOLS.backhi,
   cursor: "crosshair",
 
   // actual visible track
   "&::-webkit-slider-runnable-track": {
-    height: "0.2rem",
+    height: "0.5rem",
     background: øCOLS.backhi,
     border: `1px solid ${TXTcol_CODE}`,
   },
@@ -62,13 +63,12 @@ export const RANGE_CSS: CssMap = {
   "::-webkit-slider-thumb": {
     WebkitAppearance: "none",
 
-    width: "0.75rem",
-    height: "0.75rem",
-    marginTop: "-0.32rem",
+    width: "1rem",
+    height: "1rem",
 
     border: `10px solid ${TXTcol_CODE}`,
     background: "hotpink",
-    borderRadius: "0",
+    // borderRadius: "0",
   },
 
   "&::-moz-range-track": {
@@ -81,7 +81,7 @@ export const RANGE_CSS: CssMap = {
     width: "0.75rem",
     height: "0.75rem",
     border: `1px solid ${TXTcol_CODE}`,
-    background: cssVars.get("oklch-demo-current"),
+    background: CURRENT_OKLCH,
     borderRadius: "0",
   },
 };

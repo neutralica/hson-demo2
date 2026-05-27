@@ -75,6 +75,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_canvas_plot(),
 livetree_canvas_pointer(),
     livetree_document_ownership(),
+    livetree_css_surfaces_new(),
     livetree_css_refinements(),
   ] as const;
 }

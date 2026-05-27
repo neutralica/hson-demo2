@@ -23,8 +23,6 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 
 export async function run_app(root: LiveTree): OutcomeAsync<void> {
   root.empty();
-  log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
-  log_oklch_palette(OKLCH_VIBRANT, "brighter");
 
   const app = mk_div_id(root, "app")
     .classlist.set("app")

@@ -1,9 +1,11 @@
-import { canon_to_css_prop, normalize_css_key, normalize_css_value, normalize_decls, render_rule } from "hson-live/_tests";
+
 import type { TestCase, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
 import { øfontSize } from "../../app/core/consts/ui-consts";
+import { render_rule, normalize_decls } from "hson-live/_tests";
+import { normalize_css_value, normalize_css_key, canon_to_css_prop } from "../../../../hson-live/dist/utils/attrs-utils/normalize-css";
 
 export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
