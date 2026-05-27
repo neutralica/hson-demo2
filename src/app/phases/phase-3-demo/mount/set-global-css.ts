@@ -51,7 +51,7 @@ export const set_global_css = (): void => {
   })
 
   /* hide all menu buttons on mobile */
-  mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #ui-root, #mouse-button, #about-button, #mouse-slot")
+  mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #ui-root, #mouse-button, #about-button, #mouse-slot, #point-button")
     .set.display("none");
 
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")

@@ -2,7 +2,6 @@
 // ---- types ----
 
 import { LiveTree, make_tree_selector } from "hson-live";
-import type { TreeSelector } from "../../../../../../hson-live/dist/api/livetree/tree-selector";
 import { _DATA_QUID } from "../../../../../../hson-live/dist/consts/constants";
 
 export type MousePanelRig = Readonly<{

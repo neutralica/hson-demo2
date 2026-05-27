@@ -107,7 +107,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         display: "block",
         color: øWATERMARK_FMT_[fmt],
       })
-      .css.selector(":hover > div.pp-watermark").setMany({
+      .css.selector("&:hover > div.pp-watermark").setMany({
         color: øHSON_COL.n,
         
       });
