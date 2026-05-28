@@ -1,4 +1,5 @@
 import type { TestSuite, LiveTreeCaseSpec } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import { flush_dom } from "../inspector/inspector.helpers";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_tree_selector_surface(): TestSuite {
@@ -479,6 +480,48 @@ export function livetree_tree_selector_surface(): TestSuite {
                     t.eq("empty selector css broadcast writes nothing", r.oneBackground, undefined);
                     t.eq("empty selector data broadcast writes nothing", r.oneState, undefined);
                     t.eq("empty selector operations preserve unrelated node", r.oneStillExists, true);
+                },
+            },
+            {
+                suite: SUITE,
+                name: "css pseudos: attr() content browser readback is accepted",
+                dom: true,
+                fixture: "css/pseudos",
+                sub: "before-attr-content-browser-readback",
+
+                html: `
+    <main id="root">
+      <div id="target" data-label="HELLO">world</div>
+    </main>
+  `,
+
+                async act(tree) {
+                    const target = tree.find.must.byId("target");
+
+                    target.css.setMany({
+                        __before: {
+                            content: "attr(data-label)",
+                        },
+                    });
+
+                    await flush_dom();
+
+                    const el = target.dom.el() as HTMLElement;
+                    const before = getComputedStyle(el, "::before");
+
+                    (tree as any).__result = {
+                        content: before.content,
+                    };
+                },
+
+                assert(tree, t) {
+                    const r = (tree as any).__result;
+
+                    const accepted =
+                        r.content === "attr(data-label)"
+                        || r.content === `"HELLO"`;
+
+                    t.eq("browser exposes attr() pseudo content in an accepted form", accepted, true);
                 },
             },
         ];

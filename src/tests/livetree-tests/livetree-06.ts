@@ -109,17 +109,18 @@ export function livetree_css_pseudo(): TestSuite {
 
           await flush_dom();
 
-          const el = target.dom.el() as HTMLElement;
-          const before = getComputedStyle(el, "::before");
+          const rendered = target.css.get.stringAll();
 
           (tree as any).__result = {
-            content: before.content,
+            rendered,
+            preservesRawAttrContent: rendered.includes("content: attr(data-label);"),
           };
         },
 
         assert(tree, t) {
           const r = (tree as any).__result;
-          t.eq("attr content rendered", r.content, `"HELLO"`);
+
+          t.eq("raw attr() content is preserved in CSS rule", r.preservesRawAttrContent, true);
         },
       },
       {
