@@ -319,8 +319,8 @@ export function root_multi_isolation(): TestSuite {
         const rootA = tree.find.must.byId("rootA");
         const rootB = tree.find.must.byId("rootB");
 
-        const boxA = rootA.find.must.byAttrs("class", "box");
-        const boxB = rootB.find.must.byAttrs("class", "box");
+        const boxA = rootA.find.must.byAttribute("class", "box");
+        const boxB = rootB.find.must.byAttribute("class", "box");
 
         boxA.css.setMany({ opacity: "0.25" });
 
@@ -590,8 +590,8 @@ export function document_question(): TestSuite {
         const treeA = hson.liveTree.fromNode(hostA);
         const treeB = hson.liveTree.fromNode(hostB);
 
-        const elA = treeA.find.must.byAttrs("class", "box").dom.el() as HTMLElement;
-        const elB = treeB.find.must.byAttrs("class", "box").dom.el() as HTMLElement;
+        const elA = treeA.find.must.byAttribute("class", "box").dom.el() as HTMLElement;
+        const elB = treeB.find.must.byAttribute("class", "box").dom.el() as HTMLElement;
 
         (tree as any).__quids = [
           elA.getAttribute("data-_quid"),
@@ -628,8 +628,8 @@ export function document_question(): TestSuite {
         const treeA = hson.liveTree.fromNode(hostA);
         const treeB = hson.liveTree.fromNode(hostB);
 
-        const boxA = treeA.find.must.byAttrs("class", "box");
-        const boxB = treeB.find.must.byAttrs("class", "box");
+        const boxA = treeA.find.must.byAttribute("class", "box");
+        const boxB = treeB.find.must.byAttribute("class", "box");
 
         boxA.css.setMany({
           opacity: "0.25",
@@ -911,7 +911,7 @@ export function error_handling(): TestSuite {
 
         try {
           const xs = tree.findAll.byAttribute("class", "");
-          count = xs.count();
+          count = xs.length;
         } catch {
           threw = true;
         }

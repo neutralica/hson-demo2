@@ -14,7 +14,8 @@ import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../.
 import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "../../../../tests/json-tests/json-test-builder";
 import {  livetree_document_ownership } from "../../../../tests/livetree-tests/livetree-16-canvas-3";
 import { livetree_css_surfaces_new } from "../../../../tests/livetree-tests/livetree-17-new-vars";
-import { livetree_css_refinements } from "../../../../tests/livetree-tests/livetree-18-css-refinements";
+import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more } from "../../../../tests/livetree-tests/livetree-18-css-refinements";
+import { livetree_tree_selector_surface } from "../../../../tests/livetree-tests/livetree-19-tree-selector";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -149,6 +150,9 @@ export function build_suites_for_mode(
       livetree_document_ownership(),
       livetree_css_surfaces_new(),
       livetree_css_refinements(),
+      livetree_css_new_getters(),
+      livetree_find_more(),
+      livetree_tree_selector_surface()
       
     ])
   }

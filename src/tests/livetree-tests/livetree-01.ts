@@ -85,7 +85,7 @@ export function suite_find(): TestSuite {
 
       assert(tree, t) {
         const items = tree.findAll(".item");
-        t.eq(`findAll(".item").count() === 3`, items.count(), 3);
+        t.eq(`findAll(".item").length === 3`, items.length, 3);
 
         let threw = false;
         try {
@@ -515,7 +515,7 @@ export function mixedRegression() {
 
         // IR sanity: exactly one node child with id=layer under root subtree
         const hits = root.findAll({ attrs: { id: "layer" } });
-        t.eq("IR: exactly one #layer", hits.count(), 1);
+        t.eq("IR: exactly one #layer", hits.length, 1);
 
         // DOM sanity (optional): only assert if mounted
         const rootEl = root.dom.el() as HTMLElement | null;
@@ -598,7 +598,7 @@ export function mixedRegression() {
 
       assert(tree, t) {
         const items = tree.findAll({ attrs: { class: "item" } });
-        t.eq("count", items.count(), 2);
+        t.eq("count", items.length, 2);
 
         items.each((node, i) => {
           // IR attrs should include data-row
@@ -655,7 +655,7 @@ export function mixedRegression() {
 
       assert(tree, t) {
         const selector = tree.findAll({ attrs: { class: "item" } });
-        t.eq("matched 3 items", selector.count(), 3);
+        t.eq("matched 3 items", selector.length, 3);
 
         const anyDom = !!selector.first()?.dom.el?.();
         if (!anyDom) {
@@ -703,7 +703,7 @@ export function mixedRegression() {
         t.ok("created tag is div", (tree as unknown as { __createdTag?: string }).__createdTag === "div");
 
         // IR: should now have a div child somewhere under content
-        const created = part.find.byAttrs("class", "created");
+        const created = part.find.byAttribute("class", "created");
         t.ok("IR can refind .created", !!created);
 
         // DOM if mounted
@@ -888,7 +888,7 @@ export function extraCases(): readonly TestSuite[] {
 
         const root = tree.find.must.byId("root");
         const hits = root.findAll({ attrs: { id: "layer" } });
-        t.eq("exactly one #layer in IR", hits.count(), 1);
+        t.eq("exactly one #layer in IR", hits.length, 1);
       },
 
       preview(tree) {
@@ -924,7 +924,7 @@ export function extraCases(): readonly TestSuite[] {
 
       assert(tree, t) {
         const items = (tree as any).__refind;
-        t.eq("selector count", items.count(), 2);
+        t.eq("selector count", items.length, 2);
 
         items.each((node: LiveTree, i: number) => {
           const attrs = node.node._attrs ?? {};
@@ -1019,7 +1019,7 @@ export function extraCases(): readonly TestSuite[] {
 
       assert(tree, t) {
         const branch = (tree as any).__branch as LiveTree;
-        const found = branch.find.byAttrs("class", "child");
+        const found = branch.find.byAttribute("class", "child");
 
         t.ok("child exists in IR", !!found);
 

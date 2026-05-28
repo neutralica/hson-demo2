@@ -874,7 +874,7 @@ function suite_css_more(): TestSuite {
 
       assert(tree, t) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const arr = multi.items();
+        const arr = multi.array();
 
         t.eq("selected .x count", arr.length, 2);
 
@@ -975,10 +975,10 @@ function suite_find_more(): TestSuite {
         t.eq("find miss returns undefined", miss, undefined);
 
         const allMiss = root.findAll({ tag: "p", attrs: { class: "nope" } });
-        t.eq("findAll miss count is zero", allMiss.count(), 0);
+        t.eq("findAll miss count is zero", allMiss.length, 0);
 
         const allPs = root.findAll({ tag: "p" });
-        t.eq("findAll count is two", allPs.count(), 2);
+        t.eq("findAll count is two", allPs.length, 2);
 
         const texts: string[] = [];
         allPs.each((branch) => {
@@ -1023,10 +1023,10 @@ function suite_find_more(): TestSuite {
         t.ok("find.must throws on miss", threw);
 
         const none = root.findAll(".nope");
-        t.eq("findAll miss count is zero", none.count(), 0);
+        t.eq("findAll miss count is zero", none.length, 0);
 
         const allSpans = root.findAll("span");
-        t.eq("findAll span count is two", allSpans.count(), 2);
+        t.eq("findAll span count is two", allSpans.length, 2);
 
         const classes: string[] = [];
         allSpans.each((branch) => {
@@ -1193,7 +1193,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       assert(tree, t) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const arr = multi.items();
+        const arr = multi.array();
 
         t.eq("selected .x count", arr.length, 2);
 
@@ -1216,7 +1216,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       preview(tree) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const first = multi.items()[0];
+        const first = multi.array()[0];
         const snap = first?.css.devSnapshot;
         return snap ? snap() : "<no css snapshot>";
       },
@@ -1243,7 +1243,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       assert(tree, t) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const arr = multi.items();
+        const arr = multi.array();
 
         t.eq("selected .x count", arr.length, 2);
 
@@ -1271,7 +1271,7 @@ function suite_css_value_and_selection(): TestSuite {
 
       preview(tree) {
         const multi = tree.findAll({ tag: "p", attrs: { class: "x" } });
-        const first = multi.items()[0];
+        const first = multi.array()[0];
         const snap = first?.css.devSnapshot;
         return snap ? snap() : "<no css snapshot>";
       },
@@ -1326,7 +1326,7 @@ function suite_css_empty(): TestSuite {
         const root = tree.find.must.byId("root");
         const emptyMulti = root.findAll({ tag: "span", attrs: { class: "nope" } });
 
-        t.eq("empty selection count is zero", emptyMulti.count(), 0);
+        t.eq("empty selection count is zero", emptyMulti.length, 0);
 
         const stash = tree as unknown as { __before?: string; __after?: string };
         t.eq(

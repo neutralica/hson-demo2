@@ -507,71 +507,71 @@ export function livetree_css_refinements(): TestSuite {
       },
     },
     {
-  suite: SUITE,
-  name: "css surface: get.all returns independent single-node snapshots",
-  dom: true,
-  fixture: "css-selectors",
-  sub: "get-all-independent-single-node-snapshots",
+      suite: SUITE,
+      name: "css surface: get.all returns independent single-node snapshots",
+      dom: true,
+      fixture: "css-selectors",
+      sub: "get-all-independent-single-node-snapshots",
 
-  html: `
+      html: `
     <main id="root">
       <div class="shared" id="one"></div>
       <div class="shared" id="two"></div>
     </main>
   `,
 
-  async act(tree) {
-    const one = tree.find.must.byId("one");
-    const two = tree.find.must.byId("two");
+      async act(tree) {
+        const one = tree.find.must.byId("one");
+        const two = tree.find.must.byId("two");
 
-    // CHANGED: findAll returns an array of LiveTree handles, not one combined
-    // multi-node handle. This verifies discovery without pretending the array
-    // has a shared css surface.
-    const shared = tree.findAll.byAttribute("class", "shared");
+        // CHANGED: findAll returns an array of LiveTree handles, not one combined
+        // multi-node handle. This verifies discovery without pretending the array
+        // has a shared css surface.
+        const shared = tree.findAll.byAttribute("class", "shared");
 
-    one.css.setMany({
-      background: "red",
-      borderRadius: "0",
-    });
+        one.css.setMany({
+          background: "red",
+          borderRadius: "0",
+        });
 
-    two.css.setMany({
-      background: "red",
-      borderRadius: "4px",
-    });
+        two.css.setMany({
+          background: "red",
+          borderRadius: "4px",
+        });
 
-    (tree as any).__result = {
-      sharedCount: shared.count(),
+        (tree as any).__result = {
+          sharedCount: shared.length,
 
-      oneBackground: one.css.get.background(),
-      oneBorderRadius: one.css.get.borderRadius(),
-      oneAll: one.css.get.all(),
-      oneStringAll: one.css.get.stringAll(),
+          oneBackground: one.css.get.background(),
+          oneBorderRadius: one.css.get.borderRadius(),
+          oneAll: one.css.get.all(),
+          oneStringAll: one.css.get.stringAll(),
 
-      twoBackground: two.css.get.background(),
-      twoBorderRadius: two.css.get.borderRadius(),
-      twoAll: two.css.get.all(),
-      twoStringAll: two.css.get.stringAll(),
-    };
-  },
+          twoBackground: two.css.get.background(),
+          twoBorderRadius: two.css.get.borderRadius(),
+          twoAll: two.css.get.all(),
+          twoStringAll: two.css.get.stringAll(),
+        };
+      },
 
-  assert(tree, t) {
-    const r = (tree as any).__result;
+      assert(tree, t) {
+        const r = (tree as any).__result;
 
-    t.eq("findAll.byAttrs discovers both shared nodes", r.sharedCount, 2);
+        t.eq("findAll.byAttrs discovers both shared nodes", r.sharedCount, 2);
 
-    t.eq("first node point getter reads background", r.oneBackground, "red");
-    t.eq("first node point getter reads borderRadius", r.oneBorderRadius, "0");
-    t.eq("first node get.all includes background", r.oneAll.background, "red");
-    t.eq("first node get.all includes borderRadius", r.oneAll.borderRadius, "0");
-    t.eq("first node get.stringAll serializes declarations", r.oneStringAll, "background: red; border-radius: 0;");
+        t.eq("first node point getter reads background", r.oneBackground, "red");
+        t.eq("first node point getter reads borderRadius", r.oneBorderRadius, "0");
+        t.eq("first node get.all includes background", r.oneAll.background, "red");
+        t.eq("first node get.all includes borderRadius", r.oneAll.borderRadius, "0");
+        t.eq("first node get.stringAll serializes declarations", r.oneStringAll, "background: red; border-radius: 0;");
 
-    t.eq("second node point getter reads background", r.twoBackground, "red");
-    t.eq("second node point getter reads borderRadius", r.twoBorderRadius, "4px");
-    t.eq("second node get.all includes background", r.twoAll.background, "red");
-    t.eq("second node get.all includes borderRadius", r.twoAll.borderRadius, "4px");
-    t.eq("second node get.stringAll serializes declarations", r.twoStringAll, "background: red; border-radius: 4px;");
-  },
-},
+        t.eq("second node point getter reads background", r.twoBackground, "red");
+        t.eq("second node point getter reads borderRadius", r.twoBorderRadius, "4px");
+        t.eq("second node get.all includes background", r.twoAll.background, "red");
+        t.eq("second node get.all includes borderRadius", r.twoAll.borderRadius, "4px");
+        t.eq("second node get.stringAll serializes declarations", r.twoStringAll, "background: red; border-radius: 4px;");
+      },
+    },
     {
       suite: SUITE,
       name: "css surface: selector getter sees values written after getter creation",
@@ -628,7 +628,574 @@ export function livetree_css_refinements(): TestSuite {
   return make_livetree_suite(SUITE, cases);
 }
 
+export function livetree_css_new_getters(): TestSuite {
+  const SUITE = "livetree-18/new-css-vars-get-sel";
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: `css surface: get.property("all") reads actual CSS all property`,
+      dom: true,
+      fixture: "css-selectors",
+      sub: "get-property-css-all",
+
+      html: `
+      <main id="root">
+        <div id="box"></div>
+      </main>
+    `,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setProp("all", "unset");
+
+        (tree as any).__result = {
+          cssAllProperty: box.css.get.property("all"),
+          bulkAll: box.css.get.all(),
+          bulkAllType: typeof box.css.get.all(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("CSS all property is readable through property()", r.cssAllProperty, "unset");
+        t.eq("bulk get.all remains object-returning", r.bulkAllType, "object");
+        t.eq("bulk get.all does not collide with CSS all property", r.bulkAll.all, "unset");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "css surface: selector get.all preserves custom properties",
+      dom: true,
+      fixture: "css-selectors",
+      sub: "selector-get-all-custom-properties",
+
+      html: `
+      <main id="root">
+        <div id="test-div">target</div>
+      </main>
+    `,
+
+      async act(tree) {
+        const root = tree.find.must.byId("root");
+        const selected = root.css.selector("& > #test-div");
+
+        selected.setMany({
+          "--tone": "red",
+          background: "var(--tone)",
+        });
+
+        const all = selected.get.all();
+
+        selected.clear();
+        selected.setMany(all);
+
+        (tree as any).__result = {
+          all,
+          tone: selected.get.var("tone"),
+          background: selected.get.background(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("custom property is preserved in get.all", r.all["--tone"], "red");
+        t.eq("normal property is preserved in get.all", r.all.background, "var(--tone)");
+        t.eq("custom property round-trips through setMany", r.tone, "red");
+        t.eq("normal property round-trips through setMany", r.background, "var(--tone)");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "css surface: selector get.stringAll serializes custom properties exactly",
+      dom: true,
+      fixture: "css-selectors",
+      sub: "selector-string-all-custom-properties",
+
+      html: `
+      <main id="root">
+        <div id="test-div">target</div>
+      </main>
+    `,
+
+      async act(tree) {
+        const root = tree.find.must.byId("root");
+        const selected = root.css.selector("& > #test-div");
+
+        selected.setMany({
+          "--tone": "red",
+          background: "var(--tone)",
+        });
+
+        (tree as any).__result = {
+          stringAll: selected.get.stringAll(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq(
+          "custom property string serializes exactly",
+          r.stringAll,
+          "--tone: red; background: var(--tone);",
+        );
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "css surface: setMany object key without ampersand is ignored without throwing",
+      dom: true,
+      fixture: "css-selectors",
+      sub: "setmany-dot-selector-without-ampersand-ignored",
+
+      html: `
+      <main id="root">
+        <div class="child" id="child">target</div>
+      </main>
+    `,
+
+      async act(tree) {
+        const root = tree.find.must.byId("root");
+
+        root.css.setMany({
+          ".child": {
+            color: "red",
+          },
+        });
+
+        (tree as any).__result = {
+          childColor: root.css.selector(" .child").get.color(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("object-valued non-ampersand selector key is ignored", r.childColor, undefined);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "css surface: selector clear empties point, all, and stringAll reads",
+      dom: true,
+      fixture: "css-selectors",
+      sub: "selector-clear-empties-getters",
+
+      html: `
+      <main id="root">
+        <div id="test-div">target</div>
+      </main>
+    `,
+
+      async act(tree) {
+        const root = tree.find.must.byId("root");
+        const selected = root.css.selector("& > #test-div");
+
+        selected.setMany({
+          color: "red",
+          background: "black",
+        });
+
+        selected.clear();
+
+        (tree as any).__result = {
+          color: selected.get.color(),
+          allLength: Object.keys(selected.get.all()).length,
+          stringAll: selected.get.stringAll(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("selector point read is cleared", r.color, undefined);
+        t.eq("selector get.all is cleared", r.allLength, 0);
+        t.eq("selector get.stringAll is cleared", r.stringAll, "");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "css surface: get.all returns a defensive snapshot",
+      dom: true,
+      fixture: "css-selectors",
+      sub: "get-all-defensive-snapshot",
+
+      html: `
+      <main id="root">
+        <div id="box"></div>
+      </main>
+    `,
+
+      async act(tree) {
+        const box = tree.find.must.byId("box");
+
+        box.css.setMany({
+          background: "red",
+          borderRadius: "0",
+        });
+
+        const all = box.css.get.all();
+        const mutable: Record<string, string> = { ...all };
+        mutable.background = "blue";
+        mutable.borderRadius = "999px";
+
+        (tree as any).__result = {
+          mutatedBackground: mutable.background,
+          mutatedBorderRadius: mutable.borderRadius,
+          storedBackground: box.css.get.background(),
+          storedBorderRadius: box.css.get.borderRadius(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("local snapshot copy was mutated", r.mutatedBackground, "blue");
+        t.eq("local snapshot copy borderRadius was mutated", r.mutatedBorderRadius, "999px");
+        t.eq("stored background is unchanged", r.storedBackground, "red");
+        t.eq("stored borderRadius is unchanged", r.storedBorderRadius, "0");
+      },
+    },
 
 
 
+  ];
+  return make_livetree_suite(SUITE, cases);
+}
 
+
+
+export function livetree_find_more(): TestSuite {
+  const SUITE = "livetree-18/more-find-findall";
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "find surface: byId hit, miss, and must semantics",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "find-by-id-semantics",
+
+      html: `
+      <main id="root">
+        <section id="alpha"></section>
+        <section id="beta"></section>
+      </main>
+    `,
+
+      async act(tree) {
+        let mustMissThrows = false;
+
+        try {
+          tree.find.must.byId("missing");
+        } catch {
+          mustMissThrows = true;
+        }
+
+        (tree as any).__result = {
+          alphaId: tree.find.byId("alpha")?.node._attrs.id,
+          missing: tree.find.byId("missing"),
+          mustAlphaId: tree.find.must.byId("alpha").node._attrs.id,
+          mustMissThrows,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("find.byId hits existing node", r.alphaId, "alpha");
+        t.eq("find.byId miss returns undefined", r.missing, undefined);
+        t.eq("find.must.byId hits existing node", r.mustAlphaId, "alpha");
+        t.eq("find.must.byId throws on miss", r.mustMissThrows, true);
+      },
+    },
+
+
+    {
+      suite: SUITE,
+      name: "find surface: byAttrs hit, miss, and must semantics",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "find-by-attrs-semantics",
+
+      html: `
+      <main id="root">
+        <article id="first" data-kind="card" data-rank="1"></article>
+        <article id="second" data-kind="card" data-rank="2"></article>
+        <aside id="third" data-kind="note" data-rank="3"></aside>
+      </main>
+    `,
+
+      async act(tree) {
+        let mustMissThrows = false;
+
+        try {
+          tree.find.must.byAttribute("data-kind", "missing");
+        } catch {
+          mustMissThrows = true;
+        }
+
+        (tree as any).__result = {
+          firstCardId: tree.find.byAttribute("data-kind", "card")?.node._attrs.id,
+          rankTwoId: tree.find.byAttribute("data-rank", "2")?.node._attrs.id,
+          missing: tree.find.byAttribute("data-kind", "missing"),
+          mustCardId: tree.find.must.byAttribute("data-kind", "card").node._attrs.id,
+          mustMissThrows,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("find.byAttrs returns first matching attr value", r.firstCardId, "first");
+        t.eq("find.byAttrs can match another attr", r.rankTwoId, "second");
+        t.eq("find.byAttrs miss returns undefined", r.missing, undefined);
+        t.eq("find.must.byAttrs hits first matching attr value", r.mustCardId, "first");
+        t.eq("find.must.byAttrs throws on miss", r.mustMissThrows, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "find surface: byFlags hit, miss, and must semantics",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "find-by-flags-semantics",
+
+      html: `
+      <main id="root">
+        <button id="save" disabled>save</button>
+        <button id="cancel">cancel</button>
+      </main>
+    `,
+
+      async act(tree) {
+        let mustMissThrows = false;
+
+        try {
+          tree.find.must.byFlag("hidden");
+        } catch {
+          mustMissThrows = true;
+        }
+
+        (tree as any).__result = {
+          disabledId: tree.find.byFlag("disabled")?.node._attrs.id,
+          hidden: tree.find.byFlag("hidden"),
+          mustDisabledId: tree.find.must.byFlag("disabled").node._attrs.id,
+          mustMissThrows,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("find.byFlags hits boolean-present attr", r.disabledId, "save");
+        t.eq("find.byFlags miss returns undefined", r.hidden, undefined);
+        t.eq("find.must.byFlags hits boolean-present attr", r.mustDisabledId, "save");
+        t.eq("find.must.byFlags throws on miss", r.mustMissThrows, true);
+      },
+    },
+    {
+      suite: SUITE,
+      name: "findAll surface: byId returns TreeSelector and empty selector on miss",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "findall-by-id-semantics",
+
+      html: `
+      <main id="root">
+        <section id="alpha"></section>
+        <section id="beta"></section>
+      </main>
+    `,
+
+      async act(tree) {
+        const alpha = tree.findAll.byId("alpha");
+        const missing = tree.findAll.byId("missing");
+
+        (tree as any).__result = {
+          alphaLength: alpha.length,
+          alphaId: alpha.first()?.node._attrs.id,
+
+          missingLength: missing.length,
+          missingFirst: missing.first(),
+          missingIsTreeSelector:
+            typeof missing.length === "number"
+            && typeof missing.first === "function"
+            && typeof missing.at === "function",
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("findAll.byId returns one match for unique id", r.alphaLength, 1);
+        t.eq("findAll.byId preserves hit identity", r.alphaId, "alpha");
+        t.eq("findAll.byId miss returns empty TreeSelector", r.missingLength, 0);
+        t.eq("findAll.byId miss first() is undefined", r.missingFirst, undefined);
+        t.eq("findAll.byId miss is still a TreeSelector", r.missingIsTreeSelector, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "findAll surface: byAttribute preserves order and returns empty TreeSelector on miss",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "findall-by-attribute-semantics",
+
+      html: `
+      <main id="root">
+        <article id="first" data-kind="card"></article>
+        <article id="second" data-kind="card"></article>
+        <aside id="third" data-kind="note"></aside>
+      </main>
+    `,
+
+      async act(tree) {
+        const cards = tree.findAll.byAttribute("data-kind", "card");
+        const notes = tree.findAll.byAttribute("data-kind", "note");
+        const missing = tree.findAll.byAttribute("data-kind", "missing");
+
+        (tree as any).__result = {
+          cardLength: cards.length,
+          cardIds: cards.map((item) => item.node._attrs.id),
+
+          noteLength: notes.length,
+          noteIds: notes.map((item) => item.node._attrs.id),
+
+          missingLength: missing.length,
+          missingFirst: missing.first(),
+          missingIsTreeSelector:
+            typeof missing.length === "number"
+            && typeof missing.first === "function"
+            && typeof missing.at === "function",
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("findAll.byAttribute finds two card matches", r.cardLength, 2);
+        t.eq("findAll.byAttribute preserves first match order", r.cardIds[0], "first");
+        t.eq("findAll.byAttribute preserves second match order", r.cardIds[1], "second");
+
+        t.eq("findAll.byAttribute finds singleton attr match", r.noteLength, 1);
+        t.eq("findAll.byAttribute preserves singleton identity", r.noteIds[0], "third");
+
+        t.eq("findAll.byAttribute miss returns empty TreeSelector", r.missingLength, 0);
+        t.eq("findAll.byAttribute miss first() is undefined", r.missingFirst, undefined);
+        t.eq("findAll.byAttribute miss is still a TreeSelector", r.missingIsTreeSelector, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "findAll surface: byFlag preserves order and returns empty TreeSelector on miss",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "findall-by-flag-semantics",
+
+      html: `
+      <main id="root">
+        <button id="one" disabled>one</button>
+        <button id="two" disabled>two</button>
+        <button id="three">three</button>
+      </main>
+    `,
+
+      async act(tree) {
+        const disabled = tree.findAll.byFlag("disabled");
+        const hidden = tree.findAll.byFlag("hidden");
+
+        (tree as any).__result = {
+          disabledLength: disabled.length,
+          disabledIds: disabled.map((item) => item.node._attrs.id),
+
+          hiddenLength: hidden.length,
+          hiddenFirst: hidden.first(),
+          hiddenIsTreeSelector:
+            typeof hidden.length === "number"
+            && typeof hidden.first === "function"
+            && typeof hidden.at === "function",
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("findAll.byFlag finds two disabled matches", r.disabledLength, 2);
+        t.eq("findAll.byFlag preserves first match order", r.disabledIds[0], "one");
+        t.eq("findAll.byFlag preserves second match order", r.disabledIds[1], "two");
+
+        t.eq("findAll.byFlag miss returns empty TreeSelector", r.hiddenLength, 0);
+        t.eq("findAll.byFlag miss first() is undefined", r.hiddenFirst, undefined);
+        t.eq("findAll.byFlag miss is still a TreeSelector", r.hiddenIsTreeSelector, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "findAll surface: TreeSelector items are independent LiveTree handles",
+      dom: true,
+      fixture: "find-matrix",
+      sub: "findall-selector-items-are-livetrees",
+
+      html: `
+      <main id="root">
+        <div id="one" data-kind="item"></div>
+        <div id="two" data-kind="item"></div>
+      </main>
+    `,
+
+      async act(tree) {
+        const items = tree.findAll.must.byAttribute("data-kind", "item");
+
+        items.first()?.css.setMany({
+          background: "red",
+        });
+
+        items.at(1)?.css.setMany({
+          background: "blue",
+        });
+
+        (tree as any).__result = {
+          length: items.length,
+          firstId: items.first()?.node._attrs.id,
+          secondId: items.at(1)?.node._attrs.id,
+
+          firstBackground: tree.find.must.byId("one").css.get.background(),
+          secondBackground: tree.find.must.byId("two").css.get.background(),
+
+          itemsIsTreeSelector:
+            typeof items.length === "number"
+            && typeof items.first === "function"
+            && typeof items.at === "function"
+            && typeof items.map === "function",
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("findAll returns a TreeSelector", r.itemsIsTreeSelector, true);
+        t.eq("TreeSelector contains both items", r.length, 2);
+        t.eq("TreeSelector first() returns first match", r.firstId, "one");
+        t.eq("TreeSelector at(1) returns second match", r.secondId, "two");
+
+        t.eq("first returned LiveTree handle can write css", r.firstBackground, "red");
+        t.eq("second returned LiveTree handle can write css independently", r.secondBackground, "blue");
+      },
+    },
+
+
+  ];
+  return make_livetree_suite(SUITE, cases);
+}

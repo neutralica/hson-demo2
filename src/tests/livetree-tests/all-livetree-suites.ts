@@ -17,7 +17,8 @@ import { livetree_canvas, livetree_canvas_stress } from "./livetree-14-canvas";
 import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } from "./livetree-15-canvas-size";
 import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-16-canvas-3";
 import { livetree_css_surfaces_new } from "./livetree-17-new-vars";
-import { livetree_css_refinements } from "./livetree-18-css-refinements";
+import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more } from "./livetree-18-css-refinements";
+import { livetree_tree_selector_surface } from "./livetree-19-tree-selector";
 
 
 /******************************************************
@@ -77,5 +78,9 @@ livetree_canvas_pointer(),
     livetree_document_ownership(),
     livetree_css_surfaces_new(),
     livetree_css_refinements(),
+    livetree_css_new_getters(),
+    livetree_find_more(),
+livetree_tree_selector_surface(),
+
   ] as const;
 }
