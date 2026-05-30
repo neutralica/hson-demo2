@@ -5,6 +5,7 @@ import { CssManager, pseudo_to_suffix, selector_for_quid } from "../../../../hso
 import { canon_to_css_prop, normalize_css_key, normalize_css_value } from "../../../../hson-live/dist/utils/attrs-utils/normalize-css";
 import { normalize_decls, render_rule } from "hson-live/_tests";
 
+const gcss = CssManager.api();
 
 export function unit_test_css(): TestSuite {
   const suite = "unit/css";
@@ -757,35 +758,34 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "selector rule stores pseudo rule in snapshot", () => {
+    make_unit_case(SUITE, "selector rule stores pseudo rule under explicit rule key", () => {
       const m = CssManager.invoke();
       const quid = "__test_css_manager_Q8";
       const key = `unit:${quid}:before`;
 
       cleanup_quid(m, quid);
-      CssManager.api().drop(key);
+      gcss.drop(key);
 
       // CHANGED: pseudos are selector rules now; this replaces the removed
       // setPseudoForQuid storage path.
-      CssManager.api()
+      gcss
         .rule(key, `${selector_for_quid(quid)}::before`)
         .setProp("content", `"X"`);
+      const css = gcss.get(key);
 
-      const css = m.snapshot();
-
-      if (!css.includes(`[data-_quid="${quid}"]::before`)) {
-        CssManager.api().drop(key);
+      if (!css?.includes(`[data-_quid="${quid}"]::before`)) {
+        gcss.drop(key);
         cleanup_quid(m, quid);
-        throw new Error(`snapshot missing ::before selector: ${css}`);
+        throw new Error(`rule missing ::before selector: ${String(css)}`);
       }
 
       if (!css.includes(`content:"X";`)) {
-        CssManager.api().drop(key);
+        gcss.drop(key);
         cleanup_quid(m, quid);
-        throw new Error(`snapshot missing pseudo content:"X"; ${css}`);
+        throw new Error(`rule missing pseudo content:"X"; ${css}`);
       }
 
-      CssManager.api().drop(key);
+      gcss.drop(key);
       cleanup_quid(m, quid);
     }),
 
@@ -796,33 +796,34 @@ export function unit_test_css_manager(): TestSuite {
       const afterKey = `unit:${quid}:after`;
 
       cleanup_quid(m, quid);
-      CssManager.api().drop(beforeKey);
-      CssManager.api().drop(afterKey);
+      gcss.drop(beforeKey);
+      gcss.drop(afterKey);
 
-      CssManager.api()
+      gcss
         .rule(beforeKey, `${selector_for_quid(quid)}::before`)
         .setProp("content", `"A"`);
-      CssManager.api()
+      gcss
         .rule(afterKey, `${selector_for_quid(quid)}::after`)
         .setProp("content", `"B"`);
 
-      CssManager.api().drop(beforeKey);
+      gcss.drop(beforeKey);
 
-      const css = m.snapshot();
+      const beforeCss = gcss.get(beforeKey);
+      const afterCss = gcss.get(afterKey);
 
-      if (css.includes(`[data-_quid="${quid}"]::before`)) {
-        CssManager.api().drop(afterKey);
+      if (beforeCss !== undefined) {
+        gcss.drop(afterKey);
         cleanup_quid(m, quid);
-        throw new Error(`expected ::before removed, css was:\n${css}`);
+        throw new Error(`expected ::before removed, css was:\n${beforeCss}`);
       }
 
-      if (!css.includes(`[data-_quid="${quid}"]::after`)) {
-        CssManager.api().drop(afterKey);
+      if (!afterCss?.includes(`[data-_quid="${quid}"]::after`)) {
+        gcss.drop(afterKey);
         cleanup_quid(m, quid);
-        throw new Error(`expected ::after preserved, css was:\n${css}`);
+        throw new Error(`expected ::after preserved, css was:\n${String(afterCss)}`);
       }
 
-      CssManager.api().drop(afterKey);
+      gcss.drop(afterKey);
       cleanup_quid(m, quid);
     }),
 
@@ -833,24 +834,25 @@ export function unit_test_css_manager(): TestSuite {
       const afterKey = `unit:${quid}:after`;
 
       cleanup_quid(m, quid);
-      CssManager.api().drop(beforeKey);
-      CssManager.api().drop(afterKey);
+      gcss.drop(beforeKey);
+      gcss.drop(afterKey);
 
-      CssManager.api()
+      gcss
         .rule(beforeKey, `${selector_for_quid(quid)}::before`)
         .setProp("content", `"A"`);
-      CssManager.api()
+      gcss
         .rule(afterKey, `${selector_for_quid(quid)}::after`)
         .setProp("content", `"B"`);
 
-      CssManager.api().drop(beforeKey);
-      CssManager.api().drop(afterKey);
+      gcss.drop(beforeKey);
+      gcss.drop(afterKey);
 
-      const css = m.snapshot();
+      const beforeCss = gcss.get(beforeKey);
+      const afterCss = gcss.get(afterKey);
 
-      if (css.includes(`[data-_quid="${quid}"]::before`) || css.includes(`[data-_quid="${quid}"]::after`)) {
+      if (beforeCss !== undefined || afterCss !== undefined) {
         cleanup_quid(m, quid);
-        throw new Error(`expected all selector pseudos removed for ${quid}, css was:\n${css}`);
+        throw new Error(`expected all selector pseudos removed for ${quid}, before=${String(beforeCss)} after=${String(afterCss)}`);
       }
 
       cleanup_quid(m, quid);

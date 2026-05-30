@@ -91,15 +91,14 @@ export function unit_test_more_css(): TestSuite {
                 .rule(q1BeforeKey, `${selector_for_quid(q1)}::before`)
                 .setProp("content", `"A"`);
 
-            m.syncNow();
-            const css = m.snapshot();
+            const q1Rendered = CssManager.api().get(q1BeforeKey);
 
-            if (!css.includes(`[data-_quid="${q1}"]::before`)) {
+            if (!q1Rendered?.includes(`[data-_quid="${q1}"]::before`)) {
                 CssManager.api().drop(q1BeforeKey);
                 throw new Error(`missing q1 pseudo`);
             }
 
-            if (css.includes(`[data-_quid="${q2}"]::before`)) {
+            if (q1Rendered.includes(`[data-_quid="${q2}"]::before`)) {
                 CssManager.api().drop(q1BeforeKey);
                 throw new Error(`pseudo leaked to q2`);
             }
@@ -469,7 +468,7 @@ export function unit_test_parser_helpers(): TestSuite {
                 }
             },
         },
-        
+
 
     ];
 
@@ -481,109 +480,161 @@ export function unit_test_parser_helpers(): TestSuite {
 
 
 export function unit_css_pseudo_unification(): TestSuite {
-  const SUITE = "unit/css/pseudo-unification";
-  return {
-    suite: SUITE,
-      cases: [
-          
-          make_unit_case(SUITE, "global css var key returns declaration-ready var reference", () => {
-    const css = CssManager.api();
-    const name = "__unit_var_key_test";
+    const SUITE = "unit/css/pseudo-unification";
+    return {
+        suite: SUITE,
+        cases: [
 
-    css.var.remove(name);
+            make_unit_case(SUITE, "global css var key returns declaration-ready var reference", () => {
+                const css = CssManager.api();
+                const name = "__unit_var_key_test";
 
-    const key = css.var.key(name);
-    const canon = css.var.name(name);
-    const valueBefore = css.var.value(name);
+                css.var.remove(name);
 
-    if (key !== "var(--__unit_var_key_test)") {
-        throw new Error(`expected var(...) key, got ${key}`);
-    }
+                const key = css.var.key(name);
+                const canon = css.var.name(name);
+                const valueBefore = css.var.value(name);
 
-    if (canon !== "--__unit_var_key_test") {
-        throw new Error(`expected canonical name, got ${String(canon)}`);
-    }
+                if (key !== "var(--__unit_var_key_test)") {
+                    throw new Error(`expected var(...) key, got ${key}`);
+                }
 
-    if (valueBefore !== undefined) {
-        throw new Error(`expected unset var value to be undefined, got ${valueBefore}`);
-    }
+                if (canon !== "--__unit_var_key_test") {
+                    throw new Error(`expected canonical name, got ${String(canon)}`);
+                }
 
-    css.var.set(name, "oklch(75% 0.06 300)");
+                if (valueBefore !== undefined) {
+                    throw new Error(`expected unset var value to be undefined, got ${valueBefore}`);
+                }
 
-    const valueAfter = css.var.value(name);
+                css.var.set(name, "oklch(75% 0.06 300)");
 
-    if (valueAfter !== "oklch(75% 0.06 300)") {
-        css.var.remove(name);
-        throw new Error(`expected stored declaration value, got ${String(valueAfter)}`);
-    }
+                const valueAfter = css.var.value(name);
 
-    if (css.var.key(name) !== key) {
-        css.var.remove(name);
-        throw new Error(`var key should remain stable after set`);
-    }
+                if (valueAfter !== "oklch(75% 0.06 300)") {
+                    css.var.remove(name);
+                    throw new Error(`expected stored declaration value, got ${String(valueAfter)}`);
+                }
 
-    css.var.remove(name);
-          }),
-          make_unit_case(SUITE, "global css var key rejects invalid custom property names", () => {
-    const css = CssManager.api();
+                if (css.var.key(name) !== key) {
+                    css.var.remove(name);
+                    throw new Error(`var key should remain stable after set`);
+                }
 
-    let threw = false;
+                css.var.remove(name);
+            }),
+            make_unit_case(SUITE, "global css var key rejects invalid custom property names", () => {
+                const css = CssManager.api();
 
-    try {
-        css.var.key("");
-    } catch {
-        threw = true;
-    }
+                let threw = false;
 
-    if (!threw) {
-        throw new Error(`expected css.var.key("") to throw`);
-    }
-          }),
-          make_unit_case(SUITE, "global css var value remove clears stored declaration", () => {
-    const css = CssManager.api();
-    const name = "__unit_var_remove_test";
+                try {
+                    css.var.key("");
+                } catch {
+                    threw = true;
+                }
 
-    css.var.set(name, "red");
+                if (!threw) {
+                    throw new Error(`expected css.var.key("") to throw`);
+                }
+            }),
+            make_unit_case(SUITE, "global css var value remove clears stored declaration", () => {
+                const css = CssManager.api();
+                const name = "__unit_var_remove_test";
 
-    if (css.var.value(name) !== "red") {
-        css.var.remove(name);
-        throw new Error(`expected stored value before remove`);
-    }
+                css.var.set(name, "red");
 
-    css.var.remove(name);
+                if (css.var.value(name) !== "red") {
+                    css.var.remove(name);
+                    throw new Error(`expected stored value before remove`);
+                }
 
-    if (css.var.value(name) !== undefined) {
-        throw new Error(`expected undefined after remove, got ${String(css.var.value(name))}`);
-    }
-          }),
-          
-          
-          
-        make_unit_case(SUITE, "selector rule drop is idempotent", () => {
-    const m = CssManager.invoke();
-    const quid = "__test_drop_idempotent";
-    const key = `unit:${quid}:before`;
+                css.var.remove(name);
 
-    cleanup_quid(m, quid);
-    CssManager.api().drop(key);
+                if (css.var.value(name) !== undefined) {
+                    throw new Error(`expected undefined after remove, got ${String(css.var.value(name))}`);
+                }
+            }),
 
-    CssManager.api()
-        .rule(key, `${selector_for_quid(quid)}::before`)
-        .setProp("content", `"X"`);
 
-    CssManager.api().drop(key);
-    CssManager.api().drop(key);
 
-    const css = m.snapshot();
+            make_unit_case(SUITE, "selector rule drop is idempotent", () => {
+                const m = CssManager.invoke();
+                const quid = "__test_drop_idempotent";
+                const key = `unit:${quid}:before`;
 
-    if (css.includes(`[data-_quid="${quid}"]::before`)) {
-        cleanup_quid(m, quid);
-        throw new Error(`expected selector rule dropped idempotently, css was:\n${css}`);
-    }
+                cleanup_quid(m, quid);
+                CssManager.api().drop(key);
 
-    cleanup_quid(m, quid);
-        }),
-          
-    ],
-  };
+                CssManager.api()
+                    .rule(key, `${selector_for_quid(quid)}::before`)
+                    .setProp("content", `"X"`);
+
+                CssManager.api().drop(key);
+                CssManager.api().drop(key);
+
+                const css = m.snapshot();
+
+                if (css.includes(`[data-_quid="${quid}"]::before`)) {
+                    cleanup_quid(m, quid);
+                    throw new Error(`expected selector rule dropped idempotently, css was:\n${css}`);
+                }
+
+                cleanup_quid(m, quid);
+            }),
+            make_unit_case(SUITE, "selector rule dropByPrefix removes owned keys only", () => {
+                const gcss = CssManager.api();
+                const prefix = "unit:drop-prefix:";
+                const ownedOne = `${prefix}one`;
+                const ownedTwo = `${prefix}two`;
+                const neighbor = "unit:drop-prefix-neighbor:one";
+
+                gcss.drop(ownedOne);
+                gcss.drop(ownedTwo);
+                gcss.drop(neighbor);
+
+                gcss
+                    .rule(ownedOne, `.owned-one`)
+                    .setProp("color", "red");
+                gcss
+                    .rule(ownedTwo, `.owned-two`)
+                    .setProp("color", "blue");
+                gcss
+                    .rule(neighbor, `.neighbor`)
+                    .setProp("color", "green");
+
+                gcss.dropByPrefix(prefix);
+
+                const ownedOneCss = gcss.get(ownedOne);
+                const ownedTwoCss = gcss.get(ownedTwo);
+                const neighborCss = gcss.get(neighbor);
+
+                if (ownedOneCss !== undefined || ownedTwoCss !== undefined) {
+                    gcss.drop(ownedOne);
+                    gcss.drop(ownedTwo);
+                    gcss.drop(neighbor);
+                    throw new Error(`expected owned prefix rules removed, one=${String(ownedOneCss)} two=${String(ownedTwoCss)}`);
+                }
+
+                if (!neighborCss?.includes(`.neighbor`)) {
+                    gcss.drop(neighbor);
+                    throw new Error(`expected neighboring key preserved, got ${String(neighborCss)}`);
+                }
+
+                // CHANGED: prefix cleanup should be safe to repeat.
+                gcss.dropByPrefix(prefix);
+
+                if (!gcss.get(neighbor)?.includes(`.neighbor`)) {
+                    gcss.drop(neighbor);
+                    throw new Error(`expected neighboring key preserved after idempotent repeat`);
+                }
+
+                gcss.drop(neighbor);
+            }),
+
+
+
+            
+        ],
+    };
 }
