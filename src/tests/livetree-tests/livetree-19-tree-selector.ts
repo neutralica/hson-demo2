@@ -528,3 +528,332 @@ export function livetree_tree_selector_surface(): TestSuite {
 
     return make_livetree_suite(SUITE, cases);
 }
+
+
+export function livetree_css_pseudo_selector_unification(): TestSuite {
+  const SUITE = "livetree/css-pseudo-selector-unification";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "pseudo shorthand write is readable through selector handle",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "shorthand-before-selector-read",
+
+      html: `
+        <main id="root">
+          <div id="target" data-label="HELLO">world</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        target.css.setMany({
+          __before: {
+            content: "attr(data-label)",
+            color: "red",
+          },
+        });
+
+        const before = target.css.selector("&::before");
+
+        (tree as any).__result = {
+          content: before.get.property("content"),
+          color: before.get.color(),
+          all: before.get.all(),
+          stringAll: before.get.stringAll(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("selector getter reads shorthand pseudo content", r.content, "attr(data-label)");
+        t.eq("selector getter reads shorthand pseudo color", r.color, "red");
+        t.eq("get.all includes pseudo content", r.all.content, "attr(data-label)");
+        t.eq("get.all includes pseudo color", r.all.color, "red");
+        t.eq("get.stringAll includes pseudo content", r.stringAll.includes("content: attr(data-label);"), true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "selector pseudo write round-trips through selector getter",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "selector-before-roundtrip",
+
+      html: `
+        <main id="root">
+          <div id="target">world</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+        const before = target.css.selector("&::before");
+
+        before.setMany({
+          content: `"A"`,
+          backgroundColor: "black",
+          color: "white",
+        });
+
+        const all = before.get.all();
+
+        (tree as any).__result = {
+          content: before.get.property("content"),
+          backgroundColor: before.get.backgroundColor(),
+          color: before.get.color(),
+          all,
+          stringAll: before.get.stringAll(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("selector pseudo content round-trips", r.content, `"A"`);
+        t.eq("selector pseudo backgroundColor round-trips", r.backgroundColor, "black");
+        t.eq("selector pseudo color round-trips", r.color, "white");
+        t.eq("get.all content matches", r.all.content, `"A"`);
+        t.eq("get.stringAll includes background-color", r.stringAll.includes("background-color: black;"), true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "pseudo shorthand and selector writes merge into one rule",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "shorthand-selector-merge",
+
+      html: `
+        <main id="root">
+          <div id="target">world</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        target.css.setMany({
+          __before: {
+            content: `"A"`,
+            color: "red",
+          },
+        });
+
+        target.css.selector("&::before").setMany({
+          color: "blue",
+          background: "black",
+        });
+
+        const before = target.css.selector("&::before");
+
+        (tree as any).__result = {
+          content: before.get.property("content"),
+          color: before.get.color(),
+          background: before.get.background(),
+          all: before.get.all(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("content from shorthand remains", r.content, `"A"`);
+        t.eq("selector write overrides shared property", r.color, "blue");
+        t.eq("selector write adds new property", r.background, "black");
+        t.eq("get.all sees merged content", r.all.content, `"A"`);
+        t.eq("get.all sees merged background", r.all.background, "black");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "pseudo shorthand supports pseudo-class suffixes through selector getter",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "shorthand-hover-selector-read",
+
+      html: `
+        <main id="root">
+          <button id="target">press</button>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        target.css.setMany({
+          _hover: {
+            color: "lime",
+            background: "black",
+          },
+        });
+
+        const hover = target.css.selector("&:hover");
+
+        (tree as any).__result = {
+          color: hover.get.color(),
+          background: hover.get.background(),
+          all: hover.get.all(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("hover shorthand is readable through selector getter", r.color, "lime");
+        t.eq("hover shorthand background is readable through selector getter", r.background, "black");
+        t.eq("hover get.all includes color", r.all.color, "lime");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "selector clear removes pseudo selector rule only",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "selector-clear-pseudo-only",
+
+      html: `
+        <main id="root">
+          <div id="target">world</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+        const before = target.css.selector("&::before");
+
+        target.css.setMany({
+          color: "red",
+          __before: {
+            content: `"A"`,
+            color: "blue",
+          },
+        });
+
+        before.clear();
+
+        (tree as any).__result = {
+          baseColor: target.css.get.color(),
+          beforeContent: before.get.property("content"),
+          beforeColor: before.get.color(),
+          beforeAll: before.get.all(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("base color remains after selector clear", r.baseColor, "red");
+        t.eq("before content cleared", r.beforeContent, undefined);
+        t.eq("before color cleared", r.beforeColor, undefined);
+        t.eq("before get.all is empty", Object.keys(r.beforeAll).length, 0);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "base css clear should clear owned pseudo selector rules",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "base-clear-clears-owned-pseudos",
+
+      html: `
+        <main id="root">
+          <div id="target">world</div>
+          <div id="child">child</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+        const child = tree.find.must.byId("child");
+
+        target.css.setMany({
+          color: "red",
+          __before: {
+            content: `"A"`,
+            color: "blue",
+          },
+        });
+
+        child.css.setMany({
+          color: "green",
+          __before: {
+            content: `"child"`,
+          },
+        });
+
+        target.css.clear();
+
+        const targetBefore = target.css.selector("&::before");
+        const childBefore = child.css.selector("&::before");
+
+        (tree as any).__result = {
+          targetColor: target.css.get.color(),
+          targetBeforeContent: targetBefore.get.property("content"),
+          targetBeforeColor: targetBefore.get.color(),
+          childColor: child.css.get.color(),
+          childBeforeContent: childBefore.get.property("content"),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("target base color cleared", r.targetColor, undefined);
+        t.eq("target owned pseudo content cleared", r.targetBeforeContent, undefined);
+        t.eq("target owned pseudo color cleared", r.targetBeforeColor, undefined);
+        t.eq("child base color remains", r.childColor, "green");
+        t.eq("child owned pseudo remains", r.childBeforeContent, `"child"`);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "pseudo shorthand auto-content is selector-readable",
+      dom: true,
+      fixture: "css/pseudos",
+      sub: "auto-content-selector-readable",
+
+      html: `
+        <main id="root">
+          <div id="target">world</div>
+        </main>
+      `,
+
+      async act(tree) {
+        const target = tree.find.must.byId("target");
+
+        target.css.setMany({
+          __before: {
+            color: "red",
+          },
+        });
+
+        const before = target.css.selector("&::before");
+
+        (tree as any).__result = {
+          content: before.get.property("content"),
+          color: before.get.color(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("auto-content is written for before shorthand", r.content, `""`);
+        t.eq("other pseudo declaration is preserved", r.color, "red");
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}

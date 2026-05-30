@@ -8,14 +8,13 @@ export const all_unit_tests = () => [
     unit_test_css_manager(),
     unit_test_more_css(),
     unit_test_parser_helpers(),
-    
+unit_css_pseudo_unification(),    
 
 ];
 
 
  export const cleanup_quid = (m: CssManager, quid: string): void => {
     m.clearQuid(quid);
-    m.clearPseudoAllForQuid(quid);
  };
   
 
@@ -37,7 +36,7 @@ export function make_unit_case(
 
 import type { TestCase, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import type { CssManager } from "hson-live";
-import { unit_test_more_css, unit_test_parser_helpers } from "./unit-tests-2";
+import { unit_css_pseudo_unification, unit_test_more_css, unit_test_parser_helpers } from "./unit-tests-2";
 
 export function UNIT_TEST_TEMPLATE(): TestSuite {
   const SUITE = "[INSERT NAME]";

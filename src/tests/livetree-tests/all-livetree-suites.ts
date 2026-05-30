@@ -18,7 +18,7 @@ import { livetree_canvas_clear, livetree_canvas_display, livetree_canvas_plot } 
 import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree-16-canvas-3";
 import { livetree_css_surfaces_new } from "./livetree-17-new-vars";
 import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more } from "./livetree-18-css-refinements";
-import { livetree_tree_selector_surface } from "./livetree-19-tree-selector";
+import { livetree_css_pseudo_selector_unification, livetree_tree_selector_surface } from "./livetree-19-tree-selector";
 
 
 /******************************************************
@@ -74,13 +74,14 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_canvas_display(),
     livetree_canvas_clear(),
     livetree_canvas_plot(),
-livetree_canvas_pointer(),
+    livetree_canvas_pointer(),
     livetree_document_ownership(),
     livetree_css_surfaces_new(),
     livetree_css_refinements(),
     livetree_css_new_getters(),
     livetree_find_more(),
-livetree_tree_selector_surface(),
+    livetree_tree_selector_surface(),
+    livetree_css_pseudo_selector_unification(),
 
   ] as const;
 }

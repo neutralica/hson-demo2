@@ -757,71 +757,100 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "setPseudoForQuid stores pseudo rule in snapshot", () => {
+    make_unit_case(SUITE, "selector rule stores pseudo rule in snapshot", () => {
       const m = CssManager.invoke();
       const quid = "__test_css_manager_Q8";
+      const key = `unit:${quid}:before`;
 
       cleanup_quid(m, quid);
+      CssManager.api().drop(key);
 
-      m.setPseudoForQuid(quid, "__before", "content", `"X"`);
+      // CHANGED: pseudos are selector rules now; this replaces the removed
+      // setPseudoForQuid storage path.
+      CssManager.api()
+        .rule(key, `${selector_for_quid(quid)}::before`)
+        .setProp("content", `"X"`);
 
       const css = m.snapshot();
 
       if (!css.includes(`[data-_quid="${quid}"]::before`)) {
+        CssManager.api().drop(key);
         cleanup_quid(m, quid);
         throw new Error(`snapshot missing ::before selector: ${css}`);
       }
 
       if (!css.includes(`content:"X";`)) {
+        CssManager.api().drop(key);
         cleanup_quid(m, quid);
         throw new Error(`snapshot missing pseudo content:"X"; ${css}`);
       }
 
+      CssManager.api().drop(key);
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "clearPseudoQuid removes only one pseudo bucket", () => {
+    make_unit_case(SUITE, "selector rule drop removes only one pseudo selector", () => {
       const m = CssManager.invoke();
       const quid = "__test_css_manager_Q9";
+      const beforeKey = `unit:${quid}:before`;
+      const afterKey = `unit:${quid}:after`;
 
       cleanup_quid(m, quid);
+      CssManager.api().drop(beforeKey);
+      CssManager.api().drop(afterKey);
 
-      m.setPseudoForQuid(quid, "__before", "content", `"A"`);
-      m.setPseudoForQuid(quid, "__after", "content", `"B"`);
+      CssManager.api()
+        .rule(beforeKey, `${selector_for_quid(quid)}::before`)
+        .setProp("content", `"A"`);
+      CssManager.api()
+        .rule(afterKey, `${selector_for_quid(quid)}::after`)
+        .setProp("content", `"B"`);
 
-      m.clearPseudoQuid(quid, "__before");
+      CssManager.api().drop(beforeKey);
 
       const css = m.snapshot();
 
       if (css.includes(`[data-_quid="${quid}"]::before`)) {
+        CssManager.api().drop(afterKey);
         cleanup_quid(m, quid);
         throw new Error(`expected ::before removed, css was:\n${css}`);
       }
 
       if (!css.includes(`[data-_quid="${quid}"]::after`)) {
+        CssManager.api().drop(afterKey);
         cleanup_quid(m, quid);
         throw new Error(`expected ::after preserved, css was:\n${css}`);
       }
 
+      CssManager.api().drop(afterKey);
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "clearPseudoAllForQuid removes all pseudos for one quid", () => {
+    make_unit_case(SUITE, "selector rule drops remove all pseudo selectors for one quid", () => {
       const m = CssManager.invoke();
       const quid = "__test_css_manager_Q10";
+      const beforeKey = `unit:${quid}:before`;
+      const afterKey = `unit:${quid}:after`;
 
       cleanup_quid(m, quid);
+      CssManager.api().drop(beforeKey);
+      CssManager.api().drop(afterKey);
 
-      m.setPseudoForQuid(quid, "__before", "content", `"A"`);
-      m.setPseudoForQuid(quid, "__after", "content", `"B"`);
+      CssManager.api()
+        .rule(beforeKey, `${selector_for_quid(quid)}::before`)
+        .setProp("content", `"A"`);
+      CssManager.api()
+        .rule(afterKey, `${selector_for_quid(quid)}::after`)
+        .setProp("content", `"B"`);
 
-      m.clearPseudoAllForQuid(quid);
+      CssManager.api().drop(beforeKey);
+      CssManager.api().drop(afterKey);
 
       const css = m.snapshot();
 
       if (css.includes(`[data-_quid="${quid}"]::before`) || css.includes(`[data-_quid="${quid}"]::after`)) {
         cleanup_quid(m, quid);
-        throw new Error(`expected all pseudos removed for ${quid}, css was:\n${css}`);
+        throw new Error(`expected all selector pseudos removed for ${quid}, css was:\n${css}`);
       }
 
       cleanup_quid(m, quid);

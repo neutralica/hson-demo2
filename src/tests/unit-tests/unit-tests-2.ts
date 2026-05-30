@@ -6,6 +6,7 @@ import { _parse_selector, _parse_style_string, _serialize_style } from "hson-liv
 import { øfontSize } from "../../app/core/consts/ui-consts";
 import { render_rule, normalize_decls } from "hson-live/_tests";
 import { normalize_css_value, normalize_css_key, canon_to_css_prop } from "../../../../hson-live/dist/utils/attrs-utils/normalize-css";
+import { selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
 
 export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
@@ -84,19 +85,26 @@ export function unit_test_more_css(): TestSuite {
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
 
-            m.setPseudoForQuid(q1, "__before", "content", `"A"`);
+            // CHANGED: pseudo shorthand now routes through selector-rule storage.
+            const q1BeforeKey = `unit:${q1}:before`;
+            CssManager.api()
+                .rule(q1BeforeKey, `${selector_for_quid(q1)}::before`)
+                .setProp("content", `"A"`);
 
             m.syncNow();
             const css = m.snapshot();
 
             if (!css.includes(`[data-_quid="${q1}"]::before`)) {
+                CssManager.api().drop(q1BeforeKey);
                 throw new Error(`missing q1 pseudo`);
             }
 
             if (css.includes(`[data-_quid="${q2}"]::before`)) {
+                CssManager.api().drop(q1BeforeKey);
                 throw new Error(`pseudo leaked to q2`);
             }
 
+            CssManager.api().drop(q1BeforeKey);
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
         }),
@@ -157,9 +165,14 @@ export function unit_test_more_css(): TestSuite {
 
             m.setForQuid(quid, "color", "green");
 
-            m.setPseudoForQuid(quid, "__before", "content", `"X"`);
+            // CHANGED: selector-backed pseudo rules are independent from base
+            // QUID declarations and can be dropped without touching base state.
+            const beforeKey = `unit:${quid}:before`;
+            CssManager.api()
+                .rule(beforeKey, `${selector_for_quid(quid)}::before`)
+                .setProp("content", `"X"`);
 
-            m.clearPseudoQuid(quid, "__before");
+            CssManager.api().drop(beforeKey);
 
             const all = m.getAllForQuid(quid);
 
@@ -464,4 +477,113 @@ export function unit_test_parser_helpers(): TestSuite {
         suite: SUITE,
         cases,
     };
+}
+
+
+export function unit_css_pseudo_unification(): TestSuite {
+  const SUITE = "unit/css/pseudo-unification";
+  return {
+    suite: SUITE,
+      cases: [
+          
+          make_unit_case(SUITE, "global css var key returns declaration-ready var reference", () => {
+    const css = CssManager.api();
+    const name = "__unit_var_key_test";
+
+    css.var.remove(name);
+
+    const key = css.var.key(name);
+    const canon = css.var.name(name);
+    const valueBefore = css.var.value(name);
+
+    if (key !== "var(--__unit_var_key_test)") {
+        throw new Error(`expected var(...) key, got ${key}`);
+    }
+
+    if (canon !== "--__unit_var_key_test") {
+        throw new Error(`expected canonical name, got ${String(canon)}`);
+    }
+
+    if (valueBefore !== undefined) {
+        throw new Error(`expected unset var value to be undefined, got ${valueBefore}`);
+    }
+
+    css.var.set(name, "oklch(75% 0.06 300)");
+
+    const valueAfter = css.var.value(name);
+
+    if (valueAfter !== "oklch(75% 0.06 300)") {
+        css.var.remove(name);
+        throw new Error(`expected stored declaration value, got ${String(valueAfter)}`);
+    }
+
+    if (css.var.key(name) !== key) {
+        css.var.remove(name);
+        throw new Error(`var key should remain stable after set`);
+    }
+
+    css.var.remove(name);
+          }),
+          make_unit_case(SUITE, "global css var key rejects invalid custom property names", () => {
+    const css = CssManager.api();
+
+    let threw = false;
+
+    try {
+        css.var.key("");
+    } catch {
+        threw = true;
+    }
+
+    if (!threw) {
+        throw new Error(`expected css.var.key("") to throw`);
+    }
+          }),
+          make_unit_case(SUITE, "global css var value remove clears stored declaration", () => {
+    const css = CssManager.api();
+    const name = "__unit_var_remove_test";
+
+    css.var.set(name, "red");
+
+    if (css.var.value(name) !== "red") {
+        css.var.remove(name);
+        throw new Error(`expected stored value before remove`);
+    }
+
+    css.var.remove(name);
+
+    if (css.var.value(name) !== undefined) {
+        throw new Error(`expected undefined after remove, got ${String(css.var.value(name))}`);
+    }
+          }),
+          
+          
+          
+        make_unit_case(SUITE, "selector rule drop is idempotent", () => {
+    const m = CssManager.invoke();
+    const quid = "__test_drop_idempotent";
+    const key = `unit:${quid}:before`;
+
+    cleanup_quid(m, quid);
+    CssManager.api().drop(key);
+
+    CssManager.api()
+        .rule(key, `${selector_for_quid(quid)}::before`)
+        .setProp("content", `"X"`);
+
+    CssManager.api().drop(key);
+    CssManager.api().drop(key);
+
+    const css = m.snapshot();
+
+    if (css.includes(`[data-_quid="${quid}"]::before`)) {
+        cleanup_quid(m, quid);
+        throw new Error(`expected selector rule dropped idempotently, css was:\n${css}`);
+    }
+
+    cleanup_quid(m, quid);
+        }),
+          
+    ],
+  };
 }
