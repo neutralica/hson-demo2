@@ -2,9 +2,10 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, SPECIAL_WORDScss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss } from "./about.css";
+import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
+import { CONSTcol } from "../../../core/consts/ui-consts";
 
 
 
@@ -114,8 +115,31 @@ export function render_inline_code(row: LiveTree, code: string): void {
     row.create.span().css.setMany(css).text.set(s);
   };
 
+  const startsWordAt = (word: string, ix: number): boolean => {
+    // CHANGED: keyword highlighter for code tokens such as `const`.
+    const before = code[ix - 1] ?? "";
+    const after = code[ix + word.length] ?? "";
+
+    const beforeIsWord = /[A-Za-z0-9_$]/.test(before);
+    const afterIsWord = /[A-Za-z0-9_$]/.test(after);
+
+    return code.startsWith(word, ix) && !beforeIsWord && !afterIsWord;
+  };
+
   for (let i = 0; i < code.length; i += 1) {
     const ch = code[i] ?? "";
+
+    // ---- keyword highlighting: only outside quoted strings ----
+    if (inQuote === null && startsWordAt("const", i)) {
+      flush(currentTextCss());
+      row.create.span()
+        .css.setMany({color: CONSTcol})
+        .text.set("const");
+
+      i += "const".length - 1;
+      inType = false;
+      continue;
+    }
 
     // ---- comment start: only when not inside a quoted string ----
     if (inQuote === null) {
@@ -427,7 +451,7 @@ function render_prose_text(host: LiveTree, text: string): void {
 
     host.create.span()
       .classlist.add("md-term")
-      .css.setMany(SPECIAL_WORDScss)
+      // .css.setMany(SPECIAL_WORDScss)
       .text.set(hit);
 
     lastIx = ix + hit.length;

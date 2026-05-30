@@ -26,7 +26,7 @@ export function livetree_css_refinements(): TestSuite {
 
         (tree as any).__result = {
           hasVarSet: typeof css.var.set === "function",
-          hasVarRef: typeof css.var.get === "function",
+          hasVarRef: typeof css.var.key === "function",
           hasKeyframesSet: typeof css.keyframes.set === "function",
           hasKeyframesRenderAll: typeof css.keyframes.renderAll === "function",
           hasAtPropertyRegister: typeof css.atProperty.register === "function",

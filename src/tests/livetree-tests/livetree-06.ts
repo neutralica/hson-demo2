@@ -107,20 +107,21 @@ export function livetree_css_pseudo(): TestSuite {
             },
           });
 
-          await flush_dom();
-
-          const rendered = target.css.get.stringAll();
+          const before = target.css.selector("&::before");
 
           (tree as any).__result = {
-            rendered,
-            preservesRawAttrContent: rendered.includes("content: attr(data-label);"),
+            content: before.get.property("content"),
+            all: before.get.all(),
+            stringAll: before.get.stringAll(),
           };
         },
 
         assert(tree, t) {
           const r = (tree as any).__result;
 
-          t.eq("raw attr() content is preserved in CSS rule", r.preservesRawAttrContent, true);
+          t.eq("raw attr() content is readable from selector getter", r.content, "attr(data-label)");
+          t.eq("raw attr() content is preserved in get.all", r.all.content, "attr(data-label)");
+          t.eq("raw attr() content appears in get.stringAll", r.stringAll.includes("content: attr(data-label);"), true);
         },
       },
       {

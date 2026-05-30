@@ -2,7 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../../core/consts/colors.consts";
-import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $SIDEBAR_WIDTH, CURRENT_OKLCH} from "../../../core/consts/ui-consts";
+import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $SIDEBAR_WIDTH, MENU_OKLCH} from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { GRID_GAPstr, øfontSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
@@ -31,7 +31,7 @@ export const UI_ROOTcss: CssMap = {
 export const MAIN_MENUcss: CssMap = {
   ...FONT_FAM_MONO,
   userSelect: "none",
-  color: CURRENT_OKLCH,
+  color: MENU_OKLCH,
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",

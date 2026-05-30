@@ -7,7 +7,7 @@ import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, LAYOUT_GRIDcss
 import { $ABOUT, $BUILD, $FLEURS, $DS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { $MENU_SHADOW, $PANEL_HIDDEN, CURRENT_OKLCH, CURRENT_OKLCHname, TXTcol_MENU, øfontSize } from "../../../core/consts/ui-consts";
+import { $MENU_SHADOW, $PANEL_HIDDEN, MAIN_OKLCHname, MENU_OKLCH, MENU_OKLCHname, SUBMENU_OKLCHname, BACK_OKLCHname, TXTcol_CODE, TXTcol_MENU, TXTcol_ACTIVE, øfontSize } from "../../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
 import { øCOLS } from "../../../core/consts/ui-consts";
 import { øHSON_COL } from "../../../core/consts/ui-consts";
@@ -44,7 +44,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   stage.empty();
   const gcss = CssManager.api();
 
-  gcss.var.set(CURRENT_OKLCHname, TXTcol_MENU);
+  // CHANGED: seed editable page theme vars from concrete defaults before any
+  // CSS maps that reference var(--...) are mounted.
+  gcss.var.set(MAIN_OKLCHname, TXTcol_CODE);
+  gcss.var.set(MENU_OKLCHname, TXTcol_MENU);
+  gcss.var.set(SUBMENU_OKLCHname, TXTcol_ACTIVE);
+  gcss.var.set(BACK_OKLCHname, øCOLS.backlo);
+
   const demoBox = mk_div_id(stage, $DS.demo)
     .classlist.add($DS.demo)
     .css.setMany(DEMOcss);

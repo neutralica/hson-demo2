@@ -4,7 +4,7 @@
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
 import { $gry_, ACID_WASH_RGBA, bckColor, bcklight, deepBack } from "./colors.consts";
-import { ACID_WASH_OKLCH, OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4 } from "./oklch";
+import { ACID_WASH_OKLCH, OKLCH_FOREST, OKLCH_MUTED_PASTEL, OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4 } from "./oklch";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./oklch";
 import type { Fmt } from "../types/core.types";
 import type { CssMap } from "hson-live/types";
@@ -17,10 +17,11 @@ export const øWATERMARK_FMT_: Record<Fmt, string> = {
 } as const;
 
 export const øHSON_COL = {
-  h: OKLCH_VIBRANT.blueElecky,
-  s: OKLCH_VIBRANT.yellowSodium,
-  o: OKLCH_VIBRANT.roseNeon,
-  n: OKLCH_VIBRANT.mintIce,
+  // h: OKLCH_VIBRANT.blueElecky,
+  h: OKLCH_FLEURS.oxidizedSky,
+  s: OKLCH_VIBRANT.yellowBrass,
+  o: OKLCH_VIBRANT.roseSmoke,
+  n: OKLCH_VIBRANT.mossToxic,
 };
 
 export const øCOL_FOR_FMT_ = {
@@ -40,27 +41,49 @@ export const øfontSize = {
   main: "16px",
 } as const;
 
+export const CURRENT_OKLCHname = "oklch-demo-current";
+export const CURRENT_OKLCH = CssManager.api().var.key(CURRENT_OKLCHname);
 
+// CHANGED: named editable OKLCH theme vars. CURRENT_OKLCH is only the picker
+// preview/current-edit color; these are durable page theme targets. Use `.get()`
+// here because CSS maps need a stable `var(--name)` reference at module load.
+// Use `CssManager.api().var.value(name)` only at runtime when reading a seeded value.
+export const MAIN_OKLCHname = "hson-color-main-text";
+export const MAIN_OKLCH = CssManager.api().var.key(MAIN_OKLCHname);
+
+export const MENU_OKLCHname = "hson-color-menu-text";
+export const MENU_OKLCH = CssManager.api().var.key(MENU_OKLCHname);
+
+export const SUBMENU_OKLCHname = "hson-color-submenu-text";
+export const SUBMENU_OKLCH = CssManager.api().var.key(SUBMENU_OKLCHname);
+
+export const BACK_OKLCHname = "hson-color-panel-back";
+export const BACK_OKLCH = CssManager.api().var.key(BACK_OKLCHname);
+
+// CHANGED: concrete color constants remain concrete defaults. Do not point these
+// at editable CSS vars; helpers like set_alpha() need real color strings.
+// Dynamic page CSS should opt into MAIN_OKLCH / MENU_OKLCH / SUBMENU_OKLCH / BACK_OKLCH.
 // export const TXTcol_MENU = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_MENU = OKLCH_FLEURS.greyLilac;
+export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 export const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_ALT = OKLCH_NEUTRALS.steel;
-export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
+// export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
+export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 
-const gcss = CssManager.api();
-export const CURRENT_OKLCHname = "oklch-demo-current";
-export const CURRENT_OKLCH = CssManager.api().var.get(CURRENT_OKLCHname);
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
 export const TOCcol = TXTcol_GREY;
 
 /* code markdown */
-export const CODE_PARENScol = ACID_WASH_OKLCH.amber;
-export const CODE_PARENS_INNERcol = OKLCH_VIBRANT.blueHorizon;
+export const CODE_ALTcol = OKLCH_FLEURS.oxidizedSky;
+export const CODE_PARENScol =OKLCH_VIBRANT.blueYves;
+export const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
+export const CONSTcol = OKLCH_NEUTRALS.violetTint
 export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
-export const CODE_QUOTEcol = ACID_WASH_OKLCH.smokeRose;
+export const CODE_QUOTEcol =  OKLCH_VIBRANT.redOxide;
 export const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
 export const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
@@ -105,4 +128,3 @@ export const øCOLS = {
   backhi: bckColor,
   bcklight,
 };
-

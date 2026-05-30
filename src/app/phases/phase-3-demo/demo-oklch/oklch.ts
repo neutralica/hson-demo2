@@ -1,7 +1,7 @@
 import { LiveTree, CssManager } from "hson-live";
 import { oklch_to_css } from "./mount-oklch";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget } from "./oklch.types";
-import { CURRENT_OKLCH, CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
+import { CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
 
 
 const css = CssManager.api();
@@ -38,13 +38,14 @@ export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: Oklch
   for (let i = 0; i < model.targets.length; i += 1) {
     const target = model.targets[i];
     const row = rig.targetRows[i];
-    if (!row) continue;
+    if (!row || !target) continue;
 
-    row.text.set(`${target!.label}: ${css.var.get(target!.varName)}`);
+    const targetValue = css.var.value(target.varName) ?? target.initial ?? "";
+    row.text.set(`${target.label}: ${targetValue}`);
+    if (targetValue !== "") row.css.setMany({ color: targetValue });
   }
 };
 
 export const apply_to_target = (target: OklchTarget, state: OklchValues): void => {
   CssManager.api().var.set(target.varName, oklch_to_css(state));
 };
-

@@ -12,7 +12,9 @@ export type OklchChannel = keyof OklchValues;
 export type OklchTarget = Readonly<{
   label: string;
   varName: string;
+  initial: string;
 }>;
+
 
 export type OklchPickerModel = Readonly<{
   state: OklchValues;

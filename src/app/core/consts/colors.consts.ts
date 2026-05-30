@@ -49,10 +49,10 @@ export const deepBack = "rgba(7, 7, 10, 1)"
 const bckColorR = 12;
 const bckColorG = 19;
 const bckColorB = 26;
-export const bcklight = `rgba(${bckColorR * 1.2}, ${bckColorG * 1.2}, ${bckColorB * 1.2}, 1)`;
+export const bcklight = `rgba(${bckColorR * 1.5}, ${bckColorG * 1.5}, ${bckColorB * 1.5}, 1)`;
 
-const bckAlpha = 1;
-export const bckColor = `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${bckAlpha})`;
+export const bckColor = bcklight;
+// export const bckColor = `oklch(0.1831 0.018 248.84 / 1)`;
 
 export const back_w_alpha = (num: number) => `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${num})`;
 export const odd_={

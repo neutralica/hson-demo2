@@ -16,6 +16,7 @@ import {  livetree_document_ownership } from "../../../../tests/livetree-tests/l
 import { livetree_css_surfaces_new } from "../../../../tests/livetree-tests/livetree-17-new-vars";
 import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more } from "../../../../tests/livetree-tests/livetree-18-css-refinements";
 import { livetree_tree_selector_surface } from "../../../../tests/livetree-tests/livetree-19-tree-selector";
+import { livetree_css_pseudo } from "../../../../tests/livetree-tests/livetree-06";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -152,7 +153,8 @@ export function build_suites_for_mode(
       livetree_css_refinements(),
       livetree_css_new_getters(),
       livetree_find_more(),
-      livetree_tree_selector_surface()
+      livetree_tree_selector_surface(),
+      livetree_css_pseudo()
       
     ])
   }

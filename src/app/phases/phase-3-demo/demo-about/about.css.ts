@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch";
-import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -118,7 +118,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
   ...FONT_FAM_MONO,
-  color: TXTcol_CODE,
+  color: CODE_ALTcol,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word",
 } as const;
@@ -285,6 +285,4 @@ export const FLUSH_LISTcss = {
 };
 
 
-export const SPECIAL_WORDScss: CssMap = {
-  fontWeight: "300",
-};
+

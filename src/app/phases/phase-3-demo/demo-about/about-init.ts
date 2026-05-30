@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 import { get_about_toc_open, set_about_toc_open, demo_subscribe } from "../../../state/store2";
 import { TOC_BTNcss, TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss } from "./about.css";
 import type { AboutDocKey } from "./about.types";
-import { type AboutInitTargets, type AboutInitDeps, find_doc } from "./init-helpers";
+import { type AboutInitTargets, type AboutInitDeps, find_doc } from "./about-helpers";
 import { render_md_doc } from "./render-md-doc";
 
 
