@@ -680,7 +680,7 @@ export function livetree_css_new_getters(): TestSuite {
 
         (tree as any).__result = {
           all,
-          tone: selected.get.var("tone"),
+          tone: selected.var.value("tone"),
           background: selected.get.background(),
         };
       },

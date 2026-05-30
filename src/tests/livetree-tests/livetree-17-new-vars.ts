@@ -69,12 +69,12 @@ export function livetree_css_surfaces_new(): TestSuite {
                     fontSize: box.css.get.fontSize(),
                     fontSizeByCamelProperty: box.css.get.property("fontSize"),
                     fontSizeByKebabProperty: box.css.get.property("font-size"),
-                    fontSizeAsVar: box.css.get.var("font-size"),
+                    fontSizeAsVar: box.css.var.value("font-size"),
 
                     letterSpacing: box.css.get.letterSpacing(),
                     letterSpacingByCamelProperty: box.css.get.property("letterSpacing"),
                     letterSpacingByKebabProperty: box.css.get.property("letter-spacing"),
-                    letterSpacingAsVar: box.css.get.var("letter-spacing"),
+                    letterSpacingAsVar: box.css.var.value("letter-spacing"),
                 };
             },
 
@@ -113,12 +113,12 @@ export function livetree_css_surfaces_new(): TestSuite {
                 box.css.set.var("-single-hyphen-var", "B");
                 box.css.set.var("bare-var", "C");
                 (tree as any).__result = {
-                    canonical: box.css.get.var("--canonical-var"),
-                    singleHyphen: box.css.get.var("--single-hyphen-var"),
-                    bare: box.css.get.var("--bare-var"),
-                    canonicalByBare: box.css.get.var("canonical-var"),
-                    singleHyphenBySingle: box.css.get.var("-single-hyphen-var"),
-                    bareByBare: box.css.get.var("bare-var"),
+                    canonical: box.css.var.value("--canonical-var"),
+                    singleHyphen: box.css.var.value("--single-hyphen-var"),
+                    bare: box.css.var.value("--bare-var"),
+                    canonicalByBare: box.css.var.value("canonical-var"),
+                    singleHyphenBySingle: box.css.var.value("-single-hyphen-var"),
+                    bareByBare: box.css.var.value("bare-var"),
                 };
             },
 
@@ -152,9 +152,9 @@ export function livetree_css_surfaces_new(): TestSuite {
                 box.css.set.var("--direct-var", "ok");
 
                 (tree as any).__result = {
-                    directBracket: box.css.get.var("--direct-var"),
-                    directVar: box.css.get.var("--direct-var"),
-                    directBare: box.css.get.var("direct-var"),
+                    directBracket: box.css.var.value("--direct-var"),
+                    directVar: box.css.var.value("--direct-var"),
+                    directBare: box.css.var.value("direct-var"),
                 };
             },
 
@@ -185,9 +185,9 @@ export function livetree_css_surfaces_new(): TestSuite {
                 box.css.set.var("-custom-prop-name", "hyphenated");
 
                 (tree as any).__result = {
-                    correct: box.css.get.var("--custom-prop-name"),
-                    clobbered: box.css.get.var("--custompropname"),
-                    partiallyClobbered: box.css.get.var("--custom-propname"),
+                    correct: box.css.var.value("--custom-prop-name"),
+                    clobbered: box.css.var.value("--custompropname"),
+                    partiallyClobbered: box.css.var.value("--custom-propname"),
                 };
             },
 
@@ -224,8 +224,8 @@ export function livetree_css_surfaces_new(): TestSuite {
                 (tree as any).__result = {
                     width: box.css.get.width(),
                     backgroundColor: box.css.get.backgroundColor(),
-                    manyVar: box.css.get.var("many-var"),
-                    manyBracket: box.css.get.var("--many-var"),
+                    manyVar: box.css.var.value("many-var"),
+                    manyBracket: box.css.var.value("--many-var"),
                 };
             },
 
@@ -257,7 +257,7 @@ export function livetree_css_surfaces_new(): TestSuite {
                 box.css.set.var("--gone-var", "here");
 
                 const beforeWidth = box.css.get.width();
-                const beforeVar = box.css.get.var("gone-var");
+                const beforeVar = box.css.var.value("gone-var");
 
                 // changed: nullish CssValue paths should remove stored declarations.
                 box.css.set.width(null);
@@ -267,7 +267,7 @@ export function livetree_css_surfaces_new(): TestSuite {
                     beforeWidth,
                     beforeVar,
                     afterWidth: box.css.get.width(),
-                    afterVar: box.css.get.var("gone-var"),
+                    afterVar: box.css.var.value("gone-var"),
                 };
             },
 
@@ -295,28 +295,36 @@ export function livetree_css_surfaces_new(): TestSuite {
             async act(tree) {
                 const box = tree.find.must.byId("box");
 
-                box.css.set.var("", "bad");
-                box.css.set.var("   ", "also-bad");
-                box.css.set.var("-", "bad-single");
-                box.css.set.var("--", "bad-double");
+                let valueThrows = false;
+                let setThrows = false;
+                let nameThrows = false;
+                let keyThrows = false;
+
+                try { box.css.var.value(""); } catch { valueThrows = true; }
+                try { box.css.var.set("", "red"); } catch { setThrows = true; }
+                try { box.css.var.name(""); } catch { nameThrows = true; }
+                try { box.css.var.key(""); } catch { keyThrows = true; }
+
+                const picked = box.css.get.vars(["", "   ", "--", "missing"]);
 
                 (tree as any).__result = {
-                    empty: box.css.get.var(""),
-                    whitespace: box.css.get.var("   "),
-                    single: box.css.get.var("-"),
-                    double: box.css.get.var("--"),
-                    all: box.css.getMany() ?? {},
+                    valueThrows,
+                    setThrows,
+                    nameThrows,
+                    keyThrows,
+                    pickedKeys: Object.keys(picked),
                 };
             },
 
             assert(tree, t) {
                 const r = (tree as any).__result;
-                t.eq("empty var name reads undefined", r.empty, undefined);
-                t.eq("whitespace var name reads undefined", r.whitespace, undefined);
-                t.eq("single hyphen var name reads undefined", r.single, undefined);
-                t.eq("double hyphen var name reads undefined", r.double, undefined);
-                t.eq("invalid sentinel var was not stored", Object.prototype.hasOwnProperty.call(r.all, "--"), false);
-            },
+
+                t.eq("var.value rejects empty name", r.valueThrows, true);
+                t.eq("var.set rejects empty name", r.setThrows, true);
+                t.eq("var.name rejects empty name", r.nameThrows, true);
+                t.eq("var.key rejects empty name", r.keyThrows, true);
+                t.eq("get.vars omits invalid and missing names", r.pickedKeys.length, 0);
+            }
         },
         {
             suite: SUITE,
@@ -338,7 +346,7 @@ export function livetree_css_surfaces_new(): TestSuite {
                 box.css.set.color("var(--theme-ink)");
 
                 (tree as any).__result = {
-                    themeInk: box.css.get.var("--theme-ink"),
+                    themeInk: box.css.var.value("--theme-ink"),
                     color: box.css.get.color(),
                 };
             },
