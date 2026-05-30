@@ -38,7 +38,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const flareBox = frame.bud(SPLASH_BUDS.flareBox);
     const flare = flareBox.bud(SPLASH_BUDS.flare);
     const gradient = frame.bud(SPLASH_BUDS.gradient);
-   stage.css.get.var
+
     /* create sun elements */
     const sunCarrier = wordMark.bud(SPLASH_BUDS.sunCarrier);
     const sun = sunCarrier.bud(SPLASH_BUDS.sun);

@@ -562,8 +562,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
         (tree as any).__result = {
           content: before.get.property("content"),
           color: before.get.color(),
-          all: before.get.all(),
-          stringAll: before.get.stringAll(),
+          all: before.getMany(),
         };
       },
 
@@ -572,9 +571,8 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
         t.eq("selector getter reads shorthand pseudo content", r.content, "attr(data-label)");
         t.eq("selector getter reads shorthand pseudo color", r.color, "red");
-        t.eq("get.all includes pseudo content", r.all.content, "attr(data-label)");
-        t.eq("get.all includes pseudo color", r.all.color, "red");
-        t.eq("get.stringAll includes pseudo content", r.stringAll.includes("content: attr(data-label);"), true);
+        t.eq("getMany includes pseudo content", r.all.content, "attr(data-label)");
+        t.eq("getMany includes pseudo color", r.all.color, "red");
       },
     },
 
@@ -601,14 +599,13 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
           color: "white",
         });
 
-        const all = before.get.all();
+        const all = before.getMany();
 
         (tree as any).__result = {
           content: before.get.property("content"),
           backgroundColor: before.get.backgroundColor(),
           color: before.get.color(),
           all,
-          stringAll: before.get.stringAll(),
         };
       },
 
@@ -618,8 +615,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
         t.eq("selector pseudo content round-trips", r.content, `"A"`);
         t.eq("selector pseudo backgroundColor round-trips", r.backgroundColor, "black");
         t.eq("selector pseudo color round-trips", r.color, "white");
-        t.eq("get.all content matches", r.all.content, `"A"`);
-        t.eq("get.stringAll includes background-color", r.stringAll.includes("background-color: black;"), true);
+        t.eq("getMany content matches", r.all.content, `"A"`);
       },
     },
 
@@ -657,7 +653,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
           content: before.get.property("content"),
           color: before.get.color(),
           background: before.get.background(),
-          all: before.get.all(),
+          all: before.getMany(),
         };
       },
 
@@ -667,8 +663,8 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
         t.eq("content from shorthand remains", r.content, `"A"`);
         t.eq("selector write overrides shared property", r.color, "blue");
         t.eq("selector write adds new property", r.background, "black");
-        t.eq("get.all sees merged content", r.all.content, `"A"`);
-        t.eq("get.all sees merged background", r.all.background, "black");
+        t.eq("getMany sees merged content", r.all.content, `"A"`);
+        t.eq("getMany sees merged background", r.all.background, "black");
       },
     },
 
@@ -700,7 +696,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
         (tree as any).__result = {
           color: hover.get.color(),
           background: hover.get.background(),
-          all: hover.get.all(),
+          all: hover.getMany(),
         };
       },
 
@@ -709,7 +705,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
         t.eq("hover shorthand is readable through selector getter", r.color, "lime");
         t.eq("hover shorthand background is readable through selector getter", r.background, "black");
-        t.eq("hover get.all includes color", r.all.color, "lime");
+        t.eq("hover getMany includes color", r.all.color, "lime");
       },
     },
 
@@ -744,7 +740,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
           baseColor: target.css.get.color(),
           beforeContent: before.get.property("content"),
           beforeColor: before.get.color(),
-          beforeAll: before.get.all(),
+          beforeAll: before.getMany(),
         };
       },
 
@@ -754,7 +750,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
         t.eq("base color remains after selector clear", r.baseColor, "red");
         t.eq("before content cleared", r.beforeContent, undefined);
         t.eq("before color cleared", r.beforeColor, undefined);
-        t.eq("before get.all is empty", Object.keys(r.beforeAll).length, 0);
+        t.eq("before getMany is empty", Object.keys(r.beforeAll).length, 0);
       },
     },
 

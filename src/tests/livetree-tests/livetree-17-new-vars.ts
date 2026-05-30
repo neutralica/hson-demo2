@@ -112,7 +112,6 @@ export function livetree_css_surfaces_new(): TestSuite {
                 box.css.set.var("--canonical-var", "A");
                 box.css.set.var("-single-hyphen-var", "B");
                 box.css.set.var("bare-var", "C");
-
                 (tree as any).__result = {
                     canonical: box.css.get.var("--canonical-var"),
                     singleHyphen: box.css.get.var("--single-hyphen-var"),
@@ -306,7 +305,7 @@ export function livetree_css_surfaces_new(): TestSuite {
                     whitespace: box.css.get.var("   "),
                     single: box.css.get.var("-"),
                     double: box.css.get.var("--"),
-                    all: box.css.get.all() ?? {},
+                    all: box.css.getMany() ?? {},
                 };
             },
 

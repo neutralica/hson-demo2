@@ -363,8 +363,8 @@ export function livetree_css_refinements(): TestSuite {
         const css = CssManager.api();
         const renderedAll = css.renderAll();
         const rules = css.list();
-        console.log(">>> tree.css.get.all()");
-        console.log(tree.css.get.all());
+        console.log(">>> tree.css.getMany()");
+        console.log(tree.css.getMany());
 
         (tree as any).__result = {
           baseAppearance: range.css.get.appearance(),
@@ -393,7 +393,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: get.all returns setMany-compatible base declarations",
+      name: "css surface: getMany returns setMany-compatible base declarations",
       dom: true,
       fixture: "css-selectors",
       sub: "get-all-base-declarations",
@@ -413,15 +413,13 @@ export function livetree_css_refinements(): TestSuite {
           borderRadius: "0",
         });
 
-        const all = box.css.get.all();
-        const stringAll = box.css.get.stringAll();
+        const all = box.css.getMany();
 
         box.css.clear();
         box.css.setMany(all);
 
         (tree as any).__result = {
           all,
-          stringAll: stringAll,
           replayAppearance: box.css.get.appearance(),
           replayBackground: box.css.get.background(),
           replayBorderRadius: box.css.get.borderRadius(),
@@ -431,19 +429,18 @@ export function livetree_css_refinements(): TestSuite {
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("get.all appearance is setMany-compatible", r.all.appearance, "none");
-        t.eq("get.all background is setMany-compatible", r.all.background, "red");
-        t.eq("get.all borderRadius is setMany-compatible", r.all.borderRadius, "0");
-        t.eq("get.stringAll serializes base declarations", r.stringAll, "appearance: none; background: red; border-radius: 0;");
+        t.eq("getMany appearance is setMany-compatible", r.all.appearance, "none");
+        t.eq("getMany background is setMany-compatible", r.all.background, "red");
+        t.eq("getMany borderRadius is setMany-compatible", r.all.borderRadius, "0");
 
-        t.eq("get.all round-trips appearance", r.replayAppearance, "none");
-        t.eq("get.all round-trips background", r.replayBackground, "red");
-        t.eq("get.all round-trips borderRadius", r.replayBorderRadius, "0");
+        t.eq("getMany round-trips appearance", r.replayAppearance, "none");
+        t.eq("getMany round-trips background", r.replayBackground, "red");
+        t.eq("getMany round-trips borderRadius", r.replayBorderRadius, "0");
       },
     },
     {
       suite: SUITE,
-      name: "css surface: selector get.all returns setMany-compatible declarations",
+      name: "css surface: selector getMany returns setMany-compatible declarations",
       dom: true,
       fixture: "css-selectors",
       sub: "get-all-selector-declarations",
@@ -468,15 +465,13 @@ export function livetree_css_refinements(): TestSuite {
         });
 
         const thumb = range.css.selector("::-webkit-slider-thumb");
-        const all = thumb.get.all();
-        const stringAll = thumb.get.stringAll();
+        const all = thumb.getMany();
 
         thumb.clear();
         thumb.setMany(all);
 
         (tree as any).__result = {
           all,
-          stringAll,
           webkitAppearance: thumb.get.property("-webkit-appearance"),
           appearance: thumb.get.appearance(),
           background: thumb.get.background(),
@@ -488,30 +483,25 @@ export function livetree_css_refinements(): TestSuite {
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("selector get.all includes webkitAppearance", r.all.webkitAppearance, "none");
-        t.eq("selector get.all includes appearance", r.all.appearance, "none");
-        t.eq("selector get.all includes background", r.all.background, "red");
-        t.eq("selector get.all includes border", r.all.border, "1px solid white");
-        t.eq("selector get.all includes borderRadius", r.all.borderRadius, "0");
-        t.eq(
-          "selector get.stringAll serializes declarations",
-          r.stringAll,
-          "-webkit-appearance: none; appearance: none; background: red; border: 1px solid white; border-radius: 0;",
-        );
+        t.eq("selector getMany includes webkitAppearance", r.all.webkitAppearance, "none");
+        t.eq("selector getMany includes appearance", r.all.appearance, "none");
+        t.eq("selector getMany includes background", r.all.background, "red");
+        t.eq("selector getMany includes border", r.all.border, "1px solid white");
+        t.eq("selector getMany includes borderRadius", r.all.borderRadius, "0");
 
-        t.eq("selector get.all round-trips webkit appearance", r.webkitAppearance, "none");
-        t.eq("selector get.all round-trips appearance", r.appearance, "none");
-        t.eq("selector get.all round-trips background", r.background, "red");
-        t.eq("selector get.all round-trips border", r.border, "1px solid white");
-        t.eq("selector get.all round-trips borderRadius", r.borderRadius, "0");
+        t.eq("selector getMany round-trips webkit appearance", r.webkitAppearance, "none");
+        t.eq("selector getMany round-trips appearance", r.appearance, "none");
+        t.eq("selector getMany round-trips background", r.background, "red");
+        t.eq("selector getMany round-trips border", r.border, "1px solid white");
+        t.eq("selector getMany round-trips borderRadius", r.borderRadius, "0");
       },
     },
     {
       suite: SUITE,
-      name: "css surface: get.all returns independent single-node snapshots",
+      name: "css surface: getMany returns independent single-node snapshots",
       dom: true,
       fixture: "css-selectors",
-      sub: "get-all-independent-single-node-snapshots",
+      sub: "getmany-independent-single-node-snapshots",
 
       html: `
     <main id="root">
@@ -524,9 +514,6 @@ export function livetree_css_refinements(): TestSuite {
         const one = tree.find.must.byId("one");
         const two = tree.find.must.byId("two");
 
-        // CHANGED: findAll returns an array of LiveTree handles, not one combined
-        // multi-node handle. This verifies discovery without pretending the array
-        // has a shared css surface.
         const shared = tree.findAll.byAttribute("class", "shared");
 
         one.css.setMany({
@@ -539,18 +526,19 @@ export function livetree_css_refinements(): TestSuite {
           borderRadius: "4px",
         });
 
+        const oneMany = one.css.getMany();
+        const twoMany = two.css.getMany();
+
         (tree as any).__result = {
           sharedCount: shared.length,
 
           oneBackground: one.css.get.background(),
           oneBorderRadius: one.css.get.borderRadius(),
-          oneAll: one.css.get.all(),
-          oneStringAll: one.css.get.stringAll(),
+          oneMany,
 
           twoBackground: two.css.get.background(),
           twoBorderRadius: two.css.get.borderRadius(),
-          twoAll: two.css.get.all(),
-          twoStringAll: two.css.get.stringAll(),
+          twoMany,
         };
       },
 
@@ -561,15 +549,13 @@ export function livetree_css_refinements(): TestSuite {
 
         t.eq("first node point getter reads background", r.oneBackground, "red");
         t.eq("first node point getter reads borderRadius", r.oneBorderRadius, "0");
-        t.eq("first node get.all includes background", r.oneAll.background, "red");
-        t.eq("first node get.all includes borderRadius", r.oneAll.borderRadius, "0");
-        t.eq("first node get.stringAll serializes declarations", r.oneStringAll, "background: red; border-radius: 0;");
+        t.eq("first node getMany includes background", r.oneMany.background, "red");
+        t.eq("first node getMany includes borderRadius", r.oneMany.borderRadius, "0");
 
         t.eq("second node point getter reads background", r.twoBackground, "red");
         t.eq("second node point getter reads borderRadius", r.twoBorderRadius, "4px");
-        t.eq("second node get.all includes background", r.twoAll.background, "red");
-        t.eq("second node get.all includes borderRadius", r.twoAll.borderRadius, "4px");
-        t.eq("second node get.stringAll serializes declarations", r.twoStringAll, "background: red; border-radius: 4px;");
+        t.eq("second node getMany includes background", r.twoMany.background, "red");
+        t.eq("second node getMany includes borderRadius", r.twoMany.borderRadius, "4px");
       },
     },
     {
@@ -651,8 +637,8 @@ export function livetree_css_new_getters(): TestSuite {
 
         (tree as any).__result = {
           cssAllProperty: box.css.get.property("all"),
-          bulkAll: box.css.get.all(),
-          bulkAllType: typeof box.css.get.all(),
+          bulkAll: box.css.getMany(),
+          bulkAllType: typeof box.css.getMany(),
         };
       },
 
@@ -660,14 +646,14 @@ export function livetree_css_new_getters(): TestSuite {
         const r = (tree as any).__result;
 
         t.eq("CSS all property is readable through property()", r.cssAllProperty, "unset");
-        t.eq("bulk get.all remains object-returning", r.bulkAllType, "object");
-        t.eq("bulk get.all does not collide with CSS all property", r.bulkAll.all, "unset");
+        t.eq("bulk getMany remains object-returning", r.bulkAllType, "object");
+        t.eq("bulk getMany does not collide with CSS all property", r.bulkAll.all, "unset");
       },
     },
 
     {
       suite: SUITE,
-      name: "css surface: selector get.all preserves custom properties",
+      name: "css surface: selector getMany preserves custom properties",
       dom: true,
       fixture: "css-selectors",
       sub: "selector-get-all-custom-properties",
@@ -687,7 +673,7 @@ export function livetree_css_new_getters(): TestSuite {
           background: "var(--tone)",
         });
 
-        const all = selected.get.all();
+        const all = selected.getMany();
 
         selected.clear();
         selected.setMany(all);
@@ -702,48 +688,10 @@ export function livetree_css_new_getters(): TestSuite {
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("custom property is preserved in get.all", r.all["--tone"], "red");
-        t.eq("normal property is preserved in get.all", r.all.background, "var(--tone)");
+        t.eq("custom property is preserved in getMany", r.all["--tone"], "red");
+        t.eq("normal property is preserved in getMany", r.all.background, "var(--tone)");
         t.eq("custom property round-trips through setMany", r.tone, "red");
         t.eq("normal property round-trips through setMany", r.background, "var(--tone)");
-      },
-    },
-
-    {
-      suite: SUITE,
-      name: "css surface: selector get.stringAll serializes custom properties exactly",
-      dom: true,
-      fixture: "css-selectors",
-      sub: "selector-string-all-custom-properties",
-
-      html: `
-      <main id="root">
-        <div id="test-div">target</div>
-      </main>
-    `,
-
-      async act(tree) {
-        const root = tree.find.must.byId("root");
-        const selected = root.css.selector("& > #test-div");
-
-        selected.setMany({
-          "--tone": "red",
-          background: "var(--tone)",
-        });
-
-        (tree as any).__result = {
-          stringAll: selected.get.stringAll(),
-        };
-      },
-
-      assert(tree, t) {
-        const r = (tree as any).__result;
-
-        t.eq(
-          "custom property string serializes exactly",
-          r.stringAll,
-          "--tone: red; background: var(--tone);",
-        );
       },
     },
 
@@ -780,19 +728,18 @@ export function livetree_css_new_getters(): TestSuite {
         t.eq("object-valued non-ampersand selector key is ignored", r.childColor, undefined);
       },
     },
-
     {
       suite: SUITE,
-      name: "css surface: selector clear empties point, all, and stringAll reads",
+      name: "css surface: selector clear empties point and getMany reads",
       dom: true,
       fixture: "css-selectors",
       sub: "selector-clear-empties-getters",
 
       html: `
-      <main id="root">
-        <div id="test-div">target</div>
-      </main>
-    `,
+    <main id="root">
+      <div id="test-div">target</div>
+    </main>
+  `,
 
       async act(tree) {
         const root = tree.find.must.byId("root");
@@ -807,8 +754,7 @@ export function livetree_css_new_getters(): TestSuite {
 
         (tree as any).__result = {
           color: selected.get.color(),
-          allLength: Object.keys(selected.get.all()).length,
-          stringAll: selected.get.stringAll(),
+          manyLength: Object.keys(selected.getMany()).length,
         };
       },
 
@@ -816,14 +762,12 @@ export function livetree_css_new_getters(): TestSuite {
         const r = (tree as any).__result;
 
         t.eq("selector point read is cleared", r.color, undefined);
-        t.eq("selector get.all is cleared", r.allLength, 0);
-        t.eq("selector get.stringAll is cleared", r.stringAll, "");
+        t.eq("selector getMany is cleared", r.manyLength, 0);
       },
     },
-
     {
       suite: SUITE,
-      name: "css surface: get.all returns a defensive snapshot",
+      name: "css surface: getMany returns a defensive snapshot",
       dom: true,
       fixture: "css-selectors",
       sub: "get-all-defensive-snapshot",
@@ -842,7 +786,7 @@ export function livetree_css_new_getters(): TestSuite {
           borderRadius: "0",
         });
 
-        const all = box.css.get.all();
+        const all = box.css.getMany();
         const mutable: Record<string, string> = { ...all };
         mutable.background = "blue";
         mutable.borderRadius = "999px";

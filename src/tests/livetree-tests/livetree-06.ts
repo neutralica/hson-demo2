@@ -111,8 +111,7 @@ export function livetree_css_pseudo(): TestSuite {
 
           (tree as any).__result = {
             content: before.get.property("content"),
-            all: before.get.all(),
-            stringAll: before.get.stringAll(),
+            all: before.getMany(),
           };
         },
 
@@ -120,8 +119,7 @@ export function livetree_css_pseudo(): TestSuite {
           const r = (tree as any).__result;
 
           t.eq("raw attr() content is readable from selector getter", r.content, "attr(data-label)");
-          t.eq("raw attr() content is preserved in get.all", r.all.content, "attr(data-label)");
-          t.eq("raw attr() content appears in get.stringAll", r.stringAll.includes("content: attr(data-label);"), true);
+          t.eq("raw attr() content is preserved in getMany", r.all.content, "attr(data-label)");
         },
       },
       {

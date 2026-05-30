@@ -31,7 +31,7 @@ export const ROOT_CSS: CssMap = {
   backgroundPosition: "1px 2px, center, center, center",
   backgroundBlendMode: "screen, normal, normal, normal",
 
-  border: `1px solid oklch(78% 0.13 145 / 0.72)`,
+  border: `1px solid oklch(78% 0.13 245 / 0.72)`,
   outline: `1px solid oklch(78% 0.13 145 / 0.24)`,
   outlineOffset: "-0.34rem",
   boxShadow: `0 0 1.05rem oklch(70% 0.16 145 / 0.11), inset 0 -1.15rem 2.4rem oklch(78% 0.14 82 / 0.035), inset 0 0 1.5rem oklch(85% 0.02 260 / 0.04)`,

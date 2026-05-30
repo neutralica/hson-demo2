@@ -1,6 +1,6 @@
 // motes2/mount-motes2.ts
 
-import type { LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live";
 import { type Outcome, relay, relay_data, relay_void } from "intrastructure";
 import { _freeze } from "../demo-test/tests.consts";
 import { config_mote, motes_init } from "./motes-init";

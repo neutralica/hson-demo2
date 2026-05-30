@@ -18,6 +18,7 @@ import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more 
 import { livetree_css_pseudo_selector_unification, livetree_tree_selector_surface } from "../../../../tests/livetree-tests/livetree-19-tree-selector";
 import { livetree_css_pseudo } from "../../../../tests/livetree-tests/livetree-06";
 import { unit_css_pseudo_unification } from "../../../../tests/unit-tests/unit-tests-2";
+import { livetree_css_var_facade_surfaces } from "../../../../tests/livetree-tests/livetree-20-vars-set-get";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -149,9 +150,13 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
+      
+      livetree_css_refinements(),
       livetree_css_pseudo(),
       livetree_css_pseudo_selector_unification(),
-      unit_css_pseudo_unification()
+      unit_css_pseudo_unification(),
+      livetree_css_var_facade_surfaces(),
+
     ])
   }
   if (mode === "fuzz-json") {
