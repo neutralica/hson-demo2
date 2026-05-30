@@ -294,7 +294,6 @@ export function livetree_css_surfaces_new(): TestSuite {
 
             async act(tree) {
                 const box = tree.find.must.byId("box");
-
                 let valueThrows = false;
                 let setThrows = false;
                 let nameThrows = false;
