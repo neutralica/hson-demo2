@@ -22,7 +22,7 @@ export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Ou
 // ---------------------------
 function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
   // stable root id so remount doesn’t duplicate
-  const old = host.find.byId("motes2-root");
+  const old = host.find.byId("motes-root");
   if (old) old.removeSelf();
 
   const root = host.create.div()

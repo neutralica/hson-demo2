@@ -5,7 +5,7 @@ import {  TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, MAIN_OKLCHname, MENU_OKLCHnam
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import { make_range_attrs, render_prev, read_input_number, apply_to_target } from "./oklch";
 import { parse_oklch } from "../../../core/helpers/color-helpers";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
 
 const normalize_parsed_lightness = (l: number): number => {
@@ -53,8 +53,6 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   const controls = mk_div_cls(root, "oklch-demo-controls").css.setMany(PANEL_CSS);
   mk_div_cls(controls, "oklch-demo-title").css.setMany(TITLE_CSS).text.set("OKLCH color picker");
   for (const channel of channels) {
-    console.log(">>>> model.state[channel]")
-    console.log(model.state[channel])
     const row = mk_div_cls_txt(controls, `oklch-row-${channel}`, channel).css.setMany(ROW_CSS);
     const input = row.create.input()
       .attr.setMany(make_range_attrs(channel))
@@ -119,13 +117,17 @@ export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
 
     for (let i = 0; i < rig.targetRows.length; i += 1) {
       const row = rig.targetRows[i];
-      if (!row) continue;
       const target = model.targets[i];
-      // CHANGED: row labels should display the resolved target color, not the
-      // shared CURRENT_OKLCH preview var.
-      const targetColor = target ? CssManager.api().var.value(target.varName) : undefined;
+      if (!row || !target) continue;
+
+      // CHANGED: the picker now treats targetStates as the local source of
+      // truth. render_prev() no longer rewrites target rows separately, which
+      // avoids row labels/colors being updated through two different paths.
+      const targetState = getTargetState(i, state);
+      const targetColor = oklch_to_css(targetState);
+      row.text.set(`${target.label}: ${targetColor}`);
       row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
-      if (targetColor !== undefined) row.css.setMany({ color: targetColor });
+      row.css.setMany({ color: targetColor });
     }
   };
 
@@ -151,7 +153,7 @@ export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
       activeTargetIndex = i;
 
       state = getTargetState(i, state);
-      CssManager.api().var.set(MENU_OKLCHname, oklch_to_css(state));
+      targetStates[i] = state;
 
       render();
     });

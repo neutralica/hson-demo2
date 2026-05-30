@@ -25,6 +25,7 @@ export const OKLCH_FLEURS = {
 
     cyanDust: "oklch(0.76 0.09 210)",
     seaGlass: "oklch(0.73 0.08 190)",
+    baySky: "oklch(0.69 0.39 230)",
     oxidizedSky: "oklch(0.69 0.09 230)",
 
     limeTint: "oklch(0.79 0.13 125)",

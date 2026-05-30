@@ -34,16 +34,6 @@ export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: Oklch
     write_input_number(item.input, n);
     item.value.text.set(String(n));
   }
-
-  for (let i = 0; i < model.targets.length; i += 1) {
-    const target = model.targets[i];
-    const row = rig.targetRows[i];
-    if (!row || !target) continue;
-
-    const targetValue = css.var.value(target.varName) ?? target.initial ?? "";
-    row.text.set(`${target.label}: ${targetValue}`);
-    if (targetValue !== "") row.css.setMany({ color: targetValue });
-  }
 };
 
 export const apply_to_target = (target: OklchTarget, state: OklchValues): void => {

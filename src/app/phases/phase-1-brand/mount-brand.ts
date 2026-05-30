@@ -8,7 +8,7 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css, NOTEBOXcss } from "./brand.css";
-import { $blu_, $grn_ } from "../../core/consts/colors.consts";
+import { $blu_, $grn_ } from "../../core/consts/old-rgb.consts";
 import { øCOLS, SYS_MONOfont, øHSON_COL, øfontWeight } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 

@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { øCOLS } from "../../core/consts/ui-consts";
 import { SYS_MONOfont, øfontSize, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
-import { OKLCH_VIBRANT } from "../../core/consts/oklch";
+import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 

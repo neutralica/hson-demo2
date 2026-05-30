@@ -1,11 +1,11 @@
 import type { CssMap } from "hson-live/types";
-import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
-import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch";
+import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
+import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch.consts";
 import { øCOLS, øfontWeight } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { øfontSize } from "../../app/core/consts/ui-consts";
-import { OKLCH_VIBRANT } from "../../app/core/consts/oklch";
+import { OKLCH_VIBRANT } from "../../app/core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 

@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { ACID_WASH_RGBA } from "../../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH } from "../../../core/consts/oklch";
+import { ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts";
+import { ACID_WASH_OKLCH } from "../../../core/consts/oklch.consts";
 import { øCOLS, øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 

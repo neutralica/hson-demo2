@@ -10,11 +10,11 @@ import { $CHIP_WIDTHstr, _freeze } from "../../app/phases/phase-3-demo/demo-test
 import type { CaseKey, CaseMeta } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
-import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/colors.consts";
+import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
 import { øCOLS } from "../../app/core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
-import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch";
+import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch.consts";
 import type { TestLog } from "../../app/phases/phase-3-demo/demo-test/test-logger";
 
 

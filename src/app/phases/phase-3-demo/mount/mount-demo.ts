@@ -16,7 +16,6 @@ import { mount_build_panels } from "../demo-build/build-mount-init";
 import { mount_about_panels } from "../demo-about/mount-about";
 import { ABOUT_DOCS } from "../demo-about/about.consts";
 import { mount_mouse_panel } from "../demo-pointer/mouse-factory";
-import { mount_motes } from "../demo-motes/mount-motes";
 import { spawn_flower } from "../demo-fleurs/fleurs";
 import type { DemoView } from "../../../state/state.types";
 import { set_global_css } from "./set-global-css";
@@ -26,12 +25,14 @@ import { mount_panel_simple } from "../../../ui/panels/panel-simple";
 import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
 import { get_view, get_widgets, demo_subscribe, set_view, set_about_toc_open, toggle_view, toggle_widget } from "../../../state/store2";
 import { UI_ROOTcss } from "./demo.css";
-import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { FLOWER_FIELDcss, FLOWER_OVERLAYcss } from "../demo-fleurs/fleurs.css";
 import { MOUSE_SLOTcss, MOUSE_HOSTcss } from "../demo-pointer/mouse.css";
 import { ALL_MOTEScss } from "../demo-motes/motes.css";
 import { mount_oklch } from "../demo-oklch/mount-oklch";
+import { mount_panel_spawner } from "../../../widgets/panel-spawner/panel-spawner";
+import { mount_motes } from "../demo-motes/mount-motes";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -288,6 +289,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     void spawn_flower(fleurField, x, y);
 
   });
+
+  // mount_panel_spawner(stage);
+
   debug_state_smoke_test();
   return relay.ok();
 }

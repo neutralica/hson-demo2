@@ -1,9 +1,9 @@
 import type { CssMap } from "hson-live/types";
-import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/colors.consts";
+import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/old-rgb.consts";
 import { øCOLS, SYS_SMOLfont, TXTcol_MAIN, øfontWeight, $SIDEBAR_WIDTH } from "../../../core/consts/ui-consts";
 import { GRID_GAPstr, øfontSize, TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { OKLCH_VIBRANT } from "../../../core/consts/oklch";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { get_line_color } from "./test-helpers";
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../../ui/panels/panels.css";

@@ -1,4 +1,4 @@
-import { OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4, OKLCH_MUTED_PASTEL } from "./oklch";
+// import { OKLCH_SOFT_CORE_4, OKLCH_TERMINAL_4, OKLCH_WASHED_NEON_4, OKLCH_MUTED_PASTEL } from "./oklch";
 
 const greenDragon = "rgba(24, 201, 137, 1)";
 const greenEaster = "rgba(120,255,180,1)";
@@ -210,11 +210,11 @@ export const ACID_WASH_RGBA = {
   dimWhite: "rgba(225,230,235,0.90)",
 };
 
-export const COLOR_4WAY = {
-  ui: OKLCH_SOFT_CORE_4,
-  accent: OKLCH_TERMINAL_4,
-  playful: OKLCH_WASHED_NEON_4,
-  muted: OKLCH_MUTED_PASTEL
-};
+// export const COLOR_4WAY = {
+//   ui: OKLCH_SOFT_CORE_4,
+//   accent: OKLCH_TERMINAL_4,
+//   playful: OKLCH_WASHED_NEON_4,
+//   muted: OKLCH_MUTED_PASTEL
+// };
 
 

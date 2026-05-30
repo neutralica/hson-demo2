@@ -1,13 +1,13 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, } from "../../../core/consts/colors.consts";
+import { $blu_, } from "../../../core/consts/old-rgb.consts";
 import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $SIDEBAR_WIDTH, MENU_OKLCH} from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { GRID_GAPstr, øfontSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import { CssManager } from "hson-live";
 
 

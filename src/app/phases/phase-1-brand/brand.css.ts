@@ -2,7 +2,7 @@
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
 import { øCOLS, SYS_MONOfont, øHSON_COL, øfontSize } from "../../core/consts/ui-consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch";
+import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { FADE_1col } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 

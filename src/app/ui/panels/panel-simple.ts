@@ -1,8 +1,8 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import { $blu_ } from "../../core/consts/colors.consts";
-import { OKLCH_NEUTRALS } from "../../core/consts/oklch";
+import { $blu_ } from "../../core/consts/old-rgb.consts";
+import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { øCOLS, SYS_MONOfont, TXTcol_MAIN, TXTcol_MENU, TXTcol_CODE, TXTcol_ALT } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";

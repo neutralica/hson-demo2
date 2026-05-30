@@ -195,17 +195,17 @@ export const OKLCH_TERMINAL_4 = {
   pink: "oklch(0.75 0.095 335)",
 };
 
-export const OKLCH_WASHED_NEON_4 = {
-  blue: "oklch(0.79 0.085 235)",
-  yellow: "oklch(0.83 0.09 100)",
-  green: "oklch(0.76 0.08 145)",
-  pink: "oklch(0.78 0.09 340)",
-};
+// export const OKLCH_WASHED_NEON_4 = {
+//   blue: "oklch(0.79 0.085 235)",
+//   yellow: "oklch(0.83 0.09 100)",
+//   green: "oklch(0.76 0.08 145)",
+//   pink: "oklch(0.78 0.09 340)",
+// };
 
-export const OKLCH_MUTED_PASTEL = {
-  blue: "oklch(0.77 0.05 245)",
-  yellow: "oklch(0.81 0.055 95)",
-  green: "oklch(0.74 0.05 150)",
-  pink: "oklch(0.76 0.055 335)",
-};
+// export const OKLCH_MUTED_PASTEL = {
+//   blue: "oklch(0.77 0.05 245)",
+//   yellow: "oklch(0.81 0.055 95)",
+//   green: "oklch(0.74 0.05 150)",
+//   pink: "oklch(0.76 0.055 335)",
+// };
 

@@ -4,7 +4,7 @@ import { CLOUD_LAYER_BASE_CSS } from "../../phases/phase-2-splash/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/phase-2-splash/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { make_rng } from "../../utils/rng";
-import { bckRGB } from "../../core/consts/colors.consts";
+import { bckRGB } from "../../core/consts/old-rgb.consts";
 import { øCOLS } from "../../core/consts/ui-consts";
 
 

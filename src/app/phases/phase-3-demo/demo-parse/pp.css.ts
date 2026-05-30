@@ -2,10 +2,10 @@
 
 import type { CssMap } from "hson-live/types";
 
-import { $gry_ } from "../../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH, OKLCH_SOFT_CORE_4 } from "../../../core/consts/oklch";
+import { $gry_ } from "../../../core/consts/old-rgb.consts";
+import { ACID_WASH_OKLCH, OKLCH_SOFT_CORE_4 } from "../../../core/consts/oklch.consts";
 import { øCOLS } from "../../../core/consts/ui-consts";
-import { OKLCH_NEUTRALS } from "../../../core/consts/oklch";
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import { SYS_MONOfont, øfontSize, GRID_GAPstr, øCOL_FOR_FMT_, øHSON_COL, TXTcol_ALT } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
