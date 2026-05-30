@@ -19,7 +19,7 @@ import { livetree_canvas_pointer, livetree_document_ownership } from "./livetree
 import { livetree_css_surfaces_new } from "./livetree-17-new-vars";
 import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more } from "./livetree-18-css-refinements";
 import { livetree_css_pseudo_selector_unification, livetree_tree_selector_surface } from "./livetree-19-tree-selector";
-import { livetree_css_var_facade_surfaces } from "./livetree-20-vars-set-get";
+import { livetree_css_var_facade_surfaces, livetree_get_many_surface } from "./livetree-20-vars-set-get";
 
 
 /******************************************************
@@ -84,6 +84,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_tree_selector_surface(),
     livetree_css_pseudo_selector_unification(),
     livetree_css_var_facade_surfaces(),
+    livetree_get_many_surface(),
 
   ] as const;
 }
