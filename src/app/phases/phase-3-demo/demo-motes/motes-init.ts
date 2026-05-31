@@ -1,3 +1,4 @@
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import type { MotesRig } from "./make-mote";
 import type { MotesOpts, MoteStyle } from "./make-mote";
 import { make_mote } from "./make-mote";
@@ -9,31 +10,31 @@ const randi = (a: number, b: number): number => Math.floor(rand(a, b + 1));
 type Rng = () => number;
 
 function rand2(min: number, max: number, rng: Rng = Math.random): number {
-  return min + (max - min) * rng();
+    return min + (max - min) * rng();
 }
 
 function normalize_hue(h: number): number {
-  let out = h % 360;
-  if (out < 0) out += 360;
-  return out;
+    let out = h % 360;
+    if (out < 0) out += 360;
+    return out;
 }
 
 function format_oklch(l: number, c: number, h: number): string {
-  return `oklch(${l.toFixed(3)} ${c.toFixed(3)} ${normalize_hue(h).toFixed(1)})`;
+    return `oklch(${l.toFixed(3)} ${c.toFixed(3)} ${normalize_hue(h).toFixed(1)})`;
 }
 
 function pick_mote_color(rng: Rng = Math.random): string {
-  const familyRoll = rng();
+    const familyRoll = rng();
 
-  const hue =
-    familyRoll < 0.35 ? rand2(175, 215, rng) :
-    familyRoll < 0.65 ? rand2(215, 245, rng) :
-                        rand2(270, 310, rng);
+    const hue =
+        familyRoll < 0.35 ? rand2(175, 215, rng) :
+            familyRoll < 0.65 ? rand2(215, 245, rng) :
+                rand2(270, 310, rng);
 
-  const l = rand2(0.76, 0.90, rng);
-  const c = rand2(0.025, 0.085, rng);
+    const l = rand2(0.76, 0.90, rng);
+    const c = rand2(0.025, 0.085, rng);
 
-  return format_oklch(l, c, hue);
+    return format_oklch(l, c, hue);
 }
 
 const pickRange = (r: readonly [number, number]): number => rand(r[0], r[1]);
@@ -47,12 +48,12 @@ export function config_mote(
         xPx,
         // yPx,
         swayAmpPx: pickRange(opts.swayAmpPx),
-
+        color: opts.colors[0]! || OKLCH_NEUTRALS.dryReed,
         // correct key is sizePx (not fontSizePx)
         sizePx: pickRange(opts.sizePx),
 
         opacity: pickRange(opts.opacity),
-        color: pick_mote_color(),
+        // color: pick_mote_color(),
         // blurPx: pickRange(opts.blurPx),
 
         riseMs: pickRangeInt(opts.riseDurMs),

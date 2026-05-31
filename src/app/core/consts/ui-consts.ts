@@ -75,7 +75,7 @@ export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
-export const TOCcol = TXTcol_GREY;
+export const TOCcol = øHSON_COL.s;
 
 /* code markdown */
 export const CODE_ALTcol = OKLCH_FLEURS.oxidizedSky;
@@ -121,8 +121,8 @@ export const PINKLIKEcol = øHSON_COL.o;
 
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 export const $MENU_SHADOW = "1px 1px 25px ";
-export const GRAFFITIcol = set_alpha(ACID_WASH_RGBA.mutedViolet, 0.2);
 
+export const GRAFFITIcol = set_alpha(OKLCH_VIBRANT.roseNeon, 0.2);
 export const øCOLS = {
   backlo: deepBack,
   backhi: bckColor,

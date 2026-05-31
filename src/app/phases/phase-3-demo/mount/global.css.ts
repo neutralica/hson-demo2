@@ -4,7 +4,7 @@ import { $gry_, ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts"
 import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { øfontSize, REDcol, TXTcol_MENU } from "../../../core/consts/ui-consts";
-import { ACID_WASH_OKLCH } from "../../../core/consts/oklch.consts";
+import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 export const SCROLL_HOVER_COLcss = {
@@ -61,24 +61,26 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 };
 
 export const MENU_ACTIVE_VIEWcss: CssMap = {
-  color: øHSON_COL.n,
   textDecoration: "underline",
   textUnderlineOffset: "0.3em",
   fontWeight: øfontWeight.fat,
+  color: øHSON_COL.h,
   _hover: {
+    // color: $gry_.dim,
     background: øCOLS.backhi,
-    color: TXTcol_CODE,
     // color: TXTcol_MENU,
     fontWeight: øfontWeight.main,
   },
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
+  textDecoration: "underline",
+  textUnderlineOffset: "0.3em",
   color: øHSON_COL.o,
   fontWeight: øfontWeight.fat,
   _hover: {
-    background: set_alpha(TXTcol_MENU, 0.6),
-    color: øCOLS.backhi,
+    background: øCOLS.backhi,
+    // color: $gry_.dim,
     fontWeight: øfontWeight.main,
   },
 

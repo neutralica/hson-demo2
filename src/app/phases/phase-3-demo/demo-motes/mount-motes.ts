@@ -2,6 +2,8 @@ import { type LiveTree } from "hson-live";
 import { relay, relay_data, relay_void, type Outcome } from "intrastructure";
 import { motes_init } from "./motes-init";
 import type { MotesOpts, MotesRig } from "./make-mote";
+import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
 export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
   try {
@@ -58,7 +60,7 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
   return relay.data({
     char: inOpts.char ?? "*",
 
-    colors: inOpts.colors ?? ["rgba(120, 255, 160, 0.85)"],
+    colors: inOpts.colors ?? [OKLCH_VIBRANT.yellowVolt],
     sizePx: inOpts.sizePx ?? [10, 18],
     opacity: inOpts.opacity ?? [0.10, 0.42],
     // blurPx: inOpts.blurPx ?? [0.3, 1.6],
@@ -67,13 +69,13 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
     maxMotes: inOpts.maxMotes ?? 420,
     spawnBatch: inOpts.spawnBatch ?? 12,
 
-    riseDurMs: inOpts.riseDurMs ?? [9000, 17000],
-    swayDurMs: inOpts.swayDurMs ?? [5600, 15200],
+    riseDurMs: inOpts.riseDurMs ?? [15000, 21000],
+    swayDurMs: inOpts.swayDurMs ?? [3600, 10200],
     spinDurMs: inOpts.spinDurMs ?? [0, 0],
-    swayAmpPx: inOpts.swayAmpPx ?? [10, 60],
+    swayAmpPx: inOpts.swayAmpPx ?? [10, 30],
     spinTurns: inOpts.spinTurns ?? [-0.35, 0.35],
 
     spawnPadVw: inOpts.spawnPadVw ?? 18,
-    pointerEvents: inOpts.pointerEvents ?? "none",
+    pointerEvents: "none",
   });
 }

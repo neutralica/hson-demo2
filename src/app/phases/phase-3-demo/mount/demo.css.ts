@@ -35,11 +35,11 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",
-  textShadow: $MENU_SHADOW + set_alpha(TXTcol_MENU, 0.4)
-          + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
+  // textShadow: $MENU_SHADOW + set_alpha(TXTcol_MENU, 0.4)
+  //         + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
   fontWeight: øfontWeight.main,
   _hover: {
-    fontWeight: øfontWeight.main,
+    // fontWeight: øfontWeight.main,
     background:MENU_OKLCH,
     color: øCOLS.backhi
   },

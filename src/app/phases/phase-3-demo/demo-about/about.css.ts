@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol, øHSON_COL } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -96,12 +96,12 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "4px",
-  color: TXTcol_CODE,
+  color: øHSON_COL.h,
   fontWeight: øfontWeight.fat,
   _hover: {
-    color: TXTcol_CODE,
+    color: øHSON_COL.h,
     background: $gry_.dark,
-  }
+  },
 };
 
 export const TOC_BTN_IDLEcss: CssMap = {
@@ -198,6 +198,7 @@ export const TOC_BTNcss: CssMap = {
   userSelect: "none",
   textAlign: "right",
   lineHeight: "2",
+  paddingRight: "1rem",
   _hover: {
     background: TOCcol,
     color: øCOLS.backlo
