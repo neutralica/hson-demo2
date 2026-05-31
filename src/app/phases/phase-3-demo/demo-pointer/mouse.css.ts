@@ -14,7 +14,7 @@ export const MOUSE_ROOTcss: CssMap = {
   gridTemplateColumns: "2fr 1fr",
   minWidth: "0",
   minHeight: "0",
-  width: "20 0px",
+  width: "200px",
   maxWidth: "200px",
   // marginBottom: "1rem",
   overflow: "hidden",
@@ -120,7 +120,7 @@ export const POINTER_TRACKERcss: CssMap = {
 
 export const STACK_TABLEcss: CssMap = {
   display: "grid",
-  gridTemplateRows: "fit-content auto",
+  gridTemplateRows: "auto",
   gridColumn: "1 / 3",
   gridRow: "1",
   // gap: "12px",

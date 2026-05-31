@@ -1,67 +1,113 @@
 import type { LiveTree } from "hson-live";
 import { mk_div_cls } from "../../../utils/makers";
-import type { Mote, MoteStyle } from "./motes.types";
+
+
+export type MotesOpts = Readonly<{
+  char: string;
+
+  colors: readonly string[];
+  sizePx: readonly [number, number];
+  opacity: readonly [number, number];
+  // blurPx: readonly [number, number];
+
+  densityPerKpx2: number;
+  maxMotes: number;
+  spawnBatch: number;
+
+  riseDurMs: readonly [number, number];
+  swayDurMs: readonly [number, number];
+  spinDurMs: readonly [number, number];
+
+  spinTurns: readonly [number, number];
+  swayAmpPx: readonly [number, number];
+
+  /** Extra horizontal spawn padding so resize/zoom-out does not reveal bald edges. */
+  spawnPadVw: number;
+  pointerEvents: "none" | "auto";
+}>;
+
+export type Mote = {
+  wrap: LiveTree;
+  rise: LiveTree; // owns rise
+  sway: LiveTree; // owns l-r
+  ink: LiveTree;
+};
+// You likely already have these types in your motes2 module.
+export type MoteStyle = Readonly<{
+  xPx: number;
+  // yPx: number;
+  swayAmpPx: number;
+  sizePx: number;
+  opacity: number;
+  color: string;
+  // blurPx: number;
+
+  riseMs: number;
+  riseDelayMs: number; // negative allowed (prefill)
+  swayMs: number;
+  swayDelayMs: number; // negative allowed (prefill)
+}>;
+
+export type MotesRig = Readonly<{
+  root: LiveTree;
+  layer: LiveTree;
+  dispose: () => void;
+}>;
 
 
 export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {
   const wrap = mk_div_cls(host, "mote-wrap");
-  const rise = mk_div_cls(wrap, "mote-rise");
-  rise.css.setMany({
+  wrap.style.setMany({
+    // CHANGED: wrap owns fixed placement only. Continuous motion is CSS-driven
+    // by nested transform animations; JS does not rewrite x/y at runtime.
     position: "absolute",
     top: "0px",
     left: `${s.xPx}px`,
-    willChange: "transform",
-    pointerEvents: "auto",
+    pointerEvents: "none",
+  });
+
+  const rise = mk_div_cls(wrap, "mote-rise");
+  rise.style.setMany({
+    // willChange: "transform",
+    pointerEvents: "none",
   });
 
   const sway = mk_div_cls(rise, "mote-sway");
-  sway.css.setMany({
-    willChange: "transform",
+  sway.style.setMany({
+    // willChange: "transform",
   });
+  sway.style.var.set("mote-sway-amp", `${s.swayAmpPx}px`);
 
-  const fall = mk_div_cls(sway, "mote-fall");
-  fall.css.setMany({
-    willChange: "transform",
-  });
-
-  const ink = fall.create.span().classlist.add("mote-ink");
+  const ink = sway.create.span().classlist.add("mote-ink");
   ink.text.set(ch);
-  ink.css.setMany({
+  ink.style.setMany({
     display: "inline-block",
     fontSize: `${s.sizePx}px`,
     opacity: String(s.opacity),
     color: s.color,
-    filter: s.blurPx > 0 ? `blur(${s.blurPx}px)` : "none",
-    willChange: "transform, opacity, filter",
+    // filter: s.blurPx > 0 ? `blur(${s.blurPx}px)` : "none",
     userSelect: "none",
+    pointerEvents: "none",
   });
 
   // rise on rise
-  rise.css.anim.begin({
-    name: "mote-rise",
-    duration: `${s.riseMs}ms`,
-    timingFunction: "linear",
-    delay: `${s.riseDelayMs}ms`,
-    iterationCount: "infinite",
+  rise.style.setMany({
+    animationName: "mote-rise",
+    animationDuration: `${s.riseMs}ms`,
+    animationTimingFunction: "linear",
+    animationDelay: `${s.riseDelayMs}ms`,
+    animationIterationCount: "infinite",
   });
 
   // sway on sway
-  sway.css.anim.begin({
-    name: "mote-sway",
-    duration: `${s.swayMs}ms`,
-    timingFunction: "ease-in-out",
-    delay: `${s.swayDelayMs}ms`,
-    iterationCount: "infinite",
-    direction: "alternate",
+  sway.style.setMany({
+    animationName: "mote-sway",
+    animationDuration: `${s.swayMs}ms`,
+    animationTimingFunction: "ease-in-out",
+    animationDelay: `${s.swayDelayMs}ms`,
+    animationIterationCount: "infinite",
+    animationDirection: "alternate",
   });
 
-  // spin on ink
-  ink.css.anim.begin({
-    name: s.spinDir === "cw" ? "mote-spin-cw" : "mote-spin-ccw",
-    duration: `${s.spinMs}ms`,
-    timingFunction: "linear",
-    iterationCount: "infinite",
-  });
-
-  return {wrap,  rise, sway, fall, ink, dead: false };
+  return { wrap, rise, sway, ink };
 }

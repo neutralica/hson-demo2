@@ -1,11 +1,7 @@
-// motes2/mount-motes2.ts
-
-import { CssManager, type LiveTree } from "hson-live";
-import { type Outcome, relay, relay_data, relay_void } from "intrastructure";
-import { _freeze } from "../demo-test/tests.consts";
-import { config_mote, motes_init } from "./motes-init";
-import type { Mote, MotesOpts, MoteStyle } from "./motes.types";
-import type { MotesRig } from "./motes.types";
+import { type LiveTree } from "hson-live";
+import { relay, relay_data, relay_void, type Outcome } from "intrastructure";
+import { motes_init } from "./motes-init";
+import type { MotesOpts, MotesRig } from "./make-mote";
 
 export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
   try {
@@ -64,24 +60,20 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
 
     colors: inOpts.colors ?? ["rgba(120, 255, 160, 0.85)"],
     sizePx: inOpts.sizePx ?? [10, 18],
-    opacity: inOpts.opacity ?? [0.25, 0.90],
-    blurPx: inOpts.blurPx ?? [0.3, 1.6],
+    opacity: inOpts.opacity ?? [0.10, 0.42],
+    // blurPx: inOpts.blurPx ?? [0.3, 1.6],
 
-    densityPerKpx2: inOpts.densityPerKpx2 ?? 38,
-    maxMotes: inOpts.maxMotes ?? 820,
+    densityPerKpx2: inOpts.densityPerKpx2 ?? 24,
+    maxMotes: inOpts.maxMotes ?? 420,
     spawnBatch: inOpts.spawnBatch ?? 12,
 
     riseDurMs: inOpts.riseDurMs ?? [9000, 17000],
     swayDurMs: inOpts.swayDurMs ?? [5600, 15200],
-    spinDurMs: inOpts.spinDurMs ?? [6000, 14000],
+    spinDurMs: inOpts.spinDurMs ?? [0, 0],
     swayAmpPx: inOpts.swayAmpPx ?? [10, 60],
     spinTurns: inOpts.spinTurns ?? [-0.35, 0.35],
 
-    repelRadiusPx: inOpts.repelRadiusPx ?? 90,
-    repelStrengthPx: inOpts.repelStrengthPx ?? 28,
-    killRadiusPx: inOpts.killRadiusPx ?? 10,
-    repelOnlyBelowMouse: inOpts.repelOnlyBelowMouse ?? true,
-    killOnHit: inOpts.killOnHit ?? true,
+    spawnPadVw: inOpts.spawnPadVw ?? 18,
     pointerEvents: inOpts.pointerEvents ?? "none",
   });
 }

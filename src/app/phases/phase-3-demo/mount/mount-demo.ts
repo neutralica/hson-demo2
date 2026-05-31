@@ -291,7 +291,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
   // mount_panel_spawner(stage);
-
   debug_state_smoke_test();
   return relay.ok();
 }

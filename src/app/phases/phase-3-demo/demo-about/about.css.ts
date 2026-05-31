@@ -60,7 +60,7 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   userSelect: "none",
   whiteSpace: "pre",
   // fontSize: "1rem",
-  verticalAlign: "center",
+  // verticalAlign: "center",
   color: LISTcol,
 };
 
@@ -187,7 +187,7 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   gridTemplateColumns: $SIDEBAR_WIDTH + " 1fr",
   gap: "0",
   boxSizing: "border-box",
-  maxWidth: $SIDEBAR_WIDTH + $CONTENT_WIDTH
+  maxWidth: "calc("+$SIDEBAR_WIDTH +" + "+ $CONTENT_WIDTH+")"
 };
 
 

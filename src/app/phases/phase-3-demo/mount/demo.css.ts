@@ -40,12 +40,13 @@ export const MAIN_MENUcss: CssMap = {
   fontWeight: øfontWeight.main,
   _hover: {
     fontWeight: øfontWeight.main,
-    background: BLUELIKEcol,
+    background: "hotpink",
     color: øCOLS.backhi
   },
+  
   _active: {
-    background: øCOLS.backhi,
-    color: BLUELIKEcol,
+    background: "hotpink",
+    color: "hotpink",
     fontWeight: øfontWeight.fat,
   }
 }
