@@ -68,7 +68,7 @@ export function mouse_init(rig: MousePanelRig): void {
 
         rig.readout.angle.text.set(`θ: ${deg.toFixed(1)}°`);
 
-        rig.pointer.css.setMany({
+        rig.pointer.style.setMany({
             transform: `translate(0, -50%) rotate(${deg}deg)`,
         });
         const hitStack = rig.root.dom.doc?.elementsFromPoint(x, y) ?? [];

@@ -66,7 +66,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   textUnderlineOffset: "0.3em",
   fontWeight: øfontWeight.fat,
   _hover: {
-    background: $gry_.dark,
+    background: øCOLS.backhi,
     color: TXTcol_CODE,
     // color: TXTcol_MENU,
     fontWeight: øfontWeight.main,

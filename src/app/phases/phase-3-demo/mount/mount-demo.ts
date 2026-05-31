@@ -133,8 +133,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     return span;
   });
   const letters = [$h, $s, $o, $n];
-  mk_div_id(menuContainer, "livedemo-subhead")
-    .text.set(`liveDemo`)
+  mk_div_id_txt(menuContainer, "livedemo-subhead", `liveDemo`)
     .css.setMany(HSON_SUBcss);
 
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
@@ -160,7 +159,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: øHSON_COL[l]
+      color: øHSON_COL[l],
     });
   });
 
@@ -289,6 +288,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     void spawn_flower(fleurField, x, y);
 
   });
+  const styleEl = document.querySelector<HTMLStyleElement>("style#_hson");
 
   // mount_panel_spawner(stage);
   debug_state_smoke_test();

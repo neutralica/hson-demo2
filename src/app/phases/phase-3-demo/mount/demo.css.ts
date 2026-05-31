@@ -40,13 +40,13 @@ export const MAIN_MENUcss: CssMap = {
   fontWeight: øfontWeight.main,
   _hover: {
     fontWeight: øfontWeight.main,
-    background: "hotpink",
+    background:MENU_OKLCH,
     color: øCOLS.backhi
   },
   
   _active: {
-    background: "hotpink",
-    color: "hotpink",
+        background: øCOLS.backhi,
+    color: BLUELIKEcol,
     fontWeight: øfontWeight.fat,
   }
 }
@@ -88,7 +88,8 @@ export const HSON_WORDcss: CssMap = {
   width: "0.5em",
   userSelect: "none",
   lineHeight: "0.9",
-  verticalAlign: "bottom"
+  verticalAlign: "bottom",
+  pointerEvents: "auto",
 
 }
 
