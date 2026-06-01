@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts"
 import { $gry_, ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts"
-import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE, MENU_OKLCH, WIDGETcol, TXTcol_ALT } from "../../../core/consts/ui-consts";
+import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE, MENU_OKLCH, WIDGETcol, TXTcol_GREY } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { øfontSize, REDcol, TXTcol_MENU } from "../../../core/consts/ui-consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
@@ -72,7 +72,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   },
   _hover: {
     // color: $gry_.dim,
-    background: TXTcol_ALT,
+    background: TXTcol_GREY,
     color: øCOLS.backlo,
     fontWeight: øfontWeight.main,
     __before: {
@@ -100,7 +100,7 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
       position: "absolute",
       left: "-1rem",
     },
-    background: TXTcol_ALT,
+    background: TXTcol_GREY,
     color: øCOLS.backlo,
     fontWeight: øfontWeight.main,
   },

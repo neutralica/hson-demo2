@@ -3,7 +3,7 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import { øCOLS } from "../../../core/consts/ui-consts";
-import { øfontSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
+import { øfontSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_GREY, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";

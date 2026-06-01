@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol, øHSON_COL, MAIN_OKLCH } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol, øHSON_COL, MAIN_OKLCH, TXTcol_MENU, TXTcol_GREY } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -49,7 +49,6 @@ export const ABOUT_LIST_ROWcss: CssMap = {
   alignItems: "start",
   minWidth: "0",
   maxWidth: "70ch",
-  color: OKLCH_FLEURS.mauve,
   ...FONT_FAM_MONO,
 };
 
@@ -84,7 +83,7 @@ export const ANTI_LIST_TEXTcss: CssMap = {
 export const HRcss: CssMap = {
   width: "90%",
   height: "1px",
-  background: TXTcol_ALT,
+  background: TXTcol_GREY,
   // opacity: "0.8",
   marginTop: "2em",
   marginBottom: "3em",
@@ -92,40 +91,59 @@ export const HRcss: CssMap = {
   marginRight: "auto",
 };
 
+
+
+export const TOC_BTNcss: CssMap = {
+  ...FONT_FAM_MONO,
+  boxSizing: "border-box",
+  cursor: "pointer",
+  userSelect: "none",
+  textAlign: "right",
+  lineHeight: "2",
+  paddingRight: "2rem",
+  color: øHSON_COL.h,
+  // _hover: {
+  //   background: TOCcol,
+  //   color: øCOLS.backlo
+  // }
+};
+
 export const TOC_BTN_ACTIVEcss: CssMap = {
   // textDecoration: "underline",
   // textUnderlineOffset: "4px",
-  color: TOCcol,
   opacity: "1",
   fontWeight: øfontWeight.fat,
   background: "transparent",
-  __before: {
-    content: "> ",
-    position: "relative",
-    marginRight : "1rem"
+  __after: {
+    content: " <",
+    position: "absolute",
+    marginLeft : "1ch"
   },
   _hover: {
     // color: øHSON_COL.h,
-    background: TXTcol_ALT,
-    __before: {
-    content: "x ",
-    // position: "absolute",
-    // left: "-1rem",
-  },
+    background: TXTcol_GREY,
+    color: øCOLS.backlo,
+    __after: {
+      content: "x",
+      position: "absolute",
+      // right: "1rem",
+    },
   },
 };
 
 export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
-  color: TOCcol,
   opacity: "0.8",
   fontSize: øfontSize.main,
-  __before: {
-    // position: "absolute",
-    // left: "-1rem",
-  },
+  __after: {},
   _hover: {
+    __after: {
+      content: "<<",
+      position: "absolute",
+      marginLeft: "1ch",
+      // right: "-1rem",
+    },
     color: øCOLS.backlo,
     background: TOCcol,
   }
@@ -203,23 +221,9 @@ export const ABOUT_BODY_ROWcss: CssMap = {
   gridTemplateColumns: $SIDEBAR_WIDTH + " 1fr",
   gap: "0",
   boxSizing: "border-box",
-  maxWidth: "calc("+$SIDEBAR_WIDTH +" + "+ $CONTENT_WIDTH+")"
+  maxWidth: "calc(" + $SIDEBAR_WIDTH + " + " + $CONTENT_WIDTH + ")"
 };
 
-
-export const TOC_BTNcss: CssMap = {
-  ...FONT_FAM_MONO,
-  boxSizing: "border-box",
-  cursor: "pointer",
-  userSelect: "none",
-  textAlign: "right",
-  lineHeight: "2",
-  paddingRight: "1rem",
-  _hover: {
-    background: TOCcol,
-    color: øCOLS.backlo
-  }
-};
 
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px",

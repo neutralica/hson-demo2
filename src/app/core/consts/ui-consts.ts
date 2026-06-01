@@ -65,10 +65,9 @@ export const MOTE_OKLCH = CssManager.api().var.key(MOTE_OKLCHname);
 // Dynamic page CSS should opt into MAIN_OKLCH / MENU_OKLCH / SUBMENU_OKLCH / BACK_OKLCH.
 // export const TXTcol_MENU = OKLCH_VIBRANT.blueCobalt;
 export const TXTcol_MENU = OKLCH_FLEURS.greyLilac;
-export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 export const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
 export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
-export const TXTcol_ALT = OKLCH_NEUTRALS.steel;
+export const TXTcol_GREY = OKLCH_NEUTRALS.steel;
 // export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 
@@ -84,15 +83,15 @@ export const CODE_PARENScol =OKLCH_VIBRANT.blueYves;
 export const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
 export const CONSTcol = OKLCH_NEUTRALS.violetTint
 export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
-export const CODE_QUOTEcol =  OKLCH_VIBRANT.redOxide;
+export const CODE_QUOTEcol =  OKLCH_VIBRANT.redInfra;
 export const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
 export const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
-export const LISTcol = OKLCH_FLEURS.greyLilac;
+export const LISTcol = øHSON_COL.h;
 
 
 /* misc markdown */
-export const COPYRITEcol = TXTcol_ALT;
+export const COPYRITEcol = TXTcol_GREY;
 export const URLcol = øHSON_COL.h;
 
 

@@ -2,9 +2,9 @@
 
 import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../../core/consts/old-rgb.consts";
-import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_ALT, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname} from "../../../core/consts/ui-consts";
+import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_GREY, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { GRID_GAPstr, øfontSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU,  BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/ui-consts";
+import { GRID_GAPstr, øfontSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
@@ -37,16 +37,21 @@ export const MAIN_MENUcss: CssMap = {
   background: øCOLS.backlo,
   opacity: "0.9",
   textIndent: "1rem",
-  // textShadow: $MENU_SHADOW + set_alpha(TXTcol_MENU, 0.4)
-  //         + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
   fontWeight: øfontWeight.main,
+  paddingLeft: "1ch",
+  __before: {},
   _hover: {
     // fontWeight: øfontWeight.main,
-    background:MENU_OKLCH,
-    color: øCOLS.backhi
+    background: MENU_OKLCH,
+    color: øCOLS.backhi,
+    __before: {
+      content: ">>",
+      position: "absolute",
+      left: "-1rem"
+    }
   },
   _active: {
-        background: øCOLS.backhi,
+    background: øCOLS.backhi,
     color: BLUELIKEcol,
     fontWeight: øfontWeight.fat,
   }
@@ -101,7 +106,7 @@ export const DEMOcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  
+
   pointerEvents: "none",
   boxSizing: "border-box"
 };
@@ -135,7 +140,7 @@ export const DEMO_SCREENcss: CssMap = {
   display: "grid",
   gridTemplateColumns: $SIDEBAR_WIDTH + " auto",
   gridTemplateRows: "minmax(0, 1fr)",
-  
+
   gap: GRID_GAPstr,
 
 }

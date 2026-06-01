@@ -278,3 +278,305 @@ export function livetree_anim_key_preservation(): TestSuite {
 
     return make_livetree_suite(SUITE, cases);
 }
+
+export function livetree_dom_contains_surface(): TestSuite {
+  const SUITE = "livetree/dom-contains-surface";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "dom.contains supports callable, tree, node, and target for descendants",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "contains-descendant-surfaces",
+
+      html: `
+        <main id="root">
+          <section id="panel">
+            <button id="button">
+              <span id="label">Click</span>
+            </button>
+          </section>
+          <aside id="outside">Outside</aside>
+        </main>
+      `,
+
+      async act(tree) {
+        const root = tree.find.must.byId("root");
+        const panel = tree.find.must.byId("panel");
+        const button = tree.find.must.byId("button");
+        const label = tree.find.must.byId("label");
+        const outside = tree.find.must.byId("outside");
+
+        const panelEl = panel.dom.must.el();
+        const buttonEl = button.dom.must.el();
+        const labelEl = label.dom.must.el();
+        const outsideEl = outside.dom.must.el();
+
+        (tree as any).__result = {
+          legacyPanel: root.dom.contains(panel),
+          explicitPanel: root.dom.contains.tree(panel),
+          nodePanel: root.dom.contains.node(panelEl),
+          targetPanel: root.dom.contains.target(panelEl),
+
+          legacyButton: panel.dom.contains(button),
+          explicitButton: panel.dom.contains.tree(button),
+          nodeButton: panel.dom.contains.node(buttonEl),
+          targetButton: panel.dom.contains.target(buttonEl),
+
+          legacyLabel: panel.dom.contains(label),
+          explicitLabel: panel.dom.contains.tree(label),
+          nodeLabel: panel.dom.contains.node(labelEl),
+          targetLabel: panel.dom.contains.target(labelEl),
+
+          panelContainsOutsideTree: panel.dom.contains(outside),
+          panelContainsOutsideTreeExplicit: panel.dom.contains.tree(outside),
+          panelContainsOutsideNode: panel.dom.contains.node(outsideEl),
+          panelContainsOutsideTarget: panel.dom.contains.target(outsideEl),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("legacy callable contains descendant tree", r.legacyPanel, true);
+        t.eq("explicit tree contains descendant tree", r.explicitPanel, true);
+        t.eq("node contains descendant element", r.nodePanel, true);
+        t.eq("target contains descendant EventTarget element", r.targetPanel, true);
+
+        t.eq("panel legacy contains button tree", r.legacyButton, true);
+        t.eq("panel explicit contains button tree", r.explicitButton, true);
+        t.eq("panel node contains button element", r.nodeButton, true);
+        t.eq("panel target contains button EventTarget", r.targetButton, true);
+
+        t.eq("panel legacy contains nested label tree", r.legacyLabel, true);
+        t.eq("panel explicit contains nested label tree", r.explicitLabel, true);
+        t.eq("panel node contains nested label element", r.nodeLabel, true);
+        t.eq("panel target contains nested label EventTarget", r.targetLabel, true);
+
+        t.eq("panel legacy does not contain sibling tree", r.panelContainsOutsideTree, false);
+        t.eq("panel explicit tree does not contain sibling tree", r.panelContainsOutsideTreeExplicit, false);
+        t.eq("panel node does not contain sibling element", r.panelContainsOutsideNode, false);
+        t.eq("panel target does not contain sibling EventTarget", r.panelContainsOutsideTarget, false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom.contains treats self containment consistently",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "contains-self",
+
+      html: `
+        <main id="root">
+          <section id="panel">
+            <button id="button">Click</button>
+          </section>
+        </main>
+      `,
+
+      async act(tree) {
+        const panel = tree.find.must.byId("panel");
+        const panelEl = panel.dom.must.el();
+
+        (tree as any).__result = {
+          legacySelf: panel.dom.contains(panel),
+          explicitSelf: panel.dom.contains.tree(panel),
+          nodeSelf: panel.dom.contains.node(panelEl),
+          targetSelf: panel.dom.contains.target(panelEl),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("legacy callable contains self", r.legacySelf, true);
+        t.eq("explicit tree contains self", r.explicitSelf, true);
+        t.eq("node contains self element", r.nodeSelf, true);
+        t.eq("target contains self EventTarget", r.targetSelf, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom.contains.target safely rejects null and non-Node EventTargets",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "contains-target-invalid",
+
+      html: `
+        <main id="root">
+          <section id="panel">Panel</section>
+        </main>
+      `,
+
+      async act(tree) {
+        const panel = tree.find.must.byId("panel");
+
+        const abort = new AbortController();
+        const signal = abort.signal;
+
+        (tree as any).__result = {
+          nullTarget: panel.dom.contains.target(null),
+          signalTarget: panel.dom.contains.target(signal),
+          windowTarget: panel.dom.contains.target(window),
+          documentTarget: panel.dom.contains.target(document),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("target rejects null", r.nullTarget, false);
+        t.eq("target rejects AbortSignal EventTarget", r.signalTarget, false);
+        t.eq("target rejects window EventTarget", r.windowTarget, false);
+        t.eq("target rejects document when it is not a Node in this context", r.documentTarget, false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom.contains.node handles text nodes and detached nodes",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "contains-node-edge-cases",
+
+      html: `
+        <main id="root">
+          <section id="panel"><span id="label">hello</span></section>
+        </main>
+      `,
+
+      async act(tree) {
+        const panel = tree.find.must.byId("panel");
+        const label = tree.find.must.byId("label");
+
+        const labelEl = label.dom.must.el();
+        const textNode = labelEl.firstChild;
+        const detached = document.createElement("div");
+        const detachedText = document.createTextNode("detached");
+
+        (tree as any).__result = {
+          textNodeIsNode: textNode instanceof Node,
+          containsTextNode: textNode ? panel.dom.contains.node(textNode) : false,
+          containsTextTarget: textNode ? panel.dom.contains.target(textNode) : false,
+
+          containsDetachedElement: panel.dom.contains.node(detached),
+          containsDetachedTarget: panel.dom.contains.target(detached),
+
+          containsDetachedText: panel.dom.contains.node(detachedText),
+          containsDetachedTextTarget: panel.dom.contains.target(detachedText),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("fixture text child is a Node", r.textNodeIsNode, true);
+        t.eq("node contains descendant text node", r.containsTextNode, true);
+        t.eq("target contains descendant text EventTarget", r.containsTextTarget, true);
+
+        t.eq("node rejects detached element", r.containsDetachedElement, false);
+        t.eq("target rejects detached element EventTarget", r.containsDetachedTarget, false);
+        t.eq("node rejects detached text node", r.containsDetachedText, false);
+        t.eq("target rejects detached text EventTarget", r.containsDetachedTextTarget, false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom.contains works for document-level outside-click style checks",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "contains-outside-click-shape",
+
+      html: `
+        <main id="root">
+          <section id="dialog">
+            <button id="inside-button">Inside</button>
+          </section>
+          <button id="outside-button">Outside</button>
+        </main>
+      `,
+
+      async act(tree) {
+        const dialog = tree.find.must.byId("dialog");
+        const inside = tree.find.must.byId("inside-button");
+        const outside = tree.find.must.byId("outside-button");
+
+        const insideEl = inside.dom.must.el();
+        const outsideEl = outside.dom.must.el();
+
+        const insideEvent = new PointerEvent("pointerdown", { bubbles: true });
+        const outsideEvent = new PointerEvent("pointerdown", { bubbles: true });
+
+        insideEl.dispatchEvent(insideEvent);
+        outsideEl.dispatchEvent(outsideEvent);
+
+        (tree as any).__result = {
+          insideTargetCheck: dialog.dom.contains.target(insideEvent.target),
+          outsideTargetCheck: dialog.dom.contains.target(outsideEvent.target),
+
+          insideNodeCheck: insideEvent.target instanceof Node
+            ? dialog.dom.contains.node(insideEvent.target)
+            : false,
+
+          outsideNodeCheck: outsideEvent.target instanceof Node
+            ? dialog.dom.contains.node(outsideEvent.target)
+            : false,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("dialog contains inside event target", r.insideTargetCheck, true);
+        t.eq("dialog does not contain outside event target", r.outsideTargetCheck, false);
+        t.eq("dialog contains inside event target after Node narrowing", r.insideNodeCheck, true);
+        t.eq("dialog rejects outside event target after Node narrowing", r.outsideNodeCheck, false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom.contains.tree returns false for tree handles without comparable DOM elements",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "contains-tree-no-dom",
+
+      html: `
+        <main id="root">
+          <section id="panel">Panel</section>
+        </main>
+      `,
+
+      async act(tree) {
+        const panel = tree.find.must.byId("panel");
+
+        const detachedEl = document.createElement("div");
+        const detachedTree = panel.dom.must.treeFromEl(panel.dom.must.el());
+
+        detachedEl.id = "detached";
+
+        (tree as any).__result = {
+          comparableCloneContains: panel.dom.contains.tree(detachedTree),
+          legacyComparableCloneContains: panel.dom.contains(detachedTree),
+          detachedNode: panel.dom.contains.node(detachedEl),
+          detachedTarget: panel.dom.contains.target(detachedEl),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("explicit tree contains resolved comparable self tree", r.comparableCloneContains, true);
+        t.eq("legacy callable contains resolved comparable self tree", r.legacyComparableCloneContains, true);
+        t.eq("node rejects detached DOM element", r.detachedNode, false);
+        t.eq("target rejects detached DOM element", r.detachedTarget, false);
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
