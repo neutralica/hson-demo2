@@ -4,7 +4,7 @@
 import { LiveTree, make_tree_selector } from "hson-live";
 import { _DATA_QUID } from "../../../../../../hson-live/dist/consts/constants";
 
-export type MousePanelRig = Readonly<{
+export type PointPanelRig = Readonly<{
     root: LiveTree;
     stage: LiveTree;
     pointer: LiveTree;
@@ -29,7 +29,7 @@ const fmt_int = (n: number): string => String(Math.round(n));
 
 
 // ---- init (behavior) ----
-export function mouse_init(rig: MousePanelRig): void {
+export function point_init(rig: PointPanelRig): void {
     let raf = 0;
     let mounted = true;
 

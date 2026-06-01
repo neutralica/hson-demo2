@@ -5,7 +5,7 @@ import { øCOLS, øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
-export const MOUSE_ROOTcss: CssMap = {
+export const POINT_ROOTcss: CssMap = {
   position: "fixed",
   bottom: "0.5rem",
   left: "1rem",
@@ -20,7 +20,7 @@ export const MOUSE_ROOTcss: CssMap = {
   overflow: "hidden",
 } as const;
 
-export const MOUSE_SLOTcss: CssMap = {
+export const POINT_SLOTcss: CssMap = {
   // space below menu
   height: "400px",
   display: "flex",
@@ -29,9 +29,10 @@ export const MOUSE_SLOTcss: CssMap = {
   width: "100%",
   minWidth: "0",
   minHeight: "0",
+  zIndex: "-10",
 };
 
-export const MOUSE_HOSTcss: CssMap = {
+export const POINT_HOSTcss: CssMap = {
   width: "100%",
   height: "100%",
   minWidth: "0",
@@ -42,9 +43,10 @@ export const MOUSE_HOSTcss: CssMap = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "flex-end",
+  zIndex: "-10",
 };
 
-export const MOUSE_POINTERcss = {
+export const TRACKERcss = {
   position: "absolute",
   left: "50%",
   top: "50%",
@@ -56,7 +58,7 @@ export const MOUSE_POINTERcss = {
   boxShadow: "0 0 10px rgba(140,210,255,0.20)",
 }
 
-export const MOUSE_POINTER_ORIGINcss = {
+export const TRACKER_ORIGINcss = {
   position: "absolute",
   left: "50%",
   top: "50%",
@@ -84,7 +86,7 @@ export const MOUSE_COORD_Ycss = {
   marginLeft: "1rem",
 }
 
-export const MOUSE_THETAcss = {
+export const TRACKER_THETAcss = {
   FontFamily: SYS_SMOLfont,
   fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
@@ -144,7 +146,7 @@ export const ELEMENT_STACKcss: CssMap = {
 
 }
 
-export const MOUSE_COORDScss: CssMap = {
+export const POINTER_COORDScss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto auto auto", // CHANGED
   minWidth: "0",

@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 
-export const FLOWER_OVERLAYcss: CssMap = {
+export const FLOWER_LAYERcss: CssMap = {
   position: "absolute",
   inset: "0",
   width: "100%",

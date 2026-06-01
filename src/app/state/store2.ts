@@ -36,7 +36,7 @@ export type DemoStore = {
   deactivate_widget(next: DemoWidget): void;
   toggle_widget(widget: DemoWidget): void;
 
-  set_about_toc_open(next: boolean): void;
+  // set_about_toc_open(next: boolean): void;
 
   subscribe(fn: (state: DemoStateRO) => void): () => void;
   subscribe_diff(fn: Listener): () => void;
@@ -180,13 +180,13 @@ export function create_demo_store(
       deactivate_widget(widget);
       return;
     }
-
+    
     activate_widget(widget);
   }
 
-  function set_about_toc_open(next: boolean): void {
-    state_set(["ui", "aboutTocOpen"], next);
-  }
+  // function set_about_toc_open(next: boolean): void {
+  //   state_set(["ui", "aboutTocOpen"], next);
+  // }
 
   // -------------------------
   // subscriptions
@@ -239,7 +239,7 @@ export function create_demo_store(
     activate_widget,
     deactivate_widget,
     toggle_widget,
-    set_about_toc_open,
+    // set_about_toc_open,
 
     subscribe,
     subscribe_diff,
@@ -265,7 +265,7 @@ export const toggle_view = demoStore.toggle_view;
 export const activate_widget = demoStore.activate_widget;
 export const deactivate_widget = demoStore.deactivate_widget;
 export const toggle_widget = demoStore.toggle_widget;
-export const set_about_toc_open = demoStore.set_about_toc_open;
+// export const set_about_toc_open = demoStore.set_about_toc_open;
 
 export const demo_subscribe = demoStore.subscribe;
 export const demo_subscribe_diff = demoStore.subscribe_diff;

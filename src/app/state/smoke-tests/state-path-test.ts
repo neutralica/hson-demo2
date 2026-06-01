@@ -71,7 +71,7 @@ export function debug_state_find_test(): StateSmokeResult {
         const root = parse_root_from_json({
             ui: {
                 currentView: null,
-                activeWidgets: ["mouse", "parse"],
+                activeWidgets: ["point", "parse"],
                 aboutTocOpen: false,
             },
             items: [
@@ -99,13 +99,13 @@ export function debug_state_find_test(): StateSmokeResult {
         t.eq(
             "activeWidgets semantic value",
             jsonify(unwrap_value_payload(widgetsNode!)),
-            ["mouse", "parse"],
+            ["point", "parse"],
         );
 
         t.eq(
             "activeWidgets[0] semantic value",
             jsonify(unwrap_value_payload(widget0Node!)),
-            "mouse",
+            "point",
         );
 
         t.eq(
@@ -136,7 +136,7 @@ export function debug_state_intentional_fail_test(): StateSmokeResult {
         const root = parse_root_from_json({
             ui: {
                 currentView: null,
-                activeWidgets: ["mouse", "parse"],
+                activeWidgets: ["point", "parse"],
             },
         });
 
@@ -156,7 +156,7 @@ export function debug_state_set_test(): StateSmokeResult {
         const root = parse_root_from_json({
             ui: {
                 currentView: null,
-                activeWidgets: ["mouse", "parse"],
+                activeWidgets: ["point", "parse"],
                 aboutTocOpen: false,
             },
         });
@@ -239,7 +239,7 @@ export function debug_state_remove_test(): StateSmokeResult {
         const root = parse_root_from_json({
             ui: {
                 currentView: "about",
-                activeWidgets: ["mouse", "parse"],
+                activeWidgets: ["point", "parse"],
                 aboutTocOpen: false,
             },
         });
@@ -253,7 +253,7 @@ export function debug_state_remove_test(): StateSmokeResult {
                 {
                     ui: {
                         currentView: "about",
-                        activeWidgets: ["mouse", "parse"],
+                        activeWidgets: ["point", "parse"],
                     },
                 },
             );
@@ -316,7 +316,7 @@ export function debug_state_replace_test(): StateSmokeResult {
             state.replace({
                 ui: {
                     currentView: "about",
-                    activeWidgets: ["mouse"],
+                    activeWidgets: ["point"],
                     aboutTocOpen: true,
                 },
             });
@@ -327,7 +327,7 @@ export function debug_state_replace_test(): StateSmokeResult {
                 {
                     ui: {
                         currentView: "about",
-                        activeWidgets: ["mouse"],
+                        activeWidgets: ["point"],
                         aboutTocOpen: true,
                     },
                 },
@@ -384,10 +384,10 @@ export function debug_store_facade_test(): StateSmokeResult {
         const store = create_demo_store();
 
         store.set_view("test");
-        store.activate_widget("mouse");
-        store.activate_widget("mouse"); // no-op
+        store.activate_widget("point");
+        store.activate_widget("point"); // no-op
         store.set_about_toc_open(true);
-        store.deactivate_widget("mouse");
+        store.deactivate_widget("point");
         store.toggle_view("test"); // back to null
 
         t.eq(

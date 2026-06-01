@@ -4,17 +4,17 @@ export const MIN_DESKTOP_WIDTH =1100
 
 export const COPY_TEXTstr ="© 2026 terminal_gothic — hson-live (Public Parity License 7.0)"
 
-const DEMO_STRINGS = {
-  stage: "stage",
-  demo: "demo",
-  wall: "wall",
-  wallFx: "wall-fx",
-  inset: "screen-inset",
-  screen: "demo-screen",
-  screenFx: "screen-fx",
-  menuBox: "menu-box",
-} as const;
-export const $DS = DEMO_STRINGS;
+// const DEMO_STRINGS = {
+//   stage: "stage",
+//   demo: "demo",
+//   wall: "wall",
+//   wallFx: "wall-fx",
+//   inset: "screen-inset",
+//   screen: "demo-screen",
+//   screenFx: "screen-fx",
+//   menuBox: "menu-box",
+// } as const;
+// export const $DS = DEMO_STRINGS;
 
 
 export const shade_class = (l: string) => {
@@ -40,6 +40,7 @@ export const $FLEURS = "fleurs";
 export const $OKLCH = "oklch";
 export const $POINT = "point";
 export const $ABOUT = "about";
+export const $MOTES = "motes";
 export const MENU_OPTIONS = [
   $ABOUT,
   $TEST,
@@ -48,6 +49,7 @@ export const MENU_OPTIONS = [
   $FLEURS,
   $OKLCH,
   $POINT,
+  $MOTES
 ] as const;
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";

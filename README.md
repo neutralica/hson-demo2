@@ -145,9 +145,7 @@ On mobile, only [fleurs] is available.
 
 ## Purpose of this demo
 
-The goal of LiveDemo is expose the mechanics of the hson-live library in a visible way; its styling is intentionally minimalist. 
-
-Each demo proves at least one of these properties of hson-live:
+The goal of LiveDemo is expose the mechanics of the hson-live library in a visible way. Each demo proves at least one of these properties of hson-live:
 
 - data integrity and stability within the transformation system across repeated loops
 - locally scoped and typed CSS without Shadow DOM 

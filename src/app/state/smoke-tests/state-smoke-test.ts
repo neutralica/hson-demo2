@@ -16,7 +16,7 @@ export function debug_state_smoke_test(): StateSmokeResult {
     const root = parse_root_from_json({
       ui: {
         currentView: null,
-        activeWidgets: ["mouse", "parse"],
+        activeWidgets: ["point", "parse"],
         aboutTocOpen: false,
       },
     });
@@ -34,8 +34,8 @@ export function debug_state_smoke_test(): StateSmokeResult {
     const tocSlot = make_state_slot(root, "ui.aboutTocOpen", listeners);
 
     t.eq("initial currentView", viewSlot.get() as JsonValue, null);
-    t.eq("initial activeWidgets", widgetsSlot.get() as JsonValue, ["mouse", "parse"]);
-    t.eq("initial widget[0]", widget0Slot.get() as JsonValue, "mouse");
+    t.eq("initial activeWidgets", widgetsSlot.get() as JsonValue, ["point", "parse"]);
+    t.eq("initial widget[0]", widget0Slot.get() as JsonValue, "point");
     t.eq("initial aboutTocOpen", tocSlot.get() as JsonValue, false);
 
     t.step("set currentView", () => {

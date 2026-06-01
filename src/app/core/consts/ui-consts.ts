@@ -54,11 +54,11 @@ export const MAIN_OKLCH = CssManager.api().var.key(MAIN_OKLCHname);
 export const MENU_OKLCHname = "hson-color-menu-text";
 export const MENU_OKLCH = CssManager.api().var.key(MENU_OKLCHname);
 
-export const SUBMENU_OKLCHname = "hson-color-submenu-text";
-export const SUBMENU_OKLCH = CssManager.api().var.key(SUBMENU_OKLCHname);
+export const GRAF_OKLCHname = "hson-color-graffiti";
+export const GRAF_OKLCH = CssManager.api().var.key(GRAF_OKLCHname);
 
-export const BACK_OKLCHname = "hson-color-panel-back";
-export const BACK_OKLCH = CssManager.api().var.key(BACK_OKLCHname);
+export const MOTE_OKLCHname = "hson-color-motes";
+export const MOTE_OKLCH = CssManager.api().var.key(MOTE_OKLCHname);
 
 // CHANGED: concrete color constants remain concrete defaults. Do not point these
 // at editable CSS vars; helpers like set_alpha() need real color strings.
@@ -72,10 +72,11 @@ export const TXTcol_ALT = OKLCH_NEUTRALS.steel;
 // export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 
+export const WIDGETcol = TXTcol_CODE;
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
-export const TOCcol = øHSON_COL.s;
+export const TOCcol = øHSON_COL.n;
 
 /* code markdown */
 export const CODE_ALTcol = OKLCH_FLEURS.oxidizedSky;
@@ -122,7 +123,7 @@ export const PINKLIKEcol = øHSON_COL.o;
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 export const $MENU_SHADOW = "1px 1px 25px ";
 
-export const GRAFFITIcol = set_alpha(OKLCH_VIBRANT.roseNeon, 0.2);
+export const GRAFFITIcol = set_alpha(OKLCH_VIBRANT.roseNeon, 0.3);
 export const øCOLS = {
   backlo: deepBack,
   backhi: bckColor,

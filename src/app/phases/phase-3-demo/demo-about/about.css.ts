@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol, øHSON_COL } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_ALT, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol, øHSON_COL, MAIN_OKLCH } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -15,7 +15,6 @@ export const ABOUT_DOCcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "scroll",
   overflowX: "hidden",
-  background: øCOLS.backlo,
   width: "90ch",
 
 };
@@ -28,7 +27,7 @@ export const ABOUT_TOCcss: CssMap = {
   alignContent: "end",
   padding: "1em",
   boxSizing: "border-box",
-  background: øCOLS.backlo,
+  background: "transparent",
   overflowY: "auto",
   overflowX: "hidden",
   ...FONT_FAM_MONO,
@@ -39,7 +38,7 @@ export const ABOUT_P_TEXTcss: CssMap = {
   ...FONT_FAM_MONO,
   whiteSpace: "pre-wrap",
   // lineHeight: "2em",
-  color: TXTcol_MAIN,
+  color: MAIN_OKLCH,
 }
 
 
@@ -98,6 +97,7 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   textUnderlineOffset: "4px",
   color: øHSON_COL.h,
   fontWeight: øfontWeight.fat,
+  background: "transparent",
   _hover: {
     color: øHSON_COL.h,
     background: $gry_.dark,

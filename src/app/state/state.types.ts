@@ -32,10 +32,11 @@ export type DemoView = null |
   "build" |
   "fleurs";
 
-export type DemoWidget = "oklch" |
-  "mouse" |
+export type DemoWidget =
+  "oklch" |
+  "point" |
   "motes";
-// Readonly type alias used everywhere 
+
 
 export type DemoUiState = {
   currentView: DemoView;
@@ -51,8 +52,8 @@ export type DemoState = {
 export type DemoStateRO = Readonly<DemoState>;
 //  listeners receive (next, prev) so they can diff
 
-export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;export type StateSmokeResult = {
-    ok: boolean;
-    steps: string[];
+export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void; export type StateSmokeResult = {
+  ok: boolean;
+  steps: string[];
 };
 

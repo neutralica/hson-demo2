@@ -1,19 +1,39 @@
 import type { CssMap } from "hson-live/types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { TXTcol_CODE, øfontSize, TXTcol_MENU, TXTcol_MAIN, CURRENT_OKLCH } from "../../../core/consts/ui-consts";
+import { set_alpha } from "../../../core/helpers/color-helpers";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
+
+const STIPPLE_DOT = `oklch(90% 0.04 250 / 0.045)`;
+const LOW_WARM_UNDERGLOW = `oklch(72% 0.13 82 / 0.045)`;
+const LOW_COOL_SIDE_WASH = `oklch(62% 0.12 150 / 0.035)`;
+const PANEL_DARK_A = `oklch(6% 0.022 250 / 0.98)`;
+const PANEL_DARK_B = `oklch(2.5% 0.016 286 / 0.99)`;
+
+const OKLCH_PANEL_BACKGROUND = `
+  radial-gradient(circle at 50% 126%, ${LOW_WARM_UNDERGLOW}, transparent 50%),
+  radial-gradient(circle at 20% 104%, ${LOW_COOL_SIDE_WASH}, transparent 44%),
+  linear-gradient(145deg, ${PANEL_DARK_A}, ${PANEL_DARK_B})
+`;
+
+const OKLCH_PANEL_STIPPLED_BACKGROUND = `
+  radial-gradient(circle, ${STIPPLE_DOT} 0 1px, transparent 1.3px),
+  radial-gradient(circle at 50% 126%, ${LOW_WARM_UNDERGLOW}, transparent 50%),
+  radial-gradient(circle at 20% 104%, ${LOW_COOL_SIDE_WASH}, transparent 44%),
+  linear-gradient(145deg, ${PANEL_DARK_A}, ${PANEL_DARK_B})
+`;
 
 export const ROOT_CSS: CssMap = {
   position: "fixed",
   right: "1.2rem",
   bottom: "1.2rem",
   zIndex: "20",
-
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr) 6.35rem",
   gap: "0.85rem",
   alignItems: "stretch",
-
+boxSizing: "content-box",
   width: "min(36rem, calc(100vw - 2.4rem))",
   minHeight: "11.4rem",
   padding: "0.85rem",
@@ -22,18 +42,14 @@ export const ROOT_CSS: CssMap = {
   ...FONT_FAM_MONO,
   fontSize: øfontSize.smol,
 
-  // CHANGED: #12-inspired instrument material: dead CRT glass + amber buried
-  // lamp + ordered/coarse stipple. Keep this static first; animation can be
-  // added later with a pseudo-element veil once the material feels right.
-  background: "radial-gradient(circle at 50% 126%, oklch(72% 0.13 82 / 0.045), transparent 50%), radial-gradient(circle at 20% 104%, oklch(62% 0.12 150 / 0.035), transparent 44%), linear-gradient(145deg, oklch(6% 0.022 250 / 0.98), oklch(2.5% 0.016 286 / 0.99))",
-  backgroundImage: "radial-gradient(circle, oklch(90% 0.04 250 / 0.045) 0 1px, transparent 1.3px), radial-gradient(circle at 50% 126%, oklch(72% 0.13 82 / 0.045), transparent 50%), radial-gradient(circle at 20% 104%, oklch(62% 0.12 150 / 0.035), transparent 44%), linear-gradient(145deg, oklch(6% 0.022 250 / 0.98), oklch(2.5% 0.016 286 / 0.99))",
-  backgroundSize: "7px 7px, auto, auto, auto",
-  backgroundPosition: "1px 2px, center, center, center",
-  backgroundBlendMode: "screen, normal, normal, normal",
+  backgroundImage: OKLCH_PANEL_STIPPLED_BACKGROUND,
+  backgroundSize: `7px 7px, auto, auto, auto`,
+  backgroundPosition: `1px 2px, center, center, center`,
+  backgroundBlendMode: `screen, normal, normal, normal`,
 
-  border: `1px solid oklch(78% 0.13 245 / 0.72)`,
-  outline: `1px solid oklch(78% 0.13 145 / 0.24)`,
-  outlineOffset: "-0.34rem",
+  border: `13px ridge ` + CURRENT_OKLCH,
+  // outline: `1px solid oklch(78% 0.13 145 / 0.24)`,
+  outlineOffset: "0.34rem",
   boxShadow: `0 0 1.05rem oklch(70% 0.16 145 / 0.11), inset 0 -1.15rem 2.4rem oklch(78% 0.14 82 / 0.035), inset 0 0 1.5rem oklch(85% 0.02 260 / 0.04)`,
 
   overflow: "hidden",

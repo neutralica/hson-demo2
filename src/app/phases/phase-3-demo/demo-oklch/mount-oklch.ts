@@ -1,12 +1,12 @@
 import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
-import {  TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, MAIN_OKLCHname, MENU_OKLCHname, SUBMENU_OKLCHname, BACK_OKLCHname } from "../../../core/consts/ui-consts";
+import {  TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname, GRAFFITIcol } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
-import { make_range_attrs, render_prev, read_input_number, apply_to_target } from "./oklch";
-import { parse_oklch } from "../../../core/helpers/color-helpers";
+import { parse_oklch, set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
+const gcss = CssManager.api();
 
 const normalize_parsed_lightness = (l: number): number => {
   // CHANGED: parse_oklch() may return CSS number lightness as 0–1.
@@ -85,7 +85,7 @@ export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
     const initialState = parsed_state_or_default(target.initial, state);
     // CHANGED: var.value reads the stored declaration value; var.get returns
     // a CSS var(...) reference string for use inside CSS maps.
-    return parsed_state_or_default(CssManager.api().var.value(target.varName), initialState);
+    return parsed_state_or_default(gcss.var.value(target.varName), initialState);
   });
 
   const getTargetState = (index: number, fallback: OklchValues): OklchValues => {
@@ -209,25 +209,24 @@ export function make_oklch_model(targets?: readonly OklchTarget[]): OklchPickerM
   return Object.freeze({
     state: OKLCH_DEFAULT_STATE,
     targets: targets ?? [
-      { label: "main text", varName: MAIN_OKLCHname, initial: TXTcol_CODE },
-      { label: "menu text", varName: MENU_OKLCHname, initial: TXTcol_MENU },
-      { label: "submenu text", varName: SUBMENU_OKLCHname, initial: TXTcol_ACTIVE },
-      { label: "panel back", varName: BACK_OKLCHname, initial: OKLCH_NEUTRALS.violetTint },
+      { label: "text", varName: MAIN_OKLCHname, initial: TXTcol_CODE },
+      { label: "menu", varName: MENU_OKLCHname, initial: TXTcol_MENU },
+      { label: "graffiti", varName: GRAF_OKLCHname, initial: GRAFFITIcol },
+      { label: "motes", varName: MOTE_OKLCHname, initial: OKLCH_VIBRANT.yellowSodium },
     ],
   });
 }
 
 function seed_target_vars(targets: readonly OklchTarget[]): void {
-  const css = CssManager.api();
 
   for (const target of targets) {
-    const current = css.var.value(target.varName);
+    const current = gcss.var.value(target.varName);
     if (current !== undefined) continue;
     if (target.initial === undefined) continue;
 
     // CHANGED: seed only missing vars. var.value reads the stored value;
     // var.get returns a reusable CSS reference and is never undefined.
-    css.var.set(target.varName, target.initial);
+    gcss.var.set(target.varName, target.initial);
   }
 }
 
@@ -241,3 +240,37 @@ export function mount_oklch(stage: LiveTree, opts: OklchDemoOpts = {}): void {
   // CURRENT_OKLCH here.
   oklch_init(rig, model);
 }
+
+
+export const make_range_attrs = (channel: OklchChannel): Record<string, string> => {
+  if (channel === "l") return { type: "range", min: "0", max: "100", step: "0.1" };
+  if (channel === "c") return { type: "range", min: "0", max: "1", step: "0.001" };
+  if (channel === "h") return { type: "range", min: "0", max: "360", step: "0.1" };
+  return { type: "range", min: "0", max: "1", step: "0.01" };
+};
+
+export const read_input_number = (input: LiveTree): number => {
+  return Number(input.form.getValue());
+};
+const write_input_number = (input: LiveTree, n: number): void => {
+  input.form.setValue(String(n));
+
+};
+
+export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues): void => {
+  const value = oklch_to_css(state);
+
+
+  gcss.var.set(CURRENT_OKLCHname, value);
+  rig.code.text.set(value);
+
+  for (const item of rig.inputs) {
+    const n = state[item.channel];
+    write_input_number(item.input, n);
+    item.value.text.set(String(n));
+  }
+};
+
+export const apply_to_target = (target: OklchTarget, state: OklchValues): void => {
+  gcss.var.set(target.varName, oklch_to_css(state));
+};

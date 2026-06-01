@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types"
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts"
 import { $gry_, ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts"
-import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE } from "../../../core/consts/ui-consts";
+import { øCOLS, øHSON_COL, SYS_MONOfont, øfontWeight, TXTcol_CODE, MENU_OKLCH, WIDGETcol } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { øfontSize, REDcol, TXTcol_MENU } from "../../../core/consts/ui-consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
@@ -64,11 +64,11 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "0.3em",
   fontWeight: øfontWeight.fat,
-  color: øHSON_COL.h,
+  // color: øHSON_COL.h,
   _hover: {
     // color: $gry_.dim,
     background: øCOLS.backhi,
-    // color: TXTcol_MENU,
+    color: MENU_OKLCH,
     fontWeight: øfontWeight.main,
   },
 };
@@ -76,11 +76,11 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "0.3em",
-  color: øHSON_COL.o,
+  // color: øHSON_COL.o,
   fontWeight: øfontWeight.fat,
   _hover: {
     background: øCOLS.backhi,
-    // color: $gry_.dim,
+    color: WIDGETcol,
     fontWeight: øfontWeight.main,
   },
 
