@@ -184,12 +184,13 @@ export const PANEL_BRANCHcss: CssMap = {
   background: øCOLS.backlo,
 };
 
-export const LOG_SPANcss = (line: string) => {
+export const LOG_SPANcss = (line: string) : CssMap=> {
   return {
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
     minWidth: "0",
     color: get_line_color(line),
-    marginLeft: "1ch",
+    textAlign: "end",
+    // marginLeft: "1ch",
   }
 }

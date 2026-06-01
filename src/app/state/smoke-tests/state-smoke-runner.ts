@@ -1,5 +1,5 @@
 import type { JsonValue } from "hson-live/types";
-import { assert_json_eq } from "../state-helpers";
+import { assert_json_eq, LOG_HR_PART } from "../state-helpers";
 import type { NodeStateSlot, StateSmokeResult } from "../state.types";
 
 type SmokeCtx = {
@@ -29,18 +29,18 @@ export function run_state_smoke(name: string, body: (t: SmokeCtx) => void): Stat
                 );
             }
 
-            steps.push(`>> ${label}: `);
-            steps.push(`OK `);
-steps.push("|=•=-~-");
+            steps.push(`• ${label}: vv`);
+            steps.push(`OK`);
+steps.push(LOG_HR_PART);
 
         },
 
         step(label, fn) {
             try {
                 fn();
-                steps.push(`>> ${label}: `);
-                steps.push(`OK `);
-steps.push("|=•=-~-");
+                steps.push(`• ${label}: vv`);
+                steps.push(`OK`);
+steps.push(LOG_HR_PART);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 throw new Error(`[state smoke] ${label}\n${msg}`);

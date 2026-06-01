@@ -7,6 +7,8 @@ import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards
 import { hson } from "hson-live";
 import { clone_node } from "./clone-node";
 
+export const LOG_HR_PART = "-~-=•=|";
+export const LOG_HR_FULL = "|=•=-~- - - • - - -~-=•=|";
 export function mk_node(tag: string, content: HsonNode[] = []): HsonNode {
   return _CREATE_NODE({
     _tag: tag,
@@ -106,9 +108,9 @@ Xx•.•.•......•.•.•xX
     );
   }
 
-steps.push(`>> ${label} :`);
-steps.push(`OK `);
-steps.push("|=•=-~-");
+steps.push(`• ${label}: vv`);
+steps.push(`OK`);
+steps.push(LOG_HR_PART);
 }
 
 export function node_equal(a: HsonNode, b: HsonNode): boolean {
@@ -161,3 +163,4 @@ export function parse_root_from_json(input: JsonValue): HsonNode {
 
   return root;
 }
+

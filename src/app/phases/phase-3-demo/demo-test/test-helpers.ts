@@ -61,12 +61,12 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
             case "PASS": 
           case "OK:":
             case "OK": return øHSON_COL.n;
-            case ">>": return TXTcol_MAIN;
+            case "• ": return TXTcol_MAIN;
             case "SKIP":
                 case "WARN": return øHSON_COL.s;
                 case "RUN": return TXTcol_ALT;
             case "DONE": return TXTcol_MAIN;
-            case "===":return TXTcol_MAIN;
+            case "===":return TXTcol_ALT;
             case "SUITE:":return TXTcol_MAIN;
             default: return TXTcol_ALT;
         }

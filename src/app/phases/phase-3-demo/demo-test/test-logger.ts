@@ -83,7 +83,7 @@ export function create_test_log(): TestLog {
 
       const s = suites.get(e.suite)!;
       if (e.totalPlanned !== undefined) s.totalPlanned = e.totalPlanned;
-      lastLine = `suite ${e.suite}…`;
+      lastLine = `suite begin: ${e.suite}…`;
       return;
     }
 

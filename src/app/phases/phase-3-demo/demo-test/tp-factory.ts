@@ -21,9 +21,7 @@ import { _snip } from "../../../utils/helpers";
 import type { LoopReport } from "../../../../../../hson-live/dist/types/diagnostics.types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { PANEL_BRANCHcss, TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss } from "./tp.css";
-
-const dividerMajor = "+===============+"
-const dividerMinor = " •-----•"
+import { LOG_HR_PART, LOG_HR_FULL } from "../../../state/state-helpers";
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "all", label: "all" },
@@ -116,6 +114,7 @@ export function tp_factory(): Outcome<TestPanel> {
             fontSize: øfontSize.smol,
             // lineHeight: "0.8",
             // paddingBottom: "2px",
+            textAlign: "end",
             color: get_line_color(line),
         });
     };
@@ -155,14 +154,13 @@ export function tp_factory(): Outcome<TestPanel> {
 
         if (e.t === "suite_begin") {
             currentCaseLine = null;
-            appendLogLine(dividerMajor);
+            appendLogLine(LOG_HR_FULL);
             appendLogLine(`suite: beginning ${e.suite}`);
-            appendLogLine(dividerMajor);
+            appendLogLine(LOG_HR_PART);
             return;
         }
         
         if (e.t === "case_begin") {
-            appendLogLine(dividerMinor);
             currentCaseLine = appendLogLine(`run - ${e.name}`);
             return;
         }
@@ -179,7 +177,7 @@ export function tp_factory(): Outcome<TestPanel> {
                 
                 if (e.status === "fail" && e.err) {
                     appendLogSpan(currentCaseLine, _snip(`— ${e.err}`, 2000));
-                    appendLogLine(dividerMajor);
+                    appendLogLine(LOG_HR_FULL);
                 }
             } else {
                 const fallback = appendLogLine(statusText);
