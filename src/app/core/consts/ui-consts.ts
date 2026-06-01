@@ -20,7 +20,7 @@ export const øHSON_COL = {
   // h: OKLCH_VIBRANT.blueElecky,
   h: OKLCH_FLEURS.oxidizedSky,
   s: OKLCH_VIBRANT.yellowBrass,
-  o: OKLCH_VIBRANT.roseSmoke,
+  o: OKLCH_VIBRANT.roseNeon2,
   n: OKLCH_VIBRANT.mossToxic,
 };
 
@@ -72,7 +72,7 @@ export const TXTcol_ALT = OKLCH_NEUTRALS.steel;
 // export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 
-export const WIDGETcol = TXTcol_CODE;
+export const WIDGETcol = TXTcol_MAIN;
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
@@ -123,7 +123,7 @@ export const PINKLIKEcol = øHSON_COL.o;
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 export const $MENU_SHADOW = "1px 1px 25px ";
 
-export const GRAFFITIcol = set_alpha(OKLCH_VIBRANT.roseNeon, 0.3);
+export const GRAFFITIcol = set_alpha(øHSON_COL.o, 0.3);
 export const øCOLS = {
   backlo: deepBack,
   backhi: bckColor,

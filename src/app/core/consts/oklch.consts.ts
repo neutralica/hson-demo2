@@ -16,6 +16,7 @@ export const OKLCH_VIBRANT = {
   redRustBloom: "oklch(0.60 0.095 15)", // dusty red-brown
   roseSmoke: "oklch(0.73 0.090 350)", // desaturated red-rose
   roseNeon: "oklch(0.74 0.200 355)", // hot pink-red glow
+  roseNeon2: "oklch(0.7 0.170 355)", // hot pink-red glow
 
 
   // --- oranges / ambers ---

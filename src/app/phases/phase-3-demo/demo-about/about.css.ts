@@ -95,12 +95,13 @@ export const HRcss: CssMap = {
 export const TOC_BTN_ACTIVEcss: CssMap = {
   textDecoration: "underline",
   textUnderlineOffset: "4px",
-  color: øHSON_COL.h,
+  color: TOCcol,
+  opacity: "1",
   fontWeight: øfontWeight.fat,
   background: "transparent",
   _hover: {
-    color: øHSON_COL.h,
-    background: $gry_.dark,
+    // color: øHSON_COL.h,
+    background: TXTcol_ALT,
   },
 };
 
@@ -108,6 +109,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
   color: TOCcol,
+  opacity: "0.8",
   fontSize: øfontSize.main,
   _hover: {
     color: øCOLS.backlo,

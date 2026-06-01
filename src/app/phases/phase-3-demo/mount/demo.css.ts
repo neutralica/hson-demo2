@@ -35,6 +35,7 @@ export const MAIN_MENUcss: CssMap = {
   cursor: "pointer",
   lineHeight: "2",
   background: øCOLS.backlo,
+  opacity: "0.9",
   // textShadow: $MENU_SHADOW + set_alpha(TXTcol_MENU, 0.4)
   //         + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
   fontWeight: øfontWeight.main,
