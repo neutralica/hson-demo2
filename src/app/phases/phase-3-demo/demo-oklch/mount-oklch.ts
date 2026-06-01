@@ -8,7 +8,7 @@ import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts
 
 const gcss = CssManager.api();
 
-const normalize_parsed_lightness = (l: number): number => {
+const normalizeLightness = (l: number): number => {
   // CHANGED: parse_oklch() may return CSS number lightness as 0–1.
   // The picker state stores lightness as 0–100 because oklch_to_css() emits `%`.
   if (l >= 0 && l <= 1) return l * 100;
@@ -16,14 +16,14 @@ const normalize_parsed_lightness = (l: number): number => {
 };
 const defOk = parse_oklch(TXTcol_MENU);
 
-export const OKLCH_DEFAULT_STATE: OklchValues = Object.freeze({
-  l: normalize_parsed_lightness(defOk.l),
+const OKLCH_DEFAULT_STATE: OklchValues = Object.freeze({
+  l: normalizeLightness(defOk.l),
   c: defOk.c,
   h: defOk.h,
   a: defOk.a ?? 1,
 });
 
-function parsed_state_or_default(value: string | undefined, fallback: OklchValues): OklchValues {
+function stateOrDefault(value: string | undefined, fallback: OklchValues): OklchValues {
   // CHANGED: this helper accepts concrete OKLCH strings only. Do not pass
   // CssManager.api().var.get(...) here; that returns a CSS var reference such as
   // `var(--hson-color-main-text)`, not the current stored value.
@@ -33,10 +33,10 @@ function parsed_state_or_default(value: string | undefined, fallback: OklchValue
   try {
     const parsed = parse_oklch(value);
 
-    return normalize_oklch_state({
+    return normalizeOklch({
       ...parsed,
       // CHANGED: convert parsed CSS-number lightness into the picker scale.
-      l: normalize_parsed_lightness(parsed.l),
+      l: normalizeLightness(parsed.l),
       a: parsed.a ?? 1,
     });
   } catch {
@@ -45,7 +45,7 @@ function parsed_state_or_default(value: string | undefined, fallback: OklchValue
 }
 
 
-export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRig {
+ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
   const inputs: OklchInputRig[] = [];
   const channels: OklchChannel[] = ["l", "c", "h", "a"];
 
@@ -55,7 +55,7 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   for (const channel of channels) {
     const row = mk_div_cls_txt(controls, `oklch-row-${channel}`, channel).css.setMany(ROW_CSS);
     const input = row.create.input()
-      .attr.setMany(make_range_attrs(channel))
+      .attr.setMany(mk_rangeAttrs(channel))
       .form.setValue(String(model.state[channel]))
       .css.setMany(RANGE_CSS);
     const value = mk_div_cls(row, `oklch-value-${channel}`);
@@ -77,15 +77,15 @@ export function oklch_factory(stage: LiveTree, model: OklchPickerModel): OklchRi
   return Object.freeze({ root, preview, code, inputs, targetRows });
 }
 
-export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
+function oklchInit(rig: OklchRig, model: OklchPickerModel): void {
   let state = model.state;
   let activeTargetIndex = 0;
 
   const targetStates: OklchValues[] = model.targets.map((target) => {
-    const initialState = parsed_state_or_default(target.initial, state);
+    const initialState = stateOrDefault(target.initial, state);
     // CHANGED: var.value reads the stored declaration value; var.get returns
     // a CSS var(...) reference string for use inside CSS maps.
-    return parsed_state_or_default(gcss.var.value(target.varName), initialState);
+    return stateOrDefault(gcss.var.value(target.varName), initialState);
   });
 
   const getTargetState = (index: number, fallback: OklchValues): OklchValues => {
@@ -112,7 +112,7 @@ export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
   };
 
   const render = (): void => {
-    render_prev(rig, model, state);
+    renderPrev(rig, model, state);
     syncInputsToState();
 
     for (let i = 0; i < rig.targetRows.length; i += 1) {
@@ -124,7 +124,7 @@ export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
       // truth. render_prev() no longer rewrites target rows separately, which
       // avoids row labels/colors being updated through two different paths.
       const targetState = getTargetState(i, state);
-      const targetColor = oklch_to_css(targetState);
+      const targetColor = oklchToCss(targetState);
       row.text.set(`${target.label}: ${targetColor}`);
       row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
       row.css.setMany({ color: targetColor });
@@ -133,12 +133,12 @@ export function oklch_init(rig: OklchRig, model: OklchPickerModel): void {
 
   for (const item of rig.inputs) {
     item.input.listen.onInput(() => {
-      state = update_oklch_state(state, item.channel, read_input_number(item.input));
+      state = updateOklchState(state, item.channel, readInputValue(item.input));
 
       targetStates[activeTargetIndex] = state;
 
       const target = model.targets[activeTargetIndex];
-      if (target) apply_to_target(target, state);
+      if (target) applyToTarget(target, state);
 
       render();
     });
@@ -175,7 +175,7 @@ const round = (n: number, places: number): number => {
   return Math.round(n * p) / p;
 };
 
-export function normalize_oklch_state(input: OklchValues): OklchValues {
+function normalizeOklch(input: OklchValues): OklchValues {
   return Object.freeze({
     l: round(clamp(input.l, 0, 100), 1),
     c: round(clamp(input.c, 0, 1), 3),
@@ -184,19 +184,19 @@ export function normalize_oklch_state(input: OklchValues): OklchValues {
   });
 }
 
-export function update_oklch_state(
+function updateOklchState(
   prev: OklchValues,
   channel: OklchChannel,
   value: number,
 ): OklchValues {
-  return normalize_oklch_state({
+  return normalizeOklch({
     ...prev,
     [channel]: value,
   });
 }
 
-export function oklch_to_css(state: OklchValues): string {
-  const s = normalize_oklch_state(state);
+function oklchToCss(state: OklchValues): string {
+  const s = normalizeOklch(state);
 
   if (s.a >= 1) {
     return `oklch(${s.l}% ${s.c} ${s.h})`;
@@ -205,7 +205,7 @@ export function oklch_to_css(state: OklchValues): string {
   return `oklch(${s.l}% ${s.c} ${s.h} / ${s.a})`;
 }
 
-export function make_oklch_model(targets?: readonly OklchTarget[]): OklchPickerModel {
+ function makeOklchModel(targets?: readonly OklchTarget[]): OklchPickerModel {
   return Object.freeze({
     state: OKLCH_DEFAULT_STATE,
     targets: targets ?? [
@@ -217,7 +217,7 @@ export function make_oklch_model(targets?: readonly OklchTarget[]): OklchPickerM
   });
 }
 
-function seed_target_vars(targets: readonly OklchTarget[]): void {
+function seedTargetVars(targets: readonly OklchTarget[]): void {
 
   for (const target of targets) {
     const current = gcss.var.value(target.varName);
@@ -231,34 +231,34 @@ function seed_target_vars(targets: readonly OklchTarget[]): void {
 }
 
 export function mount_oklch(stage: LiveTree, opts: OklchDemoOpts = {}): void {
-  const model = make_oklch_model(opts.targets);
-  seed_target_vars(model.targets);
-  const rig = oklch_factory(stage, model);
+  const model = makeOklchModel(opts.targets);
+  seedTargetVars(model.targets);
+  const rig = oklchFactory(stage, model);
 
   // CHANGED: oklch_init() now chooses the first target's actual current color
   // before first render, so mount should not write the fallback model state into
   // CURRENT_OKLCH here.
-  oklch_init(rig, model);
+  oklchInit(rig, model);
 }
 
 
-export const make_range_attrs = (channel: OklchChannel): Record<string, string> => {
+const mk_rangeAttrs = (channel: OklchChannel): Record<string, string> => {
   if (channel === "l") return { type: "range", min: "0", max: "100", step: "0.1" };
   if (channel === "c") return { type: "range", min: "0", max: "1", step: "0.001" };
   if (channel === "h") return { type: "range", min: "0", max: "360", step: "0.1" };
   return { type: "range", min: "0", max: "1", step: "0.01" };
 };
 
-export const read_input_number = (input: LiveTree): number => {
+const readInputValue = (input: LiveTree): number => {
   return Number(input.form.getValue());
 };
-const write_input_number = (input: LiveTree, n: number): void => {
+const writeInputValue = (input: LiveTree, n: number): void => {
   input.form.setValue(String(n));
 
 };
 
-export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues): void => {
-  const value = oklch_to_css(state);
+const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues): void => {
+  const value = oklchToCss(state);
 
 
   gcss.var.set(CURRENT_OKLCHname, value);
@@ -266,11 +266,11 @@ export const render_prev = (rig: OklchRig, model: OklchPickerModel, state: Oklch
 
   for (const item of rig.inputs) {
     const n = state[item.channel];
-    write_input_number(item.input, n);
+    writeInputValue(item.input, n);
     item.value.text.set(String(n));
   }
 };
 
-export const apply_to_target = (target: OklchTarget, state: OklchValues): void => {
-  gcss.var.set(target.varName, oklch_to_css(state));
+ const applyToTarget = (target: OklchTarget, state: OklchValues): void => {
+  gcss.var.set(target.varName, oklchToCss(state));
 };
