@@ -135,18 +135,21 @@ export function build_suites_for_mode(
 
   if (mode === "transform") {
     return _freeze([
-      make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/new", map),
-      make_transform_test_suite(h, EXTRA_FIXTURES, "transform/extra", map),
-      make_transform_test_suite(h, HSON_FIXTURES, "transform/hson/fixtures", map),
-      make_transform_test_suite(h, TRANSFORM_FAILS, "transform/invalid/fail_is_pass", map, "auto", "fail"),
-      make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/invalid", map, "hson", "fail"),
-      make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
-      make_transform_test_suite(
-        h,
-        make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-        `generated/json/seed_${GENERATED_JSON_SEED}`,
-        map,
-      ),
+      make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/json/basic-test", map),
+    make_transform_test_suite(
+      h,
+      make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+      `fuzzer/json/seed_${GENERATED_JSON_SEED}`,
+      map,
+    ),
+    make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
+    make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
+    make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/html/new", map),
+    make_transform_test_suite(h, EXTRA_FIXTURES, "transform/misc-extra", map),
+    make_transform_test_suite(h, HSON_FIXTURES, "transform/hson", map),
+    make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
+    make_transform_test_suite(h, TRANSFORM_FAILS, "transform/_INVALID", map, "auto", "fail"),
+    make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/_INVALID", map, "hson", "fail"),
     ]);
   }
   if (mode === "dev") {

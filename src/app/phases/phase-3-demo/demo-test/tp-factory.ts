@@ -58,12 +58,12 @@ export function tp_factory(): Outcome<TestPanel> {
     const chips = create_test_chips(rowContainer);
 
     // main two-column content
-    const content = mk_div_id(branch, "test-content") .css.setMany(TEST_CONTENTcss);
+    const content = mk_div_id(branch, "test-content").css.setMany(TEST_CONTENTcss);
 
     const inspectorPane = mk_div_id(content, "test-inspector-pane")
         .css.setMany(TEST_INSPECTOR_PANEcss);
 
-    const logPane =mk_div_id(content, "test-log-pane")
+    const logPane = mk_div_id(content, "test-log-pane")
         .css.setMany(TEST_LOG_PANEcss);
 
     const logger = mk_div_id(logPane, "test-logger")
@@ -159,38 +159,38 @@ export function tp_factory(): Outcome<TestPanel> {
             appendLogLine(LOG_HR_PART);
             return;
         }
-        
+
         if (e.t === "case_begin") {
-            currentCaseLine = appendLogLine(`run - ${e.name}`);
+            currentCaseLine = appendLogLine(`• ${e.name}`);
             return;
         }
-        
+
         if (e.t === "case_end") {
             const statusText = e.status.toUpperCase();
-            
+
             if (currentCaseLine) {
-                const t =     appendLogLine(statusText);
-                
+                const t = appendLogLine(statusText);
+
                 if (typeof e.ms === "number") {
                     appendLogSpan(t, `(${e.ms.toFixed(1)}ms)`);
                 }
-                
+
                 if (e.status === "fail" && e.err) {
                     appendLogSpan(currentCaseLine, _snip(`— ${e.err}`, 2000));
                     appendLogLine(LOG_HR_FULL);
                 }
             } else {
                 const fallback = appendLogLine(statusText);
-                
+
                 if (typeof e.ms === "number") {
                     appendLogSpan(fallback, `(${e.ms.toFixed(1)}ms)`);
                 }
-                
+
                 if (e.status === "fail" && e.err) {
                     appendLogSpan(fallback, _snip(`— ${e.err}`, 2000));
                 }
             }
-
+            appendLogLine(LOG_HR_PART);
             currentCaseLine = null;
             return;
         }

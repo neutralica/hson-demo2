@@ -76,7 +76,7 @@ export const WIDGETcol = TXTcol_MAIN;
 
 /* markdown highlighting */
 export const HEADERcol = OKLCH_FLEURS.greyLilac;
-export const TOCcol = øHSON_COL.n;
+export const TOCcol = TXTcol_CODE;
 
 /* code markdown */
 export const CODE_ALTcol = OKLCH_FLEURS.oxidizedSky;

@@ -147,16 +147,16 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .css.setMany(HSON_SUBcss);
 
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
-
+  const mk_btn_txt = (txt: string) => `${txt}`
   const menu = {
-    aboutBtn: mk_div_id_txt(menuBox, `${$ABOUT}-button`, `[${$ABOUT}]`),
-    testBtn: mk_div_id_txt(menuBox, `${$TEST}-button`, `[${$TEST}]`),
-    parseBtn: mk_div_id_txt(menuBox, `${$PARSE}-button`, `[${$PARSE}]`),
-    buildBtn: mk_div_id_txt(menuBox, `${$BUILD}-button`, `[${$BUILD}]`),
-    fleurBtn: mk_div_id_txt(menuBox, `${$FLEURS}-button`, `[${$FLEURS}]`),
-    mouseBtn: mk_div_id_txt(menuBox, `${$POINT}-button`, `[${$POINT}]`),
-    oklchBtn: mk_div_id_txt(menuBox, `${$OKLCH}-button`, `[${$OKLCH}]`),
-    motesBtn: mk_div_id_txt(menuBox, `${$OKLCH}-button`, `[${$MOTES}]`),
+    aboutBtn: mk_div_id_txt(menuBox, `${$ABOUT}-button`, mk_btn_txt($ABOUT)),
+    testBtn: mk_div_id_txt(menuBox, `${$TEST}-button`, mk_btn_txt($TEST)),
+    parseBtn: mk_div_id_txt(menuBox, `${$PARSE}-button`, mk_btn_txt($PARSE)),
+    buildBtn: mk_div_id_txt(menuBox, `${$BUILD}-button`, mk_btn_txt($BUILD)),
+    fleurBtn: mk_div_id_txt(menuBox, `${$FLEURS}-button`, mk_btn_txt($FLEURS)),
+    mouseBtn: mk_div_id_txt(menuBox, `${$POINT}-button`, mk_btn_txt($POINT)),
+    oklchBtn: mk_div_id_txt(menuBox, `${$OKLCH}-button`, mk_btn_txt($OKLCH)),
+    motesBtn: mk_div_id_txt(menuBox, `${$MOTES}-button`, mk_btn_txt($MOTES)),
 
   } as const;
 

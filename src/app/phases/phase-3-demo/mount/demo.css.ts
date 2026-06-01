@@ -36,6 +36,7 @@ export const MAIN_MENUcss: CssMap = {
   lineHeight: "2",
   background: øCOLS.backlo,
   opacity: "0.9",
+  textIndent: "1rem",
   // textShadow: $MENU_SHADOW + set_alpha(TXTcol_MENU, 0.4)
   //         + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
   fontWeight: øfontWeight.main,
@@ -44,7 +45,6 @@ export const MAIN_MENUcss: CssMap = {
     background:MENU_OKLCH,
     color: øCOLS.backhi
   },
-  
   _active: {
         background: øCOLS.backhi,
     color: BLUELIKEcol,
@@ -75,7 +75,7 @@ export const MENU_CONTAINERcss: CssMap = {
   width: "auto",
   height: "100%",
   // pointerEvents: "none",
-  marginLeft: "2rem",
+  marginLeft: "3rem",
   marginTop: "2rem",
   zIndex: "40",
 

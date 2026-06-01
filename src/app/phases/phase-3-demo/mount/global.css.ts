@@ -61,26 +61,46 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 };
 
 export const MENU_ACTIVE_VIEWcss: CssMap = {
-  textDecoration: "underline",
-  textUnderlineOffset: "0.3em",
+  // textDecoration: "underline",
+  // textUnderlineOffset: "0.3em",
   fontWeight: øfontWeight.fat,
   opacity: "1",
+  __before: {
+    content: "> ",
+    position: "absolute",
+    left: "-1rem",
+  },
   _hover: {
     // color: $gry_.dim,
-    background:TXTcol_ALT,
+    background: TXTcol_ALT,
     color: øCOLS.backlo,
     fontWeight: øfontWeight.main,
+    __before: {
+      content: "x ",
+      position: "absolute",
+      left: "-1rem",
+    },
   },
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
-  textDecoration: "underline",
-  textUnderlineOffset: "0.3em",
+  // textDecoration: "underline",
+  // textUnderlineOffset: "0.3em",
   // color: øHSON_COL.o,
   fontWeight: øfontWeight.fat,
   opacity: "1",
+  __before: {
+    content: "• ",
+    position: "absolute",
+    left: "-1rem",
+  },
   _hover: {
-    background:TXTcol_ALT,
+    __before: {
+      content: "x ",
+      position: "absolute",
+      left: "-1rem",
+    },
+    background: TXTcol_ALT,
     color: øCOLS.backlo,
     fontWeight: øfontWeight.main,
   },

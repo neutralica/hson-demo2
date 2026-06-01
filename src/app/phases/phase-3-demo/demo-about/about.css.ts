@@ -93,15 +93,25 @@ export const HRcss: CssMap = {
 };
 
 export const TOC_BTN_ACTIVEcss: CssMap = {
-  textDecoration: "underline",
-  textUnderlineOffset: "4px",
+  // textDecoration: "underline",
+  // textUnderlineOffset: "4px",
   color: TOCcol,
   opacity: "1",
   fontWeight: øfontWeight.fat,
   background: "transparent",
+  __before: {
+    content: "> ",
+    position: "relative",
+    marginRight : "1rem"
+  },
   _hover: {
     // color: øHSON_COL.h,
     background: TXTcol_ALT,
+    __before: {
+    content: "x ",
+    // position: "absolute",
+    // left: "-1rem",
+  },
   },
 };
 
@@ -111,6 +121,10 @@ export const TOC_BTN_IDLEcss: CssMap = {
   color: TOCcol,
   opacity: "0.8",
   fontSize: øfontSize.main,
+  __before: {
+    // position: "absolute",
+    // left: "-1rem",
+  },
   _hover: {
     color: øCOLS.backlo,
     background: TOCcol,
