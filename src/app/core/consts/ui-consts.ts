@@ -87,7 +87,7 @@ export const CODE_QUOTEcol =  OKLCH_VIBRANT.redInfra;
 export const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
 export const COMMENTScol = ACID_WASH_OKLCH.fern;
 export const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
-export const LISTcol = øHSON_COL.h;
+export const LISTcol = øHSON_COL.n;
 
 
 /* misc markdown */

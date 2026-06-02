@@ -175,6 +175,16 @@ export const HSON_SUBcss: CssMap = {
   userSelect: "none",
 }
 
+
+
+export const OKLCH_HOSTcss = {
+  position: "fixed",
+  right: "1.2rem",
+  bottom: "1.2rem",
+  zIndex: "20",
+};
+
+
 export const COPYRITEcss: CssMap = {
   fontFamily: SYS_SANSfont,
   fontSize: øfontSize.smol,

@@ -25,10 +25,10 @@ const OKLCH_PANEL_STIPPLED_BACKGROUND = `
 `;
 
 export const ROOT_CSS: CssMap = {
-  position: "fixed",
-  right: "1.2rem",
-  bottom: "1.2rem",
-  zIndex: "20",
+  // position: "fixed",
+  // right: "1.2rem",
+  // bottom: "1.2rem",
+  // zIndex: "20",
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr) 6.35rem",
   gap: "0.85rem",

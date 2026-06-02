@@ -1,7 +1,7 @@
 import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
-import {  TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname, GRAFFITIcol } from "../../../core/consts/ui-consts";
+import { TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname, GRAFFITIcol } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import { parse_oklch, set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
@@ -45,7 +45,7 @@ function stateOrDefault(value: string | undefined, fallback: OklchValues): Oklch
 }
 
 
- function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
+function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
   const inputs: OklchInputRig[] = [];
   const channels: OklchChannel[] = ["l", "c", "h", "a"];
 
@@ -158,10 +158,7 @@ function oklchInit(rig: OklchRig, model: OklchPickerModel): void {
       render();
     });
   }
-  rig.root.listen.document.onKeyDown((ke: KeyboardEvent) => {
-    if (ke.key === "Escape")
-      rig.root.removeSelf();
-  })
+
   render();
 }
 
@@ -205,7 +202,7 @@ function oklchToCss(state: OklchValues): string {
   return `oklch(${s.l}% ${s.c} ${s.h} / ${s.a})`;
 }
 
- function makeOklchModel(targets?: readonly OklchTarget[]): OklchPickerModel {
+function makeOklchModel(targets?: readonly OklchTarget[]): OklchPickerModel {
   return Object.freeze({
     state: OKLCH_DEFAULT_STATE,
     targets: targets ?? [
@@ -271,6 +268,6 @@ const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues):
   }
 };
 
- const applyToTarget = (target: OklchTarget, state: OklchValues): void => {
+const applyToTarget = (target: OklchTarget, state: OklchValues): void => {
   gcss.var.set(target.varName, oklchToCss(state));
 };
