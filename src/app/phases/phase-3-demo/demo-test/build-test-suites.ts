@@ -139,7 +139,7 @@ export function build_suites_for_mode(
     make_transform_test_suite(
       h,
       make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-      `fuzzer/json/seed_${GENERATED_JSON_SEED}`,
+      `transform/fuzz-json/seed_${GENERATED_JSON_SEED}`,
       map,
     ),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
@@ -189,7 +189,7 @@ export function build_suites_for_mode(
     make_transform_test_suite(
       h,
       make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-      `fuzzer/json/seed_${GENERATED_JSON_SEED}`,
+      `transform/fuzz-json/seed_${GENERATED_JSON_SEED}`,
       map,
     ),
     make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),

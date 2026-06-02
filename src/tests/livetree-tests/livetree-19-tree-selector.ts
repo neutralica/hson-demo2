@@ -28,17 +28,17 @@ export function livetree_tree_selector_surface(): TestSuite {
           (tree as any).__result = {
             length: items.length,
 
-            firstId: items.first()?.node._attrs.id,
-            lastId: items.last()?.node._attrs.id,
+            firstId: items.first()?.node.$_attrs.id,
+            lastId: items.last()?.node.$_attrs.id,
 
-            atZeroId: items.at(0)?.node._attrs.id,
-            atOneId: items.at(1)?.node._attrs.id,
-            atTwoId: items.at(2)?.node._attrs.id,
+            atZeroId: items.at(0)?.node.$_attrs.id,
+            atOneId: items.at(1)?.node.$_attrs.id,
+            atTwoId: items.at(2)?.node.$_attrs.id,
             atMiss: items.at(3),
 
             arrayIsArray: Array.isArray(arr),
             arrayLength: arr.length,
-            arrayIds: arr.map((item) => item.node._attrs.id),
+            arrayIds: arr.map((item) => item.node.$_attrs.id),
           };
         },
 
@@ -87,7 +87,7 @@ export function livetree_tree_selector_surface(): TestSuite {
             atZero: missing.at(0),
             arrayIsArray: Array.isArray(arr),
             arrayLength: arr.length,
-            mappedLength: missing.map((item) => item.node._attrs.id).length,
+            mappedLength: missing.map((item) => item.node.$_attrs.id).length,
           };
         },
 
@@ -126,13 +126,13 @@ export function livetree_tree_selector_surface(): TestSuite {
           const eachIndexes: number[] = [];
 
           items.each((item, index) => {
-            const idd = typeof item.node._attrs.id === "string" ? item.node._attrs.id : `${item.node._attrs.id}` || "";
+            const idd = typeof item.node.$_attrs.id === "string" ? item.node.$_attrs.id : `${item.node.$_attrs.id}` || "";
             eachIds.push(idd);
             eachIndexes.push(index);
           });
 
           (tree as any).__result = {
-            mapIds: items.map((item) => item.node._attrs.id),
+            mapIds: items.map((item) => item.node.$_attrs.id),
             eachIds,
             eachIndexes,
           };
@@ -173,16 +173,16 @@ export function livetree_tree_selector_surface(): TestSuite {
         async act(tree) {
           const items = tree.findAll.byData("kind", "item");
 
-          const kept = items.filter((item) => item.node._attrs["data-keep"] === "yes");
-          const rejected = items.filter((item) => item.node._attrs["data-keep"] === "never");
+          const kept = items.filter((item) => item.node.$_attrs["data-keep"] === "yes");
+          const rejected = items.filter((item) => item.node.$_attrs["data-keep"] === "never");
 
           (tree as any).__result = {
             originalLength: items.length,
 
             keptLength: kept.length,
-            keptFirstId: kept.first()?.node._attrs.id,
-            keptLastId: kept.last()?.node._attrs.id,
-            keptIds: kept.map((item) => item.node._attrs.id),
+            keptFirstId: kept.first()?.node.$_attrs.id,
+            keptLastId: kept.last()?.node.$_attrs.id,
+            keptIds: kept.map((item) => item.node.$_attrs.id),
 
             rejectedLength: rejected.length,
             rejectedFirst: rejected.first(),
@@ -228,7 +228,7 @@ export function livetree_tree_selector_surface(): TestSuite {
           (tree as any).__result = {
             mutatedArrayLength: arr.length,
             selectorLengthAfterArrayMutation: items.length,
-            selectorLastIdAfterArrayMutation: items.last()?.node._attrs.id,
+            selectorLastIdAfterArrayMutation: items.last()?.node.$_attrs.id,
           };
         },
 

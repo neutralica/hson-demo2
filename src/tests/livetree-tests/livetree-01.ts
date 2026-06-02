@@ -602,7 +602,7 @@ export function mixedRegression() {
 
         items.each((node, i) => {
           // IR attrs should include data-row
-          const attrs = node.node._attrs ?? {};
+          const attrs = node.node.$_attrs ?? {};
           t.eq(`IR data-row [${i}]`, attrs["data-row"], "42");
 
           // DOM check if mounted
@@ -927,7 +927,7 @@ export function extraCases(): readonly TestSuite[] {
         t.eq("selector count", items.length, 2);
 
         items.each((node: LiveTree, i: number) => {
-          const attrs = node.node._attrs ?? {};
+          const attrs = node.node.$_attrs ?? {};
           t.eq(`data-row persisted [${i}]`, attrs["data-row"], "42");
 
           const el = node.dom.el();
@@ -1384,20 +1384,20 @@ export function suite_css_and_content(): TestSuite {
         // <div> "hello " <span>"world"</span> </div>
         const node: HsonNode = _CREATE_NODE({
           _tag: "div",
-          _attrs: { id: "x" },
+          $_attrs: { id: "x" },
           _content: [_CREATE_NODE(
             {
               _tag: STR_TAG,
-              _attrs: {},
+              $_attrs: {},
               _content: ["hello "]
             }),
           _CREATE_NODE({
             _tag: "span",
-            _attrs: {},
+            $_attrs: {},
             _content: [
               _CREATE_NODE({
                 _tag: STR_TAG,
-                _attrs: {},
+                $_attrs: {},
                 _content: ["world"]
               })],
           }),

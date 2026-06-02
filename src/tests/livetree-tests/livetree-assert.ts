@@ -9,7 +9,7 @@ export function must_el<T extends Element = HTMLElement>(lt: LiveTree): T {
 export function assert_attr_sync(lt: LiveTree, name: string, expected: string | null): void {
   const el = must_el(lt);
   const node = lt.node;
-  const attrs = node._attrs ?? {};
+  const attrs = node.$_attrs ?? {};
 
   if (expected === null) {
     if (name in attrs) throw new Error(`Expected node attr removed: ${name}`);

@@ -95,7 +95,7 @@ export function livetree_svg_lvl2(): TestSuite {
                     const el = path.dom.el();
 
                     (tree as any).__result = {
-                        nodeAttrs: path.node._attrs,
+                        nodeAttrs: path.node.$_attrs,
                         domAttrs: {
                             d: el?.getAttribute("d"),
                             fill: el?.getAttribute("fill"),

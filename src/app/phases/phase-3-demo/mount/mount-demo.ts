@@ -29,7 +29,7 @@ import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { FLOWER_FIELDcss, FLOWER_LAYERcss } from "../demo-fleurs/fleurs.css";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../demo-pointer/point.css";
-import { ALL_MOTEScss } from "../demo-motes/motes.css";
+import { MOTES_LAYERcss } from "../demo-motes/motes.css";
 import { mount_oklch } from "../demo-oklch/mount-oklch";
 import { mount_panel_spawner } from "../../../widgets/panel-spawner/panel-spawner";
 import { mount_motes } from "../demo-motes/mount-motes";
@@ -78,7 +78,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     .css.setMany(MENU_CONTAINERcss);
   const motesLayer = mk_div_id(screen, "motes")
     .classlist.add("demo motes")
-    .css.setMany(ALL_MOTEScss);
+    .css.setMany(MOTES_LAYERcss);
   // screen.css.setMany(SIZE_WARNINGcss)
   const copyright = screen.create.footer()
     .id.set("copyright-footer")
@@ -281,13 +281,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   demoLayer.listen.document.onKeyDown((ke) => {
     if (ke.key === "Escape") {
       deactivate_widget("oklch");
+      deactivate_widget("point");
     }
   });
-  demoLayer.listen.document.onPointerDown((me: MouseEvent) => {
-    if (!oklchHost.dom.contains.target(me.target) && get_widgets().includes("oklch")) {
-      deactivate_widget("oklch");
-    }
-  })
 
   screen.listen.onClick((ev: MouseEvent) => {
     if (get_view() !== "fleurs") return;

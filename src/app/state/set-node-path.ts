@@ -23,7 +23,7 @@ export function set_node_at_path(
 
     // mutate root in place
     root._tag = payload._tag;
-    root._attrs = payload._attrs;
+    root.$_attrs = payload.$_attrs;
     root._content = clone_node(payload._content ?? []);
     root._meta = clone_node(payload._meta ?? {});
     return;

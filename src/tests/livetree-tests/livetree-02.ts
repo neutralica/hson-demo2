@@ -51,7 +51,7 @@ function suite_attrs_flags_refresh(): TestSuite {
         const el = spanX.dom.el();
 
         t.ok("spanX DOM exists", !!el);
-        t.eq("node data-test cleared", node._attrs?.["data-test"], undefined);
+        t.eq("node data-test cleared", node.$_attrs?.["data-test"], undefined);
         t.eq("DOM data-test removed", el?.getAttribute("data-test") ?? null, null);
         t.eq("DOM hidden removed", el?.hasAttribute("hidden") ?? false, false);
       },
@@ -86,9 +86,9 @@ function suite_attrs_flags_refresh(): TestSuite {
         const el = spanX.dom.el();
 
         t.ok("spanX DOM exists", !!el);
-        t.eq("node data-test set", node._attrs?.["data-test"], "ok");
+        t.eq("node data-test set", node.$_attrs?.["data-test"], "ok");
         t.eq("DOM data-test set", el?.getAttribute("data-test") ?? "", "ok");
-        t.eq("node hidden flag stored", String(node._attrs?.["hidden"] ?? ""), "hidden");
+        t.eq("node hidden flag stored", String(node.$_attrs?.["hidden"] ?? ""), "hidden");
         t.eq("DOM hidden present", el?.hasAttribute("hidden") ?? false, true);
       },
 
@@ -226,15 +226,15 @@ function suite_dataset(): TestSuite {
         const el = btn.dom.el();
 
         t.eq("manager get(state)", btn.data.get("state"), "closed");
-        t.eq("node data-state", node._attrs?.["data-state"], "closed");
+        t.eq("node data-state", node.$_attrs?.["data-state"], "closed");
         t.eq("DOM data-state", el?.getAttribute("data-state") ?? "", "closed");
 
         t.eq("manager get(user-id) removed", btn.data.get("user-id"), undefined);
-        t.ok("node data-user-id removed", !("data-user-id" in (node._attrs ?? {})));
+        t.ok("node data-user-id removed", !("data-user-id" in (node.$_attrs ?? {})));
         t.eq("DOM data-user-id removed", el?.hasAttribute("data-user-id") ?? false, false);
 
         t.eq("manager get(flag)", btn.data.get("flag"), "on");
-        t.eq("node data-flag", node._attrs?.["data-flag"], "on");
+        t.eq("node data-flag", node.$_attrs?.["data-flag"], "on");
         t.eq("DOM data-flag", el?.getAttribute("data-flag") ?? "", "on");
       },
 
@@ -276,8 +276,8 @@ function suite_dataset(): TestSuite {
         t.eq("data-state present in manager", btn.data.get("state"), "open");
         t.eq("data-user-id present in manager", btn.data.get("user-id"), "42");
 
-        t.eq("node data-state", node._attrs?.["data-state"], "open");
-        t.eq("node data-user-id", node._attrs?.["data-user-id"], "42");
+        t.eq("node data-state", node.$_attrs?.["data-state"], "open");
+        t.eq("node data-user-id", node.$_attrs?.["data-user-id"], "42");
 
         t.eq("DOM data-state", el?.getAttribute("data-state") ?? "", "open");
         t.eq("DOM data-user-id", el?.getAttribute("data-user-id") ?? "", "42");
@@ -527,7 +527,7 @@ function suite_dataset_more(): TestSuite {
       assert(tree, t) {
         const btn = tree.find.must.byId("btn");
         const node = btn.node;
-        const attrs = node._attrs ?? {};
+        const attrs = node.$_attrs ?? {};
         const el = btn.dom.el();
 
         t.eq("node data-state updated", attrs["data-state"], "closed");
@@ -1074,7 +1074,7 @@ function suite_find_more(): TestSuite {
       assert(tree, t) {
         const stash = tree as unknown as {
           __liveNode?: HsonNode;
-          __snapshot?: { _attrs?: Record<string, unknown>; };
+          __snapshot?: { $_attrs?: Record<string, unknown>; };
         };
 
         t.ok("live node captured", !!stash.__liveNode);
@@ -1082,19 +1082,19 @@ function suite_find_more(): TestSuite {
 
         t.eq(
           "live node sees mutation",
-          stash.__liveNode?._attrs?.["data-state"],
+          stash.__liveNode?.$_attrs?.["data-state"],
           "mutated"
         );
 
         t.eq(
           "snapshot does not see mutation",
-          stash.__snapshot?._attrs?.["data-state"],
+          stash.__snapshot?.$_attrs?.["data-state"],
           undefined
         );
       },
 
       preview(tree) {
-        return JSON.stringify(tree.node._attrs ?? {});
+        return JSON.stringify(tree.node.$_attrs ?? {});
       },
     },
   ];

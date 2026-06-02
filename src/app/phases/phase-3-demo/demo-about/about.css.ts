@@ -117,7 +117,7 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   __after: {
     content: " <",
     position: "absolute",
-    marginLeft : "1ch"
+    marginLeft : "2ch"
   },
   _hover: {
     // color: øHSON_COL.h,
@@ -126,7 +126,7 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
     __after: {
       content: "x",
       position: "absolute",
-      // right: "1rem",
+      marginLeft : "2ch"
     },
   },
 };
