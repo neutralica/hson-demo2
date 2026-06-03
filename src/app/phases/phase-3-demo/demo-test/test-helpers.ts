@@ -2,7 +2,7 @@ import { type LiveTree } from "hson-live";
 import type { TestSummary } from "./tests.types";
 import { mk_div_id, mk_div_cls } from "../../../utils/makers";
 import  { øHSON_COL, TXTcol_MAIN, TXTcol_GREY } from "../../../core/consts/ui-consts";
-import { TEST_CHIP_ROWcss, MAKE_CHIP_DEFAULTcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
+import { TEST_CHIP_ROWcss, TEST_CHIP_DEFcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
 
 
 export type ChipDisplay = Readonly<{
@@ -17,7 +17,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
 
   // ADDED: small helper so all chips share the same visual language
   const makeChip = (label: string) => {
-    const chip = mk_div_cls(box, "test-chip").css.setMany(MAKE_CHIP_DEFAULTcss);
+    const chip = mk_div_cls(box, "test-chip").css.setMany(TEST_CHIP_DEFcss);
 
     const val = mk_div_cls(chip, "test-chip-value")
       .text.set("—")

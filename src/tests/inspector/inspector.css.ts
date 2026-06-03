@@ -1,16 +1,17 @@
 import type { CssMap } from "hson-live/types";
 import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
-import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch.consts";
-import { øCOLS, øfontWeight } from "../../app/core/consts/ui-consts";
+import { ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "../../app/core/consts/oklch.consts";
+import { TXTcol_CODE, øCOLS, øfontWeight, øHSON_COL } from "../../app/core/consts/ui-consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { øfontSize } from "../../app/core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
+import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
-
-export const NAME_WIDTH = "45ch"; // standardize width so it doesn’t jump
-
+const nameWidth = "45ch"; // standardize width so it doesn’t jump
+const rowFade = `linear-gradient(150deg, ${øCOLS.backhi}, transparent)`;
+const rowFadeFail = `linear-gradient(150deg, ${set_alpha(OKLCH_VIBRANT.redInfra, 0.4)}, transparent)`;
 
 export const LOG_SCROLLcss: CssMap = {
   overflowX: "auto",
@@ -22,9 +23,10 @@ export const LOG_SCROLLcss: CssMap = {
   minHeight: "0",
 };
 
-export const INSPECTORcss = {
+export const INSPECTORcss: CssMap = {
   position: "relative",
   width: "100%",
+  // maxWidth: "90ch",
   height: "100%",
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
@@ -49,17 +51,16 @@ export const TDcss: CssMap = {
 };
 
 export const TD_PREVIEW_ROWcss: CssMap = {
+  ...FONT_FAM_MONO,
   padding: "8px 12px",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
-  ...FONT_FAM_MONO,
   background: øCOLS.backhi,
 };
 
-export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };
 
 export const ROW_SUITEcss: CssMap = {
-  background: øCOLS.backhi,
+  background: rowFade,
   cursor: "pointer",
   textAlign: "left",
 };
@@ -69,8 +70,8 @@ export const ROW_GROUPcss: CssMap = {
 };
 
 export const tdNameCssBase: CssMap = {
-  width: NAME_WIDTH,
-  maxWidth: NAME_WIDTH,
+  width: nameWidth,
+  maxWidth: nameWidth,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
@@ -84,20 +85,18 @@ export const tdNameChildCss: CssMap = {
 };
 
 export const ROW_SUITE_FAILcss: CssMap = {
-  background: "rgba(190, 20, 20, 0.3)",
+  background: rowFadeFail,
   color: ACID_WASH_OKLCH.ash,
 };
 
 
 export const ROW_CASEcss: CssMap = {
-  background: "transparent",
   color: OKLCH_VIBRANT.mintIce,
   fontWeight: øfontWeight.main,
 };
 
 export const ROW_CASE_FAILcss: CssMap = {
-  color: $red_etc_.heartsBlood,
-  background: øCOLS.backhi,
+  color: "red",
   fontWeight: øfontWeight.fat,
   // filter: "saturate(1.3) brightness(1.3)"
 };
@@ -114,15 +113,41 @@ export const MADE_BUTTONcss = {
 
 export const PREVIEW_METAcss: CssMap = {
   minWidth: "0",
-  opacity: "0.85",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  color: ACID_WASH_RGBA.seafoam,
+  // whiteSpace: "nowrap",
+  padding: "1rem",
+  // overflow: "scroll",
+  // textOverflow: "ellipsis",
+  background: øCOLS.backlo,
+  color: øHSON_COL.n,
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {
-  background: øCOLS.backhi,
-  color: ACID_WASH_OKLCH.mutedRed,
+  background: "black",
+  color: OKLCH_VIBRANT.redSignal,
+  height: "fit-content"
   // filter: "saturate(1.3) brightness(1.3)"
+};
+
+export const BUTTON_BARcss = {
+  display: "flex",
+  gap: "1ch",
+  alignItems: "center",
+  justifyContent: "flex-end",
+};
+
+export const INSP_PREV_PREcss = {
+  margin: "0",
+  overflow: "auto",
+  whiteSpace: "pre-wrap",
+  overflowWrap: "anywhere",
+  color: TXTcol_CODE,
+  fontSize: øfontSize.smol
+};
+
+export const INSP_CAP_ROWcss = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  gap: "1ch",
+  alignItems: "center",
+  marginBottom: "0.5rem",
 };

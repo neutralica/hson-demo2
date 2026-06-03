@@ -104,6 +104,7 @@ export const SYS_SANSfont =  /*"'IBM Plex Sans', sans-serif"; // */ "'DM Mono', 
 
 export const GRID_GAPstr = "2px";
 export const $SIDEBAR_WIDTH = "15vw";
+export const $LOGGER_WIDTH = "23vw"
 export const $CONTENT_WIDTH = "90ch";
 
 /* queryable consts */
@@ -122,7 +123,7 @@ export const PINKLIKEcol = øHSON_COL.o;
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 export const $MENU_SHADOW = "1px 1px 25px ";
 
-export const GRAFFITIcol = set_alpha(øHSON_COL.o, 0.3);
+export const GRAFFITIcol = set_alpha(øHSON_COL.o, 0.6);
 export const øCOLS = {
   backlo: deepBack,
   backhi: bckColor,

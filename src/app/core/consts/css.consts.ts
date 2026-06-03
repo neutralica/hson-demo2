@@ -8,4 +8,6 @@ export const FONT_FAM_MONO: CssMap = {
     // letterSpacing: "0.5px",
     // letterSpacing: "0.1px",
     // lineHeight: "1.6rem",
-}
+};
+
+export const CLICKABLEcss: CssMap = { cursor: "pointer", userSelect: "any" };

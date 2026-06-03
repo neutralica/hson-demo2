@@ -20,6 +20,8 @@ import { log_oklch_palette } from "./utils/swatch-logger";
 
 const _pause = () => _sleep(PHASE_LINGER);
 const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
+  log_oklch_palette(OKLCH_VIBRANT, "vibrant");
+  log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
 
 export async function run_app(root: LiveTree): OutcomeAsync<void> {
   root.empty();

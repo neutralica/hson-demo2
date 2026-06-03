@@ -2,7 +2,7 @@
 
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
-import { øCOLS } from "../../../core/consts/ui-consts";
+import { $CONTENT_WIDTH, $SIDEBAR_WIDTH, øCOLS } from "../../../core/consts/ui-consts";
 import { øfontSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_GREY, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
@@ -10,13 +10,14 @@ import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
-import { UI_TEXTcss } from "../demo-test/tp.css";
+import { UI_TEXTcss } from "../../../ui/panels/panels.css";
 
 // --- root that lives inside build div ---
 export const BUILD_ROOTcss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   width: "100%",
+    maxWidth: "calc(" + $SIDEBAR_WIDTH + " + " + $CONTENT_WIDTH + ")",
   height: "100%",
   minWidth: "0",
   minHeight: "0",

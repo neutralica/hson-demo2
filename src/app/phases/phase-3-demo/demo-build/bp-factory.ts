@@ -8,7 +8,7 @@ import { mk_div_cls, mk_div_id, mk_section_cls, mk_span_cls } from "../../../uti
 import { UI_2STACKcss, UI_BTNcss, UI_PANEL_HEADcss, UI_STACK_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
 import { UI_PANEL_HEADERcss } from "../../../ui/panels/panels.css";
 import { øfontSize } from "../../../core/consts/ui-consts";
-import { UI_PANELcss } from "../demo-test/tp.css";
+import { UI_PANELcss } from "../../../ui/panels/panels.css";
 
 // keep this parallel to pp_factory return shape: root + handles
 export type BuildDemo = Readonly<{

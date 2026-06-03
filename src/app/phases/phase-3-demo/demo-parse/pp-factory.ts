@@ -10,7 +10,8 @@ import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../mount/demo.consts";
 import { init_parsing_panels } from "./init-pp";
 import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
-import { UI_PANELcss, UI_TEXTcss } from "../demo-test/tp.css";
+import { UI_PANELcss } from "../../../ui/panels/panels.css";
+import { UI_TEXTcss } from "../../../ui/panels/panels.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];

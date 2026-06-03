@@ -20,7 +20,7 @@ import { flush_dom, next_frame } from "../../../../tests/inspector/inspector.hel
 import { _snip } from "../../../utils/helpers";
 import type { LoopReport } from "../../../../../../hson-live/dist/types/diagnostics.types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
-import { PANEL_BRANCHcss, TEST_ROW_CONTAINERcss, CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss } from "./tp.css";
+import { TP_BRANCHcss, TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss, TP_LOG_ROWcss } from "./tp.css";
 import { LOG_HR_PART, LOG_HR_FULL } from "../../../state/state-helpers";
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
@@ -42,11 +42,11 @@ export function tp_factory(): Outcome<TestPanel> {
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
-        .css.setMany(PANEL_BRANCHcss);
+        .css.setMany(TP_BRANCHcss);
 
     // top row
     const rowContainer = mk_div_id(branch, "row-container").css.setMany(TEST_ROW_CONTAINERcss);
-    const controlsRow = mk_div_id(rowContainer, "test-controls").css.setMany(CONTROL_ROWcss);
+    const controlsRow = mk_div_id(rowContainer, "test-controls").css.setMany(TP_CONTROL_ROWcss);
 
     const runChip = mk_btn(controlsRow, "test-run", "run");
     const suiteSel = controlsRow.create.select().id.set("test-select").css.setMany(TEST_SELECTORcss);
@@ -106,17 +106,7 @@ export function tp_factory(): Outcome<TestPanel> {
     let currentCaseLine: LiveTree | null = null;
 
     const mkLogRow = (line: string): LiveTree => {
-        return logger.create.div().css.setMany({
-            whiteSpace: "pre-wrap",
-            overflowWrap: "normal",
-            minWidth: "0",
-            fontFamily: SYS_SMOLfont,
-            fontSize: øfontSize.smol,
-            // lineHeight: "0.8",
-            // paddingBottom: "2px",
-            textAlign: "end",
-            color: get_line_color(line),
-        });
+        return logger.create.div().css.setMany(TP_LOG_ROWcss(line));
     };
 
     const appendLogLine = (line: string): LiveTree => {

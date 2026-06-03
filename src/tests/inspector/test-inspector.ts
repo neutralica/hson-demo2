@@ -1,7 +1,8 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss,  tdNameChildCss, CLICKABLEcss, TD_PREVIEW_ROWcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss } from "./inspector.css";
+import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, tdNameChildCss, TD_PREVIEW_ROWcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss, BUTTON_BARcss, INSP_PREV_PREcss, INSP_CAP_ROWcss } from "./inspector.css";
+import { CLICKABLEcss } from "../../app/core/consts/css.consts";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections } from "./report-section";
@@ -89,9 +90,9 @@ export function create_inspector(
 
   const tableHost = mk_div_cls(root, "insp-table-host").css.setMany({
     position: "absolute",
-    inset:"0",
+    inset: "0",
     height: "100%",
-    width:"100%",
+    width: "100%",
     display: "flex",
     overflow: "hidden",
     fontSize: øfontSize.main,
@@ -255,14 +256,12 @@ export function create_inspector(
         const ms = c.ms !== undefined ? c.ms.toFixed(1) : "—";
         const preview = c.meta?.preview ?? "";
         const caseIsOpen = expandedCases.has(c.key);
-
+        const isfail = res === "fail";
         const cr = mk_tr(tbody, "insp-case-row");
-        cr.css.setMany({
-          ...ROW_CASEcss,
-          cursor: "pointer",
-        });
-
-        if (res === "fail") cr.css.setMany(ROW_CASE_FAILcss);
+        cr.css.setMany(
+          isfail ? ROW_CASEcss : ROW_CASE_FAILcss,
+          // cursor: "pointer",
+        );
 
         const resCell = mk_td(cr, "c-res", res);
         resCell.css.setMany(TDcss);
@@ -271,12 +270,12 @@ export function create_inspector(
         mk_td(cr, "c-name", c.name).css.setMany({
           ...TDcss,
           ...tdNameChildCss,
-          color: TXTcol_MAIN,
+          color: isfail ? "red" : TXTcol_MAIN,
         });
 
         mk_td(cr, "c-ms", ms).css.setMany({
           ...TDcss,
-          color: TXTcol_MAIN,
+          color: TXTcol_CODE,
         });
 
         // changed: whole case row toggles, not only the name cell
@@ -299,13 +298,7 @@ export function create_inspector(
         cell.empty();
 
         const topRow = cell.create.div().classlist.set("insp-cap-row");
-        topRow.css.setMany({
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) auto",
-          gap: "1ch",
-          alignItems: "center",
-          marginBottom: "0.5rem",
-        });
+        topRow.css.setMany(INSP_CAP_ROWcss);
 
         const metaBox = topRow.create.div().classlist.set("insp-cap-meta");
         metaBox.css.setMany({
@@ -318,12 +311,7 @@ export function create_inspector(
         metaBox.text.set(`${c.suite} :: ${c.name}`);
 
         const btnBar = topRow.create.div().classlist.set("insp-cap-btnbar");
-        btnBar.css.setMany({
-          display: "flex",
-          gap: "1ch",
-          alignItems: "center",
-          justifyContent: "flex-end",
-        });
+        btnBar.css.setMany(BUTTON_BARcss);
 
         const viewBtn = mkTextButton(btnBar, "view");
         const copyBtn = mkTextButton(btnBar, "copy");
@@ -375,16 +363,7 @@ export function create_inspector(
         });
 
         const pre = cell.create.pre().classlist.set("insp-preview-pre");
-        pre.css.setMany({
-          margin: "0",
-          background: "rgba(0,0,0,0.35)",
-          overflow: "auto",
-          maxHeight: "100%",
-          whiteSpace: "pre-wrap",
-          overflowWrap: "anywhere",
-          color: TXTcol_CODE,
-          fontSize: øfontSize.smol
-        });
+        pre.css.setMany(INSP_PREV_PREcss);
 
         pre.text.set(preview || "—");
 

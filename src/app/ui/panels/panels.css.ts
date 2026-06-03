@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { øCOLS } from "../../core/consts/ui-consts";
+import { GRID_GAPstr, øCOLS } from "../../core/consts/ui-consts";
 import { SYS_MONOfont, øfontSize, TXTcol_CODE, TXTcol_MENU } from "../../core/consts/ui-consts";
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
@@ -108,5 +108,32 @@ export const UI_PANEL_HEADERcss: CssMap = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
+};
+
+export const UI_TEXTcss = {
+  height: "100%",
+  minWidth: "0",
+  resize: "none",
+  width: "100%",
+  boxSizing: "border-box",
+  ...FONT_FAM_MONO,
+  // background: COLORS_.bckdeep,
+  border: "none",
+  padding: "10px",
+  color: TXTcol_MENU,
+  outline: "none"
+};
+export const UI_PANELcss: CssMap = {
+  display: "grid",
+  gridTemplateRows: "auto minmax(0, 1fr)",
+  gap: GRID_GAPstr,
+  minHeight: "0",
+  minWidth: "0",
+  width: "100%",
+  padding: "8px",
+  boxSizing: "border-box",
+  overflowY: "auto",
+  maxHeight: "100%",
+  background: øCOLS.backlo,
 };
 

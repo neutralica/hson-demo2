@@ -576,6 +576,34 @@ export function livetree_dom_contains_surface(): TestSuite {
         t.eq("target rejects detached DOM element", r.detachedTarget, false);
       },
     },
+
+    {
+      suite: "##!!TEST FAIL STYLE TEST!!##",
+      name: "this is a deliberately failing test to see how it is styled",
+      dom: true,
+      fixture: "dom/contains",
+      sub: "INVALID/FAIL",
+
+      html: `
+        <main id="root">
+          <section id="panel">Panel</section>
+        </main>
+      `,
+
+      async act(tree) {
+
+
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("this should fail", r.comparableCloneContains, true);
+        t.eq("this should fail too", r.comparableCloneContains, true);
+        t.eq("this should fail three", r.comparableCloneContains, true);
+        t.eq("this should fail also", r.comparableCloneContains, true);
+      },
+    },
   ];
 
   return make_livetree_suite(SUITE, cases);
