@@ -279,6 +279,569 @@ export function livetree_anim_key_preservation(): TestSuite {
     return make_livetree_suite(SUITE, cases);
 }
 
+
+// ADDED: listener API behavior coverage, especially propagation/default/once/off semantics.
+export function livetree_listener_api_surface(): TestSuite {
+  const SUITE = "livetree/listen-api-surface";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "listen.onClick and listen.on generic handlers receive native events and bubble normally",
+      dom: true,
+      fixture: "listen/api",
+      sub: "generic-and-convenience-click-bubble",
+
+      html: `
+        <main id="root">
+          <section id="parent">
+            <button id="child">Click</button>
+          </section>
+        </main>
+      `,
+
+      async act(tree) {
+        const parent = tree.find.must.byId("parent");
+        const child = tree.find.must.byId("child");
+        const childEl = child.dom.must.el();
+
+        let parentGeneric = 0;
+        let parentConvenience = 0;
+        let childGeneric = 0;
+        let childConvenience = 0;
+        let childEventType = "";
+        let childTargetId = "";
+        let childCurrentTargetId = "";
+        let parentSawChildTarget = false;
+
+        parent.listen.on("click", (ev) => {
+          parentGeneric += 1;
+          parentSawChildTarget = ev.target instanceof Element && ev.target.id === "child";
+        });
+
+        parent.listen.onClick(() => {
+          parentConvenience += 1;
+        });
+
+        child.listen.on("click", (ev) => {
+          childGeneric += 1;
+          childEventType = ev.type;
+          childTargetId = ev.target instanceof Element ? ev.target.id : "";
+          childCurrentTargetId = ev.currentTarget instanceof Element ? ev.currentTarget.id : "";
+        });
+
+        child.listen.onClick(() => {
+          childConvenience += 1;
+        });
+
+        childEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          parentGeneric,
+          parentConvenience,
+          childGeneric,
+          childConvenience,
+          childEventType,
+          childTargetId,
+          childCurrentTargetId,
+          parentSawChildTarget,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("child generic listener fires", r.childGeneric, 1);
+        t.eq("child convenience listener fires", r.childConvenience, 1);
+        t.eq("parent generic listener receives bubbled click", r.parentGeneric, 1);
+        t.eq("parent convenience listener receives bubbled click", r.parentConvenience, 1);
+        t.eq("event type is preserved", r.childEventType, "click");
+        t.eq("event target is original child", r.childTargetId, "child");
+        t.eq("event currentTarget is listener host", r.childCurrentTargetId, "child");
+        t.eq("parent sees original child target", r.parentSawChildTarget, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "event.stopPropagation prevents ancestor LiveTree listeners from firing",
+      dom: true,
+      fixture: "listen/api",
+      sub: "stop-propagation-blocks-ancestor",
+
+      html: `
+        <main id="root">
+          <section id="grandparent">
+            <section id="parent">
+              <button id="child">Click</button>
+            </section>
+          </section>
+        </main>
+      `,
+
+      async act(tree) {
+        const grandparent = tree.find.must.byId("grandparent");
+        const parent = tree.find.must.byId("parent");
+        const child = tree.find.must.byId("child");
+        const childEl = child.dom.must.el();
+
+        let childHits = 0;
+        let parentHits = 0;
+        let grandparentHits = 0;
+        let nativeParentHits = 0;
+
+        parent.dom.must.el().addEventListener("pointerdown", () => {
+          nativeParentHits += 1;
+        });
+
+        grandparent.listen.onPointerDown(() => {
+          grandparentHits += 1;
+        });
+
+        parent.listen.onPointerDown(() => {
+          parentHits += 1;
+        });
+
+        child.listen.onPointerDown((ev) => {
+          childHits += 1;
+          ev.stopPropagation();
+        });
+
+        childEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          childHits,
+          parentHits,
+          grandparentHits,
+          nativeParentHits,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("child listener fires before stopping", r.childHits, 1);
+        t.eq("parent LiveTree listener is blocked by stopPropagation", r.parentHits, 0);
+        t.eq("grandparent LiveTree listener is blocked by stopPropagation", r.grandparentHits, 0);
+        t.eq("native parent listener is also blocked", r.nativeParentHits, 0);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "event.stopImmediatePropagation prevents later same-target listeners and ancestors",
+      dom: true,
+      fixture: "listen/api",
+      sub: "stop-immediate-propagation-blocks-same-target",
+
+      html: `
+        <main id="root">
+          <section id="parent">
+            <button id="child">Click</button>
+          </section>
+        </main>
+      `,
+
+      async act(tree) {
+        const parent = tree.find.must.byId("parent");
+        const child = tree.find.must.byId("child");
+        const childEl = child.dom.must.el();
+
+        let firstChildHits = 0;
+        let secondChildHits = 0;
+        let parentHits = 0;
+
+        parent.listen.onPointerDown(() => {
+          parentHits += 1;
+        });
+
+        child.listen.onPointerDown((ev) => {
+          firstChildHits += 1;
+          ev.stopImmediatePropagation();
+        });
+
+        child.listen.onPointerDown(() => {
+          secondChildHits += 1;
+        });
+
+        childEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          firstChildHits,
+          secondChildHits,
+          parentHits,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("first same-target listener fires", r.firstChildHits, 1);
+        t.eq("second same-target listener is blocked", r.secondChildHits, 0);
+        t.eq("ancestor listener is blocked", r.parentHits, 0);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "event.preventDefault marks cancelable events as defaultPrevented",
+      dom: true,
+      fixture: "listen/api",
+      sub: "prevent-default",
+
+      html: `
+        <main id="root">
+          <a id="link" href="#next">Link</a>
+        </main>
+      `,
+
+      async act(tree) {
+        const link = tree.find.must.byId("link");
+        const linkEl = link.dom.must.el();
+
+        let listenerSawCancelable = false;
+        let listenerSawBeforePrevented = true;
+        let listenerSawAfterPrevented = false;
+
+        link.listen.onClick((ev) => {
+          listenerSawCancelable = ev.cancelable;
+          listenerSawBeforePrevented = ev.defaultPrevented;
+          ev.preventDefault();
+          listenerSawAfterPrevented = ev.defaultPrevented;
+        });
+
+        const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+        const dispatchResult = linkEl.dispatchEvent(event);
+
+        (tree as any).__result = {
+          listenerSawCancelable,
+          listenerSawBeforePrevented,
+          listenerSawAfterPrevented,
+          finalDefaultPrevented: event.defaultPrevented,
+          dispatchResult,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("listener sees cancelable event", r.listenerSawCancelable, true);
+        t.eq("listener sees not prevented before preventDefault", r.listenerSawBeforePrevented, false);
+        t.eq("listener sees prevented after preventDefault", r.listenerSawAfterPrevented, true);
+        t.eq("event remains defaultPrevented after dispatch", r.finalDefaultPrevented, true);
+        t.eq("dispatchEvent returns false when default is prevented", r.dispatchResult, false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "listen.once removes listener after first event and does not block normal listeners",
+      dom: true,
+      fixture: "listen/api",
+      sub: "once-and-normal-listeners",
+
+      html: `
+        <main id="root">
+          <button id="button">Click</button>
+        </main>
+      `,
+
+      async act(tree) {
+        const button = tree.find.must.byId("button");
+        const buttonEl = button.dom.must.el();
+
+        let onceHits = 0;
+        let normalHits = 0;
+
+        button.listen.once().onClick(() => {
+          onceHits += 1;
+        });
+
+        button.listen.onClick(() => {
+          normalHits += 1;
+        });
+
+        buttonEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        buttonEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        buttonEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          onceHits,
+          normalHits,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("once listener fires once", r.onceHits, 1);
+        t.eq("normal listener fires for every dispatch", r.normalHits, 3);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "subscription off is idempotent and removes only its own listener",
+      dom: true,
+      fixture: "listen/api",
+      sub: "off-idempotent-single-subscription",
+
+      html: `
+        <main id="root">
+          <button id="button">Click</button>
+        </main>
+      `,
+
+      async act(tree) {
+        const button = tree.find.must.byId("button");
+        const buttonEl = button.dom.must.el();
+
+        let removedHits = 0;
+        let keptHits = 0;
+
+        const removed = button.listen.onClick(() => {
+          removedHits += 1;
+        });
+
+        button.listen.onClick(() => {
+          keptHits += 1;
+        });
+
+        buttonEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        removed.off();
+        removed.off();
+        buttonEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          removedHits,
+          keptHits,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("removed listener only fires before off", r.removedHits, 1);
+        t.eq("kept listener survives another subscription off", r.keptHits, 2);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "listen options: capture listener fires before bubble listener and can be removed",
+      dom: true,
+      fixture: "listen/api",
+      sub: "capture-option-order-and-off",
+
+      html: `
+        <main id="root">
+          <section id="parent">
+            <button id="child">Click</button>
+          </section>
+        </main>
+      `,
+
+      async act(tree) {
+        const parent = tree.find.must.byId("parent");
+        const child = tree.find.must.byId("child");
+        const childEl = child.dom.must.el();
+
+        const order: string[] = [];
+
+        const captureSub = parent.listen.capture().on("pointerdown", () => {
+          order.push("capture");
+        });
+
+        parent.listen.onPointerDown(() => {
+          order.push("bubble");
+        });
+
+        childEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+        captureSub.off();
+        childEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          order,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("capture fires before bubble on first dispatch", r.order.slice(0, 2).join(","), "capture,bubble");
+        t.eq("capture off removes capture listener only", r.order.join(","), "capture,bubble,bubble");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "listen options: passive listener receives event without changing target/currentTarget semantics",
+      dom: true,
+      fixture: "listen/api",
+      sub: "passive-option-basic-semantics",
+
+      html: `
+        <main id="root">
+          <section id="parent">
+            <button id="child">Click</button>
+          </section>
+        </main>
+      `,
+
+      async act(tree) {
+        const parent = tree.find.must.byId("parent");
+        const child = tree.find.must.byId("child");
+        const childEl = child.dom.must.el();
+
+        let hits = 0;
+        let targetId = "";
+        let currentTargetId = "";
+
+        parent.listen.passive().on("pointerdown", (ev) => {
+          hits += 1;
+          targetId = ev.target instanceof Element ? ev.target.id : "";
+          currentTargetId = ev.currentTarget instanceof Element ? ev.currentTarget.id : "";
+        });
+
+        childEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          hits,
+          targetId,
+          currentTargetId,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("passive listener fires", r.hits, 1);
+        t.eq("passive listener sees original event target", r.targetId, "child");
+        t.eq("passive listener sees parent currentTarget", r.currentTargetId, "parent");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "form and keyboard convenience listeners route expected event types",
+      dom: true,
+      fixture: "listen/api",
+      sub: "input-change-keyboard-convenience",
+
+      html: `
+        <main id="root">
+          <input id="input" value="a" />
+          <button id="button">Click</button>
+        </main>
+      `,
+
+      async act(tree) {
+        const input = tree.find.must.byId("input");
+        const button = tree.find.must.byId("button");
+        const inputEl = input.dom.must.el();
+        const buttonEl = button.dom.must.el();
+
+        let inputHits = 0;
+        let changeHits = 0;
+        let keyDownHits = 0;
+        let keyUpHits = 0;
+        let keyDownKey = "";
+        let keyUpKey = "";
+
+        input.listen.onInput((ev) => {
+          inputHits += 1;
+          if (ev.target instanceof HTMLInputElement) ev.target.value = "b";
+        });
+
+        input.listen.onChange(() => {
+          changeHits += 1;
+        });
+
+        button.listen.onKeyDown((ev) => {
+          keyDownHits += 1;
+          keyDownKey = ev.key;
+        });
+
+        button.listen.onKeyUp((ev) => {
+          keyUpHits += 1;
+          keyUpKey = ev.key;
+        });
+
+        inputEl.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
+        inputEl.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
+        buttonEl.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+        buttonEl.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          inputHits,
+          inputValue: inputEl instanceof HTMLInputElement ? inputEl.value : "",
+          changeHits,
+          keyDownHits,
+          keyUpHits,
+          keyDownKey,
+          keyUpKey,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("onInput fires", r.inputHits, 1);
+        t.eq("onInput receives input target", r.inputValue, "b");
+        t.eq("onChange fires", r.changeHits, 1);
+        t.eq("onKeyDown fires", r.keyDownHits, 1);
+        t.eq("onKeyDown receives key", r.keyDownKey, "Enter");
+        t.eq("onKeyUp fires", r.keyUpHits, 1);
+        t.eq("onKeyUp receives key", r.keyUpKey, "Escape");
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "document listener receives outside events and off removes it",
+      dom: true,
+      fixture: "listen/api",
+      sub: "document-listener-outside-event-and-off",
+
+      html: `
+        <main id="root">
+          <section id="panel">Panel</section>
+        </main>
+      `,
+
+      async act(tree) {
+        const panel = tree.find.must.byId("panel");
+        const panelEl = panel.dom.must.el();
+
+        let documentHits = 0;
+        let documentTargetId = "";
+
+        const sub = panel.listen.document.onPointerDown((ev) => {
+          documentHits += 1;
+          documentTargetId = ev.target instanceof Element ? ev.target.id : "";
+        });
+
+        panelEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+        sub.off();
+        panelEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+
+        (tree as any).__result = {
+          documentHits,
+          documentTargetId,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("document pointer listener receives bubbled document event", r.documentHits, 1);
+        t.eq("document listener sees original target", r.documentTargetId, "panel");
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
 export function livetree_dom_contains_surface(): TestSuite {
   const SUITE = "livetree/dom-contains-surface";
 
@@ -608,3 +1171,4 @@ export function livetree_dom_contains_surface(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
+

@@ -6,7 +6,7 @@ import { make_livetree_suite } from "./livetree-testkit";
 
 
 export function livetree_css_refinements(): TestSuite {
-  const SUITE = "livetree-18/css-refinements";
+  const SUITE = "livetree/css-refinements";
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
@@ -615,7 +615,7 @@ export function livetree_css_refinements(): TestSuite {
 }
 
 export function livetree_css_new_getters(): TestSuite {
-  const SUITE = "livetree-18/new-css-vars-get-sel";
+  const SUITE = "livetree/new-css-vars-get-sel";
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
@@ -818,7 +818,7 @@ export function livetree_css_new_getters(): TestSuite {
 
 
 export function livetree_find_more(): TestSuite {
-  const SUITE = "livetree-18/more-find-findall";
+  const SUITE = "livetree/more-find-findall";
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,

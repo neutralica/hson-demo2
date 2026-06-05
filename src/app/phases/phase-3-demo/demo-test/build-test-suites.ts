@@ -11,15 +11,8 @@ import { EXTRA_FIXTURES } from "../../../../tests/transform-tests/extra-fixtures
 import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../../tests/transform-tests/hson-tests";
 import { JSON_FIXTURES_LEVEL2 } from "../../../../tests/transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../../../../hson-live/dist/types/diagnostics.types";
-import { make_json_fixture_bundle, make_json_fixture_map, random_seed } from "../../../../tests/json-tests/json-test-builder";
-import {  livetree_document_ownership } from "../../../../tests/livetree-tests/livetree-16-canvas-3";
-import { livetree_css_surfaces_new } from "../../../../tests/livetree-tests/livetree-17-new-vars";
-import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more } from "../../../../tests/livetree-tests/livetree-18-css-refinements";
-import { livetree_css_pseudo_selector_unification, livetree_tree_selector_surface } from "../../../../tests/livetree-tests/livetree-19-tree-selector";
-import { livetree_css_pseudo } from "../../../../tests/livetree-tests/livetree-06";
-import { unit_css_pseudo_unification } from "../../../../tests/unit-tests/unit-tests-2";
-import { livetree_css_var_facade_surfaces, livetree_get_many_surface } from "../../../../tests/livetree-tests/livetree-20-vars-set-get";
-import { livetree_anim_key_preservation, livetree_dom_contains_surface } from "../../../../tests/livetree-tests/livetree-21-anim-kf";
+import { make_json_fixture_bundle, random_seed } from "../../../../tests/json-tests/json-test-builder";
+import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree_listener_api_surface } from "../../../../tests/livetree-tests/livetree-21-anim-kf";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -136,26 +129,28 @@ export function build_suites_for_mode(
   if (mode === "transform") {
     return _freeze([
       make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/json/basic-test", map),
-    make_transform_test_suite(
-      h,
-      make_json_fixture_bundle(50, GENERATED_JSON_SEED),
-      `transform/fuzz-json/seed_${GENERATED_JSON_SEED}`,
-      map,
-    ),
-    make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
-    make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
-    make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/html/new", map),
-    make_transform_test_suite(h, EXTRA_FIXTURES, "transform/misc-extra", map),
-    make_transform_test_suite(h, HSON_FIXTURES, "transform/hson", map),
-    make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
-    make_transform_test_suite(h, TRANSFORM_FAILS, "transform/_INVALID", map, "auto", "fail"),
-    make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/_INVALID", map, "hson", "fail"),
+      make_transform_test_suite(
+        h,
+        make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+        `transform/fuzz-json/seed_${GENERATED_JSON_SEED}`,
+        map,
+      ),
+      make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
+      make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
+      make_transform_test_suite(h, HTML_FIXTURES_NEW, "transform/html/new", map),
+      make_transform_test_suite(h, EXTRA_FIXTURES, "transform/misc-extra", map),
+      make_transform_test_suite(h, HSON_FIXTURES, "transform/hson", map),
+      make_transform_test_suite(h, JSON_FIXTURES_LEVEL2, "transform/json/level-2", map),
+      make_transform_test_suite(h, TRANSFORM_FAILS, "transform/_INVALID", map, "auto", "fail"),
+      make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/_INVALID", map, "hson", "fail"),
     ]);
   }
   if (mode === "dev") {
     return _freeze([
       livetree_anim_key_preservation(),
-      livetree_dom_contains_surface()
+      livetree_dom_contains_surface(),
+      livetree_listener_api_surface(),
+
 
     ])
   }
