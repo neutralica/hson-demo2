@@ -21,6 +21,7 @@ import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more 
 import { livetree_css_pseudo_selector_unification, livetree_tree_selector_surface } from "./livetree-19-tree-selector";
 import { livetree_css_var_facade_surfaces, livetree_get_many_surface } from "./livetree-20-vars-set-get";
 import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree_listener_api_surface } from "./livetree-21-anim-kf";
+import { livetree_quid_media } from "./livetree-22-quid-media";
 
 
 /******************************************************
@@ -89,6 +90,7 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_anim_key_preservation(),
     livetree_dom_contains_surface(),
     livetree_listener_api_surface(),
+    livetree_quid_media(),
 
   ] as const;
 }

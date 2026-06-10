@@ -13,6 +13,7 @@ import { JSON_FIXTURES_LEVEL2 } from "../../../../tests/transform-tests/json-lev
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../../../../hson-live/dist/types/diagnostics.types";
 import { make_json_fixture_bundle, random_seed } from "../../../../tests/json-tests/json-test-builder";
 import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree_listener_api_surface } from "../../../../tests/livetree-tests/livetree-21-anim-kf";
+import { livetree_quid_media } from "../../../../tests/livetree-tests/livetree-22-quid-media";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -147,9 +148,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_anim_key_preservation(),
-      livetree_dom_contains_surface(),
-      livetree_listener_api_surface(),
+      livetree_quid_media()
 
 
     ])
