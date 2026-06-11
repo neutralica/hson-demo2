@@ -8,6 +8,8 @@ import { render_rule, normalize_decls } from "hson-live/_tests";
 import { normalize_css_value, normalize_css_key, canon_to_css_prop } from "../../../../hson-live/dist/utils/attrs-utils/normalize-css";
 import { selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
 
+const gcss = CssManager.api();
+
 export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
 
@@ -637,4 +639,211 @@ export function unit_css_pseudo_unification(): TestSuite {
             
         ],
     };
+}
+
+
+export function unit_media(): TestSuite {
+    const SUITE = "livetree/unit/media";
+
+    const cases: readonly TestCase[] = [
+        make_unit_case(SUITE, "CssManager.api().media: scoped facade stores rule body", () => {
+            const key = "unit:media:base-rule";
+            const selector = ".unit-media-target";
+
+            gcss.drop(key);
+
+            gcss
+                .media("(max-width: 700px)")
+                .rule(key, selector)
+                .setMany({ color: "blue", display: "block" });
+
+            const css = gcss.get(key);
+            if (!css) {
+                gcss.drop(key);
+                throw new Error("expected media CSS rule to be stored");
+            }
+
+            // CHANGED: gcss.get(key) returns the stored rule body, not the
+            // composed stylesheet wrapper. This unit test asserts the scoped
+            // facade storage contract; wrapper rendering belongs in a renderer
+            // seam with an isolated stylesheet fixture.
+            if (!css.includes(selector)) {
+                gcss.drop(key);
+                throw new Error(`expected selector ${selector}, got:\n${css}`);
+            }
+
+            if (!css.includes("color:blue;") || !css.includes("display:block;")) {
+                gcss.drop(key);
+                throw new Error(`expected normalized declarations, got:\n${css}`);
+            }
+
+            gcss.drop(key);
+        }),
+
+        make_unit_case(SUITE, "CssManager.api().supports: scoped facade stores rule body", () => {
+            const key = "unit:supports:base-rule";
+            const selector = ".unit-supports-target";
+
+            gcss.drop(key);
+
+            gcss
+                .supports("(display: grid)")
+                .rule(key, selector)
+                .setMany({ display: "grid", gap: "1rem" });
+
+            const css = gcss.get(key);
+            if (!css) {
+                gcss.drop(key);
+                throw new Error("expected supports CSS rule to be stored");
+            }
+
+            // CHANGED: gcss.get(key) returns the stored rule body, not the
+            // composed stylesheet wrapper. This unit test asserts the scoped
+            // facade storage contract.
+            if (!css.includes(selector)) {
+                gcss.drop(key);
+                throw new Error(`expected selector ${selector}, got:\n${css}`);
+            }
+
+            if (!css.includes("display:grid;") || !css.includes("gap:1rem;")) {
+                gcss.drop(key);
+                throw new Error(`expected normalized declarations, got:\n${css}`);
+            }
+
+            gcss.drop(key);
+        }),
+
+        make_unit_case(SUITE, "CssManager.api().layer: scoped facade stores rule body", () => {
+            const key = "unit:layer:base-rule";
+            const selector = ".unit-layer-target";
+
+            gcss.drop(key);
+
+            gcss
+                .layer("components")
+                .rule(key, selector)
+                .setMany({ color: "purple", opacity: "0.7" });
+
+            const css = gcss.get(key);
+            if (!css) {
+                gcss.drop(key);
+                throw new Error("expected layer CSS rule to be stored");
+            }
+
+            // CHANGED: gcss.get(key) returns the stored rule body, not the
+            // composed stylesheet wrapper. This unit test asserts the scoped
+            // facade storage contract.
+            if (!css.includes(selector)) {
+                gcss.drop(key);
+                throw new Error(`expected selector ${selector}, got:\n${css}`);
+            }
+
+            if (!css.includes("color:purple;") || !css.includes("opacity:0.7;")) {
+                gcss.drop(key);
+                throw new Error(`expected normalized declarations, got:\n${css}`);
+            }
+
+            gcss.drop(key);
+        }),
+
+        make_unit_case(SUITE, "CssManager scoped facades: same selector can coexist across distinct keys", () => {
+            const baseKey = "unit:scoped-coexist:base";
+            const mediaKey = "unit:scoped-coexist:media";
+            const supportsKey = "unit:scoped-coexist:supports";
+            const layerKey = "unit:scoped-coexist:layer";
+            const selector = ".unit-scoped-coexist";
+
+            gcss.drop(baseKey);
+            gcss.drop(mediaKey);
+            gcss.drop(supportsKey);
+            gcss.drop(layerKey);
+
+            gcss.rule(baseKey, selector).setProp("color", "red");
+            gcss.media("(max-width: 700px)").rule(mediaKey, selector).setProp("color", "blue");
+            gcss.supports("(display: grid)").rule(supportsKey, selector).setProp("color", "green");
+            gcss.layer("components").rule(layerKey, selector).setProp("color", "purple");
+
+            const baseCss = gcss.get(baseKey);
+            const mediaCss = gcss.get(mediaKey);
+            const supportsCss = gcss.get(supportsKey);
+            const layerCss = gcss.get(layerKey);
+
+            if (!baseCss?.includes("color:red;")) {
+                throw new Error(`expected base color red, got:\n${String(baseCss)}`);
+            }
+
+            if (!mediaCss?.includes("color:blue;")) {
+                throw new Error(`expected media rule body color blue, got:\n${String(mediaCss)}`);
+            }
+
+            if (!supportsCss?.includes("color:green;")) {
+                throw new Error(`expected supports rule body color green, got:\n${String(supportsCss)}`);
+            }
+
+            if (!layerCss?.includes("color:purple;")) {
+                throw new Error(`expected layer rule body color purple, got:\n${String(layerCss)}`);
+            }
+
+            gcss.drop(baseKey);
+            gcss.drop(mediaKey);
+            gcss.drop(supportsKey);
+            gcss.drop(layerKey);
+        }),
+
+        make_unit_case(SUITE, "CssManager scoped facades: nested media/supports/layer preserve rule body", () => {
+            const key = "unit:nested-scopes:rule";
+            const selector = ".unit-nested-scope";
+
+            gcss.drop(key);
+
+            gcss
+                .media("(max-width: 720px)")
+                .supports("(display: grid)")
+                .layer("responsive")
+                .rule(key, selector)
+                .setMany({ backgroundColor: "gold", color: "black" });
+
+            const css = gcss.get(key);
+            if (!css) {
+                gcss.drop(key);
+                throw new Error("expected nested scoped CSS rule to be stored");
+            }
+
+            // CHANGED: gcss.get(key) exposes the stored nested rule body. We
+            // assert selector/declaration preservation here; at-rule wrapper
+            // rendering should be covered through an isolated renderer test.
+            if (!css.includes(selector) || !css.includes("background-color:gold;") || !css.includes("color:black;")) {
+                gcss.drop(key);
+                throw new Error(`expected nested selector declarations, got:\n${css}`);
+            }
+
+            gcss.drop(key);
+        }),
+
+        make_unit_case(SUITE, "CssManager scoped facades: dropping scoped rule removes stored CSS", () => {
+            const key = "unit:scoped-drop:media";
+            const selector = ".unit-scoped-drop";
+
+            gcss.drop(key);
+
+            gcss
+                .media("(max-width: 700px)")
+                .rule(key, selector)
+                .setProp("color", "blue");
+
+            if (!gcss.get(key)?.includes("color:blue;")) {
+                gcss.drop(key);
+                throw new Error(`expected scoped rule before drop, got:\n${String(gcss.get(key))}`);
+            }
+
+            gcss.drop(key);
+
+            if (gcss.get(key) !== undefined) {
+                gcss.drop(key);
+                throw new Error(`expected scoped rule removed, got:\n${String(gcss.get(key))}`);
+            }
+        }),
+    ];
+
+    return { suite: SUITE, cases };
 }

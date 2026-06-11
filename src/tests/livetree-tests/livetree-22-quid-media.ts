@@ -1,5 +1,7 @@
+import { CssManager } from "hson-live";
 import type { TestSuite, LiveTreeCaseSpec } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
+import { make_unit_case } from "../unit-tests/all-unit-tests";
 
 type QuidScopedCssResult = Record<string, unknown>;
 
@@ -9,7 +11,7 @@ function result(tree: unknown): QuidScopedCssResult {
   return target.__result;
 }
 
-
+const gcss = CssManager.api()
 export function livetree_quid_media(): TestSuite {
   const SUITE = "livetree/quid-scoped-media";
 
@@ -300,3 +302,4 @@ export function livetree_quid_media(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
+

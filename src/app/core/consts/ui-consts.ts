@@ -123,7 +123,7 @@ export const PINKLIKEcol = øHSON_COL.o;
 export const FADE_1col = OKLCH_NEUTRALS.silver;
 export const $MENU_SHADOW = "1px 1px 25px ";
 
-export const GRAFFITIcol = set_alpha(øHSON_COL.o, 0.6);
+export const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
 export const øCOLS = {
   backlo: deepBack,
   backhi: bckColor,
