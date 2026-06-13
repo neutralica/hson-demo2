@@ -6,6 +6,7 @@ import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, C
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 import { CONSTcol } from "../../../core/consts/ui-consts";
+import type { ListItem } from "./about.types";
 
 
 
@@ -22,32 +23,6 @@ import { CONSTcol } from "../../../core/consts/ui-consts";
  * for certain punctuation marks (WIP)
  **/
 
-
-// -----------------------------
-// Types
-// -----------------------------
-
-export type AboutInitDeps = Readonly<{
-  docs: AboutDocs;
-  initialDocKey?: AboutDocKey;
-}>;
-
-export type AboutInitTargets = Readonly<{
-  toc: LiveTree;
-  doc: LiveTree;
-}>;
-
-export type ListKind = "ul" | "ol" | "anti";
-export type ListItem =
-  | { kind: "ul"; depth: number; marker: string; text: string }
-  | { kind: "ol"; depth: number; n: number; text: string }
-  | { kind: "anti"; depth: number; marker: string; text: string };
-
-// -----------------------------
-// Inline rendering (single entrypoint)
-// - backticks are always code
-// - parens highlighting only happens inside code segments
-// -----------------------------
 type InlineSeg = { kind: "text" | "code"; s: string };
 
 export function split_inline_backticks(src: string): InlineSeg[] {

@@ -1,10 +1,7 @@
 import type { LiveTree } from "hson-live";
 import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
-import { type ListItem, type ListKind, render_line_with_comment, extractUrl, parse_list_item, isIndented } from "./about-helpers";
-
-// -----------------------------
-// Markdown-ish renderer (only touch: flushPara + flushList use render_inline)
-// -----------------------------
+import { extractUrl, isIndented, parse_list_item, render_line_with_comment } from "./about-helpers";
+import type { ListItem, ListKind } from "./about.types";
 
 export function render_md_doc(host: LiveTree, src: string): void {
   host.empty();

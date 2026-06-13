@@ -41,6 +41,7 @@ export const $OKLCH = "oklch";
 export const $POINT = "point";
 export const $ABOUT = "about";
 export const $MOTES = "motes";
+export const $BARBAR = "bar-bar";
 export const MENU_OPTIONS = [
   $ABOUT,
   $TEST,
@@ -49,7 +50,8 @@ export const MENU_OPTIONS = [
   $FLEURS,
   $OKLCH,
   $POINT,
-  $MOTES
+  $MOTES,
+  $BARBAR,
 ] as const;
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";

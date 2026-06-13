@@ -30,6 +30,7 @@ export type DemoView = null |
   "test" |
   "parse" |
   "build" |
+  "bar-bar" |
   "fleurs";
 
 export type DemoWidget =

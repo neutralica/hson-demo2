@@ -4,7 +4,7 @@ import { CssManager, hson, type LiveTree } from "hson-live";
 import { mk_div, mk_div_cls, mk_div_id, mk_div_id_cls, mk_div_id_txt, mk_span_id } from "../../../utils/makers";
 import { relay, relay_data, relay_void, type OutcomeAsync } from "intrastructure";
 import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss, FX_LAYERcss, OKLCH_HOSTcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr, $MOTES } from "./demo.consts";
+import { $ABOUT, $BUILD, $FLEURS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr, $MOTES, $BARBAR } from "./demo.consts";
 import { _clamp01, _clampN1P1, keys_of } from "../../../utils/helpers";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { $MENU_SHADOW, $PANEL_HIDDEN, MAIN_OKLCHname, MENU_OKLCH, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, TXTcol_CODE, TXTcol_MENU, TXTcol_ACTIVE, øfontSize, GRAFFITIcol, TXTcol_MAIN, WIDGETcol } from "../../../core/consts/ui-consts";
@@ -31,8 +31,8 @@ import { FLOWER_FIELDcss, FLOWER_LAYERcss } from "../demo-fleurs/fleurs.css";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../demo-pointer/point.css";
 import { MOTES_LAYERcss } from "../demo-motes/motes.css";
 import { mount_oklch } from "../demo-oklch/mount-oklch";
-import { mount_panel_spawner } from "../../../widgets/panel-spawner/panel-spawner";
 import { mount_motes } from "../demo-motes/mount-motes";
+import mount_bar_bar from "../demo-bar-bar.ts/mount-bar-bar";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 
@@ -149,14 +149,15 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
   const mk_btn_txt = (txt: string) => `${txt}`
   const menu = {
-    aboutBtn: mk_div_id_txt(menuBox, `${$ABOUT}-button`, mk_btn_txt($ABOUT)),
-    testBtn: mk_div_id_txt(menuBox, `${$TEST}-button`, mk_btn_txt($TEST)),
-    parseBtn: mk_div_id_txt(menuBox, `${$PARSE}-button`, mk_btn_txt($PARSE)),
-    buildBtn: mk_div_id_txt(menuBox, `${$BUILD}-button`, mk_btn_txt($BUILD)),
-    fleurBtn: mk_div_id_txt(menuBox, `${$FLEURS}-button`, mk_btn_txt($FLEURS)),
-    mouseBtn: mk_div_id_txt(menuBox, `${$POINT}-button`, mk_btn_txt($POINT)),
-    oklchBtn: mk_div_id_txt(menuBox, `${$OKLCH}-button`, mk_btn_txt($OKLCH)),
-    motesBtn: mk_div_id_txt(menuBox, `${$MOTES}-button`, mk_btn_txt($MOTES)),
+    aboutBtn: mk_div_id_txt(menuBox, `${$ABOUT}-button`, $ABOUT),
+    testBtn: mk_div_id_txt(menuBox, `${$TEST}-button`, $TEST),
+    parseBtn: mk_div_id_txt(menuBox, `${$PARSE}-button`, $PARSE),
+    buildBtn: mk_div_id_txt(menuBox, `${$BUILD}-button`, $BUILD),
+    barbarBtn: mk_div_id_txt(menuBox, `${$BARBAR}-button`, $BARBAR),
+    fleurBtn: mk_div_id_txt(menuBox, `${$FLEURS}-button`, $FLEURS),
+    mouseBtn: mk_div_id_txt(menuBox, `${$POINT}-button`, $POINT),
+    oklchBtn: mk_div_id_txt(menuBox, `${$OKLCH}-button`, $OKLCH),
+    motesBtn: mk_div_id_txt(menuBox, `${$MOTES}-button`, $MOTES),
 
   } as const;
 
@@ -188,19 +189,21 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
 
   // views stack in viewSlot
-  const parse = mount_panel_simple(uiRoot, "parse");
-  const testHost = mount_panel_simple(uiRoot, "test");
-  const buildHost = mount_panel_simple(uiRoot, "build");
-  const aboutHost = mount_panel_simple(uiRoot, "about");
+  const parse = mount_panel_simple(uiRoot, $PARSE);
+  const testHost = mount_panel_simple(uiRoot, $TEST);
+  const buildHost = mount_panel_simple(uiRoot, $BUILD);
+  const aboutHost = mount_panel_simple(uiRoot, $ABOUT);
+  const barbarHost = mount_panel_simple(uiRoot, $BARBAR)
   const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany(OKLCH_HOSTcss);
   relay_data(mount_about_panels(aboutHost, ABOUT_DOCS));
   relay_data(mount_test_panels(testHost));
   relay_data(mount_parsing_panels(parse));
   relay_data(mount_build_panels(buildHost));
+  relay_void(mount_bar_bar(barbarHost));
   relay_void(mount_point_panel(pointHost));
   mount_oklch(oklchHost);
   mount_motes(motesLayer);
-  activate_widget("motes")
+  activate_widget($MOTES)
   initFleurViewbox();
 
   function isMobileDemoWidth(): boolean {
@@ -217,17 +220,19 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     _hide(testHost);
     _hide(buildHost);
     _hide(aboutHost);
+    _hide(barbarHost);
 
-    if (view === "parse") { _unhide(parse); }
-    else if (view === "test") { _unhide(testHost); }
-    else if (view === "build") { _unhide(buildHost); }
-    else if (view === "about") { _unhide(aboutHost); }
+    if (view === $PARSE) { _unhide(parse); }
+    else if (view === $TEST) { _unhide(testHost); }
+    else if (view === $BUILD) { _unhide(buildHost); }
+    else if (view === $ABOUT) { _unhide(aboutHost); }
+    else if (view === $BARBAR) { _unhide(barbarHost); }
 
-    if (widgets.includes("point")) { _unhide(pointHost); }
+    if (widgets.includes($POINT)) { _unhide(pointHost); }
     else { _hide(pointHost); }
-    if (widgets.includes("oklch")) { _unhide(oklchHost); }
+    if (widgets.includes($OKLCH)) { _unhide(oklchHost); }
     else { _hide(oklchHost); }
-    if (widgets.includes("motes")) { _unhide(motesLayer); }
+    if (widgets.includes($MOTES)) { _unhide(motesLayer); }
     else { _hide(motesLayer); }
 
     apply_menu_active(menu, view);
@@ -248,6 +253,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     menu.testBtn.data.set("active", view === "test" ? "true" : null);
     menu.parseBtn.data.set("active", view === "parse" ? "true" : null);
     menu.buildBtn.data.set("active", view === "build" ? "true" : null);
+    menu.barbarBtn.data.set("active", view === $BARBAR ? "true" : null);
     menu.fleurBtn.data.set("active", view === "fleurs" ? "true" : null);
     menu.mouseBtn.data.set("active", has_widget("point") ? "true" : null);
     menu.oklchBtn.data.set("active", has_widget("oklch") ? "true" : null);
@@ -270,6 +276,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   menu.testBtn.listen.stopProp().onClick(() => { toggle_view("test"); });
   menu.aboutBtn.listen.stopProp().onClick(() => { toggle_view("about") });
   menu.buildBtn.listen.stopProp().onClick(() => { toggle_view("build"); });
+  menu.barbarBtn.listen.stopProp().onClick(() => { toggle_view($BARBAR); });
   menu.mouseBtn.listen.stopProp().onClick(() => { toggle_widget("point"); });
   menu.oklchBtn.listen.stopProp().onClick(() => { toggle_widget("oklch"); });
   menu.motesBtn.listen.stopProp().onClick(() => { toggle_widget("motes"); });
@@ -297,8 +304,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     void spawn_flower(fleurField, x, y);
 
   });
-  // panel style tester
-  // mount_panel_spawner(stage);
+  // mount_bar_bar(stage);
   debug_state_smoke_test();
   return relay.ok();
 }
