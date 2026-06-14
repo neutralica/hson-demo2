@@ -1,7 +1,7 @@
 import { hson, LiveTree } from "hson-live";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { type Outcome, relay } from "intrastructure";
-import { build_suites_for_mode } from "./build-test-suites";
+import { build_suites_for_mode, make_ad_hoc_transform_suite } from "./build-test-suites";
 import { make_inspector } from "../../../../tests/inspector/make-inspector";
 import { create_test_log } from "./test-logger";
 import { run_test_suites } from "./test-runner";
@@ -12,7 +12,7 @@ import { create_test_chips } from "./test-helpers";
 import type { TestPanel } from "./tp.types";
 import { flush_dom } from "../../../../tests/inspector/inspector.helpers";
 import { _snip } from "../../../utils/helpers";
-import type { LoopReport } from "../../../../../../hson-live/dist/types/diagnostics.types";
+import type { LoopReport, SourceFormat } from "../../../../../../hson-live/dist/types/diagnostics.types";
 import { TP_BRANCHcss, TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss, TP_LOG_ROWcss } from "./tp.css";
 import { LOG_HR_PART, LOG_HR_FULL } from "../../../state/state-helpers";
 
@@ -28,6 +28,12 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
 
 type LogVerbosity = "normal" | "verbose";
 const LOG_VERBOSITY: readonly LogVerbosity[] = ["normal", "verbose"];
+
+export type ExternalTestAction = {
+    label: string;
+    isEnabled: () => boolean;
+    run: () => void | Promise<void>;
+};
 
 function next_verbosity(current: LogVerbosity): LogVerbosity {
     const i = LOG_VERBOSITY.indexOf(current);
@@ -70,6 +76,7 @@ type TestConsoleParts = {
     suiteSel: LiveTree;
     verbosityBtn: LiveTree;
     clearBtn: LiveTree;
+    externalBtn: LiveTree;
     chips: ReturnType<typeof create_test_chips>;
 };
 
@@ -93,10 +100,15 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         ...TEST_CLEAR_BTNcss,
         gridColumn: "1 / 3",
     });
+    const externalBtn = mk_div_id_txt(controlsRow, "test-external", "test parse").css.setMany({
+        ...TEST_CLEAR_BTNcss,
+        gridColumn: "1 / 3",
+        opacity: "0.3",
+    });
 
     const chips = create_test_chips(rowContainer);
 
-    return { runBtn, suiteSel, verbosityBtn, clearBtn, chips };
+    return { runBtn, suiteSel, verbosityBtn, clearBtn, externalBtn, chips };
 }
 
 type TestSurfaceParts = {
@@ -125,13 +137,14 @@ export function tp_factory(): Outcome<TestPanel> {
     let level: UiLevel = "normal";
     let mode: TestRunMode = "all";
     let verbosity: LogVerbosity = "normal";
+    let externalAction: ExternalTestAction | null = null;
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
         .css.setMany(TP_BRANCHcss);
 
     const { leftColumn, rightColumn, inspectorPane, logger } = create_test_surfaces(branch);
-    const { runBtn, suiteSel, verbosityBtn, clearBtn, chips } = create_test_console(leftColumn, rightColumn);
+    const { runBtn, suiteSel, verbosityBtn, clearBtn, externalBtn, chips } = create_test_console(leftColumn, rightColumn);
 
     const tlog = create_test_log();
     const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
@@ -207,6 +220,16 @@ export function tp_factory(): Outcome<TestPanel> {
         verbosityBtn.text.set(`log: ${verbosity}`);
     };
 
+    const syncExternalAction = (): void => {
+        const enabled = Boolean(externalAction?.isEnabled());
+        externalBtn.text.set(externalAction?.label ?? "test parse");
+        externalBtn.css.setMany({
+            opacity: enabled ? "1" : "0.3",
+            pointerEvents: enabled ? "auto" : "none",
+            filter: enabled ? "brightness(1.0)" : "brightness(0.72)",
+        });
+    };
+
     const doLogOnEvent = (e: TestEvent): void => {
         tlog.onEvent(e);
         if (!should_log_event(verbosity, e)) return;
@@ -261,6 +284,22 @@ export function tp_factory(): Outcome<TestPanel> {
         }
     };
 
+    const runAdHocTransform = async (fmt: SourceFormat, text: string): Promise<void> => {
+        chips.clear();
+        tlog.clear();
+        clearLogLines();
+        captureMap.clear();
+
+        appendLogLine(`running parse-panel transform: ${fmt} (${text.length} bytes)`);
+        await flush_dom();
+
+        const suites = [make_ad_hoc_transform_suite({ _test_full_loop }, fmt, text, captureMap)] as const;
+        const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
+        chips.render(res.summary);
+        inspector.show();
+        inspector.render();
+    };
+
     const mount = (hostBody: LiveTree): void => {
         if (mounted) return;
         mounted = true;
@@ -276,6 +315,7 @@ export function tp_factory(): Outcome<TestPanel> {
         wire_press_feedback(runBtn);
         wire_press_feedback(clearBtn);
         wire_press_feedback(verbosityBtn);
+        wire_press_feedback(externalBtn);
 
         verbosityBtn.listen.onClick(() => {
             verbosity = next_verbosity(verbosity);
@@ -283,7 +323,13 @@ export function tp_factory(): Outcome<TestPanel> {
             appendLogLine(`log verbosity: ${verbosity}`);
         });
 
+        externalBtn.listen.onClick(() => {
+            if (!externalAction?.isEnabled()) return;
+            void externalAction.run();
+        });
+
         syncVerbosity();
+        syncExternalAction();
 
         runBtn.listen.onClick(async () => {
 
@@ -328,5 +374,10 @@ export function tp_factory(): Outcome<TestPanel> {
         getVerbosity: () => verbosity,
         clearLogs: clearLogLines,
         setLog: appendLogLine,
+        setExternalAction: (action: ExternalTestAction | null) => {
+            externalAction = action;
+            syncExternalAction();
+        },
+        runAdHocTransform,
     } as const);
 }

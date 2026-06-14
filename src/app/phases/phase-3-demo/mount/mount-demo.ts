@@ -11,6 +11,8 @@ import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { DemoView, DemoWidget } from "../../../state/state.types";
+import type { Fmt } from "../../../core/types/core.types";
+import type { Panels } from "../../../ui/panels/panels.types";
 import { get_view, get_widgets, demo_subscribe, set_view, toggle_view, toggle_widget, activate_widget, has_widget, deactivate_widget } from "../../../state/store2";
 import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
 import { set_global_css } from "./set-global-css";
@@ -20,6 +22,7 @@ import { mount_build_panels } from "../demo-build/build-mount-init";
 import { mount_about_panels } from "../demo-about/mount-about";
 import { ABOUT_DOCS } from "../demo-about/about.consts";
 import { mount_test_panels } from "../demo-test/mount-tp";
+import type { TestPanels } from "../demo-test/tp.types";
 import { mount_point_panel } from "../demo-pointer/point-factory";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../demo-pointer/point.css";
 import { FLOWER_FIELDcss, FLOWER_LAYERcss } from "../demo-fleurs/fleurs.css";
@@ -56,6 +59,16 @@ type DemoHosts = {
   oklchHost: LiveTree;
   viewHosts: ViewHosts;
   widgetHosts: WidgetHosts;
+};
+
+type DemoContent = {
+  parse: Panels;
+  test: TestPanels;
+};
+
+type ParseCandidate = {
+  fmt: Fmt;
+  text: string;
 };
 
 const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES];
@@ -227,14 +240,73 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   };
 }
 
-function mount_demo_content(hosts: DemoHosts): void {
+function mount_demo_content(hosts: DemoHosts): DemoContent {
   relay_data(mount_about_panels(hosts.aboutHost, ABOUT_DOCS));
-  relay_data(mount_test_panels(hosts.testHost));
-  relay_data(mount_parsing_panels(hosts.parseHost));
+  const test = relay_data(mount_test_panels(hosts.testHost));
+  const parse = relay_data(mount_parsing_panels(hosts.parseHost));
   relay_data(mount_build_panels(hosts.buildHost));
   relay_void(mount_bar_bar(hosts.barbarHost));
   relay_void(mount_point_panel(hosts.pointHost));
   mount_oklch(hosts.oklchHost);
+
+  return { parse, test };
+}
+
+function get_parse_candidate(parse: Panels, preferredFmt?: Fmt): ParseCandidate | undefined {
+  const fallback: readonly Fmt[] = ["json", "hson", "html"];
+  const fmts: readonly Fmt[] = preferredFmt
+    ? [preferredFmt, ...fallback.filter((fmt) => fmt !== preferredFmt)]
+    : fallback;
+
+  for (const fmt of fmts) {
+    const panel = parse.panels[fmt];
+    if (!panel) continue;
+
+    const raw = panel.textarea.form.getValue();
+    const text = typeof raw === "string" ? raw : String(raw ?? "");
+    if (text.trim().length > 0) return { fmt, text };
+  }
+
+  return undefined;
+}
+
+function wire_parse_test_bridge(parse: Panels, test: TestPanels): void {
+  const testPanel = (test.tp ?? test) as any;
+  if (typeof testPanel.setExternalAction !== "function") return;
+
+  let activeFmt: Fmt | undefined;
+
+  const sync = (): void => {
+    testPanel.setExternalAction({
+      label: "test parse",
+      isEnabled: () => Boolean(get_parse_candidate(parse, activeFmt)),
+      run: () => {
+        const candidate = get_parse_candidate(parse, activeFmt);
+        if (!candidate) return;
+
+        if (typeof testPanel.runAdHocTransform === "function") {
+          return testPanel.runAdHocTransform(candidate.fmt, candidate.text);
+        }
+
+        testPanel.clearLogs?.();
+        testPanel.setLog?.(`[parse] ${candidate.fmt} ${candidate.text.length} bytes`);
+        testPanel.setLog?.(candidate.text.slice(0, 600));
+        if (candidate.text.length > 600) testPanel.setLog?.("…");
+      },
+    });
+  };
+
+  Object.values(parse.panels).forEach((panel) => {
+    const markActiveAndSync = (): void => {
+      activeFmt = panel.fmt;
+      sync();
+    };
+
+    panel.textarea.listen.on("input", markActiveAndSync);
+    panel.textarea.listen.on("change", markActiveAndSync);
+  });
+
+  sync();
 }
 
 function is_mobile_demo_width(stage: LiveTree): boolean {
@@ -298,7 +370,8 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const hosts = create_demo_hosts(uiRoot, menuContainer, motesLayer);
   const { viewHosts, widgetHosts } = hosts;
 
-  mount_demo_content(hosts);
+  const content = mount_demo_content(hosts);
+  wire_parse_test_bridge(content.parse, content.test);
   mount_motes(motesLayer);
   activate_widget($MOTES);
   sync_fleur_viewbox(fleurLayer, fleurField);

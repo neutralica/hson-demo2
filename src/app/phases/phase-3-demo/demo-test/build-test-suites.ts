@@ -108,7 +108,27 @@ export function make_transform_test_suite(
     }
   }
 
+
   return _freeze({ suite, cases: _freeze(cases) });
+}
+
+export function make_ad_hoc_transform_suite(
+  hson: HsonTestApi,
+  fmt: SourceFormat,
+  text: string,
+  captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
+): TestSuite {
+  return make_transform_test_suite(
+    hson,
+    {
+      "parse-panel": {
+        [fmt]: text as FixtureAtom,
+      },
+    },
+    `transform/ad-hoc/${fmt}`,
+    captureMap,
+    fmt,
+  );
 }
 
 const GENERATED_JSON_SEED = random_seed();
