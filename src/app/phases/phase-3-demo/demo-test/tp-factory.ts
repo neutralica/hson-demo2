@@ -2,24 +2,17 @@ import { hson, LiveTree } from "hson-live";
 import { _test_full_loop } from "hson-live/diagnostics";
 import { type Outcome, relay } from "intrastructure";
 import { build_suites_for_mode } from "./build-test-suites";
-import { create_inspector } from "../../../../tests/inspector/test-inspector";
+import { make_inspector } from "../../../../tests/inspector/make-inspector";
 import { create_test_log } from "./test-logger";
 import { run_test_suites } from "./test-runner";
 import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "./tests.types";
-import { $grn_, $ylw_, ACID_WASH_RGBA, $blu_ } from "../../../core/consts/old-rgb.consts";
-import { ACID_WASH_OKLCH } from "../../../core/consts/oklch.consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { $PANEL_HIDDEN, øfontSize, øHSON_COL, SYS_SMOLfont, TXTcol_MAIN, TXTcol_MENU } from "../../../core/consts/ui-consts";
-import { mk_div_id } from "../../../utils/makers";
-import { mk_btn } from "../../../widgets/chips-deprecate/make-btn";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { SYS_MONOfont } from "../../../core/consts/ui-consts";
-import { create_test_chips, get_line_color } from "./test-helpers";
+import { $PANEL_HIDDEN } from "../../../core/consts/ui-consts";
+import { mk_div_id, mk_div_id_txt } from "../../../utils/makers";
+import { create_test_chips } from "./test-helpers";
 import type { TestPanel } from "./tp.types";
-import { flush_dom, next_frame } from "../../../../tests/inspector/inspector.helpers";
+import { flush_dom } from "../../../../tests/inspector/inspector.helpers";
 import { _snip } from "../../../utils/helpers";
 import type { LoopReport } from "../../../../../../hson-live/dist/types/diagnostics.types";
-import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { TP_BRANCHcss, TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss, TP_LOG_ROWcss } from "./tp.css";
 import { LOG_HR_PART, LOG_HR_FULL } from "../../../state/state-helpers";
 
@@ -33,46 +26,117 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "fuzz-json", label: "fuzz-json" },
 ] as const;
 
+type LogVerbosity = "normal" | "verbose";
+const LOG_VERBOSITY: readonly LogVerbosity[] = ["normal", "verbose"];
+
+function next_verbosity(current: LogVerbosity): LogVerbosity {
+    const i = LOG_VERBOSITY.indexOf(current);
+    return LOG_VERBOSITY[(i + 1) % LOG_VERBOSITY.length] ?? "normal";
+}
+
+function should_log_event(verbosity: LogVerbosity, e: TestEvent): boolean {
+    if (verbosity === "verbose") return true;
+
+    if (e.t === "suite_begin" || e.t === "suite_end") return true;
+    if (e.t === "case_end" && e.status === "fail") return true;
+
+    return false;
+}
+
+function set_button_pressed(btn: LiveTree, on: boolean): void {
+    btn.css.setMany(on
+        ? { transform: "translateY(1px)", filter: "brightness(0.98)" }
+        : { transform: "translateY(0px)", filter: "brightness(1.0)" });
+}
+
+function wire_press_feedback(btn: LiveTree): void {
+    btn.listen.onPointerDown(() => set_button_pressed(btn, true));
+    btn.listen.onPointerUp(() => set_button_pressed(btn, false));
+    btn.listen.onPointerLeave(() => set_button_pressed(btn, false));
+}
+
+function populate_mode_selector(suiteSel: LiveTree, mode: TestRunMode): void {
+    suiteSel.empty();
+    for (const m of MODES) {
+        const opt = suiteSel.create.option();
+        opt.attr.set("value", m.key);
+        opt.text.set(m.label);
+        if (m.key === mode) opt.flag.set("selected");
+    }
+}
+
+type TestConsoleParts = {
+    runBtn: LiveTree;
+    suiteSel: LiveTree;
+    verbosityBtn: LiveTree;
+    clearBtn: LiveTree;
+    chips: ReturnType<typeof create_test_chips>;
+};
+
+function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestConsoleParts {
+    const rowContainer = mk_div_id(leftColumn, "row-container").css.setMany(TEST_ROW_CONTAINERcss);
+    const controlsRow = mk_div_id(rightColumn, "test-controls").css.setMany(TP_CONTROL_ROWcss);
+
+    const runBtn = mk_div_id_txt(controlsRow, "test-run", "run").css.setMany({
+        ...TEST_RUN_BTNcss,
+        gridColumn: "1 / 2",
+    });
+    const clearBtn = mk_div_id_txt(controlsRow, "test-clear", "clear").css.setMany({
+        ...TEST_CLEAR_BTNcss,
+        gridColumn: "2 / 3",
+    });
+    const suiteSel = controlsRow.create.select().id.set("test-select").css.setMany({
+        ...TEST_SELECTORcss,
+        gridColumn: "1 / 3",
+    });
+    const verbosityBtn = mk_div_id_txt(controlsRow, "test-verbosity", "log: normal").css.setMany({
+        ...TEST_CLEAR_BTNcss,
+        gridColumn: "1 / 3",
+    });
+
+    const chips = create_test_chips(rowContainer);
+
+    return { runBtn, suiteSel, verbosityBtn, clearBtn, chips };
+}
+
+type TestSurfaceParts = {
+    leftColumn: LiveTree;
+    rightColumn: LiveTree;
+    inspectorPane: LiveTree;
+    logger: LiveTree;
+};
+
+function create_test_surfaces(branch: LiveTree): TestSurfaceParts {
+    const leftColumn = mk_div_id(branch, "test-left-column").css.setMany(TEST_CONTENTcss);
+    const rightColumn = mk_div_id(branch, "test-right-column").css.setMany(TEST_LOG_PANEcss);
+
+    const inspectorPane = mk_div_id(leftColumn, "test-inspector-pane")
+        .css.setMany(TEST_INSPECTOR_PANEcss);
+
+    const logger = mk_div_id(rightColumn, "test-logger")
+        .css.setMany(TEST_LOGGERcss);
+
+    return { leftColumn, rightColumn, inspectorPane, logger };
+}
 
 export function tp_factory(): Outcome<TestPanel> {
     let inited = false;
     let mounted = false;
     let level: UiLevel = "normal";
     let mode: TestRunMode = "all";
+    let verbosity: LogVerbosity = "normal";
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
         .css.setMany(TP_BRANCHcss);
 
-    // top row
-    const rowContainer = mk_div_id(branch, "row-container").css.setMany(TEST_ROW_CONTAINERcss);
-    const controlsRow = mk_div_id(rowContainer, "test-controls").css.setMany(TP_CONTROL_ROWcss);
-
-    const runChip = mk_btn(controlsRow, "test-run", "run");
-    const suiteSel = controlsRow.create.select().id.set("test-select").css.setMany(TEST_SELECTORcss);
-    const clearChip = mk_btn(controlsRow, "test-clear", "clear");
-
-    const runBtn = runChip.tree.css.setMany(TEST_RUN_BTNcss);
-    const clearBtn = clearChip.tree.css.setMany(TEST_CLEAR_BTNcss);
-
-    const chips = create_test_chips(rowContainer);
-
-    // main two-column content
-    const content = mk_div_id(branch, "test-content").css.setMany(TEST_CONTENTcss);
-
-    const inspectorPane = mk_div_id(content, "test-inspector-pane")
-        .css.setMany(TEST_INSPECTOR_PANEcss);
-
-    const logPane = mk_div_id(content, "test-log-pane")
-        .css.setMany(TEST_LOG_PANEcss);
-
-    const logger = mk_div_id(logPane, "test-logger")
-        .css.setMany(TEST_LOGGERcss);
+    const { leftColumn, rightColumn, inspectorPane, logger } = create_test_surfaces(branch);
+    const { runBtn, suiteSel, verbosityBtn, clearBtn, chips } = create_test_console(leftColumn, rightColumn);
 
     const tlog = create_test_log();
     const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
 
-    const inspector = create_inspector(
+    const inspector = make_inspector(
         inspectorPane,
         tlog,
         { hideClass: $PANEL_HIDDEN },
@@ -102,7 +166,7 @@ export function tp_factory(): Outcome<TestPanel> {
             } as unknown as LoopReport;
         },
     );
-    // keep track of the current "run ..." row so PASS/FAIL can append inline
+
     let currentCaseLine: LiveTree | null = null;
 
     const mkLogRow = (line: string): LiveTree => {
@@ -139,8 +203,13 @@ export function tp_factory(): Outcome<TestPanel> {
         logger.empty();
     };
 
+    const syncVerbosity = (): void => {
+        verbosityBtn.text.set(`log: ${verbosity}`);
+    };
+
     const doLogOnEvent = (e: TestEvent): void => {
         tlog.onEvent(e);
+        if (!should_log_event(verbosity, e)) return;
 
         if (e.t === "suite_begin") {
             currentCaseLine = null;
@@ -197,32 +266,24 @@ export function tp_factory(): Outcome<TestPanel> {
         mounted = true;
         hostBody.append(branch);
 
-        suiteSel.empty();
-        for (const m of MODES) {
-            const opt = suiteSel.create.option();
-            opt.attr.set("value", m.key);
-            opt.text.set(m.label);
-            if (m.key === mode) opt.flag.set("selected");
-        }
+        populate_mode_selector(suiteSel, mode);
 
         suiteSel.listen.on("change", () => {
             const v = suiteSel.form.getValue() ?? "all";
             mode = (MODES.find(m => m.key === v)?.key ?? "all");
         });
 
-        const press = (b: LiveTree, on: boolean): void => {
-            b.css.setMany(on
-                ? { transform: "translateY(1px)", filter: "brightness(0.98)" }
-                : { transform: "translateY(0px)", filter: "brightness(1.0)" });
-        };
+        wire_press_feedback(runBtn);
+        wire_press_feedback(clearBtn);
+        wire_press_feedback(verbosityBtn);
 
-        runBtn.listen.onPointerDown(() => press(runBtn, true));
-        runBtn.listen.onPointerUp(() => press(runBtn, false));
-        runBtn.listen.onPointerLeave(() => press(runBtn, false));
+        verbosityBtn.listen.onClick(() => {
+            verbosity = next_verbosity(verbosity);
+            syncVerbosity();
+            appendLogLine(`log verbosity: ${verbosity}`);
+        });
 
-        clearBtn.listen.onPointerDown(() => press(clearBtn, true));
-        clearBtn.listen.onPointerUp(() => press(clearBtn, false));
-        clearBtn.listen.onPointerLeave(() => press(clearBtn, false));
+        syncVerbosity();
 
         runBtn.listen.onClick(async () => {
 
@@ -264,8 +325,8 @@ export function tp_factory(): Outcome<TestPanel> {
         inspectorSurface: inspectorPane,
         getLevel: () => level,
         getMode: () => mode,
+        getVerbosity: () => verbosity,
         clearLogs: clearLogLines,
         setLog: appendLogLine,
     } as const);
 }
-

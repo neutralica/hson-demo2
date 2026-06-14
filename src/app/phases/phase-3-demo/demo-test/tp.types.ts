@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import type { create_inspector, InspectorUi } from "../../../../tests/inspector/test-inspector";
+import type { make_inspector, InspectorUi } from "../../../../tests/inspector/make-inspector";
 import type { UiLevel, TestRunMode } from "./tests.types";
 import type { ChipDisplay } from "./test-helpers";
 
@@ -29,7 +29,7 @@ export type TestPanels = Readonly<{
   // setStatus: (txt: string) => void;
   setLog: (txt: string) => void;
   clearLogs: () => void;
-  inspector: ReturnType<typeof create_inspector>;
+  inspector: ReturnType<typeof make_inspector>;
   inspectorSurface: LiveTree;
 }>;
 

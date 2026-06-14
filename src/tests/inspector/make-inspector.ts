@@ -29,7 +29,6 @@ export type InspectorUi = Readonly<{
 
 
 export type CaptureFn = (key: CaseKey) => Promise<LoopReport>; // you’ll tighten to LoopReport
-let mainScrollEl: HTMLElement | null = null;
 
 const _stop = (ev: unknown): void => {
   const e = ev as { stopPropagation?: () => void; preventDefault?: () => void };
@@ -70,13 +69,15 @@ export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>)
 
   return [inputSec, ...secs].map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
 }
-export function create_inspector(
+export function make_inspector(
   host: LiveTree,
   tlog: TestLog,
   opts?: { hideClass?: string },
   capture?: CaptureFn,
 ): InspectorUi {
   const hideClass = opts?.hideClass ?? "";
+
+  let mainScrollEl: HTMLElement | null = null;
 
   const root = mk_div_id(host, "inspector-root")
     .css.setMany(INSPECTORcss);
@@ -95,7 +96,7 @@ export function create_inspector(
     width: "100%",
     display: "flex",
     overflow: "hidden",
-    fontSize: øfontSize.main,
+    fontSize: øfontSize.smol,
     color: TXTcol_MAIN,
   });
 
@@ -147,12 +148,16 @@ export function create_inspector(
       .classlist.set("insp-empty-message")
       .text.set("choose from test suites or select 'all' to test transformer chain and LiveTree operations")
       .css.setMany({
-        // justifySelf: "center",
         alignSelf: "center",
-        inset: "0",
-        // minHeight: "100%",
+        margin: "auto",
+        maxWidth: "72ch",
+        padding: "0.75rem 1rem",
+        boxSizing: "border-box",
         color: TXTcol_GREY,
         textAlign: "center",
+        lineHeight: "1.45",
+        border: "1px solid rgba(190, 205, 196, 0.16)",
+        background: "rgba(3, 10, 10, 0.28)",
       });
   };
 
@@ -170,6 +175,9 @@ export function create_inspector(
     const scroll = tableHost.create.div().classlist.set("insp-scroll main-scroll");
     scroll.css.setMany({
       ...LOG_SCROLLcss,
+      width: "100%",
+      height: "100%",
+      flex: "1 1 100%",
       minWidth: "0",
       minHeight: "0",
       overflowY: "auto",
@@ -259,7 +267,7 @@ export function create_inspector(
         const isfail = res === "fail";
         const cr = mk_tr(tbody, "insp-case-row");
         cr.css.setMany(
-          isfail ? ROW_CASEcss : ROW_CASE_FAILcss,
+          isfail ? ROW_CASE_FAILcss : ROW_CASEcss,
           // cursor: "pointer",
         );
 

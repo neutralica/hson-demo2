@@ -33,7 +33,7 @@ export const INSPECTORcss: CssMap = {
   overflow: "hidden",
   background: øCOLS.backlo,
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.main,
+  fontSize: øfontSize.smol,
 };
 
 export const THcss: CssMap = {

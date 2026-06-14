@@ -47,11 +47,11 @@ export const MENU_OPTIONS = [
   $TEST,
   $PARSE,
   $BUILD,
-  $FLEURS,
-  $OKLCH,
-  $POINT,
-  $MOTES,
   $BARBAR,
+  $FLEURS,
+  $POINT,
+  $OKLCH,
+  $MOTES,
 ] as const;
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";

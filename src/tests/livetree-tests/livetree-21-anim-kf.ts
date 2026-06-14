@@ -3,6 +3,14 @@ import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_anim_key_preservation(): TestSuite {
   const SUITE = "livetree/animation-identifier-preservation";
+  const ANIM_UNDERSCORE = "lt_probe_anim_7a3_loop";
+  const ANIM_HYPHEN = "lt-probe-anim-7a3-loop";
+  const MANUAL_UNDERSCORE = "lt_manual_probe_name";
+
+  const ruleFor = (snapshot: string, quid: string): string => {
+    const selector = `[data-_quid="${quid}"]`;
+    return snapshot.split("\n").find(line => line.startsWith(selector)) ?? "";
+  };
 
   const cases: readonly LiveTreeCaseSpec[] = [
     {
@@ -57,30 +65,52 @@ export function livetree_anim_key_preservation(): TestSuite {
       sub: "begin-name-underscore-preserved",
 
       html: `
-        <main id="root">
-          <div id="box">x</div>
-        </main>
-      `,
+    <main id="root">
+      <div id="box">x</div>
+    </main>
+  `,
 
       async act(tree) {
         const box = tree.find.must.byId("box");
 
-        box.css.anim.beginName("cloud_band_loop");
+        box.css.anim.beginName(ANIM_UNDERSCORE);
+
+        const animationName = box.css.get.animationName();
+        const many = box.css.getMany();
+        const snapshot = box.css.devSnapshot();
+        const quid = (box as any).quid as string;
+        const rule = ruleFor(snapshot, quid);
 
         (tree as any).__result = {
-          animationName: box.css.get.animationName(),
-          many: box.css.getMany(),
-          snapshot: box.css.devSnapshot(),
+          quid,
+          animationName,
+          many,
+          snapshot,
+          rule,
+          animationNameLines: snapshot.split("\n").filter(line => line.includes("animation-name")),
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("animationName getter preserves underscore value", r.animationName, "cloud_band_loop");
-        t.eq("getMany preserves underscore animationName value", r.many.animationName, "cloud_band_loop");
-        t.eq("snapshot contains emitted animation-name with underscore value", r.snapshot.includes("animation-name: cloud_band_loop;"), true);
-        t.eq("snapshot does not hyphenate animation-name value", r.snapshot.includes("animation-name: cloud-band-loop;"), false);
+        t.eq("animationName getter preserves underscore value", r.animationName, ANIM_UNDERSCORE);
+        t.eq("getMany preserves underscore animationName value", r.many.animationName, ANIM_UNDERSCORE);
+        t.eq("snapshot has a rule for the current box", r.rule.length > 0, true);
+        t.eq("current box rule contains emitted animation-name with underscore value", r.rule.includes(`animation-name: ${ANIM_UNDERSCORE};`), true);
+        t.eq(
+          [
+            "current box rule does not hyphenate animation-name value",
+            "",
+            "current rule:",
+            r.rule,
+            "",
+            "all animation-name lines:",
+            ...r.animationNameLines,
+          ].join("\n"),
+          r.rule.includes(`animation-name: ${ANIM_HYPHEN};`),
+          false,
+        );
       },
     },
     {
@@ -100,13 +130,16 @@ export function livetree_anim_key_preservation(): TestSuite {
         const box = tree.find.must.byId("box");
 
         box.css.anim.begin({
-          name: "cloud_band_loop",
+          name: ANIM_UNDERSCORE,
           duration: "2s",
           timingFunction: "ease-in-out",
           iterationCount: "infinite",
         });
 
         const many = box.css.getMany();
+        const snapshot = box.css.devSnapshot();
+        const quid = (box as any).quid as string;
+        const rule = ruleFor(snapshot, quid);
 
         (tree as any).__result = {
           animationName: box.css.get.animationName(),
@@ -114,20 +147,21 @@ export function livetree_anim_key_preservation(): TestSuite {
           animationTimingFunction: box.css.get.animationTimingFunction(),
           animationIterationCount: box.css.get.animationIterationCount(),
           many,
-          snapshot: box.css.devSnapshot(),
+          snapshot,
+          rule,
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("begin spec preserves underscore animationName", r.animationName, "cloud_band_loop");
+        t.eq("begin spec preserves underscore animationName", r.animationName, ANIM_UNDERSCORE);
         t.eq("begin spec writes duration", r.animationDuration, "2s");
         t.eq("begin spec writes timing function", r.animationTimingFunction, "ease-in-out");
         t.eq("begin spec writes iteration count", r.animationIterationCount, "infinite");
-        t.eq("getMany preserves underscore animationName", r.many.animationName, "cloud_band_loop");
-        t.eq("snapshot contains animation-name with underscore value", r.snapshot.includes("animation-name: cloud_band_loop;"), true);
-        t.eq("snapshot does not hyphenate animation-name value", r.snapshot.includes("animation-name: cloud-band-loop;"), false);
+        t.eq("getMany preserves underscore animationName", r.many.animationName, ANIM_UNDERSCORE);
+        t.eq("current box rule contains animation-name with underscore value", r.rule.includes(`animation-name: ${ANIM_UNDERSCORE};`), true);
+        t.eq("current box rule does not hyphenate animation-name value", r.rule.includes(`animation-name: ${ANIM_HYPHEN};`), false);
       },
     },
     {
@@ -146,21 +180,26 @@ export function livetree_anim_key_preservation(): TestSuite {
       async act(tree) {
         const box = tree.find.must.byId("box");
 
-        box.css.anim.beginName("old_loop");
-        box.css.anim.restartName("cloud_band_loop");
+        box.css.anim.beginName("lt_old_probe_loop");
+        box.css.anim.restartName(ANIM_UNDERSCORE);
+
+        const snapshot = box.css.devSnapshot();
+        const quid = (box as any).quid as string;
+        const rule = ruleFor(snapshot, quid);
 
         (tree as any).__result = {
           animationName: box.css.get.animationName(),
-          snapshot: box.css.devSnapshot(),
+          snapshot,
+          rule,
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("restartName preserves final underscore animationName", r.animationName, "cloud_band_loop");
-        t.eq("snapshot contains final underscore animation-name", r.snapshot.includes("animation-name: cloud_band_loop;"), true);
-        t.eq("snapshot does not contain hyphenated final animation-name", r.snapshot.includes("animation-name: cloud-band-loop;"), false);
+        t.eq("restartName preserves final underscore animationName", r.animationName, ANIM_UNDERSCORE);
+        t.eq("current box rule contains final underscore animation-name", r.rule.includes(`animation-name: ${ANIM_UNDERSCORE};`), true);
+        t.eq("current box rule does not contain hyphenated final animation-name", r.rule.includes(`animation-name: ${ANIM_HYPHEN};`), false);
       },
     },
     {
@@ -179,19 +218,24 @@ export function livetree_anim_key_preservation(): TestSuite {
       async act(tree) {
         const box = tree.find.must.byId("box");
 
-        box.css.anim.beginName("  cloud_band_loop  ");
+        box.css.anim.beginName(`  ${ANIM_UNDERSCORE}  `);
+
+        const snapshot = box.css.devSnapshot();
+        const quid = (box as any).quid as string;
+        const rule = ruleFor(snapshot, quid);
 
         (tree as any).__result = {
           animationName: box.css.get.animationName(),
-          snapshot: box.css.devSnapshot(),
+          snapshot,
+          rule,
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("animation name is trimmed", r.animationName, "cloud_band_loop");
-        t.eq("animation name internal underscores are preserved", r.snapshot.includes("animation-name: cloud_band_loop;"), true);
+        t.eq("animation name is trimmed", r.animationName, ANIM_UNDERSCORE);
+        t.eq("animation name internal underscores are preserved", r.rule.includes(`animation-name: ${ANIM_UNDERSCORE};`), true);
       },
     },
     {
@@ -211,28 +255,30 @@ export function livetree_anim_key_preservation(): TestSuite {
         const box = tree.find.must.byId("box");
 
         box.css.keyframes.set({
-          name: "cloud-band-loop",
+          name: ANIM_HYPHEN,
           steps: {
             from: { opacity: "0" },
             to: { opacity: "1" },
           },
         });
 
-        box.css.anim.beginName("cloud-band-loop");
+        box.css.anim.beginName(ANIM_HYPHEN);
 
         const snapshot = box.css.devSnapshot();
+        const quid = (box as any).quid as string;
+        const rule = ruleFor(snapshot, quid);
 
         (tree as any).__result = {
           animationName: box.css.get.animationName(),
-          hasHyphenKeyframes: snapshot.includes("@keyframes cloud-band-loop"),
-          hasHyphenAnimationName: snapshot.includes("animation-name: cloud-band-loop;"),
+          hasHyphenKeyframes: snapshot.includes(`@keyframes ${ANIM_HYPHEN}`),
+          hasHyphenAnimationName: rule.includes(`animation-name: ${ANIM_HYPHEN};`),
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("hyphen animation name remains hyphenated", r.animationName, "cloud-band-loop");
+        t.eq("hyphen animation name remains hyphenated", r.animationName, ANIM_HYPHEN);
         t.eq("hyphen keyframes name remains hyphenated", r.hasHyphenKeyframes, true);
         t.eq("hyphen animation-name value remains hyphenated", r.hasHyphenAnimationName, true);
       },
@@ -253,22 +299,25 @@ export function livetree_anim_key_preservation(): TestSuite {
       async act(tree) {
         const box = tree.find.must.byId("box");
 
-        box.css.set.animationName("manual_loop_name");
+        box.css.set.animationName(MANUAL_UNDERSCORE);
 
         const snapshot = box.css.devSnapshot();
+        const quid = (box as any).quid as string;
+        const rule = ruleFor(snapshot, quid);
 
         (tree as any).__result = {
           animationName: box.css.get.animationName(),
-          hasCssProperty: snapshot.includes("animation-name: manual_loop_name;"),
-          hasCamelProperty: snapshot.includes("animationName: manual_loop_name;"),
-          hasHyphenatedValue: snapshot.includes("animation-name: manual-loop-name;"),
+          rule,
+          hasCssProperty: rule.includes(`animation-name: ${MANUAL_UNDERSCORE};`),
+          hasCamelProperty: rule.includes(`animationName: ${MANUAL_UNDERSCORE};`),
+          hasHyphenatedValue: rule.includes("animation-name: lt-manual-probe-name;"),
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("getter preserves manually set underscore animationName value", r.animationName, "manual_loop_name");
+        t.eq("getter preserves manually set underscore animationName value", r.animationName, MANUAL_UNDERSCORE);
         t.eq("snapshot emits normalized CSS property key", r.hasCssProperty, true);
         t.eq("snapshot does not emit camelCase CSS property key", r.hasCamelProperty, false);
         t.eq("snapshot does not hyphenate animation name value", r.hasHyphenatedValue, false);

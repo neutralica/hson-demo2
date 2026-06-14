@@ -148,7 +148,10 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livetree_quid_media()
+      livetree_quid_media(),
+      livetree_listener_api_surface(),
+      livetree_dom_contains_surface(),
+      livetree_anim_key_preservation()
 
 
     ])
