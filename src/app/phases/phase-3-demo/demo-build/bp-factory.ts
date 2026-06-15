@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import { relay, type Outcome } from "intrastructure";
-import { BUILD_BODYcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss,  BUILD_TAB_ACTIVEcss, BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss } from "./build.css";
+import { BUILD_BODYcss, BUILD_HTMLBOXcss, BUILD_PANEcss, BUILD_PREVIEWcss, BUILD_ROOTcss,  BUILD_TABcss, BUILD_TEXTAREAcss, BUILD_TEXTWRAPcss, BUILD_TITLEcss, BUILD_TOGGLEcss } from "./build.css";
 import { BUILD_STRINGhson } from "./build-hson.consts";
 import { mk_div_cls, mk_div_id, mk_section_cls, mk_span_cls } from "../../../utils/makers";
 import { UI_2STACKcss, UI_BTNcss, UI_PANEL_HEADcss, UI_STACK_LABELcss, UI_2STACK_VALcss } from "../../../ui/panels/panels.css";
@@ -20,8 +20,7 @@ export type BuildDemo = Readonly<{
 
   // shared controls
   tabs: {
-    render: LiveTree;
-    html: LiveTree;
+    view: LiveTree;
   };
 
   // content handles
@@ -55,6 +54,27 @@ type BuildFactoryOpts = Readonly<{
   // default starter HSON
   seed?: string;
 }>;
+
+const BUILD_HEADER_BTNcss = {
+  ...UI_BTNcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+  // minHeight: "1.35rem",
+  padding: "0.4em 0.5em",
+  letterSpacing: "0.04em",
+};
+
+const BUILD_HEADER_VALUEcss = {
+  ...UI_2STACK_VALcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+};
+
+const BUILD_HEADER_LABELcss = {
+  ...UI_STACK_LABELcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+};
 
 // IDs / consts
 const $BUILD_ROOT = "build-root" as const;
@@ -104,7 +124,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
   const clearBtn = mk_span_cls(src.head, "build-btn build-btn--clear")
     .text.set("clear")
-    .css.setMany(UI_BTNcss)
+    .css.setMany(BUILD_HEADER_BTNcss)
     .attr.setMany({
       role: "button",
       tabindex: "0",
@@ -115,20 +135,18 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .css.setMany(UI_2STACKcss);
 
   const status = mk_div_cls(statusBox, "status-number")
-    .css.setMany({
-      ...UI_2STACK_VALcss,
-    });
+    .css.setMany(BUILD_HEADER_VALUEcss);
 
   mk_div_cls(statusBox, "status-label")
     .text.set("status")
     .css.setMany({
-      ...UI_STACK_LABELcss,
+      ...BUILD_HEADER_LABELcss,
       bottom: "0",
     });
 
   const copyBtn = mk_span_cls(src.head, "build-btn build-btn--copy")
     .text.set("copy")
-    .css.setMany(UI_BTNcss)
+    .css.setMany(BUILD_HEADER_BTNcss)
     .attr.setMany({
       role: "button",
       tabindex: "0",
@@ -164,26 +182,15 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     .classlist.set("build-toggle")
     .css.setMany(BUILD_TOGGLEcss);
 
-  const tabRender = toggle.create.div()
-    .classlist.set("build-tab build-tab--render")
+  const tabView = toggle.create.div()
+    .classlist.set("build-tab build-tab--view")
     .data.set("tab", "render")
     .text.set("render")
-    .css.setMany({ ...BUILD_TABcss, ...BUILD_TAB_ACTIVEcss })
-    .attr.setMany({
-      role: "button",
-      tabindex: "0",
-      "aria-label": "show render preview",
-    });
-
-  const tabHtml = toggle.create.div()
-    .classlist.set("build-tab build-tab--html")
-    .data.set("tab", "html")
-    .text.set("html")
     .css.setMany(BUILD_TABcss)
     .attr.setMany({
       role: "button",
       tabindex: "0",
-      "aria-label": "show html output",
+      "aria-label": "toggle output view",
     });
 
   // --------------------------------------------------
@@ -210,7 +217,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
     root,
     src,
     out,
-    tabs: { render: tabRender, html: tabHtml },
+    tabs: { view: tabView },
     input: {
       wrap: inputWrap,
       textarea,

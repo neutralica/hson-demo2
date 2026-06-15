@@ -46,14 +46,14 @@ function initBuild(bp: BuildDemo): void {
     };
 
     const syncTabs = (): void => {
-        // show/hide the two output panes
         const showRender = activeTab === "render";
         bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" });
         bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
 
-        // simple active affordance (optional)
-        bp.tabs.render.data.set("active", String(showRender));
-        bp.tabs.html.data.set("active", String(!showRender));
+        bp.tabs.view.data.set("tab", activeTab);
+        bp.tabs.view.data.set("active", "true");
+        bp.tabs.view.text.set(activeTab);
+        bp.tabs.view.attr.set("aria-label", activeTab === "render" ? "show html output" : "show render preview");
     };
 
     const render = (raw: string): void => {
@@ -102,13 +102,9 @@ function initBuild(bp: BuildDemo): void {
 
     // --- events ---
 
-    // Tabs
-    bp.tabs.render.listen.onClick(() => {
-        activeTab = "render";
-        syncTabs();
-    });
-    bp.tabs.html.listen.onClick(() => {
-        activeTab = "html";
+    // View toggle: label is the currently shown view.
+    bp.tabs.view.listen.onClick(() => {
+        activeTab = activeTab === "render" ? "html" : "render";
         syncTabs();
     });
 

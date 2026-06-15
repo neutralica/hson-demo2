@@ -98,6 +98,7 @@ export function make_inspector(
     overflow: "hidden",
     fontSize: øfontSize.smol,
     color: TXTcol_MAIN,
+    // margin: "0rem 3rem",
   });
 
   const expandedSuites = new Set<string>();

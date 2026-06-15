@@ -77,15 +77,19 @@ export const BUILD_TOGGLEcss: CssMap = {
   display: "grid",
   gridAutoFlow: "column",
   gap: "8px",
-  // marginLeft: "auto",
-  // alignItems: "baseline",
+  alignItems: "center",
 };
 
 // Tabs (plain div “buttons”)
 export const BUILD_TABcss: CssMap = {
   ...UI_BTN_STDcss,
-  padding: "8px 4px",
+  padding: "0.1rem 0.45rem",
+  minHeight: "1.35rem",
   flexShrink: "0",
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+  letterSpacing: "0.04em",
+  color: TXTcol_CODE,
 };
 
 export const BUILD_TAB_ACTIVEcss: CssMap = {
@@ -135,7 +139,7 @@ export const BUILD_PANEcss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   gap: "10px",
-  padding: "10px",
+  // padding: "10px",
   boxSizing: "border-box",
   // overflow: "hidden",
 };

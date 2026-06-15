@@ -37,8 +37,8 @@ export const MAIN_MENUcss: CssMap = {
   background: øCOLS.backlo,
   opacity: "0.9",
   textIndent: "1rem",
-  fontWeight: øfontWeight.main,
   paddingLeft: "1ch",
+  fontWeight: øfontWeight.main,
   __before: {},
   _hover: {
     // fontWeight: øfontWeight.main,
@@ -80,8 +80,8 @@ export const MENU_CONTAINERcss: CssMap = {
   width: "auto",
   height: "100%",
   // pointerEvents: "none",
-  marginLeft: "3rem",
-  marginTop: "2rem",
+  marginLeft: "1rem",
+  marginTop: "1rem",
   zIndex: "40",
 
 };
@@ -173,6 +173,8 @@ export const HSON_SUBcss: CssMap = {
   // color: ACID_WASH_OKLCH.steel,
   marginBottom: "1rem",
   userSelect: "none",
+  textIndent: "1rem",
+  paddingLeft: "1ch",
 }
 
 

@@ -42,6 +42,7 @@ export const UI_BTN_STDcss: CssMap = {
   textTransform: "lowercase",
   background: øCOLS.backlo,
   fontSize: øfontSize.main,
+  lineHeight:"1",
 } as const;
 
 
@@ -54,7 +55,7 @@ export const UI_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
   ...UI_BTN_HOVERcss(TXTcol_CODE),
   height: "100%",
-  padding: "4px 4px",
+  padding: "0.4em 0.5em",
   background: øCOLS.backlo,
   color: TXTcol_CODE,
   width: "25%",
@@ -66,10 +67,10 @@ export const UI_2STACKcss: CssMap = {
   display: "flex",
   flexDirection: "column",
   placeItems: "center",
-  width: "15%",
-  height: "100%",
+  // width: "15%",
+  // height: "100%",
   fontSize: øfontSize.main,
-  padding: "4px",
+  padding: "0.4em 0.5em",
   justifyContent: "flex-end",
 };
 
@@ -86,13 +87,13 @@ export const UI_2STACK_VALcss: CssMap = {
 export const UI_PANEL_HEADcss: CssMap = {
   position: "relative",
   zIndex: "5",
-  height: "3rem",
-  maxHeight: "3rem",
+  height: "2rem",
+  // maxHeight: "3rem",
   padding: "6px",
   background: øCOLS.backlo,
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
+  alignItems: "flex-end",
+  justifyContent: "center",
   // gap: "2ch",
 };
 

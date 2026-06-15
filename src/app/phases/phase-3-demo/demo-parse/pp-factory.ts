@@ -18,6 +18,29 @@ export type PpFactoryOpts = {
   // includeNodeOutput?: boolean;
 };
 
+const PP_HEADER_BTNcss = {
+  ...UI_BTNcss,
+  fontSize: øfontSize.smol,
+  // lineHeight: "1",
+  // minHeight: "1.35rem",
+  padding: "0.4rem 0.5rem",
+  letterSpacing: "0.04em",
+  height: "fit-content"
+};
+
+const PP_HEADER_VALUEcss = {
+  ...UI_2STACK_VALcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+};
+
+const PP_HEADER_LABELcss = {
+  ...UI_STACK_LABELcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+};
+
+
 export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
   const pp = relay_data(pp_factory(host));
   init_parsing_panels(pp);
@@ -61,9 +84,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     const copyBtn = mk_div_cls(head, "pp-copy")
       .text.set("copy")
-      .css.setMany({
-        ...UI_BTNcss,
-      })
+      .css.setMany(PP_HEADER_BTNcss)
       .attr.setMany({
         "role": "button",
         "tabindex": "0",
@@ -77,15 +98,12 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
 
     const bytesNum = bytesBox.create.div()
       .data.set("field", `${fmt}-bytes`)
-      .css.setMany({
-        ...UI_2STACK_VALcss,
-        fontSize: øfontSize.main,
-      })
+      .css.setMany(PP_HEADER_VALUEcss)
       .text.set("0");
 
     bytesBox.create.div()
       .data.set("field", `${fmt}-label`)
-      .css.setMany(UI_STACK_LABELcss)
+      .css.setMany(PP_HEADER_LABELcss)
       .text.set("bytes");
 
     const statusBox = mk_span_cls(head, "status-box")
@@ -94,12 +112,12 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       });
 
     const status = mk_div_cls(statusBox, "status-number")
-      .css.setMany(UI_2STACK_VALcss)
+      .css.setMany(PP_HEADER_VALUEcss)
       .text.set("--");
 
     mk_div_cls(statusBox, "status-label")
       .text.set("status")
-      .css.setMany(UI_STACK_LABELcss);
+      .css.setMany(PP_HEADER_LABELcss);
 
     const wrap = panel.create.div()
       .classlist.set("pp-textwrap")
@@ -148,7 +166,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .classlist.set("pp-toggle")
       .text.set("text")
       .css.setMany({
-        ...UI_BTNcss,
+        ...PP_HEADER_BTNcss,
         ...UI_BTN_HOVERcss(TXTcol_CODE),
       })
       .attr.setMany({

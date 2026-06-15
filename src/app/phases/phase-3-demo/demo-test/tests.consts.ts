@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 
-export const $CHIP_WIDTHnum = 7;
+export const $CHIP_WIDTHnum = 1;
 export const $CHIP_WIDTHstr = ` ${$CHIP_WIDTHnum}ch`;
 export const $PANEL_NAME_WIDTHnum = 42;
 export const $PANEL_NAME_WIDTHstr = `${$PANEL_NAME_WIDTHnum}ch`;

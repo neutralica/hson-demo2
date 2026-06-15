@@ -9,7 +9,7 @@ import { OKLCH_VIBRANT } from "../../app/core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
-const nameWidth = "45ch"; // standardize width so it doesn’t jump
+const nameWidth = "35ch"; // standardize width so it doesn’t jump
 const rowFade = `linear-gradient(150deg, ${øCOLS.backhi}, transparent)`;
 const rowFadeFail = `linear-gradient(150deg, ${set_alpha(OKLCH_VIBRANT.redInfra, 0.4)}, transparent)`;
 
