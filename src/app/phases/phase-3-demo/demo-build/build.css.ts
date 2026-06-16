@@ -2,8 +2,10 @@
 
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
-import { $CONTENT_WIDTH, $SIDEBAR_WIDTH, øCOLS } from "../../../core/consts/ui-consts";
-import { øfontSize, øCOL_FOR_FMT_, GRID_GAPstr, TXTcol_GREY, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/ui-consts";
+import { $CONTENT_WIDTH, $SIDEBAR_WIDTH } from "../../../core/consts/ui-consts";
+import { _COLS } from "../../../core/consts/colors.consts";
+import { øfontSize, GRID_GAPstr } from "../../../core/consts/ui-consts";
+import { øCOL_FOR_FMT_, TXTcol_GREY, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
@@ -45,14 +47,14 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
 
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
   color: øCOL_FOR_FMT_.hson,
-  fontSize: øfontSize.main,
+  fontSize: øfontSize.smol,
   padding: "15px",
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
@@ -106,14 +108,13 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
 };
 
 // HTML output box: same textarea styling
 export const BUILD_HTMLBOXcss: CssMap = {
   ...UI_TEXTcss,
-
   // same fill behavior as source textarea
   width: "100%",
   height: "100%",
@@ -126,7 +127,7 @@ export const BUILD_HTMLBOXcss: CssMap = {
   boxShadow: "inset 0 0 25px 1px " + set_alpha(øCOL_FOR_FMT_["html"], 0.6),
   color: øCOL_FOR_FMT_.html,
   caretColor: "auto",
-  fontSize: øfontSize.main
+  // fontSize: øfontSize.main
 
 };
 

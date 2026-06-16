@@ -3,9 +3,9 @@
 import type { CssMap } from "hson-live/types";
 
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
-import { øCOLS } from "../../../core/consts/ui-consts";
+import { _COLS } from "../../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
-import {  øCOL_FOR_FMT_ } from "../../../core/consts/ui-consts";
+import { øCOL_FOR_FMT_ } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
@@ -109,7 +109,7 @@ export const PP_IDLEcss = (f: Fmt) => {
     pointerEvents: "auto",
     userSelect: "none",
     boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
-    background: øCOLS.backlo,
+    background: _COLS.backlo,
     color: "darkred",
   };
 }
@@ -119,7 +119,7 @@ export const PP_INACTIVE_INVALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: øCOLS.backhi,
+    background: _COLS.backhi,
     boxShadow: "inset 0 0 9px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.9),
     color: "darkred",
   };

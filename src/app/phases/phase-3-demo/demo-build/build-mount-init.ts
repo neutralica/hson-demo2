@@ -1,7 +1,8 @@
 import { LiveTree, hson } from "hson-live";
 import { outcome, relay, relay_data, type Outcome } from "intrastructure";
 import { bp_factory, type BuildDemo } from "./bp-factory";
-import { øfontSize, TXTcol_CODE, øHSON_COL } from "../../../core/consts/ui-consts";
+import { øfontSize } from "../../../core/consts/ui-consts";
+import { TXTcol_CODE, øHSON_COL } from "../../../core/consts/colors.consts";
 
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";

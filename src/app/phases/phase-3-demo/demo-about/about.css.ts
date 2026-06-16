@@ -2,7 +2,8 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { $SIDEBAR_WIDTH, CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, SYS_MONOfont, SYS_SANSfont, TOCcol, TXTcol_CODE, TXTcol_MAIN, URLcol, øCOLS, øfontWeight, øfontSize, $CONTENT_WIDTH, CODE_ALTcol, øHSON_COL, MAIN_OKLCH, TXTcol_MENU, TXTcol_GREY } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, SYS_MONOfont, SYS_SANSfont, øfontWeight, øfontSize, $CONTENT_WIDTH, MAIN_OKLCH } from "../../../core/consts/ui-consts";
+import { CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, TOCcol, TXTcol_CODE, TXTcol_MAIN, URLcol, _COLS, CODE_ALTcol, øHSON_COL, TXTcol_MENU, TXTcol_GREY } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -122,7 +123,7 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   _hover: {
     // color: øHSON_COL.h,
     background: TXTcol_GREY,
-    color: øCOLS.backlo,
+    color: _COLS.backlo,
     __after: {
       content: "x",
       position: "absolute",
@@ -144,7 +145,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
       marginLeft: "1ch",
       // right: "-1rem",
     },
-    color: øCOLS.backlo,
+    color: _COLS.backlo,
     background: TOCcol,
   }
 };
@@ -227,7 +228,7 @@ export const ABOUT_BODY_ROWcss: CssMap = {
 
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px",
-  background: øCOLS.backhi,
+  background: _COLS.backhi,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word", // not anywhere
   fontSize: øfontSize.main,

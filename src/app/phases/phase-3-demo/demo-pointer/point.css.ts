@@ -1,7 +1,8 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch.consts";
-import { øCOLS, øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
+import { øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
+import { _COLS } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
 
@@ -113,7 +114,7 @@ export const POINTER_TRACKERcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "2",
-  backgroundColor: øCOLS.backlo,
+  backgroundColor: _COLS.backlo,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
@@ -129,7 +130,7 @@ export const STACK_TABLEcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   height: "100%",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
   alignContent: "end",
 
 }

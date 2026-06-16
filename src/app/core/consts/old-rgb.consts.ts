@@ -44,6 +44,7 @@ const greyDim = "rgba(134, 134, 134, 1)"
 const greyDimmer = "rgba(58, 58, 58, 1)"
 const greyDark = "rgba(40, 38, 38, 1)"
 const greyBlack = "rgba(26, 26, 26, 1)"
+
 export const deepBack = "rgba(7, 7, 10, 1)"
 
 const bckColorR = 12;

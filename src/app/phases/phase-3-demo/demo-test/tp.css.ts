@@ -1,7 +1,9 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/old-rgb.consts";
-import { øCOLS, SYS_SMOLfont, TXTcol_MAIN, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
-import { øfontSize, TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../../core/consts/ui-consts";
+import { SYS_SMOLfont, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
+import { _COLS, TXTcol_MAIN, TXTcol_GREY } from "../../../core/consts/colors.consts";
+import { øfontSize } from "../../../core/consts/ui-consts";
+import { TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
@@ -17,7 +19,7 @@ export const TP_BRANCHcss: CssMap = {
   boxSizing: "border-box",
   gridTemplateColumns: "minmax(0, 1fr) " + $LOGGER_WIDTH,
   gridTemplateRows: "minmax(0, 1fr)",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
 };
 
 export const TP_ROOTcss: CssMap = {
@@ -70,7 +72,7 @@ export const TP_CONTROL_ROWcss: CssMap = {
   gridRow: "2",
   alignSelf: "end",
   padding: "9px",
-  border: "2px ridge rgba(190, 205, 196, 0.50)",
+  border: "6px ridge " + TXTcol_GREY,
   background: "rgba(3, 10, 10, 0.70)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 0 0 1px rgba(0,0,0,0.55)",
 };
@@ -86,7 +88,7 @@ export const TEST_CHIP_ROWcss = {
   alignItems: "stretch",
   padding: "7px 9px",
   boxSizing: "border-box",
-  border: "2px ridge rgba(190, 205, 196, 0.36)",
+  // border: "6px ridge rgba(190, 205, 196, 0.36)",
   background: "rgba(3, 10, 10, 0.54)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04), 0 0 0 1px rgba(0,0,0,0.45)",
 }
@@ -131,7 +133,7 @@ export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
   ...UI_BTN_HOVERcss(TXTcol_MENU),
   alignItems: "center",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
   color: TXTcol_MENU,
   fontFamily: SYS_SMOLfont,
   fontSize: øfontSize.smol,

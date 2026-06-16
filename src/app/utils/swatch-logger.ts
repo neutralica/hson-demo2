@@ -1,4 +1,4 @@
-import { øCOLS } from "../core/consts/ui-consts";
+import { _COLS } from "../core/consts/colors.consts";
 
 export function log_oklch_palette(palette: Record<string, string>, label?: string): void {
 

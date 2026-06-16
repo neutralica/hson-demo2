@@ -1,7 +1,17 @@
 import { CssManager } from "hson-live";
 import { $PANEL_HIDDEN, øfontSize } from "../../../core/consts/ui-consts";
-import { MIN_DESKTOP_WIDTH } from "./demo.consts";
+import { MENU_OPTIONS, MIN_DESKTOP_WIDTH } from "./demo.consts";
 import { GLOB_HIDEcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, SCROLL_HOVER_COLcss, GLOB_SCROLL_THUMBcss, WEBKIT_SCROLL_TRKcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, DISP_SIZE_ALERTcss } from "./global.css";
+
+const mobileMenuButtonSelector = MENU_OPTIONS
+  .map((opt) => `#${opt}-button`)
+  .join(", ");
+
+const mobileHiddenSelector = [
+  mobileMenuButtonSelector,
+  "#ui-root",
+  "#mouse-slot",
+].join(", ");
 
 export const set_global_css = (): void => {
   const gcss =CssManager.api();
@@ -51,8 +61,9 @@ export const set_global_css = (): void => {
   })
 
   /* hide all menu buttons on mobile */
-  mobile.rule("hide-mobile-buttons", "#test-button, #parse-button, #build-button, #ui-root, #mouse-button, #about-button, #mouse-slot, #point-button, #motes-button, #oklch-button")
-    .set.display("none");
+  //// clunky and stringly
+  mobile.rule("hide-mobile-buttons", mobileHiddenSelector)
+  .set.display("none");
 
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))

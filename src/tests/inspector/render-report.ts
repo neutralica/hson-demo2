@@ -1,6 +1,6 @@
 
 import type { LoopReport, Artifact } from "../../../../hson-live/dist/types/diagnostics.types";
-import { øCOLS } from "../../app/core/consts/ui-consts";
+import { _COLS } from "../../app/core/consts/colors.consts";
 import { _freeze } from "../../app/phases/phase-3-demo/demo-test/tests.consts";
 import type { CaseKey, CaseMeta } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { render_livetree_report } from "./report-livetree";
@@ -254,7 +254,7 @@ export function render_transform_report(
       margin: 0; padding: 14px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px; line-height: 1.35;
-      background: ${øCOLS.backhi}; color: #e9e9ee;
+      background: ${_COLS.backhi}; color: #e9e9ee;
     }
     .top{
   display:grid;

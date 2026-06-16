@@ -1,7 +1,8 @@
 import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
-import { TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname, GRAFFITIcol } from "../../../core/consts/ui-consts";
+import { MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
+import { TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, GRAFFITIcol } from "../../../core/consts/colors.consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import { parse_oklch, set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";

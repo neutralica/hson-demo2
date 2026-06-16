@@ -1,9 +1,10 @@
 //css.consts.ts
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
-import { øCOLS, SYS_MONOfont, øHSON_COL, øfontSize } from "../../core/consts/ui-consts";
+import { SYS_MONOfont, øfontSize } from "../../core/consts/ui-consts";
+import { _COLS, øHSON_COL } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
-import { FADE_1col } from "../../core/consts/ui-consts";
+import { FADE_1col } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 const LOGOBOXcss:CssMap = {
@@ -17,7 +18,7 @@ const LOGOBOXcss:CssMap = {
   overflowY: "hidden",
   color: OKLCH_NEUTRALS.ash,
   width: "25ch",
-  backgroundColor: øCOLS.backlo,
+  backgroundColor: _COLS.backlo,
   fontFamily: SYS_MONOfont,
 }
 
@@ -51,7 +52,7 @@ export const NOTEBOXcss: CssMap= {
   position: "fixed",
   top: "1rem",
   left: "1rem",
-  backgroundColor: øCOLS.backlo,
+  backgroundColor: _COLS.backlo,
   padding: "1rem",
   ...FONT_FAM_MONO,
   color: øHSON_COL.n,

@@ -5,7 +5,7 @@ import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
 import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
-import { CONSTcol } from "../../../core/consts/ui-consts";
+import { CONSTcol } from "../../../core/consts/colors.consts";
 import type { ListItem } from "./about.types";
 
 

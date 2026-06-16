@@ -1,6 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
-import { TXTcol_CODE, øfontSize, TXTcol_MENU, TXTcol_MAIN, CURRENT_OKLCH } from "../../../core/consts/ui-consts";
+import { øfontSize, CURRENT_OKLCH } from "../../../core/consts/ui-consts";
+import { TXTcol_CODE, TXTcol_MENU, TXTcol_MAIN } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
@@ -47,7 +48,7 @@ boxSizing: "content-box",
   backgroundPosition: `1px 2px, center, center, center`,
   backgroundBlendMode: `screen, normal, normal, normal`,
 
-  border: `13px ridge ` + CURRENT_OKLCH,
+  border: `6px ridge ` + CURRENT_OKLCH,
   // outline: `1px solid oklch(78% 0.13 145 / 0.24)`,
   outlineOffset: "0.34rem",
   boxShadow: `0 0 1.05rem oklch(70% 0.16 145 / 0.11), inset 0 -1.15rem 2.4rem oklch(78% 0.14 82 / 0.035), inset 0 0 1.5rem oklch(85% 0.02 260 / 0.04)`,

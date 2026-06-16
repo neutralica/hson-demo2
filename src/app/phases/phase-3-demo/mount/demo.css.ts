@@ -2,9 +2,11 @@
 
 import type { CssMap } from "hson-live/types";
 import { $blu_, } from "../../../core/consts/old-rgb.consts";
-import { $MENU_SHADOW, øCOLS, øHSON_COL, SYS_SANSfont, SYS_SMOLfont, øfontWeight, TXTcol_GREY, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname } from "../../../core/consts/ui-consts";
+import { SYS_SANSfont, SYS_SMOLfont, øfontWeight, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname } from "../../../core/consts/ui-consts";
+import { $MENU_SHADOW, _COLS, øHSON_COL, TXTcol_GREY } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { GRID_GAPstr, øfontSize, GRAFFITIcol, SYS_MONOfont, TXTcol_MENU, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/ui-consts";
+import { GRID_GAPstr, øfontSize, SYS_MONOfont } from "../../../core/consts/ui-consts";
+import { GRAFFITIcol, TXTcol_MENU, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
@@ -34,7 +36,7 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
   opacity: "0.9",
   textIndent: "1rem",
   paddingLeft: "1ch",
@@ -43,7 +45,7 @@ export const MAIN_MENUcss: CssMap = {
   _hover: {
     // fontWeight: øfontWeight.main,
     background: MENU_OKLCH,
-    color: øCOLS.backhi,
+    color: _COLS.backhi,
     __before: {
       content: ">>",
       position: "absolute",
@@ -51,7 +53,7 @@ export const MAIN_MENUcss: CssMap = {
     }
   },
   _active: {
-    background: øCOLS.backhi,
+    background: _COLS.backhi,
     color: BLUELIKEcol,
     fontWeight: øfontWeight.fat,
   }

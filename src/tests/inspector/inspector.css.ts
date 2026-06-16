@@ -1,7 +1,8 @@
 import type { CssMap } from "hson-live/types";
 import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
 import { ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "../../app/core/consts/oklch.consts";
-import { TXTcol_CODE, øCOLS, øfontWeight, øHSON_COL } from "../../app/core/consts/ui-consts";
+import { øfontWeight } from "../../app/core/consts/ui-consts";
+import { TXTcol_CODE, _COLS, øHSON_COL } from "../../app/core/consts/colors.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { øfontSize } from "../../app/core/consts/ui-consts";
@@ -10,7 +11,7 @@ import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
 
 const nameWidth = "35ch"; // standardize width so it doesn’t jump
-const rowFade = `linear-gradient(150deg, ${øCOLS.backhi}, transparent)`;
+const rowFade = `linear-gradient(150deg, ${_COLS.backhi}, transparent)`;
 const rowFadeFail = `linear-gradient(150deg, ${set_alpha(OKLCH_VIBRANT.redInfra, 0.4)}, transparent)`;
 
 export const LOG_SCROLLcss: CssMap = {
@@ -31,7 +32,7 @@ export const INSPECTORcss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   overflow: "hidden",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
   fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
 };
@@ -55,7 +56,7 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   padding: "8px 12px",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
-  background: øCOLS.backhi,
+  background: _COLS.backhi,
 };
 
 
@@ -65,7 +66,7 @@ export const ROW_SUITEcss: CssMap = {
   textAlign: "left",
 };
 export const ROW_GROUPcss: CssMap = {
-  background: øCOLS.backhi,
+  background: _COLS.backhi,
   cursor: "pointer",
 };
 
@@ -117,7 +118,7 @@ export const PREVIEW_METAcss: CssMap = {
   padding: "1rem",
   // overflow: "scroll",
   // textOverflow: "ellipsis",
-  background: øCOLS.backlo,
+  background: _COLS.backlo,
   color: øHSON_COL.n,
 };
 

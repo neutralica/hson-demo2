@@ -4,7 +4,7 @@ import { hson } from "hson-live";
 import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
 import type { Fmt } from "../../../core/types/core.types";
 import { PP_IDLEcss, PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss } from "./pp.css";
-import { øHSON_COL } from "../../../core/consts/ui-consts";
+import { øHSON_COL } from "../../../core/consts/colors.consts";
 
 // origin-aware primitive parsing.
 // - JSON: any JSON primitive is allowed (strings must be quoted because JSON.parse enforces it)

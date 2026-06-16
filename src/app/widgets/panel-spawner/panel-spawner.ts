@@ -1,6 +1,6 @@
 import { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
-import { øHSON_COL } from "../../core/consts/ui-consts";
+import { øHSON_COL } from "../../core/consts/colors.consts";
 
 /**
  * Temporary visual sampler for overlay/dialog panel treatments.

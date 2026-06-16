@@ -16,7 +16,7 @@ import { create_clouds } from "../../widgets/clouds/make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { LETTER_COLORstd } from "../../core/consts/old-rgb.consts";
-import { øHSON_COL } from "../../core/consts/ui-consts";
+import { øHSON_COL } from "../../core/consts/colors.consts";
 
 
 

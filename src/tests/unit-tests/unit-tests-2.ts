@@ -643,7 +643,7 @@ export function unit_css_pseudo_unification(): TestSuite {
 
 
 export function unit_media(): TestSuite {
-    const SUITE = "livetree/unit/media";
+    const SUITE = "unit/media";
 
     const cases: readonly TestCase[] = [
         make_unit_case(SUITE, "CssManager.api().media: scoped facade stores rule body", () => {
