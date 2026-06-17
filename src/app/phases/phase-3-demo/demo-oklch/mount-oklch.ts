@@ -2,11 +2,15 @@ import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
 import { CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
-import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
+import { ROOT_CSS, PANEL_CSS, PREVIEW_PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import { parse_oklch} from "../../../core/helpers/color-helpers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
 
 const gcss = CssManager.api();
+
+type OklchRigWithReset = OklchRig & Readonly<{
+  resetBtn: LiveTree;
+}>;
 
 const normalizeLightness = (l: number): number => {
   // CHANGED: parse_oklch() may return CSS number lightness as 0–1.
@@ -46,13 +50,18 @@ function stateOrDefault(value: string | undefined, fallback: OklchValues): Oklch
 }
 
 
-function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
+function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithReset {
   const inputs: OklchInputRig[] = [];
   const channels: OklchChannel[] = ["l", "c", "h", "a"];
 
   const root = mk_div_cls(stage, "oklch-demo-root").css.setMany(ROOT_CSS);
   const controls = mk_div_cls(root, "oklch-demo-controls").css.setMany(PANEL_CSS);
-  mk_div_cls(controls, "oklch-demo-title").css.setMany(TITLE_CSS).text.set("OKLCH color picker");
+  const code = mk_div_cls(controls, "oklch-demo-title")
+    .attr.set("role", "button")
+    .css.setMany({
+      ...TITLE_CSS,
+      cursor: "copy",
+    });
   for (const channel of channels) {
     const row = mk_div_cls_txt(controls, `oklch-row-${channel}`, channel).css.setMany(ROW_CSS);
     const input = row.create.input()
@@ -63,7 +72,11 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
     inputs.push({ channel, input, value });
   }
 
-  const code = mk_div_cls(controls, "oklch-demo-code").css.setMany(CODE_CSS);
+  const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PREVIEW_PANEL_CSS);
+  const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
+  const resetBtn = mk_div_cls_txt(previewPanel, "oklch-demo-factory", "factory")
+    .attr.set("role", "button")
+    .css.setMany(RESET_CSS);
   const targetPanel = mk_div_cls(controls, "oklch-demo-targets").css.setMany({
     ...PANEL_CSS,
     maxHeight: "min(52vh, 28rem)",
@@ -77,17 +90,15 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
       .css.setMany(TARGET_ROW_CSS);
     return row;
   });
-  const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PANEL_CSS);
-  const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
 
-  return Object.freeze({ root, preview, code, inputs, targetRows });
+  return Object.freeze({ root, preview, code, inputs, targetRows, resetBtn });
 }
 
-function oklchInit(rig: OklchRig, model: OklchPickerModel): void {
+function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   let state = model.state;
   let activeTargetIndex = 0;
 
-  const targetStates: OklchValues[] = model.targets.map((target) => {
+  let targetStates: OklchValues[] = model.targets.map((target) => {
     const initialState = stateOrDefault(target.initial, state);
     // CHANGED: var.value reads the stored declaration value; var.get returns
     // a CSS var(...) reference string for use inside CSS maps.
@@ -164,6 +175,22 @@ function oklchInit(rig: OklchRig, model: OklchPickerModel): void {
       render();
     });
   }
+
+  rig.code.listen.onClick(() => {
+    const write = navigator.clipboard?.writeText(oklchToCss(state));
+    if (write) void write.catch(() => undefined);
+  });
+
+  rig.resetBtn.listen.onClick(() => {
+    targetStates = model.targets.map((target) => stateOrDefault(target.initial, OKLCH_DEFAULT_STATE));
+
+    for (const target of model.targets) {
+      gcss.var.set(target.varName, target.initial);
+    }
+
+    state = getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE);
+    render();
+  });
 
   render();
 }
@@ -261,6 +288,7 @@ const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues):
 
   gcss.var.set(CURRENT_OKLCHname, value);
   rig.code.text.set(value);
+  rig.code.attr.set("title", `copy ${value}`);
 
   for (const item of rig.inputs) {
     const n = state[item.channel];

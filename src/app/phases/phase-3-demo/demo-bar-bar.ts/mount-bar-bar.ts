@@ -100,7 +100,7 @@ function stipple(ctx: CanvasRenderingContext2D): void {
 }
 
 function type(ctx: CanvasRenderingContext2D, txt: string, x: number, y: number, align: CanvasTextAlign = "left", size = 19, fill = C.ink): void {
-  ctx.fillStyle = fill; ctx.font = `900 ${size}px Arial Black, Impact, Verdana, sans-serif`; ctx.textAlign = align; ctx.fillText(txt, x, y);
+  ctx.fillStyle = fill; ctx.font = `900 ${size}px Trebuchet MS, Arial Black, Impact, Verdana, sans-serif`; ctx.textAlign = align; ctx.fillText(txt, x, y);
 }
 
 function bar_label(ctx: CanvasRenderingContext2D, x: number): void {
@@ -113,7 +113,7 @@ function bar_label(ctx: CanvasRenderingContext2D, x: number): void {
   box(ctx, x + 7, PY + 3, PW - 14, 1, "#777263");
   box(ctx, x + 7, PY + PH - 4, PW - 14, 1, "#b3ae9c");
 
-  ctx.fillStyle = C.shell;
+  ctx.fillStyle = C.rot;
   ctx.font = "900 13px Arial Black, Impact, Verdana, sans-serif";
   ctx.textAlign = "center";
   for (let i = 0; i < txt.length; i += 1) ctx.fillText(txt[i] ?? "", left + step * i, PY + 14);

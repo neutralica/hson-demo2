@@ -1,8 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { øfontSize, CURRENT_OKLCH } from "../../../core/consts/ui-consts";
-import { set_alpha } from "../../../core/helpers/color-helpers";
-import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { _cols } from "../../../core/consts/colors.consts";
 
 
@@ -31,10 +29,10 @@ export const ROOT_CSS: CssMap = {
   // bottom: "1.2rem",
   // zIndex: "20",
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) 6.35rem",
+  gridTemplateColumns: "minmax(0, 1fr) 10rem",
   gap: "0.85rem",
   alignItems: "stretch",
-boxSizing: "content-box",
+  boxSizing: "content-box",
   width: "min(36rem, calc(100vw - 2.4rem))",
   minHeight: "11.4rem",
   padding: "0.85rem",
@@ -68,6 +66,14 @@ export const PANEL_CSS: CssMap = {
   padding: "0.2rem",
   boxSizing: "border-box",
 };
+
+export const PREVIEW_PANEL_CSS: CssMap = {
+  ...PANEL_CSS,
+  justifyItems: "stretch",
+  alignContent: "start",
+  gap: "0.65rem",
+};
+
 export const ROW_CSS: CssMap = {
   display: "grid",
   gridTemplateColumns: "4ch minmax(0, 1fr) 8ch",
@@ -95,6 +101,17 @@ export const CODE_CSS: CssMap = {
   background: "oklch(0% 0 0 / 0.24)",
 };
 
+export const CHIP_CSS: CssMap = {
+  ...CODE_CSS,
+  minHeight: "auto",
+  padding: "0.28rem 0.35rem",
+  textAlign: "center",
+  cursor: "copy",
+  whiteSpace: "normal",
+  overflowWrap: "anywhere",
+  lineHeight: "1.25",
+};
+
 export const TARGET_ROW_CSS: CssMap = {
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr)",
@@ -103,6 +120,13 @@ export const TARGET_ROW_CSS: CssMap = {
   cursor: "crosshair",
   background: "oklch(0% 0 0 / 0.10)",
   boxShadow: "none",
+};
+
+export const RESET_CSS: CssMap = {
+  ...TARGET_ROW_CSS,
+  color: _cols.txt.menu,
+  textAlign: "center",
+  cursor: "pointer",
 };
 
 export const TARGET_ROW_ACTIVE_CSS: CssMap = {
@@ -114,11 +138,12 @@ export const TARGET_ROW_ACTIVE_CSS: CssMap = {
 };
 
 export const PREVIEW_CSS: CssMap = {
-  height: "5.2rem",
-  width: "5.2rem",
-  alignSelf: "start",
-  justifySelf: "center",
-  background: CURRENT_OKLCH,
+  height: "7.8rem",
+  width: "100%",
+  alignSelf: "stretch",
+  justifySelf: "stretch",
+  boxSizing: "border-box",
+  background: `linear-gradient(${CURRENT_OKLCH}, ${CURRENT_OKLCH}), oklch(4% 0.01 250)`,
   border: `1px solid oklch(84% 0.04 250 / 0.42)`,
   outline: `1px solid oklch(0% 0 0 / 0.45)`,
   outlineOffset: "-0.28rem",
