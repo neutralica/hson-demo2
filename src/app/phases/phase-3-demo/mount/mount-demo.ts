@@ -6,18 +6,18 @@ import { relay, relay_data, relay_void, type OutcomeAsync } from "intrastructure
 import { mk_div_id, mk_div_id_cls, mk_div_id_txt, mk_span_id } from "../../../utils/makers";
 import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss, FX_LAYERcss, OKLCH_HOSTcss, UI_ROOTcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr, $MOTES, $BARBAR } from "./demo.consts";
-import { $PANEL_HIDDEN, MAIN_OKLCHname, MENU_OKLCH, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname } from "../../../core/consts/ui-consts";
-import { _cols, øHSON_COL } from "../../../core/consts/colors.consts";
+import { $PANEL_HIDDEN, MENU_OKLCH } from "../../../core/consts/ui-consts";
+import { _cols, _HSON_COL } from "../../../core/consts/colors.consts";
 import { $MENU_SHADOW } from "../../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
+import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { DemoView, DemoWidget } from "../../../state/state.types";
 import type { Fmt } from "../../../core/types/core.types";
 import type { Panels } from "../../../ui/panels/panels.types";
 import { get_view, get_widgets, demo_subscribe, set_view, toggle_view, toggle_widget, activate_widget, has_widget, deactivate_widget } from "../../../state/store2";
 import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
-import { set_global_css } from "./set-global-css";
+import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_panel_simple } from "../../../ui/panels/panel-simple";
 import { mount_parsing_panels } from "../demo-parse/pp-factory";
 import { mount_build_panels } from "../demo-build/build-mount-init";
@@ -74,7 +74,7 @@ type ParseCandidate = {
 };
 
 const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES];
-const gcss = CssManager.api();
+export const gcss = CssManager.api();
 let _testsWired = false;
 
 const _hide = (lt: LiveTree): void => { lt.classlist.add($PANEL_HIDDEN); };
@@ -156,13 +156,6 @@ function create_demo_shell(stage: LiveTree): DemoShell {
   return { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer };
 }
 
-function seed_demo_theme_vars(): void {
-  gcss.var.set(MAIN_OKLCHname, _cols.txt.main);
-  gcss.var.set(MENU_OKLCHname, _cols.txt.menu);
-  gcss.var.set(GRAF_OKLCHname, _cols.graffiti);
-  gcss.var.set(MOTE_OKLCHname, set_alpha(OKLCH_VIBRANT.yellowSodium, 0.4));
-}
-
 function create_demo_wordmark(menuContainer: LiveTree): void {
   const headline = mk_div_id(menuContainer, "hson-headline")
     .css.setMany(DEMO_HEADLINEcss);
@@ -174,14 +167,14 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
       .classlist.add("demo-wordmark")
       .css.setMany({
         ...HSON_WORDcss,
-        textShadow: $MENU_SHADOW + set_alpha(øHSON_COL[k], 0.4)
+        textShadow: $MENU_SHADOW + set_alpha(_HSON_COL[k], 0.4)
           + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       });
   });
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: øHSON_COL[l],
+      color: _HSON_COL[l],
     });
   });
 

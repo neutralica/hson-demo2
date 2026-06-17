@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types"
 import {  ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts"
 import {  øfontWeight } from "../../../core/consts/ui-consts";
-import { _cols,  TXTcol_GREY } from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 export const SCROLL_HOVER_COLcss = {
@@ -69,7 +69,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   },
   _hover: {
     // color: $gry_.dim,
-    background: TXTcol_GREY,
+    background: _cols.txt.grey,
     color: _cols.backlo,
     fontWeight: øfontWeight.main,
     __before: {
@@ -97,7 +97,7 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
       position: "absolute",
       left: "-1rem",
     },
-    background: TXTcol_GREY,
+    background: _cols.txt.grey,
     color: _cols.backlo,
     fontWeight: øfontWeight.main,
   },

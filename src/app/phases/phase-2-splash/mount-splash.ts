@@ -16,7 +16,7 @@ import { create_clouds } from "../../widgets/clouds/make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { LETTER_COLORstd } from "../../core/consts/old-rgb.consts";
-import { øHSON_COL } from "../../core/consts/colors.consts";
+import { _HSON_COL } from "../../core/consts/colors.consts";
 
 
 
@@ -77,7 +77,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     letters.forEach(l => {
         const k = get_letter_key(l);
         if (!k) return;
-        const col = øHSON_COL[k]
+        const col = _HSON_COL[k]
         l.css.set.var("--glow", col);
         l.css.set.var("--final", col);
         l.css.set.var("--starshine", col);

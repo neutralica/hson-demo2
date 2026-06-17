@@ -51,7 +51,7 @@ export const MAIN_MENUcss: CssMap = {
   },
   _active: {
     background: _cols.backhi,
-    color: _cols.hson.h,
+    color: _cols.bluelike,
     fontWeight: øfontWeight.fat,
   }
 }

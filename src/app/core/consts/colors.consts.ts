@@ -2,28 +2,95 @@ import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.const
 import { set_alpha } from "../helpers/color-helpers";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH } from "./oklch.consts";
 import { deepBack, bckColor } from "./old-rgb.consts";
+import { GRAF_OKLCHname, MAIN_OKLCHname, MENU_OKLCHname, MOTE_OKLCHname } from "./ui-consts";
 
+export type ColorVarSource = Readonly<{
+  path: string;
+  varName: string;
+  value: string;
+}>;
 
+type ColorTree = string | ColorTreeBranch;
 
-export const øHSON_COL = {
+interface ColorTreeBranch {
+  readonly [key: string]: ColorTree;
+}
+
+type ColorVarRefs<T> = T extends string
+  ? string
+  : T extends Readonly<Record<string, unknown>>
+    ? { readonly [K in keyof T]: ColorVarRefs<T[K]> }
+    : never;
+
+const COLOR_VAR_NAME_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
+  "txt.main": MAIN_OKLCHname,
+  "txt.menu": MENU_OKLCHname,
+  graffiti: GRAF_OKLCHname,
+  motes: MOTE_OKLCHname,
+});
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function color_var_name_for_path(path: string): string {
+  return COLOR_VAR_NAME_OVERRIDES[path] ?? `--hson-color-${path.replace(/[^a-zA-Z0-9]+/g, "-")}`;
+}
+
+function color_var_ref_for_path(path: string, fallback: string): string {
+  return `var(${color_var_name_for_path(path)}, ${fallback})`;
+}
+
+function make_color_var_refs<T extends ColorTree>(value: T, prefix = ""): ColorVarRefs<T> {
+  if (typeof value === "string") return color_var_ref_for_path(prefix, value) as ColorVarRefs<T>;
+
+  const out: Record<string, unknown> = {};
+
+  for (const [key, child] of Object.entries(value)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    out[key] = make_color_var_refs(child as ColorTree, path);
+  }
+
+  return out as ColorVarRefs<T>;
+}
+
+function collect_color_var_sources(value: unknown, prefix = ""): ColorVarSource[] {
+  if (typeof value === "string") {
+    return [{ path: prefix, varName: color_var_name_for_path(prefix), value }];
+  }
+
+  if (!isRecord(value)) return [];
+
+  const sources: ColorVarSource[] = [];
+
+  for (const [key, child] of Object.entries(value)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    sources.push(...collect_color_var_sources(child, path));
+  }
+
+  return sources;
+}
+
+export const _HSON_COL = {
   // h: OKLCH_VIBRANT.blueElecky,
   h: OKLCH_FLEURS.oxidizedSky,
   s: OKLCH_VIBRANT.yellowBrass,
   o: OKLCH_VIBRANT.roseNeon2,
   n: OKLCH_VIBRANT.mossToxic,
 };
+const TOCcol = _HSON_COL.h;
 const TXTcol_MENU = OKLCH_FLEURS.greyLilac;
-export const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
+const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
 const TXTcol_CODE = OKLCH_NEUTRALS.white;
-export const TXTcol_GREY = OKLCH_NEUTRALS.steel;
+const TXTcol_GREY = OKLCH_NEUTRALS.steel;
+const COPYRITEcol = TXTcol_GREY;
+const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
+const WIDGETcol = TXTcol_MAIN;
+const HEADERcol = OKLCH_FLEURS.greyLilac;
 // export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
-export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 
-export const WIDGETcol = TXTcol_MAIN;
 /* markdown highlighting */
 
- const HEADERcol = OKLCH_FLEURS.greyLilac;
- const TOCcol = TXTcol_CODE;
  const CODE_ALTcol = OKLCH_NEUTRALS.frost;
  const CODE_PARENScol = OKLCH_VIBRANT.blueYves;
  const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
@@ -33,47 +100,31 @@ export const WIDGETcol = TXTcol_MAIN;
  const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
  const COMMENTScol = ACID_WASH_OKLCH.fern;
  const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
-const LISTcol = øHSON_COL.h;
+const LISTcol = _HSON_COL.h;
 /* misc markdown */
 
 
- const COPYRITEcol = TXTcol_GREY;
 const URLcol = OKLCH_VIBRANT.blueYves;
- const COLONcol = OKLCH_FLEURS.blazeOrange;
-
-
-
-
-
-
-const FADE_1col = OKLCH_NEUTRALS.silver;
-
+const COLONcol = OKLCH_FLEURS.blazeOrange;
+ 
  const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
  const REDcol = OKLCH_VIBRANT.redSignal;
+ const FADE_1col = OKLCH_NEUTRALS.silver;
 
-export const _col_fmt = {
-  json: øHSON_COL.h,
-  html: øHSON_COL.o,
-  hson: øHSON_COL.s
-};
+ const MOTEScol = set_alpha(OKLCH_VIBRANT.yellowSodium, 0.4);
 
-
-
-
-
-export const _cols = {
+export const _colorVals = {
   backlo: deepBack,
   backhi: bckColor,
   graffiti: GRAFFITIcol,
+  motes: MOTEScol,
   red: REDcol,
   fade: FADE_1col,
   toc: TOCcol,
-  hson: {
-    h: øHSON_COL.h,
-    s: øHSON_COL.s,
-    o: øHSON_COL.o,
-    n: øHSON_COL.n,
-  },
+    bluelike: _HSON_COL.h,
+    yellowlike: _HSON_COL.s,
+    pinklike: _HSON_COL.o,
+    greenlike: _HSON_COL.n,
   
   txt: {
     main: TXTcol_MAIN,
@@ -87,9 +138,9 @@ export const _cols = {
     copyright: COPYRITEcol,
   },
   fmt: {
-    json: øHSON_COL.h,
-    html: øHSON_COL.o,
-    hson: øHSON_COL.s
+    json: _HSON_COL.h,
+    html: _HSON_COL.o,
+    hson: _HSON_COL.s
   },
   code: {
     alt: CODE_ALTcol,
@@ -106,3 +157,9 @@ export const _cols = {
     
   }
 };
+
+export const COLOR_VAR_SOURCES: readonly ColorVarSource[] = Object.freeze(
+  collect_color_var_sources(_colorVals),
+);
+
+export const _cols = make_color_var_refs(_colorVals);

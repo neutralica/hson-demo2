@@ -1,11 +1,10 @@
 import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
-import { MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
-import {  _cols } from "../../../core/consts/colors.consts";
+import { CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import { parse_oklch} from "../../../core/helpers/color-helpers";
-import {  OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
+import { OKLCH_COLOR_TARGETS } from "./link-colors";
 
 const gcss = CssManager.api();
 
@@ -15,7 +14,8 @@ const normalizeLightness = (l: number): number => {
   if (l >= 0 && l <= 1) return l * 100;
   return l;
 };
-const defOk = parse_oklch(_cols.txt.menu);
+const DEFAULT_OKLCH_STRING = OKLCH_COLOR_TARGETS[0]?.initial ?? "oklch(80% 0 0)";
+const defOk = parse_oklch(DEFAULT_OKLCH_STRING);
 
 const OKLCH_DEFAULT_STATE: OklchValues = Object.freeze({
   l: normalizeLightness(defOk.l),
@@ -64,7 +64,12 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRig {
   }
 
   const code = mk_div_cls(controls, "oklch-demo-code").css.setMany(CODE_CSS);
-  const targetPanel = mk_div_cls(controls, "oklch-demo-targets").css.setMany(PANEL_CSS);
+  const targetPanel = mk_div_cls(controls, "oklch-demo-targets").css.setMany({
+    ...PANEL_CSS,
+    maxHeight: "min(52vh, 28rem)",
+    overflowY: "auto",
+    overscrollBehavior: "contain",
+  });
 
   const targetRows = model.targets.map((target) => {
     const row = mk_div_cls_txt(targetPanel, "oklch-demo-target-row", target.label)
@@ -206,12 +211,7 @@ function oklchToCss(state: OklchValues): string {
 function makeOklchModel(targets?: readonly OklchTarget[]): OklchPickerModel {
   return Object.freeze({
     state: OKLCH_DEFAULT_STATE,
-    targets: targets ?? [
-      { label: "text", varName: MAIN_OKLCHname, initial: _cols.txt.code },
-      { label: "menu", varName: MENU_OKLCHname, initial: _cols.txt.menu },
-      { label: "graffiti", varName: GRAF_OKLCHname, initial: _cols.graffiti },
-      { label: "motes", varName: MOTE_OKLCHname, initial: OKLCH_VIBRANT.yellowSodium },
-    ],
+    targets: targets ?? OKLCH_COLOR_TARGETS,
   });
 }
 

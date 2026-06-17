@@ -37,7 +37,7 @@ function initBuild(bp: BuildDemo): void {
         if (k === "valid") {
             bp.input.status.text.set("OK")
             bp.input.status.css.setMany({
-                color: _cols.hson.n,
+                color: _cols.greenlike,
                 opacity: "1"
             });
             return;

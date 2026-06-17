@@ -127,7 +127,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         display: "block",
       })
       .css.selector("&:hover > div.pp-watermark").setMany({
-        color: _cols.hson.n,
+        color: _cols.greenlike,
         
       });
 

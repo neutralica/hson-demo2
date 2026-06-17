@@ -17,9 +17,9 @@ export const øfontWeight = {
 }
 
 export const øfontSize = {
-  smol: "12px",
+  smol: "14px",
   sansMain: "16px",
-  main: "16px",
+  main: "18px",
 } as const;
 
 

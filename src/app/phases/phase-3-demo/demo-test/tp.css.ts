@@ -1,9 +1,9 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/old-rgb.consts";
 import { SYS_MONOfont, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
-import { _cols, TXTcol_MAIN, TXTcol_GREY } from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 import { øfontSize } from "../../../core/consts/ui-consts";
-import { øHSON_COL } from "../../../core/consts/colors.consts";
+import { _HSON_COL } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
@@ -72,7 +72,7 @@ export const TP_CONTROL_ROWcss: CssMap = {
   gridRow: "2",
   alignSelf: "end",
   padding: "9px",
-  border: "6px ridge " + TXTcol_GREY,
+  border: "6px ridge " + _cols.txt.grey,
   background: "rgba(3, 10, 10, 0.70)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 0 0 1px rgba(0,0,0,0.55)",
 };
@@ -170,14 +170,13 @@ export const TEST_SELECTORcss: CssMap = {
   padding: "4px 8px",
   minHeight: "24px",
   boxSizing: "border-box",
-
   ...FONT_FAM_MONO,
   fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   lineHeight: "1",
 
   // background: $cols_.backdeep,
-  color: TXTcol_MAIN,
+  color: _cols.txt.main,
   border: "1px solid rgba(255,255,255,0.2)",
   outline: "none",
   _hover: {

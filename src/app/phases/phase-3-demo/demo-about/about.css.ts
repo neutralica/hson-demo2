@@ -16,11 +16,13 @@ export const ABOUT_DOCcss: CssMap = {
   overflowY: "scroll",
   overflowX: "hidden",
   width: "90ch",
+  lineHeight: "1.9"
 
 };
 
-export const DOC_CONTAINER = {
+export const DOC_CONTAINER: CssMap = {
   maxWidth: "80ch",
+fontSize: øfontSize.smol,
 }
 
 export const ABOUT_TOCcss: CssMap = {
@@ -49,7 +51,7 @@ export const ABOUT_LIST_ROWcss: CssMap = {
   alignItems: "start",
   minWidth: "0",
   maxWidth: "70ch",
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
 };
 
 export const ABOUT_LIST_MARKERcss: CssMap = {
@@ -63,7 +65,7 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
 };
 
 export const LIST_TEXTcss: CssMap = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   color: _cols.txt.list,
 };
 
@@ -94,14 +96,14 @@ export const HRcss: CssMap = {
 
 
 export const TOC_BTNcss: CssMap = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   boxSizing: "border-box",
   cursor: "pointer",
   userSelect: "none",
   textAlign: "right",
   lineHeight: "2",
   paddingRight: "2rem",
-  color: _cols.hson.h,
+  color: _cols.bluelike,
   // _hover: {
   //   background: TOCcol,
   //   color: øCOLS.backlo
@@ -232,7 +234,7 @@ export const MD_CODE_PREcss: CssMap = {
   overflowWrap: "break-word", // not anywhere
   fontSize: øfontSize.smol,
   lineHeight: "2",
-  padding: "1rem",
+  padding: "1em",
   // whiteSpace: "normal",
   border: "1px solid " + set_alpha(ACID_WASH_OKLCH.lilac, 0.5),
 
@@ -274,7 +276,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
     fontFamily: SYS_MONOfont,
     letterSpacing: "0.06em",
     textTransform: level === 2 ? "uppercase" : "none",
-    fontSize: øfontSize.main,
+    fontSize: level === 1 ? øfontSize.main: øfontSize.smol,
     // fontSize: level === 1 ? _TXT.heading : level === 2 ? _TXT.subhead : level === 3 ? _TXT.subhead : _TXT.main,
     fontWeight: level === 1 ? øfontWeight.fat : level === 2 ? 600 : 400,
     justifySelf: level <= 2 ? "center" : "start",
@@ -293,7 +295,7 @@ export const MD_COPY_LINEcss: CssMap = {
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   color: _cols.code.url,
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   textDecoration: "underline",
   marginLeft: "2rem"
 }

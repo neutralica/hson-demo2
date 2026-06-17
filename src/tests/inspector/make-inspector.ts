@@ -116,7 +116,7 @@ export function make_inspector(
   // changed: one tiny helper keeps pass/fail coloring local to result text
   const applyResultColor = (cell: LiveTree, res: string): void => {
     if (res === "pass") {
-      cell.css.set.color(_cols.hson.n);
+      cell.css.set.color(_cols.greenlike);
       return;
     }
 

@@ -1,7 +1,7 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import { _cols,  TXTcol_GREY } from "../../core/consts/colors.consts";
+import { _cols } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
@@ -18,7 +18,7 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       pointerEvents: "all",
       maxHeight: "100%",
       overflow: "hidden",
-      color: TXTcol_GREY,
+      color: _cols.txt.grey,
       ...FONT_FAM_MONO,
       background: _cols.backlo
     });

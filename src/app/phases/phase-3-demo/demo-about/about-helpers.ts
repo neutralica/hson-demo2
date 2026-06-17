@@ -6,7 +6,7 @@ import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, C
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 import type { ListItem } from "./about.types";
-import { _col_fmt, _cols } from "../../../core/consts/colors.consts";
+import {  _cols } from "../../../core/consts/colors.consts";
 
 
 

@@ -5,7 +5,6 @@ import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch.cons
 import { $CONTENT_WIDTH, $SIDEBAR_WIDTH } from "../../../core/consts/ui-consts";
 import { _cols } from "../../../core/consts/colors.consts";
 import { øfontSize } from "../../../core/consts/ui-consts";
-import { _col_fmt,} from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
@@ -51,12 +50,12 @@ export const BUILD_TEXTWRAPcss: CssMap = {
 
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
-  color: _col_fmt.hson,
+  color: _cols.fmt.hson,
   fontSize: øfontSize.smol,
   padding: "15px",
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
-    boxShadow: "inset 0 0 15px 1px " + set_alpha(_col_fmt["hson"], 0.5),
+    boxShadow: "inset 0 0 15px 1px " + set_alpha(_cols.fmt.hson, 0.5),
 
   }
 
@@ -122,8 +121,8 @@ export const BUILD_HTMLBOXcss: CssMap = {
   resize: "none",
   outline: "none",
 
-  boxShadow: "inset 0 0 25px 1px " + set_alpha(_col_fmt["html"], 0.6),
-  color: _col_fmt.html,
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(_cols.fmt.html, 0.6),
+  color: _cols.fmt.html,
   caretColor: "auto",
   // fontSize: øfontSize.main
 

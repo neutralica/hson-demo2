@@ -119,7 +119,7 @@ export const PREVIEW_METAcss: CssMap = {
   // overflow: "scroll",
   // textOverflow: "ellipsis",
   background: _cols.backlo,
-  color: _cols.hson.n,
+  color: _cols.greenlike,
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {

@@ -2,6 +2,7 @@ import { CssManager } from "hson-live";
 import { $PANEL_HIDDEN, øfontSize } from "../../../core/consts/ui-consts";
 import { MENU_OPTIONS, MIN_DESKTOP_WIDTH } from "./demo.consts";
 import { GLOB_HIDEcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, SCROLL_HOVER_COLcss, GLOB_SCROLL_THUMBcss, WEBKIT_SCROLL_TRKcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, DISP_SIZE_ALERTcss } from "./global.css";
+import { COLOR_VAR_SOURCES } from "../../../core/consts/colors.consts";
 
 const mobileMenuButtonSelector = MENU_OPTIONS
   .map((opt) => `#${opt}-button`)
@@ -75,4 +76,11 @@ export const set_global_css = (): void => {
     .set.display("none");
 
 
+}
+export function seed_demo_theme_vars(): void {
+  const gcss = CssManager.api();
+
+  for (const source of COLOR_VAR_SOURCES) {
+    gcss.var.set(source.varName, source.value);
+  }
 }
