@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts";
 import { ACID_WASH_OKLCH } from "../../../core/consts/oklch.consts";
-import { øfontSize, SYS_SMOLfont } from "../../../core/consts/ui-consts";
+import { øfontSize, SYS_MONOfont } from "../../../core/consts/ui-consts";
 import { _COLS } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -72,7 +72,7 @@ export const TRACKER_ORIGINcss = {
 
 
 export const MOUSE_COORD_Xcss: CssMap = {
-  FontFamily: SYS_SMOLfont,
+  FontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
@@ -80,7 +80,7 @@ export const MOUSE_COORD_Xcss: CssMap = {
 }
 
 export const MOUSE_COORD_Ycss = {
-  FontFamily: SYS_SMOLfont,
+  FontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
@@ -88,7 +88,7 @@ export const MOUSE_COORD_Ycss = {
 }
 
 export const TRACKER_THETAcss = {
-  FontFamily: SYS_SMOLfont,
+  FontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
@@ -102,7 +102,7 @@ export const ROW_GRIDcss: CssMap = {
   columnGap: "2px",
   alignItems: "baseline",
   minWidth: "0",
-  FontFamily: SYS_SMOLfont,
+  FontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
 } as const;
 

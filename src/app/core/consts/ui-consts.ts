@@ -23,9 +23,8 @@ export const øfontSize = {
 } as const;
 
 
-export const SYS_SMOLfont = /* "'IBM Plex Sans', sans-serif"; // */ "'DM Mono', Monaco, monospace";
+
 export const SYS_MONOfont = "'DM Mono', Monaco, monospace";
-export const SYS_SANSfont =  /*"'IBM Plex Sans', sans-serif"; // */ "'DM Mono', Monaco, monospace";
 
 
 // export const $CODE_FONT_SIZE = øTXT.main;

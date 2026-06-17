@@ -1,16 +1,14 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { $blu_, } from "../../../core/consts/old-rgb.consts";
-import { SYS_SANSfont, SYS_SMOLfont, øfontWeight, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname } from "../../../core/consts/ui-consts";
-import { $MENU_SHADOW, _COLS, øHSON_COL, TXTcol_GREY } from "../../../core/consts/colors.consts";
+import {  øfontWeight, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname, SYS_MONOfont } from "../../../core/consts/ui-consts";
+import {  _COLS,} from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
-import { GRID_GAPstr, øfontSize, SYS_MONOfont } from "../../../core/consts/ui-consts";
-import { GRAFFITIcol, TXTcol_MENU, BLUELIKEcol, FADE_1col, COPYRITEcol } from "../../../core/consts/colors.consts";
+import { GRID_GAPstr, øfontSize} from "../../../core/consts/ui-consts";
+import {  BLUELIKEcol, COPYRITEcol } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { CssManager } from "hson-live";
 
 
 export const UI_ROOTcss: CssMap = {
@@ -190,7 +188,7 @@ export const OKLCH_HOSTcss = {
 
 
 export const COPYRITEcss: CssMap = {
-  fontFamily: SYS_SANSfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   position: "fixed",
   bottom: "0.2rem",

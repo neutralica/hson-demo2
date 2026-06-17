@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/old-rgb.consts";
-import { SYS_SMOLfont, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
+import { SYS_MONOfont, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
 import { _COLS, TXTcol_MAIN, TXTcol_GREY } from "../../../core/consts/colors.consts";
 import { øfontSize } from "../../../core/consts/ui-consts";
 import { TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../../core/consts/colors.consts";
@@ -110,7 +110,7 @@ export const TEST_CHIP_DEFcss = {
 
 
 export const TEST_CHIP_VALUEcss = {
-  fontFamily: SYS_SMOLfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   fontWeight: øfontWeight.fat,
   lineHeight: "1",
@@ -119,7 +119,7 @@ export const TEST_CHIP_VALUEcss = {
 
 export const TEST_CHIP_LABELcss = {
   marginTop: "3px",
-  fontFamily: SYS_SMOLfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   lineHeight: "1",
   letterSpacing: "0.08em",
@@ -135,7 +135,7 @@ export const TEST_CLEAR_BTNcss: CssMap = {
   alignItems: "center",
   background: _COLS.backlo,
   color: TXTcol_MENU,
-  fontFamily: SYS_SMOLfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   lineHeight: "1",
   minHeight: "24px",
@@ -153,7 +153,7 @@ export const TEST_RUN_BTNcss: CssMap = {
   ...UI_BTN_HOVERcss(ACID_WASH_RGBA.fadedMint),
   alignItems: "center",
   color: ACID_WASH_RGBA.fadedMint,
-  fontFamily: SYS_SMOLfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   lineHeight: "1",
   minHeight: "24px",
@@ -172,7 +172,7 @@ export const TEST_SELECTORcss: CssMap = {
   boxSizing: "border-box",
 
   ...FONT_FAM_MONO,
-  fontFamily: SYS_SMOLfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   lineHeight: "1",
 
@@ -233,7 +233,7 @@ export const TP_LOG_ROWcss = (line: string): CssMap => {
     minWidth: "0",
     maxWidth: "100%",         // CHANGED
 
-    fontFamily: SYS_SMOLfont,
+    fontFamily: SYS_MONOfont,
     fontSize: øfontSize.smol,
     textAlign: "end",
     color: get_line_color(line),

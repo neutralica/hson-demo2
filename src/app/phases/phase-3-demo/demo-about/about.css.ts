@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { $SIDEBAR_WIDTH, SYS_MONOfont, SYS_SANSfont, øfontWeight, øfontSize, $CONTENT_WIDTH, MAIN_OKLCH } from "../../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, SYS_MONOfont, øfontWeight, øfontSize, $CONTENT_WIDTH, MAIN_OKLCH } from "../../../core/consts/ui-consts";
 import { CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, TOCcol, TXTcol_CODE, TXTcol_MAIN, URLcol, _COLS, CODE_ALTcol, øHSON_COL, TXTcol_MENU, TXTcol_GREY } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
@@ -285,7 +285,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
 
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
-  fontFamily: SYS_SANSfont,
+  fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   color: COPYRITEcol,
   marginTop: "2rem",
