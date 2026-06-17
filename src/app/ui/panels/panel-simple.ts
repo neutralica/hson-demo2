@@ -1,11 +1,7 @@
 // panels.simple.ts
 
 import type { LiveTree } from "hson-live";
-import { $blu_ } from "../../core/consts/old-rgb.consts";
-import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { SYS_MONOfont } from "../../core/consts/ui-consts";
-import { _COLS, TXTcol_MAIN, TXTcol_MENU, TXTcol_CODE, TXTcol_GREY } from "../../core/consts/colors.consts";
-import { set_alpha } from "../../core/helpers/color-helpers";
+import { _cols,  TXTcol_GREY } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
@@ -24,6 +20,6 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       overflow: "hidden",
       color: TXTcol_GREY,
       ...FONT_FAM_MONO,
-      background: _COLS.backlo
+      background: _cols.backlo
     });
 }

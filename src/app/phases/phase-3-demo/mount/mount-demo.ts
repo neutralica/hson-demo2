@@ -7,7 +7,8 @@ import { mk_div_id, mk_div_id_cls, mk_div_id_txt, mk_span_id } from "../../../ut
 import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss, FX_LAYERcss, OKLCH_HOSTcss, UI_ROOTcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr, $MOTES, $BARBAR } from "./demo.consts";
 import { $PANEL_HIDDEN, MAIN_OKLCHname, MENU_OKLCH, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname } from "../../../core/consts/ui-consts";
-import { $MENU_SHADOW, TXTcol_MENU, GRAFFITIcol, TXTcol_MAIN, WIDGETcol, øHSON_COL } from "../../../core/consts/colors.consts";
+import { _cols, øHSON_COL } from "../../../core/consts/colors.consts";
+import { $MENU_SHADOW } from "../../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
@@ -156,9 +157,9 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 }
 
 function seed_demo_theme_vars(): void {
-  gcss.var.set(MAIN_OKLCHname, TXTcol_MAIN);
-  gcss.var.set(MENU_OKLCHname, TXTcol_MENU);
-  gcss.var.set(GRAF_OKLCHname, GRAFFITIcol);
+  gcss.var.set(MAIN_OKLCHname, _cols.txt.main);
+  gcss.var.set(MENU_OKLCHname, _cols.txt.menu);
+  gcss.var.set(GRAF_OKLCHname, _cols.graffiti);
   gcss.var.set(MOTE_OKLCHname, set_alpha(OKLCH_VIBRANT.yellowSodium, 0.4));
 }
 
@@ -197,7 +198,7 @@ function create_demo_menu(menuBox: LiveTree): MenuButtons {
       .classlist.set(isWidget ? "widget-button" : "view-button")
       .css.setMany({
         ...MAIN_MENUcss,
-        color: isWidget ? WIDGETcol : MENU_OKLCH
+        color: isWidget ? _cols.txt.widget : MENU_OKLCH
       });
   });
 

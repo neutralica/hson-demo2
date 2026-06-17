@@ -2,10 +2,9 @@
 
 import type { CssMap } from "hson-live/types";
 import {  øfontWeight, $SIDEBAR_WIDTH, MENU_OKLCH, GRAF_OKLCH, GRAF_OKLCHname, SYS_MONOfont } from "../../../core/consts/ui-consts";
-import {  _COLS,} from "../../../core/consts/colors.consts";
+import {  _cols,} from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { GRID_GAPstr, øfontSize} from "../../../core/consts/ui-consts";
-import {  BLUELIKEcol, COPYRITEcol } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
@@ -34,7 +33,7 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",
-  background: _COLS.backlo,
+  background: _cols.backlo,
   opacity: "0.9",
   textIndent: "1rem",
   paddingLeft: "1ch",
@@ -43,7 +42,7 @@ export const MAIN_MENUcss: CssMap = {
   _hover: {
     // fontWeight: øfontWeight.main,
     background: MENU_OKLCH,
-    color: _COLS.backhi,
+    color: _cols.backhi,
     __before: {
       content: ">>",
       position: "absolute",
@@ -51,8 +50,8 @@ export const MAIN_MENUcss: CssMap = {
     }
   },
   _active: {
-    background: _COLS.backhi,
-    color: BLUELIKEcol,
+    background: _cols.backhi,
+    color: _cols.hson.h,
     fontWeight: øfontWeight.fat,
   }
 }
@@ -193,6 +192,6 @@ export const COPYRITEcss: CssMap = {
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",
-  color: COPYRITEcol,
+  color: _cols.txt.copyright,
   zIndex: "-10",
 };

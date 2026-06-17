@@ -3,9 +3,9 @@
 import type { CssMap } from "hson-live/types";
 
 import { $gry_ } from "../../../core/consts/old-rgb.consts";
-import { _COLS } from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
-import { øCOL_FOR_FMT_ } from "../../../core/consts/colors.consts";
+import { _col_fmt } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { Fmt } from "../../../core/types/core.types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
@@ -20,7 +20,7 @@ export const VIEW_TOGGLEcss: CssMap = {
 
 // text container
 export const PP_TEXTWRAPcss = (f: Fmt | null) => {
-  const color = (f === null) ? OKLCH_NEUTRALS.silver : øCOL_FOR_FMT_[f];
+  const color = (f === null) ? OKLCH_NEUTRALS.silver : _col_fmt[f];
   return {
     position: "relative",
     minHeight: "0",
@@ -71,10 +71,10 @@ export const PP_ACTIVE_VALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "auto",
-    boxShadow: "inset 0 0 15px 0.1px " + set_alpha(øCOL_FOR_FMT_[f], 0.5),
-    background: set_alpha(øCOL_FOR_FMT_[f], 0.1),
+    boxShadow: "inset 0 0 15px 0.1px " + set_alpha(_col_fmt[f], 0.5),
+    background: set_alpha(_col_fmt[f], 0.1),
     border: "none",
-    color: øCOL_FOR_FMT_[f]
+    color: _col_fmt[f]
   } as CssMap;
 };
 
@@ -97,9 +97,9 @@ export const PP_INACTIVE_VALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: set_alpha(øCOL_FOR_FMT_[f], 0.05),
-    boxShadow: "inset 0 0 9px 1px " + set_alpha(øCOL_FOR_FMT_[f], 0.4),
-    color: øCOL_FOR_FMT_[f],
+    background: set_alpha(_col_fmt[f], 0.05),
+    boxShadow: "inset 0 0 9px 1px " + set_alpha(_col_fmt[f], 0.4),
+    color: _col_fmt[f],
   };
 }
 //// used
@@ -109,7 +109,7 @@ export const PP_IDLEcss = (f: Fmt) => {
     pointerEvents: "auto",
     userSelect: "none",
     boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
-    background: _COLS.backlo,
+    background: _cols.backlo,
     color: "darkred",
   };
 }
@@ -119,7 +119,7 @@ export const PP_INACTIVE_INVALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: _COLS.backhi,
+    background: _cols.backhi,
     boxShadow: "inset 0 0 9px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.9),
     color: "darkred",
   };

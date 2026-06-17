@@ -12,9 +12,9 @@ export const øHSON_COL = {
   o: OKLCH_VIBRANT.roseNeon2,
   n: OKLCH_VIBRANT.mossToxic,
 };
-export const TXTcol_MENU = OKLCH_FLEURS.greyLilac;
+const TXTcol_MENU = OKLCH_FLEURS.greyLilac;
 export const TXTcol_MAIN = OKLCH_VIBRANT.yellowSunStaringEyesBright;
-export const TXTcol_CODE = OKLCH_VIBRANT.blueCobalt;
+const TXTcol_CODE = OKLCH_NEUTRALS.white;
 export const TXTcol_GREY = OKLCH_NEUTRALS.steel;
 // export const TXTcol_GREY = OKLCH_FLEURS.greyLilac;
 export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
@@ -22,60 +22,59 @@ export const TXTcol_ACTIVE = OKLCH_VIBRANT.redSignal;
 export const WIDGETcol = TXTcol_MAIN;
 /* markdown highlighting */
 
-export const HEADERcol = OKLCH_FLEURS.greyLilac;
-export const TOCcol = TXTcol_CODE;
-/* code markdown */
-
-export const CODE_ALTcol = OKLCH_FLEURS.oxidizedSky;
-export const CODE_PARENScol = OKLCH_VIBRANT.blueYves;
-export const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
-export const CONSTcol = OKLCH_NEUTRALS.violetTint;
-export const CODE_PUNCTcol = ACID_WASH_OKLCH.ember;
-export const CODE_QUOTEcol = OKLCH_VIBRANT.redInfra;
-export const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
-export const COMMENTScol = ACID_WASH_OKLCH.fern;
-export const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
-export const LISTcol = øHSON_COL.h;
+ const HEADERcol = OKLCH_FLEURS.greyLilac;
+ const TOCcol = TXTcol_CODE;
+ const CODE_ALTcol = OKLCH_NEUTRALS.frost;
+ const CODE_PARENScol = OKLCH_VIBRANT.blueYves;
+ const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
+ const CONSTcol = OKLCH_FLEURS.oxidizedSky;
+ const CODE_PUNCTcol = OKLCH_VIBRANT.violetIon;
+ const CODE_QUOTEcol = OKLCH_VIBRANT.redInfra;
+ const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
+ const COMMENTScol = ACID_WASH_OKLCH.fern;
+ const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
+const LISTcol = øHSON_COL.h;
 /* misc markdown */
 
 
-export const COPYRITEcol = TXTcol_GREY;
-export const URLcol = øHSON_COL.h;
-export const COLONcol = OKLCH_FLEURS.blazeOrange;
+ const COPYRITEcol = TXTcol_GREY;
+const URLcol = OKLCH_VIBRANT.blueYves;
+ const COLONcol = OKLCH_FLEURS.blazeOrange;
 
 
 
 
 
 
-export const FADE_1col = OKLCH_NEUTRALS.silver;
-export const $MENU_SHADOW = "1px 1px 25px ";
+const FADE_1col = OKLCH_NEUTRALS.silver;
 
-export const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
-export const REDcol = OKLCH_VIBRANT.redSignal;
-export const BLUELIKEcol = øHSON_COL.h;
-export const GREENLIKEcol = øHSON_COL.n;
-export const YELLOWLIKEcol = øHSON_COL.s;
-export const PINKLIKEcol = øHSON_COL.o;
+ const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
+ const REDcol = OKLCH_VIBRANT.redSignal;
 
-export const øCOL_FOR_FMT_ = {
+export const _col_fmt = {
   json: øHSON_COL.h,
   html: øHSON_COL.o,
   hson: øHSON_COL.s
 };
 
-export const _COLS = {
+
+
+
+
+export const _cols = {
   backlo: deepBack,
   backhi: bckColor,
   graffiti: GRAFFITIcol,
   red: REDcol,
+  fade: FADE_1col,
+  toc: TOCcol,
   hson: {
     h: øHSON_COL.h,
     s: øHSON_COL.s,
     o: øHSON_COL.o,
     n: øHSON_COL.n,
   },
-
+  
   txt: {
     main: TXTcol_MAIN,
     menu: TXTcol_MENU,
@@ -83,8 +82,9 @@ export const _COLS = {
     active: TXTcol_ACTIVE,
     code: TXTcol_CODE,
     list: LISTcol,
-    url: URLcol,
     header: HEADERcol,
+    widget: WIDGETcol,
+    copyright: COPYRITEcol,
   },
   fmt: {
     json: øHSON_COL.h,
@@ -99,6 +99,10 @@ export const _COLS = {
     parens: CODE_PARENScol,
     quotes: CODE_QUOTEcol,
     comment: COMMENTScol,
+    url: URLcol,
+    parensInner: CODE_PARENS_INNERcol,
     colon: COLONcol,
+    const: CONSTcol,
+    
   }
 };

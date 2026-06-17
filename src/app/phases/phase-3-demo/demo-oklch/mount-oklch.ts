@@ -2,10 +2,10 @@ import { CssManager, LiveTree } from "hson-live";
 import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget, OklchDemoOpts, OklchInputRig } from "./oklch.types";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
 import { MAIN_OKLCHname, MENU_OKLCHname, GRAF_OKLCHname, MOTE_OKLCHname, CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
-import { TXTcol_MENU, TXTcol_CODE, TXTcol_ACTIVE, GRAFFITIcol } from "../../../core/consts/colors.consts";
+import {  _cols } from "../../../core/consts/colors.consts";
 import { ROOT_CSS, PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, CODE_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
-import { parse_oklch, set_alpha } from "../../../core/helpers/color-helpers";
-import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
+import { parse_oklch} from "../../../core/helpers/color-helpers";
+import {  OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
 const gcss = CssManager.api();
 
@@ -15,7 +15,7 @@ const normalizeLightness = (l: number): number => {
   if (l >= 0 && l <= 1) return l * 100;
   return l;
 };
-const defOk = parse_oklch(TXTcol_MENU);
+const defOk = parse_oklch(_cols.txt.menu);
 
 const OKLCH_DEFAULT_STATE: OklchValues = Object.freeze({
   l: normalizeLightness(defOk.l),
@@ -207,9 +207,9 @@ function makeOklchModel(targets?: readonly OklchTarget[]): OklchPickerModel {
   return Object.freeze({
     state: OKLCH_DEFAULT_STATE,
     targets: targets ?? [
-      { label: "text", varName: MAIN_OKLCHname, initial: TXTcol_CODE },
-      { label: "menu", varName: MENU_OKLCHname, initial: TXTcol_MENU },
-      { label: "graffiti", varName: GRAF_OKLCHname, initial: GRAFFITIcol },
+      { label: "text", varName: MAIN_OKLCHname, initial: _cols.txt.code },
+      { label: "menu", varName: MENU_OKLCHname, initial: _cols.txt.menu },
+      { label: "graffiti", varName: GRAF_OKLCHname, initial: _cols.graffiti },
       { label: "motes", varName: MOTE_OKLCHname, initial: OKLCH_VIBRANT.yellowSodium },
     ],
   });

@@ -1,12 +1,7 @@
 import type { CssMap } from "hson-live/types"
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts"
-import { $gry_, ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts"
-import { SYS_MONOfont, øfontWeight, MENU_OKLCH } from "../../../core/consts/ui-consts";
-import { _COLS, øHSON_COL, TXTcol_CODE, WIDGETcol, TXTcol_GREY } from "../../../core/consts/colors.consts";
-import { set_alpha } from "../../../core/helpers/color-helpers";
-import { øfontSize } from "../../../core/consts/ui-consts";
-import { REDcol, TXTcol_MENU } from "../../../core/consts/colors.consts";
-import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
+import {  ACID_WASH_RGBA } from "../../../core/consts/old-rgb.consts"
+import {  øfontWeight } from "../../../core/consts/ui-consts";
+import { _cols,  TXTcol_GREY } from "../../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 
 export const SCROLL_HOVER_COLcss = {
@@ -28,8 +23,8 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       zIndex: "9997",
       width: "auto",
       ...FONT_FAM_MONO,
-      color: REDcol,
-      background: _COLS.backhi,
+      color: _cols.red,
+      background: _cols.backhi,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
       textAlign: "center",
@@ -75,7 +70,7 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   _hover: {
     // color: $gry_.dim,
     background: TXTcol_GREY,
-    color: _COLS.backlo,
+    color: _cols.backlo,
     fontWeight: øfontWeight.main,
     __before: {
       content: "x ",
@@ -103,7 +98,7 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
       left: "-1rem",
     },
     background: TXTcol_GREY,
-    color: _COLS.backlo,
+    color: _cols.backlo,
     fontWeight: øfontWeight.main,
   },
 

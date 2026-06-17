@@ -3,7 +3,7 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
 import { øfontSize, øWATERMARK_FMT_ } from "../../../core/consts/ui-consts";
-import { TXTcol_CODE, _COLS, øHSON_COL, øCOL_FOR_FMT_ } from "../../../core/consts/colors.consts";
+import {  _cols,   } from "../../../core/consts/colors.consts";
 import type { Fmt } from "../../../core/types/core.types";
 import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
 import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
@@ -127,7 +127,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         display: "block",
       })
       .css.selector("&:hover > div.pp-watermark").setMany({
-        color: øHSON_COL.n,
+        color: _cols.hson.n,
         
       });
 
@@ -144,7 +144,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .css.setMany({
         ...UI_TEXTcss,
         background: "transparent",
-        color: øCOL_FOR_FMT_[fmt],
+        color: _cols.fmt[fmt],
       });
 
     // NEW: node view box
@@ -156,8 +156,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         margin: "0",
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
-        background: _COLS.backhi,
-        color: øCOL_FOR_FMT_[fmt],
+        background: _cols.backhi,
+        color: _cols.fmt[fmt],
       });
 
     const nodeText = nodeBox.create.div()
@@ -168,7 +168,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .text.set("text")
       .css.setMany({
         ...PP_HEADER_BTNcss,
-        ...UI_BTN_HOVERcss(TXTcol_CODE),
+        ...UI_BTN_HOVERcss(_cols.txt.code),
       })
       .attr.setMany({
         "role": "button",

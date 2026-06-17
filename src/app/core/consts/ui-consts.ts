@@ -56,6 +56,8 @@ export const GRAF_OKLCH = CssManager.api().var.key(GRAF_OKLCHname);
 
 export const MOTE_OKLCHname = "hson-color-motes";
 export const MOTE_OKLCH = CssManager.api().var.key(MOTE_OKLCHname);
+/* code markdown */
+export const $MENU_SHADOW = "1px 1px 25px ";
 
 
 

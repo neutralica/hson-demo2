@@ -1,9 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { $gry_ } from "../../../core/consts/old-rgb.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS, OKLCH_TERMINAL_4, OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { $SIDEBAR_WIDTH, SYS_MONOfont, øfontWeight, øfontSize, $CONTENT_WIDTH, MAIN_OKLCH } from "../../../core/consts/ui-consts";
-import { CODE_BRACEcol, CODE_EQUALScol, CODE_PARENS_INNERcol, CODE_PARENScol, CODE_PUNCTcol, CODE_QUOTEcol, COMMENTScol, COPYRITEcol, HEADERcol, LISTcol, REDcol, TOCcol, TXTcol_CODE, TXTcol_MAIN, URLcol, _COLS, CODE_ALTcol, øHSON_COL, TXTcol_MENU, TXTcol_GREY } from "../../../core/consts/colors.consts";
+import {  _cols, } from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 
@@ -36,7 +35,7 @@ export const ABOUT_TOCcss: CssMap = {
 
 export const ABOUT_P_TEXTcss: CssMap = {
   // padding: "0 30px 0 30px",
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   whiteSpace: "pre-wrap",
   // lineHeight: "2em",
   color: MAIN_OKLCH,
@@ -60,23 +59,23 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   whiteSpace: "pre",
   // fontSize: "1rem",
   // verticalAlign: "center",
-  color: LISTcol,
+  color: _cols.txt.list,
 };
 
 export const LIST_TEXTcss: CssMap = {
   ...FONT_FAM_MONO,
-  color: LISTcol,
+  color: _cols.txt.list,
 };
 
 
 export const ANTI_LIST_MARKERcss: CssMap = {
-  color: set_alpha(REDcol, 0.8),
+  color: set_alpha(_cols.red, 0.8),
   fontWeight: øfontWeight.fat,
 };
 
 export const ANTI_LIST_TEXTcss: CssMap = {
   ...LIST_TEXTcss,
-  color: REDcol,
+  color: _cols.red,
   // fontSize: $txt_.main,
   // textDecoration: "line-through",
 };
@@ -84,7 +83,7 @@ export const ANTI_LIST_TEXTcss: CssMap = {
 export const HRcss: CssMap = {
   width: "90%",
   height: "1px",
-  background: TXTcol_GREY,
+  background: _cols.txt.grey,
   // opacity: "0.8",
   marginTop: "2em",
   marginBottom: "3em",
@@ -102,7 +101,7 @@ export const TOC_BTNcss: CssMap = {
   textAlign: "right",
   lineHeight: "2",
   paddingRight: "2rem",
-  color: øHSON_COL.h,
+  color: _cols.hson.h,
   // _hover: {
   //   background: TOCcol,
   //   color: øCOLS.backlo
@@ -122,8 +121,8 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   },
   _hover: {
     // color: øHSON_COL.h,
-    background: TXTcol_GREY,
-    color: _COLS.backlo,
+    background: _cols.txt.grey,
+    color: _cols.backlo,
     __after: {
       content: "x",
       position: "absolute",
@@ -145,52 +144,52 @@ export const TOC_BTN_IDLEcss: CssMap = {
       marginLeft: "1ch",
       // right: "-1rem",
     },
-    color: _COLS.backlo,
-    background: TOCcol,
+    color: _cols.backlo,
+    background: _cols.toc,
   }
 };
 
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
-  ...FONT_FAM_MONO,
-  color: CODE_ALTcol,
+  // ...FONT_FAM_MONO,
+  color: _cols.code.alt,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word",
 } as const;
 
 // parentheses inside inline code
 export const CODE_PARENcss: CssMap = {
-  ...FONT_FAM_MONO,
-  color: CODE_PARENScol, // choose something distinct but harmonious
+  // ...FONT_FAM_MONO,
+  color: _cols.code.parens, // choose something distinct but harmonious
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
-  ...FONT_FAM_MONO,
-  color: CODE_PARENS_INNERcol,
+  // ...FONT_FAM_MONO,
+  color: _cols.code.parensInner,
 } as const;
 
 export const CODE_BRACEcss: CssMap = {
-  ...FONT_FAM_MONO,
-  color: CODE_BRACEcol
+  // ...FONT_FAM_MONO,
+  color: _cols.code.brace
 }
 
 export const CODE_COMMENTScss: CssMap = {
-  ...FONT_FAM_MONO,
-  color: COMMENTScol,
+  // ...FONT_FAM_MONO,
+  color: _cols.code.comment,
   overflowWrap: "anywhere",
   whiteSpace: "normal",
 
 };
 
 export const CODE_QUOTEcss = {
-  color: CODE_QUOTEcol,              // muted gray
+  color: _cols.code.quotes,              
 };
 export const CODE_EQUALSscss = {
-  color: CODE_EQUALScol,              // muted gray
+  color: _cols.code.equals,              
 };
 
 export const CODE_PUNCTcss = {
-  color: CODE_PUNCTcol,              // muted gray
+  color: _cols.code.dot,              
 };
 
 
@@ -228,18 +227,18 @@ export const ABOUT_BODY_ROWcss: CssMap = {
 
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px",
-  background: _COLS.backhi,
+  background: _cols.backhi,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word", // not anywhere
-  fontSize: øfontSize.main,
-  // lineHeight: "1.85",
+  fontSize: øfontSize.smol,
+  lineHeight: "2",
   padding: "1rem",
   // whiteSpace: "normal",
   border: "1px solid " + set_alpha(ACID_WASH_OKLCH.lilac, 0.5),
 
 };
 export const CODE_COLONcss = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   color: OKLCH_FLEURS.blazeOrange
 };
 /* export const SLASHcss = OKLCH_FLEURS.blazeOrange;
@@ -250,19 +249,19 @@ export const ANGLEcss = OKLCH_VIBRANT.roseNeon;
 
 
 export const ANGLEcss = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   color: OKLCH_VIBRANT.roseNeon
 }
 export const PIPEcss = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   color: OKLCH_NEUTRALS.slate
 }
 export const SLASHcss = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   color: OKLCH_FLEURS.blazeOrange
 }
 export const CODE_TYPEcss = {
-  ...FONT_FAM_MONO,
+  // ...FONT_FAM_MONO,
   color: OKLCH_TERMINAL_4.pink
 }
 
@@ -279,7 +278,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
     // fontSize: level === 1 ? _TXT.heading : level === 2 ? _TXT.subhead : level === 3 ? _TXT.subhead : _TXT.main,
     fontWeight: level === 1 ? øfontWeight.fat : level === 2 ? 600 : 400,
     justifySelf: level <= 2 ? "center" : "start",
-    color: HEADERcol,
+    color: _cols.txt.header,
   }
 }
 
@@ -287,13 +286,13 @@ export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
-  color: COPYRITEcol,
+  color: _cols.txt.copyright,
   marginTop: "2rem",
 }
 
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
-  color: URLcol,
+  color: _cols.code.url,
   ...FONT_FAM_MONO,
   textDecoration: "underline",
   marginLeft: "2rem"

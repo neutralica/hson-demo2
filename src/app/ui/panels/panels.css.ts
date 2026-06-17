@@ -1,9 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { GRID_GAPstr } from "../../core/consts/ui-consts";
-import { _COLS } from "../../core/consts/colors.consts";
+import { _cols } from "../../core/consts/colors.consts";
 import { SYS_MONOfont, øfontSize } from "../../core/consts/ui-consts";
-import { TXTcol_CODE, TXTcol_MENU } from "../../core/consts/colors.consts";
-import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
@@ -19,7 +17,7 @@ export const UI_BUTTON_BORDERcss: CssMap = {
 
   }
 };
-export const UI_BTN_HOVERcss = (col: string = TXTcol_MENU, back: string = _COLS.backhi): CssMap => {
+export const UI_BTN_HOVERcss = (col: string = _cols.txt.menu, back: string = _cols.backhi): CssMap => {
   return {
     _hover: {
       background: col,
@@ -42,7 +40,7 @@ export const UI_BTN_STDcss: CssMap = {
   cursor: "pointer",
   ...FONT_FAM_MONO,
   textTransform: "lowercase",
-  background: _COLS.backlo,
+  background: _cols.backlo,
   fontSize: øfontSize.main,
   lineHeight:"1",
 } as const;
@@ -55,11 +53,11 @@ export const UI_STACK_LABELcss: CssMap = {
 
 export const UI_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
-  ...UI_BTN_HOVERcss(TXTcol_CODE),
+  ...UI_BTN_HOVERcss(_cols.txt.code),
   height: "100%",
   padding: "0.4em 0.5em",
-  background: _COLS.backlo,
-  color: TXTcol_CODE,
+  background: _cols.backlo,
+  color: _cols.txt.code,
   width: "25%",
 // justifyContent: "flex-end",
   // alignSelf: "flex-end"
@@ -92,7 +90,7 @@ export const UI_PANEL_HEADcss: CssMap = {
   height: "2rem",
   // maxHeight: "3rem",
   padding: "6px",
-  background: _COLS.backlo,
+  background: _cols.backlo,
   display: "flex",
   alignItems: "flex-end",
   justifyContent: "center",
@@ -105,7 +103,7 @@ export const UI_PANEL_HEADERcss: CssMap = {
   zIndex: "5",
   height: "2rem",
   maxHeight: "2rem",
-  background: _COLS.backhi,
+  background: _cols.backhi,
   // columnGap: "0.5ch",
   width: "100%",
   display: "inline-flex",
@@ -124,7 +122,7 @@ export const UI_TEXTcss: CssMap = {
   // background: COLORS_.bckdeep,
   border: "none",
   padding: "10px",
-  color: TXTcol_MENU,
+  color: _cols.txt.menu,
   outline: "none"
 };
 export const UI_PANELcss: CssMap = {
@@ -138,6 +136,6 @@ export const UI_PANELcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "auto",
   maxHeight: "100%",
-  background: _COLS.backlo,
+  background: _cols.backlo,
 };
 

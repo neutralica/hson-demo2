@@ -10,7 +10,7 @@ import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css, NOTEBOXcss } from "./brand.css";
 import { $blu_, $grn_ } from "../../core/consts/old-rgb.consts";
 import { SYS_MONOfont, øfontWeight } from "../../core/consts/ui-consts";
-import { _COLS, øHSON_COL } from "../../core/consts/colors.consts";
+import { _cols, øHSON_COL } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
 

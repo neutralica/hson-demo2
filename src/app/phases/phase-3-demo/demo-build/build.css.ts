@@ -3,11 +3,9 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH, OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 import { $CONTENT_WIDTH, $SIDEBAR_WIDTH } from "../../../core/consts/ui-consts";
-import { _COLS } from "../../../core/consts/colors.consts";
-import { øfontSize, GRID_GAPstr } from "../../../core/consts/ui-consts";
-import { øCOL_FOR_FMT_, TXTcol_GREY, TXTcol_CODE, TXTcol_MAIN } from "../../../core/consts/colors.consts";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
-import { SYS_MONOfont } from "../../../core/consts/ui-consts";
+import { _cols } from "../../../core/consts/colors.consts";
+import { øfontSize } from "../../../core/consts/ui-consts";
+import { _col_fmt,} from "../../../core/consts/colors.consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
@@ -47,18 +45,18 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: _COLS.backlo,
+  background: _cols.backlo,
 
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
-  color: øCOL_FOR_FMT_.hson,
+  color: _col_fmt.hson,
   fontSize: øfontSize.smol,
   padding: "15px",
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
-    boxShadow: "inset 0 0 15px 1px " + set_alpha(øCOL_FOR_FMT_["hson"], 0.5),
+    boxShadow: "inset 0 0 15px 1px " + set_alpha(_col_fmt["hson"], 0.5),
 
   }
 
@@ -91,7 +89,7 @@ export const BUILD_TABcss: CssMap = {
   fontSize: øfontSize.smol,
   lineHeight: "1",
   letterSpacing: "0.04em",
-  color: TXTcol_CODE,
+  color: _cols.txt.code,
 };
 
 export const BUILD_TAB_ACTIVEcss: CssMap = {
@@ -108,7 +106,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: _COLS.backlo,
+  background: _cols.backlo,
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
 };
 
@@ -124,8 +122,8 @@ export const BUILD_HTMLBOXcss: CssMap = {
   resize: "none",
   outline: "none",
 
-  boxShadow: "inset 0 0 25px 1px " + set_alpha(øCOL_FOR_FMT_["html"], 0.6),
-  color: øCOL_FOR_FMT_.html,
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(_col_fmt["html"], 0.6),
+  color: _col_fmt.html,
   caretColor: "auto",
   // fontSize: øfontSize.main
 

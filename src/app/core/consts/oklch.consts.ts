@@ -84,7 +84,7 @@ export const OKLCH_NEUTRALS = {
 
   // --- light scale ---
   silver: "oklch(0.72 0.010 260)", // primary text on dark
-  frost: "oklch(0.82 0.010 260)", // bright UI text
+  frost: "oklch(0.8 0.030 260)", // bright UI text
   paper: "oklch(0.82 0.02 260)", // light surfaces
 
   /* beige-brown conteingent */

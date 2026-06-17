@@ -1,9 +1,9 @@
 import type { CssMap } from "hson-live/types";
 import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/old-rgb.consts";
 import { SYS_MONOfont, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
-import { _COLS, TXTcol_MAIN, TXTcol_GREY } from "../../../core/consts/colors.consts";
+import { _cols, TXTcol_MAIN, TXTcol_GREY } from "../../../core/consts/colors.consts";
 import { øfontSize } from "../../../core/consts/ui-consts";
-import { TXTcol_CODE, TXTcol_MENU, øHSON_COL } from "../../../core/consts/colors.consts";
+import { øHSON_COL } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
@@ -19,7 +19,7 @@ export const TP_BRANCHcss: CssMap = {
   boxSizing: "border-box",
   gridTemplateColumns: "minmax(0, 1fr) " + $LOGGER_WIDTH,
   gridTemplateRows: "minmax(0, 1fr)",
-  background: _COLS.backlo,
+  background: _cols.backlo,
 };
 
 export const TP_ROOTcss: CssMap = {
@@ -131,10 +131,10 @@ export const TEST_CHIP_LABELcss = {
 
 export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
-  ...UI_BTN_HOVERcss(TXTcol_MENU),
+  ...UI_BTN_HOVERcss(_cols.txt.menu),
   alignItems: "center",
-  background: _COLS.backlo,
-  color: TXTcol_MENU,
+  background: _cols.backlo,
+  color: _cols.txt.menu,
   fontFamily: SYS_MONOfont,
   fontSize: øfontSize.smol,
   lineHeight: "1",
