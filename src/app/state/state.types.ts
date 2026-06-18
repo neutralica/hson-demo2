@@ -81,36 +81,36 @@ export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void; export ty
   steps: string[];
 };
 export type DemoStore = {
-  get_state(): DemoStateRO;
-  get_view(): DemoView;
-  get_widgets(): DemoWidget[];
-  has_widget(widget: DemoWidget): boolean;
-  get_about_toc_open(): boolean;
-  get_color_state(): DemoColorState;
-  get_color_tokens(): Record<DemoColorPath, DemoColorToken>;
-  get_color_token(path: DemoColorPath): DemoColorToken | undefined;
-  get_color_active_path(): DemoColorPath | null;
-  get_active_color_token(): DemoColorToken | undefined;
+  stateSnapshot(): DemoStateRO;
+  getView(): DemoView;
+  getWidgets(): DemoWidget[];
+  hasWidget(widget: DemoWidget): boolean;
+  getTocOpen(): boolean;
+  getColorState(): DemoColorState;
+  getColorTokens(): Record<DemoColorPath, DemoColorToken>;
+  getColTkn(path: DemoColorPath): DemoColorToken | undefined;
+  getColorActivePath(): DemoColorPath | null;
+  getColorActiveToken(): DemoColorToken | undefined;
 
   update(mut: (draft: DemoState) => void): void;
-  set_view(next: DemoView): void;
-  toggle_view(next: Exclude<DemoView, null>): void;
+  setView(next: DemoView): void;
+  toggleView(next: Exclude<DemoView, null>): void;
 
-  activate_widget(next: DemoWidget): void;
-  deactivate_widget(next: DemoWidget): void;
-  toggle_widget(widget: DemoWidget): void;
-  set_color_active_path(path: DemoColorPath | null): void;
-  set_color_value(path: DemoColorPath, value: string): void;
-  reset_color_value(path: DemoColorPath): void;
-  reset_color_values(): void;
+  startWidget(next: DemoWidget): void;
+  stopWidget(next: DemoWidget): void;
+  toggleWidget(widget: DemoWidget): void;
+  setColorActivePath(path: DemoColorPath | null): void;
+  setColorValue(path: DemoColorPath, value: string): void;
+  resetColVal(path: DemoColorPath): void;
+  resetColorValues(): void;
 
   // set_about_toc_open(next: boolean): void;
   subscribe(fn: (state: DemoStateRO) => void): () => void;
-  subscribe_diff(fn: Listener): () => void;
-  subscribe_sel<T>(
+  subDiff(fn: Listener): () => void;
+  subSel<T>(
     sel: (s: DemoStateRO) => T,
     onChange: (next: T, prev: T, state: DemoStateRO) => void
   ): () => void;
 
-  state_node(): HsonNode;
+  stateNode(): HsonNode;
 };

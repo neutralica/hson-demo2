@@ -14,7 +14,8 @@ import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../.
 import { make_json_fixture_bundle, random_seed } from "../../../../tests/json-tests/json-test-builder";
 import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree_listener_api_surface } from "../../../../tests/livetree-tests/livetree-21-anim-kf";
 import { livetree_quid_media } from "../../../../tests/livetree-tests/livetree-22-quid-media";
-import { demo_meta_1_colors } from "../../../../tests/demo-meta-tests/demo-meta-tests-1";
+import { demo_meta_colors } from "../../../../tests/demo-meta-tests/demo-meta-tests-1";
+import { all_demo_meta } from "../../../../tests/demo-meta-tests/make-demo-meta-test";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -169,14 +170,14 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      demo_meta_1_colors(),
+      ...all_demo_meta(),
 
 
     ])
   }
   if (mode === "demo-meta") {
     return _freeze([
-      demo_meta_1_colors(),
+      ...all_demo_meta(),
 
 
     ])

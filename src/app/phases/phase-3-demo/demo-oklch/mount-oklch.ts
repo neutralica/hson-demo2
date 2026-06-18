@@ -3,9 +3,10 @@ import type { OklchChannel, OklchRig, OklchPickerModel, OklchValues, OklchTarget
 import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../../utils/makers";
 import { CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, PREVIEW_PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
-import { parse_oklch} from "../../../core/helpers/color-helpers";
+import { parse_oklch } from "../../../core/helpers/color-helpers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
-import { get_color_active_path, get_color_token, reset_color_values, set_color_active_path, set_color_value } from "../../../state/store";
+import { get_changed_color_tokens, get_color_active_path, get_color_token, is_color_changed, reset_color_values, set_color_active_path, set_color_value } from "../../../state/store";
+import { _cols } from "../../../core/consts/colors.consts";
 
 const gcss = CssManager.api();
 
@@ -75,7 +76,7 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 
   const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PREVIEW_PANEL_CSS);
   const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
-  const resetBtn = mk_div_cls_txt(previewPanel, "oklch-demo-factory", "[factory]")
+  const resetBtn = mk_div_cls_txt(previewPanel, "oklch-demo-factory", "[reset]")
     .attr.set("role", "button")
     .css.setMany(RESET_CSS);
   const targetPanel = mk_div_cls(controls, "oklch-demo-targets").css.setMany({
@@ -146,6 +147,10 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     renderPrev(rig, model, state);
     syncInputsToState();
 
+    const changedCount = get_changed_color_tokens().length;
+    rig.resetBtn.text.set(changedCount > 0 ? `[reset ${changedCount}]` : "[reset]");
+    rig.resetBtn.style.set.color(changedCount > 0 ? _cols.greenlike : _cols.txt.grey);
+    const labelWidth = Math.max(...model.targets.map((target) => target.label.length), 0) + 2;
     for (let i = 0; i < rig.targetRows.length; i += 1) {
       const row = rig.targetRows[i];
       const target = model.targets[i];
@@ -158,9 +163,26 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
         ? state
         : getTargetState(i, OKLCH_DEFAULT_STATE);
       const targetColor = oklchToCss(targetState);
-      row.text.set(`${target.label}: ${targetColor}`);
+      const changed = is_color_changed(target.path);
+      row.text.set(`${target.label.padEnd(labelWidth, " ")}${targetColor}`);
+      row.attr.set("title", targetColor);
       row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
-      row.css.setMany({ color: targetColor });
+      row.css.setMany(changed
+        ? {
+          textDecorationLine: "underline",
+          textDecorationStyle: "wavy",
+          textDecorationThickness: "0.08em",
+          textUnderlineOffset: "0.18em",
+        }
+        : { textDecorationLine: "none" });
+      row.css.setMany({
+        whiteSpace: "pre",
+        fontVariantNumeric: "tabular-nums",
+        fontFeatureSettings: '"tnum"',
+        color: i === activeTargetIndex ? _cols.txt.menu : _cols.txt.main,
+        boxShadow: `inset 0.45rem 0 0 ${targetColor}`,
+        paddingLeft: "0.85rem",
+      });
     }
   };
 

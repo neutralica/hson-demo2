@@ -1,6 +1,16 @@
 // make-demo-meta-test.ts
 
+import type { TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import { demo_meta_colors, demo_meta_diffing } from "./demo-meta-tests-1";
+
 // make-demo-meta-test.ts
+
+export function all_demo_meta(): readonly TestSuite[] {
+  return [
+    demo_meta_colors(),
+    demo_meta_diffing(),
+  ] as const
+}
 
 export type DemoMetaAssert = Readonly<{
   ok: (label: string, value: unknown) => void;
@@ -106,3 +116,4 @@ export function make_demo_meta_suite<TContext = undefined>(
     cases: cases.map((spec) => make_demo_meta_case(suite, spec)),
   });
 }
+

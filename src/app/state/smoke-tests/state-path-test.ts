@@ -10,7 +10,7 @@ import { jsonify, make_state } from "../make-state";
 import { set_node_at_path } from "../set-node-path";
 import { remove_node_at_path } from "../remove-node-path";
 import { hson } from "hson-live";
-import { create_demo_store } from "../create-store";
+import { create_demo_store } from "../store";
 
 
 export function debug_state_path_test(): StateSmokeResult {
@@ -374,32 +374,38 @@ export function debug_state_replace_test(): StateSmokeResult {
             `expected exactly 2 emissions, got ${String(emitCount)}`,
         );
     });
-}
-// CHANGED: facade/store sequence smoke test
+}// CHANGED: facade/store sequence smoke test
 export function debug_store_facade_test(): StateSmokeResult {
     return run_state_smoke("demo store facade sequence", (t) => {
-        // this assumes you expose a resettable factory or local demo-store-like instance.
-        // If your current facade is singleton-only, you may want a create_demo_store() helper first.
-
         const store = create_demo_store();
 
-        store.set_view("test");
-        store.activate_widget("point");
-        store.activate_widget("point"); // no-op
-        store.set_about_toc_open(true);
-        store.deactivate_widget("point");
-        store.toggle_view("test"); // back to null
+        store.setView("test");
+        store.startWidget("point");
+        store.startWidget("point"); // no-op
+        store.stopWidget("point");
+        store.toggleView("test"); // back to null
+
+        const finalState = store.stateSnapshot();
 
         t.eq(
-            "final facade state",
-            store.get_state() as JsonValue,
+            "final facade ui state",
+            finalState.ui as unknown as JsonValue,
             {
-                ui: {
-                    currentView: null,
-                    activeWidgets: [],
-                    aboutTocOpen: true,
-                },
-            },
+                currentView: null,
+                activeWidgets: [],
+                aboutTocOpen: false,
+            } as unknown as JsonValue,
+        );
+
+        t.ok(
+            "facade state seeds color tokens",
+            Object.keys(finalState.theme.colors.tokens).length > 0,
+        );
+
+        t.eq(
+            "facade color active path starts null",
+            finalState.theme.colors.activePath as unknown as JsonValue,
+            null,
         );
     });
 }

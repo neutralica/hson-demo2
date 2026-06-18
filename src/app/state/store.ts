@@ -7,6 +7,8 @@ import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStat
 import { json_equal } from "./state-helpers";
 import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.consts";
 
+export type DemoColorDiff = Partial<Record<DemoColorPath, string>>;
+
 function is_oklch_value(value: string): boolean {
   return value.trim().startsWith("oklch(");
 }
@@ -66,28 +68,28 @@ export function create_demo_store(
   // CHANGED: store-local listeners, not module-global
   const listeners = new Set<Listener>();
 
-  function clone_json<T extends JsonValue>(value: T): T {
+  function cloneJson<T extends JsonValue>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
   }
 
   function snapshot(): DemoStateRO {
-    return clone_json(demoState.get() as DemoState);
+    return cloneJson(demoState.get() as DemoState);
   }
 
   function emit(prev: DemoStateRO): void {
-    const next = get_state();
+    const next = stateSnapshot();
     for (const fn of listeners) {
       fn(next, prev);
     }
   }
 
-  function state_get<T extends JsonValue>(
+  function stateGet<T extends JsonValue>(
     path: string | readonly (string | number)[],
   ): T {
     return demoState.at(path).get() as T;
   }
 
-  function state_set(
+  function stateSet(
     path: string | readonly (string | number)[],
     next: JsonValue,
   ): void {
@@ -95,74 +97,74 @@ export function create_demo_store(
 
     demoState.at(path).set(next);
 
-    const nextSnap = get_state();
+    const nextSnap = stateSnapshot();
     if (json_equal(prev as JsonValue, nextSnap as JsonValue)) return;
 
     emit(prev);
   }
 
-  function state_remove(
-    path: string | readonly (string | number)[],
-  ): void {
-    const prev = snapshot();
+  // function state_remove(
+  //   path: string | readonly (string | number)[],
+  // ): void {
+  //   const prev = snapshot();
 
-    demoState.at(path).remove();
+  //   demoState.at(path).remove();
 
-    const nextSnap = get_state();
-    if (json_equal(prev as JsonValue, nextSnap as JsonValue)) return;
+  //   const nextSnap = get_state();
+  //   if (json_equal(prev as JsonValue, nextSnap as JsonValue)) return;
 
-    emit(prev);
-  }
+  //   emit(prev);
+  // }
 
   // -------------------------
   // public API
   // -------------------------
 
-  function get_state(): DemoStateRO {
+  function stateSnapshot(): DemoStateRO {
     return snapshot();
   }
 
-  function get_view(): DemoView {
-    return state_get<DemoView>(["ui", "currentView"]);
+  function getView(): DemoView {
+    return stateGet<DemoView>(["ui", "currentView"]);
   }
 
-  function get_widgets(): DemoWidget[] {
-    return state_get<DemoWidget[]>(["ui", "activeWidgets"]);
+  function getWidgets(): DemoWidget[] {
+    return stateGet<DemoWidget[]>(["ui", "activeWidgets"]);
   }
 
-  function has_widget(widget: DemoWidget): boolean {
-    return get_widgets().includes(widget);
+  function hasWidget(widget: DemoWidget): boolean {
+    return getWidgets().includes(widget);
   }
 
-  function get_about_toc_open(): boolean {
-    return state_get<boolean>(["ui", "aboutTocOpen"]);
+  function getTocOpen(): boolean {
+    return stateGet<boolean>(["ui", "aboutTocOpen"]);
   }
 
-  function get_color_state(): DemoColorState {
-    return state_get<DemoColorState>(["theme", "colors"]);
+  function getColorState(): DemoColorState {
+    return stateGet<DemoColorState>(["theme", "colors"]);
   }
 
-  function get_color_tokens(): Record<DemoColorPath, DemoColorToken> {
-    return state_get<Record<DemoColorPath, DemoColorToken>>(["theme", "colors", "tokens"]);
+  function getColorTokens(): Record<DemoColorPath, DemoColorToken> {
+    return stateGet<Record<DemoColorPath, DemoColorToken>>(["theme", "colors", "tokens"]);
   }
 
-  function get_color_token(path: DemoColorPath): DemoColorToken | undefined {
-    return get_color_tokens()[path];
+  function getColTkn(path: DemoColorPath): DemoColorToken | undefined {
+    return getColorTokens()[path];
   }
 
-  function get_color_active_path(): DemoColorPath | null {
-    return state_get<DemoColorPath | null>(["theme", "colors", "activePath"]);
+  function getColorActivePath(): DemoColorPath | null {
+    return stateGet<DemoColorPath | null>(["theme", "colors", "activePath"]);
   }
 
-  function get_active_color_token(): DemoColorToken | undefined {
-    const path = get_color_active_path();
-    return path === null ? undefined : get_color_token(path);
+  function getColorActiveToken(): DemoColorToken | undefined {
+    const path = getColorActivePath();
+    return path === null ? undefined : getColTkn(path);
   }
 
   // CHANGED: update stays ergonomic, but now replaces the whole node-backed root
   function update(mut: (draft: DemoState) => void): void {
     const prev = snapshot();
-    const draft = clone_json(prev);
+    const draft = cloneJson(prev);
 
     mut(draft);
 
@@ -172,65 +174,65 @@ export function create_demo_store(
     emit(prev);
   }
 
-  function set_view(next: DemoView): void {
-    state_set(["ui", "currentView"], next);
+  function setView(next: DemoView): void {
+    stateSet(["ui", "currentView"], next);
   }
 
-  function toggle_view(next: Exclude<DemoView, null>): void {
-    const current = get_view();
-    set_view(current === next ? null : next);
+  function toggleView(next: Exclude<DemoView, null>): void {
+    const current = getView();
+    setView(current === next ? null : next);
   }
 
   // CHANGED: still using full-array replacement for now; simple and robust
-  function activate_widget(next: DemoWidget): void {
-    const widgets = get_widgets();
+  function startWidget(next: DemoWidget): void {
+    const widgets = getWidgets();
     if (widgets.includes(next)) return;
 
-    state_set(["ui", "activeWidgets"], [...widgets, next]);
+    stateSet(["ui", "activeWidgets"], [...widgets, next]);
   }
 
-  function deactivate_widget(next: DemoWidget): void {
-    const widgets = get_widgets();
+  function stopWidget(next: DemoWidget): void {
+    const widgets = getWidgets();
     const filtered = widgets.filter((w) => w !== next);
 
     if (filtered.length === widgets.length) return;
-    state_set(["ui", "activeWidgets"], filtered);
+    stateSet(["ui", "activeWidgets"], filtered);
   }
 
-  function toggle_widget(widget: DemoWidget): void {
-    if (has_widget(widget)) {
-      deactivate_widget(widget);
+  function toggleWidget(widget: DemoWidget): void {
+    if (hasWidget(widget)) {
+      stopWidget(widget);
       return;
     }
     
-    activate_widget(widget);
+    startWidget(widget);
   }
 
-  function set_color_active_path(path: DemoColorPath | null): void {
-    if (path !== null && !get_color_token(path)) {
+  function setColorActivePath(path: DemoColorPath | null): void {
+    if (path !== null && !getColTkn(path)) {
       throw new Error(`unknown color token path: ${path}`);
     }
 
-    state_set(["theme", "colors", "activePath"], path);
+    stateSet(["theme", "colors", "activePath"], path);
   }
 
-  function set_color_value(path: DemoColorPath, value: string): void {
-    const token = get_color_token(path);
+  function setColorValue(path: DemoColorPath, value: string): void {
+    const token = getColTkn(path);
     if (!token) throw new Error(`unknown color token path: ${path}`);
 
-    state_set(["theme", "colors", "tokens", path, "value"], value);
+    stateSet(["theme", "colors", "tokens", path, "value"], value);
   }
 
-  function reset_color_value(path: DemoColorPath): void {
-    const token = get_color_token(path);
+  function resetColVal(path: DemoColorPath): void {
+    const token = getColTkn(path);
     if (!token) throw new Error(`unknown color token path: ${path}`);
 
-    state_set(["theme", "colors", "tokens", path, "value"], token.initial);
+    stateSet(["theme", "colors", "tokens", path, "value"], token.initial);
   }
 
-  function reset_color_values(): void {
-    for (const token of Object.values(get_color_tokens())) {
-      state_set(["theme", "colors", "tokens", token.path, "value"], token.initial);
+  function resetColorValues(): void {
+    for (const token of Object.values(getColorTokens())) {
+      stateSet(["theme", "colors", "tokens", token.path, "value"], token.initial);
     }
   }
 
@@ -248,16 +250,16 @@ export function create_demo_store(
     return () => listeners.delete(wrapped);
   }
 
-  function subscribe_diff(fn: Listener): () => void {
+  function subscribeDiff(fn: Listener): () => void {
     listeners.add(fn);
     return () => listeners.delete(fn);
   }
 
-  function subscribe_sel<T>(
+  function subscribeSel<T>(
     sel: (s: DemoStateRO) => T,
     onChange: (next: T, prev: T, state: DemoStateRO) => void,
   ): () => void {
-    let prevVal = sel(get_state());
+    let prevVal = sel(stateSnapshot());
 
     const wrapped: Listener = (next) => {
       const nextVal = sel(next);
@@ -272,42 +274,42 @@ export function create_demo_store(
     return () => listeners.delete(wrapped);
   }
 
-  function state_node(): HsonNode {
+  function stateNode(): HsonNode {
     return demoState.root();
   }
 
   return {
-    get_state,
-    get_view,
-    get_widgets,
-    has_widget,
-    get_about_toc_open,
+    stateSnapshot: stateSnapshot,
+    getView,
+    getWidgets,
+ hasWidget,
+    getTocOpen,
 
-    get_color_state,
-    get_color_tokens,
-    get_color_token,
-    get_color_active_path,
-    get_active_color_token,
+    getColorState,
+    getColorTokens,
+    getColTkn,
+    getColorActivePath,
+    getColorActiveToken,
 
     update,
-    set_view,
-    toggle_view,
-    activate_widget,
-    deactivate_widget,
-    toggle_widget,
+    setView,
+    toggleView,
+    startWidget,
+    stopWidget,
+    toggleWidget,
 
-    set_color_active_path,
-    set_color_value,
-    reset_color_value,
-    reset_color_values,
+    setColorActivePath,
+    setColorValue,
+    resetColVal,
+    resetColorValues,
 
     // set_about_toc_open,
 
     subscribe,
-    subscribe_diff,
-    subscribe_sel,
+    subDiff: subscribeDiff,
+    subSel: subscribeSel,
 
-    state_node,
+    stateNode: stateNode,
   };
 }
 
@@ -315,34 +317,79 @@ export function create_demo_store(
 const demoStore = create_demo_store();
 
 // CHANGED: preserve old module API so the rest of the app does not need to change
-export const demo_get_state = demoStore.get_state;
-export const get_view = demoStore.get_view;
-export const get_widgets = demoStore.get_widgets;
-export const has_widget = demoStore.has_widget;
-export const get_about_toc_open = demoStore.get_about_toc_open;
+export const demo_get_state = demoStore.stateSnapshot;
+export const get_view = demoStore.getView;
+export const get_widgets = demoStore.getWidgets;
+export const has_widget = demoStore.hasWidget;
+export const get_about_toc_open = demoStore.getTocOpen;
 
-export const get_color_state = demoStore.get_color_state;
-export const get_color_tokens = demoStore.get_color_tokens;
-export const get_color_token = demoStore.get_color_token;
-export const get_color_active_path = demoStore.get_color_active_path;
-export const get_active_color_token = demoStore.get_active_color_token;
+export const get_color_state = demoStore.getColorState;
+export const get_color_tokens = demoStore.getColorTokens;
+export const get_color_token = demoStore.getColTkn;
+export const get_color_active_path = demoStore.getColorActivePath;
+export const get_active_color_token = demoStore.getColorActiveToken;
 
 export const demo_update = demoStore.update;
-export const set_view = demoStore.set_view;
-export const toggle_view = demoStore.toggle_view;
-export const activate_widget = demoStore.activate_widget;
-export const deactivate_widget = demoStore.deactivate_widget;
-export const toggle_widget = demoStore.toggle_widget;
+export const set_view = demoStore.setView;
+export const toggle_view = demoStore.toggleView;
+export const activate_widget = demoStore.startWidget;
+export const deactivate_widget = demoStore.stopWidget;
+export const toggle_widget = demoStore.toggleWidget;
 
-export const set_color_active_path = demoStore.set_color_active_path;
-export const set_color_value = demoStore.set_color_value;
-export const reset_color_value = demoStore.reset_color_value;
-export const reset_color_values = demoStore.reset_color_values;
+export const set_color_active_path = demoStore.setColorActivePath;
+export const set_color_value = demoStore.setColorValue;
+export const reset_color_value = demoStore.resetColVal;
+export const reset_color_values = demoStore.resetColorValues;
+
+export function is_color_changed(path: DemoColorPath): boolean {
+  const token = get_color_token(path);
+  return !!token && token.value !== token.initial;
+}
+
+export function get_changed_color_tokens(): DemoColorToken[] {
+  return Object.values(get_color_tokens()).filter((token) => token.value !== token.initial);
+}
+
+export function get_color_diff(): DemoColorDiff {
+  const diff: DemoColorDiff = {};
+
+  for (const token of get_changed_color_tokens()) {
+    diff[token.path] = token.value;
+  }
+
+  return diff;
+}
+
+export function apply_color_diff(diff: DemoColorDiff): void {
+  const entries: [DemoColorPath, string][] = [];
+
+  for (const [path, value] of Object.entries(diff)) {
+    if (value === undefined) continue;
+    if (typeof value !== "string") throw new Error(`invalid color diff value for path: ${path}`);
+    if (!get_color_token(path)) throw new Error(`unknown color token path: ${path}`);
+
+    entries.push([path, value]);
+  }
+
+  if (entries.length === 0) return;
+
+  demo_update((draft) => {
+    for (const [path, value] of entries) {
+      draft.theme.colors.tokens[path]!.value = value;
+    }
+  });
+}
+
+export function reset_changed_color_values(): void {
+  for (const token of get_changed_color_tokens()) {
+    reset_color_value(token.path);
+  }
+}
 
 // export const set_about_toc_open = demoStore.set_about_toc_open;
 
 export const demo_subscribe = demoStore.subscribe;
-export const demo_subscribe_diff = demoStore.subscribe_diff;
-export const demo_subscribe_sel = demoStore.subscribe_sel;
+export const demo_subscribe_diff = demoStore.subDiff;
+export const demo_subscribe_sel = demoStore.subSel;
 
-export const demo_state_node = demoStore.state_node;
+export const demo_state_node = demoStore.stateNode;

@@ -21,7 +21,9 @@ import { livetree_css_new_getters, livetree_css_refinements, livetree_find_more 
 import { livetree_css_pseudo_selector_unification, livetree_tree_selector_surface } from "./livetree-19-tree-selector";
 import { livetree_css_var_facade_surfaces, livetree_get_many_surface } from "./livetree-20-vars-set-get";
 import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree_listener_api_surface } from "./livetree-21-anim-kf";
-import { livetree_quid_media } from "./livetree-22-quid-media";
+import { livetree_construction_parity, livetree_find_query_surface, livetree_quid_media } from "./livetree-22-quid-media";
+import { livetree_listener_builder_corners, livetree_text_content_surface } from "./livetree-23-coverage-gaps";
+import { livetree_dom_helper_surface } from "./livetree-24-dom-corners";
 
 
 /******************************************************
@@ -91,6 +93,10 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_dom_contains_surface(),
     livetree_listener_api_surface(),
     livetree_quid_media(),
-
+    livetree_construction_parity(),
+    livetree_find_query_surface(),
+    livetree_text_content_surface(),
+livetree_listener_builder_corners(),
+    livetree_dom_helper_surface(),
   ] as const;
 }
