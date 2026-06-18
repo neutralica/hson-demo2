@@ -24,6 +24,7 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "unit", label: "unit" },
     { key: "dev", label: "dev" },
     { key: "fuzz-json", label: "fuzz-json" },
+    { key: "demo-meta", label: "demo-meta" },
 ] as const;
 
 type LogVerbosity = "normal" | "verbose";

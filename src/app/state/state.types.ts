@@ -38,6 +38,28 @@ export type DemoWidget =
   "point" |
   "motes";
 
+export type DemoColorKind = "oklch" | "css";
+
+export type DemoColorPath = string;
+
+export type DemoColorToken = {
+  path: DemoColorPath;
+  label: string;
+  varName: string;
+  initial: string;
+  value: string;
+  editable: boolean;
+  kind: DemoColorKind;
+};
+
+export type DemoColorState = {
+  activePath: DemoColorPath | null;
+  tokens: Record<DemoColorPath, DemoColorToken>;
+};
+
+export type DemoThemeState = {
+  colors: DemoColorState;
+};
 
 export type DemoUiState = {
   currentView: DemoView;
@@ -48,6 +70,7 @@ export type DemoUiState = {
 
 export type DemoState = {
   ui: DemoUiState;
+  theme: DemoThemeState;
 };
 
 export type DemoStateRO = Readonly<DemoState>;
@@ -57,4 +80,37 @@ export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void; export ty
   ok: boolean;
   steps: string[];
 };
+export type DemoStore = {
+  get_state(): DemoStateRO;
+  get_view(): DemoView;
+  get_widgets(): DemoWidget[];
+  has_widget(widget: DemoWidget): boolean;
+  get_about_toc_open(): boolean;
+  get_color_state(): DemoColorState;
+  get_color_tokens(): Record<DemoColorPath, DemoColorToken>;
+  get_color_token(path: DemoColorPath): DemoColorToken | undefined;
+  get_color_active_path(): DemoColorPath | null;
+  get_active_color_token(): DemoColorToken | undefined;
 
+  update(mut: (draft: DemoState) => void): void;
+  set_view(next: DemoView): void;
+  toggle_view(next: Exclude<DemoView, null>): void;
+
+  activate_widget(next: DemoWidget): void;
+  deactivate_widget(next: DemoWidget): void;
+  toggle_widget(widget: DemoWidget): void;
+  set_color_active_path(path: DemoColorPath | null): void;
+  set_color_value(path: DemoColorPath, value: string): void;
+  reset_color_value(path: DemoColorPath): void;
+  reset_color_values(): void;
+
+  // set_about_toc_open(next: boolean): void;
+  subscribe(fn: (state: DemoStateRO) => void): () => void;
+  subscribe_diff(fn: Listener): () => void;
+  subscribe_sel<T>(
+    sel: (s: DemoStateRO) => T,
+    onChange: (next: T, prev: T, state: DemoStateRO) => void
+  ): () => void;
+
+  state_node(): HsonNode;
+};

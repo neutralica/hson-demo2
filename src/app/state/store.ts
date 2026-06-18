@@ -3,58 +3,59 @@
 import type { JsonValue, HsonNode } from "hson-live/types";
 import { make_state } from "./make-state";
 import { clone_node } from "./clone-node";
-import type { DemoState, DemoStateRO, DemoView, DemoWidget, Listener } from "./state.types";
+import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
 import { json_equal } from "./state-helpers";
+import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.consts";
 
-// export type DemoView = "about" | "parse" | "test" | "build" | null;
-// export type DemoWidget = "mouse";
+function is_oklch_value(value: string): boolean {
+  return value.trim().startsWith("oklch(");
+}
 
-// export type DemoState = {
-//   ui: {
-//     currentView: DemoView;
-//     activeWidgets: DemoWidget[];
-//     aboutTocOpen: boolean;
-//   };
-// };
+function label_for_color_path(path: string): string {
+  return path.replace(/\./g, "-");
+}
 
-// export type DemoStateRO = Readonly<DemoState>;
+function make_demo_color_token(source: ColorVarSource): DemoColorToken {
+  const isOklch = is_oklch_value(source.value);
 
-// export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;
+  return {
+    path: source.path,
+    label: label_for_color_path(source.path),
+    varName: source.varName,
+    initial: source.value,
+    value: source.value,
+    editable: isOklch,
+    kind: isOklch ? "oklch" : "css",
+  };
+}
 
-export type DemoStore = {
-  get_state(): DemoStateRO;
-  get_view(): DemoView;
-  get_widgets(): DemoWidget[];
-  has_widget(widget: DemoWidget): boolean;
-  get_about_toc_open(): boolean;
+function make_demo_color_tokens(): Record<DemoColorPath, DemoColorToken> {
+  const tokens: Record<DemoColorPath, DemoColorToken> = {};
 
-  update(mut: (draft: DemoState) => void): void;
-  set_view(next: DemoView): void;
-  toggle_view(next: Exclude<DemoView, null>): void;
+  for (const source of COLOR_VAR_SOURCES) {
+    tokens[source.path] = make_demo_color_token(source);
+  }
 
-  activate_widget(next: DemoWidget): void;
-  deactivate_widget(next: DemoWidget): void;
-  toggle_widget(widget: DemoWidget): void;
+  return tokens;
+}
 
-  // set_about_toc_open(next: boolean): void;
+export function make_initial_demo_state(): DemoState {
+  return {
+    ui: {
+      currentView: null,
+      activeWidgets: [],
+      aboutTocOpen: false,
+    },
+    theme: {
+      colors: {
+        activePath: null,
+        tokens: make_demo_color_tokens(),
+      },
+    },
+  };
+}
 
-  subscribe(fn: (state: DemoStateRO) => void): () => void;
-  subscribe_diff(fn: Listener): () => void;
-  subscribe_sel<T>(
-    sel: (s: DemoStateRO) => T,
-    onChange: (next: T, prev: T, state: DemoStateRO) => void,
-  ): () => void;
-
-  state_node(): HsonNode;
-};
-
-export const INITIAL_DEMO_STATE: DemoState = {
-  ui: {
-    currentView: null,
-    activeWidgets: [],
-    aboutTocOpen: false,
-  },
-};
+export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
 export function create_demo_store(
   initial: DemoState = INITIAL_DEMO_STATE,
@@ -137,6 +138,27 @@ export function create_demo_store(
     return state_get<boolean>(["ui", "aboutTocOpen"]);
   }
 
+  function get_color_state(): DemoColorState {
+    return state_get<DemoColorState>(["theme", "colors"]);
+  }
+
+  function get_color_tokens(): Record<DemoColorPath, DemoColorToken> {
+    return state_get<Record<DemoColorPath, DemoColorToken>>(["theme", "colors", "tokens"]);
+  }
+
+  function get_color_token(path: DemoColorPath): DemoColorToken | undefined {
+    return get_color_tokens()[path];
+  }
+
+  function get_color_active_path(): DemoColorPath | null {
+    return state_get<DemoColorPath | null>(["theme", "colors", "activePath"]);
+  }
+
+  function get_active_color_token(): DemoColorToken | undefined {
+    const path = get_color_active_path();
+    return path === null ? undefined : get_color_token(path);
+  }
+
   // CHANGED: update stays ergonomic, but now replaces the whole node-backed root
   function update(mut: (draft: DemoState) => void): void {
     const prev = snapshot();
@@ -182,6 +204,34 @@ export function create_demo_store(
     }
     
     activate_widget(widget);
+  }
+
+  function set_color_active_path(path: DemoColorPath | null): void {
+    if (path !== null && !get_color_token(path)) {
+      throw new Error(`unknown color token path: ${path}`);
+    }
+
+    state_set(["theme", "colors", "activePath"], path);
+  }
+
+  function set_color_value(path: DemoColorPath, value: string): void {
+    const token = get_color_token(path);
+    if (!token) throw new Error(`unknown color token path: ${path}`);
+
+    state_set(["theme", "colors", "tokens", path, "value"], value);
+  }
+
+  function reset_color_value(path: DemoColorPath): void {
+    const token = get_color_token(path);
+    if (!token) throw new Error(`unknown color token path: ${path}`);
+
+    state_set(["theme", "colors", "tokens", path, "value"], token.initial);
+  }
+
+  function reset_color_values(): void {
+    for (const token of Object.values(get_color_tokens())) {
+      state_set(["theme", "colors", "tokens", token.path, "value"], token.initial);
+    }
   }
 
   // function set_about_toc_open(next: boolean): void {
@@ -233,12 +283,24 @@ export function create_demo_store(
     has_widget,
     get_about_toc_open,
 
+    get_color_state,
+    get_color_tokens,
+    get_color_token,
+    get_color_active_path,
+    get_active_color_token,
+
     update,
     set_view,
     toggle_view,
     activate_widget,
     deactivate_widget,
     toggle_widget,
+
+    set_color_active_path,
+    set_color_value,
+    reset_color_value,
+    reset_color_values,
+
     // set_about_toc_open,
 
     subscribe,
@@ -259,12 +321,24 @@ export const get_widgets = demoStore.get_widgets;
 export const has_widget = demoStore.has_widget;
 export const get_about_toc_open = demoStore.get_about_toc_open;
 
+export const get_color_state = demoStore.get_color_state;
+export const get_color_tokens = demoStore.get_color_tokens;
+export const get_color_token = demoStore.get_color_token;
+export const get_color_active_path = demoStore.get_color_active_path;
+export const get_active_color_token = demoStore.get_active_color_token;
+
 export const demo_update = demoStore.update;
 export const set_view = demoStore.set_view;
 export const toggle_view = demoStore.toggle_view;
 export const activate_widget = demoStore.activate_widget;
 export const deactivate_widget = demoStore.deactivate_widget;
 export const toggle_widget = demoStore.toggle_widget;
+
+export const set_color_active_path = demoStore.set_color_active_path;
+export const set_color_value = demoStore.set_color_value;
+export const reset_color_value = demoStore.reset_color_value;
+export const reset_color_values = demoStore.reset_color_values;
+
 // export const set_about_toc_open = demoStore.set_about_toc_open;
 
 export const demo_subscribe = demoStore.subscribe;

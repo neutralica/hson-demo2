@@ -13,6 +13,7 @@ function labelForPath(path: string): string {
 
 function makeTarget(source: ColorVarSource): OklchTarget {
   return Object.freeze({
+    path: source.path,
     label: labelForPath(source.path),
     varName: source.varName,
     initial: source.value,

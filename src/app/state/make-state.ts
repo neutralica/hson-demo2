@@ -131,17 +131,17 @@ export function make_state_slot(
     set(next: JsonValue): void {
       const prev = clone_node(root);
       set_node_at_path(root, parts, next);
+
+      if (node_equal(prev, root)) return;
       for (const fn of listeners) fn(root, prev);
     },
 
     remove(): void {
       const prev = clone_node(root);
       remove_node_at_path(root, parts);
+
+      if (node_equal(prev, root)) return;
       for (const fn of listeners) fn(root, prev);
     },
   };
-}
-
-function shallow_equal(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
 }

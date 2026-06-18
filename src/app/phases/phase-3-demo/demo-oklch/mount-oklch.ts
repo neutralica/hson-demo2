@@ -5,6 +5,7 @@ import { CURRENT_OKLCHname } from "../../../core/consts/ui-consts";
 import { ROOT_CSS, PANEL_CSS, PREVIEW_PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS, TITLE_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import { parse_oklch} from "../../../core/helpers/color-helpers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
+import { get_color_active_path, get_color_token, reset_color_values, set_color_active_path, set_color_value } from "../../../state/store";
 
 const gcss = CssManager.api();
 
@@ -74,7 +75,7 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 
   const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PREVIEW_PANEL_CSS);
   const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
-  const resetBtn = mk_div_cls_txt(previewPanel, "oklch-demo-factory", "factory")
+  const resetBtn = mk_div_cls_txt(previewPanel, "oklch-demo-factory", "[factory]")
     .attr.set("role", "button")
     .css.setMany(RESET_CSS);
   const targetPanel = mk_div_cls(controls, "oklch-demo-targets").css.setMany({
@@ -96,27 +97,30 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 
 function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   let state = model.state;
-  let activeTargetIndex = 0;
-
-  let targetStates: OklchValues[] = model.targets.map((target) => {
-    const initialState = stateOrDefault(target.initial, state);
-    // CHANGED: var.value reads the stored declaration value; var.get returns
-    // a CSS var(...) reference string for use inside CSS maps.
-    return stateOrDefault(gcss.var.value(target.varName), initialState);
-  });
+  const storedActivePath = get_color_active_path();
+  const storedActiveIndex = storedActivePath === null
+    ? -1
+    : model.targets.findIndex((target) => target.path === storedActivePath);
+  let activeTargetIndex = storedActiveIndex >= 0 ? storedActiveIndex : 0;
+  const targetStateCache = new Map<string, OklchValues>();
 
   const getTargetState = (index: number, fallback: OklchValues): OklchValues => {
-    // CHANGED: maintain a local state slot per target. This keeps target
-    // selection from collapsing back into the shared CURRENT_OKLCH preview var
-    // when a theme var is unset or not parseable as direct OKLCH.
-    return targetStates[index] ?? fallback;
+    const target = model.targets[index];
+    if (!target) return fallback;
+
+    const cached = targetStateCache.get(target.path);
+    if (cached) return cached;
+
+    const targetDefault = stateOrDefault(target.initial, fallback);
+    const liveValue = gcss.var.value(target.varName);
+    const token = get_color_token(target.path);
+
+    return stateOrDefault(liveValue ?? token?.value, targetDefault);
   };
 
-  // CHANGED: initial render should adopt the first editable target's current
-  // color when available. Otherwise render_prev() writes the fallback model state
-  // into CURRENT_OKLCH, which can make the picker open as black.
-  state = getTargetState(activeTargetIndex, state);
-  targetStates[activeTargetIndex] = state;
+  const activeTarget = model.targets[activeTargetIndex];
+  if (activeTarget) set_color_active_path(activeTarget.path);
+  state = getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE);
 
   const syncInputsToState = (): void => {
     // CHANGED: selecting a target should pull that color into both the preview
@@ -128,6 +132,16 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     }
   };
 
+  const persistActiveState = (): void => {
+    const target = model.targets[activeTargetIndex];
+    if (!target) return;
+
+    const value = oklchToCss(state);
+    targetStateCache.set(target.path, state);
+    set_color_value(target.path, value);
+    gcss.var.set(target.varName, value);
+  };
+
   const render = (): void => {
     renderPrev(rig, model, state);
     syncInputsToState();
@@ -137,10 +151,12 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
       const target = model.targets[i];
       if (!row || !target) continue;
 
-      // CHANGED: the picker now treats targetStates as the local source of
-      // truth. render_prev() no longer rewrites target rows separately, which
-      // avoids row labels/colors being updated through two different paths.
-      const targetState = getTargetState(i, state);
+      // CHANGED: each row renders from its own store token. Never use the
+      // currently selected state as a row fallback, or target rows visually
+      // collapse into the active color while moving through the list.
+      const targetState = i === activeTargetIndex
+        ? state
+        : getTargetState(i, OKLCH_DEFAULT_STATE);
       const targetColor = oklchToCss(targetState);
       row.text.set(`${target.label}: ${targetColor}`);
       row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
@@ -152,10 +168,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     item.input.listen.onInput(() => {
       state = updateOklchState(state, item.channel, readInputValue(item.input));
 
-      targetStates[activeTargetIndex] = state;
-
-      const target = model.targets[activeTargetIndex];
-      if (target) applyToTarget(target, state);
+      persistActiveState();
 
       render();
     });
@@ -164,13 +177,12 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   for (let i = 0; i < model.targets.length; i += 1) {
     const target = model.targets[i];
     const row = rig.targetRows[i];
-    if (!row) continue;
+    if (!row || !target) continue;
 
     row.listen.onClick(() => {
       activeTargetIndex = i;
-
-      state = getTargetState(i, state);
-      targetStates[i] = state;
+      set_color_active_path(target.path);
+      state = getTargetState(i, OKLCH_DEFAULT_STATE);
 
       render();
     });
@@ -182,10 +194,11 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   });
 
   rig.resetBtn.listen.onClick(() => {
-    targetStates = model.targets.map((target) => stateOrDefault(target.initial, OKLCH_DEFAULT_STATE));
+    reset_color_values();
+    targetStateCache.clear();
 
     for (const target of model.targets) {
-      gcss.var.set(target.varName, target.initial);
+      applyToTarget(target);
     }
 
     state = getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE);
@@ -243,15 +256,8 @@ function makeOklchModel(targets?: readonly OklchTarget[]): OklchPickerModel {
 }
 
 function seedTargetVars(targets: readonly OklchTarget[]): void {
-
   for (const target of targets) {
-    const current = gcss.var.value(target.varName);
-    if (current !== undefined) continue;
-    if (target.initial === undefined) continue;
-
-    // CHANGED: seed only missing vars. var.value reads the stored value;
-    // var.get returns a reusable CSS reference and is never undefined.
-    gcss.var.set(target.varName, target.initial);
+    applyToTarget(target);
   }
 }
 
@@ -287,7 +293,7 @@ const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues):
 
 
   gcss.var.set(CURRENT_OKLCHname, value);
-  rig.code.text.set(value);
+  rig.code.text.set(`[${value}]`);
   rig.code.attr.set("title", `copy ${value}`);
 
   for (const item of rig.inputs) {
@@ -297,6 +303,7 @@ const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues):
   }
 };
 
-const applyToTarget = (target: OklchTarget, state: OklchValues): void => {
-  gcss.var.set(target.varName, oklchToCss(state));
+const applyToTarget = (target: OklchTarget): void => {
+  const token = get_color_token(target.path);
+  gcss.var.set(target.varName, token?.value ?? target.initial);
 };

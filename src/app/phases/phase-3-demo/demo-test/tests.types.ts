@@ -67,6 +67,7 @@ export type TestRunMode =
   | "dev"
   | "unit"
   | "fuzz-json"
+  | "demo-meta"
 
 export type CaseMeta = Readonly<{
   fixture?: string;

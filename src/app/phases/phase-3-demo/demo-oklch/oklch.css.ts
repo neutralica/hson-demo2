@@ -2,6 +2,7 @@ import type { CssMap } from "hson-live/types";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { øfontSize, CURRENT_OKLCH } from "../../../core/consts/ui-consts";
 import { _cols } from "../../../core/consts/colors.consts";
+import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 
 
 const STIPPLE_DOT = `oklch(90% 0.04 250 / 0.045)`;
@@ -124,7 +125,7 @@ export const TARGET_ROW_CSS: CssMap = {
 
 export const RESET_CSS: CssMap = {
   ...TARGET_ROW_CSS,
-  color: _cols.txt.menu,
+  color: OKLCH_VIBRANT.mintIce,
   textAlign: "center",
   cursor: "pointer",
 };

@@ -36,9 +36,12 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 export function color_var_name_for_path(path: string): string {
   return COLOR_VAR_NAME_OVERRIDES[path] ?? `--hson-color-${path.replace(/[^a-zA-Z0-9]+/g, "-")}`;
 }
+function css_var_ref_name(varName: string): string {
+  return varName.startsWith("--") ? varName : `--${varName}`;
+}
 
 function color_var_ref_for_path(path: string, fallback: string): string {
-  return `var(${color_var_name_for_path(path)}, ${fallback})`;
+  return `var(${css_var_ref_name(color_var_name_for_path(path))}, ${fallback})`;
 }
 
 function make_color_var_refs<T extends ColorTree>(value: T, prefix = ""): ColorVarRefs<T> {
@@ -76,7 +79,7 @@ export const _HSON_COL = {
   h: OKLCH_FLEURS.oxidizedSky,
   s: OKLCH_VIBRANT.yellowBrass,
   o: OKLCH_VIBRANT.roseNeon2,
-  n: OKLCH_VIBRANT.mossToxic,
+  n: OKLCH_VIBRANT.mintIce,
 };
 const TOCcol = _HSON_COL.h;
 const TXTcol_MENU = OKLCH_FLEURS.greyLilac;

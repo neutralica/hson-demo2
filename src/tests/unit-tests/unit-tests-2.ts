@@ -303,7 +303,7 @@ export function unit_test_parser_helpers(): TestSuite {
             run() {
                 const out = _serialize_style({
                     backgroundColor: "red",
-                    fontSize: øfontSize.smol,
+                    fontSize: "12px",
                 });
 
                 if (!out.includes("background-color:red") && !out.includes("background-color: red")) {

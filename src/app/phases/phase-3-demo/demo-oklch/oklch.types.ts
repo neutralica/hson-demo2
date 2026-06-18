@@ -10,6 +10,7 @@ export type OklchValues = Readonly<{
 export type OklchChannel = keyof OklchValues;
 
 export type OklchTarget = Readonly<{
+  path: string;
   label: string;
   varName: string;
   initial: string;

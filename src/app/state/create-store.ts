@@ -1,8 +1,57 @@
 import type { HsonNode, JsonValue } from "hson-live/types";
-import type { DemoStateRO, DemoView, DemoWidget, DemoState } from "./state.types";
+import type { DemoColorPath, DemoColorToken, DemoStateRO, DemoView, DemoWidget, DemoState } from "./state.types";
 import { clone_node } from "./clone-node";
 import { make_state, jsonify } from "./make-state";
 import { json_equal } from "./state-helpers";
+import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.consts";
+
+function is_oklch_value(value: string): boolean {
+  return value.trim().startsWith("oklch(");
+}
+
+function label_for_color_path(path: string): string {
+  return path.replace(/\./g, "-");
+}
+
+function make_demo_color_token(source: ColorVarSource): DemoColorToken {
+  const isOklch = is_oklch_value(source.value);
+
+  return {
+    path: source.path,
+    label: label_for_color_path(source.path),
+    varName: source.varName,
+    initial: source.value,
+    value: source.value,
+    editable: isOklch,
+    kind: isOklch ? "oklch" : "css",
+  };
+}
+
+function make_demo_color_tokens(): Record<DemoColorPath, DemoColorToken> {
+  const tokens: Record<DemoColorPath, DemoColorToken> = {};
+
+  for (const source of COLOR_VAR_SOURCES) {
+    tokens[source.path] = make_demo_color_token(source);
+  }
+
+  return tokens;
+}
+
+export function make_initial_demo_state(): DemoState {
+  return {
+    ui: {
+      currentView: null,
+      activeWidgets: [],
+      aboutTocOpen: false,
+    },
+    theme: {
+      colors: {
+        activePath: null,
+        tokens: make_demo_color_tokens(),
+      },
+    },
+  };
+}
 
 export type DemoStore = {
   get_state(): DemoStateRO;
@@ -32,13 +81,7 @@ export type DemoStore = {
 };
 
 export function create_demo_store(
-  initial: DemoState = {
-    ui: {
-      currentView: null,
-      activeWidgets: [],
-      aboutTocOpen: false,
-    },
-  },
+  initial: DemoState = make_initial_demo_state(),
 ): DemoStore {
   const state = make_state(initial);
   const listeners = new Set<(next: DemoStateRO, prev: DemoStateRO) => void>();

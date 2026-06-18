@@ -15,7 +15,7 @@ import { set_alpha } from "../../../core/helpers/color-helpers";
 import type { DemoView, DemoWidget } from "../../../state/state.types";
 import type { Fmt } from "../../../core/types/core.types";
 import type { Panels } from "../../../ui/panels/panels.types";
-import { get_view, get_widgets, demo_subscribe, set_view, toggle_view, toggle_widget, activate_widget, has_widget, deactivate_widget } from "../../../state/store2";
+import { get_view, get_widgets, demo_subscribe, set_view, toggle_view, toggle_widget, activate_widget, has_widget, deactivate_widget } from "../../../state/store";
 import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_panel_simple } from "../../../ui/panels/panel-simple";
