@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live";
 import type { AboutDocKey, AboutDocs, AboutDocSpec } from "./about.types";
-import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss } from "./about.css";
+import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, CODE_EQUALSscss, CODE_PUNCTcss, CODE_QUOTEcss, CODE_COLONcss, CODE_TYPEcss, CODE_BRACEcss, ANGLEcss, PIPEcss, SLASHcss, SPECIAL_WORDScss } from "./about.css";
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 import type { ListItem } from "./about.types";
@@ -426,7 +426,7 @@ function render_prose_text(host: LiveTree, text: string): void {
 
     host.create.span()
       .classlist.add("md-term")
-      // .css.setMany(SPECIAL_WORDScss)
+      .style.setMany(SPECIAL_WORDScss)
       .text.set(hit);
 
     lastIx = ix + hit.length;

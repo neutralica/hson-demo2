@@ -308,4 +308,7 @@ export const FLUSH_LISTcss = {
 };
 
 
-
+export const SPECIAL_WORDScss = {
+  color: _cols.greenlike,
+  // background: _cols.backhi,
+}
