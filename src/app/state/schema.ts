@@ -70,6 +70,7 @@ export type SchemaToken<T = JsonValue> = Readonly<{
   __schemaToken: true;
   __type?: T;
   __optional?: boolean;
+  __recordShape?: SchemaShapeValue;
   rule: SchemaRule;
   optional: SchemaOptionalToken<T>;
   array: SchemaToken<T[]>;
@@ -85,6 +86,7 @@ export type SchemaContext = Readonly<{
   boolean: SchemaToken<boolean>;
   null: SchemaToken<null>;
   unknown: SchemaToken<JsonValue>;
+  record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>>;
   pick<const T extends readonly JsonValue[]>(...values: T): SchemaToken<T[number]>;
 }>;
 export interface SchemaShape {
@@ -106,7 +108,7 @@ type OptionalKeys<T extends SchemaShape> = {
 
 type RequiredKeys<T extends SchemaShape> = Exclude<keyof T, OptionalKeys<T>>;
 
-type InferShapeValue<T> =
+export type InferShapeValue<T> =
   T extends SchemaToken<infer V> ? V :
   T extends readonly (infer V)[] ? V :
   T extends SchemaShape ? InferShape<T> :
@@ -121,23 +123,24 @@ export type InferSchema<T> =
   T extends SchemaToken<infer V> ? V :
   never;
 
-function freeze_validation(issues: SchemaIssue[]): SchemaValidation {
+function freezeValidation(issues: SchemaIssue[]): SchemaValidation {
   return Object.freeze({ ok: issues.length === 0, issues: Object.freeze(issues) });
 }
 
-function schema_path_parts(path: SchemaPath): SchemaSegment[] {
+function schemaPathParts(path: SchemaPath): SchemaSegment[] {
   return typeof path === "string" ? path_to_parts(path) : [...path];
 }
 
-function state_path_parts(path: StatePath): (string | number)[] {
+function statePathParts(path: StatePath): (string | number)[] {
   return typeof path === "string" ? path_to_parts(path) : [...path];
 }
 
-function schema_key(parts: readonly SchemaSegment[]): string {
+function schemaKey(parts: readonly SchemaSegment[]): string {
   return JSON.stringify(parts);
 }
 
-function path_matches(schemaPath: readonly SchemaSegment[], valuePath: readonly (string | number)[]): boolean {
+
+function pathMatches(schemaPath: readonly SchemaSegment[], valuePath: readonly (string | number)[]): boolean {
   if (schemaPath.length !== valuePath.length) return false;
 
   for (let i = 0; i < schemaPath.length; i += 1) {
@@ -147,6 +150,81 @@ function path_matches(schemaPath: readonly SchemaSegment[], valuePath: readonly 
   }
 
   return true;
+}
+
+function hasWildcard(parts: readonly SchemaSegment[]): boolean {
+  return parts.includes("*");
+}
+
+function isJsonContainer(value: JsonValue): value is JsonValue[] | Record<string, JsonValue> {
+  return value !== null && typeof value === "object";
+}
+function jsonValueAtPath(root: JsonValue, path: readonly (string | number)[]): JsonValue | undefined {
+  let current: JsonValue | undefined = root;
+
+  for (const part of path) {
+    if (current === undefined || !isJsonContainer(current)) return undefined;
+
+    if (Array.isArray(current)) {
+      if (typeof part !== "number") return undefined;
+      current = current[part];
+      continue;
+    }
+
+    current = current[part];
+  }
+
+  return current;
+}
+
+function expandSchemaPath(root: JsonValue, schemaPath: readonly SchemaSegment[]): (string | number)[][] {
+  const paths: (string | number)[][] = [];
+
+  const walk = (value: JsonValue, index: number, actualPath: (string | number)[]): void => {
+    if (index >= schemaPath.length) {
+      paths.push(actualPath);
+      return;
+    }
+
+    const part = schemaPath[index];
+    if (part === undefined) return;
+
+    if (part === "*") {
+      if (!isJsonContainer(value)) return;
+
+      if (Array.isArray(value)) {
+        value.forEach((item, itemIndex) => {
+          walk(item, index + 1, [...actualPath, itemIndex]);
+        });
+        return;
+      }
+
+      for (const [key, item] of Object.entries(value)) {
+        walk(item as JsonValue, index + 1, [...actualPath, key]);
+      }
+
+      return;
+    }
+
+    if (!isJsonContainer(value)) return;
+
+    if (Array.isArray(value)) {
+      if (typeof part !== "number") return;
+      const next = value[part];
+      if (next === undefined) return;
+      walk(next, index + 1, [...actualPath, part]);
+      return;
+    }
+
+    if (typeof part === "number") return;
+
+    const next = value[part];
+    if (next === undefined) return;
+    walk(next, index + 1, [...actualPath, part]);
+  };
+
+  walk(root, 0, []);
+  return paths;
 }
 
 function specificity(parts: readonly SchemaSegment[]): number {
@@ -159,7 +237,7 @@ function specificity(parts: readonly SchemaSegment[]): number {
   return score;
 }
 
-function value_type(value: JsonValue): SchemaValueType {
+function valueType(value: JsonValue): SchemaValueType {
   if (value === null) return "null";
   if (Array.isArray(value)) return "array";
 
@@ -170,13 +248,13 @@ function value_type(value: JsonValue): SchemaValueType {
   return "object";
 }
 
-function allowed_types(rule: SchemaRule): readonly SchemaValueType[] {
+function allowedTypes(rule: SchemaRule): readonly SchemaValueType[] {
   if (!rule.type) return ["unknown"];
   return typeof rule.type === "string" ? [rule.type] : rule.type;
 }
 
-function type_allowed(rule: SchemaRule, actual: SchemaValueType): boolean {
-  const allowed = allowed_types(rule);
+function typeAllowed(rule: SchemaRule, actual: SchemaValueType): boolean {
+  const allowed = allowedTypes(rule);
   return allowed.includes("unknown") || allowed.includes(actual);
 }
 
@@ -184,11 +262,11 @@ function issue(path: readonly (string | number)[], code: string, message: string
   return Object.freeze({ path: Object.freeze([...path]), code, message });
 }
 
-function literal_equal(a: JsonValue, b: JsonValue): boolean {
+function literalEqual(a: JsonValue, b: JsonValue): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-function is_schema_issue(value: unknown): value is SchemaIssue {
+function isSchemaIssue(value: unknown): value is SchemaIssue {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -197,7 +275,7 @@ function is_schema_issue(value: unknown): value is SchemaIssue {
     "message" in value
   );
 }
-function normalize_custom_issues(
+function normalizeCustomIssues(
   value: JsonValue,
   path: readonly (string | number)[],
   rule: SchemaRule,
@@ -207,70 +285,100 @@ function normalize_custom_issues(
   const result = rule.validate(value, Object.freeze({ path: Object.freeze([...path]), rule }));
   if (result === undefined) return [];
   if (typeof result === "string") return [issue(path, "custom", result)];
-  if (is_schema_issue(result)) return [result];
+  if (isSchemaIssue(result)) return [result];
 
   return [...result];
 }
 
-function validate_rule_value(
+
+function validateRuleValue(
   rule: SchemaRule,
   path: readonly (string | number)[],
   value: JsonValue,
 ): SchemaIssue[] {
   const issues: SchemaIssue[] = [];
-  const actual = value_type(value);
+  const actual = valueType(value);
 
-  if (rule.type && !type_allowed(rule, actual)) {
+  if (rule.type && !typeAllowed(rule, actual)) {
     issues.push(issue(
       path,
       "type",
-      `Expected ${allowed_types(rule).join(" | ")}, got ${actual}`,
+      `Expected ${allowedTypes(rule).join(" | ")}, got ${actual}`,
     ));
   }
 
-  if (rule.literals && !rule.literals.some((literal) => literal_equal(literal, value))) {
+  if (rule.literals && !rule.literals.some((literal) => literalEqual(literal, value))) {
     issues.push(issue(path, "literal", "Value is not one of the allowed literal choices"));
   }
 
   if (rule.items && Array.isArray(value)) {
     value.forEach((item, index) => {
-      issues.push(...validate_rule_value(rule.items!, [...path, index], item));
+      issues.push(...validateRuleValue(rule.items!, [...path, index], item));
     });
   }
 
-  issues.push(...normalize_custom_issues(value, path, rule));
+  issues.push(...normalizeCustomIssues(value, path, rule));
   return issues;
 }
 
-function schema_error(validation: SchemaValidation): Error {
+function validateRootValue(schema: NodeSchema, value: JsonValue): SchemaValidation {
+  const issues: SchemaIssue[] = [];
+
+  for (const entry of schema.entries()) {
+    const paths = expandSchemaPath(value, entry.path);
+
+    if (paths.length === 0) {
+      if (!hasWildcard(entry.path) && !entry.rule.optional) {
+        issues.push(issue(
+          entry.path.filter((part): part is string | number => part !== "*"),
+          "required",
+          "Required schema path is missing from replacement value",
+        ));
+      }
+
+      continue;
+    }
+
+    for (const path of paths) {
+      const next = jsonValueAtPath(value, path);
+      if (next === undefined) continue;
+      issues.push(...validateRuleValue(entry.rule, path, next));
+    }
+  }
+
+  return freezeValidation(issues);
+}
+
+function schemaError(validation: SchemaValidation): Error {
   const message = validation.issues.map((i) => `${i.code}: ${i.message}`).join("; ");
   return new Error(`Schema validation failed: ${message}`);
 }
 
-function merge_type(rule: SchemaRule, nextType: SchemaValueType): readonly SchemaValueType[] {
-  const current = allowed_types(rule);
+function mergeType(rule: SchemaRule, nextType: SchemaValueType): readonly SchemaValueType[] {
+  const current = allowedTypes(rule);
   return current.includes(nextType) ? current : [...current, nextType];
 }
 
-function make_token<T>(rule: SchemaRule, optional = false): SchemaToken<T> {
+function makeToken<T>(rule: SchemaRule, optional = false, recordShape?: SchemaShapeValue): SchemaToken<T> {
   const token = {} as SchemaToken<T>;
 
   Object.defineProperties(token, {
     __schemaToken: { value: true, enumerable: false },
     __optional: { value: optional, enumerable: false },
+    __recordShape: { value: recordShape, enumerable: false },
     rule: { value: rule, enumerable: true },
 
     optional: {
       enumerable: true,
       get() {
-        return make_token<T>({ ...rule, optional: true }, true);
+        return makeToken<T>({ ...rule, optional: true }, true, recordShape);
       },
     },
 
     array: {
       enumerable: true,
       get() {
-        return make_token<T[]>({ type: "array", items: rule });
+        return makeToken<T[]>({ type: "array", items: rule });
       },
     },
 
@@ -278,31 +386,31 @@ function make_token<T>(rule: SchemaRule, optional = false): SchemaToken<T> {
       enumerable: true,
       get() {
         const nextRule: SchemaRule = rule.literals
-          ? { ...rule, literals: [...rule.literals, null], type: merge_type(rule, "null") }
-          : { ...rule, type: merge_type(rule, "null") };
+          ? { ...rule, literals: [...rule.literals, null], type: mergeType(rule, "null") }
+          : { ...rule, type: mergeType(rule, "null") };
 
-        return make_token<T | null>(nextRule, optional);
+        return makeToken<T | null>(nextRule, optional, recordShape);
       },
     },
 
     readonly: {
       enumerable: true,
       get() {
-        return make_token<T>({ ...rule, readonly: true }, optional);
+        return makeToken<T>({ ...rule, readonly: true }, optional, recordShape);
       },
     },
 
     lazy: {
       enumerable: true,
       get() {
-        return make_token<T>({ ...rule, storage: "lazy" }, optional);
+        return makeToken<T>({ ...rule, storage: "lazy" }, optional, recordShape);
       },
     },
 
     opaque: {
       enumerable: true,
       get() {
-        return make_token<T>({ ...rule, storage: "opaque" }, optional);
+        return makeToken<T>({ ...rule, storage: "opaque" }, optional, recordShape);
       },
     },
   });
@@ -310,25 +418,56 @@ function make_token<T>(rule: SchemaRule, optional = false): SchemaToken<T> {
   return Object.freeze(token);
 }
 
-export const schema_context: SchemaContext = Object.freeze({
-  string: make_token<string>({ type: "string" }),
-  number: make_token<number>({ type: "number" }),
-  boolean: make_token<boolean>({ type: "boolean" }),
-  null: make_token<null>({ type: "null" }),
-  unknown: make_token<JsonValue>({ type: "unknown" }),
+export const SCHEMA_CONTEXT: SchemaContext = Object.freeze({
+  string: makeToken<string>({ type: "string" }),
+  number: makeToken<number>({ type: "number" }),
+  boolean: makeToken<boolean>({ type: "boolean" }),
+  null: makeToken<null>({ type: "null" }),
+  unknown: makeToken<JsonValue>({ type: "unknown" }),
+
+  record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>> {
+    return makeToken<Record<string, InferShapeValue<V>>>({ type: "object" }, false, value);
+  },
 
   pick<const T extends readonly JsonValue[]>(...values: T): SchemaToken<T[number]> {
-    return make_token<T[number]>({ literals: values });
+    return makeToken<T[number]>({ literals: values });
   },
 });
+function compileShapeValue(schema: NodeSchema, path: readonly SchemaSegment[], value: SchemaShapeValue): void {
+  if (isSchemaToken(value)) {
+    schema.set(path, {
+      ...value.rule,
+      optional: value.__optional === true || value.rule.optional === true,
+    });
 
-export const scm = schema_context;
+    if (value.__recordShape !== undefined) {
+      compileShapeValue(schema, [...path, "*"], value.__recordShape);
+    }
 
-function is_schema_token(value: unknown): value is SchemaToken {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    schema.set(path, { literals: value });
+    return;
+  }
+
+  if (isSchemaRule(value)) {
+    schema.set(path, value);
+    return;
+  }
+
+  schema.set(path, { type: "object" });
+  compileShape(schema, path, value as SchemaShape);
+}
+
+export const SCM = SCHEMA_CONTEXT;
+
+function isSchemaToken(value: unknown): value is SchemaToken {
   return typeof value === "object" && value !== null && "__schemaToken" in value;
 }
 
-function is_schema_rule(value: unknown): value is SchemaRule {
+function isSchemaRule(value: unknown): value is SchemaRule {
   return typeof value === "object" && value !== null && (
     "type" in value ||
     "optional" in value ||
@@ -341,30 +480,9 @@ function is_schema_rule(value: unknown): value is SchemaRule {
   );
 }
 
-function compile_shape(schema: NodeSchema, basePath: readonly (string | number)[], shape: SchemaShape): void {
+function compileShape(schema: NodeSchema, basePath: readonly SchemaSegment[], shape: SchemaShape): void {
   for (const [key, value] of Object.entries(shape)) {
-    const path = [...basePath, key];
-
-    if (is_schema_token(value)) {
-      schema.set(path, {
-        ...value.rule,
-        optional: value.__optional === true || value.rule.optional === true,
-      });
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      schema.set(path, { literals: value });
-      continue;
-    }
-
-    if (is_schema_rule(value)) {
-      schema.set(path, value);
-      continue;
-    }
-
-    schema.set(path, { type: "object" });
-    compile_shape(schema, path, value as SchemaShape);
+    compileShapeValue(schema, [...basePath, key], value);
   }
 }
 
@@ -373,27 +491,27 @@ export function make_schema(initialEntries: readonly SchemaMatch[] = []): NodeSc
 
   const api: NodeSchema = Object.freeze({
     set(path, rule) {
-      const parts = schema_path_parts(path);
-      rules.set(schema_key(parts), Object.freeze({ path: Object.freeze(parts), rule }));
+      const parts = schemaPathParts(path);
+      rules.set(schemaKey(parts), Object.freeze({ path: Object.freeze(parts), rule }));
       return api;
     },
 
     remove(path) {
-      rules.delete(schema_key(schema_path_parts(path)));
+      rules.delete(schemaKey(schemaPathParts(path)));
       return api;
     },
 
     get(path) {
-      return rules.get(schema_key(schema_path_parts(path)))?.rule;
+      return rules.get(schemaKey(schemaPathParts(path)))?.rule;
     },
 
     match(path) {
-      const parts = state_path_parts(path);
+      const parts = statePathParts(path);
       let best: SchemaMatch | undefined;
       let bestScore = -1;
 
       for (const entry of rules.values()) {
-        if (!path_matches(entry.path, parts)) continue;
+        if (!pathMatches(entry.path, parts)) continue;
 
         const score = specificity(entry.path);
         if (score <= bestScore) continue;
@@ -406,15 +524,15 @@ export function make_schema(initialEntries: readonly SchemaMatch[] = []): NodeSc
     },
 
     validateValue(path, value) {
-      const parts = state_path_parts(path);
+      const parts = statePathParts(path);
       const match = api.match(parts);
-      if (!match) return freeze_validation([]);
+      if (!match) return freezeValidation([]);
 
-      return freeze_validation(validate_rule_value(match.rule, parts, value));
+      return freezeValidation(validateRuleValue(match.rule, parts, value));
     },
 
     validateMutation(mutation) {
-      const parts = state_path_parts(mutation.path);
+      const parts = statePathParts(mutation.path);
       const match = api.match(parts);
       const issues: SchemaIssue[] = [];
 
@@ -427,12 +545,12 @@ export function make_schema(initialEntries: readonly SchemaMatch[] = []): NodeSc
           issues.push(issue(parts, "required", "Cannot remove required schema path"));
         }
 
-        return freeze_validation(issues);
+        return freezeValidation(issues);
       }
 
       const valueValidation = api.validateValue(parts, mutation.value);
       issues.push(...valueValidation.issues);
-      return freeze_validation(issues);
+      return freezeValidation(issues);
     },
 
     validateCommit(mutations) {
@@ -442,22 +560,22 @@ export function make_schema(initialEntries: readonly SchemaMatch[] = []): NodeSc
         issues.push(...api.validateMutation(mutation).issues);
       }
 
-      return freeze_validation(issues);
+      return freezeValidation(issues);
     },
 
     assertValue(path, value) {
       const validation = api.validateValue(path, value);
-      if (!validation.ok) throw schema_error(validation);
+      if (!validation.ok) throw schemaError(validation);
     },
 
     assertMutation(mutation) {
       const validation = api.validateMutation(mutation);
-      if (!validation.ok) throw schema_error(validation);
+      if (!validation.ok) throw schemaError(validation);
     },
 
     assertCommit(mutations) {
       const validation = api.validateCommit(mutations);
-      if (!validation.ok) throw schema_error(validation);
+      if (!validation.ok) throw schemaError(validation);
     },
 
     entries() {
@@ -475,10 +593,10 @@ export function make_schema(initialEntries: readonly SchemaMatch[] = []): NodeSc
 export function define_schema<const Shape extends SchemaShape>(
   makeShape: (scm: SchemaContext) => Shape,
 ): TypedNodeSchema<InferShape<Shape>> {
-  const shape = makeShape(schema_context);
+  const shape = makeShape(SCHEMA_CONTEXT);
   const schema = make_schema();
 
-  compile_shape(schema, [], shape);
+  compileShape(schema, [], shape);
 
   return schema as TypedNodeSchema<InferShape<Shape>>;
 }
@@ -506,12 +624,14 @@ export function with_schema(state: NodeState, schema: NodeSchema): NodeState {
     },
 
     replace(next: JsonValue): void {
-      schema.assertValue([], next);
+      const validation = validateRootValue(schema, next);
+      if (!validation.ok) throw schemaError(validation);
       state.replace(next);
     },
 
     replaceRoot(next: JsonValue): void {
-      schema.assertValue([], next);
+      const validation = validateRootValue(schema, next);
+      if (!validation.ok) throw schemaError(validation);
       state.replaceRoot(next);
     },
 

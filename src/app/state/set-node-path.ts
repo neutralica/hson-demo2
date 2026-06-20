@@ -1,4 +1,3 @@
-
 import { clone_node } from "./clone-node";
 import { II_TAG, ROOT_TAG } from "../../../../hson-live/dist/consts/constants";
 import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
@@ -12,7 +11,6 @@ export function set_node_at_path(
   parts: readonly (string | number)[],
   next: JsonValue,
 ): void {
-  // CHANGED: allow whole-root replacement in the simplest possible way
   if (parts.length === 0) {
     const payload = json_value_to_payload_node(next);
 
@@ -91,7 +89,14 @@ export function set_node_at_path(
 
     if (leaf === items.length) {
       if (!Array.isArray(arr._content)) arr._content = [];
-      arr._content.push(mk_node(II_TAG, [payload]));
+
+      const item = mk_node(II_TAG, [payload]);
+      item._meta = {
+        ...(item._meta ?? {}),
+        "data-_index": String(leaf),
+      };
+
+      arr._content.push(item);
       return;
     }
 

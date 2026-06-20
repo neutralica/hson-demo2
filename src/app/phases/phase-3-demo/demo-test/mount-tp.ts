@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { debug_state_path_test, debug_state_find_test, debug_state_intentional_fail_test, debug_state_remove_test, debug_state_replace_test, debug_store_facade_test } from "../../../state/smoke-tests/state-path-test";
-import { debug_state_smoke_test } from "../../../state/smoke-tests/state-smoke-test";
+import { debug_state_path_test, debug_state_find_test, debug_state_intentional_fail_test, debug_state_remove_test, debug_state_replace_test, debug_store_facade_test, debug_state_set_test, debug_state_public_path_test, debug_state_public_path_edges_test, debug_schema_context_exports_smoke_test, smoke_demo_store_schema_impl, smoke_test_test, smoke_schema_replace_impl } from "../../../state/smoke-tests/smoke-test-1";
+import { debug_schema_path_smoke_test, debug_schema_smoke_test, debug_state_smoke_test } from "../../../state/smoke-tests/smoke-test-1";
 import { tp_factory } from "./tp-factory";
 import type { TestPanels } from "./tp.types";
 import { TP_ROOTcss } from "./tp.css";
@@ -22,33 +22,37 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
             tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
             tp.setLog("=- init: smoke test -=#");
             tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
-            const stateSmoke = debug_state_smoke_test();
-            for (const line of stateSmoke.steps) tp.setLog(line);
+            const runSmoke = (label: string, fn: () => { steps: string[] }): void => {
+                try {
+                    const result = fn();
+                    for (const line of result.steps) tp.setLog(line);
+                } catch (err) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    tp.setLog(`FAIL - ${label}: ${msg}`);
+                }
+            };
 
-            const statePath = debug_state_path_test();
-            for (const line of statePath.steps) tp.setLog(line);
+            runSmoke("state smoke", debug_state_smoke_test);
+            runSmoke("state path parsing", debug_state_path_test);
+            runSmoke("state path lookup", debug_state_find_test);
+            runSmoke("state remove path", debug_state_remove_test);
+            runSmoke("state replace", debug_state_replace_test);
+            runSmoke("store facade", debug_store_facade_test);
+            runSmoke("state set path", debug_state_set_test);
+            runSmoke("state public path", debug_state_public_path_test);
+            runSmoke("state public path edges", debug_state_public_path_edges_test);
+            runSmoke("schema validation", debug_schema_smoke_test);
+            runSmoke("schema path validation", debug_schema_path_smoke_test);
+            runSmoke("schema context exports", debug_schema_context_exports_smoke_test);
+            runSmoke("smoke impl?", smoke_demo_store_schema_impl);
+            runSmoke("debug 1", smoke_test_test);
+            runSmoke("debug 2", smoke_schema_replace_impl);
 
-            const stateFind = debug_state_find_test();
-            for (const line of stateFind.steps) tp.setLog(line);
-
-            const removeFind = debug_state_remove_test();
-            for (const line of removeFind.steps) tp.setLog(line);
-
-            const replaceFind = debug_state_replace_test();
-            for (const line of replaceFind.steps) tp.setLog(line);
-
-            const storeFind = debug_store_facade_test();
-            for (const line of storeFind.steps) tp.setLog(line);
-            
             tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
             tp.setLog("=-   smoke negative  -=");
             tp.setLog("=    (fail is good)   =");
             tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
-            
-            const fail = debug_state_intentional_fail_test();
-            for (const line of fail.steps) {
-                tp.setLog(line);
-            }
+            runSmoke("intentional failure", debug_state_intentional_fail_test);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             tp.setLog(`FAIL - ${msg}`);

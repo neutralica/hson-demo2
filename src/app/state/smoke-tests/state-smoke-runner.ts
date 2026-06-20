@@ -12,7 +12,7 @@ type SmokeCtx = {
 };
 
 
-export function run_state_smoke(name: string, body: (t: SmokeCtx) => void): StateSmokeResult {
+export function state_smoke_test(name: string, body: (t: SmokeCtx) => void): StateSmokeResult {
     const steps: string[] = [];
 
     const t: SmokeCtx = {

@@ -2,6 +2,7 @@
 
 import type { JsonValue, HsonNode } from "hson-live/types";
 import { make_state } from "./state";
+import { define_schema, with_schema } from "./schema";
 import { clone_node } from "./clone-node";
 import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
 import { json_equal } from "./state-helpers";
@@ -59,11 +60,35 @@ export function make_initial_demo_state(): DemoState {
 
 export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
+const DemoStateSchema = define_schema((scm) => ({
+  ui: {
+    currentView: scm.string.nullable,
+    activeWidgets: scm.string.array,
+    aboutTocOpen: scm.boolean,
+  },
+  theme: {
+    colors: {
+      activePath: scm.string.nullable,
+      tokens: scm.record({
+        path: scm.string,
+        label: scm.string,
+        varName: scm.string,
+        initial: scm.string,
+        value: scm.string,
+        editable: scm.boolean,
+        kind: scm.pick("oklch", "css"),
+      }),
+    },
+  },
+}));
+
 export function create_demo_store(
   initial: DemoState = INITIAL_DEMO_STATE,
 ): DemoStore {
-  // CHANGED: one canonical node-backed state instance per store
-  const demoState = make_state(clone_node(initial));
+  const demoState = with_schema(
+    make_state(clone_node(initial)),
+    DemoStateSchema,
+  );
 
   // CHANGED: store-local listeners, not module-global
   const listeners = new Set<Listener>();

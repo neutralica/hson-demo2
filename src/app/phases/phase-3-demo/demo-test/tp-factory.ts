@@ -36,12 +36,12 @@ export type ExternalTestAction = {
     run: () => void | Promise<void>;
 };
 
-function next_verbosity(current: LogVerbosity): LogVerbosity {
+function nextVerbosity(current: LogVerbosity): LogVerbosity {
     const i = LOG_VERBOSITY.indexOf(current);
     return LOG_VERBOSITY[(i + 1) % LOG_VERBOSITY.length] ?? "normal";
 }
 
-function should_log_event(verbosity: LogVerbosity, e: TestEvent): boolean {
+function shouldLogEvent(verbosity: LogVerbosity, e: TestEvent): boolean {
     if (verbosity === "verbose") return true;
 
     if (e.t === "suite_begin" || e.t === "suite_end") return true;
@@ -50,19 +50,19 @@ function should_log_event(verbosity: LogVerbosity, e: TestEvent): boolean {
     return false;
 }
 
-function set_button_pressed(btn: LiveTree, on: boolean): void {
+function setButtonClicked(btn: LiveTree, on: boolean): void {
     btn.css.setMany(on
         ? { transform: "translateY(1px)", filter: "brightness(0.98)" }
         : { transform: "translateY(0px)", filter: "brightness(1.0)" });
 }
 
-function wire_press_feedback(btn: LiveTree): void {
-    btn.listen.onPointerDown(() => set_button_pressed(btn, true));
-    btn.listen.onPointerUp(() => set_button_pressed(btn, false));
-    btn.listen.onPointerLeave(() => set_button_pressed(btn, false));
+function implClickFeedback(btn: LiveTree): void {
+    btn.listen.onPointerDown(() => setButtonClicked(btn, true));
+    btn.listen.onPointerUp(() => setButtonClicked(btn, false));
+    btn.listen.onPointerLeave(() => setButtonClicked(btn, false));
 }
 
-function populate_mode_selector(suiteSel: LiveTree, mode: TestRunMode): void {
+function populateModeSelector(suiteSel: LiveTree, mode: TestRunMode): void {
     suiteSel.empty();
     for (const m of MODES) {
         const opt = suiteSel.create.option();
@@ -119,7 +119,7 @@ type TestSurfaceParts = {
     logger: LiveTree;
 };
 
-function create_test_surfaces(branch: LiveTree): TestSurfaceParts {
+function createTestSurface(branch: LiveTree): TestSurfaceParts {
     const leftColumn = mk_div_id(branch, "test-left-column").css.setMany(TEST_CONTENTcss);
     const rightColumn = mk_div_id(branch, "test-right-column").css.setMany(TEST_LOG_PANEcss);
 
@@ -144,7 +144,7 @@ export function tp_factory(): Outcome<TestPanel> {
         .id.set("test-panel-branch")
         .css.setMany(TP_BRANCHcss);
 
-    const { leftColumn, rightColumn, inspectorPane, logger } = create_test_surfaces(branch);
+    const { leftColumn, rightColumn, inspectorPane, logger } = createTestSurface(branch);
     const { runBtn, suiteSel, verbosityBtn, clearBtn, externalBtn, chips } = create_test_console(leftColumn, rightColumn);
 
     const tlog = create_test_log();
@@ -233,7 +233,7 @@ export function tp_factory(): Outcome<TestPanel> {
 
     const doLogOnEvent = (e: TestEvent): void => {
         tlog.onEvent(e);
-        if (!should_log_event(verbosity, e)) return;
+        if (!shouldLogEvent(verbosity, e)) return;
 
         if (e.t === "suite_begin") {
             currentCaseLine = null;
@@ -306,20 +306,20 @@ export function tp_factory(): Outcome<TestPanel> {
         mounted = true;
         hostBody.append(branch);
 
-        populate_mode_selector(suiteSel, mode);
+        populateModeSelector(suiteSel, mode);
 
         suiteSel.listen.on("change", () => {
             const v = suiteSel.form.getValue() ?? "all";
             mode = (MODES.find(m => m.key === v)?.key ?? "all");
         });
 
-        wire_press_feedback(runBtn);
-        wire_press_feedback(clearBtn);
-        wire_press_feedback(verbosityBtn);
-        wire_press_feedback(externalBtn);
+        implClickFeedback(runBtn);
+        implClickFeedback(clearBtn);
+        implClickFeedback(verbosityBtn);
+        implClickFeedback(externalBtn);
 
         verbosityBtn.listen.onClick(() => {
-            verbosity = next_verbosity(verbosity);
+            verbosity = nextVerbosity(verbosity);
             syncVerbosity();
             appendLogLine(`log verbosity: ${verbosity}`);
         });
