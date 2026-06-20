@@ -1,5 +1,6 @@
 import type { JsonValue } from "hson-live/types";
 import { make_state } from "../../../state/state";
+import { define_schema, with_schema } from "../../../state/schema";
 import type { StateMutation } from "../../../state/state.types";
 import { _freeze } from "./tests.consts";
 import type { CaseKey, CaseLog, SuiteLog, TestEvent, TestFailure, TestSummary } from "./tests.types";
@@ -48,6 +49,39 @@ type TestLogState = {
   lastLine: string;
 };
 
+const TEST_LOG_SCHEMA = define_schema((scm) => ({
+  activeSuite: scm.string.nullable,
+  casesByKey: scm.record({
+    key: scm.string,
+    suite: scm.string,
+    name: scm.string,
+    status: scm.pick("pass", "fail", "skip").optional,
+    ms: scm.number.optional,
+    err: scm.string.optional,
+    meta: scm.unknown.optional,
+  }),
+  caseKeysBySuite: scm.record(scm.string.array),
+  suitesByName: scm.record({
+    suite: scm.string,
+    totalPlanned: scm.number.optional,
+    caseKeys: scm.string.array,
+    pass: scm.number,
+    fail: scm.number,
+    skip: scm.number,
+    ms: scm.number.optional,
+  }),
+  failures: scm.unknown.array,
+  summary: {
+    suites: scm.number,
+    cases: scm.number,
+    pass: scm.number,
+    fail: scm.number,
+    skip: scm.number,
+    msTotal: scm.number,
+  },
+  lastLine: scm.string,
+}));
+
 function make_initial_test_log_state(): TestLogState {
   return {
     activeSuite: null,
@@ -72,7 +106,10 @@ function as_json(value: unknown): JsonValue {
 }
 
 export function create_test_log(): TestLog {
-  const logState = make_state(make_initial_test_log_state() as unknown as JsonValue);
+  const logState = with_schema(
+    make_state(make_initial_test_log_state() as unknown as JsonValue),
+    TEST_LOG_SCHEMA,
+  );
 
   const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
 

@@ -8,7 +8,8 @@ import { set_node_at_path } from "../set-node-path";
 import { remove_node_at_path } from "../remove-node-path";
 import { hson } from "hson-live";
 import { create_demo_store, DEMO_STATE_SCHEMA } from "../store";
-import { define_schema, type InferSchema, with_schema, make_schema, SCM, SCHEMA_CONTEXT } from "../schema";
+import { define_schema, with_schema, make_schema, SCM, SCHEMA_CONTEXT } from "../schema";
+import { type InferSchema } from "../schema.types";
 
 
 export function debug_state_path_test(): StateSmokeResult {

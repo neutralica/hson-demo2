@@ -1,128 +1,28 @@
 import type { HsonNode, JsonValue } from "hson-live/types";
 import type { NodeState, NodeStateSlot, StateCommit, StateMutation, StatePath } from "./state.types";
 import { path_to_parts } from "./path-to-parts";
+import type { InferShape, InferShapeValue, NodeSchema, SchemaContext, SchemaIssue, SchemaMatch, SchemaPath, SchemaRule, SchemaSegment, SchemaShape, SchemaShapeValue, SchemaToken, SchemaValidation, SchemaValueType, TypedNodeSchema } from "./schema.types";
+import { allowed_types, make_token } from "./schema-helpers";
+import { validateOklchValue } from "../core/helpers/color-helpers";
 
-type SchemaSegment = string | number | "*";
-export type SchemaPath = string | readonly SchemaSegment[];
 
-export type SchemaValueType =
-  | "unknown"
-  | "string"
-  | "number"
-  | "boolean"
-  | "null"
-  | "object"
-  | "array";
+export const SCHEMA_CONTEXT: SchemaContext = Object.freeze({
+  string: make_token<string>({ type: "string" }),
+  number: make_token<number>({ type: "number" }),
+  boolean: make_token<boolean>({ type: "boolean" }),
+  null: make_token<null>({ type: "null" }),
+  unknown: make_token<JsonValue>({ type: "unknown" }),
+  oklch: make_token<string>({ type: "string", validate: validateOklchValue }),
 
-export type SchemaStorageMode = "hot" | "lazy" | "opaque";
+  record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>> {
+    return make_token<Record<string, InferShapeValue<V>>>({ type: "object" }, false, value);
+  },
 
-export type SchemaIssue = Readonly<{
-  path: readonly (string | number)[];
-  code: string;
-  message: string;
-}>;
+  pick<const T extends readonly JsonValue[]>(...values: T): SchemaToken<T[number]> {
+    return make_token<T[number]>({ literals: values });
+  },
+});
 
-export type SchemaValidation = Readonly<{
-  ok: boolean;
-  issues: readonly SchemaIssue[];
-}>;
-
-export type SchemaRule = Readonly<{
-  type?: SchemaValueType | readonly SchemaValueType[];
-  optional?: boolean;
-  readonly?: boolean;
-  label?: string;
-  storage?: SchemaStorageMode;
-  items?: SchemaRule;
-  literals?: readonly JsonValue[];
-  validate?: (value: JsonValue, ctx: SchemaValidationContext) => readonly SchemaIssue[] | SchemaIssue | string | undefined;
-}>;
-
-export type SchemaValidationContext = Readonly<{
-  path: readonly (string | number)[];
-  rule: SchemaRule;
-}>;
-
-export type SchemaMatch = Readonly<{
-  path: readonly SchemaSegment[];
-  rule: SchemaRule;
-}>;
-
-export type NodeSchema = Readonly<{
-  set(path: SchemaPath, rule: SchemaRule): NodeSchema;
-  remove(path: SchemaPath): NodeSchema;
-  get(path: SchemaPath): SchemaRule | undefined;
-  match(path: StatePath): SchemaMatch | undefined;
-  validateValue(path: StatePath, value: JsonValue): SchemaValidation;
-  validateMutation(mutation: StateMutation): SchemaValidation;
-  validateCommit(mutations: readonly StateMutation[]): SchemaValidation;
-  assertValue(path: StatePath, value: JsonValue): void;
-  assertMutation(mutation: StateMutation): void;
-  assertCommit(mutations: readonly StateMutation[]): void;
-  entries(): readonly SchemaMatch[];
-}>;
-
-export type SchemaOptionalToken<T = JsonValue> = SchemaToken<T> & Readonly<{
-  __optional: true;
-}>;
-
-export type SchemaToken<T = JsonValue> = Readonly<{
-  __schemaToken: true;
-  __type?: T;
-  __optional?: boolean;
-  __recordShape?: SchemaShapeValue;
-  rule: SchemaRule;
-  optional: SchemaOptionalToken<T>;
-  array: SchemaToken<T[]>;
-  nullable: SchemaToken<T | null>;
-  readonly: SchemaToken<T>;
-  lazy: SchemaToken<T>;
-  opaque: SchemaToken<T>;
-}>;
-
-export type SchemaContext = Readonly<{
-  string: SchemaToken<string>;
-  number: SchemaToken<number>;
-  boolean: SchemaToken<boolean>;
-  null: SchemaToken<null>;
-  unknown: SchemaToken<JsonValue>;
-  oklch: SchemaToken<string>;
-  record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>>;
-  pick<const T extends readonly JsonValue[]>(...values: T): SchemaToken<T[number]>;
-}>;
-export interface SchemaShape {
-  readonly [key: string]: SchemaShapeValue;
-}
-
-export type SchemaShapeValue =
-  | SchemaToken
-  | readonly JsonValue[]
-  | SchemaRule
-  | SchemaShape;
-export type TypedNodeSchema<T> = NodeSchema & Readonly<{
-  __type?: T;
-}>;
-
-type OptionalKeys<T extends SchemaShape> = {
-  [K in keyof T]: T[K] extends { readonly __optional: true } ? K : never
-}[keyof T];
-
-type RequiredKeys<T extends SchemaShape> = Exclude<keyof T, OptionalKeys<T>>;
-
-export type InferShapeValue<T> =
-  T extends SchemaToken<infer V> ? V :
-  T extends readonly (infer V)[] ? V :
-  T extends SchemaShape ? InferShape<T> :
-  JsonValue;
-
-export type InferShape<T extends SchemaShape> =
-  & { [K in RequiredKeys<T>]: InferShapeValue<T[K]> }
-  & { [K in OptionalKeys<T>]?: InferShapeValue<T[K]> };
-
-export type InferSchema<T> =
-  T extends TypedNodeSchema<infer V> ? V :
-  T extends SchemaToken<infer V> ? V :
-  never;
 
 function freezeValidation(issues: SchemaIssue[]): SchemaValidation {
   return Object.freeze({ ok: issues.length === 0, issues: Object.freeze(issues) });
@@ -160,6 +60,7 @@ function hasWildcard(parts: readonly SchemaSegment[]): boolean {
 function isJsonContainer(value: JsonValue): value is JsonValue[] | Record<string, JsonValue> {
   return value !== null && typeof value === "object";
 }
+
 function jsonValueAtPath(root: JsonValue, path: readonly (string | number)[]): JsonValue | undefined {
   let current: JsonValue | undefined = root;
 
@@ -249,13 +150,8 @@ function valueType(value: JsonValue): SchemaValueType {
   return "object";
 }
 
-function allowedTypes(rule: SchemaRule): readonly SchemaValueType[] {
-  if (!rule.type) return ["unknown"];
-  return typeof rule.type === "string" ? [rule.type] : rule.type;
-}
-
 function typeAllowed(rule: SchemaRule, actual: SchemaValueType): boolean {
-  const allowed = allowedTypes(rule);
+  const allowed = allowed_types(rule);
   return allowed.includes("unknown") || allowed.includes(actual);
 }
 
@@ -304,7 +200,7 @@ function validateRuleValue(
     issues.push(issue(
       path,
       "type",
-      `Expected ${allowedTypes(rule).join(" | ")}, got ${actual}`,
+      `Expected ${allowed_types(rule).join(" | ")}, got ${actual}`,
     ));
   }
 
@@ -355,176 +251,12 @@ function schemaError(validation: SchemaValidation): Error {
   return new Error(`Schema validation failed: ${message}`);
 }
 
-function mergeType(rule: SchemaRule, nextType: SchemaValueType): readonly SchemaValueType[] {
-  const current = allowedTypes(rule);
-  return current.includes(nextType) ? current : [...current, nextType];
+function schemaUpdateError(): Error {
+  return new Error(
+    "Cannot call update() on schema-wrapped state; use at(...).set(...), commit(...), replace(...), or replaceRoot(...) so schema validation can run.",
+  );
 }
 
-function parseCssNumber(value: string): { number: number; unit: string } | undefined {
-  const match = value.trim().match(/^([+-]?(?:\d+|\d*\.\d+)(?:e[+-]?\d+)?)([a-z%]*)$/i);
-  if (!match) return undefined;
-
-  const [, numberPart, unit = ""] = match;
-  if (numberPart === undefined) return undefined;
-
-  const number = Number(numberPart);
-  if (!Number.isFinite(number)) return undefined;
-
-  return { number, unit: unit.toLowerCase() };
-}
-
-function isNone(value: string): boolean {
-  return value.toLowerCase() === "none";
-}
-
-function isOklchLightness(value: string): boolean {
-  if (isNone(value)) return true;
-
-  const parsed = parseCssNumber(value);
-  if (!parsed) return false;
-
-  if (parsed.unit === "%") return parsed.number >= 0 && parsed.number <= 100;
-  if (parsed.unit !== "") return false;
-
-  return parsed.number >= 0 && parsed.number <= 1;
-}
-
-function isOklchChroma(value: string): boolean {
-  if (isNone(value)) return true;
-
-  const parsed = parseCssNumber(value);
-  if (!parsed) return false;
-
-  if (parsed.unit !== "" && parsed.unit !== "%") return false;
-  return parsed.number >= 0;
-}
-
-function isOklchHue(value: string): boolean {
-  if (isNone(value)) return true;
-
-  const parsed = parseCssNumber(value);
-  if (!parsed) return false;
-
-  return parsed.unit === "" || parsed.unit === "deg" || parsed.unit === "rad" || parsed.unit === "grad" || parsed.unit === "turn";
-}
-
-function isOklchAlpha(value: string): boolean {
-  if (isNone(value)) return true;
-
-  const parsed = parseCssNumber(value);
-  if (!parsed) return false;
-
-  if (parsed.unit === "%") return parsed.number >= 0 && parsed.number <= 100;
-  if (parsed.unit !== "") return false;
-
-  return parsed.number >= 0 && parsed.number <= 1;
-}
-
-function isOklchString(value: string): boolean {
-  const match = value.trim().match(/^oklch\((.*)\)$/i);
-  if (!match) return false;
-
-  const body = match[1];
-  if (body === undefined || body.includes(",")) return false;
-
-  const parts = body.replace(/\//g, " / ").trim().split(/\s+/).filter(Boolean);
-  if (parts.length !== 3 && parts.length !== 5) return false;
-
-  const [lightness, chroma, hue, slash, alpha] = parts;
-  if (lightness === undefined || chroma === undefined || hue === undefined) return false;
-
-  if (!isOklchLightness(lightness)) return false;
-  if (!isOklchChroma(chroma)) return false;
-  if (!isOklchHue(hue)) return false;
-
-  if (parts.length === 3) return true;
-  if (slash !== "/" || alpha === undefined) return false;
-
-  return isOklchAlpha(alpha);
-}
-
-function validateOklchValue(value: JsonValue): readonly SchemaIssue[] | SchemaIssue | string | undefined {
-  if (typeof value !== "string") return undefined;
-  if (isOklchString(value)) return undefined;
-
-  return "Expected OKLCH color string";
-}
-
-function makeToken<T>(rule: SchemaRule, optional = false, recordShape?: SchemaShapeValue): SchemaToken<T> {
-  const token = {} as SchemaToken<T>;
-
-  Object.defineProperties(token, {
-    __schemaToken: { value: true, enumerable: false },
-    __optional: { value: optional, enumerable: false },
-    __recordShape: { value: recordShape, enumerable: false },
-    rule: { value: rule, enumerable: true },
-
-    optional: {
-      enumerable: true,
-      get() {
-        return makeToken<T>({ ...rule, optional: true }, true, recordShape);
-      },
-    },
-
-    array: {
-      enumerable: true,
-      get() {
-        return makeToken<T[]>({ type: "array", items: rule });
-      },
-    },
-
-    nullable: {
-      enumerable: true,
-      get() {
-        const nextRule: SchemaRule = rule.literals
-          ? { ...rule, literals: [...rule.literals, null], type: mergeType(rule, "null") }
-          : { ...rule, type: mergeType(rule, "null") };
-
-        return makeToken<T | null>(nextRule, optional, recordShape);
-      },
-    },
-
-    readonly: {
-      enumerable: true,
-      get() {
-        return makeToken<T>({ ...rule, readonly: true }, optional, recordShape);
-      },
-    },
-
-    lazy: {
-      enumerable: true,
-      get() {
-        return makeToken<T>({ ...rule, storage: "lazy" }, optional, recordShape);
-      },
-    },
-
-    opaque: {
-      enumerable: true,
-      get() {
-        return makeToken<T>({ ...rule, storage: "opaque" }, optional, recordShape);
-      },
-    },
-  });
-
-  return Object.freeze(token);
-}
-
-export const SCHEMA_CONTEXT: SchemaContext = Object.freeze({
-  string: makeToken<string>({ type: "string" }),
-  number: makeToken<number>({ type: "number" }),
-  boolean: makeToken<boolean>({ type: "boolean" }),
-  null: makeToken<null>({ type: "null" }),
-  unknown: makeToken<JsonValue>({ type: "unknown" }),
-  oklch: makeToken<string>({ type: "string", validate: validateOklchValue }),
-
-  record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>> {
-    return makeToken<Record<string, InferShapeValue<V>>>({ type: "object" }, false, value);
-  },
-
-  pick<const T extends readonly JsonValue[]>(...values: T): SchemaToken<T[number]> {
-    return makeToken<T[number]>({ literals: values });
-  },
-});
 function compileShapeValue(schema: NodeSchema, path: readonly SchemaSegment[], value: SchemaShapeValue): void {
   if (isSchemaToken(value)) {
     schema.set(path, {
@@ -691,6 +423,8 @@ export function define_schema<const Shape extends SchemaShape>(
 }
 
 export function with_schema(state: NodeState, schema: NodeSchema): NodeState {
+  const initialValidation = validateRootValue(schema, state.get());
+  if (!initialValidation.ok) throw schemaError(initialValidation);
   const makeSlot = (path: StatePath, slot: NodeStateSlot): NodeStateSlot => Object.freeze({
     node: () => slot.node(),
     get: () => slot.get(),
@@ -709,7 +443,8 @@ export function with_schema(state: NodeState, schema: NodeSchema): NodeState {
     snapshot: () => state.snapshot(),
 
     update(mut: (root: HsonNode) => void): void {
-      state.update(mut);
+      void mut;
+      throw schemaUpdateError();
     },
 
     replace(next: JsonValue): void {
