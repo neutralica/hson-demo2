@@ -1,3 +1,6 @@
+import type { JsonValue } from "hson-live/types";
+import { make_state } from "../../../state/state";
+import type { StateMutation } from "../../../state/state.types";
 import { _freeze } from "./tests.consts";
 import type { CaseKey, CaseLog, SuiteLog, TestEvent, TestFailure, TestSummary } from "./tests.types";
 
@@ -18,114 +21,172 @@ export type TestLog = Readonly<{
   clear: () => void;
 }>;
 
-export function create_test_log(): TestLog {
-  let activeSuite: string | undefined;
+type SuiteLogState = {
+  suite: string;
+  totalPlanned?: number;
+  caseKeys: CaseKey[];
+  pass: number;
+  fail: number;
+  skip: number;
+  ms?: number;
+};
 
-  // store all cases by key (suite::name)
-  const cases = new Map<CaseKey, CaseLog>();
-  const caseKeysBySuite = new Map<string, CaseKey[]>();
-
-  // suite aggregates
-  const suites = new Map<string, {
-    suite: string;
-    totalPlanned?: number;
-    caseKeys: CaseKey[];
+type TestLogState = {
+  activeSuite: string | null;
+  casesByKey: Record<CaseKey, CaseLog>;
+  caseKeysBySuite: Record<string, CaseKey[]>;
+  suitesByName: Record<string, SuiteLogState>;
+  failures: TestFailure[];
+  summary: {
+    suites: number;
+    cases: number;
     pass: number;
     fail: number;
     skip: number;
-    ms?: number;
-  }>();
+    msTotal: number;
+  };
+  lastLine: string;
+};
 
-  // failures list for inspector
-  const failures: TestFailure[] = [];
+function make_initial_test_log_state(): TestLogState {
+  return {
+    activeSuite: null,
+    casesByKey: {},
+    caseKeysBySuite: {},
+    suitesByName: {},
+    failures: [],
+    summary: {
+      suites: 0,
+      cases: 0,
+      pass: 0,
+      fail: 0,
+      skip: 0,
+      msTotal: 0,
+    },
+    lastLine: "idle",
+  };
+}
 
-  // running counters (for gem dashboard)
-  let suitesCount = 0;
-  let casesCount = 0;
-  let pass = 0;
-  let fail = 0;
-  let skip = 0;
-  let msTotal = 0;
+function as_json(value: unknown): JsonValue {
+  return value as JsonValue;
+}
 
-  // one-line marquee (always short, always meaningful)
-  let lastLine = "idle";
+export function create_test_log(): TestLog {
+  const logState = make_state(make_initial_test_log_state() as unknown as JsonValue);
 
   const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
 
-  const ensureSuite = (suite: string): void => {
-    if (suites.has(suite)) return;
-    suites.set(suite, { suite, caseKeys: [], pass: 0, fail: 0, skip: 0 });
-    caseKeysBySuite.set(suite, []);
+  const read = <T>(path: readonly (string | number)[]): T | undefined => {
+    return logState.at(path).get() as unknown as T | undefined;
+  };
+
+  const set = (
+    mutations: StateMutation[],
+    path: readonly (string | number)[],
+    value: unknown,
+  ): void => {
+    mutations.push({ kind: "set", path, value: as_json(value) });
+  };
+
+  const commit = (mutations: StateMutation[]): void => {
+    if (mutations.length === 0) return;
+    logState.commit(mutations);
+  };
+
+  const emptySummary = (): TestLogState["summary"] => ({
+    suites: 0,
+    cases: 0,
+    pass: 0,
+    fail: 0,
+    skip: 0,
+    msTotal: 0,
+  });
+
+  const getSummaryState = (): TestLogState["summary"] => {
+    return read<TestLogState["summary"]>(["summary"]) ?? emptySummary();
+  };
+
+  const makeSuite = (suite: string): SuiteLogState => ({
+    suite,
+    caseKeys: [],
+    pass: 0,
+    fail: 0,
+    skip: 0,
+  });
+
+  const getSuite = (suite: string): SuiteLogState => {
+    return read<SuiteLogState>(["suitesByName", suite]) ?? makeSuite(suite);
   };
 
   const clear = (): void => {
-    activeSuite = undefined;
-    cases.clear();
-    caseKeysBySuite.clear();
-    suites.clear();
-    failures.length = 0;
-
-    suitesCount = 0;
-    casesCount = 0;
-    pass = 0;
-    fail = 0;
-    skip = 0;
-    msTotal = 0;
-
-    lastLine = "idle";
+    logState.replaceRoot(make_initial_test_log_state() as unknown as JsonValue);
   };
 
   const onEvent = (e: TestEvent): void => {
-    if (e.t === "suite_begin") {
-      activeSuite = e.suite;
-      suitesCount += 1;
-      ensureSuite(e.suite);
+    const mutations: StateMutation[] = [];
 
-      const s = suites.get(e.suite)!;
-      if (e.totalPlanned !== undefined) s.totalPlanned = e.totalPlanned;
-      lastLine = `suite begin: ${e.suite}…`;
+    if (e.t === "suite_begin") {
+      const summary = getSummaryState();
+      set(mutations, ["activeSuite"], e.suite);
+      set(mutations, ["summary"], { ...summary, suites: summary.suites + 1 });
+
+      const existing = read<SuiteLogState>(["suitesByName", e.suite]);
+      const base = existing ?? makeSuite(e.suite);
+      const withPlanned = e.totalPlanned !== undefined
+        ? { ...base, totalPlanned: e.totalPlanned }
+        : base;
+
+      set(mutations, ["suitesByName", e.suite], withPlanned);
+      if (!existing) set(mutations, ["caseKeysBySuite", e.suite], []);
+      set(mutations, ["lastLine"], `suite begin: ${e.suite}…`);
+      commit(mutations);
       return;
     }
 
     if (e.t === "case_begin") {
-      casesCount += 1;
-      ensureSuite(e.suite);
-
+      const summary = getSummaryState();
       const k = key(e.suite, e.name);
       const meta = e.meta;
+      const suiteKeys = read<CaseKey[]>(["caseKeysBySuite", e.suite]) ?? [];
+      const suiteState = getSuite(e.suite);
 
-      const s = suites.get(e.suite)!;
-      caseKeysBySuite.get(e.suite)!.push(k);
-      s.caseKeys.push(k);
+      set(mutations, ["summary"], { ...summary, cases: summary.cases + 1 });
+      set(mutations, ["caseKeysBySuite", e.suite], [...suiteKeys, k]);
+      set(mutations, ["suitesByName", e.suite], {
+        ...suiteState,
+        caseKeys: [...suiteState.caseKeys, k],
+      });
 
       const base = { key: k, suite: e.suite, name: e.name } as const;
-      cases.set(k, _freeze(meta ? { ...base, meta } : base));
-
-      lastLine = `run: ${e.name}`;
+      set(mutations, ["casesByKey", k], meta ? { ...base, meta } : base);
+      set(mutations, ["lastLine"], `run: ${e.name}`);
+      commit(mutations);
       return;
     }
 
     if (e.t === "case_end") {
+      const summary = getSummaryState();
       const k = key(e.suite, e.name);
-      const prev = cases.get(k);
+      const prev = read<CaseLog>(["casesByKey", k]);
+      const suiteState = getSuite(e.suite);
 
-      // update global counts
-      if (e.status === "pass") pass += 1;
-      else if (e.status === "fail") fail += 1;
-      else skip += 1;
+      const nextSummary = { ...summary };
+      if (e.status === "pass") nextSummary.pass += 1;
+      else if (e.status === "fail") nextSummary.fail += 1;
+      else nextSummary.skip += 1;
+      set(mutations, ["summary"], nextSummary);
 
-      // update per-suite counts
-      ensureSuite(e.suite);
-      const s = suites.get(e.suite)!;
-      if (e.status === "pass") s.pass += 1;
-      else if (e.status === "fail") s.fail += 1;
-      else s.skip += 1;
+      const nextSuite = { ...suiteState };
+      if (e.status === "pass") nextSuite.pass += 1;
+      else if (e.status === "fail") nextSuite.fail += 1;
+      else nextSuite.skip += 1;
+      set(mutations, ["suitesByName", e.suite], nextSuite);
 
       // merge metaPatch into existing meta (exactOptionalPropertyTypes friendly)
       const prevMeta = prev?.meta;
       const nextMeta =
         (prevMeta || e.metaPatch)
-          ? _freeze({ ...(prevMeta ?? {}), ...(e.metaPatch ?? {}) })
+          ? { ...(prevMeta ?? {}), ...(e.metaPatch ?? {}) }
           : undefined;
 
       const baseEnd = {
@@ -136,12 +197,11 @@ export function create_test_log(): TestLog {
         ms: e.ms,
       } as const;
 
-      //  only attach err/meta when present (no `undefined` assignment)
+      // only attach err/meta when present (no `undefined` assignment)
       const withMeta = nextMeta ? { ...baseEnd, meta: nextMeta } : baseEnd;
       const withErr = e.err ? { ...withMeta, err: e.err } : withMeta;
+      set(mutations, ["casesByKey", k], withErr);
 
-      cases.set(k, _freeze(withErr));
-      // TODO these can be consolidated with the above vars
       if (e.status === "fail") {
         const meta = prev?.meta;
         const base = {
@@ -151,38 +211,49 @@ export function create_test_log(): TestLog {
           ms: e.ms,
         } as const;
 
-        //  with exactOptionalPropertyTypes, only attach meta when present
-        failures.push(meta ? { ...base, meta } : base);
-
-        lastLine = `FAIL ${e.suite} :: ${e.name}`;
+        const failures = read<TestFailure[]>(["failures"]) ?? [];
+        set(mutations, ["failures"], [...failures, meta ? { ...base, meta } : base]);
+        set(mutations, ["lastLine"], `FAIL ${e.suite} :: ${e.name}`);
       } else {
-        lastLine = e.status.toUpperCase();
+        set(mutations, ["lastLine"], e.status.toUpperCase());
       }
+
+      commit(mutations);
       return;
     }
 
     if (e.t === "suite_end") {
-      msTotal += e.ms;
-      const s = suites.get(e.suite);
-      if (s) s.ms = e.ms;
-      lastLine = `done ${e.suite} (${e.ms.toFixed(1)}ms)`;
+      const summary = getSummaryState();
+      const suiteState = read<SuiteLogState>(["suitesByName", e.suite]);
+
+      set(mutations, ["summary"], { ...summary, msTotal: summary.msTotal + e.ms });
+      if (suiteState) set(mutations, ["suitesByName", e.suite], { ...suiteState, ms: e.ms });
+      set(mutations, ["lastLine"], `done ${e.suite} (${e.ms.toFixed(1)}ms)`);
+      commit(mutations);
       return;
     }
   };
 
-  const getSummary = (): TestSummary => _freeze({
-    suites: suitesCount,
-    cases: casesCount,
-    pass,
-    fail,
-    skip,
-    msTotal,
-    failures: _freeze([...failures]),
-  });
+  const getSummary = (): TestSummary => {
+    const summary = getSummaryState();
+    const failures = read<TestFailure[]>(["failures"]) ?? [];
+
+    return _freeze({
+      suites: summary.suites,
+      cases: summary.cases,
+      pass: summary.pass,
+      fail: summary.fail,
+      skip: summary.skip,
+      msTotal: summary.msTotal,
+      failures: _freeze([...failures]),
+    });
+  };
 
   const listSuites = (): readonly SuiteLog[] => {
+    const suitesByName = read<Record<string, SuiteLogState>>(["suitesByName"]) ?? {};
+
     return _freeze(
-      [...suites.values()].map((s) => {
+      Object.values(suitesByName).map((s) => {
         const base = {
           suite: s.suite,
           cases: _freeze([...s.caseKeys]),
@@ -200,28 +271,32 @@ export function create_test_log(): TestLog {
         return _freeze(withMs);
       }),
     );
-  }
-
+  };
 
   const listCases = (suite: string): readonly CaseLog[] => {
-    const keys = caseKeysBySuite.get(suite) ?? [];
+    const keys = read<CaseKey[]>(["caseKeysBySuite", suite]) ?? [];
     const out: CaseLog[] = [];
+
     for (const k of keys) {
-      const c = cases.get(k);
-      if (c) out.push(c);
+      const c = read<CaseLog>(["casesByKey", k]);
+      if (c) out.push(_freeze(c));
     }
+
     return _freeze(out);
   };
 
-  const getCase = (k: CaseKey): CaseLog | undefined => cases.get(k);
+  const getCase = (k: CaseKey): CaseLog | undefined => {
+    const c = read<CaseLog>(["casesByKey", k]);
+    return c ? _freeze(c) : undefined;
+  };
 
-  const listFailures = (): readonly TestFailure[] => _freeze([...failures]);
+  const listFailures = (): readonly TestFailure[] => _freeze([...(read<TestFailure[]>(["failures"]) ?? [])]);
 
   return _freeze({
     onEvent,
     getSummary,
-    getActiveSuite: () => activeSuite,
-    getLastLine: () => lastLine,
+    getActiveSuite: () => read<string | null>(["activeSuite"]) ?? undefined,
+    getLastLine: () => read<string>(["lastLine"]) ?? "idle",
     listSuites,
     listCases,
     getCase,

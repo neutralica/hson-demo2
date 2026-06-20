@@ -1,6 +1,6 @@
 import { hson } from "hson-live";
-import type { JsonValue, HsonNode } from "hson-live/types";
-import { make_state_slot } from "../make-state";
+import type { JsonValue } from "hson-live/types";
+import { make_state } from "../state";
 import  { assert_json_eq, parse_root_from_json } from "../state-helpers";
 import { run_state_smoke } from "./state-smoke-runner";
 
@@ -21,17 +21,17 @@ export function debug_state_smoke_test(): StateSmokeResult {
       },
     });
 
-    const listeners = new Set<(next: HsonNode, prev: HsonNode) => void>();
+    const state = make_state(root);
 
     let emitCount = 0;
-    listeners.add(() => {
+    state.subscribe_change(() => {
       emitCount += 1;
     });
 
-    const viewSlot = make_state_slot(root, "ui.currentView", listeners);
-    const widgetsSlot = make_state_slot(root, "ui.activeWidgets", listeners);
-    const widget0Slot = make_state_slot(root, "ui.activeWidgets[0]", listeners);
-    const tocSlot = make_state_slot(root, "ui.aboutTocOpen", listeners);
+    const viewSlot = state.at("ui.currentView");
+    const widgetsSlot = state.at("ui.activeWidgets");
+    const widget0Slot = state.at("ui.activeWidgets[0]");
+    const tocSlot = state.at("ui.aboutTocOpen");
 
     t.eq("initial currentView", viewSlot.get() as JsonValue, null);
     t.eq("initial activeWidgets", widgetsSlot.get() as JsonValue, ["point", "parse"]);

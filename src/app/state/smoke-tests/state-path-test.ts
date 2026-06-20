@@ -6,7 +6,7 @@ import { run_state_smoke } from "./state-smoke-runner";
 import type { StateSmokeResult } from "../state.types";
 import { parse_root_from_json, unwrap_value_payload } from "../state-helpers";
 import { find_node_at_path } from "../find-node-path";
-import { jsonify, make_state } from "../make-state";
+import { jsonify, make_state } from "../state";
 import { set_node_at_path } from "../set-node-path";
 import { remove_node_at_path } from "../remove-node-path";
 import { hson } from "hson-live";
