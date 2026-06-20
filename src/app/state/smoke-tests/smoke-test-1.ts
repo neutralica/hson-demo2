@@ -12,7 +12,7 @@ import { define_schema, with_schema, make_schema, SCM, SCHEMA_CONTEXT } from "..
 import { type InferSchema } from "../schema.types";
 
 
-export function debug_state_path_test(): StateSmokeResult {
+export function smoke_path(): StateSmokeResult {
   return state_smoke_test("state path parsing", (t) => {
     t.eq(
       "dot path",
@@ -64,7 +64,7 @@ export function debug_state_path_test(): StateSmokeResult {
   });
 }
 
-export function debug_state_find_test(): StateSmokeResult {
+export function smoke_find(): StateSmokeResult {
   return state_smoke_test("state path lookup", (t) => {
     const root = parse_root_from_json({
       ui: {
@@ -129,7 +129,7 @@ export function debug_state_find_test(): StateSmokeResult {
   });
 }
 
-export function debug_state_intentional_fail_test(): StateSmokeResult {
+export function smoke_intentional_fail(): StateSmokeResult {
   return state_smoke_test("state intentional fail", (t) => {
     const root = parse_root_from_json({
       ui: {
@@ -148,7 +148,7 @@ export function debug_state_intentional_fail_test(): StateSmokeResult {
   });
 }
 
-export function debug_state_set_test(): StateSmokeResult {
+export function smoke_set(): StateSmokeResult {
   return state_smoke_test("state set_node_at_path", (t) => {
     const root = parse_root_from_json({
       ui: {
@@ -230,7 +230,7 @@ export function debug_state_set_test(): StateSmokeResult {
   });
 }
 
-export function debug_state_remove_test(): StateSmokeResult {
+export function smoke_remove(): StateSmokeResult {
   return state_smoke_test("state remove_node_at_path", (t) => {
     const root = parse_root_from_json({
       ui: {
@@ -292,7 +292,7 @@ export function debug_state_remove_test(): StateSmokeResult {
   });
 }
 
-export function debug_state_replace_test(): StateSmokeResult {
+export function smoke_state_replace(): StateSmokeResult {
   return state_smoke_test("state replace()", (t) => {
     const state = make_state({
       ui: {
@@ -371,7 +371,7 @@ export function debug_state_replace_test(): StateSmokeResult {
   });
 }
 
-export function debug_state_public_path_test(): StateSmokeResult {
+export function smoke_public_path(): StateSmokeResult {
   return state_smoke_test("state public path api", (t) => {
     t.step("slot get/set/remove with string paths", () => {
       const state = make_state({
@@ -491,7 +491,7 @@ export function debug_state_public_path_test(): StateSmokeResult {
   });
 }
 
-export function debug_store_facade_test(): StateSmokeResult {
+export function smoke_store_facade(): StateSmokeResult {
   return state_smoke_test("demo store facade sequence", (t) => {
     const store = create_demo_store();
 
@@ -532,7 +532,7 @@ type StateSmokeResult = {
 // tiny explicit smoke test for path/get/set/remove
 
 
-export function debug_state_smoke_test(): StateSmokeResult {
+export function smoke_state(): StateSmokeResult {
   return state_smoke_test("state path/get/set/remove", (t) => {
     const root = parse_root_from_json({
       ui: {
@@ -597,7 +597,7 @@ export function debug_state_smoke_test(): StateSmokeResult {
   });
 }
 
-export function debug_schema_smoke_test(): StateSmokeResult {
+export function smoke_schema(): StateSmokeResult {
   return state_smoke_test("schema validation", (t) => {
     const UserSchema = define_schema((scm) => ({
       name: scm.string,
@@ -684,7 +684,7 @@ export function debug_schema_smoke_test(): StateSmokeResult {
   });
 }
 
-export function debug_schema_path_smoke_test(): StateSmokeResult {
+export function smoke_schema_path(): StateSmokeResult {
   return state_smoke_test("schema path validation", (t) => {
     const schema = make_schema();
 
@@ -773,7 +773,7 @@ export function debug_schema_path_smoke_test(): StateSmokeResult {
 }
 
 
-export function debug_state_public_path_edges_test(): StateSmokeResult {
+export function smoke_public_path_edges(): StateSmokeResult {
   return state_smoke_test("state public path edges", (t) => {
     t.step("public array append and remove", () => {
       const state = make_state({
@@ -865,7 +865,7 @@ export function debug_state_public_path_edges_test(): StateSmokeResult {
   });
 }
 
-export function debug_schema_context_exports_smoke_test(): StateSmokeResult {
+export function smoke_schema_context_exports(): StateSmokeResult {
   return state_smoke_test("schema context exports", (t) => {
     t.step("SCM aliases SCHEMA_CONTEXT", () => {
       t.eq(
@@ -921,7 +921,7 @@ export function debug_schema_context_exports_smoke_test(): StateSmokeResult {
     });
   });
 }
-export function smoke_demo_store_schema_impl(): StateSmokeResult {
+export function smoke_store_schema_impl(): StateSmokeResult {
   return state_smoke_test("demo store schema", (t) => {
     const store = create_demo_store();
     const token = Object.values(store.getColorTokens())[0];

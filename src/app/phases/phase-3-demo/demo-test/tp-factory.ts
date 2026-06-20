@@ -1,6 +1,6 @@
 import { hson, LiveTree } from "hson-live";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { type Outcome, relay } from "intrastructure";
+import { type Outcome, relay, relay_data } from "intrastructure";
 import { build_suites_for_mode, make_ad_hoc_transform_suite } from "./build-test-suites";
 import { make_inspector } from "../../../../tests/inspector/make-inspector";
 import { create_test_log } from "./test-logger";
@@ -9,12 +9,14 @@ import type { UiLevel, TestRunMode, CaseKey, TestEvent } from "./tests.types";
 import { $PANEL_HIDDEN } from "../../../core/consts/ui-consts";
 import { mk_div_id, mk_div_id_txt } from "../../../utils/makers";
 import { create_test_chips } from "./test-helpers";
-import type { TestPanel } from "./tp.types";
+import type { TestPanel, TestPanels } from "./tp.types";
 import { flush_dom } from "../../../../tests/inspector/inspector.helpers";
 import { _snip } from "../../../utils/helpers";
 import type { LoopReport, SourceFormat } from "../../../../../../hson-live/dist/types/diagnostics.types";
-import { TP_BRANCHcss, TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss, TP_LOG_ROWcss } from "./tp.css";
+import { TP_BRANCHcss, TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_SELECTORcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_CONTENTcss, TEST_INSPECTOR_PANEcss, TEST_LOG_PANEcss, TEST_LOGGERcss, LOG_SPANcss, TP_LOG_ROWcss, TP_ROOTcss } from "./tp.css";
 import { LOG_HR_PART, LOG_HR_FULL } from "../../../state/state-helpers";
+import { smoke_state, smoke_path, smoke_find, smoke_remove, smoke_state_replace, smoke_store_facade, smoke_set, smoke_public_path, smoke_public_path_edges, smoke_schema, smoke_schema_path, smoke_schema_context_exports, smoke_store_schema_impl, smoke_intentional_fail } from "../../../state/smoke-tests/smoke-test-1";
+import { smoke_log_schema } from "../../../state/smoke-tests/smoke-test-2";
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "all", label: "all" },
@@ -133,7 +135,6 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
 }
 
 export function tp_factory(): Outcome<TestPanel> {
-    let inited = false;
     let mounted = false;
     let level: UiLevel = "normal";
     let mode: TestRunMode = "all";
@@ -381,4 +382,74 @@ export function tp_factory(): Outcome<TestPanel> {
         },
         runAdHocTransform,
     } as const);
+}
+export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
+    try {
+        const old = host.find.byId("test-panels-root");
+        if (old) old.removeSelf();
+
+        const root = host.create.div()
+            .id.set("test-panels-root")
+            .css.setMany(TP_ROOTcss);
+
+        const tp = relay_data(tp_factory());
+        tp.mount(root);
+        try {
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            tp.setLog("=- init: smoke test -=#");
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            const runSmoke = (label: string, fn: () => { steps: string[]; }): void => {
+                try {
+                    const result = fn();
+                    for (const line of result.steps) tp.setLog(line);
+                } catch (err) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    tp.setLog(`FAIL - ${label}: ${msg}`);
+                }
+            };
+
+            const smokeRuns: readonly Readonly<{
+                label: string;
+                run: () => { steps: string[]; };
+            }>[] = [
+                    { label: "state smoke", run: smoke_state },
+                    { label: "state path parsing", run: smoke_path },
+                    { label: "state path lookup", run: smoke_find },
+                    { label: "state remove path", run: smoke_remove },
+                    { label: "state replace", run: smoke_state_replace },
+                    { label: "store facade", run: smoke_store_facade },
+                    { label: "state set path", run: smoke_set },
+                    { label: "state public path", run: smoke_public_path },
+                    { label: "state public path edges", run: smoke_public_path_edges },
+                    { label: "schema validation", run: smoke_schema },
+                    { label: "schema path validation", run: smoke_schema_path },
+                    { label: "schema context exports", run: smoke_schema_context_exports },
+                    { label: "demo store schema", run: smoke_store_schema_impl },
+                    { label: "test log store", run: smoke_log_schema },
+                ];
+
+            for (const { label, run } of smokeRuns) {
+                runSmoke(label, run);
+            }
+
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            tp.setLog("=-   smoke negative  -=");
+            tp.setLog("=    (fail is good)   =");
+            tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
+            runSmoke("intentional failure", smoke_intentional_fail);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            tp.setLog(`FAIL - ${msg}`);
+            tp.setLog("=== state - smoke test failed ===");
+        }
+        return relay.data({
+            root,
+            tp,
+            inspector: tp.inspector,
+            inspectorSurface: tp.inspectorSurface,
+            testSurface: tp.branch,
+        });
+    } catch (err) {
+        return relay.err(err instanceof Error ? err.message : "unknown error:", err);
+    }
 }

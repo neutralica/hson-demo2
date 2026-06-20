@@ -3,30 +3,35 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
 import { øfontSize, øWATERMARK_FMT_ } from "../../../core/consts/ui-consts";
-import {  _cols,   } from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 import type { Fmt } from "../../../core/types/core.types";
-import { UI_PANEL_HEADcss, UI_BTNcss, UI_BTN_HOVERcss, UI_PANEL_HEADERcss, UI_2STACKcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
-import type { Panels, PanelViewMode, PanelShell } from "../../../ui/panels/panels.types";
-import { mk_div_id, mk_div_cls, mk_span_cls } from "../../../utils/makers";
+import {
+  UI_2STACK_VALcss,
+  UI_2STACKcss,
+  UI_BTN_HOVERcss,
+  UI_BTNcss,
+  UI_PANEL_HEADERcss,
+  UI_PANEL_HEADcss,
+  UI_PANELcss,
+  UI_STACK_LABELcss,
+  UI_TEXTcss,
+} from "../../../ui/panels/panels.css";
+import type { PanelShell, Panels, PanelViewMode } from "../../../ui/panels/panels.types";
+import { mk_div_cls, mk_div_id, mk_span_cls } from "../../../utils/makers";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../mount/demo.consts";
 import { init_parsing_panels } from "./init-pp";
-import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
-import { UI_PANELcss } from "../../../ui/panels/panels.css";
-import { UI_TEXTcss } from "../../../ui/panels/panels.css";
+import { PP_GRIDcss, PP_ROOTcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
-  // includeNodeOutput?: boolean;
 };
 
 const PP_HEADER_BTNcss = {
   ...UI_BTNcss,
   fontSize: øfontSize.smol,
-  // lineHeight: "1",
-  // minHeight: "1.35rem",
   padding: "0.4rem 0.5rem",
   letterSpacing: "0.04em",
-  height: "fit-content"
+  height: "fit-content",
 };
 
 const PP_HEADER_VALUEcss = {
@@ -49,10 +54,6 @@ export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
 }
 
 
-
-// --- pp_factory ---
-
-
 export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcome<Panels> {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
   let viewMode: PanelViewMode = "text";
@@ -63,7 +64,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
     .id.set($PARSING_PANELS_ROOT)
     .css.setMany(PP_ROOTcss);
 
-  const header = root.create.div()
+  root.create.div()
     .css.setMany(UI_PANEL_HEADERcss)
     .text.set("~ parsing panels ~");
 
@@ -73,6 +74,15 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
     });
 
   const panels = {} as Record<Fmt, PanelShell>;
+  const syncPanelViewModeFns: Array<() => void> = [];
+
+  function setPanelViewMode(next: PanelViewMode): void {
+    viewMode = next;
+
+    for (const sync of syncPanelViewModeFns) {
+      sync();
+    }
+  }
 
   for (const fmt of fmts) {
     const panel = panelGrid.create.section()
@@ -128,7 +138,6 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       })
       .css.selector("&:hover > div.pp-watermark").setMany({
         color: _cols.greenlike,
-        
       });
 
     const wmFmt = wrap.create.div()
@@ -137,9 +146,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .css.setMany({
         ...PP_WATERMARKcss,
       });
-      
-      
-      const textarea = wrap.create.textarea()
+
+    const textarea = wrap.create.textarea()
       .data.set("input", fmt)
       .css.setMany({
         ...UI_TEXTcss,
@@ -147,7 +155,6 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         color: _cols.fmt[fmt],
       });
 
-    // NEW: node view box
     const nodeBox = panel.create.pre()
       .classlist.set("pp-nodebox")
       .css.setMany({
@@ -161,7 +168,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       });
 
     const nodeText = nodeBox.create.div()
-      .css.setMany({ ...UI_TEXTcss, })
+      .css.setMany({ ...UI_TEXTcss });
 
     const toggleBtn = head.create.div()
       .classlist.set("pp-toggle")
@@ -177,12 +184,9 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       });
 
     toggleBtn.listen.onClick(() => {
-      const nextView: PanelViewMode = (viewMode !== "text") ? "text" : "node"
+      const nextView: PanelViewMode = viewMode !== "text" ? "text" : "node";
       setPanelViewMode(nextView);
-
-    })
-
-
+    });
     function syncPanelViewMode(): void {
       const isText = viewMode === "text";
 
@@ -193,19 +197,14 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       nodeBox.css.setMany({ display: isText ? "none" : "block" });
     }
 
-    function setPanelViewMode(mode: PanelViewMode): void {
-      viewMode = mode;
-      syncPanelViewMode();
-    }
-
     copyBtn.listen.onClick(() => {
       const clip = globalThis.navigator?.clipboard?.writeText;
       if (!clip) return;
 
-      const textVisible = textarea.css.get.property("display") !== "none";
+      const textVisible = wrap.css.get.property("display") !== "none";
       const txt = textVisible
         ? (textarea.form.getValue() ?? "")
-        : (nodeBox.text.get() ?? "");
+        : (nodeText.text.get() ?? "");
 
       void clip.call(navigator.clipboard, txt);
     });
@@ -218,12 +217,13 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       bytes: bytesNum,
       copyBtn,
       textBox: wrap,
+      nodeText,
       wmFmt,
       status,
-
-      viewMode: "text",
-      nodeBox: nodeText,
     };
+
+    syncPanelViewModeFns.push(syncPanelViewMode);
+    syncPanelViewMode();
   }
 
   return relay.data({ root, panels });
