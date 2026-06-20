@@ -71,7 +71,7 @@ export const PP_ACTIVE_VALIDcss = (f: Fmt) => {
     pointerEvents: "auto",
     userSelect: "auto",
     boxShadow: "inset 0 0 15px 0.1px " + set_alpha(_cols.fmt[f], 0.5),
-    background: set_alpha(_cols.fmt[f], 0.1),
+    // background: set_alpha(_cols.fmt[f], 0.1),
     border: "none",
     color: _cols.fmt[f]
   } as CssMap;
@@ -84,7 +84,7 @@ export const PP_ACTIVE_INVALIDcss = (f: Fmt) => {
     pointerEvents: "auto",
     userSelect: "auto",
     boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.4), // + set_alpha(COLOR_FOR_FMT_[f], 0.1),
-    // background: set_alpha(COLOR_FOR_FMT_[f], 0.1),
+    background: _cols.backlo,
     border: "none",
     color: "red",
   } as CssMap;
@@ -96,7 +96,7 @@ export const PP_INACTIVE_VALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: set_alpha(_cols.fmt[f], 0.05),
+    // background: set_alpha(_cols.fmt[f], 0.01),
     boxShadow: "inset 0 0 9px 1px " + set_alpha(_cols.fmt[f], 0.4),
     color: _cols.fmt[f],
   };

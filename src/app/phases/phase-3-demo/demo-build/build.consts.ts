@@ -1,3 +1,6 @@
+
+export const $BUILD_ROOT = "build-root" as const;
+
 export const BUILD_STRINGhson = `
 <div id="build-demo" style="
   background: #02070d;

@@ -7,7 +7,7 @@ import { _cols } from "../../../core/consts/colors.consts";
 import { øfontSize } from "../../../core/consts/ui-consts";
 import { set_alpha } from "../../../core/helpers/color-helpers";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
-import { UI_BTN_STDcss } from "../../../ui/panels/panels.css";
+import { UI_2STACK_VALcss, UI_BTN_STDcss, UI_BTNcss, UI_STACK_LABELcss } from "../../../ui/panels/panels.css";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
 import { UI_TEXTcss } from "../../../ui/panels/panels.css";
 
@@ -150,3 +150,24 @@ export const BUILD_BODYcss: CssMap = {
   height: "100%",
   overflow: "hidden",
 };
+export const BUILD_HEADER_BTNcss: CssMap = {
+  ...UI_BTNcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+  // minHeight: "1.35rem",
+  padding: "0.4em 0.5em",
+  letterSpacing: "0.04em",
+};
+
+export const BUILD_HEADER_VALUEcss: CssMap = {
+  ...UI_2STACK_VALcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+};
+
+export const BUILD_HEADER_LABELcss: CssMap = {
+  ...UI_STACK_LABELcss,
+  fontSize: øfontSize.smol,
+  lineHeight: "1",
+};
+

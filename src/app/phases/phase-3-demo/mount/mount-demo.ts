@@ -20,7 +20,7 @@ import { smoke_state } from "../../../state/smoke-tests/smoke-test-1";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_panel_simple } from "../../../ui/panels/panel-simple";
 import { mount_parsing_panels } from "../demo-parse/pp-factory";
-import { mount_build_panels } from "../demo-build/build-mount-init";
+import { mount_build_panels } from "../demo-build/mount-bp";
 import { mount_about_panels } from "../demo-about/mount-about";
 import { ABOUT_DOCS } from "../demo-about/about.consts";
 import { mount_test_panels } from "../demo-test/tp-factory";
