@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { debug_state_path_test, debug_state_find_test, debug_state_intentional_fail_test, debug_state_remove_test, debug_state_replace_test, debug_store_facade_test, debug_state_set_test, debug_state_public_path_test, debug_state_public_path_edges_test, debug_schema_context_exports_smoke_test, smoke_demo_store_schema_impl, smoke_test_test, smoke_schema_replace_impl } from "../../../state/smoke-tests/smoke-test-1";
+import { debug_state_path_test, debug_state_find_test, debug_state_intentional_fail_test, debug_state_remove_test, debug_state_replace_test, debug_store_facade_test, debug_state_set_test, debug_state_public_path_test, debug_state_public_path_edges_test, debug_schema_context_exports_smoke_test, smoke_demo_store_schema_impl } from "../../../state/smoke-tests/smoke-test-1";
 import { debug_schema_path_smoke_test, debug_schema_smoke_test, debug_state_smoke_test } from "../../../state/smoke-tests/smoke-test-1";
 import { tp_factory } from "./tp-factory";
 import type { TestPanels } from "./tp.types";
@@ -45,8 +45,6 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
             runSmoke("schema path validation", debug_schema_path_smoke_test);
             runSmoke("schema context exports", debug_schema_context_exports_smoke_test);
             runSmoke("smoke impl?", smoke_demo_store_schema_impl);
-            runSmoke("debug 1", smoke_test_test);
-            runSmoke("debug 2", smoke_schema_replace_impl);
 
             tp.setLog("#=-=-=-=-=-=-=-=-=-=-=#");
             tp.setLog("=-   smoke negative  -=");

@@ -60,7 +60,7 @@ export function make_initial_demo_state(): DemoState {
 
 export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
-const DemoStateSchema = define_schema((scm) => ({
+export const DEMO_STATE_SCHEMA = define_schema((scm) => ({
   ui: {
     currentView: scm.string.nullable,
     activeWidgets: scm.string.array,
@@ -87,7 +87,7 @@ export function create_demo_store(
 ): DemoStore {
   const demoState = with_schema(
     make_state(clone_node(initial)),
-    DemoStateSchema,
+    DEMO_STATE_SCHEMA,
   );
 
   // CHANGED: store-local listeners, not module-global

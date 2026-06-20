@@ -468,13 +468,10 @@ function isSchemaToken(value: unknown): value is SchemaToken {
 }
 
 function isSchemaRule(value: unknown): value is SchemaRule {
-  return typeof value === "object" && value !== null && (
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+
+  return (
     "type" in value ||
-    "optional" in value ||
-    "readonly" in value ||
-    "label" in value ||
-    "storage" in value ||
-    "items" in value ||
     "literals" in value ||
     "validate" in value
   );

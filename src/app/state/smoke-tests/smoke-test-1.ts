@@ -7,7 +7,7 @@ import { jsonify, make_state } from "../state";
 import { set_node_at_path } from "../set-node-path";
 import { remove_node_at_path } from "../remove-node-path";
 import { hson } from "hson-live";
-import { create_demo_store } from "../store";
+import { create_demo_store, DEMO_STATE_SCHEMA } from "../store";
 import { define_schema, type InferSchema, with_schema, make_schema, SCM, SCHEMA_CONTEXT } from "../schema";
 
 
@@ -922,143 +922,73 @@ export function debug_schema_context_exports_smoke_test(): StateSmokeResult {
 }
 export function smoke_demo_store_schema_impl(): StateSmokeResult {
   return state_smoke_test("demo store schema", (t) => {
-    t.step("color token value path validates", () => {
-      const store = create_demo_store();
-      const token = Object.values(store.getColorTokens())[0];
+    const store = create_demo_store();
+    const token = Object.values(store.getColorTokens())[0];
 
-      if (!token) {
+    if (!token) {
+      t.step("color token setup", () => {
         t.ok("has at least one color token", false);
-        return;
-      }
+      });
+      return;
+    }
 
-      const validColor = "oklch(50% 0.1 120)";
+    const tokenValuePath = ["theme", "colors", "tokens", token.path, "value"] as const;
+    const validColor = "oklch(50% 0.1 120)";
 
+    t.step("demo schema validates color token value path", () => {
+      t.ok(
+        "actual demo schema matches token value path",
+        !!DEMO_STATE_SCHEMA.match(tokenValuePath),
+      );
+
+      t.ok(
+        "actual demo schema rejects number at token value path",
+        !DEMO_STATE_SCHEMA.validateValue(tokenValuePath, 1).ok,
+      );
+    });
+
+    t.step("valid color string applies", () => {
       store.setColorValue(token.path, validColor);
       t.eq(
         "valid color string applies",
         store.getColTkn(token.path)?.value as JsonValue,
         validColor,
       );
+    });
 
-      let setThrew = false;
+    t.step("invalid color path set throws and does not apply", () => {
+      let threw = false;
 
       try {
         store.setColorValue(token.path, 1 as unknown as string);
       } catch {
-        setThrew = true;
+        threw = true;
       }
 
-      t.ok("invalid color token value throws through schema path set", setThrew);
+      t.ok("invalid color token value throws through schema path set", threw);
       t.eq(
         "invalid path set did not apply",
         store.getColTkn(token.path)?.value as JsonValue,
         validColor,
       );
+    });
 
-      let updateThrew = false;
+    t.step("invalid color update throws and does not apply", () => {
+      let threw = false;
 
       try {
         store.update((draft) => {
           draft.theme.colors.tokens[token.path]!.value = 1 as unknown as string;
         });
       } catch {
-        updateThrew = true;
-      }
-
-      const afterInvalidUpdate = store.getColTkn(token.path)?.value as JsonValue;
-
-      t.ok(`diagnostic: invalid update threw = ${String(updateThrew)}`, true);
-      t.ok(`diagnostic: value after invalid update = ${JSON.stringify(afterInvalidUpdate)}`, true);
-
-      t.eq(
-        "invalid color token value did not apply",
-        afterInvalidUpdate,
-        validColor,
-      );
-
-      t.ok("invalid color token value throws through schema replace", updateThrew);
-    });
-  });
-}
-
-export function smoke_test_test(): StateSmokeResult {
-  return state_smoke_test("test test test", (t) => {
-    t.step("color token value path validates", () => {
-      const Schema = define_schema((scm) => ({
-        theme: {
-          colors: {
-            tokens: scm.record({
-              value: scm.string,
-            }),
-          },
-        },
-      }));
-
-      t.ok(
-        "record wildcard path matches",
-        !!Schema.match(["theme", "colors", "tokens", "demo", "value"]),
-      );
-
-      t.ok(
-        "record wildcard value rejects number",
-        !Schema.validateValue(["theme", "colors", "tokens", "demo", "value"], 1).ok,
-      );
-    });
-
-  });
-}
-
-export function smoke_schema_replace_impl(): StateSmokeResult {
-  return state_smoke_test("schema replace impl", (t) => {
-    const Schema = define_schema((scm) => ({
-      theme: {
-        colors: {
-          tokens: scm.record({
-            value: scm.string,
-          }),
-        },
-      },
-    }));
-
-    const state = with_schema(
-      make_state({
-        theme: {
-          colors: {
-            tokens: {
-              demo: {
-                value: "oklch(50% 0.1 120)",
-              },
-            },
-          },
-        },
-      }),
-      Schema,
-    );
-
-    t.step("direct replace validates wildcard record paths", () => {
-      let threw = false;
-
-      try {
-        state.replace({
-          theme: {
-            colors: {
-              tokens: {
-                demo: {
-                  value: 1,
-                },
-              },
-            },
-          },
-        });
-      } catch {
         threw = true;
       }
 
-      t.ok("invalid direct replace throws", threw);
+      t.ok("invalid color token value throws through schema replace", threw);
       t.eq(
-        "invalid direct replace did not apply",
-        state.at("theme.colors.tokens.demo.value").get() as JsonValue,
-        "oklch(50% 0.1 120)",
+        "invalid color token value did not apply",
+        store.getColTkn(token.path)?.value as JsonValue,
+        validColor,
       );
     });
   });
