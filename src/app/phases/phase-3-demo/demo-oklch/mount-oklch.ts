@@ -6,7 +6,7 @@ import { ROOT_CSS, PANEL_CSS, PREVIEW_PANEL_CSS, ROW_CSS, RANGE_CSS, PREVIEW_CSS
 import { parse_oklch } from "../../../core/helpers/color-helpers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
 import { get_changed_color_tokens, get_color_active_path, get_color_token, is_color_changed, reset_color_values, set_color_active_path, set_color_value } from "../../../state/store";
-import { _cols, _HSON_COL } from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
 
 const gcss = CssManager.api();
@@ -150,7 +150,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
 
     const changedCount = get_changed_color_tokens().length;
     rig.resetBtn.text.set(changedCount > 0 ? `[reset ${changedCount}]` : "reset");
-    rig.resetBtn.style.set.color(changedCount > 0 ? _HSON_COL.n : OKLCH_NEUTRALS.slate);
+    rig.resetBtn.style.set.color(changedCount > 0 ? _cols.hson.n : OKLCH_NEUTRALS.slate);
     const labelWidth = Math.max(...model.targets.map((target) => target.label.length), 0) + 2;
     for (let i = 0; i < rig.targetRows.length; i += 1) {
       const row = rig.targetRows[i];

@@ -2,7 +2,7 @@
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
 import { SYS_MONOfont, øfontSize } from "../../core/consts/ui-consts";
-import { _cols, _HSON_COL } from "../../core/consts/colors.consts";
+import { _cols } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
@@ -54,7 +54,7 @@ export const NOTEBOXcss: CssMap= {
   backgroundColor: _cols.backlo,
   padding: "1rem",
   ...FONT_FAM_MONO,
-  color: _HSON_COL.n,
+  color: _cols.hson.n,
   fontSize: øfontSize.smol
 };
 export const Intro_css = {

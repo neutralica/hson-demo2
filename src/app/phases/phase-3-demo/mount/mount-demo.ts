@@ -7,7 +7,7 @@ import { mk_div_id, mk_div_id_cls, mk_div_id_txt, mk_span_id } from "../../../ut
 import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss, FX_LAYERcss, OKLCH_HOSTcss, UI_ROOTcss } from "./demo.css";
 import { $ABOUT, $BUILD, $FLEURS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr, $MOTES, $BARBAR } from "./demo.consts";
 import { $PANEL_HIDDEN, MENU_OKLCH } from "../../../core/consts/ui-consts";
-import { _cols, _HSON_COL } from "../../../core/consts/colors.consts";
+import { _cols} from "../../../core/consts/colors.consts";
 import { $MENU_SHADOW } from "../../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
@@ -167,14 +167,14 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
       .classlist.add("demo-wordmark")
       .css.setMany({
         ...HSON_WORDcss,
-        textShadow: $MENU_SHADOW + set_alpha(_HSON_COL[k], 0.4)
+        textShadow: $MENU_SHADOW + set_alpha(_cols.hson[k], 0.1)
           + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       });
   });
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: _HSON_COL[l],
+      color: _cols.hson[l],
     });
   });
 

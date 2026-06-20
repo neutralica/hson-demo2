@@ -4,7 +4,7 @@ import { hson } from "hson-live";
 import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
 import type { Fmt } from "../../../core/types/core.types";
 import { PP_IDLEcss, PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss } from "./pp.css";
-import { _HSON_COL } from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 
 // origin-aware primitive parsing.
 // - JSON: any JSON primitive is allowed (strings must be quoted because JSON.parse enforces it)
@@ -178,7 +178,7 @@ export function init_parsing_panels(pp: Panels): void {
         const fmtt = pp.panels[f];
         fmtt.status.text.set("OK");
       }
-      p.status.css.setMany({ opacity: "1", color: _HSON_COL.n });
+      p.status.css.setMany({ opacity: "1", color: _cols.hson.n });
       return;
     }
 

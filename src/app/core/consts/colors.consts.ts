@@ -19,8 +19,8 @@ interface ColorTreeBranch {
 type ColorVarRefs<T> = T extends string
   ? string
   : T extends Readonly<Record<string, unknown>>
-    ? { readonly [K in keyof T]: ColorVarRefs<T[K]> }
-    : never;
+  ? { readonly [K in keyof T]: ColorVarRefs<T[K]> }
+  : never;
 
 const COLOR_VAR_NAME_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
   "txt.main": MAIN_OKLCHname,
@@ -74,7 +74,7 @@ function collect_color_var_sources(value: unknown, prefix = ""): ColorVarSource[
   return sources;
 }
 
-export const _HSON_COL = {
+ const _HSON_COL = {
   // h: OKLCH_VIBRANT.blueElecky,
   h: OKLCH_FLEURS.oxidizedSky,
   s: OKLCH_VIBRANT.yellowBrass,
@@ -94,27 +94,27 @@ const HEADERcol = OKLCH_FLEURS.greyLilac;
 
 /* markdown highlighting */
 
- const CODE_ALTcol = OKLCH_NEUTRALS.frost;
- const CODE_PARENScol = OKLCH_VIBRANT.blueYves;
- const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
- const CONSTcol = OKLCH_FLEURS.oxidizedSky;
- const CODE_PUNCTcol = OKLCH_VIBRANT.violetIon;
- const CODE_QUOTEcol = OKLCH_VIBRANT.redInfra;
- const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
- const COMMENTScol = ACID_WASH_OKLCH.fern;
- const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
+const CODE_ALTcol = OKLCH_NEUTRALS.frost;
+const CODE_PARENScol = OKLCH_VIBRANT.blueYves;
+const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
+const CONSTcol = OKLCH_FLEURS.oxidizedSky;
+const CODE_PUNCTcol = OKLCH_VIBRANT.violetIon;
+const CODE_QUOTEcol = OKLCH_VIBRANT.redInfra;
+const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
+const COMMENTScol = ACID_WASH_OKLCH.fern;
+const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
 const LISTcol = _HSON_COL.h;
 /* misc markdown */
 
 
 const URLcol = OKLCH_VIBRANT.blueYves;
 const COLONcol = OKLCH_FLEURS.blazeOrange;
- 
- const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
- const REDcol = OKLCH_VIBRANT.redSignal;
- const FADE_1col = OKLCH_NEUTRALS.silver;
 
- const MOTEScol = set_alpha(OKLCH_VIBRANT.yellowSodium, 0.4);
+const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
+const REDcol = OKLCH_VIBRANT.redSignal;
+const FADE_1col = OKLCH_NEUTRALS.silver;
+
+const MOTEScol = set_alpha(OKLCH_VIBRANT.yellowSodium, 0.4);
 
 export const _colorVals = {
   backlo: deepBack,
@@ -123,12 +123,18 @@ export const _colorVals = {
   motes: MOTEScol,
   red: REDcol,
   fade: FADE_1col,
+  hson: {
+    h: _HSON_COL.h,
+    s: _HSON_COL.s,
+    o: _HSON_COL.o,
+    n: _HSON_COL.n,
+  },
   toc: TOCcol,
-    bluelike: _HSON_COL.h,
-    yellowlike: _HSON_COL.s,
-    pinklike: _HSON_COL.o,
-    greenlike: _HSON_COL.n,
-  
+  bluelike: _HSON_COL.h,
+  yellowlike: _HSON_COL.s,
+  pinklike: _HSON_COL.o,
+  greenlike: _HSON_COL.n,
+
   txt: {
     main: TXTcol_MAIN,
     menu: TXTcol_MENU,
@@ -157,7 +163,7 @@ export const _colorVals = {
     parensInner: CODE_PARENS_INNERcol,
     colon: COLONcol,
     const: CONSTcol,
-    
+
   }
 };
 

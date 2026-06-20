@@ -302,7 +302,7 @@ export const MD_LINK_LINEcss: CssMap = {
 
 export const FLUSH_LISTcss = {
   display: "grid",
-  gap: "1rem",
+  // gap: "1rem",
   margin: "20px 0",
   minWidth: "0",
 };

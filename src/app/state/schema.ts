@@ -86,6 +86,7 @@ export type SchemaContext = Readonly<{
   boolean: SchemaToken<boolean>;
   null: SchemaToken<null>;
   unknown: SchemaToken<JsonValue>;
+  oklch: SchemaToken<string>;
   record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>>;
   pick<const T extends readonly JsonValue[]>(...values: T): SchemaToken<T[number]>;
 }>;
@@ -359,6 +360,96 @@ function mergeType(rule: SchemaRule, nextType: SchemaValueType): readonly Schema
   return current.includes(nextType) ? current : [...current, nextType];
 }
 
+function parseCssNumber(value: string): { number: number; unit: string } | undefined {
+  const match = value.trim().match(/^([+-]?(?:\d+|\d*\.\d+)(?:e[+-]?\d+)?)([a-z%]*)$/i);
+  if (!match) return undefined;
+
+  const [, numberPart, unit = ""] = match;
+  if (numberPart === undefined) return undefined;
+
+  const number = Number(numberPart);
+  if (!Number.isFinite(number)) return undefined;
+
+  return { number, unit: unit.toLowerCase() };
+}
+
+function isNone(value: string): boolean {
+  return value.toLowerCase() === "none";
+}
+
+function isOklchLightness(value: string): boolean {
+  if (isNone(value)) return true;
+
+  const parsed = parseCssNumber(value);
+  if (!parsed) return false;
+
+  if (parsed.unit === "%") return parsed.number >= 0 && parsed.number <= 100;
+  if (parsed.unit !== "") return false;
+
+  return parsed.number >= 0 && parsed.number <= 1;
+}
+
+function isOklchChroma(value: string): boolean {
+  if (isNone(value)) return true;
+
+  const parsed = parseCssNumber(value);
+  if (!parsed) return false;
+
+  if (parsed.unit !== "" && parsed.unit !== "%") return false;
+  return parsed.number >= 0;
+}
+
+function isOklchHue(value: string): boolean {
+  if (isNone(value)) return true;
+
+  const parsed = parseCssNumber(value);
+  if (!parsed) return false;
+
+  return parsed.unit === "" || parsed.unit === "deg" || parsed.unit === "rad" || parsed.unit === "grad" || parsed.unit === "turn";
+}
+
+function isOklchAlpha(value: string): boolean {
+  if (isNone(value)) return true;
+
+  const parsed = parseCssNumber(value);
+  if (!parsed) return false;
+
+  if (parsed.unit === "%") return parsed.number >= 0 && parsed.number <= 100;
+  if (parsed.unit !== "") return false;
+
+  return parsed.number >= 0 && parsed.number <= 1;
+}
+
+function isOklchString(value: string): boolean {
+  const match = value.trim().match(/^oklch\((.*)\)$/i);
+  if (!match) return false;
+
+  const body = match[1];
+  if (body === undefined || body.includes(",")) return false;
+
+  const parts = body.replace(/\//g, " / ").trim().split(/\s+/).filter(Boolean);
+  if (parts.length !== 3 && parts.length !== 5) return false;
+
+  const [lightness, chroma, hue, slash, alpha] = parts;
+  if (lightness === undefined || chroma === undefined || hue === undefined) return false;
+
+  if (!isOklchLightness(lightness)) return false;
+  if (!isOklchChroma(chroma)) return false;
+  if (!isOklchHue(hue)) return false;
+
+  if (parts.length === 3) return true;
+  if (slash !== "/" || alpha === undefined) return false;
+
+  return isOklchAlpha(alpha);
+}
+
+function validateOklchValue(value: JsonValue): readonly SchemaIssue[] | SchemaIssue | string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (isOklchString(value)) return undefined;
+
+  return "Expected OKLCH color string";
+}
+
 function makeToken<T>(rule: SchemaRule, optional = false, recordShape?: SchemaShapeValue): SchemaToken<T> {
   const token = {} as SchemaToken<T>;
 
@@ -424,6 +515,7 @@ export const SCHEMA_CONTEXT: SchemaContext = Object.freeze({
   boolean: makeToken<boolean>({ type: "boolean" }),
   null: makeToken<null>({ type: "null" }),
   unknown: makeToken<JsonValue>({ type: "unknown" }),
+  oklch: makeToken<string>({ type: "string", validate: validateOklchValue }),
 
   record<const V extends SchemaShapeValue>(value: V): SchemaToken<Record<string, InferShapeValue<V>>> {
     return makeToken<Record<string, InferShapeValue<V>>>({ type: "object" }, false, value);

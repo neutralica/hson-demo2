@@ -1,5 +1,3 @@
-// CHANGED: turn the demo store into a factory first, then export a singleton.
-
 import type { JsonValue, HsonNode } from "hson-live/types";
 import { make_state } from "./state";
 import { define_schema, with_schema } from "./schema";
@@ -10,33 +8,35 @@ import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.co
 
 export type DemoColorDiff = Partial<Record<DemoColorPath, string>>;
 
-function is_oklch_value(value: string): boolean {
-  return value.trim().startsWith("oklch(");
+function isOklchValue(value: string): boolean {
+  return value.trim().toLowerCase().startsWith("oklch(");
 }
 
-function label_for_color_path(path: string): string {
+function labelForColorPath(path: string): string {
   return path.replace(/\./g, "-");
 }
 
-function make_demo_color_token(source: ColorVarSource): DemoColorToken {
-  const isOklch = is_oklch_value(source.value);
+function makeDemoColorToken(source: ColorVarSource): DemoColorToken {
+  if (!isOklchValue(source.value)) {
+    throw new Error(`expected OKLCH color token value for path: ${source.path}`);
+  }
 
   return {
     path: source.path,
-    label: label_for_color_path(source.path),
+    label: labelForColorPath(source.path),
     varName: source.varName,
     initial: source.value,
     value: source.value,
-    editable: isOklch,
-    kind: isOklch ? "oklch" : "css",
+    editable: true,
+    kind: "oklch",
   };
 }
 
-function make_demo_color_tokens(): Record<DemoColorPath, DemoColorToken> {
+function makeDemoColorTokens(): Record<DemoColorPath, DemoColorToken> {
   const tokens: Record<DemoColorPath, DemoColorToken> = {};
 
   for (const source of COLOR_VAR_SOURCES) {
-    tokens[source.path] = make_demo_color_token(source);
+    tokens[source.path] = makeDemoColorToken(source);
   }
 
   return tokens;
@@ -52,7 +52,7 @@ export function make_initial_demo_state(): DemoState {
     theme: {
       colors: {
         activePath: null,
-        tokens: make_demo_color_tokens(),
+        tokens: makeDemoColorTokens(),
       },
     },
   };
@@ -73,10 +73,10 @@ export const DEMO_STATE_SCHEMA = define_schema((scm) => ({
         path: scm.string,
         label: scm.string,
         varName: scm.string,
-        initial: scm.string,
-        value: scm.string,
+        initial: scm.oklch,
+        value: scm.oklch,
         editable: scm.boolean,
-        kind: scm.pick("oklch", "css"),
+        kind: scm.pick("oklch"),
       }),
     },
   },
@@ -90,7 +90,6 @@ export function create_demo_store(
     DEMO_STATE_SCHEMA,
   );
 
-  // CHANGED: store-local listeners, not module-global
   const listeners = new Set<Listener>();
 
   function cloneJson<T extends JsonValue>(value: T): T {
@@ -186,7 +185,6 @@ export function create_demo_store(
     return path === null ? undefined : getColTkn(path);
   }
 
-  // CHANGED: update stays ergonomic, but now replaces the whole node-backed root
   function update(mut: (draft: DemoState) => void): void {
     const prev = snapshot();
     const draft = cloneJson(prev);
@@ -208,7 +206,6 @@ export function create_demo_store(
     setView(current === next ? null : next);
   }
 
-  // CHANGED: still using full-array replacement for now; simple and robust
   function startWidget(next: DemoWidget): void {
     const widgets = getWidgets();
     if (widgets.includes(next)) return;
@@ -307,7 +304,7 @@ export function create_demo_store(
     stateSnapshot: stateSnapshot,
     getView,
     getWidgets,
- hasWidget,
+    hasWidget,
     getTocOpen,
 
     getColorState,
@@ -338,10 +335,8 @@ export function create_demo_store(
   };
 }
 
-// CHANGED: singleton app store still exists, but now comes from the factory
 const demoStore = create_demo_store();
 
-// CHANGED: preserve old module API so the rest of the app does not need to change
 export const demo_get_state = demoStore.stateSnapshot;
 export const get_view = demoStore.getView;
 export const get_widgets = demoStore.getWidgets;

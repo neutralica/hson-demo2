@@ -1,6 +1,6 @@
 import { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
-import { _HSON_COL } from "../../core/consts/colors.consts";
+import { _cols } from "../../core/consts/colors.consts";
 
 /**
  * Temporary visual sampler for overlay/dialog panel treatments.
@@ -60,7 +60,7 @@ export function mount_panel_spawner(stage: LiveTree): void {
     if (sample.hasActionCorner) {
       const diode = panel.create.div()
         .classlist.add("panel-spawner-diode")
-        .css.setMany(make_diode_css(_HSON_COL.h));
+        .css.setMany(make_diode_css(_cols.hson.h));
 
       let active = false;
       const el = diode.dom.el();
@@ -68,7 +68,7 @@ export function mount_panel_spawner(stage: LiveTree): void {
         el.addEventListener("click", (ev) => {
           ev.stopPropagation();
           active = !active;
-          diode.css.setMany(make_diode_css(active ? _HSON_COL.n : _HSON_COL.h));
+          diode.css.setMany(make_diode_css(active ? _cols.hson.n : _cols.hson.h));
         });
       }
     }

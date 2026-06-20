@@ -3,7 +3,6 @@ import { $red_etc_, ACID_WASH_RGBA, $ylw_, $gry_ } from "../../../core/consts/ol
 import { SYS_MONOfont, øfontWeight, $SIDEBAR_WIDTH, $LOGGER_WIDTH } from "../../../core/consts/ui-consts";
 import { _cols } from "../../../core/consts/colors.consts";
 import { øfontSize } from "../../../core/consts/ui-consts";
-import { _HSON_COL } from "../../../core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../../core/consts/css.consts";
