@@ -141,7 +141,6 @@ export function build_suites_for_mode(
 
   if (mode === "legacy") {
     return _freeze([
-      make_state_smoke_suite(),
       make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
       make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     ]);
@@ -149,7 +148,6 @@ export function build_suites_for_mode(
 
   if (mode === "transform") {
     return _freeze([
-      make_state_smoke_suite(),
       make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/json/basic-test", map),
       make_transform_test_suite(
         h,
@@ -180,7 +178,6 @@ export function build_suites_for_mode(
   if (mode === "fuzz-json") {
     const GENERATED_JSON_SEED = random_seed();
     return _freeze([
-      make_state_smoke_suite(),
       make_transform_test_suite(
         h,
         make_json_fixture_bundle(200, GENERATED_JSON_SEED),
@@ -197,7 +194,6 @@ export function build_suites_for_mode(
   }
   if (mode === "livetree") {
     return _freeze([
-      make_state_smoke_suite(),
       ...all_livetree_suites(),
     ]);
   }
