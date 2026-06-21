@@ -13,9 +13,9 @@ import { PHASE_LINGER } from "./core/consts/config.consts";
 import { _cols } from "./core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { _test_full_loop } from "hson-live/diagnostics";
-import { mount_demo } from "./phases/phase-3-demo/mount/mount-demo";
 import { smoke_state } from "./state/smoke-tests/smoke-test-1";
 import { log_oklch_palette } from "./utils/swatch-logger";
+import { mount_demo } from "./phases/phase-3-demo/mount-demo";
 
 
 const _pause = () => _sleep(PHASE_LINGER);

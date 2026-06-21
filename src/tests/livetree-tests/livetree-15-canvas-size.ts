@@ -1,6 +1,6 @@
 import { _disposables_count_for_owner } from "hson-live/diagnostics";
 import { flush_dom } from "../inspector/inspector.helpers";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/demo-test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import { tick } from "./livetree-03";
 

@@ -1,6 +1,6 @@
 import { hson, type LiveTree } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import { create_test_log } from "../../phases/phase-3-demo/demo-test/test-logger";
+import { create_test_log } from "../../demos/demo-test/test-logger";
 import { store_graph_entries } from "../store";
 import { define_schema } from "../schema";
 import { state_graph_entries, state_graph_key, state_graph_path_to_text } from "../state-graph";

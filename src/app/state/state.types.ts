@@ -56,6 +56,7 @@ export type DemoView = null |
   "parse" |
   "build" |
   "bar-bar" |
+  "render" |
   "fleurs";
 
 export type DemoWidget =

@@ -1,4 +1,4 @@
-import type { LiveTreeCaseSpec, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { LiveTreeCaseSpec, TestSuite } from "../../app/demos/demo-test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_gnarly_svg(): TestSuite {

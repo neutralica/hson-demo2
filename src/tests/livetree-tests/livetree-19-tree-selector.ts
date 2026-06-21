@@ -1,4 +1,4 @@
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/demo-test/tests.types";
 import { flush_dom } from "../inspector/inspector.helpers";
 import { make_livetree_suite } from "./livetree-testkit";
 

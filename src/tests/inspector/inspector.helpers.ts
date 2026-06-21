@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import type { CaseReport } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { CaseReport } from "../../app/demos/demo-test/tests.types";
 import { tick } from "../livetree-tests/livetree-03";
 import type { Artifact } from "hson-live/diagnostics";
 

@@ -1,4 +1,5 @@
-import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
+
+import  { OKLCH_FLEURS } from "../../demos/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "./oklch.consts";
 import { deepBack, bckColor } from "./old-rgb.consts";

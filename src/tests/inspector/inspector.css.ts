@@ -1,6 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { $grn_, $gry_, $pnk_, $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
-import { ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "../../app/core/consts/oklch.consts";
+import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch.consts";
 import { øfontWeight } from "../../app/core/consts/ui-consts";
 import { _cols } from "../../app/core/consts/colors.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
@@ -8,7 +7,7 @@ import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
 import { øfontSize } from "../../app/core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
-import { OKLCH_FLEURS } from "../../app/phases/phase-3-demo/demo-fleurs/fleurs.consts";
+
 
 const nameWidth = "35ch"; // standardize width so it doesn’t jump
 const rowFade = `linear-gradient(150deg, ${_cols.backhi}, transparent)`;

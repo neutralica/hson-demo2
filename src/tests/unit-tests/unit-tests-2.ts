@@ -1,5 +1,5 @@
 
-import type { TestCase, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { TestCase, TestSuite } from "../../app/demos/demo-test/tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";

@@ -1,6 +1,6 @@
 import { unit_test_css, unit_test_css_manager, unit_test_internals, unit_test_internals_2 } from "./unit-tests-1";
 import { unit_css_pseudo_unification, unit_media, unit_test_more_css, unit_test_parser_helpers } from "./unit-tests-2";
-import type { TestCase, TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { TestCase, TestSuite } from "../../app/demos/demo-test/tests.types";
 import type { CssManager } from "hson-live";
 
 export const all_unit_tests = () => [

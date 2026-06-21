@@ -1,8 +1,8 @@
 
 import type { LoopReport, Artifact } from "../../../../hson-live/dist/types/diagnostics.types";
 import { _cols } from "../../app/core/consts/colors.consts";
-import { _freeze } from "../../app/phases/phase-3-demo/demo-test/tests.consts";
-import type { CaseKey, CaseMeta } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import { _freeze } from "../../app/demos/demo-test/tests.consts";
+import type { CaseKey, CaseMeta } from "../../app/demos/demo-test/tests.types";
 import { render_livetree_report } from "./report-livetree";
 
 

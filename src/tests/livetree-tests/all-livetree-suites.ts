@@ -9,7 +9,6 @@ import { livetree_svg_ingermediate } from "./livetree-10-svg-2";
 import { livetree_gnarly_svg } from "./livetree-11-svg-3";
 import { livetree_create_size, livetree_css_pseudo, livetree_recent_api } from "./livetree-06";
 import { livetree_new_dom_doc } from "./livetree-08-dom";
-import type { TestSuite } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { livetree_more_listeners } from "./livetree-07";
 import { livetree_svg_lvl2 } from "./livetree-12-svg-new";
 import { livetree_new_form_api } from "./livetree-13-form";
@@ -24,6 +23,7 @@ import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree
 import { livetree_construction_parity, livetree_find_query_surface, livetree_quid_media } from "./livetree-22-quid-media";
 import { livetree_listener_builder_corners, livetree_text_content_surface } from "./livetree-23-coverage-gaps";
 import { livetree_dom_helper_surface } from "./livetree-24-dom-corners";
+import type { TestSuite } from "../../app/demos/demo-test/tests.types";
 
 
 /******************************************************
