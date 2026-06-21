@@ -4,10 +4,9 @@ import { CssManager, type LiveTree } from "hson-live";
 import type { SvgLiveTree } from "hson-live/types";
 import { relay, relay_data, relay_void, type OutcomeAsync } from "intrastructure";
 import { mk_div_id, mk_div_id_cls, mk_div_id_txt, mk_span_id } from "../../../utils/makers";
-import { HSON_WORDcss, DEMO_SCREENcss, DEMOcss, DEMO_HEADLINEcss, MENU_CONTAINERcss, MAIN_MENUcss, MENU_BOXcss, HSON_GRAFFITIcss, HSON_SUBcss, COPYRITEcss, FX_LAYERcss, OKLCH_HOSTcss, UI_ROOTcss } from "./demo.css";
-import { $ABOUT, $BUILD, $FLEURS, $POINT, $OKLCH, $PARSE, $TEST, MENU_OPTIONS, shade_class, HSON_LIVE_GRAFFITIstr, MIN_DESKTOP_WIDTH, COPY_TEXTstr, $MOTES, $BARBAR } from "./demo.consts";
+import { $ABOUT, $BARBAR, $BUILD, $FLEURS, $MONITOR, $MOTES, $OKLCH, $PARSE, $POINT, $STATE, $TEST, COPY_TEXTstr, HSON_LIVE_GRAFFITIstr, MENU_OPTIONS, MIN_DESKTOP_WIDTH, shade_class, WIDGET_MENU_KEYS } from "./demo.consts";
 import { $PANEL_HIDDEN, MENU_OKLCH } from "../../../core/consts/ui-consts";
-import { _cols} from "../../../core/consts/colors.consts";
+import { _cols } from "../../../core/consts/colors.consts";
 import { $MENU_SHADOW } from "../../../core/consts/ui-consts";
 import { HSONlower, LETTER_LOWS } from "../../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../../core/consts/oklch.consts";
@@ -16,8 +15,8 @@ import type { DemoView, DemoWidget } from "../../../state/state.types";
 import type { Fmt } from "../../../core/types/core.types";
 import type { Panels } from "../../../ui/panels/panels.types";
 import { get_view, get_widgets, demo_subscribe, set_view, toggle_view, toggle_widget, activate_widget, has_widget, deactivate_widget } from "../../../state/store";
-import { smoke_state } from "../../../state/smoke-tests/smoke-test-1";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
+import { mount_state_monitor } from "../../../state/mount-state";
 import { mount_panel_simple } from "../../../ui/panels/panel-simple";
 import { mount_parsing_panels } from "../demo-parse/pp-factory";
 import { mount_build_panels } from "../demo-build/mount-bp";
@@ -34,6 +33,7 @@ import { mount_oklch } from "../demo-oklch/mount-oklch";
 import { MOTES_LAYERcss } from "../demo-motes/motes.css";
 import { mount_motes } from "../demo-motes/mount-motes";
 import mount_bar_bar from "../demo-bar-bar.ts/mount-bar-bar";
+import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 type DemoMenuView = Exclude<DemoView, null>;
@@ -59,6 +59,7 @@ type DemoHosts = {
   aboutHost: LiveTree;
   barbarHost: LiveTree;
   oklchHost: LiveTree;
+  monitorHost: LiveTree;
   viewHosts: ViewHosts;
   widgetHosts: WidgetHosts;
 };
@@ -73,9 +74,7 @@ type ParseCandidate = {
   text: string;
 };
 
-const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES];
 export const gcss = CssManager.api();
-let _testsWired = false;
 
 const _hide = (lt: LiveTree): void => { lt.classlist.add($PANEL_HIDDEN); };
 const _unhide = (lt: LiveTree): void => { lt.classlist.remove($PANEL_HIDDEN); };
@@ -206,7 +205,29 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const buildHost = mount_panel_simple(uiRoot, $BUILD);
   const aboutHost = mount_panel_simple(uiRoot, $ABOUT);
   const barbarHost = mount_panel_simple(uiRoot, $BARBAR);
-  const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany(OKLCH_HOSTcss);
+  const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
+    ...OKLCH_HOSTcss,
+    top: "calc(50% + 0.5rem)",
+    right: "1rem",
+    bottom: "1rem",
+    left: "auto",
+    width: "min(36rem, calc(100% - 2rem))",
+    maxHeight: "calc(50% - 1.5rem)",
+    boxSizing: "border-box",
+    overflow: "auto",
+  });
+  const monitorHost = mk_div_id_cls(uiRoot, "monitor", $PANEL_HIDDEN).css.setMany({
+    position: "absolute",
+    top: "1rem",
+    right: "1rem",
+    bottom: "calc(50% + 0.5rem)",
+    width: "min(36rem, calc(100% - 2rem))",
+    zIndex: "40",
+    overflow: "hidden",
+    border: "1px solid color-mix(in oklch, currentColor 18%, transparent)",
+    background: "color-mix(in oklch, black 72%, transparent)",
+    backdropFilter: "blur(10px)",
+  });
 
   const viewHosts: ViewHosts = {
     [$PARSE]: parseHost,
@@ -220,6 +241,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     [$POINT]: pointHost,
     [$OKLCH]: oklchHost,
     [$MOTES]: motesLayer,
+    [$MONITOR]: monitorHost,
   };
 
   return {
@@ -230,16 +252,19 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     aboutHost,
     barbarHost,
     oklchHost,
+    monitorHost,
     viewHosts,
     widgetHosts,
   };
 }
+
 
 function mount_demo_content(hosts: DemoHosts): DemoContent {
   relay_data(mount_about_panels(hosts.aboutHost, ABOUT_DOCS));
   const test = relay_data(mount_test_panels(hosts.testHost));
   const parse = relay_data(mount_parsing_panels(hosts.parseHost));
   relay_data(mount_build_panels(hosts.buildHost));
+  mount_state_monitor(hosts.monitorHost);
   relay_void(mount_bar_bar(hosts.barbarHost));
   relay_void(mount_point_panel(hosts.pointHost));
   mount_oklch(hosts.oklchHost);
@@ -392,13 +417,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     }
   });
 
-  if (!_testsWired) { _testsWired = true; }
   wire_demo_menu(menu, fleurField);
 
   demoLayer.listen.document.onKeyDown((ke) => {
     if (ke.key === "Escape") {
-      deactivate_widget("oklch");
-      deactivate_widget("point");
+      deactivate_widget($OKLCH);
+      deactivate_widget($POINT);
+      deactivate_widget($MONITOR);
     }
   });
 

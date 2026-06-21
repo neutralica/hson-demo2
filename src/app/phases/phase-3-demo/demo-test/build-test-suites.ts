@@ -1,7 +1,6 @@
 import type { CaseKey, FixtureBundle, HsonTestApi, TestCase, TestRunMode, TestSuite } from "./tests.types";
 import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../../../../data-old/data/json-fixtures"
 import { _snip } from "../../../utils/helpers";
-import { _is_Node, _test_full_loop } from "hson-live/diagnostics";
 import { TRANSFORM_FAILS, HTML_FIXTURES_LEGACY } from "../../../../../data-old/data/html-fixtures";
 import { _freeze } from "./tests.consts";
 import { all_livetree_suites } from "../../../../tests/livetree-tests/all-livetree-suites";
@@ -12,10 +11,8 @@ import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../../tests/transform-tes
 import { JSON_FIXTURES_LEVEL2 } from "../../../../tests/transform-tests/json-level-2";
 import type { FixtureAtom, LoopReport, SourceFormat, LoopOpts } from "../../../../../../hson-live/dist/types/diagnostics.types";
 import { make_json_fixture_bundle, random_seed } from "../../../../tests/json-tests/json-test-builder";
-import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree_listener_api_surface } from "../../../../tests/livetree-tests/livetree-21-anim-kf";
-import { livetree_quid_media } from "../../../../tests/livetree-tests/livetree-22-quid-media";
-import { demo_meta_colors } from "../../../../tests/demo-meta-tests/demo-meta-tests-1";
 import { all_demo_meta } from "../../../../tests/demo-meta-tests/make-demo-meta-test";
+import { make_state_smoke_suite } from "./state-smoke-suite";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
@@ -144,6 +141,7 @@ export function build_suites_for_mode(
 
   if (mode === "legacy") {
     return _freeze([
+      make_state_smoke_suite(),
       make_transform_test_suite(h, JSON_FIXTURES_LEGACY, "transform/legacy/json", map),
       make_transform_test_suite(h, HTML_FIXTURES_LEGACY, "transform/legacy/html", map),
     ]);
@@ -151,6 +149,7 @@ export function build_suites_for_mode(
 
   if (mode === "transform") {
     return _freeze([
+      make_state_smoke_suite(),
       make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/json/basic-test", map),
       make_transform_test_suite(
         h,
@@ -171,21 +170,17 @@ export function build_suites_for_mode(
   if (mode === "dev") {
     return _freeze([
       ...all_demo_meta(),
-
-
-    ])
+    ]);
   }
   if (mode === "demo-meta") {
     return _freeze([
       ...all_demo_meta(),
-
-
-    ])
+    ]);
   }
   if (mode === "fuzz-json") {
     const GENERATED_JSON_SEED = random_seed();
     return _freeze([
-
+      make_state_smoke_suite(),
       make_transform_test_suite(
         h,
         make_json_fixture_bundle(200, GENERATED_JSON_SEED),
@@ -198,13 +193,13 @@ export function build_suites_for_mode(
   if (mode === "unit") {
     return _freeze([
       ...all_unit_tests(),
-
-    ])
+    ]);
   }
   if (mode === "livetree") {
     return _freeze([
+      make_state_smoke_suite(),
       ...all_livetree_suites(),
-    ])
+    ]);
   }
 
   return _freeze([

@@ -5,10 +5,10 @@ import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, tdNameChildCs
 import { CLICKABLEcss } from "../../app/core/consts/css.consts";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
-import { loopreport_to_sections } from "./report-section";
+import { loopreport_to_sections, report_to_sections } from "./report-section";
 import { øfontSize } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr, _freeze } from "../../app/phases/phase-3-demo/demo-test/tests.consts";
-import type { CaseKey, CaseMeta } from "../../app/phases/phase-3-demo/demo-test/tests.types";
+import type { CaseKey, CaseMeta, CaseReport } from "../../app/phases/phase-3-demo/demo-test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
@@ -68,6 +68,68 @@ export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>)
   });
 
   return [inputSec, ...secs].map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
+}
+
+type InspectorAssertRow = Readonly<{
+  ok: boolean;
+  label: string;
+  actual?: string;
+  expected?: string;
+}>;
+
+type InspectorCaseWithAssertRows = Partial<CaseReport> & Readonly<{
+  suite?: string;
+  name?: string;
+  status?: string;
+  ms?: number;
+  assertRows?: readonly InspectorAssertRow[];
+}>;
+
+function sections_to_text(sections: ReturnType<typeof report_to_sections>): string {
+  return sections.map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
+}
+
+function escape_html_text(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function text_report_to_html(title: string, text: string): string {
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${escape_html_text(title)}</title>
+<style>
+  body { margin: 0; padding: 1rem; background: #050808; color: #dce6df; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  pre { white-space: pre-wrap; line-height: 1.45; font-size: 12px; }
+</style>
+</head>
+<body>
+<pre>${escape_html_text(text)}</pre>
+</body>
+</html>`;
+}
+
+function local_case_report_to_text(raw: unknown): string | undefined {
+  const found = raw as InspectorCaseWithAssertRows | undefined;
+  const assertRows = found?.assertRows ?? [];
+  if (!assertRows.length) return undefined;
+
+  const report = {
+    suite: found?.suite ?? "—",
+    name: found?.name ?? "—",
+    status: found?.status === "fail" ? "fail" : "pass",
+    ms: found?.ms,
+    steps: found?.steps ?? [],
+    assertRows,
+  } as CaseReport & Readonly<{ assertRows: readonly InspectorAssertRow[] }>;
+
+  return sections_to_text(report_to_sections(report));
 }
 export function make_inspector(
   host: LiveTree,
@@ -325,18 +387,28 @@ export function make_inspector(
         const viewBtn = mkTextButton(btnBar, "view");
         const copyBtn = mkTextButton(btnBar, "copy");
 
-        if (!capture) {
+        const hasLocalReport = local_case_report_to_text(tlog.getCase(c.key)) !== undefined;
+
+        if (!capture && !hasLocalReport) {
           viewBtn.css.setMany({ opacity: "0.45", cursor: "default" });
           copyBtn.css.setMany({ opacity: "0.45", cursor: "default" });
         }
 
         copyBtn.listen.onClick(async (me) => {
           _stop(me);
-          if (!capture) return;
 
           copyBtn.text.set("copying");
 
           try {
+            const localText = local_case_report_to_text(tlog.getCase(c.key));
+            if (localText !== undefined) {
+              await navigator.clipboard.writeText(localText);
+              copyBtn.text.set("copied");
+              return;
+            }
+
+            if (!capture) return;
+
             const report = await capture(c.key);
             const meta = tlog.getCase(c.key)?.meta;
             const txt = report_to_text(report, meta);
@@ -353,11 +425,19 @@ export function make_inspector(
 
         viewBtn.listen.onClick(async (me) => {
           _stop(me);
-          if (!capture) return;
 
           viewBtn.text.set("opening");
 
           try {
+            const localText = local_case_report_to_text(tlog.getCase(c.key));
+            if (localText !== undefined) {
+              open_report_window(text_report_to_html(`${c.suite} :: ${c.name}`, localText));
+              viewBtn.text.set("view");
+              return;
+            }
+
+            if (!capture) return;
+
             const report = await capture(c.key);
             const meta = tlog.getCase(c.key)?.meta;
             const render = render_report_html(c.key, c.name, c.suite, report, meta);

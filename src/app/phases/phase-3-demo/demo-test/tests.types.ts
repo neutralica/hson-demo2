@@ -51,6 +51,7 @@ export type TestCase = Readonly<{
 
 export type RunCaseRet = Readonly<{
   metaPatch?: Record<string, string>;
+  assertRows?: readonly TestAssertRow[];
 }>;
 
 export type TestSuite = Readonly<{

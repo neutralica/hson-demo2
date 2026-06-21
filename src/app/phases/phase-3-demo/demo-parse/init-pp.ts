@@ -4,10 +4,12 @@ import type { JsonValue } from "hson-live/types";
 
 import { define_schema, with_schema } from "../../../state/schema";
 import { make_state } from "../../../state/state";
+import { register_node_state_source } from "../../../state/state-sources";
 import type { Panels, PanelShell } from "../../../ui/panels/panels.types";
 import type { Fmt } from "../../../core/types/core.types";
 import { PP_IDLEcss, PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss } from "./pp.css";
 import { _cols } from "../../../core/consts/colors.consts";
+import { _CREATE_NODE } from "hson-live/diagnostics";
 
 type PrimParse =
   | { ok: true; value: string | number | boolean | null; kind: "string" | "scalar" }
@@ -105,6 +107,12 @@ export function init_parsing_panels(pp: Panels): void {
     make_state(makeInitialParsePanelControlState() as unknown as JsonValue),
     PARSE_PANEL_CONTROL_SCHEMA,
   );
+
+  register_node_state_source({
+    name: "parse",
+    state: parseState,
+    schema: PARSE_PANEL_CONTROL_SCHEMA,
+  });
 
   function getParseState(): ParsePanelControlState {
     return parseState.get() as ParsePanelControlState;
@@ -234,34 +242,40 @@ export function init_parsing_panels(pp: Panels): void {
 
       if (isThisActiveInvalid(f)) {
         p.textBox.css.setMany(PP_ACTIVE_INVALIDcss(f));
+        p.wmFmt.style.set.color( "transparent")
         unlockTextarea(p);
         continue;
       }
 
       if (isThisActiveValid(f)) {
         p.textBox.css.setMany(PP_ACTIVE_VALIDcss(f));
+        p.wmFmt.style.set.color("transparent")
         unlockTextarea(p);
         continue;
       }
 
       if (isActiveValid()) {
         p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
+        p.wmFmt.style.set.color( "transparent")
         lockTextarea(p);
         continue;
       }
       if (isIdleInvalid()) {
         p.textBox.css.setMany(PP_INACTIVE_INVALIDcss(f));
+        p.wmFmt.style.set.color( _cols.txt.grey)
         unlockTextarea(p);
         continue;
       }
 
       if (isIdleValid()) {
         p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
+        p.wmFmt.style.set.color( "transparent")
         unlockTextarea(p);
         continue;
       }
 
       p.textBox.css.setMany(PP_IDLEcss(f));
+      p.wmFmt.style.set.color( _cols.txt.grey)
       if (getActive() === null) {
         unlockTextarea(p);
       } else {

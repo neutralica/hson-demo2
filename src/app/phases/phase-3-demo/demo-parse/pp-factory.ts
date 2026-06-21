@@ -144,7 +144,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .classlist.set("pp-watermark pp-watermark--fmt")
       .text.set(øWATERMARK_FMT_[fmt])
       .css.setMany({
-        ...PP_WATERMARKcss,
+        ...PP_WATERMARKcss
       });
 
     const textarea = wrap.create.textarea()

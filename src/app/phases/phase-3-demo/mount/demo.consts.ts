@@ -1,21 +1,41 @@
 // demo.consts.ts
 
+import type { DemoWidget } from "../../../state/state.types";
+
 export const MIN_DESKTOP_WIDTH =1100
 
 export const COPY_TEXTstr ="© 2026 terminal_gothic — hson-live (Public Parity License 7.0)"
 
-// const DEMO_STRINGS = {
-//   stage: "stage",
-//   demo: "demo",
-//   wall: "wall",
-//   wallFx: "wall-fx",
-//   inset: "screen-inset",
-//   screen: "demo-screen",
-//   screenFx: "screen-fx",
-//   menuBox: "menu-box",
-// } as const;
-// export const $DS = DEMO_STRINGS;
+export const $BUILD = "build";
+export const $STATE = "state";
 
+export const $PARSE = "parse";
+export const $TEST = "test";
+export const $FLEURS = "fleurs";
+export const $OKLCH = "oklch";
+export const $POINT = "point";
+export const $ABOUT = "about";
+export const $MOTES = "motes";
+export const $MONITOR = "monitor";
+export const $BARBAR = "bar-bar";
+export const MENU_OPTIONS = [
+  $ABOUT,
+  $TEST,
+  $PARSE,
+  $BUILD,
+  $STATE,
+  $BARBAR,
+  $FLEURS,
+  $POINT,
+  $OKLCH,
+  $MOTES,
+  $MONITOR,
+] as const;
+export const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES, $MONITOR] as const;
+
+export const $PARSING_PANELS_ROOT = "parsing-panels-root";
+
+export const $PP_HEAD = "pp-head";
 
 export const shade_class = (l: string) => {
   let shadeClass: string;
@@ -32,31 +52,6 @@ export const shade_class = (l: string) => {
   console.warn("shadeClass function failed");
   return "shadeClass function failed"
 };
-
-export const $PARSE = "parse";
-export const $TEST = "test";
-export const $BUILD = "build";
-export const $FLEURS = "fleurs";
-export const $OKLCH = "oklch";
-export const $POINT = "point";
-export const $ABOUT = "about";
-export const $MOTES = "motes";
-export const $BARBAR = "bar-bar";
-export const MENU_OPTIONS = [
-  $ABOUT,
-  $TEST,
-  $PARSE,
-  $BUILD,
-  $BARBAR,
-  $FLEURS,
-  $POINT,
-  $OKLCH,
-  $MOTES,
-] as const;
-
-export const $PARSING_PANELS_ROOT = "parsing-panels-root";
-
-export const $PP_HEAD = "pp-head";
 
 export const HSON_LIVE_GRAFFITIstr = `
 
@@ -77,4 +72,4 @@ m888N= 888> '   ^"F        'Y"         ""   'Y"            ^*888%    R888"     '
     :"                      Hypertext Structured Object Notation                                   
                                           2.0.26                                                   
                                                                                                    
-`
+`;

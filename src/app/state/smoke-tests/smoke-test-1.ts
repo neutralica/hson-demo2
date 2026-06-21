@@ -10,6 +10,7 @@ import { hson } from "hson-live";
 import { create_demo_store, DEMO_STATE_SCHEMA } from "../store";
 import { define_schema, with_schema, make_schema, SCM, SCHEMA_CONTEXT } from "../schema";
 import { type InferSchema } from "../schema.types";
+import type { StateSmokeResult } from "../state.types";
 
 
 export function smoke_path(): StateSmokeResult {
@@ -525,12 +526,6 @@ export function smoke_store_facade(): StateSmokeResult {
     );
   });
 }
-type StateSmokeResult = {
-  ok: boolean;
-  steps: string[];
-};
-// tiny explicit smoke test for path/get/set/remove
-
 
 export function smoke_state(): StateSmokeResult {
   return state_smoke_test("state path/get/set/remove", (t) => {

@@ -241,7 +241,7 @@ export const MD_CODE_PREcss: CssMap = {
 };
 export const CODE_COLONcss = {
   // ...FONT_FAM_MONO,
-  color: OKLCH_FLEURS.blazeOrange
+  color: _cols.code.colon
 };
 /* export const SLASHcss = OKLCH_FLEURS.blazeOrange;
 export const PIPEcss = OKLCH_NEUTRALS.slate;

@@ -5,8 +5,13 @@ import { clone_node } from "./clone-node";
 import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
 import { json_equal } from "./state-helpers";
 import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.consts";
+import { state_graph_entries } from "./state-graph";
+import type { StateGraphEntry, StateGraphOptions } from "./state-graph";
+
 
 export type DemoColorDiff = Partial<Record<DemoColorPath, string>>;
+export type StoreStateGraphOptions = Omit<StateGraphOptions, "schema">;
+export type DemoStateGraphOptions = StoreStateGraphOptions;
 
 function isOklchValue(value: string): boolean {
   return value.trim().toLowerCase().startsWith("oklch(");
@@ -342,6 +347,18 @@ export const get_view = demoStore.getView;
 export const get_widgets = demoStore.getWidgets;
 export const has_widget = demoStore.hasWidget;
 export const get_about_toc_open = demoStore.getTocOpen;
+
+export function store_graph_entries(
+  options: DemoStateGraphOptions = {},
+): readonly StateGraphEntry[] {
+  const graphOptions: StateGraphOptions = {
+    schema: DEMO_STATE_SCHEMA,
+    ...(options.includeContainers !== undefined ? { includeContainers: options.includeContainers } : {}),
+    ...(options.maxPreviewLength !== undefined ? { maxPreviewLength: options.maxPreviewLength } : {}),
+  };
+
+  return state_graph_entries(demo_get_state() as JsonValue, graphOptions);
+}
 
 export const get_color_state = demoStore.getColorState;
 export const get_color_tokens = demoStore.getColorTokens;

@@ -1,6 +1,7 @@
 import type { JsonValue } from "hson-live/types";
 import { make_state } from "../../../state/state";
 import { define_schema, with_schema } from "../../../state/schema";
+import { register_node_state_source } from "../../../state/state-sources";
 import type { StateMutation } from "../../../state/state.types";
 import { _freeze } from "./tests.consts";
 import type { CaseKey, CaseLog, SuiteLog, TestEvent, TestFailure, TestSummary } from "./tests.types";
@@ -49,6 +50,10 @@ type TestLogState = {
   lastLine: string;
 };
 
+type TestEventWithAssertRows = TestEvent & Readonly<{
+  assertRows?: readonly unknown[];
+}>;
+
 const TEST_LOG_SCHEMA = define_schema((scm) => ({
   activeSuite: scm.string.nullable,
   casesByKey: scm.record({
@@ -59,6 +64,7 @@ const TEST_LOG_SCHEMA = define_schema((scm) => ({
     ms: scm.number.optional,
     err: scm.string.optional,
     meta: scm.unknown.optional,
+    assertRows: scm.unknown.array.optional,
   }),
   caseKeysBySuite: scm.record(scm.string.array),
   suitesByName: scm.record({
@@ -110,6 +116,12 @@ export function create_test_log(): TestLog {
     make_state(make_initial_test_log_state() as unknown as JsonValue),
     TEST_LOG_SCHEMA,
   );
+
+  register_node_state_source({
+    name: "test-log",
+    state: logState,
+    schema: TEST_LOG_SCHEMA,
+  });
 
   const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
 
@@ -234,10 +246,15 @@ export function create_test_log(): TestLog {
         ms: e.ms,
       } as const;
 
-      // only attach err/meta when present (no `undefined` assignment)
+      const assertRows = (e as TestEventWithAssertRows).assertRows;
+
+      // only attach optional fields when present (no `undefined` assignment)
       const withMeta = nextMeta ? { ...baseEnd, meta: nextMeta } : baseEnd;
       const withErr = e.err ? { ...withMeta, err: e.err } : withMeta;
-      set(mutations, ["casesByKey", k], withErr);
+      const withAssertRows = assertRows !== undefined
+        ? { ...withErr, assertRows }
+        : withErr;
+      set(mutations, ["casesByKey", k], withAssertRows);
 
       if (e.status === "fail") {
         const meta = prev?.meta;

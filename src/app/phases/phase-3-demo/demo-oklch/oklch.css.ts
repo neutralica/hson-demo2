@@ -33,9 +33,11 @@ export const ROOT_CSS: CssMap = {
   gridTemplateColumns: "minmax(0, 1fr) 10rem",
   gap: "0.85rem",
   alignItems: "stretch",
-  boxSizing: "content-box",
+  boxSizing: "border-box",
   width: "min(36rem, calc(100vw - 2.4rem))",
-  minHeight: "11.4rem",
+  height: "100%",
+  minHeight: "0",
+  maxHeight: "100%",
   padding: "0.85rem",
 
   color: _cols.txt.code,

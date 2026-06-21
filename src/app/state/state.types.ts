@@ -61,7 +61,8 @@ export type DemoView = null |
 export type DemoWidget =
   "oklch" |
   "point" |
-  "motes";
+  "motes" |
+  "monitor";
 
 export type DemoColorKind = "oklch" | "css";
 
@@ -101,10 +102,22 @@ export type DemoState = {
 export type DemoStateRO = Readonly<DemoState>;
 //  listeners receive (next, prev) so they can diff
 
-export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void; export type StateSmokeResult = {
+export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;
+
+export type StateSmokeRow = Readonly<{
   ok: boolean;
-  steps: string[];
-};
+  label: string;
+  actual?: JsonValue;
+  expected?: JsonValue;
+  detail?: string;
+}>;
+
+export type StateSmokeResult = Readonly<{
+  ok: boolean;
+  steps: readonly string[];
+  rows: readonly StateSmokeRow[];
+}>;
+
 export type DemoStore = {
   stateSnapshot(): DemoStateRO;
   getView(): DemoView;

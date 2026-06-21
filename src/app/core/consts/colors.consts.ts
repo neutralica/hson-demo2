@@ -1,6 +1,6 @@
 import { OKLCH_FLEURS } from "../../phases/phase-3-demo/demo-fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
-import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH } from "./oklch.consts";
+import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "./oklch.consts";
 import { deepBack, bckColor } from "./old-rgb.consts";
 import { GRAF_OKLCHname, MAIN_OKLCHname, MENU_OKLCHname, MOTE_OKLCHname } from "./ui-consts";
 
@@ -94,12 +94,12 @@ const HEADERcol = OKLCH_FLEURS.greyLilac;
 
 /* markdown highlighting */
 
-const CODE_ALTcol = OKLCH_NEUTRALS.frost;
-const CODE_PARENScol = OKLCH_VIBRANT.blueYves;
+const CODE_ALTcol = OKLCH_NEUTRALS.frost2;
+const CODE_PARENScol = OKLCH_ACID_WASHED.orchid;
 const CODE_PARENS_INNERcol = OKLCH_VIBRANT.yellowBrass;
 const CONSTcol = OKLCH_FLEURS.oxidizedSky;
-const CODE_PUNCTcol = OKLCH_VIBRANT.violetIon;
-const CODE_QUOTEcol = OKLCH_VIBRANT.redInfra;
+const CODE_PUNCTcol = OKLCH_VIBRANT.roseNeon2;
+const CODE_QUOTEcol = OKLCH_VIBRANT.orangeEmber;
 const CODE_EQUALScol = OKLCH_FLEURS.limeTint;
 const COMMENTScol = ACID_WASH_OKLCH.fern;
 const CODE_BRACEcol = OKLCH_VIBRANT.violetIon;
@@ -108,7 +108,7 @@ const LISTcol = _HSON_COL.h;
 
 
 const URLcol = OKLCH_VIBRANT.blueYves;
-const COLONcol = OKLCH_FLEURS.blazeOrange;
+const COLONcol = OKLCH_VIBRANT.yellowBrass;
 
 const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
 const REDcol = OKLCH_VIBRANT.redSignal;

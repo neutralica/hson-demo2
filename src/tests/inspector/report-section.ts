@@ -10,6 +10,28 @@ type ReportSection = Readonly<{
     bodyHtml?: string;          // optional for view (or build html from text)
 }>;
 
+type AssertRow = Readonly<{
+  ok: boolean;
+  label: string;
+  actual?: string;
+  expected?: string;
+}>;
+
+type CaseReportWithAssertRows = CaseReport & Readonly<{
+  assertRows?: readonly AssertRow[];
+}>;
+
+function assert_rows_to_text(rows: readonly AssertRow[]): string {
+  if (!rows.length) return "—";
+
+  return rows.map((row, i) => {
+    const head = `${row.ok ? "ok" : "FAIL"}  #${i}  ${row.label}`;
+    const actual = row.actual !== undefined ? `\nactual: ${row.actual}` : "";
+    const expected = row.expected !== undefined ? `\nexpected: ${row.expected}` : "";
+    return `${head}${actual}${expected}`;
+  }).join("\n\n");
+}
+
 export function loopreport_to_sections(r: LoopReport): readonly ReportSection[] {
   const lines: string[] = [];
   lines.push(`ok: ${r.ok}`);
@@ -84,11 +106,15 @@ export function loopreport_to_sections(r: LoopReport): readonly ReportSection[] 
 }
 
 export function report_to_sections(r: CaseReport): readonly ReportSection[] {
+  const assertRows = (r as CaseReportWithAssertRows).assertRows ?? [];
+  const assertFailCount = assertRows.filter((row) => !row.ok).length;
   const head = [
     `${r.status.toUpperCase()}  ${r.suite} :: ${r.name}`,
     r.ms !== undefined ? `ms: ${r.ms.toFixed(1)}` : `ms: —`,
     r.hashes ? `hash: (pending)` : `hash: —`,
     r.norms?.length ? `norm: ${r.norms.join(" | ")}` : `norm: —`,
+    `assertions: ${assertRows.length}`,
+    `assertion failures: ${assertFailCount}`,
   ].join("\n");
 
   const steps = r.steps.map((s) => {
@@ -109,9 +135,12 @@ export function report_to_sections(r: CaseReport): readonly ReportSection[] {
     finals.html ? `--- final html ---\n${finals.html.text}` : "",
   ].filter(Boolean).join("\n\n") || "—";
 
+  const assertionsText = assert_rows_to_text(assertRows);
+
   return _freeze([
     _freeze({ title: "Summary", bodyText: head }),
     _freeze({ title: "Trace", bodyText: steps || "—" }),
+    _freeze({ title: "Assertions", bodyText: assertionsText }),
     _freeze({ title: "Final artifacts", bodyText: finalsText }),
   ]);
 }

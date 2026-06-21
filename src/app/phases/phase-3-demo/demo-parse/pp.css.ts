@@ -47,7 +47,7 @@ export const PP_GRIDcss: CssMap = {
 export const PP_WATERMARKcss: CssMap = {
   position: "absolute",
   inset: "0",
-  color: $gry_.dimmer,
+  color: _cols.txt.grey,
   display: "grid",
   placeItems: "center",
   pointerEvents: "all",
@@ -83,7 +83,7 @@ export const PP_ACTIVE_INVALIDcss = (f: Fmt) => {
     filter: "none",
     pointerEvents: "auto",
     userSelect: "auto",
-    boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.4), // + set_alpha(COLOR_FOR_FMT_[f], 0.1),
+    boxShadow: "inset 0 0 9px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.9),
     background: _cols.backlo,
     border: "none",
     color: "red",
@@ -118,8 +118,8 @@ export const PP_INACTIVE_INVALIDcss = (f: Fmt) => {
     filter: "saturate(1.1) brightness(1.1)",
     pointerEvents: "auto",
     userSelect: "none",
-    background: _cols.backhi,
-    boxShadow: "inset 0 0 9px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.9),
+    background: _cols.backlo,
+    boxShadow: "inset 0 0 9px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
     color: "darkred",
   };
 }

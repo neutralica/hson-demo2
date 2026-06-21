@@ -4,7 +4,7 @@
 
 import { _freeze } from "./tests.consts";
 import { TestRecorder } from "./test-recorder";
-import type { RunOptions, RunResult, TestAssertRow, TestEvent, TestSuite } from "./tests.types";
+import type { RunCaseRet, RunOptions, RunResult, TestAssertRow, TestEvent, TestSuite } from "./tests.types";
 
 // cooperative yield so the browser can paint + process input.
 // - requestAnimationFrame - "UI-friendly" yield.
@@ -30,6 +30,31 @@ function now(): number {
 function asErrMsg(err: unknown): string {
   if (err instanceof Error) return err.stack ? `${err.message}\n${err.stack}` : err.message;
   return String(err);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  return value as Record<string, unknown>;
+}
+
+function readMetaPatch(value: unknown): Record<string, string> | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+
+  const metaPatch = record.metaPatch;
+  if (typeof metaPatch !== "object" || metaPatch === null || Array.isArray(metaPatch)) return undefined;
+
+  return metaPatch as Record<string, string>;
+}
+
+function readAssertRows(value: unknown): readonly TestAssertRow[] | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+
+  const assertRows = record.assertRows;
+  if (!Array.isArray(assertRows)) return undefined;
+
+  return assertRows as readonly TestAssertRow[];
 }
 
 export async function run_test_suites(
@@ -66,10 +91,7 @@ export async function run_test_suites(
         const ret = await tc.run();
 
         const runRet = (ret && typeof ret === "object")
-          ? ret as {
-            metaPatch?: Record<string, string>;
-            assertRows?: readonly TestAssertRow[];
-          }
+          ? ret as RunCaseRet
           : undefined;
 
         const metaPatch = runRet?.metaPatch;
@@ -96,15 +118,29 @@ export async function run_test_suites(
         );
       } catch (err) {
         const msg = asErrMsg(err);
+        const metaPatch = readMetaPatch(err);
+        const assertRows = readAssertRows(err);
 
-        emit(rec, onEvent, {
+        const endBase = {
           t: "case_end",
           suite: tc.suite,
           name: tc.name,
           status: "fail",
           ms: now() - c0,
           err: msg,
-        });
+        } as const;
+
+        emit(
+          rec,
+          onEvent,
+          metaPatch || assertRows?.length
+            ? {
+              ...endBase,
+              ...(metaPatch ? { metaPatch } : {}),
+              ...(assertRows?.length ? { assertRows } : {}),
+            }
+            : endBase
+        );
 
         if (opts.bail) break;
       }
