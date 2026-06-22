@@ -3,6 +3,8 @@ import { _cols } from "../../core/consts/colors.consts";
 import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
 import { extractUrl, isIndented, parse_list_item, render_line_with_comment } from "./about-helpers";
 import type { ListItem, ListKind } from "./about.types";
+import type { MarkdownRenderOptions } from "../deck/mount-deck";
+
 
 function code_fence_css(lang: string | null): Record<string, string> {
   const normalized = (lang ?? "").toLowerCase();
@@ -36,7 +38,13 @@ function is_formatted_data_fence(lang: string | null): boolean {
   return normalized === "json" || normalized === "hson" || normalized === "html";
 }
 
-export function render_md_doc(host: LiveTree, src: string): void {
+
+
+export function render_md_doc(
+  host: LiveTree,
+  src: string,
+  options: MarkdownRenderOptions = {},
+): void {
   host.empty();
   const lines = src.replace(/\r\n/g, "\n").split("\n");
 
@@ -106,7 +114,7 @@ export function render_md_doc(host: LiveTree, src: string): void {
         ? ANTI_LIST_MARKERcss
         : ABOUT_LIST_MARKERcss;
 
-      const block = li.create.span()
+      li.create.span()
         .text.set(marker)
         .css.setMany({
           ...markerCss,
@@ -117,10 +125,10 @@ export function render_md_doc(host: LiveTree, src: string): void {
       const bodyCss = item.kind === "anti"
         ? ANTI_LIST_TEXTcss
         : LIST_TEXTcss;
-      
+
       const body = li.create.span()
         .css.setMany(bodyCss);
-      
+
       const lines = item.text.split("\n");
       for (let j = 0; j < lines.length; j += 1) {
         const row = body.create.div();
@@ -151,8 +159,8 @@ export function render_md_doc(host: LiveTree, src: string): void {
       const row = pre.create.div();
       row.css.setMany({ whiteSpace: "pre" });
 
-      // CHANGED: ts and other ordinary code fences keep the existing code
-      // highlighter; json/hson/html fences use the parsing-panel color lanes.
+      // CHANGED: hson/json/html fences are real deck/data fences now, not the
+      // old about-page hson-logo escape hatch.
       if (formattedDataFence) row.text.set(line);
       else render_line_with_comment(row, line, "code");
     }
@@ -236,7 +244,10 @@ export function render_md_doc(host: LiveTree, src: string): void {
       const text = (m[2] ?? "").trim();
 
       const h = host.create.div().classlist.add(`md-h${level}`);
-      h.css.setMany(ABOUT_HEADERcss(level));
+      h.css.setMany({
+        ...ABOUT_HEADERcss(level),
+        ...(options.headingCss?.(level) ?? {}),
+      });
       h.text.set(text);
       continue;
     }
