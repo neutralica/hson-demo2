@@ -1,7 +1,7 @@
 
 
 import type { LoopReport } from "hson-live/diagnostics";
-import type { CaseKey, CaseMeta, TestAssertRow } from "../../app/demos/demo-test/tests.types";
+import type { CaseKey, CaseMeta, TestAssertRow } from "../../app/demos/test/tests.types";
 import { escape_html } from "./render-report";
 
 export type ReportHtml = {

@@ -1,6 +1,6 @@
 // make-demo-meta-test.ts
 
-import type { TestSuite } from "../../app/demos/demo-test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
 import { demo_meta_colors, demo_meta_diffing } from "./demo-meta-tests-1";
 
 // make-demo-meta-test.ts

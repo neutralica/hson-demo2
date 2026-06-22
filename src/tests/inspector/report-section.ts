@@ -1,6 +1,6 @@
 
-import type { CaseReport } from "../../app/demos/demo-test/tests.types";
-import { _freeze } from "../../app/demos/demo-test/tests.consts";
+import type { CaseReport } from "../../app/demos/test/tests.types";
+import { _freeze } from "../../app/demos/test/tests.consts";
 import { get_final_artifacts } from "./inspector.helpers";
 import type { Artifact, LoopReport } from "hson-live/diagnostics";
 

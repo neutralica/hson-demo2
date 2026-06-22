@@ -1,6 +1,6 @@
 
 import { make_rng } from "../../utils/rng";
-import type { Rng } from "../demo-test/tests.types";
+import type { Rng } from "../test/tests.types";
 import { pickOne } from "./fleurs-helpers";
 import { DAISYshape, SUNBURSTshape, PINWHEELshape, SCISSORshape, ROSETTEshape, WILDshape, DANDYshape } from "./fleurs.consts";
 import type { FlowerCultivar, CultivarShape, FlowerSpec } from "./fleurs.types";

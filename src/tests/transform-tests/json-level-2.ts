@@ -1,4 +1,4 @@
-import type { FixtureBag, FixtureBundle } from "../../app/demos/demo-test/tests.types";
+import type { FixtureBag, FixtureBundle } from "../../app/demos/test/tests.types";
 
 
 const jsonKeyEdgeCases: Record<string, string> = {

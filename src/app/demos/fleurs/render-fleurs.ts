@@ -1,6 +1,6 @@
 import { adjustOklch } from "../../core/helpers/color-helpers";
 import { make_rng } from "../../utils/rng";
-import type { Rng } from "../demo-test/tests.types";
+import type { Rng } from "../test/tests.types";
 import { pickStamenColor, fmtNum, jitter_oklch } from "./fleurs-cols";
 import { getStamenDistance } from "./fleurs-cultivars";
 import { lerp } from "./fleurs-helpers";

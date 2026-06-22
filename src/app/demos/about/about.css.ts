@@ -4,7 +4,7 @@ import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_VIBRANT, OKLCH_NEUTRALS, OKLCH_TERMINAL_4 } from "../../core/consts/oklch.consts";
 import { øfontSize, MAIN_OKLCH, øfontWeight, $SIDEBAR_WIDTH, $CONTENT_WIDTH, SYS_MONOfont } from "../../core/consts/ui-consts";
 import  { set_alpha } from "../../core/helpers/color-helpers";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 
 
 

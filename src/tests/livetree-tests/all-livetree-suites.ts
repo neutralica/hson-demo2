@@ -23,7 +23,7 @@ import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree
 import { livetree_construction_parity, livetree_find_query_surface, livetree_quid_media } from "./livetree-22-quid-media";
 import { livetree_listener_builder_corners, livetree_text_content_surface } from "./livetree-23-coverage-gaps";
 import { livetree_dom_helper_surface } from "./livetree-24-dom-corners";
-import type { TestSuite } from "../../app/demos/demo-test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
 
 
 /******************************************************

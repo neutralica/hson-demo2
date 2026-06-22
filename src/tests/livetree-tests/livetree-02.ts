@@ -1,5 +1,5 @@
 import { hson, LiveTree } from "hson-live";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/demo-test/tests.types";
+import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import type { HsonNode } from "hson-live/types";
 import { tick } from "./livetree-03";

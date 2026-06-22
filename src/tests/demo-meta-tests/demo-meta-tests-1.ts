@@ -2,7 +2,7 @@
 
 import { COLOR_VAR_SOURCES, _cols, color_var_name_for_path } from "../../app/core/consts/colors.consts";
 import { parse_oklch } from "../../app/core/helpers/color-helpers";
-import { OKLCH_COLOR_TARGETS } from "../../app/demos/demo-oklch/link-colors";
+import { OKLCH_COLOR_TARGETS } from "../../app/demos/oklch/link-colors";
 import {
   apply_color_diff,
   create_demo_store,

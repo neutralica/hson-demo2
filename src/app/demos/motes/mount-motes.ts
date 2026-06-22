@@ -2,7 +2,7 @@ import { type LiveTree } from "hson-live";
 import { relay, relay_data, relay_void, type Outcome } from "intrastructure";
 import { motes_init } from "./motes-init";
 import type { MotesOpts, MotesRig } from "./make-mote";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 
 

@@ -1,5 +1,5 @@
 import { hson, LiveTree, make_tree_selector } from "hson-live";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/demo-test/tests.types";
+import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_svg_basic(): TestSuite {

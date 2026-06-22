@@ -1,5 +1,5 @@
 import type { CssMap } from "hson-live/types";
-import { OKLCH_FLEURS } from "../demo-fleurs/fleurs.consts";
+import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 import { _cols } from "../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../core/consts/oklch.consts";
 import { ACID_WASH_RGBA } from "../../core/consts/old-rgb.consts";

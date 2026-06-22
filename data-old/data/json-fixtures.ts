@@ -2,8 +2,8 @@
 
 import { json_CARS, json_invertebrae } from "./large-fixtures/json-chunks.mock";
 import { json_homepage } from "./large-fixtures/json-homepage-string.mock";
-import { _freeze } from "../../src/app/demos/demo-test/tests.consts";
-import type {FixtureBundle} from "../../src/app/demos/demo-test/tests.types"
+import { _freeze } from "../../src/app/demos/test/tests.consts";
+import type {FixtureBundle} from "../../src/app/demos/test/tests.types"
 
 
 

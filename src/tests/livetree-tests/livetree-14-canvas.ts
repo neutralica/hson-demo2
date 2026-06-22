@@ -1,5 +1,5 @@
 import { flush_dom } from "../inspector/inspector.helpers";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/demo-test/tests.types";
+import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_canvas(): TestSuite {

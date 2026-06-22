@@ -7,16 +7,16 @@ import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections, report_to_sections } from "./report-section";
 import { øfontSize } from "../../app/core/consts/ui-consts";
-import { $CHIP_WIDTHstr, _freeze } from "../../app/demos/demo-test/tests.consts";
-import type { CaseKey, CaseMeta, CaseReport } from "../../app/demos/demo-test/tests.types";
+import { $CHIP_WIDTHstr, _freeze } from "../../app/demos/test/tests.consts";
+import type { CaseKey, CaseMeta, CaseReport } from "../../app/demos/test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
 import { _cols } from "../../app/core/consts/colors.consts";
-import { OKLCH_FLEURS } from "../../app/demos/demo-fleurs/fleurs.consts";
+import { OKLCH_FLEURS } from "../../app/demos/fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
 import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch.consts";
-import type { TestLog } from "../../app/demos/demo-test/test-logger";
+import type { TestLog } from "../../app/demos/test/test-logger";
 
 
 export type InspectorUi = Readonly<{

@@ -1,4 +1,4 @@
-import { _freeze } from "../../app/demos/demo-test/tests.consts";
+import { _freeze } from "../../app/demos/test/tests.consts";
 
 
 const AUTO_FIXTURES = _freeze({

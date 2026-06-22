@@ -1,6 +1,6 @@
 
 import { _lerp } from "../../utils/helpers";
-import type { Rng } from "../demo-test/tests.types";
+import type { Rng } from "../test/tests.types";
 import type { CultivarShape, FlowerCultivar, HueBand } from "./fleurs.types";
 
 
