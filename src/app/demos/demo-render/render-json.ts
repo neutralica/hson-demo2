@@ -1,248 +1,11 @@
 import type { LiveTree } from "hson-live";
 import type { CssMap, JsonValue } from "hson-live/types";
+import type { JsonRenderKind, JsonPathPart, JsonRenderDraft, JsonRenderRole, JsonRenderPart, JsonRenderOptions, JsonRender, ConnectorPosition } from "./render.types";
+import { COMPLEX_VALUE_CSS, CONNECTOR_CSS, CONNECTOR_RAIL_CLEAR_CSS,  DEMO_COLUMN_CSS, DEMO_ERROR_CSS, DEMO_LABEL_CSS, DEMO_OUTPUT_CSS, DEMO_ROOT_CSS, DEMO_TEXTAREA_CSS, HIGHLIGHT_CLEAR_CSS, HIGHLIGHT_CONNECTOR_CSS, HIGHLIGHT_RELATED_CSS, HIGHLIGHT_SELF_CSS, KEY_CSS, NODE_HIT_CSS, PATH_TEXT_CSS, PRIMITIVE_CSS, ROOT_CSS, ROW_CSS, TRIGGER_CSS, VALUE_CSS } from "./render.css";
 import { _cols } from "../../core/consts/colors.consts";
-import { FONT_FAM_MONO } from "../../core/consts/css.consts";
-import { øfontSize } from "../../core/consts/ui-consts";
-
-type JsonPathPart = string | number;
-type JsonRenderKind = "array" | "boolean" | "null" | "number" | "object" | "string";
-type JsonRenderRole = "array" | "connector" | "item" | "key" | "object" | "primitive" | "property" | "root" | "value";
-type ConnectorPosition = "first" | "last" | "middle" | "single";
-
-export type JsonRenderOptions = Readonly<{
-    clearHost?: boolean;
-}>;
-
-export type JsonRenderPart = Readonly<{
-    tree: LiveTree;
-    path: readonly JsonPathPart[];
-    pathText: string;
-    role: JsonRenderRole;
-    kind: JsonRenderKind;
-}>;
-
-export type JsonRenderGroup = Readonly<{
-    items: readonly LiveTree[];
-    each: (fn: (tree: LiveTree) => void) => void;
-    css: Readonly<{
-        setMany: (styles: CssMap) => void;
-    }>;
-}>;
-
-export type JsonRender = Readonly<{
-    root: LiveTree;
-    parts: readonly JsonRenderPart[];
-    all: JsonRenderGroup;
-    arrays: JsonRenderGroup;
-    connectors: JsonRenderGroup;
-    items: JsonRenderGroup;
-    keys: JsonRenderGroup;
-    objects: JsonRenderGroup;
-    primitives: JsonRenderGroup;
-    properties: JsonRenderGroup;
-    values: JsonRenderGroup;
-    byPath: (path: string | readonly JsonPathPart[]) => LiveTree | undefined;
-}>;
-
-type JsonRenderBuckets = {
-    all: LiveTree[];
-    arrays: LiveTree[];
-    connectors: LiveTree[];
-    items: LiveTree[];
-    keys: LiveTree[];
-    objects: LiveTree[];
-    primitives: LiveTree[];
-    properties: LiveTree[];
-    values: LiveTree[];
-};
-
-type JsonRenderDraft = {
-    parts: JsonRenderPart[];
-    buckets: JsonRenderBuckets;
-    byPath: Map<string, LiveTree>;
-};
-
-const ROOT_CSS: CssMap = {
-    ...FONT_FAM_MONO,
-    fontSize: øfontSize.smol,
-    display: "grid",
-    gap: "0.35rem",
-    alignContent: "start",
-    lineHeight: "1.35",
-    color: _cols.fade,
-    userSelect: "none",
-};
-
-const NODE_CSS: CssMap = {
-    display: "grid",
-    gap: "0",
-    boxSizing: "border-box",
-    width: "max-content",
-    minWidth: "max-content",
-    border: "0",
-    borderRadius: "0.18rem",
-    background: "transparent",
-};
-
-function nodeCss(depth: number): CssMap {
-    const safeDepth = Math.min(depth, 12);
-    const rightPadding = `${0.72 + safeDepth * 0.18}rem`;
-    const leftPadding = `${0.25 + safeDepth * 0.02}rem`;
-    const shadeStop = `${180 - safeDepth * 4}%`;
-    return {
-        ...NODE_CSS,
-        // padding: `0.06rem ${rightPadding} 0.08rem ${leftPadding}`,
-        background: `linear-gradient(to bottom right, transparent 0%, ${_cols.backhi} ${shadeStop})`,
-    };
-}
-
-const ROW_CSS: CssMap = {
-    display: "grid",
-    gridTemplateColumns: "0.9rem max-content max-content",
-    gap: "0",
-    alignItems: "stretch",
-    width: "max-content",
-    minWidth: "max-content",
-};
-
-const CONNECTOR_CSS: CssMap = {
-    alignSelf: "stretch",
-    minHeight: "1.35em",
-    width: "0.9rem",
-};
-
-function connectorBackground(position: ConnectorPosition): string {
-    const verticalFull = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0 / 1px 100% no-repeat`;
-    const verticalDown = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0.72em / 1px calc(100% - 0.72em) no-repeat`;
-    const verticalUp = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0 / 1px 0.72em no-repeat`;
-    const horizontal = `linear-gradient(to right, ${_cols.fade}, ${_cols.fade}) 0.38rem 0.72em / 0.52rem 1px no-repeat`;
-    const horizontalFull = `linear-gradient(to right, ${_cols.fade}, ${_cols.fade}) 0 0.72em / 0.9rem 1px no-repeat`;
-
-    if (position === "single") return horizontal;
-    if (position === "first") return `${verticalDown}, ${horizontalFull}`;
-    if (position === "last") return `${verticalUp}, ${horizontal}`;
-    return `${verticalFull}, ${horizontal}`;
-}
-
-function connectorCss(depth: number, position: ConnectorPosition): CssMap {
-    const safeDepth = Math.min(depth, 8);
-    return {
-        ...CONNECTOR_CSS,
-        opacity: String(0.24 + safeDepth * 0.035),
-        background: connectorBackground(position),
-    };
-}
-
-function connectorPosition(index: number, count: number): ConnectorPosition {
-    if (count <= 1) return "single";
-    if (index === 0) return "first";
-    if (index === count - 1) return "last";
-    return "middle";
-}
-
-const KEY_CSS: CssMap = {
-    color: _cols.fmt.json,
-    opacity: "0.72",
-    overflow: "visible",
-    whiteSpace: "nowrap",
-    paddingRight: "0.36rem",
-    display: "flex",
-    alignItems: "flex-start",
-    boxSizing: "border-box",
-};
-
-const VALUE_CSS: CssMap = {
-    minWidth: "0",
-    width: "max-content",
-    overflow: "visible",
-    alignSelf: "start",
-};
-
-const PRIMITIVE_CSS: CssMap = {
-    color: _cols.yellowlike,
-    paddingRight: "0.36rem",
-    overflow: "visible",
-    whiteSpace: "nowrap",
-};
-
-const DEMO_ROOT_CSS: CssMap = {
-    ...FONT_FAM_MONO,
-    display: "grid",
-    gridTemplateColumns: "minmax(16rem, 0.45fr) minmax(0, 1fr)",
-    gap: "0.75rem",
-    height: "100%",
-    minHeight: "0",
-    boxSizing: "border-box",
-    padding: "0.75rem",
-    color: _cols.fade,
-};
-
-const DEMO_COLUMN_CSS: CssMap = {
-    display: "grid",
-    gridTemplateRows: "auto minmax(0, 1fr)",
-    gap: "0.45rem",
-    minHeight: "0",
-};
-
-const DEMO_LABEL_CSS: CssMap = {
-    color: _cols.fade,
-    opacity: "0.58",
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-    fontSize: "0.68rem",
-};
-
-const DEMO_TEXTAREA_CSS: CssMap = {
-    width: "100%",
-    height: "100%",
-    minHeight: "0",
-    boxSizing: "border-box",
-    resize: "none",
-    padding: "0.75rem",
-    border: `1px solid ${_cols.bluelike}`,
-    background: _cols.backlo,
-    color: _cols.fmt.json,
-    outline: "none",
-    ...FONT_FAM_MONO,
-    fontSize: øfontSize.smol,
-};
-
-const DEMO_OUTPUT_CSS: CssMap = {
-    minHeight: "0",
-    overflow: "auto",
-    boxSizing: "border-box",
-    padding: "0.75rem",
-    border: "0",
-    borderRadius: "0.18rem",
-    background: `linear-gradient(to bottom right, ${_cols.backlo} 0%, ${_cols.backlo} 72%, ${_cols.backhi} 135%)`,
-};
-
-const DEMO_ERROR_CSS: CssMap = {
-    color: _cols.red,
-    whiteSpace: "pre-wrap",
-};
-
-const HIGHLIGHT_CLEAR_CSS: CssMap = {
-    boxShadow: "",
-    filter: "",
-
-};
-
-const HIGHLIGHT_RELATED_CSS: CssMap = {
-    boxShadow: `inset 0 0 0 1px ${_cols.fade}`,
-};
-
-const HIGHLIGHT_SELF_CSS: CssMap = {
-    boxShadow: `inset 0 0 0 1px ${_cols.red}`,
-};
-
-const HIGHLIGHT_TEXT_CSS: CssMap = {
-
-};
-
-const HIGHLIGHT_CONNECTOR_CSS: CssMap = {
-    filter: `drop-shadow(0 0 0.08rem ${_cols.red})`,
-};
+import { connectorPosition, isHighlightContainer, isHighlightNode, isHighlightText, setMeta, kindOf, makeBuckets, makeGroup, pathFromInput, pathKey, pathsEqual, pathText, label_trees_by_path, clear_path_overlay, draw_path_overlay, make_path_overlay, type PathOverlay, } from "./render-helpers";
+import { nodeCss } from "./render.css";
+import { $RENDER_STRING_DEF } from "./render.consts";
 
 const SAMPLE_JSON_TEXT = JSON.stringify({
     title: "LiveMap render sketch",
@@ -259,83 +22,162 @@ const SAMPLE_JSON_TEXT = JSON.stringify({
     },
 }, null, 2);
 
-function makeBuckets(): JsonRenderBuckets {
-    return {
-        all: [],
-        arrays: [],
-        connectors: [],
-        items: [],
-        keys: [],
-        objects: [],
-        primitives: [],
-        properties: [],
-        values: [],
-    };
-}
+type ConnectorPositionValue = ReturnType<typeof connectorPosition>;
 
-function makeGroup(items: LiveTree[]): JsonRenderGroup {
-    return Object.freeze({
-        items: Object.freeze(items),
-        each(fn: (tree: LiveTree) => void): void {
-            for (const item of items) fn(item);
-        },
-        css: Object.freeze({
-            setMany(styles: CssMap): void {
-                for (const item of items) item.css.setMany(styles);
-            },
-        }),
-    });
-}
+type ConnectorRenderInfo = Readonly<{
+    position: ConnectorPositionValue;
+    parentPath: readonly JsonPathPart[];
+    path: readonly JsonPathPart[];
+    index: number;
+    count: number;
+}>;
 
-function kindOf(value: JsonValue): JsonRenderKind {
-    if (value === null) return "null";
-    if (Array.isArray(value)) return "array";
-    return typeof value as JsonRenderKind;
-}
+const connectorStyles = new WeakMap<LiveTree, CssMap>();
+const connectorPositions = new WeakMap<LiveTree, ConnectorPositionValue>();
+const connectorInfos = new WeakMap<LiveTree, ConnectorRenderInfo>();
+const connectorIndexes = new Map<string, number>();
 
-function pathKey(path: readonly JsonPathPart[]): string {
-    return JSON.stringify(path);
-}
+const connectorRails = new WeakMap<LiveTree, LiveTree>();
+const connectorRailTrees = new Set<LiveTree>();
+export const pathLineY = "1.55em";
+export const pathLineCornerStub = "0.42em";
+const pathLineThickness = "1px";
+const pathLineOpacity = "0.38";
+const pathLineFilter = `drop-shadow(0 0 0.035rem ${_cols.yellowlike}) drop-shadow(0 0 0.09rem ${_cols.yellowlike})`;
 
-function pathText(path: readonly JsonPathPart[]): string {
-    if (path.length === 0) return "$";
-
-    let text = "$";
-
-    for (const part of path) {
-        if (typeof part === "number") {
-            text += `[${part}]`;
-            continue;
-        }
-
-        if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(part)) {
-            text += `.${part}`;
-            continue;
-        }
-
-        text += `[${JSON.stringify(part)}]`;
-    }
-
-    return text;
-}
-
-function pathFromInput(path: string | readonly JsonPathPart[]): string {
-    if (typeof path === "string") return path;
-    return pathKey(path);
-}
-
-function pathsEqual(a: readonly JsonPathPart[], b: readonly JsonPathPart[]): boolean {
-    if (a.length !== b.length) return false;
-    return a.every((part, i) => part === b[i]);
-}
-
-function pathContains(parent: readonly JsonPathPart[], child: readonly JsonPathPart[]): boolean {
+const activeLinesEnabled = false;
+export function pathContains(parent: readonly JsonPathPart[], child: readonly JsonPathPart[]): boolean {
     if (parent.length > child.length) return false;
     return parent.every((part, i) => part === child[i]);
 }
-
-function pathsRelated(a: readonly JsonPathPart[], b: readonly JsonPathPart[]): boolean {
+export function pathsRelated(a: readonly JsonPathPart[], b: readonly JsonPathPart[]): boolean {
     return pathContains(a, b);
+}
+
+export const CONNECTOR_RAIL_CSS: CssMap = {
+    position: "absolute",
+    gridColumn: "1 / 3",
+    left: "0.38rem",
+    right: "-0.18rem",
+    top: pathLineY,
+    height: pathLineCornerStub,
+    opacity: "0",
+    background: "transparent",
+    filter: "",
+    pointerEvents: "none",
+    zIndex: "0",
+};
+
+function connectorTargetIndex(info: ConnectorRenderInfo, target: readonly JsonPathPart[]): number | undefined {
+    if (!pathContains(info.parentPath, target)) return undefined;
+    if (target.length <= info.parentPath.length) return undefined;
+
+    const targetPart = target[info.parentPath.length];
+    if (targetPart === undefined) return undefined;
+
+    const targetChildPath = [...info.parentPath, targetPart];
+    return connectorIndexes.get(pathKey(targetChildPath));
+}
+
+function highlightedConnectorBackground(position: ConnectorPositionValue): string {
+    const color = _cols.yellowlike;
+    const verticalFull = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem 0 / ${pathLineThickness} 100% no-repeat`;
+    const verticalDown = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem calc(${pathLineY} - ${pathLineThickness}) / ${pathLineThickness} calc(100% - ${pathLineY} + ${pathLineThickness}) no-repeat`;
+    const verticalUp = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem 0 / ${pathLineThickness} calc(${pathLineY} + ${pathLineThickness}) no-repeat`;
+    const horizontal = `linear-gradient(to right, ${color}, ${color}) 0.38rem ${pathLineY} / 0.62rem ${pathLineThickness} no-repeat`;
+    const horizontalFull = `linear-gradient(to right, ${color}, ${color}) 0 ${pathLineY} / 0.9rem ${pathLineThickness} no-repeat`;
+
+    if (position === "single") return horizontal;
+    if (position === "first") return `${verticalDown}, ${horizontalFull}`;
+    if (position === "last") return `${verticalUp}, ${horizontal}`;
+    return `${verticalFull}, ${horizontal}`;
+}
+
+function connectorBackground(position: ConnectorPosition): string {
+    const verticalFull = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0 / 1px 100% no-repeat`;
+    const verticalDown = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0.72em / 1px calc(100% - 0.72em) no-repeat`;
+    const verticalUp = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0 / 1px 0.72em no-repeat`;
+    const horizontal = `linear-gradient(to right, ${_cols.fade}, ${_cols.fade}) 0.38rem 0.72em / 0.62rem 1px no-repeat`;
+    const horizontalFull = `linear-gradient(to right, ${_cols.fade}, ${_cols.fade}) 0 0.72em / 0.9rem 1px no-repeat`;
+
+    if (position === "single") return horizontal;
+    if (position === "first") return `${verticalDown}, ${horizontalFull}`;
+    if (position === "last") return `${verticalUp}, ${horizontal}`;
+    return `${verticalFull}, ${horizontal}`;
+}
+function connectorCss(depth: number, position: ConnectorPosition): CssMap {
+    const safeDepth = Math.min(depth, 8);
+    return {
+        ...CONNECTOR_CSS,
+        opacity: String(0.24 + safeDepth * 0.035),
+        background: connectorBackground(position),
+    };
+}
+function highlightedConnectorBranchBackground(info: ConnectorRenderInfo, target: readonly JsonPathPart[]): string | undefined {
+    const targetIndex = connectorTargetIndex(info, target);
+    if (targetIndex === undefined) return undefined;
+    if (info.index > targetIndex) return undefined;
+
+    const color = _cols.yellowlike;
+    const verticalFull = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem 0 / ${pathLineThickness} 100% no-repeat`;
+    const verticalDown = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem calc(${pathLineY} - ${pathLineThickness}) / ${pathLineThickness} calc(100% - ${pathLineY} + ${pathLineThickness}) no-repeat`;
+
+    if (info.index < targetIndex) {
+        if (info.index === 0) return verticalDown;
+        return verticalFull;
+    }
+
+    const continuesBeyondConnector = pathContains(info.path, target) && target.length > info.path.length;
+    if (continuesBeyondConnector) return verticalDown;
+
+    return "none";
+}
+
+function highlightedConnectorBranchCss(info: ConnectorRenderInfo, target: readonly JsonPathPart[]): CssMap | undefined {
+    const background = highlightedConnectorBranchBackground(info, target);
+    if (!background) return undefined;
+
+    return {
+        ...HIGHLIGHT_CONNECTOR_CSS,
+        opacity: pathLineOpacity,
+        filter: pathLineFilter,
+        background,
+    };
+}
+
+function highlightedConnectorRailBackground(): string {
+    const color = _cols.yellowlike;
+    return `linear-gradient(to right, ${color}, ${color}) 0 0 / 100% ${pathLineThickness} no-repeat`;
+}
+
+function highlightedConnectorRailCss(info: ConnectorRenderInfo, target: readonly JsonPathPart[]): CssMap | undefined {
+    const targetIndex = connectorTargetIndex(info, target);
+    if (targetIndex === undefined) return undefined;
+    if (info.index !== targetIndex) return undefined;
+
+    return {
+        opacity: pathLineOpacity,
+        background: highlightedConnectorRailBackground(),
+        filter: pathLineFilter,
+    };
+}
+
+function highlightedConnectorCss(position: ConnectorPositionValue): CssMap {
+    return {
+        ...HIGHLIGHT_CONNECTOR_CSS,
+        opacity: pathLineOpacity,
+        filter: pathLineFilter,
+        background: highlightedConnectorBackground(position),
+    };
+}
+
+function rememberConnector(tree: LiveTree, styles: CssMap, info: ConnectorRenderInfo, rail: LiveTree): void {
+    connectorStyles.set(tree, styles);
+    connectorPositions.set(tree, info.position);
+    connectorInfos.set(tree, info);
+    connectorIndexes.set(pathKey(info.path), info.index);
+    connectorRails.set(tree, rail);
+    connectorRailTrees.add(rail);
 }
 
 function preview(value: JsonValue): string {
@@ -378,34 +220,25 @@ function addPart(
     }
 }
 
-function setMeta(
-    tree: LiveTree,
-    path: readonly JsonPathPart[],
-    role: JsonRenderRole,
-    kind: JsonRenderKind,
-): void {
-    tree.attr.setMany({
-        "data-json-role": role,
-        "data-json-kind": kind,
-        "data-json-path": pathText(path),
-    });
-}
-
-function isHighlightContainer(role: JsonRenderRole): boolean {
-    return role === "item" || role === "property" || role === "root";
-}
-
-function isHighlightNode(role: JsonRenderRole): boolean {
-    return role === "array" || role === "object";
-}
-
-function isHighlightText(role: JsonRenderRole): boolean {
-    return role === "key" || role === "primitive";
-}
-
-function wirePathHighlight(parts: readonly JsonRenderPart[]): void {
+function wirePathHighlight(parts: readonly JsonRenderPart[], root: LiveTree, overlay: PathOverlay | undefined): void {
+    const labels = label_trees_by_path(parts);
     const clear = (): void => {
+        clear_path_overlay(overlay);
+        for (const rail of connectorRailTrees) {
+            rail.css.setMany(CONNECTOR_RAIL_CLEAR_CSS);
+        }
         for (const part of parts) {
+            if (part.role === "connector") {
+                const connectorStyle = connectorStyles.get(part.tree);
+                if (connectorStyle) {
+                    part.tree.css.setMany({
+                        ...connectorStyle,
+                        filter: "",
+                    });
+                    continue;
+                }
+            }
+
             part.tree.css.setMany(HIGHLIGHT_CLEAR_CSS);
         }
     };
@@ -414,25 +247,51 @@ function wirePathHighlight(parts: readonly JsonRenderPart[]): void {
         clear();
 
         for (const part of parts) {
+            if (part.role === "connector") {
+                if (!activeLinesEnabled) continue;
+
+                const connectorInfo = connectorInfos.get(part.tree);
+                const branchCss = connectorInfo ? highlightedConnectorBranchCss(connectorInfo, target) : undefined;
+                if (branchCss) {
+                    part.tree.css.setMany(branchCss);
+                    const rail = connectorRails.get(part.tree);
+                    const railCss = (rail && connectorInfo) ? highlightedConnectorRailCss(connectorInfo, target) : undefined;
+                    if (rail && railCss) rail.css.setMany(railCss);
+                    continue;
+                }
+            }
+
             if (!pathsRelated(part.path, target)) continue;
 
             if (part.role === "connector") {
-                part.tree.css.setMany(HIGHLIGHT_CONNECTOR_CSS);
+                if (!activeLinesEnabled) continue;
+
+                const connectorPositionValue = connectorPositions.get(part.tree);
+                part.tree.css.setMany(connectorPositionValue ? highlightedConnectorCss(connectorPositionValue) : HIGHLIGHT_CONNECTOR_CSS);
+                const connectorInfo = connectorInfos.get(part.tree);
+                const rail = connectorRails.get(part.tree);
+                const railCss = connectorInfo && rail ? highlightedConnectorRailCss(connectorInfo, target) : undefined;
+                if (rail && railCss) rail.css.setMany(railCss);
+                continue;
+            }
+
+            if (isHighlightText(part.role)) {
+                part.tree.css.setMany(PATH_TEXT_CSS);
                 continue;
             }
 
             if (pathsEqual(part.path, target)) {
                 if (isHighlightContainer(part.role)) part.tree.css.setMany(HIGHLIGHT_SELF_CSS);
-                if (isHighlightText(part.role)) part.tree.css.setMany(HIGHLIGHT_TEXT_CSS);
                 continue;
             }
 
             if (isHighlightNode(part.role)) part.tree.css.setMany(HIGHLIGHT_RELATED_CSS);
         }
+        draw_path_overlay(root, overlay, labels, target);
     };
 
     const shouldTrigger = (role: JsonRenderRole): boolean => {
-        return role === "connector" || role === "key" || role === "primitive";
+        return role === "connector" || role === "key" || role === "primitive" || role === "trigger";
     };
 
     const rootPart = parts.find((part) => part.role === "root");
@@ -478,23 +337,42 @@ function renderValue(
         setMeta(node, path, "array", kind);
         addPart(draft, node, path, "array", kind);
 
+        const nodeHit = node.create.div().css.setMany(NODE_HIT_CSS);
+        setMeta(nodeHit, path, "trigger", kind);
+        addPart(draft, nodeHit, path, "trigger", kind);
+
         for (let i = 0; i < value.length; i += 1) {
             const itemPath = [...path, i];
             const child = value[i] as JsonValue;
             const childKind = kindOf(child);
             const row = node.create.div().css.setMany(ROW_CSS);
-            const connector = row.create.div().css.setMany(connectorCss(depth + 1, connectorPosition(i, value.length)));
+            const rail = row.create.div().css.setMany(CONNECTOR_RAIL_CSS);
+            const connectorPos = connectorPosition(i, value.length);
+            const connectorStyle = connectorCss(depth + 1, connectorPos);
+            const connector = row.create.div().css.setMany(connectorStyle);
+            rememberConnector(connector, connectorStyle, {
+                position: connectorPos,
+                parentPath: Object.freeze([...path]),
+                path: Object.freeze([...itemPath]),
+                index: i,
+                count: value.length,
+            }, rail);
             const key = row.create.div().text.set(`[${i}]`).css.setMany(KEY_CSS);
-            const val = row.create.div().css.setMany(VALUE_CSS);
+            const val = row.create.div().css.setMany(childKind === "array" || childKind === "object" ? COMPLEX_VALUE_CSS : VALUE_CSS);
+            const trigger = row.create.div().css.setMany(TRIGGER_CSS);
+            const triggerPath = path.length === 0 ? itemPath : path;
+            const triggerKind = path.length === 0 ? childKind : kind;
 
             setMeta(row, itemPath, "item", childKind);
             setMeta(connector, itemPath, "connector", childKind);
             setMeta(key, itemPath, "key", childKind);
             setMeta(val, itemPath, "value", childKind);
+            setMeta(trigger, triggerPath, "trigger", triggerKind);
             addPart(draft, row, itemPath, "item", childKind);
             addPart(draft, connector, itemPath, "connector", childKind);
             addPart(draft, key, itemPath, "key", childKind);
             addPart(draft, val, itemPath, "value", childKind);
+            addPart(draft, trigger, triggerPath, "trigger", triggerKind);
             renderValue(val, child, itemPath, draft, depth + 1);
         }
 
@@ -507,24 +385,43 @@ function renderValue(
     setMeta(node, path, "object", kind);
     addPart(draft, node, path, "object", kind);
 
+    const nodeHit = node.create.div().css.setMany(NODE_HIT_CSS);
+    setMeta(nodeHit, path, "trigger", kind);
+    addPart(draft, nodeHit, path, "trigger", kind);
+
     let keyIndex = 0;
     for (const keyName of keys) {
         const valuePath = [...path, keyName];
         const child = objectValue[keyName] as JsonValue;
         const childKind = kindOf(child);
         const row = node.create.div().css.setMany(ROW_CSS);
-        const connector = row.create.div().css.setMany(connectorCss(depth + 1, connectorPosition(keyIndex, keys.length)));
+        const rail = row.create.div().css.setMany(CONNECTOR_RAIL_CSS);
+        const connectorPos = connectorPosition(keyIndex, keys.length);
+        const connectorStyle = connectorCss(depth + 1, connectorPos);
+        const connector = row.create.div().css.setMany(connectorStyle);
+        rememberConnector(connector, connectorStyle, {
+            position: connectorPos,
+            parentPath: Object.freeze([...path]),
+            path: Object.freeze([...valuePath]),
+            index: keyIndex,
+            count: keys.length,
+        }, rail);
         const key = row.create.div().text.set(keyName).css.setMany(KEY_CSS);
-        const val = row.create.div().css.setMany(VALUE_CSS);
+        const val = row.create.div().css.setMany(childKind === "array" || childKind === "object" ? COMPLEX_VALUE_CSS : VALUE_CSS);
+        const trigger = row.create.div().css.setMany(TRIGGER_CSS);
+        const triggerPath = path.length === 0 ? valuePath : path;
+        const triggerKind = path.length === 0 ? childKind : kind;
 
         setMeta(row, valuePath, "property", childKind);
         setMeta(connector, valuePath, "connector", childKind);
         setMeta(key, valuePath, "key", childKind);
         setMeta(val, valuePath, "value", childKind);
+        setMeta(trigger, triggerPath, "trigger", triggerKind);
         addPart(draft, row, valuePath, "property", childKind);
         addPart(draft, connector, valuePath, "connector", childKind);
         addPart(draft, key, valuePath, "key", childKind);
         addPart(draft, val, valuePath, "value", childKind);
+        addPart(draft, trigger, triggerPath, "trigger", triggerKind);
         renderValue(val, child, valuePath, draft, depth + 1);
         keyIndex += 1;
     }
@@ -538,6 +435,8 @@ export function render_json(
     options: JsonRenderOptions = {},
 ): JsonRender {
     if (options.clearHost ?? true) host.empty();
+    connectorIndexes.clear();
+    connectorRailTrees.clear();
 
     const draft: JsonRenderDraft = {
         parts: [],
@@ -545,11 +444,15 @@ export function render_json(
         byPath: new Map<string, LiveTree>(),
     };
 
-    const root = host.create.div().css.setMany(ROOT_CSS);
+    const root = host.create.div().css.setMany({
+        ...ROOT_CSS,
+        position: "relative",
+    });
+    const overlay = make_path_overlay(root);
     setMeta(root, [], "root", kindOf(value));
     addPart(draft, root, [], "root", kindOf(value));
     renderValue(root, value, [], draft, 0);
-    wirePathHighlight(draft.parts);
+    wirePathHighlight(draft.parts, root, overlay);
 
     return Object.freeze({
         root,
@@ -579,7 +482,6 @@ export function render_json_text(
 
 export function mount_json_render_demo(host: LiveTree): void {
     host.empty();
-
     const root = host.create.div().css.setMany(DEMO_ROOT_CSS);
     const inputColumn = root.create.div().css.setMany(DEMO_COLUMN_CSS);
     const outputColumn = root.create.div().css.setMany(DEMO_COLUMN_CSS);
@@ -590,7 +492,7 @@ export function mount_json_render_demo(host: LiveTree): void {
     const input = inputColumn.create.textarea().css.setMany(DEMO_TEXTAREA_CSS);
     const output = outputColumn.create.div().css.setMany(DEMO_OUTPUT_CSS);
 
-    input.form.setValue(SAMPLE_JSON_TEXT);
+    input.form.setValue($RENDER_STRING_DEF);
 
     const renderInput = (): void => {
         const raw = input.form.getValue();
