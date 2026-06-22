@@ -70,6 +70,7 @@ const ROOT_CSS: CssMap = {
     alignContent: "start",
     lineHeight: "1.35",
     color: _cols.fade,
+    userSelect: "none",
 };
 
 const NODE_CSS: CssMap = {
@@ -90,7 +91,7 @@ function nodeCss(depth: number): CssMap {
     const shadeStop = `${180 - safeDepth * 4}%`;
     return {
         ...NODE_CSS,
-        padding: `0 ${rightPadding} 0 ${leftPadding}`,
+        // padding: `0.06rem ${rightPadding} 0.08rem ${leftPadding}`,
         background: `linear-gradient(to bottom right, transparent 0%, ${_cols.backhi} ${shadeStop})`,
     };
 }
@@ -99,7 +100,7 @@ const ROW_CSS: CssMap = {
     display: "grid",
     gridTemplateColumns: "0.9rem max-content max-content",
     gap: "0",
-    alignItems: "start",
+    alignItems: "stretch",
     width: "max-content",
     minWidth: "max-content",
 };
@@ -145,12 +146,16 @@ const KEY_CSS: CssMap = {
     overflow: "visible",
     whiteSpace: "nowrap",
     paddingRight: "0.36rem",
+    display: "flex",
+    alignItems: "flex-start",
+    boxSizing: "border-box",
 };
 
 const VALUE_CSS: CssMap = {
     minWidth: "0",
     width: "max-content",
     overflow: "visible",
+    alignSelf: "start",
 };
 
 const PRIMITIVE_CSS: CssMap = {
@@ -219,9 +224,8 @@ const DEMO_ERROR_CSS: CssMap = {
 
 const HIGHLIGHT_CLEAR_CSS: CssMap = {
     boxShadow: "",
-    textDecoration: "",
-    textDecorationColor: "",
-    textUnderlineOffset: "",
+    filter: "",
+
 };
 
 const HIGHLIGHT_RELATED_CSS: CssMap = {
@@ -233,9 +237,11 @@ const HIGHLIGHT_SELF_CSS: CssMap = {
 };
 
 const HIGHLIGHT_TEXT_CSS: CssMap = {
-    textDecoration: "underline",
-    textDecorationColor: _cols.red,
-    textUnderlineOffset: "0.15em",
+
+};
+
+const HIGHLIGHT_CONNECTOR_CSS: CssMap = {
+    filter: `drop-shadow(0 0 0.08rem ${_cols.red})`,
 };
 
 const SAMPLE_JSON_TEXT = JSON.stringify({
@@ -329,7 +335,7 @@ function pathContains(parent: readonly JsonPathPart[], child: readonly JsonPathP
 }
 
 function pathsRelated(a: readonly JsonPathPart[], b: readonly JsonPathPart[]): boolean {
-    return pathContains(a, b) || pathContains(b, a);
+    return pathContains(a, b);
 }
 
 function preview(value: JsonValue): string {
@@ -400,7 +406,6 @@ function isHighlightText(role: JsonRenderRole): boolean {
 function wirePathHighlight(parts: readonly JsonRenderPart[]): void {
     const clear = (): void => {
         for (const part of parts) {
-            if (part.role === "connector") continue;
             part.tree.css.setMany(HIGHLIGHT_CLEAR_CSS);
         }
     };
@@ -409,8 +414,12 @@ function wirePathHighlight(parts: readonly JsonRenderPart[]): void {
         clear();
 
         for (const part of parts) {
-            if (part.role === "connector") continue;
             if (!pathsRelated(part.path, target)) continue;
+
+            if (part.role === "connector") {
+                part.tree.css.setMany(HIGHLIGHT_CONNECTOR_CSS);
+                continue;
+            }
 
             if (pathsEqual(part.path, target)) {
                 if (isHighlightContainer(part.role)) part.tree.css.setMany(HIGHLIGHT_SELF_CSS);
@@ -422,12 +431,16 @@ function wirePathHighlight(parts: readonly JsonRenderPart[]): void {
         }
     };
 
+    const shouldTrigger = (role: JsonRenderRole): boolean => {
+        return role === "connector" || role === "key" || role === "primitive";
+    };
+
     const rootPart = parts.find((part) => part.role === "root");
-    rootPart?.tree.listen.on("pointerleave", clear);
+    rootPart?.tree.listen.onPointerLeave(clear);
 
     for (const part of parts) {
-        if (part.role === "connector" || part.role === "root") continue;
-        part.tree.listen.on("pointerenter", () => highlight(part.path));
+        if (!shouldTrigger(part.role)) continue;
+        part.tree.listen.onPointerEnter(() => highlight(part.path));
     }
 }
 
