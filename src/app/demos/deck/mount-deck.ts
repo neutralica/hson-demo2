@@ -2,972 +2,123 @@
 
 import { LiveTree } from "hson-live";
 import { _cols } from "../../core/consts/colors.consts";
-import { FONT_FAM_MONO } from "../../core/consts/css.consts";
-import { øfontSize } from "../../core/consts/ui-consts";
-import { ABOUT_P_TEXTcss, ABOUT_HEADERcss, ABOUT_LIST_ROWcss, ABOUT_LIST_MARKERcss, LIST_TEXTcss, FLUSH_LISTcss, MD_CODE_PREcss } from "../about/about.css";
+import { ABOUT_P_TEXTcss, ABOUT_HEADERcss, ABOUT_LIST_ROWcss, ABOUT_LIST_MARKERcss, LIST_TEXTcss, FLUSH_LISTcss } from "../about/about.css";
+import { set_alpha } from "../../core/helpers/color-helpers";
+import { deckCodeStringCss, deckCodeKeywordCss, deckCodeMethodCss, deckCodeMutedCss, deckCodeCommentCss, deckCodeCss, deckBodyCss, deckHeaderBStackCss, deckHeaderBCss, deckSectionStackCss, deckSectionCss, deckSectionHeadingCss, deckSectionTextCss, deckSlideCss, deckHeaderCss, deckHeaderVisibleCss, deckBodyGridCss, deckFooterCss, deckRootCss, deckVeilCss, deckChromeCss, deckStageCss, deckButtonCss } from "./deck.css";
+import { SLIDES } from "./deck-slides";
+import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, slide_bodies, write_in_text } from "./deck-helpers";
+import type { DeckSlideConfig, DeckState, DeckSlideBody, DeckSlideSection, DeckApi } from "./deck.types";
+import { deckCodeStringPattern, deckCodeKeywordPattern, deckCodePunctuationPattern, deckCodeTokenPattern } from "./deck.consts";
+import { deckCodeSyntaxCss, deckCodeContentCss } from "./deck.css";
+import type { CssMap } from "hson-live/types";
 import { render_line_with_comment } from "../about/about-helpers";
 
-const jsonString = `{
-  "site": {
-    "title": "HSON Live",
-    "version": "2.0.26",
-    "theme": {
-      "mode": "terminal-gothic",
-      "accent": "yellowlike"
-    },
-    "sections": [
-      {
-        "id": "transform",
-        "label": "hson.transform",
-        "status": "stable"
-      },
-      {
-        "id": "liveTree",
-        "label": "hson.liveTree",
-        "status": "active"
-      },
-      {
-        "id": "liveMap",
-        "label": "hson.liveMap",
-        "status": "wip"
-      }
-    ]
-  }
-}`;
-const htmlString = `
-<body id="hson-demo">
-  <main class="deck">
-    <section id="transform" data-status="stable">
-      <h1>hson.transform</h1>
-      <p>JSON, HTML, and HSON convert through one node graph.</p>
-    </section>
 
-    <section id="liveTree" data-status="active">
-      <h1>hson.liveTree</h1>
-      <p>The DOM is projected from a live HsonNode graph.</p>
-    </section>
 
-    <section id="liveMap" data-status="wip">
-      <h1>hson.liveMap</h1>
-      <p>State and view begin to share one editable source.</p>
-    </section>
-  </main>
-</body>
-`
-export type MarkdownRenderOptions = Readonly<{
-  headingCss?: (level: 1 | 2 | 3 | 4) =>
-    Record<string, string>;
-}>;
+export function deckTransitionMs(): number { return 180 };
+export const writeTickMs = 24;
+export const writeMinMs = 460;
+export const writeMaxMs = 980;
+export const writeNoise = "<>/\\{}[]()*&^%$#@!?:;~";
 
-export type DeckBodyKind = "text" | "code" | "image";
+function deck_code_panel_css(lang: string | undefined, fillPanel: boolean): CssMap {
+  const formatColor = deck_code_format_color(lang);
 
-export type DeckSlideBody = Readonly<
-  | {
-    kind: "text";
-    text: string;
-  }
-  | {
-    kind: "code";
-    text: string;
-    lang?: string;
-  }
-  | {
-    kind: "image";
-    src: string;
-    alt?: string;
-  }
->;
+  return {
+    position: "relative",
+    minWidth: "0",
+    minHeight: "0",
+    height: fillPanel ? "100%" : "auto",
+    maxHeight: fillPanel ? "100%" : "min(18rem, 42vh)",
+    overflowX: "hidden",
+    overflowY: "auto",
+    boxSizing: "border-box",
+    // CHANGED: this is the actual shell used by both solo code bodies and
+    // fenced markdown code blocks, so panel padding belongs here.
+    padding: "1rem 1rem",
+    background: _cols.backlo,
+    // CHANGED: restore format-aware body text color inside data/code panels.
+    color: formatColor,
+    border: `1px solid ${formatColor}`,
+    boxShadow: "inset 0 0 15px 0.1px " + set_alpha(formatColor, 0.5),
+    scrollbarWidth: "thin",
 
-export type DeckSlideSection = Readonly<{
-  heading: string;
-  text?: string;
-}>;
-
-export type DeckSlideConfig = Readonly<{
-  headerA?: string;
-  headerB?: string;
-  bodyA?: DeckSlideBody;
-  bodyB?: DeckSlideBody;
-  bodyC?: DeckSlideBody;
-  sections?: readonly DeckSlideSection[];
-  stackAlign?: "start" | "center";
-  footer?: string;
-}>;
-
-export type DeckApi = Readonly<{
-  root: LiveTree;
-  open: () => void;
-  close: () => void;
-  toggle: () => void;
-  next: () => void;
-  prev: () => void;
-  goTo: (index: number) => void;
-}>;
-
-type DeckState = {
-  isOpen: boolean;
-  index: number;
-  timerIds: number[];
-};
-
-const deckTransitionMs = 180;
-const writeTickMs = 24;
-const writeMinMs = 460;
-const writeMaxMs = 980;
-const writeNoise = "█▓▒░<>/\\{}[]()*&^%$#@!?:;~";
-
-const deckHeaderBCss = {
-  color: _cols.yellowlike,
-  fontSize: "clamp(1.65rem, 2.8vw, 3rem)",
-  lineHeight: "1.02",
-  letterSpacing: "-0.025em",
-  textShadow: `0 0 0.12rem ${_cols.yellowlike}`,
-  // CHANGED: align secondary deck headers with the main slide header/body rail.
-  justifySelf: "stretch",
-  textAlign: "left",
-  // CHANGED: separate headerB from the previous body while keeping its own
-  // following body close enough to read as a unit.
-  marginTop: "2.15rem",
-  marginBottom: "0.25rem",
-};
-
-const deckHeaderBStackCss = {
-  display: "grid",
-  gap: "0.55rem",
-  alignContent: "start",
-  justifyContent: "stretch",
-  gridTemplateColumns: "1fr",
-  minHeight: "0",
-};
-
-const deckRootCss = {
-  ...FONT_FAM_MONO,
-  position: "absolute",
-  inset: "0",
-  zIndex: "95",
-  display: "none",
-  color: _cols.fade,
-  // CHANGED: the deck root itself stays transparent so the hson/livedemo
-  // lighthouse mark can remain visually distinct.
-  background: "transparent",
-};
-
-const deckVeilCss = {
-  position: "absolute",
-  inset: "0",
-  zIndex: "0",
-  pointerEvents: "none",
-  background: "color-mix(in oklch, black 34%, transparent)",
-  backdropFilter: "blur(1.5px) brightness(0.78)",
-  // CHANGED: leave the top-left logo area untouched while dimming/filtering
-  // the menu, graffiti, motes, and the rest of the screen behind the deck.
-  clipPath: "polygon(0 7.35rem, 12.75rem 7.35rem, 12.75rem 0, 100% 0, 100% 100%, 0 100%)",
-};
-
-const deckChromeCss = {
-  position: "absolute",
-  top: "0.85rem",
-  right: "0.85rem",
-  zIndex: "2",
-  display: "flex",
-  gap: "0.4rem",
-  alignItems: "center",
-  fontSize: øfontSize.smol,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: _cols.fade,
-  opacity: "0.72",
-};
-
-const deckButtonCss = {
-  border: `1px solid ${_cols.bluelike}`,
-  background: "color-mix(in oklch, black 42%, transparent)",
-  color: _cols.fade,
-  padding: "0.25rem 0.45rem",
-  cursor: "pointer",
-  userSelect: "none",
-};
-
-const deckStageCss = {
-  position: "absolute",
-  inset: "0",
-  display: "grid",
-  placeItems: "center",
-  zIndex: "1",
-  // CHANGED: give the lighthouse mark breathing room and shift slide content
-  // into the open stage area instead of starting under the logo/menu rail.
-  padding: "5.75rem 6rem 4.25rem clamp(13.5rem, 14vw, 18rem)",
-  boxSizing: "border-box",
-  transition: `opacity ${deckTransitionMs}ms ease, transform ${deckTransitionMs}ms ease, filter ${deckTransitionMs}ms ease`,
-};
-
-const deckSlideCss = {
-  width: "min(72rem, 100%)",
-  minHeight: "min(38rem, 100%)",
-  display: "grid",
-  // CHANGED: keep the body directly under headerA instead of letting the middle
-  // row absorb vertical space and visually behave like a large margin-bottom.
-  gridTemplateRows: "auto auto auto",
-  alignContent: "start",
-  gap: "0.55rem",
-  boxSizing: "border-box",
-};
-
-const deckHeaderCss = {
-  color: _cols.yellowlike,
-  fontSize: "clamp(2.1rem, 5vw, 5rem)",
-  lineHeight: "0.95",
-  letterSpacing: "-0.055em",
-  textShadow: `0 0 0.18rem ${_cols.yellowlike}`,
-  opacity: "0",
-  transform: "translateY(-0.22rem)",
-  transition: "opacity 220ms ease, transform 220ms ease, text-shadow 220ms ease",
-};
-
-const deckHeaderVisibleCss = {
-  opacity: "1",
-  transform: "translateY(0)",
-};
-
-const deckBodyGridCss = {
-  display: "grid",
-  gap: "1.25rem",
-  alignContent: "start",
-  minHeight: "0",
-};
-
-const deckBodyCss = {
-  minWidth: "0",
-  minHeight: "0",
-  color: _cols.fade,
-  fontSize: "clamp(1rem, 1.4vw, 1.38rem)",
-  // lineHeight: "1.42",
-  whiteSpace: "pre-wrap",
-  overflow: "hidden",
-};
-
-const deckSectionStackCss = {
-  display: "grid",
-  gap: "2.2rem",
-  alignContent: "center",
-  maxWidth: "48rem",
-  justifySelf: "center",
-};
-
-const deckSectionCss = {
-  display: "grid",
-  gap: "0.55rem",
-};
-
-const deckSectionHeadingCss = {
-  color: _cols.yellowlike,
-  fontSize: "clamp(1.35rem, 2.15vw, 2rem)",
-  lineHeight: "1.08",
-  letterSpacing: "0.02em",
-  textShadow: `0 0 0.1rem ${_cols.yellowlike}`,
-};
-
-const deckSectionTextCss = {
-  ...deckBodyCss,
-  fontSize: "clamp(0.95rem, 1.18vw, 1.18rem)",
-  // lineHeight: "1.38",
-};
-
-const deckCodeCss = {
-  ...deckBodyCss,
-  color: _cols.fmt.json,
-  fontSize: "clamp(0.8rem, 1.1vw, 1.08rem)",
-  lineHeight: "1.05",
-  padding: "0.8rem 0 0 0",
-};
-
-const deckFooterCss = {
-  color: _cols.fade,
-  opacity: "0.56",
-  fontSize: øfontSize.smol,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  position: "absolute",
-  bottom: "3rem",
-  left: "3rem"
-};
-
-const sampleSlides: readonly DeckSlideConfig[] = [
-  {
-    headerA: "HSON",
-    bodyA: {
-      kind: "text",
-      text: "### Hypertext Structured Object Notation\na 'glue format' that unites JSON and HTML",
-    },
-    headerB: "hson-live",
-    bodyB: {
-      kind: "text",
-      text: "### a typescript library containing:\n• hson.transform: a transformer set for converting data to and from JSON, HTML, and HSON\n• hson.liveTree: a responsive web authoring surface built on top of a HsonNode graph",
-    },
-    footer: "terminal gothic / hson-live",
-  },
-  {
-    headerA: "why?",
-    bodyA: {
-      kind: "text",
-      text: "### why\nwhy.",
-    },
-    bodyB: {
-      kind: "image",
-      src: "/whah.jpg",
-      alt: "whah",
-    },
-    footer: "whah",
-  },
-  {
-    headerA: "about the author",
-    bodyA: {
-      kind: "text",
-      text: "### I have no idea what I'm doing\n#### (figure 1: the author in his natural environment)",
-    },
-    bodyB: {
-      kind: "image",
-      src: "/pretentious-guy.jpeg",
-      alt: "pretentious guy",
-    },
-    footer: "necessary disclosure",
-  },
-  {
-    headerA: "v1 — hson.transform",
-    bodyA: {
-      kind: "text",
-      text: `seven parsers and serializers that convert any json or xml-valid html to HsonNodes
-      - tokenize_hson (HSON -> tokens)
-      - parse_tokens (tokens -> HsonNode)
-      - serialize_hson (HsonNode -> HSON)
-      - parse_json (JSON -> HsonNode)
-      - serialize_json (HsonNode -> JSON)
-      - parse_html/parse_xml (HTML -> HsonNode)
-      - serialize_html (HsonNode -> HTML)
-transformations are stable and lossless. user data can run in loops strings through the full chain many times without degradation or distortion of user data
-`
-    },
-    footer: "v1 / transform",
-  },
-  {
-    headerA: "HSON syntax and relation",
-    bodyA: {
-      kind: "text",
-      text: "```json\n// json sample data\n```\nkey:value",
-    },
-    bodyB: {
-      kind: "text",
-      text: "```hson\n// hson sample data\n```\ntag:content",
-    },
-    bodyC: {
-      kind: "text",
-      text: "```html\n// html sample data\n```\nparent:child",
-    },
-    footer: "json / hson / html",
-  },
-  {
-    headerA: "HTML <=> HSON",
-    bodyA: {
-      kind: "code",
-      lang: "html",
-      text: `
-      <body id="hson-demo">
-  <main class="deck">
-    <section id="transform" data-status="stable">
-      <h1>hson.transform</h1>
-      <p>JSON, HTML, and HSON convert through one node graph.</p>
-    </section>
-
-    <section id="liveTree" data-status="active">
-      <h1>hson.liveTree</h1>
-      <p>The DOM is projected from a live HsonNode graph.</p>
-    </section>
-
-    <section id="liveMap" data-status="wip">
-      <h1>hson.liveMap</h1>
-      <p>State and view begin to share one editable source.</p>
-    </section>
-  </main>
-</body>
-`,
-    },
-    bodyB: {
-      kind: "code",
-      lang: "hson",
-      text: `
-  <body id="hson-demo"
-  <main class="deck"
-    <section id="transform" data-status="stable"
-      <h1 "hson.transform"/>
-      <p "JSON, HTML, and HSON convert through one node graph."/>
-    />
-    <section id="liveTree" data-status="active"
-      <h1 "hson.liveTree"/>
-      <p "The DOM is projected from a live HsonNode graph."/>
-    />
-    <section id="liveMap" data-status="wip"
-      <h1 "hson.liveMap"/>
-      <p "State and view begin to share one editable source."/>
-    />
-  />
-/>
-`,
-    },
-    footer: "transform pair / html + hson",
-  },
-  {
-    headerA: "JSON <=> HSON",
-    bodyA: {
-      kind: "code",
-      lang: "json",
-      text: `{
-  "site": {
-    "title": "HSON Live",
-    "version": "2.0.26",
-    "theme": {
-      "mode": "terminal-gothic",
-      "accent": "yellowlike"
-    },
-    "sections": [
-      {
-        "id": "transform",
-        "label": "hson.transform",
-        "status": "stable"
-      },
-      {
-        "id": "liveTree",
-        "label": "hson.liveTree",
-        "status": "active"
-      },
-      {
-        "id": "liveMap",
-        "label": "hson.liveMap",
-        "status": "wip"
-      }
-    ]
-  }
-}`,
-    },
-    bodyB: {
-      kind: "code",
-      lang: "hson",
-      text: `<site
-  <title  "HSON Live">
-  <version  "2.0.26">
-  <theme
-    <mode  "terminal-gothic">
-    <accent  "yellowlike">
-  >
-  <sections
-    «
-      <
-        <id  "transform">
-        <label  "hson.transform">
-        <status  "stable">
-      >,
-      <
-        <id  "liveTree">
-        <label  "hson.liveTree">
-        <status  "active">
-      >,
-      <
-        <id  "liveMap">
-        <label  "hson.liveMap">
-        <status  "wip">
-      >
-    »
-  >
->`,
-    },
-    footer: "transform pair / json + hson",
-  },
-  {
-    headerA: "JSON <=> HSON <=> HTML",
-    bodyA: {
-      kind: "code",
-      lang: "json",
-      text: `{
-  "site": {
-    "title": "HSON Live",
-    "version": "2.0.26",
-    "theme": {
-      "mode": "terminal-gothic",
-      "accent": "yellowlike"
-    },
-    "sections": [
-      {
-        "id": "transform",
-        "label": "hson.transform",
-        "status": "stable"
-      },
-      {
-        "id": "liveTree",
-        "label": "hson.liveTree",
-        "status": "active"
-      },
-      {
-        "id": "liveMap",
-        "label": "hson.liveMap",
-        "status": "wip"
-      }
-    ]
-  }
+  };
 }
-  `,
-    },
-    bodyB: {
-      kind: "code",
-      lang: "hson",
-      text: `<site
-  <title  "HSON Live">
-  <version  "2.0.26">
-  <theme
-    <mode  "terminal-gothic">
-    <accent  "yellowlike">
-  >
-  <sections
-    «
-      <
-        <id  "transform">
-        <label  "hson.transform">
-        <status  "stable">
-      >,
-      <
-        <id  "liveTree">
-        <label  "hson.liveTree">
-        <status  "active">
-      >,
-      <
-        <id  "liveMap">
-        <label  "hson.liveMap">
-        <status  "wip">
-      >
-    »
-  >
->`,
-    },
-    bodyC: {
-      kind: "code",
-      lang: "html",
-      text: `<_-obj>
-<site><_-obj>
-<title><_-obj>
-HSON Live
-</_-obj></title>
-<version><_-obj>
-2.0.26
-</_-obj></version>
-<theme><_-obj>
-<mode><_-obj>
-terminal-gothic
-</_-obj></mode>
-<accent><_-obj>
-yellowlike
-</_-obj></accent>
-</_-obj></theme>
-<sections><_-arr><_-ii data-_index="0"><_-obj>
-<id><_-obj>
-transform
-</_-obj></id>
-<label><_-obj>
-hson.transform
-</_-obj></label>
-<status><_-obj>
-stable
-</_-obj></status>
-</_-obj></_-ii><_-ii data-_index="1"><_-obj>
-<id><_-obj>
-liveTree
-</_-obj></id>
-<label><_-obj>
-hson.liveTree
-</_-obj></label>
-<status><_-obj>
-active
-</_-obj></status>
-</_-obj></_-ii><_-ii data-_index="2"><_-obj>
-<id><_-obj>
-liveMap
-</_-obj></id>
-<label><_-obj>
-hson.liveMap
-</_-obj></label>
-<status><_-obj>
-wip
-</_-obj></status>
-</_-obj></_-ii></_-arr></sections>
-</_-obj></site>
-</_-obj>
-`,
-    },
-    footer: "derived projection / json",
-  },
-  {
-    headerA: "HTML <=> HSON <=> JSON",
-    bodyA: {
-      kind: "code",
-      lang: "html",
-      text: `<body id="hson-demo"><main class="deck"><section data-status="stable" id="transform"><h1>hson.transform</h1>
-<p>JSON, HTML, and HSON convert through one node graph.</p></section>
-<section data-status="active" id="liveTree"><h1>hson.liveTree</h1>
-<p>The DOM is projected from a live HsonNode graph.</p></section>
-<section data-status="wip" id="liveMap"><h1>hson.liveMap</h1>
-<p>State and view begin to share one editable source.</p></section></main></body>`,
-    },
-    bodyB: {
-      kind: "code",
-      lang: "hson",
-      text: `<body id="hson-demo"
-  <main class="deck"
-    <section id="transform" data-status="stable"
-      <h1 "hson.transform"/>
-      <p "JSON, HTML, and HSON convert through one node graph."/>
-    />
-    <section id="liveTree" data-status="active"
-      <h1 "hson.liveTree"/>
-      <p "The DOM is projected from a live HsonNode graph."/>
-    />
-    <section id="liveMap" data-status="wip"
-      <h1 "hson.liveMap"/>
-      <p "State and view begin to share one editable source."/>
-    />
-  />
-/>`,
-    },
-    bodyC: {
-      kind: "code",
-      lang: "json",
-      text: `{
-  "_-elem": [
-    {
-      "$_attrs": {
-        "id": "hson-demo"
-      },
-      "body": {
-        "_-elem": [
-          {
-            "$_attrs": {
-              "class": "deck"
-            },
-            "main": {
-              "_-elem": [
-                {
-                  "$_attrs": {
-                    "data-status": "stable",
-                    "id": "transform"
-                  },
-                  "section": {
-                    "_-elem": [
-                      {
-                        "h1": {
-                          "_-elem": [
-                            "hson.transform"
-                          ]
-                        }
-                      },
-                      {
-                        "p": {
-                          "_-elem": [
-                            "JSON, HTML, and HSON convert through one node graph."
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "$_attrs": {
-                    "data-status": "active",
-                    "id": "liveTree"
-                  },
-                  "section": {
-                    "_-elem": [
-                      {
-                        "h1": {
-                          "_-elem": [
-                            "hson.liveTree"
-                          ]
-                        }
-                      },
-                      {
-                        "p": {
-                          "_-elem": [
-                            "The DOM is projected from a live HsonNode graph."
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "$_attrs": {
-                    "data-status": "wip",
-                    "id": "liveMap"
-                  },
-                  "section": {
-                    "_-elem": [
-                      {
-                        "h1": {
-                          "_-elem": [
-                            "hson.liveMap"
-                          ]
-                        }
-                      },
-                      {
-                        "p": {
-                          "_-elem": [
-                            "State and view begin to share one editable source."
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
+
+function deck_code_token_css(token: string): Record<string, string> {
+  if (deckCodeStringPattern.test(token)) return deckCodeStringCss;
+  if (deckCodeKeywordPattern.test(token)) return deckCodeKeywordCss;
+  if (token.startsWith(".")) return deckCodeMethodCss;
+  if (deckCodePunctuationPattern.test(token)) return deckCodeMutedCss;
+  return deckCodeSyntaxCss;
+}
+
+function deck_code_comment_index(line: string): number {
+  let quote: "'" | "\"" | "`" | undefined;
+  let escaped = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (escaped) {
+      escaped = false;
+      continue;
     }
-  ]
+
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (quote) {
+      if (char === quote) quote = undefined;
+      continue;
+    }
+
+    if (char === "'" || char === "\"" || char === "`") {
+      quote = char;
+      continue;
+    }
+
+    if (char === "/" && next === "/") return i;
+  }
+
+  return -1;
 }
-  `,
-    },
-    footer: "derived projection / html",
-  },
-  {
-    headerA: "v2 — hson.liveTree",
-    bodyA: {
-      kind: "text",
-      text: "A web authoring platform built on top of the HsonNode graph, allowing a single source of truth for a united state and view",
-    },
-    footer: "v2.0 / livetree",
-  },
-  {
-    headerA: "LiveTree - Internals",
-    bodyA: {
-      kind: "text",
-      text: "1) parses <body> and all child nodes to HsonNodes (must be xml compatible)\n2) replaces it with identical HTML projection projected from HsonNode graph\n3) provides interface for node graph; changes and mutations are reflected in realtime on-DOM",
-    },
-    footer: "livetree internals",
-  },
-  {
-    headerA: "LiveTree - example",
-    bodyA: {
-      kind: "code",
-      lang: "ts",
-      text: `
-const tree = hson.queryBody() // or \`.queryDom(/*selector*/)\`
-.liveTree // initialize LiveTree creation
-.graft(); // replace document.body with identical LiveTree projection
 
-  // LiveTree extends many basic JS document methods
-const branchDiv = tree.create.div()
-    .setText("hello world")
-     // methods return \`this\`, enabling complex chained operations
-    .css.set.backgroundColor("pink");
-
-// liveTree's ListenerManager exposes event listeners and handling
-tree.listen
-   // listener teardown/cleanup occurs automatically on node removal
-  .once()
-   // event listener options are fully represented in liveTree's .listen toolchain
-  .onClick(() => {
-       // changes to the node graph are rendered to the DOM in realtime
-      branchDiv.setText("goodbye world")
-          .css.set.backgroundColor("blue");
+function mount_deck_code_span(state: DeckState, host: LiveTree, text: string, css: Record<string, string>): void {
+  const span = host.create.span().css.setMany({
+  ...css,
+  lineHeight: "inherit",
+  verticalAlign: "baseline",
 });
-`,
-    },
-    footer: "livetree graft example",
-  },
-  {
-    headerA: "LiveTree",
-    bodyA: {
-      kind: "text",
-      text: "### features:\n- node creation/removal, always synced to DOM\n- dynamic, typed CSS using standard JS variables\n- event listener management & teardown\n- animation, keyframes, and @property management & sequencing\n- automated teardown (CSS, listeners, keyframes)\n- native SVG support: creation, mutation, and animation\n- native <canvas> support\n- getComputedStyle, getBoundingClientRect, elementAtPoint (from liveTree.dom)",
-    },
-    footer: "features / surface",
-  },
-  {
-      headerA: "LiveTree - a new way of creating the web?",
-  stackAlign: "center",
-    bodyA: {
-      kind: "text",
-      text: "instead of \n\n### `ui = ƒ(state)`\n\n LiveTree proposes:",
-    },
-    headerB: "ui === state",
-    footer: "view === state",
-  },
-  {
-    headerA: "LiveDemo",
-    bodyA: {
-      kind: "text",
-      text: "explore working demos in the first site ever made entirely with hson-live",
-    },
-    bodyB: {
-      kind: "text",
-      text: "- full hson-live docs provided ([about]) as well as over 1000 transformer, livetree, and unit tests\n- demonstrates various LiveTree features and its potential for authoring complex interactive websites",
-    },
-    footer: "site / proof surface",
-  },
-  {
-    headerA: "v3? LiveMap (WIP)",
-    bodyA: {
-      kind: "text",
-      text: "fulfilling the other half of the promise",
-    },
-    bodyB: {
-      kind: "text",
-      text: "state management that automatically links to LiveTree, updating css and content by editing the underlying node graph that both link to\n\nETA: July 2026",
-    },
-    footer: "v3 / livemap",
-  },
-  {
-    headerA: "and please remember: I have no idea what I'm doing",
-    bodyA: {
-      kind: "text",
-      text: "(seriously, what should I do with this)",
-    },
-    footer: "confession / question",
-  },
-  {
-    headerA: "ty",
-    bodyA: {
-      kind: "text",
-      text: "terminalgothic.com\nhansonpw@gmail.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2",
-    },
-    footer: "contact / links",
-  },
-];
-
-function clamp_index(index: number, slides: readonly DeckSlideConfig[]): number {
-  if (slides.length === 0) return 0;
-  return Math.max(0, Math.min(slides.length - 1, index));
+  write_in_text(state, span, text);
 }
 
-function random_write_char(): string {
-  const index = Math.floor(Math.random() * writeNoise.length);
-  return writeNoise[index] ?? "*";
+function mount_deck_code_tokens(state: DeckState, host: LiveTree, code: string): void {
+  const tokens = code.match(deckCodeTokenPattern) ?? [code];
+
+  for (const token of tokens) {
+    mount_deck_code_span(state, host, token, deck_code_token_css(token));
+  }
 }
 
-function clear_timers(state: DeckState): void {
-  state.timerIds.forEach((timerId) => window.clearInterval(timerId));
-  state.timerIds = [];
-}
+function mount_deck_code_line(state: DeckState, host: LiveTree, line: string): void {
+  const commentIndex = deck_code_comment_index(line);
 
-function write_in_text(state: DeckState, target: LiveTree, text: string, onComplete?: () => void): void {
-  target.text.set("");
-  const chars = [...text];
-  const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
-  const started = performance.now();
-
-  const timerId = window.setInterval(() => {
-    const elapsed = performance.now() - started;
-    const progress = Math.min(1, elapsed / duration);
-    const settledCount = Math.floor(chars.length * progress);
-    const noisyCount = Math.min(chars.length - settledCount, 10);
-    const settled = chars.slice(0, settledCount).join("");
-    const noisy = Array.from({ length: noisyCount }, () => random_write_char()).join("");
-
-    target.text.set(settled + noisy);
-
-    if (progress >= 1) {
-      target.text.set(text);
-      onComplete?.();
-      window.clearInterval(timerId);
-      state.timerIds = state.timerIds.filter((id) => id !== timerId);
-    }
-  }, writeTickMs);
-
-  state.timerIds.push(timerId);
-}
-
-function slide_bodies(slide: DeckSlideConfig): readonly DeckSlideBody[] {
-  return [slide.bodyA, slide.bodyB, slide.bodyC].filter((body): body is DeckSlideBody => body !== undefined);
-}
-
-function body_grid_columns(count: number): string {
-  if (count <= 1) return "minmax(24rem, 48rem)";
-  if (count === 2) return "1fr 1fr";
-  return "1fr 1fr 1fr";
-}
-
-function body_markdown(body: Extract<DeckSlideBody, { kind: "text" | "code"; }>): string {
-  if (body.kind === "code") {
-    const lang = body.lang ?? "ts";
-    return `\`\`\`${lang}\n${body.text}\n\`\`\``;
+  if (commentIndex < 0) {
+    mount_deck_code_tokens(state, host, line);
+    return;
   }
 
-  return body.text;
+  const code = line.slice(0, commentIndex);
+  const comment = line.slice(commentIndex);
+  if (code) mount_deck_code_tokens(state, host, code);
+  mount_deck_code_span(state, host, comment, deckCodeCommentCss);
 }
 
-function deck_markdown_heading_css(level: 1 | 2 | 3 | 4): Record<string, string> {
-  if (level !== 3) return {};
-
-  // CHANGED: deck-local markdown subheads should read as subheads, not small
-  // about-page labels.
-  return {
-    fontSize: "clamp(1.25rem, 1.9vw, 1.85rem)",
-    // lineHeight: "1.16",
-    letterSpacing: "0.035em",
-    opacity: "0.9",
-    // CHANGED: deck subheads should bind tightly to the body they introduce.
-    margin: "0 0 0.35rem 0",
-    padding: "0",
-  };
-}
-
-function deck_code_fence_css(lang: string | undefined): Record<string, string> {
-  const normalized = (lang ?? "ts").toLowerCase();
-
-  if (normalized === "json") {
-    return {
-      color: _cols.bluelike,
-      boxShadow: `0 0 0.12rem ${_cols.bluelike}`,
-    };
-  }
-
-  if (normalized === "hson") {
-    return {
-      color: _cols.yellowlike,
-      boxShadow: `0 0 0.12rem ${_cols.yellowlike}`,
-    };
-  }
-
-  if (normalized === "html") {
-    return {
-      color: _cols.pinklike,
-      boxShadow: `0 0 0.12rem ${_cols.pinklike}`,
-    };
-  }
-
-  return {};
-}
-
-function is_formatted_data_lang(lang: string | undefined): boolean {
-  const normalized = (lang ?? "ts").toLowerCase();
-  return normalized === "json" || normalized === "hson" || normalized === "html";
-}
-
-function writing_shell_css(body: Extract<DeckSlideBody, { kind: "text" | "code"; }>) {
-  if (body.kind === "code") {
-    return {
-      ...MD_CODE_PREcss,
-      ...deck_code_fence_css(body.lang),
-    };
-  }
-
-  return {
-    ...ABOUT_P_TEXTcss,
-    textIndent: "4ch",
-  };
-}
-
-function writing_text(body: Extract<DeckSlideBody, { kind: "text" | "code"; }>, markdown: string): string {
-  if (body.kind === "code") return body.text;
-  return markdown;
-}
 
 // CHANGED: deck-local markdown mounting creates styled nodes first, then writes
 // text into those nodes. This avoids raw markdown write-in followed by a
@@ -979,9 +130,9 @@ type DeckMarkdownBlock = Readonly<
   | { kind: "code"; lang?: string; text: string }
 >;
 
-function is_deck_list_line(line: string): boolean {
-  return /^\s*(?:[-*•]|\d+[.)])\s+/.test(line);
-}
+type DeckMarkdownOptions = Readonly<{
+  fillCodePanels: boolean;
+}>;
 
 function parse_deck_markdown(markdown: string): readonly DeckMarkdownBlock[] {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -1017,7 +168,7 @@ function parse_deck_markdown(markdown: string): readonly DeckMarkdownBlock[] {
         i += 1;
       }
 
-      const text = codeLines.join("\n");
+      const text = normalize_code_block_text(codeLines);
       // CHANGED: with exactOptionalPropertyTypes, omit `lang` entirely instead
       // of passing `undefined` to an optional property.
       blocks.push(lang ? { kind: "code", lang, text } : { kind: "code", text });
@@ -1069,10 +220,21 @@ function mount_deck_heading_block(state: DeckState, host: LiveTree, block: Extra
 }
 
 function mount_deck_paragraph_block(state: DeckState, host: LiveTree, text: string): void {
-  const paragraph = host.create.div().css.setMany(ABOUT_P_TEXTcss);
+  const paragraph = host.create.div().css.setMany({
+    ...ABOUT_P_TEXTcss,
+    // CHANGED: deck paragraphs need a little air between generated rows; the
+    // imported about text style alone does not affect each row div.
+    display: "grid",
+    gap: "0.28rem",
+    lineHeight: "1.28",
+  });
 
   for (const line of text.split("\n")) {
-    const row = paragraph.create.div().css.setMany({ textIndent: "4ch" });
+    const row = paragraph.create.div().css.setMany({
+      textIndent: "4ch",
+      lineHeight: "1.28",
+      minHeight: "1.28em",
+    });
     write_in_text(state, row, line);
   }
 }
@@ -1101,15 +263,22 @@ function mount_deck_list_block(state: DeckState, host: LiveTree, lines: readonly
   }
 }
 
-function mount_deck_code_block(state: DeckState, host: LiveTree, block: Extract<DeckMarkdownBlock, { kind: "code" }>): void {
-  const pre = host.create.div().css.setMany({
-    ...MD_CODE_PREcss,
-    ...deck_code_fence_css(block.lang),
-    whiteSpace: "pre",
+function mount_deck_code_block(
+  state: DeckState,
+  host: LiveTree,
+  block: Extract<DeckMarkdownBlock, { kind: "code" }>,
+  options: DeckMarkdownOptions,
+): void {
+  const panel = host.create.div().css.setMany(deck_code_panel_css(block.lang, options.fillCodePanels));
+
+  const content = panel.create.div().css.setMany({
+    ...deckCodeContentCss,
+    // CHANGED: apply line-height at the final write-in target so formatted
+    // data blocks and tokenized TS blocks share the same vertical rhythm.
   });
 
   if (is_formatted_data_lang(block.lang)) {
-    write_in_text(state, pre, block.text);
+    write_in_text(state, content, block.text);
     return;
   }
 
@@ -1117,20 +286,23 @@ function mount_deck_code_block(state: DeckState, host: LiveTree, block: Extract<
   // each row writes in and settles into syntax highlighting. This avoids the
   // whole code block jumping when one raw text node is replaced by many rows.
   for (const line of block.text.split("\n")) {
-    const row = pre.create.div().css.setMany({
-      whiteSpace: "pre",
-      minHeight: "1em",
+    const row = content.create.div().css.setMany({
+      whiteSpace: "pre-wrap",
+      overflowWrap: "anywhere",
+      wordBreak: "break-word",
+      lineHeight: "1.22",
+      minHeight: "1.22em",
+      overflow: "hidden",
     });
-
-    write_in_text(state, row, line, () => {
-      row.empty();
-      render_line_with_comment(row, line, "code");
-    });
+    // CHANGED: ordinary code styling now exists before write-in begins; comments
+    // no longer snap into styling after the line has already appeared.
+    render_line_with_comment(row, line, "code");
   }
 }
 
-function mount_deck_markdown(state: DeckState, host: LiveTree, markdown: string): void {
+function mount_deck_markdown(state: DeckState, host: LiveTree, markdown: string, options: DeckMarkdownOptions): void {
   const blocks = parse_deck_markdown(markdown);
+  const onlyCodeBlock = blocks.length === 1 && blocks[0]?.kind === "code";
   host.empty();
 
   for (const block of blocks) {
@@ -1149,7 +321,12 @@ function mount_deck_markdown(state: DeckState, host: LiveTree, markdown: string)
       continue;
     }
 
-    mount_deck_code_block(state, host, block);
+    mount_deck_code_block(state, host, block, {
+      ...options,
+      // CHANGED: a text body containing only a fenced code block should behave
+      // like a full code panel; mixed prose+code bodies still size code to content.
+      fillCodePanels: options.fillCodePanels || onlyCodeBlock,
+    });
   }
 }
 
@@ -1166,11 +343,26 @@ function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody): void
     return;
   }
 
-  const bodyFrame = host.create.div().css.setMany(body.kind === "code" ? deckCodeCss : deckBodyCss);
   const markdown = body_markdown(body);
+  const parsedBlocks = parse_deck_markdown(markdown);
+  const onlyCodeBlock = parsedBlocks.length === 1 && parsedBlocks[0]?.kind === "code";
+  const fillAsCodePanel = body.kind === "code" || onlyCodeBlock;
+
+  const bodyFrame = host.create.div().css.setMany({
+    ...(body.kind === "code" ? deckCodeCss : deckBodyCss),
+    // CHANGED: text bodies that contain only one fenced code block should use
+    // the same constrained panel geometry as true code bodies.
+    height: fillAsCodePanel ? "100%" : "auto",
+    minHeight: "0",
+    overflow: fillAsCodePanel ? "hidden" : "visible",
+  });
 
   // CHANGED: styling/layout now lands first; write-in fills already-styled nodes.
-  mount_deck_markdown(state, bodyFrame, markdown);
+  mount_deck_markdown(state, bodyFrame, markdown, {
+    // CHANGED: full code bodies and code-only text bodies own the slide panel height;
+    // mixed prose+code bodies size code to content.
+    fillCodePanels: fillAsCodePanel,
+  });
 }
 function deck_header_b_stack_css(slide: DeckSlideConfig) {
   if (slide.stackAlign === "center") {
@@ -1187,7 +379,7 @@ function mount_header_b_stack(state: DeckState, host: LiveTree, slide: DeckSlide
   const stack = host.create.div().css.setMany(deck_header_b_stack_css(slide));
 
   if (slide.bodyA) {
-    const bodyAHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0" });
+    const bodyAHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
     mount_body(state, bodyAHost, slide.bodyA);
   }
 
@@ -1196,12 +388,12 @@ function mount_header_b_stack(state: DeckState, host: LiveTree, slide: DeckSlide
     .css.setMany(deckHeaderBCss);
 
   if (slide.bodyB) {
-    const bodyBHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0" });
+    const bodyBHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
     mount_body(state, bodyBHost, slide.bodyB);
   }
 
   if (slide.bodyC) {
-    const bodyCHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0" });
+    const bodyCHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
     mount_body(state, bodyCHost, slide.bodyC);
   }
 }
@@ -1245,7 +437,7 @@ function mount_slide(state: DeckState, stage: LiveTree, slide: DeckSlideConfig):
     });
 
     bodies.forEach((body) => {
-      const bodyHost = bodyGrid.create.div().css.setMany({ minWidth: "0", minHeight: "0" });
+      const bodyHost = bodyGrid.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
       mount_body(state, bodyHost, body);
     });
   } else {
@@ -1258,7 +450,7 @@ function mount_slide(state: DeckState, stage: LiveTree, slide: DeckSlideConfig):
     .css.setMany(deckFooterCss);
 }
 
-export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = sampleSlides): DeckApi {
+export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = SLIDES): DeckApi {
   const state: DeckState = {
     isOpen: false,
     index: 0,
@@ -1282,14 +474,14 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
   const render_current = (): void => {
     clear_timers(state);
     sync_counter();
-    stage.css.setMany({ opacity: "0", transform: "translateY(0.8rem)", filter: "blur(2px)" });
+    stage.css.setMany({ opacity: "0", transform: "translateY(-1rem)", filter: "blur(2px)" });
 
     window.setTimeout(() => {
       mount_slide(state, stage, slides[state.index]! ?? slides[0]);
       requestAnimationFrame(() => {
         stage.css.setMany({ opacity: "1", transform: "translateY(0)", filter: "blur(0)" });
       });
-    }, deckTransitionMs);
+    }, deckTransitionMs());
   };
 
   const open = (): void => {

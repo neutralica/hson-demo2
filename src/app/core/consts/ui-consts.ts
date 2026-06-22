@@ -20,6 +20,7 @@ export const øfontSize = {
   smol: "14px",
   sansMain: "16px",
   main: "18px",
+  header: "24px",
 } as const;
 
 
