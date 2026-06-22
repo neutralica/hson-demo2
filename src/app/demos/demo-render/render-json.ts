@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live";
 import type { CssMap, JsonValue } from "hson-live/types";
 import type { JsonRenderKind, JsonPathPart, JsonRenderDraft, JsonRenderRole, JsonRenderPart, JsonRenderOptions, JsonRender, ConnectorPosition } from "./render.types";
-import { COMPLEX_VALUE_CSS, CONNECTOR_CSS, CONNECTOR_RAIL_CLEAR_CSS,  DEMO_COLUMN_CSS, DEMO_ERROR_CSS, DEMO_LABEL_CSS, DEMO_OUTPUT_CSS, DEMO_ROOT_CSS, DEMO_TEXTAREA_CSS, HIGHLIGHT_CLEAR_CSS, HIGHLIGHT_CONNECTOR_CSS, HIGHLIGHT_RELATED_CSS, HIGHLIGHT_SELF_CSS, KEY_CSS, NODE_HIT_CSS, PATH_TEXT_CSS, PRIMITIVE_CSS, ROOT_CSS, ROW_CSS, TRIGGER_CSS, VALUE_CSS } from "./render.css";
+import { COMPLEX_VALUE_CSS, CONNECTOR_CSS, CONNECTOR_RAIL_CLEAR_CSS, DEMO_COLUMN_CSS, DEMO_ERROR_CSS, DEMO_LABEL_CSS, DEMO_OUTPUT_CSS, DEMO_ROOT_CSS, DEMO_TEXTAREA_CSS, HIGHLIGHT_CLEAR_CSS, HIGHLIGHT_CONNECTOR_CSS, HIGHLIGHT_RELATED_CSS, HIGHLIGHT_SELF_CSS, KEY_CSS, NODE_HIT_CSS, PATH_TEXT_CSS, PRIMITIVE_CSS, ROOT_CSS, ROW_CSS, TRIGGER_CSS, VALUE_CSS } from "./render.css";
 import { _cols } from "../../core/consts/colors.consts";
 import { connectorPosition, isHighlightContainer, isHighlightNode, isHighlightText, setMeta, kindOf, makeBuckets, makeGroup, pathFromInput, pathKey, pathsEqual, pathText, label_trees_by_path, clear_path_overlay, draw_path_overlay, make_path_overlay, type PathOverlay, } from "./render-helpers";
 import { nodeCss } from "./render.css";
@@ -21,6 +21,65 @@ const SAMPLE_JSON_TEXT = JSON.stringify({
         templates: null,
     },
 }, null, 2);
+
+// CHANGED: hover metadata stays local to the render demo for now; the JSON
+// textarea remains the source, while the rendered tree can inspect paths.
+type JsonRenderHoverMetadata = Readonly<{
+    pathText: string;
+    pathKey: string;
+    role: JsonRenderRole;
+    kind: JsonRenderKind;
+    depth: number;
+    parentPathText: string;
+    valueKind: string;
+    valuePreview: string;
+    childCount: number;
+    subtreeNodeCount: number;
+    directPartCount: number;
+    relatedPartCount: number;
+    keysPreview: string;
+    changed: boolean;
+}>;
+
+type JsonRenderHoverOptions = Readonly<{
+    onHoverMetadata?: (metadata: JsonRenderHoverMetadata) => void;
+    onClearHoverMetadata?: () => void;
+}>;
+
+type JsonRenderDiffOptions = Readonly<{
+    changedPaths?: readonly (readonly JsonPathPart[])[];
+}>;
+
+type JsonRenderRuntimeOptions = JsonRenderOptions & JsonRenderHoverOptions & JsonRenderDiffOptions;
+
+const METADATA_PANEL_CSS: CssMap = {
+    ...DEMO_OUTPUT_CSS,
+    minHeight: "7rem",
+    maxHeight: "14rem",
+    whiteSpace: "pre-wrap",
+    overflow: "auto",
+    fontSize: "0.72rem",
+    lineHeight: "1.35",
+};
+
+// CHANGED: local diff flare colors for the editable JSON render demo.
+const diffFlareTextColor = _cols.yellowlike;
+const diffFlareGlowColor = _cols.yellowlike;
+const diffFlareMs = 900;
+
+const DIFF_FLARE_CSS: CssMap = {
+    opacity: "1",
+    textShadow: `0 0 0.12rem ${diffFlareGlowColor}, 0 0 0.22rem ${diffFlareTextColor}`,
+    textDecoration: "underline",
+    textDecorationColor: diffFlareGlowColor,
+    transition: `text-shadow ${diffFlareMs}ms ease, text-decoration-color ${diffFlareMs}ms ease`,
+};
+
+const DIFF_FLARE_CLEAR_CSS: CssMap = {
+    textShadow: "",
+    textDecoration: "",
+    textDecorationColor: "",
+};
 
 type ConnectorPositionValue = ReturnType<typeof connectorPosition>;
 
@@ -188,6 +247,187 @@ function preview(value: JsonValue): string {
     return `{object:${Object.keys(value).length}}`;
 }
 
+function valueAtPath(value: JsonValue, path: readonly JsonPathPart[]): JsonValue | undefined {
+    let current: JsonValue | undefined = value;
+
+    for (const part of path) {
+        if (current === undefined || current === null || typeof current !== "object") return undefined;
+        if (Array.isArray(current)) {
+            if (typeof part !== "number") return undefined;
+            current = current[part] as JsonValue | undefined;
+            continue;
+        }
+
+        if (typeof part !== "string") return undefined;
+        current = (current as Record<string, JsonValue>)[part];
+    }
+
+    return current;
+}
+
+function childCount(value: JsonValue | undefined): number {
+    if (value === undefined || value === null || typeof value !== "object") return 0;
+    if (Array.isArray(value)) return value.length;
+    return Object.keys(value).length;
+}
+
+function subtreeNodeCount(value: JsonValue | undefined): number {
+    if (value === undefined) return 0;
+    if (value === null || typeof value !== "object") return 1;
+
+    let total = 1;
+
+    // CHANGED: avoid `reduce` here because JsonValue unions make the accumulator
+    // inference too wide under strict/noUncheckedIndexedAccess settings.
+    if (Array.isArray(value)) {
+        for (const child of value) {
+            total += subtreeNodeCount(child as JsonValue);
+        }
+        return total;
+    }
+
+    for (const child of Object.values(value)) {
+        total += subtreeNodeCount(child as JsonValue);
+    }
+
+    return total;
+}
+
+function keysPreview(value: JsonValue | undefined): string {
+    if (value === undefined || value === null || typeof value !== "object") return "";
+    const keys = Array.isArray(value) ? value.map((_, i) => `[${i}]`) : Object.keys(value);
+    const previewKeys = keys.slice(0, 8).join(", ");
+    if (keys.length <= 8) return previewKeys;
+    return `${previewKeys}, … +${keys.length - 8}`;
+}
+
+function pathKeySet(paths: readonly (readonly JsonPathPart[])[]): Set<string> {
+    return new Set(paths.map((path) => pathKey(path)));
+}
+
+function diffJsonPaths(before: JsonValue | undefined, after: JsonValue, path: readonly JsonPathPart[] = []): readonly (readonly JsonPathPart[])[] {
+    if (before === undefined) return [];
+    if (Object.is(before, after)) return [];
+
+    const beforeKind = kindOf(before);
+    const afterKind = kindOf(after);
+    if (beforeKind !== afterKind) return [path];
+
+    if (before === null || after === null || typeof before !== "object" || typeof after !== "object") {
+        return [path];
+    }
+
+    if (Array.isArray(before) && Array.isArray(after)) {
+        const changes: (readonly JsonPathPart[])[] = [];
+        const max = Math.max(before.length, after.length);
+        if (before.length !== after.length) changes.push(path);
+
+        for (let i = 0; i < max; i += 1) {
+            if (i >= before.length || i >= after.length) {
+                changes.push([...path, i]);
+                continue;
+            }
+            changes.push(...diffJsonPaths(before[i] as JsonValue, after[i] as JsonValue, [...path, i]));
+        }
+
+        return changes;
+    }
+
+    const beforeObj = before as Record<string, JsonValue>;
+    const afterObj = after as Record<string, JsonValue>;
+    const keys = new Set([...Object.keys(beforeObj), ...Object.keys(afterObj)]);
+    const changes: (readonly JsonPathPart[])[] = [];
+
+    for (const key of keys) {
+        if (!(key in beforeObj) || !(key in afterObj)) {
+            changes.push([...path, key]);
+            continue;
+        }
+
+        const beforeChild = beforeObj[key];
+        const afterChild = afterObj[key];
+        if (beforeChild === undefined || afterChild === undefined) {
+            changes.push([...path, key]);
+            continue;
+        }
+
+        // CHANGED: index access is guarded explicitly so strict TS does not
+        // treat object children as possibly undefined.
+        changes.push(...diffJsonPaths(beforeChild, afterChild, [...path, key]));
+    }
+
+    return changes;
+}
+
+function applyDiffFlares(parts: readonly JsonRenderPart[], changedPaths: readonly (readonly JsonPathPart[])[]): void {
+    if (changedPaths.length === 0) return;
+    const changed = pathKeySet(changedPaths);
+
+    for (const part of parts) {
+        if (!changed.has(pathKey(part.path))) continue;
+        if (part.role !== "key" && part.role !== "primitive") continue;
+
+        // CHANGED: flare only small text-bearing parts and let the effect decay;
+        // broad container backgrounds were visually interesting but too loud.
+        part.tree.css.setMany(DIFF_FLARE_CSS);
+        setTimeout(() => {
+            part.tree.css.setMany(DIFF_FLARE_CLEAR_CSS);
+        }, diffFlareMs);
+    }
+}
+
+function makeHoverMetadata(
+    value: JsonValue,
+    parts: readonly JsonRenderPart[],
+    triggerPart: JsonRenderPart,
+    changedPathKeys: ReadonlySet<string>,
+): JsonRenderHoverMetadata {
+    const target = triggerPart.path;
+    const currentValue = valueAtPath(value, target);
+    const parentPath = target.slice(0, -1);
+    const directPartCount = parts.filter((part) => pathsEqual(part.path, target)).length;
+    const relatedPartCount = parts.filter((part) => pathsRelated(part.path, target)).length;
+    const changed = changedPathKeys.has(pathKey(target));
+
+    // CHANGED: report path/value/render metadata from the hovered rendered part.
+    return {
+        pathText: pathText(target),
+        pathKey: pathKey(target),
+        role: triggerPart.role,
+        kind: triggerPart.kind,
+        depth: target.length,
+        parentPathText: pathText(parentPath),
+        valueKind: currentValue === undefined ? "missing" : kindOf(currentValue),
+        valuePreview: currentValue === undefined ? "undefined" : preview(currentValue),
+        childCount: childCount(currentValue),
+        subtreeNodeCount: subtreeNodeCount(currentValue),
+        directPartCount,
+        relatedPartCount,
+        keysPreview: keysPreview(currentValue),
+        changed,
+    };
+}
+
+function formatHoverMetadata(metadata: JsonRenderHoverMetadata): string {
+    const rows = [
+        `path        ${metadata.pathText}`,
+        `path key    ${metadata.pathKey}`,
+        `role        ${metadata.role}`,
+        `kind        ${metadata.kind}`,
+        `value kind  ${metadata.valueKind}`,
+        `value       ${metadata.valuePreview}`,
+        `depth       ${metadata.depth}`,
+        `parent      ${metadata.parentPathText}`,
+        `children    ${metadata.childCount}`,
+        `subtree     ${metadata.subtreeNodeCount} node(s)`,
+        `parts       ${metadata.directPartCount} direct / ${metadata.relatedPartCount} related`,
+        `changed     ${metadata.changed ? "yes" : "no"}`,
+    ];
+
+    if (metadata.keysPreview) rows.push(`keys        ${metadata.keysPreview}`);
+    return rows.join("\n");
+}
+
 function addPart(
     draft: JsonRenderDraft,
     tree: LiveTree,
@@ -220,10 +460,18 @@ function addPart(
     }
 }
 
-function wirePathHighlight(parts: readonly JsonRenderPart[], root: LiveTree, overlay: PathOverlay | undefined): void {
+function wirePathHighlight(
+    parts: readonly JsonRenderPart[],
+    root: LiveTree,
+    overlay: PathOverlay | undefined,
+    value: JsonValue,
+    options: JsonRenderHoverOptions & { changedPaths?: readonly (readonly JsonPathPart[])[] } = {},
+): void {
     const labels = label_trees_by_path(parts);
+    const changedPathKeys = pathKeySet(options.changedPaths ?? []);
     const clear = (): void => {
         clear_path_overlay(overlay);
+        options.onClearHoverMetadata?.();
         for (const rail of connectorRailTrees) {
             rail.css.setMany(CONNECTOR_RAIL_CLEAR_CSS);
         }
@@ -243,7 +491,8 @@ function wirePathHighlight(parts: readonly JsonRenderPart[], root: LiveTree, ove
         }
     };
 
-    const highlight = (target: readonly JsonPathPart[]): void => {
+    const highlight = (triggerPart: JsonRenderPart): void => {
+        const target = triggerPart.path;
         clear();
 
         for (const part of parts) {
@@ -287,7 +536,9 @@ function wirePathHighlight(parts: readonly JsonRenderPart[], root: LiveTree, ove
 
             if (isHighlightNode(part.role)) part.tree.css.setMany(HIGHLIGHT_RELATED_CSS);
         }
+
         draw_path_overlay(root, overlay, labels, target);
+        options.onHoverMetadata?.(makeHoverMetadata(value, parts, triggerPart, changedPathKeys));
     };
 
     const shouldTrigger = (role: JsonRenderRole): boolean => {
@@ -299,7 +550,7 @@ function wirePathHighlight(parts: readonly JsonRenderPart[], root: LiveTree, ove
 
     for (const part of parts) {
         if (!shouldTrigger(part.role)) continue;
-        part.tree.listen.onPointerEnter(() => highlight(part.path));
+        part.tree.listen.onPointerEnter(() => highlight(part));
     }
 }
 
@@ -432,7 +683,7 @@ function renderValue(
 export function render_json(
     host: LiveTree,
     value: JsonValue,
-    options: JsonRenderOptions = {},
+    options: JsonRenderRuntimeOptions = {},
 ): JsonRender {
     if (options.clearHost ?? true) host.empty();
     connectorIndexes.clear();
@@ -452,7 +703,8 @@ export function render_json(
     setMeta(root, [], "root", kindOf(value));
     addPart(draft, root, [], "root", kindOf(value));
     renderValue(root, value, [], draft, 0);
-    wirePathHighlight(draft.parts, root, overlay);
+    applyDiffFlares(draft.parts, options.changedPaths ?? []);
+    wirePathHighlight(draft.parts, root, overlay, value, options);
 
     return Object.freeze({
         root,
@@ -475,7 +727,7 @@ export function render_json(
 export function render_json_text(
     host: LiveTree,
     text: string,
-    options: JsonRenderOptions = {},
+    options: JsonRenderRuntimeOptions = {},
 ): JsonRender {
     return render_json(host, JSON.parse(text) as JsonValue, options);
 }
@@ -488,20 +740,40 @@ export function mount_json_render_demo(host: LiveTree): void {
 
     inputColumn.create.div().text.set("json input").css.setMany(DEMO_LABEL_CSS);
     outputColumn.create.div().text.set("live render").css.setMany(DEMO_LABEL_CSS);
+    outputColumn.create.div().text.set("hover metadata").css.setMany(DEMO_LABEL_CSS);
 
     const input = inputColumn.create.textarea().css.setMany(DEMO_TEXTAREA_CSS);
     const output = outputColumn.create.div().css.setMany(DEMO_OUTPUT_CSS);
+    const metadataOutput = outputColumn.create.div().css.setMany(METADATA_PANEL_CSS);
 
     input.form.setValue($RENDER_STRING_DEF);
+    let previousValue: JsonValue | undefined;
+
+    const clearMetadata = (): void => {
+        metadataOutput.text.set("hover rendered JSON for path metadata");
+    };
+
+    const renderMetadata = (metadata: JsonRenderHoverMetadata): void => {
+        metadataOutput.text.set(formatHoverMetadata(metadata));
+    };
 
     const renderInput = (): void => {
         const raw = input.form.getValue();
         const text = typeof raw === "string" ? raw : String(raw ?? "");
 
         try {
-            render_json_text(output, text);
+            const nextValue = JSON.parse(text) as JsonValue;
+            const changedPaths = diffJsonPaths(previousValue, nextValue);
+            render_json(output, nextValue, {
+                changedPaths,
+                onHoverMetadata: renderMetadata,
+                onClearHoverMetadata: clearMetadata,
+            });
+            previousValue = nextValue;
+            clearMetadata();
         } catch (err) {
             output.empty();
+            clearMetadata();
             output.create.div()
                 .text.set(err instanceof Error ? err.message : String(err))
                 .css.setMany(DEMO_ERROR_CSS);

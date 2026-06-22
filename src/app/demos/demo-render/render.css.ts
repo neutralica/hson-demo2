@@ -3,6 +3,18 @@ import { _cols } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { øfontSize } from "../../core/consts/ui-consts";
 
+// CHANGED: centralize render-demo colors so the visual system can be tuned
+// from one place without hunting through each CSS object.
+const renderColorBaseText = _cols.fade;
+const renderColorJsonText = _cols.fmt.json;
+const renderColorPrimitiveText = _cols.yellowlike;
+const renderColorActiveText = _cols.yellowlike;
+const renderColorActiveGlow = _cols.yellowlike;
+const renderColorConnectorGlow = _cols.yellowlike;
+const renderColorPanelBorder = _cols.bluelike;
+const renderColorPanelBackLow = _cols.backlo;
+const renderColorPanelBackHigh = _cols.backhi;
+const renderColorErrorText = _cols.red;
 
 export const ROOT_CSS: CssMap = {
     ...FONT_FAM_MONO,
@@ -12,7 +24,7 @@ export const ROOT_CSS: CssMap = {
     gap: "0.35rem",
     alignContent: "start",
     lineHeight: "1.35",
-    color: _cols.fade,
+    color: renderColorBaseText,
     userSelect: "none",
 };
 export const NODE_CSS: CssMap = {
@@ -51,7 +63,7 @@ export const CONNECTOR_CSS: CssMap = {
     width: "0.9rem",
 };
 export const KEY_CSS: CssMap = {
-    color: _cols.fmt.json,
+    color: renderColorJsonText,
     opacity: "0.72",
     overflow: "visible",
     whiteSpace: "nowrap",
@@ -75,7 +87,7 @@ export const TRIGGER_CSS: CssMap = {
     width: "100%",
 };
 export const PRIMITIVE_CSS: CssMap = {
-    color: _cols.yellowlike,
+    color: renderColorPrimitiveText,
 
     overflow: "visible",
     whiteSpace: "nowrap",
@@ -89,7 +101,7 @@ export const DEMO_ROOT_CSS: CssMap = {
     minHeight: "0",
     boxSizing: "border-box",
     padding: "0.75rem",
-    color: _cols.fade,
+    color: renderColorBaseText,
 };
 export const DEMO_COLUMN_CSS: CssMap = {
     display: "grid",
@@ -98,7 +110,7 @@ export const DEMO_COLUMN_CSS: CssMap = {
     minHeight: "0",
 };
 export const DEMO_LABEL_CSS: CssMap = {
-    color: _cols.fade,
+    color: renderColorBaseText,
     opacity: "0.58",
     textTransform: "uppercase",
     letterSpacing: "0.08em",
@@ -111,9 +123,9 @@ export const DEMO_TEXTAREA_CSS: CssMap = {
     boxSizing: "border-box",
     resize: "none",
     padding: "0.75rem",
-    border: `1px solid ${_cols.bluelike}`,
-    background: _cols.backlo,
-    color: _cols.fmt.json,
+    border: `1px solid ${renderColorPanelBorder}`,
+    background: renderColorPanelBackLow,
+    color: renderColorJsonText,
     outline: "none",
     ...FONT_FAM_MONO,
     fontSize: øfontSize.smol,
@@ -125,10 +137,10 @@ export const DEMO_OUTPUT_CSS: CssMap = {
     padding: "0.75rem",
     border: "0",
     borderRadius: "0.18rem",
-    background: `linear-gradient(to bottom right, ${_cols.backlo} 0%, ${_cols.backlo} 72%, ${_cols.backhi} 135%)`,
+    background: `linear-gradient(to bottom right, ${renderColorPanelBackLow} 0%, ${renderColorPanelBackLow} 72%, ${renderColorPanelBackHigh} 135%)`,
 };
 export const DEMO_ERROR_CSS: CssMap = {
-    color: _cols.red,
+    color: renderColorErrorText,
     whiteSpace: "pre-wrap",
 };
 export const HIGHLIGHT_CLEAR_CSS: CssMap = {
@@ -142,13 +154,13 @@ export const HIGHLIGHT_CLEAR_CSS: CssMap = {
 export const HIGHLIGHT_RELATED_CSS: CssMap = {};
 export const HIGHLIGHT_SELF_CSS: CssMap = {};
 export const HIGHLIGHT_TEXT_CSS: CssMap = {
-    color: _cols.yellowlike,
+    color: renderColorActiveText,
     opacity: "1",
-    textShadow: `0 0 0.08rem ${_cols.yellowlike}`,
+    textShadow: `0 0 0.08rem ${renderColorActiveGlow}`,
     fontWeight: "700",
 };
 export const HIGHLIGHT_CONNECTOR_CSS: CssMap = {
-    filter: `drop-shadow(0 0 0.08rem ${_cols.yellowlike})`,
+    filter: `drop-shadow(0 0 0.08rem ${renderColorConnectorGlow})`,
 };
 export const CONNECTOR_RAIL_CLEAR_CSS: CssMap = {
     opacity: "0",
@@ -157,9 +169,9 @@ export const CONNECTOR_RAIL_CLEAR_CSS: CssMap = {
 };
 export const PATH_TEXT_CSS: CssMap = {
     ...HIGHLIGHT_TEXT_CSS,
-    color: _cols.yellowlike,
+    color: renderColorActiveText,
     opacity: "1",
-    textShadow: `0 0 0.08rem ${_cols.yellowlike}`,
+    textShadow: `0 0 0.08rem ${renderColorActiveGlow}`,
     fontWeight: "700",
 };export function nodeCss(depth: number): CssMap {
     const safeDepth = Math.min(depth, 12);
@@ -167,7 +179,7 @@ export const PATH_TEXT_CSS: CssMap = {
     return {
         ...NODE_CSS,
         padding: "0.08rem 0 0.12rem 0",
-        background: `linear-gradient(to bottom right, transparent 0%, ${_cols.backhi} ${shadeStop})`,
+        background: `linear-gradient(to bottom right, transparent 0%, ${renderColorPanelBackHigh} ${shadeStop})`,
     };
 }
 export const PATH_OVERLAY_CSS: CssMap = {
@@ -188,4 +200,3 @@ export const PATH_OVERLAY_SVG_CSS: CssMap = {
     height: "100%",
     overflow: "visible",
 };
-
