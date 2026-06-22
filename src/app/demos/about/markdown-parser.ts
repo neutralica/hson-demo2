@@ -1,7 +1,40 @@
 import type { LiveTree } from "hson-live";
+import { _cols } from "../../core/consts/colors.consts";
 import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
 import { extractUrl, isIndented, parse_list_item, render_line_with_comment } from "./about-helpers";
 import type { ListItem, ListKind } from "./about.types";
+
+function code_fence_css(lang: string | null): Record<string, string> {
+  const normalized = (lang ?? "").toLowerCase();
+
+  if (normalized === "json") {
+    return {
+      color: _cols.bluelike,
+      boxShadow: `0 0 0.12rem ${_cols.bluelike}`,
+    };
+  }
+
+  if (normalized === "hson") {
+    return {
+      color: _cols.yellowlike,
+      boxShadow: `0 0 0.12rem ${_cols.yellowlike}`,
+    };
+  }
+
+  if (normalized === "html") {
+    return {
+      color: _cols.pinklike,
+      boxShadow: `0 0 0.12rem ${_cols.pinklike}`,
+    };
+  }
+
+  return {};
+}
+
+function is_formatted_data_fence(lang: string | null): boolean {
+  const normalized = (lang ?? "").toLowerCase();
+  return normalized === "json" || normalized === "hson" || normalized === "html";
+}
 
 export function render_md_doc(host: LiveTree, src: string): void {
   host.empty();
@@ -106,16 +139,22 @@ export function render_md_doc(host: LiveTree, src: string): void {
     codeBuf = [];
     if (codeLines.length === 0) return;
 
-    const isLogo = (codeLang ?? "").toLowerCase() === "hson";
+    const lang = codeLang;
+    const formattedDataFence = is_formatted_data_fence(lang);
 
-    const pre = host.create.div().classlist.add("md-pre").css.setMany(MD_CODE_PREcss);
-    if (isLogo) return;
+    const pre = host.create.div().classlist.add("md-pre").css.setMany({
+      ...MD_CODE_PREcss,
+      ...code_fence_css(lang),
+    });
 
     for (const line of codeLines) {
       const row = pre.create.div();
       row.css.setMany({ whiteSpace: "pre" });
 
-      render_line_with_comment(row, line, "code");
+      // CHANGED: ts and other ordinary code fences keep the existing code
+      // highlighter; json/hson/html fences use the parsing-panel color lanes.
+      if (formattedDataFence) row.text.set(line);
+      else render_line_with_comment(row, line, "code");
     }
 
     codeLang = null;

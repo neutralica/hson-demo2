@@ -8,7 +8,7 @@ import { register_node_state_source } from "../../state/state-sources";
 import { find_doc } from "./about-helpers";
 import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_TOCcss, ABOUT_DOCcss, DOC_CONTAINER, TOC_BTNcss, TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss } from "./about.css";
 import type { AboutDocKey, AboutPanel, AboutInitTargets, AboutInitDeps, AboutDocs } from "./about.types";
-import { render_md_doc } from "./render-md-doc";
+import { render_md_doc } from "./markdown-parser";
 
 type AboutControlState = Readonly<{
   activeKey: string;

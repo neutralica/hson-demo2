@@ -4,6 +4,8 @@ import { LiveTree } from "hson-live";
 import { _cols } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { øfontSize } from "../../core/consts/ui-consts";
+import { render_md_doc } from "../about/markdown-parser";
+import { ABOUT_P_TEXTcss, MD_CODE_PREcss } from "../about/about.css";
 
 export type DeckBodyKind = "text" | "code" | "image";
 
@@ -61,9 +63,21 @@ const deckRootCss = {
   zIndex: "95",
   display: "none",
   color: _cols.fade,
-  background: "color-mix(in oklch, black 18%, transparent)",
-  backdropFilter: "blur(2px)",
-  overflow: "hidden",
+  // CHANGED: the deck root itself stays transparent so the hson/livedemo
+  // lighthouse mark can remain visually distinct.
+  background: "transparent",
+};
+
+const deckVeilCss = {
+  position: "absolute",
+  inset: "0",
+  zIndex: "0",
+  pointerEvents: "none",
+  background: "color-mix(in oklch, black 34%, transparent)",
+  backdropFilter: "blur(1.5px) brightness(0.78)",
+  // CHANGED: leave the top-left logo area untouched while dimming/filtering
+  // the menu, graffiti, motes, and the rest of the screen behind the deck.
+  clipPath: "polygon(0 7.35rem, 12.75rem 7.35rem, 12.75rem 0, 100% 0, 100% 100%, 0 100%)",
 };
 
 const deckChromeCss = {
@@ -95,13 +109,16 @@ const deckStageCss = {
   inset: "0",
   display: "grid",
   placeItems: "center",
-  padding: "5.5rem 6rem 4.25rem 6rem",
+  zIndex: "1",
+  // CHANGED: give the lighthouse mark breathing room and shift slide content
+  // into the open stage area instead of starting under the logo/menu rail.
+  padding: "5.75rem 6rem 4.25rem clamp(13.5rem, 14vw, 18rem)",
   boxSizing: "border-box",
   transition: `opacity ${deckTransitionMs}ms ease, transform ${deckTransitionMs}ms ease, filter ${deckTransitionMs}ms ease`,
 };
 
 const deckSlideCss = {
-  width: "min(78rem, 100%)",
+  width: "min(72rem, 100%)",
   minHeight: "min(38rem, 100%)",
   display: "grid",
   gridTemplateRows: "auto 1fr auto",
@@ -162,41 +179,65 @@ const sampleSlides: readonly DeckSlideConfig[] = [
     header: "LiveDemo Deck",
     bodyA: {
       kind: "text",
-      text: "A terminal-gothic slide shell mounted inside LiveDemo.\n\nTilde toggles the deck. Arrows move through slides. Escape closes.",
+      text: "### first pass\nA terminal-gothic slide shell mounted inside LiveDemo.\n\nTilde toggles the deck. Arrows move through slides. Escape closes.",
     },
     footer: "mount-deck / first pass",
   },
   {
-    header: "State as substrate",
+    header: "Structured Text",
     bodyA: {
       kind: "text",
-      text: "The deck is just another mounted LiveTree surface: a small state object, a scheduler, a slide factory, and a few effects.",
+      text: "### Plain text\nThis panel is standard body copy. It should write in, then settle into the shared markdown parser without a layout jump.\n\nThe goal is boring stability: readable text, clean rhythm, no PowerPoint smell unless we ask for it.",
+    },
+    bodyB: {
+      kind: "text",
+      text: "### List text\n• bullet marker\n- dash marker\n* star marker\n\n### nested-ish continuation\n- first item\n  continued line for the first item\n- second item",
+    },
+    footer: "split / text + list",
+  },
+  {
+    header: "Code Split",
+    bodyA: {
+      kind: "text",
+      text: "### Text beside code\nThis should feel like a compact technical slide: one side argument, one side proof.\n\nThe code body writes in without showing the fence markers, then settles into the markdown/code renderer.",
     },
     bodyB: {
       kind: "code",
       lang: "ts",
-      text: `type DeckState = {\n  isOpen: boolean;\n  index: number;\n  timerIds: number[];\n};`,
+      text: `type DeckSlideConfig = Readonly<{\n  header?: string;\n  bodyA: DeckSlideBody;\n  bodyB?: DeckSlideBody;\n  bodyC?: DeckSlideBody;\n  footer?: string;\n}>;`,
     },
-    footer: "split slide",
+    footer: "split / text + ts",
   },
   {
-    header: "Three columns",
-    bodyA: { kind: "text", text: "One panel can carry argument." },
-    bodyB: { kind: "text", text: "One panel can carry proof." },
-    bodyC: { kind: "text", text: "One panel can carry diagnostics, code, or a little theatrical nonsense." },
-    footer: "triple slide",
-  },
-  {
-    header: "The point",
+    header: "Format Lanes",
     bodyA: {
-      kind: "text",
-      text: "A web-native deck can use the same visual language, same runtime, and same interaction model as the thing being presented.",
+      kind: "code",
+      lang: "json",
+      text: `{\n  "format": "json",\n  "color": "bluelike",\n  "active": true\n}`,
     },
     bodyB: {
       kind: "code",
-      text: `mount_deck(screen);\n// then press ~`,
+      lang: "hson",
+      text: `<deck\n  <slide\n    header "Format Lanes"\n    body "hson sample"\n  >\n>`,
     },
-    footer: "end / or beginning",
+    bodyC: {
+      kind: "code",
+      lang: "html",
+      text: `<section class="deck-slide">\n  <h3>HTML sample</h3>\n  <p>pinklike lane</p>\n</section>`,
+    },
+    footer: "triple / json + hson + html",
+  },
+  {
+    header: "Markdown Edges",
+    bodyA: {
+      kind: "text",
+      text: "### Subheading\nParagraph text before a rule.\n\n---\n\n!!! caution line rendered through the warning path\n\nhttps://neutralica.dev",
+    },
+    bodyB: {
+      kind: "text",
+      text: "### Inline formatted data\n```json\n{\n  \"from\": \"text body\",\n  \"still\": \"markdown parsed\"\n}\n```",
+    },
+    footer: "edge cases / heading + rule + warning + url + fenced text body",
   },
 ];
 
@@ -215,7 +256,7 @@ function clear_timers(state: DeckState): void {
   state.timerIds = [];
 }
 
-function write_in_text(state: DeckState, target: LiveTree, text: string): void {
+function write_in_text(state: DeckState, target: LiveTree, text: string, onComplete?: () => void): void {
   target.text.set("");
   const chars = [...text];
   const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
@@ -233,6 +274,7 @@ function write_in_text(state: DeckState, target: LiveTree, text: string): void {
 
     if (progress >= 1) {
       target.text.set(text);
+      onComplete?.();
       window.clearInterval(timerId);
       state.timerIds = state.timerIds.filter((id) => id !== timerId);
     }
@@ -246,9 +288,64 @@ function slide_bodies(slide: DeckSlideConfig): readonly DeckSlideBody[] {
 }
 
 function body_grid_columns(count: number): string {
-  if (count <= 1) return "1fr";
+  if (count <= 1) return "minmax(24rem, 48rem)";
   if (count === 2) return "1fr 1fr";
   return "1fr 1fr 1fr";
+}
+
+function body_markdown(body: Extract<DeckSlideBody, { kind: "text" | "code"; }>): string {
+  if (body.kind === "code") {
+    const lang = body.lang ?? "ts";
+    return `\`\`\`${lang}\n${body.text}\n\`\`\``;
+  }
+
+  return body.text;
+}
+
+function deck_code_fence_css(lang: string | undefined): Record<string, string> {
+  const normalized = (lang ?? "ts").toLowerCase();
+
+  if (normalized === "json") {
+    return {
+      color: _cols.bluelike,
+      boxShadow: `0 0 0.12rem ${_cols.bluelike}`,
+    };
+  }
+
+  if (normalized === "hson") {
+    return {
+      color: _cols.yellowlike,
+      boxShadow: `0 0 0.12rem ${_cols.yellowlike}`,
+    };
+  }
+
+  if (normalized === "html") {
+    return {
+      color: _cols.pinklike,
+      boxShadow: `0 0 0.12rem ${_cols.pinklike}`,
+    };
+  }
+
+  return {};
+}
+
+function writing_shell_css(body: Extract<DeckSlideBody, { kind: "text" | "code"; }>) {
+  if (body.kind === "code") {
+    return {
+      ...MD_CODE_PREcss,
+      ...deck_code_fence_css(body.lang),
+    };
+  }
+
+  return {
+    ...ABOUT_P_TEXTcss,
+    textIndent: "4ch",
+  };
+}
+
+function writing_text(body: Extract<DeckSlideBody, { kind: "text" | "code"; }>, markdown: string): string {
+  if (body.kind === "code") return body.text;
+  return markdown;
 }
 
 function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody): void {
@@ -264,11 +361,28 @@ function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody): void
     return;
   }
 
-  const bodyTree = host.create.div().css.setMany(body.kind === "code" ? deckCodeCss : deckBodyCss);
+  const bodyFrame = host.create.div().css.setMany({
+    ...(body.kind === "code" ? deckCodeCss : deckBodyCss),
+    position: "relative",
+  });
+  const markdown = body_markdown(body);
 
-  // CHANGED: first pass uses plain fenced/code text; syntax highlighting can be
-  // swapped in here once the deck shell is wired and stable.
-  write_in_text(state, bodyTree, body.text);
+  const finalTree = bodyFrame.create.div().css.setMany({ visibility: "hidden" });
+  render_md_doc(finalTree, markdown);
+
+  const writer = bodyFrame.create.div().css.setMany({
+    ...writing_shell_css(body),
+    position: "absolute",
+    inset: "0",
+  });
+
+  // CHANGED: render the final markdown structure invisibly before write-in so
+  // headings/lists/code boxes reserve their final layout and do not jump when
+  // the parser pass becomes visible.
+  write_in_text(state, writer, writing_text(body, markdown), () => {
+    writer.css.setMany({ display: "none" });
+    finalTree.css.setMany({ visibility: "visible" });
+  });
 }
 
 function mount_slide(state: DeckState, stage: LiveTree, slide: DeckSlideConfig): void {
@@ -283,6 +397,9 @@ function mount_slide(state: DeckState, stage: LiveTree, slide: DeckSlideConfig):
   const bodyGrid = slideTree.create.div().css.setMany({
     ...deckBodyGridCss,
     gridTemplateColumns: body_grid_columns(bodies.length),
+    // CHANGED: single-body slides sit nearer the visual center; split/triple
+    // slides still use the full available slide width.
+    justifyContent: bodies.length <= 1 ? "center" : "stretch",
   });
 
   bodies.forEach((body) => {
@@ -303,6 +420,7 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
   };
 
   const root = host.create.div().id.set("live-demo-deck").css.setMany(deckRootCss);
+  root.create.div().css.setMany(deckVeilCss);
   const chrome = root.create.div().css.setMany(deckChromeCss);
   const stage = root.create.div().css.setMany(deckStageCss);
   const counter = chrome.create.div().text.set(`1 / ${slides.length}`);
