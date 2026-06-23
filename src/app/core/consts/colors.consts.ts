@@ -3,7 +3,7 @@ import  { OKLCH_FLEURS } from "../../demos/fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "./oklch.consts";
 import { deepBack, bckColor } from "./old-rgb.consts";
-import { GRAF_OKLCHname, MAIN_OKLCHname, MENU_OKLCHname, MOTE_OKLCHname } from "./ui-consts";
+import { GRAF_COLname, MAIN_COLname, MENU_COLname, MOTE_COLname } from "./ui-consts";
 
 export type ColorVarSource = Readonly<{
   path: string;
@@ -24,10 +24,10 @@ type ColorVarRefs<T> = T extends string
   : never;
 
 const COLOR_VAR_NAME_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
-  "txt.main": MAIN_OKLCHname,
-  "txt.menu": MENU_OKLCHname,
-  graffiti: GRAF_OKLCHname,
-  motes: MOTE_OKLCHname,
+  "txt.main": MAIN_COLname,
+  "txt.menu": MENU_COLname,
+  graffiti: GRAF_COLname,
+  motes: MOTE_COLname,
 });
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -111,7 +111,7 @@ const LISTcol = _HSON_COL.h;
 const URLcol = OKLCH_VIBRANT.blueYves;
 const COLONcol = OKLCH_VIBRANT.yellowBrass;
 
-const GRAFFITIcol = set_alpha(TXTcol_MENU, 0.3);
+const GRAFFITIcol = "oklch(0.3 0.5 300 / 0.19)";
 const REDcol = OKLCH_VIBRANT.redSignal;
 const FADE_1col = OKLCH_NEUTRALS.silver;
 

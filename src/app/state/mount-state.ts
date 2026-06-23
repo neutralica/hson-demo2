@@ -24,81 +24,6 @@ type StatePulseRow = Readonly<{
   next: string;
 }>;
 
-const stateGraphModes: readonly StateGraphMode[] = ["all", "leaves", "containers"];
-function filterEntries(
-  entries: readonly StateGraphEntry[],
-  mode: StateGraphMode,
-): readonly StateGraphEntry[] {
-  if (mode === "leaves") return entries.filter((entry) => entry.isLeaf);
-  if (mode === "containers") return entries.filter((entry) => entry.isContainer);
-  return entries;
-}
-
-const stateGraphRootCss: CssMap = {
-  padding: "1rem",
-  fontFamily: "var(--font-mono, monospace)",
-  fontSize: "0.72rem",
-  lineHeight: "1.35",
-  color: "var(--txt-main, #d8ded8)",
-  overflow: "auto",
-  background: _colors.backlo
-} as const;
-
-const stateGraphTitleCss: CssMap = {
-  marginBottom: "0.75rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  opacity: "0.82",
-} as const;
-
-const stateGraphControlsCss: CssMap = {
-  display: "flex",
-  gap: "0.5rem",
-  marginBottom: "0.75rem",
-} as const;
-
-const stateGraphButtonCss: CssMap = {
-  appearance: "none",
-  border: "1px solid color-mix(in oklch, currentColor 22%, transparent)",
-  background: "transparent",
-  color: "inherit",
-  font: "inherit",
-  fontSize: "0.68rem",
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  padding: "0.2rem 0.45rem",
-  cursor: "pointer",
-  opacity: "0.62",
-} as const;
-
-const stateGraphButtonActiveCss: CssMap = {
-  border: "1px solid color-mix(in oklch, currentColor 60%, transparent)",
-  opacity: "0.95",
-  textDecoration: "underline",
-  textUnderlineOffset: "0.18em",
-} as const;
-
-const stateGraphGridCss: CssMap = {
-  display: "grid",
-  gridTemplateColumns: "minmax(14rem, 2fr) 6rem minmax(10rem, 1fr) minmax(10rem, 1fr)",
-  gap: "0.75rem",
-} as const;
-
-const stateGraphHeaderCss: CssMap = {
-  ...stateGraphGridCss,
-  padding: "0.35rem 0",
-  borderBottom: "1px solid color-mix(in oklch, currentColor 30%, transparent)",
-  opacity: "0.72",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-} as const;
-
-const stateGraphRowCss: CssMap = {
-  ...stateGraphGridCss,
-  padding: "0.28rem 0",
-  borderBottom: "1px solid color-mix(in oklch, currentColor 10%, transparent)",
-} as const;
-
 const statePulseRootCss: CssMap = {
   padding: "0.75rem",
   fontFamily: "var(--font-mono, monospace)",
@@ -152,41 +77,6 @@ function ensureStoreStateSource(): void {
     entries: () => store_graph_entries({ includeContainers: false, maxPreviewLength: 48 }),
     subscribe: (fn) => demo_subscribe(() => fn()),
   });
-}
-
-function schemaText(entry: StateGraphEntry): string {
-  if (!entry.schema) return "—";
-
-  const types = entry.schema.types.join("|") || "unknown";
-  const flags = [
-    entry.schema.optional ? "optional" : "",
-    entry.schema.readonly ? "readonly" : "",
-    entry.schema.hasCustomValidation ? "custom" : "",
-  ].filter(Boolean).join(", ");
-
-  return flags ? `${types} (${flags})` : types;
-}
-
-
-
-function renderModeControls(
-  root: LiveTree,
-  activeMode: StateGraphMode,
-  setMode: (next: StateGraphMode) => void,
-): void {
-  const controls = root.create.div().css.setMany(stateGraphControlsCss);
-
-  for (const nextMode of stateGraphModes) {
-    const button = controls.create.button()
-      .text.set(nextMode)
-      .css.setMany(
-        nextMode === activeMode
-          ? { ...stateGraphButtonCss, ...stateGraphButtonActiveCss }
-          : stateGraphButtonCss
-      );
-    button.listen.onPointerDown(() => setMode(nextMode));
-
-  }
 }
 
 function pulseText(entry: StateGraphEntry): string {

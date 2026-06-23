@@ -4,7 +4,7 @@ import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { _fontWeight, MENU_OKLCH, SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr, GRAF_OKLCH, _fontSize } from "../../core/consts/ui-consts";
+import { _fontWeight, MENU_Var, SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr, GRAF_VAR, _fontSize } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 
 export const UI_ROOTcss: CssMap = {
@@ -38,7 +38,7 @@ export const MAIN_MENUcss: CssMap = {
   __before: {},
   _hover: {
     // fontWeight: øfontWeight.main,
-    background: MENU_OKLCH,
+    background: MENU_Var,
     color: _colors.backhi,
     __before: {
       content: ">>",
@@ -60,7 +60,6 @@ export const MENU_BOXcss: CssMap = {
 };
 
 export const DEMO_HEADLINEcss: CssMap = {
-  textShadow: "1px 1px 62px hotpink",
   display: "flex",
   alignContent: "end",
 
@@ -113,7 +112,6 @@ export const FX_LAYERcss: CssMap = {
   left: "0",
   height: "100%",
   width: "100%",
-  background: `linear-gradient(transparent 50%,${set_alpha(OKLCH_VIBRANT.cyanSeaLaser, 0.1)})`,
   zIndex: "50"
 };
 /**
@@ -149,9 +147,9 @@ export const HSON_GRAFFITIcss: CssMap = {
   transform: "translate(-50%, -50%)",
   whiteSpace: "pre",
   fontFamily: "monospace", // best density; do not change to system mono
-  color: GRAF_OKLCH,
+  color: GRAF_VAR,
   boxSizing: "border-box",
-  mixBlendMode: "multiply",
+  // mixBlendMode: "multiply",
   fontSize: "min(16px, calc((100vw) / 84))",
   lineHeight: "1",
   width: "100%",

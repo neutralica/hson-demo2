@@ -132,18 +132,6 @@ export function create_demo_store(
     emit(prev);
   }
 
-  // function state_remove(
-  //   path: string | readonly (string | number)[],
-  // ): void {
-  //   const prev = snapshot();
-
-  //   demoState.at(path).remove();
-
-  //   const nextSnap = get_state();
-  //   if (json_equal(prev as JsonValue, nextSnap as JsonValue)) return;
-
-  //   emit(prev);
-  // }
 
   // -------------------------
   // public API

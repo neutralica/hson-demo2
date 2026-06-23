@@ -23,14 +23,16 @@ import {
   deckSectionTextCss,
   deckSlideCss,
   deckStageCss,
-  deckVeilCss,
+  deckCoverCss,
 } from "./deck.css";
 import { SLIDES } from "./deck-slides";
 import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, slide_bodies, write_in_text, write_in_rendered_text } from "./deck-helpers";
 import type { DeckSlideConfig, DeckState, DeckSlideBody, DeckSlideSection, DeckApi } from "./deck.types";
 import type { CssMap } from "hson-live/types";
 import { render_line_with_comment } from "../about/about-helpers";
-import { mk_div_cls, mk_div_cls_txt, mk_div_id } from "../../utils/makers";
+import { mk_div_cls, mk_div_cls_txt, mk_div_id, mk_div_id_txt } from "../../utils/makers";
+import { HSON_LIVE_GRAFFITIstr } from "../../phases/phase-3-demo/demo.consts";
+import { DEMO_SCREENcss, HSON_GRAFFITIcss } from "../../phases/phase-3-demo/demo.css";
 
 
 function deck_align_css(stackAlign: DeckSlideConfig["stackAlign"] | undefined): CssMap {
@@ -57,7 +59,6 @@ function deck_header_b_css(): CssMap {
     textAlign: "center",
     justifySelf: "center",
     width: "100%",
-    marginTop: "2.55rem",
   };
 }
 export function deckTransitionMs(): number { return 180 };
@@ -103,6 +104,16 @@ type DeckMarkdownOptions = Readonly<{
   fillCodePanels: boolean;
   stackAlign?: DeckSlideConfig["stackAlign"];
 }>;
+function deck_header_b_stack_css(slide: DeckSlideConfig): CssMap {
+  if (slide.stackAlign === "center") {
+    return {
+      ...deckHeaderBStackCss,
+      gridTemplateColumns: "minmax(24rem, 54rem)",
+    };
+  }
+
+  return deckHeaderBStackCss;
+}
 
 function parse_deck_markdown(markdown: string): readonly DeckMarkdownBlock[] {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -252,7 +263,7 @@ function mount_deck_list_block(state: DeckState, host: LiveTree, lines: readonly
 function mount_deck_hr_block(host: LiveTree): void {
   host.create.div().css.setMany({
     height: "1.15rem",
-    margin: "0.25rem 0 0.5rem 0",
+    margin: "2rem 0 1rem 0",
     borderTop: `1px solid ${set_alpha(_colors.fade, 0.25)}`,
     opacity: "0.75",
   });
@@ -266,11 +277,7 @@ function mount_deck_code_block(
 ): void {
   const panel = host.create.div().css.setMany(deck_code_panel_css(block.lang, options.fillCodePanels));
 
-  const content = panel.create.div().css.setMany({
-    ...deckCodeContentCss,
-    // CHANGED: apply line-height at the final write-in target so formatted
-    // data blocks and tokenized TS blocks share the same vertical rhythm.
-  });
+  const content = panel.create.div().css.setMany(deckCodeContentCss);
 
   if (is_formatted_data_lang(block.lang)) {
     write_in_text(state, content, block.text);
@@ -367,7 +374,7 @@ function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody, stack
   });
 }
 function mount_header_b_stack(state: DeckState, host: LiveTree, slide: DeckSlideConfig): void {
-  const stack = host.create.div().css.setMany(deck_header_b_css());
+  const stack = host.create.div().css.setMany(deck_header_b_stack_css(slide));
 
   if (slide.bodyA) {
     const bodyAHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
@@ -376,7 +383,7 @@ function mount_header_b_stack(state: DeckState, host: LiveTree, slide: DeckSlide
 
   stack.create.div()
     .text.set(slide.headerB ?? "")
-    .css.setMany(deck_header_b_css())
+    .css.setMany(deck_header_b_css());
 
   if (slide.bodyB) {
     const bodyBHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
@@ -452,14 +459,21 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
   };
 
   const root = host.create.div().id.set("live-demo-deck").css.setMany(deckRootCss);
-  root.create.div().css.setMany(deckVeilCss);
-  const chrome = root.create.div().css.setMany(deckChromeCss);
-  const stage = root.create.div().css.setMany(deckStageCss);
-  const counter = chrome.create.div().text.set(`1 / ${slides.length}`);
-
+  const chrome = mk_div_id(root, "deck-chrome").css.setMany(deckChromeCss);
+  
+  const stage = mk_div_id(root, "deck-stage").css.setMany(deckStageCss);
+  const counter = mk_div_id_txt(chrome, "slide-counter", `1 / ${slides.length}`);
+  
   const prevButton = chrome.create.div().text.set("prev").css.setMany(deckButtonCss);
   const nextButton = chrome.create.div().text.set("next").css.setMany(deckButtonCss);
   const closeButton = chrome.create.div().text.set("close").css.setMany(deckButtonCss);
+  
+  const deckCover = root.create.div()
+    .css.setMany(deckCoverCss)
+    // .css.setMany(DEMO_SCREENcss);
+  const graf = mk_div_cls(deckCover, "graffiti-layer")
+    .text.set(HSON_LIVE_GRAFFITIstr)
+    .css.setMany(HSON_GRAFFITIcss);
 
   const sync_counter = (): void => {
     counter.text.set(`${state.index + 1} / ${slides.length}`);
@@ -490,7 +504,7 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
     state.isOpen = false;
     clear_timers(state);
     root.css.setMany({ display: "none" });
-  };
+  }
 
   const goTo = (index: number): void => {
     const nextIndex = clamp_index(index, slides);

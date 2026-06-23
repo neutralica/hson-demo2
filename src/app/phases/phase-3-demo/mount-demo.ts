@@ -3,10 +3,10 @@
 import { LiveTree, CssManager } from "hson-live";
 import type { SvgLiveTree } from "hson-live/types";
 import { relay_data, relay_void, type OutcomeAsync, relay } from "intrastructure";
-import  { _colors } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { $PANEL_HIDDEN, $MENU_SHADOW, MENU_OKLCH } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, $MENU_SHADOW, MENU_Var } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import type { Fmt } from "../../core/types/core.types";
 import { ABOUT_DOCS } from "../../demos/about/about.consts";
@@ -15,7 +15,7 @@ import mount_bar_bar from "../../demos/bar-bar.ts/mount-bar-bar";
 import { mount_build_panels } from "../../demos/build/mount-bp";
 import { mount_deck } from "../../demos/deck/mount-deck";
 import { spawn_flower } from "../../demos/fleurs/fleurs";
-import  { fmtNum } from "../../demos/fleurs/fleurs-cols";
+import { fmtNum } from "../../demos/fleurs/fleurs-cols";
 import { FLOWER_LAYERcss, FLOWER_FIELDcss } from "../../demos/fleurs/fleurs.css";
 import { MOTES_LAYERcss } from "../../demos/motes/motes.css";
 import { mount_motes } from "../../demos/motes/mount-motes";
@@ -49,6 +49,7 @@ type DemoShell = {
   fleurLayer: LiveTree;
   fleurField: SvgLiveTree;
   uiRoot: LiveTree;
+  graf: LiveTree;
   menuContainer: LiveTree;
   motesLayer: LiveTree;
 };
@@ -120,13 +121,13 @@ function create_demo_shell(stage: LiveTree): DemoShell {
     .css.setMany(DEMO_SCREENcss);
 
   mk_div_id(screen, "fx-layer").css.setMany(FX_LAYERcss);
+  
+    const graf = mk_div_id(screen, "graffiti-layer")
+      .text.set(HSON_LIVE_GRAFFITIstr)
+      .css.setMany(HSON_GRAFFITIcss);
 
   const fleurLayer = mk_div_id(screen, "fleurs-layer")
     .css.setMany(FLOWER_LAYERcss);
-
-  mk_div_id(screen, "graffiti-layer")
-    .text.set(HSON_LIVE_GRAFFITIstr)
-    .css.setMany(HSON_GRAFFITIcss);
 
   const uiRoot = mk_div_id(screen, "ui-root")
     .css.setMany(UI_ROOTcss);
@@ -155,7 +156,7 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 
   sync_fleur_viewbox(fleurLayer, fleurField);
 
-  return { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer };
+  return { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graf };
 }
 
 function create_demo_wordmark(menuContainer: LiveTree): void {
@@ -170,7 +171,7 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
       .css.setMany({
         ...HSON_WORDcss,
         textShadow: $MENU_SHADOW + set_alpha(_colors.hson[k], 0.1)
-          + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
+          + ", 0 0 18px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       });
   });
 
@@ -193,7 +194,7 @@ function create_demo_menu(menuBox: LiveTree): MenuButtons {
       .classlist.set(isWidget ? "widget-button" : "view-button")
       .css.setMany({
         ...MAIN_MENUcss,
-        color: isWidget ? _colors.txt.widget : MENU_OKLCH
+        color: isWidget ? _colors.txt.widget : MENU_Var
       });
   });
 
@@ -385,7 +386,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   seed_demo_theme_vars();
 
   const shell = create_demo_shell(stage);
-  const { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer } = shell;
+  const { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graf } = shell;
 
   create_demo_wordmark(menuContainer);
 

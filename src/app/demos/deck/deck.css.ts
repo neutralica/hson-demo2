@@ -9,15 +9,14 @@ export const deckHeaderBCss: CssMap = {
   fontSize: _fontSize.title,
   lineHeight: "1.02",
   // CHANGED: a little internal breathing room without recreating large gaps.
-  padding: "0.1rem 0 0.2rem 0",
-  letterSpacing: "-0.025em",
-  textShadow: `0 0 0.12rem ${_colors.yellowlike}`,
+  paddingBottom: "0.5rem",
+  // letterSpacing: "-0.025em",
   // CHANGED: align secondary deck headers with the main slide header/body rail.
   justifySelf: "center",
   textAlign: "center",
   // CHANGED: separate headerB from the previous body while keeping its own
   // following body close enough to read as a unit.
-  marginTop: "0.15rem",
+  // marginTop: "0.15rem",
   marginBottom: "0.25rem",
 };
 export const deckHeaderBStackCss : CssMap= {
@@ -30,7 +29,7 @@ export const deckHeaderBStackCss : CssMap= {
   ...deckHeaderBCss,
 };
 
-export const deckVeilCss: CssMap = {
+export const deckCoverCss: CssMap = {
   position: "absolute",
   inset: "0",
   zIndex: "0",
@@ -43,8 +42,8 @@ export const deckVeilCss: CssMap = {
 };
 export const deckChromeCss: CssMap = {
   position: "absolute",
-  top: "0.85rem",
-  right: "0.85rem",
+  top: "0",
+  right: "0",
   zIndex: "2",
   display: "flex",
   gap: "0.4rem",
@@ -53,7 +52,7 @@ export const deckChromeCss: CssMap = {
   letterSpacing: "0.08em",
   textTransform: "uppercase",
   color: _colors.fade,
-  opacity: "0.72",
+  // opacity: "0.72",
 };
 export const deckButtonCss: CssMap = {
   border: `1px solid ${_colors.bluelike}`,
@@ -72,15 +71,14 @@ export const deckStageCss: CssMap = {
   // CHANGED: give the lighthouse mark breathing room and shift slide content
   // into the open stage area instead of starting under the logo/menu rail.
   // padding: "5.75rem 6rem 4.25rem clamp(13.5rem, 14vw, 18rem)",
-  paddingLeft: "2rem",
+  padding: "0 2rem",
   boxSizing: "border-box",
   transition: `opacity ${deckTransitionMs}ms ease, transform ${deckTransitionMs}ms ease, filter ${deckTransitionMs}ms ease`,
 };
 export const deckSlideCss: CssMap = {
-  width: "min(72rem, 100%)",
+  // width: "min(72rem, 100%)",
   maxHeight: "100%",
   display: "grid",
-  paddingLeft: "5rem",
   gridTemplateRows: "auto minmax(0, 1fr) auto",
   alignContent: "stretch",
   gap: "0.55rem",
@@ -90,11 +88,11 @@ export const deckSlideCss: CssMap = {
 export const deckHeaderCss: CssMap = {
   color: _colors.yellowlike,
   fontSize: "clamp(2.1rem, 5vw, 5rem)",
-  // lineHeight: "0.95",
+  lineHeight: "0.95",
   // CHANGED: a little internal breathing room without changing the fixed rail.
   // padding: "0.12rem 0 0.3rem 0",
-  letterSpacing: "-0.055em",
-  textShadow: `0 0 0.18rem ${_colors.yellowlike}`,
+  // letterSpacing: "-0.055em",
+  // marginTop:"2rem",
   
   opacity: "0",
   transform: "translateY(-0.22rem)",
@@ -106,18 +104,19 @@ export const deckHeaderVisibleCss: CssMap = {
 };
 export const deckBodyGridCss: CssMap = {
   display: "grid",
-  gap: "1.25rem",
+  gap: "2rem",
   alignContent: "start",
   minHeight: "0",
-  height: "100%",
+  // height: "100%",
+  marginBottom: "2rem",
   overflow: "hidden",
 };
 export const deckBodyCss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   color: _colors.fade,
-  fontSize: "clamp(1rem, 1.4vw, 1.38rem)",
-  // lineHeight: "1.42",
+  fontSize: _fontSize.main,
+  lineHeight: "1.42",
   whiteSpace: "pre-wrap",
   overflow: "hidden",
 };
@@ -136,13 +135,12 @@ export const deckSectionHeadingCss: CssMap = {
   color: _colors.yellowlike,
   fontSize: "clamp(1.35rem, 2.15vw, 2rem)",
   lineHeight: "1.08",
-  letterSpacing: "0.02em",
-  textShadow: `0 0 0.1rem ${_colors.yellowlike}`,
+  // letterSpacing: "0.02em",
 };
 export const deckSectionTextCss: CssMap = {
   ...deckBodyCss,
   fontSize: "clamp(0.95rem, 1.18vw, 1.18rem)",
-  // lineHeight: "1.38",
+  lineHeight: "1.38",
 };
 export const deckCodeCss: CssMap = {
   ...deckBodyCss,
@@ -156,8 +154,8 @@ export const deckFooterCss: CssMap = {
   letterSpacing: "0.08em",
   textTransform: "uppercase",
   position: "absolute",
-  bottom: "3rem",
-  left: "3rem"
+  bottom: "1.5rem",
+  left: "1.5rem"
 };
 export const deckRootCss:CssMap = {
   ...FONT_FAM_MONO,
@@ -183,4 +181,5 @@ export const deckCodeContentCss: CssMap = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   wordBreak: "break-word",
+  margin: "1.5em"
 };

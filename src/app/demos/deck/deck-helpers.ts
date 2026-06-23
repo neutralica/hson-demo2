@@ -8,6 +8,9 @@ const writeTickMs = 24;
 const writeMinMs = 460;
 const writeMaxMs = 980;
 const writeNoise = "<>/\\{}[]()*&^%$#@!?:;~";
+
+type TextSetter = (value: string) => void;
+
 export function is_deck_list_line(line: string): boolean {
   return /^\s*(?:[-*•]|\d+[.)])\s+/.test(line);
 }
@@ -47,10 +50,34 @@ export function clear_timers(state: DeckState): void {
   state.timerIds = [];
 }
 
+function write_text_value(state: DeckState, text: string, setText: TextSetter, onComplete?: () => void): void {
+  setText("");
+  const chars = [...text];
+  const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
+  const started = performance.now();
+
+  const timerId = window.setInterval(() => {
+    const elapsed = performance.now() - started;
+    const progress = Math.min(1, elapsed / duration);
+    const settledCount = Math.floor(chars.length * progress);
+    const noisyCount = Math.min(chars.length - settledCount, 10);
+    const settled = chars.slice(0, settledCount).join("");
+    const noisy = Array.from({ length: noisyCount }, () => random_write_char()).join("");
+
+    setText(settled + noisy);
+
+    if (progress >= 1) {
+      setText(text);
+      onComplete?.();
+      window.clearInterval(timerId);
+      state.timerIds = state.timerIds.filter((id) => id !== timerId);
+    }
+  }, writeTickMs);
+
+  state.timerIds.push(timerId);
+}
+
 export function write_in_rendered_text(state: DeckState, root: LiveTree): void {
-  // CHANGED: keep the public helper LiveTree-native. We only touch the DOM at
-  // the boundary where the canonical markdown renderer has already produced
-  // styled text nodes.
   const rootElement = root.dom.must.html();
   const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
   const entries: { node: Text; text: string; }[] = [];
@@ -62,60 +89,17 @@ export function write_in_rendered_text(state: DeckState, root: LiveTree): void {
     current = walker.nextNode();
   }
 
-  entries.forEach(({ node }) => {
-    node.textContent = "";
-  });
-
   entries.forEach(({ node, text }) => {
-    const chars = [...text];
-    const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
-    const started = performance.now();
-
-    const timerId = window.setInterval(() => {
-      const elapsed = performance.now() - started;
-      const progress = Math.min(1, elapsed / duration);
-      const settledCount = Math.floor(chars.length * progress);
-      const noisyCount = Math.min(chars.length - settledCount, 10);
-      const settled = chars.slice(0, settledCount).join("");
-      const noisy = Array.from({ length: noisyCount }, () => random_write_char()).join("");
-
-      node.textContent = settled + noisy;
-
-      if (progress >= 1) {
-        node.textContent = text;
-        window.clearInterval(timerId);
-        state.timerIds = state.timerIds.filter((id) => id !== timerId);
-      }
-    }, writeTickMs);
-
-    state.timerIds.push(timerId);
+    write_text_value(state, text, (value) => {
+      node.textContent = value;
+    });
   });
 }
 
 export function write_in_text(state: DeckState, target: LiveTree, text: string, onComplete?: () => void): void {
-  target.text.set("");
-  const chars = [...text];
-  const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
-  const started = performance.now();
-  const timerId = window.setInterval(() => {
-    const elapsed = performance.now() - started;
-    const progress = Math.min(1, elapsed / duration);
-    const settledCount = Math.floor(chars.length * progress);
-    const noisyCount = Math.min(chars.length - settledCount, 10);
-    const settled = chars.slice(0, settledCount).join("");
-    const noisy = Array.from({ length: noisyCount }, () => random_write_char()).join("");
-
-    target.text.set(settled + noisy);
-
-    if (progress >= 1) {
-      target.text.set(text);
-      onComplete?.();
-      window.clearInterval(timerId);
-      state.timerIds = state.timerIds.filter((id) => id !== timerId);
-    }
-  }, writeTickMs);
-
-  state.timerIds.push(timerId);
+  write_text_value(state, text, (value) => {
+    target.text.set(value);
+  }, onComplete);
 }
 export function slide_bodies(slide: DeckSlideConfig): readonly DeckSlideBody[] {
   return [slide.bodyA, slide.bodyB, slide.bodyC].filter((body): body is DeckSlideBody => body !== undefined);
@@ -146,20 +130,36 @@ export function deck_markdown_heading_css(level: 1 | 2 | 3 | 4): CssMap {
   };
 }
 export function is_formatted_data_lang(lang: string | undefined): boolean {
-  const normalized = (lang ?? "ts").toLowerCase();
-  return normalized === "json" || normalized === "hson" || normalized === "html";
+  switch ((lang ?? "ts").toLowerCase()) {
+    case "json":
+    case "hson":
+    case "html":
+      return true;
+    default:
+      return false;
+  }
 }
 export function deck_code_format_color(lang: string | undefined): string {
-  const normalized = (lang ?? "ts").toLowerCase();
-  if (normalized === "json") return _colors.bluelike;
-  if (normalized === "hson") return _colors.yellowlike;
-  if (normalized === "html") return _colors.pinklike;
-  return _colors.bluelike;
+  switch ((lang ?? "ts").toLowerCase()) {
+    case "json":
+      return _colors.bluelike;
+    case "hson":
+      return _colors.yellowlike;
+    case "html":
+      return _colors.pinklike;
+    default:
+      return _colors.bluelike;
+  }
 }
 export function deck_code_watermark(lang: string | undefined): string {
-  const normalized = (lang ?? "ts").toLowerCase();
-  if (normalized === "json") return "{JSON}";
-  if (normalized === "hson") return "<HSON>";
-  if (normalized === "html") return "<HTML/>";
-  return normalized.toUpperCase();
+  switch ((lang ?? "ts").toLowerCase()) {
+    case "json":
+      return "{JSON}";
+    case "hson":
+      return "<HSON>";
+    case "html":
+      return "<HTML/>";
+    default:
+      return (lang ?? "ts").toUpperCase();
+  }
 }

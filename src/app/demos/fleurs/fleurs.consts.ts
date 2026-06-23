@@ -6,6 +6,7 @@ import type { CultivarShape, FlowerCultivar, HueBand } from "./fleurs.types";
 
 export const OKLCH_FLEURS = {
     greyLilac: "oklch(0.75 0.06 300)",
+    darkGrotto: "oklch(0.55 0.3 300)",
     electricCyan: "oklch(0.80 0.08 220)",
     
     fadedGold: "oklch(0.76 0.11 92)",

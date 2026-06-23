@@ -13,18 +13,18 @@ export const jsonStub = `
 }`;
 export const htmlStub = `
 <body id="main-page">
-<main class="landing-page open">
-<section data-status="mounted" id="first-section">
-<h1>first section</h1>
-</section>
-<section data-status="waiting" id="second-section">
-<h1>second section</h1>
-</section>
-</main>
+  <main class="landing-page open">
+    <section data-status="mounted" id="first-section">
+      <h1>first section</h1>
+    </section>
+    <section data-status="waiting" id="second-section">
+      <h1>second section</h1>
+    </section>
+  </main>
 </body>
 `;
 
-export const htmlHson = hson.fromTrustedHtml(htmlStub).toHson().serialize();
+export const htmlHson = hson.fromTrustedHtml(htmlStub).toHson().spaced().serialize();
 export const htmlJson = hson.fromTrustedHtml(htmlStub).toJson().serialize();
 
 export const jsonHson = hson.fromJson(jsonStub).toHson().serialize();
@@ -36,21 +36,21 @@ export const SLIDES: readonly DeckSlideConfig[] = [
     stackAlign: "center",
     bodyA: {
       kind: "text",
-      text: "### Hypertext Structured Object Notation\na 'glue format' that unites JSON and HTML",
+      text: "### Hypertext Structured Object Notation\na 'glue format' that can fully express any valid JSON and (almost any) valid HTML\n#HR#",
     },
     headerB: "hson-live",
     bodyB: {
       kind: "text",
-      text: "### a typescript library containing:\n• hson.transform: a transformer set for converting data to and from JSON, HTML, and HSON\n• hson.liveTree: a responsive web authoring surface built on top of a HsonNode graph",
+      text: "a typescript library containing:\n• hson.transform: a transformer set for converting data to and from JSON, HTML, and HSON\n• hson.liveTree: a responsive web authoring surface built on top of a HsonNode graph\n#HR#",
     },
     footer: "HSON / hson-live",
   },
   {
     headerA: "why?",
-    stackAlign:"center",
+    stackAlign: "center",
     bodyB: {
       kind: "text",
-      text: "### why \n why.",
+      text: "### why\n why.",
     },
     bodyA: {
       kind: "image",
@@ -64,58 +64,51 @@ export const SLIDES: readonly DeckSlideConfig[] = [
     bodyA: {
       kind: "text",
       text: `
-seven parsers and serializers that convert any json or xml-valid html to HsonNodes
+parsers and serializers: accept and output JSON, HTML*, XML, SVG, HSON, and HsonNodes 
       - tokenize_hson (HSON -> tokens)
       - parse_tokens (tokens -> HsonNode)
       - serialize_hson (HsonNode -> HSON)
       - parse_json (JSON -> HsonNode)
       - serialize_json (HsonNode -> JSON)
-      - parse_html/parse_xml (HTML -> HsonNode) *
+      - parse_html/parse_xml (HTML -> HsonNode)*
       - serialize_html (HsonNode -> HTML)
-transformations are stable and lossless. data can loop through the full chain repeatedly without degradation or distortion of user data
+transformations are tested stable and lossless across repeated loops
 
-(* hson can only parse xml-compatible html)
+#### (* hson-live requires xml-compatible html)
 `
     },
     footer: "v1 / transform",
   },
   {
-    headerA: "HSON — syntax and relation",
-    bodyA: {
-      kind: "text",
-      text: `
-### json input:
-\`\`\`json
-${jsonStub}
-\`\`\`
-### hson output:
-\`\`\`hson
- ${jsonHson}
-  \`\`\`
-`,
-    },
-    bodyB: {
-      kind: "text",
-      text: `
-### html input:
-      \`\`\`html\n${htmlStub}\n\`\`\`
-### hson output:
-    \`\`\`hson\n${htmlHson}\n\`\`\`
-`,
-    },
-    footer: "json / hson / html",
-  },
-  {
     headerA: "HTML <=> HSON",
+    // stackAlign: "center",
     bodyA: {
-      kind: "code",
-      lang: "html",
-      text: htmlStub,
+      kind: "text",
+      text: `
+html: 
+\`\`\`html
+${htmlStub}
+\`\`\`
+
+hson:
+\`\`\`hson
+${htmlHson}
+\`\`\`
+`,
     },
     bodyB: {
-      kind: "code",
-      lang: "hson",
-      text: htmlHson,
+      kind: "text",
+      text: `
+#HR#
+HSON resembes a pared-down syntax of HTML.
+Instead of separate tags to open and close, HSON contains all node data within a single tag.
+HSON tags derived from HTML are closed with a slash-angle: "/>"
+### HTML:  
+<tag>content</tag>
+### HSON:
+<tag "content"/>
+#HR#
+      `,
     },
     footer: "transform pair / html + hson",
   },
@@ -130,12 +123,17 @@ ${jsonStub}
     bodyB: {
       kind: "code",
       lang: "hson",
-      text: jsonHson,
+      text: `${jsonHson}
+HSON data sourced from JSON is structured identically to HTML-derived data, but is closed with a slash-angle:
+\`\`\`
+>
+\`\`\`
+      `,
     },
     footer: "transform / json + hson",
   },
   {
-    headerA: "JSON <=> HSON <=> HTML",
+    headerA: "JSON => HSON => HTML",
     bodyA: {
       kind: "code",
       lang: "json",
@@ -154,7 +152,7 @@ ${jsonStub}
     footer: "derived projection / json",
   },
   {
-    headerA: "HTML <=> HSON <=> JSON",
+    headerA: "HTML => HSON => JSON",
     bodyA: {
       kind: "code",
       lang: "html",
@@ -176,54 +174,45 @@ ${jsonStub}
     headerA: "v2 — hson.liveTree",
     bodyA: {
       kind: "text",
-      text: "a web authoring platform built on the HsonNode graph\n state and view data are united in a single source-of-truth",
+      text: "a web authoring platform built on the HsonNode graph.\n state and view data are united in a single source-of-truth",
     },
     footer: "hson.livetree",
   },
   {
-    headerA: "LiveTree - Internals",
-    bodyA: {
-      kind: "code",
-      lang: "ts",
-      text: "hson.liveTree.fromHTML()\nhson.liveTree.queryBody()",
-    },
-    bodyB: {
-      kind: "text",
-      text: "1: parse <body> and all child nodes to HsonNodes (must be xml compatible)\n2: replaces it with identical HTML projection projected from HsonNode graph\n3: return handle for node graph interface\n changes and mutations to the graph are reflected in realtime on-DOM",
-    },
-    footer: "livetree / internals",
-  },
-  {
-    headerA: "LiveTree - example",
+    headerA: "LiveTree creation",
     bodyA: {
       kind: "code",
       lang: "ts",
       text: `
-const tree = hson.queryBody() 
-.liveTree 
-.graft(); 
+const tree = hson.queryBody() // (1)
+  .liveTree 
+  .graft(); // (2)
 
+// (3)
 const branchDiv = tree.create.div()
-    .setText("hello world")
-    .css.set.backgroundColor("pink");
+  .setText("hello world")
+  // (4)
+  .css.set.backgroundColor("pink");
 
+// (5)
 tree.listen
-  .once()
-  .onClick(() => {
-      branchDiv.setText("goodbye world")
-          .css.set.backgroundColor("blue");
+.once()
+.onClick(() => {
+branchDiv.setText("goodbye world")
+.css.set.backgroundColor("blue");
 });
 `,
     },
     bodyB: {
       kind: "text",
       text: `
-OOO:
-1- query document.body and parse it (deep) into HSON nodes
-2- project it to the DOM via graft()
-3- the LiveTree API exposes node creation, css, inline style, even listeners, canvas and svg methoeds, finders and queries, DOM properties, and many other common operations, all wrapped in a frictionless typed ecosystem
 #HR#
-Those 
+1- query document.body and deep-parse it into HSON
+2- re-render the HsonNode graph as identical html and project to the DOM via graft()
+3- the LiveTree API enables rich DOM manipulation in a frictionless typed ecosystem
+4- LiveTree methods act on the underlying node graph, which updates the DOM projection synchronously on mutation
+5- event listeners and css animations allow for interactions to be scheduled without relying on stringly typing
+#HR#
 `,
     },
     footer: "livetree graft",

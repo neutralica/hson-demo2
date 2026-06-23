@@ -1,22 +1,16 @@
+import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
+import { set_alpha } from "../../core/helpers/color-helpers";
 
 
 export const MOTES_LAYERcss = {
-  
-     position: "fixed",
-      left: "0",
-      top: "0",
-      height: "100%",
-      width: "100%",
-      pointerEvents: "none",
-      zIndex: "100",
-  
-  
-  // position: "absolute",
-  // inset: "0",
-  // overflow: "hidden",
-  // pointerEvents: "none", // motes should not block hit testing
-  // // a little “terminal softness”
-  // filter: "contrast(1.05)",
+  position: "fixed",
+  left: "0",
+  top: "0",
+  height: "100%",
+  width: "100%",
+  pointerEvents: "none",
+  zIndex: "100",
+  background: `linear-gradient(transparent 50%,${set_alpha(OKLCH_VIBRANT.orangeEmber, 0.1)})`,
 } as const;
 
 export const MOTEcss = {

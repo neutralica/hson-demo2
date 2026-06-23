@@ -2,7 +2,7 @@ import type { CssMap } from "hson-live/types";
 import  { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_VIBRANT, OKLCH_NEUTRALS, OKLCH_TERMINAL_4 } from "../../core/consts/oklch.consts";
-import { _fontSize, MAIN_OKLCH, _fontWeight, $SIDEBAR_WIDTH, $CONTENT_WIDTH, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { _fontSize, MAIN_VAR, _fontWeight, $SIDEBAR_WIDTH, $CONTENT_WIDTH, SYS_MONOfont } from "../../core/consts/ui-consts";
 import  { set_alpha } from "../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 
@@ -40,7 +40,7 @@ export const ABOUT_P_TEXTcss: CssMap = {
   // ...FONT_FAM_MONO,
   whiteSpace: "pre-wrap",
   // lineHeight: "2em",
-  color: MAIN_OKLCH,
+  color: MAIN_VAR,
 }
 
 
@@ -302,7 +302,7 @@ export const MD_LINK_LINEcss: CssMap = {
 
 export const FLUSH_LISTcss = {
   display: "grid",
-  // gap: "1rem",
+  gap: "0.5em",
   margin: "20px 0",
   minWidth: "0",
 };

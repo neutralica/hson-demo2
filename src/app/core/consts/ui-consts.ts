@@ -61,19 +61,19 @@ export const CURRENT_OKLCH = CssManager.api().var.key(CURRENT_OKLCHname);
 // preview/current-edit color; these are durable page theme targets. Use `.get()`
 // here because CSS maps need a stable `var(--name)` reference at module load.
 // Use `CssManager.api().var.value(name)` only at runtime when reading a seeded value.
-export const MAIN_OKLCHname = "hson-color-main-text";
-export const MAIN_OKLCH = CssManager.api().var.key(MAIN_OKLCHname);
+export const MAIN_COLname = "hson-color-main-text";
+export const MAIN_VAR = CssManager.api().var.key(MAIN_COLname);
 
-export const MENU_OKLCHname = "hson-color-menu-text";
-export const MENU_OKLCH = CssManager.api().var.key(MENU_OKLCHname);
+export const MENU_COLname = "hson-color-menu-text";
+export const MENU_Var = CssManager.api().var.key(MENU_COLname);
 
-export const GRAF_OKLCHname = "hson-color-graffiti";
-export const GRAF_OKLCH = CssManager.api().var.key(GRAF_OKLCHname);
+export const GRAF_COLname = "hson-color-graffiti";
+export const GRAF_VAR = CssManager.api().var.key(GRAF_COLname);
 
-export const MOTE_OKLCHname = "hson-color-motes";
-export const MOTE_OKLCH = CssManager.api().var.key(MOTE_OKLCHname);
+export const MOTE_COLname = "hson-color-motes";
+export const MOTE_VAR = CssManager.api().var.key(MOTE_COLname);
 /* code markdown */
-export const $MENU_SHADOW = "1px 1px 55px ";
+export const $MENU_SHADOW = "0 0 55px ";
 
 
 
