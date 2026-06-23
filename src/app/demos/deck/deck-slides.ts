@@ -199,26 +199,31 @@ ${jsonStub}
       kind: "code",
       lang: "ts",
       text: `
-const tree = hson.queryBody() // document.body
-.liveTree // initialize LiveTree creation
-.graft(); // replace document.body with identical LiveTree projection
+const tree = hson.queryBody() 
+.liveTree 
+.graft(); 
 
-  // LiveTree extends many basic JS document methods
 const branchDiv = tree.create.div()
     .setText("hello world")
-     // methods return \`this\`, enabling complex chained operations
     .css.set.backgroundColor("pink");
 
-// liveTree's ListenerManager exposes event listeners and handling
 tree.listen
-   // listener teardown/cleanup occurs automatically on node removal
   .once()
-   // event listener options are fully represented in liveTree's .listen toolchain
   .onClick(() => {
-       // changes to the node graph are rendered to the DOM in realtime
       branchDiv.setText("goodbye world")
           .css.set.backgroundColor("blue");
 });
+`,
+    },
+    bodyB: {
+      kind: "text",
+      text: `
+OOO:
+1- query document.body and parse it (deep) into HSON nodes
+2- project it to the DOM via graft()
+3- the LiveTree API exposes node creation, css, inline style, even listeners, canvas and svg methoeds, finders and queries, DOM properties, and many other common operations, all wrapped in a frictionless typed ecosystem
+#HR#
+Those 
 `,
     },
     footer: "livetree graft",
