@@ -1,9 +1,9 @@
 import type { CssMap } from "hson-live/types";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { ACID_WASH_OKLCH } from "../../core/consts/oklch.consts";
 import { ACID_WASH_RGBA } from "../../core/consts/old-rgb.consts";
-import { SYS_MONOfont, øfontSize } from "../../core/consts/ui-consts";
+import { SYS_MONOfont, _fontSize } from "../../core/consts/ui-consts";
 
 
 export const POINT_ROOTcss: CssMap = {
@@ -73,7 +73,7 @@ export const TRACKER_ORIGINcss = {
 
 export const MOUSE_COORD_Xcss: CssMap = {
   FontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1.5rem",
@@ -81,7 +81,7 @@ export const MOUSE_COORD_Xcss: CssMap = {
 
 export const MOUSE_COORD_Ycss = {
   FontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "1rem",
@@ -89,7 +89,7 @@ export const MOUSE_COORD_Ycss = {
 
 export const TRACKER_THETAcss = {
   FontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   color: OKLCH_FLEURS.clayCoral,
   whiteSpace: "pre",
   marginLeft: "0.1rem",
@@ -103,7 +103,7 @@ export const ROW_GRIDcss: CssMap = {
   alignItems: "baseline",
   minWidth: "0",
   FontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
 } as const;
 
 export const POINTER_TRACKERcss: CssMap = {
@@ -114,7 +114,7 @@ export const POINTER_TRACKERcss: CssMap = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
   gridColumn: "1",
   gridRow: "2",
-  backgroundColor: _cols.backlo,
+  backgroundColor: _colors.backlo,
   border: `1px solid ${ACID_WASH_RGBA.fadedMagenta}`,
   alignSelf: "end",
   justifySelf: "start",
@@ -130,7 +130,7 @@ export const STACK_TABLEcss: CssMap = {
   minWidth: "0",
   minHeight: "0",
   height: "100%",
-  background: _cols.backlo,
+  background: _colors.backlo,
   alignContent: "end",
 
 }

@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import  { _cols } from "../../core/consts/colors.consts";
+import  { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { ACID_WASH_OKLCH, OKLCH_VIBRANT, OKLCH_NEUTRALS, OKLCH_TERMINAL_4 } from "../../core/consts/oklch.consts";
-import { øfontSize, MAIN_OKLCH, øfontWeight, $SIDEBAR_WIDTH, $CONTENT_WIDTH, SYS_MONOfont } from "../../core/consts/ui-consts";
+import { _fontSize, MAIN_OKLCH, _fontWeight, $SIDEBAR_WIDTH, $CONTENT_WIDTH, SYS_MONOfont } from "../../core/consts/ui-consts";
 import  { set_alpha } from "../../core/helpers/color-helpers";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 
@@ -22,7 +22,7 @@ export const ABOUT_DOCcss: CssMap = {
 
 export const DOC_CONTAINER: CssMap = {
   maxWidth: "80ch",
-fontSize: øfontSize.smol,
+fontSize: _fontSize.smol,
 }
 
 export const ABOUT_TOCcss: CssMap = {
@@ -61,23 +61,23 @@ export const ABOUT_LIST_MARKERcss: CssMap = {
   whiteSpace: "pre",
   // fontSize: "1rem",
   // verticalAlign: "center",
-  color: _cols.txt.list,
+  color: _colors.txt.list,
 };
 
 export const LIST_TEXTcss: CssMap = {
   // ...FONT_FAM_MONO,
-  color: _cols.txt.list,
+  color: _colors.txt.list,
 };
 
 
 export const ANTI_LIST_MARKERcss: CssMap = {
-  color: set_alpha(_cols.red, 0.8),
-  fontWeight: øfontWeight.fat,
+  color: set_alpha(_colors.red, 0.8),
+  fontWeight: _fontWeight.fat,
 };
 
 export const ANTI_LIST_TEXTcss: CssMap = {
   ...LIST_TEXTcss,
-  color: _cols.red,
+  color: _colors.red,
   // fontSize: $txt_.main,
   // textDecoration: "line-through",
 };
@@ -85,7 +85,7 @@ export const ANTI_LIST_TEXTcss: CssMap = {
 export const HRcss: CssMap = {
   width: "90%",
   height: "1px",
-  background: _cols.txt.grey,
+  background: _colors.txt.grey,
   // opacity: "0.8",
   marginTop: "2em",
   marginBottom: "3em",
@@ -103,7 +103,7 @@ export const TOC_BTNcss: CssMap = {
   textAlign: "right",
   lineHeight: "2",
   paddingRight: "2rem",
-  color: _cols.bluelike,
+  color: _colors.bluelike,
   // _hover: {
   //   background: TOCcol,
   //   color: øCOLS.backlo
@@ -114,7 +114,7 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   // textDecoration: "underline",
   // textUnderlineOffset: "4px",
   opacity: "1",
-  fontWeight: øfontWeight.fat,
+  fontWeight: _fontWeight.fat,
   background: "transparent",
   __after: {
     content: " <",
@@ -123,8 +123,8 @@ export const TOC_BTN_ACTIVEcss: CssMap = {
   },
   _hover: {
     // color: øHSON_COL.h,
-    background: _cols.txt.grey,
-    color: _cols.backlo,
+    background: _colors.txt.grey,
+    color: _colors.backlo,
     __after: {
       content: "x",
       position: "absolute",
@@ -137,7 +137,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
   opacity: "0.8",
-  fontSize: øfontSize.main,
+  fontSize: _fontSize.main,
   __after: {},
   _hover: {
     __after: {
@@ -146,15 +146,15 @@ export const TOC_BTN_IDLEcss: CssMap = {
       marginLeft: "1ch",
       // right: "-1rem",
     },
-    color: _cols.backlo,
-    background: _cols.toc,
+    color: _colors.backlo,
+    background: _colors.toc,
   }
 };
 
 // inline code wrapper
 export const INLINE_CODEcss: CssMap = {
   // ...FONT_FAM_MONO,
-  color: _cols.code.alt,
+  color: _colors.code.alt,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word",
 } as const;
@@ -162,46 +162,46 @@ export const INLINE_CODEcss: CssMap = {
 // parentheses inside inline code
 export const CODE_PARENcss: CssMap = {
   // ...FONT_FAM_MONO,
-  color: _cols.code.parens, // choose something distinct but harmonious
+  color: _colors.code.parens, // choose something distinct but harmonious
 } as const;
 
 export const CODE_PAREN_INNERcss: CssMap = {
   // ...FONT_FAM_MONO,
-  color: _cols.code.parensInner,
+  color: _colors.code.parensInner,
 } as const;
 
 export const CODE_BRACEcss: CssMap = {
   // ...FONT_FAM_MONO,
-  color: _cols.code.brace
+  color: _colors.code.brace
 }
 
 export const CODE_COMMENTScss: CssMap = {
   // ...FONT_FAM_MONO,
-  color: _cols.code.comment,
+  color: _colors.code.comment,
   overflowWrap: "anywhere",
   whiteSpace: "normal",
 
 };
 
 export const CODE_QUOTEcss = {
-  color: _cols.code.quotes,              
+  color: _colors.code.quotes,              
 };
 export const CODE_EQUALSscss = {
-  color: _cols.code.equals,              
+  color: _colors.code.equals,              
 };
 
 export const CODE_PUNCTcss = {
-  color: _cols.code.dot,              
+  color: _colors.code.dot,              
 };
 
 
 export const WARNINGcss: CssMap = {
   color: "red",
-  fontSize: øfontSize.main,
+  fontSize: _fontSize.main,
   textTransform: "uppercase",
   textAlign: "center",
   textDecoration: "underline",
-  fontWeight: øfontWeight.fat,
+  fontWeight: _fontWeight.fat,
 }
 
 
@@ -229,10 +229,10 @@ export const ABOUT_BODY_ROWcss: CssMap = {
 
 export const MD_CODE_PREcss: CssMap = {
   margin: "20px",
-  background: _cols.backhi,
+  background: _colors.backhi,
   whiteSpace: "pre-wrap",
   overflowWrap: "break-word", // not anywhere
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "2",
   padding: "1em",
   // whiteSpace: "normal",
@@ -241,7 +241,7 @@ export const MD_CODE_PREcss: CssMap = {
 };
 export const CODE_COLONcss = {
   // ...FONT_FAM_MONO,
-  color: _cols.code.colon
+  color: _colors.code.colon
 };
 /* export const SLASHcss = OKLCH_FLEURS.blazeOrange;
 export const PIPEcss = OKLCH_NEUTRALS.slate;
@@ -276,25 +276,25 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
     fontFamily: SYS_MONOfont,
     letterSpacing: "0.06em",
     textTransform: level === 2 ? "uppercase" : "none",
-    fontSize: level === 1 ? øfontSize.main: øfontSize.smol,
+    fontSize: level === 1 ? _fontSize.main: _fontSize.smol,
     // fontSize: level === 1 ? _TXT.heading : level === 2 ? _TXT.subhead : level === 3 ? _TXT.subhead : _TXT.main,
-    fontWeight: level === 1 ? øfontWeight.fat : level === 2 ? 600 : 400,
+    fontWeight: level === 1 ? _fontWeight.fat : level === 2 ? 600 : 400,
     justifySelf: level <= 2 ? "center" : "start",
-    color: _cols.txt.header,
+    color: _colors.txt.header,
   }
 }
 
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
-  color: _cols.txt.copyright,
+  fontSize: _fontSize.smol,
+  color: _colors.txt.copyright,
   marginTop: "2rem",
 }
 
 export const MD_LINK_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
-  color: _cols.code.url,
+  color: _colors.code.url,
   // ...FONT_FAM_MONO,
   textDecoration: "underline",
   marginLeft: "2rem"
@@ -309,6 +309,6 @@ export const FLUSH_LISTcss = {
 
 
 export const SPECIAL_WORDScss = {
-  color: _cols.greenlike,
+  color: _colors.greenlike,
   // background: _cols.backhi,
 }

@@ -5,7 +5,7 @@ import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } fro
 import { _hash01, _lerp } from "../../utils/helpers";
 import { make_rng } from "../../utils/rng";
 import { bckRGB } from "../../core/consts/old-rgb.consts";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 
 
 const FADE_SOLID_PCT = 0;    // solid mask until here
@@ -13,8 +13,8 @@ const FADE_MID_PCT = 10;      // start thinning here
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  ${_cols.backlo} ${FADE_MID_PCT}%,
-  ${_cols.backlo} 100%
+  ${_colors.backlo} ${FADE_MID_PCT}%,
+  ${_colors.backlo} 100%
 )`;
 export type CloudSvgOpts = {
   seed: number;

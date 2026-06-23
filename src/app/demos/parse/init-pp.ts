@@ -2,7 +2,7 @@
 
 import  { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import  { _cols } from "../../core/consts/colors.consts";
+import  { _colors } from "../../core/consts/colors.consts";
 import type { Fmt } from "../../core/types/core.types";
 import { define_schema, with_schema } from "../../state/schema";
 import { make_state } from "../../state/state";
@@ -227,7 +227,7 @@ export function init_parsing_panels(pp: Panels): void {
         const fmtt = pp.panels[f];
         fmtt.status.text.set("OK");
       }
-      p.status.css.setMany({ opacity: "1", color: _cols.hson.n });
+      p.status.css.setMany({ opacity: "1", color: _colors.hson.n });
       return;
     }
 
@@ -261,7 +261,7 @@ export function init_parsing_panels(pp: Panels): void {
       }
       if (isIdleInvalid()) {
         p.textBox.css.setMany(PP_INACTIVE_INVALIDcss(f));
-        p.wmFmt.style.set.color( _cols.txt.grey)
+        p.wmFmt.style.set.color( _colors.txt.grey)
         unlockTextarea(p);
         continue;
       }
@@ -274,7 +274,7 @@ export function init_parsing_panels(pp: Panels): void {
       }
 
       p.textBox.css.setMany(PP_IDLEcss(f));
-      p.wmFmt.style.set.color( _cols.txt.grey)
+      p.wmFmt.style.set.color( _colors.txt.grey)
       if (getActive() === null) {
         unlockTextarea(p);
       } else {

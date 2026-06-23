@@ -2,8 +2,8 @@ import type { LiveTree } from "hson-live";
 import { mk_div_id } from "../../utils/makers";
 import { UI_BTN_STDcss, UI_BUTTON_BORDERcss, UI_BTN_HOVERcss } from "../../ui/panels/panels.css";
 import type { CssMap } from "hson-live/types";
-import { øfontSize } from "../../core/consts/ui-consts";
-import { _cols } from "../../core/consts/colors.consts";
+import { _fontSize } from "../../core/consts/ui-consts";
+import { _colors } from "../../core/consts/colors.consts";
 
 export type ToggleBtn = Readonly<{
   tree: LiveTree;
@@ -18,11 +18,11 @@ export function mk_btn(parent: LiveTree, id: string, label: string): ToggleBtn {
 
   const base: CssMap = {
     ...UI_BTN_STDcss,
-    background: _cols.backhi,
+    background: _colors.backhi,
     // padding: "6px 8px",
     // userSelect: "none",
     // cursor: "pointer",
-    fontSize: øfontSize.main,
+    fontSize: _fontSize.main,
     // letterSpacing: "0.02em",
     // textAlign: "center",
     // whiteSpace: "nowrap",

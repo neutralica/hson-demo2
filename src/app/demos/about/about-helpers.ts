@@ -6,7 +6,7 @@ import { INLINE_CODEcss, CODE_PARENcss, CODE_PAREN_INNERcss, CODE_COMMENTScss, C
 import type { CssMap } from "hson-live/types";
 import { MD_TERM_RE } from "./about.consts";
 import type { ListItem } from "./about.types";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 
 
 
@@ -109,7 +109,7 @@ export function render_inline_code(row: LiveTree, code: string): void {
     if (inQuote === null && startsWordAt("const", i)) {
       flush(currentTextCss());
       row.create.span()
-        .css.setMany({color: _cols.code.const})
+        .css.setMany({color: _colors.code.const})
         .text.set("const");
 
       i += "const".length - 1;

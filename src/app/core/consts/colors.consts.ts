@@ -172,4 +172,4 @@ export const COLOR_VAR_SOURCES: readonly ColorVarSource[] = Object.freeze(
   collect_color_var_sources(_colorVals),
 );
 
-export const _cols = make_color_var_refs(_colorVals);
+export const _colors = make_color_var_refs(_colorVals);

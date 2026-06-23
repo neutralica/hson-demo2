@@ -1,5 +1,5 @@
 import { CssManager, LiveTree } from "hson-live";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { CURRENT_OKLCHname } from "../../core/consts/ui-consts";
 import { parse_oklch } from "../../core/helpers/color-helpers";
@@ -151,7 +151,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
 
     const changedCount = get_changed_color_tokens().length;
     rig.resetBtn.text.set(changedCount > 0 ? `[reset ${changedCount}]` : "reset");
-    rig.resetBtn.style.set.color(changedCount > 0 ? _cols.hson.n : OKLCH_NEUTRALS.slate);
+    rig.resetBtn.style.set.color(changedCount > 0 ? _colors.hson.n : OKLCH_NEUTRALS.slate);
     const labelWidth = Math.max(...model.targets.map((target) => target.label.length), 0) + 2;
     for (let i = 0; i < rig.targetRows.length; i += 1) {
       const row = rig.targetRows[i];
@@ -181,7 +181,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
         whiteSpace: "pre",
         fontVariantNumeric: "tabular-nums",
         fontFeatureSettings: '"tnum"',
-        color: i === activeTargetIndex ? _cols.txt.menu : _cols.txt.main,
+        color: i === activeTargetIndex ? _colors.txt.menu : _colors.txt.main,
         boxShadow: `inset 0.45rem 0 0 ${targetColor}`,
         paddingLeft: "0.85rem",
       });

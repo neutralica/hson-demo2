@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
-import { øfontWeight, øfontSize } from "../../core/consts/ui-consts";
-import { _cols } from "../../core/consts/colors.consts";
+import { _fontWeight, _fontSize } from "../../core/consts/ui-consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { SYS_MONOfont } from "../../core/consts/ui-consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
@@ -22,8 +22,8 @@ export const LETTER_CSS: CssMap = {
   fontSize: HSON_FONT_str,
   lineHeight: "0.88",
   fontFamily: "'Times New Roman', Georgia, Iowan Old Style, Palatino, serif, ui-serif",
-  fontWeight: øfontWeight.fat,
-  color: _cols.backlo,
+  fontWeight: _fontWeight.fat,
+  color: _colors.backlo,
 };
 
 

@@ -6,13 +6,13 @@ import { CLICKABLEcss } from "../../app/core/consts/css.consts";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections, report_to_sections } from "./report-section";
-import { øfontSize } from "../../app/core/consts/ui-consts";
+import { _fontSize } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr, _freeze } from "../../app/demos/test/tests.consts";
 import type { CaseKey, CaseMeta, CaseReport } from "../../app/demos/test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
-import { _cols } from "../../app/core/consts/colors.consts";
+import { _colors } from "../../app/core/consts/colors.consts";
 import { OKLCH_FLEURS } from "../../app/demos/fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
 import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch.consts";
@@ -158,8 +158,8 @@ export function make_inspector(
     width: "100%",
     display: "flex",
     overflow: "hidden",
-    fontSize: øfontSize.smol,
-    color: _cols.txt.main,
+    fontSize: _fontSize.smol,
+    color: _colors.txt.main,
     // margin: "0rem 3rem",
   });
 
@@ -178,7 +178,7 @@ export function make_inspector(
   // changed: one tiny helper keeps pass/fail coloring local to result text
   const applyResultColor = (cell: LiveTree, res: string): void => {
     if (res === "pass") {
-      cell.css.set.color(_cols.greenlike);
+      cell.css.set.color(_colors.greenlike);
       return;
     }
 
@@ -187,7 +187,7 @@ export function make_inspector(
       return;
     }
 
-    cell.css.set.color(_cols.txt.main);
+    cell.css.set.color(_colors.txt.main);
   };
 
   // changed: simpler text-button helper
@@ -197,7 +197,7 @@ export function make_inspector(
       .attr.set("role", "button")
       .text.set(label)
       .css.setMany({
-        color: _cols.txt.code,
+        color: _colors.txt.code,
         cursor: "pointer",
         userSelect: "none",
         padding: "0 0.5ch",
@@ -216,7 +216,7 @@ export function make_inspector(
         maxWidth: "72ch",
         padding: "0.75rem 1rem",
         boxSizing: "border-box",
-        color: _cols.txt.grey,
+        color: _colors.txt.grey,
         textAlign: "center",
         lineHeight: "1.45",
         border: "1px solid rgba(190, 205, 196, 0.16)",
@@ -264,20 +264,20 @@ export function make_inspector(
       ...THcss,
       width: $CHIP_WIDTHstr,
       maxWidth: $CHIP_WIDTHstr,
-      color: _cols.txt.code,
+      color: _colors.txt.code,
     });
 
     mk_th(hr, "c-name", "suite / group / case").css.setMany({
       ...THcss,
       ...tdNameCssBase,
-      color: _cols.txt.code,
+      color: _colors.txt.code,
     });
 
     mk_th(hr, "c-ms", "ms").css.setMany({
       ...THcss,
       width: $CHIP_WIDTHstr,
       maxWidth: $CHIP_WIDTHstr,
-      color: _cols.txt.code,
+      color: _colors.txt.code,
     });
 
     for (const s of suites) {
@@ -299,13 +299,13 @@ export function make_inspector(
         .css.setMany({
           ...TDcss,
           ...tdNameCssBase,
-          color: _cols.txt.main,
+          color: _colors.txt.main,
         });
 
       mk_td(sr, "c-ms", s.ms !== undefined ? s.ms.toFixed(1) : "—")
         .css.setMany({
           ...TDcss,
-          color: _cols.txt.main,
+          color: _colors.txt.main,
         });
 
       // changed: whole suite row toggles
@@ -341,12 +341,12 @@ export function make_inspector(
         mk_td(cr, "c-name", c.name).css.setMany({
           ...TDcss,
           ...tdNameChildCss,
-          color: isfail ? "red" : _cols.txt.main,
+          color: isfail ? "red" : _colors.txt.main,
         });
 
         mk_td(cr, "c-ms", ms).css.setMany({
           ...TDcss,
-          color: _cols.txt.code,
+          color: _colors.txt.code,
         });
 
         // changed: whole case row toggles, not only the name cell
@@ -374,7 +374,7 @@ export function make_inspector(
         const metaBox = topRow.create.div().classlist.set("insp-cap-meta");
         metaBox.css.setMany({
           ...PREVIEW_METAcss,
-          color: _cols.txt.main,
+          color: _colors.txt.main,
         });
 
         if (res === "fail") metaBox.css.setMany(PREVIEW_META_FAILcss);

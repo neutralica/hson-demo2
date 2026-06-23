@@ -16,8 +16,8 @@ import {
     BUILD_TOGGLEcss,
 } from "./build.css";
 import { type BuildDemo, type BuildFactoryOpts, type BuildPanel } from "./build.types";
-import  { _cols } from "../../core/consts/colors.consts";
-import { øfontSize } from "../../core/consts/ui-consts";
+import  { _colors } from "../../core/consts/colors.consts";
+import { _fontSize } from "../../core/consts/ui-consts";
 import { define_schema, with_schema } from "../../state/schema";
 import { make_state } from "../../state/state";
 import { register_node_state_source } from "../../state/state-sources";
@@ -105,13 +105,13 @@ function initBuild(bp: BuildDemo): void {
         }
         if (k === "typing") {
             bp.input.status.text.set("...");
-            bp.input.status.css.setMany({ color: _cols.txt.grey, opacity: "1", fontSize: øfontSize.main });
+            bp.input.status.css.setMany({ color: _colors.txt.grey, opacity: "1", fontSize: _fontSize.main });
             return;
         }
         if (k === "valid") {
             bp.input.status.text.set("OK");
             bp.input.status.css.setMany({
-                color: _cols.greenlike,
+                color: _colors.greenlike,
                 opacity: "1",
             });
             return;

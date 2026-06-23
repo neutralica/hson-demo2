@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { ACID_WASH_RGBA } from "../../core/consts/old-rgb.consts";
-import { $LOGGER_WIDTH, SYS_MONOfont, øfontSize, øfontWeight } from "../../core/consts/ui-consts";
+import { $LOGGER_WIDTH, SYS_MONOfont, _fontSize, _fontWeight } from "../../core/consts/ui-consts";
 import { UI_BTN_STDcss, UI_BTN_HOVERcss } from "../../ui/panels/panels.css";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 import { get_line_color } from "./test-helpers";
@@ -15,7 +15,7 @@ export const TP_BRANCHcss: CssMap = {
   boxSizing: "border-box",
   gridTemplateColumns: "minmax(0, 1fr) " + $LOGGER_WIDTH,
   gridTemplateRows: "minmax(0, 1fr)",
-  background: _cols.backlo,
+  background: _colors.backlo,
 };
 
 export const TP_ROOTcss: CssMap = {
@@ -68,7 +68,7 @@ export const TP_CONTROL_ROWcss: CssMap = {
   gridRow: "2",
   alignSelf: "end",
   padding: "9px",
-  border: "6px ridge " + _cols.txt.grey,
+  border: "6px ridge " + _colors.txt.grey,
   background: "rgba(3, 10, 10, 0.70)",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 0 0 1px rgba(0,0,0,0.55)",
 };
@@ -107,8 +107,8 @@ export const TEST_CHIP_DEFcss = {
 
 export const TEST_CHIP_VALUEcss = {
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
-  fontWeight: øfontWeight.fat,
+  fontSize: _fontSize.smol,
+  fontWeight: _fontWeight.fat,
   lineHeight: "1",
   letterSpacing: "0.04em",
 }
@@ -116,7 +116,7 @@ export const TEST_CHIP_VALUEcss = {
 export const TEST_CHIP_LABELcss = {
   marginTop: "3px",
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
   letterSpacing: "0.08em",
   textTransform: "lowercase",
@@ -127,12 +127,12 @@ export const TEST_CHIP_LABELcss = {
 
 export const TEST_CLEAR_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
-  ...UI_BTN_HOVERcss(_cols.txt.menu),
+  ...UI_BTN_HOVERcss(_colors.txt.menu),
   alignItems: "center",
-  background: _cols.backlo,
-  color: _cols.txt.menu,
+  background: _colors.backlo,
+  color: _colors.txt.menu,
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
   minHeight: "24px",
   minWidth: "7ch",
@@ -150,7 +150,7 @@ export const TEST_RUN_BTNcss: CssMap = {
   alignItems: "center",
   color: ACID_WASH_RGBA.fadedMint,
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
   minHeight: "24px",
   minWidth: "7ch",
@@ -168,11 +168,11 @@ export const TEST_SELECTORcss: CssMap = {
   boxSizing: "border-box",
   ...FONT_FAM_MONO,
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
 
   // background: $cols_.backdeep,
-  color: _cols.txt.main,
+  color: _colors.txt.main,
   border: "1px solid rgba(255,255,255,0.2)",
   outline: "none",
   _hover: {
@@ -215,7 +215,7 @@ export const TEST_LOGGERcss: CssMap = {
   minWidth: "0",           // CHANGED
   maxWidth: "100%",        // CHANGED
 
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   color: OKLCH_FLEURS.blazeOrange,
 } as const;
 
@@ -229,7 +229,7 @@ export const TP_LOG_ROWcss = (line: string): CssMap => {
     maxWidth: "100%",         // CHANGED
 
     fontFamily: SYS_MONOfont,
-    fontSize: øfontSize.smol,
+    fontSize: _fontSize.smol,
     textAlign: "end",
     color: get_line_color(line),
   };

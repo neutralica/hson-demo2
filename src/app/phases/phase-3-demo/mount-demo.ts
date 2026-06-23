@@ -3,7 +3,7 @@
 import { LiveTree, CssManager } from "hson-live";
 import type { SvgLiveTree } from "hson-live/types";
 import { relay_data, relay_void, type OutcomeAsync, relay } from "intrastructure";
-import  { _cols } from "../../core/consts/colors.consts";
+import  { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { $PANEL_HIDDEN, $MENU_SHADOW, MENU_OKLCH } from "../../core/consts/ui-consts";
@@ -169,14 +169,14 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
       .classlist.add("demo-wordmark")
       .css.setMany({
         ...HSON_WORDcss,
-        textShadow: $MENU_SHADOW + set_alpha(_cols.hson[k], 0.1)
+        textShadow: $MENU_SHADOW + set_alpha(_colors.hson[k], 0.1)
           + ", 0 0 58px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       });
   });
 
   LETTER_LOWS.forEach(l => {
     gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: _cols.hson[l],
+      color: _colors.hson[l],
     });
   });
 
@@ -193,7 +193,7 @@ function create_demo_menu(menuBox: LiveTree): MenuButtons {
       .classlist.set(isWidget ? "widget-button" : "view-button")
       .css.setMany({
         ...MAIN_MENUcss,
-        color: isWidget ? _cols.txt.widget : MENU_OKLCH
+        color: isWidget ? _colors.txt.widget : MENU_OKLCH
       });
   });
 

@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 import type { CssMap, JsonValue } from "hson-live/types";
 import type { JsonRenderKind, JsonPathPart, JsonRenderDraft, JsonRenderRole, JsonRenderPart, JsonRenderOptions, JsonRender, ConnectorPosition } from "./render.types";
 import { COMPLEX_VALUE_CSS, CONNECTOR_CSS, CONNECTOR_RAIL_CLEAR_CSS, DEMO_COLUMN_CSS, DEMO_ERROR_CSS, DEMO_LABEL_CSS, DEMO_OUTPUT_CSS, DEMO_ROOT_CSS, DEMO_TEXTAREA_CSS, HIGHLIGHT_CLEAR_CSS, HIGHLIGHT_CONNECTOR_CSS, HIGHLIGHT_RELATED_CSS, HIGHLIGHT_SELF_CSS, KEY_CSS, NODE_HIT_CSS, PATH_TEXT_CSS, PRIMITIVE_CSS, ROOT_CSS, ROW_CSS, TRIGGER_CSS, VALUE_CSS } from "./render.css";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { connectorPosition, isHighlightContainer, isHighlightNode, isHighlightText, setMeta, kindOf, makeBuckets, makeGroup, pathFromInput, pathKey, pathsEqual, pathText, label_trees_by_path, clear_path_overlay, draw_path_overlay, make_path_overlay, type PathOverlay, } from "./render-helpers";
 import { nodeCss } from "./render.css";
 import { $RENDER_STRING_DEF } from "./render.consts";
@@ -63,8 +63,8 @@ const METADATA_PANEL_CSS: CssMap = {
 };
 
 // CHANGED: local diff flare colors for the editable JSON render demo.
-const diffFlareTextColor = _cols.yellowlike;
-const diffFlareGlowColor = _cols.yellowlike;
+const diffFlareTextColor = _colors.yellowlike;
+const diffFlareGlowColor = _colors.yellowlike;
 const diffFlareMs = 900;
 
 const DIFF_FLARE_CSS: CssMap = {
@@ -102,7 +102,7 @@ export const pathLineY = "1.55em";
 export const pathLineCornerStub = "0.42em";
 const pathLineThickness = "1px";
 const pathLineOpacity = "0.38";
-const pathLineFilter = `drop-shadow(0 0 0.035rem ${_cols.yellowlike}) drop-shadow(0 0 0.09rem ${_cols.yellowlike})`;
+const pathLineFilter = `drop-shadow(0 0 0.035rem ${_colors.yellowlike}) drop-shadow(0 0 0.09rem ${_colors.yellowlike})`;
 
 const activeLinesEnabled = false;
 export function pathContains(parent: readonly JsonPathPart[], child: readonly JsonPathPart[]): boolean {
@@ -139,7 +139,7 @@ function connectorTargetIndex(info: ConnectorRenderInfo, target: readonly JsonPa
 }
 
 function highlightedConnectorBackground(position: ConnectorPositionValue): string {
-    const color = _cols.yellowlike;
+    const color = _colors.yellowlike;
     const verticalFull = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem 0 / ${pathLineThickness} 100% no-repeat`;
     const verticalDown = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem calc(${pathLineY} - ${pathLineThickness}) / ${pathLineThickness} calc(100% - ${pathLineY} + ${pathLineThickness}) no-repeat`;
     const verticalUp = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem 0 / ${pathLineThickness} calc(${pathLineY} + ${pathLineThickness}) no-repeat`;
@@ -153,11 +153,11 @@ function highlightedConnectorBackground(position: ConnectorPositionValue): strin
 }
 
 function connectorBackground(position: ConnectorPosition): string {
-    const verticalFull = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0 / 1px 100% no-repeat`;
-    const verticalDown = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0.72em / 1px calc(100% - 0.72em) no-repeat`;
-    const verticalUp = `linear-gradient(to bottom, ${_cols.fade}, ${_cols.fade}) 0.38rem 0 / 1px 0.72em no-repeat`;
-    const horizontal = `linear-gradient(to right, ${_cols.fade}, ${_cols.fade}) 0.38rem 0.72em / 0.62rem 1px no-repeat`;
-    const horizontalFull = `linear-gradient(to right, ${_cols.fade}, ${_cols.fade}) 0 0.72em / 0.9rem 1px no-repeat`;
+    const verticalFull = `linear-gradient(to bottom, ${_colors.fade}, ${_colors.fade}) 0.38rem 0 / 1px 100% no-repeat`;
+    const verticalDown = `linear-gradient(to bottom, ${_colors.fade}, ${_colors.fade}) 0.38rem 0.72em / 1px calc(100% - 0.72em) no-repeat`;
+    const verticalUp = `linear-gradient(to bottom, ${_colors.fade}, ${_colors.fade}) 0.38rem 0 / 1px 0.72em no-repeat`;
+    const horizontal = `linear-gradient(to right, ${_colors.fade}, ${_colors.fade}) 0.38rem 0.72em / 0.62rem 1px no-repeat`;
+    const horizontalFull = `linear-gradient(to right, ${_colors.fade}, ${_colors.fade}) 0 0.72em / 0.9rem 1px no-repeat`;
 
     if (position === "single") return horizontal;
     if (position === "first") return `${verticalDown}, ${horizontalFull}`;
@@ -177,7 +177,7 @@ function highlightedConnectorBranchBackground(info: ConnectorRenderInfo, target:
     if (targetIndex === undefined) return undefined;
     if (info.index > targetIndex) return undefined;
 
-    const color = _cols.yellowlike;
+    const color = _colors.yellowlike;
     const verticalFull = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem 0 / ${pathLineThickness} 100% no-repeat`;
     const verticalDown = `linear-gradient(to bottom, ${color}, ${color}) 0.38rem calc(${pathLineY} - ${pathLineThickness}) / ${pathLineThickness} calc(100% - ${pathLineY} + ${pathLineThickness}) no-repeat`;
 
@@ -205,7 +205,7 @@ function highlightedConnectorBranchCss(info: ConnectorRenderInfo, target: readon
 }
 
 function highlightedConnectorRailBackground(): string {
-    const color = _cols.yellowlike;
+    const color = _colors.yellowlike;
     return `linear-gradient(to right, ${color}, ${color}) 0 0 / 100% ${pathLineThickness} no-repeat`;
 }
 

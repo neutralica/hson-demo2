@@ -15,7 +15,7 @@ import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "../../widgets/clouds/make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 
 
 
@@ -77,7 +77,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     letters.forEach(l => {
         const k = get_letter_key(l);
         if (!k) return;
-        const col = _cols.hson[k]
+        const col = _colors.hson[k]
         l.css.set.var("--glow", col);
         l.css.set.var("--final", col);
         l.css.set.var("--starshine", col);

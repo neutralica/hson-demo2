@@ -1,6 +1,6 @@
 import  { CssManager } from "hson-live";
 import { COLOR_VAR_SOURCES } from "../../core/consts/colors.consts";
-import { $PANEL_HIDDEN, øfontSize } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, _fontSize } from "../../core/consts/ui-consts";
 import { MENU_OPTIONS, MIN_DESKTOP_WIDTH } from "./demo.consts";
 import { GLOB_HIDEcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, SCROLL_HOVER_COLcss, GLOB_SCROLL_THUMBcss, WEBKIT_SCROLL_TRKcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, DISP_SIZE_ALERTcss } from "./global.css";
 
@@ -69,7 +69,7 @@ export const set_global_css = (): void => {
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
-    .set.fontSize(øfontSize.main)
+    .set.fontSize(_fontSize.main)
 
   /* fleurs button mobile styling (should match about) */
   mobile.rule("mobile-fleurs-btn", "#fleurs-button")

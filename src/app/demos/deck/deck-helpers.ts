@@ -1,10 +1,13 @@
 import type { LiveTree } from "hson-live";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import type { DeckSlideConfig, DeckState, DeckSlideBody } from "./deck.types";
-import { writeNoise, writeMinMs, writeMaxMs, writeTickMs } from "./mount-deck";
-import { øfontSize } from "../../core/consts/ui-consts";
+import { _fontSize } from "../../core/consts/ui-consts";
 import type { CssMap } from "hson-live/types";
 
+const writeTickMs = 24;
+const writeMinMs = 460;
+const writeMaxMs = 980;
+const writeNoise = "<>/\\{}[]()*&^%$#@!?:;~";
 export function is_deck_list_line(line: string): boolean {
   return /^\s*(?:[-*•]|\d+[.)])\s+/.test(line);
 }
@@ -29,7 +32,9 @@ export function normalize_code_block_text(lines: readonly string[]): string {
     : Math.min(...nonBlank.map(count_leading_spaces));
 
   return normalized.map((line) => line.slice(commonIndent)).join("\n");
-}export function clamp_index(index: number, slides: readonly DeckSlideConfig[]): number {
+}
+
+export function clamp_index(index: number, slides: readonly DeckSlideConfig[]): number {
   if (slides.length === 0) return 0;
   return Math.max(0, Math.min(slides.length - 1, index));
 }
@@ -41,12 +46,57 @@ export function clear_timers(state: DeckState): void {
   state.timerIds.forEach((timerId) => window.clearInterval(timerId));
   state.timerIds = [];
 }
+
+export function write_in_rendered_text(state: DeckState, root: LiveTree): void {
+  // CHANGED: keep the public helper LiveTree-native. We only touch the DOM at
+  // the boundary where the canonical markdown renderer has already produced
+  // styled text nodes.
+  const rootElement = root.dom.must.html();
+  const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
+  const entries: { node: Text; text: string; }[] = [];
+  let current = walker.nextNode();
+
+  while (current) {
+    const node = current as Text;
+    entries.push({ node, text: node.textContent ?? "" });
+    current = walker.nextNode();
+  }
+
+  entries.forEach(({ node }) => {
+    node.textContent = "";
+  });
+
+  entries.forEach(({ node, text }) => {
+    const chars = [...text];
+    const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
+    const started = performance.now();
+
+    const timerId = window.setInterval(() => {
+      const elapsed = performance.now() - started;
+      const progress = Math.min(1, elapsed / duration);
+      const settledCount = Math.floor(chars.length * progress);
+      const noisyCount = Math.min(chars.length - settledCount, 10);
+      const settled = chars.slice(0, settledCount).join("");
+      const noisy = Array.from({ length: noisyCount }, () => random_write_char()).join("");
+
+      node.textContent = settled + noisy;
+
+      if (progress >= 1) {
+        node.textContent = text;
+        window.clearInterval(timerId);
+        state.timerIds = state.timerIds.filter((id) => id !== timerId);
+      }
+    }, writeTickMs);
+
+    state.timerIds.push(timerId);
+  });
+}
+
 export function write_in_text(state: DeckState, target: LiveTree, text: string, onComplete?: () => void): void {
   target.text.set("");
   const chars = [...text];
   const duration = Math.max(writeMinMs, Math.min(writeMaxMs, chars.length * 18));
   const started = performance.now();
-
   const timerId = window.setInterval(() => {
     const elapsed = performance.now() - started;
     const progress = Math.min(1, elapsed / duration);
@@ -86,17 +136,13 @@ export function body_markdown(body: Extract<DeckSlideBody, { kind: "text" | "cod
 export function deck_markdown_heading_css(level: 1 | 2 | 3 | 4): CssMap {
   if (level !== 3) return {};
 
-  // CHANGED: deck-local markdown subheads should read as subheads, not small
-  // about-page labels.
   return {
-    fontSize: øfontSize.header,
-    // lineHeight: "1.16",
+    fontSize: _fontSize.header,
     letterSpacing: "0.035em",
     opacity: "0.9",
-    // CHANGED: deck subheads should bind tightly to the body they introduce.
     margin: "0 0 0.35rem 0",
     padding: "0.5rem",
-    
+    color: _colors.txt.menu,
   };
 }
 export function is_formatted_data_lang(lang: string | undefined): boolean {
@@ -105,10 +151,10 @@ export function is_formatted_data_lang(lang: string | undefined): boolean {
 }
 export function deck_code_format_color(lang: string | undefined): string {
   const normalized = (lang ?? "ts").toLowerCase();
-  if (normalized === "json") return _cols.bluelike;
-  if (normalized === "hson") return _cols.yellowlike;
-  if (normalized === "html") return _cols.pinklike;
-  return _cols.bluelike;
+  if (normalized === "json") return _colors.bluelike;
+  if (normalized === "hson") return _colors.yellowlike;
+  if (normalized === "html") return _colors.pinklike;
+  return _colors.bluelike;
 }
 export function deck_code_watermark(lang: string | undefined): string {
   const normalized = (lang ?? "ts").toLowerCase();
@@ -117,4 +163,3 @@ export function deck_code_watermark(lang: string | undefined): string {
   if (normalized === "html") return "<HTML/>";
   return normalized.toUpperCase();
 }
-

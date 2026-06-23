@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
 import { extractUrl, isIndented, parse_list_item, render_line_with_comment } from "./about-helpers";
 import type { ListItem, ListKind } from "./about.types";
@@ -11,22 +11,22 @@ function code_fence_css(lang: string | null): Record<string, string> {
 
   if (normalized === "json") {
     return {
-      color: _cols.bluelike,
-      boxShadow: `0 0 0.12rem ${_cols.bluelike}`,
+      color: _colors.bluelike,
+      boxShadow: `0 0 0.12rem ${_colors.bluelike}`,
     };
   }
 
   if (normalized === "hson") {
     return {
-      color: _cols.yellowlike,
-      boxShadow: `0 0 0.12rem ${_cols.yellowlike}`,
+      color: _colors.yellowlike,
+      boxShadow: `0 0 0.12rem ${_colors.yellowlike}`,
     };
   }
 
   if (normalized === "html") {
     return {
-      color: _cols.pinklike,
-      boxShadow: `0 0 0.12rem ${_cols.pinklike}`,
+      color: _colors.pinklike,
+      boxShadow: `0 0 0.12rem ${_colors.pinklike}`,
     };
   }
 

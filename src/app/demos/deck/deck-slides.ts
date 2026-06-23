@@ -1,4 +1,34 @@
+import { hson } from "hson-live";
 import type { DeckSlideConfig } from "./deck.types";
+
+export const jsonStub = `
+{
+  "user": {
+    "name": "Mara Bell",
+    "timezone": "America/Chicago",
+    "notifications": true,
+    "dailyLimit": 6,
+    "favoriteColors": ["green", "black", "ivory"]
+  }
+}`;
+export const htmlStub = `
+<body id="main-page">
+<main class="landing-page open">
+<section data-status="mounted" id="first-section">
+<h1>first section</h1>
+</section>
+<section data-status="waiting" id="second-section">
+<h1>second section</h1>
+</section>
+</main>
+</body>
+`;
+
+export const htmlHson = hson.fromTrustedHtml(htmlStub).toHson().serialize();
+export const htmlJson = hson.fromTrustedHtml(htmlStub).toJson().serialize();
+
+export const jsonHson = hson.fromJson(jsonStub).toHson().serialize();
+export const jsonHtml = hson.fromJson(jsonStub).toHtml().serialize();
 
 export const SLIDES: readonly DeckSlideConfig[] = [
   {
@@ -17,164 +47,61 @@ export const SLIDES: readonly DeckSlideConfig[] = [
   },
   {
     headerA: "why?",
-    bodyA: {
-      kind: "text",
-      text: "### why\nwhy.",
-    },
+    stackAlign:"center",
     bodyB: {
+      kind: "text",
+      text: "### why \n why.",
+    },
+    bodyA: {
       kind: "image",
       src: "/whah.jpg",
-      alt: "whah",
+      alt: "whah?",
     },
     footer: "whah",
-  },
-  {
-    headerA: "about the author",
-    bodyA: {
-      kind: "text",
-      text: "### I have no idea what I'm doing\n (figure 1: the author in his natural environment)",
-    },
-    bodyB: {
-      kind: "image",
-      src: "/pretentious-guy.jpeg",
-      alt: "pretentious guy",
-    },
-    footer: "full disclosure",
   },
   {
     headerA: "v1 — hson.transform",
     bodyA: {
       kind: "text",
-      text: `seven parsers and serializers that convert any json or xml-valid html to HsonNodes
+      text: `
+seven parsers and serializers that convert any json or xml-valid html to HsonNodes
       - tokenize_hson (HSON -> tokens)
       - parse_tokens (tokens -> HsonNode)
       - serialize_hson (HsonNode -> HSON)
       - parse_json (JSON -> HsonNode)
       - serialize_json (HsonNode -> JSON)
-      - parse_html/parse_xml (HTML -> HsonNode)
+      - parse_html/parse_xml (HTML -> HsonNode) *
       - serialize_html (HsonNode -> HTML)
-transformations are stable and lossless. user data can run in loops strings through the full chain many times without degradation or distortion of user data
+transformations are stable and lossless. data can loop through the full chain repeatedly without degradation or distortion of user data
+
+(* hson can only parse xml-compatible html)
 `
     },
     footer: "v1 / transform",
   },
   {
-    headerA: "HSON syntax and relation",
+    headerA: "HSON — syntax and relation",
     bodyA: {
       kind: "text",
       text: `
-      \`\`\`json
-{
-  "site": {
-    "title": "HSON Live",
-    "version": "2.0.26",
-    "theme": {
-      "mode": "terminal-gothic",
-      "accent": "yellowlike"
-    },
-    "sections": [
-      {
-        "id": "transform",
-        "label": "hson.transform",
-        "status": "stable"
-      },
-      {
-        "id": "liveTree",
-        "label": "hson.liveTree",
-        "status": "active"
-      },
-      {
-        "id": "liveMap",
-        "label": "hson.liveMap",
-        "status": "wip"
-      }
-    ]
-  }
-}\n\`\`\``,
+### json input:
+\`\`\`json
+${jsonStub}
+\`\`\`
+### hson output:
+\`\`\`hson
+ ${jsonHson}
+  \`\`\`
+`,
     },
     bodyB: {
       kind: "text",
       text: `
-      \`\`\`hson\n
-<site
-  <title  "HSON Live">
-  <version  "2.0.26">
-  <theme
-    <mode  "terminal-gothic">
-    <accent  "yellowlike">
-  >
-  <sections
-    «
-      <
-        <id  "transform">
-        <label  "hson.transform">
-        <status  "stable">
-      >,
-      <
-        <id  "liveTree">
-        <label  "hson.liveTree">
-        <status  "active">
-      >,
-      <
-        <id  "liveMap">
-        <label  "hson.liveMap">
-        <status  "wip">
-      >
-    »
-  >
->\n\`\`\``,
-    },
-    bodyC: {
-      kind: "text",
-      text: `\`\`\`html\n<_-obj>
-<site><_-obj>
-<title><_-obj>
-HSON Live
-</_-obj></title>
-<version><_-obj>
-2.0.26
-</_-obj></version>
-<theme><_-obj>
-<mode><_-obj>
-terminal-gothic
-</_-obj></mode>
-<accent><_-obj>
-yellowlike
-</_-obj></accent>
-</_-obj></theme>
-<sections><_-arr><_-ii data-_index="0"><_-obj>
-<id><_-obj>
-transform
-</_-obj></id>
-<label><_-obj>
-hson.transform
-</_-obj></label>
-<status><_-obj>
-stable
-</_-obj></status>
-</_-obj></_-ii><_-ii data-_index="1"><_-obj>
-<id><_-obj>
-liveTree
-</_-obj></id>
-<label><_-obj>
-hson.liveTree
-</_-obj></label>
-<status><_-obj>
-active
-</_-obj></status>
-</_-obj></_-ii><_-ii data-_index="2"><_-obj>
-<id><_-obj>
-liveMap
-</_-obj></id>
-<label><_-obj>
-hson.liveMap
-</_-obj></label>
-<status><_-obj>
-wip
-</_-obj></status>
-</_-obj></_-ii></_-arr></sections>
-</_-obj></site>
-</_-obj>\n\`\`\``,
+### html input:
+      \`\`\`html\n${htmlStub}\n\`\`\`
+### hson output:
+    \`\`\`hson\n${htmlHson}\n\`\`\`
+`,
     },
     footer: "json / hson / html",
   },
@@ -183,48 +110,12 @@ wip
     bodyA: {
       kind: "code",
       lang: "html",
-      text: `
-<body id="hson-demo">
-  <main class="deck">
-    <section id="transform" data-status="stable">
-      <h1>hson.transform</h1>
-      <p>JSON, HTML, and HSON convert through one node graph.</p>
-    </section>
-
-    <section id="liveTree" data-status="active">
-      <h1>hson.liveTree</h1>
-      <p>The DOM is projected from a live HsonNode graph.</p>
-    </section>
-
-    <section id="liveMap" data-status="wip">
-      <h1>hson.liveMap</h1>
-      <p>State and view begin to share one editable source.</p>
-    </section>
-  </main>
-</body>
-`,
+      text: htmlStub,
     },
     bodyB: {
       kind: "code",
       lang: "hson",
-      text: `
-<body id="hson-demo"
-  <main class="deck"
-    <section id="transform" data-status="stable"
-      <h1 "hson.transform"/>
-      <p "JSON, HTML, and HSON convert through one node graph."/>
-    />
-    <section id="liveTree" data-status="active"
-      <h1 "hson.liveTree"/>
-      <p "The DOM is projected from a live HsonNode graph."/>
-    />
-    <section id="liveMap" data-status="wip"
-      <h1 "hson.liveMap"/>
-      <p "State and view begin to share one editable source."/>
-    />
-  />
-/>
-`,
+      text: htmlHson,
     },
     footer: "transform pair / html + hson",
   },
@@ -233,190 +124,32 @@ wip
     bodyA: {
       kind: "code",
       lang: "json",
-      text: `
-{
-  "site": {
-    "title": "HSON Live",
-    "version": "2.0.26",
-    "theme": {
-      "mode": "terminal-gothic",
-      "accent": "yellowlike"
-    },
-    "sections": [
-      {
-        "id": "transform",
-        "label": "hson.transform",
-        "status": "stable"
-      },
-      {
-        "id": "liveTree",
-        "label": "hson.liveTree",
-        "status": "active"
-      },
-      {
-        "id": "liveMap",
-        "label": "hson.liveMap",
-        "status": "wip"
-      }
-    ]
-  }
-}`,
+      text: jsonStub,
+
     },
     bodyB: {
       kind: "code",
       lang: "hson",
-      text: `
-<site
-  <title  "HSON Live">
-  <version  "2.0.26">
-  <theme
-    <mode  "terminal-gothic">
-    <accent  "yellowlike">
-  >
-  <sections
-    «
-      <
-        <id  "transform">
-        <label  "hson.transform">
-        <status  "stable">
-      >,
-      <
-        <id  "liveTree">
-        <label  "hson.liveTree">
-        <status  "active">
-      >,
-      <
-        <id  "liveMap">
-        <label  "hson.liveMap">
-        <status  "wip">
-      >
-    »
-  >
->`,
+      text: jsonHson,
     },
-    footer: "transform pair / json + hson",
+    footer: "transform / json + hson",
   },
   {
     headerA: "JSON <=> HSON <=> HTML",
     bodyA: {
       kind: "code",
       lang: "json",
-      text: `
-{
-  "site": {
-    "title": "HSON Live",
-    "version": "2.0.26",
-    "theme": {
-      "mode": "terminal-gothic",
-      "accent": "yellowlike"
-    },
-    "sections": [
-      {
-        "id": "transform",
-        "label": "hson.transform",
-        "status": "stable"
-      },
-      {
-        "id": "liveTree",
-        "label": "hson.liveTree",
-        "status": "active"
-      },
-      {
-        "id": "liveMap",
-        "label": "hson.liveMap",
-        "status": "wip"
-      }
-    ]
-  }
-}
-  `,
+      text: jsonStub,
     },
     bodyB: {
       kind: "code",
       lang: "hson",
-      text: `
-<site
-  <title  "HSON Live">
-  <version  "2.0.26">
-  <theme
-    <mode  "terminal-gothic">
-    <accent  "yellowlike">
-  >
-  <sections
-    «
-      <
-        <id  "transform">
-        <label  "hson.transform">
-        <status  "stable">
-      >,
-      <
-        <id  "liveTree">
-        <label  "hson.liveTree">
-        <status  "active">
-      >,
-      <
-        <id  "liveMap">
-        <label  "hson.liveMap">
-        <status  "wip">
-      >
-    »
-  >
->`,
+      text: jsonHson,
     },
     bodyC: {
       kind: "code",
       lang: "html",
-      text: `
-<_-obj>
-<site><_-obj>
-<title><_-obj>
-HSON Live
-</_-obj></title>
-<version><_-obj>
-2.0.26
-</_-obj></version>
-<theme><_-obj>
-<mode><_-obj>
-terminal-gothic
-</_-obj></mode>
-<accent><_-obj>
-yellowlike
-</_-obj></accent>
-</_-obj></theme>
-<sections><_-arr><_-ii data-_index="0"><_-obj>
-<id><_-obj>
-transform
-</_-obj></id>
-<label><_-obj>
-hson.transform
-</_-obj></label>
-<status><_-obj>
-stable
-</_-obj></status>
-</_-obj></_-ii><_-ii data-_index="1"><_-obj>
-<id><_-obj>
-liveTree
-</_-obj></id>
-<label><_-obj>
-hson.liveTree
-</_-obj></label>
-<status><_-obj>
-active
-</_-obj></status>
-</_-obj></_-ii><_-ii data-_index="2"><_-obj>
-<id><_-obj>
-liveMap
-</_-obj></id>
-<label><_-obj>
-hson.liveMap
-</_-obj></label>
-<status><_-obj>
-wip
-</_-obj></status>
-</_-obj></_-ii></_-arr></sections>
-</_-obj></site>
-</_-obj>
-`,
+      text: jsonHtml,
     },
     footer: "derived projection / json",
   },
@@ -425,144 +158,17 @@ wip
     bodyA: {
       kind: "code",
       lang: "html",
-      text: `
-<body id="hson-demo">
-  <main class="deck">
-    <section data-status="stable" id="transform">
-      <h1>hson.transform</h1>
-      <p>JSON, HTML, and HSON convert through one node graph.</p>
-    </section>
-    <section data-status="active" id="liveTree">
-      <h1>hson.liveTree</h1>
-      <p>The DOM is projected from a live HsonNode graph.</p>
-    </section>
-    <section data-status="wip" id="liveMap">
-      <h1>hson.liveMap</h1>
-      <p>State and view begin to share one editable source.</p>
-    </section> 
-  </main>
-</body>`,
+      text: htmlStub,
     },
     bodyB: {
       kind: "code",
       lang: "hson",
-      text: `
-<body id="hson-demo"
-  <main class="deck"
-    <section id="transform" data-status="stable"
-      <h1 "hson.transform"/>
-      <p "JSON, HTML, and HSON convert through one node graph."/>
-    />
-    <section id="liveTree" data-status="active"
-      <h1 "hson.liveTree"/>
-      <p "The DOM is projected from a live HsonNode graph."/>
-    />
-    <section id="liveMap" data-status="wip"
-      <h1 "hson.liveMap"/>
-      <p "State and view begin to share one editable source."/>
-    />
-  />
-/>`,
+      text: htmlHson,
     },
     bodyC: {
       kind: "code",
       lang: "json",
-      text: `
-{
-  "_-elem": [
-    {
-      "$_attrs": {
-        "id": "hson-demo"
-      },
-      "body": {
-        "_-elem": [
-          {
-            "$_attrs": {
-              "class": "deck"
-            },
-            "main": {
-              "_-elem": [
-                {
-                  "$_attrs": {
-                    "data-status": "stable",
-                    "id": "transform"
-                  },
-                  "section": {
-                    "_-elem": [
-                      {
-                        "h1": {
-                          "_-elem": [
-                            "hson.transform"
-                          ]
-                        }
-                      },
-                      {
-                        "p": {
-                          "_-elem": [
-                            "JSON, HTML, and HSON convert through one node graph."
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "$_attrs": {
-                    "data-status": "active",
-                    "id": "liveTree"
-                  },
-                  "section": {
-                    "_-elem": [
-                      {
-                        "h1": {
-                          "_-elem": [
-                            "hson.liveTree"
-                          ]
-                        }
-                      },
-                      {
-                        "p": {
-                          "_-elem": [
-                            "The DOM is projected from a live HsonNode graph."
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "$_attrs": {
-                    "data-status": "wip",
-                    "id": "liveMap"
-                  },
-                  "section": {
-                    "_-elem": [
-                      {
-                        "h1": {
-                          "_-elem": [
-                            "hson.liveMap"
-                          ]
-                        }
-                      },
-                      {
-                        "p": {
-                          "_-elem": [
-                            "State and view begin to share one editable source."
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
-  ]
-}
-  `,
+      text: htmlJson,
     },
     footer: "derived projection / html",
   },
@@ -570,15 +176,20 @@ wip
     headerA: "v2 — hson.liveTree",
     bodyA: {
       kind: "text",
-      text: "A web authoring platform built on top of the HsonNode graph, allowing a single source of truth for a united state and view",
+      text: "a web authoring platform built on the HsonNode graph\n state and view data are united in a single source-of-truth",
     },
     footer: "hson.livetree",
   },
   {
     headerA: "LiveTree - Internals",
     bodyA: {
+      kind: "code",
+      lang: "ts",
+      text: "hson.liveTree.fromHTML()\nhson.liveTree.queryBody()",
+    },
+    bodyB: {
       kind: "text",
-      text: "1) parses <body> and all child nodes to HsonNodes (must be xml compatible)\n2) replaces it with identical HTML projection projected from HsonNode graph\n3) provides interface for node graph; changes and mutations are reflected in realtime on-DOM",
+      text: "1: parse <body> and all child nodes to HsonNodes (must be xml compatible)\n2: replaces it with identical HTML projection projected from HsonNode graph\n3: return handle for node graph interface\n changes and mutations to the graph are reflected in realtime on-DOM",
     },
     footer: "livetree / internals",
   },
@@ -588,7 +199,7 @@ wip
       kind: "code",
       lang: "ts",
       text: `
-const tree = hson.queryBody() // or \`.queryDom(/*selector*/)\`
+const tree = hson.queryBody() // document.body
 .liveTree // initialize LiveTree creation
 .graft(); // replace document.body with identical LiveTree projection
 
@@ -647,18 +258,15 @@ tree.listen
     footer: "v3 / livemap - WIP",
   },
   {
-    headerA: "Q&A",
+    headerA: "",
+    headerB: "",
     bodyA: {
       kind: "text",
-      text: "### please remember:\n### I have no idea what I'm doing\n(seriously, I'm way over my skis)",
+      text: "",
     },
-    footer: "q / a",
-  },
-  {
-    headerA: "ty",
-    bodyA: {
+    bodyB: {
       kind: "text",
-      text: "terminalgothic.com\nhansonpw@gmail.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2",
+      text: "### ty\n\`\`\`hson\nhansonpw@gmail.com\nwww.terminalgothic.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2\n\`\`\`",
     },
     footer: "acknowledgement / contact / links",
   },

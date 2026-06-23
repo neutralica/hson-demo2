@@ -1,5 +1,5 @@
 import type { CssMap, JsonValue, SvgLiveTree } from "hson-live/types";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { CONNECTOR_CSS, PATH_OVERLAY_CSS, PATH_OVERLAY_SVG_CSS } from "./render.css";
 import type { ConnectorPosition, JsonPathPart, JsonRenderBuckets, JsonRenderGroup, JsonRenderKind, JsonRenderPart, JsonRenderRole } from "./render.types";
 import type { LiveTree } from "hson-live";
@@ -164,7 +164,7 @@ export function make_path_overlay(root: LiveTree): PathOverlay | undefined {
         .attr.setMany({
             d: "",
             fill: "none",
-            stroke: _cols.yellowlike,
+            stroke: _colors.yellowlike,
             // CHANGED: make the trace hold up deeper into large JSON renders.
             "stroke-width": "1.45",
             "stroke-linecap": "square",
@@ -172,7 +172,7 @@ export function make_path_overlay(root: LiveTree): PathOverlay | undefined {
             opacity: "0.62",
         })
         .css.setMany({
-            filter: `drop-shadow(0 0 0.06rem ${_cols.yellowlike})`,
+            filter: `drop-shadow(0 0 0.06rem ${_colors.yellowlike})`,
         });
 
     return { tree, svg, path };

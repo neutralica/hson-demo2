@@ -1,7 +1,7 @@
 import type { CssMap } from "hson-live/types";
 import { GRID_GAPstr } from "../../core/consts/ui-consts";
-import { _cols } from "../../core/consts/colors.consts";
-import { SYS_MONOfont, øfontSize } from "../../core/consts/ui-consts";
+import { _colors } from "../../core/consts/colors.consts";
+import { SYS_MONOfont, _fontSize } from "../../core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
@@ -17,7 +17,7 @@ export const UI_BUTTON_BORDERcss: CssMap = {
 
   }
 };
-export const UI_BTN_HOVERcss = (col: string = _cols.txt.menu, back: string = _cols.backhi): CssMap => {
+export const UI_BTN_HOVERcss = (col: string = _colors.txt.menu, back: string = _colors.backhi): CssMap => {
   return {
     _hover: {
       background: col,
@@ -40,24 +40,24 @@ export const UI_BTN_STDcss: CssMap = {
   cursor: "pointer",
   ...FONT_FAM_MONO,
   textTransform: "lowercase",
-  background: _cols.backlo,
-  fontSize: øfontSize.main,
+  background: _colors.backlo,
+  fontSize: _fontSize.main,
   lineHeight:"1",
 } as const;
 
 
 export const UI_STACK_LABELcss: CssMap = {
   position: "relative",
-  fontSize: øfontSize.main,
+  fontSize: _fontSize.main,
 };
 
 export const UI_BTNcss: CssMap = {
   ...UI_BTN_STDcss,
-  ...UI_BTN_HOVERcss(_cols.txt.code),
+  ...UI_BTN_HOVERcss(_colors.txt.code),
   height: "100%",
   padding: "0.4em 0.5em",
-  background: _cols.backlo,
-  color: _cols.txt.code,
+  background: _colors.backlo,
+  color: _colors.txt.code,
   width: "25%",
 // justifyContent: "flex-end",
   // alignSelf: "flex-end"
@@ -69,7 +69,7 @@ export const UI_2STACKcss: CssMap = {
   placeItems: "center",
   // width: "15%",
   // height: "100%",
-  fontSize: øfontSize.main,
+  fontSize: _fontSize.main,
   padding: "0.4em 0.5em",
   justifyContent: "flex-end",
 };
@@ -90,7 +90,7 @@ export const UI_PANEL_HEADcss: CssMap = {
   height: "2rem",
   // maxHeight: "3rem",
   padding: "6px",
-  background: _cols.backlo,
+  background: _colors.backlo,
   display: "flex",
   alignItems: "flex-end",
   justifyContent: "center",
@@ -103,7 +103,7 @@ export const UI_PANEL_HEADERcss: CssMap = {
   zIndex: "5",
   height: "2rem",
   maxHeight: "2rem",
-  background: _cols.backhi,
+  background: _colors.backhi,
   // columnGap: "0.5ch",
   width: "100%",
   display: "inline-flex",
@@ -118,11 +118,11 @@ export const UI_TEXTcss: CssMap = {
   width: "100%",
   boxSizing: "border-box",
   ...FONT_FAM_MONO,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   // background: COLORS_.bckdeep,
   border: "none",
   padding: "10px",
-  color: _cols.txt.menu,
+  color: _colors.txt.menu,
   outline: "none"
 };
 export const UI_PANELcss: CssMap = {
@@ -136,6 +136,6 @@ export const UI_PANELcss: CssMap = {
   boxSizing: "border-box",
   overflowY: "auto",
   maxHeight: "100%",
-  background: _cols.backlo,
+  background: _colors.backlo,
 };
 

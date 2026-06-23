@@ -1,8 +1,8 @@
 //css.consts.ts
 
 import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
-import { SYS_MONOfont, øfontSize } from "../../core/consts/ui-consts";
-import { _cols } from "../../core/consts/colors.consts";
+import { SYS_MONOfont, _fontSize } from "../../core/consts/ui-consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 
@@ -17,7 +17,7 @@ const LOGOBOXcss:CssMap = {
   overflowY: "hidden",
   color: OKLCH_NEUTRALS.ash,
   width: "25ch",
-  backgroundColor: _cols.backlo,
+  backgroundColor: _colors.backlo,
   fontFamily: SYS_MONOfont,
 }
 
@@ -30,7 +30,7 @@ const BRAND_CSS: CssMap = {
   placeItems: "center",
   zIndex: 50,
   width: "15ch",
-  color: _cols.fade,
+  color: _colors.fade,
   overflowX: "hidden",
   filter: `drop-shadow(0 1px 0 rgba(0,0,0,.7))
           drop-shadow(0 0 6px rgba(0,0,0,.35))`
@@ -51,11 +51,11 @@ export const NOTEBOXcss: CssMap= {
   position: "fixed",
   top: "1rem",
   left: "1rem",
-  backgroundColor: _cols.backlo,
+  backgroundColor: _colors.backlo,
   padding: "1rem",
   ...FONT_FAM_MONO,
-  color: _cols.hson.n,
-  fontSize: øfontSize.smol
+  color: _colors.hson.n,
+  fontSize: _fontSize.smol
 };
 export const Intro_css = {
   zalgo: ZALGO_CSS,

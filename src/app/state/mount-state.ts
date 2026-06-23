@@ -3,7 +3,7 @@ import { store_graph_entries, demo_subscribe, has_widget } from "./store";
 import type { StateGraphEntry } from "./state-graph";
 import { register_state_source, state_source_entries, subscribe_state_sources } from "./state-sources";
 import type { CssMap } from "hson-live/types";
-import { _cols } from "../core/consts/colors.consts";
+import { _colors } from "../core/consts/colors.consts";
 
 type StateGraphMode = "all" | "leaves" | "containers";
 const STATE_PULSE_THROTTLE_MS = 80;
@@ -41,7 +41,7 @@ const stateGraphRootCss: CssMap = {
   lineHeight: "1.35",
   color: "var(--txt-main, #d8ded8)",
   overflow: "auto",
-  background: _cols.backlo
+  background: _colors.backlo
 } as const;
 
 const stateGraphTitleCss: CssMap = {
@@ -108,7 +108,7 @@ const statePulseRootCss: CssMap = {
   overflow: "auto",
   height: "100%",
   boxSizing: "border-box",
-  border: "4px ridge " + _cols.yellowlike,
+  border: "4px ridge " + _colors.yellowlike,
 } as const;
 
 const statePulseTitleCss: CssMap = {

@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import  { _cols } from "../../core/consts/colors.consts";
+import  { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { ACID_WASH_RGBA } from "../../core/consts/old-rgb.consts";
-import  { øfontWeight } from "../../core/consts/ui-consts";
+import  { _fontWeight } from "../../core/consts/ui-consts";
 
 export const SCROLL_HOVER_COLcss = {
   background: "rgba(180,230,255,0.65)"
@@ -23,8 +23,8 @@ export const DISP_SIZE_ALERTcss = (onoff: "on" | "off" = "on"): CssMap => {
       zIndex: "9997",
       width: "auto",
       ...FONT_FAM_MONO,
-      color: _cols.red,
-      background: _cols.backhi,
+      color: _colors.red,
+      background: _colors.backhi,
       border: `10px double ${ACID_WASH_RGBA.oxidizedRed}`,
       borderRadius: "12px",
       textAlign: "center",
@@ -60,7 +60,7 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 export const MENU_ACTIVE_VIEWcss: CssMap = {
   // textDecoration: "underline",
   // textUnderlineOffset: "0.3em",
-  fontWeight: øfontWeight.fat,
+  fontWeight: _fontWeight.fat,
   opacity: "1",
   __before: {
     content: "> ",
@@ -69,9 +69,9 @@ export const MENU_ACTIVE_VIEWcss: CssMap = {
   },
   _hover: {
     // color: $gry_.dim,
-    background: _cols.txt.grey,
-    color: _cols.backlo,
-    fontWeight: øfontWeight.main,
+    background: _colors.txt.grey,
+    color: _colors.backlo,
+    fontWeight: _fontWeight.main,
     __before: {
       content: "x ",
       position: "absolute",
@@ -84,7 +84,7 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
   // textDecoration: "underline",
   // textUnderlineOffset: "0.3em",
   // color: øHSON_COL.o,
-  fontWeight: øfontWeight.fat,
+  fontWeight: _fontWeight.fat,
   opacity: "1",
   __before: {
     content: "• ",
@@ -97,9 +97,9 @@ export const MENU_ACTIVE_WIDGETcss: CssMap = {
       position: "absolute",
       left: "-1rem",
     },
-    background: _cols.txt.grey,
-    color: _cols.backlo,
-    fontWeight: øfontWeight.main,
+    background: _colors.txt.grey,
+    color: _colors.backlo,
+    fontWeight: _fontWeight.main,
   },
 
 };

@@ -1,5 +1,5 @@
 import  { LiveTree } from "hson-live";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { mk_div_id, mk_div_cls } from "../../utils/makers";
 import type { TestSummary } from "./tests.types";
 import { TEST_CHIP_ROWcss, TEST_CHIP_DEFcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
@@ -59,14 +59,14 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
             case "FAIL": return "red";
             case "PASS": 
           case "OK:":
-            case "OK": return _cols.greenlike;
-            case "• ": return _cols.txt.main;
+            case "OK": return _colors.greenlike;
+            case "• ": return _colors.txt.main;
             case "SKIP":
-                case "WARN": return _cols.yellowlike;
-                case "RUN": return _cols.txt.grey;
-            case "DONE": return _cols.greenlike;
-            case "===":return _cols.txt.grey;
-            case "SUITE:":return _cols.txt.main;
-            default: return _cols.txt.grey;
+                case "WARN": return _colors.yellowlike;
+                case "RUN": return _colors.txt.grey;
+            case "DONE": return _colors.greenlike;
+            case "===":return _colors.txt.grey;
+            case "SUITE:":return _colors.txt.main;
+            default: return _colors.txt.grey;
         }
     }

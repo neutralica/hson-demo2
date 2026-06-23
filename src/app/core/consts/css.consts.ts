@@ -1,10 +1,10 @@
 import type { CssMap } from "hson-live/types";
-import { øfontSize, SYS_MONOfont,  øfontWeight } from "./ui-consts";
+import { _fontSize, SYS_MONOfont,  _fontWeight } from "./ui-consts";
 
 export const FONT_FAM_MONO: CssMap = {
-    fontSize: øfontSize.main,
+    fontSize: _fontSize.main,
     fontFamily: SYS_MONOfont,
-    fontWeight: øfontWeight.main,
+    fontWeight: _fontWeight.main,
     // letterSpacing: "0.5px",
     // letterSpacing: "0.1px",
     // lineHeight: "1.6rem",

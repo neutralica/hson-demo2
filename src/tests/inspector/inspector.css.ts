@@ -1,16 +1,16 @@
 import type { CssMap } from "hson-live/types";
 import { ACID_WASH_OKLCH } from "../../app/core/consts/oklch.consts";
-import { øfontWeight } from "../../app/core/consts/ui-consts";
-import { _cols } from "../../app/core/consts/colors.consts";
+import { _fontWeight } from "../../app/core/consts/ui-consts";
+import { _colors } from "../../app/core/consts/colors.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";
 import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
-import { øfontSize } from "../../app/core/consts/ui-consts";
+import { _fontSize } from "../../app/core/consts/ui-consts";
 import { OKLCH_VIBRANT } from "../../app/core/consts/oklch.consts";
 import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 
 const nameWidth = "35ch"; // standardize width so it doesn’t jump
-const rowFade = `linear-gradient(150deg, ${_cols.backhi}, transparent)`;
+const rowFade = `linear-gradient(150deg, ${_colors.backhi}, transparent)`;
 const rowFadeFail = `linear-gradient(150deg, ${set_alpha(OKLCH_VIBRANT.redInfra, 0.4)}, transparent)`;
 
 export const LOG_SCROLLcss: CssMap = {
@@ -31,9 +31,9 @@ export const INSPECTORcss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   overflow: "hidden",
-  background: _cols.backlo,
+  background: _colors.backlo,
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
 };
 
 export const THcss: CssMap = {
@@ -55,7 +55,7 @@ export const TD_PREVIEW_ROWcss: CssMap = {
   padding: "8px 12px",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
-  background: _cols.backhi,
+  background: _colors.backhi,
 };
 
 
@@ -65,7 +65,7 @@ export const ROW_SUITEcss: CssMap = {
   textAlign: "left",
 };
 export const ROW_GROUPcss: CssMap = {
-  background: _cols.backhi,
+  background: _colors.backhi,
   cursor: "pointer",
 };
 
@@ -92,12 +92,12 @@ export const ROW_SUITE_FAILcss: CssMap = {
 
 export const ROW_CASEcss: CssMap = {
   color: OKLCH_VIBRANT.mintIce,
-  fontWeight: øfontWeight.main,
+  fontWeight: _fontWeight.main,
 };
 
 export const ROW_CASE_FAILcss: CssMap = {
   color: "red",
-  fontWeight: øfontWeight.fat,
+  fontWeight: _fontWeight.fat,
   // filter: "saturate(1.3) brightness(1.3)"
 };
 
@@ -117,8 +117,8 @@ export const PREVIEW_METAcss: CssMap = {
   padding: "1rem",
   // overflow: "scroll",
   // textOverflow: "ellipsis",
-  background: _cols.backlo,
-  color: _cols.greenlike,
+  background: _colors.backlo,
+  color: _colors.greenlike,
 };
 
 export const PREVIEW_META_FAILcss: CssMap = {
@@ -140,8 +140,8 @@ export const INSP_PREV_PREcss = {
   overflow: "auto",
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
-  color: _cols.txt.code,
-  fontSize: øfontSize.smol
+  color: _colors.txt.code,
+  fontSize: _fontSize.smol
 };
 
 export const INSP_CAP_ROWcss = {

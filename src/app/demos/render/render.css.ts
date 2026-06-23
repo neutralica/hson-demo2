@@ -1,24 +1,24 @@
 import type { CssMap } from "hson-live/types";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
-import { øfontSize } from "../../core/consts/ui-consts";
+import { _fontSize } from "../../core/consts/ui-consts";
 
 // CHANGED: centralize render-demo colors so the visual system can be tuned
 // from one place without hunting through each CSS object.
-const renderColorBaseText = _cols.fade;
-const renderColorJsonText = _cols.fmt.json;
-const renderColorPrimitiveText = _cols.yellowlike;
-const renderColorActiveText = _cols.yellowlike;
-const renderColorActiveGlow = _cols.yellowlike;
-const renderColorConnectorGlow = _cols.yellowlike;
-const renderColorPanelBorder = _cols.bluelike;
-const renderColorPanelBackLow = _cols.backlo;
-const renderColorPanelBackHigh = _cols.backhi;
-const renderColorErrorText = _cols.red;
+const renderColorBaseText = _colors.fade;
+const renderColorJsonText = _colors.fmt.json;
+const renderColorPrimitiveText = _colors.yellowlike;
+const renderColorActiveText = _colors.yellowlike;
+const renderColorActiveGlow = _colors.yellowlike;
+const renderColorConnectorGlow = _colors.yellowlike;
+const renderColorPanelBorder = _colors.bluelike;
+const renderColorPanelBackLow = _colors.backlo;
+const renderColorPanelBackHigh = _colors.backhi;
+const renderColorErrorText = _colors.red;
 
 export const ROOT_CSS: CssMap = {
     ...FONT_FAM_MONO,
-    fontSize: øfontSize.smol,
+    fontSize: _fontSize.smol,
     display: "grid",
     width: "100%",
     gap: "0.35rem",
@@ -128,7 +128,7 @@ export const DEMO_TEXTAREA_CSS: CssMap = {
     color: renderColorJsonText,
     outline: "none",
     ...FONT_FAM_MONO,
-    fontSize: øfontSize.smol,
+    fontSize: _fontSize.smol,
 };
 export const DEMO_OUTPUT_CSS: CssMap = {
     minHeight: "0",

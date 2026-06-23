@@ -1,10 +1,10 @@
 // build.css.ts
 
 import type { CssMap } from "hson-live/types";
-import  { _cols } from "../../core/consts/colors.consts";
+import  { _colors } from "../../core/consts/colors.consts";
 import  { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH } from "../../core/consts/oklch.consts";
-import { $SIDEBAR_WIDTH, $CONTENT_WIDTH, øfontSize } from "../../core/consts/ui-consts";
+import { $SIDEBAR_WIDTH, $CONTENT_WIDTH, _fontSize } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { UI_TEXTcss, UI_BTN_STDcss, UI_BTNcss, UI_2STACK_VALcss, UI_STACK_LABELcss } from "../../ui/panels/panels.css";
 
@@ -41,18 +41,18 @@ export const BUILD_TEXTWRAPcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  background: _cols.backlo,
+  background: _colors.backlo,
 
 };
 
 export const BUILD_TEXTAREAcss: CssMap = {
   ...UI_TEXTcss,
-  color: _cols.fmt.hson,
-  fontSize: øfontSize.smol,
+  color: _colors.fmt.hson,
+  fontSize: _fontSize.smol,
   padding: "15px",
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
   _focus: {
-    boxShadow: "inset 0 0 15px 1px " + set_alpha(_cols.fmt.hson, 0.5),
+    boxShadow: "inset 0 0 15px 1px " + set_alpha(_colors.fmt.hson, 0.5),
 
   }
 
@@ -82,10 +82,10 @@ export const BUILD_TABcss: CssMap = {
   padding: "0.1rem 0.45rem",
   minHeight: "1.35rem",
   flexShrink: "0",
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
   letterSpacing: "0.04em",
-  color: _cols.txt.code,
+  color: _colors.txt.code,
 };
 
 export const BUILD_TAB_ACTIVEcss: CssMap = {
@@ -102,7 +102,7 @@ export const BUILD_PREVIEWcss: CssMap = {
   overflow: "auto",
   boxSizing: "border-box",
   padding: "10px",
-  background: _cols.backlo,
+  background: _colors.backlo,
   boxShadow: "inset 0 0 19px 1px " + set_alpha(OKLCH_NEUTRALS.silver, 0.3),
 };
 
@@ -118,8 +118,8 @@ export const BUILD_HTMLBOXcss: CssMap = {
   resize: "none",
   outline: "none",
 
-  boxShadow: "inset 0 0 25px 1px " + set_alpha(_cols.fmt.html, 0.6),
-  color: _cols.fmt.html,
+  boxShadow: "inset 0 0 25px 1px " + set_alpha(_colors.fmt.html, 0.6),
+  color: _colors.fmt.html,
   caretColor: "auto",
   // fontSize: øfontSize.main
 
@@ -149,7 +149,7 @@ export const BUILD_BODYcss: CssMap = {
 };
 export const BUILD_HEADER_BTNcss: CssMap = {
   ...UI_BTNcss,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
   // minHeight: "1.35rem",
   padding: "0.4em 0.5em",
@@ -158,13 +158,13 @@ export const BUILD_HEADER_BTNcss: CssMap = {
 
 export const BUILD_HEADER_VALUEcss: CssMap = {
   ...UI_2STACK_VALcss,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
 };
 
 export const BUILD_HEADER_LABELcss: CssMap = {
   ...UI_STACK_LABELcss,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
 };
 

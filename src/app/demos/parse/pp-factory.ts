@@ -2,8 +2,8 @@
 
 import type { LiveTree } from "hson-live";
 import { type Outcome, relay_data, relay } from "intrastructure";
-import { _cols } from "../../core/consts/colors.consts";
-import { øfontSize, øWATERMARK_FMT_ } from "../../core/consts/ui-consts";
+import { _colors } from "../../core/consts/colors.consts";
+import { _fontSize, øWATERMARK_FMT_ } from "../../core/consts/ui-consts";
 import type { Fmt } from "../../core/types/core.types";
 import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../../phases/phase-3-demo/demo.consts";
 import { UI_BTNcss, UI_2STACK_VALcss, UI_STACK_LABELcss, UI_PANEL_HEADERcss, UI_PANELcss, UI_PANEL_HEADcss, UI_2STACKcss, UI_TEXTcss, UI_BTN_HOVERcss } from "../../ui/panels/panels.css";
@@ -19,7 +19,7 @@ export type PpFactoryOpts = {
 
 const PP_HEADER_BTNcss = {
   ...UI_BTNcss,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   padding: "0.4rem 0.5rem",
   letterSpacing: "0.04em",
   height: "fit-content",
@@ -27,13 +27,13 @@ const PP_HEADER_BTNcss = {
 
 const PP_HEADER_VALUEcss = {
   ...UI_2STACK_VALcss,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
 };
 
 const PP_HEADER_LABELcss = {
   ...UI_STACK_LABELcss,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   lineHeight: "1",
 };
 
@@ -128,7 +128,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         display: "block",
       })
       .css.selector("&:hover > div.pp-watermark").setMany({
-        color: _cols.greenlike,
+        color: _colors.greenlike,
       });
 
     const wmFmt = wrap.create.div()
@@ -143,7 +143,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .css.setMany({
         ...UI_TEXTcss,
         background: "transparent",
-        color: _cols.fmt[fmt],
+        color: _colors.fmt[fmt],
       });
 
     const nodeBox = panel.create.pre()
@@ -154,8 +154,8 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
         margin: "0",
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
-        background: _cols.backhi,
-        color: _cols.fmt[fmt],
+        background: _colors.backhi,
+        color: _colors.fmt[fmt],
       });
 
     const nodeText = nodeBox.create.div()
@@ -166,7 +166,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
       .text.set("text")
       .css.setMany({
         ...PP_HEADER_BTNcss,
-        ...UI_BTN_HOVERcss(_cols.txt.code),
+        ...UI_BTN_HOVERcss(_colors.txt.code),
       })
       .attr.setMany({
         "role": "button",

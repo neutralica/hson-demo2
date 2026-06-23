@@ -1,6 +1,6 @@
 // demo-meta-tests-1.ts
 
-import { COLOR_VAR_SOURCES, _cols, color_var_name_for_path } from "../../app/core/consts/colors.consts";
+import { COLOR_VAR_SOURCES, _colors, color_var_name_for_path } from "../../app/core/consts/colors.consts";
 import { parse_oklch } from "../../app/core/helpers/color-helpers";
 import { OKLCH_COLOR_TARGETS } from "../../app/demos/oklch/link-colors";
 import {
@@ -94,7 +94,7 @@ export function demo_meta_colors(): DemoMetaSuite {
     {
       name: "_cols string leaves are CSS var refs with fallbacks",
       assert(_ctx, t) {
-        const leaves = collectStringLeaves(_cols);
+        const leaves = collectStringLeaves(_colors);
         t.ok("_cols has string leaves", leaves.length > 0);
 
         for (const leaf of leaves) {

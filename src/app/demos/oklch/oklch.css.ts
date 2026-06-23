@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
-import  { _cols } from "../../core/consts/colors.consts";
+import  { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
-import { øfontSize, CURRENT_OKLCH } from "../../core/consts/ui-consts";
+import { _fontSize, CURRENT_OKLCH } from "../../core/consts/ui-consts";
 
 
 const STIPPLE_DOT = `oklch(90% 0.04 250 / 0.045)`;
@@ -40,9 +40,9 @@ export const ROOT_CSS: CssMap = {
   maxHeight: "100%",
   padding: "0.85rem",
 
-  color: _cols.txt.code,
+  color: _colors.txt.code,
   ...FONT_FAM_MONO,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
 
   backgroundImage: OKLCH_PANEL_STIPPLED_BACKGROUND,
   backgroundSize: `7px 7px, auto, auto, auto`,
@@ -89,7 +89,7 @@ export const ROW_CSS: CssMap = {
 };
 
 export const TITLE_CSS: CssMap = {
-  color: _cols.txt.menu,
+  color: _colors.txt.menu,
   letterSpacing: "0.055em",
   padding: "0 0.1rem 0.35rem",
   borderBottom: `1px solid oklch(84% 0.04 250 / 0.32)`,
@@ -99,7 +99,7 @@ export const TITLE_CSS: CssMap = {
 export const CODE_CSS: CssMap = {
   minHeight: "1.2rem",
   padding: "0.28rem 0.35rem",
-  color: _cols.txt.menu,
+  color: _colors.txt.menu,
   border: "1px solid oklch(84% 0.04 250 / 0.16)",
   background: "oklch(0% 0 0 / 0.24)",
 };
@@ -136,8 +136,8 @@ export const TARGET_ROW_ACTIVE_CSS: CssMap = {
   ...TARGET_ROW_CSS,
   border: `1px solid oklch(78% 0.13 145 / 0.46)`,
   background: "oklch(10% 0.035 145 / 0.44)",
-  color: _cols.txt.code,
-  boxShadow: "inset 0 0 0 1px " + _cols.txt.main,
+  color: _colors.txt.code,
+  boxShadow: "inset 0 0 0 1px " + _colors.txt.main,
 };
 
 export const PREVIEW_CSS: CssMap = {

@@ -1,10 +1,10 @@
 // demo.css.ts
 
 import type { CssMap } from "hson-live/types";
-import { _cols } from "../../core/consts/colors.consts";
+import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { øfontWeight, MENU_OKLCH, SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr, GRAF_OKLCH, øfontSize } from "../../core/consts/ui-consts";
+import { _fontWeight, MENU_OKLCH, SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr, GRAF_OKLCH, _fontSize } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 
 export const UI_ROOTcss: CssMap = {
@@ -30,16 +30,16 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",
-  background: _cols.backlo,
+  background: _colors.backlo,
   opacity: "0.9",
   textIndent: "1rem",
   paddingLeft: "1ch",
-  fontWeight: øfontWeight.main,
+  fontWeight: _fontWeight.main,
   __before: {},
   _hover: {
     // fontWeight: øfontWeight.main,
     background: MENU_OKLCH,
-    color: _cols.backhi,
+    color: _colors.backhi,
     __before: {
       content: ">>",
       position: "absolute",
@@ -47,9 +47,9 @@ export const MAIN_MENUcss: CssMap = {
     }
   },
   _active: {
-    background: _cols.backhi,
-    color: _cols.bluelike,
-    fontWeight: øfontWeight.fat,
+    background: _colors.backhi,
+    color: _colors.bluelike,
+    fontWeight: _fontWeight.fat,
   }
 }
 
@@ -86,7 +86,7 @@ export const MENU_CONTAINERcss: CssMap = {
 export const HSON_WORDcss: CssMap = {
   fontSize: "4rem",
   fontFamily: SYS_MONOfont,
-  fontWeight: øfontWeight.main,
+  fontWeight: _fontWeight.main,
   width: "0.5em",
   userSelect: "none",
   lineHeight: "0.9",
@@ -185,10 +185,10 @@ export const OKLCH_HOSTcss = {
 
 export const COPYRITEcss: CssMap = {
   fontFamily: SYS_MONOfont,
-  fontSize: øfontSize.smol,
+  fontSize: _fontSize.smol,
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",
-  color: _cols.txt.copyright,
+  color: _colors.txt.copyright,
   zIndex: "-10",
 };

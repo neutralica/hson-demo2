@@ -10,17 +10,32 @@ export const øWATERMARK_FMT_: Record<Fmt, string> = {
   html: "<HTML/>",
 } as const;
 
+export const _txt = {
+  weight: {
+    main: "100",
+    fat: "900",
+  },
+  size: {
+    smol: "14px",
+    sansMain: "16px",
+    main: "18px",
+    header: "24px",
+    title: "76px",
+  },
 
-export const øfontWeight = {
+} as const;
+
+export const _fontWeight = {
   main: "100",
   fat: "900",
 }
 
-export const øfontSize = {
+export const _fontSize = {
   smol: "14px",
   sansMain: "16px",
   main: "18px",
   header: "24px",
+  title: "56px",
 } as const;
 
 
