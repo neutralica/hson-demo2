@@ -55,10 +55,20 @@ export function format_rgba(color: { r: number; g: number; b: number; a?: number
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function isCssVarRef(src: string): boolean {
+  return /^var\(\s*--/.test(src);
+}
+
+function formatAlpha(alpha: number): string {
+  return String(_clamp01(alpha));
+}
+
 export function set_alpha(color: string, alpha: number): string {
   const a = _clamp01(alpha);
   const src = color.trim().toLowerCase();
-
+if (isCssVarRef(src)) {
+  return `oklch(from ${color} l c h / ${formatAlpha(a)})`;
+}
   if (src.startsWith("rgb")) {
     const rgb = parse_rgba(color);
     return format_rgba({ ...rgb, a });

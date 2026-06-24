@@ -121,7 +121,7 @@ export type FixtureMap = Readonly<Record<string, FixtureAtom>>;
 export type FixtureBundle = Readonly<Record<string, FixtureMap>>;
 
 export type HsonTestApi = Readonly<{
-  _test_full_loop: (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
+  _circuit_test: (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 }>;
 
 

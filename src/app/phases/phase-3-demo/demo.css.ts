@@ -4,7 +4,7 @@ import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { _fontWeight, MENU_Var, SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr, GRAF_VAR, _fontSize } from "../../core/consts/ui-consts";
+import { _fontWeight,  SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr,  _fontSize } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 
 export const UI_ROOTcss: CssMap = {
@@ -38,7 +38,7 @@ export const MAIN_MENUcss: CssMap = {
   __before: {},
   _hover: {
     // fontWeight: øfontWeight.main,
-    background: MENU_Var,
+    background: _colors.txt.menu,
     color: _colors.backhi,
     __before: {
       content: ">>",
@@ -147,7 +147,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   transform: "translate(-50%, -50%)",
   whiteSpace: "pre",
   fontFamily: "monospace", // best density; do not change to system mono
-  color: GRAF_VAR,
+  color: _colors.graffiti,
   boxSizing: "border-box",
   // mixBlendMode: "multiply",
   fontSize: "min(16px, calc((100vw) / 84))",

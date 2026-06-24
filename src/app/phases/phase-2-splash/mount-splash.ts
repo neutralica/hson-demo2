@@ -25,7 +25,27 @@ import { _colors } from "../../core/consts/colors.consts";
  */
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
-    stage.empty();
+  stage.empty();
+
+  const splashCover = stage.create.div();
+  splashCover.css.setMany({
+    position: "fixed",
+    inset: "0",
+    zIndex: "9999",
+    pointerEvents: "none",
+    backgroundColor: _colors.backlo,
+    opacity: "1",
+    transition: "opacity 3000ms ease-in-out",
+  });
+
+  requestAnimationFrame(() => {
+    splashCover.css.set.opacity("0");
+  });
+
+  void wait.timer(3200).then(() => {
+    splashCover.removeSelf();
+  });
+
     const b = bud_node(stage)
     /* create structural layers */
     const sky = b.bud(SPLASH_BUDS.sky);
@@ -38,6 +58,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const flareBox = frame.bud(SPLASH_BUDS.flareBox);
     const flare = flareBox.bud(SPLASH_BUDS.flare);
     const gradient = frame.bud(SPLASH_BUDS.gradient);
+   
 
     /* create sun elements */
     const sunCarrier = wordMark.bud(SPLASH_BUDS.sunCarrier);
@@ -48,7 +69,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const starWrap = starCarrier.bud(SPLASH_BUDS.starWrap);
     const starHead = starWrap.bud(SPLASH_BUDS.starHead);
     const tailA = starWrap.bud(SPLASH_BUDS.starTailA);
-    const tailB = starWrap.bud(SPLASH_BUDS.starTailA);
+    const tailB = starWrap.bud(SPLASH_BUDS.starTailB);
     const tailC = starWrap.bud(SPLASH_BUDS.starTailC);
     
     /* create clouds */
@@ -105,7 +126,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     
     await wait.for(flareBox.tree).anim(FLAREanim).end();
     flareBox.tree.removeSelf();
-
+    
     await wait.for(sun.tree).anim(SUN_DISKanim).end()
     sunCarrier.tree.removeSelf();
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });

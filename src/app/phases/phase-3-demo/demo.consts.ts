@@ -51,7 +51,7 @@ export const shade_class = (l: string) => {
       return "pink-shade";
   }
   console.warn("shadeClass function failed");
-  return "shadeClass function failed"
+  return "shadeclass-fail";
 };
 
 export const HSON_LIVE_GRAFFITIstr = `

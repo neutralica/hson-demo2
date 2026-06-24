@@ -37,7 +37,7 @@ export function make_transform_test_suite(
 
       if (captureMap) {
         captureMap.set(k, async () => {
-          return hson._test_full_loop(atom, {
+          return hson._circuit_test(atom, {
             entry,
             dual: true,
             times: 3,
@@ -74,7 +74,7 @@ export function make_transform_test_suite(
             stopOnFirstFail: false,
           } as const;
 
-          const report = hson._test_full_loop(atom, {
+          const report = hson._circuit_test(atom, {
             ...base,
             verbose: true,
             capture: true,
@@ -130,11 +130,24 @@ export function make_ad_hoc_transform_suite(
   );
 }
 
+/* [{
+	"resource": "/Users/philliphanson/Documents/Design/web/hson/hson-demo2/src/app/demos/test/tp-factory.ts",
+	"owner": "typescript",
+	"code": "2353",
+	"severity": 8,
+	"message": "Object literal may only specify known properties, and '_circuit_test' does not exist in type 'Readonly<{ _test_full_loop: (atom: FixtureAtom, opts?: Partial<LoopOpts> | undefined) => LoopReport; }>'.",
+	"source": "ts",
+	"startLineNumber": 297,
+	"startColumn": 55,
+	"endLineNumber": 297,
+	"endColumn": 68,
+	"origin": "extHost1"
+}] */
 const GENERATED_JSON_SEED = random_seed();
 
 export function build_suites_for_mode(
   mode: TestRunMode,
-  h: Readonly<{ _test_full_loop: FullLoopFn }>,
+  h: Readonly<{ _circuit_test: FullLoopFn }>,
   map?: Map<CaseKey, () => Promise<LoopReport>>,
 ): readonly TestSuite[] {
 

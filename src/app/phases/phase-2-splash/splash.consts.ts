@@ -65,7 +65,7 @@ export const KISS_COLat: PropertyRegistration = {
   name: "--kissCol",
   syn: "<color>",
   inh: false,
-  init: _colors.backlo, // ok if this is a valid CSS color string
+  init: "rgba(12, 19, 26, 1)"
 };
 
 export const AT_LAYER_MAX: PropertyRegistration = {

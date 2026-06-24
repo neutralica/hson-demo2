@@ -153,11 +153,11 @@ function highlightedConnectorBackground(position: ConnectorPositionValue): strin
 }
 
 function connectorBackground(position: ConnectorPosition): string {
-    const verticalFull = `linear-gradient(to bottom, ${_colors.fade}, ${_colors.fade}) 0.38rem 0 / 1px 100% no-repeat`;
-    const verticalDown = `linear-gradient(to bottom, ${_colors.fade}, ${_colors.fade}) 0.38rem 0.72em / 1px calc(100% - 0.72em) no-repeat`;
-    const verticalUp = `linear-gradient(to bottom, ${_colors.fade}, ${_colors.fade}) 0.38rem 0 / 1px 0.72em no-repeat`;
-    const horizontal = `linear-gradient(to right, ${_colors.fade}, ${_colors.fade}) 0.38rem 0.72em / 0.62rem 1px no-repeat`;
-    const horizontalFull = `linear-gradient(to right, ${_colors.fade}, ${_colors.fade}) 0 0.72em / 0.9rem 1px no-repeat`;
+    const verticalFull = `linear-gradient(to bottom, ${_colors.chrome}, ${_colors.chrome}) 0.38rem 0 / 1px 100% no-repeat`;
+    const verticalDown = `linear-gradient(to bottom, ${_colors.chrome}, ${_colors.chrome}) 0.38rem 0.72em / 1px calc(100% - 0.72em) no-repeat`;
+    const verticalUp = `linear-gradient(to bottom, ${_colors.chrome}, ${_colors.chrome}) 0.38rem 0 / 1px 0.72em no-repeat`;
+    const horizontal = `linear-gradient(to right, ${_colors.chrome}, ${_colors.chrome}) 0.38rem 0.72em / 0.62rem 1px no-repeat`;
+    const horizontalFull = `linear-gradient(to right, ${_colors.chrome}, ${_colors.chrome}) 0 0.72em / 0.9rem 1px no-repeat`;
 
     if (position === "single") return horizontal;
     if (position === "first") return `${verticalDown}, ${horizontalFull}`;

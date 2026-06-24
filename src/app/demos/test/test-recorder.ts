@@ -1,6 +1,5 @@
 import { hson } from "hson-live";
 import type { TestAssertRow, TestEvent, TestFailure, TestSummary } from "./tests.types";
-import { _test_full_loop } from "hson-live/diagnostics";
 
 
 export class TestRecorder {

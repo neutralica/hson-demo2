@@ -1,5 +1,5 @@
 import { LiveTree, hson } from "hson-live";
-import { type LoopReport, _test_full_loop } from "hson-live/diagnostics";
+import { type LoopReport, _circuit_test} from "hson-live/diagnostics";
 import { type Outcome, relay, relay_data } from "intrastructure";
 import type { SourceFormat } from "../../../../../hson-live/dist/types/diagnostics.types";
 import  { flush_dom } from "../../../tests/inspector/inspector.helpers";
@@ -294,7 +294,7 @@ export function tp_factory(): Outcome<TestPanel> {
         appendLogLine(`running parse-panel transform: ${fmt} (${text.length} bytes)`);
         await flush_dom();
 
-        const suites = [make_ad_hoc_transform_suite({ _test_full_loop }, fmt, text, captureMap)] as const;
+        const suites = [make_ad_hoc_transform_suite({ _circuit_test }, fmt, text, captureMap)] as const;
         const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
         chips.render(res.summary);
         inspector.show();
@@ -357,7 +357,7 @@ export function tp_factory(): Outcome<TestPanel> {
             appendLogLine("running loop test…");
             await flush_dom();
 
-            const suites = build_suites_for_mode(mode, { _test_full_loop }, captureMap);
+            const suites = build_suites_for_mode(mode, { _circuit_test }, captureMap);
             const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
             chips.render(res.summary);
             inspector.show();

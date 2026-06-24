@@ -1,8 +1,8 @@
 import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
-import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
+
 import { set_alpha } from "../../core/helpers/color-helpers";
-import type { MotesOpts } from "./make-mote";
+
 
 
 export const MOTES_LAYERcss: CssMap = {
@@ -13,7 +13,7 @@ export const MOTES_LAYERcss: CssMap = {
   width: "100%",
   pointerEvents: "none",
   zIndex: "100",
-  background: `linear-gradient(transparent 50%, ${set_alpha(OKLCH_VIBRANT.orangeEmber, 0.1)})`,
+  background: `linear-gradient(transparent 50%, ${set_alpha(_colors.gradient, 0.05  )})`,
 } as const;
 
 export const MOTEcss: CssMap = {

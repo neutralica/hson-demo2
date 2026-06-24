@@ -6,7 +6,7 @@ import { relay_data, relay_void, type OutcomeAsync, relay } from "intrastructure
 import { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { $PANEL_HIDDEN, $MENU_SHADOW, MENU_Var } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, $MENU_SHADOW } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import type { Fmt } from "../../core/types/core.types";
 import { ABOUT_DOCS } from "../../demos/about/about.consts";
@@ -77,8 +77,6 @@ type ParseCandidate = {
   fmt: Fmt;
   text: string;
 };
-
-export const gcss = CssManager.api();
 
 const _hide = (lt: LiveTree): void => { lt.classlist.add($PANEL_HIDDEN); };
 const _unhide = (lt: LiveTree): void => { lt.classlist.remove($PANEL_HIDDEN); };
@@ -172,12 +170,9 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
         ...HSON_WORDcss,
         textShadow: $MENU_SHADOW + set_alpha(_colors.hson[k], 0.1)
           + ", 0 0 18px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
-      });
-  });
-
-  LETTER_LOWS.forEach(l => {
-    gcss.rule(`demo-${l}-shade`, `.${shade_class(l)}`).setMany({
-      color: _colors.hson[l],
+      })
+      .css.selector(`.${shade_class(k)}`).setMany({
+      color: _colors.hson[k],
     });
   });
 
@@ -194,7 +189,7 @@ function create_demo_menu(menuBox: LiveTree): MenuButtons {
       .classlist.set(isWidget ? "widget-button" : "view-button")
       .css.setMany({
         ...MAIN_MENUcss,
-        color: isWidget ? _colors.txt.widget : MENU_Var
+        color: isWidget ? _colors.txt.widget : _colors.txt.menu
       });
   });
 
@@ -432,3 +427,4 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   return relay.ok();
 }
+

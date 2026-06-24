@@ -2,8 +2,7 @@
 import { OKLCH_FLEURS } from "../../demos/fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "./oklch.consts";
-import { deepBack, bckColor } from "./old-rgb.consts";
-import { GRAF_COLname, MAIN_COLname, MENU_COLname, MOTE_COLname } from "./ui-consts";
+// import { GRAF_COLname, MAIN_COLname, MENU_COLname, MOTE_COLname } from "./ui-consts";
 
 export type ColorVarSource = Readonly<{
   path: string;
@@ -23,19 +22,19 @@ type ColorVarRefs<T> = T extends string
   ? { readonly [K in keyof T]: ColorVarRefs<T[K]> }
   : never;
 
-const COLOR_VAR_NAME_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
-  "txt.main": MAIN_COLname,
-  "txt.menu": MENU_COLname,
-  graffiti: GRAF_COLname,
-  motes: MOTE_COLname,
-});
+// const COLOR_VAR_NAME_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
+//   "txt.main": MAIN_COLname,
+//   "txt.menu": MENU_COLname,
+//   graffiti: GRAF_COLname,
+//   motes: MOTE_COLname,
+// });
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function color_var_name_for_path(path: string): string {
-  return COLOR_VAR_NAME_OVERRIDES[path] ?? `--hson-color-${path.replace(/[^a-zA-Z0-9]+/g, "-")}`;
+  return `--hson-color-${path.replace(/[^a-zA-Z0-9]+/g, "-")}`;
 }
 function css_var_ref_name(varName: string): string {
   return varName.startsWith("--") ? varName : `--${varName}`;
@@ -74,6 +73,20 @@ function collect_color_var_sources(value: unknown, prefix = ""): ColorVarSource[
 
   return sources;
 }
+// oklch(0.1831 0.018 248.84)
+const backgroundL = .183;
+const backgroundC = 0.018;
+const backgroundH = 249;
+export const bcklight = `oklch(0.2238 0.0256 249.03)`;
+export const bckColor = bcklight;
+export const deepBack = "oklch(0.1303 0.0073 285.34)";
+
+export const backgroundLCH = {
+  l: backgroundL,
+  c: backgroundC,
+  h: backgroundH,
+};
+export const CLOUDcol = `oklch( ${backgroundLCH.l}${backgroundLCH.c}${backgroundLCH.h} / 1)`;
 
 const _HSON_COL = {
   // h: OKLCH_VIBRANT.blueElecky,
@@ -111,20 +124,19 @@ const LISTcol = _HSON_COL.h;
 const URLcol = OKLCH_VIBRANT.blueYves;
 const COLONcol = OKLCH_VIBRANT.yellowBrass;
 const GRADIENTcol = OKLCH_VIBRANT.redBrick;
-const GRAFFITIcol = "oklch(0.3 0.4 300 / 0.19)";
+const GRAFFITIcol = OKLCH_VIBRANT.royalBlueGraffiti;
 const REDcol = OKLCH_VIBRANT.redSignal;
 const FADE_1col = OKLCH_NEUTRALS.silver;
 
-const MOTEScol = set_alpha(OKLCH_VIBRANT.orangeEmber, 0.6);
+const MOTEScol = set_alpha(OKLCH_VIBRANT.orangeEmber, 1);
 
 export const _colorVals = {
   backlo: deepBack,
   backhi: bckColor,
   graffiti: GRAFFITIcol,
-  motes: MOTEScol,
-  red: REDcol,
-  fade: FADE_1col,
   gradient: GRADIENTcol,
+  motes: MOTEScol,
+  chrome: FADE_1col,
   hson: {
     h: _HSON_COL.h,
     s: _HSON_COL.s,
@@ -136,6 +148,7 @@ export const _colorVals = {
   yellowlike: _HSON_COL.s,
   pinklike: _HSON_COL.o,
   greenlike: _HSON_COL.n,
+  red: REDcol,
 
   txt: {
     main: TXTcol_MAIN,
@@ -173,4 +186,7 @@ export const COLOR_VAR_SOURCES: readonly ColorVarSource[] = Object.freeze(
   collect_color_var_sources(_colorVals),
 );
 
-export const _colors = make_color_var_refs(_colorVals);
+export const _colors = make_color_var_refs(_colorVals); 
+
+
+

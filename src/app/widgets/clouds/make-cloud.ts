@@ -1,10 +1,9 @@
-import { CssManager, hson, type LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";
 import { CLOUD_LAYER_BASE_CSS } from "../../phases/phase-2-splash/splash.css";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/phase-2-splash/splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { make_rng } from "../../utils/rng";
-import { bckRGB } from "../../core/consts/old-rgb.consts";
 import { _colors } from "../../core/consts/colors.consts";
 
 
@@ -13,8 +12,8 @@ const FADE_MID_PCT = 10;      // start thinning here
 const fade = `linear-gradient(to top,
   rgba(255,255,255,1) 0%,
   rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  ${_colors.backlo} ${FADE_MID_PCT}%,
-  ${_colors.backlo} 100%
+  oklch(0.1303 0.0073 285.34) ${FADE_MID_PCT}%,
+  oklch(0.1303 0.0073 285.34) 100%
 )`;
 export type CloudSvgOpts = {
   seed: number;
@@ -29,6 +28,23 @@ export type CloudSvgOpts = {
   blur?: number;
   fillBelowPct?: number;
 };
+
+function svgAttr(value: string | number): string {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function svgDataUri(svgMarkup: string): string {
+  const encoded = encodeURIComponent(svgMarkup)
+    .replace(/'/g, "%27")
+    .replace(/"/g, "%22");
+
+  return `url("data:image/svg+xml,${encoded}")`;
+}
+
 export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   const rnd = make_rng(o.seed);
 
@@ -41,49 +57,16 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   const yMid = (o.yBandPct / 100) * h;
   const ySpan = (o.ySpreadPct / 100) * h;
   const blur = o.blur ?? 0;
+  const circles: string[] = [];
 
-  // CHANGED: build detached SVG via LiveTree
-  const svg = hson.liveTree.create.svg().attr.setMany({
-    xmlns: "http://www.w3.org/2000/svg",
-    width: String(wBleed),
-    height: String(h),
-    viewBox: `${xMin} 0 ${wBleed} ${h}`,
-    preserveAspectRatio: "none",
-  });
-
-  // CHANGED: filter block as string fallback.
-  // If you already have filter/feGaussianBlur/feColorMatrix/feComposite in SVG_TAGS,
-  // this can be rewritten natively too.
-  svg.create.defs(`
-      <defs>
-        <filter id="cloud" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="${blur.toFixed(2)}" result="b"/>
-          <feColorMatrix in="b" type="matrix"
-            values="
-              1 0 0 0 0
-              0 1 0 0 0
-              0 0 1 0 0
-              0 0 0 35 -12
-            " result="t"/>
-          <feComposite in="t" in2="t" operator="over"/>
-        </filter>
-      </defs>
-    `.trim());
-
-  const cloudGroup = svg.create.g().attr.set("filter", "url(#cloud)");
-
-  // CHANGED: circles created natively
   for (let i = 0; i < o.circles; i += 1) {
     const r = o.rMin + rnd() * (o.rMax - o.rMin);
     const x = xMin + rnd() * (wBleed + r * 2) - r;
     const y = yMid + (rnd() - 0.5) * ySpan;
 
-    cloudGroup.create.circle().attr.setMany({
-      cx: x.toFixed(2),
-      cy: y.toFixed(2),
-      r: r.toFixed(2),
-      fill: "white",
-    });
+    circles.push(
+      `<circle cx="${svgAttr(x.toFixed(2))}" cy="${svgAttr(y.toFixed(2))}" r="${svgAttr(r.toFixed(2))}" fill="white"/>`,
+    );
   }
 
   const bulkRadius = o.rMin + 0.55 * (o.rMax - o.rMin);
@@ -95,27 +78,23 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
     ),
   );
 
-  // CHANGED: slab created natively
-  cloudGroup.create.rect().attr.setMany({
-    x: xMin.toFixed(2),
-    y: fillStartY.toFixed(2),
-    width: String(wBleed),
-    height: (h - fillStartY).toFixed(2),
-    fill: "white",
-  });
+  const slab = `<rect x="${svgAttr(xMin.toFixed(2))}" y="${svgAttr(fillStartY.toFixed(2))}" width="${svgAttr(wBleed)}" height="${svgAttr((h - fillStartY).toFixed(2))}" fill="white"/>`;
 
-  //  serialize from node instead of hand-building the whole SVG string.
-  // Adjust the final render method name here if your render terminal differs.
-  const svgMarkup = hson
-    .fromNode(svg.node)
-    .toHtml()
-    .serialize();
+  const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgAttr(wBleed)}" height="${svgAttr(h)}" viewBox="${svgAttr(`${xMin} 0 ${wBleed} ${h}`)}" preserveAspectRatio="none">
+<defs>
+  <filter id="cloud" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="${svgAttr(blur.toFixed(2))}" result="b"/>
+    <feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 35 -12" result="t"/>
+    <feComposite in="t" in2="t" operator="over"/>
+  </filter>
+</defs>
+<g filter="url(#cloud)">
+${circles.join("\n")}
+${slab}
+</g>
+</svg>`;
 
-  const encoded = encodeURIComponent(svgMarkup)
-    .replace(/'/g, "%27")
-    .replace(/"/g, "%22");
-
-  return `url("data:image/svg+xml,${encoded}")`;
+  return svgDataUri(svgMarkup);
 }
 
 type CloudTune = {
@@ -208,23 +187,25 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // Child does the mask scud and holds the “ink” color
     const paintIxClass = `cloud-paint-${i}`;
-    const paint = mk_div_cls(layer, paintIxClass)
+    const paint = mk_div_cls(layer, paintIxClass);
+    const kissSkipMs = Math.min(900, Math.round(CLOUD_DURnum * 0.08));
+
     paint.css.setMany({
+      "--kiss": "0",
       position: "absolute",
       inset: "0",
       height: `${100 + cloudDropPct}%`,
       transform: `translateY(${cloudDropPct}%)`,
       backgroundImage: [
-        `linear-gradient(rgba(12, 19, 26, var(--kiss)), rgba(215, 215, 215,var(--kiss)))`,
+        `linear-gradient(to top, rgba(12, 19, 26, var(--kiss, 0)), rgba(215, 215, 215, var(--kiss, 0)))`,
         `linear-gradient(to bottom,
-     rgba(${bckRGB.r}, ${bckRGB.g}, ${bckRGB.b}, 1) 0%,
-     rgba(${bckRGB.r}, ${bckRGB.g}, ${bckRGB.b}, 1) 55%,
-     rgba(${bckRGB.r}, ${bckRGB.g}, ${bckRGB.b}, 1) 100%)`,
+      rgba(18, 36, 72, 0.72) 0%,
+      rgba(12, 19, 26, 0.94) 52%,
+      rgba(3, 6, 12, 1) 100%)`,
       ].join(", "),
       mixBlendMode: "normal",
       filter: "none",
       willChange: "mask-position, -webkit-mask-position, opacity, bottom",
-      
     });
 
     // Work around WebKit-prefixed mask properties being canonicalized incorrectly
@@ -246,7 +227,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
         maskComposite: "intersect",
         WebkitMaskComposite: "source-in",
 
-    
+
       });
 
     const far = 1 - u;
@@ -258,11 +239,13 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
         animationTimingFunction: "linear, linear",
         animationIterationCount: "infinite, 1",
         animationFillMode: "both, both",
-        animationDelay: "0s, 0s",
+        animationDelay: `0s, -${kissSkipMs}ms`,
       });
     paint.css.setMany({ backgroundColor: `rgba(255,0,255,var(--kiss))` });
     // OPTIONAL: if you want easy access later
     paint.data?.set?.("is-cloud-paint", "1"); // only if you have data on all nodes
+
+
   }
 
   return wrapper;

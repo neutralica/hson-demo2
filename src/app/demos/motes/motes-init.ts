@@ -1,6 +1,7 @@
 
 
-import { MOTE_VAR } from "../../core/consts/ui-consts";
+
+import { _colors, _colorVals } from "../../core/consts/colors.consts";
 import type { MotesRig } from "./make-mote";
 import type { MotesOpts, MoteStyle } from "./make-mote";
 import { make_mote } from "./make-mote";
@@ -21,7 +22,7 @@ export function config_mote(
         xPx,
         // yPx,
         swayAmpPx: pickRange(opts.swayAmpPx),
-        color: MOTE_VAR,
+        color: _colors.motes,
         // correct key is sizePx (not fontSizePx)
         sizePx: pickRange(opts.sizePx),
 

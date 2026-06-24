@@ -30,7 +30,7 @@ const BRAND_CSS: CssMap = {
   placeItems: "center",
   zIndex: 50,
   width: "15ch",
-  color: _colors.fade,
+  color: _colors.chrome,
   overflowX: "hidden",
   filter: `drop-shadow(0 1px 0 rgba(0,0,0,.7))
           drop-shadow(0 0 6px rgba(0,0,0,.35))`

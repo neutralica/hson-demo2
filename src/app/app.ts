@@ -12,7 +12,6 @@ import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "int
 import { PHASE_LINGER } from "./core/consts/config.consts";
 import { _colors } from "./core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
-import { _test_full_loop } from "hson-live/diagnostics";
 import { smoke_state } from "./state/smoke-tests/smoke-test-1";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";

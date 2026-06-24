@@ -5,7 +5,7 @@ import { _fontSize } from "../../core/consts/ui-consts";
 
 // CHANGED: centralize render-demo colors so the visual system can be tuned
 // from one place without hunting through each CSS object.
-const renderColorBaseText = _colors.fade;
+const renderColorBaseText = _colors.chrome;
 const renderColorJsonText = _colors.fmt.json;
 const renderColorPrimitiveText = _colors.yellowlike;
 const renderColorActiveText = _colors.yellowlike;

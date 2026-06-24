@@ -105,7 +105,7 @@ export function slide_bodies(slide: DeckSlideConfig): readonly DeckSlideBody[] {
   return [slide.bodyA, slide.bodyB, slide.bodyC].filter((body): body is DeckSlideBody => body !== undefined);
 }
 export function body_grid_columns(count: number): string {
-  if (count <= 1) return "minmax(24rem, 48rem)";
+  if (count <= 1) return "1fr";
   if (count === 2) return "1fr 1fr";
   return "1fr 1fr 1fr";
 }
@@ -127,6 +127,7 @@ export function deck_markdown_heading_css(level: 1 | 2 | 3 | 4): CssMap {
     margin: "0 0 0.35rem 0",
     padding: "0.5rem",
     color: _colors.txt.menu,
+    maxWidth:"70ch"
   };
 }
 export function is_formatted_data_lang(lang: string | undefined): boolean {

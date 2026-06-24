@@ -45,13 +45,6 @@ const greyDimmer = "rgba(58, 58, 58, 1)"
 const greyDark = "rgba(40, 38, 38, 1)"
 const greyBlack = "rgba(26, 26, 26, 1)"
 
-export const deepBack = "oklch(0.1303 0.0073 285.34)"
-
-const bckColorR = 12;
-const bckColorG = 19;
-const bckColorB = 26;
-export const bcklight = `oklch(0.2238 0.0256 249.03)`;
-export const bckColor = bcklight;
 // export const bckColor = `oklch(0.1831 0.018 248.84 / 1)`;
 
 // export const back_w_alpha = (num: number) => `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${num})`;
@@ -66,12 +59,6 @@ export const bckColor = bcklight;
 // export const _setBckgdAlpha = (n: number) => {
 //   return `rgba(${bckColorR}, ${bckColorG}, ${bckColorB}, ${n <= 1 ? n : 1})`;
 // }
-
-export const bckRGB = {
-  r: bckColorR,
-  g: bckColorG,
-  b: bckColorB,
-}
 
 // export const LETTER_COLORstd = {
 //   h: blueStd,

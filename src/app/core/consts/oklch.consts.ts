@@ -60,6 +60,7 @@ export const OKLCH_VIBRANT = {
   violetIon: "oklch(0.72 0.155 285)", // energized violet
   plumBruised: "oklch(0.62 0.115 305)", // darker purple-plum
   orchidWire: "oklch(0.76 0.145 320)", // bright orchid-magenta
+  royalBlueGraffiti: "oklch(0.109 0.4 300 / 0.19)"
 };
 
 
