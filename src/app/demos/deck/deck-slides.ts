@@ -163,7 +163,8 @@ HSON derived from HTML uses a slash-close:
       kind: "text",
       text: `
   #__#
-HSON can express any valid JSON, usually in a smaller file size.
+  HSON can express any valid JSON, usually in a smaller file size.
+  #HR#
 JSON-derived HSON tags use an angle close:
 ### >
       `,
@@ -175,7 +176,7 @@ JSON-derived HSON tags use an angle close:
     bodyA: {
       kind: "code",
       lang: "html",
-      text: htmlStub,
+      text: htmlStub + "\n\n\n\n\n\n\n\n\n\n\n !!! notice the presence of structural clutter in the json ->",
     },
     bodyB: {
       kind: "code",
@@ -196,6 +197,7 @@ JSON-derived HSON tags use an angle close:
       text: `
       \`\`\`json
       ${jsonStub}
+      \n\n\n\n\n\n\n\n\n\n\n !!! notice the presence of structural clutter in the html ->
       \`\`\`
       `,
     },
@@ -297,22 +299,17 @@ tree.listen                                      // LiveTree offers listener and
     bodyB: {
       kind: "text",
       text: `
-### the first site made entirely with hson-live
-## www.terminalgothic.com
+### the first site made entirely with hson-live:
+### www.terminalgothic.com
 
-LiveDemo is a test and development environment for hson-live. LiveDemo is a demonstration of the claims made here; in addition to a growing menu of interactive demos, visitors may run the 1000+ system tests for themselves and verify the results.
-LiveDemo is intentionally minimalist.
+LiveDemo is a test and development environment for hson-live. LiveDemo is a proof-of-concept and demonstration of the claims made here; in addition to a growing menu of interactive demos, visitors may run the 1000+ system tests and verify the results for themselves.
+LiveDemo is intentionally minimalist in styling.
       `,
     },
     footer: "livedemo",
   },
   {
-    headerA: "ty",
-    headerB: "",
-    bodyA: {
-      kind: "text",
-      text: "",
-    },
+    headerA: "ty JSMN",
     bodyB: {
       kind: "text",
       text: "### Pip Hanson\nhansonpw@gmail.com\nwww.terminalgothic.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2\n",
