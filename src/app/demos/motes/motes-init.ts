@@ -26,7 +26,7 @@ export function config_mote(
         sizePx: pickRange(opts.sizePx),
 
         opacity: pickRange(opts.opacity),
-        // blurPx: pickRange(opts.blurPx),
+        blurPx: pickRange(opts.blurPx),
 
         riseMs: pickRangeInt(opts.riseDurMs),
         riseDelayMs: -pickRangeInt(opts.riseDurMs),

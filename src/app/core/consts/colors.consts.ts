@@ -1,5 +1,5 @@
 
-import  { OKLCH_FLEURS } from "../../demos/fleurs/fleurs.consts";
+import { OKLCH_FLEURS } from "../../demos/fleurs/fleurs.consts";
 import { set_alpha } from "../helpers/color-helpers";
 import { OKLCH_VIBRANT, OKLCH_NEUTRALS, ACID_WASH_OKLCH, OKLCH_ACID_WASHED } from "./oklch.consts";
 import { deepBack, bckColor } from "./old-rgb.consts";
@@ -75,7 +75,7 @@ function collect_color_var_sources(value: unknown, prefix = ""): ColorVarSource[
   return sources;
 }
 
- const _HSON_COL = {
+const _HSON_COL = {
   // h: OKLCH_VIBRANT.blueElecky,
   h: OKLCH_FLEURS.oxidizedSky,
   s: OKLCH_VIBRANT.yellowBrass,
@@ -110,12 +110,12 @@ const LISTcol = _HSON_COL.h;
 
 const URLcol = OKLCH_VIBRANT.blueYves;
 const COLONcol = OKLCH_VIBRANT.yellowBrass;
-
-const GRAFFITIcol = "oklch(0.3 0.5 300 / 0.19)";
+const GRADIENTcol = OKLCH_VIBRANT.redBrick;
+const GRAFFITIcol = "oklch(0.3 0.4 300 / 0.19)";
 const REDcol = OKLCH_VIBRANT.redSignal;
 const FADE_1col = OKLCH_NEUTRALS.silver;
 
-const MOTEScol = set_alpha(OKLCH_VIBRANT.yellowSodium, 0.4);
+const MOTEScol = set_alpha(OKLCH_VIBRANT.orangeEmber, 0.6);
 
 export const _colorVals = {
   backlo: deepBack,
@@ -124,6 +124,7 @@ export const _colorVals = {
   motes: MOTEScol,
   red: REDcol,
   fade: FADE_1col,
+  gradient: GRADIENTcol,
   hson: {
     h: _HSON_COL.h,
     s: _HSON_COL.s,

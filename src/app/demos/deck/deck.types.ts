@@ -27,6 +27,7 @@ export type DeckSlideSection = Readonly<{
 export type DeckSlideConfig = Readonly<{
   headerA?: string;
   headerB?: string;
+  headerC?: string;
   bodyA?: DeckSlideBody;
   bodyB?: DeckSlideBody;
   bodyC?: DeckSlideBody;

@@ -12,9 +12,8 @@ import {
   deckCodeContentCss,
   deckCodeCss,
   deckFooterCss,
-  deckHeaderBCss,
   deckHeaderBStackCss,
-  deckHeaderCss,
+  deckHeaderBCss,
   deckHeaderVisibleCss,
   deckRootCss,
   deckSectionCss,
@@ -24,6 +23,7 @@ import {
   deckSlideCss,
   deckStageCss,
   deckCoverCss,
+  DECK_ROW_TXTcss,
 } from "./deck.css";
 import { SLIDES } from "./deck-slides";
 import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, slide_bodies, write_in_text, write_in_rendered_text } from "./deck-helpers";
@@ -46,7 +46,7 @@ function deck_align_css(stackAlign: DeckSlideConfig["stackAlign"] | undefined): 
 
 function deck_header_css(): CssMap {
   return {
-    ...deckHeaderCss,
+    ...deckHeaderBCss,
     textAlign: "center",
     justifySelf: "center",
     width: "100%",
@@ -97,6 +97,7 @@ type DeckMarkdownBlock = Readonly<
   | { kind: "paragraph"; text: string }
   | { kind: "list"; lines: readonly string[] }
   | { kind: "hr" }
+  | { kind: "empty-hr" }
   | { kind: "code"; lang?: string; text: string }
 >;
 
@@ -141,6 +142,12 @@ function parse_deck_markdown(markdown: string): readonly DeckMarkdownBlock[] {
       flushPara();
       flushList();
       blocks.push({ kind: "hr" });
+      continue;
+    }
+    if (trimmed === "#__#") {
+      flushPara();
+      flushList();
+      blocks.push({ kind: "empty-hr" });
       continue;
     }
 
@@ -223,12 +230,7 @@ function mount_deck_paragraph_block(state: DeckState, host: LiveTree, text: stri
   });
 
   for (const line of text.split("\n")) {
-    const row = paragraph.create.div().css.setMany({
-      textIndent: "4ch",
-      lineHeight: "1.28",
-      minHeight: "1.28em",
-      textAlign: "left",
-    });
+    const row = paragraph.create.div().css.setMany(DECK_ROW_TXTcss);
     write_in_text(state, row, line);
   }
 }
@@ -266,6 +268,14 @@ function mount_deck_hr_block(host: LiveTree): void {
     margin: "2rem 0 1rem 0",
     borderTop: `1px solid ${set_alpha(_colors.fade, 0.25)}`,
     opacity: "0.75",
+  });
+}
+
+function mount_empty_hr_block(host: LiveTree): void {
+  host.create.div().css.setMany({
+    height: "1.15rem",
+    margin: "2rem 0 1rem 0",
+    opacity: "0",
   });
 }
 
@@ -318,6 +328,11 @@ function mount_deck_markdown(state: DeckState, host: LiveTree, markdown: string,
       continue;
     }
 
+    if (block.kind === "empty-hr") {
+      mount_empty_hr_block(host);
+      continue;
+    }
+
     if (block.kind === "paragraph") {
       mount_deck_paragraph_block(state, host, block.text);
       continue;
@@ -355,13 +370,13 @@ function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody, stack
   const onlyCodeBlock = parsedBlocks.length === 1 && parsedBlocks[0]?.kind === "code";
   const fillAsCodePanel = body.kind === "code" || onlyCodeBlock;
 
-  const bodyFrame = host.create.div().css.setMany({
+  const bodyFrame = mk_div_cls(host,"body frame").css.setMany({
     ...(body.kind === "code" ? deckCodeCss : deckBodyCss),
     // CHANGED: text bodies that contain only one fenced code block should use
     // the same constrained panel geometry as true code bodies.
-    height: fillAsCodePanel ? "100%" : "auto",
-    minHeight: "0",
-    overflow: fillAsCodePanel ? "hidden" : "visible",
+    height: /* fillAsCodePanel ? "100%" : */ "auto",
+    // minHeight: "4rem",
+    /* overflow: fillAsCodePanel ? "hidden" : "visible", */
     textAlign: "left",
   });
 
@@ -373,26 +388,36 @@ function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody, stack
     stackAlign,
   });
 }
-function mount_header_b_stack(state: DeckState, host: LiveTree, slide: DeckSlideConfig): void {
+function slide_has_stacked_headers(slide: DeckSlideConfig): boolean {
+  return slide.headerB !== undefined || slide.headerC !== undefined;
+}
+
+function mount_slide_header(state: DeckState, host: LiveTree, text: string): void {
+  const header = mk_div_cls_txt(host, "slide-header", text).css.setMany(deck_header_css());
+  window.setTimeout(() => header.css.setMany(deckHeaderVisibleCss), 30);
+}
+
+function mount_header_stack(state: DeckState, host: LiveTree, slide: DeckSlideConfig): void {
   const stack = host.create.div().css.setMany(deck_header_b_stack_css(slide));
 
-  if (slide.bodyA) {
-    const bodyAHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
-    mount_body(state, bodyAHost, slide.bodyA, slide.stackAlign);
-  }
+  const rows: readonly [string | undefined, DeckSlideBody | undefined][] = [
+    [slide.headerA, slide.bodyA],
+    [slide.headerB, slide.bodyB],
+    [slide.headerC, slide.bodyC],
+  ];
 
-  stack.create.div()
-    .text.set(slide.headerB ?? "")
-    .css.setMany(deck_header_b_css());
+  for (const [header, body] of rows) {
+    if (header) mount_slide_header(state, stack, header);
 
-  if (slide.bodyB) {
-    const bodyBHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
-    mount_body(state, bodyBHost, slide.bodyB, slide.stackAlign);
-  }
+    if (body) {
+      const bodyHost = stack.create.div().css.setMany({
+        minWidth: "0",
+        minHeight: "0",
+        overflow: "hidden",
+      });
 
-  if (slide.bodyC) {
-    const bodyCHost = stack.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
-    mount_body(state, bodyCHost, slide.bodyC, slide.stackAlign);
+      mount_body(state, bodyHost, body, slide.stackAlign);
+    }
   }
 }
 
@@ -417,33 +442,38 @@ function mount_sections(state: DeckState, host: LiveTree, sections: readonly Dec
 
 function mount_slide(state: DeckState, stage: LiveTree, slide: DeckSlideConfig): void {
   stage.empty();
+
   const slideTree = mk_div_cls(stage, "slide").css.setMany(deckSlideCss);
-  const header = mk_div_cls_txt(slideTree, "slide-header", slide.headerA ?? "").css.setMany(deck_header_css());
-
-
-  window.setTimeout(() => header.css.setMany(deckHeaderVisibleCss), 30);
-
   const bodies = slide_bodies(slide);
-  if (slide.headerB) {
-    mount_header_b_stack(state, slideTree, slide);
-  } else if (slide.sections && slide.sections.length > 0) {
-    mount_sections(state, slideTree, slide.sections, slide.stackAlign);
-  } else if (bodies.length > 0) {
-    const bodyGrid = mk_div_cls(slideTree, "body-grid").css.setMany({
-      ...deckBodyGridCss,
-      gridTemplateColumns: body_grid_columns(bodies.length),
-      // CHANGED: single-body slides sit nearer the visual center; split/triple
-      // slides still use the full available slide width.
-      justifyContent: bodies.length <= 1 ? "center" : "stretch",
-    });
 
-    bodies.forEach((body) => {
-      const bodyHost = bodyGrid.create.div().css.setMany({ minWidth: "0", minHeight: "0", overflow: "hidden" });
-      mount_body(state, bodyHost, body, slide.stackAlign);
-    });
+  if (slide_has_stacked_headers(slide)) {
+    mount_header_stack(state, slideTree, slide);
   } else {
-    // CHANGED: support title/heading-only slides without requiring dummy body text.
-    slideTree.create.div();
+    if (slide.headerA) {
+      mount_slide_header(state, slideTree, slide.headerA);
+    }
+
+    if (slide.sections && slide.sections.length > 0) {
+      mount_sections(state, slideTree, slide.sections, slide.stackAlign);
+    } else if (bodies.length > 0) {
+      const bodyGrid = mk_div_cls(slideTree, "body-grid").css.setMany({
+        ...deckBodyGridCss,
+        gridTemplateColumns: body_grid_columns(bodies.length),
+        // justifyContent: bodies.length <= 1 ? "center" : "stretch",
+      });
+
+      bodies.forEach((body) => {
+        const bodyHost = bodyGrid.create.div().css.setMany({
+          minWidth: "0",
+          minHeight: "0",
+          overflow: "hidden",
+        });
+
+        mount_body(state, bodyHost, body, slide.stackAlign);
+      });
+    } else {
+      slideTree.create.div();
+    }
   }
 
   slideTree.create.div()
@@ -460,17 +490,16 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
 
   const root = host.create.div().id.set("live-demo-deck").css.setMany(deckRootCss);
   const chrome = mk_div_id(root, "deck-chrome").css.setMany(deckChromeCss);
-  
+
   const stage = mk_div_id(root, "deck-stage").css.setMany(deckStageCss);
   const counter = mk_div_id_txt(chrome, "slide-counter", `1 / ${slides.length}`);
-  
+
   const prevButton = chrome.create.div().text.set("prev").css.setMany(deckButtonCss);
   const nextButton = chrome.create.div().text.set("next").css.setMany(deckButtonCss);
   const closeButton = chrome.create.div().text.set("close").css.setMany(deckButtonCss);
-  
+
   const deckCover = root.create.div()
     .css.setMany(deckCoverCss)
-    // .css.setMany(DEMO_SCREENcss);
   const graf = mk_div_cls(deckCover, "graffiti-layer")
     .text.set(HSON_LIVE_GRAFFITIstr)
     .css.setMany(HSON_GRAFFITIcss);

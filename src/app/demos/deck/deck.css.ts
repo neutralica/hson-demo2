@@ -5,29 +5,26 @@ import { _fontSize } from "../../core/consts/ui-consts";
 import { deckTransitionMs } from "./mount-deck";
 
 export const deckHeaderBCss: CssMap = {
-  color: _colors.yellowlike,
-  fontSize: _fontSize.title,
-  lineHeight: "1.02",
-  // CHANGED: a little internal breathing room without recreating large gaps.
-  paddingBottom: "0.5rem",
-  // letterSpacing: "-0.025em",
-  // CHANGED: align secondary deck headers with the main slide header/body rail.
+  color: _colors.gradient,
+  fontSize: "clamp(2.1rem, 5vw, 5rem)",
+  lineHeight: "0.95",
+  transform: "translateY(-0.22rem)",
+  transition: "opacity 220ms ease, transform 220ms ease, text-shadow 220ms ease",
   justifySelf: "center",
   textAlign: "center",
-  // CHANGED: separate headerB from the previous body while keeping its own
-  // following body close enough to read as a unit.
-  // marginTop: "0.15rem",
-  marginBottom: "0.25rem",
+  width: "100%",
+  marginBottom: "1.5rem",
 };
-export const deckHeaderBStackCss : CssMap= {
+
+export const deckHeaderBStackCss: CssMap = {
   display: "grid",
   gap: "0.55rem",
-  alignContent: "start",
-  justifyContent: "start",
-  gridTemplateColumns: "1fr",
+  alignContent: "center",
+  justifyContent: "center",
+  gridTemplateColumns: "minmax(24rem, 54rem)",
   minHeight: "0",
-  ...deckHeaderBCss,
 };
+
 
 export const deckCoverCss: CssMap = {
   position: "absolute",
@@ -80,13 +77,13 @@ export const deckSlideCss: CssMap = {
   maxHeight: "100%",
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr) auto",
-  alignContent: "stretch",
-  gap: "0.55rem",
+  // alignContent: "stretch",
+  gap: "0.45rem",
   boxSizing: "border-box",
   overflow: "hidden",
 };
 export const deckHeaderCss: CssMap = {
-  color: _colors.yellowlike,
+  color: _colors.gradient,
   fontSize: "clamp(2.1rem, 5vw, 5rem)",
   lineHeight: "0.95",
   // CHANGED: a little internal breathing room without changing the fixed rail.
@@ -94,7 +91,6 @@ export const deckHeaderCss: CssMap = {
   // letterSpacing: "-0.055em",
   // marginTop:"2rem",
   
-  opacity: "0",
   transform: "translateY(-0.22rem)",
   transition: "opacity 220ms ease, transform 220ms ease, text-shadow 220ms ease",
 };
@@ -104,7 +100,7 @@ export const deckHeaderVisibleCss: CssMap = {
 };
 export const deckBodyGridCss: CssMap = {
   display: "grid",
-  gap: "2rem",
+  gap: "1.5rem",
   alignContent: "start",
   minHeight: "0",
   // height: "100%",
@@ -140,7 +136,6 @@ export const deckSectionHeadingCss: CssMap = {
 export const deckSectionTextCss: CssMap = {
   ...deckBodyCss,
   fontSize: "clamp(0.95rem, 1.18vw, 1.18rem)",
-  lineHeight: "1.38",
 };
 export const deckCodeCss: CssMap = {
   ...deckBodyCss,
@@ -182,4 +177,11 @@ export const deckCodeContentCss: CssMap = {
   overflowWrap: "anywhere",
   wordBreak: "break-word",
   margin: "1.5em"
+};
+
+export const DECK_ROW_TXTcss = {
+  textIndent: "4ch",
+  lineHeight: "2",
+  minHeight: "1.28em",
+  textAlign: "left",
 };

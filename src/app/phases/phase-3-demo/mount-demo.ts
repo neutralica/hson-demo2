@@ -33,7 +33,7 @@ import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
 import { MENU_OPTIONS, WIDGET_MENU_KEYS, HSON_LIVE_GRAFFITIstr, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, $MONITOR, MIN_DESKTOP_WIDTH, $FLEURS, $RENDER } from "./demo.consts";
-import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
+import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss, MONITOR_HOSTcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 
 
@@ -212,27 +212,9 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const renderHost = mount_panel_simple(uiRoot, $RENDER);
   const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
     ...OKLCH_HOSTcss,
-    top: "calc(50% + 0.5rem)",
-    right: "1rem",
-    bottom: "1rem",
-    left: "auto",
-    width: "min(36rem, calc(100% - 2rem))",
-    maxHeight: "calc(50% - 1.5rem)",
-    boxSizing: "border-box",
-    overflow: "auto",
+    
   });
-  const monitorHost = mk_div_id_cls(uiRoot, "monitor", $PANEL_HIDDEN).css.setMany({
-    position: "absolute",
-    top: "1rem",
-    right: "1rem",
-    bottom: "calc(50% + 0.5rem)",
-    width: "min(36rem, calc(100% - 2rem))",
-    zIndex: "40",
-    overflow: "hidden",
-    border: "1px solid color-mix(in oklch, currentColor 18%, transparent)",
-    background: "color-mix(in oklch, black 72%, transparent)",
-    backdropFilter: "blur(10px)",
-  });
+  const monitorHost = mk_div_id_cls(uiRoot, "monitor", $PANEL_HIDDEN).css.setMany(MONITOR_HOSTcss);
 
   const viewHosts: ViewHosts = {
     [$PARSE]: parseHost,

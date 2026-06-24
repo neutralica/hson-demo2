@@ -4,6 +4,7 @@ import { motes_init } from "./motes-init";
 import type { MotesOpts, MotesRig } from "./make-mote";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
+import { MOTES_LAYeR_2css, MOTES_ROOTcss } from "./motes.css";
 
 
 export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
@@ -27,27 +28,12 @@ function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
   const root = host.create.div()
     .id.set("motes-root")
     .classlist.add("motes-root")
-    .css.setMany({
-      position: "fixed",
-      left: "0",
-      top: "0",
-      width: "100%",
-      height: "100%",
-      overflow: "hidden",
-      zIndex: "0", 
-      pointerEvents: opts.pointerEvents === "none" ? "none" : "auto",
-
-    });
+    .css.setMany(MOTES_ROOTcss);
 
   const layer = root.create.div()
-    .id.set("motes-layer")
-    .classlist.add("motes-layer")
-    .css.setMany({
-      position: "absolute",
-      inset: "0",
-      overflow: "hidden",
-      pointerEvents: "inherit",
-    });
+    .id.set("motes-host")
+    .classlist.add("motes")
+    .css.setMany(MOTES_LAYeR_2css);
 
   const dispose = (): void => void 0; // init patches this
 
@@ -61,12 +47,12 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
   return relay.data({
     char: inOpts.char ?? "*",
 
-    colors: inOpts.colors ?? [OKLCH_VIBRANT.yellowVolt],
-    sizePx: inOpts.sizePx ?? [10, 18],
-    opacity: inOpts.opacity ?? [0.6, 0.9],
-    // blurPx: inOpts.blurPx ?? [0.3, 1.6],
+    colors: inOpts.colors ?? [OKLCH_VIBRANT.orangeTangerine],
+    sizePx: inOpts.sizePx ?? [10, 38],
+    opacity: inOpts.opacity ?? [0.2, 0.3],
+    blurPx: [1.3, 2.6],
 
-    densityPerKpx2: inOpts.densityPerKpx2 ?? 24,
+    densityPerKpx2: inOpts.densityPerKpx2 ?? 74,
     maxMotes: inOpts.maxMotes ?? 420,
     spawnBatch: inOpts.spawnBatch ?? 12,
 

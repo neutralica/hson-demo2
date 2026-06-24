@@ -33,101 +33,116 @@ export const jsonHtml = hson.fromJson(jsonStub).toHtml().serialize();
 export const SLIDES: readonly DeckSlideConfig[] = [
   {
     headerA: "HSON",
-    stackAlign: "center",
-    bodyA: {
-      kind: "text",
-      text: "### Hypertext Structured Object Notation\na 'glue format' that can fully express any valid JSON and (almost any) valid HTML\n#HR#",
-    },
     headerB: "hson-live",
-    bodyB: {
-      kind: "text",
-      text: "a typescript library containing:\n• hson.transform: a transformer set for converting data to and from JSON, HTML, and HSON\n• hson.liveTree: a responsive web authoring surface built on top of a HsonNode graph\n#HR#",
-    },
-    footer: "HSON / hson-live",
-  },
-  {
-    headerA: "why?",
+    headerC: "LiveTree",
     stackAlign: "center",
-    bodyB: {
-      kind: "text",
-      text: "### why\n why.",
-    },
-    bodyA: {
-      kind: "image",
-      src: "/whah.jpg",
-      alt: "whah?",
-    },
-    footer: "whah",
+  
+    footer: "terminology",
   },
   {
-    headerA: "v1 — hson.transform",
+    headerA: "HSON",
+    stackAlign: "center",
     bodyA: {
       kind: "text",
       text: `
-parsers and serializers: accept and output JSON, HTML*, XML, SVG, HSON, and HsonNodes 
-      - tokenize_hson (HSON -> tokens)
-      - parse_tokens (tokens -> HsonNode)
-      - serialize_hson (HsonNode -> HSON)
-      - parse_json (JSON -> HsonNode)
-      - serialize_json (HsonNode -> JSON)
-      - parse_html/parse_xml (HTML -> HsonNode)*
-      - serialize_html (HsonNode -> HTML)
-transformations are tested stable and lossless across repeated loops
+### Hypertext Structured Object Notation
+HSON is a 'glue format' that can fully express both JSON and HTML in the same syntax. By parsing to HSON as intermediary step, HTML can be converted to JSON and vice versa.
 
+#__#
+Uniting the two non-interchangeable languages of the web suggests interesting new ways of creating interactive web content. hson-live is a Typescript library that explores these possibilities.
+    `,
+    },
+    footer: "HSON",
+  },
+
+  /* hson-live */
+  {
+    headerA: "hson-live",
+    bodyA: {
+      kind: "text",
+      text: `
+hson-live is a Typescript library with two core components.
+#__#
+### hson.transform
+a transformer set for converting data to and from HSON
+#__#
+### hson.liveTree
+a web authoring surface built on top of the HsonNode graph`,
+    },
+    footer: "hson-live",
+  },
+  {
+    headerA: "hson.transform",
+    bodyA: {
+      kind: "text",
+      text: `
+hson-live's core is a 7-part circuit of tokenizers, parsers, and serializers for converting data to and from HSON. Transformation integrity is verifiable with hson-live's diagnostic suite, which loops sample data repeatedly and diffs to catch drift.
+hson-live supports these formats:
+- JSON
+- HTML *
+- XML
+- SVG
+- HSON
+- HsonNode
 #### (* hson-live requires xml-compatible html)
 `
     },
-    footer: "v1 / transform",
+    footer: "hson.transform",
   },
   {
     headerA: "HTML <=> HSON",
+    stackAlign: "center",
     // stackAlign: "center",
     bodyA: {
       kind: "text",
       text: `
-html: 
+### html: 
 \`\`\`html
-${htmlStub}
+<div>hello world</div>
 \`\`\`
 
-hson:
+#__#
+### hson:
 \`\`\`hson
-${htmlHson}
+<div "hello world"/>
 \`\`\`
 `,
     },
     bodyB: {
       kind: "text",
       text: `
-#HR#
-HSON resembes a pared-down syntax of HTML.
-Instead of separate tags to open and close, HSON contains all node data within a single tag.
-HSON tags derived from HTML are closed with a slash-angle: "/>"
-### HTML:  
-<tag>content</tag>
-### HSON:
-<tag "content"/>
-#HR#
+#__#
+HSON resembes a pared-down syntax of HTML. Instead of separate tags to open and close, HSON contains all node data within a single tag.
+#__#
+HSON tags derived from HTML are closed with a slash-angle:
+### />
       `,
     },
     footer: "transform pair / html + hson",
   },
+  
+  /* json - hson */
   {
     headerA: "JSON <=> HSON",
+    stackAlign: "center",
     bodyA: {
-      kind: "code",
-      lang: "json",
-      text: jsonStub,
-
+      kind: "text",
+      text:`
+### json:
+\`\`\`json
+{"name": "Hieronymous"}
+\`\`\`
+### hson:
+\`\`\`hson
+<name "Hieronymous">
+\`\`\`
+`
     },
     bodyB: {
-      kind: "code",
-      lang: "hson",
-      text: `${jsonHson}
-HSON data sourced from JSON is structured identically to HTML-derived data, but is closed with a slash-angle:
-\`\`\`
+      kind: "text",
+      text: `
+HSON derived from JSON is closed with an angle bracket:
 >
-\`\`\`
       `,
     },
     footer: "transform / json + hson",
@@ -135,9 +150,12 @@ HSON data sourced from JSON is structured identically to HTML-derived data, but 
   {
     headerA: "JSON => HSON => HTML",
     bodyA: {
-      kind: "code",
-      lang: "json",
-      text: jsonStub,
+      kind: "text",
+      text: `
+      \`\`\`json
+      ${jsonStub}
+      \`\`\`
+      `,
     },
     bodyB: {
       kind: "code",
@@ -171,7 +189,7 @@ HSON data sourced from JSON is structured identically to HTML-derived data, but 
     footer: "derived projection / html",
   },
   {
-    headerA: "v2 — hson.liveTree",
+    headerA: "hson.liveTree",
     bodyA: {
       kind: "text",
       text: "a web authoring platform built on the HsonNode graph.\n state and view data are united in a single source-of-truth",
@@ -179,7 +197,7 @@ HSON data sourced from JSON is structured identically to HTML-derived data, but 
     footer: "hson.livetree",
   },
   {
-    headerA: "LiveTree creation",
+    headerA: "LiveTree",
     bodyA: {
       kind: "code",
       lang: "ts",
@@ -206,13 +224,12 @@ branchDiv.setText("goodbye world")
     bodyB: {
       kind: "text",
       text: `
-#HR#
+steps:
 1- query document.body and deep-parse it into HSON
 2- re-render the HsonNode graph as identical html and project to the DOM via graft()
 3- the LiveTree API enables rich DOM manipulation in a frictionless typed ecosystem
 4- LiveTree methods act on the underlying node graph, which updates the DOM projection synchronously on mutation
 5- event listeners and css animations allow for interactions to be scheduled without relying on stringly typing
-#HR#
 `,
     },
     footer: "livetree graft",
@@ -239,7 +256,7 @@ branchDiv.setText("goodbye world")
     headerA: "LiveDemo",
     bodyA: {
       kind: "text",
-      text: "### explore working demos in the first site ever made entirely with hson-live\n- full hson-live docs & readme\n- over 1000 transformer, livetree, and unit tests\n- proof of concept for LiveTree as an authoring surface for complex interactive web content",
+      text: "### the first site ever made entirely with hson-live, LiveDemo showcasing the various ",
     },
     footer: "about livedemo",
   },

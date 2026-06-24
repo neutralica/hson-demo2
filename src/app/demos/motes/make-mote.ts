@@ -8,7 +8,7 @@ export type MotesOpts = Readonly<{
   colors: readonly string[];
   sizePx: readonly [number, number];
   opacity: readonly [number, number];
-  // blurPx: readonly [number, number];
+  blurPx: readonly [number, number];
 
   densityPerKpx2: number;
   maxMotes: number;
@@ -40,7 +40,7 @@ export type MoteStyle = Readonly<{
   sizePx: number;
   opacity: number;
   color: string;
-  // blurPx: number;
+  blurPx: number;
 
   riseMs: number;
   riseDelayMs: number; // negative allowed (prefill)
@@ -57,7 +57,7 @@ export type MotesRig = Readonly<{
 
 export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {
   const wrap = mk_div_cls(host, "mote-wrap");
-  wrap.style.setMany({
+  wrap.css.setMany({
     // CHANGED: wrap owns fixed placement only. Continuous motion is CSS-driven
     // by nested transform animations; JS does not rewrite x/y at runtime.
     position: "absolute",
@@ -73,25 +73,25 @@ export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {
   });
 
   const sway = mk_div_cls(rise, "mote-sway");
-  sway.style.setMany({
+  sway.css.setMany({
     // willChange: "transform",
   });
-  sway.style.var.set("mote-sway-amp", `${s.swayAmpPx}px`);
+  sway.css.var.set("mote-sway-amp", `${s.swayAmpPx}px`);
 
   const ink = sway.create.span().classlist.add("mote-ink");
   ink.text.set(ch);
-  ink.style.setMany({
+  ink.css.setMany({
     display: "inline-block",
     fontSize: `${s.sizePx}px`,
     opacity: String(s.opacity),
     color: s.color,
-    // filter: s.blurPx > 0 ? `blur(${s.blurPx}px)` : "none",
+    filter: s.blurPx > 0 ? `blur(${s.blurPx}px)` : "none",
     userSelect: "none",
     pointerEvents: "none",
   });
 
   // rise on rise
-  rise.style.setMany({
+  rise.css.setMany({
     animationName: "mote-rise",
     animationDuration: `${s.riseMs}ms`,
     animationTimingFunction: "linear",
@@ -100,7 +100,7 @@ export function make_mote(host: LiveTree, ch: string, s: MoteStyle): Mote {
   });
 
   // sway on sway
-  sway.style.setMany({
+  sway.css.setMany({
     animationName: "mote-sway",
     animationDuration: `${s.swayMs}ms`,
     animationTimingFunction: "ease-in-out",
