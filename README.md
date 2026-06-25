@@ -1,7 +1,18 @@
 # hson::LiveDemo
-### HSON — a unified notation for HTML and JSON
 
-LiveDemo is an interactive showcase environment for HSON and the hson-live library. It is the first website built with hson-live; its purpose is to demonstrate the features and functionality that HSON enables.
+## HSON — a unified notation for HTML and JSON
+
+LiveDemo is an interactive showcase environment for HSON, and the first website built with hson-live. Its interactive demos, tests, and full documentation demonstrate the potential of HSON and hson-live. 
+
+
+### What is HSON?
+
+HSON (Hypertext Structured Object Notation) is a glue format. It is capable of fully expressing both JSON and HTML in a single notation. 
+*By parsing to HSON as an intermediary step, HTML can be converted to JSON, and vice versa. These idempotent transformations are stable and lossless.  
+
+### What is hson-live?
+
+hson-live is a Typescript library with two main functions. 
 
 ### LiveDemo (this site)
 `https://terminalgothic.com/hson`
@@ -16,21 +27,12 @@ npm install hson-live
 
 ---
 
-## What is HSON?
-
-HSON (Hypertext Structured Object Notation) is a glue format. It is capable of fully expressing both JSON and HTML in a single notation, making them interchangeable.
-
-
-## What is hson-live?
-
-hson-live is a Typescript library with two main functions. 
-
 
 ### hson.transform
 
-hson-live is built around a core of 7 transformers: parsers and serializers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
+hson-live is built around a core of 7 tokenizers, parsers, and serializers that accept and emit HTML, JSON, SVG, XML, and HSON. These transformations preserve structure, ordering, attributes, and mixed content. Repeated round-trip conversions do not drift, distort, or mutate user data.
 
-LiveDemo's [test] showcase features an array of test suites that prove the stability of hson-live's transformater chain across round-trip conversions (see: [test]).
+LiveDemo's [test] showcase features more than 1000 system tests that prove the stability of hson-live's transformater chain across round-trip conversions.
 
 
 ### hson.liveTree
@@ -153,9 +155,7 @@ The goal of LiveDemo is expose the mechanics of the hson-live library in a visib
 - unified representation of markup and data  
 - HSON as viable markup format
 
-Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data. Rather than "`ui = ƒ(state)`", hson-live proposes a new paradigm:
-
-## view === state
+Taken together, these demos sketch an approach for building lightweight interactive web interfaces by leveraging the unified representation of markup and data. 
 
 LiveDemo will expand alongside future versions of hson-live.
 

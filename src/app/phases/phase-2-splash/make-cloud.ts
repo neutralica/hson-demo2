@@ -1,7 +1,6 @@
 import { CssManager, type LiveTree } from "hson-live";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";
-import { CLOUD_LAYER_BASE_CSS } from "../../phases/phase-2-splash/splash.css";
-import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "../../phases/phase-2-splash/splash.consts";
+import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "./splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";
 import { make_rng } from "../../utils/rng";
 import { _colors } from "../../core/consts/colors.consts";
@@ -15,6 +14,15 @@ const fade = `linear-gradient(to top,
   oklch(0.1303 0.0073 285.34) ${FADE_MID_PCT}%,
   oklch(0.1303 0.0073 285.34) 100%
 )`;
+
+const CLOUD_INK_TOP = "rgb(2, 5, 11)";
+const CLOUD_INK_BOTTOM = "rgb(12, 19, 26)";
+const CLOUD_SINK_DUR_MS = Math.round(CLOUD_DURnum * 0.92);
+
+function cloudSinkName(layerIndex: number): string {
+  return `hson-cloud-sink-${layerIndex}`;
+}
+
 export type CloudSvgOpts = {
   seed: number;
   w: number;
@@ -165,13 +173,16 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
     layer.css.set.var("--cloud-phase-px", `${phasePx}px`);
 
     // expose per-layer max opacity to mount_splash (hyphen key)
-    // (bottom stronger, top weaker)
-    const maxAlpha = _lerp(0.02, 0.28, u);
+    // bottom-weighted: keep upper sky thin, make the lower cloud bank broodier.
+    const density = Math.pow(u, 1.45);
+    const maxAlpha = _lerp(0.018, 0.82, density);
     // per-layer static strength (you already compute this)
     layer.data.set("cloud-max", maxAlpha.toFixed(3));
     layer.css.setMany({
       "--layer-max": maxAlpha.toFixed(3),
       "--layer-fade": "1",
+
+
       /*  *ONLY SET OPACITY HERE* */
       opacity: "calc(var(--layer-max) * var(--layer-fade))",
 
@@ -183,12 +194,11 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       willChange: "opacity, bottom",
     });
 
-    const cloudDropPct = 25;
+    const cloudDropPct = _lerp(10, 24, u)+1;
 
     // Child does the mask scud and holds the “ink” color
     const paintIxClass = `cloud-paint-${i}`;
     const paint = mk_div_cls(layer, paintIxClass);
-    const kissSkipMs = Math.min(900, Math.round(CLOUD_DURnum * 0.08));
 
     paint.css.setMany({
       "--kiss": "0",
@@ -196,13 +206,17 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       inset: "0",
       height: `${100 + cloudDropPct}%`,
       transform: `translateY(${cloudDropPct}%)`,
-      backgroundImage: [
-        `linear-gradient(to top, rgba(12, 19, 26, var(--kiss, 0)), rgba(215, 215, 215, var(--kiss, 0)))`,
+      backgroundImage: 
         `linear-gradient(to bottom,
-      rgba(18, 36, 72, 0.72) 0%,
-      rgba(12, 19, 26, 0.94) 52%,
-      rgba(3, 6, 12, 1) 100%)`,
-      ].join(", "),
+      rgba(215, 215, 215, 0) 0%,
+      rgba(128, 146, 184, calc(var(--kiss, 0) * 0.26)) 48%,
+      rgba(255, 244, 210, calc(var(--kiss, 0))) 100%
+    ),
+        linear-gradient(to bottom,
+
+    ${CLOUD_INK_TOP} 0%,
+    ${CLOUD_INK_TOP} 100%
+  )`,
       mixBlendMode: "normal",
       filter: "none",
       willChange: "mask-position, -webkit-mask-position, opacity, bottom",
@@ -230,7 +244,47 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
       });
 
-    const far = 1 - u;
+    const sinkName = cloudSinkName(i);
+    const sinkPx = Math.round(_lerp(220, 48, Math.pow(u, 0.62)));
+    const sinkDelayMs = Math.round(_lerp(0, 420, u));
+    const fadeHoldPct = Math.round(_lerp(30, 50, u));
+
+    gcss.keyframes.set({
+      name: sinkName,
+      source: "global",
+      steps: {
+        "0%": {
+          opacity: "calc(var(--layer-max) * var(--layer-fade))",
+          transform: "translateY(0px)",
+        },
+        [`${fadeHoldPct}%`]: {
+          opacity: "calc(var(--layer-max) * var(--layer-fade))",
+          transform: `translateY(${Math.round(sinkPx * 0.10)}px)`,
+        },
+        "78%": {
+          opacity: "calc(var(--layer-max) * 0.42)",
+          transform: `translateY(${Math.round(sinkPx * 0.72)}px)`,
+        },
+        "94%": {
+          opacity: "calc(var(--layer-max) * 0.12)",
+          transform: `translateY(${sinkPx}px)`,
+        },
+        "100%": {
+          opacity: "0",
+          transform: `translateY(${sinkPx}px)`,
+        },
+      }
+    });
+
+    gcss.sel(`.cloud-${i}`)
+      .setMany({
+        animationName: sinkName,
+        animationDuration: `${CLOUD_SINK_DUR_MS}ms`,
+        animationTimingFunction: "cubic-bezier(0.16, 0.72, 0.24, 1)",
+        animationIterationCount: "1",
+        animationFillMode: "forwards",
+        animationDelay: `${sinkDelayMs}ms`,
+      });
 
     gcss.sel(`.${paintIxClass}`)
       .setMany({
@@ -239,9 +293,9 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
         animationTimingFunction: "linear, linear",
         animationIterationCount: "infinite, 1",
         animationFillMode: "both, both",
-        animationDelay: `0s, -${kissSkipMs}ms`,
+        animationDelay: `0s, 0s`,
       });
-    paint.css.setMany({ backgroundColor: `rgba(255,0,255,var(--kiss))` });
+    // paint.css.setMany({ backgroundColor: `rgba(255,0,255,var(--kiss))` });
     // OPTIONAL: if you want easy access later
     paint.data?.set?.("is-cloud-paint", "1"); // only if you have data on all nodes
 

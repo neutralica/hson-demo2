@@ -3,9 +3,11 @@
 import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
-import { OKLCH_VIBRANT, OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
+import { OKLCH_VIBRANT, OKLCH_NEUTRALS, OKLCH_FOREST } from "../../core/consts/oklch.consts";
 import { _fontWeight,  SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr,  _fontSize } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
+import { HSON_FONT_str } from "../../ui/wordmark/wordmark.css";
+import { HSON_LIVE_GRAFFITIstr } from "./demo.consts";
 
 export const UI_ROOTcss: CssMap = {
   // display: "grid",
@@ -149,13 +151,13 @@ export const HSON_GRAFFITIcss: CssMap = {
   fontFamily: "monospace", // best density; do not change to system mono
   color: _colors.graffiti,
   boxSizing: "border-box",
-  // mixBlendMode: "multiply",
   fontSize: "min(16px, calc((100vw) / 84))",
   lineHeight: "1",
   width: "100%",
   textAlign: "center",
   maxWidth: "calc(100vw)",
   userSelect: "none",
+  textShadow: "18px 5px 2px " + set_alpha(OKLCH_VIBRANT.orangeEmber, 0.07),
 }
 
 export const HSON_SUBcss: CssMap = {

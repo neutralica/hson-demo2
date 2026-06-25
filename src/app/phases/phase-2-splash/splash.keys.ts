@@ -19,7 +19,7 @@ export const SPLASHkfs = [
     steps: {
       "0%": { offsetDistance: "0%" },
       "90%": { offsetDistance: "100%" },
-      "100%": { offsetDistance: "100%" },
+      "100%": { offsetDistance: "110%" },
     },
   },
   {
@@ -30,8 +30,8 @@ export const SPLASHkfs = [
       // "30%": { opacity: "0.2", transform: "scale(2.75)" },
       // "62%": { opacity: ".6", transform: "scale(2.7)" },
 
-      "74%": { opacity: "1", transform: "scale(2.3)", boxShadow: "0 0 8px rgba(204, 255, 84, 0.8)", },
-      "100%": { opacity: "1", transform: "scale(1.9)", boxShadow: "0 0 48px rgba(204, 255, 84, 1)", },
+      "84%": { opacity: "1", transform: "scale(2.3)", boxShadow: "0 0 48px rgba(204, 255, 84, 0.8)", },
+      "100%": { opacity: "1", transform: "scale(1)", boxShadow: "0 0 8px rgba(204, 255, 84, 1)", },
     },
   },
   {
@@ -177,11 +177,11 @@ export const SPLASHkfs = [
       },
       "40%": {
         opacity: "0.25",
-        transform: "translateX(5%) translateY(27%) rotate(30deg)",
+        transform: "translateX(5%) translateY(27%) rotate(-10deg)",
       },
       "100%": {
         opacity: "0",
-        transform: "translateX(5%) translateY(27%) rotate(40deg)",
+        transform: "translateX(5%) translateY(27%) rotate(-20deg)",
       },
     },
   },
@@ -192,8 +192,8 @@ export const SPLASHkfs = [
       "02%": { opacity: "0" },
       "62%": { opacity: ".2" },
       "72%": { opacity: ".3" },
-      "85%": { opacity: ".8" },   // fade in quickly
-      "90%": { opacity: ".4" },   // fade in quickly
+      "80%": { opacity: ".8" },   // fade in quickly
+      "85%": { opacity: ".3" },   // fade in quickly
       "96%": { opacity: "0" },
       "100%": { opacity: "0" },
     },
@@ -204,7 +204,7 @@ export const LAYER_FADEkf = {
   name: CLOUD_LAYER_FADEstr,
   steps: {
     "0%": { "--layer-fade": "1" },
-    "30%": { "--layer-fade": "1" },
+    "60%": { "--layer-fade": "1" },
     "98%": {"--layer-fade": "0" },
     "100%": { "--layer-fade": "0" },
   },

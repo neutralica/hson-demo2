@@ -12,6 +12,7 @@ export const OKLCH_VIBRANT = {
   redBrick: "oklch(0.58 0.110 25)", // deeper grounded red
   redInfra: "oklch(0.55 0.160 10)", // darker synthetic red
   redSignal: "oklch(0.66 0.180 25)", // assertive UI red
+  redSignal2: "oklch(0.16 0.90 25)", // assertive UI red ... 2
   redLaser: "oklch(0.70 0.230 20)", // high-chroma spike
   redRustBloom: "oklch(0.60 0.095 15)", // dusty red-brown
   roseSmoke: "oklch(0.73 0.090 350)", // desaturated red-rose
@@ -60,7 +61,7 @@ export const OKLCH_VIBRANT = {
   violetIon: "oklch(0.72 0.155 285)", // energized violet
   plumBruised: "oklch(0.62 0.115 305)", // darker purple-plum
   orchidWire: "oklch(0.76 0.145 320)", // bright orchid-magenta
-  royalBlueGraffiti: "oklch(0.109 0.4 300 / 0.29)"
+  royalBlueGraffiti: "oklch(0.001 0.22 300)"
 };
 
 

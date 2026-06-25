@@ -12,7 +12,7 @@ import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../ui/wordmark/wordma
 import { mk_span_cls } from "../../utils/makers";
 import { wait } from "../../utils/wait";
 import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
-import { create_clouds } from "../../widgets/clouds/make-cloud";
+import { create_clouds } from "./make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { _colors } from "../../core/consts/colors.consts";
@@ -26,25 +26,6 @@ import { _colors } from "../../core/consts/colors.consts";
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
   stage.empty();
-
-  const splashCover = stage.create.div();
-  splashCover.css.setMany({
-    position: "fixed",
-    inset: "0",
-    zIndex: "9999",
-    pointerEvents: "none",
-    backgroundColor: _colors.backlo,
-    opacity: "1",
-    transition: "opacity 3000ms ease-in-out",
-  });
-
-  requestAnimationFrame(() => {
-    splashCover.css.set.opacity("0");
-  });
-
-  void wait.timer(3200).then(() => {
-    splashCover.removeSelf();
-  });
 
     const b = bud_node(stage)
     /* create structural layers */

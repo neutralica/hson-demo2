@@ -125,6 +125,7 @@ const URLcol = OKLCH_VIBRANT.blueYves;
 const COLONcol = OKLCH_VIBRANT.yellowBrass;
 const GRADIENTcol = OKLCH_VIBRANT.redBrick;
 const GRAFFITIcol = OKLCH_VIBRANT.royalBlueGraffiti;
+const GRAFFITI_SHADOWcol = OKLCH_VIBRANT.redSignal2;
 const REDcol = OKLCH_VIBRANT.redSignal;
 const FADE_1col = OKLCH_NEUTRALS.silver;
 
@@ -134,6 +135,7 @@ export const _colorVals = {
   backlo: deepBack,
   backhi: bckColor,
   graffiti: GRAFFITIcol,
+  graffitiShadow: GRAFFITI_SHADOWcol,
   gradient: GRADIENTcol,
   motes: MOTEScol,
   chrome: FADE_1col,

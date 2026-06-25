@@ -61,12 +61,12 @@ export const KISSat: PropertyRegistration = {
   init: "0",
 };
 
-export const KISS_COLat: PropertyRegistration = {
-  name: "--kissCol",
-  syn: "<color>",
-  inh: false,
-  init: "rgba(12, 19, 26, 1)"
-};
+// export const KISS_COLat: PropertyRegistration = {
+//   name: "--kiss-col",
+//   syn: "<color>",
+//   inh: false,
+//   init: "rgba(12, 19, 26, 1)"
+// };
 
 export const AT_LAYER_MAX: PropertyRegistration = {
     name: "--layer-max",

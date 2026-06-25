@@ -67,7 +67,7 @@ HSON is a 'glue format'. By modeling the tree structure shared by JSON and HTML,
 #HR#
 ### By parsing to HSON as intermediary step, HTML can be converted to JSON and vice versa.
 #HR#
-Uniting two non-interchangeable building blocks of the web suggest a new way of creating the web. hson-live demonstrates the potential.
+Uniting two non-interchangeable building blocks of the web suggests new ways of building web content. hson-live demonstrates the potential.
     `,
     },
     footer: "about / HSON",
@@ -132,7 +132,7 @@ hson-live supports:
       kind: "text",
       text: `
 #__#
-HSON resembles a pared-down syntax of HTML. Instead of opening and closing tags, HSON encloses nested content within a single tag.
+HSON resembles a pared-down HTML. Instead of opening and closing tags, HSON encloses nested content within a single tag.
 #HR#
 HSON derived from HTML uses a slash-close:
 ### />
@@ -164,7 +164,7 @@ HSON derived from HTML uses a slash-close:
       text: `
   #__#
   HSON can express any valid JSON, usually in a smaller file size.
-  #HR#
+#HR#
 JSON-derived HSON tags use an angle close:
 ### >
       `,
@@ -252,9 +252,10 @@ JSON-derived HSON tags use an angle close:
     bodyA: {
       kind: "text",
       text: `
-### markup + state + structure in a single source of truth
-LiveTree is a live web-authoring interface built on HSON. Page structure is stored as a HSON node graph and projected to the DOM for runtime interaction. Mutations to the node graph are synced to the DOM in realtime.
-LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, and DOM traversal together in one low-friction typed interface.`,
+### markup + state + styling in a single source of truth
+LiveTree is a live web-authoring interface built on HSON. Web content is stored as a HSON node graph, serialized to html, and projected to the DOM. Mutations are made to the underlying node graph and are synced to the DOM in realtime.
+LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, and DOM traversal together in a low-friction typed interface.
+`,
     },
     footer: "livetree / about",
   },
@@ -264,18 +265,18 @@ LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, 
       kind: "code",
       lang: "ts",
       text: `
-const tree = hson.queryBody()                    // query document.body, deep-parse to HSON.
-  .liveTree                                      // initialize LiveTree creation.
-  .graft();                                      // replace DOM with a projection from the node graph.
+const tree = hson.queryBody()                    // Query document.body, deep-parse to HSON.
+  .liveTree                                      // Initialize LiveTree creation.
+  .graft();                                      // Replace DOM with a projection from the node graph.
                  
 const branchDiv = tree.create.div()              // LiveTree offers rich namespace-aware creation methods.
   .setText("hello world")                        // Changes to node graph are immediately updated on-DOM.
   .css.set.backgroundColor("pink");              // Styling available via CSS or inline style attribute.
 
 tree.listen                                      // LiveTree offers listener and event management with options baked-in.
-  .once()                                        // listener teardown is managed automatically upon node removal.
+  .once()                                        // Listener teardown is managed automatically upon node removal.
   .onAnimationEnd(() => {                        // Sequenced events and animations are easy to schedule in LiveTree.
-    branchDiv.setText("goodbye world")           // Text content, DOM structure, CSS, animations, event management,
+    branchDiv.setText("goodbye world")           // Text content, DOM structure, CSS, animations, and event management
       .css.set.backgroundColor(                  //    are all managed in a unified, typed ecosystem.
         liveTree.dom.rect().width > 500          // LiveTree wraps many DOMRect and viewport methods in its API.
         ? "red"                                  // CSS can be dynamically created from JS variables.
@@ -302,7 +303,7 @@ tree.listen                                      // LiveTree offers listener and
 ### the first site made entirely with hson-live:
 ### www.terminalgothic.com
 
-LiveDemo is a test and development environment for hson-live. LiveDemo is a proof-of-concept and demonstration of the claims made here; in addition to a growing menu of interactive demos, visitors may run the 1000+ system tests and verify the results for themselves.
+LiveDemo is a test and development environment for hson-live. LiveDemo is a proof-of-concept and demonstration of the claims made here. LiveDemo provides a growing menu of interactive demos showcasing hson-live's capabilities. visitors may run the 1000+ system tests and verify the results for themselves.
 LiveDemo is intentionally minimalist in styling.
       `,
     },
