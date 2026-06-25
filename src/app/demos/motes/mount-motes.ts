@@ -49,7 +49,7 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
 
     colors: inOpts.colors ?? [OKLCH_VIBRANT.orangeTangerine],
     sizePx: inOpts.sizePx ?? [10, 38],
-    opacity: inOpts.opacity ?? [0.01, 0.2],
+    opacity: inOpts.opacity ?? [0.02, 0.3],
     blurPx: [1.3, 2.6],
 
     densityPerKpx2: inOpts.densityPerKpx2 ?? 74,

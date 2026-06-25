@@ -128,7 +128,7 @@ const GRAFFITIcol = OKLCH_VIBRANT.royalBlueGraffiti;
 const REDcol = OKLCH_VIBRANT.redSignal;
 const FADE_1col = OKLCH_NEUTRALS.silver;
 
-const MOTEScol = set_alpha(OKLCH_VIBRANT.orangeEmber, 1);
+const MOTEScol = set_alpha(OKLCH_VIBRANT.orangeTangerine, 0.4);
 
 export const _colorVals = {
   backlo: deepBack,
