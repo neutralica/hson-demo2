@@ -69,8 +69,8 @@ export const HSON_LIVE_GRAFFITIstr = `
 m888N= 888> '   ^"F        'Y"         ""   'Y"            ^*888%    R888"     'Y"       "88888%   
  'Y"   888                                                   "%       ""                   "YP'    
       J88"                                                                                         
-      @%                                                                                           
-    :"                      Hypertext Structured Object Notation                                   
-                                          2.0.26                                                   
+      @%                                                                              v2.3.3                                                                                         
+    :"                                                
+          
                                                                                                    
 `;

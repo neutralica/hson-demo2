@@ -124,8 +124,8 @@ const LISTcol = _HSON_COL.h;
 const URLcol = OKLCH_VIBRANT.blueYves;
 const COLONcol = OKLCH_VIBRANT.yellowBrass;
 const GRADIENTcol = OKLCH_VIBRANT.redBrick;
-const GRAFFITIcol = OKLCH_VIBRANT.royalBlueGraffiti;
-const GRAFFITI_SHADOWcol = OKLCH_VIBRANT.redSignal2;
+const GRAFFITIcol = OKLCH_VIBRANT.blueRoyal;
+const GRAFFITI_SHADOWcol = OKLCH_VIBRANT.redHeart;
 const REDcol = OKLCH_VIBRANT.redSignal;
 const FADE_1col = OKLCH_NEUTRALS.silver;
 

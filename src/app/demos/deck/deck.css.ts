@@ -72,7 +72,7 @@ export const deckStageCss: CssMap = {
   // padding: "5.75rem 6rem 4.25rem clamp(13.5rem, 14vw, 18rem)",
   padding: "4rem 2rem 0",
   boxSizing: "border-box",
-  transition: `opacity ${deckTransitionMs}ms ease, transform ${deckTransitionMs}ms ease, filter ${deckTransitionMs}ms ease`,
+  transition: `opacity ${deckTransitionMs()}ms ease, transform ${deckTransitionMs()}ms ease, filter ${deckTransitionMs()}ms ease`,
 };
 export const deckSlideCss: CssMap = {
   // width: "min(72rem, 100%)",

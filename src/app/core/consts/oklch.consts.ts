@@ -18,7 +18,7 @@ export const OKLCH_VIBRANT = {
   roseSmoke: "oklch(0.73 0.090 350)", // desaturated red-rose
   roseNeon: "oklch(0.74 0.200 355)", // hot pink-red glow
   roseNeon2: "oklch(0.7 0.170 355)", // hot pink-red glow
-
+redHeart: "oklch(0.9 0.598 356.2)", // graffiti-shadow onl
 
   // --- oranges / ambers ---
   orangeEmber: "oklch(0.68 0.125 25)", // orange-red ember
@@ -53,6 +53,7 @@ export const OKLCH_VIBRANT = {
   blueNavyVoid: "oklch(0.42 0.090 250)", // deep structural blue
   blueYves: "oklch(0.52 0.10 250)", // richer anchor blue
   blueElecky: "oklch(0.82 0.210 250)", // richer anchor blue
+  blueRoyal: "oklch(0.05 0.22 300)" ,
 
 
   // --- indigo / violet ---
@@ -61,7 +62,6 @@ export const OKLCH_VIBRANT = {
   violetIon: "oklch(0.72 0.155 285)", // energized violet
   plumBruised: "oklch(0.62 0.115 305)", // darker purple-plum
   orchidWire: "oklch(0.76 0.145 320)", // bright orchid-magenta
-  royalBlueGraffiti: "oklch(0.001 0.22 300)"
 };
 
 
