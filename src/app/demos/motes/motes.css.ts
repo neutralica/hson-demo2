@@ -14,7 +14,7 @@ export const MOTES_LAYERcss: CssMap = {
   pointerEvents: "none",
   zIndex: "100",
   background: `linear-gradient(transparent 50%, ${set_alpha(_colors.gradient, 0.05)})`,
-  border: "6px ridge hotpink"
+  // border: "6px ridge hotpink"
 } as const;
 
 export const MOTEcss: CssMap = {
