@@ -145,13 +145,17 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
   for (let i = 0; i < t.layers; i++) {
     const u = i / Math.max(1, t.layers - 1);
-    const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
-    // keep band placement in 0..100 range (percent)
-    const yBandPct = _lerp(15, 95, u);
-    const ySpreadPct = _lerp(16, 34, u);
+    // Perspective distribution: far/high rows are compressed and smaller;
+    // near/low rows are larger and spaced farther apart.
+    const depth = Math.pow(u, 1.62);
+    const scaleDepth = Math.pow(u, 1.22);
+    const yBandPct = _lerp(12, 104, depth);
+    const ySpreadPct = _lerp(8, 44, scaleDepth);
 
-    const circles = Math.round(_lerp(80, 140, 1 - u));
+    const circles = Math.round(_lerp(150, 72, scaleDepth));
     const blur = _lerp(t.blurTop, t.blurBottom, u);
+
+    const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
 
     const bg = make_cloud_svg_data_uri({
       seed,
@@ -160,8 +164,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       circles,
       yBandPct,
       ySpreadPct,
-      rMin: _lerp(10, 18, u),
-      rMax: _lerp(28, 52, u),
+      rMin: _lerp(5, 26, scaleDepth),
+      rMax: _lerp(14, 78, scaleDepth),
       alpha: 1, // mask-only
       blur,
     });
@@ -174,8 +178,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // expose per-layer max opacity to mount_splash (hyphen key)
     // bottom-weighted: keep upper sky thin, make the lower cloud bank broodier.
-    const density = Math.pow(u, 1.45);
-    const maxAlpha = _lerp(0.018, 0.82, density);
+    const density = Math.pow(u, 1.78);
+    const maxAlpha = _lerp(0.010, 0.94, density);
     // per-layer static strength (you already compute this)
     layer.data.set("cloud-max", maxAlpha.toFixed(3));
     layer.css.setMany({
@@ -194,7 +198,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       willChange: "opacity, bottom",
     });
 
-    const cloudDropPct = _lerp(10, 24, u)+1;
+    const cloudDropPct = _lerp(8, 34, scaleDepth);
 
     // Child does the mask scud and holds the “ink” color
     const paintIxClass = `cloud-paint-${i}`;
@@ -206,17 +210,17 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       inset: "0",
       height: `${100 + cloudDropPct}%`,
       transform: `translateY(${cloudDropPct}%)`,
-      backgroundImage: 
+      backgroundImage: [
         `linear-gradient(to bottom,
-      rgba(215, 215, 215, 0) 0%,
-      rgba(128, 146, 184, calc(var(--kiss, 0) * 0.26)) 48%,
-      rgba(255, 244, 210, calc(var(--kiss, 0))) 100%
-    ),
-        linear-gradient(to bottom,
-
-    ${CLOUD_INK_TOP} 0%,
-    ${CLOUD_INK_TOP} 100%
-  )`,
+      rgba(210, 224, 255, calc(var(--kiss, 0) * 0.24)) 0%,
+      rgba(225, 232, 244, calc(var(--kiss, 0) * 0.34)) 52%,
+      rgba(255, 244, 210, calc(var(--kiss, 0) * 0.42)) 100%
+    )`,
+        `linear-gradient(to bottom,
+      ${CLOUD_INK_BOTTOM} 0%,
+      ${CLOUD_INK_TOP} 100%
+    )`,
+      ].join(", "),
       mixBlendMode: "normal",
       filter: "none",
       willChange: "mask-position, -webkit-mask-position, opacity, bottom",
@@ -245,9 +249,9 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       });
 
     const sinkName = cloudSinkName(i);
-    const sinkPx = Math.round(_lerp(220, 48, Math.pow(u, 0.62)));
-    const sinkDelayMs = Math.round(_lerp(0, 420, u));
-    const fadeHoldPct = Math.round(_lerp(30, 50, u));
+    const sinkPx = Math.round(_lerp(260, 64, Math.pow(u, 0.58)));
+    const sinkDelayMs = Math.round(_lerp(0, 520, u));
+    const fadeHoldPct = Math.round(_lerp(24, 52, u));
 
     gcss.keyframes.set({
       name: sinkName,
