@@ -6,23 +6,6 @@ import { make_rng } from "../../utils/rng";
 import { _colors } from "../../core/consts/colors.consts";
 
 
-const FADE_SOLID_PCT = 0;    // solid mask until here
-const FADE_MID_PCT = 10;      // start thinning here
-const fade = `linear-gradient(to top,
-  rgba(255,255,255,1) 0%,
-  rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
-  oklch(0.1303 0.0073 285.34) ${FADE_MID_PCT}%,
-  oklch(0.1303 0.0073 285.34) 100%
-)`;
-
-const CLOUD_INK_TOP = "rgb(2, 5, 11)";
-const CLOUD_INK_BOTTOM = "rgb(12, 19, 26)";
-const CLOUD_SINK_DUR_MS = Math.round(CLOUD_DURnum * 0.92);
-
-function cloudSinkName(layerIndex: number): string {
-  return `hson-cloud-sink-${layerIndex}`;
-}
-
 export type CloudSvgOpts = {
   seed: number;
   w: number;
@@ -32,10 +15,42 @@ export type CloudSvgOpts = {
   ySpreadPct: number;
   rMin: number;
   rMax: number;
-  alpha: number;   // currently unused 
+  alpha: number;
   blur?: number;
   fillBelowPct?: number;
 };
+
+type CloudTune = {
+  layers: number;           // e.g. 5
+  seed: number;             // base seed
+  // darker at bottom; lighter at top
+  alphaTop: number;         // e.g. 0.12
+  alphaBottom: number;      // e.g. 0.55
+  blurTop: number;          // e.g. 0.4
+  blurBottom: number;       // e.g. 1.3
+  // geometry
+  w: number;                // svg viewbox width, e.g. 900
+  h: number;                // svg viewbox height, e.g. 340
+  circlesMin: number;       // e.g. 22
+  circlesMax: number;       // e.g. 34
+};
+
+const FADE_SOLID_PCT = 0;    // solid mask until here
+const FADE_MID_PCT = 90;      // start thinning here
+const fade = `linear-gradient(to top,
+  rgba(255,255,255,1) 0%,
+  rgba(255,255,255,1) ${FADE_SOLID_PCT}%,
+  oklch(0.1303 0.0073 285.34) ${FADE_MID_PCT}%,
+  oklch(0.1303 0.0073 285.34) 100%
+)`;
+
+const CLOUD_INK_TOP = "2, 5, 11";
+const CLOUD_SINK_DUR_MS = Math.round(CLOUD_DURnum * 0.92);
+
+function cloudSinkName(layerIndex: number): string {
+  return `hson-cloud-sink-${layerIndex}`;
+}
+
 
 function svgAttr(value: string | number): string {
   return String(value)
@@ -59,8 +74,11 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
   const w = o.w;
   const h = o.h;
   const BLEED_PX = 2;
+  const TOP_BLEED_PX = 84;
   const wBleed = w + BLEED_PX;
+  const hBleed = h + TOP_BLEED_PX;
   const xMin = -BLEED_PX / 2;
+  const yMin = -TOP_BLEED_PX;
 
   const yMid = (o.yBandPct / 100) * h;
   const ySpan = (o.ySpreadPct / 100) * h;
@@ -72,9 +90,13 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
     const x = xMin + rnd() * (wBleed + r * 2) - r;
     const y = yMid + (rnd() - 0.5) * ySpan;
 
-    circles.push(
-      `<circle cx="${svgAttr(x.toFixed(2))}" cy="${svgAttr(y.toFixed(2))}" r="${svgAttr(r.toFixed(2))}" fill="white"/>`,
-    );
+    const circleMarkup = (cx: number): string =>
+      `<circle cx="${svgAttr(cx.toFixed(2))}" cy="${svgAttr(y.toFixed(2))}" r="${svgAttr(r.toFixed(2))}" fill="white"/>`;
+
+    circles.push(circleMarkup(x));
+
+    if (x - r < xMin) circles.push(circleMarkup(x + wBleed));
+    if (x + r > xMin + wBleed) circles.push(circleMarkup(x - wBleed));
   }
 
   const bulkRadius = o.rMin + 0.55 * (o.rMax - o.rMin);
@@ -88,7 +110,7 @@ export function make_cloud_svg_data_uri(o: CloudSvgOpts): string {
 
   const slab = `<rect x="${svgAttr(xMin.toFixed(2))}" y="${svgAttr(fillStartY.toFixed(2))}" width="${svgAttr(wBleed)}" height="${svgAttr((h - fillStartY).toFixed(2))}" fill="white"/>`;
 
-  const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgAttr(wBleed)}" height="${svgAttr(h)}" viewBox="${svgAttr(`${xMin} 0 ${wBleed} ${h}`)}" preserveAspectRatio="none">
+  const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgAttr(wBleed)}" height="${svgAttr(h)}" viewBox="${svgAttr(`${xMin} ${yMin} ${wBleed} ${hBleed}`)}" preserveAspectRatio="none">
 <defs>
   <filter id="cloud" x="-20%" y="-20%" width="140%" height="140%">
     <feGaussianBlur in="SourceGraphic" stdDeviation="${svgAttr(blur.toFixed(2))}" result="b"/>
@@ -104,21 +126,6 @@ ${slab}
 
   return svgDataUri(svgMarkup);
 }
-
-type CloudTune = {
-  layers: number;           // e.g. 5
-  seed: number;             // base seed
-  // darker at bottom; lighter at top
-  alphaTop: number;         // e.g. 0.12
-  alphaBottom: number;      // e.g. 0.55
-  blurTop: number;          // e.g. 0.4
-  blurBottom: number;       // e.g. 1.3
-  // geometry
-  w: number;                // svg viewbox width, e.g. 900
-  h: number;                // svg viewbox height, e.g. 340
-  circlesMin: number;       // e.g. 22
-  circlesMax: number;       // e.g. 34
-};
 
 export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTree {
   const t: CloudTune = {
@@ -147,12 +154,11 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
     const u = i / Math.max(1, t.layers - 1);
     // Perspective distribution: far/high rows are compressed and smaller;
     // near/low rows are larger and spaced farther apart.
-    const depth = Math.pow(u, 1.62);
-    const scaleDepth = Math.pow(u, 1.22);
-    const yBandPct = _lerp(12, 104, depth);
-    const ySpreadPct = _lerp(8, 44, scaleDepth);
-
-    const circles = Math.round(_lerp(150, 72, scaleDepth));
+    const depth = Math.pow(u, 2.55);
+    const scaleDepth = Math.pow(u, 2.10);
+    const yBandPct = _lerp(4, 94, depth);
+    const ySpreadPct = _lerp(24, 84, scaleDepth);
+    const circles = Math.round(_lerp(212, 60, scaleDepth));
     const blur = _lerp(t.blurTop, t.blurBottom, u);
 
     const seed = (t.seed ^ (i * 0x9e3779b9)) >>> 0;
@@ -164,8 +170,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       circles,
       yBandPct,
       ySpreadPct,
-      rMin: _lerp(5, 26, scaleDepth),
-      rMax: _lerp(14, 78, scaleDepth),
+      rMin: _lerp(3, 44, scaleDepth),
+      rMax: _lerp(9, 128, scaleDepth),
       alpha: 1, // mask-only
       blur,
     });
@@ -178,8 +184,8 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     // expose per-layer max opacity to mount_splash (hyphen key)
     // bottom-weighted: keep upper sky thin, make the lower cloud bank broodier.
-    const density = Math.pow(u, 1.78);
-    const maxAlpha = _lerp(0.010, 0.94, density);
+    const density = Math.pow(u, 1.95);
+    const maxAlpha = _lerp(0.008, 0.72, density);
     // per-layer static strength (you already compute this)
     layer.data.set("cloud-max", maxAlpha.toFixed(3));
     layer.css.setMany({
@@ -198,29 +204,31 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       willChange: "opacity, bottom",
     });
 
-    const cloudDropPct = _lerp(8, 34, scaleDepth);
+    const cloudDropPct = _lerp(0, 12, Math.pow(u, 1.35));
 
     // Child does the mask scud and holds the “ink” color
     const paintIxClass = `cloud-paint-${i}`;
     const paint = mk_div_cls(layer, paintIxClass);
 
     paint.css.setMany({
-      "--kiss": "0",
+      // "--kiss": "0",
+      "--cloud-ink-alpha": "calc(1 - calc(var(--kiss, 0)))",
       position: "absolute",
       inset: "0",
       height: `${100 + cloudDropPct}%`,
       transform: `translateY(${cloudDropPct}%)`,
-      backgroundImage: [
+      backgroundImage:
         `linear-gradient(to bottom,
-      rgba(210, 224, 255, calc(var(--kiss, 0) * 0.24)) 0%,
-      rgba(225, 232, 244, calc(var(--kiss, 0) * 0.34)) 52%,
-      rgba(255, 244, 210, calc(var(--kiss, 0) * 0.42)) 100%
-    )`,
-        `linear-gradient(to bottom,
-      ${CLOUD_INK_BOTTOM} 0%,
-      ${CLOUD_INK_TOP} 100%
-    )`,
-      ].join(", "),
+      rgba(210, 229, 255, calc(var(--kiss, 0) * 0.68)) 0%,
+      rgba(210, 229, 255, calc(var(--kiss, 0) * 0.34)) 18%,
+      rgba(210, 229, 255, calc(var(--kiss, 0) * 0.19)) 42%,
+      rgba(210, 229, 255, calc(var(--kiss, 0) * 0.09)) 68%,
+      rgba(12, 19, 26, 0) 100%
+    ),
+        linear-gradient(to bottom,
+    rgba(${CLOUD_INK_TOP}, calc(var(--cloud-ink-alpha, 1) * 0.5)) 1%,
+    rgba(${CLOUD_INK_TOP}, var(--cloud-ink-alpha, 1)) 100%
+  )`,
       mixBlendMode: "normal",
       filter: "none",
       willChange: "mask-position, -webkit-mask-position, opacity, bottom",
@@ -249,42 +257,44 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       });
 
     const sinkName = cloudSinkName(i);
-    const sinkPx = Math.round(_lerp(260, 64, Math.pow(u, 0.58)));
-    const sinkDelayMs = Math.round(_lerp(0, 520, u));
-    const fadeHoldPct = Math.round(_lerp(24, 52, u));
+    const fadeDepth = Math.pow(u, 1.75);
+    const sinkDelayMs = 1000;//Math.round(_lerp(0, 110, u));
+    const fadeHoldPct = Math.round(_lerp(0, 7, u));
+    const midFade = _lerp(0.000, 0.18, fadeDepth).toFixed(3);
+    const lateFade = _lerp(0.000, 0.025, fadeDepth).toFixed(3);
+    const sinkOpacityDurMs = Math.round(CLOUD_SINK_DUR_MS * _lerp(0.16, 0.50, u));
+    const sinkPx = Math.round(_lerp(106, 28, Math.pow(u, 0.70)));
+    const sinkMotionDurMs = Math.round(sinkOpacityDurMs * 1.56);
+    const bandLoopDurMs = Math.round(CLOUD_DURnum * _lerp(1.85, 0.58, Math.pow(u, 0.85)));
+    const sinkOpacityName = `${sinkName}-opacity`;
+    const sinkMotionName = `${sinkName}-motion`;
 
     gcss.keyframes.set({
-      name: sinkName,
+      name: sinkOpacityName,
       source: "global",
       steps: {
-        "0%": {
-          opacity: "calc(var(--layer-max) * var(--layer-fade))",
-          transform: "translateY(0px)",
-        },
-        [`${fadeHoldPct}%`]: {
-          opacity: "calc(var(--layer-max) * var(--layer-fade))",
-          transform: `translateY(${Math.round(sinkPx * 0.10)}px)`,
-        },
-        "78%": {
-          opacity: "calc(var(--layer-max) * 0.42)",
-          transform: `translateY(${Math.round(sinkPx * 0.72)}px)`,
-        },
-        "94%": {
-          opacity: "calc(var(--layer-max) * 0.12)",
-          transform: `translateY(${sinkPx}px)`,
-        },
-        "100%": {
-          opacity: "0",
-          transform: `translateY(${sinkPx}px)`,
-        },
+        "0%": { opacity: "calc(var(--layer-max) * var(--layer-fade))" },
+        [`${fadeHoldPct}%`]: { opacity: "calc(var(--layer-max) * var(--layer-fade))" },
+        "46%": { opacity: `calc(var(--layer-max) * var(--layer-fade) * ${midFade})` },
+        "72%": { opacity: `calc(var(--layer-max) * var(--layer-fade) * ${lateFade})` },
+        "100%": { opacity: "0" },
+      }
+    });
+
+    gcss.keyframes.set({
+      name: sinkMotionName,
+      source: "global",
+      steps: {
+        "0%": { transform: `translateY(${cloudDropPct}%)` },
+        "100%": { transform: `translateY(calc(${cloudDropPct}% + (${sinkPx}px )))` },
       }
     });
 
     gcss.sel(`.cloud-${i}`)
       .setMany({
-        animationName: sinkName,
-        animationDuration: `${CLOUD_SINK_DUR_MS}ms`,
-        animationTimingFunction: "cubic-bezier(0.16, 0.72, 0.24, 1)",
+        animationName: sinkOpacityName,
+        animationDuration: `${sinkOpacityDurMs}ms`,
+        animationTimingFunction: "linear",
         animationIterationCount: "1",
         animationFillMode: "forwards",
         animationDelay: `${sinkDelayMs}ms`,
@@ -292,16 +302,16 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
 
     gcss.sel(`.${paintIxClass}`)
       .setMany({
-        animationName: `${CLOUD_BAND_LOOPstr}, ${CLOUD_SUN_KISSstr}`,
-        animationDuration: `${CLOUD_DURnum}ms, ${CLOUD_DURnum}ms`,
-        animationTimingFunction: "linear, linear",
-        animationIterationCount: "infinite, 1",
-        animationFillMode: "both, both",
-        animationDelay: `0s, 0s`,
+        animationName: `${CLOUD_BAND_LOOPstr}, ${CLOUD_SUN_KISSstr}, ${sinkMotionName}`,
+        animationDuration: `${bandLoopDurMs}ms, ${CLOUD_DURnum}ms, ${sinkMotionDurMs}ms`,
+        animationTimingFunction: "linear, linear, linear",
+        animationIterationCount: "infinite, 1, 1",
+        animationFillMode: "both, both, forwards",
+        animationDelay: `0s, 0s, ${sinkDelayMs}ms`,
       });
     // paint.css.setMany({ backgroundColor: `rgba(255,0,255,var(--kiss))` });
-    // OPTIONAL: if you want easy access later
-    paint.data?.set?.("is-cloud-paint", "1"); // only if you have data on all nodes
+
+    paint.data?.set?.("is-cloud-paint", "1"); // only if data on all nodes
 
 
   }

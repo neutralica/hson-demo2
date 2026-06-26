@@ -32,7 +32,8 @@ import { has_widget, toggle_widget, get_view, toggle_view, activate_widget, get_
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
-import { MENU_OPTIONS, WIDGET_MENU_KEYS, HSON_LIVE_GRAFFITIstr, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, $MONITOR, MIN_DESKTOP_WIDTH, $FLEURS, $RENDER } from "./demo.consts";
+import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, $MONITOR, MIN_DESKTOP_WIDTH, $FLEURS, $RENDER } from "./demo.consts";
+import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss, MONITOR_HOSTcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 

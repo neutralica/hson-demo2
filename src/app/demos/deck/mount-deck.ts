@@ -36,7 +36,7 @@ import type { DeckSlideConfig, DeckState, DeckSlideBody, DeckSlideSection, DeckA
 import type { CssMap } from "hson-live/types";
 import { render_line_with_comment } from "../about/about-helpers";
 import { mk_div_cls, mk_div_cls_txt, mk_div_id, mk_div_id_txt, mk_span_cls, mk_span_cls_txt } from "../../utils/makers";
-import { HSON_LIVE_GRAFFITIstr } from "../../phases/phase-3-demo/demo.consts";
+import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMO_SCREENcss, HSON_GRAFFITIcss } from "../../phases/phase-3-demo/demo.css";
 
 

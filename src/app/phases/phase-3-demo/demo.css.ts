@@ -7,7 +7,7 @@ import { OKLCH_VIBRANT, OKLCH_NEUTRALS, OKLCH_FOREST } from "../../core/consts/o
 import { _fontWeight, SYS_MONOfont, $SIDEBAR_WIDTH, GRID_GAPstr, _fontSize } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { HSON_FONT_str } from "../../ui/wordmark/wordmark.css";
-import { HSON_LIVE_GRAFFITIstr } from "./demo.consts";
+import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 
 function cssFriendlyText(value: string): string {
   return `"${value
@@ -132,15 +132,15 @@ export const FX_LAYERcss: CssMap = {
 export const DEMO_SCREENcss: CssMap = {
   position: "fixed",
   inset: "0",
-  maxWidth: "100%",
-  width: "100%",
-  height: "100%",
+  // maxWidth: "100%",
+  // width: "100%",
+  // height: "100%",
   overflow: "hidden",
   isolation: "isolate",
   pointerEvents: "none",
   minHeight: "0",
   boxSizing: "border-box",
-  overscrollBehaviorY: "none", // not sure it will do what I want
+  overscrollBehaviorY: "none", 
   display: "grid",
   gridTemplateColumns: $SIDEBAR_WIDTH + " auto",
   gridTemplateRows: "minmax(0, 1fr)",
@@ -149,54 +149,8 @@ export const DEMO_SCREENcss: CssMap = {
 
 }
 
-// export const HSON_GRAFFITIcss: CssMap = {
-//   position: "fixed",
-//   margin: "2rem",
-//   left: "50%",
-//   top: "50%",
-//   transform: "translate(-50%, -50%)",
-//   whiteSpace: "pre",
-//   fontFamily: "monospace", // best density; do not change to system mono
-//   color: set_alpha(_colors.graffiti, 0.4),
-//   // color: "transparent",
-//   boxSizing: "border-box",
-//   fontSize: "min(16px, calc((100vw) / 84))",
-//   lineHeight: "1",
-//   width: "100%",
-//   textAlign: "center",
-//   maxWidth: "calc(100vw)",
-//   userSelect: "none",
-//   textShadow: "1.4em 0.2em 2px " + set_alpha(_colors.graffitiShadow, 0.9),
-//   __after: {
-//     content: hsonContent,
-//     color: set_alpha(OKLCH_VIBRANT.blueYves, 0.99),
-//     opacity: 0.4,
-//     background: "transparent",
-//     position: "fixed",
-
-//     left: "50%",
-//     top: "50%",
-//     whiteSpace: "pre-wrap",
-//     fontFamily: "monospace", // best density; do not change to system mono
-//     fontSize: "min(16px, calc((100vw) / 84))",
-//     lineHeight: "1",
-//     width: "100%",
-//     textAlign: "center",
-//     maxWidth: "calc(100vw)",
-//     userSelect: "none",
-//     height: "100%",
-//     rotate: "1deg",
-//     transform: "translate(-51%, -50%)",
-//     transformOrigin: "0 0",
-//     filter: "blur(4px)",
-//     // textShadow: "3px 2px 5px " + OKLCH_VIBRANT.blueYves,
-
-//   }
-// }
-
 export const HSON_GRAFFITIcss: CssMap = {
   position: "fixed",
-  margin: "2rem",
   left: "50%",
   top: "50%",
   transform: "translate(-50%, -50%)",

@@ -1,4 +1,3 @@
-
 import { _colors } from "../../core/consts/colors.consts";
 import { CLOUD_BAND_LOOPstr as CLOUD_LOOPstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, CLOUD_TILE_W, SKY_GRADIENT } from "./splash.consts";
 
@@ -9,7 +8,7 @@ export const SPLASHkfs = [
     steps: {
       "0%": { background: _colors.backlo },
       "02%": { background: _colors.backlo },
-      "57%": { background: "rgba(0,89,255,1)" },
+      "37%": { background: "rgba(0,89,255,1)" },
       "92%": { background: "rgba(0, 128, 255, 1)" },
       "100%": { background: _colors.backlo },
     },
@@ -204,8 +203,11 @@ export const LAYER_FADEkf = {
   name: CLOUD_LAYER_FADEstr,
   steps: {
     "0%": { "--layer-fade": "1" },
-    "60%": { "--layer-fade": "1" },
-    "98%": {"--layer-fade": "0" },
+    "18%": { "--layer-fade": "0.96" },
+    "36%": { "--layer-fade": "0.88" },
+    "54%": { "--layer-fade": "0.72" },
+    "62%": { "--layer-fade": "0.51" },
+    "84%": { "--layer-fade": "0" },
     "100%": { "--layer-fade": "0" },
   },
 } as const;
@@ -228,8 +230,8 @@ export const CLOUD_SUN_KISSkf = {
   name: CLOUD_SUN_KISSstr,
   steps: {
     "0%": { "--kiss": "0" },
-    "42%": { "--kiss": "0"},
-    "85%": { "--kiss": "0.8" },
-    "100%": { "--kiss": "0.9" },
+    "30%": { "--kiss": "0" },
+    "95%": { "--kiss": "1" },
+    "100%": { "--kiss": "1" },
   },
 } as const;

@@ -57,23 +57,27 @@ export const $PANEL_HIDDEN = 'panel-hidden';
 export const CURRENT_OKLCHname = "oklch-demo-current";
 export const CURRENT_OKLCH = CssManager.api().var.key(CURRENT_OKLCHname);
 
-// CHANGED: named editable OKLCH theme vars. CURRENT_OKLCH is only the picker
-// preview/current-edit color; these are durable page theme targets. Use `.get()`
-// here because CSS maps need a stable `var(--name)` reference at module load.
-// Use `CssManager.api().var.value(name)` only at runtime when reading a seeded value.
-// export const MAIN_COLname = "hson-color-main-text";
-// export const MAIN_VAR = CssManager.api().var.key(MAIN_COLname);
-
-// export const MENU_COLname = "hson-color-menu-text";
-// export const MENU_Var = CssManager.api().var.key(MENU_COLname);
-
-// export const GRAF_COLname = "hson-color-graffiti";
-// export const GRAF_VAR = CssManager.api().var.key(GRAF_COLname);
-
-// export const MOTE_COLname = "hson-color-motes";
-// export const MOTE_VAR = CssManager.api().var.key(MOTE_COLname);
-/* code markdown */
 export const $MENU_SHADOW = "0 0 55px ";
+export const HSON_LIVE_GRAFFITIstr = `
+
+               .x+=:.                                        ..      .       _                    
+  .uef^"      z'    ^%                                    x .d88"    @88>    u                     
+:d88E            .   <k        u.      u.    u.            5888R     %8P    88Nu.   u.             
+'888E          .@8Ned8"  ...ue888b   x@88k u@88c.          '888R      .    '88888.o888c      .u    
+ 888E .z8k   .@^%8888"   888R Y888r ^"8888""8888"           888R    .@88u   ^8888  8888   ud8888.  
+ 888E~?888L x88:  ')8b.  888R I888>   8888  888R            888R   ''888E'   8888  8888 :888'8888. 
+ 888E  888E 8888N=*8888  888R I888>   8888  888R            888R     888E    8888  8888 d888 '88%" 
+ 888E  888E  %8"    R88  888R I888>   8888  888R            888R     888E    8888  8888 8888.+"    
+ 888E  888E   @8Wou 9%  u8888cJ888    8888  888R   dR888b   888R     888E   .8888b.888P 8888L      
+ 888E  888E .888888P'    "*888*P"    "*88*" 8888"  tN888N  .888B .   888&    ^Y8888*""  '8888c. .+ 
+m888N= 888> '   ^"F        'Y"         ""   'Y"            ^*888%    R888"     'Y"       "88888%   
+ 'Y"   888                                                   "%       ""                   "YP'    
+      J88"                                                                                         
+      @%                                                                              v2.3.3                                                                                         
+    :"                                                
+          
+                                                                                                   
+`;
 
 
 

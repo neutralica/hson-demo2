@@ -125,6 +125,7 @@ export const anim_CLOUD_LOOP = (i: number): AnimSpec => {
   };
 };
 
+/* unused?? */
 export const anim_CLOUD_FADE: AnimSpec = {
   name: CLOUD_FADE_ONCEstr,
   duration: CLOUD_DURstr,
