@@ -10,7 +10,6 @@ import { run_app } from "./app/app";
 export function main(): boolean {
   const rootOc = graft_livetree();
   run_app(rootOc);
-console.log(rootOc.dom.parent)
   
   return true;
 }

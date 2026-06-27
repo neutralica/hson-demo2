@@ -24,7 +24,6 @@ export function sampleCultivarShape(
     cultivar: FlowerCultivar,
     rng: Rng): CultivarShape {
 
-    console.log(cultivar);
     if (cultivar === "daisy") { return DAISYshape(rng); }
     if (cultivar === "sunburst") { return SUNBURSTshape(rng); }
     if (cultivar === "pinwheel") { return PINWHEELshape(rng); }
