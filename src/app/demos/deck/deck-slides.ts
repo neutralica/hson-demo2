@@ -35,6 +35,7 @@ export const SLIDES: readonly DeckSlideConfig[] = [
     headerA: "view === state",
     // headerB: "hson-live / LiveTree",
     // headerC: "LiveTree",
+    stackAlign: "center",
     bodyC: {
       kind: "text",
       text: `
@@ -67,7 +68,7 @@ HSON is a 'glue format'. By modeling the tree structure shared by JSON and HTML,
 #HR#
 ### By parsing to HSON as intermediary step, HTML can be converted to JSON and vice versa.
 #HR#
-Uniting two non-interchangeable building blocks of the web suggests new ways of building web content. hson-live demonstrates the potential.
+Uniting two non-interchangeable building blocks of the web suggests new ways of building web content. This is the key insight that powers hson-live.
     `,
     },
     footer: "about / HSON",
@@ -82,7 +83,7 @@ Uniting two non-interchangeable building blocks of the web suggests new ways of 
 hson-live is a Typescript library with two core components:
 #__#
 ### hson.transform
-converts data to and from HSON
+converts JSON and HTML data to and from HSON
 #__#
 ### hson.liveTree
 a web authoring interface built on HSON
@@ -132,8 +133,8 @@ hson-live supports:
       kind: "text",
       text: `
 #__#
-HSON resembles a pared-down HTML. Instead of opening and closing tags, HSON encloses nested content within a single tag.
-#HR#
+HSON resembles pared-down HTML. Instead of opening and closing tags, HSON encloses nested content within a single tag.
+#__#
 HSON derived from HTML uses a slash-close:
 ### />
       `,
@@ -163,8 +164,8 @@ HSON derived from HTML uses a slash-close:
       kind: "text",
       text: `
   #__#
-  HSON can express any valid JSON, usually in a smaller file size.
-#HR#
+HSON can express any valid JSON, usually in a smaller file size.
+#__#
 JSON-derived HSON tags use an angle close:
 ### >
       `,
@@ -176,7 +177,7 @@ JSON-derived HSON tags use an angle close:
     bodyA: {
       kind: "code",
       lang: "html",
-      text: htmlStub + "\n\n\n\n\n\n\n\n\n\n\n !!! notice the presence of structural clutter in the json ->",
+      text: htmlStub + "\n\n\n\n\n\n\n\n\n\n\n// notice the structural clutter in the json ->",
     },
     bodyB: {
       kind: "code",
@@ -197,7 +198,7 @@ JSON-derived HSON tags use an angle close:
       text: `
       \`\`\`json
       ${jsonStub}
-      \n\n\n\n\n\n\n\n\n\n\n !!! notice the presence of structural clutter in the html ->
+      \n\n\n\n\n\n\n\n\n\n\n// notice the structural clutter in the html ->
       \`\`\`
       `,
     },
@@ -252,8 +253,8 @@ JSON-derived HSON tags use an angle close:
     bodyA: {
       kind: "text",
       text: `
-### markup + state + styling in a single source of truth
-LiveTree is a live web-authoring interface built on HSON. Web content is stored as a HSON node graph, serialized to html, and projected to the DOM. Mutations are made to the underlying node graph and are synced to the DOM in realtime.
+### markup + state + styling: a single source of truth
+LiveTree is a live web-authoring interface built on HSON. Web content is stored as a HSON node graph, serialized to html, and projected to the DOM. Mutations are made to the underlying node graph and reflected to the DOM in realtime.
 LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, and DOM traversal together in a low-friction typed interface.
 `,
     },
@@ -276,8 +277,8 @@ const branchDiv = tree.create.div()              // LiveTree offers rich namespa
 tree.listen                                      // LiveTree offers listener and event management with options baked-in.
   .once()                                        // Listener teardown is managed automatically upon node removal.
   .onAnimationEnd(() => {                        // Sequenced events and animations are easy to schedule in LiveTree.
-    branchDiv.setText("goodbye world")           // Text content, DOM structure, CSS, animations, and event management
-      .css.set.backgroundColor(                  //    are all managed in a unified, typed ecosystem.
+    branchDiv.setText("goodbye world")           // Text, DOM traversal, CSS, events, inline style, 
+      .style.set.backgroundColor(                //   are all managed in a unified, typed ecosystem.
         liveTree.dom.rect().width > 500          // LiveTree wraps many DOMRect and viewport methods in its API.
         ? "red"                                  // CSS can be dynamically created from JS variables.
         : "blue"                                 

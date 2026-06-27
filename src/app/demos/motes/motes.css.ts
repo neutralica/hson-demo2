@@ -14,22 +14,22 @@ export const MOTES_LAYERcss: CssMap = {
   pointerEvents: "none",
   zIndex: "100",
   background: `linear-gradient(transparent 50%, ${set_alpha(_colors.gradient, 0.05)})`,
-  // border: "6px ridge hotpink"
+  boxSizing: "border-box",
 } as const;
 
-export const MOTEcss: CssMap = {
-  position: "absolute",
-  left: "0",
-  top: "0",
-  willChange: "transform, opacity",
-  fontFamily: "monospace",
-  fontSize: "14px",
-  lineHeight: "14px",
-  userSelect: "none",
-  pointerEvents: "any",
-  // “Apple II-ish” vibe via glow; tweak to taste
-  textShadow: "12px 12px 4px rgba(120,255,160,1)",
-} as const;
+// export const MOTEcss: CssMap = {
+//   position: "absolute",
+//   left: "0",
+//   top: "0",
+//   willChange: "transform, opacity",
+//   fontFamily: "monospace",
+//   fontSize: "14px",
+//   lineHeight: "14px",
+//   userSelect: "none",
+//   pointerEvents: "any",
+//   // “Apple II-ish” vibe via glow; tweak to taste
+//   textShadow: "12px 12px 4px rgba(120,255,160,1)",
+// } as const;
 
 export const MOTES_ROOTcss: CssMap = {
   position: "fixed",
@@ -42,7 +42,7 @@ export const MOTES_ROOTcss: CssMap = {
 
 };
 
-export const MOTES_LAYeR_2css = {
+export const MOTES_HOSTcss = {
   position: "absolute",
   inset: "0",
   overflow: "hidden",

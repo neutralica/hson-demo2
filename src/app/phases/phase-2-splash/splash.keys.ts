@@ -162,25 +162,36 @@ export const SPLASHkfs = [
       "88%": { opacity: "0.32", transform: "translate(-100%, -50%) scaleX(44)" },
       "100%": { opacity: "0", transform: "translate(-100%, -50%) scaleX(64)" },
     },
-  },
-  {
+  }, {
     name: "hson_lens_flare",
     steps: {
       "0%": {
         opacity: "0",
-        transform: "translateX(-25%) translateY(17%) rotate(0deg)",
+        transform: "translateX(-10%) translateY(6%) rotate(-2deg) scale(0.96)",
       },
-      "20%": {
-        opacity: "0.85",
-        transform: "translateX(-25%) translateY(17%) rotate(0deg)",
+      "54%": {
+        opacity: "0",
+        transform: "translateX(-10%) translateY(6%) rotate(-2deg) scale(0.96)",
       },
-      "40%": {
-        opacity: "0.25",
-        transform: "translateX(5%) translateY(27%) rotate(-10deg)",
+      "68%": {
+        opacity: "0.34",
+        transform: "translateX(-7%) translateY(9%) rotate(-4deg) scale(1.00)",
+      },
+      "78%": {
+        opacity: "0.88",
+        transform: "translateX(-3%) translateY(13%) rotate(-7deg) scale(1.06)",
+      },
+      "88%": {
+        opacity: "0.74",
+        transform: "translateX(2%) translateY(18%) rotate(-11deg) scale(1.12)",
+      },
+      "96%": {
+        opacity: "0.26",
+        transform: "translateX(6%) translateY(22%) rotate(-14deg) scale(1.18)",
       },
       "100%": {
         opacity: "0",
-        transform: "translateX(5%) translateY(27%) rotate(-20deg)",
+        transform: "translateX(8%) translateY(24%) rotate(-16deg) scale(1.22)",
       },
     },
   },
@@ -197,6 +208,35 @@ export const SPLASHkfs = [
       "100%": { opacity: "0" },
     },
   },
+  {
+  name: "hson_lens_ghost",
+  steps: {
+    "0%": {
+      opacity: "0",
+      transform: "translate(-20%, 10%) scale(0.65)",
+    },
+    "62%": {
+      opacity: "0",
+      transform: "translate(-20%, 10%) scale(0.65)",
+    },
+    "74%": {
+      opacity: "0.20",
+      transform: "translate(-12%, 4%) scale(0.85)",
+    },
+    "82%": {
+      opacity: "0.72",
+      transform: "translate(0%, -3%) scale(1.05)",
+    },
+    "90%": {
+      opacity: "0.38",
+      transform: "translate(10%, -7%) scale(0.95)",
+    },
+    "100%": {
+      opacity: "0",
+      transform: "translate(18%, -10%) scale(0.72)",
+    },
+  },
+}
 ]
 
 export const LAYER_FADEkf = {

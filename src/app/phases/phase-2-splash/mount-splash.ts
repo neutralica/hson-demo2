@@ -35,15 +35,15 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const wordMark = frame.bud(SPLASH_BUDS.wordmark);
     const cloudBox = frame.bud(SPLASH_BUDS.cloudBox);
    
-    /* create lighting effects */
-    const flareBox = frame.bud(SPLASH_BUDS.flareBox);
-    const flare = flareBox.bud(SPLASH_BUDS.flare);
-    const gradient = frame.bud(SPLASH_BUDS.gradient);
-   
-
+    
+    
     /* create sun elements */
     const sunCarrier = wordMark.bud(SPLASH_BUDS.sunCarrier);
     const sun = sunCarrier.bud(SPLASH_BUDS.sun);
+    /* create lighting effects */
+    const flareBox = sunCarrier.bud(SPLASH_BUDS.flareBox);
+    const flare = flareBox.bud(SPLASH_BUDS.flare);
+    const gradient = frame.bud(SPLASH_BUDS.gradient);
    
     /* create star elements */
     const starCarrier = frame.bud(SPLASH_BUDS.starCarrier);

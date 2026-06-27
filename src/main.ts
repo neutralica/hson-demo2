@@ -10,17 +10,9 @@ import { run_app } from "./app/app";
 export function main(): boolean {
   const rootOc = graft_livetree();
   run_app(rootOc);
-  
+console.log(rootOc.dom.parent)
   
   return true;
-}
-
-// --- rendering helpers ---
-function render_err(root: LiveTree, err: unknown): void {
-  // root.empty();
-
-  const box = root.create.pre().classlist.set(["errbox"]);
-  box.text.set(String(err)); 
 }
 
 

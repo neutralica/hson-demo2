@@ -4,7 +4,7 @@ import { motes_init } from "./motes-init";
 import type { MotesOpts, MotesRig } from "./make-mote";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
 import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
-import { MOTES_LAYeR_2css, MOTES_ROOTcss } from "./motes.css";
+import { MOTES_HOSTcss, MOTES_ROOTcss } from "./motes.css";
 
 
 export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
@@ -33,7 +33,7 @@ function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
   const layer = root.create.div()
     .id.set("motes-host")
     .classlist.add("motes")
-    .css.setMany(MOTES_LAYeR_2css);
+    .css.setMany(MOTES_HOSTcss);
 
   const dispose = (): void => void 0; // init patches this
 
@@ -49,7 +49,7 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
 
     colors: inOpts.colors ?? [OKLCH_VIBRANT.orangeTangerine],
     sizePx: inOpts.sizePx ?? [10, 38],
-    opacity: inOpts.opacity ?? [0.02, 0.3],
+    opacity: inOpts.opacity ?? [0.2, 0.5],
     blurPx: [1.3, 2.6],
 
     densityPerKpx2: inOpts.densityPerKpx2 ?? 74,

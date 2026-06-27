@@ -243,7 +243,7 @@ function mount_deck_heading_block(
     ...ABOUT_HEADERcss(block.level),
     ...deck_markdown_heading_css(block.level),
     ...deck_align_css(options.stackAlign),
-    maxWidth: "60ch"
+    maxWidth: "65ch"
   });
   write_in_text(state, heading, block.text);
 }

@@ -75,7 +75,7 @@ export const deckStageCss: CssMap = {
   transition: `opacity ${deckTransitionMs()}ms ease, transform ${deckTransitionMs()}ms ease, filter ${deckTransitionMs()}ms ease`,
 };
 export const deckSlideCss: CssMap = {
-  // width: "min(72rem, 100%)",
+  width: "min(72rem, 100%)",
   maxHeight: "100%",
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr) auto",
@@ -83,7 +83,9 @@ export const deckSlideCss: CssMap = {
   gap: "0.45rem",
   boxSizing: "border-box",
   overflow: "hidden",
+  justifyContent: "center",
 };
+
 export const deckHeaderCss: CssMap = {
   color: _colors.gradient,
   fontSize: "clamp(2.1rem, 5vw, 5rem)",
@@ -182,21 +184,22 @@ export const deckCodeContentCss: CssMap = {
   margin: "0.5em",
 };
 
-export const DECK_ROW_TXTcss = {
+export const DECK_ROW_TXTcss: CssMap = {
   textIndent: "4ch",
   lineHeight: "2",
   minHeight: "1.28em",
   textAlign: "left",
+  
 };
 
-export const IMGcss = {
+export const IMGcss: CssMap = {
   maxWidth: "100%",
   maxHeight: "100%",
   objectFit: "contain",
   opacity: "0.88",
 };
 
-export const TXT_ROWcss = {
+export const TXT_ROWcss: CssMap = {
   whiteSpace: "pre-wrap",
   overflowWrap: "anywhere",
   wordBreak: "break-word",
@@ -205,13 +208,13 @@ export const TXT_ROWcss = {
   overflow: "hidden",
 };
 
-export const DECK_EMPTYHRcss = {
+export const DECK_EMPTYHRcss: CssMap = {
   height: "0.9rem",
   margin: "1rem 0 1rem 0",
   opacity: "0",
 };
 
-export const DECK_HRcss = {
+export const DECK_HRcss: CssMap = {
   height: "1.15rem",
   margin: "2rem 0 1rem 0",
   borderTop: `1px solid ${set_alpha(_colors.chrome, 0.25)}`,

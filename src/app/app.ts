@@ -1,6 +1,6 @@
 // app.ts
 
-import { type LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live";
 import { mount_brand } from "./phases/phase-1-brand/mount-brand";
 import { mount_splash } from "./phases/phase-2-splash/mount-splash";
 import { STAGE_CSS } from "./phases/phase-2-splash/splash.css";
@@ -17,7 +17,8 @@ import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
 
 
-const _pause = () => _sleep(PHASE_LINGER);
+const gcss = CssManager.api();
+
 const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
   log_oklch_palette(OKLCH_VIBRANT, "vibrant");
   log_oklch_palette(OKLCH_NEUTRALS, "neutrals");

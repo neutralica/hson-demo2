@@ -49,58 +49,94 @@ export const SUN_CSS: CssMap = {
 
 export const FLARE_BOX_CSS: CssMap = {
   position: "absolute",
-  left: "50%",
-  top: "32%",
+  left: "0",
+  top: "0",
   transform: "translate(-50%, -50%)",
 
-  width: "calc(var(--frameSize) * 2)",
-  height: "calc(var(--frameSize) * 2)",
+  width: "calc(var(--frameSize) * 2.35)",
+  height: "calc(var(--frameSize) * 2.35)",
 
   pointerEvents: "none",
   overflow: "visible",
   zIndex: "50",
 
 };
-
 export const FLARE_CSS: CssMap = {
   position: "absolute",
-  inset: "0",                    // keep: ensures real size
+  inset: "-18%",
   pointerEvents: "none",
   opacity: "0",
   mixBlendMode: "screen",
-  willChange: "transform, opacity",
+  filter: "saturate(1.35) blur(0.2px)",
+  willChange: "transform, opacity, background-position",
   background: `
-    linear-gradient(
-      120deg,
-      transparent 45%,
-      rgba(255,255,255,0.25) 50%,
-      transparent 55%
-    ),
     radial-gradient(
       circle at 50% 50%,
-      rgba(255,255,255,0.35),
-      transparent 60%
+      rgba(255,255,255,0.84) 0%,
+      rgba(255,245,196,0.42) 7%,
+      rgba(115,185,255,0.16) 18%,
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 33% 66%,
+      rgba(220,195,255,0.58) 0%,
+      rgba(120,220,255,0.26) 7%,
+      rgba(255,255,255,0.10) 12%,
+      transparent 19%
+    ),
+    radial-gradient(
+      circle at 25% 76%,
+      rgba(255,205,120,0.30) 0%,
+      rgba(255,255,255,0.10) 6%,
+      transparent 14%
+    ),
+    radial-gradient(
+      circle at 67% 34%,
+      rgba(180,235,255,0.28) 0%,
+      transparent 11%
+    ),
+    linear-gradient(
+      118deg,
+      transparent 38%,
+      rgba(120,210,255,0.14) 46%,
+      rgba(255,255,255,0.58) 50%,
+      rgba(255,210,145,0.18) 54%,
+      transparent 63%
+    ),
+    linear-gradient(
+      30deg,
+      transparent 46%,
+      rgba(255,255,255,0.24) 50%,
+      transparent 54%
+    ),
+    conic-gradient(
+      from 28deg at 33% 66%,
+      transparent 0deg,
+      rgba(190,170,255,0.36) 40deg,
+      transparent 80deg,
+      rgba(120,220,255,0.28) 124deg,
+      transparent 166deg,
+      transparent 360deg
     )
   `,
 };
 
 
-
 export const FRAME_CSS: CssMap = {
-    position: "fixed",
-    left: "50%",
-    top: "32%",
-    borderRadius: "22px",
-    transform: "translate(-50%, -50%)",
-    // use the shared var
-    width: "var(--frameSize)",
-    height: "var(--frameSize)" ,
-    // background: bckColor,
-    display: "grid",
-    placeItems: "center",
-    overflow: "hidden",
-    padding: "20px 20px",
-    willChange: "",
+  position: "fixed",
+  left: "50%",
+  top: "32%",
+  borderRadius: "22px",
+  transform: "translate(-50%, -50%)",
+  // use the shared var
+  width: "var(--frameSize)",
+  height: "var(--frameSize)",
+  // background: bckColor,
+  display: "grid",
+  placeItems: "center",
+  overflow: "hidden",
+  padding: "20px 20px",
+  willChange: "",
 };
 
 export const GRADIENT_CSS: CssMap = {
@@ -227,3 +263,25 @@ export const CLOUD_BOX_CSS = {
   overflow: "hidden",          // crops the river at the frame edge
   transform: "translateZ(0)",  // forces compositing; helps mask/filter weirdness
 }
+
+export const FLARE_GHOST_CSS: CssMap = {
+  position: "absolute",
+  left: "34%",
+  top: "66%",
+  width: "calc(var(--frameSize) * 0.16)",
+  height: "calc(var(--frameSize) * 0.16)",
+  borderRadius: "50%",
+  pointerEvents: "none",
+  opacity: "0",
+  mixBlendMode: "screen",
+  filter: "blur(0.5px) saturate(1.5)",
+  background: `
+    radial-gradient(
+      circle at 45% 42%,
+      rgba(255,255,255,0.70) 0%,
+      rgba(180,220,255,0.42) 18%,
+      rgba(210,150,255,0.24) 44%,
+      transparent 70%
+    )
+  `,
+};
