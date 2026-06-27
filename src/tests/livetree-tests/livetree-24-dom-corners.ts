@@ -137,7 +137,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: html and must.html distinguish HTML from SVG",
+      name: "dom surface: html and must.htmlEl distinguish HTML from SVG",
       fixture: "dom-helper/html",
       sub: "html-vs-svg",
       dom: true,
@@ -159,22 +159,22 @@ export function livetree_dom_helper_surface(): TestSuite {
         let circleMustHtmlThrows = false;
 
         try {
-          svg.dom.must.html();
+          svg.dom.must.htmlEl();
         } catch {
           svgMustHtmlThrows = true;
         }
 
         try {
-          circle.dom.must.html();
+          circle.dom.must.htmlEl();
         } catch {
           circleMustHtmlThrows = true;
         }
 
         (tree as any).__result = {
-          boxHtmlTag: box.dom.html()?.tagName.toLowerCase(),
-          boxMustHtmlTag: box.dom.must.html().tagName.toLowerCase(),
-          svgHtml: svg.dom.html(),
-          circleHtml: circle.dom.html(),
+          boxHtmlTag: box.dom.htmlEl()?.tagName.toLowerCase(),
+          boxMustHtmlTag: box.dom.must.htmlEl().tagName.toLowerCase(),
+          svgHtml: svg.dom.htmlEl(),
+          circleHtml: circle.dom.htmlEl(),
           svgElNamespace: svg.dom.must.el().namespaceURI,
           circleElNamespace: circle.dom.must.el().namespaceURI,
           svgMustHtmlThrows,
@@ -185,14 +185,14 @@ export function livetree_dom_helper_surface(): TestSuite {
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.eq("HTML element dom.html returns HTMLElement", r.boxHtmlTag, "div");
-        t.eq("HTML element dom.must.html returns HTMLElement", r.boxMustHtmlTag, "div");
-        t.eq("SVG root dom.html returns undefined", r.svgHtml, undefined);
-        t.eq("SVG child dom.html returns undefined", r.circleHtml, undefined);
+        t.eq("HTML element dom.htmlEl returns HTMLElement", r.boxHtmlTag, "div");
+        t.eq("HTML element dom.must.htmlEl returns HTMLElement", r.boxMustHtmlTag, "div");
+        t.eq("SVG root dom.htmlEl returns undefined", r.svgHtml, undefined);
+        t.eq("SVG child dom.htmlEl returns undefined", r.circleHtml, undefined);
         t.eq("SVG root dom.el remains available", r.svgElNamespace, "http://www.w3.org/2000/svg");
         t.eq("SVG child dom.el remains available", r.circleElNamespace, "http://www.w3.org/2000/svg");
-        t.eq("SVG root dom.must.html throws", r.svgMustHtmlThrows, true);
-        t.eq("SVG child dom.must.html throws", r.circleMustHtmlThrows, true);
+        t.eq("SVG root dom.must.htmlEl throws", r.svgMustHtmlThrows, true);
+        t.eq("SVG child dom.must.htmlEl throws", r.circleMustHtmlThrows, true);
       },
     },
 

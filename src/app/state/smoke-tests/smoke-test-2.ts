@@ -98,7 +98,7 @@ export function smoke_demo_state_graph_projection(): StateSmokeResult {
 
 function liveDomHtmlOf(tree: LiveTree, label: string): HTMLElement {
   try {
-    return tree.dom.must.html();
+    return tree.dom.must.htmlEl();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`${label}: ${message}`);

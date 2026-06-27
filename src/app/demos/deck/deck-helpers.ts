@@ -78,7 +78,7 @@ function write_text_value(state: DeckState, text: string, setText: TextSetter, o
 }
 
 export function write_in_rendered_text(state: DeckState, root: LiveTree): void {
-  const rootElement = root.dom.must.html();
+  const rootElement = root.dom.must.htmlEl();
   const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
   const entries: { node: Text; text: string; }[] = [];
   let current = walker.nextNode();
