@@ -92,7 +92,7 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
     return g;
 }
 
-export async function spawn_flower(layer: SvgLiveTree, x: number, y: number): Promise<SvgLiveTree>{
+export async function spawn_flower(layer: SvgLiveTree, x: number, y: number): Promise<SvgLiveTree> {
     const seed = Date.now() ^ ((x * 73856093) | 0) ^ ((y * 19349663) | 0);
     const spec = makeFlowerSpec(seed, x, y);
     return renderFlower(layer, spec);
@@ -102,50 +102,77 @@ async function make_bitmapped_effect(
     flower: SvgLiveTree,
     spec: FlowerSpec,
 ): Promise<SvgLiveTree> {
-    const el = flower.dom.el() as SVGGElement | undefined;
+    // const el = flower.dom.el() as SVGGElement | undefined;
+    // if (!el) return flower;
+    // const bbox = el.getBBox();
+
     const el2 = flower.cloneBranch();
-    if (!el) return flower;
+    const bb2 = flower.svg.must.bbox();
 
-    const bbox = el.getBBox();
+    const w2 = Math.max(1, bb2.width);
+    const h2 = Math.max(1, bb2.height);
+    const x2 = bb2.x;
+    const y2 = bb2.y;
 
-    const w = Math.max(1, bbox.width);
-    const h = Math.max(1, bbox.height);
-    const x = bbox.x;
-    const y = bbox.y;
+    // const w = Math.max(1, bbox.width);
+    // const h = Math.max(1, bbox.height);
+    // const x = bbox.x;
+    // const y = bbox.y;
 
-    const clone = el.cloneNode(true) as SVGGElement;
+    // const clone = el.cloneNode(true) as SVGGElement;
+
+    const clone2 = el2.cloneBranch();
 
     // strip transform/opacity from the cloned root because the live outer <g>
     // will keep those; otherwise they get applied twice inside the bitmap
-    clone.removeAttribute("transform");
-    clone.removeAttribute("opacity");
+    // clone.removeAttribute("transform");
+    // clone.removeAttribute("opacity");
+    clone2.attr.drop("transform");
+    clone2.attr.drop("opacity");
 
-    const standaloneSvg =
+    // const standaloneSvg =
+    //     `<svg xmlns="http://www.w3.org/2000/svg"
+    //           width="${fmtNum(w, 3)}"
+    //           height="${fmtNum(h, 3)}"
+    //           viewBox="${fmtNum(x, 3)} ${fmtNum(y, 3)} ${fmtNum(w, 3)} ${fmtNum(h, 3)}">
+    //         ${clone.outerHTML}
+    //     </svg>`;
+
+    const standaloneSvg2 =
         `<svg xmlns="http://www.w3.org/2000/svg"
-              width="${fmtNum(w, 3)}"
-              height="${fmtNum(h, 3)}"
-              viewBox="${fmtNum(x, 3)} ${fmtNum(y, 3)} ${fmtNum(w, 3)} ${fmtNum(h, 3)}">
-            ${clone.outerHTML}
+              width="${fmtNum(w2, 3)}"
+              height="${fmtNum(h2, 3)}"
+              viewBox="${fmtNum(x2, 3)} ${fmtNum(y2, 3)} ${fmtNum(w2, 3)} ${fmtNum(h2, 3)}">
+            ${clone2.content.markup.outerHTML}
         </svg>`;
 
-    const href =  svg_to_data_url(standaloneSvg);
+    const href = svg_to_data_url(standaloneSvg2);
 
     // keep the outer flower <g>; only replace its children
-    while (el.firstChild) {
-        el.removeChild(el.firstChild);
-    }
+    el2.removeChildren();
+    // while (el.firstChild) {
+    //     el.removeChild(el.firstChild);
+    // }
+    const imageEl2 = el2.create.image()
+        .attr.setMany({
+            x: fmtNum(x2, 3),
+            y: fmtNum(y2, 3),
+            width: fmtNum(w2, 3),
+            height: fmtNum(h2, 3),
+            preserveAspectRatio: "none",
+            href: href
+        });
+    // const imageEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    // imageEl.setAttribute("x", fmtNum(x, 3));
+    // imageEl.setAttribute("y", fmtNum(y, 3));
+    // imageEl.setAttribute("width", fmtNum(w, 3));
+    // imageEl.setAttribute("height", fmtNum(h, 3));
+    // imageEl.setAttribute("preserveAspectRatio", "none");
+    // imageEl.setAttribute("href", href);
 
-    const imageEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-    imageEl.setAttribute("x", fmtNum(x, 3));
-    imageEl.setAttribute("y", fmtNum(y, 3));
-    imageEl.setAttribute("width", fmtNum(w, 3));
-    imageEl.setAttribute("height", fmtNum(h, 3));
-    imageEl.setAttribute("preserveAspectRatio", "none");
-    imageEl.setAttribute("href", href);
+    // el.appendChild(imageEl);
 
-    el.appendChild(imageEl);
-
-    return flower;
+    return el2;
 }
 
 function svg_to_data_url(svg: string): string {
