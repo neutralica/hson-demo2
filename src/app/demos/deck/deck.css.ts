@@ -66,13 +66,14 @@ export const deckStageCss: CssMap = {
   inset: "0",
   display: "grid",
   placeItems: "center",
+  background: "radial-gradient( circle at 100%, rgba(0,0,0,0.5) 1%, transparent)",
   zIndex: "1",
   // CHANGED: give the lighthouse mark breathing room and shift slide content
   // into the open stage area instead of starting under the logo/menu rail.
   // padding: "5.75rem 6rem 4.25rem clamp(13.5rem, 14vw, 18rem)",
   padding: "4rem 2rem 0",
   boxSizing: "border-box",
-  transition: `opacity ${deckTransitionMs()}ms ease, transform ${deckTransitionMs()}ms ease, filter ${deckTransitionMs()}ms ease`,
+  transition: `opacity ${deckTransitionMs()}ms ease, transform ${deckTransitionMs()}ms ease, filter ${deckTransitionMs()}ms ease, background ${deckTransitionMs()}ms ease`,
 };
 export const deckSlideCss: CssMap = {
   width: "min(72rem, 100%)",
@@ -162,10 +163,12 @@ export const deckRootCss:CssMap = {
   inset: "0",
   zIndex: "95",
   display: "none",
+  height: "100%",
+  width: "100%",
   color: _colors.chrome,
+  background: "transparent",
   // CHANGED: the deck root itself stays transparent so the hson/livedemo
   // lighthouse mark can remain visually distinct.
-  background: "transparent",
   pointerEvents: "all",
 };
 export const deckCodeContentCss: CssMap = {

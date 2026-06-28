@@ -1,3 +1,4 @@
+import type { SvgLiveTree } from "hson-live/types";
 import type { LiveTreeCaseSpec, TestSuite } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
@@ -513,6 +514,339 @@ export function livetree_dom_helper_surface(): TestSuite {
         t.eq("detached clone is not connected", r.detachedConnected, false);
         t.eq("removed node is no longer connected", r.afterRemove, false);
         t.eq("removed node is not findable from root", r.findAfterRemove, undefined);
+      },
+    },
+  ];
+
+  return make_livetree_suite(SUITE, cases);
+}
+
+export function livetree_graph_dom_markup_surface(): TestSuite {
+  const SUITE = "livetree/graph-dom-markup-surface";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "content.markup serializes mounted and detached branches",
+      fixture: "markup/content-markup",
+      sub: "mounted-detached",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="target" data-kind="demo">
+            <span class="label">hello</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+        const detached = target.cloneBranch();
+
+        (tree as any).__result = {
+          mountedInner: target.content.markup.innerHTML,
+          mountedOuter: target.content.markup.outerHTML,
+          detachedInner: detached.content.markup.innerHTML,
+          detachedOuter: detached.content.markup.outerHTML,
+          detachedConnected: detached.dom.isConnected(),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("detached clone is not connected", r.detachedConnected, false);
+
+        t.ok("mounted inner contains child span", r.mountedInner.includes("<span"));
+        t.ok("mounted inner contains text", r.mountedInner.includes("hello"));
+        t.ok("mounted outer contains owner section", r.mountedOuter.includes("<section"));
+        t.ok("mounted outer contains owner id", r.mountedOuter.includes(`id="target"`));
+
+        t.ok("detached inner contains child span", r.detachedInner.includes("<span"));
+        t.ok("detached inner contains text", r.detachedInner.includes("hello"));
+        t.ok("detached outer contains owner section", r.detachedOuter.includes("<section"));
+        t.ok("detached outer contains owner id", r.detachedOuter.includes(`id="target"`));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "content.markup preserves graph attrs on detached clone",
+      fixture: "markup/content-markup",
+      sub: "detached-attrs",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="target" data-kind="demo">
+            <span class="label">hello</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+        const detached = target.cloneBranch();
+
+        detached.attr.set("data-extra", "clone-only");
+
+        (tree as any).__result = {
+          detachedOuter: detached.content.markup.outerHTML,
+          mountedOuter: target.content.markup.outerHTML,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.ok("detached markup includes cloned owner tag", r.detachedOuter.includes("<section"));
+        t.ok("detached markup includes original id", r.detachedOuter.includes(`id="target"`));
+        t.ok("detached markup includes changed clone attr", r.detachedOuter.includes(`data-extra="clone-only"`));
+        t.eq("mounted original did not receive clone-only attr", r.mountedOuter.includes(`data-extra="clone-only"`), false);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom innerHTML and outerHTML are mounted DOM-backed getters",
+      fixture: "markup/dom-html-getters",
+      sub: "mounted",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="target">
+            <span class="label">hello</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+
+        (tree as any).__result = {
+          innerHTML: target.dom.innerHtml,
+          outerHTML: target.dom.outerHtml,
+          mustInnerHTML: target.dom.must.innerHtml,
+          mustOuterHTML: target.dom.must.outerHtml,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.ok("dom.innerHTML returns child markup string", typeof r.innerHTML === "string");
+        t.ok("dom.outerHTML returns owner markup string", typeof r.outerHTML === "string");
+        t.ok("dom.must.innerHTML returns child markup string", typeof r.mustInnerHTML === "string");
+        t.ok("dom.must.outerHTML returns owner markup string", typeof r.mustOuterHTML === "string");
+
+        t.ok("dom.innerHTML contains child span", r.innerHTML.includes("<span"));
+        t.ok("dom.innerHTML contains text", r.innerHTML.includes("hello"));
+        t.ok("dom.outerHTML contains owner section", r.outerHTML.includes("<section"));
+        t.ok("dom.outerHTML contains target id", r.outerHTML.includes(`id="target"`));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "dom innerHTML and outerHTML are undefined on detached clone",
+      fixture: "markup/dom-html-getters",
+      sub: "detached",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="target">
+            <span class="label">hello</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+        const detached = target.cloneBranch();
+
+        let mustInnerMessage = "";
+        let mustOuterMessage = "";
+
+        try {
+          void detached.dom.must.innerHtml;
+        } catch (err) {
+          mustInnerMessage = err instanceof Error ? err.message : String(err);
+        }
+
+        try {
+          void detached.dom.must.outerHtml;
+        } catch (err) {
+          mustOuterMessage = err instanceof Error ? err.message : String(err);
+        }
+
+        (tree as any).__result = {
+          detachedConnected: detached.dom.isConnected(),
+          innerHTML: detached.dom.innerHtml,
+          outerHTML: detached.dom.outerHtml,
+          mustInnerMessage,
+          mustOuterMessage,
+          graphOuter: detached.content.markup.outerHTML,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("detached clone is not connected", r.detachedConnected, false);
+        t.eq("detached dom.innerHTML is undefined", r.innerHTML, undefined);
+        t.eq("detached dom.outerHTML is undefined", r.outerHTML, undefined);
+
+        t.ok("must.innerHTML throws", r.mustInnerMessage.includes("innerHTML"));
+        t.ok("must.outerHTML throws", r.mustOuterMessage.includes("outerHTML"));
+
+        t.ok("graph markup still works while detached", r.graphOuter.includes("<section"));
+        t.ok("graph markup still includes text", r.graphOuter.includes("hello"));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "svg bbox is mounted renderer-backed",
+      fixture: "markup/svg-bbox",
+      sub: "mounted-detached",
+      dom: true,
+      html: `
+        <main id="root">
+          <svg id="svg-root" width="100" height="100" viewBox="0 0 100 100">
+            <g id="flower">
+              <circle id="dot" cx="20" cy="30" r="10"></circle>
+            </g>
+          </svg>
+        </main>
+      `,
+
+      act(tree) {
+        const flower = tree.find.must.byId("flower");
+        const detached = flower.cloneBranch();
+
+        const mountedBox = flower.svg.must.bbox();
+
+        let detachedMessage = "";
+        try {
+          void detached.svg.must.bbox();
+        } catch (err) {
+          detachedMessage = err instanceof Error ? err.message : String(err);
+        }
+
+        (tree as any).__result = {
+          mountedBox,
+          detachedConnected: detached.dom.isConnected(),
+          detachedBox: detached.svg.bbox(),
+          detachedMessage,
+          detachedMarkup: detached.content.markup.outerHTML,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("detached clone is not connected", r.detachedConnected, false);
+        t.eq("detached svg.bbox is undefined", r.detachedBox, undefined);
+        t.ok("detached svg.must.bbox throws", r.detachedMessage.includes("bbox"));
+
+        t.ok("mounted bbox has positive width", r.mountedBox.width > 0);
+        t.ok("mounted bbox has positive height", r.mountedBox.height > 0);
+
+        t.ok("detached graph markup still serializes g", r.detachedMarkup.includes("<g"));
+        t.ok("detached graph markup still serializes circle", r.detachedMarkup.includes("<circle"));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "svg cloneBranch preserves SVG create surface",
+      fixture: "markup/svg-clone-typing",
+      sub: "svg-create-after-clone",
+      dom: true,
+      html: `
+        <main id="root">
+          <svg id="svg-root" width="100" height="100" viewBox="0 0 100 100">
+            <g id="flower">
+              <circle id="dot" cx="20" cy="30" r="10"></circle>
+            </g>
+          </svg>
+        </main>
+      `,
+
+      act(tree) {
+        const svg = tree.find.must.byId("svg-root") as unknown as SvgLiveTree;
+
+        const branch = svg.create.g()
+          .attr.set("id", "typed-branch");
+
+        const clone = branch.cloneBranch();
+
+        clone.create.circle()
+          .attr.setMany({
+            id: "clone-dot",
+            cx: "12",
+            cy: "14",
+            r: "5",
+          });
+
+        (tree as any).__result = {
+          cloneConnected: clone.dom.isConnected(),
+          cloneMarkup: clone.content.markup.outerHTML,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("svg clone remains detached", r.cloneConnected, false);
+        t.ok("svg clone markup contains cloned g", r.cloneMarkup.includes("<g"));
+        t.ok("svg clone can create circle through SVG surface", r.cloneMarkup.includes("<circle"));
+        t.ok("svg clone contains created circle id", r.cloneMarkup.includes(`id="clone-dot"`));
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "content.markup reflects graph mutation before mount",
+      fixture: "markup/detached-graph-mutation",
+      sub: "clone-mutate-serialize",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="target">
+            <span id="label">before</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const target = tree.find.must.byId("target");
+        const detached = target.cloneBranch();
+
+        detached.attr.set("data-state", "detached");
+        detached.empty();
+        detached.create.div()
+          .attr.set("id", "replacement")
+          .text.set("after");
+
+        (tree as any).__result = {
+          detachedConnected: detached.dom.isConnected(),
+          detachedInner: detached.content.markup.innerHTML,
+          detachedOuter: detached.content.markup.outerHTML,
+          mountedOuter: target.content.markup.outerHTML,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+
+        t.eq("detached clone is not connected", r.detachedConnected, false);
+
+        t.ok("detached inner reflects replacement child", r.detachedInner.includes(`id="replacement"`));
+        t.ok("detached inner reflects replacement text", r.detachedInner.includes("after"));
+        t.ok("detached outer reflects clone attr", r.detachedOuter.includes(`data-state="detached"`));
+
+        t.eq("mounted original does not include replacement child", r.mountedOuter.includes(`id="replacement"`), false);
+        t.eq("mounted original still includes original text", r.mountedOuter.includes("before"), true);
       },
     },
   ];

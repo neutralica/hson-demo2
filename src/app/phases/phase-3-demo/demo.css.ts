@@ -164,7 +164,7 @@ export const HSON_GRAFFITIcss: CssMap = {
   textAlign: "center",
   maxWidth: "calc(100vw)",
   userSelect: "none",
-  textShadow: "18px 5px 2px " + set_alpha(_colors.graffitiShadow, 0.1),
+  textShadow: "18px 5px 2px " + set_alpha(_colors.graffitiShadow, 0.12),
 }
 
 export const HSON_SUBcss: CssMap = {

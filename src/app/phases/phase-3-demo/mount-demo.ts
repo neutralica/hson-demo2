@@ -379,7 +379,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const content = mount_demo_content(hosts);
   wire_parse_test_bridge(content.parse, content.test);
   mount_motes(motesLayer);
-  mount_deck(screen);
+  mount_deck(stage);
   activate_widget($MOTES);
   sync_fleur_viewbox(fleurLayer, fleurField);
 

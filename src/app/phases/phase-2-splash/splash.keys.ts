@@ -30,7 +30,7 @@ export const SPLASHkfs = [
       // "62%": { opacity: ".6", transform: "scale(2.7)" },
 
       "84%": { opacity: "1", transform: "scale(2.3)", boxShadow: "0 0 48px rgba(204, 255, 84, 0.8)", },
-      "100%": { opacity: "1", transform: "scale(1)", boxShadow: "0 0 8px rgba(204, 255, 84, 1)", },
+      "100%": { opacity: "1", transform: "scale(2)", boxShadow: "0 0 8px rgba(204, 255, 84, 1)", },
     },
   },
   {

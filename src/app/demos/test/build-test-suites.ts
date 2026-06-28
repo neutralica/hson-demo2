@@ -14,6 +14,7 @@ import  { all_unit_tests } from "../../../tests/unit-tests/all-unit-tests";
 import  { _snip } from "../../utils/helpers";
 import  { _freeze } from "./tests.consts";
 import type { HsonTestApi, FixtureBundle, CaseKey, TestSuite, TestCase, TestRunMode } from "./tests.types";
+import { livetree_graph_dom_markup_surface } from "../../../tests/livetree-tests/livetree-24-dom-corners";
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
@@ -180,7 +181,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      ...all_demo_meta(),
+      livetree_graph_dom_markup_surface(),
     ]);
   }
   if (mode === "demo-meta") {

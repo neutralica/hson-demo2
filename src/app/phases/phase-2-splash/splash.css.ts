@@ -242,6 +242,7 @@ export const CLOUD_LAYER_BASE_CSS: CssMap = {
   width: "100%",
   height: "100%",
   pointerEvents: "none",
+  userSelect: "none",
   zIndex: "35",
 
   //  do not set maskImage here (masking strategy is per-layer)
@@ -259,6 +260,7 @@ export const CLOUD_BOX_CSS = {
   position: "absolute",
   inset: "0",
   pointerEvents: "none",
+  userSelect: "none",
   zIndex: "40",
   overflow: "hidden",          // crops the river at the frame edge
   transform: "translateZ(0)",  // forces compositing; helps mask/filter weirdness

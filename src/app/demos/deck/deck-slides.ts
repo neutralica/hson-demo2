@@ -54,7 +54,6 @@ export const SLIDES: readonly DeckSlideConfig[] = [
   {
     headerA: "HSON",
     headerB: "hson-live",
-    headerC: "LiveTree",
     footer: "terminology",
   },
   {
@@ -260,29 +259,31 @@ LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, 
     },
     footer: "livetree / about",
   },
+
   {
-    headerA: "LiveTree - example",
-    bodyA: {
+    headerA: "LiveTree API",
+    bodyB: {
       kind: "code",
       lang: "ts",
       text: `
-const tree = hson.queryBody()                    // Query document.body, deep-parse to HSON.
-  .liveTree                                      // Initialize LiveTree creation.
-  .graft();                                      // Replace DOM with a projection from the node graph.
-                 
-const branchDiv = tree.create.div()              // LiveTree offers rich namespace-aware creation methods.
-  .setText("hello world")                        // Changes to node graph are immediately updated on-DOM.
-  .css.set.backgroundColor("pink");              // Styling available via CSS or inline style attribute.
+// this example wraps DOM creation, EventListeners, CSS, inline style, and box-property geometry into a single chained call
 
-tree.listen                                      // LiveTree offers listener and event management with options baked-in.
-  .once()                                        // Listener teardown is managed automatically upon node removal.
-  .onAnimationEnd(() => {                        // Sequenced events and animations are easy to schedule in LiveTree.
-    branchDiv.setText("goodbye world")           // Text, DOM traversal, CSS, events, inline style, 
-      .style.set.backgroundColor(                //   are all managed in a unified, typed ecosystem.
-        liveTree.dom.rect().width > 500          // LiveTree wraps many DOMRect and viewport methods in its API.
-        ? "red"                                  // CSS can be dynamically created from JS variables.
-        : "blue"                                 
-      );                                         // (Conventional selector-based styling is also fully supported.)
+
+const button = hson.queryBody()                    // Query document.body, deep-parse to HSON.
+  .liveTree                                        // Initialize LiveTree creation. 
+  .graft()                                         // Replace DOM with a projection from the node graph.
+  .create.div()                                    // LiveTree offers rich namespace-aware creation methods.
+  .setText("hello world")                          // Changes to node graph are immediately updated on-DOM.
+  .css.set.backgroundColor("pink");                // Styling available via CSS or inline style attribute.
+  .listen                                          // LiveTree offers listener and event management with options baked-in.
+    .once()                                        // Listener teardown is managed automatically upon node removal.
+    .onAnimationEnd(() => {                        // Sequenced events and animations are easy to schedule in LiveTree.
+      branchDiv.setText("goodbye world")           // Text, DOM traversal, CSS, events, inline style, 
+        .style.set.backgroundColor(                //   are all managed in a unified, typed ecosystem.
+          liveTree.dom.rect().width > 500          // LiveTree wraps many DOMRect and viewport methods in its API.
+          ? "red"                                  // CSS can be dynamically created from JS variables.
+          : "blue"                                 // (Conventional selector-based styling is also fully supported.) 
+      );                                        
   });
 `,
     },
@@ -314,7 +315,7 @@ LiveDemo is intentionally minimalist in styling.
     headerA: "ty JSMN",
     bodyB: {
       kind: "text",
-      text: "### Pip Hanson\nhansonpw@gmail.com\nwww.terminalgothic.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2\n",
+      text: "### Pip Hanson\nwww.terminalgothic.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2\n",
     },
     footer: "contact / links",
   },
