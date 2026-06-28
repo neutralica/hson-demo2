@@ -1068,10 +1068,6 @@ export function extraCases(): readonly TestSuite[] {
         const styleEl = host?.querySelector("#_hson") as HTMLStyleElement | null;
         const css = styleEl?.textContent ?? "";
 
-        console.log("quid:", box.quid);
-        console.log("css state:", box.css.get.property("opacity"));
-        console.log("node:", box.node);
-
         t.eq(
           "LiveTree opacity is latest",
           box.css.get.property("opacity"),

@@ -849,6 +849,69 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
         t.eq("mounted original still includes original text", r.mountedOuter.includes("before"), true);
       },
     },
+    {
+      suite: SUITE,
+      name: "content.deep returns effective descendants only",
+      fixture: "content/deep-effective-descendants",
+      sub: "descendants-no-self-no-leaves",
+      dom: true,
+      html: `
+    <section id="root">
+      <header id="header">
+        <h1 id="title">Title</h1>
+      </header>
+      <main id="main">
+        <article id="article">
+          <p id="copy">Copy</p>
+        </article>
+      </main>
+      loose text
+    </section>
+  `,
+
+      act(tree) {
+        const root = tree.find.must.byId("root");
+
+        const deep = root.content.deep();
+
+        (tree as any).__result = {
+          ids: deep
+            .map(t => t.attr.get("id"))
+            .filter((id): id is string => id !== undefined),
+
+          tags: deep.map(t => t.node._tag),
+
+          includesOwner: deep.some(t => t.node === root.node),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq(
+          "content.deep returns descendant ids in tree order",
+          r.ids.join("|"),
+          "header|title|main|article|copy",
+        );
+
+        t.eq(
+          "content.deep excludes owner node",
+          r.includesOwner,
+          false,
+        );
+
+        t.eq(
+          "content.deep excludes leaf VSN nodes",
+          r.tags.includes("_str"),
+          false,
+        );
+
+        t.eq(
+          "content.deep excludes root id",
+          r.ids.includes("root"),
+          false,
+        );
+      },
+    }
   ];
 
   return make_livetree_suite(SUITE, cases);

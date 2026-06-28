@@ -163,11 +163,6 @@ export function livetree_css_pseudo(): TestSuite {
           const manualBefore = getComputedStyle(manualEl, "::before");
           const manualBase = manual.dom.computed() ?? { content: "" };
           const autoBase = auto.dom.computed() ?? { content: "" };
-
-          console.log("manual: before content", manualBefore.content);
-          console.log("manual: base content", manualBase.content);
-          console.log("manual: before content", autoBefore.content);
-          console.log("manual: base content", autoBase.content);
           (tree as any).__result = {
             manualContent: manualBefore.content,
             autoContent: autoBefore.content,

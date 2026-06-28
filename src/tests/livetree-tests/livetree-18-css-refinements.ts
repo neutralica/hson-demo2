@@ -363,8 +363,6 @@ export function livetree_css_refinements(): TestSuite {
         const css = CssManager.api();
         const renderedAll = css.renderAll();
         const rules = css.list();
-        console.log(">>> tree.css.getMany()");
-        console.log(tree.css.getMany());
 
         (tree as any).__result = {
           baseAppearance: range.css.get.appearance(),
@@ -379,9 +377,6 @@ export function livetree_css_refinements(): TestSuite {
       },
       assert(tree, t) {
         const r = (tree as any).__result;
-        // changed: temporary diagnostic output.
-        // console.log("[selector diagnostics] rules:", r.rules);
-        // console.log("[selector diagnostics] rendered css:\n", r.renderedAll);
 
         t.eq("base range appearance is stored", r.baseAppearance, "none");
         t.eq("webkit thumb appearance is readable", r.thumbWebkitAppearance, "none");

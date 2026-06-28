@@ -217,11 +217,6 @@ export function livetree_svg_basic(): TestSuite {
         const defs = svg.create.defs().id.set("defs");
         const clip = defs.create.clipPath().id.set("clip");
         const circle = g.create.circle().id.set("c");
-        console.log(svg.dom.el()?.tagName,
-          g.dom.el()?.tagName,
-          defs.dom.el()?.tagName,
-          clip.dom.el()?.tagName,
-          circle.dom.el()?.tagName);
         (root as any).__result = {
           tags: [
             svg.dom.el()?.tagName,

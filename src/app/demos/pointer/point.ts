@@ -130,7 +130,6 @@ function find_visual_only_elements(
 ): Element[] {
     const rootEl = root.dom.el();
     if (!(rootEl instanceof Element)) return [];
-
     const hitSet = new Set<Element>(hitStack);
     const out: Element[] = [];
 
