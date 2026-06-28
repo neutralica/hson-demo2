@@ -3,6 +3,20 @@
 // -------------------------
 
 import type { LiveTree } from "hson-live";
+
+type FireworksWasm = {
+  memory: WebAssembly.Memory;
+  init: (n: number) => void;
+  tick: (t: number) => void;
+};
+export type FireworkLevel = 0 | 1 | 2;
+
+export type FireworkController = Readonly<{
+  fire: (level?: FireworkLevel) => void;
+  teardown: () => void;
+}>;
+
+
 const FIREWORKS = {
   wasmPath: "/hson-fireworks.wasm",
   durationMs: 10_000,
@@ -10,13 +24,7 @@ const FIREWORKS = {
   height: 520,
   fpsCap: 60,     // optional
 } as const;
-
-type FireworksWasm = {
-  memory: WebAssembly.Memory;
-  init: (n: number) => void;
-  tick: (t: number) => void;
-};
-
+const MAX_LIVE_FIREWORKS = 100;
 let _wasmCache: FireworksWasm | undefined;
 
 async function load_fireworks_wasm(): Promise<FireworksWasm> {
@@ -56,24 +64,43 @@ type FireworkConfig = {
 };
 
 type LiveFirework = {
-  // per-particle state (JS-side offsets + velocity)
+  // per-particle state (frozen WASM burst shape + JS-side offsets/velocity)
   count: number;
+  baseX: Float32Array;
+  baseY: Float32Array;
   offX: Float32Array;
   offY: Float32Array;
   vx: Float32Array;
   vy: Float32Array;
-
   // render helpers
   prevX: Float32Array;
   prevY: Float32Array;
   phase: Float32Array;
+  white: Uint8Array;
 
   // config
   cfg: FireworkConfig;
   t: number;
 };
 
-export async function mount_firework(stage: LiveTree): Promise<() => void> {
+type DetonationPop = {
+  x: number;
+  y: number;
+  hue: number;
+  t: number;
+  life: number;
+  radius: number;
+};
+
+type SmokeCloud = {
+  x: number;
+  y: number;
+  t: number;
+  life: number;
+  radius: number;
+};
+
+export async function mount_firework(stage: LiveTree): Promise<FireworkController> {
   const fw = await load_fireworks_wasm();
 
   // Create one canvas and keep it. Everything draws here.
@@ -87,27 +114,36 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
     });
 
   const canvas = canvasLt.dom.el() as HTMLCanvasElement;
+  const ctx0 = canvasLt.canvas.ctx2d();
 
-  const ctx0 = canvas.getContext("2d");
   if (!ctx0) {
     canvasLt.removeSelf();
-    return () => void 0;
+    return Object.freeze({
+      fire: () => void 0,
+      teardown: () => void 0,
+    });
   }
   const ctx: CanvasRenderingContext2D = ctx0;
-
   const EXTRA_FALL_PX = 520;
   const W = window.innerWidth;
-  const H = window.innerHeight + EXTRA_FALL_PX;
+  const H = window.innerHeight;
+  const CULL_H = H + EXTRA_FALL_PX;
+  const SKY_LIFT_PX = Math.min(260, Math.round(H * 0.24));
   canvas.width = W;
   canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = "lighter";
 
   // --- WASM ---
-  const COUNT_MAX = 700;
+  const COUNT_MAX = 200;
   fw.init(COUNT_MAX);
   const view = new DataView(fw.memory.buffer);
 
   // Active fireworks list
   const live: LiveFirework[] = [];
+  const pops: DetonationPop[] = [];
+  const smokes: SmokeCloud[] = [];
+  let flashFrames = 0;
 
   // ---------------------------------------
   // helpers: random + envelope + color
@@ -147,6 +183,28 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
     // One firework: WASM drives a base “pattern”, JS adds ballistic arc + sparkle
     // count is clamped to COUNT_MAX (WASM buffer)
     const n = Math.min(cfg.count, COUNT_MAX);
+    const white = new Uint8Array(n);
+    // Freeze the WASM burst pattern at spawn time. After this, JS velocity/gravity
+    // controls the trajectory instead of re-reading the animated WASM pattern.
+    fw.tick(0);
+    const patternCenterX = W * 0.5;
+    const patternCenterY = H * 0.5;
+    const baseX = new Float32Array(n);
+    const baseY = new Float32Array(n);
+    let baseSumX = 0;
+    let baseSumY = 0;
+
+    for (let i = 0; i < n; i += 1) {
+      const bx = view.getInt32(4 + i * 8, true) - patternCenterX;
+      const by = view.getInt32(8 + i * 8, true) - patternCenterY;
+      baseX[i] = bx;
+      baseY[i] = by;
+      baseSumX += bx;
+      baseSumY += by;
+    }
+
+    const baseCenterX = n > 0 ? baseSumX / n : 0;
+    const baseCenterY = n > 0 ? baseSumY / n : 0;
 
     const offX = new Float32Array(n);
     const offY = new Float32Array(n);
@@ -163,17 +221,21 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
 
       // Phase for per-particle sparkle LFO
       phase[i] = Math.random() * 1000;
-
+      white[i] = Math.random() < 0.52 ? 1 : 0;
       // Launch impulse: angle + speed with slight per-particle variance
-      const a = cfg.angleRad + rand(-0.22, 0.22);
+      const radialA = rand(-Math.PI, Math.PI);
+      const sharedBias = cfg.angleRad * 0.12;
+      const a = radialA + sharedBias + rand(-0.32, 0.32);
       const s = cfg.speed * rand(0.70, 1.15);
 
       vx[i] = Math.cos(a) * s;
       vy[i] = Math.sin(a) * s; // negative means “up” if angle aims upward
     }
-
+    while (live.length >= MAX_LIVE_FIREWORKS) live.shift();
     live.push({
       count: n,
+      baseX,
+      baseY,
       offX,
       offY,
       vx,
@@ -181,9 +243,30 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
       prevX,
       prevY,
       phase,
+      white,
       cfg,
       t: 0,
     });
+    const detX = cfg.originX + baseCenterX;
+    const detY = cfg.originY + baseCenterY - SKY_LIFT_PX;
+
+    pops.push({
+      x: detX,
+      y: detY,
+      hue: cfg.hueBase,
+      t: 0,
+      life: 6,
+      radius: 50,
+    });
+    smokes.push({
+      x: detX,
+      y: detY,
+      t: 0,
+      life: 1360,
+      radius: 55,
+    });
+    flashFrames = Math.max(flashFrames, 3);
+    ensure_loop();
   }
 
   // ---------------------------------------
@@ -193,47 +276,63 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
   const DRAG = 0.992;    // air resistance
   const TERMINAL = 8.0;  // terminal velocity cap
 
-  ctx.globalCompositeOperation = "source-over";
-  ctx.fillStyle = "rgba(0,0,0,1)";
-  ctx.fillRect(0, 0, W, H);
+  ctx.clearRect(0, 0, W, H);
 
+  ctx.globalCompositeOperation = "lighter";
   let rafId: number | null = null;
-  let wasmT = 0;
+
+  function ensure_loop(): void {
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(render_frame);
+  }
 
   function render_frame(): void {
+    rafId = null;
     // global trails (keeps things coherent when many fireworks overlap)
     // (per-firework trailFade could be added, but global is usually enough + faster)
-    if (live.length === 0) {
-      rafId = requestAnimationFrame(render_frame);
+    if (live.length === 0 && pops.length === 0 && smokes.length === 0 && flashFrames <= 0) {
       return;
     }
-    ctx.globalCompositeOperation = "source-over";
+    ctx.globalCompositeOperation = "destination-out";
     ctx.fillStyle = "rgba(0,0,0,0.10)";
     ctx.fillRect(0, 0, W, H);
 
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
 
+    if (flashFrames > 0) {
+      const flashAlpha = 0.055 * (flashFrames / 3);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = `rgba(255,255,245,${flashAlpha})`;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      flashFrames -= 1;
+    }
 
-    fw.tick(wasmT++);
+    for (let p = pops.length - 1; p >= 0; p -= 1) {
+      const pop = pops[p]!;
+      const u = Math.min(1, pop.t / Math.max(1, pop.life));
+      const alpha = 0.38 * (1 - u);
+      const radius = pop.radius * (0.55 + 0.65 * u);
+      const grad = ctx.createRadialGradient(pop.x, pop.y, 0, pop.x, pop.y, radius);
+      grad.addColorStop(0, `hsla(${pop.hue}, 100%, 92%, ${alpha})`);
+      grad.addColorStop(0.35, `hsla(${pop.hue}, 100%, 72%, ${alpha * 0.45})`);
+      grad.addColorStop(1, `hsla(${pop.hue}, 100%, 60%, 0)`);
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(pop.x, pop.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      pop.t += 1;
+      if (pop.t > pop.life) pops.splice(p, 1);
+    }
+
 
     // draw and step each firework
     for (let f = live.length - 1; f >= 0; f -= 1) {
       const fwk = live[f]!;
       const cfg = fwk.cfg;
-
-      const life = cfg.lifeFrames;
-      const u = Math.min(1, fwk.t / Math.max(1, life));
-      const env = envelope(u, cfg.peakMode);
-
-      // sparkle LFO affects width/glow and slight hue wobble
-      const lineW = cfg.lineWBase * (0.7 + 0.8 * env);
-      const glow = cfg.glowBase * (0.4 + 1.2 * env);
-
-      ctx.lineWidth = lineW;
-
-      // a little color evolution (hot -> cooler) across life
-      const hueLife = cfg.hueBase + (u * cfg.hueDrift);
 
       for (let i = 0; i < fwk.count; i += 1) {
         // typed-array index reads under noUncheckedIndexedAccess: use ?? 0
@@ -258,38 +357,39 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
         fwk.offX[i] = ox;
         fwk.offY[i] = oy;
 
-        // WASM base coords (pattern). If you want origin control, add it in WAT later.
-        // Layout: n at 0, then pairs at 4 + i*8 (x), 8 + i*8 (y)
-        const wx = view.getInt32(4 + i * 8, true);
-        const wy = view.getInt32(8 + i * 8, true);
+        const x = cfg.originX + (fwk.baseX[i] ?? 0) - ox;
+        const y = cfg.originY + (fwk.baseY[i] ?? 0) + oy - SKY_LIFT_PX;
 
-        // origin + ballistic offsets
-        const x = wx + ox;
-        const y = wy + oy;
-
-        // cull when out of bounds
-        if (y < -120 || y > H + 160 || x < -160 || x > W + 160) continue;
+        // cull when out of bounds, but allow the falling tail to age out below the viewport.
+        if (y < -120 || y > CULL_H + 160 || x < -160 || x > W + 160) { continue; }
 
         // sparkle flicker: small fast LFO; occasional “twinkle spike”
         const flick = 0.65 + 0.35 * Math.sin((fwk.t + ph) * 0.22);
         const twinkle = (Math.random() < 0.015) ? 1.35 : 1.0;
 
-        const a = 0.55 * env * flick * twinkle;
+        const a = 0.55 * envelope(Math.min(1, fwk.t / Math.max(1, cfg.lifeFrames)), cfg.peakMode) * flick * twinkle;
 
         // glow
-        ctx.shadowBlur = glow * (0.6 + 0.8 * flick);
-        const hueNow = hueLife + cfg.hueDrift * 0.15 * Math.sin((fwk.t + ph) * 0.07);
-        ctx.shadowColor = `hsla(${hueNow}, 100%, 70%, ${0.55 * a})`;
+        ctx.shadowBlur = /* cfg.glowBase * (0.6 + 0.8 * flick) */ 0;
+        const hueNow = cfg.hueBase + ((fwk.t / cfg.lifeFrames) * cfg.hueDrift) + cfg.hueDrift * 0.15 * Math.sin((fwk.t + ph) * 0.07);
+        const isWhiteSpark = (fwk.white[i] ?? 0) > 0;
 
-        ctx.strokeStyle = `hsla(${hueNow}, 100%, 65%, ${a})`;
+        ctx.shadowColor = isWhiteSpark
+          ? `rgba(255,255,245,${0.75 * a})`
+          : `hsla(${hueNow}, 100%, 70%, ${0.55 * a})`;
 
+        ctx.strokeStyle = isWhiteSpark
+          ? `rgba(255,255,245,${a})`
+          : `hsla(${hueNow}, 100%, 65%, ${a})`;
         if (Number.isFinite(px) && Number.isFinite(py)) {
           ctx.beginPath();
           ctx.moveTo(px as number, py as number);
           ctx.lineTo(x, y);
           ctx.stroke();
         } else {
-          ctx.fillStyle = `hsla(${hueNow}, 100%, 65%, ${a})`;
+          ctx.fillStyle = isWhiteSpark
+            ? `rgba(255,255,245,${a})`
+            : `hsla(${hueNow}, 100%, 65%, ${a})`;
           ctx.fillRect(x, y, 2, 2);
         }
 
@@ -298,18 +398,41 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
       }
 
       fwk.t += 1;
-      if (fwk.t > life) {
+      if (fwk.t > cfg.lifeFrames) {
         live.splice(f, 1);
       }
     }
 
-    rafId = requestAnimationFrame(render_frame);
+    for (let s = smokes.length - 1; s >= 0; s -= 1) {
+      const smoke = smokes[s]!;
+      const u = Math.min(1, smoke.t / Math.max(1, smoke.life));
+      const alpha = 0.08 * Math.pow(1 - u, 1.75);
+      const radius = smoke.radius * (1.65 + 3.25 * u);
+      const driftY = smoke.t * -0.68;
+      const grad = ctx.createRadialGradient(smoke.x, smoke.y + driftY, 0, smoke.x, smoke.y + driftY, radius);
+      grad.addColorStop(0, `rgba(92,92,86,${alpha})`);
+      // grad.addColorStop(0.42, `rgba(60,60,56,${alpha * 0.42})`);
+      grad.addColorStop(1, "rgba(40,40,38,0)");
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(smoke.x, smoke.y + driftY, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = "lighter";
+
+      smoke.t += 1;
+      if (smoke.t > smoke.life) smokes.splice(s, 1);
+    }
+    if (live.length > 0 || pops.length > 0 || smokes.length > 0 || flashFrames > 0) {
+      rafId = requestAnimationFrame(render_frame);
+    }
   }
 
   rafId = requestAnimationFrame(render_frame);
 
   // ---------------------------------------
-  // SECRET keyboard controller
+  // Firework config builder
   // ---------------------------------------
   const ROWS = {
     top: "qwertyuiop",
@@ -329,38 +452,33 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
     return s.indexOf(k);
   }
 
-  function make_config_from_key(k: string, holdMs: number, layer: 0 | 1 | 2): FireworkConfig | null {
+  function make_config_from_key(k: string, holdMs: number, layer: FireworkLevel): FireworkConfig | null {
     const row = key_row(k);
     if (!row) return null;
 
-    // altitude tiers (invert if you prefer)
     const speedBase =
       row === "top" ? 4.8 :
         row === "mid" ? 4.1 :
           3.6;
 
-    // angle by key position: left = more leftward, right = more rightward
     const idx = key_index(k, row);
     const span = Math.max(1, ROWS[row].length - 1);
-    const p = (idx / span) * 2 - 1; // -1..+1
-
-    // aim mostly upward with side bias
+    const p = (idx / span) * 2 - 1;
     const angle = (-Math.PI / 2) + (p * 0.55) + rand(-0.06, 0.06);
 
-    // particle scaling by hold (cap at 2000)
     const baseCount = 520 + randInt(-80, 120);
-    const steps = Math.min(10, Math.floor(Math.min(2000, holdMs) / 200)); // up to ~10 steps (2s)
+    const steps = Math.min(10, Math.floor(Math.min(2000, holdMs) / 200));
     const add = steps * randInt(30, 55);
     const count = Math.min(2000, baseCount + add + layer * randInt(60, 140));
 
-    // origin: center-ish with a little spread; you can tie x to p if you want
-    const originX = Math.floor(W * 0.50 + rand(-W * 0.06, W * 0.06));
-    const originY = Math.floor(H * 0.55 + rand(-H * 0.08, H * 0.06));
+    // Visual origin: roughly the HSON logo area during splash.
+    // The frozen WASM burst shape currently reads visually up-left of its numeric
+    // origin, so bias the configured origin down/right to land near 50% / 25%.
+    const logoSpreadX = Math.min(170, W * 0.14);
+    const originX = Math.floor(W * 0.75 + rand(-logoSpreadX, logoSpreadX));
+    const originY = Math.floor((H * 0.40) + SKY_LIFT_PX + rand(-H * 0.03, H * 0.03));
 
-    // per-firework envelope randomization
     const peakMode = pick(["early", "mid", "late"] as const);
-
-    // color personality
     const hueBase = rand(0, 360);
     const hueDrift = rand(-45, 65) * (layer === 0 ? 1 : 0.7);
 
@@ -370,17 +488,21 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
       originY,
       angleRad: angle,
       speed: speedBase * rand(0.92, 1.18),
-
       hueBase,
       hueDrift,
       trailFade: rand(0.08, 0.14),
       lineWBase: rand(0.9, 1.8),
       glowBase: rand(6, 18),
-
       lifeFrames: randInt(120, 210),
       peakMode,
     };
   }
+
+  // ---------------------------------------
+  // Fire controller
+  // ---------------------------------------
+  const FIRE_KEYS = "qwertyuiopasdfghjklzxcvbnm";
+
 
   let downKey: string | null = null;
   let downAt = 0;
@@ -397,9 +519,8 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
   const onKeyDown = (ev: KeyboardEvent): void => {
     // ignore repeats; only start a “charge” on first press
     if (ev.repeat) return;
-
     const k = ev.key.toLowerCase();
-    if (!key_row(k)) return;
+    if (!key_row(k) || k !== "z") return;
 
     // only one active charge at a time (simple + reliable)
     if (downKey !== null) return;
@@ -421,7 +542,6 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
   const onKeyUp = (ev: KeyboardEvent): void => {
     const k = ev.key.toLowerCase();
     if (downKey === null || k !== downKey) return;
-
     const held = Math.min(2000, performance.now() - downAt);
 
     // base layer
@@ -445,18 +565,30 @@ export async function mount_firework(stage: LiveTree): Promise<() => void> {
     clear_layer_timers();
   };
 
-  window.addEventListener("keydown", onKeyDown);
-  window.addEventListener("keyup", onKeyUp);
+  canvasLt.listen.window.onKeyDown(onKeyDown);
+  canvasLt.listen.window.onKeyUp(onKeyUp)
 
-  // return a teardown so your phase system can cleanly remove this “easter egg”
+  function random_fire_key(): string {
+    return FIRE_KEYS[randInt(0, FIRE_KEYS.length - 1)] ?? "h";
+  }
+
+  function fire(level: FireworkLevel = 0): void {
+    const k = random_fire_key();
+    const safeLevel: FireworkLevel = level === 2 ? 2 : level === 1 ? 1 : 0;
+    const holdMs = safeLevel === 2 ? 2000 : safeLevel === 1 ? 1000 : 0;
+
+    for (let layer = 0; layer <= safeLevel; layer += 1) {
+      const cfg = make_config_from_key(k, holdMs, layer as FireworkLevel);
+      if (cfg) spawn_firework(cfg);
+    }
+  }
+
   const teardown = (): void => {
-    window.removeEventListener("keydown", onKeyDown);
-    window.removeEventListener("keyup", onKeyUp);
     clear_layer_timers();
 
     if (rafId !== null) cancelAnimationFrame(rafId);
     canvasLt.removeSelf();
   };
 
-  return teardown;
+  return Object.freeze({ fire, teardown });
 }

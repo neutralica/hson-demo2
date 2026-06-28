@@ -54,6 +54,7 @@ export const SLIDES: readonly DeckSlideConfig[] = [
   {
     headerA: "HSON",
     headerB: "hson-live",
+    headerC: "LiveTree",
     footer: "terminology",
   },
   {

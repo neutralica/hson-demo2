@@ -34,9 +34,9 @@ export function make_livetree_suite(
       }
 
       const tree = hson.liveTree.fromTrustedHtml(html);
-      // ADDED: optional DOM mount
+      // ADDED: DOM mount
       let sandbox: HTMLDivElement | null = null;
-
+      
       try {
         if (spec.dom) {
           sandbox = document.createElement("div");

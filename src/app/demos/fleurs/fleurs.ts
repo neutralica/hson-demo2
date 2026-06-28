@@ -102,9 +102,6 @@ async function make_bitmapped_effect(
     flower: SvgLiveTree,
     spec: FlowerSpec,
 ): Promise<SvgLiveTree> {
-    // const el = flower.dom.el() as SVGGElement | undefined;
-    // if (!el) return flower;
-    // const bbox = el.getBBox();
 
     const el2 = flower.cloneBranch();
     const bb2 = flower.svg.must.bbox();
@@ -114,29 +111,9 @@ async function make_bitmapped_effect(
     const x2 = bb2.x;
     const y2 = bb2.y;
 
-    // const w = Math.max(1, bbox.width);
-    // const h = Math.max(1, bbox.height);
-    // const x = bbox.x;
-    // const y = bbox.y;
-
-    // const clone = el.cloneNode(true) as SVGGElement;
-
     const clone2 = el2.cloneBranch();
-
-    // strip transform/opacity from the cloned root because the live outer <g>
-    // will keep those; otherwise they get applied twice inside the bitmap
-    // clone.removeAttribute("transform");
-    // clone.removeAttribute("opacity");
     clone2.attr.drop("transform");
     clone2.attr.drop("opacity");
-
-    // const standaloneSvg =
-    //     `<svg xmlns="http://www.w3.org/2000/svg"
-    //           width="${fmtNum(w, 3)}"
-    //           height="${fmtNum(h, 3)}"
-    //           viewBox="${fmtNum(x, 3)} ${fmtNum(y, 3)} ${fmtNum(w, 3)} ${fmtNum(h, 3)}">
-    //         ${clone.outerHTML}
-    //     </svg>`;
 
     const standaloneSvg2 =
         `<svg xmlns="http://www.w3.org/2000/svg"
@@ -148,11 +125,7 @@ async function make_bitmapped_effect(
 
     const href = svg_to_data_url(standaloneSvg2);
 
-    // keep the outer flower <g>; only replace its children
     el2.removeChildren();
-    // while (el.firstChild) {
-    //     el.removeChild(el.firstChild);
-    // }
     const imageEl2 = el2.create.image()
         .attr.setMany({
             x: fmtNum(x2, 3),
@@ -162,15 +135,6 @@ async function make_bitmapped_effect(
             preserveAspectRatio: "none",
             href: href
         });
-    // const imageEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-    // imageEl.setAttribute("x", fmtNum(x, 3));
-    // imageEl.setAttribute("y", fmtNum(y, 3));
-    // imageEl.setAttribute("width", fmtNum(w, 3));
-    // imageEl.setAttribute("height", fmtNum(h, 3));
-    // imageEl.setAttribute("preserveAspectRatio", "none");
-    // imageEl.setAttribute("href", href);
-
-    // el.appendChild(imageEl);
 
     return el2;
 }

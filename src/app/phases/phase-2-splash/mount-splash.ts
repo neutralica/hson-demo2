@@ -6,7 +6,7 @@ import { CLOUD_LAYER_FADEanim } from "./splash.anim";
 import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
 import { SPLASHkfs } from "./splash.keys";
 import { FLAREanim, NEON_FLASHanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_DISKanim, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM, VERanim } from "./splash.anim";
-import { get_letter_key } from "../../utils/helpers";
+import { _rng_xs32, get_letter_key } from "../../utils/helpers";
 import type { LetterCaps, LetterKey } from "../../core/types/core.types";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../ui/wordmark/wordmark.css";
 import { mk_span_cls } from "../../utils/makers";
@@ -16,6 +16,8 @@ import { create_clouds } from "./make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { _colors } from "../../core/consts/colors.consts";
+import { mount_firework } from "../../widgets/wasm-deprecate/hson-wasm-fireworks";
+import { make_rng } from "../../utils/rng";
 
 
 
@@ -25,7 +27,7 @@ import { _colors } from "../../core/consts/colors.consts";
  */
 export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     /* clear livetree contents */
-  stage.empty();
+    stage.empty();
 
     const b = bud_node(stage)
     /* create structural layers */
@@ -34,9 +36,9 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const frame = logoBox.bud(SPLASH_BUDS.frame);
     const wordMark = frame.bud(SPLASH_BUDS.wordmark);
     const cloudBox = frame.bud(SPLASH_BUDS.cloudBox);
-   
-    
-    
+
+
+
     /* create sun elements */
     const sunCarrier = wordMark.bud(SPLASH_BUDS.sunCarrier);
     const sun = sunCarrier.bud(SPLASH_BUDS.sun);
@@ -44,7 +46,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const flareBox = sunCarrier.bud(SPLASH_BUDS.flareBox);
     const flare = flareBox.bud(SPLASH_BUDS.flare);
     const gradient = frame.bud(SPLASH_BUDS.gradient);
-   
+
     /* create star elements */
     const starCarrier = frame.bud(SPLASH_BUDS.starCarrier);
     const starWrap = starCarrier.bud(SPLASH_BUDS.starWrap);
@@ -52,11 +54,12 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const tailA = starWrap.bud(SPLASH_BUDS.starTailA);
     const tailB = starWrap.bud(SPLASH_BUDS.starTailB);
     const tailC = starWrap.bud(SPLASH_BUDS.starTailC);
-    
+    const sparkleHost = stage.create.div();
+    const sparkles = await mount_firework(sparkleHost);
     /* create clouds */
     const clouds = create_clouds(cloudBox.tree, CLOUD_CONFIG).content.all();
     if (!clouds?.length) return relay.err("no clouds created");
-    
+
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterCaps): readonly [LiveTree, LiveTree] => {
         const cell = mk_span_cls(wordMark.tree, ["cell", ltr])
@@ -104,27 +107,29 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     sun.animate();
     gradient.animate()
     flare.animate();
-    
+
     await wait.for(flareBox.tree).anim(FLAREanim).end();
     flareBox.tree.removeSelf();
-    
+
     await wait.for(sun.tree).anim(SUN_DISKanim).end()
     sunCarrier.tree.removeSelf();
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });
 
     await wait.for(h).anim(NEON_FLASHanim).end()
+        begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
     ver.css.anim.begin(VERanim);
-    begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
+     for (let i = 0; i < 15; i++){
+        const rng = Math.random() * 2000;
+        setTimeout(() => {
+            sparkles.fire(2)
+        }, rng);
+    }
     letters.forEach((l) => {
         l.css.setMany(LETTER_CSS_FINAL);
         l.css.anim.begin(STARSHINEanim);
     });
 
     await wait.for(tailC.tree).anim(STAR_TAIL_C_ANIM).end();
-
-    SPLASHkfs.forEach(kf => {
-        sky.tree.css.keyframes.delete(kf.name)
-    });
     stage.empty();
     return relay.ok();
 }

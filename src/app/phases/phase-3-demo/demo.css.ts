@@ -124,11 +124,7 @@ export const FX_LAYERcss: CssMap = {
   width: "100%",
   zIndex: "50"
 };
-/**
- * GLASS (screen)
- * - keep your greyBlack
- * - stop huge bloom that reads like a seal / fog
- */
+
 export const DEMO_SCREENcss: CssMap = {
   position: "fixed",
   inset: "0",
@@ -136,7 +132,7 @@ export const DEMO_SCREENcss: CssMap = {
   // width: "100%",
   // height: "100%",
   overflow: "hidden",
-  isolation: "isolate",
+  // isolation: "isolate",
   pointerEvents: "none",
   minHeight: "0",
   boxSizing: "border-box",

@@ -49,7 +49,8 @@ export function point_init(rig: PointPanelRig): void {
 
     // radians -> degrees
     const rad_to_deg = (rad: number): number => (rad * 180) / Math.PI;
-    window.addEventListener("pointermove", onMove, { passive: true });
+    rig.root.listen.passive().onPointerMove( onMove)
+    // window.addEventListener("pointermove", onMove, { passive: true });
 
     const MAX = rig.readout.rows.length;
 

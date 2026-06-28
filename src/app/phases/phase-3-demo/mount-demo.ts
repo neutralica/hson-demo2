@@ -36,6 +36,7 @@ import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TES
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss, MONITOR_HOSTcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
+import { mount_firework } from "../../widgets/wasm-deprecate/hson-wasm-fireworks";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -425,7 +426,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     void spawn_flower(fleurField, x, y);
   });
-  
+  mount_firework(screen);
   return relay.ok();
 }
 
