@@ -773,7 +773,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
       `,
 
       act(tree) {
-        const svg = tree.find.must.byId("svg-root") as unknown as SvgLiveTree;
+        const svg = tree.find.must.asSvg.byId("svg-root");
 
         const branch = svg.create.g()
           .attr.set("id", "typed-branch");
