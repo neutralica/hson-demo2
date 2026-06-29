@@ -17,20 +17,20 @@ const AUTO_FIXTURES = _freeze({
 
 export const JSON_SHAPE_SENTRIES = _freeze({
     emptyElement: {
-        "_-elem": [
+        "_hson_elem": [
             {
                 "div": {
-                    "_-elem": []
+                    "_hson_elem": []
                 }
             }
         ]
     },
 
     elementWithStringChild: {
-        "_-elem": [
+        "_hson_elem": [
             {
                 "div": {
-                    "_-elem": ["x"]
+                    "_hson_elem": ["x"]
                 }
             }
         ]

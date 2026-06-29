@@ -135,7 +135,7 @@ hson-live supports:
 #__#
 HSON resembles pared-down HTML. Instead of opening and closing tags, HSON encloses nested content within a single tag.
 #__#
-HSON derived from HTML uses a slash-close:
+HSON can express any XML-compliant HTML. HSON derived from HTML uses a slash-closer:
 ### />
       `,
     },
@@ -166,7 +166,7 @@ HSON derived from HTML uses a slash-close:
   #__#
 HSON can express any valid JSON, usually in a smaller file size.
 #__#
-JSON-derived HSON tags use an angle close:
+JSON-derived HSON tags use an angle closer:
 ### >
       `,
     },
@@ -211,39 +211,39 @@ JSON-derived HSON tags use an angle close:
       kind: "code",
       lang: "html",
       text: `
-<_-obj>
+<_hson_obj>
   <user>
-    <_-obj>
+    <_hson_obj>
     <name>
-      <_-obj>
+      <_hson_obj>
         Mara Bell
-      </_-obj>
+      </_hson_obj>
     </name>
     <timezone>
-      <_-obj>
+      <_hson_obj>
         America/Chicago
-      </_-obj>
+      </_hson_obj>
     </timezone>
     <notifications>
-      <_-obj>
-        <_-val>true</_-val>
-      </_-obj>
+      <_hson_obj>
+        <_hson_val>true</_hson_val>
+      </_hson_obj>
     </notifications>
       <_-_-daily_x4c-imit>
-        <_-obj>
-          <_-val>6</_-val>
-        </_-obj>
+        <_hson_obj>
+          <_hson_val>6</_hson_val>
+        </_hson_obj>
       </_-_-daily_x4c-imit>
       <_-_-favorite_x43-olors>
-        <_-arr>
-          <_-ii data-_index="0">green</_-ii>
-          <_-ii data-_index="1">black</_-ii>
-          <_-ii data-_index="2">ivory</_-ii>
-        </_-arr>
+        <_hson_arr>
+          <_hson_ii data-_index="0">green</_hson_ii>
+          <_hson_ii data-_index="1">black</_hson_ii>
+          <_hson_ii data-_index="2">ivory</_hson_ii>
+        </_hson_arr>
       </_-_-favorite_x43-olors>
-    </_-obj>
+    </_hson_obj>
   </user>
-</_-obj>
+</_hson_obj>
 `,
     },
     footer: "json -> html",

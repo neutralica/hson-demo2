@@ -44,7 +44,7 @@ const fade = `linear-gradient(to top,
   oklch(0.1303 0.0073 285.34) 100%
 )`;
 
-const CLOUD_INK_TOP = "2, 5, 11";
+const CLOUD_INK_TOP = "7, 7, 10";
 const CLOUD_SINK_DUR_MS = Math.round(CLOUD_DURnum * 0.92);
 
 function cloudSinkName(layerIndex: number): string {
@@ -223,7 +223,7 @@ export function create_clouds(tree: LiveTree, tune?: Partial<CloudTune>): LiveTr
       rgba(210, 229, 255, calc(var(--kiss, 0) * 0.34)) 18%,
       rgba(210, 229, 255, calc(var(--kiss, 0) * 0.19)) 42%,
       rgba(210, 229, 255, calc(var(--kiss, 0) * 0.09)) 68%,
-      rgba(12, 19, 26, 0) 100%
+      rgb(7, 7, 10, 0) 100%
     ),
         linear-gradient(to bottom,
     rgba(${CLOUD_INK_TOP}, calc(var(--cloud-ink-alpha, 1) * 0.5)) 1%,

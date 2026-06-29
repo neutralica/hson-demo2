@@ -359,7 +359,8 @@ export const jsonMostHeinous: Record<string, string> = {
     {"name":"jo"}
   ]
 }
-}`
+}`,
+
 };
 
 const json2_INVALID = {
@@ -376,6 +377,7 @@ const json2_INVALID = {
       }
     }
   }`,
+
 }
 export const JSON_FAIL_FIXTURES = { json2: json2_INVALID }
 export const JSON_FIXTURES_LEVEL2: FixtureBundle = { level2: { ...jsonKeyEdgeCases, ...jsonMostHeinous } };

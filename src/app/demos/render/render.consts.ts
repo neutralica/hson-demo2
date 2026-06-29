@@ -1,5 +1,5 @@
 export const $RENDER_STRING_DEF = `{
-  "_-elem": [
+  "_hson_elem": [
     {
       "$_attrs": {
         "id": "build-demo",
@@ -17,7 +17,7 @@ export const $RENDER_STRING_DEF = `{
         }
       },
       "div": {
-        "_-elem": [
+        "_hson_elem": [
           {
             "$_attrs": {
               "style": {
@@ -27,7 +27,7 @@ export const $RENDER_STRING_DEF = `{
               }
             },
             "div": {
-              "_-elem": [
+              "_hson_elem": [
                 {
                   "$_attrs": {
                     "style": {
@@ -38,7 +38,7 @@ export const $RENDER_STRING_DEF = `{
                     }
                   },
                   "div": {
-                    "_-elem": []
+                    "_hson_elem": []
                   }
                 },
                 {
@@ -55,7 +55,7 @@ export const $RENDER_STRING_DEF = `{
                     }
                   },
                   "h1": {
-                    "_-elem": [
+                    "_hson_elem": [
                       "HSON BUILD DEMO"
                     ]
                   }
@@ -70,7 +70,7 @@ export const $RENDER_STRING_DEF = `{
                     }
                   },
                   "div": {
-                    "_-elem": []
+                    "_hson_elem": []
                   }
                 }
               ]
@@ -85,7 +85,7 @@ export const $RENDER_STRING_DEF = `{
               }
             },
             "div": {
-              "_-elem": [
+              "_hson_elem": [
                 {
                   "$_attrs": {
                     "style": {
@@ -97,7 +97,7 @@ export const $RENDER_STRING_DEF = `{
                     }
                   },
                   "div": {
-                    "_-elem": [
+                    "_hson_elem": [
                       "<- edit the HSON string"
                     ]
                   }
@@ -114,7 +114,7 @@ export const $RENDER_STRING_DEF = `{
               }
             },
             "div": {
-              "_-elem": [
+              "_hson_elem": [
                 {
                   "$_attrs": {
                     "style": {
@@ -127,7 +127,7 @@ export const $RENDER_STRING_DEF = `{
                     }
                   },
                   "div": {
-                    "_-elem": [
+                    "_hson_elem": [
                       {
                         "$_attrs": {
                           "style": {
@@ -136,7 +136,7 @@ export const $RENDER_STRING_DEF = `{
                           }
                         },
                         "div": {
-                          "_-elem": []
+                          "_hson_elem": []
                         }
                       },
                       {
@@ -151,7 +151,7 @@ export const $RENDER_STRING_DEF = `{
                           }
                         },
                         "div": {
-                          "_-elem": [
+                          "_hson_elem": [
                             {
                               "$_attrs": {
                                 "style": {
@@ -162,7 +162,7 @@ export const $RENDER_STRING_DEF = `{
                                 }
                               },
                               "div": {
-                                "_-elem": [
+                                "_hson_elem": [
                                   {
                                     "$_attrs": {
                                       "style": {
@@ -175,17 +175,17 @@ export const $RENDER_STRING_DEF = `{
                                       }
                                     },
                                     "div": {
-                                      "_-elem": [
+                                      "_hson_elem": [
                                         {
                                           "div": {
-                                            "_-elem": [
+                                            "_hson_elem": [
                                               "hs"
                                             ]
                                           }
                                         },
                                         {
                                           "div": {
-                                            "_-elem": [
+                                            "_hson_elem": [
                                               "on"
                                             ]
                                           }
@@ -215,7 +215,7 @@ export const $RENDER_STRING_DEF = `{
                                 }
                               },
                               "div": {
-                                "_-elem": [
+                                "_hson_elem": [
                                   ":)"
                                 ]
                               }
@@ -231,7 +231,7 @@ export const $RENDER_STRING_DEF = `{
                           }
                         },
                         "div": {
-                          "_-elem": []
+                          "_hson_elem": []
                         }
                       }
                     ]
@@ -248,7 +248,7 @@ export const $RENDER_STRING_DEF = `{
               }
             },
             "div": {
-              "_-elem": []
+              "_hson_elem": []
             }
           },
           {
@@ -260,7 +260,7 @@ export const $RENDER_STRING_DEF = `{
               }
             },
             "div": {
-              "_-elem": [
+              "_hson_elem": [
                 {
                   "$_attrs": {
                     "style": {
@@ -272,7 +272,7 @@ export const $RENDER_STRING_DEF = `{
                     }
                   },
                   "div": {
-                    "_-elem": [
+                    "_hson_elem": [
                       "^ changes rendered synchronously"
                     ]
                   }

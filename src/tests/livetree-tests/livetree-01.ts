@@ -183,7 +183,7 @@ export function suite_append_and_create(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "create.at(index) inserts among element-children under _-elem (preserves order)",
+      name: "create.at(index) inserts among element-children under _hson_elem (preserves order)",
       fixture: "append/create",
       sub: "order",
       html: `<section id="root"><p class="orig">one</p></section>`,
@@ -257,7 +257,7 @@ export function suite_append_and_create(): TestSuite {
 
     {
       suite: SUITE,
-      name: "create.p appends distinct element-children under _-elem",
+      name: "create.p appends distinct element-children under _hson_elem",
       fixture: "create.p",
       sub: "append",
       html: `<section id="root"><p class="orig">one</p></section>`,
@@ -283,7 +283,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "removeChildren: removes only direct node-children; leaves primitives under _-elem; returns count",
+      name: "removeChildren: removes only direct node-children; leaves primitives under _hson_elem; returns count",
       html: `<div id="root"></div>`,
       fixture: "remove/children",
       sub: "ignore-primitives-count",
@@ -294,8 +294,8 @@ export function suite_append_and_create(): TestSuite {
         root.append(hson.liveTree.fromTrustedHtml(`<div id="a"></div>`));
         root.append(hson.liveTree.fromTrustedHtml(`<div id="b"></div>`));
 
-        // inject a primitive into the semantic content container (_-elem)
-        // (works in no-dom mode; matches your “_-elem is invisible” rule)
+        // inject a primitive into the semantic content container (_hson_elem)
+        // (works in no-dom mode; matches your “_hson_elem is invisible” rule)
         const raw = (root.node.$_content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode =>
           is_Node(x) && x.$_tag === ELEM_TAG
@@ -306,8 +306,8 @@ export function suite_append_and_create(): TestSuite {
           kids.push("Z");
           elem.$_content = kids as unknown as (HsonNode | Primitive)[];
         } else {
-          // if a root ever lacks _-elem, keep test honest rather than silently passing
-          throw new Error(`test invariant: expected #root to have a single _-elem child`);
+          // if a root ever lacks _hson_elem, keep test honest rather than silently passing
+          throw new Error(`test invariant: expected #root to have a single _hson_elem child`);
         }
 
         (tree as unknown as { __removed?: number }).__removed = root.removeChildren();
@@ -322,11 +322,11 @@ export function suite_append_and_create(): TestSuite {
         // node-children are gone
         t.eq("content.all().length (node children)", root.content.all().length, 0);
 
-        // primitive survived under _-elem
+        // primitive survived under _hson_elem
         const raw = (root.node.$_content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
         const elemKids = (elem?.$_content ?? []) as unknown[];
-        t.ok(`primitive "Z" remains under _-elem`, elemKids.includes("Z"));
+        t.ok(`primitive "Z" remains under _hson_elem`, elemKids.includes("Z"));
       },
 
       preview(tree) {
@@ -335,7 +335,7 @@ export function suite_append_and_create(): TestSuite {
         const raw = (root.node.$_content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
         const kids = (elem?.$_content ?? []) as unknown[];
-        return `<root _-elem kids=${kids.map(x => (is_Node(x) ? `<${x.$_tag}>` : JSON.stringify(x))).join(", ")}>`;
+        return `<root _hson_elem kids=${kids.map(x => (is_Node(x) ? `<${x.$_tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
     },
     {
@@ -1364,7 +1364,7 @@ export function suite_css_and_content(): TestSuite {
 
     // -----------------------------------------------------------------------
     // get_node_text fallback: no DOM => walk HSON content
-    // We construct a minimal HsonNode tree with _-str leaves.
+    // We construct a minimal HsonNode tree with _hson_str leaves.
     {
       suite: SUITE,
       name: "get_node_text falls back to HSON when no DOM exists",
