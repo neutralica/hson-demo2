@@ -67,15 +67,7 @@ This section contains detailed information about the architecture, structural sy
 
 ### [test]
 
-An expanding set of transform, liveTree, and unit tests. Transformation tests provide full string and node logs for inspection. 
-
-Demonstrates
-
-- parser stability  
-- consistent round-trip transformations  
-- resilience across mixed HTML / JSON / SVG inputs  
-
-This panel shows that the transformation system behaves deterministically and preserves the integrity of user data.
+1022 [-20JUN2026] system tests: circuit tests, liveTree, and unit tests. Circuit tests provide full string and node artifacts for inspection. 
 
 
 ---
@@ -98,48 +90,31 @@ Demonstrates
 
 ### [build]
 
-The left panel contains a textarea with an editable HSON document.
+The left panel contains a textarea with editable HSON markup. This markup is parsed by hson.transform and projected as DOM in the panel on the right. Changes to the HSON markup on the left are rendered in realtime to the panel on the right.
 
-While input is valid, changes to the HSON are parsed and the resulting HTML is rendered in the right panel in realtime.
+---
 
-Demonstrates
+### [point]
 
-- realtime parsing and rendering  
-- HSON's viability as a markup format
-- HsonNode graph as markup source of truth
+A diagnostic widget that tracks the mouse pointer while in the browser window and displays:
+
+- current screen coordinates  
+- current HTMLElement stack  
+- compass tracking the direction of the cursor  
 
 
 ---
 
-### [mouse]
+### [oklch]
 
-A diagnostic widget that tracks the mouse pointer while in the browser window.
-
-The panel displays in realtime:
-
-- screen coordinates  
-- the current HTMLElement stack  
-- a pointer indicating the direction of the cursor  
-
-Demonstrates
-
-- direct interaction with and mutation of the HsonNode graph
-- simple access to pointer coordinates
-- responsive DOM updates
+A picker for colors in the UI.
 
 
 ---
 
 ### [fleurs]
 
-This demo clears the interface and, when the background is clicked, renders an SVG flower at the current pointer position.
-
-Demonstrates
-
-- native typed SVG handling within liveTree
-- realtime DOM mutation
-- interactive graphics driven directly by the node graph
-- dynamic markup and CSS integration
+This demo clears the interface and, when the background is clicked, renders an SVG flower at the current pointer position. This is how I explain to my mother what I'm making.
 
 On mobile, only [fleurs] is available.
 
