@@ -14,24 +14,25 @@ export function set_node_at_path(
   if (parts.length === 0) {
     const payload = json_value_to_payload_node(next);
 
-    if (root._tag === ROOT_TAG) {
+    if (root.$_tag === ROOT_TAG) {
       root._content = [payload];
       return;
     }
 
     // mutate root in place
-    root._tag = payload._tag;
+    root.$_tag = payload.$_tag;
     root.$_attrs = payload.$_attrs;
     root._content = clone_node(payload._content ?? []);
-    root._meta = clone_node(payload._meta ?? {});
+    root.$_meta = clone_node(payload.$_meta ?? {});
     return;
   }
 
   const parentPath = parts.slice(0, -1);
   const leaf = parts[parts.length - 1];
   const parent = find_node_at_path(root, parentPath);
+  const parentPayload = unwrap_path_payload(parent);
 
-  if (!parent) {
+  if (!parentPayload) {
     throw new Error(
       `set_node_at_path(): parent path not found: ${JSON.stringify(parentPath)}`
     );
@@ -43,14 +44,14 @@ export function set_node_at_path(
   // object property set
   // -------------------------
   if (typeof leaf === "string") {
-    const obj = ensure_object_container(parent);
+    const obj = ensure_object_container(parentPayload);
     if (!obj) {
       throw new Error(
         `set_node_at_path(): target parent is not an object for key "${leaf}"`
       );
     }
 
-    const existing = node_children(obj).find((n) => n._tag === leaf);
+    const existing = node_children(obj).find((n) => n.$_tag === leaf);
 
     if (existing) {
       existing._content = [payload];
@@ -73,14 +74,14 @@ export function set_node_at_path(
       );
     }
 
-    const arr = ensure_array_container(parent);
+    const arr = ensure_array_container(parentPayload);
     if (!arr) {
       throw new Error(
         `set_node_at_path(): target parent is not an array for index ${String(leaf)}`
       );
     }
 
-    const items = node_children(arr).filter((n) => n._tag === II_TAG);
+    const items = node_children(arr).filter((n) => n.$_tag === II_TAG);
 
     if (leaf < items.length) {
       items[leaf]!._content = [payload];
@@ -91,8 +92,8 @@ export function set_node_at_path(
       if (!Array.isArray(arr._content)) arr._content = [];
 
       const item = mk_node(II_TAG, [payload]);
-      item._meta = {
-        ...(item._meta ?? {}),
+      item.$_meta = {
+        ...(item.$_meta ?? {}),
         "data-_index": String(leaf),
       };
 
@@ -113,10 +114,16 @@ function node_children(node: HsonNode): HsonNode[] {
   return node._content.filter(is_Node);
 }
 
+function unwrap_path_payload(node: HsonNode | undefined): HsonNode | undefined {
+  if (!node) return undefined;
+  if (node.$_tag === ROOT_TAG) return first_node_child(node) ?? node;
+  return node;
+}
+
 export function first_node_child(node: HsonNode): HsonNode | undefined {
   return node_children(node)[0];
 }
 
 export function first_child_by_tag(node: HsonNode, tag: string): HsonNode | undefined {
-  return node_children(node).find((n) => n._tag === tag);
+  return node_children(node).find((n) => n.$_tag === tag);
 }

@@ -879,7 +879,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
             .map(t => t.attr.get("id"))
             .filter((id): id is string => id !== undefined),
 
-          tags: deep.map(t => t.node._tag),
+          tags: deep.map(t => t.node.$_tag),
 
           includesOwner: deep.some(t => t.node === root.node),
         };

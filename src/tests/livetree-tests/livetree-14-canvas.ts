@@ -75,7 +75,7 @@ export function livetree_canvas(): TestSuite {
 
                 (tree as any).__result = {
                     inScope: canvas.canvas.inScope(),
-                    tag: canvas.node._tag,
+                    tag: canvas.node.$_tag,
                 };
             },
 
@@ -371,7 +371,7 @@ export function livetree_canvas_stress(): TestSuite {
                 const canvas = tree.create.canvas(`<canvas id="made" width="40" height="20"></canvas>`);
 
                 (tree as any).__result = {
-                    tag: canvas.node._tag,
+                    tag: canvas.node.$_tag,
                     id: canvas.attr.get("id"),
                     width: canvas.canvas.width.get(),
                     height: canvas.canvas.height.get(),
@@ -409,7 +409,7 @@ export function livetree_canvas_stress(): TestSuite {
                 const root = tree.find.must.byId("root");
 
                 (tree as any).__result = {
-                    firstTag: root.content.all()[0]?.node._tag,
+                    firstTag: root.content.all()[0]?.node.$_tag,
                     firstId: root.content.all()[0]?.attr.get("id"),
                 };
             },
@@ -443,7 +443,7 @@ export function livetree_canvas_stress(): TestSuite {
                 const kids = root.content.all();
 
                 (tree as any).__result = {
-                    tags: kids.map(k => k.node._tag),
+                    tags: kids.map(k => k.node.$_tag),
                     ids: kids.map(k => k.attr.get("id")),
                 };
             },
@@ -735,7 +735,7 @@ export function livetree_canvas_stress(): TestSuite {
                 const canvas = tree.create.canvas(`<canvas id="from-source">fallback</canvas>`);
 
                 (tree as any).__result = {
-                    tag: canvas.node._tag,
+                    tag: canvas.node.$_tag,
                     id: canvas.attr.get("id"),
                     text: canvas.text.get(),
                     inScope: canvas.canvas.inScope(),

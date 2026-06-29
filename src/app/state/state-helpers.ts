@@ -11,7 +11,7 @@ export const LOG_HR_PART = "-~-=•=|";
 export const LOG_HR_FULL = "|=•=-~- - - • - - -~-=•=|";
 export function mk_node(tag: string, content: HsonNode[] = []): HsonNode {
   return _CREATE_NODE({
-    _tag: tag,
+    $_tag: tag,
     _content: content,
   });
 }
@@ -22,10 +22,10 @@ export function unwrap_value_payload(node: HsonNode): HsonNode {
   if (kids.length === 1) {
     const only = kids[0]!;
     if (
-      only._tag === OBJ_TAG ||
-      only._tag === ARR_TAG ||
-      only._tag === STR_TAG ||
-      only._tag === VAL_TAG
+      only.$_tag === OBJ_TAG ||
+      only.$_tag === ARR_TAG ||
+      only.$_tag === STR_TAG ||
+      only.$_tag === VAL_TAG
     ) {
       return only;
     }
@@ -34,7 +34,7 @@ export function unwrap_value_payload(node: HsonNode): HsonNode {
   return node;
 }
 export function ensure_object_container(node: HsonNode): HsonNode | undefined {
-  if (node._tag === OBJ_TAG) return node;
+  if (node.$_tag === OBJ_TAG) return node;
 
   const existing = first_child_by_tag(node, OBJ_TAG);
   if (existing) return existing;
@@ -42,7 +42,7 @@ export function ensure_object_container(node: HsonNode): HsonNode | undefined {
   return undefined;
 }
 export function ensure_array_container(node: HsonNode): HsonNode | undefined {
-  if (node._tag === ARR_TAG) return node;
+  if (node.$_tag === ARR_TAG) return node;
 
   const existing = first_child_by_tag(node, ARR_TAG);
   if (existing) return existing;
@@ -120,7 +120,7 @@ export function json_value_to_payload_node(value: JsonValue): HsonNode {
   // CHANGED: primitives should become direct payload nodes, not go through rooted JSON parse
   if (typeof value === "string") {
     return _CREATE_NODE({
-      _tag: STR_TAG,
+      $_tag: STR_TAG,
       _content: [value],
     });
   }
@@ -129,7 +129,7 @@ export function json_value_to_payload_node(value: JsonValue): HsonNode {
     typeof value === "number" ||
     typeof value === "boolean") {
     return _CREATE_NODE({
-      _tag: VAL_TAG,
+      $_tag: VAL_TAG,
       _content: [value],
     });
   }

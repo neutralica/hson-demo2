@@ -623,12 +623,12 @@ export function livetree_construction_parity(): TestSuite {
         const mountedCircle = tree.find.must.byId("created-circle");
 
         (tree as any).__result = {
-          cardTag: mountedCard.node._tag,
+          cardTag: mountedCard.node.$_tag,
           cardClass: mountedCard.classlist.get(),
           cardText: mountedCard.text.get(),
-          svgTag: mountedSvg.node._tag,
+          svgTag: mountedSvg.node.$_tag,
           viewBox: mountedSvg.attr.get("viewBox"),
-          circleTag: mountedCircle.node._tag,
+          circleTag: mountedCircle.node.$_tag,
           circleDomNamespace: mountedCircle.dom.must.el().namespaceURI,
         };
       },

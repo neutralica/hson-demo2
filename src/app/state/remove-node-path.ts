@@ -10,7 +10,7 @@ export function remove_node_at_path(
 ): void {
   // CHANGED: whole-root removal = clear payload
   if (parts.length === 0) {
-    if (root._tag === ROOT_TAG) {
+    if (root.$_tag === ROOT_TAG) {
       root._content = [];
       return;
     }
@@ -43,7 +43,7 @@ export function remove_node_at_path(
     if (!Array.isArray(obj._content)) return;
 
     const ix = obj._content.findIndex(
-      (v) => is_Node(v) && v._tag === leaf,
+      (v) => is_Node(v) && v.$_tag === leaf,
     );
 
     if (ix >= 0) {
@@ -75,7 +75,7 @@ export function remove_node_at_path(
     const itemIndexes: number[] = [];
     for (let i = 0; i < arr._content.length; i += 1) {
       const v = arr._content[i];
-      if (is_Node(v) && v._tag === II_TAG) {
+      if (is_Node(v) && v.$_tag === II_TAG) {
         itemIndexes.push(i);
       }
     }

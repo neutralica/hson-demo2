@@ -140,7 +140,7 @@ function suite_empty_append(): TestSuite {
         t.eq("root has one direct child", kids.length, 1);
 
         const child = kids[0];
-        t.eq("child tag is p", child?.node._tag ?? "", "p");
+        t.eq("child tag is p", child?.node.$_tag ?? "", "p");
         t.eq("child class is new", String(child?.attr.get("class") ?? ""), "new");
         t.eq("child text is hello", child?.text.get() ?? "", "hello");
 

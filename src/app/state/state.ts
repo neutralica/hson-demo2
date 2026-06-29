@@ -151,13 +151,13 @@ export function make_state(input: StateRootInput): NodeState {
       const prev = clone_node(rootNode);
       const payload = json_value_to_payload_node(next);
 
-      if (rootNode._tag === ROOT_TAG) {
+      if (rootNode.$_tag === ROOT_TAG) {
         rootNode._content = [payload];
       } else {
-        rootNode._tag = payload._tag;
+        rootNode.$_tag = payload.$_tag;
         rootNode.$_attrs = clone_node(payload.$_attrs ?? {});
         rootNode._content = clone_node(payload._content ?? []);
-        rootNode._meta = clone_node(payload._meta ?? {});
+        rootNode.$_meta = clone_node(payload.$_meta ?? {});
       }
 
       if (node_equal(prev, rootNode)) return;

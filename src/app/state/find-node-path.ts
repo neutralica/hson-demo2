@@ -12,7 +12,7 @@ export function find_node_at_path(
     if (!cur) return undefined;
 
     // CHANGED: peel off top-level wrappers when present
-    if (cur._tag === ROOT_TAG) {
+    if (cur.$_tag === ROOT_TAG) {
       cur = first_node_child(cur);
       if (!cur) return undefined;
     }
@@ -22,17 +22,17 @@ export function find_node_at_path(
     // -------------------------
     if (typeof part === "string") {
       // If current node is a property node that wraps an object, descend into that object first.
-      if (cur._tag !== OBJ_TAG) {
+      if (cur.$_tag !== OBJ_TAG) {
         const maybeObj = first_child_by_tag(cur, OBJ_TAG);
         if (maybeObj) cur = maybeObj;
       }
 
-      if (cur._tag !== OBJ_TAG) return undefined;
-
-      const hit: HsonNode | undefined = node_children(cur).find((n) => n._tag === part);
+      if (cur.$_tag !== OBJ_TAG) return undefined;
+      const hit: HsonNode | undefined = node_children(cur).find((n) => n.$_tag === part);
       if (!hit) return undefined;
 
-      cur = hit;
+      // Property nodes are wrappers; a JSON path resolves to the property's value payload.
+      cur = first_node_child(hit) ?? hit;
       continue;
     }
 
@@ -41,14 +41,14 @@ export function find_node_at_path(
     // -------------------------
     if (typeof part === "number") {
       // If current node is a property node that wraps an array, descend into that array first.
-      if (cur._tag !== ARR_TAG) {
+      if (cur.$_tag !== ARR_TAG) {
         const maybeArr = first_child_by_tag(cur, ARR_TAG);
         if (maybeArr) cur = maybeArr;
       }
 
-      if (cur._tag !== ARR_TAG) return undefined;
+      if (cur.$_tag !== ARR_TAG) return undefined;
 
-      const items = node_children(cur).filter((n) => n._tag === II_TAG);
+      const items = node_children(cur).filter((n) => n.$_tag === II_TAG);
       const ii = items[part];
       if (!ii) return undefined;
 
@@ -75,5 +75,5 @@ function first_node_child(node: HsonNode): HsonNode | undefined {
 }
 
 function first_child_by_tag(node: HsonNode, tag: string): HsonNode | undefined {
-  return node_children(node).find((n) => n._tag === tag);
+  return node_children(node).find((n) => n.$_tag === tag);
 }

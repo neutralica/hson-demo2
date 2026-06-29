@@ -224,7 +224,7 @@ export function suite_append_and_create(): TestSuite {
           .map((k, i) => {
             const cls = String(k.attr.get("class") ?? "");
             const txt = k.text.get();
-            return `${i}: <${String(k.node?._tag ?? "node")}> class="${cls}" text="${txt}"`;
+            return `${i}: <${String(k.node?.$_tag ?? "node")}> class="${cls}" text="${txt}"`;
           })
           .join("\n") || "<no kids>";
       },
@@ -298,7 +298,7 @@ export function suite_append_and_create(): TestSuite {
         // (works in no-dom mode; matches your “_-elem is invisible” rule)
         const raw = (root.node._content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode =>
-          is_Node(x) && x._tag === ELEM_TAG
+          is_Node(x) && x.$_tag === ELEM_TAG
         );
 
         if (elem) {
@@ -324,7 +324,7 @@ export function suite_append_and_create(): TestSuite {
 
         // primitive survived under _-elem
         const raw = (root.node._content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === ELEM_TAG);
+        const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
         const elemKids = (elem?._content ?? []) as unknown[];
         t.ok(`primitive "Z" remains under _-elem`, elemKids.includes("Z"));
       },
@@ -333,9 +333,9 @@ export function suite_append_and_create(): TestSuite {
         const root = tree.find.byId("root");
         if (!root) return "<no root tree>";
         const raw = (root.node._content ?? []) as unknown[];
-        const elem = raw.find((x): x is HsonNode => is_Node(x) && x._tag === ELEM_TAG);
+        const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
         const kids = (elem?._content ?? []) as unknown[];
-        return `<root _-elem kids=${kids.map(x => (is_Node(x) ? `<${x._tag}>` : JSON.stringify(x))).join(", ")}>`;
+        return `<root _-elem kids=${kids.map(x => (is_Node(x) ? `<${x.$_tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
     },
     {
@@ -693,7 +693,7 @@ export function mixedRegression() {
         const div = part.create.div();
 
         // stash quids or tags for debug
-        (tree as unknown as { __createdTag?: string }).__createdTag = div.node._tag;
+        (tree as unknown as { __createdTag?: string }).__createdTag = div.node.$_tag;
 
         div.attr.set("class", "created");
       },
@@ -1379,20 +1379,20 @@ export function suite_css_and_content(): TestSuite {
         // Minimal structure:
         // <div> "hello " <span>"world"</span> </div>
         const node: HsonNode = _CREATE_NODE({
-          _tag: "div",
+         $_tag: "div",
           $_attrs: { id: "x" },
           _content: [_CREATE_NODE(
             {
-              _tag: STR_TAG,
+             $_tag: STR_TAG,
               $_attrs: {},
               _content: ["hello "]
             }),
           _CREATE_NODE({
-            _tag: "span",
+           $_tag: "span",
             $_attrs: {},
             _content: [
               _CREATE_NODE({
-                _tag: STR_TAG,
+               $_tag: STR_TAG,
                 $_attrs: {},
                 _content: ["world"]
               })],
@@ -1470,7 +1470,7 @@ function suite_graft_regressions(): TestSuite {
           t.ok("grafted tree exists", !!grafted);
           if (!grafted) return;
 
-          t.eq("root tag is queried element tag", grafted.node._tag.toLowerCase(), "div");
+          t.eq("root tag is queried element tag", grafted.node.$_tag.toLowerCase(), "div");
 
           const el = grafted.dom.el();
           t.ok("root dom exists", !!el);
@@ -1537,7 +1537,7 @@ function suite_graft_regressions(): TestSuite {
           t.ok("grafted tree exists", !!grafted);
           if (!grafted) return;
 
-          t.eq("root tag is div", grafted.node._tag.toLowerCase(), "div");
+          t.eq("root tag is div", grafted.node.$_tag.toLowerCase(), "div");
 
           const el = grafted.dom.el();
           t.ok("root dom exists", !!el);
