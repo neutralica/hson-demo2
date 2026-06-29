@@ -170,7 +170,7 @@ export const HSON_SUBcss: CssMap = {
   color: OKLCH_NEUTRALS.ash,
   // color: ACID_WASH_RGBA.wornPurple,
   // color: ACID_WASH_OKLCH.steel,
-  marginBottom: "1rem",
+  marginBottom: "0.5rem",
   userSelect: "none",
   textIndent: "1rem",
   paddingLeft: "1ch",

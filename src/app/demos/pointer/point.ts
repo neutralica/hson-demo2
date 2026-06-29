@@ -1,7 +1,6 @@
-
 // ---- types ----
 
-import { LiveTree, make_tree_selector } from "hson-live";
+import { LiveTree } from "hson-live";
 
 export type PointPanelRig = Readonly<{
     root: LiveTree;
@@ -49,7 +48,7 @@ export function point_init(rig: PointPanelRig): void {
 
     // radians -> degrees
     const rad_to_deg = (rad: number): number => (rad * 180) / Math.PI;
-    rig.root.listen.passive().onPointerMove( onMove)
+    rig.root.listen.window.passive().onPointerMove(onMove);
     // window.addEventListener("pointermove", onMove, { passive: true });
 
     const MAX = rig.readout.rows.length;
@@ -71,11 +70,10 @@ export function point_init(rig: PointPanelRig): void {
         rig.pointer.style.setMany({
             transform: `translate(0, -50%) rotate(${deg}deg)`,
         });
-        const hitStack = rig.root.dom.doc?.elementsFromPoint(x, y) ?? [];
-        const orderedHits = [...hitStack].reverse() ?? [];
-        const ghostStack = find_visual_only_elements(rig.root, x, y, hitStack ?? []) ;
+        const hitStack = rig.root.dom.doc?.treesFromPoint(x, y).array().reverse() ?? [];
+        const ghostStack = find_visual_only_elements(rig.root, x, y, hitStack);
 
-        const stack = [...orderedHits, ...ghostStack];
+        const stack: LiveTree[] = [...hitStack, ...ghostStack];
 
         for (let i = 0; i < MAX; i += 1) {
             const row = rig.readout.rows[i];
@@ -90,12 +88,14 @@ export function point_init(rig: PointPanelRig): void {
             }
 
 
-            const tag = item.tagName.toLowerCase();
-            const id = (item instanceof HTMLElement && item.id) ? `#${item.id}` : "";
-            const cls =
-                item instanceof HTMLElement && item.classList.length
-                    ? "." + Array.from(item.classList).slice(0, 2).join(".")
-                    : "";
+            const tag = item.node._tag;
+            const idValue = item.attr.get("id");
+            const classValue = item.attr.get("class");
+            const classText = typeof classValue === "string" ? classValue : "";
+            const id = idValue ? `#${idValue}` : "";
+            const cls = classText
+                ? "." + classText.trim().split(/\s+/).filter(Boolean).slice(0, 2).join(".")
+                : "";
 
             row.ix.text.set(String(i));
             row.tag.text.set(`${tag}${id}${cls}`);
@@ -118,7 +118,6 @@ export function point_init(rig: PointPanelRig): void {
     (rig as any).dispose = (): void => {
         mounted = false;
         cancelAnimationFrame(raf);
-        window.removeEventListener("pointermove", onMove);
     };
 }
 
@@ -126,27 +125,27 @@ function find_visual_only_elements(
     root: LiveTree,
     x: number,
     y: number,
-    hitStack: Element[],
-): Element[] {
-    const rootEl = root.dom.el();
-    if (!(rootEl instanceof Element)) return [];
-    const hitSet = new Set<Element>(hitStack);
-    const out: Element[] = [];
+    hitStack: readonly LiveTree[],
+): LiveTree[] {
+    const hitSet = new Set(hitStack.map(t => t.quid));
+    const out: LiveTree[] = [];
 
-    // include root itself plus descendants
-    const candidates: Element[] = [rootEl, ...Array.from(rootEl.querySelectorAll("*"))];
+    // Equivalent to `[rootEl, ...rootEl.querySelectorAll("*")]`, but LiveTree-native.
+    const candidates: readonly LiveTree[] = [root, ...root.content.deep()];
 
-    for (const el of candidates) {
-        if (hitSet.has(el)) continue;
+    for (const tree of candidates) {
+        if (hitSet.has(tree.quid)) continue;
 
-        const cs = getComputedStyle(el);
+        const cs = tree.dom.computed();
+        if (!cs) continue;
 
         // only ghosts
         if (cs.pointerEvents !== "none") continue;
         if (cs.display === "none") continue;
         if (cs.visibility === "hidden") continue;
 
-        const r = el.getBoundingClientRect();
+        const r = tree.dom.rect();
+        if (!r) continue;
         if (r.width <= 0 || r.height <= 0) continue;
 
         const inside =
@@ -157,13 +156,14 @@ function find_visual_only_elements(
 
         if (!inside) continue;
 
-        out.push(el);
+        out.push(tree);
     }
 
     // smaller first tends to surface local overlays before giant containers
     out.sort((a, b) => {
-        const ar = a.getBoundingClientRect();
-        const br = b.getBoundingClientRect();
+        const ar = a.dom.rect();
+        const br = b.dom.rect();
+        if (!ar || !br) return 0;
         return (ar.width * ar.height) - (br.width * br.height);
     });
 

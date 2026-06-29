@@ -6,7 +6,7 @@ export const FLOWER_LAYERcss: CssMap = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
-  pointerEvents: "all",
+  pointerEvents: "none",
   zIndex: "0",
 };
 
@@ -15,5 +15,6 @@ export const FLOWER_FIELDcss: CssMap = {
   left: "50%",
   transform: "translateX(-50%)",
   display: "block",
+  pointerEvents: "none",
 };
 
