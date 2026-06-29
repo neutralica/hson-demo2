@@ -66,8 +66,8 @@ export function find_node_at_path(
 }
 
 function node_children(node: HsonNode): HsonNode[] {
-  if (!Array.isArray(node._content)) return [];
-  return node._content.filter(is_Node);
+  if (!Array.isArray(node.$_content)) return [];
+  return node.$_content.filter(is_Node);
 }
 
 function first_node_child(node: HsonNode): HsonNode | undefined {

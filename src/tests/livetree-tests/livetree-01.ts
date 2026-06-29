@@ -296,15 +296,15 @@ export function suite_append_and_create(): TestSuite {
 
         // inject a primitive into the semantic content container (_-elem)
         // (works in no-dom mode; matches your “_-elem is invisible” rule)
-        const raw = (root.node._content ?? []) as unknown[];
+        const raw = (root.node.$_content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode =>
           is_Node(x) && x.$_tag === ELEM_TAG
         );
 
         if (elem) {
-          const kids = (elem._content ?? []) as unknown[];
+          const kids = (elem.$_content ?? []) as unknown[];
           kids.push("Z");
-          elem._content = kids as unknown as (HsonNode | Primitive)[];
+          elem.$_content = kids as unknown as (HsonNode | Primitive)[];
         } else {
           // if a root ever lacks _-elem, keep test honest rather than silently passing
           throw new Error(`test invariant: expected #root to have a single _-elem child`);
@@ -323,18 +323,18 @@ export function suite_append_and_create(): TestSuite {
         t.eq("content.all().length (node children)", root.content.all().length, 0);
 
         // primitive survived under _-elem
-        const raw = (root.node._content ?? []) as unknown[];
+        const raw = (root.node.$_content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
-        const elemKids = (elem?._content ?? []) as unknown[];
+        const elemKids = (elem?.$_content ?? []) as unknown[];
         t.ok(`primitive "Z" remains under _-elem`, elemKids.includes("Z"));
       },
 
       preview(tree) {
         const root = tree.find.byId("root");
         if (!root) return "<no root tree>";
-        const raw = (root.node._content ?? []) as unknown[];
+        const raw = (root.node.$_content ?? []) as unknown[];
         const elem = raw.find((x): x is HsonNode => is_Node(x) && x.$_tag === ELEM_TAG);
-        const kids = (elem?._content ?? []) as unknown[];
+        const kids = (elem?.$_content ?? []) as unknown[];
         return `<root _-elem kids=${kids.map(x => (is_Node(x) ? `<${x.$_tag}>` : JSON.stringify(x))).join(", ")}>`;
       },
     },
@@ -1350,8 +1350,8 @@ export function suite_css_and_content(): TestSuite {
           t.eq("DOM textContent", el.textContent ?? "", "new-text");
         }
 
-        t.ok("node._content is array", Array.isArray(node._content));
-        t.eq("node._content length == 1", node._content?.length ?? 0, 1);
+        t.ok("node._content is array", Array.isArray(node.$_content));
+        t.eq("node._content length == 1", node.$_content?.length ?? 0, 1);
 
         // get_node_text prefers DOM when mounted
         t.eq("get_node_text", get_node_text_content(node), "new-text");
@@ -1381,20 +1381,20 @@ export function suite_css_and_content(): TestSuite {
         const node: HsonNode = _CREATE_NODE({
          $_tag: "div",
           $_attrs: { id: "x" },
-          _content: [_CREATE_NODE(
+          $_content: [_CREATE_NODE(
             {
              $_tag: STR_TAG,
               $_attrs: {},
-              _content: ["hello "]
+              $_content: ["hello "]
             }),
           _CREATE_NODE({
            $_tag: "span",
             $_attrs: {},
-            _content: [
+           $_content: [
               _CREATE_NODE({
                $_tag: STR_TAG,
                 $_attrs: {},
-                _content: ["world"]
+                $_content: ["world"]
               })],
           }),
           ],

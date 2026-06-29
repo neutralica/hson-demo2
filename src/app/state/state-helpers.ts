@@ -12,11 +12,11 @@ export const LOG_HR_FULL = "|=•=-~- - - • - - -~-=•=|";
 export function mk_node(tag: string, content: HsonNode[] = []): HsonNode {
   return _CREATE_NODE({
     $_tag: tag,
-    _content: content,
+    $_content: content,
   });
 }
 export function unwrap_value_payload(node: HsonNode): HsonNode {
-  const kids = Array.isArray(node._content) ? node._content.filter(is_Node) : [];
+  const kids = Array.isArray(node.$_content) ? node.$_content.filter(is_Node) : [];
 
   // CHANGED: property node usually wraps exactly one payload node
   if (kids.length === 1) {
@@ -121,7 +121,7 @@ export function json_value_to_payload_node(value: JsonValue): HsonNode {
   if (typeof value === "string") {
     return _CREATE_NODE({
       $_tag: STR_TAG,
-      _content: [value],
+      $_content: [value],
     });
   }
 
@@ -130,7 +130,7 @@ export function json_value_to_payload_node(value: JsonValue): HsonNode {
     typeof value === "boolean") {
     return _CREATE_NODE({
       $_tag: VAL_TAG,
-      _content: [value],
+      $_content: [value],
     });
   }
 

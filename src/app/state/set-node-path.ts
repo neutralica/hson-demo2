@@ -15,14 +15,14 @@ export function set_node_at_path(
     const payload = json_value_to_payload_node(next);
 
     if (root.$_tag === ROOT_TAG) {
-      root._content = [payload];
+      root.$_content = [payload];
       return;
     }
 
     // mutate root in place
     root.$_tag = payload.$_tag;
     root.$_attrs = payload.$_attrs;
-    root._content = clone_node(payload._content ?? []);
+    root.$_content = clone_node(payload.$_content ?? []);
     root.$_meta = clone_node(payload.$_meta ?? {});
     return;
   }
@@ -54,13 +54,13 @@ export function set_node_at_path(
     const existing = node_children(obj).find((n) => n.$_tag === leaf);
 
     if (existing) {
-      existing._content = [payload];
+      existing.$_content = [payload];
       return;
     }
 
     const propNode = mk_node(leaf, [payload]);
-    if (!Array.isArray(obj._content)) obj._content = [];
-    obj._content.push(propNode);
+    if (!Array.isArray(obj.$_content)) obj.$_content = [];
+    obj.$_content.push(propNode);
     return;
   }
 
@@ -84,12 +84,12 @@ export function set_node_at_path(
     const items = node_children(arr).filter((n) => n.$_tag === II_TAG);
 
     if (leaf < items.length) {
-      items[leaf]!._content = [payload];
+      items[leaf]!.$_content = [payload];
       return;
     }
 
     if (leaf === items.length) {
-      if (!Array.isArray(arr._content)) arr._content = [];
+      if (!Array.isArray(arr.$_content)) arr.$_content = [];
 
       const item = mk_node(II_TAG, [payload]);
       item.$_meta = {
@@ -97,7 +97,7 @@ export function set_node_at_path(
         "data-_index": String(leaf),
       };
 
-      arr._content.push(item);
+      arr.$_content.push(item);
       return;
     }
 
@@ -110,8 +110,8 @@ export function set_node_at_path(
 }
 
 function node_children(node: HsonNode): HsonNode[] {
-  if (!Array.isArray(node._content)) return [];
-  return node._content.filter(is_Node);
+  if (!Array.isArray(node.$_content)) return [];
+  return node.$_content.filter(is_Node);
 }
 
 function unwrap_path_payload(node: HsonNode | undefined): HsonNode | undefined {
