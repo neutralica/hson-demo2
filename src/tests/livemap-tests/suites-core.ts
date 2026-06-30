@@ -57,6 +57,30 @@ export function livemap_suites_core(): TestSuite {
         expectedOps: [],
         expectedRoot: { user: { name: "Ada" } },
       }),
+      make_core_set_case({
+        suite: SUITE,
+        name: "core set existing array item",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 0],
+        value: { name: "Margaret" },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["users", 0], prev: { name: "Ada" }, next: { name: "Margaret" } },
+        ],
+        expectedRoot: { users: [{ name: "Margaret" }, { name: "Grace" }] },
+      }),
+      make_core_set_case({
+        suite: SUITE,
+        name: "core set existing array item property",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 1, "name"],
+        value: "Margaret",
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["users", 1, "name"], prev: "Grace", next: "Margaret" },
+        ],
+        expectedRoot: { users: [{ name: "Ada" }, { name: "Margaret" }] },
+      }),
       make_core_feed_case({
         suite: SUITE,
         name: "core feed exact path hears set",
@@ -93,6 +117,40 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
+        name: "core feed array parent hears indexed set",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        feedPath: ["users"],
+        setPath: ["users", 0],
+        value: { name: "Margaret" },
+        expectedEvents: [
+          {
+            path: ["users"],
+            value: [{ name: "Margaret" }, { name: "Grace" }],
+            opPath: ["users", 0],
+            opPrev: { name: "Ada" },
+            opNext: { name: "Margaret" },
+          },
+        ],
+      }),
+      make_core_feed_case({
+        suite: SUITE,
+        name: "core feed array index hears nested child set",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        feedPath: ["users", 1],
+        setPath: ["users", 1, "name"],
+        value: "Margaret",
+        expectedEvents: [
+          {
+            path: ["users", 1],
+            value: { name: "Margaret" },
+            opPath: ["users", 1, "name"],
+            opPrev: "Grace",
+            opNext: "Margaret",
+          },
+        ],
+      }),
+      make_core_feed_case({
+        suite: SUITE,
         name: "core feed sibling ignores set",
         input: { user: { name: "Ada", role: "user" } },
         feedPath: ["user", "role"],
@@ -121,6 +179,8 @@ export function livemap_suites_core(): TestSuite {
     ] as const,
   };
 }
+
+
 
 function make_core_feed_case(spec: LiveMapFeedCaseSpec): TestCase {
   return {

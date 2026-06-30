@@ -2,8 +2,8 @@ import type { TestSuite } from "../../app/demos/test/tests.types";
 import { make_snap_case, make_set_case } from "./test-helpers";
 
 
-export function livemap_suite_editor_snap(): TestSuite {
-  const SUITE = "livemap-editor:snap";
+export function livemap_suite_editor(): TestSuite {
+  const SUITE = "livemap-editor";
 
   return {
     suite: SUITE,
@@ -43,15 +43,6 @@ export function livemap_suite_editor_snap(): TestSuite {
         path: ["users", 1, "name"],
         expected: "Grace",
       }),
-    ] as const,
-  };
-}
-export function livemap_suite_editor_set(): TestSuite {
-  const SUITE = "livemap-editor:set";
-
-  return {
-    suite: SUITE,
-    cases: [
       make_set_case({
         suite: SUITE,
         name: "set existing object property",
@@ -84,6 +75,39 @@ export function livemap_suite_editor_set(): TestSuite {
         expectedPrev: "Ada",
         expectedNext: "Ada",
         expectedRoot: { user: { name: "Ada" } },
+      }),
+      make_set_case({
+        suite: SUITE,
+        name: "set existing array item",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 0],
+        value: { name: "Margaret" },
+        expectedChanged: true,
+        expectedPrev: { name: "Ada" },
+        expectedNext: { name: "Margaret" },
+        expectedRoot: { users: [{ name: "Margaret" }, { name: "Grace" }] },
+      }),
+      make_set_case({
+        suite: SUITE,
+        name: "set existing array item property",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 1, "name"],
+        value: "Margaret",
+        expectedChanged: true,
+        expectedPrev: "Grace",
+        expectedNext: "Margaret",
+        expectedRoot: { users: [{ name: "Ada" }, { name: "Margaret" }] },
+      }),
+      make_set_case({
+        suite: SUITE,
+        name: "set existing array item unchanged",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 0],
+        value: { name: "Ada" },
+        expectedChanged: false,
+        expectedPrev: { name: "Ada" },
+        expectedNext: { name: "Ada" },
+        expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }] },
       }),
     ] as const,
   };
