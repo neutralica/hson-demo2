@@ -123,6 +123,34 @@ export function livemap_suites_node(): TestSuite {
         expectedContentLength: 1,
         expectedMessage: "LiveMap node attrs can only be edited on _hson_elem-backed nodes: [\"button\"]",
       }),
+      make_node_children_case({
+        suite: SUITE,
+        name: "node children reads direct HSON child nodes",
+        input: { user: { name: "Ada", role: "admin" } },
+        path: ["user"],
+        expectedChildTags: ["_hson_obj"],
+        expectedMissingPathChildren: [],
+      }),
+      make_node_child_lookup_case({
+        suite: SUITE,
+        name: "node child lookup reads direct child by tag",
+        input: { user: { name: "Ada", role: "admin" } },
+        path: ["user"],
+        tag: "_hson_obj",
+        missingTag: "_hson_elem",
+        expectedChildTag: "_hson_obj",
+        expectedChildrenByTagCount: 1,
+        expectedMissingChildrenByTag: [],
+        expectedMissingChild: undefined,
+      }),
+      make_node_must_child_throw_case({
+        suite: SUITE,
+        name: "node mustChild throws with path and tag context",
+        input: { user: { name: "Ada" } },
+        path: ["user"],
+        missingTag: "_hson_elem",
+        expectedMessage: `LiveMap node child does not resolve: ["user"]."_hson_elem"`,
+      }),
     ] as const,
   };
 }
@@ -247,6 +275,37 @@ type NodeJsonHtmlTagNameCaseSpec = Readonly<{
   path: (string | number)[];
   expectedTag: string;
   expectedContentLength: number;
+  expectedMessage: string;
+}>;
+
+type NodeChildrenCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  expectedChildTags: readonly string[];
+  expectedMissingPathChildren: readonly string[];
+}>;
+
+type NodeChildLookupCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  tag: string;
+  missingTag: string;
+  expectedChildTag: string;
+  expectedChildrenByTagCount: number;
+  expectedMissingChildrenByTag: readonly string[];
+  expectedMissingChild: undefined;
+}>;
+
+type NodeMustChildThrowCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  missingTag: string;
   expectedMessage: string;
 }>;
 
@@ -614,6 +673,85 @@ function make_node_json_html_tag_name_case(spec: NodeJsonHtmlTagNameCaseSpec): T
           equal_row(`${spec.name}: tag`, handle.tag(), spec.expectedTag),
           equal_row(`${spec.name}: content length`, handle.content()?.length, spec.expectedContentLength),
           equal_row(`${spec.name}: attrs error`, message, spec.expectedMessage),
+        ],
+      };
+    },
+  };
+}
+
+function make_node_children_case(spec: NodeChildrenCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      const missingHandle = map.node(["missing"]);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: child tags`, handle.children().map((child) => child.$_tag), spec.expectedChildTags),
+          equal_row(`${spec.name}: missing path children`, missingHandle.children().map((child) => child.$_tag), spec.expectedMissingPathChildren),
+        ],
+      };
+    },
+  };
+}
+
+function make_node_child_lookup_case(spec: NodeChildLookupCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      tag: preview_value(spec.tag),
+      missingTag: preview_value(spec.missingTag),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: child`, handle.child(spec.tag)?.$_tag, spec.expectedChildTag),
+          equal_row(`${spec.name}: mustChild`, handle.mustChild(spec.tag).$_tag, spec.expectedChildTag),
+          equal_row(`${spec.name}: childrenByTag count`, handle.childrenByTag(spec.tag).length, spec.expectedChildrenByTagCount),
+          equal_row(`${spec.name}: missing childrenByTag`, handle.childrenByTag(spec.missingTag).map((child) => child.$_tag), spec.expectedMissingChildrenByTag),
+          equal_row(`${spec.name}: missing child`, handle.child(spec.missingTag), spec.expectedMissingChild),
+        ],
+      };
+    },
+  };
+}
+
+function make_node_must_child_throw_case(spec: NodeMustChildThrowCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      missingTag: preview_value(spec.missingTag),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      let message = "";
+
+      try {
+        handle.mustChild(spec.missingTag);
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: error`, message, spec.expectedMessage),
         ],
       };
     },
