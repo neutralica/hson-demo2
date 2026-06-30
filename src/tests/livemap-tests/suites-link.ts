@@ -199,6 +199,172 @@ export function livemap_suites_link(): TestSuite {
         expectedFirstTarget: { user: { name: "Grace" } },
         expectedSecondTarget: { profile: { name: "Grace" } },
       }),
+      make_link_delete_case({
+        suite: SUITE,
+        name: "link propagates leaf delete",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { draft: { name: "Ada", role: "user" } },
+        linkPath: ["draft", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { draft: { role: "user" } },
+      }),
+      make_link_delete_case({
+        suite: SUITE,
+        name: "link parent propagates child delete as updated parent",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { draft: { name: "Ada", role: "user" } },
+        linkPath: ["draft"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { draft: { role: "user" } },
+      }),
+      make_link_mapped_delete_case({
+        suite: SUITE,
+        name: "link mapped propagates leaf delete",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { user: { name: "Ada", role: "user" } },
+        from: ["draft", "name"],
+        to: ["user", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { user: { role: "user" } },
+      }),
+      make_link_mapped_delete_case({
+        suite: SUITE,
+        name: "link mapped parent propagates child delete as updated parent",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { user: { name: "Ada", role: "user" } },
+        from: ["draft"],
+        to: ["user"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { user: { role: "user" } },
+      }),
+      make_link_delete_dispose_case({
+        suite: SUITE,
+        name: "link disposer stops delete propagation",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { draft: { name: "Ada", role: "user" } },
+        linkPath: ["draft", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { draft: { name: "Ada", role: "user" } },
+      }),
+      make_link_mapped_delete_dispose_case({
+        suite: SUITE,
+        name: "link mapped disposer stops delete propagation",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { user: { name: "Ada", role: "user" } },
+        from: ["draft", "name"],
+        to: ["user", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { user: { name: "Ada", role: "user" } },
+      }),
+      make_link_reverse_delete_case({
+        suite: SUITE,
+        name: "link delete is one way from source to target",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { draft: { name: "Ada", role: "user" } },
+        linkPath: ["draft", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { name: "Ada", role: "user" } },
+        expectedTarget: { draft: { role: "user" } },
+      }),
+      make_handle_link_case({
+        suite: SUITE,
+        name: "handle linkTo propagates leaf value",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: { name: "Ada" } },
+        sourcePath: ["draft", "name"],
+        targetPath: ["user", "name"],
+        setPath: ["draft", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Grace" } },
+        expectedTarget: { user: { name: "Grace" } },
+      }),
+      make_handle_link_case({
+        suite: SUITE,
+        name: "handle linkTo propagates parent value after child set",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: { name: "Ada" } },
+        sourcePath: ["draft"],
+        targetPath: ["user"],
+        setPath: ["draft", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Grace" } },
+        expectedTarget: { user: { name: "Grace" } },
+      }),
+      make_handle_link_case({
+        suite: SUITE,
+        name: "handle linkTo target can add missing property",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: {} },
+        sourcePath: ["draft", "name"],
+        targetPath: ["user", "name"],
+        setPath: ["draft", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Grace" } },
+        expectedTarget: { user: { name: "Grace" } },
+      }),
+      make_handle_link_reverse_set_case({
+        suite: SUITE,
+        name: "handle linkTo is one way from source to target",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: { name: "Ada" } },
+        sourcePath: ["draft", "name"],
+        targetPath: ["user", "name"],
+        setPath: ["user", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Ada" } },
+        expectedTarget: { user: { name: "Grace" } },
+      }),
+      make_handle_link_dispose_case({
+        suite: SUITE,
+        name: "handle linkTo disposer stops propagation",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: { name: "Ada" } },
+        sourcePath: ["draft", "name"],
+        targetPath: ["user", "name"],
+        setPath: ["draft", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Grace" } },
+        expectedTarget: { user: { name: "Ada" } },
+      }),
+      make_handle_link_delete_case({
+        suite: SUITE,
+        name: "handle linkTo propagates leaf delete",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { user: { name: "Ada", role: "user" } },
+        sourcePath: ["draft", "name"],
+        targetPath: ["user", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { user: { role: "user" } },
+      }),
+      make_handle_link_delete_case({
+        suite: SUITE,
+        name: "handle linkTo parent propagates child delete as updated parent",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { user: { name: "Ada", role: "user" } },
+        sourcePath: ["draft"],
+        targetPath: ["user"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { user: { role: "user" } },
+      }),
+      make_handle_link_delete_dispose_case({
+        suite: SUITE,
+        name: "handle linkTo disposer stops delete propagation",
+        sourceInput: { draft: { name: "Ada", role: "user" } },
+        targetInput: { user: { name: "Ada", role: "user" } },
+        sourcePath: ["draft", "name"],
+        targetPath: ["user", "name"],
+        deletePath: ["draft", "name"],
+        expectedSource: { draft: { role: "user" } },
+        expectedTarget: { user: { name: "Ada", role: "user" } },
+      }),
     ] as const,
   };
 }
@@ -215,9 +381,17 @@ type LinkCaseSpec = Readonly<{
   expectedTarget: JsonValue;
 }>;
 
+
 type MappedLinkCaseSpec = Omit<LinkCaseSpec, "linkPath"> & Readonly<{
   from: LivePath;
   to: LivePath;
+}>;
+
+type MappedLinkDeleteCaseSpec = Omit<MappedLinkCaseSpec, "setPath" | "value"> & Readonly<{
+  deletePath: LivePath;
+}>;
+type LinkDeleteCaseSpec = Omit<LinkCaseSpec, "setPath" | "value"> & Readonly<{
+  deletePath: LivePath;
 }>;
 
 type TwoTargetLinkCaseSpec = Readonly<{
@@ -234,6 +408,31 @@ type TwoTargetLinkCaseSpec = Readonly<{
   expectedSource: JsonValue;
   expectedFirstTarget: JsonValue;
   expectedSecondTarget: JsonValue;
+}>;
+
+type HandleLinkCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  sourceInput: JsonValue;
+  targetInput: JsonValue;
+  sourcePath: LivePath;
+  targetPath: LivePath;
+  setPath: LivePath;
+  value: JsonValue;
+  expectedSource: JsonValue;
+  expectedTarget: JsonValue;
+}>;
+
+type HandleLinkDeleteCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  sourceInput: JsonValue;
+  targetInput: JsonValue;
+  sourcePath: LivePath;
+  targetPath: LivePath;
+  deletePath: LivePath;
+  expectedSource: JsonValue;
+  expectedTarget: JsonValue;
 }>;
 
 function make_link_case(spec: LinkCaseSpec): TestCase {
@@ -293,6 +492,89 @@ function make_link_dispose_case(spec: LinkCaseSpec): TestCase {
   };
 }
 
+
+function make_link_delete_case(spec: LinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      linkPath: preview_value(spec.linkPath),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      link_livemap(source, target, { path: spec.linkPath });
+      source.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_link_delete_dispose_case(spec: LinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      linkPath: preview_value(spec.linkPath),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      const dispose = link_livemap(source, target, { path: spec.linkPath });
+      dispose();
+      source.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_link_reverse_delete_case(spec: LinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      linkPath: preview_value(spec.linkPath),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      link_livemap(source, target, { path: spec.linkPath });
+      target.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
 function make_link_reverse_set_case(spec: LinkCaseSpec): TestCase {
   return {
     suite: spec.suite,
@@ -339,6 +621,64 @@ function make_link_mapped_case(spec: MappedLinkCaseSpec): TestCase {
 
       link_livemap(source, target, { from: spec.from, to: spec.to });
       source.set(spec.setPath, spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+
+function make_link_mapped_delete_case(spec: MappedLinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      from: preview_value(spec.from),
+      to: preview_value(spec.to),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      link_livemap(source, target, { from: spec.from, to: spec.to });
+      source.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_link_mapped_delete_dispose_case(spec: MappedLinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      from: preview_value(spec.from),
+      to: preview_value(spec.to),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      const dispose = link_livemap(source, target, { from: spec.from, to: spec.to });
+      dispose();
+      source.delete(spec.deletePath);
 
       return {
         assertRows: [
@@ -408,6 +748,151 @@ function make_link_two_targets_case(spec: TwoTargetLinkCaseSpec): TestCase {
           equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
           equal_row(`${spec.name}: first target`, firstTarget.snap(), spec.expectedFirstTarget),
           equal_row(`${spec.name}: second target`, secondTarget.snap(), spec.expectedSecondTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_link_case(spec: HandleLinkCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      sourcePath: preview_value(spec.sourcePath),
+      targetPath: preview_value(spec.targetPath),
+      setPath: preview_value(spec.setPath),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      source.at(spec.sourcePath).linkTo(target.at(spec.targetPath));
+      source.set(spec.setPath, spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_link_reverse_set_case(spec: HandleLinkCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      sourcePath: preview_value(spec.sourcePath),
+      targetPath: preview_value(spec.targetPath),
+      setPath: preview_value(spec.setPath),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      source.at(spec.sourcePath).linkTo(target.at(spec.targetPath));
+      target.set(spec.setPath, spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_link_dispose_case(spec: HandleLinkCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      sourcePath: preview_value(spec.sourcePath),
+      targetPath: preview_value(spec.targetPath),
+      setPath: preview_value(spec.setPath),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      const dispose = source.at(spec.sourcePath).linkTo(target.at(spec.targetPath));
+      dispose();
+      source.set(spec.setPath, spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_link_delete_case(spec: HandleLinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      sourcePath: preview_value(spec.sourcePath),
+      targetPath: preview_value(spec.targetPath),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      source.at(spec.sourcePath).linkTo(target.at(spec.targetPath));
+      source.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_link_delete_dispose_case(spec: HandleLinkDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      sourcePath: preview_value(spec.sourcePath),
+      targetPath: preview_value(spec.targetPath),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      const dispose = source.at(spec.sourcePath).linkTo(target.at(spec.targetPath));
+      dispose();
+      source.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
         ],
       };
     },

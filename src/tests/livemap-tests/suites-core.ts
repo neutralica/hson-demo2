@@ -81,6 +81,165 @@ export function livemap_suites_core(): TestSuite {
         ],
         expectedRoot: { users: [{ name: "Ada" }, { name: "Margaret" }] },
       }),
+      make_core_set_path_copy_case({
+        suite: SUITE,
+        name: "core set commit path is stable after original path mutates",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        mutateOriginalPathTo: ["user", "role"],
+        value: "Grace",
+        expectedCommitPath: ["user", "name"],
+        expectedRoot: { user: { name: "Grace", role: "user" } },
+      }),
+      make_core_set_many_case({
+        suite: SUITE,
+        name: "core setMany writes multiple properties as one commit",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        values: { name: "Grace", role: "admin" },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Grace", role: "admin" } },
+      }),
+      make_core_set_many_case({
+        suite: SUITE,
+        name: "core setMany omits unchanged properties",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        values: { name: "Ada", role: "admin" },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Ada", role: "admin" } },
+      }),
+      make_core_set_many_case({
+        suite: SUITE,
+        name: "core setMany unchanged batch produces empty ops",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        values: { name: "Ada", role: "user" },
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { user: { name: "Ada", role: "user" } },
+      }),
+      make_core_set_many_feed_case({
+        suite: SUITE,
+        name: "core setMany feed emits one event per changed op",
+        input: { user: { name: "Ada", role: "user" } },
+        feedPath: ["user"],
+        setPath: ["user"],
+        values: { name: "Grace", role: "admin" },
+        expectedEvents: [
+          {
+            path: ["user"],
+            value: { name: "Grace", role: "admin" },
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: "Grace",
+          },
+          {
+            path: ["user"],
+            value: { name: "Grace", role: "admin" },
+            opPath: ["user", "role"],
+            opPrev: "user",
+            opNext: "admin",
+          },
+        ],
+      }),
+      make_core_set_many_path_copy_case({
+        suite: SUITE,
+        name: "core setMany commit paths are stable after original path mutates",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        mutateOriginalPathTo: ["profile"],
+        values: { name: "Grace", role: "admin" },
+        expectedCommitPaths: [
+          ["user", "name"],
+          ["user", "role"],
+        ],
+        expectedRoot: { user: { name: "Grace", role: "admin" } },
+      }),
+      make_core_delete_case({
+        suite: SUITE,
+        name: "core delete existing object property",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "name"], prev: "Ada", next: undefined },
+        ],
+        expectedRoot: { user: { role: "user" } },
+      }),
+      make_core_delete_case({
+        suite: SUITE,
+        name: "core delete missing object property unchanged",
+        input: { user: { name: "Ada" } },
+        path: ["user", "role"],
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      make_core_delete_feed_case({
+        suite: SUITE,
+        name: "core delete feed exact path hears delete",
+        input: { user: { name: "Ada", role: "user" } },
+        feedPath: ["user", "name"],
+        deletePath: ["user", "name"],
+        expectedEvents: [
+          {
+            path: ["user", "name"],
+            value: undefined,
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: undefined,
+          },
+        ],
+      }),
+      make_core_delete_feed_case({
+        suite: SUITE,
+        name: "core delete feed parent hears child delete",
+        input: { user: { name: "Ada", role: "user" } },
+        feedPath: ["user"],
+        deletePath: ["user", "name"],
+        expectedEvents: [
+          {
+            path: ["user"],
+            value: { role: "user" },
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: undefined,
+          },
+        ],
+      }),
+      make_core_delete_path_copy_case({
+        suite: SUITE,
+        name: "core delete commit path is stable after original path mutates",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        mutateOriginalPathTo: ["user", "role"],
+        expectedCommitPath: ["user", "name"],
+        expectedRoot: { user: { role: "user" } },
+      }),
+      make_core_delete_throw_case({
+        suite: SUITE,
+        name: "core delete root throws",
+        input: { user: { name: "Ada" } },
+        path: [],
+        expectedMessage: "LiveMap editor cannot delete the root node yet.",
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      make_core_delete_throw_case({
+        suite: SUITE,
+        name: "core delete array index throws",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 0],
+        expectedMessage: "LiveMap editor cannot delete array indexes yet: [\"users\", 0]",
+        expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }] },
+      }),
       make_core_feed_case({
         suite: SUITE,
         name: "core feed exact path hears set",
@@ -275,6 +434,97 @@ type CoreAtOriginalPathStabilityCaseSpec = Readonly<{
   expectedRoot: JsonValue;
 }>;
 
+type CoreSetPathCopyCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  mutateOriginalPathTo: (string | number)[];
+  value: JsonValue;
+  expectedCommitPath: (string | number)[];
+  expectedRoot: JsonValue;
+}>;
+
+type CoreSetManyCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  values: Readonly<Record<string, JsonValue>>;
+  expectedChanged: boolean;
+  expectedOps: readonly Readonly<{
+    kind: "set";
+    path: (string | number)[];
+    prev: JsonValue | undefined;
+    next: JsonValue | undefined;
+  }>[];
+  expectedRoot: JsonValue;
+}>;
+
+type CoreSetManyFeedCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  feedPath: (string | number)[];
+  setPath: (string | number)[];
+  values: Readonly<Record<string, JsonValue>>;
+  expectedEvents: readonly LiveMapFeedEventPreview[];
+}>;
+
+type CoreSetManyPathCopyCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  mutateOriginalPathTo: (string | number)[];
+  values: Readonly<Record<string, JsonValue>>;
+  expectedCommitPaths: readonly (string | number)[][];
+  expectedRoot: JsonValue;
+}>;
+
+type CoreDeleteCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  expectedChanged: boolean;
+  expectedOps: readonly Readonly<{
+    kind: "delete";
+    path: (string | number)[];
+    prev: JsonValue | undefined;
+    next: undefined;
+  }>[];
+  expectedRoot: JsonValue;
+}>;
+
+type CoreDeleteFeedCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  feedPath: (string | number)[];
+  deletePath: (string | number)[];
+  expectedEvents: readonly LiveMapFeedEventPreview[];
+}>;
+
+type CoreDeletePathCopyCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  mutateOriginalPathTo: (string | number)[];
+  expectedCommitPath: (string | number)[];
+  expectedRoot: JsonValue;
+}>;
+
+type CoreDeleteThrowCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  expectedMessage: string;
+  expectedRoot: JsonValue;
+}>;
+
 function make_core_at_snap_case(spec: CoreAtSnapCaseSpec): TestCase {
   return {
     suite: spec.suite,
@@ -397,6 +647,218 @@ function make_core_at_original_path_stability_case(spec: CoreAtOriginalPathStabi
         assertRows: [
           equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
           equal_row(`${spec.name}: handle path`, handle.path(), spec.path),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_set_path_copy_case(spec: CoreSetPathCopyCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      mutateOriginalPathTo: preview_value(spec.mutateOriginalPathTo),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const originalPath = [...spec.path];
+      const commit = map.set(originalPath, spec.value);
+
+      originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: commit path`, commit.ops[0]?.path, spec.expectedCommitPath),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_set_many_case(spec: CoreSetManyCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      values: preview_value(spec.values),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const commit = map.setMany(spec.path, spec.values);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
+          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_set_many_feed_case(spec: CoreSetManyFeedCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      feedPath: preview_value(spec.feedPath),
+      setPath: preview_value(spec.setPath),
+      values: preview_value(spec.values),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const events: LiveMapFeedEventPreview[] = [];
+
+      map.feed(spec.feedPath, (event) => {
+        events.push(preview_core_feed_event(event));
+      });
+
+      map.setMany(spec.setPath, spec.values);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_set_many_path_copy_case(spec: CoreSetManyPathCopyCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      mutateOriginalPathTo: preview_value(spec.mutateOriginalPathTo),
+      values: preview_value(spec.values),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const originalPath = [...spec.path];
+      const commit = map.setMany(originalPath, spec.values);
+
+      originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: commit paths`, commit.ops.map((op) => op.path), spec.expectedCommitPaths),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_delete_case(spec: CoreDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const commit = map.delete(spec.path);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
+          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_delete_feed_case(spec: CoreDeleteFeedCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      feedPath: preview_value(spec.feedPath),
+      deletePath: preview_value(spec.deletePath),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const events: LiveMapFeedEventPreview[] = [];
+
+      map.feed(spec.feedPath, (event) => {
+        events.push(preview_core_feed_event(event));
+      });
+
+      map.delete(spec.deletePath);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_delete_path_copy_case(spec: CoreDeletePathCopyCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      mutateOriginalPathTo: preview_value(spec.mutateOriginalPathTo),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const originalPath = [...spec.path];
+      const commit = map.delete(originalPath);
+
+      originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: commit path`, commit.ops[0]?.path, spec.expectedCommitPath),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_delete_throw_case(spec: CoreDeleteThrowCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      let message = "";
+
+      try {
+        map.delete(spec.path);
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: error`, message, spec.expectedMessage),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
         ],
       };
     },

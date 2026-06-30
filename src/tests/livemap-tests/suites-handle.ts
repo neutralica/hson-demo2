@@ -29,6 +29,89 @@ export function livemap_suites_handle(): TestSuite {
         expectedChanged: true,
         expectedRoot: { user: { name: "Grace" } },
       }),
+      make_handle_set_many_case({
+        suite: SUITE,
+        name: "handle setMany writes multiple scoped properties",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        values: { name: "Grace", role: "admin" },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Grace", role: "admin" } },
+      }),
+      make_handle_set_many_case({
+        suite: SUITE,
+        name: "handle setMany omits unchanged properties",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        values: { name: "Ada", role: "admin" },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Ada", role: "admin" } },
+      }),
+      make_handle_set_many_feed_case({
+        suite: SUITE,
+        name: "handle setMany emits feed events",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        values: { name: "Grace", role: "admin" },
+        expectedEvents: [
+          {
+            path: ["user"],
+            value: { name: "Grace", role: "admin" },
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: "Grace",
+          },
+          {
+            path: ["user"],
+            value: { name: "Grace", role: "admin" },
+            opPath: ["user", "role"],
+            opPrev: "user",
+            opNext: "admin",
+          },
+        ],
+      }),
+      make_handle_delete_case({
+        suite: SUITE,
+        name: "handle delete removes scoped property",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "name"], prev: "Ada", next: undefined },
+        ],
+        expectedRoot: { user: { role: "user" } },
+      }),
+      make_handle_delete_case({
+        suite: SUITE,
+        name: "handle delete missing property unchanged",
+        input: { user: { name: "Ada" } },
+        path: ["user", "role"],
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      make_handle_delete_feed_case({
+        suite: SUITE,
+        name: "handle delete emits feed event",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        expectedEvents: [
+          {
+            path: ["user", "name"],
+            value: undefined,
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: undefined,
+          },
+        ],
+      }),
       make_handle_update_case({
         suite: SUITE,
         name: "handle update changes primitive",
@@ -111,6 +194,22 @@ type HandleSetCaseSpec = Readonly<{
   expectedRoot: JsonValue;
 }>;
 
+type HandleSetManyCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: LivePath;
+  values: Readonly<Record<string, JsonValue>>;
+  expectedChanged: boolean;
+  expectedOps: readonly Readonly<{
+    kind: "set";
+    path: LivePath;
+    prev: JsonValue | undefined;
+    next: JsonValue | undefined;
+  }>[];
+  expectedRoot: JsonValue;
+}>;
+
 type HandleUpdateCaseSpec = Readonly<{
   suite: string;
   name: string;
@@ -127,6 +226,39 @@ type HandleUpdateFeedCaseSpec = Readonly<{
   input: JsonValue;
   path: LivePath;
   update: (value: JsonValue | undefined) => JsonValue;
+  expectedEvents: readonly LiveMapFeedEventPreview[];
+}>;
+
+
+type HandleSetManyFeedCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: LivePath;
+  values: Readonly<Record<string, JsonValue>>;
+  expectedEvents: readonly LiveMapFeedEventPreview[];
+}>;
+
+type HandleDeleteCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: LivePath;
+  expectedChanged: boolean;
+  expectedOps: readonly Readonly<{
+    kind: "delete";
+    path: LivePath;
+    prev: JsonValue | undefined;
+    next: undefined;
+  }>[];
+  expectedRoot: JsonValue;
+}>;
+
+type HandleDeleteFeedCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: LivePath;
   expectedEvents: readonly LiveMapFeedEventPreview[];
 }>;
 
@@ -189,6 +321,125 @@ function make_handle_set_case(spec: HandleSetCaseSpec): TestCase {
         assertRows: [
           equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
           equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_set_many_case(spec: HandleSetManyCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      values: preview_value(spec.values),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const commit = handle.setMany(spec.values);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
+          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+
+function make_handle_set_many_feed_case(spec: HandleSetManyFeedCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      values: preview_value(spec.values),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const events: LiveMapFeedEventPreview[] = [];
+
+      handle.feed((event) => {
+        events.push({
+          path: event.path,
+          value: event.value,
+          opPath: event.op.path,
+          opPrev: event.op.prev,
+          opNext: event.op.next,
+        });
+      });
+
+      handle.setMany(spec.values);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_delete_case(spec: HandleDeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const commit = handle.delete();
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
+          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_handle_delete_feed_case(spec: HandleDeleteFeedCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const events: LiveMapFeedEventPreview[] = [];
+
+      handle.feed((event) => {
+        events.push({
+          path: event.path,
+          value: event.value,
+          opPath: event.op.path,
+          opPrev: event.op.prev,
+          opNext: event.op.next,
+        });
+      });
+
+      handle.delete();
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
         ],
       };
     },

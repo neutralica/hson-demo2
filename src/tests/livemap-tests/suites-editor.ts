@@ -1,5 +1,11 @@
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import { make_snap_case, make_set_case } from "./test-helpers";
+// import type { JsonValue } from "hson-live";
+import type { JsonValue } from "hson-live/types";
+import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+// import { delete_live_path } from "hson-live";
+import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
+import { json_root_node } from "./test-kit";
+import { delete_live_path } from "../../../../hson-live/dist/api/livemap/livemap-editor";
+// import { equal_row, preview_value, json_root_node } from "./test-kit";
 
 
 export function livemap_suite_editor(): TestSuite {
@@ -109,6 +115,114 @@ export function livemap_suite_editor(): TestSuite {
         expectedNext: { name: "Ada" },
         expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }] },
       }),
+      make_delete_case({
+        suite: SUITE,
+        name: "delete existing object property",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        expectedChanged: true,
+        expectedPrev: "Ada",
+        expectedNext: undefined,
+        expectedRoot: { user: { role: "user" } },
+      }),
+      make_delete_case({
+        suite: SUITE,
+        name: "delete missing object property unchanged",
+        input: { user: { name: "Ada" } },
+        path: ["user", "role"],
+        expectedChanged: false,
+        expectedPrev: undefined,
+        expectedNext: undefined,
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      make_delete_throw_case({
+        suite: SUITE,
+        name: "delete root throws",
+        input: { user: { name: "Ada" } },
+        path: [],
+        expectedMessage: "LiveMap editor cannot delete the root node yet.",
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      make_delete_throw_case({
+        suite: SUITE,
+        name: "delete array index throws",
+        input: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        path: ["users", 0],
+        expectedMessage: "LiveMap editor cannot delete array indexes yet: [\"users\", 0]",
+        expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }] },
+      }),
     ] as const,
+  };
+}
+
+
+type DeleteCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  expectedChanged: boolean;
+  expectedPrev: JsonValue | undefined;
+  expectedNext: JsonValue | undefined;
+  expectedRoot: JsonValue;
+}>;
+
+type DeleteThrowCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  expectedMessage: string;
+  expectedRoot: JsonValue;
+}>;
+
+function make_delete_case(spec: DeleteCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const root = json_root_node(spec.input);
+      const result = delete_live_path(root, spec.path);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: changed`, result.changed, spec.expectedChanged),
+          equal_row(`${spec.name}: prev`, result.prev, spec.expectedPrev),
+          equal_row(`${spec.name}: next`, result.next, spec.expectedNext),
+          equal_row(`${spec.name}: root`, delete_live_path(root, ["__never__"]).prev, undefined),
+        ],
+      };
+    },
+  };
+}
+
+function make_delete_throw_case(spec: DeleteThrowCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const root = json_root_node(spec.input);
+      let message = "";
+
+      try {
+        delete_live_path(root, spec.path);
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: error`, message, spec.expectedMessage),
+        ],
+      };
+    },
   };
 }
