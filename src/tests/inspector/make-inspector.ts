@@ -1,7 +1,7 @@
 // inspector.ts
 
 import { type LiveTree } from "hson-live";
-import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, tdNameChildCss, TD_PREVIEW_ROWcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss, BUTTON_BARcss, INSP_PREV_PREcss, INSP_CAP_ROWcss } from "./inspector.css";
+import { LOG_SCROLLcss, THcss, tdNameCssBase, TDcss, ROW_SUITEcss, tdNameChildCss, TD_PREVIEW_ROWcss, ROW_CASEcss, PREVIEW_METAcss, PREVIEW_META_FAILcss, INSPECTORcss, BUTTON_BARcss, INSP_PREV_PREcss, INSP_CAP_ROWcss, INSP_T_HOSTcss } from "./inspector.css";
 import { CLICKABLEcss } from "../../app/core/consts/css.consts";
 import { clear_box, mk_table, mk_tr, mk_th, mk_td } from "./inspector.helpers";
 import { render_report_html, open_report_window } from "./render-report";
@@ -144,24 +144,7 @@ export function make_inspector(
   const root = mk_div_id(host, "inspector-root")
     .css.setMany(INSPECTORcss);
 
-  // const body = mk_div_cls(root, "insp-body").css.setMany({
-  //   display: "flex",
-  //   overflow: "hidden",
-  //   minWidth: "0",
-  //   minHeight: "0",
-  // });
-
-  const tableHost = mk_div_cls(root, "insp-table-host").css.setMany({
-    position: "absolute",
-    inset: "0",
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    overflow: "hidden",
-    fontSize: _fontSize.smol,
-    color: _colors.txt.main,
-    // margin: "0rem 3rem",
-  });
+  const tableHost = mk_div_cls(root, "insp-table-host").css.setMany(INSP_T_HOSTcss);
 
   const expandedSuites = new Set<string>();
   const expandedCasesBySuite = new Map<string, Set<CaseKey>>();
@@ -264,20 +247,20 @@ export function make_inspector(
       ...THcss,
       width: $CHIP_WIDTHstr,
       maxWidth: $CHIP_WIDTHstr,
-      color: _colors.txt.code,
+      color: _colors.txt.list,
     });
 
     mk_th(hr, "c-name", "suite / group / case").css.setMany({
       ...THcss,
       ...tdNameCssBase,
-      color: _colors.txt.code,
+      color: _colors.txt.list,
     });
 
     mk_th(hr, "c-ms", "ms").css.setMany({
       ...THcss,
       width: $CHIP_WIDTHstr,
       maxWidth: $CHIP_WIDTHstr,
-      color: _colors.txt.code,
+      color: _colors.txt.list,
     });
 
     for (const s of suites) {

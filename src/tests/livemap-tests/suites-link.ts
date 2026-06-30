@@ -115,6 +115,90 @@ export function livemap_suites_link(): TestSuite {
         expectedSource: { draft: { name: "Grace" } },
         expectedTarget: { user: { name: "Ada" } },
       }),
+      make_link_case({
+        suite: SUITE,
+        name: "link propagates array item replacement",
+        sourceInput: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        targetInput: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        linkPath: ["users"],
+        setPath: ["users", 0],
+        value: { name: "Margaret" },
+        expectedSource: { users: [{ name: "Margaret" }, { name: "Grace" }] },
+        expectedTarget: { users: [{ name: "Margaret" }, { name: "Grace" }] },
+      }),
+      make_link_case({
+        suite: SUITE,
+        name: "link propagates nested array item property",
+        sourceInput: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        targetInput: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        linkPath: ["users", 1],
+        setPath: ["users", 1, "name"],
+        value: "Margaret",
+        expectedSource: { users: [{ name: "Ada" }, { name: "Margaret" }] },
+        expectedTarget: { users: [{ name: "Ada" }, { name: "Margaret" }] },
+      }),
+      make_link_mapped_case({
+        suite: SUITE,
+        name: "link mapped path preserves numeric array suffix",
+        sourceInput: { draftUsers: [{ name: "Ada" }, { name: "Grace" }] },
+        targetInput: { users: [{ name: "Ada" }, { name: "Grace" }] },
+        from: ["draftUsers"],
+        to: ["users"],
+        setPath: ["draftUsers", 0, "name"],
+        value: "Margaret",
+        expectedSource: { draftUsers: [{ name: "Margaret" }, { name: "Grace" }] },
+        expectedTarget: { users: [{ name: "Margaret" }, { name: "Grace" }] },
+      }),
+      make_link_mapped_case({
+        suite: SUITE,
+        name: "link maps source leaf to renamed target leaf",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: { displayName: "Ada" } },
+        from: ["draft", "name"],
+        to: ["user", "displayName"],
+        setPath: ["draft", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Grace" } },
+        expectedTarget: { user: { displayName: "Grace" } },
+      }),
+      make_link_mapped_case({
+        suite: SUITE,
+        name: "link mapped target can add missing property",
+        sourceInput: { draft: { name: "Ada" } },
+        targetInput: { user: {} },
+        from: ["draft", "name"],
+        to: ["user", "name"],
+        setPath: ["draft", "name"],
+        value: "Grace",
+        expectedSource: { draft: { name: "Grace" } },
+        expectedTarget: { user: { name: "Grace" } },
+      }),
+      make_link_reverse_set_case({
+        suite: SUITE,
+        name: "link is one way from source to target",
+        sourceInput: { user: { name: "Ada" } },
+        targetInput: { user: { name: "Ada" } },
+        linkPath: ["user", "name"],
+        setPath: ["user", "name"],
+        value: "Grace",
+        expectedSource: { user: { name: "Ada" } },
+        expectedTarget: { user: { name: "Grace" } },
+      }),
+      make_link_two_targets_case({
+        suite: SUITE,
+        name: "link source can propagate to multiple targets",
+        sourceInput: { user: { name: "Ada" } },
+        firstTargetInput: { user: { name: "Ada" } },
+        secondTargetInput: { profile: { name: "Ada" } },
+        firstLinkPath: ["user", "name"],
+        secondFrom: ["user", "name"],
+        secondTo: ["profile", "name"],
+        setPath: ["user", "name"],
+        value: "Grace",
+        expectedSource: { user: { name: "Grace" } },
+        expectedFirstTarget: { user: { name: "Grace" } },
+        expectedSecondTarget: { profile: { name: "Grace" } },
+      }),
     ] as const,
   };
 }
@@ -134,6 +218,22 @@ type LinkCaseSpec = Readonly<{
 type MappedLinkCaseSpec = Omit<LinkCaseSpec, "linkPath"> & Readonly<{
   from: LivePath;
   to: LivePath;
+}>;
+
+type TwoTargetLinkCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  sourceInput: JsonValue;
+  firstTargetInput: JsonValue;
+  secondTargetInput: JsonValue;
+  firstLinkPath: LivePath;
+  secondFrom: LivePath;
+  secondTo: LivePath;
+  setPath: LivePath;
+  value: JsonValue;
+  expectedSource: JsonValue;
+  expectedFirstTarget: JsonValue;
+  expectedSecondTarget: JsonValue;
 }>;
 
 function make_link_case(spec: LinkCaseSpec): TestCase {
@@ -182,6 +282,34 @@ function make_link_dispose_case(spec: LinkCaseSpec): TestCase {
       const dispose = link_livemap(source, target, { path: spec.linkPath });
       dispose();
       source.set(spec.setPath, spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_link_reverse_set_case(spec: LinkCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      targetInput: preview_value(spec.targetInput),
+      linkPath: preview_value(spec.linkPath),
+      setPath: preview_value(spec.setPath),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const target = make_livemap_core(json_root_node(spec.targetInput));
+
+      link_livemap(source, target, { path: spec.linkPath });
+      target.set(spec.setPath, spec.value);
 
       return {
         assertRows: [
@@ -246,6 +374,40 @@ function make_link_mapped_dispose_case(spec: MappedLinkCaseSpec): TestCase {
         assertRows: [
           equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
           equal_row(`${spec.name}: target`, target.snap(), spec.expectedTarget),
+        ],
+      };
+    },
+  };
+}
+
+function make_link_two_targets_case(spec: TwoTargetLinkCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      sourceInput: preview_value(spec.sourceInput),
+      firstTargetInput: preview_value(spec.firstTargetInput),
+      secondTargetInput: preview_value(spec.secondTargetInput),
+      firstLinkPath: preview_value(spec.firstLinkPath),
+      secondFrom: preview_value(spec.secondFrom),
+      secondTo: preview_value(spec.secondTo),
+      setPath: preview_value(spec.setPath),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const source = make_livemap_core(json_root_node(spec.sourceInput));
+      const firstTarget = make_livemap_core(json_root_node(spec.firstTargetInput));
+      const secondTarget = make_livemap_core(json_root_node(spec.secondTargetInput));
+
+      link_livemap(source, firstTarget, { path: spec.firstLinkPath });
+      link_livemap(source, secondTarget, { from: spec.secondFrom, to: spec.secondTo });
+      source.set(spec.setPath, spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: source`, source.snap(), spec.expectedSource),
+          equal_row(`${spec.name}: first target`, firstTarget.snap(), spec.expectedFirstTarget),
+          equal_row(`${spec.name}: second target`, secondTarget.snap(), spec.expectedSecondTarget),
         ],
       };
     },

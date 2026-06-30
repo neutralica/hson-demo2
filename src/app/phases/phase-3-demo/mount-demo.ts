@@ -24,7 +24,7 @@ import { mount_parsing_panels } from "../../demos/parse/pp-factory";
 import { mount_point_panel } from "../../demos/pointer/point-factory";
 import { mount_json_render_demo } from "../../demos/render/render-json";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
-import { mount_test_panels } from "../../demos/test/tp-factory";
+import { mount_test_panels } from "../../demos/test/mount-tp";
 import type { TestPanels } from "../../demos/test/tp.types";
 import { mount_state_monitor } from "../../state/mount-state";
 import type { DemoView, DemoWidget } from "../../state/state.types";

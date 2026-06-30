@@ -176,11 +176,232 @@ export function livemap_suites_core(): TestSuite {
         value: "Grace",
         expectedEvents: [],
       }),
+      make_core_at_snap_case({
+        suite: SUITE,
+        name: "core at snap reads scoped path",
+        input: { user: { name: "Ada" } },
+        path: ["user", "name"],
+        expected: "Ada",
+      }),
+      make_core_at_set_case({
+        suite: SUITE,
+        name: "core at set writes scoped path",
+        input: { user: { name: "Ada" } },
+        path: ["user", "name"],
+        value: "Grace",
+        expectedCommitChanged: true,
+        expectedRoot: { user: { name: "Grace" } },
+      }),
+      make_core_at_feed_case({
+        suite: SUITE,
+        name: "core at feed hears scoped path",
+        input: { user: { name: "Ada" } },
+        path: ["user", "name"],
+        value: "Grace",
+        expectedEvents: [
+          {
+            path: ["user", "name"],
+            value: "Grace",
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: "Grace",
+          },
+        ],
+      }),
+      make_core_at_path_copy_case({
+        suite: SUITE,
+        name: "core at path returns copy",
+        input: { user: { name: "Ada" } },
+        path: ["user", "name"],
+        mutateReturnedPathTo: ["user", "role"],
+        expectedHandlePath: ["user", "name"],
+      }),
+      make_core_at_original_path_stability_case({
+        suite: SUITE,
+        name: "core at path is stable after original path mutates",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user", "name"],
+        mutateOriginalPathTo: ["user", "role"],
+        value: "Grace",
+        expectedRoot: { user: { name: "Grace", role: "user" } },
+      }),
     ] as const,
   };
 }
 
+type CoreAtSnapCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  expected: JsonValue | undefined;
+}>;
 
+type CoreAtSetCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  value: JsonValue;
+  expectedCommitChanged: boolean;
+  expectedRoot: JsonValue;
+}>;
+
+type CoreAtFeedCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  value: JsonValue;
+  expectedEvents: readonly LiveMapFeedEventPreview[];
+}>;
+
+type CoreAtPathCopyCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  mutateReturnedPathTo: (string | number)[];
+  expectedHandlePath: (string | number)[];
+}>;
+
+type CoreAtOriginalPathStabilityCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  input: JsonValue;
+  path: (string | number)[];
+  mutateOriginalPathTo: (string | number)[];
+  value: JsonValue;
+  expectedRoot: JsonValue;
+}>;
+
+function make_core_at_snap_case(spec: CoreAtSnapCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: snap`, handle.snap(), spec.expected),
+          equal_row(`${spec.name}: path`, handle.path(), spec.path),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_at_set_case(spec: CoreAtSetCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const commit = handle.set(spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedCommitChanged),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_at_feed_case(spec: CoreAtFeedCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const events: LiveMapFeedEventPreview[] = [];
+
+      handle.feed((event) => {
+        events.push(preview_core_feed_event(event));
+      });
+
+      handle.set(spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_at_path_copy_case(spec: CoreAtPathCopyCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      mutateReturnedPathTo: preview_value(spec.mutateReturnedPathTo),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.at(spec.path);
+      const returnedPath = handle.path() as (string | number)[];
+
+      returnedPath.splice(0, returnedPath.length, ...spec.mutateReturnedPathTo);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: returned path mutation`, handle.path(), spec.expectedHandlePath),
+        ],
+      };
+    },
+  };
+}
+
+function make_core_at_original_path_stability_case(spec: CoreAtOriginalPathStabilityCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      mutateOriginalPathTo: preview_value(spec.mutateOriginalPathTo),
+      value: preview_value(spec.value),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const originalPath = [...spec.path];
+      const handle = map.at(originalPath);
+
+      originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
+      handle.set(spec.value);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
+          equal_row(`${spec.name}: handle path`, handle.path(), spec.path),
+        ],
+      };
+    },
+  };
+}
 
 function make_core_feed_case(spec: LiveMapFeedCaseSpec): TestCase {
   return {

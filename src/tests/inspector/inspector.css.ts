@@ -23,6 +23,17 @@ export const LOG_SCROLLcss: CssMap = {
   minHeight: "0",
 };
 
+export const INSP_T_HOSTcss = {
+  position: "absolute",
+  inset: "0",
+  height: "100%",
+  width: "100%",
+  display: "flex",
+  overflow: "hidden",
+  fontSize: _fontSize.smol,
+  color: _colors.txt.main,
+  // margin: "0rem 3rem",
+};
 export const INSPECTORcss: CssMap = {
   position: "relative",
   width: "100%",
