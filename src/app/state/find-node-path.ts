@@ -1,6 +1,6 @@
 import type { HsonNode } from "hson-live/types";
-import { ROOT_TAG, OBJ_TAG, ARR_TAG, II_TAG } from "../../../../hson-live/dist/consts/constants";
-import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
+import { ROOT_TAG, OBJ_TAG, ARR_TAG, II_TAG } from "../../../../hson-live/dist/core/constants";
+import { is_Node } from "../../../../hson-live/dist/core/node-guards";
 
 export function find_node_at_path(
   root: HsonNode,

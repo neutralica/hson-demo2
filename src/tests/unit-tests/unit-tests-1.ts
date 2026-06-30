@@ -2,8 +2,7 @@
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager, pseudo_to_suffix, selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
-import { canon_to_css_prop, normalize_css_key, normalize_css_value } from "../../../../hson-live/dist/utils/attrs-utils/normalize-css";
-import { normalize_decls, render_rule } from "hson-live/_tests";
+import  { normalize_css_value, canon_to_css_prop, normalize_css_key, normalize_decls, render_rule } from "hson-live/diagnostics/test-exports";
 
 const gcss = CssManager.api();
 

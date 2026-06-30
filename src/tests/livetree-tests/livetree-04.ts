@@ -1,5 +1,6 @@
 import { CssManager, hson, LiveTree } from "hson-live";
-import type { LiveTreeCaseSpec, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { get_hson_css_rules, get_rule_for_quid, tick } from "./livetree-03";
 import { make_livetree_suite } from "./livetree-testkit";
 

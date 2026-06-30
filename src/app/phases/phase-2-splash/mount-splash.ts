@@ -98,7 +98,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     frame.animate()
 
-    clouds.forEach((cl, i) => {
+    clouds.array().forEach((cl, i) => {
         cl.css.anim.begin(CLOUD_LAYER_FADEanim(i));
     });
 

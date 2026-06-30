@@ -4,9 +4,8 @@ import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
 import { _fontSize } from "../../app/core/consts/ui-consts";
-import { render_rule, normalize_decls } from "hson-live/_tests";
-import { normalize_css_value, normalize_css_key, canon_to_css_prop } from "../../../../hson-live/dist/utils/attrs-utils/normalize-css";
 import { selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
+import  { normalize_css_value, normalize_css_key, canon_to_css_prop, render_rule, normalize_decls } from "hson-live/diagnostics/test-exports";
 
 const gcss = CssManager.api();
 

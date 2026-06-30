@@ -1,10 +1,10 @@
 import { clone_node } from "./clone-node";
-import { II_TAG, ROOT_TAG } from "../../../../hson-live/dist/consts/constants";
-import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
 import type { HsonNode } from "hson-live/types";
 import { find_node_at_path } from "./find-node-path";
 import type { JsonValue } from "../../../../hson-live/dist/types/core.types";
 import { ensure_object_container, ensure_array_container, mk_node, json_value_to_payload_node } from "./state-helpers";
+import  { ROOT_TAG, II_TAG } from "../../../../hson-live/dist/core/constants";
+import { is_Node } from "../../../../hson-live/dist/core/node-guards";
 
 export function set_node_at_path(
   root: HsonNode,

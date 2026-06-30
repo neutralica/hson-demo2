@@ -1,6 +1,7 @@
 import { CssManager, hson } from "hson-live";
 import { LiveTree } from "../../../../hson-live/dist/api/livetree/livetree";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./livetree-testkit";
 

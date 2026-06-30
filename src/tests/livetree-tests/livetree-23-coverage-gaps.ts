@@ -1,4 +1,5 @@
-import type { LiveTreeCaseSpec, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_text_content_surface(): TestSuite {
@@ -325,9 +326,9 @@ export function livetree_text_content_surface(): TestSuite {
 
       act(tree) {
         const root = tree.find.must.byId("root");
-        const all = root.content.all();
+        const all = root.content.all().array();
 
-        (all as any[]).pop();
+        all.pop();
 
         (tree as any).__result = {
           mutatedSnapshotLength: all.length,

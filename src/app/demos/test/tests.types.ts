@@ -1,6 +1,5 @@
 // tests.types.ts
 
-import type { LiveTree } from "hson-live";
 import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
@@ -63,6 +62,7 @@ export type TestRunMode =
   | "all"
   | "transform"
   | "livetree"
+  | "livemap"
   | "legacy"
   | "dev"
   | "unit"
@@ -169,16 +169,6 @@ export type CaseReport = Readonly<{
   }>;
 }>;
 
-// src/tests/livetree-suite.types.ts
-export type LiveTreeFx = {
-  name: string;
-  html: string;
-  run: (tree: LiveTree) => void | Promise<void>;
-  assert: (tree: LiveTree) => void;
-  preview?: string;           // short inspector snippet
-  inputLabel?: string;        // optional: “attrs / text / append”
-};
-
 export type TransFxtrFmt = "html" | "json" | "hson";
 
 
@@ -212,32 +202,11 @@ export type Gen<T> = Readonly<{
 }>;
 export type MetaPatch = Record<string, string>;
 
-export type LiveTreeCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-
-  // "input" is your fixture HTML for inspector
-  html: string;
-
-  // Optional: label shown in inspector meta
-  fixture?: string;
-  sub?: string;
-  dom?: boolean;
-  // Arrange/Act: mutate tree
-  act: (tree: LiveTree) => void | Promise<void>;
-
-  // Assert: use the `t` helper below (pedantic, multi-check)
-  assert: (tree: LiveTree, t: Asserter) => void | Promise<void>;
-
-  // Optional: customize what gets shown in preview
-  preview?: (tree: LiveTree) => string;
-}>;
-
 export type Asserter = Readonly<{
   ok: (label: string, condition: unknown) => void;
   eq: (label: string, got: unknown, want: unknown) => void;
   neq: (label: string, got: unknown, notWant: unknown) => void;
-
+  
   // Useful for DOM checks without exploding when missing:
   hasAttr: (label: string, el: Element | null | undefined, attr: string) => void;
   attrEq: (
@@ -246,7 +215,7 @@ export type Asserter = Readonly<{
     attr: string,
     want: string | null
   ) => void;
-
+  
   outcomeOk: (label: string, maybeOutcome: unknown) => void;
 }>;
 
@@ -256,3 +225,5 @@ export type TestAssertRow = Readonly<{
   actual?: string;
   expected?: string;
 }>;
+
+

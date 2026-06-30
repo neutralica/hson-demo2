@@ -1,116 +1,24 @@
 import type { FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
 import type { SourceFormat } from "../../../../../hson-live/dist/types/diagnostics.types";
-import  { all_demo_meta } from "../../../tests/demo-meta-tests/make-demo-meta-test";
-import  { random_seed, make_json_fixture_bundle } from "../../../tests/json-tests/json-test-builder";
-import  { all_livetree_suites } from "../../../tests/livetree-tests/all-livetree-suites";
-import  { EXTRA_FIXTURES } from "../../../tests/transform-tests/extra-fixtures";
-import  { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../tests/transform-tests/hson-tests";
-import  { JSON_FIXTURES_LEVEL2 } from "../../../tests/transform-tests/json-level-2";
+import { all_demo_meta } from "../../../tests/demo-meta-tests/make-demo-meta-test";
+import { random_seed, make_json_fuzz_suite } from "../../../tests/json-fuzzer/fuzzer-builder";
+import { all_livetree_suites } from "../../../tests/livetree-tests/all-livetree-suites";
+import { EXTRA_FIXTURES } from "../../../tests/transform-tests/extra-fixtures";
+import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../tests/transform-tests/hson-tests";
+import { JSON_FIXTURES_LEVEL2 } from "../../../tests/transform-tests/json-level-2";
 import { HTML_FIXTURES_NEW } from "../../../tests/transform-tests/new-html-fixtures";
-import {HTML_FIXTURES_LEGACY, TRANSFORM_FAILS} from "../../../../data-old/data/html-fixtures"
-import {JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY} from "../../../../data-old/data/json-fixtures"
+import { HTML_FIXTURES_LEGACY, TRANSFORM_FAILS } from "../../../../data-old/data/html-fixtures"
+import { JSON_FIXTURES_DEV, JSON_FIXTURES_LEGACY } from "../../../../data-old/data/json-fixtures"
 
-import  { all_unit_tests } from "../../../tests/unit-tests/all-unit-tests";
-import  { _snip } from "../../utils/helpers";
-import  { _freeze } from "./tests.consts";
-import type { HsonTestApi, FixtureBundle, CaseKey, TestSuite, TestCase, TestRunMode } from "./tests.types";
+import { all_unit_tests } from "../../../tests/unit-tests/all-unit-tests";
+import { _freeze } from "./tests.consts";
+import type { HsonTestApi, CaseKey, TestSuite, TestRunMode } from "./tests.types";
 import { livetree_graph_dom_markup_surface } from "../../../tests/livetree-tests/livetree-24-dom-corners";
+import { make_transform_test_suite } from "../../../tests/transform-tests/make-transform-suite";
+import { all_livemap_suites } from "../../../tests/livemap-tests/all-livemap-suites";
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
-
-// add an explicit entryFmt param
-export function make_transform_test_suite(
-  hson: HsonTestApi,
-  fixtures: FixtureBundle,
-  suite = "transform/",
-  captureMap?: Map<CaseKey, () => Promise<LoopReport>>,
-  entryFmt: SourceFormat = "auto",
-  expected: "pass" | "fail" = "pass",
-): TestSuite {
-  const cases: TestCase[] = [];
-
-  for (const [group, bundle] of Object.entries(fixtures)) {
-    for (const [sub, atom] of Object.entries(bundle)) {
-      const name = `${group}.${sub}`;
-      const entry = entryFmt;
-      const k = `${suite}::${name}` as const;
-
-      if (captureMap) {
-        captureMap.set(k, async () => {
-          return hson._circuit_test(atom, {
-            entry,
-            dual: true,
-            times: 3,
-            verbose: true,
-            capture: true,
-            stopOnFirstFail: false,
-          });
-        });
-      }
-
-      const input =
-        typeof atom === "string"
-          ? atom
-          : (typeof atom === "object" && atom && "text" in atom)
-            ? JSON.stringify((atom as { text?: unknown }).text ?? "", null, 2)
-            : JSON.stringify(atom, null, 2);
-
-      cases.push(_freeze({
-        suite,
-        name,
-        meta: {
-          fixture: group,
-          input,
-          sub,
-          preview: input.length ? _snip(input) : "—",
-        },
-
-
-        run: () => {
-          const base = {
-            entry,
-            dual: true,
-            times: 3,
-            stopOnFirstFail: false,
-          } as const;
-
-          const report = hson._circuit_test(atom, {
-            ...base,
-            verbose: true,
-            capture: true,
-          });
-
-          const didPass = report.ok;
-          const shouldPass = expected === "pass";
-
-          if (didPass !== shouldPass) {
-            const f0 = report.failures?.[0];
-            const msg =
-              expected === "pass"
-                ? (f0?.error ? `${f0.step}: ${f0.error}` : `loop failed (ok=false)`)
-                : `expected failure, but loop passed`;
-
-            throw new Error(msg);
-          }
-
-          return {
-            metaPatch: _freeze({
-              fixture: group,
-              input,
-              sub,
-              preview: input.length ? _snip(input) : "—",
-              expected,
-            }),
-          };
-        },
-      }));
-    }
-  }
-
-
-  return _freeze({ suite, cases: _freeze(cases) });
-}
 
 export function make_ad_hoc_transform_suite(
   hson: HsonTestApi,
@@ -132,17 +40,17 @@ export function make_ad_hoc_transform_suite(
 }
 
 /* [{
-	"resource": "/Users/philliphanson/Documents/Design/web/hson/hson-demo2/src/app/demos/test/tp-factory.ts",
-	"owner": "typescript",
-	"code": "2353",
-	"severity": 8,
-	"message": "Object literal may only specify known properties, and '_circuit_test' does not exist in type 'Readonly<{ _test_full_loop: (atom: FixtureAtom, opts?: Partial<LoopOpts> | undefined) => LoopReport; }>'.",
-	"source": "ts",
-	"startLineNumber": 297,
-	"startColumn": 55,
-	"endLineNumber": 297,
-	"endColumn": 68,
-	"origin": "extHost1"
+  "resource": "/Users/philliphanson/Documents/Design/web/hson/hson-demo2/src/app/demos/test/tp-factory.ts",
+  "owner": "typescript",
+  "code": "2353",
+  "severity": 8,
+  "message": "Object literal may only specify known properties, and '_circuit_test' does not exist in type 'Readonly<{ _test_full_loop: (atom: FixtureAtom, opts?: Partial<LoopOpts> | undefined) => LoopReport; }>'.",
+  "source": "ts",
+  "startLineNumber": 297,
+  "startColumn": 55,
+  "endLineNumber": 297,
+  "endColumn": 68,
+  "origin": "extHost1"
 }] */
 const GENERATED_JSON_SEED = random_seed();
 
@@ -160,12 +68,19 @@ export function build_suites_for_mode(
     ]);
   }
 
+  if (mode === "livemap") {
+    return _freeze([
+      ...all_livemap_suites(),
+
+    ]);
+  }
+
   if (mode === "transform") {
     return _freeze([
       make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/json/basic-test", map),
       make_transform_test_suite(
         h,
-        make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+        make_json_fuzz_suite(50, GENERATED_JSON_SEED),
         `transform/fuzz-json/seed_${GENERATED_JSON_SEED}`,
         map,
       ),
@@ -194,7 +109,7 @@ export function build_suites_for_mode(
     return _freeze([
       make_transform_test_suite(
         h,
-        make_json_fixture_bundle(200, GENERATED_JSON_SEED),
+        make_json_fuzz_suite(200, GENERATED_JSON_SEED),
         `generated/json/seed_${GENERATED_JSON_SEED}`,
         map,
       )
@@ -216,7 +131,7 @@ export function build_suites_for_mode(
     make_transform_test_suite(h, JSON_FIXTURES_DEV, "transform/json/basic-test", map),
     make_transform_test_suite(
       h,
-      make_json_fixture_bundle(50, GENERATED_JSON_SEED),
+      make_json_fuzz_suite(50, GENERATED_JSON_SEED),
       `transform/fuzz-json/seed_${GENERATED_JSON_SEED}`,
       map,
     ),
@@ -229,6 +144,7 @@ export function build_suites_for_mode(
     make_transform_test_suite(h, TRANSFORM_FAILS, "transform/_INVALID", map, "auto", "fail"),
     make_transform_test_suite(h, HSON_FXT_INVALID, "transform/hson/_INVALID", map, "hson", "fail"),
     ...all_livetree_suites(),
+    ...all_livemap_suites(),
     ...all_unit_tests(),
   ]);
 }

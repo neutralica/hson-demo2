@@ -131,7 +131,7 @@ function find_visual_only_elements(
     const out: LiveTree[] = [];
 
     // Equivalent to `[rootEl, ...rootEl.querySelectorAll("*")]`, but LiveTree-native.
-    const candidates: readonly LiveTree[] = [root, ...root.content.deep()];
+    const candidates: readonly LiveTree[] = [root, ...root.content.deep().array()];
 
     for (const tree of candidates) {
         if (hitSet.has(tree.quid)) continue;

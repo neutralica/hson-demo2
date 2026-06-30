@@ -31,6 +31,7 @@ export const _fontWeight = {
 }
 
 export const _fontSize = {
+  wee: "10px",
   smol: "14px",
   sansMain: "16px",
   main: "18px",

@@ -1,5 +1,6 @@
 import type { SvgLiveTree } from "hson-live/types";
-import type { LiveTreeCaseSpec, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_dom_helper_surface(): TestSuite {
@@ -881,7 +882,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
           tags: deep.map(t => t.node.$_tag),
 
-          includesOwner: deep.some(t => t.node === root.node),
+          includesOwner: deep.array().some(t => t.node === root.node),
         };
       },
 

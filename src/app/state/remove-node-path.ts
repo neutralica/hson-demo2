@@ -1,8 +1,8 @@
 import type { HsonNode } from "hson-live/types";
-import { II_TAG, ROOT_TAG } from "../../../../hson-live/dist/consts/constants";
-import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
 import { find_node_at_path } from "./find-node-path";
 import { ensure_array_container, ensure_object_container } from "./state-helpers";
+import { ROOT_TAG, II_TAG } from "../../../../hson-live/dist/core/constants";
+import  { is_Node } from "../../../../hson-live/dist/core/node-guards";
 
 export function remove_node_at_path(
   root: HsonNode,

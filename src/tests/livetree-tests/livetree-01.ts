@@ -1,16 +1,13 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
-import type { LiveTreeCaseSpec, LiveTreeFx, TestSuite, Asserter } from "../../app/demos/test/tests.types";
+import type { TestSuite, Asserter } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import type { HsonNode, Primitive } from "hson-live/types";
-import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
 import { _CREATE_NODE } from "hson-live/diagnostics";
-import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
-import { ELEM_TAG, STR_TAG } from "../../../../hson-live/dist/consts/constants";
 import { get_node_text_content, set_node_text_content } from "../../../../hson-live/dist/api/livetree/managers/text-form-values";
-import { suite_more_contract_refresh } from "./livetree-02";
-import { SYS_MONOfont } from "../../app/core/consts/ui-consts";
-import { GlobalCss } from "../../../../hson-live/dist/api/livetree/managers/global-css";
 import { flush_dom } from "../inspector/inspector.helpers";
+import  { ELEM_TAG, STR_TAG } from "../../../../hson-live/dist/core/constants";
+import { is_Node } from "../../../../hson-live/dist/core/node-guards";
 
 
 function after_paint(): Promise<void> {

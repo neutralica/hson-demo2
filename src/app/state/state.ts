@@ -2,14 +2,14 @@ import type { HsonNode } from "hson-live/types";
 import type { NodeState, NodeStateSlot, StateChange, StateCommit, StateMutation, StatePath, StateRootInput } from "./state.types";
 import type { JsonValue } from "../../../../hson-live/dist/types/core.types";
 import { hson } from "hson-live";
-import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
 import { clone_node } from "./clone-node";
 import { find_node_at_path } from "./find-node-path";
 import { path_to_parts } from "./path-to-parts";
 import { set_node_at_path } from "./set-node-path";
 import { remove_node_at_path } from "./remove-node-path";
 import { json_equal, json_value_to_payload_node, node_equal, unwrap_value_payload } from "./state-helpers";
-import { ROOT_TAG } from "../../../../hson-live/dist/consts/constants";
+import { ROOT_TAG } from "../../../../hson-live/dist/core/constants";
+import { is_Node } from "../../../../hson-live/dist/core/node-guards";
 
 export function jsonify(nod: HsonNode): JsonValue {
   return JSON.parse(

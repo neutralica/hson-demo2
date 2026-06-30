@@ -1,5 +1,18 @@
-import type { LiveTree } from "hson-live";
+import { make_livemap_feed_hub, paths_overlap, type LiveMapCommit, type LivePath, type LiveTree } from "hson-live";
 import type { LetterKey } from "../core/types/core.types";
+import { preview_value, equal_row } from "../../tests/livemap-tests/test-helpers";
+import type { TestCase } from "../demos/test/tests.types";
+import { type FeedEmitCaseSpec, preview_feed_event } from "../../tests/livemap-tests/suites-feed";
+import type { LiveMapFeedEventPreview } from "../../tests/livemap-tests/types";
+import type { JsonValue } from "hson-live/types";
+
+type PathOverlapCaseSpec = Readonly<{
+  suite: string;
+  name: string;
+  a: LivePath;
+  b: LivePath;
+  expected: boolean;
+}>;
 
 // utils/keys-of.ts
 export function keys_of<T extends object>(o: T): Array<keyof T> {
@@ -83,3 +96,58 @@ export function hash32_fnv1a(s: string): string {
   // >>>0 => unsigned
   return (h >>> 0).toString(16).padStart(8, "0");
 }
+
+export function make_path_overlap_case(spec: PathOverlapCaseSpec): TestCase {
+    return {
+        suite: spec.suite,
+        name: spec.name,
+        meta: {
+            a: preview_value(spec.a),
+            b: preview_value(spec.b),
+        },
+        run: () => ({
+            assertRows: [
+                equal_row(spec.name, paths_overlap(spec.a, spec.b), spec.expected),
+            ],
+        }),
+    };
+}export function make_feed_emit_case(spec: FeedEmitCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      feedPath: preview_value(spec.feedPath),
+      commit: preview_value(spec.commit),
+    },
+    run: () => {
+      const hub = make_livemap_feed_hub();
+      const events: LiveMapFeedEventPreview[] = [];
+
+      hub.add(spec.feedPath, (event) => {
+        events.push(preview_feed_event(event));
+      });
+
+      hub.emit(spec.commit, () => spec.snapValue);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
+        ],
+      };
+    },
+  };
+}
+export function set_commit(path: LivePath, prev: JsonValue | undefined, next: JsonValue | undefined): LiveMapCommit {
+  return {
+    changed: true,
+    ops: [
+      {
+        kind: "set",
+        path,
+        prev,
+        next,
+      },
+    ],
+  };
+}
+

@@ -1,5 +1,6 @@
 import { flush_dom } from "../inspector/inspector.helpers";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export function livetree_canvas(): TestSuite {
@@ -409,8 +410,8 @@ export function livetree_canvas_stress(): TestSuite {
                 const root = tree.find.must.byId("root");
 
                 (tree as any).__result = {
-                    firstTag: root.content.all()[0]?.node.$_tag,
-                    firstId: root.content.all()[0]?.attr.get("id"),
+                    firstTag: root.content.all().at(0)?.node.$_tag,
+                    firstId: root.content.all().at(0)?.attr.get("id"),
                 };
             },
 

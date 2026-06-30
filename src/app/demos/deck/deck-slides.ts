@@ -313,7 +313,7 @@ LiveDemo is intentionally minimalist in styling.
     footer: "livedemo",
   },
   {
-    headerA: "ty JSMN",
+    headerA: "ty",
     bodyB: {
       kind: "text",
       text: "### Pip Hanson\nwww.terminalgothic.com\ngithub.com/neutralica/hson-live\ngithub.com/neutralica/hson-demo2\n",

@@ -256,7 +256,7 @@ export function random_seed(): number {
 }
 
 
-export function make_json_fixture_bundle(
+export function make_json_fuzz_suite(
   count: number,
   seedBase: number,
   opts: GenOpts = {

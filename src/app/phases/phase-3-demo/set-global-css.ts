@@ -69,7 +69,7 @@ export const set_global_css = (): void => {
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
-    .set.fontSize(_fontSize.main)
+    .set.fontSize(_fontSize.wee)
 
   /* fleurs button mobile styling (should match about) */
   mobile.rule("mobile-fleurs-btn", "#fleurs-button")

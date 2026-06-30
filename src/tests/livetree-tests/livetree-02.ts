@@ -1,5 +1,6 @@
 import { hson, LiveTree } from "hson-live";
-import type { TestSuite, LiveTreeCaseSpec } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 import type { HsonNode } from "hson-live/types";
 import { tick } from "./livetree-03";
@@ -139,7 +140,7 @@ function suite_empty_append(): TestSuite {
         const kids = root.content.all();
         t.eq("root has one direct child", kids.length, 1);
 
-        const child = kids[0];
+        const child = kids.at(0);
         t.eq("child tag is p", child?.node.$_tag ?? "", "p");
         t.eq("child class is new", String(child?.attr.get("class") ?? ""), "new");
         t.eq("child text is hello", child?.text.get() ?? "", "hello");

@@ -1,5 +1,6 @@
 import { CssManager } from "hson-live";
-import type { LiveTreeCaseSpec, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
 import { make_livetree_suite } from "./livetree-testkit";
 
 export const tick = async (): Promise<void> => {

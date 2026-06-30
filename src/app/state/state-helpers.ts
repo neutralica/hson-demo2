@@ -1,11 +1,10 @@
 import type { HsonNode, JsonValue, Primitive } from "hson-live/types";
-import { OBJ_TAG, ARR_TAG, STR_TAG, VAL_TAG, ROOT_TAG } from "../../../../hson-live/dist/consts/constants";
 import { first_child_by_tag, first_node_child } from "./set-node-path";
 import { _CREATE_NODE } from "hson-live/diagnostics";
-import { CREATE_NODE } from "../../../../hson-live/dist/consts/factories";
-import { is_Node } from "../../../../hson-live/dist/utils/node-utils/node-guards";
 import { hson } from "hson-live";
 import { clone_node } from "./clone-node";
+import { OBJ_TAG, ARR_TAG, STR_TAG, VAL_TAG, ROOT_TAG } from "../../../../hson-live/dist/core/constants";
+import { is_Node } from "../../../../hson-live/dist/core/node-guards";
 
 export const LOG_HR_PART = "-~-=•=|";
 export const LOG_HR_FULL = "|=•=-~- - - • - - -~-=•=|";
