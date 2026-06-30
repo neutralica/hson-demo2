@@ -1,7 +1,7 @@
 
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
-import { make_livetree_suite } from "./livetree-testkit";
+import { make_livetree_suite } from "./make-livetree-suite";
 import { livetree_gnarly_svg } from "./livetree-11-svg-3";
 import { tick } from "./livetree-03";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";

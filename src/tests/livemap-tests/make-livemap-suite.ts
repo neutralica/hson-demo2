@@ -9,11 +9,21 @@ export type LiveMapCaseContext = Readonly<{
   snap: (path: LivePath) => JsonValue | undefined;
 }>;
 
+export type LiveMapCaseExpected = "ok" | "fail";
+
+export type LiveMapExpectedError = Readonly<{
+  message?: string;
+  includes?: string;
+}>;
+
 export type LiveMapCaseSpec = Readonly<{
   suite: string;
   name: string;
 
   input: JsonValue;
+
+  expected?: LiveMapCaseExpected;
+  expectedError?: LiveMapExpectedError;
 
   fixture?: string;
   sub?: string;

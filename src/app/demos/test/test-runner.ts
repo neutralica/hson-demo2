@@ -32,6 +32,11 @@ function asErrMsg(err: unknown): string {
   return String(err);
 }
 
+function asErrMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (typeof value !== "object" || value === null) return undefined;
   return value as Record<string, unknown>;
@@ -55,6 +60,32 @@ function readAssertRows(value: unknown): readonly TestAssertRow[] | undefined {
   if (!Array.isArray(assertRows)) return undefined;
 
   return assertRows as readonly TestAssertRow[];
+}
+
+function readExpected(value: unknown): "ok" | "fail" {
+  const record = asRecord(value);
+  return record?.expected === "fail" ? "fail" : "ok";
+}
+
+function readExpectedError(value: unknown): { message?: string; includes?: string } | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+
+  const expectedError = record.expectedError;
+  if (typeof expectedError !== "object" || expectedError === null || Array.isArray(expectedError)) return undefined;
+
+  const errorRecord = expectedError as Record<string, unknown>;
+  return {
+    ...(typeof errorRecord.message === "string" ? { message: errorRecord.message } : {}),
+    ...(typeof errorRecord.includes === "string" ? { includes: errorRecord.includes } : {}),
+  };
+}
+
+function expected_error_matches(msg: string, expectedError: { message?: string; includes?: string } | undefined): boolean {
+  if (expectedError === undefined) return true;
+  if (expectedError.message !== undefined && msg !== expectedError.message) return false;
+  if (expectedError.includes !== undefined && !msg.includes(expectedError.includes)) return false;
+  return true;
 }
 
 export async function run_test_suites(
@@ -87,6 +118,9 @@ export async function run_test_suites(
       const evBase = { t: "case_begin", suite: tc.suite, name: tc.name } as const;
       emit(rec, onEvent, tc.meta ? { ...evBase, meta: tc.meta } : evBase);
 
+      const expected = readExpected(tc);
+      const expectedError = readExpectedError(tc);
+
       try {
         const ret = await tc.run();
 
@@ -96,6 +130,32 @@ export async function run_test_suites(
 
         const metaPatch = runRet?.metaPatch;
         const assertRows = runRet?.assertRows;
+
+        if (expected === "fail") {
+          const endBase = {
+            t: "case_end",
+            suite: tc.suite,
+            name: tc.name,
+            status: "fail",
+            ms: now() - c0,
+            err: "Expected case to fail, but it passed.",
+          } as const;
+
+          emit(
+            rec,
+            onEvent,
+            metaPatch || assertRows?.length
+              ? {
+                ...endBase,
+                ...(metaPatch ? { metaPatch } : {}),
+                ...(assertRows?.length ? { assertRows } : {}),
+              }
+              : endBase
+          );
+
+          if (opts.bail) break;
+          continue;
+        }
 
         const endBase = {
           t: "case_end",
@@ -118,8 +178,33 @@ export async function run_test_suites(
         );
       } catch (err) {
         const msg = asErrMsg(err);
+        const shortMsg = asErrMessage(err);
         const metaPatch = readMetaPatch(err);
         const assertRows = readAssertRows(err);
+
+        if (expected === "fail" && expected_error_matches(shortMsg, expectedError)) {
+          const endBase = {
+            t: "case_end",
+            suite: tc.suite,
+            name: tc.name,
+            status: "pass",
+            ms: now() - c0,
+          } as const;
+
+          emit(
+            rec,
+            onEvent,
+            metaPatch || assertRows?.length
+              ? {
+                ...endBase,
+                ...(metaPatch ? { metaPatch } : {}),
+                ...(assertRows?.length ? { assertRows } : {}),
+              }
+              : endBase
+          );
+
+          continue;
+        }
 
         const endBase = {
           t: "case_end",

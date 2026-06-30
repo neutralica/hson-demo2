@@ -5,7 +5,7 @@ import type { JsonValue, LivePath } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveMapFeedEventPreview } from "./types";
 import { equal_row, preview_value } from "./test-helpers";
-import { json_root_node } from "./test-kit";
+import { json_root_node } from "./make-livemap-suite";
 
 export function livemap_suites_handle(): TestSuite {
   const SUITE = "livemap-handle";

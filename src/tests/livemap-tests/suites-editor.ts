@@ -3,7 +3,7 @@ import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 // import { delete_live_path } from "hson-live";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
-import { json_root_node } from "./test-kit";
+import { json_root_node } from "./make-livemap-suite";
 import { delete_live_path } from "../../../../hson-live/dist/api/livemap/livemap-editor";
 // import { equal_row, preview_value, json_root_node } from "./test-kit";
 
@@ -19,35 +19,35 @@ export function livemap_suite_editor(): TestSuite {
         name: "snap root object",
         input: { user: { name: "Ada" } },
         path: [],
-        expected: { user: { name: "Ada" } },
+        expectedOutput: { user: { name: "Ada" } },
       }),
       make_snap_case({
         suite: SUITE,
         name: "snap nested object property",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
-        expected: "Ada",
+        expectedOutput: "Ada",
       }),
       make_snap_case({
         suite: SUITE,
         name: "snap missing property",
         input: { user: { name: "Ada" } },
         path: ["user", "missing"],
-        expected: undefined,
+        expectedOutput: undefined,
       }),
       make_snap_case({
         suite: SUITE,
         name: "snap first array item property",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0, "name"],
-        expected: "Ada",
+        expectedOutput: "Ada",
       }),
       make_snap_case({
         suite: SUITE,
         name: "snap second array item property",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 1, "name"],
-        expected: "Grace",
+        expectedOutput: "Grace",
       }),
       make_set_case({
         suite: SUITE,

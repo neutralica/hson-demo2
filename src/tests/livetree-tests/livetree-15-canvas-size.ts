@@ -2,7 +2,7 @@ import { _disposables_count_for_owner } from "hson-live/diagnostics";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
-import { make_livetree_suite } from "./livetree-testkit";
+import { make_livetree_suite } from "./make-livetree-suite";
 import { tick } from "./livetree-03";
 
 export function livetree_canvas_display(): TestSuite {

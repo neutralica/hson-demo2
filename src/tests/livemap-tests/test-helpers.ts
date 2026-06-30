@@ -1,5 +1,5 @@
 import { make_livemap_core, set_live_path, snap_live_path } from "hson-live";
-import { json_root_node } from "./test-kit";
+import { json_root_node } from "./make-livemap-suite";
 import type { HsonNode, JsonValue, LiveMapCommit, LiveMapEditResult, LivePath } from "hson-live/types";
 import type { TestAssertRow, TestCase } from "../../app/demos/test/tests.types";
 import type {
@@ -97,7 +97,7 @@ function make_snap_like_case(spec: SnapLikeSpec, run_snap: SnapLikeRunner): Test
 
       return {
         assertRows: [
-          equal_row(spec.name, actual, spec.expected),
+          equal_row(spec.name, actual, spec.expectedOutput),
         ],
       };
     },

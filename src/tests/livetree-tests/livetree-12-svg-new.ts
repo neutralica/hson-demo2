@@ -1,7 +1,7 @@
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
-import { make_livetree_suite } from "./livetree-testkit";
+import { make_livetree_suite } from "./make-livetree-suite";
 
 export function livetree_svg_lvl2(): TestSuite {
     const SUITE = "livetree/new-svg/";

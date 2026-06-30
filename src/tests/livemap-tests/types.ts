@@ -1,14 +1,23 @@
 import type { JsonValue, LiveMapOp, LivePath } from "hson-live/types";
 
+export type LiveMapCaseExpected = "ok" | "fail";
+
+export type LiveMapExpectedError = Readonly<{
+  message?: string;
+  includes?: string;
+}>;
+
 export type LiveMapTestCaseBase = Readonly<{
   suite: string;
   name: string;
   input: JsonValue;
+  willFail?: LiveMapCaseExpected;
+  expectedError?: LiveMapExpectedError;
 }>;
 
 export type LiveMapSnapCaseSpec = LiveMapTestCaseBase & Readonly<{
   path?: LivePath;
-  expected: JsonValue | undefined;
+  expectedOutput: JsonValue | undefined;
 }>;
 
 export type LiveMapSetCaseSpec<TExpected extends object> = LiveMapTestCaseBase & Readonly<{

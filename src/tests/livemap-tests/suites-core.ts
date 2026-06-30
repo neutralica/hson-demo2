@@ -14,14 +14,14 @@ export function livemap_suites_core(): TestSuite {
         suite: SUITE,
         name: "core snap root object",
         input: { user: { name: "Ada" } },
-        expected: { user: { name: "Ada" } },
+        expectedOutput: { user: { name: "Ada" } },
       }),
       make_core_snap_case({
         suite: SUITE,
         name: "core snap nested object property",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
-        expected: "Ada",
+        expectedOutput: "Ada",
       }),
       make_core_set_case({
         suite: SUITE,

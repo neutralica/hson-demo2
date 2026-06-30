@@ -1,7 +1,7 @@
 import { hson, LiveTree, make_tree_selector } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
-import { make_livetree_suite } from "./livetree-testkit";
+import { make_livetree_suite } from "./make-livetree-suite";
 
 export function livetree_svg_basic(): TestSuite {
   const SUITE = "livetree/svg/basic";

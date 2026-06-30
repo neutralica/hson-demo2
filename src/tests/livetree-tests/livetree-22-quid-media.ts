@@ -1,7 +1,7 @@
 import { CssManager, hson } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
-import { make_livetree_suite } from "./livetree-testkit";
+import { make_livetree_suite } from "./make-livetree-suite";
 import { make_unit_case } from "../unit-tests/all-unit-tests";
 
 type QuidScopedCssResult = Record<string, unknown>;
