@@ -4,7 +4,7 @@ import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 // import { delete_live_path } from "hson-live";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
 import { json_root_node } from "./all-livemap-suites";
-import { delete_live_path } from "../../../../hson-live/dist/api/livemap/livemap-editor";
+import { delete_live_path } from "../../../../hson-live/dist/api/livemap/editor";
 // import { equal_row, preview_value, json_root_node } from "./test-kit";
 
 

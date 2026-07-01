@@ -1,14 +1,11 @@
 // suites-handle.ts
 
 import { make_livemap_core } from "hson-live";
-import type { JsonValue, LivePath } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveMapFeedEventPreview } from "./types";
-import { equal_row, preview_value } from "./test-helpers";
-import { json_root_node } from "./all-livemap-suites";
+import type { TestSuite } from "../../app/demos/test/tests.types";
+import { snapCase, setCase, setManyCase, setManyFeedCase, deleteCase, deleteFeedCase, updateCase, updateFeedCase, readCase, commitCase, throwCase, feedCase, linkCase, pathCopyCase, originalPathCase } from "./handle-helpers";
 
-type TestLiveMap = ReturnType<typeof make_livemap_core>;
-type TestHandle = ReturnType<TestLiveMap["at"]>;
+export type TestLiveMap = ReturnType<typeof make_livemap_core>;
+export type TestHandle = ReturnType<TestLiveMap["at"]>;
 
 export function livemap_suites_handle(): TestSuite {
   const SUITE = "livemap-handle";
@@ -157,6 +154,34 @@ export function livemap_suites_handle(): TestSuite {
             opNext: 2,
           },
         ],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle array.is returns true for array",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).array.is(),
+        expected: true,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle array.is returns false for non-array",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.is(),
+        expected: false,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.is returns true for object",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).object.is(),
+        expected: true,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.is returns false for non-object",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.is(),
+        expected: false,
       }),
       commitCase({
         suite: SUITE,
@@ -447,549 +472,529 @@ export function livemap_suites_handle(): TestSuite {
         value: "Grace",
         expectedRoot: { user: { name: "Grace", role: "user" } },
       }),
+      commitCase({
+        suite: SUITE,
+        name: "handle object.setMany writes multiple scoped properties",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.setMany({ name: "Grace", role: "admin" }),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Grace", role: "admin" } },
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle object.setMany omits unchanged properties",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.setMany({ name: "Ada", role: "admin" }),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Ada", role: "admin" } },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle object.setMany emits feed events",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        act: (handle) => handle.object.setMany({ name: "Grace", role: "admin" }),
+        expectedEvents: [
+          {
+            path: ["user"],
+            value: { name: "Grace", role: "admin" },
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: "Grace",
+          },
+          {
+            path: ["user"],
+            value: { name: "Grace", role: "admin" },
+            opPath: ["user", "role"],
+            opPrev: "user",
+            opNext: "admin",
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle object.setMany propagates link target",
+        input: { source: { name: "Ada", role: "user" }, target: {} },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.object.setMany({ name: "Grace", role: "admin" }),
+        expectedRoot: { source: { name: "Grace", role: "admin" }, target: { name: "Grace", role: "admin" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.setMany on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.setMany({ role: "user" }),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle array.push appends scoped array",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).array.push(2),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["items"], prev: [0, 1], next: [0, 1, 2] },
+        ],
+        expectedRoot: { items: [0, 1, 2] },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle array.push emits feed event",
+        input: { items: [0, 1] },
+        path: ["items"],
+        act: (handle) => handle.array.push(2),
+        expectedEvents: [
+          {
+            path: ["items"],
+            value: [0, 1, 2],
+            opPath: ["items"],
+            opPrev: [0, 1],
+            opNext: [0, 1, 2],
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle array.push propagates link target",
+        input: { source: [0, 1], target: [] },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.array.push(2),
+        expectedRoot: { source: [0, 1, 2], target: [0, 1, 2] },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.push on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.push("x"),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.push rejects non-JSON value",
+        input: { items: [] },
+        act: (map) => map.at(["items"]).array.push(undefined as never),
+        expectedMessage: "LiveMap value is not JSON at [\"items\", 0]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle array.unshift prepends scoped array",
+        input: { items: [1, 2] },
+        act: (map) => map.at(["items"]).array.unshift(0),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["items"], prev: [1, 2], next: [0, 1, 2] },
+        ],
+        expectedRoot: { items: [0, 1, 2] },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle array.unshift emits feed event",
+        input: { items: [1, 2] },
+        path: ["items"],
+        act: (handle) => handle.array.unshift(0),
+        expectedEvents: [
+          {
+            path: ["items"],
+            value: [0, 1, 2],
+            opPath: ["items"],
+            opPrev: [1, 2],
+            opNext: [0, 1, 2],
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle array.unshift propagates link target",
+        input: { source: [1, 2], target: [] },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.array.unshift(0),
+        expectedRoot: { source: [0, 1, 2], target: [0, 1, 2] },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.unshift on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.unshift("x"),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.unshift rejects non-JSON value",
+        input: { items: [] },
+        act: (map) => map.at(["items"]).array.unshift(undefined as never),
+        expectedMessage: "LiveMap value is not JSON at [\"items\", 0]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle array.pop removes last item",
+        input: { items: [0, 1, 2] },
+        act: (map) => map.at(["items"]).array.pop(),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["items"], prev: [0, 1, 2], next: [0, 1] },
+        ],
+        expectedRoot: { items: [0, 1] },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle array.pop emits feed event",
+        input: { items: [0, 1, 2] },
+        path: ["items"],
+        act: (handle) => handle.array.pop(),
+        expectedEvents: [
+          {
+            path: ["items"],
+            value: [0, 1],
+            opPath: ["items"],
+            opPrev: [0, 1, 2],
+            opNext: [0, 1],
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle array.pop propagates link target",
+        input: { source: [0, 1, 2], target: [] },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.array.pop(),
+        expectedRoot: { source: [0, 1], target: [0, 1] },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.pop on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.pop(),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.pop on empty array throws",
+        input: { items: [] },
+        act: (map) => map.at(["items"]).array.pop(),
+        expectedMessage: "LiveMap array index does not resolve: [\"items\"][-1]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle array.shift removes first item",
+        input: { items: [0, 1, 2] },
+        act: (map) => map.at(["items"]).array.shift(),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["items"], prev: [0, 1, 2], next: [1, 2] },
+        ],
+        expectedRoot: { items: [1, 2] },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle array.shift emits feed event",
+        input: { items: [0, 1, 2] },
+        path: ["items"],
+        act: (handle) => handle.array.shift(),
+        expectedEvents: [
+          {
+            path: ["items"],
+            value: [1, 2],
+            opPath: ["items"],
+            opPrev: [0, 1, 2],
+            opNext: [1, 2],
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle array.shift propagates link target",
+        input: { source: [0, 1, 2], target: [] },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.array.shift(),
+        expectedRoot: { source: [1, 2], target: [1, 2] },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.shift on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.shift(),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.shift on empty array throws",
+        input: { items: [] },
+        act: (map) => map.at(["items"]).array.shift(),
+        expectedMessage: "LiveMap array index does not resolve: [\"items\"][0]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle array.clear removes all items",
+        input: { items: [0, 1, 2] },
+        act: (map) => map.at(["items"]).array.clear(),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["items"], prev: [0, 1, 2], next: [] },
+        ],
+        expectedRoot: { items: [] },
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle array.clear on empty array unchanged",
+        input: { items: [] },
+        act: (map) => map.at(["items"]).array.clear(),
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { items: [] },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle array.clear emits feed event",
+        input: { items: [0, 1, 2] },
+        path: ["items"],
+        act: (handle) => handle.array.clear(),
+        expectedEvents: [
+          {
+            path: ["items"],
+            value: [],
+            opPath: ["items"],
+            opPrev: [0, 1, 2],
+            opNext: [],
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle array.clear propagates link target",
+        input: { source: [0, 1, 2], target: ["x"] },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.array.clear(),
+        expectedRoot: { source: [], target: [] },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.clear on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.clear(),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle object.clear removes all properties",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.clear(),
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: {} },
+        ],
+        expectedRoot: { user: {} },
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle object.clear on empty object unchanged",
+        input: { user: {} },
+        act: (map) => map.at(["user"]).object.clear(),
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { user: {} },
+      }),
+      feedCase({
+        suite: SUITE,
+        name: "handle object.clear emits feed event",
+        input: { user: { name: "Ada", role: "user" } },
+        path: ["user"],
+        act: (handle) => handle.object.clear(),
+        expectedEvents: [
+          {
+            path: ["user"],
+            value: {},
+            opPath: ["user"],
+            opPrev: { name: "Ada", role: "user" },
+            opNext: {},
+          },
+        ],
+      }),
+      linkCase({
+        suite: SUITE,
+        name: "handle object.clear propagates link target",
+        input: { source: { name: "Ada", role: "user" }, target: { old: true } },
+        sourcePath: ["source"],
+        targetPath: ["target"],
+        act: (source) => source.object.clear(),
+        expectedRoot: { source: {}, target: {} },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.clear on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.clear(),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.hasKey returns true for existing key",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).object.hasKey("name"),
+        expected: true,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.hasKey returns false for missing key",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).object.hasKey("role"),
+        expected: false,
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.hasKey on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.hasKey("name"),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.hasKey rejects non-string key",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).object.hasKey(0 as never),
+        expectedMessage: "LiveMap object key is not a string at [\"user\"]",
+      }),
+
+      readCase({
+        suite: SUITE,
+        name: "handle array.length returns array length",
+        input: { items: [0, 1, 2] },
+        act: (map) => map.at(["items"]).array.length(),
+        expected: 3,
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.length on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.length(),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.keys returns object keys",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.keys(),
+        expected: ["name", "role"],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.keys returns empty array for empty object",
+        input: { user: {} },
+        act: (map) => map.at(["user"]).object.keys(),
+        expected: [],
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.keys on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.keys(),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.values returns object values",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.values(),
+        expected: ["Ada", "user"],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.values returns empty array for empty object",
+        input: { user: {} },
+        act: (map) => map.at(["user"]).object.values(),
+        expected: [],
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.values on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.values(),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.entries returns object entries",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.entries(),
+        expected: [["name", "Ada"], ["role", "user"]],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.entries returns empty array for empty object",
+        input: { user: {} },
+        act: (map) => map.at(["user"]).object.entries(),
+        expected: [],
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.entries on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.entries(),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle array.at returns indexed item",
+        input: { items: ["a", "b", "c"] },
+        act: (map) => map.at(["items"]).array.at(1),
+        expected: "b",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.at rejects bad index",
+        input: { items: ["a", "b"] },
+        act: (map) => map.at(["items"]).array.at(4),
+        expectedMessage: "LiveMap array index does not resolve: [\"items\"][4]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle array.at on non-array throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).array.at(0),
+        expectedMessage: "LiveMap path is not an array: [\"user\"]",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.getKey returns existing value",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => map.at(["user"]).object.getKey("name"),
+        expected: "Ada",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "handle object.getKey returns undefined for missing key",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).object.getKey("role"),
+        expected: undefined,
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.getKey on non-object throws",
+        input: { items: [0, 1] },
+        act: (map) => map.at(["items"]).object.getKey("name"),
+        expectedMessage: "LiveMap path is not an object: [\"items\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle object.getKey rejects non-string key",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.at(["user"]).object.getKey(0 as never),
+        expectedMessage: "LiveMap object key is not a string at [\"user\"]",
+      }),
+      
     ] as const,
   };
 }
 
-type HandleSnapCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  expected: JsonValue | undefined;
-}>;
-
-type HandleSetCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  value: JsonValue;
-  expectedChanged: boolean;
-  expectedRoot: JsonValue;
-}>;
-
-type HandleSetManyCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  values: Readonly<Record<string, JsonValue>>;
-  expectedChanged: boolean;
-  expectedOps: readonly Readonly<{
-    kind: "set";
-    path: LivePath;
-    prev: JsonValue | undefined;
-    next: JsonValue | undefined;
-  }>[];
-  expectedRoot: JsonValue;
-}>;
-
-type HandleUpdateCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  update: (value: JsonValue | undefined) => JsonValue;
-  expectedChanged: boolean;
-  expectedRoot: JsonValue;
-}>;
-
-
-type HandleUpdateFeedCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  update: (value: JsonValue | undefined) => JsonValue;
-  expectedEvents: readonly LiveMapFeedEventPreview[];
-}>;
-
-
-
-
-
-
-
-type HandleObjectSetOp = Readonly<{
-  kind: "set";
-  path: LivePath;
-  prev: JsonValue | undefined;
-  next: JsonValue | undefined;
-}>;
-
-
-
-
-type HandleSetManyFeedCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  values: Readonly<Record<string, JsonValue>>;
-  expectedEvents: readonly LiveMapFeedEventPreview[];
-}>;
-
-type HandleDeleteCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  expectedChanged: boolean;
-  expectedOps: readonly Readonly<{
-    kind: "delete";
-    path: LivePath;
-    prev: JsonValue | undefined;
-    next: undefined;
-  }>[];
-  expectedRoot: JsonValue;
-}>;
-
-type HandleDeleteFeedCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  expectedEvents: readonly LiveMapFeedEventPreview[];
-}>;
-
-type HandlePathCopyCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  mutateReturnedPathTo: LivePath;
-  expectedHandlePath: LivePath;
-}>;
-
-type HandleOriginalPathStabilityCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  mutateOriginalPathTo: LivePath;
-  value: JsonValue;
-  expectedRoot: JsonValue;
-}>;
-
-// Generic case types and helpers for commit/throw/feed/link
-type CommitCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  act: (map: TestLiveMap) => Readonly<{ changed: boolean; ops: readonly unknown[] }>;
-  expectedChanged: boolean;
-  expectedOps: readonly unknown[];
-  expectedRoot: JsonValue;
-}>;
-
-type FeedCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: LivePath;
-  act: (handle: TestHandle) => unknown;
-  expectedEvents: readonly LiveMapFeedEventPreview[];
-}>;
-
-type LinkCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  sourcePath: LivePath;
-  targetPath: LivePath;
-  act: (source: TestHandle) => unknown;
-  expectedRoot: JsonValue;
-}>;
-
-type ThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  act: (map: TestLiveMap) => unknown;
-  expectedMessage: string;
-}>;
-
-function commitCase(spec: CommitCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const commit = spec.act(map);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
-          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-function feedCase(spec: FeedCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const events: LiveMapFeedEventPreview[] = [];
-
-      handle.feed((event) => {
-        events.push({
-          path: event.path,
-          value: event.value,
-          opPath: event.op.path,
-          opPrev: event.op.prev,
-          opNext: event.op.next,
-        });
-      });
-
-      spec.act(handle);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
-        ],
-      };
-    },
-  };
-}
-
-function linkCase(spec: LinkCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      sourcePath: preview_value(spec.sourcePath),
-      targetPath: preview_value(spec.targetPath),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const source = map.at(spec.sourcePath);
-      const target = map.at(spec.targetPath);
-
-      source.linkTo(target);
-      spec.act(source);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-function throwCase(spec: ThrowCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      let message = "";
-
-      try {
-        spec.act(map);
-      } catch (error) {
-        message = error instanceof Error ? error.message : String(error);
-      }
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: error`, message, spec.expectedMessage),
-        ],
-      };
-    },
-  };
-}
-
-function snapCase(spec: HandleSnapCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: snap`, handle.snap(), spec.expected),
-          equal_row(`${spec.name}: path`, handle.path(), spec.path),
-        ],
-      };
-    },
-  };
-}
-
-function setCase(spec: HandleSetCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      value: preview_value(spec.value),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const commit = handle.set(spec.value);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-function setManyCase(spec: HandleSetManyCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      values: preview_value(spec.values),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const commit = handle.setMany(spec.values);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
-          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-
-function setManyFeedCase(spec: HandleSetManyFeedCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      values: preview_value(spec.values),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const events: LiveMapFeedEventPreview[] = [];
-
-      handle.feed((event) => {
-        events.push({
-          path: event.path,
-          value: event.value,
-          opPath: event.op.path,
-          opPrev: event.op.prev,
-          opNext: event.op.next,
-        });
-      });
-
-      handle.setMany(spec.values);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
-        ],
-      };
-    },
-  };
-}
-
-function deleteCase(spec: HandleDeleteCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const commit = handle.delete();
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
-          equal_row(`${spec.name}: ops`, commit.ops, spec.expectedOps),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-function deleteFeedCase(spec: HandleDeleteFeedCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const events: LiveMapFeedEventPreview[] = [];
-
-      handle.feed((event) => {
-        events.push({
-          path: event.path,
-          value: event.value,
-          opPath: event.op.path,
-          opPrev: event.op.prev,
-          opNext: event.op.next,
-        });
-      });
-
-      handle.delete();
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
-        ],
-      };
-    },
-  };
-}
-
-function updateCase(spec: HandleUpdateCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const commit = handle.update(spec.update);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-        ],
-      };
-    },
-  };
-}
-
-function updateFeedCase(spec: HandleUpdateFeedCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const events: LiveMapFeedEventPreview[] = [];
-
-      handle.feed((event) => {
-        events.push({
-          path: event.path,
-          value: event.value,
-          opPath: event.op.path,
-          opPrev: event.op.prev,
-          opNext: event.op.next,
-        });
-      });
-
-      handle.update(spec.update);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: events`, events, spec.expectedEvents),
-        ],
-      };
-    },
-  };
-}
-
-
-function pathCopyCase(spec: HandlePathCopyCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      mutateReturnedPathTo: preview_value(spec.mutateReturnedPathTo),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.at(spec.path);
-      const returnedPath = handle.path() as (string | number)[];
-
-      returnedPath.splice(0, returnedPath.length, ...spec.mutateReturnedPathTo);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: returned path mutation`, handle.path(), spec.expectedHandlePath),
-        ],
-      };
-    },
-  };
-}
-
-function originalPathCase(spec: HandleOriginalPathStabilityCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      mutateOriginalPathTo: preview_value(spec.mutateOriginalPathTo),
-      value: preview_value(spec.value),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const originalPath = [...spec.path];
-      const handle = map.at(originalPath);
-
-      originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
-      handle.set(spec.value);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-          equal_row(`${spec.name}: handle path`, handle.path(), spec.path),
-        ],
-      };
-    },
-  };
-}
