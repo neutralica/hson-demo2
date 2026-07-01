@@ -473,28 +473,28 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: true,
       }),
-readCase({
-  suite: SUITE,
-  name: "proxy $_ returns stable handle identity",
-  input: { user: { name: "Ada" } },
-  act: (map) => {
-    const proxy = map.proxy() as any;
-    return proxy.user.$_ === proxy.user.$_;
-  },
-  expected: true,
-}),
-readCase({
-  suite: SUITE,
-  name: "proxy cached $_ handle still reflects current value",
-  input: { user: { name: "Ada" } },
-  act: (map) => {
-    const proxy = map.proxy() as any;
-    const handle = proxy.user.name.$_;
-    handle.set("Grace");
-    return handle.snap();
-  },
-  expected: "Grace",
-}),
+      readCase({
+        suite: SUITE,
+        name: "proxy $_ returns stable handle identity",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user.$_ === proxy.user.$_;
+        },
+        expected: true,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy cached $_ handle still reflects current value",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          const handle = proxy.user.name.$_;
+          handle.set("Grace");
+          return handle.snap();
+        },
+        expected: "Grace",
+      }),
       commitCase({
         suite: SUITE,
         name: "proxy schema allows valid $_ set",
@@ -566,7 +566,122 @@ readCase({
         },
         expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
       }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy schema rejects delete required field before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+          const proxy = map.proxy() as any;
 
+          return proxy.user.name.$_.delete();
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "proxy schema allows delete optional field",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.age.$_.delete();
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "age"], prev: 37, next: undefined },
+        ],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy schema rejects object.deleteKey required field before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.object.deleteKey("name");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "proxy schema allows object.deleteKey optional field",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.object.deleteKey("age");
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "age"], prev: 37, next: undefined },
+        ],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy exact schema rejects unknown object helper before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.object.setKey("role", "admin");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "proxy exact schema allows no-op delete of absent unknown object key",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.object.deleteKey("role");
+        },
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
 
     ] as const,
   };

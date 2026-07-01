@@ -190,7 +190,7 @@ export function livemap_suites_schema(): TestSuite {
           issues: [
             {
               path: ["user", "name"],
-              message: "LiveMap schema value is missing at [\"user\",\"name\"]",
+              message: "LiveMap schema expected string at [\"user\",\"name\"], received undefined",
             },
           ],
         },
@@ -383,7 +383,7 @@ export function livemap_suites_schema(): TestSuite {
           issues: [
             {
               path: ["user", "role"],
-              message: "LiveMap schema does not allow key \"role\" at [\"user\"]",
+              message: "LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]",
             },
           ],
         },
@@ -693,7 +693,7 @@ export function livemap_suites_schema(): TestSuite {
           issues: [
             {
               path: ["point", 1],
-              message: "LiveMap schema value is missing at [\"point\",1]",
+              message: "LiveMap schema expected number at [\"point\",1], received undefined",
             },
           ],
         },
@@ -727,7 +727,7 @@ export function livemap_suites_schema(): TestSuite {
           issues: [
             {
               path: ["point", 2],
-              message: "LiveMap schema does not allow tuple index 2 at [\"point\"]",
+              message: "LiveMap schema does not allow tuple index 2 at [\"point\",2]",
             },
           ],
         },
@@ -964,7 +964,7 @@ export function livemap_suites_schema(): TestSuite {
           issues: [
             {
               path: ["patch", "profile", "displayName"],
-              message: "LiveMap schema value is missing at [\"patch\",\"profile\",\"displayName\"]",
+              message: "LiveMap schema expected string at [\"patch\",\"profile\",\"displayName\"], received undefined",
             },
           ],
         },

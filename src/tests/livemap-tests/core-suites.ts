@@ -396,6 +396,138 @@ export function livemap_suites_core(): TestSuite {
           };
         },
       },
+      {
+        suite: SUITE,
+        name: "core schema rejects delete required field before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", age: 37 });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.delete(["user", "name"]);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core schema rejects delete required field before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+              ),
+              equal_row("core schema rejects delete required field before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema allows delete optional field",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", age: 37 });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          }));
+
+          map.withSchema(schema);
+          const commit = map.delete(["user", "age"]);
+
+          return {
+            assertRows: [
+              equal_row("core schema allows delete optional field: changed", commit.changed, true),
+              equal_row("core schema allows delete optional field: ops", commit.ops, [
+                { kind: "delete", path: ["user", "age"], prev: 37, next: undefined },
+              ]),
+              equal_row("core schema allows delete optional field: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema allows delete unknown field",
+        meta: {
+          input: preview_value({ user: { name: "Ada", role: "admin" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", role: "admin" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+
+          map.withSchema(schema);
+          const commit = map.delete(["user", "role"]);
+
+          return {
+            assertRows: [
+              equal_row("core schema allows delete unknown field: changed", commit.changed, true),
+              equal_row("core schema allows delete unknown field: ops", commit.ops, [
+                { kind: "delete", path: ["user", "role"], prev: "admin", next: undefined },
+              ]),
+              equal_row("core schema allows delete unknown field: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema rejects delete required parent before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.delete(["user"]);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core schema rejects delete required parent before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected object at [\"user\"], received undefined",
+              ),
+              equal_row("core schema rejects delete required parent before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
       make_core_delete_case({
         suite: SUITE,
         name: "core delete existing object property",
@@ -654,7 +786,168 @@ export function livemap_suites_core(): TestSuite {
         mutateOriginalPathTo: ["user", "role"],
         expectedTag: "name",
       }),
+      {
+        suite: SUITE,
+        name: "core schema allows delete unknown field",
+        meta: {
+          input: preview_value({ user: { name: "Ada", role: "admin" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", role: "admin" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
 
+          map.withSchema(schema);
+          const commit = map.delete(["user", "role"]);
+
+          return {
+            assertRows: [
+              equal_row("core schema allows delete unknown field: changed", commit.changed, true),
+              equal_row("core schema allows delete unknown field: ops", commit.ops, [
+                { kind: "delete", path: ["user", "role"], prev: "admin", next: undefined },
+              ]),
+              equal_row("core schema allows delete unknown field: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema rejects delete required parent before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.delete(["user"]);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core schema rejects delete required parent before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected object at [\"user\"], received undefined",
+              ),
+              equal_row("core schema rejects delete required parent before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+            {
+        suite: SUITE,
+        name: "core exact schema rejects unknown nested set before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.set(["user", "role"], "admin");
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row("core exact schema rejects unknown nested set before mutation: errored", message.length > 0, true),
+              equal_row("core exact schema rejects unknown nested set before mutation: mentions key", message.includes("role"), true),
+              equal_row("core exact schema rejects unknown nested set before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core exact schema rejects attach with unknown nested field",
+        meta: {
+          input: preview_value({ user: { name: "Ada", role: "admin" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", role: "admin" });
+          const schema = define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          }));
+          let message = "";
+
+          try {
+            map.withSchema(schema);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row("core exact schema rejects attach with unknown nested field: errored", message.length > 0, true),
+              equal_row("core exact schema rejects attach with unknown nested field: mentions key", message.includes("role"), true),
+              equal_row("core exact schema rejects attach with unknown nested field: schema", map.schema(), undefined),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core exact schema rejects unknown root set before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => s.exact({
+            user: {
+              name: s.string,
+            },
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.set(["meta"], { draft: true });
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row("core exact schema rejects unknown root set before mutation: errored", message.length > 0, true),
+              equal_row("core exact schema rejects unknown root set before mutation: mentions key", message.includes("meta"), true),
+              equal_row("core exact schema rejects unknown root set before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
       
     ] as const,
   };

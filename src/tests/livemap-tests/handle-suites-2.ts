@@ -762,6 +762,136 @@ export function livemap_suites_handle_2(): TestSuite {
         expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
       }),
 
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects delete required field before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+
+          return map.at(["user", "name"]).delete();
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle schema allows delete optional field",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+
+          return map.at(["user", "age"]).delete();
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "age"], prev: 37, next: undefined },
+        ],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects object.deleteKey required field before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+
+          return map.at(["user"]).object.deleteKey("name");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle schema allows object.deleteKey optional field",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number.optional,
+            },
+          })));
+
+          return map.at(["user"]).object.deleteKey("age");
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "age"], prev: 37, next: undefined },
+        ],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle schema allows object.deleteKey unknown field",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", role: "admin" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          })));
+
+          return map.at(["user"]).object.deleteKey("role");
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "delete", path: ["user", "role"], prev: "admin", next: undefined },
+        ],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle exact schema rejects unknown object.setKey before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          })));
+
+          return map.at(["user"]).object.setKey("role", "admin");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "handle exact schema allows no-op delete of absent unknown object key",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          })));
+
+          return map.at(["user"]).object.deleteKey("role");
+        },
+        expectedChanged: false,
+        expectedOps: [],
+        expectedRoot: { user: { name: "Ada" } },
+      }),
 
 
     ] as const,
