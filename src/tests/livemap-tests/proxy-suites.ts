@@ -266,7 +266,184 @@ export function livemap_suites_proxy(): TestSuite {
         ],
         expectedRoot: { user: { name: "Ada", role: "user" } },
       }),
-      
+      readCase({
+        suite: SUITE,
+        name: "proxy then access returns undefined",
+        input: { then: "data" },
+        act: (map) => {
+          const proxy = map.proxy();
+          return proxy.then;
+        },
+        expected: undefined,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy toJSON access returns undefined",
+        input: { toJSON: "data" },
+        act: (map) => {
+          const proxy = map.proxy();
+          return proxy.toJSON;
+        },
+        expected: undefined,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy constructor access returns undefined",
+        input: { constructor: "data" },
+        act: (map) => {
+          const proxy = map.proxy();
+          return proxy.constructor;
+        },
+        expected: undefined,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy reserved key can still be reached through $_ handle",
+        input: { then: "data" },
+        act: (map) => {
+          const p = map.proxy();
+          return p.$_.object.getKey("then");
+        },
+        expected: "data",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy Object.defineProperty throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy();
+          Object.defineProperty(proxy.user, "name", { value: "Grace" });
+        },
+        expectedMessage: "LiveMap proxy properties must not be defined directly.",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy Object.setPrototypeOf throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy();
+          Object.setPrototypeOf(proxy.user, {});
+        },
+        expectedMessage: "LiveMap proxy prototype must not be changed.",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy Object.preventExtensions throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy();
+          Object.preventExtensions(proxy.user);
+        },
+        expectedMessage: "LiveMap proxy extensibility must not be changed.",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy has null prototype",
+        input: { user: { name: "Ada" } },
+        act: (map) => Object.getPrototypeOf(map.proxy()),
+        expected: null,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy hasOwnProperty access returns undefined",
+        input: { hasOwnProperty: "data" },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.hasOwnProperty;
+        },
+        expected: undefined,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy __proto__ access returns undefined",
+        input: { __proto__: "data" },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.__proto__;
+        },
+        expected: undefined,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy prototype-like key can still be reached through $_ handle",
+        input: { hasOwnProperty: "data" },
+        act: (map) => map.proxy().$_.object.getKey("hasOwnProperty"),
+        expected: "data",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy max safe integer numeric string builds numeric path",
+        input: {},
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.items["9007199254740991"].$_.path();
+        },
+        expected: ["items", 9007199254740991],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy unsafe integer numeric string remains object key",
+        input: {},
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.items["9007199254740993"].$_.path();
+        },
+        expected: ["items", "9007199254740993"],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy JSON.stringify returns empty object",
+        input: { user: { name: "Ada" } },
+        act: (map) => JSON.stringify(map.proxy()),
+        expected: "{}",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy String conversion throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => String(map.proxy()),
+        expectedMessage: "Cannot convert object to primitive value",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy concatenation throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => `${map.proxy()}`,
+        expectedMessage: "Cannot convert object to primitive value",
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy Promise.resolve treats proxy as non-thenable",
+        input: { user: { name: "Ada" } },
+        act: async (map) => {
+          const resolved = await Promise.resolve(map.proxy());
+          return resolved.$_.path();
+        },
+        expected: [],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "core proxy accepts explicit empty path",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.proxy([]).$_.path(),
+        expected: [],
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "core proxy rejects non-array path",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.proxy("user" as never),
+        expectedMessage: "LiveMap path is not an array: \"user\"",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "core proxy rejects invalid path part",
+        input: { user: { name: "Ada" } },
+        act: (map) => map.proxy([{}] as never),
+        expectedMessage: "LiveMap path part is not valid: {}",
+      }),
+
+
 
     ] as const,
   };
