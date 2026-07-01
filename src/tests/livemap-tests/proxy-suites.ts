@@ -1,5 +1,6 @@
 // proxy-suites.ts
 
+import { define_livemap_schema } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { readCase, commitCase, throwCase } from "./handle-helpers";
 
@@ -494,7 +495,77 @@ readCase({
   },
   expected: "Grace",
 }),
+      commitCase({
+        suite: SUITE,
+        name: "proxy schema allows valid $_ set",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          })));
+          const proxy = map.proxy() as any;
 
+          return proxy.user.name.$_.set("Grace");
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+        ],
+        expectedRoot: { user: { name: "Grace" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy schema rejects invalid $_ set before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.name.$_.set(12);
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy schema rejects invalid array helper before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["items"], [0, 1]);
+          map.withSchema(define_livemap_schema((s) => ({
+            items: s.array(s.number),
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.items.$_.array.push("bad");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"items\"]:\n- LiveMap schema expected number at [\"items\",2], received string",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy schema rejects invalid object helper before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number,
+            },
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.object.setKey("age", "old");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+      }),
 
 
     ] as const,

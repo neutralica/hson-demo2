@@ -1,3 +1,4 @@
+import { define_livemap_schema } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { readCase, throwCase, commitCase } from "./handle-helpers";
 
@@ -607,7 +608,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).object.deleteMany(["name"]),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-            throwCase({
+      throwCase({
         suite: SUITE,
         name: "handle array.sortNumbers rejects invalid direction",
         input: { items: [3, 1, 2] },
@@ -660,7 +661,106 @@ export function livemap_suites_handle_2(): TestSuite {
         ],
         expectedRoot: { user: { name: "Ada" } },
       }),
-      
+      commitCase({
+        suite: SUITE,
+        name: "handle schema allows valid set",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          })));
+
+          return map.at(["user", "name"]).set("Grace");
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+        ],
+        expectedRoot: { user: { name: "Grace" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects invalid set before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          })));
+
+          return map.at(["user", "name"]).set(12);
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects invalid update before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada" });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          })));
+
+          return map.at(["user", "name"]).update(() => 12);
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects invalid setMany before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number,
+            },
+          })));
+
+          return map.at(["user"]).setMany({ name: "Grace", age: "old" });
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects invalid array mutation before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["items"], [0, 1]);
+          map.withSchema(define_livemap_schema((s) => ({
+            items: s.array(s.number),
+          })));
+
+          return map.at(["items"]).array.push("bad");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"items\"]:\n- LiveMap schema expected number at [\"items\",2], received string",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "handle schema rejects invalid object setKey before mutation",
+        input: {},
+        act: (map) => {
+          map.set(["user"], { name: "Ada", age: 37 });
+          map.withSchema(define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number,
+            },
+          })));
+
+          return map.at(["user"]).object.setKey("age", "old");
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+      }),
 
 
 
