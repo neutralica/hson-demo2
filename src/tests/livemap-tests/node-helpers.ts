@@ -1,471 +1,12 @@
-// suites-node.ts
+import { make_livemap_core, hson } from "hson-live";
+import type { LiveMapNodeAttrValue, HsonNode } from "hson-live/types";
+import type { TestCase } from "../../app/demos/test/tests.types";
+import { json_root_node } from "./all-livemap-suites";
+import { preview_value, equal_row } from "./test-helpers";
+import type { NodeLiveAfterDeleteCaseSpec, NodeLiveAfterSetCaseSpec, NodeParentContentCaseSpec, NodeAttrsCopyCaseSpec, NodeSetAttrCaseSpec, NodeSetAttrsCaseSpec, NodeRemoveAttrCaseSpec, NodeClearAttrsCaseSpec, NodeExistingAttrsCaseSpec, NodeAttrMissingPathThrowCaseSpec, NodeAttrJsonBackedThrowCaseSpec, NodeJsonHtmlTagNameCaseSpec, NodeChildrenCaseSpec, NodeChildLookupCaseSpec, NodeMustChildThrowCaseSpec, NodeAppendCaseSpec, NodeAppendMissingPathThrowCaseSpec, NodeAppendHtmlCaseSpec, NodeRemoveChildrenCaseSpec, NodeRemoveChildCaseSpec, NodeRemoveChildBadIndexThrowCaseSpec, NodeRemoveMissingPathThrowCaseSpec, NodeReplaceChildrenCaseSpec, NodeReplaceChildCaseSpec, NodeReplaceChildBadIndexThrowCaseSpec, NodeReplaceMissingPathThrowCaseSpec, NodeInsertChildCaseSpec, NodeInsertChildAppendCaseSpec, NodeInsertChildBadIndexThrowCaseSpec, NodeInsertMissingPathThrowCaseSpec, NodeMoveChildCaseSpec, NodeMoveChildBackwardCaseSpec, NodeMoveChildBadToIndexThrowCaseSpec, NodeMoveChildBadFromIndexThrowCaseSpec, NodeMoveMissingPathThrowCaseSpec } from "./node-types";
+import  {expected_fail_case} from "./node-suites";
 
-import type { HsonNode, JsonValue, LiveMapNodeAttrValue } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { ELEM_TAG, hson, make_livemap_core, OBJ_TAG } from "hson-live";
-import  { preview_value, equal_row } from "./test-helpers";
-import  { json_root_node } from "./make-livemap-suite";
-
-
-
-const SUITE = "LiveMap node";
-
-type ExpectedFailTestCase = TestCase & Readonly<{
-  expected: "fail";
-  expectedError?: Readonly<{
-    message?: string;
-    includes?: string;
-  }>;
-}>;
-
-function expected_fail_case(testCase: TestCase, expectedMessage: string): ExpectedFailTestCase {
-  return {
-    ...testCase,
-    expected: "fail",
-    expectedError: { message: expectedMessage },
-  };
-}
-
-export function livemap_suites_node(): TestSuite {
-  return {
-    suite: SUITE,
-    cases: [
-      make_node_live_after_delete_case({
-        suite: SUITE,
-        name: "node handle reflects deleted path",
-        input: { user: { name: "Ada", role: "user" } },
-        path: ["user", "name"],
-        deletePath: ["user", "name"],
-        expectedInitialTag: "name",
-        expectedAfterDelete: undefined,
-      }),
-      make_node_live_after_set_case({
-        suite: SUITE,
-        name: "node handle resolves after missing path is created",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        setPath: ["user", "role"],
-        value: "admin",
-        expectedInitial: undefined,
-        expectedAfterSetTag: "role",
-      }),
-      make_node_parent_content_case({
-        suite: SUITE,
-        name: "node handle parent content reflects child set",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        setPath: ["user", "role"],
-        value: "admin",
-        expectedInitialContentLength: 1,
-        expectedAfterSetContentLength: 2,
-      }),
-      make_node_attrs_copy_case({
-        suite: SUITE,
-        name: "node attrs returns defensive copy",
-        html: "<button>Press</button>",
-        path: ["button"],
-        setName: "class",
-        setValue: "active",
-        mutateName: "class",
-        mutateValue: "mutated",
-        expectedAttr: "active",
-        expectedAttrs: { class: "active" },
-      }),
-      make_node_set_attr_case({
-        suite: SUITE,
-        name: "node setAttr writes one attr and chains",
-        html: "<button>Press</button>",
-        path: ["button"],
-        nameToSet: "class",
-        valueToSet: "active",
-        expectedAttr: "active",
-        expectedAttrs: { class: "active" },
-      }),
-      make_node_set_attrs_case({
-        suite: SUITE,
-        name: "node setAttrs writes many attrs and preserves existing attrs",
-        html: "<button>Press</button>",
-        path: ["button"],
-        firstName: "class",
-        firstValue: "active",
-        attrsToSet: { title: "Profile", hidden: true },
-        expectedAttrs: { class: "active", title: "Profile", hidden: true },
-      }),
-      make_node_remove_attr_case({
-        suite: SUITE,
-        name: "node removeAttr removes one attr and chains",
-        html: "<button>Press</button>",
-        path: ["button"],
-        attrsToSet: { class: "active", title: "Profile" },
-        nameToRemove: "class",
-        expectedRemovedAttr: undefined,
-        expectedAttrs: { title: "Profile" },
-      }),
-      make_node_clear_attrs_case({
-        suite: SUITE,
-        name: "node clearAttrs removes all attrs and chains",
-        html: "<button>Press</button>",
-        path: ["button"],
-        attrsToSet: { class: "active", title: "Profile" },
-        expectedAttrs: {},
-      }),
-      make_node_existing_attrs_case({
-        suite: SUITE,
-        name: "node attrs reads parser-provided HTML attrs",
-        html: `<button class="active" disabled>Press</button>`,
-        path: ["button"],
-        expectedClass: "active",
-        expectedDisabled: "disabled",
-        expectedAttrs: { class: "active", disabled: "disabled" },
-      }),
-      make_node_attr_missing_path_throw_case({
-        suite: SUITE,
-        name: "node attr mutation on missing path throws",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        expectedMessage: "LiveMap node path does not resolve: [\"user\", \"role\"]",
-      }),
-      make_node_attr_json_backed_throw_case({
-        suite: SUITE,
-        name: "node attr mutation on JSON-backed path throws",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        expectedMessage: "LiveMap node attrs can only be edited on _hson_elem-backed nodes: [\"user\"]",
-      }),
-      make_node_json_html_tag_name_case({
-        suite: SUITE,
-        name: "node JSON key matching HTML tag remains JSON-backed",
-        input: { button: { label: "Press" } },
-        path: ["button"],
-        expectedTag: "button",
-        expectedContentLength: 1,
-        expectedMessage: "LiveMap node attrs can only be edited on _hson_elem-backed nodes: [\"button\"]",
-      }),
-      make_node_children_case({
-        suite: SUITE,
-        name: "node children reads direct HSON child nodes",
-        input: { user: { name: "Ada", role: "admin" } },
-        path: ["user"],
-        expectedChildTags: [OBJ_TAG],
-        expectedMissingPathChildren: [],
-      }),
-      make_node_child_lookup_case({
-        suite: SUITE,
-        name: "node child lookup reads direct child by tag",
-        input: { user: { name: "Ada", role: "admin" } },
-        path: ["user"],
-        tag: OBJ_TAG,
-        missingTag: ELEM_TAG,
-        expectedChildTag: OBJ_TAG,
-        expectedChildrenByTagCount: 1,
-        expectedMissingChildrenByTag: [],
-        expectedMissingChild: undefined,
-      }),
-      make_node_must_child_throw_case({
-        suite: SUITE,
-        name: "node mustChild throws with path and tag context",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        missingTag: ELEM_TAG,
-        expectedMessage: `LiveMap node child does not resolve: ["user"]."${ELEM_TAG}"`,
-      }),
-      make_node_append_case({
-        suite: SUITE,
-        name: "node append adds direct child and chains",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        childTag: "note",
-        expectedChildTags: [OBJ_TAG, "note"],
-        expectedAppendedTag: "note",
-      }),
-      make_node_append_missing_path_throw_case({
-        suite: SUITE,
-        name: "node append on missing path throws",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        childTag: "note",
-        expectedMessage: "LiveMap node path does not resolve: [\"user\", \"role\"]",
-      }),
-      make_node_append_html_case({
-        suite: SUITE,
-        name: "node append works on HTML-backed node",
-        html: "<button>Press</button>",
-        path: ["button"],
-        childTag: "icon",
-        expectedChildTags: [ELEM_TAG, "icon"],
-        expectedAppendedTag: "icon",
-      }),
-      make_node_remove_children_case({
-        suite: SUITE,
-        name: "node remove.children removes direct child nodes and chains",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        appendedTag: "note",
-        primitiveContent: "loose text",
-        expectedBeforeChildTags: [OBJ_TAG, "note"],
-        expectedAfterChildTags: [],
-        expectedAfterContent: ["loose text"],
-      }),
-      make_node_remove_child_case({
-        suite: SUITE,
-        name: "node remove.child removes by child-node index and chains",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        firstAppendedTag: "note",
-        secondAppendedTag: "icon",
-        primitiveContent: "loose text",
-        indexToRemove: 1,
-        expectedBeforeChildTags: [OBJ_TAG, "note", "icon"],
-        expectedAfterChildTags: [OBJ_TAG, "icon"],
-        expectedContentTagsAndValues: [OBJ_TAG, "loose text", "icon"],
-      }),
-      make_node_remove_child_bad_index_throw_case({
-        suite: SUITE,
-        name: "node remove.child bad index throws",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        badIndex: 4,
-        expectedMessage: "LiveMap node child index does not resolve: [\"user\"][4]",
-      }),
-      make_node_remove_missing_path_throw_case({
-        suite: SUITE,
-        name: "node remove on missing path throws",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        expectedMessage: "LiveMap node path does not resolve: [\"user\", \"role\"]",
-      }),
-    ] as const,
-  };
-}
-
-type NodeLiveAfterDeleteCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  deletePath: (string | number)[];
-  expectedInitialTag: string;
-  expectedAfterDelete: undefined;
-}>;
-
-type NodeLiveAfterSetCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  setPath: (string | number)[];
-  value: JsonValue;
-  expectedInitial: undefined;
-  expectedAfterSetTag: string;
-}>;
-
-type NodeParentContentCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  setPath: (string | number)[];
-  value: JsonValue;
-  expectedInitialContentLength: number;
-  expectedAfterSetContentLength: number;
-}>;
-
-type NodeAttrsCopyCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  setName: string;
-  setValue: LiveMapNodeAttrValue;
-  mutateName: string;
-  mutateValue: LiveMapNodeAttrValue;
-  expectedAttr: LiveMapNodeAttrValue;
-  expectedAttrs: Readonly<Record<string, LiveMapNodeAttrValue>>;
-}>;
-
-type NodeSetAttrCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  nameToSet: string;
-  valueToSet: LiveMapNodeAttrValue;
-  expectedAttr: LiveMapNodeAttrValue;
-  expectedAttrs: Readonly<Record<string, LiveMapNodeAttrValue>>;
-}>;
-
-type NodeSetAttrsCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  firstName: string;
-  firstValue: LiveMapNodeAttrValue;
-  attrsToSet: Readonly<Record<string, LiveMapNodeAttrValue>>;
-  expectedAttrs: Readonly<Record<string, LiveMapNodeAttrValue>>;
-}>;
-
-type NodeRemoveAttrCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  attrsToSet: Readonly<Record<string, LiveMapNodeAttrValue>>;
-  nameToRemove: string;
-  expectedRemovedAttr: undefined;
-  expectedAttrs: Readonly<Record<string, LiveMapNodeAttrValue>>;
-}>;
-
-type NodeClearAttrsCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  attrsToSet: Readonly<Record<string, LiveMapNodeAttrValue>>;
-  expectedAttrs: Readonly<Record<string, LiveMapNodeAttrValue>>;
-}>;
-
-type NodeExistingAttrsCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  expectedClass: LiveMapNodeAttrValue;
-  expectedDisabled: LiveMapNodeAttrValue;
-  expectedAttrs: Readonly<Record<string, LiveMapNodeAttrValue>>;
-}>;
-
-type NodeAttrMissingPathThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedMessage: string;
-}>;
-
-type NodeAttrJsonBackedThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedMessage: string;
-}>;
-
-type NodeJsonHtmlTagNameCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedTag: string;
-  expectedContentLength: number;
-  expectedMessage: string;
-}>;
-
-type NodeChildrenCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedChildTags: readonly string[];
-  expectedMissingPathChildren: readonly string[];
-}>;
-
-type NodeChildLookupCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  tag: string;
-  missingTag: string;
-  expectedChildTag: string;
-  expectedChildrenByTagCount: number;
-  expectedMissingChildrenByTag: readonly string[];
-  expectedMissingChild: undefined;
-}>;
-
-type NodeMustChildThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  missingTag: string;
-  expectedMessage: string;
-}>;
-
-type NodeAppendCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  childTag: string;
-  expectedChildTags: readonly string[];
-  expectedAppendedTag: string;
-}>;
-
-type NodeAppendMissingPathThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  childTag: string;
-  expectedMessage: string;
-}>;
-
-
-type NodeAppendHtmlCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: (string | number)[];
-  childTag: string;
-  expectedChildTags: readonly string[];
-  expectedAppendedTag: string;
-}>;
-
-type NodeRemoveChildrenCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  appendedTag: string;
-  primitiveContent: string;
-  expectedBeforeChildTags: readonly string[];
-  expectedAfterChildTags: readonly string[];
-  expectedAfterContent: readonly string[];
-}>;
-
-type NodeRemoveChildCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  firstAppendedTag: string;
-  secondAppendedTag: string;
-  primitiveContent: string;
-  indexToRemove: number;
-  expectedBeforeChildTags: readonly string[];
-  expectedAfterChildTags: readonly string[];
-  expectedContentTagsAndValues: readonly string[];
-}>;
-
-type NodeRemoveChildBadIndexThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  badIndex: number;
-  expectedMessage: string;
-}>;
-
-type NodeRemoveMissingPathThrowCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedMessage: string;
-}>;
-
-function make_node_live_after_delete_case(spec: NodeLiveAfterDeleteCaseSpec): TestCase {
+export function make_node_live_after_delete_case(spec: NodeLiveAfterDeleteCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -491,8 +32,7 @@ function make_node_live_after_delete_case(spec: NodeLiveAfterDeleteCaseSpec): Te
     },
   };
 }
-
-function make_node_live_after_set_case(spec: NodeLiveAfterSetCaseSpec): TestCase {
+export function make_node_live_after_set_case(spec: NodeLiveAfterSetCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -518,8 +58,7 @@ function make_node_live_after_set_case(spec: NodeLiveAfterSetCaseSpec): TestCase
     },
   };
 }
-
-function make_node_parent_content_case(spec: NodeParentContentCaseSpec): TestCase {
+export function make_node_parent_content_case(spec: NodeParentContentCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -545,8 +84,7 @@ function make_node_parent_content_case(spec: NodeParentContentCaseSpec): TestCas
     },
   };
 }
-
-function make_node_attrs_copy_case(spec: NodeAttrsCopyCaseSpec): TestCase {
+export function make_node_attrs_copy_case(spec: NodeAttrsCopyCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -571,8 +109,7 @@ function make_node_attrs_copy_case(spec: NodeAttrsCopyCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_set_attr_case(spec: NodeSetAttrCaseSpec): TestCase {
+export function make_node_set_attr_case(spec: NodeSetAttrCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -597,8 +134,7 @@ function make_node_set_attr_case(spec: NodeSetAttrCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_set_attrs_case(spec: NodeSetAttrsCaseSpec): TestCase {
+export function make_node_set_attrs_case(spec: NodeSetAttrsCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -623,8 +159,7 @@ function make_node_set_attrs_case(spec: NodeSetAttrsCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_remove_attr_case(spec: NodeRemoveAttrCaseSpec): TestCase {
+export function make_node_remove_attr_case(spec: NodeRemoveAttrCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -651,8 +186,7 @@ function make_node_remove_attr_case(spec: NodeRemoveAttrCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_clear_attrs_case(spec: NodeClearAttrsCaseSpec): TestCase {
+export function make_node_clear_attrs_case(spec: NodeClearAttrsCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -677,8 +211,7 @@ function make_node_clear_attrs_case(spec: NodeClearAttrsCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_existing_attrs_case(spec: NodeExistingAttrsCaseSpec): TestCase {
+export function make_node_existing_attrs_case(spec: NodeExistingAttrsCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -700,8 +233,7 @@ function make_node_existing_attrs_case(spec: NodeExistingAttrsCaseSpec): TestCas
     },
   };
 }
-
-function make_node_attr_missing_path_throw_case(spec: NodeAttrMissingPathThrowCaseSpec): TestCase {
+export function make_node_attr_missing_path_throw_case(spec: NodeAttrMissingPathThrowCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -752,8 +284,7 @@ function make_node_attr_missing_path_throw_case(spec: NodeAttrMissingPathThrowCa
     },
   };
 }
-
-function make_node_attr_json_backed_throw_case(spec: NodeAttrJsonBackedThrowCaseSpec): TestCase {
+export function make_node_attr_json_backed_throw_case(spec: NodeAttrJsonBackedThrowCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -804,8 +335,7 @@ function make_node_attr_json_backed_throw_case(spec: NodeAttrJsonBackedThrowCase
     },
   };
 }
-
-function make_node_json_html_tag_name_case(spec: NodeJsonHtmlTagNameCaseSpec): TestCase {
+export function make_node_json_html_tag_name_case(spec: NodeJsonHtmlTagNameCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -834,8 +364,7 @@ function make_node_json_html_tag_name_case(spec: NodeJsonHtmlTagNameCaseSpec): T
     },
   };
 }
-
-function make_node_children_case(spec: NodeChildrenCaseSpec): TestCase {
+export function make_node_children_case(spec: NodeChildrenCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -857,8 +386,7 @@ function make_node_children_case(spec: NodeChildrenCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_child_lookup_case(spec: NodeChildLookupCaseSpec): TestCase {
+export function make_node_child_lookup_case(spec: NodeChildLookupCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -884,8 +412,7 @@ function make_node_child_lookup_case(spec: NodeChildLookupCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_must_child_throw_case(spec: NodeMustChildThrowCaseSpec): TestCase {
+export function make_node_must_child_throw_case(spec: NodeMustChildThrowCaseSpec): TestCase {
   return expected_fail_case({
     suite: spec.suite,
     name: spec.name,
@@ -901,8 +428,7 @@ function make_node_must_child_throw_case(spec: NodeMustChildThrowCaseSpec): Test
     },
   }, spec.expectedMessage);
 }
-
-function make_node_append_case(spec: NodeAppendCaseSpec): TestCase {
+export function make_node_append_case(spec: NodeAppendCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -928,8 +454,7 @@ function make_node_append_case(spec: NodeAppendCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_append_missing_path_throw_case(spec: NodeAppendMissingPathThrowCaseSpec): TestCase {
+export function make_node_append_missing_path_throw_case(spec: NodeAppendMissingPathThrowCaseSpec): TestCase {
   return expected_fail_case({
     suite: spec.suite,
     name: spec.name,
@@ -945,9 +470,7 @@ function make_node_append_missing_path_throw_case(spec: NodeAppendMissingPathThr
     },
   }, spec.expectedMessage);
 }
-
-
-function make_node_append_html_case(spec: NodeAppendHtmlCaseSpec): TestCase {
+export function make_node_append_html_case(spec: NodeAppendHtmlCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -972,8 +495,7 @@ function make_node_append_html_case(spec: NodeAppendHtmlCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_remove_children_case(spec: NodeRemoveChildrenCaseSpec): TestCase {
+export function make_node_remove_children_case(spec: NodeRemoveChildrenCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -1001,8 +523,7 @@ function make_node_remove_children_case(spec: NodeRemoveChildrenCaseSpec): TestC
     },
   };
 }
-
-function make_node_remove_child_case(spec: NodeRemoveChildCaseSpec): TestCase {
+export function make_node_remove_child_case(spec: NodeRemoveChildCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,
@@ -1031,8 +552,7 @@ function make_node_remove_child_case(spec: NodeRemoveChildCaseSpec): TestCase {
     },
   };
 }
-
-function make_node_remove_child_bad_index_throw_case(spec: NodeRemoveChildBadIndexThrowCaseSpec): TestCase {
+export function make_node_remove_child_bad_index_throw_case(spec: NodeRemoveChildBadIndexThrowCaseSpec): TestCase {
   return expected_fail_case({
     suite: spec.suite,
     name: spec.name,
@@ -1048,8 +568,7 @@ function make_node_remove_child_bad_index_throw_case(spec: NodeRemoveChildBadInd
     },
   }, spec.expectedMessage);
 }
-
-function make_node_remove_missing_path_throw_case(spec: NodeRemoveMissingPathThrowCaseSpec): TestCase {
+export function make_node_remove_missing_path_throw_case(spec: NodeRemoveMissingPathThrowCaseSpec): TestCase {
   return expected_fail_case({
     suite: spec.suite,
     name: spec.name,
@@ -1064,11 +583,100 @@ function make_node_remove_missing_path_throw_case(spec: NodeRemoveMissingPathThr
     },
   }, spec.expectedMessage);
 }
+export function make_node_replace_children_case(spec: NodeReplaceChildrenCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      replacementTags: preview_value(spec.replacementTags),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.must().$_content.push(spec.primitiveContent);
+      handle.append(make_test_node(spec.appendedTag));
+      const beforeChildTags = handle.children().map((node) => node.$_tag);
+      const replacements = spec.replacementTags.map((tag) => make_test_node(tag));
+      const returned = handle.replace.children(replacements);
 
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: chains`, returned === handle, true),
+          equal_row(`${spec.name}: before child tags`, beforeChildTags, spec.expectedBeforeChildTags),
+          equal_row(`${spec.name}: after child tags`, handle.children().map((node) => node.$_tag), spec.expectedAfterChildTags),
+          equal_row(`${spec.name}: after content`, content_tags_and_values(handle.must()), spec.expectedAfterContent),
+        ],
+      };
+    },
+  };
+}
+export function make_node_replace_child_case(spec: NodeReplaceChildCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      indexToReplace: preview_value(spec.indexToReplace),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.append(make_test_node(spec.firstAppendedTag));
+      handle.must().$_content.splice(1, 0, spec.primitiveContent);
+      handle.append(make_test_node(spec.secondAppendedTag));
+      const beforeChildTags = handle.children().map((node) => node.$_tag);
+      const returned = handle.replace.child(spec.indexToReplace, make_test_node(spec.replacementTag));
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: chains`, returned === handle, true),
+          equal_row(`${spec.name}: before child tags`, beforeChildTags, spec.expectedBeforeChildTags),
+          equal_row(`${spec.name}: after child tags`, handle.children().map((node) => node.$_tag), spec.expectedAfterChildTags),
+          equal_row(`${spec.name}: content tags and values`, content_tags_and_values(handle.must()), spec.expectedContentTagsAndValues),
+        ],
+      };
+    },
+  };
+}
+export function make_node_replace_child_bad_index_throw_case(spec: NodeReplaceChildBadIndexThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      badIndex: preview_value(spec.badIndex),
+      replacementTag: preview_value(spec.replacementTag),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.replace.child(spec.badIndex, make_test_node(spec.replacementTag));
+    },
+  }, spec.expectedMessage);
+}
+export function make_node_replace_missing_path_throw_case(spec: NodeReplaceMissingPathThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      replacementTag: preview_value(spec.replacementTag),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.replace.children([make_test_node(spec.replacementTag)]);
+    },
+  }, spec.expectedMessage);
+}
 function content_tags_and_values(node: HsonNode): readonly string[] {
   return node.$_content.map((child) => typeof child === "object" && child !== null && "$_tag" in child ? child.$_tag : String(child));
 }
-
 function make_test_node(tag: string): HsonNode {
   return {
     $_tag: tag,
@@ -1077,7 +685,200 @@ function make_test_node(tag: string): HsonNode {
     $_meta: {},
   };
 }
-
 function html_root_node(input: string) {
   return hson.fromTrustedHtml(input).toHson().parse();
+}
+export function make_node_insert_child_case(spec: NodeInsertChildCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      indexToInsert: preview_value(spec.indexToInsert),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.append(make_test_node(spec.firstAppendedTag));
+      handle.must().$_content.splice(1, 0, spec.primitiveContent);
+      handle.append(make_test_node(spec.secondAppendedTag));
+      const beforeChildTags = handle.children().map((node) => node.$_tag);
+      const returned = handle.insert.child(spec.indexToInsert, make_test_node(spec.insertedTag));
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: chains`, returned === handle, true),
+          equal_row(`${spec.name}: before child tags`, beforeChildTags, spec.expectedBeforeChildTags),
+          equal_row(`${spec.name}: after child tags`, handle.children().map((node) => node.$_tag), spec.expectedAfterChildTags),
+          equal_row(`${spec.name}: content tags and values`, content_tags_and_values(handle.must()), spec.expectedContentTagsAndValues),
+        ],
+      };
+    },
+  };
+}
+export function make_node_insert_child_append_case(spec: NodeInsertChildAppendCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      indexToInsert: preview_value(spec.indexToInsert),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      const returned = handle.insert.child(spec.indexToInsert, make_test_node(spec.insertedTag));
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: chains`, returned === handle, true),
+          equal_row(`${spec.name}: child tags`, handle.children().map((node) => node.$_tag), spec.expectedChildTags),
+        ],
+      };
+    },
+  };
+}
+export function make_node_insert_child_bad_index_throw_case(spec: NodeInsertChildBadIndexThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      badIndex: preview_value(spec.badIndex),
+      insertedTag: preview_value(spec.insertedTag),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.insert.child(spec.badIndex, make_test_node(spec.insertedTag));
+    },
+  }, spec.expectedMessage);
+}
+export function make_node_insert_missing_path_throw_case(spec: NodeInsertMissingPathThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      insertedTag: preview_value(spec.insertedTag),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.insert.child(0, make_test_node(spec.insertedTag));
+    },
+  }, spec.expectedMessage);
+}
+export function make_node_move_child_case(spec: NodeMoveChildCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      fromIndex: preview_value(spec.fromIndex),
+      toIndex: preview_value(spec.toIndex),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.append(make_test_node(spec.firstAppendedTag));
+      handle.must().$_content.splice(1, 0, spec.primitiveContent);
+      handle.append(make_test_node(spec.secondAppendedTag));
+      const beforeChildTags = handle.children().map((node) => node.$_tag);
+      const returned = handle.move.child(spec.fromIndex, spec.toIndex);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: chains`, returned === handle, true),
+          equal_row(`${spec.name}: before child tags`, beforeChildTags, spec.expectedBeforeChildTags),
+          equal_row(`${spec.name}: after child tags`, handle.children().map((node) => node.$_tag), spec.expectedAfterChildTags),
+          equal_row(`${spec.name}: content tags and values`, content_tags_and_values(handle.must()), spec.expectedContentTagsAndValues),
+        ],
+      };
+    },
+  };
+}
+export function make_node_move_child_backward_case(spec: NodeMoveChildBackwardCaseSpec): TestCase {
+  return {
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      fromIndex: preview_value(spec.fromIndex),
+      toIndex: preview_value(spec.toIndex),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.append(make_test_node(spec.firstAppendedTag));
+      handle.append(make_test_node(spec.secondAppendedTag));
+      const beforeChildTags = handle.children().map((node) => node.$_tag);
+      const returned = handle.move.child(spec.fromIndex, spec.toIndex);
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: chains`, returned === handle, true),
+          equal_row(`${spec.name}: before child tags`, beforeChildTags, spec.expectedBeforeChildTags),
+          equal_row(`${spec.name}: after child tags`, handle.children().map((node) => node.$_tag), spec.expectedAfterChildTags),
+        ],
+      };
+    },
+  };
+}
+export function make_node_move_child_bad_to_index_throw_case(spec: NodeMoveChildBadToIndexThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      fromIndex: preview_value(spec.fromIndex),
+      badToIndex: preview_value(spec.badToIndex),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.move.child(spec.fromIndex, spec.badToIndex);
+    },
+  }, spec.expectedMessage);
+}
+export function make_node_move_child_bad_from_index_throw_case(spec: NodeMoveChildBadFromIndexThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      badFromIndex: preview_value(spec.badFromIndex),
+      toIndex: preview_value(spec.toIndex),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.move.child(spec.badFromIndex, spec.toIndex);
+    },
+  }, spec.expectedMessage);
+}
+export function make_node_move_missing_path_throw_case(spec: NodeMoveMissingPathThrowCaseSpec): TestCase {
+  return expected_fail_case({
+    suite: spec.suite,
+    name: spec.name,
+    meta: {
+      input: preview_value(spec.input),
+      path: preview_value(spec.path),
+      fromIndex: preview_value(spec.fromIndex),
+      toIndex: preview_value(spec.toIndex),
+    },
+    run: () => {
+      const map = make_livemap_core(json_root_node(spec.input));
+      const handle = map.node(spec.path);
+      handle.move.child(spec.fromIndex, spec.toIndex);
+    },
+  }, spec.expectedMessage);
 }

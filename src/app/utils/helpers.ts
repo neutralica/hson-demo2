@@ -2,7 +2,7 @@ import { make_livemap_feed_hub, paths_overlap, type LiveMapCommit, type LivePath
 import type { LetterKey } from "../core/types/core.types";
 import { preview_value, equal_row } from "../../tests/livemap-tests/test-helpers";
 import type { TestCase } from "../demos/test/tests.types";
-import { type FeedEmitCaseSpec, preview_feed_event } from "../../tests/livemap-tests/suites-feed";
+import { type FeedEmitCaseSpec, preview_feed_event } from "../../tests/livemap-tests/feed-suites";
 import type { LiveMapFeedEventPreview } from "../../tests/livemap-tests/types";
 import type { JsonValue } from "hson-live/types";
 
