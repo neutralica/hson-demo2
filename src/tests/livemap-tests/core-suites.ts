@@ -1,4 +1,4 @@
-import { hson, make_livemap_core } from "hson-live";
+import { define_livemap_schema, hson, make_livemap_core } from "hson-live";
 import type { JsonValue, LiveMapFeedEvent } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, make_core_set_case, make_core_snap_case, preview_value } from "./test-helpers";
@@ -163,6 +163,239 @@ export function livemap_suites_core(): TestSuite {
         ],
         expectedRoot: { user: { name: "Grace", role: "admin" } },
       }),
+      {
+        suite: SUITE,
+        name: "core schema returns undefined before attachment",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+
+          return {
+            assertRows: [
+              equal_row("core schema returns undefined before attachment: schema", map.schema(), undefined),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core withSchema returns core and stores schema",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+          const returned = map.withSchema(schema);
+
+          return {
+            assertRows: [
+              equal_row("core withSchema returns core and stores schema: returned", returned === map, true),
+              equal_row("core withSchema returns core and stores schema: schema", map.schema() === schema, true),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core withSchema rejects invalid current root",
+        meta: {
+          input: preview_value({ user: { name: 12 } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: 12 });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+          let message = "";
+
+          try {
+            map.withSchema(schema);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core withSchema rejects invalid current root: error",
+                message,
+                "LiveMap schema rejected value at []:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
+              ),
+              equal_row("core withSchema rejects invalid current root: schema", map.schema(), undefined),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema allows valid set",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+
+          map.withSchema(schema);
+          const commit = map.set(["user", "name"], "Grace");
+
+          return {
+            assertRows: [
+              equal_row("core schema allows valid set: changed", commit.changed, true),
+              equal_row("core schema allows valid set: root", map.snap(), { user: { name: "Grace" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema rejects invalid set before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.set(["user", "name"], 12);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core schema rejects invalid set before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
+              ),
+              equal_row("core schema rejects invalid set before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema allows valid setMany",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", age: 37 });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number,
+            },
+          }));
+
+          map.withSchema(schema);
+          const commit = map.setMany(["user"], { name: "Grace", age: 38 });
+
+          return {
+            assertRows: [
+              equal_row("core schema allows valid setMany: changed", commit.changed, true),
+              equal_row("core schema allows valid setMany: ops", commit.ops, [
+                { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+                { kind: "set", path: ["user", "age"], prev: 37, next: 38 },
+              ]),
+              equal_row("core schema allows valid setMany: root", map.snap(), { user: { name: "Grace", age: 38 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema rejects invalid setMany before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada", age: 37 });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number,
+            },
+          }));
+          let message = "";
+
+          map.withSchema(schema);
+
+          try {
+            map.setMany(["user"], { name: "Grace", age: "old" });
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core schema rejects invalid setMany before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+              ),
+              equal_row("core schema rejects invalid setMany before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core schema permits set on unknown schema path",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({}));
+          map.set(["user"], { name: "Ada" });
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+
+          map.withSchema(schema);
+          map.set(["meta"], { draft: true });
+
+          return {
+            assertRows: [
+              equal_row("core schema permits set on unknown schema path: root", map.snap(), {
+                user: { name: "Ada" },
+                meta: { draft: true },
+              }),
+            ],
+          };
+        },
+      },
       make_core_delete_case({
         suite: SUITE,
         name: "core delete existing object property",
@@ -421,6 +654,8 @@ export function livemap_suites_core(): TestSuite {
         mutateOriginalPathTo: ["user", "role"],
         expectedTag: "name",
       }),
+
+      
     ] as const,
   };
 }
