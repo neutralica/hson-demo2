@@ -442,6 +442,58 @@ export function livemap_suites_proxy(): TestSuite {
         act: (map) => map.proxy([{}] as never),
         expectedMessage: "LiveMap path part is not valid: {}",
       }),
+      readCase({
+        suite: SUITE,
+        name: "proxy child access returns stable proxy identity",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user === proxy.user;
+        },
+        expected: true,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy nested child access returns stable proxy identity",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user.name === proxy.user.name;
+        },
+        expected: true,
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy numeric child access returns stable proxy identity",
+        input: { items: [{ name: "Ada" }] },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.items[0] === proxy.items[0];
+        },
+        expected: true,
+      }),
+readCase({
+  suite: SUITE,
+  name: "proxy $_ returns stable handle identity",
+  input: { user: { name: "Ada" } },
+  act: (map) => {
+    const proxy = map.proxy() as any;
+    return proxy.user.$_ === proxy.user.$_;
+  },
+  expected: true,
+}),
+readCase({
+  suite: SUITE,
+  name: "proxy cached $_ handle still reflects current value",
+  input: { user: { name: "Ada" } },
+  act: (map) => {
+    const proxy = map.proxy() as any;
+    const handle = proxy.user.name.$_;
+    handle.set("Grace");
+    return handle.snap();
+  },
+  expected: "Grace",
+}),
 
 
 
