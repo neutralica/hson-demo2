@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 import { type Outcome, relay, relay_data } from "intrastructure";
 import { ABOUT_ROOT_ID } from "../../core/consts/ui-consts";
 import { clone_node } from "../../state/clone-node";
-import { define_schema, with_schema } from "../../state/schema";
+import { define_schema, with_schema } from "../../state/demo-schema";
 import { make_state } from "../../state/state";
 import { register_node_state_source } from "../../state/state-sources";
 import { find_doc } from "./about-helpers";

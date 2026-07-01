@@ -2,7 +2,7 @@ import { hson, type LiveTree } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import { create_test_log } from "../../demos/test/test-logger";
 import { store_graph_entries } from "../store";
-import { define_schema } from "../schema";
+import { define_schema } from "../demo-schema";
 import { state_graph_entries, state_graph_key, state_graph_path_to_text } from "../state-graph";
 import type { StateSmokeResult } from "../state.types";
 import { state_smoke_test } from "./state-smoke-runner";

@@ -18,7 +18,7 @@ import {
 import { type BuildDemo, type BuildFactoryOpts, type BuildPanel } from "./build.types";
 import  { _colors } from "../../core/consts/colors.consts";
 import { _fontSize } from "../../core/consts/ui-consts";
-import { define_schema, with_schema } from "../../state/schema";
+import { define_schema, with_schema } from "../../state/demo-schema";
 import { make_state } from "../../state/state";
 import { register_node_state_source } from "../../state/state-sources";
 import { UI_PANEL_HEADERcss, UI_PANELcss, UI_PANEL_HEADcss, UI_2STACKcss } from "../../ui/panels/panels.css";

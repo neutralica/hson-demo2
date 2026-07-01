@@ -4,7 +4,7 @@ import  { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import  { _colors } from "../../core/consts/colors.consts";
 import type { Fmt } from "../../core/types/core.types";
-import { define_schema, with_schema } from "../../state/schema";
+import { define_schema, with_schema } from "../../state/demo-schema";
 import { make_state } from "../../state/state";
 import { register_node_state_source } from "../../state/state-sources";
 import type { PanelShell, Panels } from "../../ui/panels/panels.types";

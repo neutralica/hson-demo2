@@ -1,6 +1,6 @@
 import type { JsonValue, HsonNode } from "hson-live/types";
 import { make_state } from "./state";
-import { define_schema, with_schema } from "./schema";
+import { define_schema, with_schema } from "./demo-schema";
 import { clone_node } from "./clone-node";
 import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
 import { json_equal } from "./state-helpers";

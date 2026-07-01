@@ -1,5 +1,5 @@
 import type { JsonValue } from "hson-live/types";
-import { define_schema, with_schema } from "../../state/schema";
+import { define_schema, with_schema } from "../../state/demo-schema";
 import { make_state } from "../../state/state";
 import { register_node_state_source } from "../../state/state-sources";
 import type { StateMutation } from "../../state/state.types";

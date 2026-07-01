@@ -1,3 +1,5 @@
+// demo-schema.ts
+
 import type { HsonNode, JsonValue } from "hson-live/types";
 import type { NodeState, NodeStateSlot, StateCommit, StateMutation, StatePath } from "./state.types";
 import { path_to_parts } from "./path-to-parts";
