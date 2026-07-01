@@ -9,6 +9,7 @@ import { livemap_suites_link } from "./link-suites";
 import { livemap_suites_node } from "./node-suites";
 import { livemap_suites_path } from "./path-suites";
 import { livemap_suites_guard } from "./guard-suites";
+import { livemap_suites_handle_2 } from "./handle-suites-2";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -67,5 +68,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_handle(),
     livemap_suites_node(),
     livemap_suites_guard(),
+    livemap_suites_handle_2()
   ] as const;
 }

@@ -993,7 +993,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.getKey(0 as never),
         expectedMessage: "LiveMap object key is not a string at [\"user\"]",
       }),
-      
+     
     ] as const,
   };
 }
