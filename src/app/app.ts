@@ -1,6 +1,6 @@
 // app.ts
 
-import { CssManager, type LiveTree } from "hson-live";
+import { CssManager, hson, type LiveMapSchema, type LiveTree } from "hson-live";
 import { mount_brand } from "./phases/phase-1-brand/mount-brand";
 import { mount_splash } from "./phases/phase-2-splash/mount-splash";
 import { STAGE_CSS } from "./phases/phase-2-splash/splash.css";
@@ -15,6 +15,7 @@ import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { smoke_state } from "./state/smoke-tests/smoke-test-1";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
+import type { LiveMap } from "../../../hson-live/dist/api/livemap/livemap.types";
 
 
 const gcss = CssManager.api();
@@ -52,7 +53,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
         if (outcome.isErr(res)) return res;
       }
     }
-
+const map = hson.liveMap.fromJson({}).schema.use({} as LiveMapSchema)
     // --- phase 2: splash ---
     {
       const splashP = run_phase(stage, mount_splash, _shortpause);
