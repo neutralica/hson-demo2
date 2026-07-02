@@ -175,7 +175,7 @@ export function livemap_suites_core(): TestSuite {
 
           return {
             assertRows: [
-              equal_row("core schema returns undefined before attachment: schema", map.schema(), undefined),
+              equal_row("core schema returns undefined before attachment: schema", map.schema.get(), undefined),
             ],
           };
         },
@@ -199,7 +199,7 @@ export function livemap_suites_core(): TestSuite {
           return {
             assertRows: [
               equal_row("core withSchema returns core and stores schema: returned", returned === map, true),
-              equal_row("core withSchema returns core and stores schema: schema", map.schema() === schema, true),
+              equal_row("core withSchema returns core and stores schema: schema", map.schema.get() === schema, true),
             ],
           };
         },
@@ -233,7 +233,7 @@ export function livemap_suites_core(): TestSuite {
                 message,
                 "LiveMap schema rejected value at []:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
               ),
-              equal_row("core withSchema rejects invalid current root: schema", map.schema(), undefined),
+              equal_row("core withSchema rejects invalid current root: schema", map.schema.get(), undefined),
             ],
           };
         },
@@ -910,7 +910,7 @@ export function livemap_suites_core(): TestSuite {
             assertRows: [
               equal_row("core exact schema rejects attach with unknown nested field: errored", message.length > 0, true),
               equal_row("core exact schema rejects attach with unknown nested field: mentions key", message.includes("role"), true),
-              equal_row("core exact schema rejects attach with unknown nested field: schema", map.schema(), undefined),
+              equal_row("core exact schema rejects attach with unknown nested field: schema", map.schema.get(), undefined),
             ],
           };
         },

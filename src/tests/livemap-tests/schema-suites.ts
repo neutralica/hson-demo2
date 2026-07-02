@@ -1317,7 +1317,53 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
+      readCase({
+        suite: SUITE,
+        name: "schema define returns reusable schema instance",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
 
+          return [
+            schema.validateRoot({ user: { name: "Ada" } }),
+            schema.validateRoot({ user: { name: 12 } }),
+          ];
+        },
+        expected: [
+          { ok: true, issues: [] },
+          {
+            ok: false,
+            issues: [
+              {
+                path: ["user", "name"],
+                message: "LiveMap schema expected string at [\"user\",\"name\"], received number",
+              },
+            ],
+          },
+        ],
+      }),
+      readCase({
+        suite: SUITE,
+        name: "schema make accepts token root",
+        input: {},
+        act: () => make_livemap_schema(LIVEMAP_SCHEMA.string.array).validateRoot(["a", "b"]),
+        expected: { ok: true, issues: [] },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "schema make accepts object shape root",
+        input: {},
+        act: () => make_livemap_schema({
+          user: {
+            name: LIVEMAP_SCHEMA.string,
+          },
+        }).validateRoot({ user: { name: "Ada" } }),
+        expected: { ok: true, issues: [] },
+      }),
 
     ] as const,
   };
