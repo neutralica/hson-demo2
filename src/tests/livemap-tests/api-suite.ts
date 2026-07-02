@@ -173,9 +173,8 @@ export function livemap_suites_api(): TestSuite {
             },
           }));
           const returned = map.schema.use(schema);
-
           return {
-            returned: returned === map,
+            returned: (returned as unknown) === map,
             get: map.schema.get() === schema,
           };
         },
@@ -333,7 +332,7 @@ export function livemap_suites_api(): TestSuite {
           const returned = map.withSchema(schema);
 
           return {
-            returned: returned === map,
+            returned: (returned as unknown) === map,
             get: map.schema.get() === schema,
           };
         },
