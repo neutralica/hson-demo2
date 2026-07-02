@@ -219,7 +219,7 @@ export function livemap_suites_api(): TestSuite {
           return hson.liveMap
             .fromJson({ user: { name: "Ada" } })
             .schema.use(schema)
-            .set(["user", "name"], 12);
+            .set(["user", "name"], 12 as never);
         },
         expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
       }),

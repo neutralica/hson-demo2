@@ -25,7 +25,7 @@ export function livemap_suites_guard(): TestSuite {
             }),
             guardThrowCase({
                 name: "core.set rejects invalid path part",
-                act: (map) => map.set(["user", -1] as never, "Ada"),
+                act: (map) => map.set(["user", -1], "Ada"),
                 expectedMessage: "LiveMap path part is not valid at index 1",
             }),
             guardThrowCase({
@@ -85,7 +85,7 @@ export function livemap_suites_guard(): TestSuite {
             }),
             guardThrowCase({
                 name: "handle.object.setKey rejects non-string key",
-                act: (map) => map.at(["user"]).object.setKey(0 as never, "Ada"),
+                act: (map) => (map.at(["user"]).object.setKey as any)(0, "Ada"),
                 expectedMessage: "LiveMap object key is not a string at [\"user\"]",
             }),
         ]

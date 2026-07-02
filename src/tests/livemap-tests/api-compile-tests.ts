@@ -278,3 +278,81 @@ API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "count"], "3");
 API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z" });
 // @ts-expect-error typed array proxy handle.set rejects wrong primitive value
 API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set("3");
+
+// --- Typed object write compile-only probe ---
+
+API_TYPED_MAP_USER_HANDLE.object.setKey("name", "Grace");
+API_TYPED_MAP_USER_HANDLE.object.setKey("age", 38);
+API_TYPED_MAP_USER_HANDLE.object.setKey("missing", "dynamic");
+API_TYPED_MAP_USER_HANDLE.object.setKey("missing", { nested: true });
+API_TYPED_MAP_PROXY.user.$_.object.setKey("name", "Grace");
+API_TYPED_MAP_PROXY.user.$_.object.setKey("age", 38);
+API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("id", "z");
+API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("count", 3);
+API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("label", "Z");
+API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("id", "z");
+API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("count", 3);
+API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("label", "Z");
+
+// @ts-expect-error typed object.setKey rejects wrong primitive value for string property
+API_TYPED_MAP_USER_HANDLE.object.setKey("name", 38);
+
+// @ts-expect-error typed object.setKey rejects wrong primitive value for number property
+API_TYPED_MAP_USER_HANDLE.object.setKey("age", "38");
+
+// @ts-expect-error typed proxy object.setKey rejects wrong primitive value for string property
+API_TYPED_MAP_PROXY.user.$_.object.setKey("name", 38);
+
+// @ts-expect-error typed array item object.setKey rejects wrong primitive value for string property
+API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("id", 3);
+
+// @ts-expect-error typed array item object.setKey rejects wrong primitive value for number property
+API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("count", "3");
+
+// @ts-expect-error typed array proxy object.setKey rejects wrong primitive value for optional string property
+API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("label", 3);
+
+// --- Typed array write compile-only probe ---
+
+API_TYPED_ARRAY_ITEMS_HANDLE.array.push({ id: "c", count: 3 });
+API_TYPED_ARRAY_ITEMS_HANDLE.array.push({ id: "c", count: 3, label: "C" });
+API_TYPED_ARRAY_ITEMS_HANDLE.array.pushMany([{ id: "c", count: 3 }, { id: "d", count: 4, label: "D" }]);
+API_TYPED_ARRAY_ITEMS_HANDLE.array.unshift({ id: "z", count: 0 });
+API_TYPED_ARRAY_ITEMS_HANDLE.array.unshiftMany([{ id: "y", count: 0 }, { id: "z", count: 1 }]);
+API_TYPED_ARRAY_ITEMS_HANDLE.array.insert(0, { id: "x", count: 1 });
+API_TYPED_ARRAY_ITEMS_HANDLE.array.replace(0, { id: "x", count: 1, label: "X" });
+API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0);
+API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0, 1);
+API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0, 1, { id: "x", count: 1 });
+API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0, 1, { id: "x", count: 1 }, { id: "y", count: 2, label: "Y" });
+
+API_TYPED_ARRAY_PROXY.items.$_.array.push({ id: "c", count: 3 });
+API_TYPED_ARRAY_PROXY.items.$_.array.insert(0, { id: "x", count: 1 });
+API_TYPED_ARRAY_PROXY.items.$_.array.replace(0, { id: "x", count: 1 });
+
+// @ts-expect-error typed array.push rejects missing required item property
+API_TYPED_ARRAY_ITEMS_HANDLE.array.push({ id: "c" });
+
+// @ts-expect-error typed array.push rejects wrong item property type
+API_TYPED_ARRAY_ITEMS_HANDLE.array.push({ id: "c", count: "3" });
+
+// @ts-expect-error typed array.push rejects wrong item primitive
+API_TYPED_ARRAY_ITEMS_HANDLE.array.push("c");
+
+// @ts-expect-error typed array.pushMany rejects bad member shape
+API_TYPED_ARRAY_ITEMS_HANDLE.array.pushMany([{ id: "c", count: 3 }, { id: "d" }]);
+
+// @ts-expect-error typed array.unshift rejects wrong item property type
+API_TYPED_ARRAY_ITEMS_HANDLE.array.unshift({ id: "z", count: "0" });
+
+// @ts-expect-error typed array.insert rejects missing required item property
+API_TYPED_ARRAY_ITEMS_HANDLE.array.insert(0, { id: "x" });
+
+// @ts-expect-error typed array.replace rejects wrong item property type
+API_TYPED_ARRAY_ITEMS_HANDLE.array.replace(0, { id: "x", count: "1" });
+
+// @ts-expect-error typed array.splice rejects wrong inserted item shape
+API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0, 1, { id: "x" });
+
+// @ts-expect-error typed proxy array.push rejects wrong item shape
+API_TYPED_ARRAY_PROXY.items.$_.array.push({ id: "c" });
