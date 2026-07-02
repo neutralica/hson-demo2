@@ -53,7 +53,7 @@ export async function run_app(root: LiveTree): OutcomeAsync<void> {
         if (outcome.isErr(res)) return res;
       }
     }
-const map = hson.liveMap.fromJson({}).schema.use({} as LiveMapSchema)
+
     // --- phase 2: splash ---
     {
       const splashP = run_phase(stage, mount_splash, _shortpause);
