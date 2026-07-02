@@ -1,7 +1,21 @@
+
+/**
+ * Compile-only LiveMap public API probes.
+ *
+ * This file is intentionally not a runtime suite. Its job is to fail TypeScript
+ * when public API inference regresses. `TypeExpect<TypeExtends<...>>` checks the
+ * positive inferred types, while `@ts-expect-error` checks that invalid writes
+ * are still rejected by the type surface.
+ */
+
 import { type InferLiveMapSchemaToken, hson, type InferLiveMapSchema, type LiveMapSchemaValue } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TypeExpect, TypeExtends } from "./api-suite";
 
+// --- Schema token inference ---
+// If this section fails, start in hson-live's schema token types/builders:
+// `api/livemap/schema.ts`, then confirm the public `hson.liveMap.schema` export
+// in `hson.ts` is preserving token generics.
 type _ApiSchemaTokenString = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.string>, string>>;
 type _ApiSchemaTokenStringArray = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.string.array>, readonly string[]>>;
 type _ApiSchemaTokenOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.number.optional>, number | undefined>>;
@@ -51,6 +65,11 @@ type _ApiSchemaUserPatch = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["p
 type _ApiSchemaUserDeepPatch = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["deepPatch"], { profile?: { displayName?: string; links?: readonly { label?: string; href?: string; }[]; }; }>>;
 type _ApiSchemaUserStatus = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["status"], "draft" | "published" | null>>;
 type _ApiSchemaUserResult = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["result"], { kind: "success"; value: string; } | { kind: "failure"; code: number; }>>;
+// --- Schema-bound map/root/path inference ---
+// If this section fails, inspect the public factories and schema binding path:
+// `hson.ts` for `hson.liveMap.fromJson(...)`, then `api/livemap/core.ts` and
+// `api/livemap/livemap.types.ts` for `LiveMap<TValue>`, `schema.use(...)`,
+// `withSchema(...)`, `snap()`, `at(...)`, and `LiveMapPathValue`.
 const API_TYPED_MAP_SAMPLE = hson.liveMap
   .fromJson({ user: { name: "Ada" } })
   .schema.use(hson.liveMap.schema.define((s) => ({
@@ -70,6 +89,11 @@ type ApiTypedMapUserNameSnap = ReturnType<typeof API_TYPED_MAP_USER_NAME_HANDLE.
 type _ApiTypedMapUserSnap = TypeExpect<TypeExtends<ApiTypedMapUserSnap, { name: string; age?: number; }>>;
 type _ApiTypedMapUserNameSnap = TypeExpect<TypeExtends<ApiTypedMapUserNameSnap, string>>;
 
+// --- Object read API inference ---
+// If this section fails, start in `api/livemap/livemap.types.ts` around
+// `LiveMapPathObjectApi`, `LiveMapObjectShape`, `LiveMapObjectValue`, and
+// related object helper types. Then check `api/livemap/handle.ts` passes `TValue`
+// into `make_livemap_object_api<TValue>(...)`, and `handle-object.ts` preserves it.
 const API_TYPED_MAP_USER_OBJECT = API_TYPED_MAP_USER_HANDLE.object.toObject();
 const API_TYPED_MAP_USER_OBJECT_NAME = API_TYPED_MAP_USER_HANDLE.object.getKey("name");
 const API_TYPED_MAP_USER_OBJECT_AGE = API_TYPED_MAP_USER_HANDLE.object.getKey("age");
@@ -100,6 +124,9 @@ type _ApiTypedMapUserObjectKeys = TypeExpect<TypeExtends<ApiTypedMapUserObjectKe
 type _ApiTypedMapUserObjectValues = TypeExpect<TypeExtends<ApiTypedMapUserObjectValues, readonly (string | number | undefined)[]>>;
 type _ApiTypedMapUserObjectEntries = TypeExpect<TypeExtends<ApiTypedMapUserObjectEntries, readonly (readonly ["name", string] | readonly ["age", number | undefined])[]>>;
 
+// --- Array schema/path inference setup ---
+// If this setup fails, check schema array inference in `api/livemap/schema.ts`,
+// then `LiveMapPathValue` in `api/livemap/livemap.types.ts` for numeric path parts.
 const API_TYPED_ARRAY_MAP_SAMPLE = hson.liveMap
   .fromJson({
     items: [
@@ -130,7 +157,11 @@ type _ApiTypedArrayItemSnap = TypeExpect<TypeExtends<ApiTypedArrayItemSnap, { id
 type _ApiTypedArrayItemIdSnap = TypeExpect<TypeExtends<ApiTypedArrayItemIdSnap, string>>;
 type _ApiTypedArrayItemLabelSnap = TypeExpect<TypeExtends<ApiTypedArrayItemLabelSnap, string | undefined>>;
 
-// --- Array API compile-only probe ---
+// --- Array read API inference ---
+// If this section fails, start in `api/livemap/livemap.types.ts` around
+// `LiveMapPathArrayApi`, `LiveMapArrayShape`, and `LiveMapArrayItem`. Then check
+// `api/livemap/handle.ts` passes `TValue` into `make_livemap_array_api<TValue>(...)`,
+// and `api/livemap/handle-array.ts` preserves typed read returns.
 
 const API_TYPED_ARRAY_TO_ARRAY = API_TYPED_ARRAY_ITEMS_HANDLE.array.toArray();
 const API_TYPED_ARRAY_SLICE = API_TYPED_ARRAY_ITEMS_HANDLE.array.slice(1);
@@ -161,6 +192,10 @@ type _ApiTypedArrayAt = TypeExpect<TypeExtends<ApiTypedArrayAt, { id: string; co
 type _ApiTypedArrayFirst = TypeExpect<TypeExtends<ApiTypedArrayFirst, { id: string; count: number; label?: string; }>>;
 type _ApiTypedArrayLast = TypeExpect<TypeExtends<ApiTypedArrayLast, { id: string; count: number; label?: string; }>>;
 
+// --- Object read API through array item paths ---
+// If this section fails but the direct object-read section passes, inspect
+// `LiveMapPathValue` for array item traversal and confirm numeric path parts
+// flow into object handles as the array item type.
 const API_TYPED_ARRAY_ITEM_OBJECT = API_TYPED_ARRAY_ITEM_HANDLE.object.toObject();
 const API_TYPED_ARRAY_ITEM_OBJECT_ID = API_TYPED_ARRAY_ITEM_HANDLE.object.getKey("id");
 const API_TYPED_ARRAY_ITEM_OBJECT_COUNT = API_TYPED_ARRAY_ITEM_HANDLE.object.getKey("count");
@@ -194,7 +229,11 @@ type _ApiTypedArrayItemObjectValues = TypeExpect<TypeExtends<ApiTypedArrayItemOb
 
 type _ApiTypedArrayItemObjectEntries = TypeExpect<TypeExtends<ApiTypedArrayItemObjectEntries, readonly (readonly ["id", string] | readonly ["count", number] | readonly ["label", string | undefined])[]>>;
 
-// --- Proxy API compile-only probe ---
+// --- Proxy read API inference ---
+// If this section fails, start in `api/livemap/livemap.types.ts` around
+// `LiveMapProxy`, `LiveMapProxyObjectChildren`, and `LiveMapProxyArrayChildren`.
+// Then check `api/livemap/proxy.ts` for typed path accumulation and `$_` returning
+// `LiveMapPathHandle<LiveMapPathValue<TValue, TPath>>`.
 
 const API_TYPED_MAP_PROXY = API_TYPED_MAP_SAMPLE.proxy();
 const API_TYPED_MAP_PROXY_USER_SNAP = API_TYPED_MAP_PROXY.user.$_.snap();
@@ -244,6 +283,11 @@ type _ApiTypedArrayProxyItemObject = TypeExpect<TypeExtends<ApiTypedArrayProxyIt
 type _ApiTypedArrayProxyItemObjectId = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObjectId, string>>;
 type _ApiTypedArrayProxyItemObjectLabel = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObjectLabel, string | undefined>>;
 
+// --- Path/handle/proxy write inference ---
+// If this section fails, inspect `LiveMapWriteValue`, `LiveMapPathWriteValue`,
+// `LiveMapCore.set`, and `LiveMapPathHandle.set/update` in
+// `api/livemap/livemap.types.ts`. If bad writes are not rejected, check for a
+// missing `NoInfer` on value parameters.
 API_TYPED_MAP_SAMPLE.set(["user", "name"], "Grace");
 API_TYPED_MAP_SAMPLE.set(["user", "age"], 38);
 API_TYPED_MAP_SAMPLE.set(["user"], { name: "Grace" });
@@ -279,12 +323,18 @@ API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z" });
 // @ts-expect-error typed array proxy handle.set rejects wrong primitive value
 API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set("3");
 
-// --- Typed object write compile-only probe ---
+// --- Object setKey write inference ---
+// If this section fails, inspect `LiveMapObjectWriteValue`, `LiveMapObjectKey`,
+// and `LiveMapPathObjectApi.setKey` in `api/livemap/livemap.types.ts`, then
+// `api/livemap/handle-object.ts`. Schema-shaped objects should reject unknown
+// keys; dynamic record-like objects are covered below. */
 
 API_TYPED_MAP_USER_HANDLE.object.setKey("name", "Grace");
 API_TYPED_MAP_USER_HANDLE.object.setKey("age", 38);
-API_TYPED_MAP_USER_HANDLE.object.setKey("missing", "dynamic");
-API_TYPED_MAP_USER_HANDLE.object.setKey("missing", { nested: true });
+// @ts-expect-error typed object.setMany rejects unknown keys for schema-shaped objects
+API_TYPED_MAP_USER_HANDLE.object.setMany({ missing: "dynamic" });
+// @ts-expect-error typed object.setMany rejects unknown keys for schema-shaped objects
+API_TYPED_MAP_USER_HANDLE.object.setMany({ missing: { nested: true } });
 API_TYPED_MAP_PROXY.user.$_.object.setKey("name", "Grace");
 API_TYPED_MAP_PROXY.user.$_.object.setKey("age", 38);
 API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("id", "z");
@@ -293,6 +343,18 @@ API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("label", "Z");
 API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("id", "z");
 API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("count", 3);
 API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("label", "Z");
+
+// --- Dynamic object write inference ---
+// If this section fails, the strict-object policy may be over-tightened.
+// Unschemaed/dynamic object handles should still allow arbitrary string keys
+// with JsonValue writes via `LiveMapObjectShape<TValue>` / `LiveMapObjectKey<TValue>`.
+const API_DYNAMIC_OBJECT_MAP = hson.liveMap.fromJson({ bag: {} });
+const API_DYNAMIC_OBJECT_HANDLE = API_DYNAMIC_OBJECT_MAP.at(["bag"]);
+
+API_DYNAMIC_OBJECT_HANDLE.object.setKey("missing", "dynamic");
+API_DYNAMIC_OBJECT_HANDLE.object.setKey("nested", { ok: true });
+API_DYNAMIC_OBJECT_HANDLE.object.setMany({ missing: "dynamic" });
+API_DYNAMIC_OBJECT_HANDLE.object.setMany({ nested: { ok: true } });
 
 // @ts-expect-error typed object.setKey rejects wrong primitive value for string property
 API_TYPED_MAP_USER_HANDLE.object.setKey("name", 38);
@@ -312,7 +374,10 @@ API_TYPED_ARRAY_ITEM_HANDLE.object.setKey("count", "3");
 // @ts-expect-error typed array proxy object.setKey rejects wrong primitive value for optional string property
 API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("label", 3);
 
-// --- Typed array write compile-only probe ---
+// --- Array write inference ---
+// If this section fails, inspect `LiveMapArrayWriteItem` and the write methods
+// on `LiveMapPathArrayApi` in `api/livemap/livemap.types.ts`, then
+// `api/livemap/handle-array.ts` for `arraySplice<TValue>(...)` and item-write methods.
 
 API_TYPED_ARRAY_ITEMS_HANDLE.array.push({ id: "c", count: 3 });
 API_TYPED_ARRAY_ITEMS_HANDLE.array.push({ id: "c", count: 3, label: "C" });
@@ -357,13 +422,19 @@ API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0, 1, { id: "x" });
 // @ts-expect-error typed proxy array.push rejects wrong item shape
 API_TYPED_ARRAY_PROXY.items.$_.array.push({ id: "c" });
 
-// --- Typed object setMany compile-only probe ---
+// --- Object setMany write inference ---
+// If this section fails, inspect `LiveMapObjectSetManyValues<TValue>` and
+// `LiveMapPathObjectApi.setMany` in `api/livemap/livemap.types.ts`, then
+// `api/livemap/handle-object.ts`. Schema-shaped objects should accept partial
+// known-key patches and reject unknown keys; dynamic objects should remain loose.
 
 API_TYPED_MAP_USER_HANDLE.object.setMany({ name: "Grace" });
 API_TYPED_MAP_USER_HANDLE.object.setMany({ age: 38 });
 API_TYPED_MAP_USER_HANDLE.object.setMany({ name: "Grace", age: 38 });
-API_TYPED_MAP_USER_HANDLE.object.setMany({ missing: "dynamic" });
-API_TYPED_MAP_USER_HANDLE.object.setMany({ missing: { nested: true } });
+// @ts-expect-error typed object.setKey rejects unknown keys for schema-shaped objects
+API_TYPED_MAP_USER_HANDLE.object.setKey("missing", "dynamic");
+// @ts-expect-error typed object.setKey rejects unknown keys for schema-shaped objects
+API_TYPED_MAP_USER_HANDLE.object.setKey("missing", { nested: true });
 API_TYPED_MAP_PROXY.user.$_.object.setMany({ name: "Grace", age: 38 });
 
 API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ id: "z" });
