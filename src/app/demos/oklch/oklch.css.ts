@@ -44,10 +44,7 @@ export const ROOT_CSS: CssMap = {
   ...FONT_FAM_MONO,
   fontSize: _fontSize.smol,
 
-  backgroundImage: OKLCH_PANEL_STIPPLED_BACKGROUND,
-  backgroundSize: `7px 7px, auto, auto, auto`,
-  backgroundPosition: `1px 2px, center, center, center`,
-  backgroundBlendMode: `screen, normal, normal, normal`,
+  background: _colors.backlo,
 
   border: `6px ridge ` + CURRENT_OKLCH,
   // outline: `1px solid oklch(78% 0.13 145 / 0.24)`,
@@ -85,7 +82,7 @@ export const ROW_CSS: CssMap = {
   minWidth: "0",
   color: "oklch(84% 0.018 285 / 0.88)",
   padding: "0.05rem 0.2rem",
-  background: "oklch(0% 0 0 / 0.105)",
+  background: _colors.backlo,
 };
 
 export const TITLE_CSS: CssMap = {

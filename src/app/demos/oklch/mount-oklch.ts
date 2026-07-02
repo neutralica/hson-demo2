@@ -1,4 +1,4 @@
-import { CssManager, LiveTree } from "hson-live";
+import { CssManager, LiveTree, hson } from "hson-live";
 import { _colors } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { CURRENT_OKLCHname } from "../../core/consts/ui-consts";
@@ -99,33 +99,40 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 }
 
 function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
-  let state = model.state;
   const storedActivePath = get_color_active_path();
   const storedActiveIndex = storedActivePath === null
     ? -1
     : model.targets.findIndex((target) => target.path === storedActivePath);
   let activeTargetIndex = storedActiveIndex >= 0 ? storedActiveIndex : 0;
-  const targetStateCache = new Map<string, OklchValues>();
+
+  const stateMap = hson.liveMap.fromJson({
+    current: model.state,
+  });
+
+  const readCurrentState = (): OklchValues => stateMap.at(["current"]).snap() as OklchValues;
+  const writeCurrentState = (next: OklchValues): void => {
+    stateMap.at(["current"]).set(next);
+  };
 
   const getTargetState = (index: number, fallback: OklchValues): OklchValues => {
     const target = model.targets[index];
     if (!target) return fallback;
 
-    const cached = targetStateCache.get(target.path);
-    if (cached) return cached;
-
     const targetDefault = stateOrDefault(target.initial, fallback);
-    const liveValue = gcss.var.value(target.varName);
     const token = get_color_token(target.path);
 
-    return stateOrDefault(liveValue ?? token?.value, targetDefault);
+    return stateOrDefault(token?.value, targetDefault);
   };
+
+  const getCurrentState = (): OklchValues => readCurrentState();
+
+  writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
 
   const activeTarget = model.targets[activeTargetIndex];
   if (activeTarget) set_color_active_path(activeTarget.path);
-  state = getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE);
 
   const syncInputsToState = (): void => {
+    const state = getCurrentState();
     // CHANGED: selecting a target should pull that color into both the preview
     // and the slider/value controls.
     for (const item of rig.inputs) {
@@ -138,14 +145,15 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   const persistActiveState = (): void => {
     const target = model.targets[activeTargetIndex];
     if (!target) return;
+    const state = readCurrentState();
 
     const value = oklchToCss(state);
-    targetStateCache.set(target.path, state);
     set_color_value(target.path, value);
     gcss.var.set(target.varName, value);
   };
 
   const render = (): void => {
+    const state = getCurrentState();
     renderPrev(rig, model, state);
     syncInputsToState();
 
@@ -190,10 +198,9 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
 
   for (const item of rig.inputs) {
     item.input.listen.onInput(() => {
-      state = updateOklchState(state, item.channel, readInputValue(item.input));
+      writeCurrentState(updateOklchState(readCurrentState(), item.channel, readInputValue(item.input)));
 
       persistActiveState();
-
       render();
     });
   }
@@ -206,26 +213,25 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     row.listen.onClick(() => {
       activeTargetIndex = i;
       set_color_active_path(target.path);
-      state = getTargetState(i, OKLCH_DEFAULT_STATE);
+      writeCurrentState(getTargetState(i, OKLCH_DEFAULT_STATE));
 
       render();
     });
   }
 
   rig.code.listen.onClick(() => {
-    const write = navigator.clipboard?.writeText(oklchToCss(state));
+    const write = navigator.clipboard?.writeText(oklchToCss(getCurrentState()));
     if (write) void write.catch(() => undefined);
   });
 
   rig.resetBtn.listen.onClick(() => {
     reset_color_values();
-    targetStateCache.clear();
 
     for (const target of model.targets) {
       applyToTarget(target);
     }
 
-    state = getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE);
+    writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
     render();
   });
 

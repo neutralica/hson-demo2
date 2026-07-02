@@ -1,7 +1,6 @@
+import { hson } from "hson-live";
 import type { JsonValue, HsonNode } from "hson-live/types";
-import { make_state } from "./state";
-import { define_schema, with_schema } from "./demo-schema";
-import { clone_node } from "./clone-node";
+import { define_schema } from "./demo-schema";
 import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
 import { json_equal } from "./state-helpers";
 import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.consts";
@@ -87,13 +86,40 @@ export const DEMO_STATE_SCHEMA = define_schema((scm) => ({
   },
 }));
 
+
+export const DEMO_LIVEMAP_SCHEMA = hson.liveMap.schema.define((scm) => {
+  const oklch = scm.refine(scm.string, "OKLCH color", isOklchValue);
+  const colorToken = scm.exact({
+    path: scm.string,
+    label: scm.string,
+    varName: scm.string,
+    initial: oklch,
+    value: oklch,
+    editable: scm.boolean,
+    kind: scm.literal("oklch"),
+  });
+
+  return scm.exact({
+    ui: scm.exact({
+      currentView: scm.string.nullable,
+      activeWidgets: scm.array(scm.string),
+      aboutTocOpen: scm.boolean,
+    }),
+    theme: scm.exact({
+      colors: scm.exact({
+        activePath: scm.string.nullable,
+        tokens: scm.record(colorToken),
+      }),
+    }),
+  });
+});
+
 export function create_demo_store(
   initial: DemoState = INITIAL_DEMO_STATE,
 ): DemoStore {
-  const demoState = with_schema(
-    make_state(clone_node(initial)),
-    DEMO_STATE_SCHEMA,
-  );
+  const demoState = hson.liveMap
+    .fromJson(cloneJson(initial))
+    .schema.use(DEMO_LIVEMAP_SCHEMA);
 
   const listeners = new Set<Listener>();
 
@@ -102,7 +128,7 @@ export function create_demo_store(
   }
 
   function snapshot(): DemoStateRO {
-    return cloneJson(demoState.get() as DemoState);
+    return cloneJson(demoState.snap() as DemoState);
   }
 
   function emit(prev: DemoStateRO): void {
@@ -115,7 +141,7 @@ export function create_demo_store(
   function stateGet<T extends JsonValue>(
     path: string | readonly (string | number)[],
   ): T {
-    return demoState.at(path).get() as T;
+    return demoState.at(typeof path === "string" ? [path] : path).snap() as T;
   }
 
   function stateSet(
@@ -124,7 +150,7 @@ export function create_demo_store(
   ): void {
     const prev = snapshot();
 
-    demoState.at(path).set(next);
+    demoState.at(typeof path === "string" ? [path] : path).set(next as never);
 
     const nextSnap = stateSnapshot();
     if (json_equal(prev as JsonValue, nextSnap as JsonValue)) return;
@@ -186,7 +212,7 @@ export function create_demo_store(
 
     if (json_equal(prev as JsonValue, draft as JsonValue)) return;
 
-    demoState.replace(draft);
+    demoState.set([], draft as never);
     emit(prev);
   }
 
@@ -386,23 +412,13 @@ export function get_color_diff(): DemoColorDiff {
 }
 
 export function apply_color_diff(diff: DemoColorDiff): void {
-  const entries: [DemoColorPath, string][] = [];
-
   for (const [path, value] of Object.entries(diff)) {
     if (value === undefined) continue;
     if (typeof value !== "string") throw new Error(`invalid color diff value for path: ${path}`);
     if (!get_color_token(path)) throw new Error(`unknown color token path: ${path}`);
 
-    entries.push([path, value]);
+    set_color_value(path, value);
   }
-
-  if (entries.length === 0) return;
-
-  demo_update((draft) => {
-    for (const [path, value] of entries) {
-      draft.theme.colors.tokens[path]!.value = value;
-    }
-  });
 }
 
 export function reset_changed_color_values(): void {
