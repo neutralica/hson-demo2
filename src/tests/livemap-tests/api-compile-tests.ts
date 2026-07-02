@@ -191,4 +191,90 @@ type _ApiTypedArrayItemObjectPick = TypeExpect<TypeExtends<ApiTypedArrayItemObje
 type _ApiTypedArrayItemObjectOmit = TypeExpect<TypeExtends<ApiTypedArrayItemObjectOmit, { id: string; label?: string; }>>;
 type _ApiTypedArrayItemObjectKeys = TypeExpect<TypeExtends<ApiTypedArrayItemObjectKeys, readonly ("id" | "count" | "label")[]>>;
 type _ApiTypedArrayItemObjectValues = TypeExpect<TypeExtends<ApiTypedArrayItemObjectValues, readonly (string | number | undefined)[]>>;
+
 type _ApiTypedArrayItemObjectEntries = TypeExpect<TypeExtends<ApiTypedArrayItemObjectEntries, readonly (readonly ["id", string] | readonly ["count", number] | readonly ["label", string | undefined])[]>>;
+
+// --- Proxy API compile-only probe ---
+
+const API_TYPED_MAP_PROXY = API_TYPED_MAP_SAMPLE.proxy();
+const API_TYPED_MAP_PROXY_USER_SNAP = API_TYPED_MAP_PROXY.user.$_.snap();
+const API_TYPED_MAP_PROXY_USER_NAME_SNAP = API_TYPED_MAP_PROXY.user.name.$_.snap();
+const API_TYPED_MAP_PROXY_USER_OBJECT = API_TYPED_MAP_PROXY.user.$_.object.toObject();
+const API_TYPED_MAP_PROXY_USER_OBJECT_NAME = API_TYPED_MAP_PROXY.user.$_.object.getKey("name");
+const API_TYPED_MAP_PROXY_USER_OBJECT_AGE = API_TYPED_MAP_PROXY.user.$_.object.getKey("age");
+const API_TYPED_MAP_PROXY_USER_OBJECT_MISSING = API_TYPED_MAP_PROXY.user.$_.object.getKey("missing");
+
+type ApiTypedMapProxyUserSnap = typeof API_TYPED_MAP_PROXY_USER_SNAP;
+type ApiTypedMapProxyUserNameSnap = typeof API_TYPED_MAP_PROXY_USER_NAME_SNAP;
+type ApiTypedMapProxyUserObject = typeof API_TYPED_MAP_PROXY_USER_OBJECT;
+type ApiTypedMapProxyUserObjectName = typeof API_TYPED_MAP_PROXY_USER_OBJECT_NAME;
+type ApiTypedMapProxyUserObjectAge = typeof API_TYPED_MAP_PROXY_USER_OBJECT_AGE;
+type ApiTypedMapProxyUserObjectMissing = typeof API_TYPED_MAP_PROXY_USER_OBJECT_MISSING;
+type _ApiTypedMapProxyUserSnap = TypeExpect<TypeExtends<ApiTypedMapProxyUserSnap, { name: string; age?: number; }>>;
+type _ApiTypedMapProxyUserNameSnap = TypeExpect<TypeExtends<ApiTypedMapProxyUserNameSnap, string>>;
+type _ApiTypedMapProxyUserObject = TypeExpect<TypeExtends<ApiTypedMapProxyUserObject, { name: string; age?: number; }>>;
+type _ApiTypedMapProxyUserObjectName = TypeExpect<TypeExtends<ApiTypedMapProxyUserObjectName, string>>;
+type _ApiTypedMapProxyUserObjectAge = TypeExpect<TypeExtends<ApiTypedMapProxyUserObjectAge, number | undefined>>;
+type _ApiTypedMapProxyUserObjectMissing = TypeExpect<TypeExtends<ApiTypedMapProxyUserObjectMissing, JsonValue | undefined>>;
+
+const API_TYPED_ARRAY_PROXY = API_TYPED_ARRAY_MAP_SAMPLE.proxy();
+const API_TYPED_ARRAY_PROXY_ITEMS_SNAP = API_TYPED_ARRAY_PROXY.items.$_.snap();
+const API_TYPED_ARRAY_PROXY_ITEMS_ARRAY = API_TYPED_ARRAY_PROXY.items.$_.array.toArray();
+const API_TYPED_ARRAY_PROXY_ITEM_SNAP = API_TYPED_ARRAY_PROXY.items[0]!.$_.snap();
+const API_TYPED_ARRAY_PROXY_ITEM_ID_SNAP = API_TYPED_ARRAY_PROXY.items[0]!.id.$_.snap();
+const API_TYPED_ARRAY_PROXY_ITEM_LABEL_SNAP = API_TYPED_ARRAY_PROXY.items[0]!.label.$_.snap();
+const API_TYPED_ARRAY_PROXY_ITEM_OBJECT = API_TYPED_ARRAY_PROXY.items[0]!.$_.object.toObject();
+const API_TYPED_ARRAY_PROXY_ITEM_OBJECT_ID = API_TYPED_ARRAY_PROXY.items[0]!.$_.object.getKey("id");
+const API_TYPED_ARRAY_PROXY_ITEM_OBJECT_LABEL = API_TYPED_ARRAY_PROXY.items[0]!.$_.object.getKey("label");
+
+type ApiTypedArrayProxyItemsSnap = typeof API_TYPED_ARRAY_PROXY_ITEMS_SNAP;
+type ApiTypedArrayProxyItemsArray = typeof API_TYPED_ARRAY_PROXY_ITEMS_ARRAY;
+type ApiTypedArrayProxyItemSnap = typeof API_TYPED_ARRAY_PROXY_ITEM_SNAP;
+type ApiTypedArrayProxyItemIdSnap = typeof API_TYPED_ARRAY_PROXY_ITEM_ID_SNAP;
+type ApiTypedArrayProxyItemLabelSnap = typeof API_TYPED_ARRAY_PROXY_ITEM_LABEL_SNAP;
+type ApiTypedArrayProxyItemObject = typeof API_TYPED_ARRAY_PROXY_ITEM_OBJECT;
+type ApiTypedArrayProxyItemObjectId = typeof API_TYPED_ARRAY_PROXY_ITEM_OBJECT_ID;
+type ApiTypedArrayProxyItemObjectLabel = typeof API_TYPED_ARRAY_PROXY_ITEM_OBJECT_LABEL;
+type _ApiTypedArrayProxyItemsSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemsSnap, readonly { id: string; count: number; label?: string; }[]>>;
+type _ApiTypedArrayProxyItemsArray = TypeExpect<TypeExtends<ApiTypedArrayProxyItemsArray, readonly { id: string; count: number; label?: string; }[]>>;
+type _ApiTypedArrayProxyItemSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemSnap, { id: string; count: number; label?: string; }>>;
+type _ApiTypedArrayProxyItemIdSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemIdSnap, string>>;
+type _ApiTypedArrayProxyItemLabelSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemLabelSnap, string | undefined>>;
+type _ApiTypedArrayProxyItemObject = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObject, { id: string; count: number; label?: string; }>>;
+type _ApiTypedArrayProxyItemObjectId = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObjectId, string>>;
+type _ApiTypedArrayProxyItemObjectLabel = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObjectLabel, string | undefined>>;
+
+API_TYPED_MAP_SAMPLE.set(["user", "name"], "Grace");
+API_TYPED_MAP_SAMPLE.set(["user", "age"], 38);
+API_TYPED_MAP_SAMPLE.set(["user"], { name: "Grace" });
+API_TYPED_MAP_SAMPLE.set(["user"], { name: "Grace", age: 38 });
+API_TYPED_MAP_USER_HANDLE.set({ name: "Grace" });
+API_TYPED_MAP_USER_HANDLE.set({ name: "Grace", age: 38 });
+API_TYPED_MAP_USER_HANDLE.update((value) => ({ ...value, name: "Grace" }));
+API_TYPED_MAP_USER_NAME_HANDLE.set("Grace");
+API_TYPED_MAP_USER_NAME_HANDLE.update((value) => `${value}!`);
+API_TYPED_MAP_PROXY.user.name.$_.set("Grace");
+API_TYPED_MAP_PROXY.user.$_.set({ name: "Grace", age: 38 });
+API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0], { id: "z", count: 3 });
+API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "id"], "z");
+API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "count"], 3);
+API_TYPED_ARRAY_ITEMS_HANDLE.set([{ id: "a", count: 1 }, { id: "b", count: 2, label: "B" }]);
+API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z", count: 3 });
+API_TYPED_ARRAY_ITEM_HANDLE.update((value) => ({ ...value, count: value.count + 1 }));
+API_TYPED_ARRAY_PROXY.items[0]!.$_.set({ id: "z", count: 3 });
+API_TYPED_ARRAY_PROXY.items[0]!.id.$_.set("z");
+API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set(3);
+// @ts-expect-error typed map.set rejects wrong primitive value for string path
+API_TYPED_MAP_SAMPLE.set(["user", "name"], 38);
+// @ts-expect-error typed map.set rejects wrong primitive value for number path
+API_TYPED_MAP_SAMPLE.set(["user", "age"], "38");
+// @ts-expect-error typed handle.update rejects wrong primitive return value
+API_TYPED_MAP_USER_NAME_HANDLE.update(() => 38);
+// @ts-expect-error typed proxy handle.set rejects wrong primitive value
+API_TYPED_MAP_PROXY.user.name.$_.set(38);
+// @ts-expect-error typed map.set rejects wrong array item property value
+API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "count"], "3");
+// @ts-expect-error typed array item handle.set rejects wrong object shape
+API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z" });
+// @ts-expect-error typed array proxy handle.set rejects wrong primitive value
+API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set("3");

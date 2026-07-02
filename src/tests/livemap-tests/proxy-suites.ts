@@ -272,7 +272,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy then access returns undefined",
         input: { then: "data" },
         act: (map) => {
-          const proxy = map.proxy();
+          const proxy = map.proxy()  as any;
           return proxy.then;
         },
         expected: undefined,
@@ -282,7 +282,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy toJSON access returns undefined",
         input: { toJSON: "data" },
         act: (map) => {
-          const proxy = map.proxy();
+          const proxy = map.proxy() as any;
           return proxy.toJSON;
         },
         expected: undefined,
@@ -312,7 +312,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy Object.defineProperty throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          const proxy = map.proxy();
+          const proxy = map.proxy() as any;
           Object.defineProperty(proxy.user, "name", { value: "Grace" });
         },
         expectedMessage: "LiveMap proxy properties must not be defined directly.",
@@ -322,7 +322,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy Object.setPrototypeOf throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          const proxy = map.proxy();
+          const proxy = map.proxy() as any;
           Object.setPrototypeOf(proxy.user, {});
         },
         expectedMessage: "LiveMap proxy prototype must not be changed.",
@@ -332,7 +332,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy Object.preventExtensions throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          const proxy = map.proxy();
+          const proxy = map.proxy() as any;
           Object.preventExtensions(proxy.user);
         },
         expectedMessage: "LiveMap proxy extensibility must not be changed.",
