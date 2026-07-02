@@ -356,3 +356,36 @@ API_TYPED_ARRAY_ITEMS_HANDLE.array.splice(0, 1, { id: "x" });
 
 // @ts-expect-error typed proxy array.push rejects wrong item shape
 API_TYPED_ARRAY_PROXY.items.$_.array.push({ id: "c" });
+
+// --- Typed object setMany compile-only probe ---
+
+API_TYPED_MAP_USER_HANDLE.object.setMany({ name: "Grace" });
+API_TYPED_MAP_USER_HANDLE.object.setMany({ age: 38 });
+API_TYPED_MAP_USER_HANDLE.object.setMany({ name: "Grace", age: 38 });
+API_TYPED_MAP_USER_HANDLE.object.setMany({ missing: "dynamic" });
+API_TYPED_MAP_USER_HANDLE.object.setMany({ missing: { nested: true } });
+API_TYPED_MAP_PROXY.user.$_.object.setMany({ name: "Grace", age: 38 });
+
+API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ id: "z" });
+API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ count: 3 });
+API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ label: "Z" });
+API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ id: "z", count: 3, label: "Z" });
+API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setMany({ id: "z", count: 3 });
+
+// @ts-expect-error typed object.setMany rejects wrong primitive value for string property
+API_TYPED_MAP_USER_HANDLE.object.setMany({ name: 38 });
+
+// @ts-expect-error typed object.setMany rejects wrong primitive value for number property
+API_TYPED_MAP_USER_HANDLE.object.setMany({ age: "38" });
+
+// @ts-expect-error typed proxy object.setMany rejects wrong primitive value for string property
+API_TYPED_MAP_PROXY.user.$_.object.setMany({ name: 38 });
+
+// @ts-expect-error typed array item object.setMany rejects wrong primitive value for string property
+API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ id: 3 });
+
+// @ts-expect-error typed array item object.setMany rejects wrong primitive value for number property
+API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ count: "3" });
+
+// @ts-expect-error typed array proxy object.setMany rejects wrong primitive value for optional string property
+API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setMany({ label: 3 });
