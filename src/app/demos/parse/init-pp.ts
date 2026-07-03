@@ -1,12 +1,8 @@
 // init-pp.ts
 
 import  { hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
 import  { _colors } from "../../core/consts/colors.consts";
 import type { Fmt } from "../../core/types/core.types";
-import { define_schema, with_schema } from "../../state/demo-schema";
-import { make_state } from "../../state/state";
-import { register_node_state_source } from "../../state/state-sources";
 import type { PanelShell, Panels } from "../../ui/panels/panels.types";
 import { PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss, PP_IDLEcss } from "./pp.css";
 
@@ -21,7 +17,7 @@ type ParsePanelControlState = {
   invalidOwner: Fmt | null;
 };
 
-const PARSE_PANEL_CONTROL_SCHEMA = define_schema((scm) => ({
+const PARSE_PANEL_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => ({
   inProgress: scm.boolean,
   active: scm.pick("json", "hson", "html").nullable,
   isValid: scm.boolean,
@@ -102,19 +98,12 @@ const unlockTextarea = (p: PanelShell): void => {
 export function init_parsing_panels(pp: Panels): void {
   const FMTS = Object.keys(pp.panels) as readonly Fmt[];
 
-  const parseState = with_schema(
-    make_state(makeInitialParsePanelControlState() as unknown as JsonValue),
-    PARSE_PANEL_CONTROL_SCHEMA,
-  );
-
-  register_node_state_source({
-    name: "parse",
-    state: parseState,
-    schema: PARSE_PANEL_CONTROL_SCHEMA,
-  });
+  const parseState = hson.liveMap
+    .fromJson(makeInitialParsePanelControlState())
+    .schema.use(PARSE_PANEL_CONTROL_SCHEMA);
 
   function getParseState(): ParsePanelControlState {
-    return parseState.get() as ParsePanelControlState;
+    return parseState.snap() as ParsePanelControlState;
   }
 
   function getInProgress(): boolean {
@@ -122,7 +111,7 @@ export function init_parsing_panels(pp: Panels): void {
   }
 
   function setInProgress(next: boolean): void {
-    parseState.at("inProgress").set(next);
+    parseState.at(["inProgress"]).set(next);
   }
 
   function getActive(): Fmt | null {
@@ -130,7 +119,7 @@ export function init_parsing_panels(pp: Panels): void {
   }
 
   function setActive(next: Fmt | null): void {
-    parseState.at("active").set(next);
+    parseState.at(["active"]).set(next);
   }
 
   function getIsValid(): boolean {
@@ -138,7 +127,7 @@ export function init_parsing_panels(pp: Panels): void {
   }
 
   function setIsValid(next: boolean): void {
-    parseState.at("isValid").set(next);
+    parseState.at(["isValid"]).set(next);
   }
 
   function getInvalidOwner(): Fmt | null {
@@ -146,7 +135,7 @@ export function init_parsing_panels(pp: Panels): void {
   }
 
   function setInvalidOwner(next: Fmt | null): void {
-    parseState.at("invalidOwner").set(next);
+    parseState.at(["invalidOwner"]).set(next);
   }
 
   function isIdleValid(): boolean {

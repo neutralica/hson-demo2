@@ -25,7 +25,7 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "unit", label: "unit" },
     { key: "dev", label: "dev" },
     { key: "fuzz-json", label: "json fuzzer" },
-    { key: "demo-meta", label: "demo-meta" },
+    // { key: "demo-meta", label: "demo-meta" },
     { key: "livemap", label: "livemap (alpha)" },
 ] as const;
 

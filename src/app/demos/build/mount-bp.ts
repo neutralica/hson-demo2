@@ -1,5 +1,4 @@
 import { LiveTree, hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
 import { relay, relay_data, type Outcome } from "intrastructure";
 import { $BUILD_ROOT, BUILD_STRINGhson } from "./build.consts";
 import {
@@ -18,9 +17,6 @@ import {
 import { type BuildDemo, type BuildFactoryOpts, type BuildPanel } from "./build.types";
 import  { _colors } from "../../core/consts/colors.consts";
 import { _fontSize } from "../../core/consts/ui-consts";
-import { define_schema, with_schema } from "../../state/demo-schema";
-import { make_state } from "../../state/state";
-import { register_node_state_source } from "../../state/state-sources";
 import { UI_PANEL_HEADERcss, UI_PANELcss, UI_PANEL_HEADcss, UI_2STACKcss } from "../../ui/panels/panels.css";
 import { mk_div_id, mk_div_cls, mk_section_cls, mk_span_cls } from "../../utils/makers";
 
@@ -33,7 +29,7 @@ type BuildControlState = {
     touched: boolean;
 };
 
-const BUILD_CONTROL_SCHEMA = define_schema((scm) => ({
+const BUILD_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => ({
     inProgress: scm.boolean,
     activeTab: scm.pick("render", "html"),
     touched: scm.boolean,
@@ -55,19 +51,12 @@ export function mount_build_panels(host: LiveTree): Outcome<BuildDemo> {
 }
 
 function initBuild(bp: BuildDemo): void {
-    const buildState = with_schema(
-        make_state(makeInitialBuildControlState() as unknown as JsonValue),
-        BUILD_CONTROL_SCHEMA,
-    );
-
-    register_node_state_source({
-        name: "build",
-        state: buildState,
-        schema: BUILD_CONTROL_SCHEMA,
-    });
+    const buildState = hson.liveMap
+        .fromJson(makeInitialBuildControlState())
+        .schema.use(BUILD_CONTROL_SCHEMA);
 
     function getBuildState(): BuildControlState {
-        return buildState.get() as BuildControlState;
+        return buildState.snap() as BuildControlState;
     }
 
     function getInProgress(): boolean {
@@ -75,7 +64,7 @@ function initBuild(bp: BuildDemo): void {
     }
 
     function setInProgress(next: boolean): void {
-        buildState.at("inProgress").set(next);
+        buildState.at(["inProgress"]).set(next);
     }
 
     function getActiveTab(): BuildTabKey {
@@ -83,7 +72,7 @@ function initBuild(bp: BuildDemo): void {
     }
 
     function setActiveTab(next: BuildTabKey): void {
-        buildState.at("activeTab").set(next);
+        buildState.at(["activeTab"]).set(next);
     }
 
     function getTouched(): boolean {
@@ -91,7 +80,7 @@ function initBuild(bp: BuildDemo): void {
     }
 
     function setTouched(next: boolean): void {
-        buildState.at("touched").set(next);
+        buildState.at(["touched"]).set(next);
     }
 
     const getSrc = (): string => bp.input.textarea.form.getValue() ?? "";

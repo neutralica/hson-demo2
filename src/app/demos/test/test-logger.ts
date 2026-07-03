@@ -1,8 +1,5 @@
+import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import { define_schema, with_schema } from "../../state/demo-schema";
-import { make_state } from "../../state/state";
-import { register_node_state_source } from "../../state/state-sources";
-import type { StateMutation } from "../../state/state.types";
 import { _freeze } from "./tests.consts";
 import type { TestEvent, TestSummary, SuiteLog, CaseLog, CaseKey, TestFailure } from "./tests.types";
 
@@ -54,7 +51,13 @@ type TestEventWithAssertRows = TestEvent & Readonly<{
   assertRows?: readonly unknown[];
 }>;
 
-const TEST_LOG_SCHEMA = define_schema((scm) => ({
+type TestLogMutation = Readonly<{
+  kind: "set";
+  path: readonly (string | number)[];
+  value: JsonValue;
+}>;
+
+const TEST_LOG_SCHEMA = hson.liveMap.schema.define((scm) => ({
   activeSuite: scm.string.nullable,
   casesByKey: scm.record({
     key: scm.string,
@@ -112,34 +115,28 @@ function as_json(value: unknown): JsonValue {
 }
 
 export function create_test_log(): TestLog {
-  const logState = with_schema(
-    make_state(make_initial_test_log_state() as unknown as JsonValue),
-    TEST_LOG_SCHEMA,
-  );
-
-  register_node_state_source({
-    name: "test-log",
-    state: logState,
-    schema: TEST_LOG_SCHEMA,
-  });
+  const logState = hson.liveMap
+    .fromJson(make_initial_test_log_state() as unknown as JsonValue)
+    .schema.use(TEST_LOG_SCHEMA);
 
   const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
 
   const read = <T>(path: readonly (string | number)[]): T | undefined => {
-    return logState.at(path).get() as unknown as T | undefined;
+    return logState.at(path).snap() as unknown as T | undefined;
   };
 
   const set = (
-    mutations: StateMutation[],
+    mutations: TestLogMutation[],
     path: readonly (string | number)[],
     value: unknown,
   ): void => {
     mutations.push({ kind: "set", path, value: as_json(value) });
   };
 
-  const commit = (mutations: StateMutation[]): void => {
-    if (mutations.length === 0) return;
-    logState.commit(mutations);
+  const commit = (mutations: TestLogMutation[]): void => {
+    for (const mutation of mutations) {
+      logState.at(mutation.path).set(mutation.value as never);
+    }
   };
 
   const emptySummary = (): TestLogState["summary"] => ({
@@ -168,11 +165,19 @@ export function create_test_log(): TestLog {
   };
 
   const clear = (): void => {
-    logState.replaceRoot(make_initial_test_log_state() as unknown as JsonValue);
+    const next = make_initial_test_log_state();
+
+    logState.at(["activeSuite"]).set(next.activeSuite);
+    logState.at(["casesByKey"]).set(next.casesByKey);
+    logState.at(["caseKeysBySuite"]).set(next.caseKeysBySuite);
+    logState.at(["suitesByName"]).set(next.suitesByName);
+    logState.at(["failures"]).set(next.failures);
+    logState.at(["summary"]).set(next.summary);
+    logState.at(["lastLine"]).set(next.lastLine);
   };
 
   const onEvent = (e: TestEvent): void => {
-    const mutations: StateMutation[] = [];
+    const mutations: TestLogMutation[] = [];
 
     if (e.t === "suite_begin") {
       const summary = getSummaryState();

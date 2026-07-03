@@ -3,7 +3,7 @@ import { _colors } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { CURRENT_OKLCHname } from "../../core/consts/ui-consts";
 import { parse_oklch } from "../../core/helpers/color-helpers";
-import { get_color_active_path, get_color_token, set_color_active_path, set_color_value, get_changed_color_tokens, is_color_changed, reset_color_values } from "../../state/store";
+import { get_color_active_path, get_color_token, set_color_active_path, set_color_value, is_color_changed, reset_color_values } from "../../state/store";
 import { mk_div_cls, mk_div_cls_txt } from "../../utils/makers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
 import { ROOT_CSS, PANEL_CSS, TITLE_CSS, ROW_CSS, RANGE_CSS, PREVIEW_PANEL_CSS, PREVIEW_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
@@ -157,7 +157,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     renderPrev(rig, model, state);
     syncInputsToState();
 
-    const changedCount = get_changed_color_tokens().length;
+    const changedCount = model.targets.filter((target) => is_color_changed(target.path)).length;
     rig.resetBtn.text.set(changedCount > 0 ? `[reset ${changedCount}]` : "reset");
     rig.resetBtn.style.set.color(changedCount > 0 ? _colors.hson.n : OKLCH_NEUTRALS.slate);
     const labelWidth = Math.max(...model.targets.map((target) => target.label.length), 0) + 2;

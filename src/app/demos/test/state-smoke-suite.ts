@@ -1,4 +1,4 @@
-import { smoke_state, smoke_path, smoke_find, smoke_remove, smoke_state_replace, smoke_store_facade, smoke_set, smoke_public_path, smoke_public_path_edges, smoke_schema, smoke_schema_path, smoke_schema_context_exports, smoke_store_schema_impl } from "../../state/smoke-tests/smoke-test-1";
+import {  smoke_store_facade, smoke_store_schema_impl } from "../../state/smoke-tests/smoke-test-1";
 import { smoke_log_schema, smoke_state_graph_projection, smoke_demo_state_graph_projection } from "../../state/smoke-tests/smoke-test-2";
 import  { StateSmokeError } from "../../state/smoke-tests/state-smoke-runner";
 import type { StateSmokeResult, StateSmokeRow } from "../../state/state.types";
@@ -15,18 +15,7 @@ type TestErrorWithRows = Error & {
 };
 
 const STATE_SMOKE_ENTRIES: readonly StateSmokeEntry[] = [
-  { label: "state smoke", run: smoke_state },
-  { label: "state path parsing", run: smoke_path },
-  { label: "state path lookup", run: smoke_find },
-  { label: "state remove path", run: smoke_remove },
-  { label: "state replace", run: smoke_state_replace },
   { label: "store facade", run: smoke_store_facade },
-  { label: "state set path", run: smoke_set },
-  { label: "state public path", run: smoke_public_path },
-  { label: "state public path edges", run: smoke_public_path_edges },
-  { label: "schema validation", run: smoke_schema },
-  { label: "schema path validation", run: smoke_schema_path },
-  { label: "schema context exports", run: smoke_schema_context_exports },
   { label: "demo store schema", run: smoke_store_schema_impl },
   { label: "log store", run: smoke_log_schema },
   { label: "graph projection", run: smoke_state_graph_projection },

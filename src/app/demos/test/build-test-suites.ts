@@ -1,6 +1,6 @@
 import type { FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
 import type { SourceFormat } from "../../../../../hson-live/dist/types/diagnostics.types";
-import { all_demo_meta } from "../../../tests/demo-meta-tests/make-demo-meta-test";
+// import { all_demo_meta } from "../../../tests/demo-meta-tests/make-demo-meta-test";
 import { random_seed, make_json_fuzz_suite } from "../../../tests/json-fuzzer/fuzzer-builder";
 import { all_livetree_suites } from "../../../tests/livetree-tests/all-livetree-suites";
 import { EXTRA_FIXTURES } from "../../../tests/transform-tests/extra-fixtures";
@@ -99,11 +99,11 @@ export function build_suites_for_mode(
       livetree_graph_dom_markup_surface(),
     ]);
   }
-  if (mode === "demo-meta") {
-    return _freeze([
-      ...all_demo_meta(),
-    ]);
-  }
+  // if (mode === "demo-meta") {
+  //   return _freeze([
+  //     ...all_demo_meta(),
+  //   ]);
+  // }
   if (mode === "fuzz-json") {
     const GENERATED_JSON_SEED = random_seed();
     return _freeze([

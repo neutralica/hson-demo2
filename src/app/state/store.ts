@@ -7,8 +7,6 @@ import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.co
 import { state_graph_entries } from "./state-graph";
 import type { StateGraphEntry, StateGraphOptions } from "./state-graph";
 
-
-export type DemoColorDiff = Partial<Record<DemoColorPath, string>>;
 export type StoreStateGraphOptions = Omit<StateGraphOptions, "schema">;
 export type DemoStateGraphOptions = StoreStateGraphOptions;
 
@@ -204,18 +202,6 @@ export function create_demo_store(
     return path === null ? undefined : getColTkn(path);
   }
 
-  // function update(mut: (draft: DemoState) => void): void {
-  //   const prev = snapshot();
-  //   const draft = cloneJson(prev);
-
-  //   mut(draft);
-
-  //   if (json_equal(prev as JsonValue, draft as JsonValue)) return;
-
-  //   demoState.set([], draft as never);
-  //   emit(prev);
-  // }
-
   function setView(next: DemoView): void {
     stateSet(["ui", "currentView"], next);
   }
@@ -272,14 +258,18 @@ export function create_demo_store(
   }
 
   function resetColorValues(): void {
-    for (const token of Object.values(getColorTokens())) {
-      stateSet(["theme", "colors", "tokens", token.path, "value"], token.initial);
-    }
-  }
+    const tokens = getColorTokens();
+    const nextTokens: Record<DemoColorPath, DemoColorToken> = {};
 
-  // function set_about_toc_open(next: boolean): void {
-  //   state_set(["ui", "aboutTocOpen"], next);
-  // }
+    for (const token of Object.values(tokens)) {
+      nextTokens[token.path] = {
+        ...token,
+        value: token.initial,
+      };
+    }
+
+    stateSet(["theme", "colors", "tokens"], nextTokens);
+  }
 
   // -------------------------
   // subscriptions
@@ -343,8 +333,6 @@ export function create_demo_store(
     resetColVal,
     resetColorValues,
 
-    // set_about_toc_open,
-
     subscribe,
     subDiff: subscribeDiff,
     subSel: subscribeSel,
@@ -394,39 +382,7 @@ export function is_color_changed(path: DemoColorPath): boolean {
   return !!token && token.value !== token.initial;
 }
 
-export function get_changed_color_tokens(): DemoColorToken[] {
-  return Object.values(get_color_tokens()).filter((token) => token.value !== token.initial);
-}
-
-export function get_color_diff(): DemoColorDiff {
-  const diff: DemoColorDiff = {};
-
-  for (const token of get_changed_color_tokens()) {
-    diff[token.path] = token.value;
-  }
-
-  return diff;
-}
-
-export function apply_color_diff(diff: DemoColorDiff): void {
-  for (const [path, value] of Object.entries(diff)) {
-    if (value === undefined) continue;
-    if (typeof value !== "string") throw new Error(`invalid color diff value for path: ${path}`);
-    if (!get_color_token(path)) throw new Error(`unknown color token path: ${path}`);
-
-    set_color_value(path, value);
-  }
-}
-
-export function reset_changed_color_values(): void {
-  for (const token of get_changed_color_tokens()) {
-    reset_color_value(token.path);
-  }
-}
-
-// export const set_about_toc_open = demoStore.set_about_toc_open;
 export const demo_subscribe = demoStore.subscribe;
-export const demo_subscribe_diff = demoStore.subDiff;
 export const demo_subscribe_sel = demoStore.subSel;
 
 function stop_all(stops: readonly (() => void)[]): () => void {
@@ -458,13 +414,6 @@ function state_path_signature(state: DemoStateRO, path: readonly (string | numbe
   return JSON.stringify(state_path_value(state, path));
 }
 
-function color_token_value_signature(tokens: Record<DemoColorPath, DemoColorToken>): string {
-  return Object.values(tokens)
-    .map((token) => `${token.path}\u001e${token.value}`)
-    .sort()
-    .join("\u001f");
-}
-
 function demo_subscribe_path(path: readonly (string | number)[], fn: () => void): () => void {
   return demo_subscribe_sel((state) => state_path_signature(state, path), fn);
 }
@@ -474,17 +423,6 @@ export function demo_subscribe_view_state(fn: () => void): () => void {
     demo_subscribe_path(["ui", "currentView"], fn),
     demo_subscribe_sel((state) => state.ui.activeWidgets.join("\u001f"), fn),
   ]);
-}
-
-export function demo_subscribe_color_state(fn: () => void): () => void {
-  return stop_all([
-    demo_subscribe_path(["theme", "colors", "activePath"], fn),
-    demo_subscribe_color_values(fn),
-  ]);
-}
-
-export function demo_subscribe_color_values(fn: () => void): () => void {
-  return demo_subscribe_sel((state) => color_token_value_signature(state.theme.colors.tokens), fn);
 }
 
 export const demo_state_node = demoStore.stateNode;

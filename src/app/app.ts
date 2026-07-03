@@ -8,11 +8,9 @@ import { _sleep } from "../app/utils/helpers";
 import { mk_div_id } from "../app/utils/makers";
 import { make_skip_promise, run_phase, type PhaseResult, type RaceResult } from "../app/utils/skip-promise";
 import { outcome, relay, relay_data, type Outcome, type OutcomeAsync } from "intrastructure";
-
 import { PHASE_LINGER } from "./core/consts/config.consts";
 import { _colors } from "./core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
-import { smoke_state } from "./state/smoke-tests/smoke-test-1";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
 import type { LiveMap } from "../../../hson-live/dist/api/livemap/livemap.types";
