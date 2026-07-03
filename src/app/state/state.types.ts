@@ -131,7 +131,6 @@ export type DemoStore = {
   getColorActivePath(): DemoColorPath | null;
   getColorActiveToken(): DemoColorToken | undefined;
 
-  update(mut: (draft: DemoState) => void): void;
   setView(next: DemoView): void;
   toggleView(next: Exclude<DemoView, null>): void;
 

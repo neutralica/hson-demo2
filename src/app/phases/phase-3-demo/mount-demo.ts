@@ -28,7 +28,7 @@ import { mount_test_panels } from "../../demos/test/mount-tp";
 import type { TestPanels } from "../../demos/test/tp.types";
 import { mount_state_monitor } from "../../state/mount-state";
 import type { DemoView, DemoWidget } from "../../state/state.types";
-import { has_widget, toggle_widget, get_view, toggle_view, activate_widget, get_widgets, demo_subscribe, set_view, deactivate_widget } from "../../state/store";
+import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
@@ -335,10 +335,10 @@ function sync_demo_visibility(viewHosts: ViewHosts, widgetHosts: WidgetHosts, vi
   });
 }
 
-function apply_menu_active(menu: MenuButtons, view: DemoView): void {
+function apply_menu_active(menu: MenuButtons, view: DemoView, widgets: readonly DemoWidget[]): void {
   MENU_OPTIONS.forEach((key) => {
     const active = is_widget_menu_key(key)
-      ? has_widget(key)
+      ? widgets.includes(key)
       : view === key;
     menu[key].data.set("active", active ? "true" : null);
   });
@@ -389,10 +389,10 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     const widgets = get_widgets() ?? [];
 
     sync_demo_visibility(viewHosts, widgetHosts, view, widgets);
-    apply_menu_active(menu, view);
+    apply_menu_active(menu, view, widgets);
   };
 
-  demo_subscribe(() => applyView());
+  demo_subscribe_view_state(() => applyView());
   applyView();
 
   await after_paint();

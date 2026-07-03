@@ -204,17 +204,17 @@ export function create_demo_store(
     return path === null ? undefined : getColTkn(path);
   }
 
-  function update(mut: (draft: DemoState) => void): void {
-    const prev = snapshot();
-    const draft = cloneJson(prev);
+  // function update(mut: (draft: DemoState) => void): void {
+  //   const prev = snapshot();
+  //   const draft = cloneJson(prev);
 
-    mut(draft);
+  //   mut(draft);
 
-    if (json_equal(prev as JsonValue, draft as JsonValue)) return;
+  //   if (json_equal(prev as JsonValue, draft as JsonValue)) return;
 
-    demoState.set([], draft as never);
-    emit(prev);
-  }
+  //   demoState.set([], draft as never);
+  //   emit(prev);
+  // }
 
   function setView(next: DemoView): void {
     stateSet(["ui", "currentView"], next);
@@ -332,7 +332,6 @@ export function create_demo_store(
     getColorActivePath,
     getColorActiveToken,
 
-    update,
     setView,
     toggleView,
     startWidget,
@@ -379,8 +378,6 @@ export const get_color_tokens = demoStore.getColorTokens;
 export const get_color_token = demoStore.getColTkn;
 export const get_color_active_path = demoStore.getColorActivePath;
 export const get_active_color_token = demoStore.getColorActiveToken;
-
-export const demo_update = demoStore.update;
 export const set_view = demoStore.setView;
 export const toggle_view = demoStore.toggleView;
 export const activate_widget = demoStore.startWidget;
@@ -428,9 +425,66 @@ export function reset_changed_color_values(): void {
 }
 
 // export const set_about_toc_open = demoStore.set_about_toc_open;
-
 export const demo_subscribe = demoStore.subscribe;
 export const demo_subscribe_diff = demoStore.subDiff;
 export const demo_subscribe_sel = demoStore.subSel;
+
+function stop_all(stops: readonly (() => void)[]): () => void {
+  return () => {
+    for (const stop of stops) stop();
+  };
+}
+
+function state_path_value(state: DemoStateRO, path: readonly (string | number)[]): JsonValue | undefined {
+  let value: JsonValue | undefined = state as JsonValue;
+
+  for (const part of path) {
+    if (value === null || typeof value !== "object") return undefined;
+
+    if (Array.isArray(value)) {
+      if (typeof part !== "number") return undefined;
+      value = value[part];
+      continue;
+    }
+
+    if (typeof part !== "string") return undefined;
+    value = value[part];
+  }
+
+  return value;
+}
+
+function state_path_signature(state: DemoStateRO, path: readonly (string | number)[]): string {
+  return JSON.stringify(state_path_value(state, path));
+}
+
+function color_token_value_signature(tokens: Record<DemoColorPath, DemoColorToken>): string {
+  return Object.values(tokens)
+    .map((token) => `${token.path}\u001e${token.value}`)
+    .sort()
+    .join("\u001f");
+}
+
+function demo_subscribe_path(path: readonly (string | number)[], fn: () => void): () => void {
+  return demo_subscribe_sel((state) => state_path_signature(state, path), fn);
+}
+
+export function demo_subscribe_view_state(fn: () => void): () => void {
+  return stop_all([
+    demo_subscribe_path(["ui", "currentView"], fn),
+    demo_subscribe_sel((state) => state.ui.activeWidgets.join("\u001f"), fn),
+  ]);
+}
+
+export function demo_subscribe_color_state(fn: () => void): () => void {
+  return stop_all([
+    demo_subscribe_path(["theme", "colors", "activePath"], fn),
+    demo_subscribe_color_values(fn),
+  ]);
+}
+
+export function demo_subscribe_color_values(fn: () => void): () => void {
+  return demo_subscribe_sel((state) => color_token_value_signature(state.theme.colors.tokens), fn);
+}
 
 export const demo_state_node = demoStore.stateNode;

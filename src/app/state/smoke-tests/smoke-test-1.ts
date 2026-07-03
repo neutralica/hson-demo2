@@ -968,24 +968,5 @@ export function smoke_store_schema_impl(): StateSmokeResult {
         validColor,
       );
     });
-
-    t.step("invalid color update throws and does not apply", () => {
-      let threw = false;
-
-      try {
-        store.update((draft) => {
-          draft.theme.colors.tokens[token.path]!.value = 1 as unknown as string;
-        });
-      } catch {
-        threw = true;
-      }
-
-      t.ok("invalid color token value throws through schema replace", threw);
-      t.eq(
-        "invalid color token value did not apply",
-        store.getColTkn(token.path)?.value as JsonValue,
-        validColor,
-      );
-    });
   });
 }
