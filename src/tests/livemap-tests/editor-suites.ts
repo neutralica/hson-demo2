@@ -9,7 +9,7 @@ import { delete_live_path } from "../../../../hson-live/dist/api/livemap/editor"
 
 
 export function livemap_suite_editor(): TestSuite {
-  const SUITE = "livemap-editor";
+  const SUITE = "livemap/editor";
 
   return {
     suite: SUITE,

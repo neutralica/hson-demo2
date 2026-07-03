@@ -58,7 +58,7 @@ export function preview_feed_event(event: LiveMapFeedEvent): LiveMapFeedEventPre
 }
 
 export function livemap_suite_feed(): TestSuite {
-  const SUITE = "livemap-feed";
+  const SUITE = "livemap/feed";
 
   return {
     suite: SUITE,

@@ -7,7 +7,7 @@ import { equal_row, preview_value } from "./test-helpers";
 import { json_root_node } from "./all-livemap-suites";
 
 export function livemap_suites_link(): TestSuite {
-  const SUITE = "livemap-link";
+  const SUITE = "livemap/link";
 
   return {
     suite: SUITE,

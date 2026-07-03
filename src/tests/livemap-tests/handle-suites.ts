@@ -8,7 +8,7 @@ export type TestLiveMap = ReturnType<typeof make_livemap_core>;
 export type TestHandle = ReturnType<TestLiveMap["at"]>;
 
 export function livemap_suites_handle(): TestSuite {
-  const SUITE = "livemap-handle";
+  const SUITE = "livemap/handle";
 
   return {
     suite: SUITE,

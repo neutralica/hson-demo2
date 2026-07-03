@@ -6,7 +6,7 @@ import { make_node_live_after_delete_case, make_node_live_after_set_case, make_n
 
 
 
-const SUITE = "LiveMap node";
+const SUITE = "livemap/node-internals";
 
 type ExpectedFailTestCase = TestCase & Readonly<{
   expected: "fail";

@@ -13,6 +13,7 @@ import { livemap_suites_handle_2 } from "./handle-suites-2";
 import { livemap_suites_proxy } from "./proxy-suites";
 import { livemap_suites_schema } from "./schema-suites";
 import { livemap_suites_api } from "./api-suite";
+import { livemap_suites_store } from "./store-suites";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -75,5 +76,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_proxy(),
     livemap_suites_schema(),
     livemap_suites_api(),
+    livemap_suites_store(),
   ] as const;
 }

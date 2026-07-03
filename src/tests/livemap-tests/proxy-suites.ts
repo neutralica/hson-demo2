@@ -7,7 +7,7 @@ import { readCase, commitCase, throwCase } from "./handle-helpers";
 
 
 export function livemap_suites_proxy(): TestSuite {
-  const SUITE = "livemap/handle/proxy";
+  const SUITE = "livemap/proxy";
 
   return {
     suite: SUITE,

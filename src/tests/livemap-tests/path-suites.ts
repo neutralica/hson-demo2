@@ -6,7 +6,7 @@ import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 
 export function livemap_suites_path(): TestSuite {
-  const SUITE = "livemap-path";
+  const SUITE = "livemap/path";
 
   return {
     suite: SUITE,

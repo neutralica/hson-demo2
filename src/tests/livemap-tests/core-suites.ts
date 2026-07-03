@@ -5,7 +5,7 @@ import { equal_row, make_core_set_case, make_core_snap_case, preview_value } fro
 import type { LiveMapFeedCaseSpec, LiveMapFeedEventPreview } from "./types";
 
 export function livemap_suites_core(): TestSuite {
-  const SUITE = "livemap-core";
+  const SUITE = "livemap/core";
 
   return {
     suite: SUITE,
