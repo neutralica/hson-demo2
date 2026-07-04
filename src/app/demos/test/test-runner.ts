@@ -97,7 +97,7 @@ export async function run_test_suites(
   const t0 = now();
 
 
-  const yieldEvery = opts.yieldEveryCases ?? 1;
+  const yieldEvery = opts.yieldEveryCases ?? 0;
   let caseCounter = 0;
 
   for (const suite of suites) {

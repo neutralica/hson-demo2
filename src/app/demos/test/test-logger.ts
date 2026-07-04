@@ -1,5 +1,3 @@
-import { hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
 import { _freeze } from "./tests.consts";
 import type { TestEvent, TestSummary, SuiteLog, CaseLog, CaseKey, TestFailure } from "./tests.types";
 
@@ -54,42 +52,8 @@ type TestEventWithAssertRows = TestEvent & Readonly<{
 type TestLogMutation = Readonly<{
   kind: "set";
   path: readonly (string | number)[];
-  value: JsonValue;
+  value: unknown;
 }>;
-
-const TEST_LOG_SCHEMA = hson.liveMap.schema.define((scm) => ({
-  activeSuite: scm.string.nullable,
-  casesByKey: scm.record({
-    key: scm.string,
-    suite: scm.string,
-    name: scm.string,
-    status: scm.pick("pass", "fail", "skip").optional,
-    ms: scm.number.optional,
-    err: scm.string.optional,
-    meta: scm.unknown.optional,
-    assertRows: scm.unknown.array.optional,
-  }),
-  caseKeysBySuite: scm.record(scm.string.array),
-  suitesByName: scm.record({
-    suite: scm.string,
-    totalPlanned: scm.number.optional,
-    caseKeys: scm.string.array,
-    pass: scm.number,
-    fail: scm.number,
-    skip: scm.number,
-    ms: scm.number.optional,
-  }),
-  failures: scm.unknown.array,
-  summary: {
-    suites: scm.number,
-    cases: scm.number,
-    pass: scm.number,
-    fail: scm.number,
-    skip: scm.number,
-    msTotal: scm.number,
-  },
-  lastLine: scm.string,
-}));
 
 function make_initial_test_log_state(): TestLogState {
   return {
@@ -110,19 +74,79 @@ function make_initial_test_log_state(): TestLogState {
   };
 }
 
-function as_json(value: unknown): JsonValue {
-  return value as JsonValue;
+function read_path<T>(root: TestLogState, path: readonly (string | number)[]): T | undefined {
+  let value: unknown = root;
+
+  for (const part of path) {
+    if (value === null || typeof value !== "object") return undefined;
+
+    if (Array.isArray(value)) {
+      if (typeof part !== "number") return undefined;
+      value = value[part];
+      continue;
+    }
+
+    if (typeof part !== "string") return undefined;
+    value = (value as Record<string, unknown>)[part];
+  }
+
+  return value as T | undefined;
+}
+
+function set_path(root: TestLogState, path: readonly (string | number)[], value: unknown): void {
+  if (path.length === 0) {
+    throw new Error("test log cannot set empty path");
+  }
+
+  let target: unknown = root;
+
+  for (const part of path.slice(0, -1)) {
+    if (target === null || typeof target !== "object") {
+      throw new Error(`test log set path reached non-object at ${String(part)}`);
+    }
+
+    if (Array.isArray(target)) {
+      if (typeof part !== "number") {
+        throw new Error(`test log array path expected number, got ${String(part)}`);
+      }
+      target = target[part];
+      continue;
+    }
+
+    if (typeof part !== "string") {
+      throw new Error(`test log object path expected string, got ${String(part)}`);
+    }
+
+    target = (target as Record<string, unknown>)[part];
+  }
+
+  const last = path[path.length - 1];
+  if (target === null || typeof target !== "object") {
+    throw new Error(`test log set path reached non-object at ${String(last)}`);
+  }
+
+  if (Array.isArray(target)) {
+    if (typeof last !== "number") {
+      throw new Error(`test log array path expected number, got ${String(last)}`);
+    }
+    target[last] = value;
+    return;
+  }
+
+  if (typeof last !== "string") {
+    throw new Error(`test log object path expected string, got ${String(last)}`);
+  }
+
+  (target as Record<string, unknown>)[last] = value;
 }
 
 export function create_test_log(): TestLog {
-  const logState = hson.liveMap
-    .fromJson(make_initial_test_log_state() as unknown as JsonValue)
-    .schema.use(TEST_LOG_SCHEMA);
+  let logState = make_initial_test_log_state();
 
   const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
 
   const read = <T>(path: readonly (string | number)[]): T | undefined => {
-    return logState.at(path).snap() as unknown as T | undefined;
+    return read_path<T>(logState, path);
   };
 
   const set = (
@@ -130,12 +154,12 @@ export function create_test_log(): TestLog {
     path: readonly (string | number)[],
     value: unknown,
   ): void => {
-    mutations.push({ kind: "set", path, value: as_json(value) });
+    mutations.push({ kind: "set", path, value });
   };
 
   const commit = (mutations: TestLogMutation[]): void => {
     for (const mutation of mutations) {
-      logState.at(mutation.path).set(mutation.value as never);
+      set_path(logState, mutation.path, mutation.value);
     }
   };
 
@@ -165,15 +189,7 @@ export function create_test_log(): TestLog {
   };
 
   const clear = (): void => {
-    const next = make_initial_test_log_state();
-
-    logState.at(["activeSuite"]).set(next.activeSuite);
-    logState.at(["casesByKey"]).set(next.casesByKey);
-    logState.at(["caseKeysBySuite"]).set(next.caseKeysBySuite);
-    logState.at(["suitesByName"]).set(next.suitesByName);
-    logState.at(["failures"]).set(next.failures);
-    logState.at(["summary"]).set(next.summary);
-    logState.at(["lastLine"]).set(next.lastLine);
+    logState = make_initial_test_log_state();
   };
 
   const onEvent = (e: TestEvent): void => {
@@ -236,7 +252,6 @@ export function create_test_log(): TestLog {
       else nextSuite.skip += 1;
       set(mutations, ["suitesByName", e.suite], nextSuite);
 
-      // merge metaPatch into existing meta (exactOptionalPropertyTypes friendly)
       const prevMeta = prev?.meta;
       const nextMeta =
         (prevMeta || e.metaPatch)
@@ -253,7 +268,6 @@ export function create_test_log(): TestLog {
 
       const assertRows = (e as TestEventWithAssertRows).assertRows;
 
-      // only attach optional fields when present (no `undefined` assignment)
       const withMeta = nextMeta ? { ...baseEnd, meta: nextMeta } : baseEnd;
       const withErr = e.err ? { ...withMeta, err: e.err } : withMeta;
       const withAssertRows = assertRows !== undefined
