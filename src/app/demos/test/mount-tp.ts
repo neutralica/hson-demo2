@@ -5,17 +5,19 @@ import type { SourceFormat } from "../../../../../hson-live/dist/types/diagnosti
 import  { flush_dom } from "../../../tests/inspector/inspector.helpers";
 import { make_inspector } from "../../../tests/inspector/make-inspector";
 import { $PANEL_HIDDEN } from "../../core/consts/ui-consts";
-import  { LOG_HR_FULL, LOG_HR_PART } from "../../state/state-helpers";
 import { _snip } from "../../utils/helpers";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
 import { make_ad_hoc_transform_suite, build_suites_for_mode } from "./build-test-suites";
-import { make_state_smoke_suite } from "./state-smoke-suite";
+// import { make_state_smoke_suite } from "./state-smoke-suite";
 import { create_test_chips } from "./test-helpers";
 import { create_test_log } from "./test-logger";
 import  { run_test_suites } from "./test-runner";
 import type { TestRunMode, TestEvent, UiLevel, CaseKey } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
+
+const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
+const LOG_HR_PART = " ----------=•=|"
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "all", label: "all" },
@@ -302,20 +304,20 @@ export function tp_factory(): Outcome<TestPanel> {
         inspector.render();
     };
 
-    const runBootSmokes = async (): Promise<void> => {
-        chips.clear();
-        tlog.clear();
-        clearLogLines();
-        captureMap.clear();
+    // const runBootSmokes = async (): Promise<void> => {
+    //     chips.clear();
+    //     tlog.clear();
+    //     clearLogLines();
+    //     captureMap.clear();
 
-        appendLogLine("running smoke tests…");
-        await flush_dom();
+    //     appendLogLine("running smoke tests…");
+    //     await flush_dom();
 
-        const res = await run_test_suites([make_state_smoke_suite()], doLogOnEvent, { bail: false });
-        chips.render(res.summary);
-        inspector.show();
-        inspector.render();
-    };
+    //     const res = await run_test_suites([make_state_smoke_suite()], doLogOnEvent, { bail: false });
+    //     chips.render(res.summary);
+    //     inspector.show();
+    //     inspector.render();
+    // };
 
     const mount = (hostBody: LiveTree): void => {
         if (mounted) return;
@@ -373,7 +375,7 @@ export function tp_factory(): Outcome<TestPanel> {
             inspector.clear();
         });
 
-        void runBootSmokes();
+        // void runBootSmokes();
     };
 
     return relay.data({

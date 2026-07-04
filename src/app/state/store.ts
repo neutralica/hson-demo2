@@ -1,48 +1,6 @@
 import { hson } from "hson-live";
 import type { JsonValue, HsonNode } from "hson-live/types";
-import { define_schema } from "./demo-schema";
-import type { DemoColorPath, DemoColorState, DemoColorToken, DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
-import { json_equal } from "./state-helpers";
-import { COLOR_VAR_SOURCES, type ColorVarSource } from "../core/consts/colors.consts";
-import { state_graph_entries } from "./state-graph";
-import type { StateGraphEntry, StateGraphOptions } from "./state-graph";
-
-export type StoreStateGraphOptions = Omit<StateGraphOptions, "schema">;
-export type DemoStateGraphOptions = StoreStateGraphOptions;
-
-function isOklchValue(value: string): boolean {
-  return value.trim().toLowerCase().startsWith("oklch(");
-}
-
-function labelForColorPath(path: string): string {
-  return path.replace(/\./g, "-");
-}
-
-function makeDemoColorToken(source: ColorVarSource): DemoColorToken {
-  if (!isOklchValue(source.value)) {
-    throw new Error(`expected OKLCH color token value for path: ${source.path}`);
-  }
-
-  return {
-    path: source.path,
-    label: labelForColorPath(source.path),
-    varName: source.varName,
-    initial: source.value,
-    value: source.value,
-    editable: true,
-    kind: "oklch",
-  };
-}
-
-function makeDemoColorTokens(): Record<DemoColorPath, DemoColorToken> {
-  const tokens: Record<DemoColorPath, DemoColorToken> = {};
-
-  for (const source of COLOR_VAR_SOURCES) {
-    tokens[source.path] = makeDemoColorToken(source);
-  }
-
-  return tokens;
-}
+import type { DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
 
 export function make_initial_demo_state(): DemoState {
   return {
@@ -51,63 +9,18 @@ export function make_initial_demo_state(): DemoState {
       activeWidgets: [],
       aboutTocOpen: false,
     },
-    theme: {
-      colors: {
-        activePath: null,
-        tokens: makeDemoColorTokens(),
-      },
-    },
   };
 }
 
 export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
-export const DEMO_STATE_SCHEMA = define_schema((scm) => ({
-  ui: {
-    currentView: scm.string.nullable,
-    activeWidgets: scm.string.array,
-    aboutTocOpen: scm.boolean,
-  },
-  theme: {
-    colors: {
-      activePath: scm.string.nullable,
-      tokens: scm.record({
-        path: scm.string,
-        label: scm.string,
-        varName: scm.string,
-        initial: scm.oklch,
-        value: scm.oklch,
-        editable: scm.boolean,
-        kind: scm.pick("oklch"),
-      }),
-    },
-  },
-}));
-
 
 export const DEMO_LIVEMAP_SCHEMA = hson.liveMap.schema.define((scm) => {
-  const oklch = scm.refine(scm.string, "OKLCH color", isOklchValue);
-  const colorToken = scm.exact({
-    path: scm.string,
-    label: scm.string,
-    varName: scm.string,
-    initial: oklch,
-    value: oklch,
-    editable: scm.boolean,
-    kind: scm.literal("oklch"),
-  });
-
   return scm.exact({
     ui: scm.exact({
       currentView: scm.string.nullable,
       activeWidgets: scm.array(scm.string),
       aboutTocOpen: scm.boolean,
-    }),
-    theme: scm.exact({
-      colors: scm.exact({
-        activePath: scm.string.nullable,
-        tokens: scm.record(colorToken),
-      }),
     }),
   });
 });
@@ -119,21 +32,12 @@ export function create_demo_store(
     .fromJson(cloneJson(initial))
     .schema.use(DEMO_LIVEMAP_SCHEMA);
 
-  const listeners = new Set<Listener>();
-
   function cloneJson<T extends JsonValue>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
   }
 
   function snapshot(): DemoStateRO {
     return cloneJson(demoState.snap() as DemoState);
-  }
-
-  function emit(prev: DemoStateRO): void {
-    const next = stateSnapshot();
-    for (const fn of listeners) {
-      fn(next, prev);
-    }
   }
 
   function stateGet<T extends JsonValue>(
@@ -146,14 +50,7 @@ export function create_demo_store(
     path: string | readonly (string | number)[],
     next: JsonValue,
   ): void {
-    const prev = snapshot();
-
     demoState.at(typeof path === "string" ? [path] : path).set(next as never);
-
-    const nextSnap = stateSnapshot();
-    if (json_equal(prev as JsonValue, nextSnap as JsonValue)) return;
-
-    emit(prev);
   }
 
 
@@ -179,27 +76,6 @@ export function create_demo_store(
 
   function getTocOpen(): boolean {
     return stateGet<boolean>(["ui", "aboutTocOpen"]);
-  }
-
-  function getColorState(): DemoColorState {
-    return stateGet<DemoColorState>(["theme", "colors"]);
-  }
-
-  function getColorTokens(): Record<DemoColorPath, DemoColorToken> {
-    return stateGet<Record<DemoColorPath, DemoColorToken>>(["theme", "colors", "tokens"]);
-  }
-
-  function getColTkn(path: DemoColorPath): DemoColorToken | undefined {
-    return getColorTokens()[path];
-  }
-
-  function getColorActivePath(): DemoColorPath | null {
-    return stateGet<DemoColorPath | null>(["theme", "colors", "activePath"]);
-  }
-
-  function getColorActiveToken(): DemoColorToken | undefined {
-    const path = getColorActivePath();
-    return path === null ? undefined : getColTkn(path);
   }
 
   function setView(next: DemoView): void {
@@ -235,74 +111,28 @@ export function create_demo_store(
     startWidget(widget);
   }
 
-  function setColorActivePath(path: DemoColorPath | null): void {
-    if (path !== null && !getColTkn(path)) {
-      throw new Error(`unknown color token path: ${path}`);
-    }
-
-    stateSet(["theme", "colors", "activePath"], path);
-  }
-
-  function setColorValue(path: DemoColorPath, value: string): void {
-    const token = getColTkn(path);
-    if (!token) throw new Error(`unknown color token path: ${path}`);
-
-    stateSet(["theme", "colors", "tokens", path, "value"], value);
-  }
-
-  function resetColVal(path: DemoColorPath): void {
-    const token = getColTkn(path);
-    if (!token) throw new Error(`unknown color token path: ${path}`);
-
-    stateSet(["theme", "colors", "tokens", path, "value"], token.initial);
-  }
-
-  function resetColorValues(): void {
-    const tokens = getColorTokens();
-    const nextTokens: Record<DemoColorPath, DemoColorToken> = {};
-
-    for (const token of Object.values(tokens)) {
-      nextTokens[token.path] = {
-        ...token,
-        value: token.initial,
-      };
-    }
-
-    stateSet(["theme", "colors", "tokens"], nextTokens);
-  }
-
   // -------------------------
   // subscriptions
   // -------------------------
 
   function subscribe(fn: (state: DemoStateRO) => void): () => void {
-    const wrapped: Listener = (next) => fn(next);
-    listeners.add(wrapped);
-    return () => listeners.delete(wrapped);
+    return demoState.sub((state) => fn(cloneJson(state as DemoState)));
   }
 
   function subscribeDiff(fn: Listener): () => void {
-    listeners.add(fn);
-    return () => listeners.delete(fn);
+    return demoState.sub.diff((next, prev) => {
+      fn(cloneJson(next as DemoState), cloneJson(prev as DemoState));
+    });
   }
 
   function subscribeSel<T>(
     sel: (s: DemoStateRO) => T,
     onChange: (next: T, prev: T, state: DemoStateRO) => void,
   ): () => void {
-    let prevVal = sel(stateSnapshot());
-
-    const wrapped: Listener = (next) => {
-      const nextVal = sel(next);
-      if (Object.is(nextVal, prevVal)) return;
-
-      const old = prevVal;
-      prevVal = nextVal;
-      onChange(nextVal, old, next);
-    };
-
-    listeners.add(wrapped);
-    return () => listeners.delete(wrapped);
+    return demoState.sub.sel(
+      (state) => sel(state as DemoStateRO),
+      (next, prev, state) => onChange(next, prev, cloneJson(state as DemoState)),
+    );
   }
 
   function stateNode(): HsonNode {
@@ -316,22 +146,11 @@ export function create_demo_store(
     hasWidget,
     getTocOpen,
 
-    getColorState,
-    getColorTokens,
-    getColTkn,
-    getColorActivePath,
-    getColorActiveToken,
-
     setView,
     toggleView,
     startWidget,
     stopWidget,
     toggleWidget,
-
-    setColorActivePath,
-    setColorValue,
-    resetColVal,
-    resetColorValues,
 
     subscribe,
     subDiff: subscribeDiff,
@@ -349,38 +168,11 @@ export const get_widgets = demoStore.getWidgets;
 export const has_widget = demoStore.hasWidget;
 export const get_about_toc_open = demoStore.getTocOpen;
 
-export function store_graph_entries(
-  options: DemoStateGraphOptions = {},
-): readonly StateGraphEntry[] {
-  const graphOptions: StateGraphOptions = {
-    schema: DEMO_STATE_SCHEMA,
-    ...(options.includeContainers !== undefined ? { includeContainers: options.includeContainers } : {}),
-    ...(options.maxPreviewLength !== undefined ? { maxPreviewLength: options.maxPreviewLength } : {}),
-  };
-
-  return state_graph_entries(demo_get_state() as JsonValue, graphOptions);
-}
-
-export const get_color_state = demoStore.getColorState;
-export const get_color_tokens = demoStore.getColorTokens;
-export const get_color_token = demoStore.getColTkn;
-export const get_color_active_path = demoStore.getColorActivePath;
-export const get_active_color_token = demoStore.getColorActiveToken;
 export const set_view = demoStore.setView;
 export const toggle_view = demoStore.toggleView;
 export const activate_widget = demoStore.startWidget;
 export const deactivate_widget = demoStore.stopWidget;
 export const toggle_widget = demoStore.toggleWidget;
-
-export const set_color_active_path = demoStore.setColorActivePath;
-export const set_color_value = demoStore.setColorValue;
-export const reset_color_value = demoStore.resetColVal;
-export const reset_color_values = demoStore.resetColorValues;
-
-export function is_color_changed(path: DemoColorPath): boolean {
-  const token = get_color_token(path);
-  return !!token && token.value !== token.initial;
-}
 
 export const demo_subscribe = demoStore.subscribe;
 export const demo_subscribe_sel = demoStore.subSel;

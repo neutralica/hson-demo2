@@ -26,15 +26,14 @@ import { mount_json_render_demo } from "../../demos/render/render-json";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
 import { mount_test_panels } from "../../demos/test/mount-tp";
 import type { TestPanels } from "../../demos/test/tp.types";
-import { mount_state_monitor } from "../../state/mount-state";
 import type { DemoView, DemoWidget } from "../../state/state.types";
 import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
-import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, $MONITOR, MIN_DESKTOP_WIDTH, $FLEURS, $RENDER } from "./demo.consts";
+import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, MIN_DESKTOP_WIDTH, $FLEURS } from "./demo.consts";
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
-import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss, MONITOR_HOSTcss } from "./demo.css";
+import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_firework } from "../../widgets/wasm-deprecate/hson-wasm-fireworks";
 
@@ -63,9 +62,7 @@ type DemoHosts = {
   buildHost: LiveTree;
   aboutHost: LiveTree;
   barbarHost: LiveTree;
-  renderHost: LiveTree;
   oklchHost: LiveTree;
-  monitorHost: LiveTree;
   viewHosts: ViewHosts;
   widgetHosts: WidgetHosts;
 };
@@ -206,12 +203,10 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const buildHost = mount_panel_simple(uiRoot, $BUILD);
   const aboutHost = mount_panel_simple(uiRoot, $ABOUT);
   const barbarHost = mount_panel_simple(uiRoot, $BARBAR);
-  const renderHost = mount_panel_simple(uiRoot, $RENDER);
   const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
     ...OKLCH_HOSTcss,
     
   });
-  const monitorHost = mk_div_id_cls(uiRoot, "monitor", $PANEL_HIDDEN).css.setMany(MONITOR_HOSTcss);
 
   const viewHosts: ViewHosts = {
     [$PARSE]: parseHost,
@@ -219,14 +214,12 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     [$BUILD]: buildHost,
     [$ABOUT]: aboutHost,
     [$BARBAR]: barbarHost,
-    [$RENDER]: renderHost,
   };
 
   const widgetHosts: WidgetHosts = {
     [$POINT]: pointHost,
     [$OKLCH]: oklchHost,
     [$MOTES]: motesLayer,
-    [$MONITOR]: monitorHost,
   };
 
   return {
@@ -236,9 +229,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     buildHost,
     aboutHost,
     barbarHost,
-    renderHost,
     oklchHost,
-    monitorHost,
     viewHosts,
     widgetHosts,
   };
@@ -250,9 +241,7 @@ function mount_demo_content(hosts: DemoHosts): DemoContent {
   const test = relay_data(mount_test_panels(hosts.testHost));
   const parse = relay_data(mount_parsing_panels(hosts.parseHost));
   relay_data(mount_build_panels(hosts.buildHost));
-  mount_state_monitor(hosts.monitorHost);
   relay_void(mount_bar_bar(hosts.barbarHost));
-  mount_json_render_demo(hosts.renderHost);
   relay_void(mount_point_panel(hosts.pointHost));
   mount_oklch(hosts.oklchHost);
 
@@ -411,7 +400,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     if (ke.key === "Escape") {
       deactivate_widget($OKLCH);
       deactivate_widget($POINT);
-      deactivate_widget($MONITOR);
     }
   });
 

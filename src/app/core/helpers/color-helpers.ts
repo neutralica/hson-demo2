@@ -1,5 +1,4 @@
-import type { JsonValue } from "hson-live/types";
-import type { SchemaIssue } from "../../state/schema.types";
+
 import { _clampLoHi, _clamp01, _wrap360 } from "../../utils/helpers";
 
 export function parse_oklch(src: string) {
@@ -191,11 +190,4 @@ export function isOklchString(value: string): boolean {
   if (slash !== "/" || alpha === undefined) return false;
 
   return isOklchAlpha(alpha);
-}
-
-export function validateOklchValue(value: JsonValue): readonly SchemaIssue[] | SchemaIssue | string | undefined {
-  if (typeof value !== "string") return undefined;
-  if (isOklchString(value)) return undefined;
-
-  return "Expected OKLCH color string";
 }

@@ -3,7 +3,6 @@ import { _colors } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { CURRENT_OKLCHname } from "../../core/consts/ui-consts";
 import { parse_oklch } from "../../core/helpers/color-helpers";
-import { get_color_active_path, get_color_token, set_color_active_path, set_color_value, is_color_changed, reset_color_values } from "../../state/store";
 import { mk_div_cls, mk_div_cls_txt } from "../../utils/makers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
 import { ROOT_CSS, PANEL_CSS, TITLE_CSS, ROW_CSS, RANGE_CSS, PREVIEW_PANEL_CSS, PREVIEW_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
@@ -15,6 +14,36 @@ const gcss = CssManager.api();
 type OklchRigWithReset = OklchRig & Readonly<{
   resetBtn: LiveTree;
 }>;
+
+type OklchToken = Readonly<{
+  path: string;
+  initial: string;
+  value: string;
+}>;
+
+type OklchLocalState = Readonly<{
+  current: OklchValues;
+  activePath: string | null;
+  tokens: Record<string, OklchToken>;
+}>;
+
+function makeInitialOklchLocalState(model: OklchPickerModel): OklchLocalState {
+  const tokens: Record<string, OklchToken> = {};
+
+  for (const target of model.targets) {
+    tokens[target.path] = Object.freeze({
+      path: target.path,
+      initial: target.initial,
+      value: target.initial,
+    });
+  }
+
+  return Object.freeze({
+    current: model.state,
+    activePath: model.targets[0]?.path ?? null,
+    tokens,
+  });
+}
 
 const normalizeLightness = (l: number): number => {
   // CHANGED: parse_oklch() may return CSS number lightness as 0–1.
@@ -99,19 +128,51 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 }
 
 function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
-  const storedActivePath = get_color_active_path();
+  const stateMap = hson.liveMap.fromJson(makeInitialOklchLocalState(model));
+  const storedActivePath = stateMap.at(["activePath"]).snap() as string | null;
   const storedActiveIndex = storedActivePath === null
     ? -1
     : model.targets.findIndex((target) => target.path === storedActivePath);
   let activeTargetIndex = storedActiveIndex >= 0 ? storedActiveIndex : 0;
 
-  const stateMap = hson.liveMap.fromJson({
-    current: model.state,
-  });
-
   const readCurrentState = (): OklchValues => stateMap.at(["current"]).snap() as OklchValues;
   const writeCurrentState = (next: OklchValues): void => {
     stateMap.at(["current"]).set(next);
+  };
+
+  const getToken = (path: string): OklchToken | undefined => {
+    return stateMap.at(["tokens", path]).snap() as OklchToken | undefined;
+  };
+
+  const getTokenValue = (path: string): string | undefined => getToken(path)?.value;
+
+  const setTokenValue = (path: string, value: string): void => {
+    const token = getToken(path);
+    if (!token) return;
+
+    stateMap.at(["tokens", path]).set({
+      ...token,
+      value,
+    });
+  };
+
+  const isTokenChanged = (path: string): boolean => {
+    const token = getToken(path);
+    return !!token && token.value !== token.initial;
+  };
+
+  const resetTokenValues = (): void => {
+    const tokens = stateMap.at(["tokens"]).snap() as Record<string, OklchToken>;
+    const nextTokens: Record<string, OklchToken> = {};
+
+    for (const token of Object.values(tokens)) {
+      nextTokens[token.path] = {
+        ...token,
+        value: token.initial,
+      };
+    }
+
+    stateMap.at(["tokens"]).set(nextTokens);
   };
 
   const getTargetState = (index: number, fallback: OklchValues): OklchValues => {
@@ -119,9 +180,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     if (!target) return fallback;
 
     const targetDefault = stateOrDefault(target.initial, fallback);
-    const token = get_color_token(target.path);
-
-    return stateOrDefault(token?.value, targetDefault);
+    return stateOrDefault(getTokenValue(target.path), targetDefault);
   };
 
   const getCurrentState = (): OklchValues => readCurrentState();
@@ -129,7 +188,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
 
   const activeTarget = model.targets[activeTargetIndex];
-  if (activeTarget) set_color_active_path(activeTarget.path);
+  if (activeTarget) stateMap.at(["activePath"]).set(activeTarget.path);
 
   const syncInputsToState = (): void => {
     const state = getCurrentState();
@@ -148,8 +207,8 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     const state = readCurrentState();
 
     const value = oklchToCss(state);
-    set_color_value(target.path, value);
-    gcss.var.set(target.varName, value);
+    setTokenValue(target.path, value);
+    applyToTarget(target, value);
   };
 
   const render = (): void => {
@@ -157,7 +216,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     renderPrev(rig, model, state);
     syncInputsToState();
 
-    const changedCount = model.targets.filter((target) => is_color_changed(target.path)).length;
+    const changedCount = model.targets.filter((target) => isTokenChanged(target.path)).length;
     rig.resetBtn.text.set(changedCount > 0 ? `[reset ${changedCount}]` : "reset");
     rig.resetBtn.style.set.color(changedCount > 0 ? _colors.hson.n : OKLCH_NEUTRALS.slate);
     const labelWidth = Math.max(...model.targets.map((target) => target.label.length), 0) + 2;
@@ -173,7 +232,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
         ? state
         : getTargetState(i, OKLCH_DEFAULT_STATE);
       const targetColor = oklchToCss(targetState);
-      const changed = is_color_changed(target.path);
+      const changed = isTokenChanged(target.path);
       row.text.set(`${target.label.padEnd(labelWidth, " ")}${targetColor}`);
       row.attr.set("title", targetColor);
       row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
@@ -212,7 +271,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
 
     row.listen.onClick(() => {
       activeTargetIndex = i;
-      set_color_active_path(target.path);
+      stateMap.at(["activePath"]).set(target.path);
       writeCurrentState(getTargetState(i, OKLCH_DEFAULT_STATE));
 
       render();
@@ -225,10 +284,10 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   });
 
   rig.resetBtn.listen.onClick(() => {
-    reset_color_values();
+    resetTokenValues();
 
     for (const target of model.targets) {
-      applyToTarget(target);
+      applyToTarget(target, getTokenValue(target.path) ?? target.initial);
     }
 
     writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
@@ -333,7 +392,6 @@ const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues):
   }
 };
 
-const applyToTarget = (target: OklchTarget): void => {
-  const token = get_color_token(target.path);
-  gcss.var.set(target.varName, token?.value ?? target.initial);
+const applyToTarget = (target: OklchTarget, value: string = target.initial): void => {
+  gcss.var.set(target.varName, value);
 };

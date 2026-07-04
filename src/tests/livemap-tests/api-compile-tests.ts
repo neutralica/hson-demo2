@@ -460,3 +460,86 @@ API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ count: "3" });
 
 // @ts-expect-error typed array proxy object.setMany rejects wrong primitive value for optional string property
 API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setMany({ label: 3 });
+
+// --- Subscription API inference ---
+// If this section fails, inspect `LiveMapSubApi`, `LiveMapStoreApi`, and the
+// `sub` wiring in `api/livemap/livemap.types.ts` and `api/livemap/core.ts`.
+API_TYPED_MAP_SAMPLE.sub((state) => {
+  const root: { user: { name: string; age?: number; }; } = state;
+  void root;
+});
+
+API_TYPED_MAP_SAMPLE.sub.diff((next, prev) => {
+  const nextRoot: { user: { name: string; age?: number; }; } = next;
+  const prevRoot: { user: { name: string; age?: number; }; } = prev;
+  void nextRoot;
+  void prevRoot;
+});
+
+API_TYPED_MAP_SAMPLE.sub.sel(
+  (state) => state.user.name,
+  (next, prev, state) => {
+    const nextName: string = next;
+    const prevName: string = prev;
+    const root: { user: { name: string; age?: number; }; } = state;
+    void nextName;
+    void prevName;
+    void root;
+  },
+);
+
+API_TYPED_MAP_SAMPLE.sub.sel(
+  (state) => state.user.name,
+  () => undefined,
+  {
+    equal: (next, prev) => {
+      const nextName: string = next;
+      const prevName: string = prev;
+      void nextName;
+      void prevName;
+      return next === prev;
+    },
+  },
+);
+
+API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], (next, prev) => {
+  const nextName: string = next;
+  const prevName: string = prev;
+  void nextName;
+  void prevName;
+});
+
+API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], () => undefined, {
+  equal: (next, prev) => {
+    const nextName: string = next;
+    const prevName: string = prev;
+    void nextName;
+    void prevName;
+    return next === prev;
+  },
+});
+
+// @ts-expect-error typed sub root listener receives the schema-bound root, not a primitive
+API_TYPED_MAP_SAMPLE.sub((state: string) => {
+  void state;
+});
+
+// @ts-expect-error typed sub.sel listener receives selected string values, not numbers
+API_TYPED_MAP_SAMPLE.sub.sel((state) => state.user.name, (next: number) => {
+  void next;
+});
+
+// @ts-expect-error typed sub.sel equality receives selected string values, not numbers
+API_TYPED_MAP_SAMPLE.sub.sel((state) => state.user.name, () => undefined, {
+  equal: (next: number, prev: number) => next === prev,
+});
+
+// @ts-expect-error typed sub.path listener receives string at user.name, not number
+API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], (next: number) => {
+  void next;
+});
+
+API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], () => undefined, {
+  // @ts-expect-error typed sub.path equality receives string at user.name, not numbers
+  equal: (next: number, prev: number) => next === prev,
+});

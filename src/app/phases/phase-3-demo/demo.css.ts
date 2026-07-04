@@ -176,19 +176,6 @@ export const HSON_SUBcss: CssMap = {
   paddingLeft: "1ch",
 }
 
-export const MONITOR_HOSTcss = {
-  position: "absolute",
-  top: "1rem",
-  right: "1rem",
-  bottom: "calc(50% + 0.5rem)",
-  width: "min(36rem, calc(100% - 2rem))",
-  zIndex: "40",
-  overflow: "hidden",
-  border: "1px solid color-mix(in oklch, currentColor 18%, transparent)",
-  background: "color-mix(in oklch, black 72%, transparent)",
-  backdropFilter: "blur(10px)",
-};
-
 export const OKLCH_HOSTcss = {
   position: "fixed",
   zIndex: "20",
