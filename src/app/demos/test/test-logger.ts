@@ -1,3 +1,5 @@
+import { hson } from "hson-live";
+import type { JsonValue } from "hson-live/types";
 import { _freeze } from "./tests.consts";
 import type { TestEvent, TestSummary, SuiteLog, CaseLog, CaseKey, TestFailure } from "./tests.types";
 
@@ -52,7 +54,7 @@ type TestEventWithAssertRows = TestEvent & Readonly<{
 type TestLogMutation = Readonly<{
   kind: "set";
   path: readonly (string | number)[];
-  value: unknown;
+  value: JsonValue;
 }>;
 
 function make_initial_test_log_state(): TestLogState {
@@ -74,79 +76,17 @@ function make_initial_test_log_state(): TestLogState {
   };
 }
 
-function read_path<T>(root: TestLogState, path: readonly (string | number)[]): T | undefined {
-  let value: unknown = root;
-
-  for (const part of path) {
-    if (value === null || typeof value !== "object") return undefined;
-
-    if (Array.isArray(value)) {
-      if (typeof part !== "number") return undefined;
-      value = value[part];
-      continue;
-    }
-
-    if (typeof part !== "string") return undefined;
-    value = (value as Record<string, unknown>)[part];
-  }
-
-  return value as T | undefined;
-}
-
-function set_path(root: TestLogState, path: readonly (string | number)[], value: unknown): void {
-  if (path.length === 0) {
-    throw new Error("test log cannot set empty path");
-  }
-
-  let target: unknown = root;
-
-  for (const part of path.slice(0, -1)) {
-    if (target === null || typeof target !== "object") {
-      throw new Error(`test log set path reached non-object at ${String(part)}`);
-    }
-
-    if (Array.isArray(target)) {
-      if (typeof part !== "number") {
-        throw new Error(`test log array path expected number, got ${String(part)}`);
-      }
-      target = target[part];
-      continue;
-    }
-
-    if (typeof part !== "string") {
-      throw new Error(`test log object path expected string, got ${String(part)}`);
-    }
-
-    target = (target as Record<string, unknown>)[part];
-  }
-
-  const last = path[path.length - 1];
-  if (target === null || typeof target !== "object") {
-    throw new Error(`test log set path reached non-object at ${String(last)}`);
-  }
-
-  if (Array.isArray(target)) {
-    if (typeof last !== "number") {
-      throw new Error(`test log array path expected number, got ${String(last)}`);
-    }
-    target[last] = value;
-    return;
-  }
-
-  if (typeof last !== "string") {
-    throw new Error(`test log object path expected string, got ${String(last)}`);
-  }
-
-  (target as Record<string, unknown>)[last] = value;
+function as_json(value: unknown): JsonValue {
+  return value as JsonValue;
 }
 
 export function create_test_log(): TestLog {
-  let logState = make_initial_test_log_state();
+  const logState = hson.liveMap.fromJson(make_initial_test_log_state() as unknown as JsonValue);
 
   const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
 
   const read = <T>(path: readonly (string | number)[]): T | undefined => {
-    return read_path<T>(logState, path);
+    return logState.at(path).snap() as unknown as T | undefined;
   };
 
   const set = (
@@ -154,13 +94,15 @@ export function create_test_log(): TestLog {
     path: readonly (string | number)[],
     value: unknown,
   ): void => {
-    mutations.push({ kind: "set", path, value });
+    mutations.push({ kind: "set", path, value: as_json(value) });
   };
 
   const commit = (mutations: TestLogMutation[]): void => {
-    for (const mutation of mutations) {
-      set_path(logState, mutation.path, mutation.value);
-    }
+    logState.batch((tx) => {
+      for (const mutation of mutations) {
+        tx.set(mutation.path, mutation.value);
+      }
+    });
   };
 
   const emptySummary = (): TestLogState["summary"] => ({
@@ -189,7 +131,17 @@ export function create_test_log(): TestLog {
   };
 
   const clear = (): void => {
-    logState = make_initial_test_log_state();
+    const next = make_initial_test_log_state();
+
+    logState.batch((tx) => {
+      tx.set(["activeSuite"], next.activeSuite);
+      tx.set(["casesByKey"], next.casesByKey);
+      tx.set(["caseKeysBySuite"], next.caseKeysBySuite);
+      tx.set(["suitesByName"], next.suitesByName);
+      tx.set(["failures"], next.failures);
+      tx.set(["summary"], next.summary);
+      tx.set(["lastLine"], next.lastLine);
+    });
   };
 
   const onEvent = (e: TestEvent): void => {
