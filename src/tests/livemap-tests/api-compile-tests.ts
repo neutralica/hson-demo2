@@ -141,7 +141,7 @@ const API_TYPED_ARRAY_MAP_SAMPLE = hson.liveMap
       label: s.string.optional,
     }),
   })));
-  
+
 const API_TYPED_ARRAY_ITEMS_HANDLE = API_TYPED_ARRAY_MAP_SAMPLE.at(["items"]);
 const API_TYPED_ARRAY_ITEM_HANDLE = API_TYPED_ARRAY_MAP_SAMPLE.at(["items", 0]);
 const API_TYPED_ARRAY_ITEM_ID_HANDLE = API_TYPED_ARRAY_MAP_SAMPLE.at(["items", 0, "id"]);
@@ -336,6 +336,8 @@ API_TYPED_MAP_SAMPLE.batch((tx) => {
   tx.set(["user"], { name: "Grace", age: 38 });
   tx.setMany(["user"], { name: "Grace", age: 38 });
   tx.delete(["user", "name"]);
+  tx.setMany(["user"], { name: "Grace" });
+  tx.setMany(["user"], { age: 38 });
 });
 
 API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
@@ -344,6 +346,9 @@ API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
   tx.set(["items", 0, "count"], 3);
   tx.setMany(["items", 0], { id: "z", count: 3 });
   tx.delete(["items", 0, "label"]);
+  tx.setMany(["items", 0], { id: "z" });
+  tx.setMany(["items", 0], { count: 3 });
+  tx.setMany(["items", 0], { label: "Z" });
 });
 
 API_TYPED_MAP_SAMPLE.batch((tx) => {
@@ -353,6 +358,12 @@ API_TYPED_MAP_SAMPLE.batch((tx) => {
   tx.set(["user", "age"], "38");
   // @ts-expect-error typed batch tx.set rejects wrong object shape
   tx.set(["user"], { age: 38 });
+  // @ts-expect-error typed batch tx.setMany rejects wrong primitive value for string property
+  tx.setMany(["user"], { name: 38 });
+  // @ts-expect-error typed batch tx.setMany rejects wrong primitive value for number property
+  tx.setMany(["user"], { age: "38" });
+  // @ts-expect-error typed batch tx.setMany rejects unknown keys for schema-shaped object paths
+  tx.setMany(["user"], { missing: "dynamic" });
 });
 
 API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
@@ -360,6 +371,10 @@ API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
   tx.set(["items", 0, "count"], "3");
   // @ts-expect-error typed batch tx.set rejects wrong array item shape
   tx.set(["items", 0], { id: "z" });
+  // @ts-expect-error typed batch tx.setMany rejects wrong array item property value
+  tx.setMany(["items", 0], { count: "3" });
+  // @ts-expect-error typed batch tx.setMany rejects unknown keys for typed array item paths
+  tx.setMany(["items", 0], { missing: "dynamic" });
 });
 
 // --- Object setKey write inference ---
@@ -500,6 +515,7 @@ API_TYPED_ARRAY_ITEM_HANDLE.object.setMany({ count: "3" });
 // @ts-expect-error typed array proxy object.setMany rejects wrong primitive value for optional string property
 API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setMany({ label: 3 });
 
+
 // --- Subscription API inference ---
 // If this section fails, inspect `LiveMapSubApi`, `LiveMapStoreApi`, and the
 // `sub` wiring in `api/livemap/livemap.types.ts` and `api/livemap/core.ts`.
@@ -558,6 +574,24 @@ API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], () => undefined, {
   },
 });
 
+API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], () => undefined, {
+  // @ts-expect-error typed sub.path equality receives string at user.name, not numbers
+  equal: (next: number, prev: number) => next === prev,
+});
+
+API_TYPED_MAP_SAMPLE.setMany(["user"], { name: "Grace" });
+API_TYPED_MAP_SAMPLE.setMany(["user"], { age: 38 });
+API_TYPED_MAP_SAMPLE.setMany(["user"], { name: "Grace", age: 38 });
+
+API_TYPED_MAP_USER_HANDLE.setMany({ name: "Grace" });
+API_TYPED_MAP_USER_HANDLE.setMany({ age: 38 });
+API_TYPED_MAP_USER_HANDLE.setMany({ name: "Grace", age: 38 });
+
+API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { id: "z" });
+API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { count: 3 });
+API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { label: "Z" });
+API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { id: "z", count: 3, label: "Z" });
+
 // @ts-expect-error typed sub root listener receives the schema-bound root, not a primitive
 API_TYPED_MAP_SAMPLE.sub((state: string) => {
   void state;
@@ -578,8 +612,23 @@ API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], (next: number) => {
   void next;
 });
 
-API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], () => undefined, {
-  // @ts-expect-error typed sub.path equality receives string at user.name, not numbers
-  equal: (next: number, prev: number) => next === prev,
-});
+// @ts-expect-error typed map.setMany rejects wrong primitive value for string property
+API_TYPED_MAP_SAMPLE.setMany(["user"], { name: 38 });
 
+// @ts-expect-error typed map.setMany rejects wrong primitive value for number property
+API_TYPED_MAP_SAMPLE.setMany(["user"], { age: "38" });
+
+// @ts-expect-error typed map.setMany rejects unknown keys for schema-shaped object paths
+API_TYPED_MAP_SAMPLE.setMany(["user"], { missing: "dynamic" });
+
+// @ts-expect-error typed handle.setMany rejects wrong primitive value for string property
+API_TYPED_MAP_USER_HANDLE.setMany({ name: 38 });
+
+// @ts-expect-error typed handle.setMany rejects unknown keys for schema-shaped object paths
+API_TYPED_MAP_USER_HANDLE.setMany({ missing: "dynamic" });
+
+// @ts-expect-error typed map.setMany rejects wrong array item property value
+API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { count: "3" });
+
+// @ts-expect-error typed map.setMany rejects unknown keys for typed array item paths
+API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { missing: "dynamic" });
