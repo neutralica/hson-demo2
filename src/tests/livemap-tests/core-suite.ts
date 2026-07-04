@@ -1,3 +1,5 @@
+// core-suite.ts
+
 import { define_livemap_schema, hson, make_livemap_core } from "hson-live";
 import type { JsonValue, LiveMapFeedEvent } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";

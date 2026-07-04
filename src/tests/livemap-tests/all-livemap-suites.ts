@@ -1,7 +1,7 @@
 import { hson, snap_live_path } from "hson-live";
 import type { HsonNode, JsonValue, LivePath } from "hson-live/types";
 import type { Asserter, TestSuite } from "../../app/demos/test/tests.types";
-import { livemap_suites_core } from "./core-suites";
+import { livemap_suites_core } from "./core-suite";
 import { livemap_suite_editor, livemap_suite_editor as livemap_suites_editor } from "./editor-suites";
 import { livemap_suite_feed as livemap_suites_feed } from "./feed-suites";
 import { livemap_suites_handle } from "./handle-suites";
@@ -14,6 +14,7 @@ import { livemap_suites_proxy } from "./proxy-suites";
 import { livemap_suites_schema } from "./schema-suites";
 import { livemap_suites_api } from "./api-suite";
 import { livemap_suites_store } from "./store-suites";
+import { livemap_suite_batch } from "./batch-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -77,5 +78,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_schema(),
     livemap_suites_api(),
     livemap_suites_store(),
+    livemap_suite_batch(),
   ] as const;
 }

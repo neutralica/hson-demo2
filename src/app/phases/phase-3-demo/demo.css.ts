@@ -40,7 +40,7 @@ export const MAIN_MENUcss: CssMap = {
   pointerEvents: "all",
   cursor: "pointer",
   lineHeight: "2",
-  background: _colors.backlo,
+  background: "transparent",
   opacity: "0.9",
   textIndent: "1rem",
   paddingLeft: "1ch",
