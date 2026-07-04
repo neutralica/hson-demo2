@@ -320,8 +320,47 @@ API_TYPED_MAP_PROXY.user.name.$_.set(38);
 API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "count"], "3");
 // @ts-expect-error typed array item handle.set rejects wrong object shape
 API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z" });
+
 // @ts-expect-error typed array proxy handle.set rejects wrong primitive value
 API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set("3");
+
+// --- Batch write inference ---
+// If this section fails, inspect `LiveMapBatchTx`, `LiveMapCore.batch`, and
+// `make_batch_tx(...)` in `api/livemap/livemap.types.ts` and
+// `api/livemap/core.ts`. Batch tx.set should preserve the same path/value
+// inference as map.set.
+API_TYPED_MAP_SAMPLE.batch((tx) => {
+  tx.set(["user", "name"], "Grace");
+  tx.set(["user", "age"], 38);
+  tx.set(["user"], { name: "Grace" });
+  tx.set(["user"], { name: "Grace", age: 38 });
+  tx.setMany(["user"], { name: "Grace", age: 38 });
+  tx.delete(["user", "name"]);
+});
+
+API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
+  tx.set(["items", 0], { id: "z", count: 3 });
+  tx.set(["items", 0, "id"], "z");
+  tx.set(["items", 0, "count"], 3);
+  tx.setMany(["items", 0], { id: "z", count: 3 });
+  tx.delete(["items", 0, "label"]);
+});
+
+API_TYPED_MAP_SAMPLE.batch((tx) => {
+  // @ts-expect-error typed batch tx.set rejects wrong primitive value for string path
+  tx.set(["user", "name"], 38);
+  // @ts-expect-error typed batch tx.set rejects wrong primitive value for number path
+  tx.set(["user", "age"], "38");
+  // @ts-expect-error typed batch tx.set rejects wrong object shape
+  tx.set(["user"], { age: 38 });
+});
+
+API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
+  // @ts-expect-error typed batch tx.set rejects wrong array item property value
+  tx.set(["items", 0, "count"], "3");
+  // @ts-expect-error typed batch tx.set rejects wrong array item shape
+  tx.set(["items", 0], { id: "z" });
+});
 
 // --- Object setKey write inference ---
 // If this section fails, inspect `LiveMapObjectWriteValue`, `LiveMapObjectKey`,
@@ -543,3 +582,4 @@ API_TYPED_MAP_SAMPLE.sub.path(["user", "name"], () => undefined, {
   // @ts-expect-error typed sub.path equality receives string at user.name, not numbers
   equal: (next: number, prev: number) => next === prev,
 });
+
