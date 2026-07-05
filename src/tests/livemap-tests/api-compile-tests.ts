@@ -632,3 +632,17 @@ API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { count: "3" });
 
 // @ts-expect-error typed map.setMany rejects unknown keys for typed array item paths
 API_TYPED_ARRAY_MAP_SAMPLE.setMany(["items", 0], { missing: "dynamic" });
+
+API_TYPED_MAP_SAMPLE.replace({
+  user: { name: "Grace", age: 38 },
+});
+
+API_TYPED_ARRAY_MAP_SAMPLE.replace({
+  items: [{ id: "z", count: 3 }],
+});
+
+// @ts-expect-error typed replace rejects wrong root shape
+API_TYPED_MAP_SAMPLE.replace({ user: { age: 38 } });
+
+// @ts-expect-error typed replace rejects wrong nested primitive
+API_TYPED_MAP_SAMPLE.replace({ user: { name: "Grace", age: "38" } });

@@ -3,6 +3,7 @@
 import {
   define_livemap_schema,
   LIVEMAP_SCHEMA,
+  make_livemap_core,
   make_livemap_schema,
 } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
@@ -13,6 +14,8 @@ import type {
   LiveMapSchemaInput,
   LiveMapSchemaValue,
 } from "hson-live";
+import { equal_row, preview_value } from "./test-helpers";
+import { json_root_node } from "./core-helpers";
 
 
 
@@ -98,11 +101,11 @@ type ExpectedSchemaTypeInferenceSample = {
       }>>;
     };
     result:
-      | { kind: "success"; value: string }
-      | { kind: "failure"; error: string };
+    | { kind: "success"; value: string }
+    | { kind: "failure"; error: string };
     objectChoice:
-      | { ok: true; value: string }
-      | { ok: false; error: string };
+    | { ok: true; value: string }
+    | { ok: false; error: string };
     color: string;
   };
 };
@@ -1364,7 +1367,36 @@ export function livemap_suites_schema(): TestSuite {
         }).validateRoot({ user: { name: "Ada" } }),
         expected: { ok: true, issues: [] },
       }),
+      {
+        suite: SUITE,
+        name: "core withSchema accepts direct nested json root",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+          let message = "";
 
+          try {
+            map.withSchema(schema);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row("core withSchema accepts direct nested json root: error", message, ""),
+              equal_row("core withSchema accepts direct nested json root: schema", map.schema.get() === schema, true),
+              equal_row("core withSchema accepts direct nested json root: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
     ] as const,
   };
 }
