@@ -5,6 +5,11 @@ import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "hson-live/diag
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 
 export type TestStatus = "pass" | "fail" | "skip";
+export type TestExpected = "ok" | "fail";
+export type TestExpectedError = Readonly<{
+  message?: string;
+  includes?: string;
+}>;
 
 // allow runner to attach derived diagnostics after executing the case
 export type TestEvent =
@@ -19,6 +24,7 @@ export type TestEvent =
     ms: number;
     err?: string;
     assertRows?: readonly TestAssertRow[];
+    expected?: TestExpected;
     metaPatch?: Record<string, string>; // ADDED
   };
 
@@ -44,6 +50,8 @@ export type TestCase = Readonly<{
   suite: string;
   name: string;
   meta?: Record<string, string>;
+  expected?: TestExpected;
+  expectedError?: TestExpectedError;
   run: () => void | RunCaseRet | Promise<void | RunCaseRet>;
 }>;
 
@@ -104,6 +112,7 @@ export type CaseLog = Readonly<{
   ms?: number;
   err?: string;
   meta?: CaseMeta;
+  assertRows?: readonly TestAssertRow[];
 }>;
 
 export type SuiteLog = Readonly<{
@@ -156,6 +165,7 @@ export type CaseReport = Readonly<{
   ms?: number;
 
   steps: readonly StepLog[];
+  assertRows?: readonly TestAssertRow[];
 
   summaryLine: string;
 
@@ -222,8 +232,7 @@ export type Asserter = Readonly<{
 export type TestAssertRow = Readonly<{
   ok: boolean;
   label: string;
-  actual?: string;
-  expected?: string;
+  actual?: unknown;
+  expected?: unknown;
 }>;
-
 

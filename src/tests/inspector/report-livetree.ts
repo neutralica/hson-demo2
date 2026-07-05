@@ -8,6 +8,17 @@ export type ReportHtml = {
   title: string;
   html: string;
 };
+
+function assert_value_to_html(value: unknown): string {
+  if (typeof value === "string") return escape_html(value);
+  if (value === undefined) return "—";
+  try {
+    return escape_html(JSON.stringify(value) ?? String(value));
+  } catch {
+    return escape_html(String(value));
+  }
+}
+
 export function render_livetree_report(
   key: CaseKey,
   name: string,
@@ -97,8 +108,8 @@ export function render_livetree_report(
               <tr>
                 <td class="${r.ok ? "ok" : "fail"}">${r.ok ? "ok" : "fail"}</td>
                 <td>${escape_html(r.label)}</td>
-                <td>${escape_html(r.actual ?? "—")}</td>
-                <td>${escape_html(r.expected ?? "—")}</td>
+                <td>${assert_value_to_html(r.actual)}</td>
+                <td>${assert_value_to_html(r.expected)}</td>
               </tr>
             `).join("")}
           </tbody>

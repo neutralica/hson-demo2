@@ -2,6 +2,7 @@ import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import { _freeze } from "./tests.consts";
 import type { TestEvent, TestSummary, SuiteLog, CaseLog, CaseKey, TestFailure } from "./tests.types";
+import { normalize_case_end_event } from "./assert-row-status";
 
 export type TestLog = Readonly<{
   onEvent: (e: TestEvent) => void;
@@ -46,10 +47,6 @@ type TestLogState = {
   };
   lastLine: string;
 };
-
-type TestEventWithAssertRows = TestEvent & Readonly<{
-  assertRows?: readonly unknown[];
-}>;
 
 type TestLogMutation = Readonly<{
   kind: "set";
@@ -187,60 +184,61 @@ export function create_test_log(): TestLog {
     }
 
     if (e.t === "case_end") {
+      const end = normalize_case_end_event(e);
       const summary = getSummaryState();
-      const k = key(e.suite, e.name);
+      const k = key(end.suite, end.name);
       const prev = read<CaseLog>(["casesByKey", k]);
-      const suiteState = getSuite(e.suite);
+      const suiteState = getSuite(end.suite);
 
       const nextSummary = { ...summary };
-      if (e.status === "pass") nextSummary.pass += 1;
-      else if (e.status === "fail") nextSummary.fail += 1;
+      if (end.status === "pass") nextSummary.pass += 1;
+      else if (end.status === "fail") nextSummary.fail += 1;
       else nextSummary.skip += 1;
       set(mutations, ["summary"], nextSummary);
 
       const nextSuite = { ...suiteState };
-      if (e.status === "pass") nextSuite.pass += 1;
-      else if (e.status === "fail") nextSuite.fail += 1;
+      if (end.status === "pass") nextSuite.pass += 1;
+      else if (end.status === "fail") nextSuite.fail += 1;
       else nextSuite.skip += 1;
-      set(mutations, ["suitesByName", e.suite], nextSuite);
+      set(mutations, ["suitesByName", end.suite], nextSuite);
 
       const prevMeta = prev?.meta;
       const nextMeta =
-        (prevMeta || e.metaPatch)
-          ? { ...(prevMeta ?? {}), ...(e.metaPatch ?? {}) }
+        (prevMeta || end.metaPatch)
+          ? { ...(prevMeta ?? {}), ...(end.metaPatch ?? {}) }
           : undefined;
 
       const baseEnd = {
         key: k,
-        suite: e.suite,
-        name: e.name,
-        status: e.status,
-        ms: e.ms,
+        suite: end.suite,
+        name: end.name,
+        status: end.status,
+        ms: end.ms,
       } as const;
 
-      const assertRows = (e as TestEventWithAssertRows).assertRows;
+      const assertRows = end.assertRows;
 
       const withMeta = nextMeta ? { ...baseEnd, meta: nextMeta } : baseEnd;
-      const withErr = e.err ? { ...withMeta, err: e.err } : withMeta;
+      const withErr = end.err ? { ...withMeta, err: end.err } : withMeta;
       const withAssertRows = assertRows !== undefined
         ? { ...withErr, assertRows }
         : withErr;
       set(mutations, ["casesByKey", k], withAssertRows);
 
-      if (e.status === "fail") {
-        const meta = prev?.meta;
+      if (end.status === "fail") {
+        const meta = nextMeta;
         const base = {
-          suite: e.suite,
-          name: e.name,
-          err: e.err ?? "Unknown error",
-          ms: e.ms,
+          suite: end.suite,
+          name: end.name,
+          err: end.err ?? "Unknown error",
+          ms: end.ms,
         } as const;
 
         const failures = read<TestFailure[]>(["failures"]) ?? [];
         set(mutations, ["failures"], [...failures, meta ? { ...base, meta } : base]);
-        set(mutations, ["lastLine"], `FAIL ${e.suite} :: ${e.name}`);
+        set(mutations, ["lastLine"], `FAIL ${end.suite} :: ${end.name}`);
       } else {
-        set(mutations, ["lastLine"], e.status.toUpperCase());
+        set(mutations, ["lastLine"], end.status.toUpperCase());
       }
 
       commit(mutations);

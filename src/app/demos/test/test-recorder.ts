@@ -1,5 +1,5 @@
-import { hson } from "hson-live";
 import type { TestAssertRow, TestEvent, TestFailure, TestSummary } from "./tests.types";
+import { normalize_case_end_event } from "./assert-row-status";
 
 
 export class TestRecorder {
@@ -24,36 +24,32 @@ export class TestRecorder {
         }
 
         if (e.t === "case_end") {
+            const end = normalize_case_end_event(e);
             const k = this.key(e.suite, e.name);
 
-            if (e.assertRows?.length) {
-                this.assertsByCase.set(k, [...e.assertRows]);
+            if (end.assertRows !== undefined) {
+                this.assertsByCase.set(k, [...end.assertRows]);
             }
 
 
-            if (e.status === "pass") this.pass += 1;
-            else if (e.status === "fail") this.fail += 1;
+            if (end.status === "pass") this.pass += 1;
+            else if (end.status === "fail") this.fail += 1;
             else this.skip += 1;
 
             // merge metaPatch into stored meta
-            if (e.metaPatch) {
+            if (end.metaPatch) {
                 const prev = this.metaByCase.get(k);
-                const next = prev ? { ...prev, ...e.metaPatch } : { ...e.metaPatch };
+                const next = prev ? { ...prev, ...end.metaPatch } : { ...end.metaPatch };
                 this.metaByCase.set(k, next);
             }
 
-            // store assert rows when present
-            if (e.assertRows?.length) {
-                this.assertsByCase.set(k, [...e.assertRows]);
-            }
-
-            if (e.status === "fail") {
+            if (end.status === "fail") {
                 const meta = this.metaByCase.get(k);
                 const base = {
-                    suite: e.suite,
-                    name: e.name,
-                    err: e.err ?? "Unknown error",
-                    ms: e.ms,
+                    suite: end.suite,
+                    name: end.name,
+                    err: end.err ?? "Unknown error",
+                    ms: end.ms,
                 } as const;
 
                 this.failures.push(meta ? { ...base, meta } : base);

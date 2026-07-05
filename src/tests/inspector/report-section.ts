@@ -1,5 +1,5 @@
 
-import type { CaseReport } from "../../app/demos/test/tests.types";
+import type { CaseReport, TestAssertRow } from "../../app/demos/test/tests.types";
 import { _freeze } from "../../app/demos/test/tests.consts";
 import { get_final_artifacts } from "./inspector.helpers";
 import type { Artifact, LoopReport } from "hson-live/diagnostics";
@@ -10,24 +10,23 @@ type ReportSection = Readonly<{
     bodyHtml?: string;          // optional for view (or build html from text)
 }>;
 
-type AssertRow = Readonly<{
-  ok: boolean;
-  label: string;
-  actual?: string;
-  expected?: string;
-}>;
+function assert_value_to_text(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value === undefined) return "undefined";
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
 
-type CaseReportWithAssertRows = CaseReport & Readonly<{
-  assertRows?: readonly AssertRow[];
-}>;
-
-function assert_rows_to_text(rows: readonly AssertRow[]): string {
+function assert_rows_to_text(rows: readonly TestAssertRow[]): string {
   if (!rows.length) return "—";
 
   return rows.map((row, i) => {
     const head = `${row.ok ? "ok" : "FAIL"}  #${i}  ${row.label}`;
-    const actual = row.actual !== undefined ? `\nactual: ${row.actual}` : "";
-    const expected = row.expected !== undefined ? `\nexpected: ${row.expected}` : "";
+    const actual = row.actual !== undefined ? `\nactual: ${assert_value_to_text(row.actual)}` : "";
+    const expected = row.expected !== undefined ? `\nexpected: ${assert_value_to_text(row.expected)}` : "";
     return `${head}${actual}${expected}`;
   }).join("\n\n");
 }
@@ -106,7 +105,7 @@ export function loopreport_to_sections(r: LoopReport): readonly ReportSection[] 
 }
 
 export function report_to_sections(r: CaseReport): readonly ReportSection[] {
-  const assertRows = (r as CaseReportWithAssertRows).assertRows ?? [];
+  const assertRows = r.assertRows ?? [];
   const assertFailCount = assertRows.filter((row) => !row.ok).length;
   const head = [
     `${r.status.toUpperCase()}  ${r.suite} :: ${r.name}`,

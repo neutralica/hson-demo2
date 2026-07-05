@@ -1,6 +1,6 @@
 import { CssManager, hson, type LiveTree } from "hson-live";
 import type { TestSuite, Asserter } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 import type { HsonNode, Primitive } from "hson-live/types";
 import { _CREATE_NODE } from "hson-live/diagnostics";

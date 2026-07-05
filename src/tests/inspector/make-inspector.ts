@@ -8,7 +8,7 @@ import { render_report_html, open_report_window } from "./render-report";
 import { loopreport_to_sections, report_to_sections } from "./report-section";
 import { _fontSize } from "../../app/core/consts/ui-consts";
 import { $CHIP_WIDTHstr, _freeze } from "../../app/demos/test/tests.consts";
-import type { CaseKey, CaseMeta, CaseReport } from "../../app/demos/test/tests.types";
+import type { CaseKey, CaseMeta, CaseReport, TestAssertRow } from "../../app/demos/test/tests.types";
 import { mk_div_cls, mk_div_id } from "../../app/utils/makers";
 import { ROW_SUITE_FAILcss, ROW_CASE_FAILcss } from "./inspector.css";
 import { $red_etc_, ACID_WASH_RGBA } from "../../app/core/consts/old-rgb.consts";
@@ -70,19 +70,12 @@ export function report_to_text_alt(r: LoopReport, meta?: Record<string, string>)
   return [inputSec, ...secs].map((s) => `## ${s.title}\n${s.bodyText}`).join("\n\n");
 }
 
-type InspectorAssertRow = Readonly<{
-  ok: boolean;
-  label: string;
-  actual?: string;
-  expected?: string;
-}>;
-
 type InspectorCaseWithAssertRows = Partial<CaseReport> & Readonly<{
   suite?: string;
   name?: string;
   status?: string;
   ms?: number;
-  assertRows?: readonly InspectorAssertRow[];
+  assertRows?: readonly TestAssertRow[];
 }>;
 
 function sections_to_text(sections: ReturnType<typeof report_to_sections>): string {
@@ -127,7 +120,7 @@ function local_case_report_to_text(raw: unknown): string | undefined {
     ms: found?.ms,
     steps: found?.steps ?? [],
     assertRows,
-  } as CaseReport & Readonly<{ assertRows: readonly InspectorAssertRow[] }>;
+  } as CaseReport;
 
   return sections_to_text(report_to_sections(report));
 }

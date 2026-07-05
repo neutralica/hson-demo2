@@ -4,7 +4,8 @@
 
 import { _freeze } from "./tests.consts";
 import { TestRecorder } from "./test-recorder";
-import type { RunCaseRet, RunOptions, RunResult, TestAssertRow, TestEvent, TestSuite } from "./tests.types";
+import { assertion_failure_message, normalize_assert_rows } from "./assert-row-status";
+import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "./tests.types";
 
 // cooperative yield so the browser can paint + process input.
 // - requestAnimationFrame - "UI-friendly" yield.
@@ -52,22 +53,18 @@ function readMetaPatch(value: unknown): Record<string, string> | undefined {
   return metaPatch as Record<string, string>;
 }
 
-function readAssertRows(value: unknown): readonly TestAssertRow[] | undefined {
+function readAssertRows(value: unknown): unknown {
   const record = asRecord(value);
   if (!record) return undefined;
-
-  const assertRows = record.assertRows;
-  if (!Array.isArray(assertRows)) return undefined;
-
-  return assertRows as readonly TestAssertRow[];
+  return Object.prototype.hasOwnProperty.call(record, "assertRows") ? record.assertRows : undefined;
 }
 
-function readExpected(value: unknown): "ok" | "fail" {
+function readExpected(value: unknown): TestExpected {
   const record = asRecord(value);
   return record?.expected === "fail" ? "fail" : "ok";
 }
 
-function readExpectedError(value: unknown): { message?: string; includes?: string } | undefined {
+function readExpectedError(value: unknown): TestExpectedError | undefined {
   const record = asRecord(value);
   if (!record) return undefined;
 
@@ -81,7 +78,7 @@ function readExpectedError(value: unknown): { message?: string; includes?: strin
   };
 }
 
-function expected_error_matches(msg: string, expectedError: { message?: string; includes?: string } | undefined): boolean {
+function expected_error_matches(msg: string, expectedError: TestExpectedError | undefined): boolean {
   if (expectedError === undefined) return true;
   if (expectedError.message !== undefined && msg !== expectedError.message) return false;
   if (expectedError.includes !== undefined && !msg.includes(expectedError.includes)) return false;
@@ -129,26 +126,63 @@ export async function run_test_suites(
           : undefined;
 
         const metaPatch = runRet?.metaPatch;
-        const assertRows = runRet?.assertRows;
+        const assertRowsStatus = normalize_assert_rows(runRet?.assertRows);
+        const assertRows = assertRowsStatus.assertRows;
+        const failedRows = assertRowsStatus.failedRows;
+        const malformedRows = assertRowsStatus.malformedRows;
 
         if (expected === "fail") {
+          const failedAsExpected = failedRows.length > 0 && malformedRows.length === 0;
+          const endBase = {
+            t: "case_end",
+            suite: tc.suite,
+            name: tc.name,
+            status: failedAsExpected ? "pass" : "fail",
+            ms: now() - c0,
+            expected,
+            ...(!failedAsExpected
+              ? {
+                err: failedRows.length
+                  ? assertion_failure_message(failedRows)
+                  : "Expected case to fail, but it passed.",
+              }
+              : {}),
+          } as const;
+
+          emit(
+            rec,
+            onEvent,
+            metaPatch || assertRows !== undefined
+              ? {
+                ...endBase,
+                ...(metaPatch ? { metaPatch } : {}),
+                ...(assertRows !== undefined ? { assertRows } : {}),
+              }
+              : endBase
+          );
+
+          if (!failedAsExpected && opts.bail) break;
+          continue;
+        }
+
+        if (failedRows.length > 0) {
           const endBase = {
             t: "case_end",
             suite: tc.suite,
             name: tc.name,
             status: "fail",
             ms: now() - c0,
-            err: "Expected case to fail, but it passed.",
+            err: assertion_failure_message(failedRows),
           } as const;
 
           emit(
             rec,
             onEvent,
-            metaPatch || assertRows?.length
+            metaPatch || assertRows !== undefined
               ? {
                 ...endBase,
                 ...(metaPatch ? { metaPatch } : {}),
-                ...(assertRows?.length ? { assertRows } : {}),
+                ...(assertRows !== undefined ? { assertRows } : {}),
               }
               : endBase
           );
@@ -168,11 +202,11 @@ export async function run_test_suites(
         emit(
           rec,
           onEvent,
-          metaPatch || assertRows?.length
+          metaPatch || assertRows !== undefined
             ? {
               ...endBase,
               ...(metaPatch ? { metaPatch } : {}),
-              ...(assertRows?.length ? { assertRows } : {}),
+              ...(assertRows !== undefined ? { assertRows } : {}),
             }
             : endBase
         );
@@ -180,25 +214,28 @@ export async function run_test_suites(
         const msg = asErrMsg(err);
         const shortMsg = asErrMessage(err);
         const metaPatch = readMetaPatch(err);
-        const assertRows = readAssertRows(err);
+        const assertRowsStatus = normalize_assert_rows(readAssertRows(err));
+        const assertRows = assertRowsStatus.assertRows;
+        const malformedRows = assertRowsStatus.malformedRows;
 
-        if (expected === "fail" && expected_error_matches(shortMsg, expectedError)) {
+        if (expected === "fail" && expected_error_matches(shortMsg, expectedError) && malformedRows.length === 0) {
           const endBase = {
             t: "case_end",
             suite: tc.suite,
             name: tc.name,
             status: "pass",
             ms: now() - c0,
+            expected,
           } as const;
 
           emit(
             rec,
             onEvent,
-            metaPatch || assertRows?.length
+            metaPatch || assertRows !== undefined
               ? {
                 ...endBase,
                 ...(metaPatch ? { metaPatch } : {}),
-                ...(assertRows?.length ? { assertRows } : {}),
+                ...(assertRows !== undefined ? { assertRows } : {}),
               }
               : endBase
           );
@@ -212,17 +249,18 @@ export async function run_test_suites(
           name: tc.name,
           status: "fail",
           ms: now() - c0,
-          err: msg,
+          err: malformedRows.length ? assertion_failure_message(malformedRows) : msg,
+          ...(expected === "fail" ? { expected } : {}),
         } as const;
 
         emit(
           rec,
           onEvent,
-          metaPatch || assertRows?.length
+          metaPatch || assertRows !== undefined
             ? {
               ...endBase,
               ...(metaPatch ? { metaPatch } : {}),
-              ...(assertRows?.length ? { assertRows } : {}),
+              ...(assertRows !== undefined ? { assertRows } : {}),
             }
             : endBase
         );

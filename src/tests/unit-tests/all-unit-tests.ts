@@ -1,5 +1,6 @@
 import { unit_test_css, unit_test_css_manager, unit_test_internals, unit_test_internals_2 } from "./unit-tests-1";
 import { unit_css_pseudo_unification, unit_media, unit_test_more_css, unit_test_parser_helpers } from "./unit-tests-2";
+import { unit_test_harness } from "./test-harness-tests";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import type { CssManager } from "hson-live";
 
@@ -12,6 +13,7 @@ export const all_unit_tests = () => [
     unit_test_parser_helpers(),
     unit_css_pseudo_unification(),
     unit_media(),
+    unit_test_harness(),
 
 ];
 
@@ -55,5 +57,4 @@ export function make_unit_case(
 
 
 /* ************************************ */
-
 

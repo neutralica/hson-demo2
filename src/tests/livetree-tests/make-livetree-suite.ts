@@ -5,7 +5,7 @@
 
 import { LiveTree, hson } from "hson-live";
 import type { TestSuite, TestCase, MetaPatch, Asserter, TestAssertRow } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 
 // -----------------------------
 // Implementation

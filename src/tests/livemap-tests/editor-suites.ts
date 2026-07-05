@@ -1,11 +1,8 @@
-// import type { JsonValue } from "hson-live";
+import { make_livemap_core } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-// import { delete_live_path } from "hson-live";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
 import { json_root_node } from "./all-livemap-suites";
-import { delete_live_path } from "../../../../hson-live/dist/api/livemap/editor";
-// import { equal_row, preview_value, json_root_node } from "./test-kit";
 
 
 export function livemap_suite_editor(): TestSuite {
@@ -186,14 +183,18 @@ function make_delete_case(spec: DeleteCaseSpec): TestCase {
     },
     run: () => {
       const root = json_root_node(spec.input);
-      const result = delete_live_path(root, spec.path);
+      const map = make_livemap_core(root);
+      const prev = map.snap(spec.path);
+      const commit = map.delete(spec.path);
+      const next = map.snap(spec.path);
+      const rootSnapshot = map.snap();
 
       return {
         assertRows: [
-          equal_row(`${spec.name}: changed`, result.changed, spec.expectedChanged),
-          equal_row(`${spec.name}: prev`, result.prev, spec.expectedPrev),
-          equal_row(`${spec.name}: next`, result.next, spec.expectedNext),
-          equal_row(`${spec.name}: root`, delete_live_path(root, ["__never__"]).prev, undefined),
+          equal_row(`${spec.name}: changed`, commit.changed, spec.expectedChanged),
+          equal_row(`${spec.name}: prev`, prev, spec.expectedPrev),
+          equal_row(`${spec.name}: next`, next, spec.expectedNext),
+          equal_row(`${spec.name}: root`, rootSnapshot, spec.expectedRoot),
         ],
       };
     },
@@ -210,10 +211,11 @@ function make_delete_throw_case(spec: DeleteThrowCaseSpec): TestCase {
     },
     run: () => {
       const root = json_root_node(spec.input);
+      const map = make_livemap_core(root);
       let message = "";
 
       try {
-        delete_live_path(root, spec.path);
+        map.delete(spec.path);
       } catch (error) {
         message = error instanceof Error ? error.message : String(error);
       }
@@ -221,6 +223,7 @@ function make_delete_throw_case(spec: DeleteThrowCaseSpec): TestCase {
       return {
         assertRows: [
           equal_row(`${spec.name}: error`, message, spec.expectedMessage),
+          equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
         ],
       };
     },

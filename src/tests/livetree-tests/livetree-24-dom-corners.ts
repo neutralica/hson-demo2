@@ -1,6 +1,6 @@
 import type { SvgLiveTree } from "hson-live/types";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 
 export function livetree_dom_helper_surface(): TestSuite {

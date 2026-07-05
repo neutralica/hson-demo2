@@ -1,7 +1,7 @@
 import { _listeners_debug_hard_reset } from "../../../../hson-live/dist/api/livetree/managers/listener-builder";
 import { flush_dom } from "../inspector/inspector.helpers";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/live-tests.types";
+import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./make-livetree-suite";
 
