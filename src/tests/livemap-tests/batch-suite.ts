@@ -13,42 +13,40 @@ export function livemap_suite_batch(): TestSuite {
     cases: [
       make_set_many_pipeline_case({
         suite: SUITE,
-        name: "write-op pipeline setMany writes multiple properties in one commit",
+        name: "write-op pipeline setMany replaces object in one commit",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
-          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace", role: "admin" } },
         ],
         expectedRoot: { user: { name: "Grace", role: "admin" } },
       }),
       make_set_many_pipeline_case({
         suite: SUITE,
-        name: "write-op pipeline setMany omits unchanged writes from commit",
+        name: "write-op pipeline setMany replacement removes omitted properties",
         input: { user: { name: "Ada", role: "user", active: true } },
         path: ["user"],
         values: { name: "Ada", role: "admin", active: true },
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user", active: true }, next: { name: "Ada", role: "admin", active: true } },
         ],
         expectedRoot: { user: { name: "Ada", role: "admin", active: true } },
       }),
       make_set_many_feed_case({
         suite: SUITE,
-        name: "write-op pipeline setMany feed emits once with all matching ops",
+        name: "write-op pipeline setMany feed emits once with parent replacement op",
         input: { user: { name: "Ada", role: "user" }, other: { n: 1 } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
         feedPath: ["user"],
         expectedCalls: 1,
         expectedOps: [
-          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
-          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
+          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace", role: "admin" } },
         ],
-        expectedFirstOp: { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+        expectedFirstOp: { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace", role: "admin" } },
         expectedValues: [
           { name: "Grace", role: "admin" },
         ],
@@ -62,9 +60,9 @@ export function livemap_suite_batch(): TestSuite {
         feedPath: ["user", "name"],
         expectedCalls: 1,
         expectedOps: [
-          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace", role: "admin" } },
         ],
-        expectedFirstOp: { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+        expectedFirstOp: { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace", role: "admin" } },
         expectedValues: [
           "Grace",
         ],
@@ -94,7 +92,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_batch_pipeline_case({
         suite: SUITE,
-        name: "batch collects multiple writes into one commit",
+        name: "batch collects set write and delete into one commit",
         input: { user: { name: "Ada", role: "user", old: true } },
         expectedChanged: true,
         expectedOps: [
@@ -150,7 +148,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_editor_reject_case({
         suite: SUITE,
-        name: "write-op pipeline setMany editor rejection preserves earlier properties",
+        name: "write-op pipeline write editor rejection preserves earlier properties",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users"],
         values: { first: { name: "Margaret" } },
@@ -366,7 +364,7 @@ function make_batch_pipeline_case(spec: BatchPipelineCaseSpec): TestCase {
       const map = make_livemap_core(json_root_node(spec.input));
       const commit = map.batch((tx) => {
         tx.set(["user", "name"], "Grace");
-        tx.setMany(["user"], { role: "admin" });
+        tx.write(["user"], { role: "admin" });
         tx.delete(["user", "old"]);
       });
 
@@ -570,7 +568,7 @@ function make_set_many_editor_reject_case(spec: SetManyRejectCaseSpec): TestCase
       let message = "";
 
       try {
-        map.setMany(spec.path, spec.values);
+        map.write(spec.path, spec.values);
       } catch (error) {
         message = error instanceof Error ? error.message : String(error);
       }

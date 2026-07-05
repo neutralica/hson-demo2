@@ -91,6 +91,94 @@ export function livemap_suites_link(): TestSuite {
         expectedSource: { draft: { name: "Grace" } },
         expectedTarget: { user: { name: "Grace" } },
       }),
+      {
+        suite: SUITE,
+        name: "link mapped parent propagates destructive setMany as parent replacement",
+        meta: {
+          sourceInput: preview_value({ draft: { name: "Ada", role: "user" } }),
+          targetInput: preview_value({ user: { name: "Ada", role: "user" } }),
+          from: preview_value(["draft"]),
+          to: preview_value(["user"]),
+          values: preview_value({ name: "Grace" }),
+        },
+        run: () => {
+          const source = make_livemap_core(json_root_node({ draft: { name: "Ada", role: "user" } }));
+          const target = make_livemap_core(json_root_node({ user: { name: "Ada", role: "user" } }));
+
+          link_livemap(source, target, { from: ["draft"], to: ["user"] });
+          source.setMany(["draft"], { name: "Grace" });
+
+          return {
+            assertRows: [
+              equal_row("link mapped parent propagates destructive setMany as parent replacement: source", source.snap(), {
+                draft: { name: "Grace" },
+              }),
+              equal_row("link mapped parent propagates destructive setMany as parent replacement: target", target.snap(), {
+                user: { name: "Grace" },
+              }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "link mapped parent propagates write as sibling-preserving child writes",
+        meta: {
+          sourceInput: preview_value({ draft: { name: "Ada", role: "user" } }),
+          targetInput: preview_value({ user: { name: "Ada", role: "user" } }),
+          from: preview_value(["draft"]),
+          to: preview_value(["user"]),
+          values: preview_value({ name: "Grace" }),
+        },
+        run: () => {
+          const source = make_livemap_core(json_root_node({ draft: { name: "Ada", role: "user" } }));
+          const target = make_livemap_core(json_root_node({ user: { name: "Ada", role: "user" } }));
+
+          link_livemap(source, target, { from: ["draft"], to: ["user"] });
+          source.write(["draft"], { name: "Grace" });
+
+          return {
+            assertRows: [
+              equal_row("link mapped parent propagates write as sibling-preserving child writes: source", source.snap(), {
+                draft: { name: "Grace", role: "user" },
+              }),
+              equal_row("link mapped parent propagates write as sibling-preserving child writes: target", target.snap(), {
+                user: { name: "Grace", role: "user" },
+              }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "link mapped parent propagates root replace affecting source scope",
+        meta: {
+          sourceInput: preview_value({ draft: { name: "Ada", role: "user" }, other: true }),
+          targetInput: preview_value({ user: { name: "Ada", role: "user" } }),
+          from: preview_value(["draft"]),
+          to: preview_value(["user"]),
+          value: preview_value({ draft: { name: "Grace" }, other: false }),
+        },
+        run: () => {
+          const source = make_livemap_core(json_root_node({ draft: { name: "Ada", role: "user" }, other: true }));
+          const target = make_livemap_core(json_root_node({ user: { name: "Ada", role: "user" } }));
+
+          link_livemap(source, target, { from: ["draft"], to: ["user"] });
+          source.replace({ draft: { name: "Grace" }, other: false });
+
+          return {
+            assertRows: [
+              equal_row("link mapped parent propagates root replace affecting source scope: source", source.snap(), {
+                draft: { name: "Grace" },
+                other: false,
+              }),
+              equal_row("link mapped parent propagates root replace affecting source scope: target", target.snap(), {
+                user: { name: "Grace" },
+              }),
+            ],
+          };
+        },
+      },
       make_link_mapped_case({
         suite: SUITE,
         name: "link mapped sibling ignores unrelated set",

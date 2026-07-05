@@ -663,3 +663,20 @@ API_TYPED_MAP_SAMPLE.write(["user"], { missing: "dynamic" });
 
 // @ts-expect-error typed handle.write rejects wrong primitive value for number property
 API_TYPED_MAP_USER_HANDLE.write({ age: "38" });
+
+API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace" });
+API_TYPED_MAP_SAMPLE.write(["user"], { age: 38 });
+API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace", age: 38 });
+
+API_TYPED_MAP_USER_HANDLE.write({ name: "Grace" });
+API_TYPED_MAP_USER_HANDLE.write({ age: 38 });
+API_TYPED_MAP_USER_HANDLE.write({ name: "Grace", age: 38 });
+
+API_TYPED_MAP_USER_HANDLE.object.write({ name: "Grace" });
+API_TYPED_MAP_USER_HANDLE.object.write({ age: 38 });
+API_TYPED_MAP_USER_HANDLE.object.write({ name: "Grace", age: 38 });
+
+API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { id: "z" });
+API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { count: 3 });
+API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { label: "Z" });
+API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { id: "z", count: 3, label: "Z" });
