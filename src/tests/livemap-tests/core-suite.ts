@@ -1119,7 +1119,52 @@ export function livemap_suites_core(): TestSuite {
           };
         },
       },
+      {
+        suite: SUITE,
+        name: "core setMany replaces object and removes unspecified siblings",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({
+            user: { name: "Ada", age: 37, role: "admin" },
+          }));
 
+          const commit = map.setMany(["user"], { name: "Grace" });
+
+          return {
+            assertRows: [
+              equal_row("core setMany replaces object and removes unspecified siblings: changed", commit.changed, true),
+              equal_row("core setMany replaces object and removes unspecified siblings: root", map.snap(), {
+                user: { name: "Grace" },
+              }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core write preserves unspecified siblings",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({
+            user: { name: "Ada", age: 37, role: "admin" },
+          }));
+
+          const commit = map.write(["user"], { name: "Grace" });
+
+          return {
+            assertRows: [
+              equal_row("core write preserves unspecified siblings: changed", commit.changed, true),
+              equal_row("core write preserves unspecified siblings: root", map.snap(), {
+                user: { name: "Grace", age: 37, role: "admin" },
+              }),
+            ],
+          };
+        },
+      },
     ] as const,
   };
 }

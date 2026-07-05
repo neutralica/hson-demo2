@@ -646,3 +646,20 @@ API_TYPED_MAP_SAMPLE.replace({ user: { age: 38 } });
 
 // @ts-expect-error typed replace rejects wrong nested primitive
 API_TYPED_MAP_SAMPLE.replace({ user: { name: "Grace", age: "38" } });
+
+API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace" });
+API_TYPED_MAP_SAMPLE.write(["user"], { age: 38 });
+API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace", age: 38 });
+
+API_TYPED_MAP_USER_HANDLE.write({ name: "Grace" });
+API_TYPED_MAP_USER_HANDLE.write({ age: 38 });
+API_TYPED_MAP_USER_HANDLE.object.write({ name: "Grace" });
+
+// @ts-expect-error typed map.write rejects wrong primitive value for string property
+API_TYPED_MAP_SAMPLE.write(["user"], { name: 38 });
+
+// @ts-expect-error typed map.write rejects unknown keys for schema-shaped object paths
+API_TYPED_MAP_SAMPLE.write(["user"], { missing: "dynamic" });
+
+// @ts-expect-error typed handle.write rejects wrong primitive value for number property
+API_TYPED_MAP_USER_HANDLE.write({ age: "38" });

@@ -1397,6 +1397,38 @@ export function livemap_suites_schema(): TestSuite {
           };
         },
       },
+      {
+        suite: SUITE,
+        name: "handle setMany replaces object and write preserves siblings",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({
+            user: { name: "Ada", age: 37, role: "admin" },
+          }));
+          const user = map.at(["user"]);
+
+          user.write({ name: "Grace" });
+          const afterWrite = map.snap();
+
+          user.setMany({ name: "Mina" });
+          const afterSetMany = map.snap();
+
+          return {
+            assertRows: [
+              equal_row("handle setMany replaces object and write preserves siblings: after write", afterWrite, {
+                user: { name: "Grace", age: 37, role: "admin" },
+              }),
+              equal_row("handle setMany replaces object and write preserves siblings: after setMany", afterSetMany, {
+                user: { name: "Mina" },
+              }),
+            ],
+          };
+        },
+      },
+
+
     ] as const,
   };
 }
