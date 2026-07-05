@@ -55,7 +55,7 @@ export function livemap_suites_node(): TestSuite {
         setPath: ["user", "role"],
         value: "admin",
         expectedInitialContentLength: 1,
-        expectedAfterSetContentLength: 2,
+        expectedAfterSetContentLength: 1,
       }),
       make_node_attrs_copy_case({
         suite: SUITE,

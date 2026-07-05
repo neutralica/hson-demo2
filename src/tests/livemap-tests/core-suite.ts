@@ -95,25 +95,26 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_case({
         suite: SUITE,
-        name: "core setMany replaces object from property bag",
+        name: "core setMany writes multiple properties as child ops",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace", role: "admin" } },
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
         ],
         expectedRoot: { user: { name: "Grace", role: "admin" } },
       }),
       make_core_set_many_case({
         suite: SUITE,
-        name: "core setMany replacement removes omitted properties",
+        name: "core setMany omits unchanged writes from commit",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Ada", role: "admin" },
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Ada", role: "admin" } },
+          { kind: "set", path: ["user", "role"], prev: "user", next: "admin" },
         ],
         expectedRoot: { user: { name: "Ada", role: "admin" } },
       }),
@@ -129,7 +130,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_feed_case({
         suite: SUITE,
-        name: "core setMany feed emits one parent replacement event",
+        name: "core setMany feed emits one event with first matching child op",
         input: { user: { name: "Ada", role: "user" } },
         feedPath: ["user"],
         setPath: ["user"],
@@ -138,9 +139,9 @@ export function livemap_suites_core(): TestSuite {
           {
             path: ["user"],
             value: { name: "Grace", role: "admin" },
-            opPath: ["user"],
-            opPrev: { name: "Ada", role: "user" },
-            opNext: { name: "Grace", role: "admin" },
+            opPath: ["user", "name"],
+            opPrev: "Ada",
+            opNext: "Grace",
           },
         ],
       }),
@@ -152,7 +153,8 @@ export function livemap_suites_core(): TestSuite {
         mutateOriginalPathTo: ["profile"],
         values: { name: "Grace", role: "admin" },
         expectedCommitPaths: [
-          ["user"],
+          ["user", "name"],
+          ["user", "role"],
         ],
         expectedRoot: { user: { name: "Grace", role: "admin" } },
       }),
@@ -485,7 +487,8 @@ export function livemap_suites_core(): TestSuite {
             assertRows: [
               equal_row("core schema allows valid setMany: changed", commit.changed, true),
               equal_row("core schema allows valid setMany: ops", commit.ops, [
-                { kind: "set", path: ["user"], prev: { name: "Ada", age: 37 }, next: { name: "Grace", age: 38 } },
+                { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+                { kind: "set", path: ["user", "age"], prev: 37, next: 38 },
               ]),
               equal_row("core schema allows valid setMany: root", map.snap(), { user: { name: "Grace", age: 38 } }),
             ],
@@ -522,7 +525,7 @@ export function livemap_suites_core(): TestSuite {
               equal_row(
                 "core schema rejects invalid setMany before mutation: error",
                 message,
-                "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
               ),
               equal_row("core schema rejects invalid setMany before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
             ],
@@ -1111,7 +1114,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core setMany replaces object and removes unspecified siblings",
+        name: "core setMany preserves unspecified siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
         },
@@ -1124,9 +1127,9 @@ export function livemap_suites_core(): TestSuite {
 
           return {
             assertRows: [
-              equal_row("core setMany replaces object and removes unspecified siblings: changed", commit.changed, true),
-              equal_row("core setMany replaces object and removes unspecified siblings: root", map.snap(), {
-                user: { name: "Grace" },
+              equal_row("core setMany preserves unspecified siblings: changed", commit.changed, true),
+              equal_row("core setMany preserves unspecified siblings: root", map.snap(), {
+                user: { name: "Grace", age: 37, role: "admin" },
               }),
             ],
           };

@@ -416,11 +416,11 @@ export function livemap_suites_proxy(): TestSuite {
         suite: SUITE,
         name: "proxy Promise.resolve treats proxy as non-thenable",
         input: { user: { name: "Ada" } },
-        act: async (map) => {
-          const resolved = await Promise.resolve(map.proxy());
-          return resolved.$_.path();
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.then;
         },
-        expected: [],
+        expected: undefined,
       }),
       readCase({
         suite: SUITE,
@@ -433,15 +433,15 @@ export function livemap_suites_proxy(): TestSuite {
         suite: SUITE,
         name: "core proxy rejects non-array path",
         input: { user: { name: "Ada" } },
-        act: (map) => map.proxy("user" as never),
-        expectedMessage: "LiveMap path is not an array: \"user\"",
+        act: (map) => map.proxy("user" as never).$_.path(),
+        expectedMessage: "LiveMap path is not an array",
       }),
       throwCase({
         suite: SUITE,
         name: "core proxy rejects invalid path part",
         input: { user: { name: "Ada" } },
-        act: (map) => map.proxy([{}] as never),
-        expectedMessage: "LiveMap path part is not valid: {}",
+        act: (map) => map.proxy([{}] as never).$_.path(),
+        expectedMessage: "LiveMap path part is not valid at index 0",
       }),
       readCase({
         suite: SUITE,

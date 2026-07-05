@@ -132,11 +132,11 @@ export function create_test_log(): TestLog {
 
     logState.batch((tx) => {
       tx.set(["activeSuite"], next.activeSuite);
-      tx.set(["casesByKey"], next.casesByKey);
-      tx.set(["caseKeysBySuite"], next.caseKeysBySuite);
-      tx.set(["suitesByName"], next.suitesByName);
-      tx.set(["failures"], next.failures);
-      tx.set(["summary"], next.summary);
+      tx.set(["casesByKey"], as_json(next.casesByKey));
+      tx.set(["caseKeysBySuite"], as_json(next.caseKeysBySuite));
+      tx.set(["suitesByName"], as_json(next.suitesByName));
+      tx.set(["failures"], as_json(next.failures));
+      tx.set(["summary"], as_json(next.summary));
       tx.set(["lastLine"], next.lastLine);
     });
   };

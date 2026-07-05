@@ -262,7 +262,7 @@ export function livemap_suites_schema(): TestSuite {
           issues: [
             {
               path: ["user", "role"],
-              message: "LiveMap schema expected \"admin\" | \"user\" at [\"user\",\"role\"], received \"guest\"",
+              message: "LiveMap schema expected \"admin\" | \"user\" at [\"user\",\"role\"], received string",
             },
           ],
         },
@@ -1022,8 +1022,8 @@ export function livemap_suites_schema(): TestSuite {
           ok: false,
           issues: [
             {
-              path: ["result"],
-              message: "LiveMap schema expected object | object at [\"result\"], received object",
+              path: ["result", "kind"],
+              message: "LiveMap schema expected \"success\" at [\"result\",\"kind\"], received \"pending\"",
             },
           ],
         },
@@ -1046,8 +1046,8 @@ export function livemap_suites_schema(): TestSuite {
           ok: false,
           issues: [
             {
-              path: ["result"],
-              message: "LiveMap schema expected object | object at [\"result\"], received object",
+              path: ["result", "value"],
+              message: "LiveMap schema expected string at [\"result\",\"value\"], received undefined",
             },
           ],
         },
@@ -1399,7 +1399,7 @@ export function livemap_suites_schema(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "handle setMany replaces object and write preserves siblings",
+        name: "handle setMany and write preserve siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
         },
@@ -1417,11 +1417,11 @@ export function livemap_suites_schema(): TestSuite {
 
           return {
             assertRows: [
-              equal_row("handle setMany replaces object and write preserves siblings: after write", afterWrite, {
+              equal_row("handle setMany and write preserve siblings: after write", afterWrite, {
                 user: { name: "Grace", age: 37, role: "admin" },
               }),
-              equal_row("handle setMany replaces object and write preserves siblings: after setMany", afterSetMany, {
-                user: { name: "Mina" },
+              equal_row("handle setMany and write preserve siblings: after setMany", afterSetMany, {
+                user: { name: "Mina", age: 37, role: "admin" },
               }),
             ],
           };

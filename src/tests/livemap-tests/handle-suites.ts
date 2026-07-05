@@ -68,13 +68,6 @@ export function livemap_suites_handle(): TestSuite {
             opPrev: "Ada",
             opNext: "Grace",
           },
-          {
-            path: ["user"],
-            value: { name: "Grace", role: "admin" },
-            opPath: ["user", "role"],
-            opPrev: "user",
-            opNext: "admin",
-          },
         ],
       }),
       deleteCase({
@@ -508,13 +501,6 @@ export function livemap_suites_handle(): TestSuite {
             opPath: ["user", "name"],
             opPrev: "Ada",
             opNext: "Grace",
-          },
-          {
-            path: ["user"],
-            value: { name: "Grace", role: "admin" },
-            opPath: ["user", "role"],
-            opPrev: "user",
-            opNext: "admin",
           },
         ],
       }),

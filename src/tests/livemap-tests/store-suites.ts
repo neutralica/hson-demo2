@@ -136,8 +136,8 @@ export function livemap_suites_store(): TestSuite {
                     stop();
 
                     const expected = [
-                        { prev: null, next: "test" },
-                        { prev: "test", next: null },
+                        { next: "test", prev: null },
+                        { next: null, prev: "test" },
                     ];
 
                     return {
@@ -179,8 +179,8 @@ export function livemap_suites_store(): TestSuite {
                     stop();
 
                     const expected = [
-                        { prev: [], next: ["point"] },
-                        { prev: ["point"], next: ["point", "test"] },
+                        { next: ["point"], prev: [] },
+                        { next: ["point", "test"], prev: ["point"] },
                     ];
 
                     return {
@@ -218,8 +218,8 @@ export function livemap_suites_store(): TestSuite {
                     stop();
 
                     const expected = [
-                        { prev: null, next: "test" },
-                        { prev: "test", next: null },
+                        { next: "test", prev: null },
+                        { next: null, prev: "test" },
                     ];
 
                     return {
@@ -258,8 +258,8 @@ export function livemap_suites_store(): TestSuite {
                     stop();
 
                     const expected = [
-                        { prev: [], next: ["point"] },
-                        { prev: ["point"], next: ["point", "test"] },
+                        { next: ["point"], prev: [] },
+                        { next: ["point", "test"], prev: ["point"] },
                     ];
 
                     return {

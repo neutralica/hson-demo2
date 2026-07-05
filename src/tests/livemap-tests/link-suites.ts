@@ -93,7 +93,7 @@ export function livemap_suites_link(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "link mapped parent propagates destructive setMany as parent replacement",
+        name: "link mapped parent propagates setMany as sibling-preserving child writes",
         meta: {
           sourceInput: preview_value({ draft: { name: "Ada", role: "user" } }),
           targetInput: preview_value({ user: { name: "Ada", role: "user" } }),
@@ -110,11 +110,11 @@ export function livemap_suites_link(): TestSuite {
 
           return {
             assertRows: [
-              equal_row("link mapped parent propagates destructive setMany as parent replacement: source", source.snap(), {
-                draft: { name: "Grace" },
+              equal_row("link mapped parent propagates setMany as sibling-preserving child writes: source", source.snap(), {
+                draft: { name: "Grace", role: "user" },
               }),
-              equal_row("link mapped parent propagates destructive setMany as parent replacement: target", target.snap(), {
-                user: { name: "Grace" },
+              equal_row("link mapped parent propagates setMany as sibling-preserving child writes: target", target.snap(), {
+                user: { name: "Grace", role: "user" },
               }),
             ],
           };

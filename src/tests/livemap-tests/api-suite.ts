@@ -186,16 +186,15 @@ export function livemap_suites_api(): TestSuite {
       commitCase({
         suite: SUITE,
         name: "api map schema.use allows valid chained set",
-        input: {},
-        act: () => {
+        input: { user: { name: "Ada" } },
+        act: (map) => {
           const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
           }));
 
-          return hson.liveMap
-            .fromJson({ user: { name: "Ada" } })
+          return map
             .schema.use(schema)
             .set(["user", "name"], "Grace");
         },
