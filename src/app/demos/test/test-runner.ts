@@ -94,7 +94,7 @@ export async function run_test_suites(
   const t0 = now();
 
 
-  const yieldEvery = opts.yieldEveryCases ?? 0;
+  const yieldEvery = opts.yieldEveryCases ?? 5;
   let caseCounter = 0;
 
   for (const suite of suites) {
@@ -106,6 +106,8 @@ export async function run_test_suites(
       suite: suite.suite,
       totalPlanned: suite.cases.length,
     });
+
+    await yield_to_ui();
 
     for (const tc of suite.cases) {
       if (opts.filterSuite && tc.suite !== opts.filterSuite) continue;
@@ -152,14 +154,21 @@ export async function run_test_suites(
           emit(
             rec,
             onEvent,
-            metaPatch || assertRows !== undefined
+            !failedAsExpected && (metaPatch || assertRows !== undefined)
               ? {
                 ...endBase,
                 ...(metaPatch ? { metaPatch } : {}),
                 ...(assertRows !== undefined ? { assertRows } : {}),
               }
-              : endBase
+              : metaPatch
+                ? { ...endBase, metaPatch }
+                : endBase
           );
+
+          caseCounter += 1;
+          if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
+            await yield_to_ui();
+          }
 
           if (!failedAsExpected && opts.bail) break;
           continue;
@@ -186,6 +195,11 @@ export async function run_test_suites(
               }
               : endBase
           );
+
+          caseCounter += 1;
+          if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
+            await yield_to_ui();
+          }
 
           if (opts.bail) break;
           continue;
@@ -230,14 +244,13 @@ export async function run_test_suites(
           emit(
             rec,
             onEvent,
-            metaPatch || assertRows !== undefined
-              ? {
-                ...endBase,
-                ...(metaPatch ? { metaPatch } : {}),
-                ...(assertRows !== undefined ? { assertRows } : {}),
-              }
-              : endBase
+            metaPatch ? { ...endBase, metaPatch } : endBase
           );
+
+          caseCounter += 1;
+          if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
+            await yield_to_ui();
+          }
 
           continue;
         }
@@ -264,6 +277,11 @@ export async function run_test_suites(
             : endBase
         );
 
+        caseCounter += 1;
+        if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
+          await yield_to_ui();
+        }
+
         if (opts.bail) break;
       }
 
@@ -276,8 +294,8 @@ export async function run_test_suites(
 
     emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
 
-    // optional suite-level yield
-    if (opts.yieldBetweenSuites) {
+    // suite-level yield by default so suite_begin/suite_end logs can paint between suites.
+    if (opts.yieldBetweenSuites !== false) {
       await yield_to_ui();
     }
 
