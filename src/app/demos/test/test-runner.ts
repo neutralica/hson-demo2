@@ -91,6 +91,8 @@ export async function run_test_suites(
   opts: RunOptions = {},
 ): Promise<RunResult> {
   const rec = new TestRecorder();
+  const clearLog = (onEvent as unknown as { clear?: () => void }).clear;
+  clearLog?.();
   const t0 = now();
 
 

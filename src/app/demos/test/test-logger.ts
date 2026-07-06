@@ -140,17 +140,7 @@ export function create_test_log(): TestLog {
   };
 
   const clear = (): void => {
-    const next = make_initial_test_log_state();
-
-    logState.batch((tx) => {
-      tx.set(["activeSuite"], next.activeSuite);
-      tx.set(["casesByKey"], as_json(next.casesByKey));
-      tx.set(["caseKeysBySuite"], as_json(next.caseKeysBySuite));
-      tx.set(["suitesByName"], as_json(next.suitesByName));
-      tx.set(["failures"], as_json(next.failures));
-      tx.set(["summary"], as_json(next.summary));
-      tx.set(["lastLine"], next.lastLine);
-    });
+    logState.replace(make_initial_test_log_state() as unknown as JsonValue);
   };
 
   const onEvent = (e: TestEvent): void => {
@@ -268,6 +258,8 @@ export function create_test_log(): TestLog {
       return;
     }
   };
+
+  (onEvent as typeof onEvent & { clear?: () => void }).clear = clear;
 
   const getSummary = (): TestSummary => {
     const summary = getSummaryState();
