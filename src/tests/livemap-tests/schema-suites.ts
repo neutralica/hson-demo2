@@ -1409,7 +1409,7 @@ export function livemap_suites_schema(): TestSuite {
           }));
           const user = map.at(["user"]);
 
-          user.write({ name: "Grace" });
+          user.setMany({ name: "Grace" });
           const afterWrite = map.snap();
 
           user.setMany({ name: "Mina" });

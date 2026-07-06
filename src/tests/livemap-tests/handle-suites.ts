@@ -81,14 +81,12 @@ export function livemap_suites_handle(): TestSuite {
         ],
         expectedRoot: { user: { role: "user" } },
       }),
-      deleteCase({
+      throwCase({
         suite: SUITE,
-        name: "handle delete missing property unchanged",
+        name: "handle delete missing property throws",
         input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        expectedChanged: false,
-        expectedOps: [],
-        expectedRoot: { user: { name: "Ada" } },
+        act: (map) => map.at(["user", "role"]).delete(),
+        expectedMessage: "LiveMap delete path does not resolve: [\"user\", \"role\"]",
       }),
       deleteFeedCase({
         suite: SUITE,
@@ -114,14 +112,12 @@ export function livemap_suites_handle(): TestSuite {
         expectedChanged: true,
         expectedRoot: { count: 2 },
       }),
-      updateCase({
+      throwCase({
         suite: SUITE,
-        name: "handle update sees undefined for missing property",
+        name: "handle update missing property throws",
         input: { user: {} },
-        path: ["user", "name"],
-        update: (value) => value ?? "Ada",
-        expectedChanged: true,
-        expectedRoot: { user: { name: "Ada" } },
+        act: (map) => map.at(["user", "name"]).update((value) => value ?? "Ada"),
+        expectedMessage: "LiveMap set path does not resolve: [\"user\", \"name\"]",
       }),
       updateCase({
         suite: SUITE,
@@ -383,7 +379,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.renameKey("role", "kind"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Ada", kind: "user" } },
+          { kind: "replace", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Ada", kind: "user" } },
         ],
         expectedRoot: { user: { name: "Ada", kind: "user" } },
       }),
@@ -412,7 +408,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.renameKey("role", "kind"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user", kind: "person" }, next: { name: "Ada", kind: "user" } },
+          { kind: "replace", path: ["user"], prev: { name: "Ada", role: "user", kind: "person" }, next: { name: "Ada", kind: "user" } },
         ],
         expectedRoot: { user: { name: "Ada", kind: "user" } },
       }),
@@ -779,7 +775,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.clear(),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["user"], prev: { name: "Ada", role: "user" }, next: {} },
+          { kind: "replace", path: ["user"], prev: { name: "Ada", role: "user" }, next: {} },
         ],
         expectedRoot: { user: {} },
       }),
@@ -979,7 +975,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.getKey(0 as never),
         expectedMessage: "LiveMap object key is not a string at [\"user\"]",
       }),
-     
+
     ] as const,
   };
 }

@@ -97,6 +97,18 @@ export function create_test_log(): TestLog {
   const commit = (mutations: TestLogMutation[]): void => {
     logState.batch((tx) => {
       for (const mutation of mutations) {
+        const [head, key, ...rest] = mutation.path;
+
+        if (
+          rest.length === 0
+          && typeof head === "string"
+          && typeof key === "string"
+          && (head === "suitesByName" || head === "caseKeysBySuite" || head === "casesByKey")
+        ) {
+          tx.setMany([head], { [key]: mutation.value });
+          continue;
+        }
+
         tx.set(mutation.path, mutation.value);
       }
     });
@@ -216,7 +228,7 @@ export function create_test_log(): TestLog {
         ms: end.ms,
       } as const;
 
-      const assertRows = end.assertRows;
+      const assertRows = end.status === "fail" ? end.assertRows : undefined;
 
       const withMeta = nextMeta ? { ...baseEnd, meta: nextMeta } : baseEnd;
       const withErr = end.err ? { ...withMeta, err: end.err } : withMeta;

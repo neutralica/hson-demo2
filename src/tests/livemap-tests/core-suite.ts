@@ -37,18 +37,32 @@ export function livemap_suites_core(): TestSuite {
         ],
         expectedRoot: { user: { name: "Grace" } },
       }),
-      make_core_set_case({
+      {
         suite: SUITE,
-        name: "core set missing object property",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        value: "admin",
-        expectedChanged: true,
-        expectedOps: [
-          { kind: "set", path: ["user", "role"], prev: undefined, next: "admin" },
-        ],
-        expectedRoot: { user: { name: "Ada", role: "admin" } },
-      }),
+        name: "core set missing object property throws",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user", "role"]),
+          value: preview_value("admin"),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
+          let message = "";
+
+          try {
+            map.set(["user", "role"], "admin");
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row("core set missing object property throws: error", message, "LiveMap set path does not resolve: [\"user\", \"role\"]"),
+              equal_row("core set missing object property throws: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
       make_core_set_case({
         suite: SUITE,
         name: "core set existing object property unchanged",
@@ -67,7 +81,7 @@ export function livemap_suites_core(): TestSuite {
         value: { name: "Margaret" },
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["users", 0], prev: { name: "Ada" }, next: { name: "Margaret" } },
+          { kind: "set", path: ["users", 0, "name"], prev: "Ada", next: "Margaret" },
         ],
         expectedRoot: { users: [{ name: "Margaret" }, { name: "Grace" }] },
       }),
@@ -165,8 +179,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
 
           return {
             assertRows: [
@@ -182,8 +195,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -313,8 +325,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -339,8 +350,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -375,8 +385,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: 12 } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: 12 });
+          const map = make_livemap_core(json_root_node({ user: { name: 12 } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -409,8 +418,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -435,8 +443,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -471,8 +478,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", age: 37 });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -502,8 +508,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", age: 37 });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -539,8 +544,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -548,7 +552,7 @@ export function livemap_suites_core(): TestSuite {
           }));
 
           map.withSchema(schema);
-          map.set(["meta"], { draft: true });
+          map.setMany([], { meta: { draft: true } });
 
           return {
             assertRows: [
@@ -567,8 +571,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", age: 37 });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -604,8 +607,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", age: 37 });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -634,8 +636,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", role: "admin" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -663,8 +664,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -703,15 +703,31 @@ export function livemap_suites_core(): TestSuite {
         ],
         expectedRoot: { user: { role: "user" } },
       }),
-      make_core_delete_case({
+      {
         suite: SUITE,
-        name: "core delete missing object property unchanged",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        expectedChanged: false,
-        expectedOps: [],
-        expectedRoot: { user: { name: "Ada" } },
-      }),
+        name: "core delete missing object property throws",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user", "role"]),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
+          let message = "";
+
+          try {
+            map.delete(["user", "role"]);
+          } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+          }
+
+          return {
+            assertRows: [
+              equal_row("core delete missing object property throws: error", message, "LiveMap delete path does not resolve: [\"user\", \"role\"]"),
+              equal_row("core delete missing object property throws: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
       make_core_delete_feed_case({
         suite: SUITE,
         name: "core delete feed exact path hears delete",
@@ -814,9 +830,9 @@ export function livemap_suites_core(): TestSuite {
           {
             path: ["users"],
             value: [{ name: "Margaret" }, { name: "Grace" }],
-            opPath: ["users", 0],
-            opPrev: { name: "Ada" },
-            opNext: { name: "Margaret" },
+            opPath: ["users", 0, "name"],
+            opPrev: "Ada",
+            opNext: "Margaret",
           },
         ],
       }),
@@ -957,8 +973,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", role: "admin" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -986,8 +1001,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: {
               name: s.string,
@@ -1022,8 +1036,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => ({
             user: s.exact({
               name: s.string,
@@ -1034,7 +1047,7 @@ export function livemap_suites_core(): TestSuite {
           map.withSchema(schema);
 
           try {
-            map.set(["user", "role"], "admin");
+            map.setMany(["user"], { role: "admin" });
           } catch (error) {
             message = error instanceof Error ? error.message : String(error);
           }
@@ -1055,8 +1068,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada", role: "admin" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
           const schema = define_livemap_schema((s) => ({
             user: s.exact({
               name: s.string,
@@ -1086,8 +1098,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ user: { name: "Ada" } }),
         },
         run: () => {
-          const map = make_livemap_core(json_root_node({}));
-          map.set(["user"], { name: "Ada" });
+          const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = define_livemap_schema((s) => s.exact({
             user: {
               name: s.string,
@@ -1098,7 +1109,7 @@ export function livemap_suites_core(): TestSuite {
           map.withSchema(schema);
 
           try {
-            map.set(["meta"], { draft: true });
+            map.setMany([], { meta: { draft: true } });
           } catch (error) {
             message = error instanceof Error ? error.message : String(error);
           }
@@ -1146,7 +1157,7 @@ export function livemap_suites_core(): TestSuite {
             user: { name: "Ada", age: 37, role: "admin" },
           }));
 
-          const commit = map.write(["user"], { name: "Grace" });
+          const commit = map.setMany(["user"], { name: "Grace" });
 
           return {
             assertRows: [

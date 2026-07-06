@@ -135,7 +135,7 @@ export function livemap_suites_link(): TestSuite {
           const target = make_livemap_core(json_root_node({ user: { name: "Ada", role: "user" } }));
 
           link_livemap(source, target, { from: ["draft"], to: ["user"] });
-          source.write(["draft"], { name: "Grace" });
+          source.setMany(["draft"], { name: "Grace" });
 
           return {
             assertRows: [

@@ -122,14 +122,12 @@ export function livemap_suite_editor(): TestSuite {
         expectedNext: undefined,
         expectedRoot: { user: { role: "user" } },
       }),
-      make_delete_case({
+      make_delete_throw_case({
         suite: SUITE,
-        name: "delete missing object property unchanged",
+        name: "delete missing object property throws",
         input: { user: { name: "Ada" } },
         path: ["user", "role"],
-        expectedChanged: false,
-        expectedPrev: undefined,
-        expectedNext: undefined,
+        expectedMessage: "LiveMap delete path does not resolve: [\"user\", \"role\"]",
         expectedRoot: { user: { name: "Ada" } },
       }),
       make_delete_throw_case({

@@ -129,7 +129,7 @@ export function livemap_suite_batch(): TestSuite {
         suite: SUITE,
         name: "batch editor rejection preserves earlier writes",
         input: { users: [{ name: "Ada" }, { name: "Grace" }], meta: { touched: false } },
-        expectedMessage: "LiveMap editor cannot set this path yet: [\"users\", \"first\"]",
+        expectedMessage: "LiveMap set path does not resolve: [\"users\", \"first\"]",
         expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }], meta: { touched: false } },
       }),
       make_batch_closed_tx_case({
@@ -150,11 +150,11 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_editor_reject_case({
         suite: SUITE,
-        name: "write-op pipeline write editor rejection preserves earlier properties",
+        name: "write-op pipeline setMany rejects non-object path before editor",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users"],
         values: { first: { name: "Margaret" } },
-        expectedMessage: "LiveMap editor cannot set this path yet: [\"users\", \"first\"]",
+        expectedMessage: "LiveMap setMany path is not an object: [\"users\"]",
         expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }] },
       }),
     ] as const,
@@ -366,7 +366,7 @@ function make_batch_pipeline_case(spec: BatchPipelineCaseSpec): TestCase {
       const map = make_livemap_core(json_root_node(spec.input));
       const commit = map.batch((tx) => {
         tx.set(["user", "name"], "Grace");
-        tx.write(["user"], { role: "admin" });
+        tx.setMany(["user"], { role: "admin" });
         tx.delete(["user", "old"]);
       });
 
@@ -570,7 +570,7 @@ function make_set_many_editor_reject_case(spec: SetManyRejectCaseSpec): TestCase
       let message = "";
 
       try {
-        map.write(spec.path, spec.values);
+        map.setMany(spec.path, spec.values);
       } catch (error) {
         message = error instanceof Error ? error.message : String(error);
       }

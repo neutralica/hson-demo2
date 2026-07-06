@@ -165,8 +165,7 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use returns map and stores schema",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({});
-          map.set(["user"], { name: "Ada" });
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
           const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,

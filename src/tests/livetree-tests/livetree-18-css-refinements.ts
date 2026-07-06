@@ -360,10 +360,6 @@ export function livetree_css_refinements(): TestSuite {
         });
 
         const thumb = range.css.selector("::-webkit-slider-thumb");
-        // changed: diagnostic instrumentation for selector rule rendering.
-        const css = CssManager.api();
-        const renderedAll = css.renderAll();
-        const rules = css.list();
 
         (tree as any).__result = {
           baseAppearance: range.css.get.appearance(),
@@ -372,8 +368,6 @@ export function livetree_css_refinements(): TestSuite {
           thumbBackground: thumb.get.background(),
           thumbBorder: thumb.get.border(),
           thumbBorderRadius: thumb.get.borderRadius(),
-          renderedAll,
-          rules,
         };
       },
       assert(tree, t) {

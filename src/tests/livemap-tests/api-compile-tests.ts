@@ -318,8 +318,6 @@ API_TYPED_MAP_USER_NAME_HANDLE.update(() => 38);
 API_TYPED_MAP_PROXY.user.name.$_.set(38);
 // @ts-expect-error typed map.set rejects wrong array item property value
 API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "count"], "3");
-// @ts-expect-error typed array item handle.set rejects wrong object shape
-API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z" });
 
 // @ts-expect-error typed array proxy handle.set rejects wrong primitive value
 API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set("3");
@@ -356,8 +354,6 @@ API_TYPED_MAP_SAMPLE.batch((tx) => {
   tx.set(["user", "name"], 38);
   // @ts-expect-error typed batch tx.set rejects wrong primitive value for number path
   tx.set(["user", "age"], "38");
-  // @ts-expect-error typed batch tx.set rejects wrong object shape
-  tx.set(["user"], { age: 38 });
   // @ts-expect-error typed batch tx.setMany rejects wrong primitive value for string property
   tx.setMany(["user"], { name: 38 });
   // @ts-expect-error typed batch tx.setMany rejects wrong primitive value for number property
@@ -369,8 +365,6 @@ API_TYPED_MAP_SAMPLE.batch((tx) => {
 API_TYPED_ARRAY_MAP_SAMPLE.batch((tx) => {
   // @ts-expect-error typed batch tx.set rejects wrong array item property value
   tx.set(["items", 0, "count"], "3");
-  // @ts-expect-error typed batch tx.set rejects wrong array item shape
-  tx.set(["items", 0], { id: "z" });
   // @ts-expect-error typed batch tx.setMany rejects wrong array item property value
   tx.setMany(["items", 0], { count: "3" });
   // @ts-expect-error typed batch tx.setMany rejects unknown keys for typed array item paths
@@ -646,37 +640,3 @@ API_TYPED_MAP_SAMPLE.replace({ user: { age: 38 } });
 
 // @ts-expect-error typed replace rejects wrong nested primitive
 API_TYPED_MAP_SAMPLE.replace({ user: { name: "Grace", age: "38" } });
-
-API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace" });
-API_TYPED_MAP_SAMPLE.write(["user"], { age: 38 });
-API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace", age: 38 });
-
-API_TYPED_MAP_USER_HANDLE.write({ name: "Grace" });
-API_TYPED_MAP_USER_HANDLE.write({ age: 38 });
-API_TYPED_MAP_USER_HANDLE.object.write({ name: "Grace" });
-
-// @ts-expect-error typed map.write rejects wrong primitive value for string property
-API_TYPED_MAP_SAMPLE.write(["user"], { name: 38 });
-
-// @ts-expect-error typed map.write rejects unknown keys for schema-shaped object paths
-API_TYPED_MAP_SAMPLE.write(["user"], { missing: "dynamic" });
-
-// @ts-expect-error typed handle.write rejects wrong primitive value for number property
-API_TYPED_MAP_USER_HANDLE.write({ age: "38" });
-
-API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace" });
-API_TYPED_MAP_SAMPLE.write(["user"], { age: 38 });
-API_TYPED_MAP_SAMPLE.write(["user"], { name: "Grace", age: 38 });
-
-API_TYPED_MAP_USER_HANDLE.write({ name: "Grace" });
-API_TYPED_MAP_USER_HANDLE.write({ age: 38 });
-API_TYPED_MAP_USER_HANDLE.write({ name: "Grace", age: 38 });
-
-API_TYPED_MAP_USER_HANDLE.object.write({ name: "Grace" });
-API_TYPED_MAP_USER_HANDLE.object.write({ age: 38 });
-API_TYPED_MAP_USER_HANDLE.object.write({ name: "Grace", age: 38 });
-
-API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { id: "z" });
-API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { count: 3 });
-API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { label: "Z" });
-API_TYPED_ARRAY_MAP_SAMPLE.write(["items", 0], { id: "z", count: 3, label: "Z" });

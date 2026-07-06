@@ -202,11 +202,10 @@ export async function run_test_suites(
         emit(
           rec,
           onEvent,
-          metaPatch || assertRows !== undefined
+          metaPatch
             ? {
               ...endBase,
-              ...(metaPatch ? { metaPatch } : {}),
-              ...(assertRows !== undefined ? { assertRows } : {}),
+              metaPatch,
             }
             : endBase
         );
