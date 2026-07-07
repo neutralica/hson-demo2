@@ -50,6 +50,10 @@ export function livemap_suites_bridge_livetree(): TestSuite {
       make_livetree_snap_view_object_case(SUITE),
       make_livetree_snap_view_array_case(SUITE),
       make_livetree_snap_view_rerender_case(SUITE),
+      make_livetree_snap_view_nested_object_paths_case(SUITE),
+      make_livetree_snap_view_nested_array_paths_case(SUITE),
+      make_livetree_snap_view_null_case(SUITE),
+      make_livetree_snap_view_empty_containers_case(SUITE),
       make_livetree_attr_zero_case(SUITE),
       make_livetree_input_number_writeback_case(SUITE),
       make_livetree_input_boolean_writeback_case(SUITE),
@@ -487,6 +491,121 @@ function make_livetree_snap_view_rerender_case(suite: string): TestCase {
         assertRows: [
           equal_row("rerendered snap view includes latest value", html.includes("Running"), true),
           equal_row("rerendered snap view clears old value", html.includes("Ready"), false),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_nested_object_paths_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view preserves nested object paths",
+    meta: {
+      input: preview_value({ ui: { panel: { label: "Ready" } } }),
+      path: preview_value(["ui"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { panel: { label: "Ready" } } });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["ui"]);
+      const html = tree.content.markup.innerHTML;
+
+      return {
+        assertRows: [
+          equal_row("nested object root path", tree.attr.get("data-livemap-snap-path"), "ui"),
+          equal_row("nested object includes panel path", html.includes('data-livemap-snap-path="ui.panel"'), true),
+          equal_row("nested object includes label path", html.includes('data-livemap-snap-path="ui.panel.label"'), true),
+          equal_row("nested object includes leaf value", html.includes("Ready"), true),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_nested_array_paths_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view preserves nested array paths",
+    meta: {
+      input: preview_value({ ui: { items: [{ label: "One" }, { label: "Two" }] } }),
+      path: preview_value(["ui"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { items: [{ label: "One" }, { label: "Two" }] } });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["ui"]);
+      const html = tree.content.markup.innerHTML;
+
+      return {
+        assertRows: [
+          equal_row("nested array includes items path", html.includes('data-livemap-snap-path="ui.items"'), true),
+          equal_row("nested array includes first item path", html.includes('data-livemap-snap-path="ui.items.0"'), true),
+          equal_row("nested array includes first label path", html.includes('data-livemap-snap-path="ui.items.0.label"'), true),
+          equal_row("nested array includes second label path", html.includes('data-livemap-snap-path="ui.items.1.label"'), true),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_null_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view renders null as null kind with empty text",
+    meta: {
+      input: preview_value({ ui: { value: null } }),
+      path: preview_value(["ui", "value"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { value: null } });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["ui", "value"]);
+
+      return {
+        assertRows: [
+          equal_row("null snap view kind", tree.attr.get("data-livemap-snap-kind"), "null"),
+          equal_row("null snap view path", tree.attr.get("data-livemap-snap-path"), "ui.value"),
+          equal_row("null snap view text", tree.text.get(), ""),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_empty_containers_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view renders empty object and array kinds without child rows",
+    meta: {
+      input: preview_value({ emptyObject: {}, emptyArray: [] }),
+    },
+    run: () => {
+      const objectMap = make_bridge_map({ emptyObject: {} });
+      const objectTree = make_livetree_snap_view_target();
+      const arrayMap = make_bridge_map({ emptyArray: [] });
+      const arrayTree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(objectMap, objectTree, ["emptyObject"]);
+      render_livemap_snap_view(arrayMap, arrayTree, ["emptyArray"]);
+
+      return {
+        assertRows: [
+          equal_row("empty object snap view kind", objectTree.attr.get("data-livemap-snap-kind"), "object"),
+          equal_row(
+            "empty object has no key rows",
+            objectTree.content.markup.innerHTML.includes("data-livemap-snap-key"),
+            false,
+          ),
+          equal_row("empty array snap view kind", arrayTree.attr.get("data-livemap-snap-kind"), "array"),
+          equal_row(
+            "empty array has no index rows",
+            arrayTree.content.markup.innerHTML.includes("data-livemap-snap-index"),
+            false,
+          ),
         ],
       };
     },
