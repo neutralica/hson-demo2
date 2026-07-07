@@ -15,7 +15,8 @@ import { livemap_suites_schema } from "./schema-suites";
 import { livemap_suites_api } from "./api-suite";
 import { livemap_suites_store } from "./store-suites";
 import { livemap_suite_batch } from "./batch-suite";
-import { livemap_contract_tests } from "./contract-tests";
+import { livemap_contract_tests, livemap_object_exact } from "./contract-tests";
+import { livemap_schema_contract_suite } from "./contract-tests";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -81,6 +82,8 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_store(),
     livemap_suite_batch(),
     livemap_contract_tests(),
+    livemap_schema_contract_suite(),
+    livemap_object_exact(),
 
     
   ] as const;

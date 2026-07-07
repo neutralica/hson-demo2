@@ -5,7 +5,6 @@ import type { JsonValue } from "hson-live/types";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { preview_value, equal_row } from "./test-helpers";
 
-const SUITE = "livemap/contract";
 
 function err_message(fn: () => unknown): string {
   try {
@@ -21,6 +20,7 @@ function map_from(input: JsonValue) {
 }
 
 export function livemap_contract_tests(): TestSuite {
+  const SUITE = "livemap/contract";
   return {
     suite: SUITE,
     cases: [
@@ -187,6 +187,290 @@ export function livemap_contract_tests(): TestSuite {
           return {
             assertRows: [
               equal_row("contract handle linkTo can create missing target object property: target", target.snap(), { user: { name: "Grace" } }),
+            ],
+          };
+        },
+      },
+    ],
+  };
+}
+
+const userSchema = hson.liveMap.schema.define((s) => ({
+  user: {
+    name: s.string,
+    age: s.number.optional,
+  },
+}));
+const exactUserSchema = hson.liveMap.schema.define((s) => ({
+  user: s.exact({
+    name: s.string,
+    age: s.number.optional,
+  }),
+}));
+const itemsSchema = hson.liveMap.schema.define((s) => ({
+  items: s.array(s.number),
+}));
+
+export function livemap_schema_contract_suite(): TestSuite {
+  const SUITE = "livemap/schema-contract";
+  return {
+    suite: SUITE,
+    cases: [
+      {
+        suite: SUITE,
+        name: "schema contract set validates bad leaf before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+          path: preview_value(["user", "name"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada", age: 37 } }).schema.use(userSchema);
+          const message = err_message(() => map.set(["user", "name"], 12 as never));
+
+          return {
+            assertRows: [
+              equal_row(
+                "schema contract set validates bad leaf before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number"
+              ),
+              equal_row("schema contract set validates bad leaf before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract setMany reports bad changed field",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada", age: 37 } }).schema.use(userSchema);
+          const message = err_message(() => map.setMany(["user"], { name: "Grace", age: "old" as never }));
+
+          return {
+            assertRows: [
+              equal_row(
+                "schema contract setMany reports bad changed field: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string"
+              ),
+              equal_row("schema contract setMany reports bad changed field: root", map.snap(), { user: { name: "Ada", age: 37 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract replace validates endpoint exactly",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada", age: 37 } }).schema.use(userSchema);
+          const message = err_message(() => map.replace(["user"], { name: 12 as never }));
+
+          return {
+            assertRows: [
+              equal_row(
+                "schema contract replace validates endpoint exactly: error",
+                message,
+                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number"
+              ),
+              equal_row("schema contract replace validates endpoint exactly: root", map.snap(), { user: { name: "Ada", age: 37 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract delete required field fails before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+          path: preview_value(["user", "name"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada", age: 37 } }).schema.use(userSchema);
+          const message = err_message(() => map.delete(["user", "name"]));
+
+          return {
+            assertRows: [
+              equal_row(
+                "schema contract delete required field fails before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined"
+              ),
+              equal_row("schema contract delete required field fails before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract delete optional field succeeds",
+        meta: {
+          input: preview_value({ user: { name: "Ada", age: 37 } }),
+          path: preview_value(["user", "age"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada", age: 37 } }).schema.use(userSchema);
+          const commit = map.delete(["user", "age"]);
+
+          return {
+            assertRows: [
+              equal_row("schema contract delete optional field succeeds: changed", commit.changed, true),
+              equal_row("schema contract delete optional field succeeds: ops", commit.ops, [
+                { kind: "delete", path: ["user", "age"], prev: 37, next: undefined },
+              ]),
+              equal_row("schema contract delete optional field succeeds: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract exact rejects unknown setMany key",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada" } }).schema.use(exactUserSchema);
+          const message = err_message(() => map.setMany(["user"], { role: "admin" } as never));
+
+          return {
+            assertRows: [
+              equal_row(
+                "schema contract exact rejects unknown setMany key: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]"
+              ),
+              equal_row("schema contract exact rejects unknown setMany key: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract exact allows no-op deleteKey for absent unknown key",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada" } }).schema.use(exactUserSchema);
+          const commit = map.at(["user"]).object.deleteKey("role");
+
+          return {
+            assertRows: [
+              equal_row("schema contract exact allows no-op deleteKey for absent unknown key: changed", commit.changed, false),
+              equal_row("schema contract exact allows no-op deleteKey for absent unknown key: ops", commit.ops, []),
+              equal_row("schema contract exact allows no-op deleteKey for absent unknown key: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "schema contract array helper reports bad appended item",
+        meta: {
+          input: preview_value({ items: [0, 1] }),
+          path: preview_value(["items"]),
+        },
+        run: () => {
+          const map = map_from({ items: [0, 1] }).schema.use(itemsSchema);
+          const message = err_message(() => map.at(["items"]).array.push("two" as never));
+
+          return {
+            assertRows: [
+              equal_row(
+                "schema contract array helper reports bad appended item: error",
+                message,
+                "LiveMap schema rejected value at [\"items\"]:\n- LiveMap schema expected number at [\"items\",2], received string"
+              ),
+              equal_row("schema contract array helper reports bad appended item: root", map.snap(), { items: [0, 1] }),
+            ],
+          };
+        },
+      },
+    ],
+  };
+}
+
+export function livemap_object_exact(): TestSuite {
+  const SUITE = "livemap/object-exact";
+
+  return {
+    suite: SUITE,
+    cases: [
+      {
+        suite: SUITE,
+        name: "object exact rejects unknown object.setKey before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada" } }).schema.use(exactUserSchema);
+          const message = err_message(() => map.at(["user"]).object.setKey("role" as never, "admin" as never));
+
+          return {
+            assertRows: [
+              equal_row(
+                "object exact rejects unknown object.setKey before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]"
+              ),
+              equal_row("object exact rejects unknown object.setKey before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "object exact rejects unknown object-valued set before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada" } }).schema.use(exactUserSchema);
+          const message = err_message(() => map.set(["user"], { name: "Grace", role: "admin" } as never));
+
+          return {
+            assertRows: [
+              equal_row(
+                "object exact rejects unknown object-valued set before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]"
+              ),
+              equal_row("object exact rejects unknown object-valued set before mutation: root", map.snap(), { user: { name: "Ada" } }),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "object exact rejects unknown replace key before mutation",
+        meta: {
+          input: preview_value({ user: { name: "Ada" } }),
+          path: preview_value(["user"]),
+        },
+        run: () => {
+          const map = map_from({ user: { name: "Ada" } }).schema.use(exactUserSchema);
+          const message = err_message(() => map.replace(["user"], { name: "Grace", role: "admin" } as never));
+
+          return {
+            assertRows: [
+              equal_row(
+                "object exact rejects unknown replace key before mutation: error",
+                message,
+                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]"
+              ),
+              equal_row("object exact rejects unknown replace key before mutation: root", map.snap(), { user: { name: "Ada" } }),
             ],
           };
         },

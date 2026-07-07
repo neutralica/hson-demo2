@@ -36,6 +36,7 @@ import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_firework } from "../../widgets/wasm-deprecate/hson-wasm-fireworks";
+import { smoke_test_harness } from "../../demos/test/test-smoke";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -415,6 +416,9 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     void spawn_flower(fleurField, x, y);
   });
   mount_firework(screen);
+  void smoke_test_harness().catch((error) => {
+  console.error("[test-smoke]", error);
+});
   return relay.ok();
 }
 

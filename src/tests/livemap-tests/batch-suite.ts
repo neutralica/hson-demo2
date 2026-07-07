@@ -122,7 +122,7 @@ export function livemap_suite_batch(): TestSuite {
         suite: SUITE,
         name: "batch schema rejects before any mutation",
         input: { user: { name: "Ada", age: 37 } },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
         expectedRoot: { user: { name: "Ada", age: 37 } },
       }),
       make_batch_editor_reject_case({
@@ -145,7 +145,7 @@ export function livemap_suite_batch(): TestSuite {
         input: { user: { name: "Ada", age: 37 } },
         path: ["user"],
         values: { name: "Grace", age: "old" },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
         expectedRoot: { user: { name: "Ada", age: 37 } },
       }),
       make_set_many_editor_reject_case({

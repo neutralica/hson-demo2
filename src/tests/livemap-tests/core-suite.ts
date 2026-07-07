@@ -530,7 +530,7 @@ export function livemap_suites_core(): TestSuite {
               equal_row(
                 "core schema rejects invalid setMany before mutation: error",
                 message,
-                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+               "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
               ),
               equal_row("core schema rejects invalid setMany before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
             ],
