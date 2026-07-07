@@ -17,6 +17,7 @@ import { OKLCH_FLEURS } from "../../app/demos/fleurs/fleurs.consts";
 import type { LoopReport } from "hson-live/diagnostics";
 import { OKLCH_NEUTRALS } from "../../app/core/consts/oklch.consts";
 import type { TestLog } from "../../app/demos/test/test-logger";
+import { set_alpha } from "../../app/core/helpers/color-helpers";
 
 
 export type InspectorUi = Readonly<{
@@ -196,7 +197,7 @@ export function make_inspector(
         textAlign: "center",
         lineHeight: "1.45",
         border: "1px solid rgba(190, 205, 196, 0.16)",
-        background: "rgba(3, 10, 10, 0.28)",
+        background: set_alpha(_colors.backlo, 0.5),
       });
   };
 
@@ -240,20 +241,20 @@ export function make_inspector(
       ...THcss,
       width: $CHIP_WIDTHstr,
       maxWidth: $CHIP_WIDTHstr,
-      color: _colors.txt.list,
+      color: _colors.txt.grey,
     });
 
     mk_th(hr, "c-name", "suite / group / case").css.setMany({
       ...THcss,
       ...tdNameCssBase,
-      color: _colors.txt.list,
+      color: _colors.txt.grey,
     });
 
     mk_th(hr, "c-ms", "ms").css.setMany({
       ...THcss,
       width: $CHIP_WIDTHstr,
       maxWidth: $CHIP_WIDTHstr,
-      color: _colors.txt.list,
+      color: _colors.txt.grey,
     });
 
     for (const s of suites) {

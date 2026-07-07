@@ -15,7 +15,7 @@ export const TP_BRANCHcss: CssMap = {
   boxSizing: "border-box",
   gridTemplateColumns: "minmax(0, 1fr) " + $LOGGER_WIDTH,
   gridTemplateRows: "minmax(0, 1fr)",
-  background: _colors.backlo,
+  // background: _colors.backlo,
 };
 
 export const TP_ROOTcss: CssMap = {
@@ -69,7 +69,7 @@ export const TP_CONTROL_ROWcss: CssMap = {
   alignSelf: "end",
   padding: "9px",
   border: "6px ridge " + _colors.txt.grey,
-  background: "rgba(3, 10, 10, 0.70)",
+  // background: _colors.backlo,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 0 0 1px rgba(0,0,0,0.55)",
 };
 
@@ -85,7 +85,7 @@ export const TEST_CHIP_ROWcss = {
   padding: "7px 9px",
   boxSizing: "border-box",
   // border: "6px ridge rgba(190, 205, 196, 0.36)",
-  background: "rgba(3, 10, 10, 0.54)",
+  // background: _colors.backlo,
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04), 0 0 0 1px rgba(0,0,0,0.45)",
 }
 
@@ -99,7 +99,7 @@ export const TEST_CHIP_DEFcss = {
   minWidth: "7ch",
   boxSizing: "border-box",
   overflow: "hidden",
-  background: "rgba(3, 10, 10, 0.28)",
+  background: _colors.backlo,
   border: "1px solid rgba(190, 205, 196, 0.22)",
   transition: "transform 90ms ease, filter 140ms ease",
 };

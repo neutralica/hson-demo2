@@ -166,7 +166,7 @@ export const _colorVals = {
   fmt: {
     json: _HSON_COL.h,
     html: _HSON_COL.o,
-    hson: _HSON_COL.s
+    hson: _HSON_COL.n
   },
   code: {
     alt: CODE_ALTcol,

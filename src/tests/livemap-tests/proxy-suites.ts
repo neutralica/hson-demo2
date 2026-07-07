@@ -75,6 +75,44 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
+        name: "proxy contract object-valued set preserves unspecified siblings",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user.$_.set({ name: "Grace" });
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "name"], prev: "Ada", next: "Grace" },
+        ],
+        expectedRoot: { user: { name: "Grace", role: "user" } },
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy contract set missing direct property throws",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user.role.$_.set("admin");
+        },
+        expectedMessage: "LiveMap set path does not resolve: [\"user\", \"role\"]",
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "proxy contract replace removes unspecified siblings",
+        input: { user: { name: "Ada", role: "user" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user.$_.replace({ name: "Grace" });
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "replace", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Grace" } },
+        ],
+        expectedRoot: { user: { name: "Grace" } },
+      }),
+      commitCase({
+        suite: SUITE,
         name: "proxy $_ delete deletes current path",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => {
@@ -266,6 +304,20 @@ export function livemap_suites_proxy(): TestSuite {
           { kind: "set", path: ["user", "role"], prev: undefined, next: "user" },
         ],
         expectedRoot: { user: { name: "Ada", role: "user" } },
+      }),
+      commitCase({
+        suite: SUITE,
+        name: "proxy contract setMany creates missing object key",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          const proxy = map.proxy() as any;
+          return proxy.user.$_.setMany({ role: "admin" });
+        },
+        expectedChanged: true,
+        expectedOps: [
+          { kind: "set", path: ["user", "role"], prev: undefined, next: "admin" },
+        ],
+        expectedRoot: { user: { name: "Ada", role: "admin" } },
       }),
       readCase({
         suite: SUITE,
@@ -653,6 +705,38 @@ export function livemap_suites_proxy(): TestSuite {
           return proxy.user.$_.object.setKey("role", "admin");
         },
         expectedMessage: "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy exact schema rejects unknown object-valued set before mutation",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          map.withSchema(define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.set({ name: "Grace", role: "admin" });
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"role\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]",
+      }),
+      throwCase({
+        suite: SUITE,
+        name: "proxy exact schema rejects unknown replace key before mutation",
+        input: { user: { name: "Ada" } },
+        act: (map) => {
+          map.withSchema(define_livemap_schema((s) => ({
+            user: s.exact({
+              name: s.string,
+            }),
+          })));
+          const proxy = map.proxy() as any;
+
+          return proxy.user.$_.replace({ name: "Grace", role: "admin" });
+        },
+        expectedMessage: "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema does not allow key \"role\" at [\"user\",\"role\"]",
       }),
       commitCase({
         suite: SUITE,

@@ -42,7 +42,7 @@ export const INSPECTORcss: CssMap = {
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr)",
   overflow: "hidden",
-  background: _colors.backlo,
+  // background: _colors.backlo,
   fontFamily: SYS_MONOfont,
   fontSize: _fontSize.smol,
 };
@@ -161,4 +161,11 @@ export const INSP_CAP_ROWcss = {
   gap: "1ch",
   alignItems: "center",
   marginBottom: "0.5rem",
+};
+
+export const INSPECTOR_TABLEcss = {
+  width: "100%",
+  borderCollapse: "collapse",
+  background: set_alpha(_colors.backlo, 0.7),
+  
 };

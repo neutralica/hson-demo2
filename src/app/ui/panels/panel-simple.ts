@@ -20,6 +20,6 @@ export function mount_panel_simple(parent: LiveTree, name: string): LiveTree {
       overflow: "hidden",
       color: _colors.txt.grey,
       ...FONT_FAM_MONO,
-      background: _colors.backlo
+      // background: _colors.backlo
     });
 }

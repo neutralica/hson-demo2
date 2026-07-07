@@ -2,6 +2,9 @@ import type { LiveTree } from "hson-live";
 import type { CaseReport } from "../../app/demos/test/tests.types";
 import { tick } from "../livetree-tests/livetree-03";
 import type { Artifact } from "hson-live/diagnostics";
+import { _colors } from "../../app/core/consts/colors.consts";
+import { set_alpha } from "../../app/core/helpers/color-helpers";
+import { INSPECTOR_TABLEcss } from "./inspector.css";
 
 export async function flush_dom(): Promise<void> {
   await tick();
@@ -19,7 +22,7 @@ export const mk_table = (parent: LiveTree, cls: string): { table: LiveTree; thea
   const table = parent.create.table().classlist.set(`insp-table ${cls}`);
   const thead = table.create.thead();
   const tbody = table.create.tbody();
-  table.css.setMany({ width: "100%", borderCollapse: "collapse" });
+  table.css.setMany(INSPECTOR_TABLEcss);
   return { table, thead, tbody };
 };
 

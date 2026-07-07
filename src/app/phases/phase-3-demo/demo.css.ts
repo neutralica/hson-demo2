@@ -192,7 +192,7 @@ export const OKLCH_HOSTcss = {
 
 export const COPYRITEcss: CssMap = {
   fontFamily: SYS_MONOfont,
-  fontSize: _fontSize.smol,
+  fontSize: _fontSize.wee,
   position: "fixed",
   bottom: "0.2rem",
   right: "1rem",

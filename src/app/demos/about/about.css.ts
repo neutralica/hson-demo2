@@ -16,8 +16,8 @@ export const ABOUT_DOCcss: CssMap = {
   overflowY: "scroll",
   overflowX: "hidden",
   width: "90ch",
-  lineHeight: "1.9"
-
+  lineHeight: "1.9",
+background: set_alpha(_colors.backlo, 0.3),
 };
 
 export const DOC_CONTAINER: CssMap = {
@@ -29,7 +29,7 @@ export const ABOUT_TOCcss: CssMap = {
   alignContent: "end",
   padding: "1em",
   boxSizing: "border-box",
-  background: "transparent",
+  background: set_alpha(_colors.backlo, 0.3),
   overflowY: "auto",
   overflowX: "hidden",
   ...FONT_FAM_MONO,
