@@ -6,23 +6,23 @@ import {
   bind_livetree_input_value,
   bind_livetree_text,
   render_livemap_snap,
+  render_livemap_snap_view,
+  type LiveAttrBridgeTarget,
+  type LiveInputBridgeTarget,
+  type LiveInputListenerResult,
+  type LiveSnapViewBridgeTarget,
+  type LiveTextBridgeTarget,
 } from "../../../../hson-live/src/api/livemap/bridge";
-import type {
-  LiveMapBridgeBinding,
-  LiveMapBridgeMap,
-  LiveTreeAttrBridgeTarget,
-  LiveTreeInputBridgeTarget,
-  LiveTreeInputListenerResult,
-  LiveTreeTextBridgeTarget,
-} from "../../../../hson-live/src/api/livemap/bridge";
-import type { JsonValue, LivePath } from "hson-live/types";
+import type { JsonValue } from "../../../../hson-live/src/core/types";
+import type { LiveMap, LivePath } from "../../../../hson-live/src/api/livemap/livemap.types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 
-type BridgeMap = LiveMapBridgeMap;
-type LiveTreeTextTarget = LiveTreeTextBridgeTarget;
-type LiveTreeAttrTarget = LiveTreeAttrBridgeTarget;
-type LiveTreeInputTarget = LiveTreeInputBridgeTarget;
+type BridgeMap = LiveMap;
+type LiveTreeTextTarget = LiveTextBridgeTarget;
+type LiveTreeAttrTarget = LiveAttrBridgeTarget;
+type LiveTreeInputTarget = LiveInputBridgeTarget;
+type LiveTreeSnapViewTarget = LiveSnapViewBridgeTarget;
 
 
 // Test-only event shim. Real bridge code should rely on LiveTree listener results.
@@ -46,6 +46,10 @@ export function livemap_suites_bridge_livetree(): TestSuite {
       make_livetree_snap_path_case(SUITE),
       make_livetree_snap_static_case(SUITE),
       make_livetree_snap_rerender_case(SUITE),
+      make_livetree_snap_view_primitive_case(SUITE),
+      make_livetree_snap_view_object_case(SUITE),
+      make_livetree_snap_view_array_case(SUITE),
+      make_livetree_snap_view_rerender_case(SUITE),
       make_livetree_attr_zero_case(SUITE),
       make_livetree_input_number_writeback_case(SUITE),
       make_livetree_input_boolean_writeback_case(SUITE),
@@ -71,6 +75,10 @@ function make_livetree_attr_target(): LiveTreeAttrTarget {
   return hson.liveTree.create.div() as unknown as LiveTreeAttrTarget;
 }
 
+function make_livetree_snap_view_target(): LiveTreeSnapViewTarget {
+  return hson.liveTree.create.div() as unknown as LiveTreeSnapViewTarget;
+}
+
 function make_livetree_input_target(): LiveTreeInputTarget {
   const tree = hson.liveTree.create.input() as unknown as LiveTreeInputTarget;
   let target: LiveTreeInputTarget;
@@ -89,7 +97,7 @@ function make_livetree_input_target(): LiveTreeInputTarget {
             result.off();
             TEST_INPUT_LISTENERS.delete(target as object);
           },
-        } satisfies LiveTreeInputListenerResult;
+        } satisfies LiveInputListenerResult;
       },
     },
   };
@@ -353,6 +361,7 @@ function make_livetree_snap_static_case(suite: string): TestCase {
   };
 }
 
+
 function make_livetree_snap_rerender_case(suite: string): TestCase {
   return {
     suite,
@@ -371,6 +380,114 @@ function make_livetree_snap_rerender_case(suite: string): TestCase {
 
       return {
         assertRows: [equal_row("rerendered snapshot text", tree.text.get(), "Running")],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_primitive_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view renders primitive kind and text",
+    meta: {
+      input: preview_value({ ui: { label: "Ready" } }),
+      path: preview_value(["ui", "label"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready" } });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["ui", "label"]);
+
+      return {
+        assertRows: [
+          equal_row("primitive snap view kind", tree.attr.get("data-livemap-snap-kind"), "string"),
+          equal_row("primitive snap view path", tree.attr.get("data-livemap-snap-path"), "ui.label"),
+          equal_row("primitive snap view text", tree.text.get(), "Ready"),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_object_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view renders object key/value rows",
+    meta: {
+      input: preview_value({ ui: { label: "Ready", enabled: true } }),
+      path: preview_value(["ui"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready", enabled: true } });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["ui"]);
+      const html = tree.content.markup.innerHTML;
+
+      return {
+        assertRows: [
+          equal_row("object snap view kind", tree.attr.get("data-livemap-snap-kind"), "object"),
+          equal_row("object snap view includes label key", html.includes('data-livemap-snap-key="label"'), true),
+          equal_row("object snap view includes enabled key", html.includes('data-livemap-snap-key="enabled"'), true),
+          equal_row("object snap view includes Ready value", html.includes("Ready"), true),
+          equal_row("object snap view includes true value", html.includes("true"), true),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_array_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view renders array index/value rows",
+    meta: {
+      input: preview_value({ items: ["one", "two"] }),
+      path: preview_value(["items"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ items: ["one", "two"] });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["items"]);
+      const html = tree.content.markup.innerHTML;
+
+      return {
+        assertRows: [
+          equal_row("array snap view kind", tree.attr.get("data-livemap-snap-kind"), "array"),
+          equal_row("array snap view includes index 0", html.includes('data-livemap-snap-index="0"'), true),
+          equal_row("array snap view includes index 1", html.includes('data-livemap-snap-index="1"'), true),
+          equal_row("array snap view includes first value", html.includes("one"), true),
+          equal_row("array snap view includes second value", html.includes("two"), true),
+        ],
+      };
+    },
+  };
+}
+
+function make_livetree_snap_view_rerender_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree snap view rerender clears previous static structure",
+    meta: {
+      input: preview_value({ ui: { label: "Ready" } }),
+      path: preview_value(["ui"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready" } });
+      const tree = make_livetree_snap_view_target();
+
+      render_livemap_snap_view(map, tree, ["ui"]);
+      map.set(["ui"], { label: "Running" });
+      render_livemap_snap_view(map, tree, ["ui"]);
+      const html = tree.content.markup.innerHTML;
+
+      return {
+        assertRows: [
+          equal_row("rerendered snap view includes latest value", html.includes("Running"), true),
+          equal_row("rerendered snap view clears old value", html.includes("Ready"), false),
+        ],
       };
     },
   };
