@@ -37,6 +37,8 @@ export function livemap_suites_bridge_livetree_controls(): TestSuite {
       make_controls_snap_markup_attrs_case(SUITE),
       make_controls_snap_binding_count_case(SUITE),
       make_controls_snap_boolean_writeback_case(SUITE),
+      make_controls_snap_rerender_replaces_inputs_case(SUITE),
+      make_controls_snap_rerender_after_dispose_ignores_old_input_case(SUITE),
     ] as const,
   };
 }
@@ -117,6 +119,11 @@ function control_input_by_path(tree: LiveTreeControlViewTarget, path: string): L
 
 function generated_inputs(tree: LiveTreeControlViewTarget): readonly LiveTreeControlViewTarget[] {
   return TEST_GENERATED_INPUTS.get(tree as object) ?? [];
+}
+
+function clear_generated_inputs(tree: LiveTreeControlViewTarget): void {
+  const inputs = TEST_GENERATED_INPUTS.get(tree as object);
+  if (inputs !== undefined) inputs.length = 0;
 }
 
 function make_bridge_map(value: JsonValue): BridgeMap {
@@ -318,6 +325,75 @@ function make_controls_snap_boolean_writeback_case(suite: string): TestCase {
         equal_row("generated boolean control writes boolean", map.snap(), { enabled: false }),
       ];
       binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_controls_snap_rerender_replaces_inputs_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree generated controls rerender replaces generated inputs",
+    meta: {
+      input: preview_value({ ui: { label: "Ready" } }),
+      path: preview_value(["ui"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready" } });
+      const tree = make_control_view_target();
+      const firstBinding = render_livemap_controls_snap(map, tree, ["ui"]);
+      const firstInput = control_input_by_path(tree, "ui.label");
+
+      firstBinding.dispose();
+      clear_generated_inputs(tree);
+      const secondMap = make_bridge_map({ ui: { count: 1 } });
+      const secondBinding = render_livemap_controls_snap(secondMap, tree, ["ui"]);
+      const secondInput = control_input_by_path(tree, "ui.count");
+
+      const rows = [
+        equal_row("rerender generated controls latest input kind", secondInput.attr.get("data-livemap-control-kind"), "number"),
+        equal_row("rerender generated controls latest input type", secondInput.attr.get("type"), "number"),
+        equal_row("rerender generated controls binding count", secondBinding.bindings.length, 1),
+        equal_row("rerender generated controls replaces markup", tree.content.markup.innerHTML.includes('data-livemap-control-key="label"'), false),
+        equal_row("rerender generated controls old input remains detached", firstInput.attr.get("data-livemap-control-path"), "ui.label"),
+      ];
+      secondBinding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_controls_snap_rerender_after_dispose_ignores_old_input_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree generated controls rerender disposed old input does not write back",
+    meta: {
+      input: preview_value({ ui: { label: "Ready" } }),
+      path: preview_value(["ui"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready" } });
+      const tree = make_control_view_target();
+      const firstBinding = render_livemap_controls_snap(map, tree, ["ui"]);
+      const firstInput = control_input_by_path(tree, "ui.label");
+
+      firstBinding.dispose();
+      clear_generated_inputs(tree);
+      map.set(["ui", "label"], "Running");
+      const secondBinding = render_livemap_controls_snap(map, tree, ["ui"]);
+      const secondInput = control_input_by_path(tree, "ui.label");
+
+      firstInput.form.setValue("Stale", { silent: true });
+      emit_input_if_registered(firstInput as object);
+      secondInput.form.setValue("Fresh", { silent: true });
+      emit_input(secondInput as object);
+
+      const rows = [
+        equal_row("rerender old disposed input does not write back", map.snap(), { ui: { label: "Fresh" } }),
+      ];
+      secondBinding.dispose();
 
       return { assertRows: rows };
     },

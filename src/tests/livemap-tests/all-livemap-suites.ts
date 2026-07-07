@@ -22,7 +22,7 @@ import { hson } from "hson-live";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
 import { livemap_suites_bridge } from "./bridge-suite";
 import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
-import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-suite-2";
+import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-2";
 
 
 export type LiveMapCaseContext = Readonly<{
