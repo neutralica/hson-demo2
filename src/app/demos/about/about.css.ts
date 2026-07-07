@@ -287,7 +287,7 @@ export const ABOUT_HEADERcss: (x: number) => CssMap = (level: number) => {
 export const MD_COPY_LINEcss: CssMap = {
   ...ABOUT_P_TEXTcss,
   fontFamily: SYS_MONOfont,
-  fontSize: _fontSize.smol,
+  fontSize: _fontSize.wee,
   color: _colors.txt.copyright,
   marginTop: "2rem",
 }

@@ -37,11 +37,20 @@ function same_string_array(a: readonly string[], b: readonly string[]): boolean 
     return same_json(a, b);
 }
 
+function equal_row(label: string, actual: unknown, expected: unknown) {
+    return {
+        ok: same_json(actual, expected),
+        label,
+        actual: json_text(actual),
+        expected: json_text(expected),
+    };
+}
+
 export function livemap_suites_store(): TestSuite {
     return {
         suite: SUITE,
         cases: [
-        {
+            {
                 suite: SUITE,
                 name: "sub receives projected root changes",
                 run: () => {
@@ -60,12 +69,7 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            {
-                                ok: same_json(events, expected),
-                                label: "sub emitted projected root changes until stopped",
-                                actual: json_text(events),
-                                expected: json_text(expected),
-                            },
+                            equal_row("sub emitted projected root changes until stopped", events, expected),
                         ],
                     };
                 },
@@ -94,18 +98,41 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            {
-                                ok: events.length === 1,
-                                label: "only one diff emitted before stop",
-                                actual: String(events.length),
-                                expected: "1",
-                            },
-                            {
-                                ok: same_json(events, expected),
-                                label: "diff event includes previous and next snapshots",
-                                actual: json_text(events),
-                                expected: json_text(expected),
-                            },
+                            equal_row("diff event includes previous and next snapshots", events, expected),
+                        ],
+                    };
+                },
+            },
+            {
+                suite: SUITE,
+                name: "subscribeDiff skips unchanged root signature",
+                run: () => {
+                    const map = as_ui_map({
+                        ui: {
+                            currentView: null,
+                            activeWidgets: [],
+                        },
+                    });
+                    const events: { prev: UiState; next: UiState }[] = [];
+
+                    const stop = map.sub.diff((next, prev) => {
+                        events.push({ prev, next });
+                    });
+
+                    map.at(["ui"]).replace({ currentView: null, activeWidgets: [] });
+                    map.at(["ui", "currentView"]).set("test");
+                    stop();
+
+                    const expected = [
+                        {
+                            prev: { ui: { currentView: null, activeWidgets: [] } },
+                            next: { ui: { currentView: "test", activeWidgets: [] } },
+                        },
+                    ];
+
+                    return {
+                        assertRows: [
+                            equal_row("diff suppressed unchanged JSON signature", events, expected),
                         ],
                     };
                 },
@@ -142,12 +169,7 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            {
-                                ok: same_json(events, expected),
-                                label: "selector emitted only selected changes",
-                                actual: json_text(events),
-                                expected: json_text(expected),
-                            },
+                            equal_row("selector emitted only selected changes", events, expected),
                         ],
                     };
                 },
@@ -185,12 +207,7 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            {
-                                ok: same_json(events, expected),
-                                label: "selector custom equality suppressed equivalent arrays",
-                                actual: json_text(events),
-                                expected: json_text(expected),
-                            },
+                            equal_row("selector custom equality suppressed equivalent arrays", events, expected),
                         ],
                     };
                 },
@@ -224,12 +241,37 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            {
-                                ok: same_json(events, expected),
-                                label: "path emitted only path changes",
-                                actual: json_text(events),
-                                expected: json_text(expected),
-                            },
+                            equal_row("path emitted only path changes", events, expected),
+                        ],
+                    };
+                },
+            },
+            {
+                suite: SUITE,
+                name: "sub.path emits when parent replace changes path value",
+                run: () => {
+                    const map = as_ui_map({
+                        ui: {
+                            currentView: null,
+                            activeWidgets: [],
+                        },
+                    });
+                    const events: { next: string | null; prev: string | null }[] = [];
+
+                    const stop = map.sub.path(["ui", "currentView"], (next, prev) => {
+                        events.push({ next, prev });
+                    });
+
+                    map.at(["ui"]).replace({ currentView: "test", activeWidgets: ["point"] });
+                    stop();
+
+                    const expected = [
+                        { next: "test", prev: null },
+                    ];
+
+                    return {
+                        assertRows: [
+                            equal_row("path emitted for parent endpoint replacement", events, expected),
                         ],
                     };
                 },
@@ -264,12 +306,72 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            {
-                                ok: same_json(events, expected),
-                                label: "path custom equality suppressed equivalent arrays",
-                                actual: json_text(events),
-                                expected: json_text(expected),
-                            },
+                            equal_row("path custom equality suppressed equivalent arrays", events, expected),
+                        ],
+                    };
+                },
+            },
+            {
+                suite: SUITE,
+                name: "sub root snapshots are cloned",
+                run: () => {
+                    const map = as_ui_map({
+                        ui: {
+                            currentView: null,
+                            activeWidgets: [],
+                        },
+                    });
+
+                    const stop = map.sub((next) => {
+                        next.ui.currentView = "mutated-by-subscriber";
+                        next.ui.activeWidgets.push("mutated-by-subscriber");
+                    });
+
+                    map.at(["ui", "currentView"]).set("test");
+                    stop();
+
+                    const expected = {
+                        ui: {
+                            currentView: "test",
+                            activeWidgets: [],
+                        },
+                    };
+
+                    return {
+                        assertRows: [
+                            equal_row("subscriber root snapshot mutation did not mutate map", map.snap(), expected),
+                        ],
+                    };
+                },
+            },
+            {
+                suite: SUITE,
+                name: "sub.path snapshots are cloned",
+                run: () => {
+                    const map = as_ui_map({
+                        ui: {
+                            currentView: null,
+                            activeWidgets: [],
+                        },
+                    });
+
+                    const stop = map.sub.path(["ui", "activeWidgets"], (next) => {
+                        next.push("mutated-by-subscriber");
+                    });
+
+                    map.at(["ui", "activeWidgets"]).set(["point"]);
+                    stop();
+
+                    const expected = {
+                        ui: {
+                            currentView: null,
+                            activeWidgets: ["point"],
+                        },
+                    };
+
+                    return {
+                        assertRows: [
+                            equal_row("subscriber path snapshot mutation did not mutate map", map.snap(), expected),
                         ],
                     };
                 },
