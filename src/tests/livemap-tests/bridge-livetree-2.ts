@@ -39,6 +39,7 @@ export function livemap_suites_bridge_livetree_controls(): TestSuite {
       make_controls_snap_boolean_writeback_case(SUITE),
       make_controls_snap_rerender_replaces_inputs_case(SUITE),
       make_controls_snap_rerender_after_dispose_ignores_old_input_case(SUITE),
+      make_controls_snap_dotted_keys_preserve_internal_path_case(SUITE),
     ] as const,
   };
 }
@@ -394,6 +395,36 @@ function make_controls_snap_rerender_after_dispose_ignores_old_input_case(suite:
         equal_row("rerender old disposed input does not write back", map.snap(), { ui: { label: "Fresh" } }),
       ];
       secondBinding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_controls_snap_dotted_keys_preserve_internal_path_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree generated controls preserve internal paths for dotted keys",
+    meta: {
+      input: preview_value({ "ui.panel": { "label.text": "Ready" } }),
+      path: preview_value(["ui.panel"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ "ui.panel": { "label.text": "Ready" } });
+      const tree = make_control_view_target();
+      const binding = render_livemap_controls_snap(map, tree, ["ui.panel"]);
+      const input = first_control_input(tree);
+
+      input.form.setValue("Running", { silent: true });
+      emit_input(input as object);
+
+      const rows = [
+        equal_row("dotted key control readable path is dotted", input.attr.get("data-livemap-control-path"), "ui.panel.label.text"),
+        equal_row("dotted key control writes exact internal path", map.snap(), { "ui.panel": { "label.text": "Running" } }),
+        equal_row("dotted key control does not create nested ui key", map.snap(["ui"]), undefined),
+        equal_row("dotted key control does not create nested label key", map.snap(["ui.panel", "label"]), undefined),
+      ];
+      binding.dispose();
 
       return { assertRows: rows };
     },

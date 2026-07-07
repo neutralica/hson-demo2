@@ -1,4 +1,0 @@
-// schema-contract-suite.ts
-
-
-

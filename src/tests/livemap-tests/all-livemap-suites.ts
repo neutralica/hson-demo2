@@ -23,6 +23,7 @@ import { livemap_suite_html_proof } from "./html-livemap-suite";
 import { livemap_suites_bridge } from "./bridge-suite";
 import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
 import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-2";
+import { livemap_suites_schema_controls } from "./schema-control-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -94,7 +95,7 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_bridge(),
     livemap_suites_bridge_livetree(),
     livemap_suites_bridge_livetree_controls(),
-
+    livemap_suites_schema_controls(),
 
     // livemap_suite_html_proof(), // non-supported currently
 
