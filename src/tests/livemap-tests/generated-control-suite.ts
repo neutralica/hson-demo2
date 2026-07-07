@@ -1,11 +1,16 @@
-// schema-control-suite.ts
+// generated-control-suite.ts
 
 import { hson } from "hson-live";
 import type { JsonValue } from "../../../../hson-live/src/core/types";
 import type { LiveMap } from "../../../../hson-live/src/api/livemap/livemap.types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
-import { render_livemap_schema_controls_snap, type LiveControlViewBridgeTarget, type LiveInputListenerResult, type LiveMapSchemaControlSpec } from "../../../../hson-live/src/api/livemap/bridge";
+import {
+  render_livemap_schema_controls_snap,
+  type LiveControlViewBridgeTarget,
+  type LiveInputListenerResult,
+  type LiveMapSchemaControlSpec,
+} from "../../../../hson-live/src/api/livemap/bridge";
 
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &
@@ -28,6 +33,8 @@ export function livemap_suites_schema_controls(): TestSuite {
       make_schema_control_boolean_checkbox_case(SUITE),
       make_schema_control_nested_dotted_schema_path_case(SUITE),
       make_schema_control_missing_schema_fallback_case(SUITE),
+      make_schema_control_binding_count_case(SUITE),
+      make_schema_control_rerender_uses_latest_schema_case(SUITE),
     ] as const,
   };
 }
@@ -101,6 +108,15 @@ function schema_control_by_path(tree: LiveTreeControlViewTarget, path: string): 
   const match = TEST_GENERATED_INPUTS.get(tree as object)?.find((input) => input.attr.get("data-livemap-control-path") === path);
   if (match === undefined) throw new Error(`Expected generated schema control for path ${path}.`);
   return match;
+}
+
+function generated_schema_controls(tree: LiveTreeControlViewTarget): readonly LiveTreeControlViewTarget[] {
+  return TEST_GENERATED_INPUTS.get(tree as object) ?? [];
+}
+
+function clear_generated_schema_controls(tree: LiveTreeControlViewTarget): void {
+  const inputs = TEST_GENERATED_INPUTS.get(tree as object);
+  if (inputs !== undefined) inputs.length = 0;
 }
 
 function make_bridge_map(value: JsonValue): BridgeMap {
@@ -331,6 +347,92 @@ function make_schema_control_missing_schema_fallback_case(suite: string): TestCa
         equal_row("schema fallback writes both values", map.snap(), { ui: { label: "Running", count: 2 } }),
       ];
       binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_schema_control_binding_count_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "Schema generated controls return one binding per primitive leaf",
+    meta: {
+      input: preview_value({ ui: { label: "Ready", count: 1, enabled: true } }),
+      schema: preview_value({
+        "ui.label": { label: "Label" },
+        "ui.count": { kind: "number", min: 0 },
+        "ui.enabled": { kind: "boolean", label: "Enabled" },
+      }),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready", count: 1, enabled: true } });
+      const tree = make_control_view_target();
+      const schema: LiveMapSchemaControlSpec = {
+        "ui.label": { label: "Label" },
+        "ui.count": { kind: "number", min: 0 },
+        "ui.enabled": { kind: "boolean", label: "Enabled" },
+      };
+      const binding = render_livemap_schema_controls_snap(map, tree, schema, ["ui"]);
+
+      const rows = [
+        equal_row("schema generated control count", generated_schema_controls(tree).length, 3),
+        equal_row("schema generated binding count", binding.bindings.length, 3),
+        equal_row("schema generated label control exists", schema_control_by_path(tree, "ui.label").attr.get("data-livemap-control-label"), "Label"),
+        equal_row("schema generated number control exists", schema_control_by_path(tree, "ui.count").attr.get("type"), "number"),
+        equal_row("schema generated boolean control exists", schema_control_by_path(tree, "ui.enabled").attr.get("type"), "checkbox"),
+      ];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_schema_control_rerender_uses_latest_schema_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "Schema generated controls rerender uses latest schema metadata",
+    meta: {
+      input: preview_value({ count: 1 }),
+      schema: preview_value({ count: { kind: "number", label: "First", min: 0 } }),
+    },
+    run: () => {
+      const map = make_bridge_map({ count: 1 });
+      const tree = make_control_view_target();
+      const firstSchema: LiveMapSchemaControlSpec = {
+        count: {
+          kind: "number",
+          label: "First",
+          min: 0,
+        },
+      };
+      const firstBinding = render_livemap_schema_controls_snap(map, tree, firstSchema);
+      const firstInput = first_schema_control(tree);
+
+      firstBinding.dispose();
+      clear_generated_schema_controls(tree);
+
+      const secondSchema: LiveMapSchemaControlSpec = {
+        count: {
+          kind: "number",
+          label: "Second",
+          min: 5,
+          max: 10,
+        },
+      };
+      const secondBinding = render_livemap_schema_controls_snap(map, tree, secondSchema);
+      const secondInput = first_schema_control(tree);
+
+      const rows = [
+        equal_row("schema rerender old input label remains detached", firstInput.attr.get("data-livemap-control-label"), "First"),
+        equal_row("schema rerender latest input label", secondInput.attr.get("data-livemap-control-label"), "Second"),
+        equal_row("schema rerender latest min", secondInput.attr.get("min"), "5"),
+        equal_row("schema rerender latest max", secondInput.attr.get("max"), "10"),
+        equal_row("schema rerender latest markup", tree.content.markup.innerHTML.includes("Second"), true),
+        equal_row("schema rerender clears old markup", tree.content.markup.innerHTML.includes("First"), false),
+      ];
+      secondBinding.dispose();
 
       return { assertRows: rows };
     },
