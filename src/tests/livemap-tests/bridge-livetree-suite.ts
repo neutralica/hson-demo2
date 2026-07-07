@@ -1,50 +1,29 @@
 // bridge-livetree-suite.ts
 
 import { hson } from "hson-live";
-import type { JsonValue, LiveMapCommit, LivePath } from "hson-live/types";
+import {
+  bind_livetree_attr,
+  bind_livetree_input_value,
+  bind_livetree_text,
+  render_livemap_snap,
+} from "../../../../hson-live/src/api/livemap/bridge";
+import type {
+  LiveMapBridgeBinding,
+  LiveMapBridgeMap,
+  LiveTreeAttrBridgeTarget,
+  LiveTreeInputBridgeTarget,
+  LiveTreeInputListenerResult,
+  LiveTreeTextBridgeTarget,
+} from "../../../../hson-live/src/api/livemap/bridge";
+import type { JsonValue, LivePath } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 
-type BridgeBinding = Readonly<{
-  dispose: () => void;
-}>;
+type BridgeMap = LiveMapBridgeMap;
+type LiveTreeTextTarget = LiveTreeTextBridgeTarget;
+type LiveTreeAttrTarget = LiveTreeAttrBridgeTarget;
+type LiveTreeInputTarget = LiveTreeInputBridgeTarget;
 
-type BridgeMap = Readonly<{
-  snap: (path?: LivePath) => JsonValue | undefined;
-  set: (path: LivePath, value: JsonValue) => LiveMapCommit;
-  sub: Readonly<{
-    path: (path: LivePath, listener: (next: JsonValue | undefined) => void) => () => void;
-  }>;
-}>;
-
-type LiveTreeTextTarget = Readonly<{
-  text: Readonly<{
-    get: () => string;
-    set: (value: string) => unknown;
-  }>;
-}>;
-
-type LiveTreeAttrTarget = Readonly<{
-  attr: Readonly<{
-    get: (name: string) => string | undefined;
-    set: (name: string, value: string) => unknown;
-    drop: (name: string) => unknown;
-  }>;
-}>;
-
-type LiveTreeInputTarget = Readonly<{
-  form: Readonly<{
-    getValue: () => JsonValue | undefined;
-    setValue: (value: JsonValue, options?: { silent?: boolean }) => unknown;
-  }>;
-  listen: Readonly<{
-    onInput: (listener: () => void) => Readonly<{
-      off: () => void;
-      count: number;
-      ok: boolean;
-    }>;
-  }>;
-}>;
 
 // Test-only event shim. Real bridge code should rely on LiveTree listener results.
 const TEST_INPUT_LISTENERS = new WeakMap<object, () => void>();
@@ -67,6 +46,11 @@ export function livemap_suites_bridge_livetree(): TestSuite {
       make_livetree_snap_path_case(SUITE),
       make_livetree_snap_static_case(SUITE),
       make_livetree_snap_rerender_case(SUITE),
+      make_livetree_attr_zero_case(SUITE),
+      make_livetree_input_number_writeback_case(SUITE),
+      make_livetree_input_boolean_writeback_case(SUITE),
+      make_livetree_input_schema_reject_case(SUITE),
+      make_livetree_input_dispose_writeback_case(SUITE),
     ] as const,
   };
 }
@@ -84,7 +68,29 @@ function make_livetree_attr_target(): LiveTreeAttrTarget {
 }
 
 function make_livetree_input_target(): LiveTreeInputTarget {
-  return hson.liveTree.create.input() as unknown as LiveTreeInputTarget;
+  const tree = hson.liveTree.create.input() as unknown as LiveTreeInputTarget;
+  let target: LiveTreeInputTarget;
+
+  target = {
+    form: tree.form,
+    listen: {
+      onInput: (listener) => {
+        TEST_INPUT_LISTENERS.set(target as object, listener);
+        const result = tree.listen.onInput(listener);
+
+        return {
+          count: result.count,
+          ok: result.ok,
+          off: () => {
+            result.off();
+            TEST_INPUT_LISTENERS.delete(target as object);
+          },
+        } satisfies LiveTreeInputListenerResult;
+      },
+    },
+  };
+
+  return target;
 }
 
 function make_livetree_text_initial_case(suite: string): TestCase {
@@ -366,73 +372,138 @@ function make_livetree_snap_rerender_case(suite: string): TestCase {
   };
 }
 
-function render_livemap_snap(map: BridgeMap, tree: LiveTreeTextTarget, path?: LivePath): void {
-  tree.text.set(value_to_text(map.snap(path)));
-}
-
-function bind_livetree_text(map: BridgeMap, path: LivePath, tree: LiveTreeTextTarget): BridgeBinding {
-  const sync = (value: JsonValue | undefined) => {
-    tree.text.set(value_to_text(value));
-  };
-
-  sync(map.snap(path));
-  const dispose = map.sub.path(path, sync);
-
-  return { dispose };
-}
-
-function bind_livetree_attr(
-  map: BridgeMap,
-  path: LivePath,
-  tree: LiveTreeAttrTarget,
-  name: string,
-): BridgeBinding {
-  const sync = (value: JsonValue | undefined) => {
-    if (value === false || value === null || value === undefined) {
-      tree.attr.drop(name);
-      return;
-    }
-
-    tree.attr.set(name, value_to_text(value));
-  };
-
-  sync(map.snap(path));
-  const dispose = map.sub.path(path, sync);
-
-  return { dispose };
-}
-
-function bind_livetree_input_value(
-  tree: LiveTreeInputTarget,
-  map: BridgeMap,
-  path: LivePath,
-): BridgeBinding {
-  let isSyncing = false;
-
-  const syncFromMap = (value: JsonValue | undefined) => {
-    isSyncing = true;
-    tree.form.setValue(value_to_text(value), { silent: true });
-    isSyncing = false;
-  };
-
-  const syncToMap = () => {
-    if (isSyncing) return;
-    map.set(path, coerce_input_value(tree.form.getValue(), map.snap(path)));
-  };
-
-  syncFromMap(map.snap(path));
-  const disposePath = map.sub.path(path, syncFromMap);
-  const inputListener = tree.listen.onInput(syncToMap);
-  TEST_INPUT_LISTENERS.set(tree as object, syncToMap);
-
+function make_livetree_attr_zero_case(suite: string): TestCase {
   return {
-    dispose: () => {
-      inputListener.off();
-      TEST_INPUT_LISTENERS.delete(tree as object);
-      disposePath();
+    suite,
+    name: "LiveTree attr binding preserves numeric zero as attr value",
+    meta: {
+      input: preview_value({ ui: { count: 0 } }),
+      path: preview_value(["ui", "count"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { count: 0 } });
+      const tree = make_livetree_attr_target();
+
+      const binding = bind_livetree_attr(map, ["ui", "count"], tree, "data-count");
+
+      const rows = [equal_row("zero LiveTree attr", tree.attr.get("data-count"), "0")];
+      binding.dispose();
+
+      return { assertRows: rows };
     },
   };
 }
+
+function make_livetree_input_number_writeback_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree input binding coerces numeric string back to number",
+    meta: {
+      input: preview_value({ form: { count: 1 } }),
+      path: preview_value(["form", "count"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ form: { count: 1 } });
+      const tree = make_livetree_input_target();
+
+      const binding = bind_livetree_input_value(tree, map, ["form", "count"]);
+      tree.form.setValue("42", { silent: true });
+      emit_input(tree);
+
+      const rows = [equal_row("numeric LiveTree input writeback", map.snap(), { form: { count: 42 } })];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_livetree_input_boolean_writeback_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree input binding coerces true string back to boolean",
+    meta: {
+      input: preview_value({ form: { enabled: false } }),
+      path: preview_value(["form", "enabled"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ form: { enabled: false } });
+      const tree = make_livetree_input_target();
+
+      const binding = bind_livetree_input_value(tree, map, ["form", "enabled"]);
+      tree.form.setValue("true", { silent: true });
+      emit_input(tree);
+
+      const rows = [equal_row("boolean LiveTree input writeback", map.snap(), { form: { enabled: true } })];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_livetree_input_schema_reject_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree input binding schema rejection leaves map value stable",
+    meta: {
+      input: preview_value({ form: { count: 1 } }),
+      path: preview_value(["form", "count"]),
+    },
+    run: () => {
+      const schema = hson.liveMap.schema.define((s) => ({
+        form: {
+          count: s.number,
+        },
+      }));
+      const map = hson.liveMap.fromJson({ form: { count: 1 } }).schema.use(schema) as unknown as BridgeMap;
+      const tree = make_livetree_input_target();
+
+      const binding = bind_livetree_input_value(tree, map, ["form", "count"]);
+      tree.form.setValue("not-a-number", { silent: true });
+
+      let message = "";
+      try {
+        emit_input(tree);
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+
+      const rows = [
+        equal_row("schema rejection mentions number", message.includes("expected number"), true),
+        equal_row("schema rejection keeps map stable", map.snap(), { form: { count: 1 } }),
+      ];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_livetree_input_dispose_writeback_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree input binding disposer stops later input writeback",
+    meta: {
+      input: preview_value({ form: { name: "Ada" } }),
+      path: preview_value(["form", "name"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ form: { name: "Ada" } });
+      const tree = make_livetree_input_target();
+
+      const binding = bind_livetree_input_value(tree, map, ["form", "name"]);
+      binding.dispose();
+      tree.form.setValue("Grace", { silent: true });
+      emit_input(tree);
+
+      return {
+        assertRows: [equal_row("disposed LiveTree input does not write back", map.snap(), { form: { name: "Ada" } })],
+      };
+    },
+  };
+}
+
 
 // These are bridge-shape probes, not public API.
 function emit_input(tree: LiveTreeInputTarget): void {
@@ -500,22 +571,4 @@ function as_event_target(value: unknown): EventTarget | undefined {
     as_event_target(boxed.el) ??
     as_event_target(boxed.current)
   );
-}
-
-function coerce_input_value(value: JsonValue | undefined, current: JsonValue | undefined): JsonValue {
-  if (typeof current === "number") {
-    const next = Number(value);
-    return Number.isFinite(next) ? next : value_to_text(value);
-  }
-
-  if (typeof current === "boolean") return value === true || value === "true";
-  if (current === null && value === "null") return null;
-  return value ?? "";
-}
-
-function value_to_text(value: JsonValue | undefined): string {
-  if (value === undefined || value === null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
 }
