@@ -119,10 +119,10 @@ function create_demo_shell(stage: LiveTree): DemoShell {
     .css.setMany(DEMO_SCREENcss);
 
   mk_div_id(screen, "fx-layer").css.setMany(FX_LAYERcss);
-  
-    const graf = mk_div_id(screen, "graffiti-layer")
-      .text.set(HSON_LIVE_GRAFFITIstr)
-      .css.setMany(HSON_GRAFFITIcss);
+
+  const graf = mk_div_id(screen, "graffiti-layer")
+    .text.set(HSON_LIVE_GRAFFITIstr)
+    .css.setMany(HSON_GRAFFITIcss);
 
   const fleurLayer = mk_div_id(screen, "fleurs-layer")
     .css.setMany(FLOWER_LAYERcss);
@@ -172,8 +172,8 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
           + ", 0 0 18px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       })
       .css.selector(`.${shade_class(k)}`).setMany({
-      color: _colors.hson[k],
-    });
+        color: _colors.hson[k],
+      });
   });
 
   mk_div_id_txt(menuContainer, "livedemo-subhead", `liveDemo`)
@@ -206,7 +206,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const barbarHost = mount_panel_simple(uiRoot, $BARBAR);
   const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
     ...OKLCH_HOSTcss,
-    
+
   });
 
   const viewHosts: ViewHosts = {
@@ -415,10 +415,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     void spawn_flower(fleurField, x, y);
   });
+
   mount_firework(screen);
   void smoke_test_harness().catch((error) => {
-  console.error("[test-smoke]", error);
-});
+    console.error("[test-smoke]", error);
+  });
   return relay.ok();
 }
 

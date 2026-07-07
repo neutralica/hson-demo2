@@ -1,23 +1,27 @@
-import { hson, snap_live_path } from "hson-live";
+import { snap_live_path } from "../../../../hson-live/src/api/livemap/editor";
 import type { HsonNode, JsonValue, LivePath } from "hson-live/types";
 import type { Asserter, TestSuite } from "../../app/demos/test/tests.types";
 import { livemap_suites_core } from "./core-suite";
-import { livemap_suite_editor, livemap_suite_editor as livemap_suites_editor } from "./editor-suites";
-import { livemap_suite_feed as livemap_suites_feed } from "./feed-suites";
-import { livemap_suites_handle } from "./handle-suites";
-import { livemap_suites_link } from "./link-suites";
-import { livemap_suites_node } from "./node-suites";
-import { livemap_suites_path } from "./path-suites";
-import { livemap_suites_guard } from "./guard-suites";
-import { livemap_suites_handle_2 } from "./handle-suites-2";
-import { livemap_suites_proxy } from "./proxy-suites";
-import { livemap_suites_schema } from "./schema-suites";
+import { livemap_suite_editor } from "./editor-suite";
+import { livemap_suite_feed } from "./feed-suite";
+import { livemap_suites_handle } from "./handle-suite";
+import { livemap_suites_link } from "./link-suite";
+import { livemap_suites_node } from "./node-suite";
+import { livemap_suites_path } from "./path-suite";
+import { livemap_suites_guard } from "./guard-suite";
+import { livemap_suites_handle_2 } from "./handle-suite-2";
+import { livemap_suites_proxy } from "./proxy-suite";
+import { livemap_suites_schema } from "./schema-suite";
 import { livemap_suites_api } from "./api-suite";
-import { livemap_suites_store } from "./store-suites";
+import { livemap_suites_store } from "./store-suite";
 import { livemap_suite_batch } from "./batch-suite";
 import { livemap_contract_tests, livemap_object_exact } from "./contract-tests";
 import { livemap_schema_contract_suite } from "./contract-tests";
-import { livemap_link_contract_suites } from "./link-contract-suites";
+import { livemap_link_contract_suites } from "./link-contract-suite";
+import { hson } from "hson-live";
+import { livemap_suite_html_proof } from "./html-livemap-suite";
+import { livemap_suites_bridge } from "./bridge-suite";
+import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -68,9 +72,9 @@ export function preview_livemap_case(ctx: LiveMapCaseContext): string {
 }
 export function all_livemap_suites(): readonly TestSuite[] {
   return [
-    livemap_suites_editor(),
+    livemap_suite_editor(),
     livemap_suites_core(),
-    livemap_suites_feed(),
+    livemap_suite_feed(),
     livemap_suites_path(),
     livemap_suites_link(),
     livemap_suites_handle(),
@@ -86,7 +90,11 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_schema_contract_suite(),
     livemap_object_exact(),
     livemap_link_contract_suites(),
-
+    livemap_suites_bridge(),
+    livemap_suites_bridge_livetree(),
     
+    
+    // livemap_suite_html_proof(), // non-supported currently
+
   ] as const;
 }

@@ -4,7 +4,7 @@ import type { TestCase } from "../../app/demos/test/tests.types";
 import { json_root_node } from "./all-livemap-suites";
 import { preview_value, equal_row } from "./test-helpers";
 import type { NodeLiveAfterDeleteCaseSpec, NodeLiveAfterSetCaseSpec, NodeParentContentCaseSpec, NodeAttrsCopyCaseSpec, NodeSetAttrCaseSpec, NodeSetAttrsCaseSpec, NodeRemoveAttrCaseSpec, NodeClearAttrsCaseSpec, NodeExistingAttrsCaseSpec, NodeAttrMissingPathThrowCaseSpec, NodeAttrJsonBackedThrowCaseSpec, NodeJsonHtmlTagNameCaseSpec, NodeChildrenCaseSpec, NodeChildLookupCaseSpec, NodeMustChildThrowCaseSpec, NodeAppendCaseSpec, NodeAppendMissingPathThrowCaseSpec, NodeAppendHtmlCaseSpec, NodeRemoveChildrenCaseSpec, NodeRemoveChildCaseSpec, NodeRemoveChildBadIndexThrowCaseSpec, NodeRemoveMissingPathThrowCaseSpec, NodeReplaceChildrenCaseSpec, NodeReplaceChildCaseSpec, NodeReplaceChildBadIndexThrowCaseSpec, NodeReplaceMissingPathThrowCaseSpec, NodeInsertChildCaseSpec, NodeInsertChildAppendCaseSpec, NodeInsertChildBadIndexThrowCaseSpec, NodeInsertMissingPathThrowCaseSpec, NodeMoveChildCaseSpec, NodeMoveChildBackwardCaseSpec, NodeMoveChildBadToIndexThrowCaseSpec, NodeMoveChildBadFromIndexThrowCaseSpec, NodeMoveMissingPathThrowCaseSpec } from "./node-types";
-import  {expected_fail_case} from "./node-suites";
+import  {expected_fail_case} from "./node-suite";
 
 export function make_node_live_after_delete_case(spec: NodeLiveAfterDeleteCaseSpec): TestCase {
   return {

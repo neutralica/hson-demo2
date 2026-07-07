@@ -1,6 +1,7 @@
-import { make_livemap_core, set_live_path, snap_live_path } from "hson-live";
+import { make_livemap_core, } from "hson-live";
 import { json_root_node } from "./all-livemap-suites";
 import type { HsonNode, JsonValue, LiveMapCommit, LiveMapEditResult, LivePath } from "hson-live/types";
+import { set_live_path, snap_live_path } from "../../../../hson-live/src/api/livemap/editor";
 import type { TestAssertRow, TestCase } from "../../app/demos/test/tests.types";
 import type {
   LiveMapSetCaseSpec,
