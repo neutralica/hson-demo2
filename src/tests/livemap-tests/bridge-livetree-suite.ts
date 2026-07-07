@@ -51,6 +51,10 @@ export function livemap_suites_bridge_livetree(): TestSuite {
       make_livetree_input_boolean_writeback_case(SUITE),
       make_livetree_input_schema_reject_case(SUITE),
       make_livetree_input_dispose_writeback_case(SUITE),
+      make_livetree_text_fanout_case(SUITE),
+      make_livetree_input_to_text_loop_case(SUITE),
+      make_livetree_text_fanout_partial_dispose_case(SUITE),
+      make_livetree_input_loop_repeated_writeback_case(SUITE),
     ] as const,
   };
 }
@@ -500,6 +504,128 @@ function make_livetree_input_dispose_writeback_case(suite: string): TestCase {
       return {
         assertRows: [equal_row("disposed LiveTree input does not write back", map.snap(), { form: { name: "Ada" } })],
       };
+    },
+  };
+}
+
+function make_livetree_text_fanout_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree bridge fans one map path out to two text targets",
+    meta: {
+      input: preview_value({ ui: { label: "Ready" } }),
+      path: preview_value(["ui", "label"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready" } });
+      const first = make_livetree_text_target();
+      const second = make_livetree_text_target();
+
+      const firstBinding = bind_livetree_text(map, ["ui", "label"], first);
+      const secondBinding = bind_livetree_text(map, ["ui", "label"], second);
+      map.set(["ui", "label"], "Running");
+
+      const rows = [
+        equal_row("first text target receives fanout update", first.text.get(), "Running"),
+        equal_row("second text target receives fanout update", second.text.get(), "Running"),
+      ];
+      firstBinding.dispose();
+      secondBinding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_livetree_input_to_text_loop_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree input writeback updates subscribed text target",
+    meta: {
+      input: preview_value({ form: { name: "Ada" } }),
+      path: preview_value(["form", "name"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ form: { name: "Ada" } });
+      const input = make_livetree_input_target();
+      const text = make_livetree_text_target();
+
+      const inputBinding = bind_livetree_input_value(input, map, ["form", "name"]);
+      const textBinding = bind_livetree_text(map, ["form", "name"], text);
+      input.form.setValue("Grace", { silent: true });
+      emit_input(input);
+
+      const rows = [
+        equal_row("input writeback updates map", map.snap(), { form: { name: "Grace" } }),
+        equal_row("input writeback updates subscribed text", text.text.get(), "Grace"),
+      ];
+      inputBinding.dispose();
+      textBinding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_livetree_text_fanout_partial_dispose_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree fanout disposing one text binding leaves the other active",
+    meta: {
+      input: preview_value({ ui: { label: "Ready" } }),
+      path: preview_value(["ui", "label"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ ui: { label: "Ready" } });
+      const first = make_livetree_text_target();
+      const second = make_livetree_text_target();
+
+      const firstBinding = bind_livetree_text(map, ["ui", "label"], first);
+      const secondBinding = bind_livetree_text(map, ["ui", "label"], second);
+      firstBinding.dispose();
+      map.set(["ui", "label"], "Running");
+
+      const rows = [
+        equal_row("disposed fanout target remains at previous value", first.text.get(), "Ready"),
+        equal_row("active fanout target receives later update", second.text.get(), "Running"),
+      ];
+      secondBinding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_livetree_input_loop_repeated_writeback_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree input loop handles repeated writeback without echo drift",
+    meta: {
+      input: preview_value({ form: { name: "Ada" } }),
+      path: preview_value(["form", "name"]),
+    },
+    run: () => {
+      const map = make_bridge_map({ form: { name: "Ada" } });
+      const input = make_livetree_input_target();
+      const text = make_livetree_text_target();
+
+      const inputBinding = bind_livetree_input_value(input, map, ["form", "name"]);
+      const textBinding = bind_livetree_text(map, ["form", "name"], text);
+
+      input.form.setValue("Grace", { silent: true });
+      emit_input(input);
+      input.form.setValue("Hopper", { silent: true });
+      emit_input(input);
+
+      const rows = [
+        equal_row("repeated input writeback leaves map at final value", map.snap(), { form: { name: "Hopper" } }),
+        equal_row("repeated input writeback leaves input at final value", input.form.getValue(), "Hopper"),
+        equal_row("repeated input writeback leaves text at final value", text.text.get(), "Hopper"),
+      ];
+      inputBinding.dispose();
+      textBinding.dispose();
+
+      return { assertRows: rows };
     },
   };
 }
