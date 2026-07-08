@@ -65,6 +65,11 @@ export type TestSuite = Readonly<{
   cases: readonly TestCase[];
 }>;
 
+export type TestSuitePlan = Readonly<{
+  key: string;
+  label: string;
+  count: number;
+}>;
 
 export type TestRunMode =
   | "all"

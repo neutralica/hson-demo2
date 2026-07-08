@@ -28,6 +28,8 @@ export function livemap_suites_schema_validation_controls(): TestSuite {
       make_schema_number_max_rejects_writeback_case(SUITE),
       make_schema_number_min_rejects_writeback_case(SUITE),
       make_schema_number_valid_after_invalid_clears_error_case(SUITE),
+      make_schema_enum_rejects_unknown_choice_case(SUITE),
+      make_schema_enum_valid_after_invalid_clears_error_case(SUITE),
     ] as const,
   };
 }
@@ -109,6 +111,16 @@ function make_number_schema(min: number, max: number): LiveMapSchemaControlSpec 
       max,
       step: 1,
       label: "Count",
+    },
+  };
+}
+
+function make_enum_schema(): LiveMapSchemaControlSpec {
+  return {
+    status: {
+      kind: "enum",
+      choices: ["draft", "published"],
+      label: "Status",
     },
   };
 }
@@ -198,6 +210,69 @@ function make_schema_number_valid_after_invalid_clears_error_case(suite: string)
         equal_row("schema valid recovery writes number", map.snap(), { count: 7 }),
         equal_row("schema valid recovery marks control valid", input.attr.get("data-livemap-control-valid"), "true"),
         equal_row("schema valid recovery clears error", input.attr.get("data-livemap-control-error"), undefined),
+      ];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_schema_enum_rejects_unknown_choice_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "Schema enum validation rejects unknown choices",
+    meta: {
+      input: preview_value({ status: "draft" }),
+      schema: preview_value(make_enum_schema()),
+      invalid: preview_value("archived"),
+    },
+    run: () => {
+      const map = make_bridge_map({ status: "draft" });
+      const tree = make_control_view_target();
+      const binding = render_livemap_schema_controls_snap(map, tree, make_enum_schema());
+      const input = first_schema_control(tree);
+
+      input.form.setValue("archived", { silent: true });
+      emit_input(input as object);
+
+      const rows = [
+        equal_row("schema enum rejection leaves map unchanged", map.snap(), { status: "draft" }),
+        equal_row("schema enum rejection marks control invalid", input.attr.get("data-livemap-control-valid"), "false"),
+        equal_row("schema enum rejection stores error", input.attr.get("data-livemap-control-error"), "Expected one of: draft, published"),
+      ];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_schema_enum_valid_after_invalid_clears_error_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "Schema enum validation clears error after valid choice",
+    meta: {
+      input: preview_value({ status: "draft" }),
+      schema: preview_value(make_enum_schema()),
+      invalid: preview_value("archived"),
+      valid: preview_value("published"),
+    },
+    run: () => {
+      const map = make_bridge_map({ status: "draft" });
+      const tree = make_control_view_target();
+      const binding = render_livemap_schema_controls_snap(map, tree, make_enum_schema());
+      const input = first_schema_control(tree);
+
+      input.form.setValue("archived", { silent: true });
+      emit_input(input as object);
+      input.form.setValue("published", { silent: true });
+      emit_input(input as object);
+
+      const rows = [
+        equal_row("schema enum valid recovery writes choice", map.snap(), { status: "published" }),
+        equal_row("schema enum valid recovery marks control valid", input.attr.get("data-livemap-control-valid"), "true"),
+        equal_row("schema enum valid recovery clears error", input.attr.get("data-livemap-control-error"), undefined),
       ];
       binding.dispose();
 

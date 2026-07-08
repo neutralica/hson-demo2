@@ -8,11 +8,12 @@ import { $PANEL_HIDDEN } from "../../core/consts/ui-consts";
 import { _snip } from "../../utils/helpers";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
 import { make_ad_hoc_transform_suite, build_suites_for_mode } from "./build-test-suites";
+import { create_blinkenlights_panel } from "./blinkenlights";
 // import { make_state_smoke_suite } from "./state-smoke-suite";
 import { create_test_chips } from "./test-helpers";
 import { create_test_log } from "./test-logger";
 import  { run_test_suites } from "./test-runner";
-import type { TestRunMode, TestEvent, UiLevel, CaseKey } from "./tests.types";
+import type { TestRunMode, TestEvent, UiLevel, CaseKey, TestSuite, TestSuitePlan } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 
@@ -76,6 +77,19 @@ function populateModeSelector(suiteSel: LiveTree, mode: TestRunMode): void {
     }
 }
 
+function suite_plan_from_suites(suites: readonly TestSuite[]): readonly TestSuitePlan[] {
+    return suites.map((suite) => ({
+        key: suite.suite,
+        label: suite.suite,
+        count: suite.cases.length,
+    }));
+}
+
+function build_plan_for_mode(mode: TestRunMode): readonly TestSuitePlan[] {
+    const scratchMap = new Map<CaseKey, () => Promise<LoopReport>>();
+    return suite_plan_from_suites(build_suites_for_mode(mode, { _circuit_test }, scratchMap));
+}
+
 type TestConsoleParts = {
     runBtn: LiveTree;
     suiteSel: LiveTree;
@@ -130,8 +144,15 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
     const inspectorPane = mk_div_id(leftColumn, "test-inspector-pane")
         .css.setMany(TEST_INSPECTOR_PANEcss);
 
-    const logger = mk_div_id(rightColumn, "test-logger")
-        .css.setMany(TEST_LOGGERcss);
+    // Logger output is no longer mounted in the visible test panel. The internal
+    // test log still feeds chips and inspector state, and this detached LiveTree
+    // keeps the TestPanel surface stable for existing callers.
+    const logger = hson.liveTree.create.div()
+        .id.set("test-logger")
+        .css.setMany({
+            ...TEST_LOGGERcss,
+            display: "none",
+        });
 
     return { leftColumn, rightColumn, inspectorPane, logger };
 }
@@ -183,7 +204,10 @@ export function tp_factory(): Outcome<TestPanel> {
             } as unknown as LoopReport;
         },
     );
-
+    const blinkenlights = create_blinkenlights_panel(rightColumn);
+    const loadBlinkenlightsPlan = (): void => {
+        blinkenlights.loadPlan(build_plan_for_mode(mode));
+    };
     let currentCaseLine: LiveTree | null = null;
 
     const mkLogRow = (line: string): LiveTree => {
@@ -236,6 +260,7 @@ export function tp_factory(): Outcome<TestPanel> {
 
     const doLogOnEvent = (e: TestEvent): void => {
         tlog.onEvent(e);
+        blinkenlights.onEvent(e);
         if (!shouldLogEvent(verbosity, e)) return;
 
         if (e.t === "suite_begin") {
@@ -293,11 +318,13 @@ export function tp_factory(): Outcome<TestPanel> {
         tlog.clear();
         clearLogLines();
         captureMap.clear();
+        const suites = [make_ad_hoc_transform_suite({ _circuit_test }, fmt, text, captureMap)] as const;
+        blinkenlights.loadPlan(suite_plan_from_suites(suites));
 
         appendLogLine(`running parse-panel transform: ${fmt} (${text.length} bytes)`);
         await flush_dom();
 
-        const suites = [make_ad_hoc_transform_suite({ _circuit_test }, fmt, text, captureMap)] as const;
+        blinkenlights.resetRun();
         const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
         chips.render(res.summary);
         inspector.show();
@@ -325,10 +352,12 @@ export function tp_factory(): Outcome<TestPanel> {
         hostBody.append(branch);
 
         populateModeSelector(suiteSel, mode);
+        loadBlinkenlightsPlan();
 
         suiteSel.listen.on("change", () => {
             const v = suiteSel.form.getValue() ?? "all";
             mode = (MODES.find(m => m.key === v)?.key ?? "all");
+            loadBlinkenlightsPlan();
         });
 
         implClickFeedback(runBtn);
@@ -356,6 +385,8 @@ export function tp_factory(): Outcome<TestPanel> {
             tlog.clear();
             clearLogLines();
             captureMap.clear();
+            loadBlinkenlightsPlan();
+            blinkenlights.resetRun();
 
             appendLogLine("running loop test…");
             await flush_dom();
@@ -371,6 +402,7 @@ export function tp_factory(): Outcome<TestPanel> {
             tlog.clear();
             chips.clear();
             clearLogLines();
+            blinkenlights.resetRun();
             appendLogLine("idle");
             inspector.clear();
         });
