@@ -8,6 +8,7 @@ import { _colors } from "../../core/consts/colors.consts";
 type Operator = "+" | "-" | "*" | "/";
 type CellKind = "blank" | "text" | "number" | "operator" | "result" | "error";
 type Direction = "horizontal" | "vertical";
+type CellRelation = "none" | "selected" | "operand" | "operator" | "target" | "blocked";
 
 type CellValue = string | number | Operator | undefined;
 
@@ -22,6 +23,7 @@ type CellModel = {
     authored: boolean;
     resultOf: string | undefined;
     error: string | undefined;
+    relation: CellRelation;
     input: LiveTree | undefined;
 };
 
@@ -47,6 +49,7 @@ type CellsheetDerivedCellState = {
     authored: boolean;
     resultOf: string | null;
     error: string | null;
+    relation: CellRelation;
 };
 
 type CellsheetOperationState = {
@@ -69,6 +72,9 @@ type CellsheetSummaryState = {
 
 type CellsheetState = {
     cells: Record<string, CellsheetCellState>;
+    ui: {
+        selected: string | null;
+    };
     derived: {
         cells: Record<string, CellsheetDerivedCellState>;
         operations: Record<string, CellsheetOperationState>;
@@ -84,6 +90,11 @@ export type CellsheetPanel = Readonly<{
 const ROWS = 8;
 const COLS = 8;
 const OPERATORS = new Set<string>(["+", "-", "*", "/"]);
+const MAX_EVALUATION_PASSES = ROWS * COLS;
+
+function cell_key(row: number, col: number): string {
+    return `${String.fromCharCode(65 + col)}${row + 1}`;
+}
 
 function create_initial_cellsheet_state(): CellsheetState {
     const cells: Record<string, CellsheetCellState> = {};
@@ -99,12 +110,16 @@ function create_initial_cellsheet_state(): CellsheetState {
                 authored: false,
                 resultOf: null,
                 error: null,
+                relation: "none",
             };
         }
     }
 
     return {
         cells,
+        ui: {
+            selected: null,
+        },
         derived: {
             cells: derivedCells,
             operations: {},
@@ -165,6 +180,8 @@ const CELLcss: CssMap = {
     height: "2.35rem",
     boxSizing: "border-box",
     border: "1px solid currentColor",
+    borderWidth: "1px",
+    borderStyle: "solid",
     background: "transparent",
     color: "inherit",
     font: "inherit",
@@ -173,7 +190,8 @@ const CELLcss: CssMap = {
     fontStyle: "normal",
     textDecoration: "none",
     textAlign: "center",
-    outline: "none",
+    outline: "1px solid transparent",
+    outlineOffset: "-1px",
     opacity: "0.88",
 };
 
@@ -220,10 +238,6 @@ function hide_panel(): string {
     return $PANEL_HIDDEN;
 }
 
-function cell_key(row: number, col: number): string {
-    return `${String.fromCharCode(65 + col)}${row + 1}`;
-}
-
 function is_operator(value: string): value is Operator {
     return OPERATORS.has(value);
 }
@@ -252,22 +266,35 @@ function value_text(value: string | number | undefined): string {
     return String(value);
 }
 
+
 function can_receive_result(cell: CellModel): boolean {
     return !cell.authored || cell.kind === "result";
 }
 
-function cell_status(cell: CellModel): string {
+function result_target_error(operation: OperationModel): string | undefined {
+    const target = operation.target;
+
+    if (target.kind === "result" && target.resultOf !== undefined && target.resultOf !== operation.key) {
+        return `result collision: ${target.key} is already written by ${target.resultOf}`;
+    }
+
+    if (!can_receive_result(target)) {
+        return `occupied result target for ${operation.operator.key}`;
+    }
+
+    return undefined;
+}
+
+function cell_status(cell: CellModel): CellKind {
     if (cell.error) return "error";
     return cell.kind;
 }
 
-function apply_cell_style(cell: CellModel): void {
-    if (!cell.input) return;
+function css_for_cell_state(derived: CellsheetDerivedCellState): CssMap {
+    const status = derived.kind;
+    const relation = derived.relation;
 
-    const status = cell_status(cell);
-    cell.input.attr.set("data-cellsheet-cell", status);
-
-    const css: CssMap = {
+    return {
         ...CELLcss,
         ...(status === "operator" ? {
             fontWeight: "700",
@@ -281,16 +308,42 @@ function apply_cell_style(cell: CellModel): void {
             opacity: "1",
             textDecoration: "underline",
         } : {}),
-        borderStyle: cell.resultOf ? "dashed" : "solid",
+        borderStyle: derived.resultOf ? "dashed" : "solid",
+        ...(relation === "selected" ? {
+            outline: "2px solid currentColor",
+            outlineOffset: "-2px",
+            opacity: "1",
+        } : {}),
+        ...(relation === "operand" ? {
+            borderWidth: "2px",
+            opacity: "1",
+        } : {}),
+        ...(relation === "operator" ? {
+            borderWidth: "2px",
+            fontWeight: "700",
+            opacity: "1",
+        } : {}),
+        ...(relation === "target" ? {
+            borderStyle: "dashed",
+            borderWidth: "2px",
+            opacity: "1",
+        } : {}),
+        ...(relation === "blocked" ? {
+            borderStyle: "double",
+            borderWidth: "3px",
+            opacity: "1",
+            textDecoration: "underline",
+        } : {}),
     };
-
-    cell.input.css.setMany(css);
 }
 
-function apply_display(cell: CellModel): void {
+function render_cell_from_derived(cell: CellModel, derived: CellsheetDerivedCellState): void {
     if (!cell.input) return;
-    cell.input.form.setValue(cell.display, { silent: true });
-    apply_cell_style(cell);
+
+    cell.input.form.setValue(derived.display, { silent: true });
+    cell.input.attr.set("data-cellsheet-cell", derived.kind);
+    cell.input.attr.set("data-cellsheet-relation", derived.relation);
+    cell.input.css.setMany(css_for_cell_state(derived));
 }
 
 function apply_authored_raw(cell: CellModel, raw: string): void {
@@ -302,6 +355,7 @@ function apply_authored_raw(cell: CellModel, raw: string): void {
     cell.authored = normalize_raw(raw) !== "";
     cell.resultOf = undefined;
     cell.error = undefined;
+    cell.relation = "none";
 }
 
 function reset_derived_state(cells: readonly CellModel[]): void {
@@ -314,6 +368,7 @@ function reset_derived_state(cells: readonly CellModel[]): void {
         }
         cell.resultOf = undefined;
         cell.error = undefined;
+        cell.relation = "none";
     }
 }
 
@@ -347,10 +402,11 @@ function operation_error(op: Operator, left: CellModel, right: CellModel, result
 function derived_cell_from_model(cell: CellModel): CellsheetDerivedCellState {
     return {
         display: cell.display,
-        kind: cell_status(cell) as CellKind,
+        kind: cell_status(cell),
         authored: cell.authored,
         resultOf: cell.resultOf ?? null,
         error: cell.error ?? null,
+        relation: cell.relation,
     };
 }
 
@@ -374,6 +430,68 @@ function summary_state_from_models(cells: readonly CellModel[], operations: read
         results: cells.filter((cell) => cell.kind === "result").length,
         errors: cells.filter((cell) => cell.error).length,
     };
+}
+
+function read_selected_from_snap(snap: unknown): string | undefined {
+    if (!is_record(snap)) return undefined;
+    if (!is_record(snap.ui)) return undefined;
+    return typeof snap.ui.selected === "string" ? snap.ui.selected : undefined;
+}
+
+function read_summary_from_snap(snap: unknown): CellsheetSummaryState {
+    if (!is_record(snap)) return { authored: 0, operators: 0, results: 0, errors: 0 };
+    if (!is_record(snap.derived)) return { authored: 0, operators: 0, results: 0, errors: 0 };
+    if (!is_record(snap.derived.summary)) return { authored: 0, operators: 0, results: 0, errors: 0 };
+
+    const summary = snap.derived.summary;
+    return {
+        authored: typeof summary.authored === "number" ? summary.authored : 0,
+        operators: typeof summary.operators === "number" ? summary.operators : 0,
+        results: typeof summary.results === "number" ? summary.results : 0,
+        errors: typeof summary.errors === "number" ? summary.errors : 0,
+    };
+}
+
+function read_derived_cell_from_snap(snap: unknown, key: string): CellsheetDerivedCellState | undefined {
+    if (!is_record(snap)) return undefined;
+    if (!is_record(snap.derived)) return undefined;
+    if (!is_record(snap.derived.cells)) return undefined;
+
+    const entry = snap.derived.cells[key];
+    if (!is_record(entry)) return undefined;
+
+    return {
+        display: typeof entry.display === "string" ? entry.display : "",
+        kind: typeof entry.kind === "string" ? entry.kind as CellKind : "blank",
+        authored: typeof entry.authored === "boolean" ? entry.authored : false,
+        resultOf: typeof entry.resultOf === "string" ? entry.resultOf : null,
+        error: typeof entry.error === "string" ? entry.error : null,
+        relation: typeof entry.relation === "string" ? entry.relation as CellRelation : "none",
+    };
+}
+
+function mark_related_cell(cell: CellModel, relation: CellRelation): void {
+    if (cell.relation === "selected") return;
+    if (cell.relation === "blocked") return;
+    cell.relation = relation;
+}
+
+function model_value_changed(cell: CellModel, operation: OperationModel): boolean {
+    return cell.kind !== "result"
+        || cell.value !== operation.result
+        || cell.display !== value_text(operation.result)
+        || cell.resultOf !== operation.key;
+}
+
+function remember_operation_once(operations: OperationModel[], seen: Set<string>, operation: OperationModel): void {
+    if (seen.has(operation.key)) {
+        const index = operations.findIndex((row) => row.key === operation.key);
+        if (index >= 0) operations[index] = operation;
+        return;
+    }
+
+    seen.add(operation.key);
+    operations.push(operation);
 }
 
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
@@ -402,7 +520,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const helpCard = sidebar.create.div().css.setMany(CARDcss);
     helpCard.create.div().text.set("rules").css.setMany(LABELcss);
     helpCard.create.div()
-        .text.set("+ can add numbers or join strings. - * / only operate on numbers. Operators look left/right first, then up/down. Result conflicts are marked as errors.")
+        .text.set("+ can add numbers or join strings. - * / only operate on numbers. Operators look left/right first, then up/down. Select a cell to reveal the operation it participates in.")
         .css.setMany(METAcss);
 
     const resetButton = sidebar.create.button().css.setMany(RESETcss);
@@ -411,6 +529,10 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const getCell = (row: number, col: number): CellModel | undefined => {
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return undefined;
         return cells[(row * COLS) + col];
+    };
+
+    const getCellByKey = (key: string): CellModel | undefined => {
+        return cells.find((cell) => cell.key === key);
     };
 
     const readRawFromSnap = (snap: unknown, key: string): string => {
@@ -427,6 +549,11 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
 
     const writeRawToMap = (key: string, raw: string): void => {
         map.set(["cells", key, "raw"], raw);
+    };
+
+    const selectCell = (key: string): void => {
+        map.set(["ui", "selected"], key);
+        evaluate();
     };
 
     const syncAuthoredFromSnap = (snap: unknown): void => {
@@ -449,14 +576,18 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         });
     };
 
-    const renderStatus = (): void => {
-        const summary = summary_state_from_models(cells, operations);
+    const renderStatusFromMap = (snap: unknown): void => {
+        const summary = read_summary_from_snap(snap);
         statusText.text.set(`${summary.authored} authored / ${summary.operators} operators / ${summary.results} results / ${summary.errors} errors`);
     };
 
-    const applyAll = (): void => {
-        for (const cell of cells) apply_display(cell);
-        renderStatus();
+    const renderFromMap = (): void => {
+        const snap = map.snap();
+        for (const cell of cells) {
+            const derived = read_derived_cell_from_snap(snap, cell.key);
+            if (derived) render_cell_from_derived(cell, derived);
+        }
+        renderStatusFromMap(snap);
     };
 
     const findOperation = (operator: CellModel): OperationModel | undefined => {
@@ -502,41 +633,77 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         return undefined;
     };
 
+    const applySelectionRelations = (selectedKey: string | undefined): void => {
+        if (!selectedKey) return;
+
+        const selectedCell = getCellByKey(selectedKey);
+        if (selectedCell) selectedCell.relation = "selected";
+
+        for (const operation of operations) {
+            const touchesOperation = operation.left.key === selectedKey
+                || operation.right.key === selectedKey
+                || operation.operator.key === selectedKey
+                || operation.target.key === selectedKey;
+
+            if (!touchesOperation) continue;
+
+            mark_related_cell(operation.left, "operand");
+            mark_related_cell(operation.right, "operand");
+            mark_related_cell(operation.operator, "operator");
+            mark_related_cell(operation.target, operation.target.error ? "blocked" : "target");
+        }
+    };
+
     const evaluate = (): void => {
         const snap = map.snap();
+        const selectedKey = read_selected_from_snap(snap);
         operations.length = 0;
         syncAuthoredFromSnap(snap);
         reset_derived_state(cells);
 
-        for (const operator of cells) {
-            if (operator.kind !== "operator") continue;
+        const seenOperations = new Set<string>();
 
-            const operation = findOperation(operator);
-            if (!operation) continue;
-            operations.push(operation);
+        for (let pass = 0; pass < MAX_EVALUATION_PASSES; pass += 1) {
+            let changed = false;
 
-            if (operation.error) {
-                operation.operator.error = operation.error;
-                continue;
+            for (const operator of cells) {
+                if (operator.kind !== "operator") continue;
+
+                const operation = findOperation(operator);
+                if (!operation) continue;
+                remember_operation_once(operations, seenOperations, operation);
+
+                if (operation.error) {
+                    operation.operator.error = operation.error;
+                    continue;
+                }
+
+                const targetError = result_target_error(operation);
+                if (targetError) {
+                    operation.error = targetError;
+                    operation.operator.error = targetError;
+                    operation.target.error = targetError;
+                    continue;
+                }
+
+                if (model_value_changed(operation.target, operation)) changed = true;
+                operation.target.kind = "result";
+                operation.target.value = operation.result;
+                operation.target.display = value_text(operation.result);
+                operation.target.resultOf = operation.key;
             }
 
-            if (!can_receive_result(operation.target)) {
-                operation.target.error = `occupied result target for ${operation.operator.key}`;
-                continue;
-            }
-
-            operation.target.kind = "result";
-            operation.target.value = operation.result;
-            operation.target.display = value_text(operation.result);
-            operation.target.resultOf = operation.key;
+            if (!changed) break;
         }
 
+        applySelectionRelations(selectedKey);
         writeDerivedToMap();
-        applyAll();
+        renderFromMap();
     };
 
     const reset = (): void => {
         map.batch((tx) => {
+            tx.set(["ui", "selected"], null);
             for (const cell of cells) tx.set(["cells", cell.key, "raw"], "");
         });
         evaluate();
@@ -556,6 +723,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                 authored: false,
                 resultOf: undefined,
                 error: undefined,
+                relation: "none",
                 input: undefined,
             };
 
@@ -563,6 +731,9 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             input.attr.set("aria-label", key);
             input.attr.set("data-cellsheet-key", key);
             input.css.setMany(CELLcss);
+            input.listen.on("focus", () => {
+                selectCell(cell.key);
+            });
             input.listen.on("input", () => {
                 writeRawToMap(cell.key, input.form.getValue() ?? "");
                 evaluate();
