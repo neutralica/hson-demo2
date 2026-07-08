@@ -324,8 +324,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         return cells[(row * COLS) + col];
     };
 
-    const readRawFromMap = (key: string): string => {
-        const snap = map.snap();
+    const readRawFromSnap = (snap: unknown, key: string): string => {
         if (!is_record(snap)) return "";
 
         const cellRoot = snap.cells;
@@ -341,8 +340,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         map.set(["cells", key, "raw"], raw);
     };
 
-    const syncAuthoredFromMap = (): void => {
-        for (const cell of cells) apply_authored_raw(cell, readRawFromMap(cell.key));
+    const syncAuthoredFromSnap = (snap: unknown): void => {
+        for (const cell of cells) apply_authored_raw(cell, readRawFromSnap(snap, cell.key));
     };
 
     const renderStatus = (): void => {
@@ -402,8 +401,9 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     };
 
     const evaluate = (): void => {
+        const snap = map.snap();
         operations.length = 0;
-        syncAuthoredFromMap();
+        syncAuthoredFromSnap(snap);
         reset_derived_state(cells);
 
         for (const operator of cells) {
@@ -433,7 +433,9 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     };
 
     const reset = (): void => {
-        for (const cell of cells) writeRawToMap(cell.key, "");
+        map.batch((tx) => {
+            for (const cell of cells) tx.set(["cells", cell.key, "raw"], "");
+        });
         evaluate();
     };
 
