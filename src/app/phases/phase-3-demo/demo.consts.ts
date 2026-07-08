@@ -24,11 +24,11 @@ export const MENU_OPTIONS = [
   $PARSE,
   $BUILD,
   $BARBAR,
+  $CELLS,
   $FLEURS,
   $POINT,
   $OKLCH,
   $MOTES,
-  $CELLS,
   
 ] as const;
 export const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES] as const;
