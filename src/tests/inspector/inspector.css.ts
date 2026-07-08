@@ -10,7 +10,7 @@ import { FONT_FAM_MONO } from "../../app/core/consts/css.consts";
 
 
 const nameWidth = "35ch"; // standardize width so it doesn’t jump
-const rowFade = `linear-gradient(6deg, ${set_alpha(_colors.backhi, 0.7)}, transparent)`;
+const rowFade = `linear-gradient(150deg, ${_colors.backhi}, transparent)`;
 const rowFadeFail = `linear-gradient(150deg, ${set_alpha(OKLCH_VIBRANT.redInfra, 0.4)}, transparent)`;
 
 export const LOG_SCROLLcss: CssMap = {
