@@ -13,6 +13,7 @@ import { ABOUT_DOCS } from "../../demos/about/about.consts";
 import { mount_about_panels } from "../../demos/about/mount-about";
 import mount_bar_bar from "../../demos/bar-bar.ts/mount-bar-bar";
 import { mount_build_panels } from "../../demos/build/mount-bp";
+import { create_cellsheet_panel } from "../../demos/cellsheet/cellsheet";
 import { mount_deck } from "../../demos/deck/mount-deck";
 import { spawn_flower } from "../../demos/fleurs/fleurs";
 import { fmtNum } from "../../demos/fleurs/fleurs-cols";
@@ -31,7 +32,7 @@ import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, dem
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
-import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, MIN_DESKTOP_WIDTH, $FLEURS } from "./demo.consts";
+import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS } from "./demo.consts";
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
@@ -63,6 +64,7 @@ type DemoHosts = {
   buildHost: LiveTree;
   aboutHost: LiveTree;
   barbarHost: LiveTree;
+  cellsHost: LiveTree;
   oklchHost: LiveTree;
   viewHosts: ViewHosts;
   widgetHosts: WidgetHosts;
@@ -204,6 +206,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const buildHost = mount_panel_simple(uiRoot, $BUILD);
   const aboutHost = mount_panel_simple(uiRoot, $ABOUT);
   const barbarHost = mount_panel_simple(uiRoot, $BARBAR);
+  const cellsHost = mount_panel_simple(uiRoot, $CELLS);
   const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
     ...OKLCH_HOSTcss,
 
@@ -215,6 +218,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     [$BUILD]: buildHost,
     [$ABOUT]: aboutHost,
     [$BARBAR]: barbarHost,
+    [$CELLS]: cellsHost,
   };
 
   const widgetHosts: WidgetHosts = {
@@ -230,6 +234,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     buildHost,
     aboutHost,
     barbarHost,
+    cellsHost,
     oklchHost,
     viewHosts,
     widgetHosts,
@@ -243,6 +248,7 @@ function mount_demo_content(hosts: DemoHosts): DemoContent {
   const parse = relay_data(mount_parsing_panels(hosts.parseHost));
   relay_data(mount_build_panels(hosts.buildHost));
   relay_void(mount_bar_bar(hosts.barbarHost));
+  create_cellsheet_panel(hosts.cellsHost);
   relay_void(mount_point_panel(hosts.pointHost));
   mount_oklch(hosts.oklchHost);
 
@@ -422,5 +428,3 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
   return relay.ok();
 }
-
-

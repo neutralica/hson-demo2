@@ -8,6 +8,7 @@ export type DemoView = null |
   "parse" |
   "build" |
   "bar-bar" |
+  "cells" | // added
   "fleurs";
 
 export type DemoWidget =

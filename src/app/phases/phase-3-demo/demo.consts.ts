@@ -17,6 +17,7 @@ export const $POINT = "point";
 export const $ABOUT = "about";
 export const $MOTES = "motes";
 export const $BARBAR = "bar-bar";
+export const $CELLS = "cells";
 export const MENU_OPTIONS = [
   $ABOUT,
   $TEST,
@@ -27,6 +28,8 @@ export const MENU_OPTIONS = [
   $POINT,
   $OKLCH,
   $MOTES,
+  $CELLS,
+  
 ] as const;
 export const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES] as const;
 
