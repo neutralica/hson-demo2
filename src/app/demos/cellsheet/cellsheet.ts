@@ -41,8 +41,39 @@ type CellsheetCellState = {
     raw: string;
 };
 
+type CellsheetDerivedCellState = {
+    display: string;
+    kind: CellKind;
+    authored: boolean;
+    resultOf: string | null;
+    error: string | null;
+};
+
+type CellsheetOperationState = {
+    op: Operator;
+    direction: Direction;
+    left: string;
+    right: string;
+    operator: string;
+    target: string;
+    result: string | number | null;
+    error: string | null;
+};
+
+type CellsheetSummaryState = {
+    authored: number;
+    operators: number;
+    results: number;
+    errors: number;
+};
+
 type CellsheetState = {
     cells: Record<string, CellsheetCellState>;
+    derived: {
+        cells: Record<string, CellsheetDerivedCellState>;
+        operations: Record<string, CellsheetOperationState>;
+        summary: CellsheetSummaryState;
+    };
 };
 
 export type CellsheetPanel = Readonly<{
@@ -56,12 +87,35 @@ const OPERATORS = new Set<string>(["+", "-", "*", "/"]);
 
 function create_initial_cellsheet_state(): CellsheetState {
     const cells: Record<string, CellsheetCellState> = {};
+    const derivedCells: Record<string, CellsheetDerivedCellState> = {};
+
     for (let row = 0; row < ROWS; row += 1) {
         for (let col = 0; col < COLS; col += 1) {
-            cells[cell_key(row, col)] = { raw: "" };
+            const key = cell_key(row, col);
+            cells[key] = { raw: "" };
+            derivedCells[key] = {
+                display: "",
+                kind: "blank",
+                authored: false,
+                resultOf: null,
+                error: null,
+            };
         }
     }
-    return { cells };
+
+    return {
+        cells,
+        derived: {
+            cells: derivedCells,
+            operations: {},
+            summary: {
+                authored: 0,
+                operators: 0,
+                results: 0,
+                errors: 0,
+            },
+        },
+    };
 }
 
 const PANELcss: CssMap = {
@@ -115,6 +169,9 @@ const CELLcss: CssMap = {
     color: "inherit",
     font: "inherit",
     fontSize: "0.78rem",
+    fontWeight: "400",
+    fontStyle: "normal",
+    textDecoration: "none",
     textAlign: "center",
     outline: "none",
     opacity: "0.88",
@@ -287,6 +344,38 @@ function operation_error(op: Operator, left: CellModel, right: CellModel, result
     return undefined;
 }
 
+function derived_cell_from_model(cell: CellModel): CellsheetDerivedCellState {
+    return {
+        display: cell.display,
+        kind: cell_status(cell) as CellKind,
+        authored: cell.authored,
+        resultOf: cell.resultOf ?? null,
+        error: cell.error ?? null,
+    };
+}
+
+function operation_state_from_model(operation: OperationModel): CellsheetOperationState {
+    return {
+        op: operation.op,
+        direction: operation.direction,
+        left: operation.left.key,
+        right: operation.right.key,
+        operator: operation.operator.key,
+        target: operation.target.key,
+        result: operation.result ?? null,
+        error: operation.error ?? null,
+    };
+}
+
+function summary_state_from_models(cells: readonly CellModel[], operations: readonly OperationModel[]): CellsheetSummaryState {
+    return {
+        authored: cells.filter((cell) => cell.authored).length,
+        operators: operations.length,
+        results: cells.filter((cell) => cell.kind === "result").length,
+        errors: cells.filter((cell) => cell.error).length,
+    };
+}
+
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellModel[] = [];
     const operations: OperationModel[] = [];
@@ -344,12 +433,25 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         for (const cell of cells) apply_authored_raw(cell, readRawFromSnap(snap, cell.key));
     };
 
+    const writeDerivedToMap = (): void => {
+        const derivedCells: Record<string, CellsheetDerivedCellState> = {};
+        const derivedOperations: Record<string, CellsheetOperationState> = {};
+
+        for (const cell of cells) derivedCells[cell.key] = derived_cell_from_model(cell);
+        for (const operation of operations) derivedOperations[operation.key] = operation_state_from_model(operation);
+
+        const summary = summary_state_from_models(cells, operations);
+
+        map.batch((tx) => {
+            tx.set(["derived", "cells"], derivedCells);
+            tx.set(["derived", "operations"], derivedOperations);
+            tx.set(["derived", "summary"], summary);
+        });
+    };
+
     const renderStatus = (): void => {
-        const authoredCount = cells.filter((cell) => cell.authored).length;
-        const resultCount = cells.filter((cell) => cell.kind === "result").length;
-        const errorCount = cells.filter((cell) => cell.error).length;
-        const opCount = operations.length;
-        statusText.text.set(`${authoredCount} authored / ${opCount} operators / ${resultCount} results / ${errorCount} errors`);
+        const summary = summary_state_from_models(cells, operations);
+        statusText.text.set(`${summary.authored} authored / ${summary.operators} operators / ${summary.results} results / ${summary.errors} errors`);
     };
 
     const applyAll = (): void => {
@@ -429,6 +531,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             operation.target.resultOf = operation.key;
         }
 
+        writeDerivedToMap();
         applyAll();
     };
 
