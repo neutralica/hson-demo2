@@ -1,6 +1,6 @@
 // cellsheet.ts
 
-import type { LiveTree } from "hson-live";
+import { hson, type LiveTree } from "hson-live";
 import { $PANEL_HIDDEN } from "../../core/consts/ui-consts";
 import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
@@ -37,6 +37,14 @@ type OperationModel = {
     error: string | undefined;
 };
 
+type CellsheetCellState = {
+    raw: string;
+};
+
+type CellsheetState = {
+    cells: Record<string, CellsheetCellState>;
+};
+
 export type CellsheetPanel = Readonly<{
     branch: LiveTree;
     reset: () => void;
@@ -45,6 +53,16 @@ export type CellsheetPanel = Readonly<{
 const ROWS = 8;
 const COLS = 8;
 const OPERATORS = new Set<string>(["+", "-", "*", "/"]);
+
+function create_initial_cellsheet_state(): CellsheetState {
+    const cells: Record<string, CellsheetCellState> = {};
+    for (let row = 0; row < ROWS; row += 1) {
+        for (let col = 0; col < COLS; col += 1) {
+            cells[cell_key(row, col)] = { raw: "" };
+        }
+    }
+    return { cells };
+}
 
 const PANELcss: CssMap = {
     display: "grid",
@@ -157,6 +175,10 @@ function normalize_raw(raw: string): string {
     return raw.trim();
 }
 
+function is_record(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function parse_value(raw: string): Pick<CellModel, "value" | "kind"> {
     const clean = normalize_raw(raw);
     if (clean === "") return { value: undefined, kind: "blank" };
@@ -210,7 +232,7 @@ function apply_cell_style(cell: CellModel): void {
 
 function apply_display(cell: CellModel): void {
     if (!cell.input) return;
-    cell.input.form.setValue(cell.display);
+    cell.input.form.setValue(cell.display, { silent: true });
     apply_cell_style(cell);
 }
 
@@ -268,6 +290,7 @@ function operation_error(op: Operator, left: CellModel, right: CellModel, result
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellModel[] = [];
     const operations: OperationModel[] = [];
+    const map = hson.liveMap.fromJson(create_initial_cellsheet_state());
 
     const branch = stage.create.div()
         .id.set("cellsheet-panel")
@@ -299,6 +322,27 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const getCell = (row: number, col: number): CellModel | undefined => {
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return undefined;
         return cells[(row * COLS) + col];
+    };
+
+    const readRawFromMap = (key: string): string => {
+        const snap = map.snap();
+        if (!is_record(snap)) return "";
+
+        const cellRoot = snap.cells;
+        if (!is_record(cellRoot)) return "";
+
+        const entry = cellRoot[key];
+        if (!is_record(entry)) return "";
+
+        return typeof entry.raw === "string" ? entry.raw : "";
+    };
+
+    const writeRawToMap = (key: string, raw: string): void => {
+        map.set(["cells", key, "raw"], raw);
+    };
+
+    const syncAuthoredFromMap = (): void => {
+        for (const cell of cells) apply_authored_raw(cell, readRawFromMap(cell.key));
     };
 
     const renderStatus = (): void => {
@@ -359,6 +403,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
 
     const evaluate = (): void => {
         operations.length = 0;
+        syncAuthoredFromMap();
         reset_derived_state(cells);
 
         for (const operator of cells) {
@@ -388,7 +433,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     };
 
     const reset = (): void => {
-        for (const cell of cells) apply_authored_raw(cell, "");
+        for (const cell of cells) writeRawToMap(cell.key, "");
         evaluate();
     };
 
@@ -414,7 +459,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             input.attr.set("data-cellsheet-key", key);
             input.css.setMany(CELLcss);
             input.listen.on("input", () => {
-                apply_authored_raw(cell, input.form.getValue() ?? "");
+                writeRawToMap(cell.key, input.form.getValue() ?? "");
                 evaluate();
             });
 
@@ -428,7 +473,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const seed = (row: number, col: number, raw: string): void => {
         const cell = getCell(row, col);
         if (!cell) return;
-        apply_authored_raw(cell, raw);
+        writeRawToMap(cell.key, raw);
     };
 
     seed(0, 0, "1");
