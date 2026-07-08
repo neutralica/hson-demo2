@@ -113,6 +113,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
       zIndex: "1",
     });
 
+  // BUG TODO ixnay on the om.elday()
   const canvas = canvasLt.dom.el() as HTMLCanvasElement;
   const ctx0 = canvasLt.canvas.ctx2d();
 
@@ -129,6 +130,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
   const H = window.innerHeight;
   const CULL_H = H + EXTRA_FALL_PX;
   const SKY_LIFT_PX = Math.min(260, Math.round(H * 0.24));
+  // ixnay i say
   canvas.width = W;
   canvas.height = H;
   ctx.clearRect(0, 0, W, H);

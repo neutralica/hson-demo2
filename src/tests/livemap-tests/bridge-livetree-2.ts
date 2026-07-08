@@ -40,6 +40,7 @@ export function livemap_suites_bridge_livetree_controls(): TestSuite {
       make_controls_snap_rerender_replaces_inputs_case(SUITE),
       make_controls_snap_rerender_after_dispose_ignores_old_input_case(SUITE),
       make_controls_snap_dotted_keys_preserve_internal_path_case(SUITE),
+      make_controls_snap_number_nonfinite_falls_back_to_text_case(SUITE),
     ] as const,
   };
 }
@@ -423,6 +424,36 @@ function make_controls_snap_dotted_keys_preserve_internal_path_case(suite: strin
         equal_row("dotted key control writes exact internal path", map.snap(), { "ui.panel": { "label.text": "Running" } }),
         equal_row("dotted key control does not create nested ui key", map.snap(["ui"]), undefined),
         equal_row("dotted key control does not create nested label key", map.snap(["ui.panel", "label"]), undefined),
+      ];
+      binding.dispose();
+
+      return { assertRows: rows };
+    },
+  };
+}
+
+function make_controls_snap_number_nonfinite_falls_back_to_text_case(suite: string): TestCase {
+  return {
+    suite,
+    name: "LiveTree generated number control falls back to text on non-finite input",
+    meta: {
+      input: preview_value({ count: 1 }),
+      invalid: preview_value("abc"),
+    },
+    run: () => {
+      const map = make_bridge_map({ count: 1 });
+      const tree = make_control_view_target();
+      const binding = render_livemap_controls_snap(map, tree, ["count"]);
+      const input = first_control_input(tree);
+
+      input.form.setValue("abc", { silent: true });
+      emit_input(input as object);
+
+      const rows = [
+        equal_row("schema-blind number control remains number input", input.attr.get("type"), "number"),
+        equal_row("schema-blind number non-finite write falls back to text", map.snap(), { count: "abc" }),
+        equal_row("schema-blind number non-finite write does not mark invalid", input.attr.get("data-livemap-control-valid"), undefined),
+        equal_row("schema-blind number non-finite write does not set error", input.attr.get("data-livemap-control-error"), undefined),
       ];
       binding.dispose();
 

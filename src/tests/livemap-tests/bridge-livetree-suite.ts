@@ -2,9 +2,6 @@
 
 import { hson } from "hson-live";
 import {
-  bind_livetree_attr,
-  bind_livetree_input_value,
-  bind_livetree_text,
   render_livemap_snap,
   render_livemap_snap_view,
   type LiveAttrBridgeTarget,
@@ -17,6 +14,7 @@ import type { JsonValue } from "../../../../hson-live/src/core/types";
 import type { LiveMap, LivePath } from "../../../../hson-live/src/api/livemap/livemap.types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
+import { bind_livetree_text, bind_livetree_attr, bind_livetree_input_value } from "../../../../hson-live/src/api/livemap/bridge-bindings";
 
 type BridgeMap = LiveMap;
 type LiveTreeTextTarget = LiveTextBridgeTarget;
