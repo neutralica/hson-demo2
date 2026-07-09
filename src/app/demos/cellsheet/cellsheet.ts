@@ -9,32 +9,93 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellModel[] = [];
     const operations: OperationModel[] = [];
     const map = hson.liveMap.fromJson(create_initial_cellsheet_state());
+    const disposers: Array<() => void> = [];
+    let activeResizeCleanup: (() => void) | undefined;
+    let activeResizeTarget: HTMLElement | undefined;
+    let disposed = false;
+
+    const DEFAULT_COL_WIDTH = 56;
+    const DEFAULT_ROW_HEIGHT = 34;
+    const MIN_COL_WIDTH = 34;
+    const MAX_COL_WIDTH = 140;
+    const MIN_ROW_HEIGHT = 26;
+    const MAX_ROW_HEIGHT = 96;
+    const RESIZE_EDGE_PX = 7;
+    const RESIZE_EDGE_COLOR = "var(--hson-color-txt-menu, currentColor)";
+
+    type ResizeEdge = "left" | "right" | "top" | "bottom";
+
+    type ResizeAxis = "col" | "row";
+
+    type ResizeTarget = {
+        axis: ResizeAxis;
+        index: number;
+        neighborIndex: number | undefined;
+        sign: 1 | -1;
+    };
 
     const branch = stage.create.div()
         .id.set("cellsheet-panel")
         .css.setMany(PANELcss);
 
-    const header = branch.create.div().css.setMany(HEADERcss);
-    header.create.div().text.set("cellsheet").css.setMany(TITLEcss);
-    header.create.div()
-        .text.set("A small reactive operator grid. Type values into cells, then place + - * or / between adjacent cells. The result appears one cell past the second operand, unless that cell is already occupied.")
+    const header = branch.create.div().css.setMany(HEADERcss).css.setMany({
+        display: "grid",
+        gridTemplateColumns: "minmax(280px, 0.82fr) minmax(360px, 1.18fr)",
+        gap: "24px",
+        alignItems: "stretch",
+    });
+    const headerText = header.create.div().css.setMany({
+        minWidth: "0",
+        display: "grid",
+        alignContent: "start",
+        gap: "10px",
+    });
+    headerText.create.div().text.set("cellsheet").css.setMany(TITLEcss);
+    headerText.create.div()
+        .text.set("A small reactive operator grid. Type values into cells, then place + - * or / between adjacent cells. Drag cell edges to resize rows and columns; hold shift while dragging to take space from the neighbor.")
         .css.setMany(SUBTITLEcss);
 
-    const body = branch.create.div().css.setMany(BODYcss);
-    const grid = body.create.div().css.setMany(GRIDcss);
-    const sidebar = body.create.div().css.setMany(SIDEBARcss);
+    const sidebar = header.create.div().css.setMany(SIDEBARcss).css.setMany({
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr) auto",
+        gap: "10px",
+        alignItems: "stretch",
+        alignSelf: "stretch",
+    });
+    const sidebarCards = sidebar.create.div().css.setMany({
+        display: "grid",
+        gap: "10px",
+        minWidth: "0",
+    });
+    const sidebarActions = sidebar.create.div().css.setMany({
+        display: "grid",
+        alignContent: "stretch",
+        minWidth: "144px",
+    });
+    const body = branch.create.div().css.setMany(BODYcss).css.setMany({
+        display: "flex",
+        justifyContent: "center",
+    });
+    const grid = body.create.div().css.setMany(GRIDcss).css.setMany({
+        width: "fit-content",
+        maxWidth: "100%",
+    });
 
-    const statusCard = sidebar.create.div().css.setMany(CARDcss);
+    const statusCard = sidebarCards.create.div().css.setMany(CARDcss);
     statusCard.create.div().text.set("state").css.setMany(LABELcss);
     const statusText = statusCard.create.div().css.setMany(METAcss);
 
-    const helpCard = sidebar.create.div().css.setMany(CARDcss);
+    const helpCard = sidebarCards.create.div().css.setMany(CARDcss);
     helpCard.create.div().text.set("rules").css.setMany(LABELcss);
     helpCard.create.div()
         .text.set("+ can add numbers or join strings. - * / only operate on numbers. Operators look left/right first, then up/down. Select a cell to reveal the operation it participates in.")
         .css.setMany(METAcss);
 
-    const resetButton = sidebar.create.button().css.setMany(RESETcss);
+    const resetButton = sidebarActions.create.button().css.setMany(RESETcss).css.setMany({
+        height: "100%",
+        minHeight: "100%",
+        paddingInline: "24px",
+    });
     resetButton.text.set("reset grid");
 
     const getCell = (row: number, col: number): CellModel | undefined => {
@@ -56,6 +117,249 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         if (!is_record(entry)) return "";
 
         return typeof entry.raw === "string" ? entry.raw : "";
+    };
+
+    const clampDimension = (value: number, min: number, max: number): number => {
+        return Math.max(min, Math.min(max, Math.round(value)));
+    };
+
+    const makeDimensionRecord = (count: number, value: number): Record<string, number> => {
+        const out: Record<string, number> = {};
+        for (let i = 0; i < count; i += 1) out[String(i)] = value;
+        return out;
+    };
+
+    const readDimensionRecordFromSnap = (
+        snap: unknown,
+        key: "colWidths" | "rowHeights",
+        count: number,
+        fallback: number,
+    ): number[] => {
+        const out: number[] = [];
+        const ui = is_record(snap) && is_record(snap.ui) ? snap.ui : undefined;
+        const record = ui && is_record(ui[key]) ? ui[key] : undefined;
+
+        for (let i = 0; i < count; i += 1) {
+            const value = record?.[String(i)];
+            out.push(typeof value === "number" && Number.isFinite(value) ? value : fallback);
+        }
+
+        return out;
+    };
+
+    const ensureDimensionState = (): void => {
+        const snap = map.snap();
+        if (!is_record(snap) || !is_record(snap.ui)) return;
+
+        const ui = snap.ui;
+        const nextUi: Record<string, unknown> = { ...ui };
+
+        if (!is_record(ui.colWidths)) nextUi.colWidths = makeDimensionRecord(COLS, DEFAULT_COL_WIDTH);
+        if (!is_record(ui.rowHeights)) nextUi.rowHeights = makeDimensionRecord(ROWS, DEFAULT_ROW_HEIGHT);
+
+        if (nextUi.colWidths !== ui.colWidths || nextUi.rowHeights !== ui.rowHeights) {
+            const uiHandle = map.at(["ui"]);
+            uiHandle.replace(nextUi as Parameters<typeof uiHandle.replace>[0]);
+        }
+    };
+
+    const renderGridDimensionsFromMap = (): void => {
+        const snap = map.snap();
+        const colWidths = readDimensionRecordFromSnap(snap, "colWidths", COLS, DEFAULT_COL_WIDTH);
+        const rowHeights = readDimensionRecordFromSnap(snap, "rowHeights", ROWS, DEFAULT_ROW_HEIGHT);
+
+        grid.css.setMany({
+            gridTemplateColumns: colWidths.map((width) => `${width}px`).join(" "),
+            gridTemplateRows: rowHeights.map((height) => `${height}px`).join(" "),
+        });
+    };
+
+    const writeColumnWidthToMap = (col: number, width: number): void => {
+        map.set(["ui", "colWidths", String(col)], clampDimension(width, MIN_COL_WIDTH, MAX_COL_WIDTH));
+    };
+
+    const writeRowHeightToMap = (row: number, height: number): void => {
+        map.set(["ui", "rowHeights", String(row)], clampDimension(height, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT));
+    };
+
+    const startResize = (
+        edge: ResizeEdge,
+        target: ResizeTarget,
+        startPointer: number,
+        startSize: number,
+        neighborStartSize: number | undefined,
+        takeFromNeighbor: boolean,
+    ): void => {
+        activeResizeCleanup?.();
+
+        const { axis, index, neighborIndex, sign } = target;
+        const min = axis === "col" ? MIN_COL_WIDTH : MIN_ROW_HEIGHT;
+        const max = axis === "col" ? MAX_COL_WIDTH : MAX_ROW_HEIGHT;
+        const previousCursor = document.body.style.cursor;
+        const previousUserSelect = document.body.style.userSelect;
+        const resizeTarget = activeResizeTarget;
+        if (resizeTarget) setResizeEdgeHighlight(resizeTarget, edge, true);
+        document.body.style.cursor = axis === "col" ? "col-resize" : "row-resize";
+        document.body.style.userSelect = "none";
+
+        const writeMain = axis === "col" ? writeColumnWidthToMap : writeRowHeightToMap;
+        const writeNeighbor = axis === "col" ? writeColumnWidthToMap : writeRowHeightToMap;
+
+        const onMove = (event: PointerEvent): void => {
+            const pointer = axis === "col" ? event.clientX : event.clientY;
+            const delta = (pointer - startPointer) * sign;
+
+            if (takeFromNeighbor && neighborIndex !== undefined && neighborStartSize !== undefined) {
+                const pairTotal = startSize + neighborStartSize;
+                const minMainSize = min;
+                const maxMainSize = pairTotal - min;
+                const nextSize = clampDimension(startSize + delta, minMainSize, maxMainSize);
+                const nextNeighborSize = pairTotal - nextSize;
+
+                writeMain(index, nextSize);
+                writeNeighbor(neighborIndex, nextNeighborSize);
+                return;
+            }
+
+            const nextSize = clampDimension(startSize + delta, min, max);
+            writeMain(index, nextSize);
+        };
+
+        const onEnd = (): void => {
+            activeResizeCleanup?.();
+        };
+
+        activeResizeCleanup = () => {
+            document.removeEventListener("pointermove", onMove);
+            document.removeEventListener("pointerup", onEnd);
+            document.removeEventListener("pointercancel", onEnd);
+            document.body.style.cursor = previousCursor;
+            document.body.style.userSelect = previousUserSelect;
+            clearResizeEdgeHighlight(resizeTarget);
+            if (activeResizeTarget === resizeTarget) activeResizeTarget = undefined;
+            activeResizeCleanup = undefined;
+        };
+
+        document.addEventListener("pointermove", onMove);
+        document.addEventListener("pointerup", onEnd);
+        document.addEventListener("pointercancel", onEnd);
+    };
+
+    const resizeEdgeForEvent = (target: HTMLElement, event: PointerEvent): ResizeEdge | undefined => {
+        const rect = target.getBoundingClientRect();
+        const candidates: Array<{ edge: ResizeEdge; distance: number }> = [
+            { edge: "left", distance: event.clientX - rect.left },
+            { edge: "right", distance: rect.right - event.clientX },
+            { edge: "top", distance: event.clientY - rect.top },
+            { edge: "bottom", distance: rect.bottom - event.clientY },
+        ];
+        const distances = candidates.filter((item) => item.distance >= 0 && item.distance <= RESIZE_EDGE_PX);
+
+        distances.sort((a, b) => a.distance - b.distance);
+        return distances[0]?.edge;
+    };
+
+    const cursorForResizeEdge = (edge: ResizeEdge | undefined): string => {
+        if (edge === "left" || edge === "right") return "col-resize";
+        if (edge === "top" || edge === "bottom") return "row-resize";
+        return "text";
+    };
+
+    const shadowForResizeEdge = (edge: ResizeEdge, active: boolean): string => {
+        const size = active ? 3 : 2;
+        const blur = active ? 1 : 0;
+
+        if (edge === "left") return `inset ${size}px 0 ${blur}px ${RESIZE_EDGE_COLOR}`;
+        if (edge === "right") return `inset -${size}px 0 ${blur}px ${RESIZE_EDGE_COLOR}`;
+        if (edge === "top") return `inset 0 ${size}px ${blur}px ${RESIZE_EDGE_COLOR}`;
+        return `inset 0 -${size}px ${blur}px ${RESIZE_EDGE_COLOR}`;
+    };
+
+    const setResizeEdgeHighlight = (target: HTMLElement, edge: ResizeEdge | undefined, active: boolean = false): void => {
+        target.style.boxShadow = edge ? shadowForResizeEdge(edge, active) : "";
+    };
+
+    const clearResizeEdgeHighlight = (target: HTMLElement | undefined): void => {
+        if (target) target.style.boxShadow = "";
+    };
+
+    const readGridDimensions = (): { colWidths: number[]; rowHeights: number[] } => {
+        const snap = map.snap();
+        return {
+            colWidths: readDimensionRecordFromSnap(snap, "colWidths", COLS, DEFAULT_COL_WIDTH),
+            rowHeights: readDimensionRecordFromSnap(snap, "rowHeights", ROWS, DEFAULT_ROW_HEIGHT),
+        };
+    };
+
+    const resizeTargetForCellEdge = (cell: CellModel, edge: ResizeEdge): ResizeTarget => {
+        if (edge === "left") {
+            const index = cell.col > 0 ? cell.col - 1 : cell.col;
+            return {
+                axis: "col",
+                index,
+                neighborIndex: index < COLS - 1 ? index + 1 : undefined,
+                sign: cell.col > 0 ? 1 : -1,
+            };
+        }
+
+        if (edge === "right") {
+            return {
+                axis: "col",
+                index: cell.col,
+                neighborIndex: cell.col < COLS - 1 ? cell.col + 1 : undefined,
+                sign: 1,
+            };
+        }
+
+        if (edge === "top") {
+            const index = cell.row > 0 ? cell.row - 1 : cell.row;
+            return {
+                axis: "row",
+                index,
+                neighborIndex: index < ROWS - 1 ? index + 1 : undefined,
+                sign: cell.row > 0 ? 1 : -1,
+            };
+        }
+
+        return {
+            axis: "row",
+            index: cell.row,
+            neighborIndex: cell.row < ROWS - 1 ? cell.row + 1 : undefined,
+            sign: 1,
+        };
+    };
+
+    const maybeStartCellResize = (cell: CellModel, event: PointerEvent): boolean => {
+        const target = event.currentTarget;
+        if (!(target instanceof HTMLElement)) return false;
+
+        const edge = resizeEdgeForEvent(target, event);
+        if (!edge) return false;
+
+        event.preventDefault();
+        event.stopPropagation();
+        activeResizeTarget = target;
+        setResizeEdgeHighlight(target, edge, true);
+
+        const dimensions = readGridDimensions();
+        const targetInfo = resizeTargetForCellEdge(cell, edge);
+        const sizes = targetInfo.axis === "col" ? dimensions.colWidths : dimensions.rowHeights;
+        const fallbackSize = targetInfo.axis === "col" ? DEFAULT_COL_WIDTH : DEFAULT_ROW_HEIGHT;
+        const startSize = sizes[targetInfo.index] ?? fallbackSize;
+        const neighborStartSize = event.shiftKey && targetInfo.neighborIndex !== undefined
+            ? sizes[targetInfo.neighborIndex]
+            : undefined;
+        const startPointer = targetInfo.axis === "col" ? event.clientX : event.clientY;
+
+        startResize(
+            edge,
+            targetInfo,
+            startPointer,
+            startSize,
+            neighborStartSize,
+            event.shiftKey,
+        );
+        return true;
     };
 
     const writeRawToMap = (key: string, raw: string): void => {
@@ -216,6 +520,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const reset = (): void => {
         map.batch((tx) => {
             tx.set(["ui", "selected"], null);
+            tx.set(["ui", "colWidths"], makeDimensionRecord(COLS, DEFAULT_COL_WIDTH));
+            tx.set(["ui", "rowHeights"], makeDimensionRecord(ROWS, DEFAULT_ROW_HEIGHT));
             for (const cell of cells) tx.set(["cells", cell.key, "raw"], "");
         });
     };
@@ -241,12 +547,43 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             const input = grid.create.input();
             input.attr.set("aria-label", key);
             input.attr.set("data-cellsheet-key", key);
-            input.css.setMany(CELLcss);
+            input.css.setMany(CELLcss)
+                .css.setMany({
+                    width: "100%",
+                    height: "100%",
+                    inlineSize: "100%",
+                    blockSize: "100%",
+                    minWidth: "0",
+                    minHeight: "0",
+                    boxSizing: "border-box",
+                    alignSelf: "stretch",
+                    justifySelf: "stretch",
+                });
             input.listen.on("focus", () => {
                 selectCell(cell.key);
             });
             input.listen.on("input", () => {
                 writeRawToMap(cell.key, input.form.getValue() ?? "");
+            });
+            input.listen.on("pointerdown", (event: PointerEvent) => {
+                maybeStartCellResize(cell, event);
+            });
+            input.listen.on("pointermove", (event: PointerEvent) => {
+                const target = event.currentTarget;
+                if (!(target instanceof HTMLElement)) return;
+                if (activeResizeTarget) return;
+
+                const edge = resizeEdgeForEvent(target, event);
+                target.style.cursor = cursorForResizeEdge(edge);
+                setResizeEdgeHighlight(target, edge);
+            });
+            input.listen.on("pointerleave", (event: PointerEvent) => {
+                const target = event.currentTarget;
+                if (!(target instanceof HTMLElement)) return;
+                if (activeResizeTarget === target) return;
+
+                target.style.cursor = "text";
+                clearResizeEdgeHighlight(target);
             });
 
             cell.input = input;
@@ -261,6 +598,9 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         if (!cell) return;
         writeRawToMap(cell.key, raw);
     };
+
+    ensureDimensionState();
+    renderGridDimensionsFromMap();
 
     seed(0, 0, "1");
     seed(0, 1, "+");
@@ -281,14 +621,25 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
 
         queueMicrotask(() => {
             evaluateQueued = false;
-            evaluate();
+            if (!disposed) evaluate();
         });
     };
 
-    map.sub.path(["cells"], scheduleEvaluate);
-    map.sub.path(["ui", "selected"], scheduleEvaluate);
+    disposers.push(map.sub.path(["cells"], scheduleEvaluate));
+    disposers.push(map.sub.path(["ui", "selected"], scheduleEvaluate));
+    disposers.push(map.sub.path(["ui", "colWidths"], renderGridDimensionsFromMap));
+    disposers.push(map.sub.path(["ui", "rowHeights"], renderGridDimensionsFromMap));
 
     scheduleEvaluate();
 
-    return { branch, reset };
+    const dispose = (): void => {
+        disposed = true;
+        activeResizeCleanup?.();
+        clearResizeEdgeHighlight(activeResizeTarget);
+        activeResizeTarget = undefined;
+        for (const stop of disposers.splice(0)) stop();
+    };
+
+    const panel = { branch, reset, dispose };
+    return panel;
 }
