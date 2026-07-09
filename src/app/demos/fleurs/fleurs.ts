@@ -3,10 +3,11 @@
 import type { SvgLiveTree } from "hson-live/types";
 import { make_rng } from "../../utils/rng";
 import { pickFlowerPalette, pick_center_color, fmtNum } from "./fleurs-cols";
-import { pick_cultivar, sampleCultivarShape } from "./fleurs-cultivars";
-import { lerp } from "./fleurs-helpers";
-import type { FlowerSpec } from "./fleurs.types";
+import { lerp, pickOne } from "./fleurs-helpers";
+import type { CultivarShape, FlowerCultivar, FlowerSpec } from "./fleurs.types";
 import { appendDaisySpotsMarkup, appendPetalRingMarkup, appendStamensMarkup } from "./render-fleurs";
+import type { Rng } from "../test/tests.types";
+import { DAISYshape, SUNBURSTshape, PINWHEELshape, SCISSORshape, WILDshape, DANDYshape, ROSETTEshape } from "./fleurs.consts";
 
 
 function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
@@ -69,6 +70,9 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
     if (petals.trim()) {
         g.create.g(`<g>${petals}</g>`);
     }
+    if (stamens.trim()) {
+        g.create.g(`<g>${stamens}</g>`);
+    }
 
     g.create.circle().attr.setMany({
         cx: "0",
@@ -81,9 +85,6 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
         g.create.g(`<g>${daisySpots}</g>`);
     }
 
-    if (stamens.trim()) {
-        g.create.g(`<g>${stamens}</g>`);
-    }
 
     if (spec.bitmap) {
         return await make_bitmapped_effect(g, spec);
@@ -141,4 +142,32 @@ async function make_bitmapped_effect(
 
 function svg_to_data_url(svg: string): string {
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+export function pick_cultivar(seed: number): FlowerCultivar {
+    const rng = make_rng(seed);
+
+    const cultivars: readonly FlowerCultivar[] = [
+        "daisy",
+        "sunburst",
+        "pinwheel",
+        "scissor",
+        "rosette",
+        "wild",
+        "dandy"
+    ];
+
+    return pickOne(cultivars, rng);
+}
+export function sampleCultivarShape(
+    cultivar: FlowerCultivar,
+    rng: Rng): CultivarShape {
+
+    if (cultivar === "daisy") { return DAISYshape(rng); }
+    if (cultivar === "sunburst") { return SUNBURSTshape(rng); }
+    if (cultivar === "pinwheel") { return PINWHEELshape(rng); }
+    if (cultivar === "scissor") { return SCISSORshape(rng); }
+    if (cultivar === "wild") { return WILDshape(rng); }
+    if (cultivar === "dandy") { return DANDYshape(rng); }
+
+    return ROSETTEshape(rng);
 }

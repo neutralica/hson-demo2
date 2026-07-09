@@ -1,10 +1,9 @@
-
 import  { parse_oklch, format_oklch } from "../../core/helpers/color-helpers";
 import { make_rng } from "../../utils/rng";
 import type { Rng } from "../test/tests.types";
 import { clamp, lerp } from "./fleurs-helpers";
 import { randSigned } from "./fleurs-helpers";
-import { hueBands } from "./fleurs.consts";
+import { HUE_BANDS } from "./fleurs.consts";
 import type { OklchColor, JitterOpts, FlowerPaletteSpec, HueBand, FlowerSpec, FlowerColorOpts, FlowerCultivar } from "./fleurs.types";
 
 export function jitter_oklch(base: string, rng: Rng, opts: Partial<JitterOpts> = {}): string {
@@ -58,7 +57,7 @@ function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
 }
 export function pickFlowerPalette(seed: number): FlowerPaletteSpec {
     const rng = make_rng(seed);
-    const primaryBand = pickWeightedBand(hueBands, make_rng(seed * Math.random()));
+    const primaryBand = pickWeightedBand(HUE_BANDS, make_rng(seed * Math.random()));
     const secondaryBand = pickSecondaryBand(primaryBand, make_rng(seed * Math.random()));
 
     const primaryHue = sampleHueBand(primaryBand.min, primaryBand.max, make_rng(seed * Math.random()));
@@ -66,7 +65,9 @@ export function pickFlowerPalette(seed: number): FlowerPaletteSpec {
     const secondaryHue = secondaryBand
         ? sampleHueBand(secondaryBand.min, secondaryBand.max, make_rng(seed * Math.random()))
         : null;
-    const centerHue = normalizeHue(primaryHue + (rng() * 80 - 140));
+    const centerHue = normalizeHue(primaryHue + (rng() < 0.5
+        ? lerp(115, 155, rng())
+        : -lerp(115, 155, rng())));
 
     return {
         primaryPetal: sampleFlowerColor(primaryHue, make_rng(seed * Math.random()), {
@@ -90,12 +91,12 @@ export function pickFlowerPalette(seed: number): FlowerPaletteSpec {
             }),
 
         center: sampleFlowerColor(centerHue, rng, {
-            lMin: 0.26,
-            lMax: 0.44,
-            cMin: 0.06,
-            cMax: 0.12,
-            hSpread: 10,
-            lightnessBias: 1,
+            lMin: 0.34,
+            lMax: 0.62,
+            cMin: 0.08,
+            cMax: 0.18,
+            hSpread: 8,
+            lightnessBias: 0.92,
         }),
 
         useAlternatingPetals: secondaryHue !== null && rng() < 0.55,
@@ -134,57 +135,26 @@ export function normalizeHue(h: number): number {
     return out;
 }
 export function pickStamenColor(spec: FlowerSpec, rng: Rng): string {
-    const petal = parse_oklch(spec.palette.primaryPetal);
+    const pick = rng();
 
-    // darker flowers can take lighter stamens; lighter flowers need darker stamens
-    if (petal.l > 0.68) {
-        const hue = sampleHueBand(25, 45, make_rng(Math.random())); // warm brown / ochre
-        return sampleFlowerColor(hue, make_rng(Math.random()), {
-            lMin: 0.22,
-            lMax: 0.38,
-            cMin: 0.03,
-            cMax: 0.08,
-            hSpread: 8,
-            lightnessBias: 1.1,
-        });
+    if (pick < 0.52) {
+        return jitter_oklch(spec.palette.center, rng, { l: 0.018, c: 0.018, h: 8 });
     }
 
-    if (petal.l > 0.58) {
-        const hue = sampleHueBand(260, 320, make_rng(Math.random())); // soot plum / eggplant
-        return sampleFlowerColor(hue, make_rng(Math.random()), {
-            lMin: 0.26,
-            lMax: 0.42,
-            cMin: 0.03,
-            cMax: 0.07,
-            hSpread: 10,
-            lightnessBias: 1,
-        });
+    if (pick < 0.84) {
+        const petal = parse_oklch(spec.palette.primaryPetal);
+        const l = clamp(petal.l + (petal.l > 0.62 ? -0.20 : 0.20), 0.30, 0.74);
+        const c = clamp(petal.c * 0.85, 0.06, 0.18);
+        const h = normalizeHue(petal.h + (rng() * 24 - 12));
+
+        return format_oklch({ l, c, h });
     }
 
-    // pale grey / dusty cream for darker petals
-    const useWarm = make_rng(Math.random())() < 0.5;
-
-    if (useWarm) {
-        const hue = sampleHueBand(60, 90, make_rng(Math.random()));
-        return sampleFlowerColor(hue, make_rng(Math.random()), {
-            lMin: 0.66,
-            lMax: 0.82,
-            cMin: 0.015,
-            cMax: 0.05,
-            hSpread: 8,
-            lightnessBias: 0.9,
-        });
+    if (spec.palette.secondaryPetal !== null) {
+        return jitter_oklch(spec.palette.secondaryPetal, rng, { l: 0.018, c: 0.018, h: 8 });
     }
 
-    const hue = sampleHueBand(220, 280, make_rng(Math.random()));
-    return sampleFlowerColor(hue, make_rng(Math.random()), {
-        lMin: 0.64,
-        lMax: 0.80,
-        cMin: 0.01,
-        cMax: 0.04,
-        hSpread: 10,
-        lightnessBias: 0.9,
-    });
+    return jitter_oklch(spec.palette.primaryPetal, rng, { l: 0.018, c: 0.018, h: 8 });
 }
 export function pick_center_color(
     palette: FlowerPaletteSpec,
@@ -194,10 +164,10 @@ export function pick_center_color(
     if (cultivar === "rosette") {
         const src = parse_oklch(palette.primaryPetal);
 
-        // keep same hue family, but darker and slightly duller
-        const h = normalizeHue(src.h + (rng() * 6 - 3));
-        const l = clamp(src.l * 0.42, 0.2, 0.26);
-        const c = clamp(src.c * 0.55, 0.015, 0.09);
+        // keep the center related, but avoid the black-hole/funnel effect
+        const h = normalizeHue(src.h + (rng() * 14 - 7));
+        const l = clamp(src.l * 0.62, 0.32, 0.48);
+        const c = clamp(src.c * 0.72, 0.045, 0.14);
 
         return format_oklch({ l, c, h });
     }

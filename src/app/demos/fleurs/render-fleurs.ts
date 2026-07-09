@@ -2,7 +2,6 @@ import { adjustOklch } from "../../core/helpers/color-helpers";
 import { make_rng } from "../../utils/rng";
 import type { Rng } from "../test/tests.types";
 import { pickStamenColor, fmtNum, jitter_oklch } from "./fleurs-cols";
-import { getStamenDistance } from "./fleurs-cultivars";
 import { lerp } from "./fleurs-helpers";
 import type { FlowerSpec, FlowerPaletteSpec } from "./fleurs.types";
 
@@ -39,40 +38,51 @@ export function renderDefaultRing(spec: FlowerSpec, ringIx: number): string {
 
     return out;
 }
+export function makeRosettePetal(
+    angle: number,
+    length: number,
+    width: number,
+    fill: string,
+    opacity: number,
+    outline: string,
+    offsetRatio: number
+): string {
+    return `<ellipse cx="0" cy="${fmtNum(-length * offsetRatio, 3)}"
+        rx="${fmtNum(width, 3)}"
+        ry="${fmtNum(length, 3)}"
+        fill="${fill}"
+        fill-opacity="${fmtNum(opacity, 3)}"
+        ${outline}
+        transform="rotate(${fmtNum(angle, 3)})" />`;
+}
 export function renderRosetteRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
-
     const innerness = ringIx / Math.max(1, spec.ringCount - 1);
-const count = Math.max(10, Math.round(lerp(spec.petalCount, spec.petalCount * 0.72, innerness)));
+
+    const count = Math.max(4, Math.round(lerp(spec.petalCount * 0.62, spec.petalCount * 0.36, innerness)));
     const step = 360 / count;
+    const phase = (ringIx * 47) + (step * 0.22 * ringIx);
 
-    const ringShrink = Math.pow(0.75, ringIx);
-    const widthShrink = Math.pow(0.96, ringIx);
-
-    let baseLength = spec.petalLength * 0.78 * ringShrink;
-    let baseWidth = spec.petalWidth * 0.72 * widthShrink;
-
-    const phase = step * 0.14 * ringIx;
+    const lengthScale = lerp(0.78, 0.36, innerness);
+    const widthScale = lerp(1.02, 0.64, innerness);
+    const offsetRatio = lerp(0.62, 0.42, innerness);
 
     let out = "";
 
     for (let i = 0; i < count; i += 1) {
-        const angle = (step * i) + phase + lerp(-3.5, 3.5, rng());
-
-        let length = baseLength * lerp(0.98, 1.04, rng());
-        let width = baseWidth * lerp(0.96, 1.04, rng());
+        const angle = (step * i) + phase + lerp(-14, 14, rng());
+        const length = spec.petalLength * lengthScale * lerp(0.90, 1.14, rng());
+        const width = spec.petalWidth * widthScale * lerp(0.88, 1.12, rng());
 
         const fillBase = pickPetalColor(spec.palette, i + (ringIx * 100), rng, true);
-
-        // slightly darker inward to suggest puckering/shadow
         const fill = adjustOklch(fillBase, {
-            l: lerp(0, -0.155, innerness),
+            l: lerp(-0.035, 0.045, rng()) + lerp(-0.025, 0.015, innerness),
         });
 
-        const opacity = lerp(0.72, 0.90, rng());
+        const opacity = lerp(0.82, 0.92, rng());
         const outline = makeOutline(width, rng);
 
-        out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
+        out += makeRosettePetal(angle, length, width, fill, opacity, outline, offsetRatio);
     }
 
     return out;
@@ -82,12 +92,12 @@ export function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
     // scissor should be sparse and prominent
-    const count = Math.random() * spec.petalCount + 3;
+    const count = spec.petalCount;
     const step = 360 / count;
     const phase = step * 0.5 * ringIx;
 
-    let baseLength = spec.petalLength * (ringIx === 0 ? 1.22 : 0.58);
-    let baseWidth = spec.petalWidth * (ringIx === 0 ? 0.52 : 0.34);
+    let baseLength = spec.petalLength * (ringIx === 0 ? 0.82 : 0.42);
+    let baseWidth = spec.petalWidth * (ringIx === 0 ? 1.08 : 0.62);
 
     let out = "";
 
@@ -101,10 +111,10 @@ export function renderScissorRing(spec: FlowerSpec, ringIx: number): string {
         let width = baseWidth * lerp(0.82, 0.94, rng());
 
         const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
-        const opacity = lerp(0.78, 0.92, rng());
+        const opacity = lerp(0.78, 0.90, rng());
         const outline = makeOutline(width, rng);
 
-        out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
+        out += makeDetachedEllipsePetal(angle, length, width, spec.centerRadius, fill, opacity, outline, width * 0.12);
     }
 
     return out;
@@ -114,14 +124,14 @@ export function renderDaisyRing(spec: FlowerSpec, ringIx: number): string {
 
     // daisies should not keep accumulating surprise back-rings
     const count = ringIx === 0
-        ? Math.max(10, spec.petalCount)
-        : Math.max(8, Math.floor(spec.petalCount * 0.55));
+        ? Math.max(8, Math.floor(spec.petalCount * 0.82))
+        : Math.max(6, Math.floor(spec.petalCount * 0.42));
 
     const step = 360 / count;
     const phase = ringIx === 0 ? 0 : step * 0.5;
 
-    let baseLength = spec.petalLength * (ringIx === 0 ? 0.98 : 0.52);
-    let baseWidth = spec.petalWidth * (ringIx === 0 ? 0.86 : 0.42);
+    let baseLength = spec.petalLength * (ringIx === 0 ? 1.04 : 0.52);
+    let baseWidth = spec.petalWidth * (ringIx === 0 ? 0.68 : 0.34);
 
     let out = "";
 
@@ -132,7 +142,7 @@ export function renderDaisyRing(spec: FlowerSpec, ringIx: number): string {
         let width = baseWidth * lerp(0.96, 1.04, rng());
 
         const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
-        const opacity = lerp(0.82, 0.98, rng());
+        const opacity = lerp(0.78, 0.90, rng());
         const outline = makeOutline(width, rng);
 
         out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
@@ -150,8 +160,8 @@ export function renderSunburstRing(spec: FlowerSpec, ringIx: number): string {
     const step = 360 / count;
     const phase = step * 0.5 * ringIx;
 
-    let baseLength = spec.petalLength * (ringIx > 0 ? 0.82 : 1);
-    let baseWidth = spec.petalWidth * (ringIx > 0 ? 0.68 : 0.78);
+    let baseLength = spec.petalLength * (ringIx > 0 ? 0.62 : 0.74);
+    let baseWidth = spec.petalWidth * (ringIx > 0 ? 0.88 : 1.04);
 
     let out = "";
 
@@ -163,10 +173,10 @@ export function renderSunburstRing(spec: FlowerSpec, ringIx: number): string {
         const width = baseWidth * taper * lerp(0.94, 1.04, rng());
 
         const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
-        const opacity = lerp(0.78, 0.92, rng());
+        const opacity = lerp(0.88, 0.98, rng());
         const outline = makeOutline(width, rng);
 
-        out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
+        out += makeDetachedEllipsePetal(angle, length, width, spec.centerRadius, fill, opacity, outline, width * 0.08);
     }
 
     return out;
@@ -174,14 +184,14 @@ export function renderSunburstRing(spec: FlowerSpec, ringIx: number): string {
 export function renderWildRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
 
-    const count = Math.max(5, Math.floor(spec.petalCount * 0.55));
+    const count = Math.max(4, Math.floor(spec.petalCount * 0.48));
     const step = 360 / count;
 
     // this is the important bit for wild
     const phase = step * 0.5 * ringIx;
 
-    let baseLength = spec.petalLength * 0.90 * Math.pow(0.88, ringIx);
-    let baseWidth = spec.petalWidth * 0.72 * Math.pow(0.92, ringIx);
+    let baseLength = spec.petalLength * 1.04 * Math.pow(0.88, ringIx);
+    let baseWidth = spec.petalWidth * 0.86 * Math.pow(0.92, ringIx);
 
     let out = "";
 
@@ -189,10 +199,10 @@ export function renderWildRing(spec: FlowerSpec, ringIx: number): string {
         let angle = (step * i) + phase + lerp(-10, 10, rng());
 
         const length = baseLength * lerp(0.82, 1.04, rng());
-        const width = baseWidth * lerp(0.62, 0.80, rng());
+        const width = baseWidth * lerp(0.76, 0.94, rng());
 
         const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
-        const opacity = lerp(0.78, 0.92, rng());
+        const opacity = lerp(0.88, 0.98, rng());
         const outline = makeOutline(width, rng);
 
         out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
@@ -207,8 +217,8 @@ export function renderPinwheelRing(spec: FlowerSpec, ringIx: number): string {
     const step = 360 / count;
     const phase = step * 0.35 * ringIx;
 
-    let baseLength = spec.petalLength * Math.pow(0.90, ringIx);
-    let baseWidth = spec.petalWidth * (ringIx > 0 ? 0.82 : 1);
+    let baseLength = spec.petalLength * 0.92 * Math.pow(0.90, ringIx);
+    let baseWidth = spec.petalWidth * (ringIx > 0 ? 0.76 : 0.92);
 
     let out = "";
 
@@ -219,8 +229,11 @@ export function renderPinwheelRing(spec: FlowerSpec, ringIx: number): string {
         const length = baseLength * taper * lerp(0.95, 1.05, rng());
         const width = baseWidth * taper * lerp(0.95, 1.05, rng());
 
-        const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
-        const opacity = lerp(0.78, 0.92, rng());
+        const innerness = ringIx / Math.max(1, spec.ringCount - 1);
+        const fill = adjustOklch(pickPetalColor(spec.palette, i + (ringIx * 100), rng), {
+            l: lerp(0.055, -0.035, innerness),
+        });
+        const opacity = lerp(0.74, 0.58, innerness) * lerp(0.96, 1.04, rng());
         const outline = makeOutline(width, rng);
 
         out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
@@ -229,6 +242,7 @@ export function renderPinwheelRing(spec: FlowerSpec, ringIx: number): string {
     return out;
 }
 export function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
+    console.log(spec.cultivar);
     switch (spec.cultivar) {
         case "rosette":
             return renderRosetteRing(spec, ringIx);
@@ -265,6 +279,7 @@ export function appendStamensMarkup(spec: FlowerSpec): string {
     const dist = getStamenDistance(spec);
 
     let out = "";
+    const fill = pickStamenColor(spec, rng);
 
     for (let i = 0; i < spec.stamenCount; i += 1) {
         const angleDeg = step * i;
@@ -273,10 +288,9 @@ export function appendStamensMarkup(spec: FlowerSpec): string {
         const x = Math.cos(angleRad) * dist;
         const y = Math.sin(angleRad) * dist;
 
-        const fill = pickStamenColor(spec, rng);
-
+        
         if (spec.cultivar === "scissor") {
-
+            
             const innerDist = dist * 0.82;
             const outerDist = dist * 1.94;
             const ctrlDist = dist * 1.08;
@@ -315,41 +329,14 @@ export function appendDaisySpotsMarkup(spec: FlowerSpec): string {
         return "";
     }
 
-    const rng = make_rng(spec.seed + 707);
-    const spotCount = 14 + Math.floor(rng() * 10);
-
-    let out = "";
-
-    // golden angle in radians
-    const golden = Math.PI * (3 - Math.sqrt(5));
-
-    for (let i = 0; i < spotCount; i += 1) {
-        const t = (i + 0.5) / spotCount;
-
-        // even distribution across the head, biased naturally outward
-        const r = spec.centerRadius * 0.78 * Math.sqrt(t);
-        const ang = i * golden;
-
-        const x = Math.cos(ang) * r;
-        const y = Math.sin(ang) * r;
-
-        const dotR = spec.centerRadius * lerp(0.04, 0.07, rng());
-
-        out += `<circle cx="${fmtNum(x, 3)}" cy="${fmtNum(y, 3)}"
-            r="${fmtNum(dotR, 3)}"
-            fill="rgba(0,0,0,0.20)" />`;
-    }
-
-    return out;
+    return "";
 }
 export function makeRingRng(spec: FlowerSpec, ringIx: number): () => number {
     return make_rng(spec.seed + ((ringIx + 1) * 101));
 }
 
-export function makeOutline(width: number, rng: () => number): string {
-    return rng() < 0.94
-        ? ` stroke="rgba(0,0,0,0.11)" stroke-width="${fmtNum(width * 0.08, 3)}"`
-        : "";
+export function makeOutline(_width: number, _rng: () => number): string {
+    return "";
 }
 
 export function makeEllipsePetal(
@@ -360,7 +347,25 @@ export function makeEllipsePetal(
     opacity: number,
     outline: string
 ): string {
-    return `<ellipse cx="0" cy="${fmtNum(-length * 0.55, 3)}"
+    return `<ellipse cx="0" cy="${fmtNum(-length * 0.78, 3)}"
+        rx="${fmtNum(width, 3)}"
+        ry="${fmtNum(length, 3)}"
+        fill="${fill}"
+        fill-opacity="${fmtNum(opacity, 3)}"
+        ${outline}
+        transform="rotate(${fmtNum(angle, 3)})" />`;
+}
+export function makeDetachedEllipsePetal(
+    angle: number,
+    length: number,
+    width: number,
+    centerRadius: number,
+    fill: string,
+    opacity: number,
+    outline: string,
+    gap: number
+): string {
+    return `<ellipse cx="0" cy="${fmtNum(-(length + centerRadius + gap), 3)}"
         rx="${fmtNum(width, 3)}"
         ry="${fmtNum(length, 3)}"
         fill="${fill}"
@@ -371,29 +376,16 @@ export function makeEllipsePetal(
 
 export function makePetalOpacity(spec: FlowerSpec, rng: () => number): number {
     return spec.cultivar === "daisy"
-        ? lerp(0.82, 0.98, rng())
-        : lerp(0.78, 0.94, rng());
+        ? lerp(0.58, 0.90, rng())
+        : lerp(0.78, 0.88, rng());
 }
 export function pickPetalColor(
     palette: FlowerPaletteSpec,
-    petalIx: number,
+    _petalIx: number,
     rng: Rng,
-    randomize: boolean = false
+    _randomize: boolean = false
 ): string {
-    let base = palette.useAlternatingPetals &&
-        palette.secondaryPetal !== null &&
-        petalIx % 2 === 1
-        ? palette.secondaryPetal
-        : palette.primaryPetal;
-    if (randomize &&
-        palette.secondaryPetal !== null &&
-        rng() < 0.78) {
-        base = rng() < 0.5
-            ? palette.primaryPetal
-            : palette.secondaryPetal;
-    }
-
-    return jitter_oklch(base, rng, { l: 0.015, c: 0.015, h: 8 });
+    return jitter_oklch(palette.primaryPetal, rng, { l: 0.006, c: 0.006, h: 3 });
 }
 export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
     const rng = makeRingRng(spec, ringIx);
@@ -406,8 +398,8 @@ export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
     const ringShrink = Math.pow(0.80, ringIx);
     const widthGrow = Math.pow(1.08, ringIx);
 
-    let baseLength = spec.petalLength * 0.92 * ringShrink;
-    let baseWidth = spec.petalWidth * 0.92 * widthGrow;
+    let baseLength = spec.petalLength * 1.02 * ringShrink;
+    let baseWidth = spec.petalWidth * 0.48 * widthGrow;
 
     // strong per-ring phase so layers interleave
     const phase = step * 0.5 * ringIx;
@@ -421,12 +413,15 @@ export function renderDandyRing(spec: FlowerSpec, ringIx: number): string {
         let width = baseWidth * lerp(0.96, 1.04, rng());
 
         const fill = pickPetalColor(spec.palette, i + (ringIx * 100), rng);
-        const opacity = lerp(0.72, 0.90, rng());
+        const opacity = lerp(0.74, 0.86, rng());
         const outline = makeOutline(width, rng);
 
         out += makeEllipsePetal(angle, length, width, fill, opacity, outline);
     }
 
     return out;
+}export function getStamenDistance(spec: FlowerSpec): number {
+    if (spec.cultivar === "sunburst") return spec.centerRadius * 1.18;
+    if (spec.cultivar === "scissor") return spec.centerRadius * 1.08;
+    return spec.centerRadius * 1.02;
 }
-
