@@ -260,6 +260,61 @@ export function read_derived_cell_from_snap(snap: unknown, key: string): Cellshe
         relation: typeof entry.relation === "string" ? entry.relation as CellRelation : "none",
     };
 }
+
+export function read_operations_from_snap(snap: unknown): Record<string, CellsheetOperationState> {
+    if (!is_record(snap)) return {};
+    if (!is_record(snap.derived)) return {};
+    if (!is_record(snap.derived.operations)) return {};
+
+    const out: Record<string, CellsheetOperationState> = {};
+
+    for (const [key, entry] of Object.entries(snap.derived.operations)) {
+        if (!is_record(entry)) continue;
+        const op = String(entry.op);
+        if (!is_operator(op)) continue;
+
+        const direction = entry.direction === "horizontal" || entry.direction === "vertical"
+            ? entry.direction
+            : undefined;
+        if (!direction) continue;
+
+        const left = typeof entry.left === "string" ? entry.left : undefined;
+        const right = typeof entry.right === "string" ? entry.right : undefined;
+        const operator = typeof entry.operator === "string" ? entry.operator : undefined;
+        const target = typeof entry.target === "string" ? entry.target : undefined;
+        if (!left || !right || !operator || !target) continue;
+
+        const result = typeof entry.result === "string" || typeof entry.result === "number" ? entry.result : null;
+        const error = typeof entry.error === "string" ? entry.error : null;
+
+        out[key] = {
+            op,
+            direction,
+            left,
+            right,
+            operator,
+            target,
+            result,
+            error,
+        };
+    }
+
+    return out;
+}
+
+export function operation_touches_cell(operation: CellsheetOperationState, key: string): boolean {
+    return operation.left === key
+        || operation.right === key
+        || operation.operator === key
+        || operation.target === key;
+}
+
+export function format_operation_state(operation: CellsheetOperationState): string {
+    const arrow = operation.error ? "!" : "→";
+    const result = operation.error ?? value_text(operation.result ?? undefined);
+    const suffix = result === "" ? "" : ` ${arrow} ${operation.target}=${result}`;
+    return `${operation.left} ${operation.op} ${operation.right}${suffix}`;
+}
 export function mark_related_cell(cell: CellModel, relation: CellRelation): void {
     if (cell.relation === "selected") return;
     if (cell.relation === "blocked") return;

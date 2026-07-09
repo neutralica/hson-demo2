@@ -2,7 +2,7 @@ import type { LiveTree } from "hson-live";
 
 export type Operator = "+" | "-" | "*" | "/";
 export type CellKind = "blank" | "text" | "number" | "operator" | "result" | "error";
-type Direction = "horizontal" | "vertical";
+export type Direction = "horizontal" | "vertical";
 export type CellRelation = "none" | "selected" | "operand" | "operator" | "target" | "blocked";
 type CellValue = string | number | Operator | undefined;
 export type CellModel = {
@@ -61,6 +61,8 @@ export type CellsheetState = {
     cells: Record<string, CellsheetCellState>;
     ui: {
         selected: string | null;
+        colWidths?: Record<string, number>;
+        rowHeights?: Record<string, number>;
     };
     derived: {
         cells: Record<string, CellsheetDerivedCellState>;
@@ -72,4 +74,5 @@ export type CellsheetState = {
 export type CellsheetPanel = Readonly<{
     branch: LiveTree;
     reset: () => void;
+    dispose: () => void;
 }>;

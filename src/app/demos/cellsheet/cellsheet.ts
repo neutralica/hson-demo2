@@ -2,8 +2,8 @@
 
 import { hson, type LiveTree } from "hson-live";
 import type { CellsheetDerivedCellState, Operator, CellModel, OperationModel, CellsheetOperationState, CellsheetPanel } from "./cellsheet.types";
-import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, SIDEBARcss, CARDcss, LABELcss, METAcss, RESETcss } from "./cellsheet.css";
-import { create_initial_cellsheet_state, ROWS, COLS, is_record, apply_authored_raw, derived_cell_from_model, operation_state_from_model, summary_state_from_models, read_summary_from_snap, read_derived_cell_from_snap, render_cell_from_derived, is_operator, compute_result, operation_error, mark_related_cell, read_selected_from_snap, reset_derived_state, MAX_EVALUATION_PASSES, remember_operation_once, result_target_error, model_value_changed, value_text, cell_key } from "./cellsheet-helpers";
+import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, CARDcss, LABELcss, METAcss, RESETcss, FOOTERcss, RESIZE_EDGE, SEL_EDGE, AUTH_TEXT, DER_TEXT, OPERATOR_COLOR, ERR_TEXT, RELAT_EDGE, BORDER, DER_BORDER, ERR_BORDER } from "./cellsheet.css";
+import { create_initial_cellsheet_state, ROWS, COLS, is_record, apply_authored_raw, derived_cell_from_model, operation_state_from_model, summary_state_from_models, read_summary_from_snap, read_derived_cell_from_snap, read_operations_from_snap, operation_touches_cell, format_operation_state, render_cell_from_derived, is_operator, compute_result, operation_error, mark_related_cell, read_selected_from_snap, reset_derived_state, MAX_EVALUATION_PASSES, remember_operation_once, result_target_error, model_value_changed, value_text, cell_key } from "./cellsheet-helpers";
 
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellModel[] = [];
@@ -21,7 +21,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const MIN_ROW_HEIGHT = 26;
     const MAX_ROW_HEIGHT = 96;
     const RESIZE_EDGE_PX = 7;
-    const RESIZE_EDGE_COLOR = "var(--hson-color-txt-menu, currentColor)";
+    const RESIZE_EDGE_COLOR = RESIZE_EDGE;
 
     type ResizeEdge = "left" | "right" | "top" | "bottom";
 
@@ -38,60 +38,45 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         .id.set("cellsheet-panel")
         .css.setMany(PANELcss);
 
-    const header = branch.create.div().css.setMany(HEADERcss).css.setMany({
-        display: "grid",
-        gridTemplateColumns: "minmax(280px, 0.82fr) minmax(360px, 1.18fr)",
-        gap: "24px",
-        alignItems: "stretch",
-    });
-    const headerText = header.create.div().css.setMany({
-        minWidth: "0",
-        display: "grid",
-        alignContent: "start",
-        gap: "10px",
-    });
-    headerText.create.div().text.set("cellsheet").css.setMany(TITLEcss);
-    headerText.create.div()
-        .text.set("A small reactive operator grid. Type values into cells, then place + - * or / between adjacent cells. Drag cell edges to resize rows and columns; hold shift while dragging to take space from the neighbor.")
+    const header = branch.create.div().css.setMany(HEADERcss);
+    header.create.div().text.set("cellsheet").css.setMany(TITLEcss);
+    header.create.div()
+        .text.set("A small reactive operator grid.\n• type values into cells\n• place + - * or / between adjacent cells\n• drag cell edges to resize rows and columns\n• hold shift while dragging to take space from the neighbor")
         .css.setMany(SUBTITLEcss);
 
-    const sidebar = header.create.div().css.setMany(SIDEBARcss).css.setMany({
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) auto",
-        gap: "10px",
-        alignItems: "stretch",
-        alignSelf: "stretch",
-    });
-    const sidebarCards = sidebar.create.div().css.setMany({
-        display: "grid",
-        gap: "10px",
-        minWidth: "0",
-    });
-    const sidebarActions = sidebar.create.div().css.setMany({
-        display: "grid",
-        alignContent: "stretch",
-        minWidth: "144px",
-    });
-    const body = branch.create.div().css.setMany(BODYcss).css.setMany({
-        display: "flex",
-        justifyContent: "center",
-    });
+    const body = branch.create.div().css.setMany(BODYcss);
     const grid = body.create.div().css.setMany(GRIDcss).css.setMany({
         width: "fit-content",
         maxWidth: "100%",
     });
 
-    const statusCard = sidebarCards.create.div().css.setMany(CARDcss);
-    statusCard.create.div().text.set("state").css.setMany(LABELcss);
-    const statusText = statusCard.create.div().css.setMany(METAcss);
+    const footer = branch.create.div().css.setMany(FOOTERcss);
+    const footerCards = footer.create.div().css.setMany({
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 0.86fr) minmax(0, 1.14fr)",
+        gap: "0.75rem",
+        minWidth: "0",
+    });
+    const footerActions = footer.create.div().css.setMany({
+        display: "grid",
+        alignContent: "stretch",
+        minWidth: "9rem",
+    });
 
-    const helpCard = sidebarCards.create.div().css.setMany(CARDcss);
-    helpCard.create.div().text.set("rules").css.setMany(LABELcss);
-    helpCard.create.div()
-        .text.set("+ can add numbers or join strings. - * / only operate on numbers. Operators look left/right first, then up/down. Select a cell to reveal the operation it participates in.")
-        .css.setMany(METAcss);
+    const statusCard = footerCards.create.div().css.setMany(CARDcss).css.setMany({
+        borderColor: BORDER,
+    });
+    statusCard.create.div().text.set("state").css.setMany(LABELcss).css.setMany({ color: OPERATOR_COLOR });
+    const statusText = statusCard.create.div().css.setMany(METAcss).css.setMany({ color: DER_TEXT });
 
-    const resetButton = sidebarActions.create.button().css.setMany(RESETcss).css.setMany({
+    const selectionCard = footerCards.create.div().css.setMany(CARDcss).css.setMany({
+        borderColor: SEL_EDGE,
+        boxShadow: `inset 0 0 0 1px ${RELAT_EDGE}`,
+    });
+    selectionCard.create.div().text.set("selection").css.setMany(LABELcss).css.setMany({ color: SEL_EDGE });
+    const selectionText = selectionCard.create.div().css.setMany(METAcss).css.setMany({ color: AUTH_TEXT });
+
+    const resetButton = footerActions.create.button().css.setMany(RESETcss).css.setMany({
         height: "100%",
         minHeight: "100%",
         paddingInline: "24px",
@@ -182,6 +167,14 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         map.set(["ui", "rowHeights", String(row)], clampDimension(height, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT));
     };
 
+    const writeResolvedColumnWidthToMap = (col: number, width: number): void => {
+        map.set(["ui", "colWidths", String(col)], Math.round(width));
+    };
+
+    const writeResolvedRowHeightToMap = (row: number, height: number): void => {
+        map.set(["ui", "rowHeights", String(row)], Math.round(height));
+    };
+
     const startResize = (
         edge: ResizeEdge,
         target: ResizeTarget,
@@ -203,7 +196,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         document.body.style.userSelect = "none";
 
         const writeMain = axis === "col" ? writeColumnWidthToMap : writeRowHeightToMap;
-        const writeNeighbor = axis === "col" ? writeColumnWidthToMap : writeRowHeightToMap;
+        const writeResolvedMain = axis === "col" ? writeResolvedColumnWidthToMap : writeResolvedRowHeightToMap;
+        const writeResolvedNeighbor = axis === "col" ? writeResolvedColumnWidthToMap : writeResolvedRowHeightToMap;
 
         const onMove = (event: PointerEvent): void => {
             const pointer = axis === "col" ? event.clientX : event.clientY;
@@ -216,8 +210,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                 const nextSize = clampDimension(startSize + delta, minMainSize, maxMainSize);
                 const nextNeighborSize = pairTotal - nextSize;
 
-                writeMain(index, nextSize);
-                writeNeighbor(neighborIndex, nextNeighborSize);
+                writeResolvedMain(index, nextSize);
+                writeResolvedNeighbor(neighborIndex, nextNeighborSize);
                 return;
             }
 
@@ -281,6 +275,40 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
 
     const clearResizeEdgeHighlight = (target: HTMLElement | undefined): void => {
         if (target) target.style.boxShadow = "";
+    };
+
+    const renderCellColors = (cell: CellModel, derived: CellsheetDerivedCellState): void => {
+        const input = cell.input;
+        if (!input) return;
+
+        const hasRelation = derived.relation !== "none";
+        const textColor = derived.error
+            ? ERR_TEXT
+            : derived.kind === "result"
+                ? DER_TEXT
+                : derived.kind === "operator"
+                    ? OPERATOR_COLOR
+                    : AUTH_TEXT;
+        const borderColor = derived.error
+            ? ERR_BORDER
+            : derived.kind === "result"
+                ? DER_BORDER
+                : hasRelation
+                    ? RELAT_EDGE
+                    : BORDER;
+        const outlineColor = derived.relation === "selected"
+            ? SEL_EDGE
+            : hasRelation
+                ? RELAT_EDGE
+                : "transparent";
+
+        input.css.setMany({
+            color: textColor,
+            borderColor,
+            borderStyle: derived.kind === "result" ? "dashed" : "solid",
+            outlineColor,
+            boxShadow: derived.error ? `inset 0 0 0 1px ${ERR_TEXT}` : "none",
+        });
     };
 
     const readGridDimensions = (): { colWidths: number[]; rowHeights: number[] } => {
@@ -393,15 +421,44 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const renderStatusFromMap = (snap: unknown): void => {
         const summary = read_summary_from_snap(snap);
         statusText.text.set(`${summary.authored} authored / ${summary.operators} operators / ${summary.results} results / ${summary.errors} errors`);
+        statusText.css.setMany({ color: summary.errors > 0 ? ERR_TEXT : DER_TEXT });
+    };
+
+    const renderSelectionFromMap = (snap: unknown): void => {
+        const selectedKey = read_selected_from_snap(snap);
+        if (!selectedKey) {
+            selectionText.text.set("Select a cell to inspect its derived operation links.");
+            selectionText.css.setMany({ color: AUTH_TEXT });
+            return;
+        }
+
+        const operationsFromMap = read_operations_from_snap(snap);
+        const touchedOperations = Object.values(operationsFromMap)
+            .filter((operation) => operation_touches_cell(operation, selectedKey));
+
+        if (touchedOperations.length === 0) {
+            selectionText.text.set(`${selectedKey}: no derived operation links.`);
+            selectionText.css.setMany({ color: AUTH_TEXT });
+            return;
+        }
+
+        selectionText.text.set(`${selectedKey}\n${touchedOperations.map(format_operation_state).join("\n")}`);
+        selectionText.css.setMany({
+            color: touchedOperations.some((operation) => operation.error) ? ERR_TEXT : DER_TEXT,
+        });
     };
 
     const renderFromMap = (): void => {
         const snap = map.snap();
         for (const cell of cells) {
             const derived = read_derived_cell_from_snap(snap, cell.key);
-            if (derived) render_cell_from_derived(cell, derived);
+            if (derived) {
+                render_cell_from_derived(cell, derived);
+                renderCellColors(cell, derived);
+            }
         }
         renderStatusFromMap(snap);
+        renderSelectionFromMap(snap);
     };
 
     const findOperations = (operator: CellModel): OperationModel[] => {
