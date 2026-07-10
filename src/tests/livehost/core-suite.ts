@@ -353,6 +353,307 @@ export function livehost_core_suite(): TestSuite {
           message: "async boom",
         },
       }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "schema payload validator accepts valid payload",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value): value is { name: string } => {
+                    return typeof value === "object"
+                      && value !== null
+                      && !Array.isArray(value)
+                      && typeof (value as { name?: unknown }).name === "string";
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+
+          const response = await host.dispatch_action({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: { name: "Grace" },
+          });
+
+          return {
+            responseType: response.type,
+            seq: response.seq,
+            hostSeq: host.seq,
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          responseType: "ack",
+          seq: 1,
+          hostSeq: 1,
+          name: "Grace",
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "schema payload validator rejects invalid payload without incrementing seq",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value): value is { name: string } => {
+                    return typeof value === "object"
+                      && value !== null
+                      && !Array.isArray(value)
+                      && typeof (value as { name?: unknown }).name === "string";
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+
+          const response = await host.dispatch_action({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: { label: "Grace" },
+          });
+
+          return {
+            responseType: response.type,
+            ok: "ok" in response ? response.ok : undefined,
+            seq: response.seq,
+            hostSeq: host.seq,
+            code: response.type === "error" ? response.error.code : undefined,
+            message: response.type === "error" ? response.error.message : undefined,
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          responseType: "error",
+          ok: false,
+          seq: 0,
+          hostSeq: 0,
+          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+          message: "Value failed LiveHost schema validation.",
+          name: "Ada",
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "schema payload decoder passes decoded value to handler",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value) => {
+                    if (typeof value !== "string") {
+                      return { ok: false, issues: ["name must be string"] } as const;
+                    }
+
+                    return { ok: true, value: { name: value } } as const;
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+
+          const response = await host.dispatch_action({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: "Grace",
+          });
+
+          return {
+            responseType: response.type,
+            seq: response.seq,
+            hostSeq: host.seq,
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          responseType: "ack",
+          seq: 1,
+          hostSeq: 1,
+          name: "Grace",
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "schema payload decoder reports custom issues",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value) => {
+                    if (typeof value !== "string") {
+                      return { ok: false, issues: ["name must be string", "payload rejected"] } as const;
+                    }
+
+                    return { ok: true, value: { name: value } } as const;
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+
+          const response = await host.dispatch_action({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: { name: "Grace" },
+          });
+
+          return {
+            responseType: response.type,
+            ok: "ok" in response ? response.ok : undefined,
+            seq: response.seq,
+            hostSeq: host.seq,
+            code: response.type === "error" ? response.error.code : undefined,
+            message: response.type === "error" ? response.error.message : undefined,
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          responseType: "error",
+          ok: false,
+          seq: 0,
+          hostSeq: 0,
+          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+          message: "name must be string; payload rejected",
+          name: "Ada",
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "create exposes schema reference",
+        input: {},
+        act: () => {
+          const schema = {
+            state: (value: unknown): value is { ok: boolean } => {
+              return typeof value === "object"
+                && value !== null
+                && !Array.isArray(value)
+                && typeof (value as { ok?: unknown }).ok === "boolean";
+            },
+          } as const;
+          const host = create_livehost({
+            state: { ok: true },
+            schema,
+          });
+
+          return {
+            sameSchema: host.schema === schema,
+            root: host.map.snap(),
+          };
+        },
+        expected: {
+          sameSchema: true,
+          root: { ok: true },
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "create applies state schema validator before map creation",
+        input: {},
+        act: () => {
+          let validatorCalled = false;
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              state: (value): value is { user: { name: string } } => {
+                validatorCalled = true;
+                return typeof value === "object"
+                  && value !== null
+                  && !Array.isArray(value)
+                  && typeof (value as { user?: { name?: unknown } }).user?.name === "string";
+              },
+            },
+          });
+
+          return {
+            validatorCalled,
+            root: host.map.snap(),
+          };
+        },
+        expected: {
+          validatorCalled: true,
+          root: { user: { name: "Ada" } },
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "create applies state schema decoder before map creation",
+        input: {},
+        act: () => {
+          const host = create_livehost({
+            state: { user: { name: "  Ada  " } },
+            schema: {
+              state: (value) => {
+                if (typeof value !== "object" || value === null || Array.isArray(value)) {
+                  return { ok: false, issues: ["state must be object"] } as const;
+                }
+
+                const name = (value as { user?: { name?: unknown } }).user?.name;
+                if (typeof name !== "string") {
+                  return { ok: false, issues: ["state user name must be string"] } as const;
+                }
+
+                return { ok: true, value: { user: { name: name.trim() } } } as const;
+              },
+            },
+          });
+
+          return {
+            root: host.map.snap(),
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          root: { user: { name: "Ada" } },
+          name: "Ada",
+        },
+      }),
+
     ] as const,
   };
 }

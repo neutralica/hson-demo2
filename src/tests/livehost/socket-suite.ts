@@ -83,6 +83,17 @@ function make_memory_socket(): MemorySocket {
   };
 }
 
+function is_record(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function message_error_field(message: unknown, field: string): unknown {
+  if (!is_record(message)) return undefined;
+  const error = message.error;
+  if (!is_record(error)) return undefined;
+  return error[field];
+}
+
 export function livehost_socket_suite(): TestSuite {
   const SUITE = "livehost/socket";
 
@@ -129,11 +140,11 @@ export function livehost_socket_suite(): TestSuite {
           host.connect(socket);
           await socket.receive_raw("{ nope");
 
-          const [message] = socket.sent() as Array<Record<string, any>>;
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
           return {
             type: message?.type,
             seq: message?.seq,
-            message: message?.error?.message,
+            message: message_error_field(message, "message"),
           };
         },
         expected: {
@@ -201,15 +212,15 @@ export function livehost_socket_suite(): TestSuite {
             name: "missing_action",
           });
 
-          const [message] = socket.sent() as Array<Record<string, any>>;
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
           return {
             type: message?.type,
             id: message?.id,
             ok: message?.ok,
             seq: message?.seq,
             hostSeq: host.seq,
-            code: message?.error?.code,
-            errorMessage: message?.error?.message,
+            code: message_error_field(message, "code"),
+            errorMessage: message_error_field(message, "message"),
           };
         },
         expected: {
@@ -224,58 +235,50 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect subscribe sends not implemented error",
+        name: "connect subscribe sends current value sync",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_livehost({ state: { ui: { selected: "home" } } });
           const socket = make_memory_socket();
 
           host.connect(socket);
           await socket.receive({ type: "subscribe", path: ["ui", "selected"] });
 
-          const [message] = socket.sent() as Array<Record<string, any>>;
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
           return {
             type: message?.type,
             seq: message?.seq,
-            code: message?.error?.code,
-            path: message?.error?.path,
-            errorMessage: message?.error?.message,
+            path: message?.path,
+            value: message?.value,
           };
         },
         expected: {
-          type: "error",
+          type: "sync",
           seq: 0,
-          code: "LIVEHOST_NOT_IMPLEMENTED",
           path: ["ui", "selected"],
-          errorMessage: "LiveHost subscribe is not implemented yet.",
+          value: "home",
         },
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect unsubscribe sends not implemented error",
+        name: "connect unsubscribe sends no message on success",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_livehost({ state: { ui: { selected: "home" } } });
           const socket = make_memory_socket();
 
           host.connect(socket);
+          await socket.receive({ type: "subscribe", path: ["ui", "selected"] });
           await socket.receive({ type: "unsubscribe", path: ["ui", "selected"] });
 
-          const [message] = socket.sent() as Array<Record<string, any>>;
           return {
-            type: message?.type,
-            seq: message?.seq,
-            code: message?.error?.code,
-            path: message?.error?.path,
-            errorMessage: message?.error?.message,
+            sentCount: socket.sent().length,
+            firstType: (socket.sent()[0] as Record<string, unknown> | undefined)?.type,
           };
         },
         expected: {
-          type: "error",
-          seq: 0,
-          code: "LIVEHOST_NOT_IMPLEMENTED",
-          path: ["ui", "selected"],
-          errorMessage: "LiveHost unsubscribe is not implemented yet.",
+          sentCount: 1,
+          firstType: "sync",
         },
       }),
       livehost_socket_read_case({
@@ -374,12 +377,12 @@ export function livehost_socket_suite(): TestSuite {
           host.connect(socket);
           await socket.receive({ type: "action", name: "missing_id" });
 
-          const [message] = socket.sent() as Array<Record<string, any>>;
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
           return {
             type: message?.type,
             seq: message?.seq,
             hostSeq: host.seq,
-            errorMessage: message?.error?.message,
+            errorMessage: message_error_field(message, "message"),
           };
         },
         expected: {
@@ -387,6 +390,323 @@ export function livehost_socket_suite(): TestSuite {
           seq: 0,
           hostSeq: 0,
           errorMessage: "LiveHost action message requires string id.",
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "connect action applies schema validator before ack",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value): value is { name: string } => {
+                    return typeof value === "object"
+                      && value !== null
+                      && !Array.isArray(value)
+                      && typeof (value as { name?: unknown }).name === "string";
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+          const socket = make_memory_socket();
+
+          host.connect(socket);
+          await socket.receive({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: { name: "Grace" },
+          });
+
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
+          return {
+            type: message?.type,
+            id: message?.id,
+            ok: message?.ok,
+            seq: message?.seq,
+            hostSeq: host.seq,
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          type: "ack",
+          id: "action-a",
+          ok: true,
+          seq: 1,
+          hostSeq: 1,
+          name: "Grace",
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "connect action rejects schema-invalid payload",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value): value is { name: string } => {
+                    return typeof value === "object"
+                      && value !== null
+                      && !Array.isArray(value)
+                      && typeof (value as { name?: unknown }).name === "string";
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+          const socket = make_memory_socket();
+
+          host.connect(socket);
+          await socket.receive({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: { label: "Grace" },
+          });
+
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
+          return {
+            type: message?.type,
+            id: message?.id,
+            ok: message?.ok,
+            seq: message?.seq,
+            hostSeq: host.seq,
+            code: message_error_field(message, "code"),
+            errorMessage: message_error_field(message, "message"),
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          type: "error",
+          id: "action-a",
+          ok: false,
+          seq: 0,
+          hostSeq: 0,
+          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+          errorMessage: "Value failed LiveHost schema validation.",
+          name: "Ada",
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "connect action applies schema decoder before handler",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            schema: {
+              actions: {
+                rename_user: {
+                  payload: (value) => {
+                    if (typeof value !== "string") return { ok: false, issues: ["name must be string"] } as const;
+                    return { ok: true, value: { name: value } } as const;
+                  },
+                },
+              },
+            },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+          const socket = make_memory_socket();
+
+          host.connect(socket);
+          await socket.receive({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: "Grace",
+          });
+
+          const [message] = socket.sent() as Array<Record<string, unknown>>;
+          return {
+            type: message?.type,
+            id: message?.id,
+            ok: message?.ok,
+            seq: message?.seq,
+            hostSeq: host.seq,
+            name: host.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          type: "ack",
+          id: "action-a",
+          ok: true,
+          seq: 1,
+          hostSeq: 1,
+          name: "Grace",
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "connect subscribed path syncs after action ack",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { user: { name: "Ada" } },
+            actions: {
+              rename_user: (ctx, payload) => {
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const name = (payload as { name?: unknown }).name;
+                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+              },
+            },
+          });
+          const socket = make_memory_socket();
+
+          host.connect(socket);
+          await socket.receive({ type: "subscribe", path: ["user", "name"] });
+          await socket.receive({
+            type: "action",
+            id: "action-a",
+            name: "rename_user",
+            payload: { name: "Grace" },
+          });
+
+          const [initialSync, ack, updateSync] = socket.sent() as Array<Record<string, unknown>>;
+          return {
+            initialType: initialSync?.type,
+            initialSeq: initialSync?.seq,
+            initialValue: initialSync?.value,
+            ackType: ack?.type,
+            ackSeq: ack?.seq,
+            updateType: updateSync?.type,
+            updateSeq: updateSync?.seq,
+            updatePath: updateSync?.path,
+            updateValue: updateSync?.value,
+          };
+        },
+        expected: {
+          initialType: "sync",
+          initialSeq: 0,
+          initialValue: "Ada",
+          ackType: "ack",
+          ackSeq: 1,
+          updateType: "sync",
+          updateSeq: 1,
+          updatePath: ["user", "name"],
+          updateValue: "Grace",
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "connect unsubscribe prevents later action sync",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { count: 0 },
+            actions: {
+              increment: (ctx) => {
+                const current = ctx.map.at(["count"]).snap();
+                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+              },
+            },
+          });
+          const socket = make_memory_socket();
+
+          host.connect(socket);
+          await socket.receive({ type: "subscribe", path: ["count"] });
+          await socket.receive({ type: "unsubscribe", path: ["count"] });
+          await socket.receive({ type: "action", id: "action-a", name: "increment" });
+
+          const [initialSync, ack, extra] = socket.sent() as Array<Record<string, unknown> | undefined>;
+          return {
+            sentCount: socket.sent().length,
+            initialType: initialSync?.type,
+            initialValue: initialSync?.value,
+            ackType: ack?.type,
+            ackSeq: ack?.seq,
+            extraType: extra?.type,
+            count: host.map.at(["count"]).snap(),
+          };
+        },
+        expected: {
+          sentCount: 2,
+          initialType: "sync",
+          initialValue: 0,
+          ackType: "ack",
+          ackSeq: 1,
+          extraType: undefined,
+          count: 1,
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "connect multiple sessions receive subscribed action sync",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: { count: 0 },
+            actions: {
+              increment: (ctx) => {
+                const current = ctx.map.at(["count"]).snap();
+                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+              },
+            },
+          });
+          const firstSocket = make_memory_socket();
+          const secondSocket = make_memory_socket();
+
+          host.connect(firstSocket);
+          host.connect(secondSocket);
+          await firstSocket.receive({ type: "subscribe", path: ["count"] });
+          await secondSocket.receive({ type: "subscribe", path: ["count"] });
+          await firstSocket.receive({ type: "action", id: "action-a", name: "increment" });
+
+          const firstSent = firstSocket.sent() as Array<Record<string, unknown>>;
+          const secondSent = secondSocket.sent() as Array<Record<string, unknown>>;
+          const firstUpdate = firstSent[2];
+          const secondUpdate = secondSent[1];
+
+          return {
+            firstCount: firstSent.length,
+            secondCount: secondSent.length,
+            firstAckType: firstSent[1]?.type,
+            firstUpdateType: firstUpdate?.type,
+            firstUpdateSeq: firstUpdate?.seq,
+            firstUpdateValue: firstUpdate?.value,
+            secondUpdateType: secondUpdate?.type,
+            secondUpdateSeq: secondUpdate?.seq,
+            secondUpdateValue: secondUpdate?.value,
+            count: host.map.at(["count"]).snap(),
+          };
+        },
+        expected: {
+          firstCount: 3,
+          secondCount: 2,
+          firstAckType: "ack",
+          firstUpdateType: "sync",
+          firstUpdateSeq: 1,
+          firstUpdateValue: 1,
+          secondUpdateType: "sync",
+          secondUpdateSeq: 1,
+          secondUpdateValue: 1,
+          count: 1,
         },
       }),
       livehost_socket_read_case({

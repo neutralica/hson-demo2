@@ -38,6 +38,31 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
+        name: "decode ignores invalid optional hello fields",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "hello",
+            clientId: 123,
+            lastSeq: -1,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
+            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "hello",
+          clientId: undefined,
+          lastSeq: undefined,
+        },
+      }),
+      read_case({
+        suite: SUITE,
         name: "decode accepts action message",
         input: {},
         act: () => {
@@ -152,6 +177,125 @@ export function livehost_protocol_suite(): TestSuite {
           ok: true,
           type: "action",
           payload: "compact",
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode accepts null action payload",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "action",
+            id: "action-a",
+            name: "clear_selection",
+            payload: null,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            payload: decoded.ok && decoded.value.type === "action" ? decoded.value.payload : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "action",
+          payload: null,
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode accepts nested json action payload",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "action",
+            id: "action-a",
+            name: "set_rows",
+            payload: [{ id: 1, label: "A", active: true }, null],
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            payload: decoded.ok && decoded.value.type === "action" ? decoded.value.payload : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "action",
+          payload: [{ id: 1, label: "A", active: true }, null],
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode normalizes sparse action payload arrays",
+        input: {},
+        act: () => {
+          const sparse: unknown[] = [];
+          sparse[1] = "present";
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "action",
+            id: "action-a",
+            name: "set_rows",
+            payload: sparse,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            payload: decoded.ok && decoded.value.type === "action" ? decoded.value.payload : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "action",
+          payload: [null, "present"],
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode rejects action payload with non-json function value",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "action",
+            id: "action-a",
+            name: "set_value",
+            payload: { value: "ok" },
+          }).replace("\"ok\"", "undefined"));
+
+          return {
+            ok: decoded.ok,
+            message: decoded.ok ? undefined : decoded.error.message,
+          };
+        },
+        expected: {
+          ok: false,
+          message: "Invalid LiveHost message JSON.",
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode action omits absent payload field",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "action",
+            id: "action-a",
+            name: "increment",
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            hasPayload: decoded.ok && decoded.value.type === "action" ? Object.prototype.hasOwnProperty.call(decoded.value, "payload") : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "action",
+          hasPayload: false,
         },
       }),
       read_case({
@@ -322,6 +466,26 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
+        name: "decode rejects unsubscribe with invalid path parts",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "unsubscribe",
+            path: ["ui", false],
+          }));
+
+          return {
+            ok: decoded.ok,
+            message: decoded.ok ? undefined : decoded.error.message,
+          };
+        },
+        expected: {
+          ok: false,
+          message: "LiveHost unsubscribe message requires path.",
+        },
+      }),
+      read_case({
+        suite: SUITE,
         name: "encode serializes server messages as json",
         input: {},
         act: () => {
@@ -345,6 +509,33 @@ export function livehost_protocol_suite(): TestSuite {
           sessionId: "session-a",
           seq: 7,
           snapshot: { user: { name: "Ada" } },
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "encode serializes sync messages as json",
+        input: {},
+        act: () => {
+          const encoded = encode_livehost_message({
+            type: "sync",
+            seq: 3,
+            path: ["user", "name"],
+            value: "Grace",
+          });
+          const parsed = JSON.parse(encoded) as Record<string, unknown>;
+
+          return {
+            type: parsed.type,
+            seq: parsed.seq,
+            path: parsed.path,
+            value: parsed.value,
+          };
+        },
+        expected: {
+          type: "sync",
+          seq: 3,
+          path: ["user", "name"],
+          value: "Grace",
         },
       }),
     ] as const,
