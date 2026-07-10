@@ -3,21 +3,22 @@ import type { SourceFormat } from "../../../../../hson-live/dist/types/diagnosti
 // import { all_demo_meta } from "../../../tests/demo-meta-tests/make-demo-meta-test";
 import { random_seed, make_json_fuzz_suite } from "../../../tests/json-fuzzer/fuzzer-builder";
 import { all_livemap_suites } from "../../../tests/livemap/all-livemap-suites";
-import  { all_livetree_suites } from "../../../tests/livetree/all-livetree-suites";
+import { all_livetree_suites } from "../../../tests/livetree/all-livetree-suites";
 import { livetree_graph_dom_markup_surface } from "../../../tests/livetree/livetree-24-dom-corners";
-import  { HTML_FIXTURES_LEGACY, TRANSFORM_FAILS } from "../../../tests/test-data/html-fixtures";
-import  { JSON_FIXTURES_LEGACY, JSON_FIXTURES_DEV } from "../../../tests/test-data/json-fixtures";
-import  { EXTRA_FIXTURES } from "../../../tests/transform/extra-fixtures";
-import  { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../tests/transform/hson-tests";
-import  { JSON_FIXTURES_LEVEL2 } from "../../../tests/transform/json-level-2";
-import  { make_transform_test_suite } from "../../../tests/transform/make-transform-suite";
-import  { HTML_FIXTURES_NEW } from "../../../tests/transform/new-html-fixtures";
-import  { all_unit_tests } from "../../../tests/unit/all-unit-tests";
-import  { _freeze } from "./tests.consts";
+import { HTML_FIXTURES_LEGACY, TRANSFORM_FAILS } from "../../../tests/test-data/html-fixtures";
+import { JSON_FIXTURES_LEGACY, JSON_FIXTURES_DEV } from "../../../tests/test-data/json-fixtures";
+import { EXTRA_FIXTURES } from "../../../tests/transform/extra-fixtures";
+import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../../tests/transform/hson-tests";
+import { JSON_FIXTURES_LEVEL2 } from "../../../tests/transform/json-level-2";
+import { make_transform_test_suite } from "../../../tests/transform/make-transform-suite";
+import { HTML_FIXTURES_NEW } from "../../../tests/transform/new-html-fixtures";
+import { all_unit_tests } from "../../../tests/unit/all-unit-tests";
+import { _freeze } from "./tests.consts";
 import type { HsonTestApi, CaseKey, TestSuite, TestRunMode } from "./tests.types";
 import { livemap_suites_quid } from "../../../tests/livemap/quid-suite";
 import { livemap_editor_contract } from "../../../tests/livemap/editor-contract-tests";
 import { livetree_quid_level_2 } from "../../../tests/livetree/livetree-25-regression-2";
+import { all_livehost_suites } from "../../../tests/livehost/all-livehost-suites";
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
@@ -101,6 +102,11 @@ export function build_suites_for_mode(
       livetree_quid_level_2(),
 
     ]);
+  }
+  if (mode === "livehost") {
+    return _freeze(
+      all_livehost_suites(),
+    );
   }
   if (mode === "fuzz-json") {
     const GENERATED_JSON_SEED = random_seed();

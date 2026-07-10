@@ -2,7 +2,7 @@
 
 import { hson } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { commitCase, readCase, throwCase } from "./handle-helpers";
+import { commitCase, read_case, throwCase } from "./handle-helpers";
 
 export type TypeExpect<TValue extends true> = TValue;
 export type TypeExtends<TActual, TExpected> = TActual extends TExpected ? true : false;
@@ -13,7 +13,7 @@ export function livemap_suites_api(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap schema.define validates matching json",
         input: {},
@@ -29,7 +29,7 @@ export function livemap_suites_api(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap schema.define reports invalid json",
         input: {},
@@ -52,35 +52,35 @@ export function livemap_suites_api(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap schema.make accepts token root",
         input: {},
         act: () => hson.liveMap.schema.make(hson.liveMap.schema.string.array).validateRoot(["a", "b"]),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap fromJson string creates projected map",
         input: {},
         act: () => hson.liveMap.fromJson('{"user":{"name":"Ada"}}').snap(),
         expected: { user: { name: "Ada" } },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap fromJson value creates projected map",
         input: {},
         act: () => hson.liveMap.fromJson({ user: { name: "Ada" } }).snap(),
         expected: { user: { name: "Ada" } },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap fromHson creates projected map",
         input: {},
         act: () => hson.liveMap.fromHson('<user<name"Ada">>').snap(),
         expected: { user: { name: "Ada" } },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap fromNode creates projected map",
         input: {},
@@ -90,7 +90,7 @@ export function livemap_suites_api(): TestSuite {
         },
         expected: { user: { name: "Ada" } },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap typed at reads nested object path",
         input: {},
@@ -116,7 +116,7 @@ export function livemap_suites_api(): TestSuite {
           name: "Ada",
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap typed at reads nested array path",
         input: {},
@@ -146,7 +146,7 @@ export function livemap_suites_api(): TestSuite {
           id: "a",
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api map schema namespace reads undefined before use",
         input: {},
@@ -160,7 +160,7 @@ export function livemap_suites_api(): TestSuite {
         },
         expected: { hasUse: true },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api map schema.use returns map and stores schema",
         input: {},
@@ -221,7 +221,7 @@ export function livemap_suites_api(): TestSuite {
         },
         expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received number",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api map schema.use accepts fromJson object root",
         input: {},
@@ -246,7 +246,7 @@ export function livemap_suites_api(): TestSuite {
           schema: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api map schema.use accepts fromJson string root",
         input: {},
@@ -305,7 +305,7 @@ export function livemap_suites_api(): TestSuite {
         },
         expectedMessage: "LiveMap schema rejected value at []:\n- LiveMap schema does not allow key \"meta\" at [\"meta\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api liveMap schema.make accepts object shape root",
         input: {},
@@ -316,7 +316,7 @@ export function livemap_suites_api(): TestSuite {
         }).validateRoot({ user: { name: "Ada" } }),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "api map withSchema remains schema.use alias",
         input: {},

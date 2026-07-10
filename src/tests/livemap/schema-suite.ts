@@ -7,7 +7,7 @@ import {
   make_livemap_schema,
 } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { readCase } from "./handle-helpers";
+import { read_case } from "./handle-helpers";
 import type {
   LiveMapSchemaInput,
 } from "hson-live";
@@ -22,14 +22,14 @@ export function livemap_suites_schema(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema validates a string root",
         input: {},
         act: () => make_livemap_schema(LIVEMAP_SCHEMA.string).validateRoot("Ada"),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema rejects wrong primitive type",
         input: {},
@@ -44,7 +44,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema validates object literal shape",
         input: {},
@@ -60,7 +60,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema reports missing required object key",
         input: {},
@@ -83,7 +83,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema optional object key can be absent",
         input: {},
@@ -99,7 +99,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema nullable accepts null",
         input: {},
@@ -114,7 +114,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick validates literal union",
         input: {},
@@ -129,7 +129,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick rejects unlisted literal",
         input: {},
@@ -152,7 +152,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema array builder validates array of objects",
         input: {},
@@ -168,7 +168,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema array reports indexed child issue",
         input: {},
@@ -191,7 +191,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema token array shorthand validates primitive array",
         input: {},
@@ -204,7 +204,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema record validates each string key value",
         input: {},
@@ -217,7 +217,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema record reports key path issue",
         input: {},
@@ -238,7 +238,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema non-exact object allows extra keys",
         input: {},
@@ -253,7 +253,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema exact object rejects extra keys",
         input: {},
@@ -276,7 +276,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema validateValue validates nested path",
         input: {},
@@ -291,7 +291,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema validateValue reports missing rule",
         input: {},
@@ -314,7 +314,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns deepest object property rule",
         input: {},
@@ -330,7 +330,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "string", path: ["user", "name"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns array wildcard child rule",
         input: {},
@@ -346,7 +346,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "string", path: ["items", "*", "label"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns record wildcard child rule",
         input: {},
@@ -360,21 +360,21 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "string", path: ["colors", "*"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema unknown accepts any JSON value",
         input: {},
         act: () => make_livemap_schema(LIVEMAP_SCHEMA.unknown).validateRoot({ any: ["json", 1, true, null] }),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema null validates null root",
         input: {},
         act: () => make_livemap_schema(LIVEMAP_SCHEMA.null).validateRoot(null),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema null rejects non-null root",
         input: {},
@@ -389,7 +389,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema nullable rejects wrong non-null type",
         input: {},
@@ -404,21 +404,21 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema literal validates number literal",
         input: {},
         act: () => make_livemap_schema(LIVEMAP_SCHEMA.literal(1, 2, 3)).validateRoot(2),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema literal validates boolean literal",
         input: {},
         act: () => make_livemap_schema(LIVEMAP_SCHEMA.literal(true)).validateRoot(true),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema readonly flag appears in matched rule",
         input: {},
@@ -434,7 +434,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema optional flag appears in matched rule",
         input: {},
@@ -450,7 +450,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema nullable flag appears in matched rule",
         input: {},
@@ -466,7 +466,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema array rejects non-array value",
         input: {},
@@ -487,7 +487,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema object rejects array value",
         input: {},
@@ -510,7 +510,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema record rejects array value",
         input: {},
@@ -531,7 +531,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tuple validates fixed items",
         input: {},
@@ -544,7 +544,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tuple reports indexed item issue",
         input: {},
@@ -565,7 +565,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tuple reports missing required item",
         input: {},
@@ -586,7 +586,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tuple allows missing optional item",
         input: {},
@@ -599,7 +599,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tuple rejects extra item",
         input: {},
@@ -620,7 +620,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tuple rejects non-array value",
         input: {},
@@ -641,7 +641,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns tuple index rule",
         input: {},
@@ -655,7 +655,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "number", path: ["point", 1] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns pick rule for schema choices",
         input: {},
@@ -669,7 +669,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "pick", path: ["id"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick validates first schema choice",
         input: {},
@@ -682,7 +682,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick validates later schema choice",
         input: {},
@@ -695,7 +695,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick rejects non-matching schema choice",
         input: {},
@@ -716,7 +716,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick validates mixed literal and schema choices",
         input: {},
@@ -729,7 +729,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema pick validates object schema choice",
         input: {},
@@ -745,7 +745,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns pick rule",
         input: {},
@@ -759,7 +759,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "pick", path: ["id"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema partial allows missing listed keys",
         input: {},
@@ -775,7 +775,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema partial validates present listed key",
         input: {},
@@ -791,7 +791,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema partial rejects wrong present key type",
         input: {},
@@ -815,7 +815,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema partial makes nested object property optional",
         input: {},
@@ -832,7 +832,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema partial keeps nested object fields required when object is present",
         input: {},
@@ -857,7 +857,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tagged validates matching variant",
         input: {},
@@ -873,7 +873,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tagged validates later matching variant",
         input: {},
@@ -889,7 +889,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tagged rejects unknown discriminator value",
         input: {},
@@ -913,7 +913,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema tagged rejects missing variant payload",
         input: {},
@@ -937,7 +937,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema lazy validates recursive tree",
         input: {},
@@ -965,7 +965,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema lazy reports recursive child issue",
         input: {},
@@ -1000,7 +1000,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema lazy validateValue descends through recursive path",
         input: {},
@@ -1020,7 +1020,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match keeps lazy rule shallow",
         input: {},
@@ -1041,7 +1041,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "lazy", path: ["tree"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema refine validates accepted value",
         input: {},
@@ -1054,7 +1054,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema refine rejects failed predicate",
         input: {},
@@ -1075,7 +1075,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema refine returns base validation first",
         input: {},
@@ -1096,7 +1096,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema match returns refine rule",
         input: {},
@@ -1110,7 +1110,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { kind: "refine", path: ["color"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema deepPartial allows missing nested object field",
         input: {},
@@ -1127,7 +1127,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema deepPartial validates present nested object field",
         input: {},
@@ -1144,7 +1144,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema deepPartial rejects wrong present nested field type",
         input: {},
@@ -1169,7 +1169,7 @@ export function livemap_suites_schema(): TestSuite {
           ],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema deepPartial makes array item object fields optional",
         input: {},
@@ -1187,7 +1187,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema deepPartial makes record value object fields optional",
         input: {},
@@ -1205,7 +1205,7 @@ export function livemap_suites_schema(): TestSuite {
         },
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema define returns reusable schema instance",
         input: {},
@@ -1234,14 +1234,14 @@ export function livemap_suites_schema(): TestSuite {
           },
         ],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema make accepts token root",
         input: {},
         act: () => make_livemap_schema(LIVEMAP_SCHEMA.string.array).validateRoot(["a", "b"]),
         expected: { ok: true, issues: [] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "schema make accepts object shape root",
         input: {},

@@ -109,7 +109,7 @@ export function throwCase(spec: ThrowCaseSpec): TestCase {
     },
   };
 }
-export function readCase(spec: ReadCaseSpec): TestCase {
+export function read_case(spec: ReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
     name: spec.name,

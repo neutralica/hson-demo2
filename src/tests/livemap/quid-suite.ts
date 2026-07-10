@@ -11,7 +11,7 @@ import {
   remint_livemap_quid,
 } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { readCase } from "./handle-helpers";
+import { read_case } from "./handle-helpers";
 
 const TEST_RUN_ID = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 let testQuidIndex = 0;
@@ -27,7 +27,7 @@ export function livemap_suites_quid(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid get returns undefined before ensure",
         input: {},
@@ -37,14 +37,14 @@ export function livemap_suites_quid(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid owner lookup returns undefined before ensure",
         input: {},
         act: () => get_livemap_owner("lmq-missing"),
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid ensure mints stable owner identity",
         input: {},
@@ -67,7 +67,7 @@ export function livemap_suites_quid(): TestSuite {
           prefix: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid ensure accepts supplied identity",
         input: {},
@@ -88,7 +88,7 @@ export function livemap_suites_quid(): TestSuite {
           owned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid ensure keeps existing owner identity over supplied identity",
         input: {},
@@ -111,7 +111,7 @@ export function livemap_suites_quid(): TestSuite {
           ignoredUnowned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid ensure gives different objects different minted identities",
         input: {},
@@ -133,7 +133,7 @@ export function livemap_suites_quid(): TestSuite {
           secondOwned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid ensure rejects supplied identity owned by another object",
         input: {},
@@ -160,7 +160,7 @@ export function livemap_suites_quid(): TestSuite {
           includesQuid: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid reindex restores supplied identity for owner",
         input: {},
@@ -179,7 +179,7 @@ export function livemap_suites_quid(): TestSuite {
           owned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid reindex is idempotent for same owner and identity",
         input: {},
@@ -200,7 +200,7 @@ export function livemap_suites_quid(): TestSuite {
           owned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid reindex rejects identity owned by another object",
         input: {},
@@ -227,7 +227,7 @@ export function livemap_suites_quid(): TestSuite {
           includesQuid: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid drop releases owner and quid lookup",
         input: {},
@@ -246,7 +246,7 @@ export function livemap_suites_quid(): TestSuite {
           quidLookup: undefined,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid drop is idempotent",
         input: {},
@@ -266,7 +266,7 @@ export function livemap_suites_quid(): TestSuite {
           quidLookup: undefined,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid drop removes owner from debug snapshot",
         input: {},
@@ -282,7 +282,7 @@ export function livemap_suites_quid(): TestSuite {
         },
         expected: { before: true, after: false },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid dropped identity can be claimed by another owner",
         input: {},
@@ -306,7 +306,7 @@ export function livemap_suites_quid(): TestSuite {
           secondOwns: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid remint replaces old owner identity",
         input: {},
@@ -331,7 +331,7 @@ export function livemap_suites_quid(): TestSuite {
           prefix: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid remint can mint identity for unclaimed owner",
         input: {},
@@ -351,7 +351,7 @@ export function livemap_suites_quid(): TestSuite {
           prefix: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid remint leaves other owner identity untouched",
         input: {},
@@ -379,7 +379,7 @@ export function livemap_suites_quid(): TestSuite {
           secondStillOwned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "path handle quid is stable for repeated property reads",
         input: {},
@@ -403,7 +403,7 @@ export function livemap_suites_quid(): TestSuite {
           prefix: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "path handle quid is stable for same map and same path",
         input: {},
@@ -428,7 +428,7 @@ export function livemap_suites_quid(): TestSuite {
           secondOwned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "path handle quid differs for same map and different paths",
         input: {},
@@ -453,7 +453,7 @@ export function livemap_suites_quid(): TestSuite {
           settingsOwned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "path handle quid differs for different maps and same path",
         input: {},
@@ -479,7 +479,7 @@ export function livemap_suites_quid(): TestSuite {
           secondOwned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "path handle quid survives value mutation at same path",
         input: {},
@@ -501,7 +501,7 @@ export function livemap_suites_quid(): TestSuite {
           sameOwner: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy handle quid matches core at same path",
         input: {},
@@ -525,7 +525,7 @@ export function livemap_suites_quid(): TestSuite {
           owned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy handle quid is stable for repeated same path access",
         input: {},
@@ -549,7 +549,7 @@ export function livemap_suites_quid(): TestSuite {
           owned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy handle quid differs for different paths",
         input: {},
@@ -575,7 +575,7 @@ export function livemap_suites_quid(): TestSuite {
           settingsOwned: true,
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "quid debug snapshot includes registered owner",
         input: {},

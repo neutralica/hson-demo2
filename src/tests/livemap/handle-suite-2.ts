@@ -1,6 +1,6 @@
 import { define_livemap_schema } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { readCase, throwCase, commitCase } from "./handle-helpers";
+import { read_case, throwCase, commitCase } from "./handle-helpers";
 
 
 
@@ -10,14 +10,14 @@ export function livemap_suites_handle_2(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.first returns first item",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.first(),
         expected: "a",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.last returns last item",
         input: { items: ["a", "b", "c"] },
@@ -52,28 +52,28 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["user"]).array.last(),
         expectedMessage: "LiveMap path is not an array: [\"user\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.includes returns true for primitive item",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.includes("b"),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.includes returns false for missing primitive item",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.includes("x"),
         expected: false,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.includes uses deep object equality",
         input: { items: [{ name: "Ada", role: "user" }] },
         act: (map) => map.at(["items"]).array.includes({ role: "user", name: "Ada" }),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.includes uses deep array equality",
         input: { items: [[0, 1], [2, 3]] },
@@ -94,28 +94,28 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.includes(undefined as never),
         expectedMessage: "LiveMap value is not JSON at [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.indexOf returns primitive item index",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.indexOf("b"),
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.indexOf returns -1 for missing primitive item",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.indexOf("x"),
         expected: -1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.indexOf uses deep object equality",
         input: { items: [{ name: "Ada", role: "user" }] },
         act: (map) => map.at(["items"]).array.indexOf({ role: "user", name: "Ada" }),
         expected: 0,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.indexOf uses deep array equality",
         input: { items: [[0, 1], [2, 3]] },
@@ -136,7 +136,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.indexOf(undefined as never),
         expectedMessage: "LiveMap value is not JSON at [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.toArray returns array copy",
         input: { items: [0, 1, 2] },
@@ -150,7 +150,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["user"]).array.toArray(),
         expectedMessage: "LiveMap path is not an array: [\"user\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.toObject returns object copy",
         input: { user: { name: "Ada", role: "user" } },
@@ -164,14 +164,14 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).object.toObject(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.isEmpty returns true for empty array",
         input: { items: [] },
         act: (map) => map.at(["items"]).array.isEmpty(),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.isEmpty returns false for populated array",
         input: { items: [0, 1] },
@@ -185,14 +185,14 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["user"]).array.isEmpty(),
         expectedMessage: "LiveMap path is not an array: [\"user\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.isEmpty returns true for empty object",
         input: { user: {} },
         act: (map) => map.at(["user"]).object.isEmpty(),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.isEmpty returns false for populated object",
         input: { user: { name: "Ada" } },
@@ -206,14 +206,14 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).object.isEmpty(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.size returns property count",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.size(),
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.size returns zero for empty object",
         input: { user: {} },
@@ -227,14 +227,14 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).object.size(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.getKey returns property value",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => map.at(["user"]).object.getKey("name"),
         expected: "Ada",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.getKey returns undefined for missing property",
         input: { user: { name: "Ada" } },
@@ -248,42 +248,42 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).object.getKey("name"),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.keys returns object keys",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.keys(),
         expected: ["name", "role"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.values returns object values",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.values(),
         expected: ["Ada", "user"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.entries returns object entries",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.entries(),
         expected: [["name", "Ada"], ["role", "user"]],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.at supports negative index",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.at(-1),
         expected: "c",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.slice returns sliced copy",
         input: { items: ["a", "b", "c", "d"] },
         act: (map) => map.at(["items"]).array.slice(1, 3),
         expected: ["b", "c"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.slice supports negative start",
         input: { items: ["a", "b", "c", "d"] },
@@ -297,7 +297,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["user"]).array.slice(0, 1),
         expectedMessage: "LiveMap path is not an array: [\"user\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.take/drop/takeLast/dropLast read expected slices",
         input: { items: ["a", "b", "c", "d"] },
@@ -314,14 +314,14 @@ export function livemap_suites_handle_2(): TestSuite {
           dropLast: ["a", "b"],
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.at reads object item",
         input: { items: [{ id: "a", count: 1 }, { id: "b", count: 2 }] },
         act: (map) => map.at(["items"]).array.at(1),
         expected: { id: "b", count: 2 },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.first/last read object items",
         input: { items: [{ id: "a", count: 1 }, { id: "b", count: 2 }] },
@@ -334,7 +334,7 @@ export function livemap_suites_handle_2(): TestSuite {
           last: { id: "b", count: 2 },
         },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.slice reads object item slice",
         input: { items: [{ id: "a", count: 1 }, { id: "b", count: 2 }, { id: "c", count: 3 }] },
@@ -607,21 +607,21 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.splice(1, 1.5),
         expectedMessage: "LiveMap array splice deleteCount is not valid at [\"items\"]: 1.5",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.pick returns selected keys",
         input: { user: { name: "Ada", role: "user", active: true } },
         act: (map) => map.at(["user"]).object.pick(["name", "active"]),
         expected: { name: "Ada", active: true },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.pick ignores missing keys",
         input: { user: { name: "Ada" } },
         act: (map) => map.at(["user"]).object.pick(["name", "role"]),
         expected: { name: "Ada" },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.omit removes selected keys",
         input: { user: { name: "Ada", role: "user", active: true } },
@@ -705,14 +705,14 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).object.omit(["name"]),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.pick with empty keys returns empty object",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.pick([]),
         expected: {},
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.omit with empty keys returns object copy",
         input: { user: { name: "Ada", role: "user" } },

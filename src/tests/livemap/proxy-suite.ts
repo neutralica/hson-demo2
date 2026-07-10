@@ -2,7 +2,7 @@
 
 import { define_livemap_schema } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { readCase, commitCase, throwCase } from "./handle-helpers";
+import { read_case, commitCase, throwCase } from "./handle-helpers";
 
 
 
@@ -12,14 +12,14 @@ export function livemap_suites_proxy(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy root $_ returns root handle path",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy().$_.path(),
         expected: [],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy string property builds path",
         input: { user: { name: "Ada" } },
@@ -29,7 +29,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["user", "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy numeric property builds array index path",
         input: { items: [{ name: "Ada" }] },
@@ -39,7 +39,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", 0, "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy path-scoped root builds from starting path",
         input: { user: { profile: { name: "Ada" } } },
@@ -49,7 +49,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["user", "profile", "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy $_ snap reads current value",
         input: { user: { name: "Ada" } },
@@ -145,35 +145,35 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expectedMessage: "LiveMap proxy values must be deleted through $_.",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy has $_ escape key",
         input: { user: { name: "Ada" } },
         act: (map) => "$_" in map.proxy(),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy does not report data keys through in operator",
         input: { user: { name: "Ada" } },
         act: (map) => "user" in map.proxy(),
         expected: false,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy own keys reports only escape key",
         input: { user: { name: "Ada" } },
         act: (map) => Reflect.ownKeys(map.proxy()),
         expected: ["$_"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy Object.keys hides escape key",
         input: { user: { name: "Ada" } },
         act: (map) => Object.keys(map.proxy()),
         expected: [],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy numeric string property builds array index path",
         input: { items: [{ name: "Ada" }] },
@@ -183,7 +183,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", 0, "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy leading-zero numeric string remains object key",
         input: { items: { "01": { name: "Ada" } } },
@@ -193,7 +193,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", "01", "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy negative numeric string remains object key",
         input: { items: { "-1": { name: "Ada" } } },
@@ -203,7 +203,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", "-1", "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy decimal numeric string remains object key",
         input: { items: { "1.5": { name: "Ada" } } },
@@ -213,7 +213,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", "1.5", "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy symbol access returns undefined",
         input: { user: { name: "Ada" } },
@@ -223,7 +223,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy $_ descriptor is non-enumerable",
         input: { user: { name: "Ada" } },
@@ -233,7 +233,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: false,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy $_ descriptor is configurable",
         input: { user: { name: "Ada" } },
@@ -243,21 +243,21 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy unknown descriptor is undefined",
         input: { user: { name: "Ada" } },
         act: (map) => Object.getOwnPropertyDescriptor(map.proxy(), "user"),
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy scoped $_ returns scoped handle path",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy(["user", "name"]).$_.path(),
         expected: ["user", "name"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy $_ exposes array handle namespace",
         input: { items: ["a", "b", "c"] },
@@ -267,7 +267,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: 3,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy $_ exposes object handle namespace",
         input: { user: { name: "Ada", role: "user" } },
@@ -319,7 +319,7 @@ export function livemap_suites_proxy(): TestSuite {
         ],
         expectedRoot: { user: { name: "Ada", role: "admin" } },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy then access returns undefined",
         input: { then: "data" },
@@ -329,7 +329,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy toJSON access returns undefined",
         input: { toJSON: "data" },
@@ -339,7 +339,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy constructor access returns undefined",
         input: { constructor: "data" },
@@ -349,7 +349,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy reserved key can still be reached through $_ handle",
         input: { then: "data" },
@@ -389,14 +389,14 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expectedMessage: "LiveMap proxy extensibility must not be changed.",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy has null prototype",
         input: { user: { name: "Ada" } },
         act: (map) => Object.getPrototypeOf(map.proxy()),
         expected: null,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy hasOwnProperty access returns undefined",
         input: { hasOwnProperty: "data" },
@@ -406,7 +406,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy __proto__ access returns undefined",
         input: { __proto__: "data" },
@@ -416,14 +416,14 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy prototype-like key can still be reached through $_ handle",
         input: { hasOwnProperty: "data" },
         act: (map) => map.proxy().$_.object.getKey("hasOwnProperty"),
         expected: "data",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy max safe integer numeric string builds numeric path",
         input: {},
@@ -433,7 +433,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", 9007199254740991],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy unsafe integer numeric string remains object key",
         input: {},
@@ -443,7 +443,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: ["items", "9007199254740993"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy JSON.stringify returns empty object",
         input: { user: { name: "Ada" } },
@@ -464,7 +464,7 @@ export function livemap_suites_proxy(): TestSuite {
         act: (map) => `${map.proxy()}`,
         expectedMessage: "Cannot convert object to primitive value",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy Promise.resolve treats proxy as non-thenable",
         input: { user: { name: "Ada" } },
@@ -474,7 +474,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: undefined,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "core proxy accepts explicit empty path",
         input: { user: { name: "Ada" } },
@@ -495,7 +495,7 @@ export function livemap_suites_proxy(): TestSuite {
         act: (map) => map.proxy([{}] as never).$_.path(),
         expectedMessage: "LiveMap path part is not valid at index 0",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy child access returns stable proxy identity",
         input: { user: { name: "Ada" } },
@@ -505,7 +505,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy nested child access returns stable proxy identity",
         input: { user: { name: "Ada" } },
@@ -515,7 +515,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy numeric child access returns stable proxy identity",
         input: { items: [{ name: "Ada" }] },
@@ -525,7 +525,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy $_ returns stable handle identity",
         input: { user: { name: "Ada" } },
@@ -535,7 +535,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "proxy cached $_ handle still reflects current value",
         input: { user: { name: "Ada" } },

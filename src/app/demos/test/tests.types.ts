@@ -71,11 +71,11 @@ export type TestRunMode =
   | "transform"
   | "livetree"
   | "livemap"
+  | "livehost"
   | "legacy"
   | "dev"
   | "unit"
-  | "fuzz-json"
-  | "demo-meta"
+  | "fuzz-json";
 
 export type CaseMeta = Readonly<{
   fixture?: string;

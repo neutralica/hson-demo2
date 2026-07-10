@@ -23,12 +23,13 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "all", label: "all" },
     { key: "transform", label: "transform" },
     { key: "livetree", label: "livetree" },
+    { key: "livemap", label: "livemap" },
+    { key: "livehost", label: "livehost" },
     { key: "legacy", label: "legacy" },
     { key: "unit", label: "unit" },
     { key: "dev", label: "dev" },
     { key: "fuzz-json", label: "json fuzzer" },
     // { key: "demo-meta", label: "demo-meta" },
-    { key: "livemap", label: "livemap (alpha)" },
 ] as const;
 
 type LogVerbosity = "normal" | "verbose";

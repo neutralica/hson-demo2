@@ -2,7 +2,7 @@
 
 import { make_livemap_core } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { snapCase, setCase, setManyCase, setManyFeedCase, deleteCase, deleteFeedCase, updateCase, updateFeedCase, readCase, commitCase, throwCase, feedCase, linkCase, pathCopyCase, originalPathCase } from "./handle-helpers";
+import { snapCase, setCase, setManyCase, setManyFeedCase, deleteCase, deleteFeedCase, updateCase, updateFeedCase, read_case, commitCase, throwCase, feedCase, linkCase, pathCopyCase, originalPathCase } from "./handle-helpers";
 
 export type TestLiveMap = ReturnType<typeof make_livemap_core>;
 export type TestHandle = ReturnType<TestLiveMap["at"]>;
@@ -144,28 +144,28 @@ export function livemap_suites_handle(): TestSuite {
           },
         ],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.is returns true for array",
         input: { items: [0, 1] },
         act: (map) => map.at(["items"]).array.is(),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.is returns false for non-array",
         input: { user: { name: "Ada" } },
         act: (map) => map.at(["user"]).array.is(),
         expected: false,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.is returns true for object",
         input: { user: { name: "Ada" } },
         act: (map) => map.at(["user"]).object.is(),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.is returns false for non-object",
         input: { items: [0, 1] },
@@ -820,14 +820,14 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["items"]).object.clear(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.hasKey returns true for existing key",
         input: { user: { name: "Ada" } },
         act: (map) => map.at(["user"]).object.hasKey("name"),
         expected: true,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.hasKey returns false for missing key",
         input: { user: { name: "Ada" } },
@@ -849,7 +849,7 @@ export function livemap_suites_handle(): TestSuite {
         expectedMessage: "LiveMap object key is not a string at [\"user\"]",
       }),
 
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.length returns array length",
         input: { items: [0, 1, 2] },
@@ -863,14 +863,14 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).array.length(),
         expectedMessage: "LiveMap path is not an array: [\"user\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.keys returns object keys",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.keys(),
         expected: ["name", "role"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.keys returns empty array for empty object",
         input: { user: {} },
@@ -884,14 +884,14 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["items"]).object.keys(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.values returns object values",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.values(),
         expected: ["Ada", "user"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.values returns empty array for empty object",
         input: { user: {} },
@@ -905,14 +905,14 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["items"]).object.values(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.entries returns object entries",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.entries(),
         expected: [["name", "Ada"], ["role", "user"]],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.entries returns empty array for empty object",
         input: { user: {} },
@@ -926,7 +926,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["items"]).object.entries(),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle array.at returns indexed item",
         input: { items: ["a", "b", "c"] },
@@ -947,14 +947,14 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).array.at(0),
         expectedMessage: "LiveMap path is not an array: [\"user\"]",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.getKey returns existing value",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => map.at(["user"]).object.getKey("name"),
         expected: "Ada",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "handle object.getKey returns undefined for missing key",
         input: { user: { name: "Ada" } },

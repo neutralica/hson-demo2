@@ -2,7 +2,7 @@
 
 import { bind_path, bind_paths, derive_from_paths, make_microtask_scheduler, stop_all, subscribe_paths } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { readCase } from "./handle-helpers";
+import { read_case } from "./handle-helpers";
 
 type CapturedMicrotaskResult<T> = Readonly<{
   queued: number;
@@ -36,7 +36,7 @@ export function livemap_misc_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      readCase({
+      read_case({
         suite: SUITE,
         name: "make_microtask_scheduler does not run synchronously",
         input: {},
@@ -51,7 +51,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 0,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "make_microtask_scheduler queues only one microtask before flush",
         input: {},
@@ -66,7 +66,7 @@ export function livemap_misc_suite(): TestSuite {
         }).queued,
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "make_microtask_scheduler coalesces queued calls",
         input: {},
@@ -85,7 +85,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "make_microtask_scheduler allows later queued run",
         input: {},
@@ -104,7 +104,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "make_microtask_scheduler allows reentrant later run",
         input: {},
@@ -123,7 +123,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "make_microtask_scheduler coalesces reentrant queued calls",
         input: {},
@@ -146,7 +146,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "stop_all handles empty disposer list",
         input: {},
@@ -158,7 +158,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: "stopped",
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "stop_all runs disposers in insertion order",
         input: {},
@@ -175,7 +175,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["a", "b", "c"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "stop_all is idempotent",
         input: {},
@@ -194,7 +194,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "stop_all ignores recursive stop calls",
         input: {},
@@ -217,7 +217,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["a", "b"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "stop_all accepts iterable disposer source",
         input: {},
@@ -236,7 +236,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["first", "second"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths handles empty path list",
         input: {},
@@ -256,7 +256,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 0,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths subscribes each path",
         input: {},
@@ -275,7 +275,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: [["cells"], ["ui", "selected"]],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths subscribes paths in insertion order",
         input: {},
@@ -294,7 +294,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["a", "b.c", "d"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths returns combined disposer",
         input: {},
@@ -321,7 +321,7 @@ export function livemap_misc_suite(): TestSuite {
           "stop:ui.selected",
         ],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths listeners share callback",
         input: {},
@@ -342,7 +342,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths combined disposer detaches listeners",
         input: {},
@@ -371,7 +371,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths composes with microtask scheduler",
         input: {},
@@ -397,7 +397,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "subscribe_paths combined disposer is idempotent",
         input: {},
@@ -421,7 +421,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["stop:cells", "stop:ui.selected"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path renders immediately by default",
         input: {},
@@ -441,7 +441,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["a"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path can skip immediate render",
         input: {},
@@ -460,7 +460,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: [],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path renders latest read value on subscription event",
         input: {},
@@ -487,7 +487,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["b"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path returns subscription disposer",
         input: {},
@@ -505,7 +505,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["stop"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path composes with microtask scheduler",
         input: {},
@@ -536,7 +536,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: ["c"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path immediate render bypasses scheduler",
         input: {},
@@ -555,7 +555,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: ["a"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path scheduled listener does not render before flush",
         input: {},
@@ -580,7 +580,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: [],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_path disposer detaches subscribed listener",
         input: {},
@@ -609,7 +609,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["b"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths renders immediately by default",
         input: {},
@@ -629,7 +629,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["a"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths can skip immediate render",
         input: {},
@@ -648,7 +648,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: [],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths subscribes all paths",
         input: {},
@@ -670,7 +670,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["a", "b.c", "d"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths renders latest read value on subscribed event",
         input: {},
@@ -699,7 +699,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["b", "c"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths composes with microtask scheduler",
         input: {},
@@ -730,7 +730,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: ["c"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths scheduled listener does not render before flush",
         input: {},
@@ -756,7 +756,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: [],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths immediate render bypasses scheduler",
         input: {},
@@ -775,7 +775,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: ["a"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths returns combined disposer",
         input: {},
@@ -803,7 +803,7 @@ export function livemap_misc_suite(): TestSuite {
           "stop:b",
         ],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "bind_paths handles empty path list",
         input: {},
@@ -826,7 +826,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: { subscriptions: 0, renders: ["a"] },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths does not run immediately by default",
         input: {},
@@ -843,7 +843,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 0,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths can run immediately",
         input: {},
@@ -861,7 +861,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths subscribes input paths",
         input: {},
@@ -881,7 +881,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: ["cells", "ui.selected"],
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths runs derive on subscribed event",
         input: {},
@@ -905,7 +905,7 @@ export function livemap_misc_suite(): TestSuite {
         },
         expected: 2,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths composes with microtask scheduler",
         input: {},
@@ -931,7 +931,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths immediate run uses scheduler when supplied",
         input: {},
@@ -953,7 +953,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: { beforeFlush: 0, afterFlush: 1 },
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths scheduled immediate coalesces with event",
         input: {},
@@ -979,7 +979,7 @@ export function livemap_misc_suite(): TestSuite {
         }).value,
         expected: 1,
       }),
-      readCase({
+      read_case({
         suite: SUITE,
         name: "derive_from_paths returns combined disposer",
         input: {},
