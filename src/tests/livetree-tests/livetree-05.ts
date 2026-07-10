@@ -167,7 +167,8 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.ok("new quid exists", r.newQuid.length > 0);
                     t.eq("shape text preserved", r.text, "x");
                     t.eq("shape tag preserved", r.tag, "div");
-                    t.eq("quid preserved", r.oldQuid === r.newQuid, true);
+                    // CHANGED: rehydration creates a distinct branch, so identity must be reminted.
+                    t.eq("quid reminted", r.oldQuid === r.newQuid, false);
                 },
             },
             {

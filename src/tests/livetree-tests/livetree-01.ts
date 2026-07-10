@@ -1418,7 +1418,7 @@ export function suite_recent_regressions(): readonly TestSuite[] {
 }
 
 function suite_graft_regressions(): TestSuite {
-  const SUITE = "livetree/recent-graft-regressions";
+  const SUITE = "livetree/regressions/graft";
 
   const cases: readonly LiveTreeCaseSpec[] = [
     {
@@ -1636,7 +1636,7 @@ function suite_graft_regressions(): TestSuite {
 }
 
 function suite_css_regressions(): TestSuite {
-  const SUITE = "livetree/recent-css-regressions";
+  const SUITE = "livetree/regressions/css";
 
   const tick = async (): Promise<void> => {
     await new Promise<void>((r) => setTimeout(() => r(), 0));
