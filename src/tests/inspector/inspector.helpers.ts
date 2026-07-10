@@ -1,6 +1,6 @@
 import type { LiveTree } from "hson-live";
 import type { CaseReport } from "../../app/demos/test/tests.types";
-import { tick } from "../livetree-tests/livetree-03";
+import { tick } from "../livetree/livetree-03";
 import type { Artifact } from "hson-live/diagnostics";
 import { _colors } from "../../app/core/consts/colors.consts";
 import { set_alpha } from "../../app/core/helpers/color-helpers";

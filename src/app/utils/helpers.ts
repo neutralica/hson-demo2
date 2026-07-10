@@ -1,9 +1,9 @@
 import { make_livemap_feed_hub, paths_overlap, type LiveMapCommit, type LivePath, type LiveTree } from "hson-live";
 import type { LetterKey } from "../core/types/core.types";
-import { preview_value, equal_row } from "../../tests/livemap-tests/test-helpers";
+import { preview_value, equal_row } from "../../tests/livemap/test-helpers";
 import type { TestCase } from "../demos/test/tests.types";
-import { type FeedEmitCaseSpec, preview_feed_event } from "../../tests/livemap-tests/feed-suite";
-import type { LiveMapFeedEventPreview } from "../../tests/livemap-tests/types";
+import { type FeedEmitCaseSpec, preview_feed_event } from "../../tests/livemap/feed-suite";
+import type { LiveMapFeedEventPreview } from "../../tests/livemap/types";
 import type { JsonValue } from "hson-live/types";
 
 type PathOverlapCaseSpec = Readonly<{
