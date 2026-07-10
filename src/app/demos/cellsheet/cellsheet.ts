@@ -1,6 +1,6 @@
 // cellsheet.ts
 
-import { hson, type LiveTree } from "hson-live";
+import { bind_paths, derive_from_paths, hson, make_microtask_scheduler, type LiveTree } from "hson-live";
 import type { CellsheetDerivedCellState, Operator, CellModel, OperationModel, CellsheetOperationState, CellsheetPanel } from "./cellsheet.types";
 import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, CARDcss, LABELcss, METAcss, RESETcss, FOOTERcss, RESIZE_EDGE, SEL_EDGE, AUTH_TEXT, DER_TEXT, OPERATOR_COLOR, ERR_TEXT, RELAT_EDGE, BORDER, DER_BORDER, ERR_BORDER } from "./cellsheet.css";
 import { create_initial_cellsheet_state, ROWS, COLS, is_record, apply_authored_raw, derived_cell_from_model, operation_state_from_model, summary_state_from_models, read_summary_from_snap, read_derived_cell_from_snap, read_operations_from_snap, operation_touches_cell, format_operation_state, render_cell_from_derived, is_operator, compute_result, operation_error, mark_related_cell, read_selected_from_snap, reset_derived_state, MAX_EVALUATION_PASSES, remember_operation_once, result_target_error, model_value_changed, value_text, cell_key } from "./cellsheet-helpers";
@@ -461,6 +461,12 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         renderSelectionFromMap(snap);
     };
 
+    const operandsCanApplyOperator = (op: Operator, left: CellModel, right: CellModel): boolean => {
+        if (left.value === undefined || right.value === undefined) return false;
+        if (op === "+") return true;
+        return typeof left.value === "number" && typeof right.value === "number";
+    };
+
     const findOperations = (operator: CellModel): OperationModel[] => {
         const op = operator.value;
         if (!is_operator(String(op))) return [];
@@ -470,7 +476,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         const left = getCell(operator.row, operator.col - 1);
         const right = getCell(operator.row, operator.col + 1);
         const horizontalTarget = getCell(operator.row, operator.col + 2);
-        if (left && right && horizontalTarget && left.value !== undefined && right.value !== undefined) {
+        if (left && right && horizontalTarget && operandsCanApplyOperator(op as Operator, left, right)) {
             const result = compute_result(op as Operator, left, right);
             out.push({
                 key: `${operator.key}:h`,
@@ -488,7 +494,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         const top = getCell(operator.row - 1, operator.col);
         const bottom = getCell(operator.row + 1, operator.col);
         const verticalTarget = getCell(operator.row + 2, operator.col);
-        if (top && bottom && verticalTarget && top.value !== undefined && bottom.value !== undefined) {
+        if (top && bottom && verticalTarget && operandsCanApplyOperator(op as Operator, top, bottom)) {
             const result = compute_result(op as Operator, top, bottom);
             out.push({
                 key: `${operator.key}:v`,
@@ -669,25 +675,36 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     seed(5, 3, "/");
     seed(6, 3, "2");
 
-    // Debounced evaluation logic
-    let evaluateQueued = false;
-
-    const scheduleEvaluate = (): void => {
-        if (evaluateQueued) return;
-        evaluateQueued = true;
-
-        queueMicrotask(() => {
-            evaluateQueued = false;
-            if (!disposed) evaluate();
-        });
+    const subscribePath = (path: string[], listener: () => void): (() => void) => {
+        return map.sub.path(path, listener);
     };
 
-    disposers.push(map.sub.path(["cells"], scheduleEvaluate));
-    disposers.push(map.sub.path(["ui", "selected"], scheduleEvaluate));
-    disposers.push(map.sub.path(["ui", "colWidths"], renderGridDimensionsFromMap));
-    disposers.push(map.sub.path(["ui", "rowHeights"], renderGridDimensionsFromMap));
+    disposers.push(derive_from_paths({
+        paths: [
+            ["cells"],
+            ["ui", "selected"],
+        ],
+        subscribePath,
+        derive: () => {
+            if (!disposed) evaluate();
+        },
+        schedule: make_microtask_scheduler,
+        immediate: true,
+    }));
 
-    scheduleEvaluate();
+    disposers.push(bind_paths({
+        paths: [
+            ["ui", "colWidths"],
+            ["ui", "rowHeights"],
+        ],
+        subscribePath,
+        read: () => undefined,
+        render: () => {
+            renderGridDimensionsFromMap();
+        },
+        schedule: make_microtask_scheduler,
+        immediate: true,
+    }));
 
     const dispose = (): void => {
         disposed = true;

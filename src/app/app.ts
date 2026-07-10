@@ -13,7 +13,6 @@ import { _colors } from "./core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
-import type { LiveMap } from "../../../hson-live/dist/api/livemap/livemap.types";
 import { CssManager, LiveTree } from "hson-live";
 
 

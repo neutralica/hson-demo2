@@ -19,8 +19,8 @@ function map_from(input: JsonValue) {
   return hson.liveMap.fromJson(input);
 }
 
-export function livemap_contract_tests(): TestSuite {
-  const SUITE = "livemap/contract";
+export function livemap_editor_contract(): TestSuite {
+  const SUITE = "livemap/editor-contract";
   return {
     suite: SUITE,
     cases: [

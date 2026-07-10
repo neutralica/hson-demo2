@@ -6,7 +6,7 @@ import {
   render_livemap_snap_view,
 } from "../../../../hson-live/src/api/livemap/bridge";
 import type { JsonValue } from "../../../../hson-live/src/core/types";
-import type { LiveMap, LivePath } from "../../../../hson-live/src/api/livemap/livemap.types";
+import type { LiveMap, LivePath } from "../../../../hson-live/src/types/livemap.types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 import { bind_livetree_text, bind_livetree_attr, bind_livetree_input_value } from "../../../../hson-live/src/api/livemap/bridge-bindings";

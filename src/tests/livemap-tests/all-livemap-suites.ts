@@ -15,8 +15,8 @@ import { livemap_suites_schema } from "./schema-suite";
 import { livemap_suites_api } from "./api-suite";
 import { livemap_suites_store } from "./store-suite";
 import { livemap_suite_batch } from "./batch-suite";
-import { livemap_contract_tests, livemap_object_exact } from "./contract-tests";
-import { livemap_schema_contract_suite } from "./contract-tests";
+import { livemap_editor_contract, livemap_object_exact } from "./editor-contract-tests";
+import { livemap_schema_contract_suite } from "./editor-contract-tests";
 import { livemap_link_contract_suites } from "./link-contract-suite";
 import { hson } from "hson-live";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
@@ -25,6 +25,7 @@ import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
 import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-2";
 import { livemap_suites_schema_controls } from "./generated-control-suite";
 import { livemap_suites_schema_validation_controls } from "./schema-suite-2";
+import { livemap_misc_suite } from "./misc-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -89,7 +90,7 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_api(),
     livemap_suites_store(),
     livemap_suite_batch(),
-    livemap_contract_tests(),
+    livemap_editor_contract(),
     livemap_schema_contract_suite(),
     livemap_object_exact(),
     livemap_link_contract_suites(),
@@ -98,6 +99,7 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_bridge_livetree_controls(),
     livemap_suites_schema_controls(),
     livemap_suites_schema_validation_controls(),
+    livemap_misc_suite(),
 
     // livemap_suite_html_proof(), // non-supported currently
 
