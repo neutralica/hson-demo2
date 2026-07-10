@@ -17,6 +17,7 @@ import  { _freeze } from "./tests.consts";
 import type { HsonTestApi, CaseKey, TestSuite, TestRunMode } from "./tests.types";
 import { livemap_suites_quid } from "../../../tests/livemap/quid-suite";
 import { livemap_editor_contract } from "../../../tests/livemap/editor-contract-tests";
+import { livetree_quid_level_2 } from "../../../tests/livetree/livetree-25-regression-2";
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
@@ -97,7 +98,7 @@ export function build_suites_for_mode(
   }
   if (mode === "dev") {
     return _freeze([
-      livemap_suites_quid(),
+      livetree_quid_level_2(),
 
     ]);
   }

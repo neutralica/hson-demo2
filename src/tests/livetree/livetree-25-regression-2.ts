@@ -6,6 +6,7 @@ import {
   make_livetree_suite,
 } from "./make-livetree-suite.js";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types.js";
+import type { TestSuite } from "../../app/demos/test/tests.types.js";
 
 type IdentitySnapshot = Readonly<Record<string, string>>;
 
@@ -40,7 +41,7 @@ function identitiesMatch(
   return ids.every((id) => left[id] === right[id]);
 }
 
-export function livetree_regression_2(): ReturnType<typeof make_livetree_suite> {
+export function livetree_regression_2(): TestSuite {
   const SUITE = "livetree/regression-2";
   const ROUNDTRIP_IDS = ["panel", "heading", "copy", "accent"] as const;
 
@@ -505,5 +506,259 @@ export function livetree_regression_2(): ReturnType<typeof make_livetree_suite> 
       },
     }
   ];
+  return make_livetree_suite(SUITE, cases);
+}
+
+export function livetree_quid_level_2(): TestSuite {
+  const SUITE = "livetree/quid-level-2";
+
+  const cases: readonly LiveTreeCaseSpec[] = [
+    {
+      suite: SUITE,
+      name: "serialization: DOM outerHTML includes resolved root quid by default",
+      fixture: "identity/serialization",
+      sub: "root-quid-default",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel">panel</section>
+        </main>
+      `,
+
+      act(tree) {
+        const rootQuid = tree.quid;
+        const html = tree.dom.must.el().outerHTML;
+
+        (tree as any).__result = {
+          includesDataQuid: html.includes("data-_quid"),
+          includesRootQuid: html.includes(rootQuid),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("outerHTML includes data-_quid by default", r.includesDataQuid, true);
+        t.eq("outerHTML includes the resolved root quid", r.includesRootQuid, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "serialization: DOM outerHTML includes resolved descendant quids by default",
+      fixture: "identity/serialization",
+      sub: "descendant-quid-default",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel">
+            <span id="accent">accent</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const panel = tree.find.must.byId("panel");
+        const accent = tree.find.must.byId("accent");
+        const html = tree.dom.must.el().outerHTML;
+
+        (tree as any).__result = {
+          includesPanelQuid: html.includes(panel.quid),
+          includesAccentQuid: html.includes(accent.quid),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("outerHTML includes resolved descendant quid", r.includesPanelQuid, true);
+        t.eq("outerHTML includes resolved nested descendant quid", r.includesAccentQuid, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "serialization: DOM outerHTML preserves ordinary data attrs alongside quids",
+      fixture: "identity/serialization",
+      sub: "preserve-data-attrs",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel" data-role="demo" data-kind="panel">panel</section>
+        </main>
+      `,
+
+      act(tree) {
+        const panel = tree.find.must.byId("panel");
+        const html = tree.dom.must.el().outerHTML;
+
+        (tree as any).__result = {
+          includesQuid: html.includes(panel.quid),
+          preservesRole: html.includes('data-role="demo"'),
+          preservesKind: html.includes('data-kind="panel"'),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("outerHTML includes quid identity", r.includesQuid, true);
+        t.eq("outerHTML preserves data-role", r.preservesRole, true);
+        t.eq("outerHTML preserves data-kind", r.preservesKind, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "serialization: reading DOM outerHTML does not remint source quids",
+      fixture: "identity/serialization",
+      sub: "read-only-serialization",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel">
+            <span id="accent">accent</span>
+          </section>
+        </main>
+      `,
+
+      act(tree) {
+        const ids = ["root", "panel", "accent"] as const;
+        const before = identitySnapshot(tree, ids);
+        const firstHtml = tree.dom.must.el().outerHTML;
+        const secondHtml = tree.dom.must.el().outerHTML;
+        const after = identitySnapshot(tree, ids);
+
+        (tree as any).__result = {
+          htmlStable: firstHtml === secondHtml,
+          identitiesStable: identitiesMatch(before, after, ids),
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("repeated outerHTML reads are stable", r.htmlStable, true);
+        t.eq("outerHTML reads do not remint source identities", r.identitiesStable, true);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "serialization: mounted subtree serializes materialized child quids",
+      fixture: "identity/serialization",
+      sub: "mounted-subtree-materializes-children",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel">panel</section>
+          <aside id="sibling">sibling</aside>
+        </main>
+      `,
+
+      act(tree) {
+        const rootQuid = tree.quid;
+        const panel = tree.find.must.byId("panel");
+        const sibling = tree.find.must.byId("sibling");
+        const html = tree.dom.must.el().outerHTML;
+
+        (tree as any).__result = {
+          includesRootQuid: html.includes(rootQuid),
+          includesPanelQuid: html.includes(panel.quid),
+          includesSiblingQuid: html.includes(sibling.quid),
+          quidCount: html.match(/data-_quid=/g)?.length ?? 0,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("outerHTML includes resolved root quid", r.includesRootQuid, true);
+        t.eq("outerHTML includes materialized child quid", r.includesPanelQuid, true);
+        t.eq("outerHTML includes materialized sibling quid", r.includesSiblingQuid, true);
+        t.eq("mounted subtree serializes root and child quids", r.quidCount, 3);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "serialization: mounted siblings serialize with quids alongside resolved descendant",
+      fixture: "identity/serialization",
+      sub: "mounted-siblings-serialize-with-quids",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel">panel</section>
+          <aside id="sibling">sibling</aside>
+        </main>
+      `,
+
+      act(tree) {
+        const rootQuid = tree.quid;
+        const panel = tree.find.must.byId("panel");
+        const panelQuid = panel.quid;
+        const sibling = tree.find.must.byId("sibling");
+        const siblingQuid = sibling.quid;
+        const html = tree.dom.must.el().outerHTML;
+
+        (tree as any).__result = {
+          includesRootQuid: html.includes(rootQuid),
+          includesPanelQuid: html.includes(panelQuid),
+          includesSiblingQuid: html.includes(siblingQuid),
+          siblingHasQuid: /<aside\b[^>]*\bdata-_quid=/.test(html),
+          quidCount: html.match(/data-_quid=/g)?.length ?? 0,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("outerHTML includes resolved root quid", r.includesRootQuid, true);
+        t.eq("outerHTML includes resolved descendant quid", r.includesPanelQuid, true);
+        t.eq("outerHTML includes materialized sibling quid", r.includesSiblingQuid, true);
+        t.eq("outerHTML marks mounted sibling with data-_quid", r.siblingHasQuid, true);
+        t.eq("mounted root, descendant, and sibling quids serialize", r.quidCount, 3);
+      },
+    },
+
+    {
+      suite: SUITE,
+      name: "serialization: reading outerHTML is stable for materialized subtree quids",
+      fixture: "identity/serialization",
+      sub: "outerhtml-stable-materialized-subtree",
+      dom: true,
+      html: `
+        <main id="root">
+          <section id="panel">
+            <span id="accent">accent</span>
+          </section>
+          <aside id="sibling">sibling</aside>
+        </main>
+      `,
+
+      act(tree) {
+        const rootQuid = tree.quid;
+        const panel = tree.find.must.byId("panel");
+        const accent = tree.find.must.byId("accent");
+        const sibling = tree.find.must.byId("sibling");
+        const firstHtml = tree.dom.must.el().outerHTML;
+        const secondHtml = tree.dom.must.el().outerHTML;
+
+        (tree as any).__result = {
+          htmlStable: firstHtml === secondHtml,
+          includesRootQuid: secondHtml.includes(rootQuid),
+          includesPanelQuid: secondHtml.includes(panel.quid),
+          includesAccentQuid: secondHtml.includes(accent.quid),
+          includesSiblingQuid: secondHtml.includes(sibling.quid),
+          quidCount: secondHtml.match(/data-_quid=/g)?.length ?? 0,
+        };
+      },
+
+      assert(tree, t) {
+        const r = (tree as any).__result;
+        t.eq("repeated outerHTML reads are stable", r.htmlStable, true);
+        t.eq("outerHTML includes the resolved root quid", r.includesRootQuid, true);
+        t.eq("outerHTML includes materialized child quid", r.includesPanelQuid, true);
+        t.eq("outerHTML includes materialized nested child quid", r.includesAccentQuid, true);
+        t.eq("outerHTML includes materialized sibling quid", r.includesSiblingQuid, true);
+        t.eq("outerHTML includes all materialized subtree quids", r.quidCount, 4);
+      },
+    },
+  ];
+
   return make_livetree_suite(SUITE, cases);
 }
