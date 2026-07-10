@@ -140,6 +140,51 @@ export function livehost_pair_suite(): TestSuite {
     cases: [
       livehost_pair_read_case({
         suite: SUITE,
+        name: "client socket close detaches host listener",
+        input: {},
+        act: async () => {
+          const [clientSocket, hostSocket] = make_socket_pair();
+          const host = create_livehost({ state: { ready: true } });
+          const client = create_livehost_client<{ ready: boolean }>({
+            socket: clientSocket,
+            clientId: "client-a",
+          });
+
+          host.connect(hostSocket);
+          client.connect();
+          await settle_pair();
+          clientSocket.close();
+          await settle_pair();
+          clientSocket.send(JSON.stringify({ type: "hello", clientId: "client-a", lastSeq: 0 }));
+          await settle_pair();
+
+          const clientMessages = clientSocket.sent() as Array<Record<string, unknown>>;
+          const hostMessages = hostSocket.sent() as Array<Record<string, unknown>>;
+
+          return {
+            clientSentCount: clientMessages.length,
+            hostSentCount: hostMessages.length,
+            firstClientType: clientMessages[0]?.type,
+            secondClientType: clientMessages[1]?.type,
+            firstHostType: hostMessages[0]?.type,
+            secondHostType: hostMessages[1]?.type,
+            clientSeq: client.seq,
+            clientRoot: client.map.snap(),
+          };
+        },
+        expected: {
+          clientSentCount: 2,
+          hostSentCount: 1,
+          firstClientType: "hello",
+          secondClientType: "hello",
+          firstHostType: "hello",
+          secondHostType: undefined,
+          clientSeq: 0,
+          clientRoot: { ready: true },
+        },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
         name: "client hello receives host snapshot",
         input: {},
         act: async () => {
@@ -364,6 +409,211 @@ export function livehost_pair_suite(): TestSuite {
           clientCount: 0,
           hostCount: 1,
           lastHostMessageType: "ack",
+        },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "client reconnect with stale seq receives replayed sync",
+        input: {},
+        act: async () => {
+          type Actions = Readonly<{
+            increment: undefined;
+          }>;
+          const [firstClientSocket, firstHostSocket] = make_socket_pair();
+          const [secondClientSocket, secondHostSocket] = make_socket_pair();
+          const host = create_livehost({
+            state: { count: 0 },
+            actions: {
+              increment: (ctx) => {
+                const current = ctx.map.at(["count"]).snap();
+                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+              },
+            },
+          });
+          const firstClient = create_livehost_client<{ count: number }, Actions>({
+            socket: firstClientSocket,
+            actionId: () => "action-a",
+          });
+
+          host.connect(firstHostSocket);
+          firstClient.connect();
+          await settle_pair();
+          firstClient.subscribe(["count"]);
+          await settle_pair();
+          const resultPromise = firstClient.action("increment");
+          await settle_pair();
+          await resultPromise;
+          await settle_pair();
+
+          const secondClient = create_livehost_client<{ count: number }, Actions>({
+            socket: secondClientSocket,
+            clientId: "client-b",
+          });
+          host.connect(secondHostSocket);
+          secondClient.connect();
+          await settle_pair();
+
+          const [secondHello] = secondClientSocket.sent() as Array<Record<string, unknown>>;
+          const [hostHello, replay] = secondHostSocket.sent() as Array<Record<string, unknown>>;
+
+          return {
+            secondLastSeq: secondHello?.lastSeq,
+            hostHelloType: hostHello?.type,
+            hostHelloSeq: hostHello?.seq,
+            replayType: replay?.type,
+            replaySeq: replay?.seq,
+            replayPath: replay?.path,
+            replayValue: replay?.value,
+            secondSeq: secondClient.seq,
+            secondCount: secondClient.map.at(["count"]).snap(),
+          };
+        },
+        expected: {
+          secondLastSeq: 0,
+          hostHelloType: "hello",
+          hostHelloSeq: 1,
+          replayType: "sync",
+          replaySeq: 1,
+          replayPath: ["count"],
+          replayValue: 1,
+          secondSeq: 1,
+          secondCount: 1,
+        },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "client reconnect after latest seq receives only hello",
+        input: {},
+        act: async () => {
+          type Actions = Readonly<{
+            increment: undefined;
+          }>;
+          const [firstClientSocket, firstHostSocket] = make_socket_pair();
+          const [secondClientSocket, secondHostSocket] = make_socket_pair();
+          const host = create_livehost({
+            state: { count: 0 },
+            actions: {
+              increment: (ctx) => {
+                const current = ctx.map.at(["count"]).snap();
+                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+              },
+            },
+          });
+          const firstClient = create_livehost_client<{ count: number }, Actions>({
+            socket: firstClientSocket,
+            actionId: () => "action-a",
+          });
+
+          host.connect(firstHostSocket);
+          firstClient.connect();
+          await settle_pair();
+          firstClient.subscribe(["count"]);
+          await settle_pair();
+          const resultPromise = firstClient.action("increment");
+          await settle_pair();
+          await resultPromise;
+          await settle_pair();
+
+          const secondClient = create_livehost_client<{ count: number }, Actions>({ socket: secondClientSocket });
+          host.connect(secondHostSocket);
+          secondClient.connect();
+          await settle_pair();
+          secondClient.disconnect();
+          secondClientSocket.close();
+          await settle_pair();
+          host.connect(secondHostSocket);
+          secondClient.connect();
+          await settle_pair();
+
+          const secondClientMessages = secondClientSocket.sent() as Array<Record<string, unknown>>;
+          const secondHostMessages = secondHostSocket.sent() as Array<Record<string, unknown>>;
+          const replayMessages = secondHostMessages.filter((message) => message.type === "sync");
+          const lastHello = secondHostMessages[secondHostMessages.length - 1];
+
+          return {
+            clientHelloCount: secondClientMessages.length,
+            firstLastSeq: secondClientMessages[0]?.lastSeq,
+            secondLastSeq: secondClientMessages[1]?.lastSeq,
+            hostSentCount: secondHostMessages.length,
+            replayCount: replayMessages.length,
+            lastHostType: lastHello?.type,
+            lastHostSeq: lastHello?.seq,
+            clientSeq: secondClient.seq,
+            clientCount: secondClient.map.at(["count"]).snap(),
+          };
+        },
+        expected: {
+          clientHelloCount: 2,
+          firstLastSeq: 0,
+          secondLastSeq: 1,
+          hostSentCount: 3,
+          replayCount: 1,
+          lastHostType: "hello",
+          lastHostSeq: 1,
+          clientSeq: 1,
+          clientCount: 1,
+        },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "client reconnect too far behind receives snapshot without replay",
+        input: {},
+        act: async () => {
+          type Actions = Readonly<{
+            increment: undefined;
+          }>;
+          const [writerClientSocket, writerHostSocket] = make_socket_pair();
+          const [readerClientSocket, readerHostSocket] = make_socket_pair();
+          const host = create_livehost({
+            state: { count: 0 },
+            actions: {
+              increment: (ctx) => {
+                const current = ctx.map.at(["count"]).snap();
+                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+              },
+            },
+          });
+          const writer = create_livehost_client<{ count: number }, Actions>({
+            socket: writerClientSocket,
+            actionId: () => "action-a",
+          });
+
+          host.connect(writerHostSocket);
+          writer.connect();
+          await settle_pair();
+          writer.subscribe(["count"]);
+          await settle_pair();
+          const resultPromise = writer.action("increment");
+          await settle_pair();
+          await resultPromise;
+          await settle_pair();
+
+          const reader = create_livehost_client<{ count: number }, Actions>({ socket: readerClientSocket });
+          host.connect(readerHostSocket);
+          reader.connect();
+          await settle_pair();
+
+          const hostMessages = readerHostSocket.sent() as Array<Record<string, unknown>>;
+          const replayMessages = hostMessages.filter((message) => message.type === "sync");
+
+          return {
+            hostSentCount: hostMessages.length,
+            replayCount: replayMessages.length,
+            helloType: hostMessages[0]?.type,
+            helloSeq: hostMessages[0]?.seq,
+            readerSeq: reader.seq,
+            readerRoot: reader.map.snap(),
+            readerCount: reader.map.at(["count"]).snap(),
+          };
+        },
+        expected: {
+          hostSentCount: 2,
+          replayCount: 1,
+          helloType: "hello",
+          helloSeq: 1,
+          readerSeq: 1,
+          readerRoot: { count: 1 },
+          readerCount: 1,
         },
       }),
     ] as const,

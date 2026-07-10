@@ -61,6 +61,52 @@ export function livehost_protocol_suite(): TestSuite {
           lastSeq: undefined,
         },
       }),
+            read_case({
+        suite: SUITE,
+        name: "decode accepts zero hello lastSeq",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "hello",
+            clientId: "client-a",
+            lastSeq: 0,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "hello",
+          lastSeq: 0,
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode ignores fractional hello lastSeq",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "hello",
+            clientId: "client-a",
+            lastSeq: 1.5,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "hello",
+          lastSeq: undefined,
+        },
+      }),
       read_case({
         suite: SUITE,
         name: "decode accepts action message",
@@ -482,6 +528,45 @@ export function livehost_protocol_suite(): TestSuite {
         expected: {
           ok: false,
           message: "LiveHost unsubscribe message requires path.",
+        },
+      }),
+            read_case({
+        suite: SUITE,
+        name: "encode serializes error messages as json",
+        input: {},
+        act: () => {
+          const encoded = encode_livehost_message({
+            type: "error",
+            id: "action-a",
+            ok: false,
+            seq: 4,
+            error: {
+              message: "Nope.",
+              code: "NOPE",
+              path: ["user", "name"],
+            },
+          });
+          const parsed = JSON.parse(encoded) as Record<string, unknown>;
+          const error = parsed.error as Record<string, unknown> | undefined;
+
+          return {
+            type: parsed.type,
+            id: parsed.id,
+            ok: parsed.ok,
+            seq: parsed.seq,
+            message: error?.message,
+            code: error?.code,
+            path: error?.path,
+          };
+        },
+        expected: {
+          type: "error",
+          id: "action-a",
+          ok: false,
+          seq: 4,
+          message: "Nope.",
+          code: "NOPE",
+          path: ["user", "name"],
         },
       }),
       read_case({
