@@ -436,21 +436,11 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   // CHANGED: use an explicit document listener so remount teardown can remove it.
   const onDocumentKeyDown = (ke: KeyboardEvent): void => {
-    if (ke.key === "q") {
-      const frame = bud_node(graffitiLayer);
-      const starCarrier = frame.bud(SPLASH_BUDS.starCarrier);
-      const starWrap = starCarrier.bud(SPLASH_BUDS.starWrap);
-      const starHead = starWrap.bud(SPLASH_BUDS.starHead);
-      const tailA = starWrap.bud(SPLASH_BUDS.starTailA);
-      const tailB = starWrap.bud(SPLASH_BUDS.starTailB);
-      const tailC = starWrap.bud(SPLASH_BUDS.starTailC);
-      begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
-    }
     if (ke.key !== "Escape") return;
     demoController.deactivateWidget($OKLCH);
     demoController.deactivateWidget($POINT);
   };
-
+  
   document.addEventListener("keydown", onDocumentKeyDown);
 
   stopDemoMount = () => {

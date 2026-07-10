@@ -1,6 +1,7 @@
 // quid-suite.ts
 
 import {
+  hson,
   debug_livemap_quids,
   drop_livemap_quid,
   ensure_livemap_quid,
@@ -376,6 +377,202 @@ export function livemap_suites_quid(): TestSuite {
           firstNewOwned: true,
           secondStillStored: true,
           secondStillOwned: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "path handle quid is stable for repeated property reads",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const handle = map.at(["user"]);
+          const first = handle.quid;
+          const second = handle.quid;
+
+          return {
+            stable: first === second,
+            stored: get_livemap_quid(handle) === first,
+            owned: get_livemap_owner(first) === handle,
+            prefix: first.startsWith("lmq-"),
+          };
+        },
+        expected: {
+          stable: true,
+          stored: true,
+          owned: true,
+          prefix: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "path handle quid is stable for same map and same path",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const firstHandle = map.at(["user"]);
+          const secondHandle = map.at(["user"]);
+          const firstQuid = firstHandle.quid;
+          const secondQuid = secondHandle.quid;
+
+          return {
+            sameHandle: firstHandle === secondHandle,
+            sameQuid: firstQuid === secondQuid,
+            firstOwned: get_livemap_owner(firstQuid) === firstHandle,
+            secondOwned: get_livemap_owner(secondQuid) === secondHandle,
+          };
+        },
+        expected: {
+          sameHandle: true,
+          sameQuid: true,
+          firstOwned: true,
+          secondOwned: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "path handle quid differs for same map and different paths",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" }, settings: { theme: "dark" } });
+          const userHandle = map.at(["user"]);
+          const settingsHandle = map.at(["settings"]);
+          const userQuid = userHandle.quid;
+          const settingsQuid = settingsHandle.quid;
+
+          return {
+            differentHandles: userHandle !== settingsHandle,
+            differentQuids: userQuid !== settingsQuid,
+            userOwned: get_livemap_owner(userQuid) === userHandle,
+            settingsOwned: get_livemap_owner(settingsQuid) === settingsHandle,
+          };
+        },
+        expected: {
+          differentHandles: true,
+          differentQuids: true,
+          userOwned: true,
+          settingsOwned: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "path handle quid differs for different maps and same path",
+        input: {},
+        act: () => {
+          const firstMap = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const secondMap = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const firstHandle = firstMap.at(["user"]);
+          const secondHandle = secondMap.at(["user"]);
+          const firstQuid = firstHandle.quid;
+          const secondQuid = secondHandle.quid;
+
+          return {
+            differentHandles: firstHandle !== secondHandle,
+            differentQuids: firstQuid !== secondQuid,
+            firstOwned: get_livemap_owner(firstQuid) === firstHandle,
+            secondOwned: get_livemap_owner(secondQuid) === secondHandle,
+          };
+        },
+        expected: {
+          differentHandles: true,
+          differentQuids: true,
+          firstOwned: true,
+          secondOwned: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "path handle quid survives value mutation at same path",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const handle = map.at(["user"]);
+          const before = handle.quid;
+
+          map.set(["user"], { name: "Grace" });
+          const after = map.at(["user"]).quid;
+
+          return {
+            sameQuid: before === after,
+            sameOwner: get_livemap_owner(before) === handle,
+          };
+        },
+        expected: {
+          sameQuid: true,
+          sameOwner: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy handle quid matches core at same path",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const proxy = map.proxy() as any;
+          const proxyHandle = proxy.user.$_;
+          const atHandle = map.at(["user"]);
+          const proxyQuid = proxyHandle.quid;
+          const atQuid = atHandle.quid;
+
+          return {
+            sameHandle: proxyHandle === atHandle,
+            sameQuid: proxyQuid === atQuid,
+            owned: get_livemap_owner(proxyQuid) === atHandle,
+          };
+        },
+        expected: {
+          sameHandle: true,
+          sameQuid: true,
+          owned: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy handle quid is stable for repeated same path access",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const proxy = map.proxy() as any;
+          const firstHandle = proxy.user.$_;
+          const secondHandle = proxy.user.$_;
+          const firstQuid = firstHandle.quid;
+          const secondQuid = secondHandle.quid;
+
+          return {
+            sameHandle: firstHandle === secondHandle,
+            sameQuid: firstQuid === secondQuid,
+            owned: get_livemap_owner(firstQuid) === firstHandle,
+          };
+        },
+        expected: {
+          sameHandle: true,
+          sameQuid: true,
+          owned: true,
+        },
+      }),
+      readCase({
+        suite: SUITE,
+        name: "proxy handle quid differs for different paths",
+        input: {},
+        act: () => {
+          const map = hson.liveMap.fromJson({ user: { name: "Ada" }, settings: { theme: "dark" } });
+          const proxy = map.proxy() as any;
+          const userHandle = proxy.user.$_;
+          const settingsHandle = proxy.settings.$_;
+          const userQuid = userHandle.quid;
+          const settingsQuid = settingsHandle.quid;
+
+          return {
+            differentHandles: userHandle !== settingsHandle,
+            differentQuids: userQuid !== settingsQuid,
+            userOwned: get_livemap_owner(userQuid) === userHandle,
+            settingsOwned: get_livemap_owner(settingsQuid) === settingsHandle,
+          };
+        },
+        expected: {
+          differentHandles: true,
+          differentQuids: true,
+          userOwned: true,
+          settingsOwned: true,
         },
       }),
       readCase({
