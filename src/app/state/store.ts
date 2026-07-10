@@ -177,44 +177,15 @@ export const toggle_widget = demoStore.toggleWidget;
 export const demo_subscribe = demoStore.subscribe;
 export const demo_subscribe_sel = demoStore.subSel;
 
-function stop_all(stops: readonly (() => void)[]): () => void {
-  return () => {
-    for (const stop of stops) stop();
-  };
-}
-
-function state_path_value(state: DemoStateRO, path: readonly (string | number)[]): JsonValue | undefined {
-  let value: JsonValue | undefined = state as JsonValue;
-
-  for (const part of path) {
-    if (value === null || typeof value !== "object") return undefined;
-
-    if (Array.isArray(value)) {
-      if (typeof part !== "number") return undefined;
-      value = value[part];
-      continue;
-    }
-
-    if (typeof part !== "string") return undefined;
-    value = value[part];
-  }
-
-  return value;
-}
-
-function state_path_signature(state: DemoStateRO, path: readonly (string | number)[]): string {
-  return JSON.stringify(state_path_value(state, path));
-}
-
-function demo_subscribe_path(path: readonly (string | number)[], fn: () => void): () => void {
-  return demo_subscribe_sel((state) => state_path_signature(state, path), fn);
-}
-
 export function demo_subscribe_view_state(fn: () => void): () => void {
-  return stop_all([
-    demo_subscribe_path(["ui", "currentView"], fn),
-    demo_subscribe_sel((state) => state.ui.activeWidgets.join("\u001f"), fn),
-  ]);
+  // CHANGED: one selector tracks the complete view-render state and emits once per update.
+  return demo_subscribe_sel(
+    (state) => JSON.stringify([
+      state.ui.currentView,
+      state.ui.activeWidgets,
+    ]),
+    fn,
+  );
 }
 
 export const demo_state_node = demoStore.stateNode;

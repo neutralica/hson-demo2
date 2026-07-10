@@ -50,7 +50,8 @@ type FireworkConfig = {
   originY: number;
   angleRad: number;
   speed: number;
-
+  // CHANGED: normal fireworks use full-size rendering; compact variants may override this.
+  shapeScale: number;
   // look
   hueBase: number;
   hueDrift: number;
@@ -92,12 +93,22 @@ type DetonationPop = {
   radius: number;
 };
 
+
 type SmokeCloud = {
   x: number;
   y: number;
   t: number;
   life: number;
   radius: number;
+};
+
+type ScreenFlash = {
+  t: number;
+  dropFrames: number;
+  holdFrames: number;
+  fadeFrames: number;
+  peakAlpha: number;
+  tailAlpha: number;
 };
 
 export async function mount_firework(stage: LiveTree): Promise<FireworkController> {
@@ -110,7 +121,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
       position: "fixed",
       inset: "0",
       pointerEvents: "none",
-      zIndex: "1",
+      zIndex: "2",
     });
 
   // BUG TODO ixnay on the om.elday()
@@ -125,6 +136,20 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     });
   }
   const ctx: CanvasRenderingContext2D = ctx0;
+
+  // CHANGED: keep the screen flash out of the persistent particle-trail canvas.
+  // Painting white into that canvas caused faint frames to accumulate over time.
+  const flashLt = stage.create.div()
+    .id.set("wasm-fireworks-flash")
+    .css.setMany({
+      position: "fixed",
+      inset: "0",
+      pointerEvents: "none",
+      zIndex: "1",
+      background: "rgb(255 255 245)",
+      opacity: "0",
+    });
+  const flashEl = flashLt.dom.el() as HTMLDivElement;
   const EXTRA_FALL_PX = 520;
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -145,7 +170,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
   const live: LiveFirework[] = [];
   const pops: DetonationPop[] = [];
   const smokes: SmokeCloud[] = [];
-  let flashFrames = 0;
+  const flashes: ScreenFlash[] = [];
 
   // ---------------------------------------
   // helpers: random + envelope + color
@@ -189,8 +214,10 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     // Freeze the WASM burst pattern at spawn time. After this, JS velocity/gravity
     // controls the trajectory instead of re-reading the animated WASM pattern.
     fw.tick(0);
-    const patternCenterX = W * 0.5;
-    const patternCenterY = H * 0.5;
+    // CHANGED: WASM emits coordinates in its fixed 900 × 520 field.
+    // Using viewport dimensions here shifts the whole burst right on narrow screens.
+    const patternCenterX = FIREWORKS.width * 0.5;
+    const patternCenterY = FIREWORKS.height * 0.5;
     const baseX = new Float32Array(n);
     const baseY = new Float32Array(n);
     let baseSumX = 0;
@@ -258,16 +285,30 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
       hue: cfg.hueBase,
       t: 0,
       life: 6,
-      radius: 50,
+      // CHANGED: compact pattern bursts keep compact detonation halos.
+      radius: 50 * Math.max(0.2, cfg.shapeScale),
     });
     smokes.push({
       x: detX,
       y: detY,
       t: 0,
-      life: 1360,
-      radius: 55,
+      // CHANGED: compact pattern bursts do not leave full-size, long-lived smoke.
+      life: Math.max(90, Math.round(1360 * cfg.shapeScale)),
+      radius: 55 * Math.max(0.2, cfg.shapeScale),
     });
-    flashFrames = Math.max(flashFrames, 3);
+    // CHANGED: immediate pop, then a short low glow with quick dissipation.
+    if (cfg.shapeScale >= 0.25) {
+      flashes.push({
+        t: 0,
+        // CHANGED: immediate pop, then a short low glow with quick dissipation.
+        dropFrames: 1,
+        holdFrames: 4,
+        fadeFrames: 24,
+        // CHANGED: stronger detonation peak; reflected tail remains unchanged.
+        peakAlpha: 0.065,
+        tailAlpha: 0.006,
+      });
+    }
     ensure_loop();
   }
 
@@ -292,7 +333,8 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     rafId = null;
     // global trails (keeps things coherent when many fireworks overlap)
     // (per-firework trailFade could be added, but global is usually enough + faster)
-    if (live.length === 0 && pops.length === 0 && smokes.length === 0 && flashFrames <= 0) {
+    if (live.length === 0 && pops.length === 0 && smokes.length === 0 && flashes.length === 0) {
+      flashEl.style.opacity = "0";
       return;
     }
     ctx.globalCompositeOperation = "destination-out";
@@ -302,14 +344,38 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
 
-    if (flashFrames > 0) {
-      const flashAlpha = 0.055 * (flashFrames / 3);
-      ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = `rgba(255,255,245,${flashAlpha})`;
-      ctx.fillRect(0, 0, W, H);
-      ctx.globalCompositeOperation = "lighter";
-      flashFrames -= 1;
+    let flashAlpha = 0;
+
+    for (let i = flashes.length - 1; i >= 0; i -= 1) {
+      const flash = flashes[i]!;
+      const fadeStart = flash.dropFrames + flash.holdFrames;
+      const totalFrames = fadeStart + flash.fadeFrames;
+      let alpha = 0;
+
+      if (flash.t < flash.dropFrames) {
+        // CHANGED: cubic snap-down makes the bright pop effectively immediate.
+        const k = flash.t / Math.max(1, flash.dropFrames);
+        alpha = flash.tailAlpha
+          + (flash.peakAlpha - flash.tailAlpha) * Math.pow(1 - k, 3);
+      } else if (flash.t < fadeStart) {
+        // CHANGED: brief low plateau reads as reflected light rather than another flash.
+        alpha = flash.tailAlpha;
+      } else if (flash.t < totalFrames) {
+        // CHANGED: eased tail lingers softly, then disappears without a linear ramp.
+        const k = (flash.t - fadeStart) / Math.max(1, flash.fadeFrames);
+        const eased = 1 - (k * k * (3 - 2 * k));
+        alpha = flash.tailAlpha * eased;
+      }
+
+      // CHANGED: simultaneous firework layers share one flash instead of stacking brighter.
+      flashAlpha = Math.max(flashAlpha, alpha);
+      flash.t += 1;
+      if (flash.t >= totalFrames) flashes.splice(i, 1);
     }
+
+    // CHANGED: DOM opacity is non-persistent, so the flash appears immediately
+    // and follows the envelope exactly instead of accreting in the trail buffer.
+    flashEl.style.opacity = String(Math.min(0.065, flashAlpha));
 
     for (let p = pops.length - 1; p >= 0; p -= 1) {
       const pop = pops[p]!;
@@ -426,7 +492,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
       smoke.t += 1;
       if (smoke.t > smoke.life) smokes.splice(s, 1);
     }
-    if (live.length > 0 || pops.length > 0 || smokes.length > 0 || flashFrames > 0) {
+    if (live.length > 0 || pops.length > 0 || smokes.length > 0 || flashes.length > 0) {
       rafId = requestAnimationFrame(render_frame);
     }
   }
@@ -473,11 +539,10 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     const add = steps * randInt(30, 55);
     const count = Math.min(2000, baseCount + add + layer * randInt(60, 140));
 
-    // Visual origin: roughly the HSON logo area during splash.
-    // The frozen WASM burst shape currently reads visually up-left of its numeric
-    // origin, so bias the configured origin down/right to land near 50% / 25%.
+    // CHANGED: once the fixed WASM field is centered correctly, the configured
+    // origin can be the actual viewport center rather than a rightward correction.
     const logoSpreadX = Math.min(170, W * 0.14);
-    const originX = Math.floor(W * 0.75 + rand(-logoSpreadX, logoSpreadX));
+    const originX = Math.floor(W * 0.5 + rand(-logoSpreadX, logoSpreadX));
     const originY = Math.floor((H * 0.40) + SKY_LIFT_PX + rand(-H * 0.03, H * 0.03));
 
     const peakMode = pick(["early", "mid", "late"] as const);
@@ -490,6 +555,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
       originY,
       angleRad: angle,
       speed: speedBase * rand(0.92, 1.18),
+      shapeScale: 1,
       hueBase,
       hueDrift,
       trailFade: rand(0.08, 0.14),
@@ -589,6 +655,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     clear_layer_timers();
 
     if (rafId !== null) cancelAnimationFrame(rafId);
+    flashLt.removeSelf();
     canvasLt.removeSelf();
   };
 

@@ -1,6 +1,6 @@
 // mount-demo.ts
 
-import { LiveTree, CssManager } from "hson-live";
+import { LiveTree } from "hson-live";
 import type { SvgLiveTree } from "hson-live/types";
 import { relay_data, relay_void, type OutcomeAsync, relay } from "intrastructure";
 import { _colors } from "../../core/consts/colors.consts";
@@ -36,15 +36,29 @@ import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TES
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
-import { mount_firework } from "../../widgets/wasm-deprecate/hson-wasm-fireworks";
+import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
 import { smoke_test_harness } from "../../demos/test/test-smoke";
+import { bud_node } from "../../widgets/buds-deprecate/bud-config";
+import { SPLASH_BUDS } from "../phase-2-splash/splash.buds";
+import { begin_star } from "../phase-2-splash/mount-splash";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 type DemoMenuView = Exclude<DemoView, null>;
 type MenuButtons = Record<MenuKey, LiveTree>;
 type ViewHosts = Partial<Record<DemoMenuView, LiveTree>>;
-type WidgetHosts = Partial<Record<DemoWidget, LiveTree>>;
+type WidgetHostGroup = readonly LiveTree[];
+type WidgetHosts = Partial<Record<DemoWidget, WidgetHostGroup>>;
+
+
+type DemoStateController = Readonly<{
+  // The schema-bound store LiveMap is the single interaction state authority.
+  getView: () => DemoView;
+  setView: (view: DemoMenuView) => void;
+  toggleView: (view: DemoMenuView) => void;
+  toggleWidget: (widget: DemoWidget) => void;
+  deactivateWidget: (widget: DemoWidget) => void;
+}>;
 
 type DemoShell = {
   demoLayer: LiveTree;
@@ -52,7 +66,7 @@ type DemoShell = {
   fleurLayer: LiveTree;
   fleurField: SvgLiveTree;
   uiRoot: LiveTree;
-  graf: LiveTree;
+  graffitiLayer: LiveTree;
   menuContainer: LiveTree;
   motesLayer: LiveTree;
 };
@@ -79,6 +93,8 @@ type ParseCandidate = {
   fmt: Fmt;
   text: string;
 };
+
+let stopDemoMount: (() => void) | undefined;
 
 const _hide = (lt: LiveTree): void => { lt.classlist.add($PANEL_HIDDEN); };
 const _unhide = (lt: LiveTree): void => { lt.classlist.remove($PANEL_HIDDEN); };
@@ -122,7 +138,7 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 
   mk_div_id(screen, "fx-layer").css.setMany(FX_LAYERcss);
 
-  const graf = mk_div_id(screen, "graffiti-layer")
+  const graffitiLayer = mk_div_id(screen, "graffiti-layer")
     .text.set(HSON_LIVE_GRAFFITIstr)
     .css.setMany(HSON_GRAFFITIcss);
 
@@ -156,7 +172,7 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 
   sync_fleur_viewbox(fleurLayer, fleurField);
 
-  return { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graf };
+  return { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graffitiLayer };
 }
 
 function create_demo_wordmark(menuContainer: LiveTree): void {
@@ -198,7 +214,7 @@ function create_demo_menu(menuBox: LiveTree): MenuButtons {
   return menu;
 }
 
-function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer: LiveTree): DemoHosts {
+function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer: LiveTree, graf: LiveTree): DemoHosts {
   const pointSlot = mk_div_id(menuContainer, "mouse-slot").css.setMany(POINT_SLOTcss);
   const pointHost = mk_div_id_cls(pointSlot, "mouse-host", $PANEL_HIDDEN).css.setMany(POINT_HOSTcss);
   const parseHost = mount_panel_simple(uiRoot, $PARSE);
@@ -222,9 +238,9 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   };
 
   const widgetHosts: WidgetHosts = {
-    [$POINT]: pointHost,
-    [$OKLCH]: oklchHost,
-    [$MOTES]: motesLayer,
+    [$POINT]: [pointHost],
+    [$OKLCH]: [oklchHost],
+    [$MOTES]: [motesLayer, graf],
   };
 
   return {
@@ -324,10 +340,12 @@ function sync_demo_visibility(viewHosts: ViewHosts, widgetHosts: WidgetHosts, vi
   if (activeHost) _unhide(activeHost);
 
   WIDGET_MENU_KEYS.forEach((key) => {
-    const host = widgetHosts[key];
-    if (!host) return;
-    if (widgets.includes(key)) _unhide(host);
-    else _hide(host);
+    const hosts = widgetHosts[key];
+    if (!hosts) return;
+    hosts.forEach((host) => {
+      if (widgets.includes(key)) _unhide(host);
+      else _hide(host);
+    });
   });
 }
 
@@ -340,28 +358,32 @@ function apply_menu_active(menu: MenuButtons, view: DemoView, widgets: readonly 
   });
 }
 
-function wire_demo_menu(menu: MenuButtons, fleurField: SvgLiveTree): void {
+function wire_demo_menu(menu: MenuButtons, fleurField: SvgLiveTree, controller: DemoStateController): void {
   MENU_OPTIONS.forEach((key) => {
     menu[key].listen.stopProp().onClick(() => {
       if (is_widget_menu_key(key)) {
-        toggle_widget(key);
+        controller.toggleWidget(key);
         return;
       }
 
       if (!is_demo_menu_key(key)) return;
-      if (key === $FLEURS && get_view() === $FLEURS) fleurField.empty();
-      toggle_view(key);
+      if (key === $FLEURS && controller.getView() === $FLEURS) fleurField.empty();
+      controller.toggleView(key);
     });
   });
 }
 
 export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
+  // CHANGED: release remount-persistent bindings before rebuilding the demo tree.
+  stopDemoMount?.();
+  stopDemoMount = undefined;
+
   stage.empty();
 
   seed_demo_theme_vars();
 
   const shell = create_demo_shell(stage);
-  const { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graf } = shell;
+  const { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graffitiLayer } = shell;
 
   create_demo_wordmark(menuContainer);
 
@@ -370,7 +392,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   set_global_css();
 
-  const hosts = create_demo_hosts(uiRoot, menuContainer, motesLayer);
+  const hosts = create_demo_hosts(uiRoot, menuContainer, motesLayer, graffitiLayer);
   const { viewHosts, widgetHosts } = hosts;
 
   const content = mount_demo_content(hosts);
@@ -379,6 +401,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   mount_deck(stage);
   activate_widget($MOTES);
   sync_fleur_viewbox(fleurLayer, fleurField);
+  const demoController: DemoStateController = {
+    getView: get_view,
+    setView: set_view,
+    toggleView: toggle_view,
+    toggleWidget: toggle_widget,
+    deactivateWidget: deactivate_widget,
+  };
 
   const applyView = (): void => {
     const view = get_view();
@@ -388,11 +417,13 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     apply_menu_active(menu, view, widgets);
   };
 
-  demo_subscribe_view_state(() => applyView());
+  // CHANGED: render directly from the store's schema-bound LiveMap.
+  const stopStoreBindings = demo_subscribe_view_state(applyView);
+  stopDemoMount = stopStoreBindings;
   applyView();
 
   await after_paint();
-  if (is_mobile_demo_width(stage)) set_view("fleurs");
+  if (is_mobile_demo_width(stage)) demoController.setView($FLEURS);
   sync_fleur_viewbox(fleurLayer, fleurField);
 
   screen.css.setMany({
@@ -401,17 +432,34 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     }
   });
 
-  wire_demo_menu(menu, fleurField);
+  wire_demo_menu(menu, fleurField, demoController);
 
-  demoLayer.listen.document.onKeyDown((ke) => {
-    if (ke.key === "Escape") {
-      deactivate_widget($OKLCH);
-      deactivate_widget($POINT);
+  // CHANGED: use an explicit document listener so remount teardown can remove it.
+  const onDocumentKeyDown = (ke: KeyboardEvent): void => {
+    if (ke.key === "q") {
+      const frame = bud_node(graffitiLayer);
+      const starCarrier = frame.bud(SPLASH_BUDS.starCarrier);
+      const starWrap = starCarrier.bud(SPLASH_BUDS.starWrap);
+      const starHead = starWrap.bud(SPLASH_BUDS.starHead);
+      const tailA = starWrap.bud(SPLASH_BUDS.starTailA);
+      const tailB = starWrap.bud(SPLASH_BUDS.starTailB);
+      const tailC = starWrap.bud(SPLASH_BUDS.starTailC);
+      begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
     }
-  });
+    if (ke.key !== "Escape") return;
+    demoController.deactivateWidget($OKLCH);
+    demoController.deactivateWidget($POINT);
+  };
+
+  document.addEventListener("keydown", onDocumentKeyDown);
+
+  stopDemoMount = () => {
+    stopStoreBindings();
+    document.removeEventListener("keydown", onDocumentKeyDown);
+  };
 
   screen.listen.onClick((ev: MouseEvent) => {
-    if (get_view() !== "fleurs") return;
+    if (demoController.getView() !== $FLEURS) return;
 
     const rect = fleurLayer.dom.rect();
     if (!rect) return;
@@ -421,6 +469,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
     void spawn_flower(fleurField, x, y);
   });
+
 
   mount_firework(screen);
   void smoke_test_harness().catch((error) => {

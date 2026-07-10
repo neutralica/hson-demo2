@@ -16,7 +16,7 @@ import { create_clouds } from "./make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
 import { _colors } from "../../core/consts/colors.consts";
-import { mount_firework } from "../../widgets/wasm-deprecate/hson-wasm-fireworks";
+import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
 import { make_rng } from "../../utils/rng";
 
 
@@ -116,9 +116,9 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });
 
     await wait.for(h).anim(NEON_FLASHanim).end()
-        begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
+    begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
     ver.css.anim.begin(VERanim);
-     for (let i = 0; i < 15; i++){
+    for (let i = 0; i < 15; i++) {
         const rng = Math.random() * 2000;
         setTimeout(() => {
             sparkles.fire(2)
@@ -135,7 +135,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 }
 
 
-function begin_star(
+export function begin_star(
     carrier: LiveTree,
     head: LiveTree,
     tailA: LiveTree,

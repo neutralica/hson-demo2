@@ -122,13 +122,13 @@ export const SPLASHkfs = [
     steps: {
       "0%": { opacity: "0" },
       "6%": { opacity: "1" },   // fade in quickly
-      "16%": { opacity: ".2" },   // fade in quickly
-      "36%": { opacity: ".4" },   // fade in quickly
+      "16%": { opacity: ".9" },   // fade in quickly
+      "36%": { opacity: ".7" },   // fade in quickly
       "56%": { opacity: "1" },   // fade in quickly
-      "71%": { opacity: ".3" },   // fade in quickly
-      "75%": { opacity: "0" },   // stay on
-      "90%": { opacity: "0" },   // fade out
-      "100%": { opacity: "0" },
+      "71%": { opacity: ".8" },   // fade in quickly
+      "75%": { opacity: "0.9" },   // stay on
+      "90%": { opacity: "0.7" },   // fade out
+      "100%": { opacity: "0.9" },
     },
   },
 
