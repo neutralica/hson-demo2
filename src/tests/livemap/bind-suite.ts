@@ -23,6 +23,9 @@ export function livemap_bind_suite(): TestSuite {
             make_bind_attr_mapper_case(SUITE),
             make_bind_paths_style_bridge_case(SUITE),
             make_bind_paths_dispose_case(SUITE),
+            make_bind_text_paths_case(SUITE),
+            make_bind_attrs_paths_case(SUITE),
+            make_bind_css_paths_case(SUITE),
             make_bind_path_case(SUITE),
             make_bind_paths_case(SUITE),
             make_bind_dispose_case(SUITE),
@@ -434,6 +437,133 @@ function make_bind_paths_dispose_case(suite: string): TestCase {
                     equal_row("disposed bind.paths does not react to either path", text.text.get(), "one/two"),
                 ],
             };
+        },
+    };
+}
+
+function make_bind_text_paths_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.textPaths maps multiple paths to text",
+        meta: {
+            input: preview_value({ first: "one", second: "two" }),
+            paths: preview_value([["first"], ["second"]]),
+        },
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const text = host.create.span();
+            const map = hson.liveMap.fromJson({ first: "one", second: "two" });
+            const seen: string[] = [];
+
+            const dispose = text.bind.textPaths(map, [["first"], ["second"]], (values, previous) => {
+                const prev = previous ? `${String(previous[0] ?? "")}/${String(previous[1] ?? "")}` : "unset";
+                const next = `${String(values[0] ?? "")}/${String(values[1] ?? "")}`;
+                seen.push(`${prev}→${next}`);
+                return next;
+            });
+
+            const initial = text.text.get();
+            map.at(["second"]).set("three");
+
+            const rows = [
+                equal_row("initial textPaths value is applied", initial, "one/two"),
+                equal_row("updated textPaths value is applied", text.text.get(), "one/three"),
+                equal_row("initial textPaths mapper has no previous values", seen[0], "unset→one/two"),
+                equal_row("updated textPaths mapper receives previous values", seen[1], "one/two→one/three"),
+            ];
+            dispose();
+
+            return { assertRows: rows };
+        },
+    };
+}
+
+function make_bind_attrs_paths_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.attrsPaths maps multiple paths to attrs",
+        meta: {
+            input: preview_value({ hoveredId: null, selectedId: "about" }),
+            paths: preview_value([["hoveredId"], ["selectedId"]]),
+        },
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const button = host.create.button();
+            const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
+            const id = "about";
+
+            const dispose = button.bind.attrsPaths(map, [["hoveredId"], ["selectedId"]], (values) => {
+                const hovered = values[0] === id;
+                const selected = values[1] === id;
+                return {
+                    "aria-current": selected ? "page" : null,
+                    "data-hovered": hovered ? "yes" : null,
+                };
+            });
+
+            const initialCurrent = button.attr.get("aria-current");
+            const initialHovered = button.attr.has("data-hovered");
+            map.at(["hoveredId"]).set("about");
+            const hoverValue = button.attr.get("data-hovered");
+            map.at(["selectedId"]).set("parse");
+            map.at(["hoveredId"]).set(null);
+
+            const rows = [
+                equal_row("initial attrsPaths selected attr is set", initialCurrent, "page"),
+                equal_row("initial attrsPaths hover attr is absent", initialHovered, false),
+                equal_row("hover attrsPaths attr appears", hoverValue, "yes"),
+                equal_row("selected attrsPaths attr is dropped", button.attr.has("aria-current"), false),
+                equal_row("hover attrsPaths attr is dropped", button.attr.has("data-hovered"), false),
+            ];
+            dispose();
+
+            return { assertRows: rows };
+        },
+    };
+}
+
+function make_bind_css_paths_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.cssPaths maps multiple paths to css",
+        meta: {
+            input: preview_value({ hoveredId: null, selectedId: "about" }),
+            paths: preview_value([["hoveredId"], ["selectedId"]]),
+        },
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const button = host.create.button();
+            const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
+            const id = "about";
+
+            const dispose = button.bind.cssPaths(map, [["hoveredId"], ["selectedId"]], (values) => {
+                const hovered = values[0] === id;
+                const selected = values[1] === id;
+                return {
+                    opacity: hovered ? "1" : selected ? "0.85" : "0.45",
+                    transform: hovered ? "scale(1.02)" : null,
+                };
+            });
+
+            const initialOpacity = button.css.get.property("opacity");
+            const initialTransform = button.css.get.property("transform");
+            map.at(["hoveredId"]).set("about");
+            const hoverOpacity = button.css.get.property("opacity");
+            const hoverTransform = button.css.get.property("transform");
+            map.at(["selectedId"]).set("parse");
+            map.at(["hoveredId"]).set(null);
+
+            const rows = [
+                equal_row("initial cssPaths selected value is set", initialOpacity, "0.85"),
+                equal_row("initial cssPaths nullable value is absent", initialTransform, undefined),
+                equal_row("hover cssPaths value updates", hoverOpacity, "1"),
+                equal_row("hover cssPaths nullable value appears", hoverTransform, "scale(1.02)"),
+                equal_row("unselected cssPaths value updates", button.css.get.property("opacity"), "0.45"),
+                equal_row("unhovered cssPaths nullable value is removed", button.css.get.property("transform"), undefined),
+            ];
+            dispose();
+
+            return { assertRows: rows };
         },
     };
 }
