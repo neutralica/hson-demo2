@@ -61,7 +61,7 @@ export function livehost_protocol_suite(): TestSuite {
           lastSeq: undefined,
         },
       }),
-            read_case({
+      read_case({
         suite: SUITE,
         name: "decode accepts zero hello lastSeq",
         input: {},
@@ -81,6 +81,62 @@ export function livehost_protocol_suite(): TestSuite {
         expected: {
           ok: true,
           type: "hello",
+          lastSeq: 0,
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode accepts hello hostId",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "hello",
+            clientId: "client-a",
+            hostId: "counter-a",
+            lastSeq: 0,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
+            hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
+            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "hello",
+          clientId: "client-a",
+          hostId: "counter-a",
+          lastSeq: 0,
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "decode ignores invalid hello hostId",
+        input: {},
+        act: () => {
+          const decoded = decode_livehost_message(JSON.stringify({
+            type: "hello",
+            clientId: "client-a",
+            hostId: 123,
+            lastSeq: 0,
+          }));
+
+          return {
+            ok: decoded.ok,
+            type: decoded.ok ? decoded.value.type : undefined,
+            clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
+            hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
+            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+          };
+        },
+        expected: {
+          ok: true,
+          type: "hello",
+          clientId: "client-a",
+          hostId: undefined,
           lastSeq: 0,
         },
       }),
@@ -530,7 +586,7 @@ export function livehost_protocol_suite(): TestSuite {
           message: "LiveHost unsubscribe message requires path.",
         },
       }),
-            read_case({
+      read_case({
         suite: SUITE,
         name: "encode serializes error messages as json",
         input: {},
