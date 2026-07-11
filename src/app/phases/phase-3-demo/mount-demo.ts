@@ -41,7 +41,7 @@ import { smoke_test_harness } from "../../demos/test/test-smoke";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "../phase-2-splash/splash.buds";
 import { begin_star } from "../phase-2-splash/mount-splash";
-import { make_amoeba } from "../../demos/amoeba/make-amoeba";
+import { make_amoebi } from "../../demos/amoeba/make-amoebi";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -462,7 +462,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
 
-  make_amoeba(screen);
+  make_amoebi(screen);
   mount_firework(screen);
   void smoke_test_harness().catch((error) => {
     console.error("[test-smoke]", error);

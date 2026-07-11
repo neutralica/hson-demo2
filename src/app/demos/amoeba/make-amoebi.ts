@@ -1,4 +1,4 @@
-// make-amoeba.ts
+// make-amoebi.ts
 
 import { hson, type LiveTree } from "hson-live";
 import type { JsonValue, LiveMap, SvgLiveTree } from "hson-live/types";
@@ -15,16 +15,10 @@ type AmoebaButtonInput = Readonly<{
   tone: string;
 }>;
 
-type AmoebaCell = Readonly<{
-  id: string;
-  q: number;
-  r: number;
-}>;
 
 type AmoebaButtonLayout = Readonly<{
   id: string;
   label: string;
-  cells: AmoebaCell[];
   path: string;
   cx: number;
   cy: number;
@@ -32,11 +26,8 @@ type AmoebaButtonLayout = Readonly<{
 }>;
 
 type AmoebaState = {
-  seed: number;
-  hexSize: number;
   selectedId: string;
   hoveredId: string | null;
-  buttons: AmoebaButtonInput[];
   layout: AmoebaButtonLayout[];
 };
 
@@ -107,6 +98,12 @@ const SVG_CSS: Readonly<Record<string, string>> = Object.freeze({
   height: "100%",
   overflow: "visible",
   filter: `drop-shadow(0 18px 26px ${set_alpha(OKLCH_NEUTRALS.black, 0.28)})`,
+});
+
+const PATH_BASE_CSS: Readonly<Record<string, string>> = Object.freeze({
+  cursor: "pointer",
+  transition: "fill 120ms ease, stroke 120ms ease, stroke-width 120ms ease, filter 120ms ease",
+  vectorEffect: "non-scaling-stroke",
 });
 
 function key_of(coord: HexCoord): string {
@@ -436,7 +433,6 @@ function make_layout(buttons: AmoebaButtonInput[], seed: number): AmoebaButtonLa
     return {
       id: button.id,
       label: button.label,
-      cells: coords.map((coord) => ({ id: button.id, q: coord.q, r: coord.r })),
       path: path_for_cells(coords, HEX_SIZE),
       cx: labelCenter.x,
       cy: labelCenter.y,
@@ -447,11 +443,8 @@ function make_layout(buttons: AmoebaButtonInput[], seed: number): AmoebaButtonLa
 
 function make_initial_state(seed: number): AmoebaState {
   return {
-    seed,
-    hexSize: HEX_SIZE,
     selectedId: BUTTONS[0]?.id ?? "",
     hoveredId: null,
-    buttons: BUTTONS.map((button) => ({ ...button })),
     layout: make_layout(BUTTONS, seed),
   };
 }
@@ -459,6 +452,7 @@ function make_initial_state(seed: number): AmoebaState {
 function make_seed(): number {
   return Math.floor((Date.now() ^ Math.floor(Math.random() * 1000000)) >>> 0);
 }
+
 
 function set_svg_text_style(text: SvgLiveTree): void {
   text.css.setMany({
@@ -474,16 +468,23 @@ function set_svg_text_style(text: SvgLiveTree): void {
   });
 }
 
+function amoeba_path_css(button: AmoebaButtonLayout, hoveredId: JsonValue | undefined, selectedId: JsonValue | undefined): Readonly<Record<string, string>> {
+  const hovered = hoveredId === button.id;
+  const selected = selectedId === button.id;
+
+  return {
+    fill: set_alpha(button.tone, hovered ? 0.29 : selected ? 0.27 : 0.22),
+    stroke: hovered ? button.tone : set_alpha(button.tone, selected ? 0.9 : 0.66),
+    strokeWidth: hovered ? "2.4" : selected ? "1.7" : "1.35",
+    filter: hovered ? `drop-shadow(0 0 8px ${set_alpha(button.tone, 0.22)})` : "none",
+  };
+}
+
 function render_amoeba(svg: SvgLiveTree, map: LiveMap<AmoebaState>): void {
   svg.empty();
   const state = map.snap();
 
   state.layout.forEach((button) => {
-    const selected = state.selectedId === button.id;
-    const hovered = state.hoveredId === button.id;
-    const fill = set_alpha(button.tone, hovered ? 0.29 : selected ? 0.27 : 0.22);
-    const stroke = hovered ? button.tone : set_alpha(button.tone, selected ? 0.9 : 0.66);
-
     const path = svg.create.path()
       .attr.setMany({
         d: button.path,
@@ -492,39 +493,15 @@ function render_amoeba(svg: SvgLiveTree, map: LiveMap<AmoebaState>): void {
         "aria-label": button.label,
         "data-amoeba-id": button.id,
       })
-      .css.setMany({
-        fill,
-        stroke,
-        strokeWidth: hovered ? "2.4" : selected ? "1.7" : "1.35",
-        cursor: "pointer",
-        transition: "fill 120ms ease, stroke 120ms ease, stroke-width 120ms ease, filter 120ms ease",
-        vectorEffect: "non-scaling-stroke",
-        filter: hovered ? `drop-shadow(0 0 8px ${set_alpha(button.tone, 0.22)})` : "none",
-      });
+      .css.setMany(PATH_BASE_CSS);
 
-    path.listen.on("pointerenter", () => {
-      map.at(["hoveredId"]).set(button.id);
-      path.css.setMany({
-        fill: set_alpha(button.tone, 0.29),
-        stroke: button.tone,
-        strokeWidth: "2.4",
-        filter: `drop-shadow(0 0 8px ${set_alpha(button.tone, 0.22)})`,
-      });
+    path.bind.paths(map, [["hoveredId"], ["selectedId"]], (tree, values) => {
+      tree.css.setMany(amoeba_path_css(button, values[0], values[1]));
     });
-    path.listen.on("pointerleave", () => {
-      map.at(["hoveredId"]).set(null);
-      const current = map.snap();
-      const isSelected = current.selectedId === button.id;
-      path.css.setMany({
-        fill: set_alpha(button.tone, isSelected ? 0.27 : 0.22),
-        stroke: set_alpha(button.tone, isSelected ? 0.9 : 0.66),
-        strokeWidth: isSelected ? "1.7" : "1.35",
-        filter: "none",
-      });
-    });
-    path.listen.onClick(() => {
-      map.at(["selectedId"]).set(button.id);
-    });
+
+    path.listen.on("pointerenter", () => map.at(["hoveredId"]).set(button.id));
+    path.listen.on("pointerleave", () => map.at(["hoveredId"]).set(null));
+    path.listen.onClick(() => map.at(["selectedId"]).set(button.id));
 
     const label = svg.create.text()
       .text.set(button.label)
@@ -536,10 +513,10 @@ function render_amoeba(svg: SvgLiveTree, map: LiveMap<AmoebaState>): void {
   });
 }
 
-export function make_amoeba(stage: LiveTree): void {
+export function make_amoebi(stage: LiveTree): void {
   const root = stage.create.div()
-    .id.set("amoeba-menu-demo")
-    .classlist.add("amoeba-menu-demo")
+    .id.set("amoebi-menu-demo")
+    .classlist.add("amoebi-menu-demo")
     .css.setMany(ROOT_CSS);
 
   root.create.div()
@@ -552,7 +529,7 @@ export function make_amoeba(stage: LiveTree): void {
       viewBox: `0 0 ${AMOEBA_W} ${AMOEBA_H}`,
       preserveAspectRatio: "xMidYMid meet",
       role: "group",
-      "aria-label": "Amoeba menu sketch",
+      "aria-label": "Amoebi menu experiment",
     })
     .css.setMany(SVG_CSS);
 
