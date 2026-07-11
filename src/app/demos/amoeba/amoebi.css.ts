@@ -1,15 +1,17 @@
 import type { CssMap } from "hson-live/types";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
+import { _colors } from "../../core/consts/colors.consts";
 
 export const AMOEBI_ROOTcss: CssMap = {
   position: "absolute",
-  left: "clamp(28px, 5vw, 80px)",
-  top: "clamp(150px, 18vh, 210px)",
+  left: "15%",
+  top: "20%",
   width: "min(760px, 62vw)",
   height: "min(570px, 64vh)",
   pointerEvents: "auto",
   zIndex: "4",
+  background: _colors.backlo,
 }
 export const AMOEBI_TITLEcss: CssMap = {
   position: "absolute",
