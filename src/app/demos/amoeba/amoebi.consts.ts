@@ -7,6 +7,7 @@ export const HEX_SIZE = 13;
 export const SQRT3 = Math.sqrt(3);
 export const BUTTON_BASE_SPAN = 5;
 export const BUTTON_BASE_DEPTH = 1;
+
 export const BUTTONS: AmoebaButtonInput[] = [
   { id: "about", label: "about", tone: _colors.txt.menu },
   { id: "test", label: "test", tone: _colors.hson.h },
@@ -18,7 +19,9 @@ export const BUTTONS: AmoebaButtonInput[] = [
   { id: "point", label: "point", tone: _colors.hson.h },
   { id: "oklch", label: "oklch", tone: _colors.hson.o },
   { id: "motes", label: "motes", tone: _colors.hson.n },
-];export const TARGETS: readonly Point[] = Object.freeze([
+];
+
+export const TARGETS: readonly Point[] = Object.freeze([
   { x: 214, y: 92 },
   { x: 404, y: 102 },
   { x: 252, y: 172 },
@@ -30,4 +33,5 @@ export const BUTTONS: AmoebaButtonInput[] = [
   { x: 326, y: 468 },
   { x: 502, y: 474 },
 ]);
+
 

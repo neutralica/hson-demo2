@@ -42,6 +42,7 @@ import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "../phase-2-splash/splash.buds";
 import { begin_star } from "../phase-2-splash/mount-splash";
 import { make_amoebi } from "../../demos/amoeba/make-amoebi";
+import { type AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -106,6 +107,25 @@ function is_widget_menu_key(key: MenuKey): key is DemoWidget {
 
 function is_demo_menu_key(key: MenuKey): key is DemoMenuView {
   return !is_widget_menu_key(key);
+}
+
+function menu_key_from_id(id: string): MenuKey | undefined {
+  return (MENU_OPTIONS as readonly string[]).includes(id) ? id as MenuKey : undefined;
+}
+
+function active_menu_ids(view: DemoView, widgets: readonly DemoWidget[]): readonly string[] {
+  return [
+    ...(view ? [view] : []),
+    ...widgets,
+  ];
+}
+
+function amoebi_menu_items(): readonly AmoebiMenuItem[] {
+  return MENU_OPTIONS.map((key) => ({
+    id: key,
+    label: key,
+    tone: is_widget_menu_key(key) ? _colors.txt.widget : _colors.txt.menu,
+  }));
 }
 
 function after_paint(): Promise<void> {
@@ -389,7 +409,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   create_demo_wordmark(menuContainer);
 
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
-  const menu = create_demo_menu(menuBox);
 
   set_global_css();
 
@@ -409,13 +428,31 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     toggleWidget: toggle_widget,
     deactivateWidget: deactivate_widget,
   };
+  const amoebiMenu = make_amoebi(menuBox, {
+    items: amoebi_menu_items(),
+    activeIds: active_menu_ids(get_view(), get_widgets() ?? []),
+    showTitle: false,
+    ariaLabel: "Demo navigation",
+    onToggle: (id) => {
+      const key = menu_key_from_id(id);
+      if (!key) return;
 
+      if (is_widget_menu_key(key)) {
+        demoController.toggleWidget(key);
+        return;
+      }
+
+      if (!is_demo_menu_key(key)) return;
+      if (key === $FLEURS && demoController.getView() === $FLEURS) fleurField.empty();
+      demoController.toggleView(key);
+    },
+  });
   const applyView = (): void => {
     const view = get_view();
     const widgets = get_widgets() ?? [];
 
     sync_demo_visibility(viewHosts, widgetHosts, view, widgets);
-    apply_menu_active(menu, view, widgets);
+    amoebiMenu.setActiveIds(active_menu_ids(view, widgets));
   };
 
   // CHANGED: render directly from the store's schema-bound LiveMap.
@@ -433,7 +470,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     }
   });
 
-  wire_demo_menu(menu, fleurField, demoController);
 
   // CHANGED: use an explicit document listener so remount teardown can remove it.
   const onDocumentKeyDown = (ke: KeyboardEvent): void => {
@@ -441,7 +477,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     demoController.deactivateWidget($OKLCH);
     demoController.deactivateWidget($POINT);
   };
-  
+
   document.addEventListener("keydown", onDocumentKeyDown);
 
   stopDemoMount = () => {
@@ -462,7 +498,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   });
 
 
-  make_amoebi(screen);
   mount_firework(screen);
   void smoke_test_harness().catch((error) => {
     console.error("[test-smoke]", error);

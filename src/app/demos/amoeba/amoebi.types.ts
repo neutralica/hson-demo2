@@ -1,3 +1,8 @@
+import type { LiveTree } from "hson-live";
+import type { SvgLiveTree } from "hson-live/types";
+
+
+
 export type HexCoord = Readonly<{ q: number; r: number; }>;
 export type Point = Readonly<{ x: number; y: number; }>;
 export type AmoebaButtonInput = Readonly<{
@@ -18,3 +23,41 @@ export type AmoebaState = {
   hoveredId: string | null;
   layout: AmoebaButtonLayout[];
 };
+// === AmoebiMenu API types ===
+
+export type AmoebiMenuItem = AmoebaButtonInput;
+
+export type AmoebiMenuApi = Readonly<{
+  root: LiveTree;
+  setActiveIds: (ids: readonly string[]) => void;
+  getActiveIds: () => readonly string[];
+  setHoveredId: (id: string | null) => void;
+}>;
+
+export type AmoebiMenuOptions = Readonly<{
+  items?: readonly AmoebiMenuItem[];
+  activeIds?: readonly string[];
+  onToggle?: (id: string, nextActiveIds: readonly string[]) => void;
+  title?: string;
+  showTitle?: boolean;
+  ariaLabel?: string;
+  seed?: number;
+}>;
+
+export type AmoebiTileParts = Readonly<{
+  button: AmoebiRenderButton;
+  index: number;
+  body: SvgLiveTree;
+  cells: readonly SvgLiveTree[];
+  target: SvgLiveTree;
+  label: SvgLiveTree;
+}>;
+
+export type AmoebiRenderButton = AmoebaButtonLayout & Readonly<{
+  cells: readonly HexCoord[];
+}>;
+export type AmoebiRenderState = Omit<AmoebaState, "layout"> & Readonly<{
+  activeIds: readonly string[];
+  layout: readonly AmoebiRenderButton[];
+}>;
+

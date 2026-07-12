@@ -5,20 +5,19 @@ import { _colors } from "../../core/consts/colors.consts";
 
 export const AMOEBI_ROOTcss: CssMap = {
   position: "absolute",
-  left: "15%",
+  left: "0",
   top: "20%",
   width: "min(760px, 62vw)",
   height: "min(570px, 64vh)",
   pointerEvents: "auto",
   zIndex: "4",
-  background: _colors.backlo,
 }
 export const AMOEBI_TITLEcss: CssMap = {
   position: "absolute",
   left: "10px",
   top: "0",
   fontFamily: "DM Mono, Inconsolata, monospace",
-  fontSize: "10px",
+  fontSize: "20px",
   letterSpacing: "0.16em",
   textTransform: "uppercase",
   color: set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.72),
