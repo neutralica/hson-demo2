@@ -19,6 +19,7 @@ import { livemap_suites_quid } from "../../../tests/livemap/quid-suite";
 import { livemap_editor_contract } from "../../../tests/livemap/editor-contract-tests";
 import { livetree_quid_level_2 } from "../../../tests/livetree/livetree-25-regression-2";
 import { all_livehost_suites } from "../../../tests/livehost/all-livehost-suites";
+import { livemap_suite_revision } from "../../../tests/livemap/revision-suites";
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
@@ -57,7 +58,7 @@ export function make_ad_hoc_transform_suite(
 }] */
 const GENERATED_JSON_SEED = random_seed();
 
-export function build_suites_for_mode(
+export function all_test_suites(
   mode: TestRunMode,
   h: Readonly<{ _circuit_test: FullLoopFn }>,
   map?: Map<CaseKey, () => Promise<LoopReport>>,
@@ -100,6 +101,7 @@ export function build_suites_for_mode(
   if (mode === "dev") {
     return _freeze([
       livetree_quid_level_2(),
+livemap_suite_revision(),
 
     ]);
   }

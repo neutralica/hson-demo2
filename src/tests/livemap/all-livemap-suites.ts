@@ -30,6 +30,7 @@ import { livemap_misc_suite } from "./misc-suite";
 import { livemap_suites_quid } from "./quid-suite";
 import { livemap_bind_suite } from "./bind-suite";
 import { livemap_error_handling } from "./error-handling-suite";
+import { livemap_suite_revision } from "./revision-suites";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -107,6 +108,7 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_quid(),
     livemap_bind_suite(),
     livemap_error_handling(),
+    livemap_suite_revision(),
     // livemap_suite_html_proof(), // non-supported currently
 
   ] as const;

@@ -137,9 +137,16 @@ export function make_path_overlap_case(spec: PathOverlapCaseSpec): TestCase {
     },
   };
 }
-export function set_commit(path: LivePath, prev: JsonValue | undefined, next: JsonValue | undefined): LiveMapCommit {
+
+export function set_commit(
+  path: LivePath,
+  prev: JsonValue | undefined,
+  next: JsonValue | undefined,
+): LiveMapCommit {
   return {
     changed: true,
+    previousRevision: 0,
+    revision: 1,
     ops: [
       {
         kind: "set",
@@ -150,4 +157,3 @@ export function set_commit(path: LivePath, prev: JsonValue | undefined, next: Js
     ],
   };
 }
-

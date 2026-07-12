@@ -5,7 +5,7 @@ import type { JsonValue, LiveMapCommit, LiveMapFeedEvent, LivePath } from "hson-
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 import type { LiveMapFeedEventPreview } from "./types";
-import  { make_feed_emit_case, make_path_overlap_case, set_commit } from "../../app/utils/helpers";
+import { make_feed_emit_case, make_path_overlap_case, set_commit } from "../../app/utils/helpers";
 
 
 
@@ -135,7 +135,12 @@ export function livemap_suite_feed(): TestSuite {
         suite: SUITE,
         name: "feed ignores unchanged commit",
         feedPath: ["user", "name"],
-        commit: { changed: false, ops: [] },
+        commit: {
+          changed: false,
+          previousRevision: 0,
+          revision: 0,
+          ops: [],
+        },
         snapValue: "Ada",
         expectedEvents: [],
       }),
@@ -147,7 +152,7 @@ export function livemap_suite_feed(): TestSuite {
         snapValue: "Grace",
         expectedEvents: [],
       }),
-       make_feed_emit_case({
+      make_feed_emit_case({
         suite: SUITE,
         name: "feed exact path receives matching op",
         feedPath: ["user", "name"],

@@ -7,7 +7,7 @@ import { make_inspector } from "../../../tests/inspector/make-inspector";
 import { $PANEL_HIDDEN } from "../../core/consts/ui-consts";
 import { _snip } from "../../utils/helpers";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
-import { make_ad_hoc_transform_suite, build_suites_for_mode } from "./build-test-suites";
+import { make_ad_hoc_transform_suite, all_test_suites } from "./all-test-suites";
 // import { make_state_smoke_suite } from "./state-smoke-suite";
 import { create_test_chips } from "./test-helpers";
 import { create_test_log } from "./test-logger";
@@ -361,7 +361,7 @@ export function tp_factory(): Outcome<TestPanel> {
             appendLogLine("running loop test…");
             await flush_dom();
 
-            const suites = build_suites_for_mode(mode, { _circuit_test }, captureMap);
+            const suites = all_test_suites(mode, { _circuit_test }, captureMap);
             const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
             chips.render(res.summary);
             inspector.show();
