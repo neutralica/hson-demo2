@@ -3,12 +3,12 @@
 import { hson } from "hson-live";
 import {
   render_livemap_schema_controls_snap,
-} from "../../../../hson-live/src/api/livemap/bridge";
+} from "../../../../hson-live/src/api/livemap/livemap.bridge";
 import type { JsonValue } from "../../../../hson-live/src/core/types";
 import type { LiveMap } from "../../../../hson-live/src/types/livemap.types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
-import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/src/api/livemap/bridge.types";
+import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/src/types/bridge.types";
 
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &

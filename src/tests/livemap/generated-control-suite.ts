@@ -7,8 +7,8 @@ import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 import {
   render_livemap_schema_controls_snap,
-} from "../../../../hson-live/src/api/livemap/bridge";
-import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/src/api/livemap/bridge.types";
+} from "../../../../hson-live/src/api/livemap/livemap.bridge";
+import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/src/types/bridge.types";
 
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &

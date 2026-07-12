@@ -3,24 +3,34 @@
 import { AMOEBA_W, AMOEBA_H, BUTTON_BASE_DEPTH, BUTTON_BASE_SPAN, HEX_SIZE, SQRT3 } from "./amoebi.consts";
 import type { AmoebaButtonInput, AmoebiRenderButton, AmoebiRenderState, HexCoord, Point } from "./amoebi.types";
 
-export const MENU_HEX_ORIGIN_X = AMOEBA_W * 0.16;
-export const MENU_HEX_ORIGIN_Y = AMOEBA_H * 0.18;
+// CHANGED: keep the menu in a narrow channel beneath the HSON logo.
+export const MENU_HEX_ORIGIN_X = AMOEBA_W * 0.11;
+// CHANGED: keep the first amoeba at a fixed cell-relative top margin so
+// increasing the menu height does not push the complete layout downward.
+export const MENU_HEX_ORIGIN_Y = HEX_SIZE * 3.25;
+
+const MENU_CHANNEL_LEFT = 18;
+const MENU_CHANNEL_RIGHT = MENU_CHANNEL_LEFT + 220;
+
+// CHANGED: q = -r / 2 produces a near-vertical line in this axial grid.
+// A few anchors deviate by one cell to avoid a mechanically straight stack.
 export const MENU_ANCHORS: readonly HexCoord[] = [
   { q: 0, r: 0 },
   { q: -1, r: 2 },
   { q: -2, r: 4 },
-  { q: -2, r: 6 },
+  { q: -4, r: 6 },
   { q: -4, r: 8 },
-  { q: -4, r: 10 },
+  { q: -5, r: 10 },
   { q: -6, r: 12 },
-  { q: -4, r: 13 },
-  { q: -7, r: 15 },
-  { q: -8, r: 17 },
+  { q: -8, r: 14 },
+  { q: -8, r: 16 },
+  { q: -9, r: 18 },
 ];
+
 function span_for_button(button: AmoebaButtonInput, rng: () => number): number {
   const labelBoost = button.label.length >= 7 ? 1 : 0;
   const jitter = rng() > 0.82 ? 1 : 0;
-  return Math.max(5, BUTTON_BASE_SPAN + labelBoost + jitter);
+  return Math.min(6, Math.max(5, BUTTON_BASE_SPAN + labelBoost + jitter));
 }
 function key_of(coord: HexCoord): string {
   return `${coord.q},${coord.r}`;
@@ -90,8 +100,11 @@ function edge_key(a: Point, b: Point): string {
 }
 function is_allowed(coord: HexCoord): boolean {
   const center = hex_center(coord, HEX_SIZE);
-  return center.x > 22 && center.x < AMOEBA_W * 0.54 && center.y > 18 && center.y < AMOEBA_H - 34;
+  return center.x > MENU_CHANNEL_LEFT + HEX_SIZE
+    && center.x < MENU_CHANNEL_RIGHT - HEX_SIZE
+    && center.y > 18;
 }
+
 function add_contiguous_row(cells: Map<string, HexCoord>, qStart: number, r: number, span: number): void {
   for (let i = 0; i < span; i += 1) {
     const coord = { q: qStart + i, r };
@@ -119,12 +132,56 @@ function make_lozenge_blob(anchor: HexCoord, span: number, depth: number, rng: (
 
   return Array.from(cells.values());
 }
-function has_minimum_body_height(cells: readonly HexCoord[]): boolean {
-  return new Set(cells.map((cell) => cell.r)).size >= 2;
+function has_viable_body(
+  cells: readonly HexCoord[],
+  span: number,
+): boolean {
+  if (!cells.length) return false;
+
+  const rows = new Map<number, number>();
+
+  cells.forEach((cell) => {
+    rows.set(cell.r, (rows.get(cell.r) ?? 0) + 1);
+  });
+
+  const rowCount = rows.size;
+  const widestRow = Math.max(...rows.values());
+  const minimumCellMass = Math.max(8, span * 2);
+  const minimumReadableRow = Math.max(4, span - 1);
+
+  // CHANGED: validate the final connected body rather than the original candidate.
+  return rowCount >= 2
+    && cells.length >= minimumCellMass
+    && widestRow >= minimumReadableRow;
 }
 function cells_overlap(cells: readonly HexCoord[], occupied: Set<string>): boolean {
   return cells.some((cell) => occupied.has(key_of(cell)));
 }
+function shift_cells_left(cells: readonly HexCoord[]): readonly HexCoord[] {
+  return cells.map((cell) => ({
+    q: cell.q - 1,
+    r: cell.r,
+  }));
+}
+
+function settle_cells_left(
+  cells: readonly HexCoord[],
+  occupied: Set<string>,
+): readonly HexCoord[] {
+  let settled = cells;
+
+  for (let guard = 0; guard < 24; guard += 1) {
+    const shifted = shift_cells_left(settled);
+
+    // CHANGED: stop at the left channel edge or the nearest existing amoeba.
+    if (!shifted.every(is_allowed) || cells_overlap(shifted, occupied)) break;
+
+    settled = shifted;
+  }
+
+  return settled;
+}
+
 function contact_score(cells: readonly HexCoord[], occupied: Set<string>): number {
   let score = 0;
   cells.forEach((cell) => {
@@ -184,7 +241,8 @@ function center_penalty(cells: readonly HexCoord[], anchor: HexCoord): number {
   const rightDrift = Math.max(0, cx - anchorCenter.x);
   const leftDrift = Math.max(0, anchorCenter.x - cx);
 
-  return dx * 1.15 + dy * 0.22 + rightDrift * 1.65 + leftDrift * 0.18;
+  // CHANGED: strongly discourage shelves growing away from the left-side spine.
+  return dx * 1.25 + dy * 0.22 + rightDrift * 3.4 + leftDrift * 0.12;
 }
 function settle_blob(anchor: HexCoord, span: number, depth: number, occupied: Set<string>, rng: () => number): readonly HexCoord[] {
   const attempts: HexCoord[] = [anchor];
@@ -202,8 +260,14 @@ function settle_blob(anchor: HexCoord, span: number, depth: number, occupied: Se
   let bestTouching: Readonly<{ cells: readonly HexCoord[]; score: number; contact: number; }> | undefined;
 
   attempts.forEach((attempt) => {
-    const cells = make_lozenge_blob(attempt, span, depth, rng);
-    if (!cells.length || !has_minimum_body_height(cells)) return;
+    const generated = settle_cells_left(
+      make_lozenge_blob(attempt, span, depth, rng),
+      occupied,
+    );
+    if (cells_overlap(generated, occupied)) return;
+    const cells = largest_connected_cells(generated);
+
+    if (!has_viable_body(cells, span)) return;
     if (cells_overlap(cells, occupied)) return;
 
     const contact = contact_score(cells, occupied);
@@ -222,12 +286,23 @@ function settle_blob(anchor: HexCoord, span: number, depth: number, occupied: Se
   }
 
   const fallback = attempts
-    .map((attempt) => make_lozenge_blob(attempt, span, depth, rng).filter((cell) => !occupied.has(key_of(cell))))
-    .filter((cells) => cells.length > 0 && has_minimum_body_height(cells))
+    .map((attempt) => {
+      const available = settle_cells_left(
+        make_lozenge_blob(attempt, span, depth, rng),
+        occupied,
+      ).filter((cell) => !occupied.has(key_of(cell)));
+
+      return largest_connected_cells(available);
+    })
+    .filter((cells) => has_viable_body(cells, span))
     .sort((a, b) => {
-      const contactDiff = contact_score(b, occupied) - contact_score(a, occupied);
+      const contactDiff =
+        contact_score(b, occupied) - contact_score(a, occupied);
+
       if (contactDiff !== 0) return contactDiff;
-      return center_penalty(a, anchor) - center_penalty(b, anchor);
+
+      return center_penalty(a, anchor)
+        - center_penalty(b, anchor);
     })[0] ?? [];
 
   fallback.forEach((cell) => occupied.add(key_of(cell)));
@@ -322,17 +397,28 @@ function path_for_cells(cells: readonly HexCoord[], size: number): string {
   const largest = loops.sort((a, b) => polygon_area(b) - polygon_area(a))[0];
   return largest ? smooth_loop_path(largest) : "";
 }
+
 function anchor_for_button(_button: AmoebaButtonInput, index: number, rng: () => number): HexCoord {
-  const base = MENU_ANCHORS[index % MENU_ANCHORS.length] ?? { q: -2, r: -8 + index * 2 };
+  const base = MENU_ANCHORS[index % MENU_ANCHORS.length]
+    ?? { q: -index, r: index * 2 };
+
   const cycle = Math.floor(index / MENU_ANCHORS.length);
-  const qJitter = rng() > 0.86 ? 1 : 0;
-  const rJitter = rng() > 0.72 ? Math.floor(rng() * 3) - 1 : 0;
+  const r = base.r + cycle * 3 + (rng() > 0.88 ? 1 : 0);
+
+  // CHANGED: derive the main x-position from the final row so the stack stays
+  // vertical even when later cycles extend the layout.
+  const verticalSpineQ = Math.round(-r / 2);
+  const authoredDeviation = base.q - Math.round(-base.r / 2);
+  const rareDeviation = rng() > 0.92
+    ? (rng() > 0.5 ? 1 : -1)
+    : 0;
 
   return {
-    q: base.q + qJitter,
-    r: base.r + cycle * 3 + rJitter,
+    q: verticalSpineQ + authoredDeviation + rareDeviation,
+    r,
   };
 }
+
 function label_center_for_cells(cells: readonly HexCoord[], span: number): Point {
   if (!cells.length) return { x: AMOEBA_W * 0.5, y: AMOEBA_H * 0.5 };
 
@@ -375,7 +461,14 @@ function make_layout(buttons: readonly AmoebaButtonInput[], seed: number): Amoeb
   return buttons.map((button, index) => {
     const span = span_for_button(button, rng);
     const anchor = anchor_for_button(button, index, rng);
-    const coords = largest_connected_cells(settle_blob(anchor, span, BUTTON_BASE_DEPTH, occupied, rng));
+    // CHANGED: settle_blob now returns an already validated connected body.
+    const coords = settle_blob(
+      anchor,
+      span,
+      BUTTON_BASE_DEPTH,
+      occupied,
+      rng,
+    );
     const labelCenter = label_center_for_cells(coords, span);
 
     return {
@@ -389,6 +482,25 @@ function make_layout(buttons: readonly AmoebaButtonInput[], seed: number): Amoeb
     };
   });
 }
+
+export function amoebi_view_height(state: AmoebiRenderState): number {
+  const bottom = state.layout.reduce((maxBottom, button) => {
+    const buttonBottom = button.cells.reduce((maxCellBottom, cell) => {
+      const center = hex_center(cell, HEX_SIZE);
+      return Math.max(maxCellBottom, center.y + HEX_SIZE);
+    }, 0);
+
+    return Math.max(maxBottom, buttonBottom);
+  }, 0);
+
+  return Math.max(
+    HEX_SIZE * 12,
+    Math.ceil(bottom + HEX_SIZE * 2.5),
+  );
+}
+
+
+
 export function make_initial_state(seed: number, buttons: readonly AmoebaButtonInput[], activeIds: readonly string[]): AmoebiRenderState {
   return {
     selectedId: activeIds[0] ?? "",

@@ -1,4 +1,5 @@
-import { snap_live_path } from "../../../../hson-live/src/api/livemap/editor";
+// all-livemap-suites.ts
+
 import type { HsonNode, JsonValue, LivePath } from "hson-live/types";
 import type { Asserter, TestSuite } from "../../app/demos/test/tests.types";
 import { livemap_suites_core } from "./core-suite";
@@ -18,7 +19,7 @@ import { livemap_suite_batch } from "./batch-suite";
 import { livemap_editor_contract, livemap_object_exact } from "./editor-contract-tests";
 import { livemap_schema_contract_suite } from "./editor-contract-tests";
 import { livemap_link_contract_suites } from "./link-contract-suite";
-import { hson } from "hson-live";
+import { hson, snap_live_path } from "hson-live";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
 import { livemap_suites_bridge } from "./bridge-suite";
 import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";

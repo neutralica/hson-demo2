@@ -6,7 +6,7 @@ import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import type { AmoebaButtonLayout, AmoebiMenuApi, AmoebiMenuOptions, AmoebiRenderButton, AmoebiRenderState, AmoebiTileParts, HexCoord, Point } from "./amoebi.types";
 import { AMOEBA_W, AMOEBA_H, HEX_SIZE, BUTTONS } from "./amoebi.consts";
-import { hex_cell_path, hex_center, make_initial_state, make_seed } from "./amoebi-geometry";
+import { amoebi_view_height, hex_cell_path, hex_center, make_initial_state, make_seed } from "./amoebi-geometry";
 import { PATH_BASEcss, AMOEBI_ROOTcss, AMOEBI_TITLEcss, AMOEBI_SVGcss } from "./amoebi.css";
 import { _txt } from "../../core/consts/ui-consts";
 
@@ -160,7 +160,6 @@ function render_amoebi_tile(svg: SvgLiveTree, map: LiveMap<AmoebiRenderState>, b
   const parts = { button, index, body, cells, target, label } satisfies AmoebiTileParts;
 
   RECEDED_AMOEBI_TILES.delete(parts);
-  render_amoebi_label(svg, button, index);
   grow_amoebi_outline(body, button, index);
   return parts;
 }
@@ -343,12 +342,19 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
   const items = options.items ?? BUTTONS;
   const seed = options.seed ?? make_seed();
   const activeIds = options.activeIds ?? [];
+  // CHANGED: geometry is settled first so the containing SVG can adopt its
+  // required height without changing the horizontal coordinate scale.
+  const initialState = make_initial_state(seed, items, activeIds);
+  const viewHeight = amoebi_view_height(initialState);
+  const state = hson.liveMap.fromJson(
+    initialState as unknown as JsonValue,
+  ) as unknown as LiveMap<AmoebiRenderState>;
 
   const root = stage.create.div()
     .id.set("amoebi-menu-demo")
     .classlist.add("amoebi-menu-demo")
-    .css.setMany(AMOEBI_ROOTcss);
-
+    .css.setMany(AMOEBI_ROOTcss)
+    .css.setMany({ height: "auto" });
   if (options.showTitle !== false) {
     root.create.div()
       .text.set(options.title ?? "'amoeba' menu sketch v0.1")
@@ -358,15 +364,19 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
   const svg = root.create.svg()
     .attr.setMany({
       xmlns: "http://www.w3.org/2000/svg",
-      viewBox: `0 0 ${AMOEBA_W} ${AMOEBA_H}`,
-      preserveAspectRatio: "xMidYMid meet",
+      viewBox: `0 0 ${AMOEBA_W} ${viewHeight}`,
+      // CHANGED: anchor the SVG viewBox to the left edge instead of centering it.
+      preserveAspectRatio: "xMinYMid meet",
       role: "group",
       "aria-label": options.ariaLabel ?? "Amoebi menu experiment",
     })
-    .css.setMany(AMOEBI_SVGcss);
+    .css.setMany(AMOEBI_SVGcss)
+    .css.setMany({
+      // CHANGED: width still determines scale; height follows the generated menu.
+      height: "auto",
+      aspectRatio: `${AMOEBA_W} / ${viewHeight}`,
+    });
 
-  const initialState = make_initial_state(seed, items, activeIds) as unknown as JsonValue;
-  const state = hson.liveMap.fromJson(initialState) as unknown as LiveMap<AmoebiRenderState>;
   render_amoeba(svg, state, options.onToggle);
 
   return {
@@ -376,6 +386,7 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
     setHoveredId: (id) => state.at(["hoveredId"]).set(id),
   };
 }
+
 function apply_amoebi_menu_motion(tiles: readonly AmoebiTileParts[], hoveredId: string | null, activeIds: readonly string[]): void {
   tiles.forEach((tile) => {
     const hovered = hoveredId === tile.button.id;
@@ -438,6 +449,6 @@ function recede_amoebi_tile(parts: AmoebiTileParts): void {
   recede_amoebi_node(parts.body, { x: parts.button.cx, y: parts.button.cy }, 40, 430);
   const ordered = [...ordered_cell_entries(parts)].reverse();
   ordered.forEach(({ cell, coord }, orderIndex) => {
-        recede_amoebi_node(cell, hex_center(coord, HEX_SIZE), 35 + orderIndex * 10, 420);
+    recede_amoebi_node(cell, hex_center(coord, HEX_SIZE), 35 + orderIndex * 10, 420);
   });
 }
