@@ -332,7 +332,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns array wildcard child rule",
+        name: "schema array rule matches only numeric path parts",
         input: {},
         act: () => {
           const schema = define_livemap_schema((s) => ({
@@ -340,25 +340,65 @@ export function livemap_suites_schema(): TestSuite {
               label: s.string,
             }),
           }));
-          const rule = schema.match(["items", 3, "label"]);
 
-          return rule === undefined ? undefined : { kind: rule.kind, path: rule.path };
+          return {
+            numericMatch: schema.match(["items", 3, "label"])?.kind,
+            stringMatch: schema.match(["items", "3", "label"])?.kind,
+            numericValidation: schema.validateValue(["items", 3, "label"], "third"),
+            stringValidation: schema.validateValue(["items", "3", "label"], "third"),
+          };
         },
-        expected: { kind: "string", path: ["items", "*", "label"] },
+        expected: {
+          numericMatch: "string",
+          stringMatch: undefined,
+          numericValidation: {
+            ok: true,
+            issues: [],
+          },
+          stringValidation: {
+            ok: false,
+            issues: [
+              {
+                path: ["items", "3", "label"],
+                message: "LiveMap schema has no rule for [\"items\",\"3\",\"label\"]",
+              },
+            ],
+          },
+        },
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns record wildcard child rule",
+        name: "schema record rule matches only string path parts",
         input: {},
         act: () => {
           const schema = define_livemap_schema((s) => ({
             colors: s.record(s.string),
           }));
-          const rule = schema.match(["colors", "accent"]);
 
-          return rule === undefined ? undefined : { kind: rule.kind, path: rule.path };
+          return {
+            stringMatch: schema.match(["colors", "accent"])?.kind,
+            numericMatch: schema.match(["colors", 0])?.kind,
+            stringValidation: schema.validateValue(["colors", "accent"], "blue"),
+            numericValidation: schema.validateValue(["colors", 0], "blue"),
+          };
         },
-        expected: { kind: "string", path: ["colors", "*"] },
+        expected: {
+          stringMatch: "string",
+          numericMatch: undefined,
+          stringValidation: {
+            ok: true,
+            issues: [],
+          },
+          numericValidation: {
+            ok: false,
+            issues: [
+              {
+                path: ["colors", 0],
+                message: "LiveMap schema has no rule for [\"colors\",0]",
+              },
+            ],
+          },
+        },
       }),
       read_case({
         suite: SUITE,
@@ -1312,7 +1352,190 @@ export function livemap_suites_schema(): TestSuite {
           };
         },
       },
+      read_case({
+        suite: SUITE,
+        name: "schema preserves literal star object key",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            "*": s.string,
+            other: s.number,
+          }));
 
+          return {
+            starMatch: schema.match(["*"])?.kind,
+            otherMatch: schema.match(["other"])?.kind,
+            validStar: schema.validateValue(["*"], "literal star"),
+            invalidStar: schema.validateValue(["*"], 12),
+            validOther: schema.validateValue(["other"], 12),
+            invalidOther: schema.validateValue(["other"], "twelve"),
+          };
+        },
+        expected: {
+          starMatch: "string",
+          otherMatch: "number",
+          validStar: {
+            ok: true,
+            issues: [],
+          },
+          invalidStar: {
+            ok: false,
+            issues: [
+              {
+                path: ["*"],
+                message: "LiveMap schema expected string at [\"*\"], received number",
+              },
+            ],
+          },
+          validOther: {
+            ok: true,
+            issues: [],
+          },
+          invalidOther: {
+            ok: false,
+            issues: [
+              {
+                path: ["other"],
+                message: "LiveMap schema expected number at [\"other\"], received string",
+              },
+            ],
+          },
+        },
+      }),
+      read_case({
+  suite: SUITE,
+  name: "schema rules keep public wildcard paths",
+  input: {},
+  act: () => {
+    const schema = define_livemap_schema((s) => ({
+      items: s.array({
+        label: s.string,
+      }),
+      colors: s.record(s.string),
+    }));
+
+    return schema.rules
+      .filter((rule) => rule.path.includes("*"))
+      .map((rule) => ({
+        kind: rule.kind,
+        path: rule.path,
+      }));
+  },
+  expected: [
+    {
+      kind: "object",
+      path: ["items", "*"],
+    },
+    {
+      kind: "string",
+      path: ["items", "*", "label"],
+    },
+    {
+      kind: "string",
+      path: ["colors", "*"],
+    },
+  ],
+      }),
+      read_case({
+  suite: SUITE,
+  name: "schema rules keep public wildcard paths",
+  input: {},
+  act: () => {
+    const schema = define_livemap_schema((s) => ({
+      items: s.array({
+        label: s.string,
+      }),
+      colors: s.record(s.string),
+    }));
+
+    return {
+      arrayItem: schema.rules.some((rule) =>
+        rule.kind === "object"
+        && JSON.stringify(rule.path) === JSON.stringify(["items", "*"])
+      ),
+      arrayLabel: schema.rules.some((rule) =>
+        rule.kind === "string"
+        && JSON.stringify(rule.path) === JSON.stringify(["items", "*", "label"])
+      ),
+      recordValue: schema.rules.some((rule) =>
+        rule.kind === "string"
+        && JSON.stringify(rule.path) === JSON.stringify(["colors", "*"])
+      ),
+    };
+  },
+  expected: {
+    arrayItem: true,
+    arrayLabel: true,
+    recordValue: true,
+  },
+      }),
+      read_case({
+  suite: SUITE,
+  name: "schema literal star and record wildcard remain distinct",
+  input: {},
+  act: () => {
+    const schema = define_livemap_schema((s) => ({
+      "*": s.number,
+      values: s.record(s.string),
+    }));
+
+    return {
+      literalStar: schema.match(["*"])?.kind,
+      recordStarKey: schema.match(["values", "*"])?.kind,
+      recordNamedKey: schema.match(["values", "label"])?.kind,
+      invalidLiteralStar: schema.validateValue(["*"], "wrong"),
+      invalidRecordValue: schema.validateValue(["values", "*"], 12),
+    };
+  },
+  expected: {
+    literalStar: "number",
+    recordStarKey: "string",
+    recordNamedKey: "string",
+    invalidLiteralStar: {
+      ok: false,
+      issues: [
+        {
+          path: ["*"],
+          message: "LiveMap schema expected number at [\"*\"], received string",
+        },
+      ],
+    },
+    invalidRecordValue: {
+      ok: false,
+      issues: [
+        {
+          path: ["values", "*"],
+          message: "LiveMap schema expected string at [\"values\",\"*\"], received number",
+        },
+      ],
+    },
+  },
+      }),
+      read_case({
+  suite: SUITE,
+  name: "schema tuple literal index does not behave like array wildcard",
+  input: {},
+  act: () => {
+    const schema = define_livemap_schema((s) => ({
+      point: s.tuple(s.string, s.number),
+      items: s.array(s.boolean),
+    }));
+
+    return {
+      tupleZero: schema.match(["point", 0])?.kind,
+      tupleStringZero: schema.match(["point", "0"])?.kind,
+      arrayZero: schema.match(["items", 0])?.kind,
+      arrayStringZero: schema.match(["items", "0"])?.kind,
+    };
+  },
+  expected: {
+    tupleZero: "string",
+    tupleStringZero: undefined,
+    arrayZero: "boolean",
+    arrayStringZero: undefined,
+  },
+      }),
+      
 
     ] as const,
   };

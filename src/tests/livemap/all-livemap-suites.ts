@@ -25,7 +25,7 @@ import { livemap_suites_bridge } from "./bridge-suite";
 import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
 import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-2";
 import { livemap_suites_schema_controls } from "./generated-control-suite";
-import { livemap_suites_schema_validation_controls } from "./schema-suite-2";
+import { livemap_suites_schema_validation_controls } from "./schema-control-suite-2";
 import { livemap_misc_suite } from "./misc-suite";
 import { livemap_suites_quid } from "./quid-suite";
 import { livemap_bind_suite } from "./bind-suite";
