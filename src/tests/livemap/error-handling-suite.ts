@@ -1,6 +1,7 @@
-import { define_livemap_schema } from "hson-live";
+import { define_livemap_schema, LiveMapSchemaError, make_livemap_core } from "hson-live";
 import { read_case } from "./handle-helpers";
 import type { TestSuite } from "../../app/demos/test/tests.types";
+import { json_root_node } from "./core-helpers";
 
 
 const SUITE = "livemap/schema-errors";
@@ -338,7 +339,292 @@ export function livemap_error_handling(): TestSuite {
           issues: [],
         },
       }),
+      read_case({
+        suite: SUITE,
+        name: "schema rejected write throws structured schema error",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
 
+          const map = make_livemap_core(json_root_node({
+            user: {
+              name: "Ada",
+            },
+          })).withSchema(schema);
+
+          try {
+            map.set(["user", "name"], 42 as unknown as string);
+
+            return {
+              threw: false,
+            };
+          } catch (error) {
+            if (!(error instanceof LiveMapSchemaError)) {
+              return {
+                threw: true,
+                isSchemaError: false,
+                errorName: error instanceof Error ? error.name : typeof error,
+              };
+            }
+
+            return {
+              threw: true,
+              isSchemaError: true,
+              name: error.name,
+              code: error.code,
+              path: error.path,
+              message: error.message,
+              issues: error.issues.map((issue) => ({
+                code: issue.code,
+                path: issue.path,
+                message: issue.message,
+                ...(issue.expected !== undefined
+                  ? { expected: issue.expected }
+                  : {}),
+                ...(issue.received !== undefined
+                  ? { received: issue.received }
+                  : {}),
+              })),
+            };
+          }
+        },
+        expected: {
+          threw: true,
+          isSchemaError: true,
+          name: "LiveMapSchemaError",
+          code: "SCHEMA_VALIDATION",
+          path: ["user", "name"],
+          message: [
+            "LiveMap schema rejected value at [\"user\",\"name\"]:",
+            "- LiveMap schema expected string at [\"user\",\"name\"], received number",
+          ].join("\n"),
+          issues: [
+            {
+              code: "TYPE_MISMATCH",
+              path: ["user", "name"],
+              message: "LiveMap schema expected string at [\"user\",\"name\"], received number",
+              expected: "string",
+              received: "number",
+            },
+          ],
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "schema rejected write leaves map unchanged",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+
+          const map = make_livemap_core(json_root_node({
+            user: {
+              name: "Ada",
+            },
+          })).withSchema(schema);
+
+          const before = map.snap();
+
+          try {
+            map.set(["user", "name"], 42 as unknown as string);
+          } catch {
+            // Expected schema rejection.
+          }
+
+          return {
+            before,
+            after: map.snap(),
+            name: map.snap(["user", "name"]),
+          };
+        },
+        expected: {
+          before: {
+            user: {
+              name: "Ada",
+            },
+          },
+          after: {
+            user: {
+              name: "Ada",
+            },
+          },
+          name: "Ada",
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "schema rejected constructive set uses first issue headline path",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+              age: s.number,
+            },
+          }));
+
+          const map = make_livemap_core(json_root_node({
+            user: {
+              name: "Ada",
+              age: 37,
+            },
+          })).withSchema(schema);
+
+          try {
+            map.set(["user"], {
+              name: 42 as unknown as string,
+              age: "old" as unknown as number,
+            });
+
+            return {
+              threw: false,
+            };
+          } catch (error) {
+            if (!(error instanceof LiveMapSchemaError)) {
+              return {
+                threw: true,
+                isSchemaError: false,
+              };
+            }
+
+            return {
+              threw: true,
+              isSchemaError: true,
+              path: error.path,
+              issueCodes: error.issues.map(({ code }) => code),
+              issuePaths: error.issues.map(({ path }) => path),
+              message: error.message,
+            };
+          }
+        },
+        expected: {
+          threw: true,
+          isSchemaError: true,
+          path: ["user", "name"],
+          issueCodes: [
+            "TYPE_MISMATCH",
+            "TYPE_MISMATCH",
+          ],
+          issuePaths: [
+            ["user", "name"],
+            ["user", "age"],
+          ],
+          message: [
+            "LiveMap schema rejected value at [\"user\",\"name\"]:",
+            "- LiveMap schema expected string at [\"user\",\"name\"], received number",
+            "- LiveMap schema expected number at [\"user\",\"age\"], received string",
+          ].join("\n"),
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "invalid schema attachment throws structured schema error",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+
+          const map = make_livemap_core(json_root_node({
+            user: {
+              name: 42,
+            },
+          }));
+
+          try {
+            map.withSchema(schema);
+
+            return {
+              threw: false,
+            };
+          } catch (error) {
+            if (!(error instanceof LiveMapSchemaError)) {
+              return {
+                threw: true,
+                isSchemaError: false,
+              };
+            }
+
+            return {
+              threw: true,
+              isSchemaError: true,
+              path: error.path,
+              code: error.code,
+              issueCode: error.issues[0]?.code,
+              issuePath: error.issues[0]?.path,
+              schemaAttached: map.schema.get() !== undefined,
+            };
+          }
+        },
+        expected: {
+          threw: true,
+          isSchemaError: true,
+          path: [],
+          code: "SCHEMA_VALIDATION",
+          issueCode: "TYPE_MISMATCH",
+          issuePath: ["user", "name"],
+          schemaAttached: false,
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "schema error retains immutable issue collection",
+        input: {},
+        act: () => {
+          const schema = define_livemap_schema((s) => ({
+            user: {
+              name: s.string,
+            },
+          }));
+
+          const map = make_livemap_core(json_root_node({
+            user: {
+              name: "Ada",
+            },
+          })).withSchema(schema);
+
+          try {
+            map.set(["user", "name"], 42 as unknown as string);
+
+            return {
+              threw: false,
+            };
+          } catch (error) {
+            if (!(error instanceof LiveMapSchemaError)) {
+              return {
+                threw: true,
+                isSchemaError: false,
+              };
+            }
+
+            return {
+              threw: true,
+              isSchemaError: true,
+              issuesFrozen: Object.isFrozen(error.issues),
+              firstIssueFrozen: Object.isFrozen(error.issues[0]),
+            };
+          }
+        },
+        expected: {
+          threw: true,
+          isSchemaError: true,
+          issuesFrozen: true,
+          firstIssueFrozen: true,
+        },
+      }),
 
     ] as const,
   };

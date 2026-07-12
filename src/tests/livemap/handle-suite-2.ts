@@ -355,7 +355,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.pushMany([2, 3]),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [0, 1], next: [0, 1, 2, 3] },
+          { kind: "splice", path: ["items"], start: 2, removed: [], inserted: [2, 3], prev: [0, 1], next: [0, 1, 2, 3] }
         ],
         expectedRoot: { items: [0, 1, 2, 3] },
       }),
@@ -366,7 +366,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.unshiftMany([0, 1]),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [2, 3], next: [0, 1, 2, 3] },
+          { kind: "splice", path: ["items"], start: 0, removed: [], inserted: [0, 1], prev: [2, 3], next: [0, 1, 2, 3] }
         ],
         expectedRoot: { items: [0, 1, 2, 3] },
       }),
@@ -453,7 +453,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.splice(1, 2, "x"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [0, 1, 2, 3], next: [0, "x", 3] },
+          { kind: "splice", path: ["items"], start: 1, removed: [1, 2], inserted: ["x"], prev: [0, 1, 2, 3], next: [0, "x", 3] },
         ],
         expectedRoot: { items: [0, "x", 3] },
       }),
@@ -464,7 +464,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.splice(-1, 1, "x"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [0, 1, 2, 3], next: [0, 1, 2, "x"] },
+          { kind: "splice", path: ["items"], start: 3, removed: [3], inserted: ["x"], prev: [0, 1, 2, 3], next: [0, 1, 2, "x"] },
         ],
         expectedRoot: { items: [0, 1, 2, "x"] },
       }),
@@ -475,7 +475,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.splice(2),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [0, 1, 2, 3], next: [0, 1] },
+          { kind: "splice", path: ["items"], start: 2, removed: [2, 3], inserted: [], prev: [0, 1, 2, 3], next: [0, 1] }
         ],
         expectedRoot: { items: [0, 1] },
       }),
@@ -535,7 +535,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.insert(-1, "x"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: ["a", "b", "c"], next: ["a", "b", "x", "c"] },
+          { kind: "splice", path: ["items"], start: 2, removed: [], inserted: ["x"], prev: ["a", "b", "c"], next: ["a", "b", "x", "c"] }
         ],
         expectedRoot: { items: ["a", "b", "x", "c"] },
       }),
@@ -546,7 +546,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.remove(-1),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: ["a", "b", "c"], next: ["a", "b"] },
+          { kind: "splice", path: ["items"], start: 2, removed: ["c"], inserted: [], prev: ["a", "b", "c"], next: ["a", "b"] }
         ],
         expectedRoot: { items: ["a", "b"] },
       }),
@@ -557,7 +557,7 @@ export function livemap_suites_handle_2(): TestSuite {
         act: (map) => map.at(["items"]).array.replace(-1, "x"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: ["a", "b", "c"], next: ["a", "b", "x"] },
+          { kind: "splice", path: ["items"], start: 2, removed: ["c"], inserted: ["x"], prev: ["a", "b", "c"], next: ["a", "b", "x"] }
         ],
         expectedRoot: { items: ["a", "b", "x"] },
       }),

@@ -287,7 +287,7 @@ export function livemap_suites_proxy(): TestSuite {
         },
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: ["a", "b"], next: ["a", "b", "c"] },
+          { kind: "splice", path: ["items"], start: 2, removed: [], inserted: ["c"], prev: ["a", "b"], next: ["a", "b", "c"] },
         ],
         expectedRoot: { items: ["a", "b", "c"] },
       }),
