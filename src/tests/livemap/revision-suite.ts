@@ -1,9 +1,9 @@
 // livemap/rev-suite.ts
 
-import  { make_livemap_core, define_livemap_schema } from "hson-live";
+import { make_livemap_core, define_livemap_schema } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import  { json_root_node } from "./core-helpers";
-import  { read_case } from "./handle-helpers";
+import { json_root_node } from "./core-helpers";
+import { read_case } from "./handle-helpers";
 
 
 export function livemap_suite_rev(): TestSuite {
@@ -424,6 +424,111 @@ export function livemap_suite_rev(): TestSuite {
             rev: 2,
             opCount: 2,
           },
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "capture returns initial rev and value",
+        input: {},
+        act: () => {
+          const map = make_livemap_core(json_root_node({
+            count: 0,
+          }));
+
+          const capture = map.capture();
+
+          return {
+            rev: capture.rev,
+            value: capture.value,
+            mapRev: map.rev,
+            frozen: Object.isFrozen(capture),
+          };
+        },
+        expected: {
+          rev: 0,
+          value: {
+            count: 0,
+          },
+          mapRev: 0,
+          frozen: true,
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "capture reflects current committed rev",
+        input: {},
+        act: () => {
+          const map = make_livemap_core(json_root_node({
+            count: 0,
+          }));
+
+          const commit = map.set(["count"], 1);
+          const capture = map.capture();
+
+          return {
+            commitRev: commit.rev,
+            captureRev: capture.rev,
+            mapRev: map.rev,
+            value: capture.value,
+          };
+        },
+        expected: {
+          commitRev: 1,
+          captureRev: 1,
+          mapRev: 1,
+          value: {
+            count: 1,
+          },
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "capture remains stable after later writes",
+        input: {},
+        act: () => {
+          const map = make_livemap_core(json_root_node({
+            user: {
+              name: "Ada",
+              age: 37,
+            },
+          }));
+
+          const before = map.capture();
+
+          map.set(["user", "name"], "Grace");
+          map.set(["user", "age"], 38);
+
+          const after = map.capture();
+
+          return {
+            before,
+            after,
+            mapRev: map.rev,
+          };
+        },
+        expected: {
+          before: {
+            rev: 0,
+            value: {
+              user: {
+                name: "Ada",
+                age: 37,
+              },
+            },
+          },
+          after: {
+            rev: 2,
+            value: {
+              user: {
+                name: "Grace",
+                age: 38,
+              },
+            },
+          },
+          mapRev: 2,
         },
       }),
     ] as const,

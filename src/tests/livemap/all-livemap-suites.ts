@@ -30,7 +30,7 @@ import { livemap_misc_suite } from "./misc-suite";
 import { livemap_suites_quid } from "./quid-suite";
 import { livemap_bind_suite } from "./bind-suite";
 import { livemap_error_handling } from "./error-handling-suite";
-import { livemap_suite_rev } from "./revision-suites";
+import { livemap_suite_rev } from "./revision-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
