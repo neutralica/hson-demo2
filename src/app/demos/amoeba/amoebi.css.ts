@@ -14,7 +14,7 @@ export const AMOEBI_ROOTcss: CssMap = {
   minHeight: "0",
   overflow: "visible",
 
-  pointerEvents: "auto",
+  pointerEvents: "none",
   zIndex: "4",
 };
 

@@ -46,8 +46,11 @@ export function livemap_suites_api(): TestSuite {
           ok: false,
           issues: [
             {
+              code: "TYPE_MISMATCH",
               path: ["user", "name"],
               message: "LiveMap schema expected string at [\"user\",\"name\"], received number",
+              expected: "string",
+              received: "number",
             },
           ],
         },
