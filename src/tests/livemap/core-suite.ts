@@ -530,7 +530,7 @@ export function livemap_suites_core(): TestSuite {
               equal_row(
                 "core schema rejects invalid setMany before mutation: error",
                 message,
-               "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
+                "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
               ),
               equal_row("core schema rejects invalid setMany before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
             ],
@@ -1169,6 +1169,109 @@ export function livemap_suites_core(): TestSuite {
           };
         },
       },
+      {
+        suite: SUITE,
+        name: "core rev starts at zero",
+        meta: {
+          input: preview_value({ count: 0 }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({ count: 0 }));
+
+          return {
+            assertRows: [
+              equal_row("core rev starts at zero: rev", map.rev, 0),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core rev advances with changed commits",
+        meta: {
+          input: preview_value({ count: 0 }),
+        },
+        run: () => {
+          const map = make_livemap_core(json_root_node({ count: 0 }));
+          const first = map.set(["count"], 1);
+          const second = map.set(["count"], 2);
+
+          return {
+            assertRows: [
+              equal_row(
+                "core rev advances with changed commits: first commit",
+                first.rev,
+                1,
+              ),
+              equal_row(
+                "core rev advances with changed commits: second commit",
+                second.rev,
+                2,
+              ),
+              equal_row(
+                "core rev advances with changed commits: map",
+                map.rev,
+                2,
+              ),
+            ],
+          };
+        },
+      },
+      {
+        suite: SUITE,
+        name: "core rev ignores unchanged and rejected writes",
+        meta: {
+          input: preview_value({ count: 0 }),
+        },
+        run: () => {
+          const schema = define_livemap_schema((s) => ({
+            count: s.number,
+          }));
+          const map = make_livemap_core(
+            json_root_node({ count: 0 }),
+          ).withSchema(schema);
+
+          const changed = map.set(["count"], 1);
+          const unchanged = map.set(["count"], 1);
+          let rejected = false;
+
+          try {
+            map.set(
+              ["count"],
+              "invalid" as unknown as number,
+            );
+          } catch {
+            rejected = true;
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "core rev ignores unchanged and rejected writes: changed commit",
+                changed.rev,
+                1,
+              ),
+              equal_row(
+                "core rev ignores unchanged and rejected writes: unchanged commit",
+                unchanged.rev,
+                1,
+              ),
+              equal_row(
+                "core rev ignores unchanged and rejected writes: rejected",
+                rejected,
+                true,
+              ),
+              equal_row(
+                "core rev ignores unchanged and rejected writes: map",
+                map.rev,
+                1,
+              ),
+            ],
+          };
+        },
+      },
+
+
     ] as const,
   };
 }

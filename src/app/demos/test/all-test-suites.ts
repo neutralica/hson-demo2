@@ -15,11 +15,10 @@ import { HTML_FIXTURES_NEW } from "../../../tests/transform/new-html-fixtures";
 import { all_unit_tests } from "../../../tests/unit/all-unit-tests";
 import { _freeze } from "./tests.consts";
 import type { HsonTestApi, CaseKey, TestSuite, TestRunMode } from "./tests.types";
-import { livemap_suites_quid } from "../../../tests/livemap/quid-suite";
-import { livemap_editor_contract } from "../../../tests/livemap/editor-contract-tests";
 import { livetree_quid_level_2 } from "../../../tests/livetree/livetree-25-regression-2";
 import { all_livehost_suites } from "../../../tests/livehost/all-livehost-suites";
-import { livemap_suite_revision } from "../../../tests/livemap/revision-suites";
+import { livemap_suite_rev } from "../../../tests/livemap/revision-suites";
+
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
 
@@ -101,7 +100,7 @@ export function all_test_suites(
   if (mode === "dev") {
     return _freeze([
       livetree_quid_level_2(),
-livemap_suite_revision(),
+livemap_suite_rev(),
 
     ]);
   }

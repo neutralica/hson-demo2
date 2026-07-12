@@ -137,8 +137,8 @@ export function livemap_suite_feed(): TestSuite {
         feedPath: ["user", "name"],
         commit: {
           changed: false,
-          previousRevision: 0,
-          revision: 0,
+          prevRev: 0,
+          rev: 0,
           ops: [],
         },
         snapValue: "Ada",

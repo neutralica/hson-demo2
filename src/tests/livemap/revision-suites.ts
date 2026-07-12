@@ -1,4 +1,4 @@
-// livemap/revision-suite.ts
+// livemap/rev-suite.ts
 
 import  { make_livemap_core, define_livemap_schema } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
@@ -6,15 +6,15 @@ import  { json_root_node } from "./core-helpers";
 import  { read_case } from "./handle-helpers";
 
 
-export function livemap_suite_revision(): TestSuite {
-  const SUITE = "livemap/revision";
+export function livemap_suite_rev(): TestSuite {
+  const SUITE = "livemap/rev";
 
   return {
     suite: SUITE,
     cases: [
       read_case({
         suite: SUITE,
-        name: "first changed commit advances revision from zero",
+        name: "first changed commit advances rev from zero",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -25,16 +25,16 @@ export function livemap_suite_revision(): TestSuite {
 
           return {
             changed: commit.changed,
-            previousRevision: commit.previousRevision,
-            revision: commit.revision,
+            prevRev: commit.prevRev,
+            rev: commit.rev,
             ops: commit.ops.length,
             root: map.snap(),
           };
         },
         expected: {
           changed: true,
-          previousRevision: 0,
-          revision: 1,
+          prevRev: 0,
+          rev: 1,
           ops: 1,
           root: {
             count: 1,
@@ -57,32 +57,32 @@ export function livemap_suite_revision(): TestSuite {
 
           return {
             first: {
-              previousRevision: first.previousRevision,
-              revision: first.revision,
+              prevRev: first.prevRev,
+              rev: first.rev,
             },
             second: {
-              previousRevision: second.previousRevision,
-              revision: second.revision,
+              prevRev: second.prevRev,
+              rev: second.rev,
             },
             third: {
-              previousRevision: third.previousRevision,
-              revision: third.revision,
+              prevRev: third.prevRev,
+              rev: third.rev,
             },
             root: map.snap(),
           };
         },
         expected: {
           first: {
-            previousRevision: 0,
-            revision: 1,
+            prevRev: 0,
+            rev: 1,
           },
           second: {
-            previousRevision: 1,
-            revision: 2,
+            prevRev: 1,
+            rev: 2,
           },
           third: {
-            previousRevision: 2,
-            revision: 3,
+            prevRev: 2,
+            rev: 3,
           },
           root: {
             count: 3,
@@ -92,7 +92,7 @@ export function livemap_suite_revision(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "unchanged commit retains current revision",
+        name: "unchanged commit retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -106,45 +106,45 @@ export function livemap_suite_revision(): TestSuite {
           return {
             changed: {
               changed: changed.changed,
-              previousRevision: changed.previousRevision,
-              revision: changed.revision,
+              prevRev: changed.prevRev,
+              rev: changed.rev,
             },
             unchanged: {
               changed: unchanged.changed,
-              previousRevision: unchanged.previousRevision,
-              revision: unchanged.revision,
+              prevRev: unchanged.prevRev,
+              rev: unchanged.rev,
               ops: unchanged.ops.length,
             },
             next: {
               changed: next.changed,
-              previousRevision: next.previousRevision,
-              revision: next.revision,
+              prevRev: next.prevRev,
+              rev: next.rev,
             },
           };
         },
         expected: {
           changed: {
             changed: true,
-            previousRevision: 0,
-            revision: 1,
+            prevRev: 0,
+            rev: 1,
           },
           unchanged: {
             changed: false,
-            previousRevision: 1,
-            revision: 1,
+            prevRev: 1,
+            rev: 1,
             ops: 0,
           },
           next: {
             changed: true,
-            previousRevision: 1,
-            revision: 2,
+            prevRev: 1,
+            rev: 2,
           },
         },
       }),
 
       read_case({
         suite: SUITE,
-        name: "multi operation batch advances revision once",
+        name: "multi operation batch advances rev once",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -161,16 +161,16 @@ export function livemap_suite_revision(): TestSuite {
 
           return {
             changed: commit.changed,
-            previousRevision: commit.previousRevision,
-            revision: commit.revision,
+            prevRev: commit.prevRev,
+            rev: commit.rev,
             opCount: commit.ops.length,
             root: map.snap(),
           };
         },
         expected: {
           changed: true,
-          previousRevision: 0,
-          revision: 1,
+          prevRev: 0,
+          rev: 1,
           opCount: 2,
           root: {
             user: {
@@ -183,7 +183,7 @@ export function livemap_suite_revision(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "unchanged batch retains current revision",
+        name: "unchanged batch retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -199,37 +199,37 @@ export function livemap_suite_revision(): TestSuite {
           const next = map.set(["count"], 2);
 
           return {
-            firstRevision: first.revision,
+            firstrev: first.rev,
             unchanged: {
               changed: unchanged.changed,
-              previousRevision: unchanged.previousRevision,
-              revision: unchanged.revision,
+              prevRev: unchanged.prevRev,
+              rev: unchanged.rev,
               ops: unchanged.ops.length,
             },
             next: {
-              previousRevision: next.previousRevision,
-              revision: next.revision,
+              prevRev: next.prevRev,
+              rev: next.rev,
             },
           };
         },
         expected: {
-          firstRevision: 1,
+          firstrev: 1,
           unchanged: {
             changed: false,
-            previousRevision: 1,
-            revision: 1,
+            prevRev: 1,
+            rev: 1,
             ops: 0,
           },
           next: {
-            previousRevision: 1,
-            revision: 2,
+            prevRev: 1,
+            rev: 2,
           },
         },
       }),
 
       read_case({
         suite: SUITE,
-        name: "schema rejected write does not consume revision",
+        name: "schema rejected write does not consume rev",
         input: {},
         act: () => {
           const schema = define_livemap_schema((s) => ({
@@ -258,12 +258,12 @@ export function livemap_suite_revision(): TestSuite {
           return {
             rejected,
             first: {
-              previousRevision: first.previousRevision,
-              revision: first.revision,
+              prevRev: first.prevRev,
+              rev: first.rev,
             },
             next: {
-              previousRevision: next.previousRevision,
-              revision: next.revision,
+              prevRev: next.prevRev,
+              rev: next.rev,
             },
             root: map.snap(),
           };
@@ -271,12 +271,12 @@ export function livemap_suite_revision(): TestSuite {
         expected: {
           rejected: true,
           first: {
-            previousRevision: 0,
-            revision: 1,
+            prevRev: 0,
+            rev: 1,
           },
           next: {
-            previousRevision: 1,
-            revision: 2,
+            prevRev: 1,
+            rev: 2,
           },
           root: {
             count: 2,
@@ -286,7 +286,7 @@ export function livemap_suite_revision(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected batch does not consume revision",
+        name: "schema rejected batch does not consume rev",
         input: {},
         act: () => {
           const schema = define_livemap_schema((s) => ({
@@ -324,12 +324,12 @@ export function livemap_suite_revision(): TestSuite {
           return {
             rejected,
             first: {
-              previousRevision: first.previousRevision,
-              revision: first.revision,
+              prevRev: first.prevRev,
+              rev: first.rev,
             },
             next: {
-              previousRevision: next.previousRevision,
-              revision: next.revision,
+              prevRev: next.prevRev,
+              rev: next.rev,
             },
             root: map.snap(),
           };
@@ -337,12 +337,12 @@ export function livemap_suite_revision(): TestSuite {
         expected: {
           rejected: true,
           first: {
-            previousRevision: 0,
-            revision: 1,
+            prevRev: 0,
+            rev: 1,
           },
           next: {
-            previousRevision: 1,
-            revision: 2,
+            prevRev: 1,
+            rev: 2,
           },
           root: {
             user: {
@@ -355,7 +355,7 @@ export function livemap_suite_revision(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "semantic splice advances revision once",
+        name: "semantic splice advances rev once",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -374,16 +374,16 @@ export function livemap_suite_revision(): TestSuite {
 
           return {
             changed: commit.changed,
-            previousRevision: commit.previousRevision,
-            revision: commit.revision,
+            prevRev: commit.prevRev,
+            rev: commit.rev,
             opKind: op?.kind,
             root: map.snap(),
           };
         },
         expected: {
           changed: true,
-          previousRevision: 0,
-          revision: 1,
+          prevRev: 0,
+          rev: 1,
           opKind: "splice",
           root: {
             items: [0, "x", "y", 3],
@@ -393,7 +393,7 @@ export function livemap_suite_revision(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "changed batch after prior commit advances from current revision",
+        name: "changed batch after prior commit advances from current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -409,19 +409,19 @@ export function livemap_suite_revision(): TestSuite {
           });
 
           return {
-            firstRevision: first.revision,
+            firstrev: first.rev,
             batch: {
-              previousRevision: batch.previousRevision,
-              revision: batch.revision,
+              prevRev: batch.prevRev,
+              rev: batch.rev,
               opCount: batch.ops.length,
             },
           };
         },
         expected: {
-          firstRevision: 1,
+          firstrev: 1,
           batch: {
-            previousRevision: 1,
-            revision: 2,
+            prevRev: 1,
+            rev: 2,
             opCount: 2,
           },
         },

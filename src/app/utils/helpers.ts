@@ -145,8 +145,8 @@ export function set_commit(
 ): LiveMapCommit {
   return {
     changed: true,
-    previousRevision: 0,
-    revision: 1,
+    prevRev: 0,
+    rev: 1,
     ops: [
       {
         kind: "set",
