@@ -1,12 +1,28 @@
 import { _colors } from "../../core/consts/colors.consts";
-import type { AmoebaButtonInput, Point } from "./amoebi.types";
+import type { AmoebaButtonInput, AmoebiGeometryConfig, Point } from "./amoebi.types";
 
 export const AMOEBA_W = 720;
 export const AMOEBA_H = 560;
-export const HEX_SIZE = 13;
+/* DO NOT MAKE  */
+export const HEX_SIZE = 5;
 export const SQRT3 = Math.sqrt(3);
-export const BUTTON_BASE_SPAN = 5;
-export const BUTTON_BASE_DEPTH = 1;
+
+export const AMOEBI_GEOMETRY: AmoebiGeometryConfig = Object.freeze({
+  hexSize: HEX_SIZE,
+  labelFontSize: 18,
+  labelLetterSpacing: 18 * 0.08,
+  labelGlyphWidthRatio: 0.62,
+  labelPaddingX: 16,
+  labelPaddingY: 10,
+  minCoreRows: 3,
+  minCoreColumns: 5,
+  minCellCount: 15,
+  fringeRatioMin: 0.16,
+  fringeRatioMax: 0.3,
+  contactSkinRatio: 0.14,
+  maxAspectRatio: 3.35,
+  buttonGap: 0,
+});
 
 export const BUTTONS: AmoebaButtonInput[] = [
   { id: "about", label: "about", tone: _colors.txt.menu },
@@ -33,5 +49,3 @@ export const TARGETS: readonly Point[] = Object.freeze([
   { x: 326, y: 468 },
   { x: 502, y: 474 },
 ]);
-
-

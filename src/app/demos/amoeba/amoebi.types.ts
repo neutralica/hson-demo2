@@ -5,6 +5,30 @@ import type { SvgLiveTree } from "hson-live/types";
 
 export type HexCoord = Readonly<{ q: number; r: number; }>;
 export type Point = Readonly<{ x: number; y: number; }>;
+export type AmoebiBounds = Readonly<{
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+}>;
+export type AmoebiGeometryConfig = Readonly<{
+  hexSize: number;
+  labelFontSize: number;
+  labelLetterSpacing: number;
+  labelGlyphWidthRatio: number;
+  labelPaddingX: number;
+  labelPaddingY: number;
+  minCoreRows: number;
+  minCoreColumns: number;
+  minCellCount: number;
+  fringeRatioMin: number;
+  fringeRatioMax: number;
+  contactSkinRatio: number;
+  maxAspectRatio: number;
+  buttonGap: number;
+}>;
 export type AmoebaButtonInput = Readonly<{
   id: string;
   label: string;
@@ -56,9 +80,10 @@ export type AmoebiTileParts = Readonly<{
 
 export type AmoebiRenderButton = AmoebaButtonLayout & Readonly<{
   cells: readonly HexCoord[];
+  coreCells: readonly HexCoord[];
+  bounds: AmoebiBounds;
 }>;
 export type AmoebiRenderState = Omit<AmoebaState, "layout"> & Readonly<{
   activeIds: readonly string[];
   layout: readonly AmoebiRenderButton[];
 }>;
-

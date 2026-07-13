@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts"
+    "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts",
+    "test:amoebi-geometry": "tsx src/app/demos/amoeba/amoebi-geometry.test.mts"
   },
   "keywords": [],
   "author": "terminal_gothic",

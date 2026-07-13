@@ -1,51 +1,32 @@
-// amoebi-geometry.ts
+import { AMOEBA_H, AMOEBA_W, AMOEBI_GEOMETRY, HEX_SIZE, SQRT3 } from "./amoebi.consts";
+import type {
+  AmoebaButtonInput,
+  AmoebiBounds,
+  AmoebiGeometryConfig,
+  AmoebiRenderButton,
+  AmoebiRenderState,
+  HexCoord,
+  Point,
+} from "./amoebi.types";
 
-import { AMOEBA_W, AMOEBA_H, BUTTON_BASE_DEPTH, BUTTON_BASE_SPAN, HEX_SIZE, SQRT3 } from "./amoebi.consts";
-import type { AmoebaButtonInput, AmoebiRenderButton, AmoebiRenderState, HexCoord, Point } from "./amoebi.types";
-
-// CHANGED: keep the menu in a narrow channel beneath the HSON logo.
 export const MENU_HEX_ORIGIN_X = AMOEBA_W * 0.11;
-// CHANGED: keep the first amoeba at a fixed cell-relative top margin so
-// increasing the menu height does not push the complete layout downward.
 export const MENU_HEX_ORIGIN_Y = HEX_SIZE * 3.25;
 
 const MENU_CHANNEL_LEFT = 18;
 const MENU_CHANNEL_RIGHT = MENU_CHANNEL_LEFT + 220;
+const BUTTON_X_DEVIATIONS = [0, 0, 0, -1, 0, 0, 0, -1, 0, 0] as const;
 
-// CHANGED: q = -r / 2 produces a near-vertical line in this axial grid.
-// A few anchors deviate by one cell to avoid a mechanically straight stack.
-export const MENU_ANCHORS: readonly HexCoord[] = [
-  { q: 0, r: 0 },
-  { q: -1, r: 2 },
-  { q: -2, r: 4 },
-  { q: -4, r: 6 },
-  { q: -4, r: 8 },
-  { q: -5, r: 10 },
-  { q: -6, r: 12 },
-  { q: -8, r: 14 },
-  { q: -8, r: 16 },
-  { q: -9, r: 18 },
-];
-
-function span_for_button(button: AmoebaButtonInput, rng: () => number): number {
-  const labelBoost = button.label.length >= 7 ? 1 : 0;
-  const jitter = rng() > 0.82 ? 1 : 0;
-  return Math.min(6, Math.max(5, BUTTON_BASE_SPAN + labelBoost + jitter));
-}
 function key_of(coord: HexCoord): string {
   return `${coord.q},${coord.r}`;
 }
-function hex_neighbors(coord: HexCoord): readonly HexCoord[] {
-  const { q, r } = coord;
+
+export function hex_neighbors({ q, r }: HexCoord): readonly HexCoord[] {
   return [
-    { q: q + 1, r },
-    { q: q + 1, r: r - 1 },
-    { q, r: r - 1 },
-    { q: q - 1, r },
-    { q: q - 1, r: r + 1 },
-    { q, r: r + 1 },
+    { q: q + 1, r }, { q: q + 1, r: r - 1 }, { q, r: r - 1 },
+    { q: q - 1, r }, { q: q - 1, r: r + 1 }, { q, r: r + 1 },
   ];
 }
+
 function mulberry32(seed: number): () => number {
   let t = seed >>> 0;
   return () => {
@@ -55,461 +36,292 @@ function mulberry32(seed: number): () => number {
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
 }
+
 export function hex_center(coord: HexCoord, size: number): Point {
   return {
     x: MENU_HEX_ORIGIN_X + size * SQRT3 * (coord.q + coord.r / 2),
     y: MENU_HEX_ORIGIN_Y + size * 1.5 * coord.r,
   };
 }
+
 function hex_points(coord: HexCoord, size: number): readonly Point[] {
   const center = hex_center(coord, size);
-  return Array.from({ length: 6 }, (_, i) => {
-    const angle = Math.PI / 180 * (60 * i - 30);
-    return {
-      x: center.x + size * Math.cos(angle),
-      y: center.y + size * Math.sin(angle),
-    };
+  return Array.from({ length: 6 }, (_, index) => {
+    const angle = Math.PI / 180 * (60 * index - 30);
+    return { x: center.x + size * Math.cos(angle), y: center.y + size * Math.sin(angle) };
   });
 }
+
 export function hex_cell_path(coord: HexCoord, size: number): string {
   const center = hex_center(coord, size);
   const radius = size * 1.02;
-  const points = Array.from({ length: 6 }, (_, i) => {
-    const angle = Math.PI / 180 * (60 * i - 30);
-    return {
-      x: center.x + radius * Math.cos(angle),
-      y: center.y + radius * Math.sin(angle),
-    };
+  const points = Array.from({ length: 6 }, (_, index) => {
+    const angle = Math.PI / 180 * (60 * index - 30);
+    return { x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) };
   });
   const first = points[0];
   if (!first) return "";
+  return [`M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`, ...points.slice(1).map((point) => `L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`), "Z"].join(" ");
+}
 
-  return [
-    `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`,
-    ...points.slice(1).map((point) => `L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`),
-    "Z",
-  ].join(" ");
+export function label_footprint(label: string, config: AmoebiGeometryConfig): Readonly<{ width: number; height: number }> {
+  const glyphsWidth = label.length * config.labelFontSize * config.labelGlyphWidthRatio;
+  const spacingWidth = Math.max(0, label.length - 1) * config.labelLetterSpacing;
+  return {
+    width: glyphsWidth + spacingWidth + config.labelPaddingX * 2,
+    height: config.labelFontSize + config.labelPaddingY * 2,
+  };
 }
-function point_key(point: Point): string {
-  return `${point.x.toFixed(3)},${point.y.toFixed(3)}`;
+
+export function core_dimensions(label: string, config: AmoebiGeometryConfig = AMOEBI_GEOMETRY): Readonly<{ columns: number; rows: number }> {
+  const footprint = label_footprint(label, config);
+  const columnStep = SQRT3 * config.hexSize;
+  const columnsForWidth = Math.ceil(Math.max(0, footprint.width - columnStep) / columnStep) + 1;
+  const rowsForHeight = Math.ceil(Math.max(0, footprint.height - config.hexSize * 2) / (config.hexSize * 1.5)) + 1;
+  let columns = Math.max(config.minCoreColumns, columnsForWidth);
+  let rows = Math.max(config.minCoreRows, rowsForHeight);
+  while (columns * rows < config.minCellCount) {
+    if (columns <= rows) columns += 1;
+    else rows += 1;
+  }
+  return { columns, rows };
 }
+
+function make_core(label: string, config: AmoebiGeometryConfig): readonly HexCoord[] {
+  const { columns, rows } = core_dimensions(label, config);
+  const cells: HexCoord[] = [];
+  const firstR = -Math.floor(rows / 2);
+  for (let row = 0; row < rows; row += 1) {
+    const r = firstR + row;
+    const firstQ = -Math.floor(columns / 2) - Math.floor(r / 2);
+    for (let column = 0; column < columns; column += 1) cells.push({ q: firstQ + column, r });
+  }
+  return cells;
+}
+
+export function bounds_for_cells(cells: readonly HexCoord[], size: number): AmoebiBounds {
+  if (!cells.length) return { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 };
+  const centers = cells.map((cell) => hex_center(cell, size));
+  const halfWidth = SQRT3 * size / 2;
+  const left = Math.min(...centers.map(({ x }) => x)) - halfWidth;
+  const right = Math.max(...centers.map(({ x }) => x)) + halfWidth;
+  const top = Math.min(...centers.map(({ y }) => y)) - size;
+  const bottom = Math.max(...centers.map(({ y }) => y)) + size;
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
+}
+
+function aspect_is_allowed(cells: readonly HexCoord[], config: AmoebiGeometryConfig): boolean {
+  const bounds = bounds_for_cells(cells, config.hexSize);
+  return Math.max(bounds.width / bounds.height, bounds.height / bounds.width) <= config.maxAspectRatio;
+}
+
+function add_fringe(core: readonly HexCoord[], rng: () => number, config: AmoebiGeometryConfig): readonly HexCoord[] {
+  const cells = new Map(core.map((cell) => [key_of(cell), cell] as const));
+  const fringeBand = new Map<string, HexCoord>();
+  core.forEach((cell) => hex_neighbors(cell).forEach((neighbor) => {
+    if (!cells.has(key_of(neighbor))) fringeBand.set(key_of(neighbor), neighbor);
+  }));
+  const ratio = config.fringeRatioMin + rng() * (config.fringeRatioMax - config.fringeRatioMin);
+  const target = Math.round(core.length * ratio);
+  for (let added = 0; added < target; added += 1) {
+    const candidates = new Map<string, HexCoord>();
+    cells.forEach((cell) => hex_neighbors(cell).forEach((neighbor) => {
+      if (!cells.has(key_of(neighbor))) candidates.set(key_of(neighbor), neighbor);
+    }));
+    const viable = [...candidates.values()].filter((candidate) => fringeBand.has(key_of(candidate)) && aspect_is_allowed([...cells.values(), candidate], config));
+    if (!viable.length) break;
+    const chosen = viable[Math.floor(rng() * viable.length)];
+    if (chosen) cells.set(key_of(chosen), chosen);
+  }
+  return [...cells.values()];
+}
+
+export function translate_cells(cells: readonly HexCoord[], delta: HexCoord): readonly HexCoord[] {
+  return cells.map(({ q, r }) => ({ q: q + delta.q, r: r + delta.r }));
+}
+
+function center_for_core(core: readonly HexCoord[], size: number): Point {
+  const bounds = bounds_for_cells(core, size);
+  return { x: (bounds.left + bounds.right) / 2, y: (bounds.top + bounds.bottom) / 2 };
+}
+
+function point_key(point: Point): string { return `${point.x.toFixed(3)},${point.y.toFixed(3)}`; }
 function edge_key(a: Point, b: Point): string {
-  const ak = point_key(a);
-  const bk = point_key(b);
+  const ak = point_key(a); const bk = point_key(b);
   return ak < bk ? `${ak}|${bk}` : `${bk}|${ak}`;
 }
-function is_allowed(coord: HexCoord): boolean {
-  const center = hex_center(coord, HEX_SIZE);
-  return center.x > MENU_CHANNEL_LEFT + HEX_SIZE
-    && center.x < MENU_CHANNEL_RIGHT - HEX_SIZE
-    && center.y > 18;
-}
-
-function add_contiguous_row(cells: Map<string, HexCoord>, qStart: number, r: number, span: number): void {
-  for (let i = 0; i < span; i += 1) {
-    const coord = { q: qStart + i, r };
-    if (is_allowed(coord)) cells.set(key_of(coord), coord);
-  }
-}
-function make_lozenge_blob(anchor: HexCoord, span: number, depth: number, rng: () => number): readonly HexCoord[] {
-  const cells = new Map<string, HexCoord>();
-  const rowRadius = Math.max(1, depth);
-  const shoulderSide = rng() > 0.5 ? -1 : 1;
-
-  for (let row = -rowRadius; row <= rowRadius; row += 1) {
-    const distance = Math.abs(row);
-    const isCore = distance === 0;
-    const rowSpan = isCore ? span + Math.round(rng()) : Math.max(3, span - 1 + Math.round(rng()));
-    const centerOffset = Math.floor((span - rowSpan) / 2);
-    const qStart = anchor.q + centerOffset - Math.floor(row / 2);
-
-    add_contiguous_row(cells, qStart, anchor.r + row, rowSpan);
-  }
-
-  const shoulderRow = anchor.r + (rng() > 0.5 ? -1 : 1);
-  const shoulderQ = shoulderSide < 0 ? anchor.q - 1 : anchor.q + span;
-  add_contiguous_row(cells, shoulderQ, shoulderRow, 2);
-
-  return Array.from(cells.values());
-}
-function has_viable_body(
-  cells: readonly HexCoord[],
-  span: number,
-): boolean {
-  if (!cells.length) return false;
-
-  const rows = new Map<number, number>();
-
-  cells.forEach((cell) => {
-    rows.set(cell.r, (rows.get(cell.r) ?? 0) + 1);
-  });
-
-  const rowCount = rows.size;
-  const widestRow = Math.max(...rows.values());
-  const minimumCellMass = Math.max(8, span * 2);
-  const minimumReadableRow = Math.max(4, span - 1);
-
-  // CHANGED: validate the final connected body rather than the original candidate.
-  return rowCount >= 2
-    && cells.length >= minimumCellMass
-    && widestRow >= minimumReadableRow;
-}
-function cells_overlap(cells: readonly HexCoord[], occupied: Set<string>): boolean {
-  return cells.some((cell) => occupied.has(key_of(cell)));
-}
-function shift_cells_left(cells: readonly HexCoord[]): readonly HexCoord[] {
-  return cells.map((cell) => ({
-    q: cell.q - 1,
-    r: cell.r,
-  }));
-}
-
-function settle_cells_left(
-  cells: readonly HexCoord[],
-  occupied: Set<string>,
-): readonly HexCoord[] {
-  let settled = cells;
-
-  for (let guard = 0; guard < 24; guard += 1) {
-    const shifted = shift_cells_left(settled);
-
-    // CHANGED: stop at the left channel edge or the nearest existing amoeba.
-    if (!shifted.every(is_allowed) || cells_overlap(shifted, occupied)) break;
-
-    settled = shifted;
-  }
-
-  return settled;
-}
-
-function contact_score(cells: readonly HexCoord[], occupied: Set<string>): number {
-  let score = 0;
-  cells.forEach((cell) => {
-    hex_neighbors(cell).forEach((neighbor) => {
-      if (occupied.has(key_of(neighbor))) score += 1;
-    });
-  });
-  return score;
-}
-function largest_connected_cells(cells: readonly HexCoord[]): readonly HexCoord[] {
-  const remaining = new Map(cells.map((cell) => [key_of(cell), cell] as const));
-  const groups: HexCoord[][] = [];
-
-  while (remaining.size > 0) {
-    const first = remaining.values().next().value as HexCoord | undefined;
-    if (!first) break;
-
-    const group: HexCoord[] = [];
-    const stack: HexCoord[] = [first];
-    remaining.delete(key_of(first));
-
-    while (stack.length > 0) {
-      const cell = stack.pop();
-      if (!cell) continue;
-      group.push(cell);
-
-      hex_neighbors(cell).forEach((neighbor) => {
-        const key = key_of(neighbor);
-        const next = remaining.get(key);
-        if (!next) return;
-        remaining.delete(key);
-        stack.push(next);
-      });
-    }
-
-    groups.push(group);
-  }
-
-  return groups.sort((a, b) => b.length - a.length)[0] ?? [];
-}
-function anchor_distance(a: HexCoord, b: HexCoord): number {
-  return Math.abs(a.q - b.q) + Math.abs(a.r - b.r);
-}
-function center_penalty(cells: readonly HexCoord[], anchor: HexCoord): number {
-  if (!cells.length) return 0;
-
-  const centers = cells.map((cell) => hex_center(cell, HEX_SIZE));
-  const avg = centers.reduce<Point>((sum, point) => ({
-    x: sum.x + point.x,
-    y: sum.y + point.y,
-  }), { x: 0, y: 0 });
-  const cx = avg.x / centers.length;
-  const cy = avg.y / centers.length;
-  const anchorCenter = hex_center(anchor, HEX_SIZE);
-  const dx = Math.abs(cx - anchorCenter.x);
-  const dy = Math.abs(cy - anchorCenter.y);
-  const rightDrift = Math.max(0, cx - anchorCenter.x);
-  const leftDrift = Math.max(0, anchorCenter.x - cx);
-
-  // CHANGED: strongly discourage shelves growing away from the left-side spine.
-  return dx * 1.25 + dy * 0.22 + rightDrift * 3.4 + leftDrift * 0.12;
-}
-function settle_blob(anchor: HexCoord, span: number, depth: number, occupied: Set<string>, rng: () => number): readonly HexCoord[] {
-  const attempts: HexCoord[] = [anchor];
-
-  for (let radius = 1; radius <= 8; radius += 1) {
-    for (let dr = -radius; dr <= radius; dr += 1) {
-      for (let dq = -radius; dq <= radius; dq += 1) {
-        if (Math.max(Math.abs(dq), Math.abs(dr)) !== radius) continue;
-        attempts.push({ q: anchor.q + dq, r: anchor.r + dr });
-      }
-    }
-  }
-
-  let best: Readonly<{ cells: readonly HexCoord[]; score: number; contact: number; }> | undefined;
-  let bestTouching: Readonly<{ cells: readonly HexCoord[]; score: number; contact: number; }> | undefined;
-
-  attempts.forEach((attempt) => {
-    const generated = settle_cells_left(
-      make_lozenge_blob(attempt, span, depth, rng),
-      occupied,
-    );
-    if (cells_overlap(generated, occupied)) return;
-    const cells = largest_connected_cells(generated);
-
-    if (!has_viable_body(cells, span)) return;
-    if (cells_overlap(cells, occupied)) return;
-
-    const contact = contact_score(cells, occupied);
-    const distance = anchor_distance(anchor, attempt);
-    const score = contact * 54 - distance * 18 - center_penalty(cells, anchor) * 0.12 + rng();
-    const candidate = { cells, score, contact };
-
-    if (!best || score > best.score) best = candidate;
-    if (contact > 0 && (!bestTouching || score > bestTouching.score)) bestTouching = candidate;
-  });
-
-  const chosen = occupied.size > 0 ? bestTouching ?? best : best;
-  if (chosen) {
-    chosen.cells.forEach((cell) => occupied.add(key_of(cell)));
-    return chosen.cells;
-  }
-
-  const fallback = attempts
-    .map((attempt) => {
-      const available = settle_cells_left(
-        make_lozenge_blob(attempt, span, depth, rng),
-        occupied,
-      ).filter((cell) => !occupied.has(key_of(cell)));
-
-      return largest_connected_cells(available);
-    })
-    .filter((cells) => has_viable_body(cells, span))
-    .sort((a, b) => {
-      const contactDiff =
-        contact_score(b, occupied) - contact_score(a, occupied);
-
-      if (contactDiff !== 0) return contactDiff;
-
-      return center_penalty(a, anchor)
-        - center_penalty(b, anchor);
-    })[0] ?? [];
-
-  fallback.forEach((cell) => occupied.add(key_of(cell)));
-  return fallback;
-}
 function polygon_area(points: readonly Point[]): number {
-  let area = 0;
-  points.forEach((point, index) => {
+  return Math.abs(points.reduce((area, point, index) => {
     const next = points[(index + 1) % points.length];
-    if (!next) return;
-    area += point.x * next.y - next.x * point.y;
-  });
-  return Math.abs(area) * 0.5;
+    return next ? area + point.x * next.y - next.x * point.y : area;
+  }, 0)) * 0.5;
 }
 function smooth_loop_path(points: readonly Point[]): string {
-  if (points.length < 3) return "";
-
-  const first = points[0];
-  const second = points[1];
-  const last = points[points.length - 1];
-  if (!first || !second || !last) return "";
-
-  const start = {
-    x: (last.x + first.x) / 2,
-    y: (last.y + first.y) / 2,
-  };
-
-  const commands = [`M ${start.x.toFixed(2)} ${start.y.toFixed(2)}`];
-
+  const first = points[0]; const last = points[points.length - 1];
+  if (!first || !last || points.length < 3) return "";
+  const commands = [`M ${((last.x + first.x) / 2).toFixed(2)} ${((last.y + first.y) / 2).toFixed(2)}`];
   points.forEach((point, index) => {
     const next = points[(index + 1) % points.length];
-    if (!next) return;
-    const mid = {
-      x: (point.x + next.x) / 2,
-      y: (point.y + next.y) / 2,
-    };
-    commands.push(`Q ${point.x.toFixed(2)} ${point.y.toFixed(2)} ${mid.x.toFixed(2)} ${mid.y.toFixed(2)}`);
+    if (next) commands.push(`Q ${point.x.toFixed(2)} ${point.y.toFixed(2)} ${((point.x + next.x) / 2).toFixed(2)} ${((point.y + next.y) / 2).toFixed(2)}`);
   });
-
-  commands.push("Z");
-  return commands.join(" ");
+  return [...commands, "Z"].join(" ");
 }
-function path_for_cells(cells: readonly HexCoord[], size: number): string {
+export function path_for_cells(cells: readonly HexCoord[], size: number): string {
   const edges = new Map<string, readonly [Point, Point]>();
-
-  cells.forEach((cell) => {
-    const pts = hex_points(cell, size);
-    pts.forEach((point, i) => {
-      const next = pts[(i + 1) % pts.length];
-      if (!next) return;
-      const key = edge_key(point, next);
-      if (edges.has(key)) edges.delete(key);
-      else edges.set(key, [point, next]);
-    });
-  });
-
-  const remaining = Array.from(edges.values());
-  if (!remaining.length) return "";
-
+  cells.forEach((cell) => hex_points(cell, size).forEach((point, index, points) => {
+    const next = points[(index + 1) % points.length];
+    if (!next) return;
+    const key = edge_key(point, next);
+    if (edges.has(key)) edges.delete(key); else edges.set(key, [point, next]);
+  }));
+  const remaining = [...edges.values()];
   const byStart = new Map<string, Array<readonly [Point, Point]>>();
+  remaining.forEach((edge) => byStart.set(point_key(edge[0]), [...(byStart.get(point_key(edge[0])) ?? []), edge]));
+  const used = new Set<string>(); const loops: Point[][] = [];
   remaining.forEach((edge) => {
-    const list = byStart.get(point_key(edge[0])) ?? [];
-    list.push(edge);
-    byStart.set(point_key(edge[0]), list);
-  });
-
-  const used = new Set<string>();
-  const loops: Point[][] = [];
-
-  remaining.forEach((edge) => {
-    const startKey = edge_key(edge[0], edge[1]);
-    if (used.has(startKey)) return;
-
-    const start = edge[0];
-    let current = edge[1];
-    used.add(startKey);
-    const points: Point[] = [start, current];
-
-    for (let guard = 0; guard < remaining.length + 4; guard += 1) {
-      if (point_key(current) === point_key(start)) break;
-      const nextEdges = byStart.get(point_key(current)) ?? [];
-      const next = nextEdges.find((candidate) => !used.has(edge_key(candidate[0], candidate[1])));
+    if (used.has(edge_key(edge[0], edge[1]))) return;
+    const start = edge[0]; let current = edge[1]; const points = [start, current];
+    used.add(edge_key(edge[0], edge[1]));
+    for (let guard = 0; guard < remaining.length + 4 && point_key(current) !== point_key(start); guard += 1) {
+      const next = (byStart.get(point_key(current)) ?? []).find((item) => !used.has(edge_key(item[0], item[1])));
       if (!next) break;
-      used.add(edge_key(next[0], next[1]));
-      current = next[1];
-      points.push(current);
+      used.add(edge_key(next[0], next[1])); current = next[1]; points.push(current);
     }
-
     if (points.length >= 3) loops.push(points);
   });
-
   const largest = loops.sort((a, b) => polygon_area(b) - polygon_area(a))[0];
   return largest ? smooth_loop_path(largest) : "";
 }
 
-function anchor_for_button(_button: AmoebaButtonInput, index: number, rng: () => number): HexCoord {
-  const base = MENU_ANCHORS[index % MENU_ANCHORS.length]
-    ?? { q: -index, r: index * 2 };
-
-  const cycle = Math.floor(index / MENU_ANCHORS.length);
-  const r = base.r + cycle * 3 + (rng() > 0.88 ? 1 : 0);
-
-  // CHANGED: derive the main x-position from the final row so the stack stays
-  // vertical even when later cycles extend the layout.
-  const verticalSpineQ = Math.round(-r / 2);
-  const authoredDeviation = base.q - Math.round(-base.r / 2);
-  const rareDeviation = rng() > 0.92
-    ? (rng() > 0.5 ? 1 : -1)
-    : 0;
-
-  return {
-    q: verticalSpineQ + authoredDeviation + rareDeviation,
-    r,
-  };
+function contact_count(cells: readonly HexCoord[], neighborKeys: ReadonlySet<string>): number {
+  return cells.reduce((count, cell) => count + hex_neighbors(cell).filter((neighbor) => neighborKeys.has(key_of(neighbor))).length, 0);
 }
 
-function label_center_for_cells(cells: readonly HexCoord[], span: number): Point {
-  if (!cells.length) return { x: AMOEBA_W * 0.5, y: AMOEBA_H * 0.5 };
+function add_contact_skin(
+  cells: readonly HexCoord[],
+  core: readonly HexCoord[],
+  occupied: ReadonlySet<string>,
+  config: AmoebiGeometryConfig,
+): readonly HexCoord[] {
+  if (!occupied.size) return cells;
+  const skinned = new Map(cells.map((cell) => [key_of(cell), cell] as const));
+  const additionLimit = Math.round(core.length * config.contactSkinRatio);
+  const coreCenterR = core.reduce((sum, cell) => sum + cell.r, 0) / core.length;
+  const coreMinR = Math.min(...core.map(({ r }) => r));
+  const coreMaxR = Math.max(...core.map(({ r }) => r));
+  const initialBounds = bounds_for_cells(cells, config.hexSize);
+  const skinReachX = SQRT3 * config.hexSize;
 
-  const centers = cells.map((coord) => hex_center(coord, HEX_SIZE));
-  const ys = centers.map((point) => point.y);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
+  for (let added = 0; added < additionLimit; added += 1) {
+    const candidates = new Map<string, HexCoord>();
+    skinned.forEach((cell) => hex_neighbors(cell).forEach((neighbor) => {
+      const key = key_of(neighbor);
+      if (!skinned.has(key) && !occupied.has(key)) candidates.set(key, neighbor);
+    }));
 
-  const rows = new Map<number, HexCoord[]>();
-  cells.forEach((cell) => {
-    const row = rows.get(cell.r) ?? [];
-    row.push(cell);
-    rows.set(cell.r, row);
-  });
-
-  const rs = cells.map((cell) => cell.r);
-  const midR = (Math.min(...rs) + Math.max(...rs)) / 2;
-  const minSafeSpan = Math.max(3, Math.min(span, 5));
-  const labelRow = Array.from(rows.values())
-    .filter((row) => row.length >= minSafeSpan)
-    .sort((a, b) => Math.abs((a[0]?.r ?? midR) - midR) - Math.abs((b[0]?.r ?? midR) - midR) || b.length - a.length)[0]
-    ?? Array.from(rows.values()).sort((a, b) => b.length - a.length)[0]
-    ?? cells;
-
-  const sortedRow = [...labelRow].sort((a, b) => a.q - b.q);
-  const trim = Math.max(0, Math.floor((sortedRow.length - span) / 2));
-  const readableRun = sortedRow.slice(trim, sortedRow.length - trim || sortedRow.length);
-  const runCenters = readableRun.map((coord) => hex_center(coord, HEX_SIZE));
-  const xs = runCenters.map((point) => point.x);
-
-  return {
-    x: (Math.min(...xs) + Math.max(...xs)) / 2,
-    y: (minY + maxY) / 2,
-  };
+    let best: Readonly<{ cell: HexCoord; score: number }> | undefined;
+    candidates.forEach((candidate) => {
+      if (candidate.r < coreMinR - 2 || candidate.r > coreMaxR + 1) return;
+      const center = hex_center(candidate, config.hexSize);
+      if (center.x < initialBounds.left - skinReachX || center.x > initialBounds.right + skinReachX) return;
+      const occupiedContacts = hex_neighbors(candidate).filter((neighbor) => occupied.has(key_of(neighbor))).length;
+      if (!occupiedContacts) return;
+      const nextCells = [...skinned.values(), candidate];
+      const bounds = bounds_for_cells(nextCells, config.hexSize);
+      if (bounds.left < MENU_CHANNEL_LEFT || bounds.right > MENU_CHANNEL_RIGHT) return;
+      if (!aspect_is_allowed(nextCells, config)) return;
+      const bodyContacts = hex_neighbors(candidate).filter((neighbor) => skinned.has(key_of(neighbor))).length;
+      const upwardPull = Math.max(0, coreCenterR - candidate.r);
+      const score = occupiedContacts * 100 + bodyContacts * 18 + upwardPull * 4;
+      if (!best || score > best.score) best = { cell: candidate, score };
+    });
+    if (!best) break;
+    skinned.set(key_of(best.cell), best.cell);
+  }
+  return [...skinned.values()];
 }
-function make_layout(buttons: readonly AmoebaButtonInput[], seed: number): AmoebiRenderButton[] {
+
+function place_shape(
+  cells: readonly HexCoord[],
+  core: readonly HexCoord[],
+  index: number,
+  previousCells: readonly HexCoord[],
+  occupied: ReadonlySet<string>,
+  config: AmoebiGeometryConfig,
+): Readonly<{ cells: readonly HexCoord[]; core: readonly HexCoord[] }> {
+  const localBounds = bounds_for_cells(cells, config.hexSize);
+  const deviation = BUTTON_X_DEVIATIONS[index % BUTTON_X_DEVIATIONS.length] ?? 0;
+  const previousKeys = new Set(previousCells.map(key_of));
+
+  if (previousCells.length) {
+    const previousBounds = bounds_for_cells(previousCells, config.hexSize);
+    const candidateDeltas = new Map<string, HexCoord>();
+    previousCells.forEach((previousCell) => {
+      hex_neighbors(previousCell).forEach((openNeighbor) => {
+        cells.forEach((cell) => {
+          const delta = { q: openNeighbor.q - cell.q, r: openNeighbor.r - cell.r };
+          candidateDeltas.set(key_of(delta), delta);
+        });
+      });
+    });
+    let best: Readonly<{ cells: readonly HexCoord[]; core: readonly HexCoord[]; score: number }> | undefined;
+
+    candidateDeltas.forEach((delta) => {
+      const candidate = translate_cells(cells, delta);
+      const bounds = bounds_for_cells(candidate, config.hexSize);
+      if (bounds.left < MENU_CHANNEL_LEFT || bounds.right > MENU_CHANNEL_RIGHT) return;
+      if (bounds.top <= previousBounds.top) return;
+      if (candidate.some((cell) => occupied.has(key_of(cell)))) return;
+      const previousContacts = contact_count(candidate, previousKeys);
+      if (!previousContacts) return;
+      const totalContacts = contact_count(candidate, occupied);
+      const targetQ = -Math.round(delta.r / 2) + deviation;
+      const horizontalDrift = Math.abs(delta.q - targetQ);
+      const score = previousContacts * 1_000
+        + totalContacts * 220
+        - horizontalDrift * 12
+        - bounds.bottom * 0.08;
+      if (!best || score > best.score) best = { cells: candidate, core: translate_cells(core, delta), score };
+    });
+    if (best) return { cells: add_contact_skin(best.cells, best.core, occupied, config), core: best.core };
+  }
+
+  const previousBottom = previousCells.length ? bounds_for_cells(previousCells, config.hexSize).bottom : 0;
+  const desiredTop = index === 0 ? MENU_HEX_ORIGIN_Y - config.hexSize : previousBottom + config.buttonGap;
+  const deltaR = Math.max(0, Math.ceil((desiredTop - localBounds.top) / (config.hexSize * 1.5)));
+  let deltaQ = -Math.round(deltaR / 2) + deviation;
+  let placed = translate_cells(cells, { q: deltaQ, r: deltaR });
+  let bounds = bounds_for_cells(placed, config.hexSize);
+  while (bounds.left < MENU_CHANNEL_LEFT) { deltaQ += 1; placed = translate_cells(cells, { q: deltaQ, r: deltaR }); bounds = bounds_for_cells(placed, config.hexSize); }
+  while (bounds.right > MENU_CHANNEL_RIGHT) { deltaQ -= 1; placed = translate_cells(cells, { q: deltaQ, r: deltaR }); bounds = bounds_for_cells(placed, config.hexSize); }
+  return { cells: placed, core: translate_cells(core, { q: deltaQ, r: deltaR }) };
+}
+
+export function make_layout(buttons: readonly AmoebaButtonInput[], seed: number, config: AmoebiGeometryConfig = AMOEBI_GEOMETRY): AmoebiRenderButton[] {
   const rng = mulberry32(seed);
   const occupied = new Set<string>();
-
+  let previousCells: readonly HexCoord[] = [];
   return buttons.map((button, index) => {
-    const span = span_for_button(button, rng);
-    const anchor = anchor_for_button(button, index, rng);
-    // CHANGED: settle_blob now returns an already validated connected body.
-    const coords = settle_blob(
-      anchor,
-      span,
-      BUTTON_BASE_DEPTH,
-      occupied,
-      rng,
-    );
-    const labelCenter = label_center_for_cells(coords, span);
-
-    return {
-      id: button.id,
-      label: button.label,
-      cells: coords,
-      path: path_for_cells(coords, HEX_SIZE),
-      cx: labelCenter.x,
-      cy: labelCenter.y,
-      tone: button.tone,
-    };
+    const localCore = make_core(button.label, config);
+    const localCells = add_fringe(localCore, rng, config);
+    const placed = place_shape(localCells, localCore, index, previousCells, occupied, config);
+    const bounds = bounds_for_cells(placed.cells, config.hexSize);
+    const labelCenter = center_for_core(placed.core, config.hexSize);
+    placed.cells.forEach((cell) => occupied.add(key_of(cell)));
+    previousCells = placed.cells;
+    return { id: button.id, label: button.label, tone: button.tone, cells: placed.cells, coreCells: placed.core, bounds, path: path_for_cells(placed.cells, config.hexSize), cx: labelCenter.x, cy: labelCenter.y };
   });
 }
 
 export function amoebi_view_height(state: AmoebiRenderState): number {
-  const bottom = state.layout.reduce((maxBottom, button) => {
-    const buttonBottom = button.cells.reduce((maxCellBottom, cell) => {
-      const center = hex_center(cell, HEX_SIZE);
-      return Math.max(maxCellBottom, center.y + HEX_SIZE);
-    }, 0);
-
-    return Math.max(maxBottom, buttonBottom);
-  }, 0);
-
-  return Math.max(
-    HEX_SIZE * 12,
-    Math.ceil(bottom + HEX_SIZE * 2.5),
-  );
+  const bottom = state.layout.reduce((maxBottom, button) => Math.max(maxBottom, button.bounds.bottom), 0);
+  return Math.max(HEX_SIZE * 12, Math.ceil(bottom + HEX_SIZE * 2.5));
 }
-
-
 
 export function make_initial_state(seed: number, buttons: readonly AmoebaButtonInput[], activeIds: readonly string[]): AmoebiRenderState {
-  return {
-    selectedId: activeIds[0] ?? "",
-    hoveredId: null,
-    activeIds,
-    layout: make_layout(buttons, seed),
-  };
+  return { selectedId: activeIds[0] ?? "", hoveredId: null, activeIds, layout: make_layout(buttons, seed) };
 }
+
 export function make_seed(): number {
   return Math.floor((Date.now() ^ Math.floor(Math.random() * 1000000)) >>> 0);
 }
-
