@@ -683,6 +683,75 @@ export function livemap_suite_feed(): TestSuite {
   },
       },
 
+      {
+        suite: SUITE,
+        name: "malformed second replay op emits no partial feed event",
+        meta: {
+          input: preview_value({ count: 0 }),
+        },
+        run: () => {
+          const target = make_livemap_core(json_root_node({ count: 0 }));
+          const events: LiveMapFeedEvent[] = [];
+          let errorResult: unknown;
+
+          target.feed(["count"], (event) => {
+            events.push(event);
+          });
+
+          try {
+            target.replay({
+              prevRev: 0,
+              ops: [
+                { kind: "set", path: ["count"], prev: 0, next: 1 },
+                null,
+              ],
+            } as unknown as Parameters<typeof target.replay>[0]);
+          } catch (error) {
+            const replayError = error as Error & Readonly<{
+              code?: unknown;
+              reason?: unknown;
+              opIndex?: unknown;
+            }>;
+            errorResult = {
+              name: replayError.name,
+              ...(replayError.code !== undefined ? { code: replayError.code } : {}),
+              ...(replayError.reason !== undefined ? { reason: replayError.reason } : {}),
+              ...(replayError.opIndex !== undefined ? { opIndex: replayError.opIndex } : {}),
+            };
+          }
+
+          return {
+            assertRows: [
+              equal_row(
+                "malformed second replay op emits no partial feed event: error",
+                errorResult,
+                {
+                  name: "LiveMapReplayInputError",
+                  code: "INVALID_REPLAY",
+                  reason: "operation is not an object",
+                  opIndex: 1,
+                },
+              ),
+              equal_row(
+                "malformed second replay op emits no partial feed event: events",
+                events.length,
+                0,
+              ),
+              equal_row(
+                "malformed second replay op emits no partial feed event: rev",
+                target.rev,
+                0,
+              ),
+              equal_row(
+                "malformed second replay op emits no partial feed event: root",
+                target.snap(),
+                { count: 0 },
+              ),
+            ],
+          };
+        },
+      },
+
 
     ] as const,
   };

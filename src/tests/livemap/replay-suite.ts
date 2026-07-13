@@ -1,9 +1,88 @@
 // replay-suite.ts
 
 import { define_livemap_schema, make_livemap_core } from "hson-live";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "./handle-helpers";
 import { json_root_node } from "./core-helpers";
+import { equal_row } from "./test-helpers";
+
+
+type InvalidReplayCaseSpec = Readonly<{
+  name: string;
+  input: unknown;
+  expectedReason: string;
+  expectedOpIndex?: number;
+}>;
+
+function invalid_replay_case(
+  suite: string,
+  spec: InvalidReplayCaseSpec,
+): TestCase {
+  return {
+    suite,
+    name: spec.name,
+    run: () => {
+      const initialRoot = {
+        count: 0,
+        items: ["a", "b"],
+      };
+      const map = make_livemap_core(json_root_node(initialRoot));
+      let errorResult: Readonly<{
+        name: string;
+        code?: unknown;
+        reason?: unknown;
+        message: string;
+        opIndex?: unknown;
+      }> | undefined;
+
+      try {
+        map.replay(
+          spec.input as unknown as Parameters<typeof map.replay>[0],
+        );
+      } catch (error) {
+        const replayError = error as Error & Readonly<{
+          code?: unknown;
+          reason?: unknown;
+          opIndex?: unknown;
+        }>;
+
+        errorResult = {
+          name: replayError.name,
+          ...(replayError.code !== undefined
+            ? { code: replayError.code }
+            : {}),
+          ...(replayError.reason !== undefined
+            ? { reason: replayError.reason }
+            : {}),
+          message: replayError.message,
+          ...(replayError.opIndex !== undefined
+            ? { opIndex: replayError.opIndex }
+            : {}),
+        };
+      }
+
+      const expectedError = {
+        name: "LiveMapReplayInputError",
+        code: "INVALID_REPLAY",
+        reason: spec.expectedReason,
+        message: spec.expectedOpIndex === undefined
+          ? `Invalid LiveMap replay: ${spec.expectedReason}`
+          : `Invalid LiveMap replay operation ${spec.expectedOpIndex}: ${spec.expectedReason}`,
+        ...(spec.expectedOpIndex !== undefined
+          ? { opIndex: spec.expectedOpIndex }
+          : {}),
+      };
+
+      return {
+        assertRows: [
+          equal_row(`${spec.name}: error`, errorResult, expectedError),
+          equal_row(`${spec.name}: rev`, map.rev, 0),
+          equal_row(`${spec.name}: root`, map.snap(), initialRoot),
+        ],
+      };
+    },
+  };
+}
 
 
 
@@ -14,6 +93,316 @@ export function livemap_suite_replay(): TestSuite {
   return {
     suite: SUITE,
     cases: [
+      ...[
+        {
+          name: "replay rejects null envelope",
+          input: null,
+          expectedReason: "envelope is not an object",
+        },
+        {
+          name: "replay rejects primitive envelope",
+          input: "invalid",
+          expectedReason: "envelope is not an object",
+        },
+        {
+          name: "replay rejects array envelope",
+          input: [],
+          expectedReason: "envelope is not an object",
+        },
+        {
+          name: "replay rejects missing prevRev",
+          input: { ops: [] },
+          expectedReason: "prevRev is not a non-negative integer",
+        },
+        {
+          name: "replay rejects negative prevRev",
+          input: { prevRev: -1, ops: [] },
+          expectedReason: "prevRev is not a non-negative integer",
+        },
+        {
+          name: "replay rejects fractional prevRev",
+          input: { prevRev: 0.5, ops: [] },
+          expectedReason: "prevRev is not a non-negative integer",
+        },
+        {
+          name: "replay rejects non-finite prevRev",
+          input: { prevRev: Number.POSITIVE_INFINITY, ops: [] },
+          expectedReason: "prevRev is not a non-negative integer",
+        },
+        {
+          name: "replay rejects missing ops",
+          input: { prevRev: 0 },
+          expectedReason: "ops is not an array",
+        },
+        {
+          name: "replay rejects non-array ops",
+          input: { prevRev: 0, ops: {} },
+          expectedReason: "ops is not an array",
+        },
+        {
+          name: "replay rejects non-object operation",
+          input: { prevRev: 0, ops: [null] },
+          expectedReason: "operation is not an object",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects unsupported operation kind",
+          input: { prevRev: 0, ops: [{ kind: "move" }] },
+          expectedReason: "kind is not supported",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects missing operation path",
+          input: { prevRev: 0, ops: [{ kind: "set", prev: 0, next: 1 }] },
+          expectedReason: "path is not valid",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-array operation path",
+          input: { prevRev: 0, ops: [{ kind: "set", path: "count", prev: 0, next: 1 }] },
+          expectedReason: "path is not valid",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects invalid operation path segment",
+          input: { prevRev: 0, ops: [{ kind: "set", path: [true], prev: 0, next: 1 }] },
+          expectedReason: "path is not valid",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects missing operation prev",
+          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], next: 1 }] },
+          expectedReason: "prev is missing",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects missing set next",
+          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: 0 }] },
+          expectedReason: "next is missing",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-JSON prev",
+          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: Number.NaN, next: 1 }] },
+          expectedReason: "prev is not JSON",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-JSON set next",
+          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: 0, next: undefined }] },
+          expectedReason: "next is not JSON",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects missing replace next",
+          input: { prevRev: 0, ops: [{ kind: "replace", path: [], prev: { count: 0 } }] },
+          expectedReason: "next is missing",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-JSON replace next",
+          input: { prevRev: 0, ops: [{ kind: "replace", path: [], prev: { count: 0 }, next: Number.NaN }] },
+          expectedReason: "next is not JSON",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects delete with defined next",
+          input: { prevRev: 0, ops: [{ kind: "delete", path: ["count"], prev: 0, next: null }] },
+          expectedReason: "delete next must be undefined",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects negative splice start",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: -1, removed: [], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
+          expectedReason: "splice start is not a non-negative integer",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects fractional splice start",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0.5, removed: [], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
+          expectedReason: "splice start is not a non-negative integer",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-array splice removed",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: "a", inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
+          expectedReason: "splice removed is not an array",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-array splice inserted",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: "a", prev: ["a", "b"], next: ["a", "b"] }] },
+          expectedReason: "splice inserted is not an array",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-JSON splice removed item",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [Number.NaN], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
+          expectedReason: "removed is not JSON",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-JSON splice inserted item",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [Number.NaN], prev: ["a", "b"], next: ["a", "b"] }] },
+          expectedReason: "inserted is not JSON",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-array splice prev",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [], prev: "invalid", next: ["a", "b"] }] },
+          expectedReason: "prev is not an array",
+          expectedOpIndex: 0,
+        },
+        {
+          name: "replay rejects non-array splice next",
+          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [], prev: ["a", "b"], next: "invalid" }] },
+          expectedReason: "next is not an array",
+          expectedOpIndex: 0,
+        },
+      ].map((spec) => invalid_replay_case(SUITE, spec)),
+
+      read_case({
+        suite: SUITE,
+        name: "malformed second replay op prevents all replay work",
+        input: {},
+        act: () => {
+          const target = make_livemap_core(json_root_node({ count: 0 }));
+          let errorResult: unknown;
+
+          try {
+            target.replay({
+              prevRev: 0,
+              ops: [
+                { kind: "set", path: ["count"], prev: 0, next: 1 },
+                null,
+              ],
+            } as unknown as Parameters<typeof target.replay>[0]);
+          } catch (error) {
+            const replayError = error as Error & Readonly<{
+              code?: unknown;
+              reason?: unknown;
+              opIndex?: unknown;
+            }>;
+            errorResult = {
+              name: replayError.name,
+              ...(replayError.code !== undefined ? { code: replayError.code } : {}),
+              ...(replayError.reason !== undefined ? { reason: replayError.reason } : {}),
+              ...(replayError.opIndex !== undefined ? { opIndex: replayError.opIndex } : {}),
+            };
+          }
+
+          return {
+            error: errorResult,
+            rev: target.rev,
+            root: target.snap(),
+          };
+        },
+        expected: {
+          error: {
+            name: "LiveMapReplayInputError",
+            code: "INVALID_REPLAY",
+            reason: "operation is not an object",
+            opIndex: 1,
+          },
+          rev: 0,
+          root: { count: 0 },
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "invalid replay takes precedence over stale revision",
+        input: {},
+        act: () => {
+          const target = make_livemap_core(json_root_node({ count: 0 }));
+          target.set(["count"], 1);
+          let errorResult: unknown;
+
+          try {
+            target.replay({
+              prevRev: 0,
+              ops: [null],
+            } as unknown as Parameters<typeof target.replay>[0]);
+          } catch (error) {
+            const replayError = error as Error & Readonly<{
+              code?: unknown;
+              reason?: unknown;
+              opIndex?: unknown;
+            }>;
+            errorResult = {
+              name: replayError.name,
+              ...(replayError.code !== undefined ? { code: replayError.code } : {}),
+              ...(replayError.reason !== undefined ? { reason: replayError.reason } : {}),
+              ...(replayError.opIndex !== undefined ? { opIndex: replayError.opIndex } : {}),
+            };
+          }
+
+          return {
+            error: errorResult,
+            rev: target.rev,
+            root: target.snap(),
+          };
+        },
+        expected: {
+          error: {
+            name: "LiveMapReplayInputError",
+            code: "INVALID_REPLAY",
+            reason: "operation is not an object",
+            opIndex: 0,
+          },
+          rev: 1,
+          root: { count: 1 },
+        },
+      }),
+
+      read_case({
+        suite: SUITE,
+        name: "invalid replay takes precedence over state conflict",
+        input: {},
+        act: () => {
+          const target = make_livemap_core(json_root_node({ count: 5 }));
+          let errorResult: unknown;
+
+          try {
+            target.replay({
+              prevRev: 0,
+              ops: [
+                { kind: "set", path: ["count"], prev: 0, next: 1 },
+                null,
+              ],
+            } as unknown as Parameters<typeof target.replay>[0]);
+          } catch (error) {
+            const replayError = error as Error & Readonly<{
+              code?: unknown;
+              reason?: unknown;
+              opIndex?: unknown;
+            }>;
+            errorResult = {
+              name: replayError.name,
+              ...(replayError.code !== undefined ? { code: replayError.code } : {}),
+              ...(replayError.reason !== undefined ? { reason: replayError.reason } : {}),
+              ...(replayError.opIndex !== undefined ? { opIndex: replayError.opIndex } : {}),
+            };
+          }
+
+          return {
+            error: errorResult,
+            rev: target.rev,
+            root: target.snap(),
+          };
+        },
+        expected: {
+          error: {
+            name: "LiveMapReplayInputError",
+            code: "INVALID_REPLAY",
+            reason: "operation is not an object",
+            opIndex: 1,
+          },
+          rev: 0,
+          root: { count: 5 },
+        },
+      }),
+
       read_case({
         suite: SUITE,
         name: "replay applies a changed commit to a matching map",
@@ -894,5 +1283,3 @@ export function livemap_suite_replay(): TestSuite {
     ] as const,
   };
 }
-
-
