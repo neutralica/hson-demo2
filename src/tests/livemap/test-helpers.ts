@@ -1,14 +1,16 @@
 import { make_livemap_core, } from "hson-live";
-import { json_root_node } from "./all-livemap-suites";
+import { json_root_node } from "./json-root-node";
 import type { HsonNode, JsonValue, LiveMapCommit, LiveMapEditResult, LivePath } from "hson-live/types";
 import { set_live_path, snap_live_path } from "../../../../hson-live/src/api/livemap/livemap.editor";
-import type { TestAssertRow, TestCase } from "../../app/demos/test/tests.types";
+import type { TestCase } from "../../app/demos/test/tests.types";
 import type {
   LiveMapSetCaseSpec,
   LiveMapSetCommitExpectation,
   LiveMapSetEditExpectation,
   LiveMapSnapCaseSpec,
 } from "./types";
+export { equal_row, preview_value } from "./assert-helpers";
+import { equal_row, preview_value } from "./assert-helpers";
 
 export type SnapCaseSpec = LiveMapSnapCaseSpec;
 export type CoreSnapCaseSpec = LiveMapSnapCaseSpec;
@@ -38,23 +40,6 @@ type CoreSetRunner = (
   commit: LiveMapCommit;
   rootSnapshot: JsonValue | undefined;
 }>;
-
-export function equal_row(label: string, actual: unknown, expected: unknown): TestAssertRow {
-  const actualText = preview_value(actual);
-  const expectedText = preview_value(expected);
-
-  return {
-    ok: actualText === expectedText,
-    label,
-    actual: actualText,
-    expected: expectedText,
-  };
-}
-
-export function preview_value(value: unknown): string {
-  if (value === undefined) return "undefined";
-  return JSON.stringify(value);
-}
 
 export function make_snap_case(spec: SnapCaseSpec): TestCase {
   return make_snap_like_case(spec, (root, path) => snap_live_path(root, path ?? []));

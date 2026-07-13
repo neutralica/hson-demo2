@@ -1,8 +1,8 @@
-import { make_livemap_core, type LiveMapFeedEvent, hson } from "hson-live";
-import type { JsonValue } from "hson-live/types";
+import { make_livemap_core, type LiveMapFeedEvent } from "hson-live";
 import type { TestCase } from "../../app/demos/test/tests.types";
 import type { CoreAtSnapCaseSpec, CoreAtSetCaseSpec, CoreAtFeedCaseSpec, CoreAtPathCopyCaseSpec, CoreAtOriginalPathStabilityCaseSpec, CoreNodeTagCaseSpec, CoreNodeMissingCaseSpec, CoreNodePathCopyCaseSpec, CoreNodeOriginalPathStabilityCaseSpec, CoreSetPathCopyCaseSpec, CoreSetManyCaseSpec, CoreSetManyFeedCaseSpec, CoreSetManyPathCopyCaseSpec, CoreDeleteCaseSpec, CoreDeleteFeedCaseSpec, CoreDeletePathCopyCaseSpec, CoreDeleteThrowCaseSpec } from "./core.types";
 import { preview_value, equal_row } from "./test-helpers";
+import { json_root_node } from "./json-root-node";
 import type { LiveMapFeedEventPreview, LiveMapFeedCaseSpec } from "./types";
 
 export function make_core_at_snap_case(spec: CoreAtSnapCaseSpec): TestCase {
@@ -508,6 +508,4 @@ export function preview_core_feed_event(event: LiveMapFeedEvent): LiveMapFeedEve
     opNext: event.op.next,
   };
 }
-export function json_root_node(input: JsonValue) {
-  return hson.fromJson(input).toHson().parse();
-}
+export { json_root_node } from "./json-root-node";

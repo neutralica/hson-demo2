@@ -2,7 +2,7 @@ import { make_livemap_core } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
-import { json_root_node } from "./all-livemap-suites";
+import { json_root_node } from "./json-root-node";
 
 
 export function livemap_suite_editor(): TestSuite {

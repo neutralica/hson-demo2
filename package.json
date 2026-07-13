@@ -1,12 +1,14 @@
 {
   "name": "hson-demo2",
   "version": "1.0.0",
+  "type": "module",
   "description": "interactive demo for hson-live and liveTree",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts"
   },
   "keywords": [],
   "author": "terminal_gothic",

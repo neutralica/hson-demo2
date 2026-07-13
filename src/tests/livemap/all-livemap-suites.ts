@@ -19,7 +19,7 @@ import { livemap_suite_batch } from "./batch-suite";
 import { livemap_editor_contract, livemap_object_exact } from "./editor-contract-tests";
 import { livemap_schema_contract_suite } from "./editor-contract-tests";
 import { livemap_link_contract_suites } from "./link-contract-suite";
-import { hson, snap_live_path } from "hson-live";
+import { snap_live_path } from "hson-live";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
 import { livemap_suites_bridge } from "./bridge-suite";
 import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";
@@ -65,9 +65,7 @@ export type LiveMapCaseSpec = Readonly<{
   preview?: (ctx: LiveMapCaseContext) => string;
 }>;
 
-export function json_root_node(input: JsonValue): HsonNode {
-  return hson.fromJson(input).toHson().parse();
-}
+export { json_root_node } from "./json-root-node";
 
 export function make_livemap_case_context(input: JsonValue, root: HsonNode): LiveMapCaseContext {
   return {

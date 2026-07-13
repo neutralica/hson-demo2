@@ -3,8 +3,8 @@
 import { define_livemap_schema, make_livemap_core } from "hson-live";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "./handle-helpers";
-import { json_root_node } from "./core-helpers";
-import { equal_row } from "./test-helpers";
+import { json_root_node } from "./json-root-node";
+import { equal_row } from "./assert-helpers";
 
 
 type InvalidReplayCaseSpec = Readonly<{

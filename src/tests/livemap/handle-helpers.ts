@@ -1,8 +1,8 @@
 import { make_livemap_core } from "hson-live";
 import type { TestCase } from "../../app/demos/test/tests.types";
-import { json_root_node } from "./all-livemap-suites";
+import { json_root_node } from "./json-root-node";
 import type { CommitCaseSpec, FeedCaseSpec, LinkCaseSpec, ThrowCaseSpec, ReadCaseSpec, HandleSnapCaseSpec, HandleSetCaseSpec, HandleSetManyCaseSpec, HandleSetManyFeedCaseSpec, HandleDeleteCaseSpec, HandleDeleteFeedCaseSpec, HandleUpdateCaseSpec, HandleUpdateFeedCaseSpec, HandlePathCopyCaseSpec, HandleOriginalPathStabilityCaseSpec } from "./handle.types";
-import { preview_value, equal_row } from "./test-helpers";
+import { preview_value, equal_row } from "./assert-helpers";
 import type { LiveMapFeedEventPreview } from "./types";
 
 export function commitCase(spec: CommitCaseSpec): TestCase {

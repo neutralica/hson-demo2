@@ -5,7 +5,7 @@ import { link_livemap, make_livemap_core } from "hson-live";
 import type { JsonValue, LivePath } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
-import { json_root_node } from "./all-livemap-suites";
+import { json_root_node } from "./json-root-node";
 
 const SUITE = "livemap/link-contract";
 
@@ -204,4 +204,3 @@ function make_contract_handle_link_case(spec: ContractHandleLinkCaseSpec): TestC
     },
   };
 }
-

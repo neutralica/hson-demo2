@@ -42,6 +42,7 @@ export type AmoebiMenuOptions = Readonly<{
   showTitle?: boolean;
   ariaLabel?: string;
   seed?: number;
+  isolatedIds?: readonly string[];
 }>;
 
 export type AmoebiTileParts = Readonly<{

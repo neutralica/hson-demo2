@@ -51,27 +51,89 @@ function has_hover(value: JsonValue | undefined): boolean {
   return typeof value === "string" && value.length > 0;
 }
 
+function is_isolated_id(
+  isolatedIds: readonly string[],
+  id: string,
+): boolean {
+  return isolatedIds.includes(id);
+}
+
 function amoeba_path_css(
   button: AmoebaButtonLayout,
   hoveredId: JsonValue | undefined,
   activeIds: JsonValue | undefined,
+  isolatedIds: readonly string[],
 ): Readonly<Record<string, string>> {
   const activeList = string_ids(activeIds);
   const hovered = hoveredId === button.id;
   const active = activeList.includes(button.id);
-  const anyActive = activeList.length > 0;
-  const anyHover = has_hover(hoveredId);
-  const suppressed = !hovered && !active && (anyHover || anyActive);
+  const hoveredIsIsolated = typeof hoveredId === "string"
+    && is_isolated_id(
+      isolatedIds,
+      hoveredId,
+    );
+
+  const anyBlockingActive = activeList.some((id) => {
+    return !is_isolated_id(
+      isolatedIds,
+      id,
+    );
+  });
+
+  const blockingHover = has_hover(hoveredId)
+    && !hoveredIsIsolated;
+
+  const suppressed = !hovered
+    && !active
+    && (
+      blockingHover
+      || anyBlockingActive
+    );
+
   const activeHover = active && hovered;
-  const neutralHover = hovered && anyActive && !active;
+  const neutralHover = hovered
+    && anyBlockingActive
+    && !active;
 
   return {
-    fill: activeHover ? set_alpha(OKLCH_NEUTRALS.black, 0.42) : active ? "transparent" : set_alpha(button.tone, hovered ? 0.29 : 0.22),
-    stroke: neutralHover ? set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.68) : hovered || active ? button.tone : set_alpha(button.tone, suppressed ? 0.36 : 0.66),
-    strokeWidth: hovered ? "2.4" : active ? "2" : suppressed ? "1" : "1.35",
-    filter: hovered && !active ? `drop-shadow(0 0 8px ${set_alpha(button.tone, 0.22)})` : "none",
+    fill: activeHover
+      ? set_alpha(OKLCH_NEUTRALS.black, 0.42)
+      : active
+        ? "transparent"
+        : set_alpha(
+          button.tone,
+          hovered ? 0.29 : 0.22,
+        ),
+
+    stroke: neutralHover
+      ? set_alpha(
+        OKLCH_NEUTRALS.pearlIvory,
+        0.68,
+      )
+      : hovered || active
+        ? button.tone
+        : set_alpha(
+          button.tone,
+          suppressed ? 0.36 : 0.66,
+        ),
+
+    strokeWidth: hovered
+      ? "2.4"
+      : active
+        ? "2"
+        : suppressed
+          ? "1"
+          : "1.35",
+
+    filter: hovered && !active
+      ? `drop-shadow(0 0 8px ${set_alpha(
+        button.tone,
+        0.22,
+      )})`
+      : "none",
   };
 }
+
 function render_amoebi_cells(svg: SvgLiveTree, map: LiveMap<AmoebiRenderState>, button: AmoebiRenderButton, index: number): readonly SvgLiveTree[] {
   return button.cells.map((cell, cellIndex) => render_amoebi_cell(svg, map, button, cell, index, cellIndex));
 }
@@ -82,40 +144,82 @@ function bind_amoebi_interaction(
   tiles: readonly AmoebiTileParts[],
   map: LiveMap<AmoebiRenderState>,
   onToggle: ((id: string, nextActiveIds: readonly string[]) => void) | undefined,
+  isolatedIds: readonly string[],
 ): void {
   target.listen.on("pointerenter", () => {
-    apply_amoebi_menu_motion(tiles, parts.button.id, map.snap().activeIds);
-    map.at(["hoveredId"]).set(parts.button.id);
+    apply_amoebi_menu_motion(
+      tiles,
+      parts.button.id,
+      map.snap().activeIds,
+      isolatedIds,
+    );
+
+    map.at(["hoveredId"]).set(
+      parts.button.id,
+    );
   });
 
   target.listen.on("pointerleave", () => {
     const leavingId = parts.button.id;
-    const activeIds = map.snap().activeIds;
-
-    if (!activeIds.includes(leavingId)) {
-      recede_amoebi_tile(parts);
-    }
 
     window.setTimeout(() => {
-      if (map.snap().hoveredId !== leavingId) return;
+      if (
+        map.snap().hoveredId
+        !== leavingId
+      ) {
+        return;
+      }
+
       map.at(["hoveredId"]).set(null);
-      apply_amoebi_menu_motion(tiles, null, map.snap().activeIds);
+
+      apply_amoebi_menu_motion(
+        tiles,
+        null,
+        map.snap().activeIds,
+        isolatedIds,
+      );
     }, 45);
   });
 
-  target.listen.onClick(() => toggle_amoebi_active(map, tiles, parts.button.id, onToggle));
+  target.listen.onClick(() => {
+    toggle_amoebi_active(
+      map,
+      tiles,
+      parts.button.id,
+      isolatedIds,
+      onToggle,
+    );
+  });
+
 }
 
-function render_amoebi_body(svg: SvgLiveTree, map: LiveMap<AmoebiRenderState>, button: AmoebiRenderButton): SvgLiveTree {
+function render_amoebi_body(
+  svg: SvgLiveTree,
+  map: LiveMap<AmoebiRenderState>,
+  button: AmoebiRenderButton,
+  isolatedIds: readonly string[],
+): SvgLiveTree {
   const path = svg.create.path()
     .attr.setMany({
       d: button.path,
       "data-amoeba-id": button.id,
     })
     .css.setMany(PATH_BASEcss)
-    .css.setMany({ pointerEvents: "none" });
+    .css.setMany({
+      pointerEvents: "none",
+    });
 
-  path.bind.cssPaths(map, [["hoveredId"], ["activeIds"]], (values) => amoeba_path_css(button, values[0], values[1]));
+  path.bind.cssPaths(
+    map,
+    [["hoveredId"], ["activeIds"]],
+    (values) => amoeba_path_css(
+      button,
+      values[0],
+      values[1],
+      isolatedIds,
+    ),
+  );
+
   return path;
 }
 
@@ -152,15 +256,50 @@ function render_amoebi_hit_target(svg: SvgLiveTree, button: AmoebiRenderButton):
     });
 }
 
-function render_amoebi_tile(svg: SvgLiveTree, map: LiveMap<AmoebiRenderState>, button: AmoebiRenderButton, index: number): AmoebiTileParts {
-  const cells = render_amoebi_cells(svg, map, button, index);
-  const body = render_amoebi_body(svg, map, button);
-  const target = render_amoebi_hit_target(svg, button);
-  const label = render_amoebi_label(svg, button, index);
-  const parts = { button, index, body, cells, target, label } satisfies AmoebiTileParts;
+function render_amoebi_tile(
+  svg: SvgLiveTree,
+  map: LiveMap<AmoebiRenderState>,
+  button: AmoebiRenderButton,
+  index: number,
+  isolatedIds: readonly string[],
+): AmoebiTileParts {
+  const cells = render_amoebi_cells(
+    svg,
+    map,
+    button,
+    index,
+  );
+
+  const body = render_amoebi_body(
+    svg,
+    map,
+    button,
+    isolatedIds,
+  );
+
+  const target = render_amoebi_hit_target(
+    svg,
+    button,
+  );
+
+  const label = render_amoebi_label(
+    svg,
+    button,
+    index,
+  );
+
+  const parts = {
+    button,
+    index,
+    body,
+    cells,
+    target,
+    label,
+  } satisfies AmoebiTileParts;
 
   RECEDED_AMOEBI_TILES.delete(parts);
   grow_amoebi_outline(body, button, index);
+
   return parts;
 }
 
@@ -324,27 +463,43 @@ function grow_amoebi_outline(path: SvgLiveTree, button: AmoebiRenderButton, butt
 function render_amoeba(
   svg: SvgLiveTree,
   map: LiveMap<AmoebiRenderState>,
-  onToggle: ((id: string, nextActiveIds: readonly string[]) => void) | undefined
+  onToggle: ((id: string, nextActiveIds: readonly string[]) => void) | undefined,
+  isolatedIds: readonly string[],
 ): void {
   svg.empty();
+
   const state = map.snap();
-  const tiles = state.layout.map((button, index) => render_amoebi_tile(svg, map, button, index));
 
-  tiles.forEach((tile) => bind_amoebi_interaction(tile.target, tile, tiles, map, onToggle));
+  const tiles = state.layout.map(
+    (button, index) => {
+      return render_amoebi_tile(
+        svg,
+        map,
+        button,
+        index,
+        isolatedIds,
+      );
+    },
+  );
 
-  // tiles.forEach((tile) => {
-  //   bind_amoebi_interaction(tile.target, tile, tiles, map, onToggle);
-  //   bind_amoebi_interaction(tile.label, tile, tiles, map, onToggle);
-  // });
+  tiles.forEach((tile) => {
+    bind_amoebi_interaction(
+      tile.target,
+      tile,
+      tiles,
+      map,
+      onToggle,
+      isolatedIds,
+    );
+  });
 }
 
 export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): AmoebiMenuApi {
   const items = options.items ?? BUTTONS;
   const seed = options.seed ?? make_seed();
   const activeIds = options.activeIds ?? [];
-  // CHANGED: geometry is settled first so the containing SVG can adopt its
-  // required height without changing the horizontal coordinate scale.
   const initialState = make_initial_state(seed, items, activeIds);
+  const isolatedIds = options.isolatedIds ?? [];
   const viewHeight = amoebi_view_height(initialState);
   const state = hson.liveMap.fromJson(
     initialState as unknown as JsonValue,
@@ -377,7 +532,12 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
       aspectRatio: `${AMOEBA_W} / ${viewHeight}`,
     });
 
-  render_amoeba(svg, state, options.onToggle);
+  render_amoeba(
+    svg,
+    state,
+    options.onToggle,
+    isolatedIds,
+  );
 
   return {
     root,
@@ -387,14 +547,52 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
   };
 }
 
-function apply_amoebi_menu_motion(tiles: readonly AmoebiTileParts[], hoveredId: string | null, activeIds: readonly string[]): void {
-  tiles.forEach((tile) => {
-    const hovered = hoveredId === tile.button.id;
-    const active = activeIds.includes(tile.button.id);
-    const shouldGrow = hovered || active || (hoveredId === null && activeIds.length === 0);
+function apply_amoebi_menu_motion(
+  tiles: readonly AmoebiTileParts[],
+  hoveredId: string | null,
+  activeIds: readonly string[],
+  isolatedIds: readonly string[],
+): void {
+  const hoveredIsIsolated = hoveredId !== null
+    && is_isolated_id(
+      isolatedIds,
+      hoveredId,
+    );
 
-    if (shouldGrow) grow_amoebi_tile(tile);
-    else recede_amoebi_tile(tile);
+  const hasBlockingActive = activeIds.some((id) => {
+    return !is_isolated_id(
+      isolatedIds,
+      id,
+    );
+  });
+
+  tiles.forEach((tile) => {
+    const hovered = hoveredId
+      === tile.button.id;
+
+    const active = activeIds.includes(
+      tile.button.id,
+    );
+
+    let shouldGrow: boolean;
+
+    if (hoveredId === null) {
+      shouldGrow = active
+        || !hasBlockingActive;
+    } else if (hoveredIsIsolated) {
+      shouldGrow = hovered
+        || active
+        || !hasBlockingActive;
+    } else {
+      shouldGrow = hovered
+        || active;
+    }
+
+    if (shouldGrow) {
+      grow_amoebi_tile(tile);
+    } else {
+      recede_amoebi_tile(tile);
+    }
   });
 }
 
@@ -407,15 +605,70 @@ function toggle_amoebi_active(
   map: LiveMap<AmoebiRenderState>,
   tiles: readonly AmoebiTileParts[],
   id: string,
+  isolatedIds: readonly string[],
   onToggle: ((id: string, nextActiveIds: readonly string[]) => void) | undefined,
 ): void {
   const state = map.snap();
-  const next = state.activeIds.includes(id) ? [] : [id];
 
-  set_amoebi_active_ids(map, next);
-  apply_amoebi_menu_motion(tiles, state.hoveredId, next);
-  onToggle?.(id, next);
+  const isolated = is_isolated_id(
+    isolatedIds,
+    id,
+  );
+
+  const isolatedActiveIds = state.activeIds.filter(
+    (activeId) => {
+      return is_isolated_id(
+        isolatedIds,
+        activeId,
+      );
+    },
+  );
+
+  const blockingActiveIds = state.activeIds.filter(
+    (activeId) => {
+      return !is_isolated_id(
+        isolatedIds,
+        activeId,
+      );
+    },
+  );
+
+  const next = isolated
+    ? state.activeIds.includes(id)
+      ? state.activeIds.filter(
+        (activeId) => activeId !== id,
+      )
+      : [
+        ...state.activeIds,
+        id,
+      ]
+    : [
+      ...isolatedActiveIds,
+      ...(
+        blockingActiveIds.includes(id)
+          ? []
+          : [id]
+      ),
+    ];
+
+  set_amoebi_active_ids(
+    map,
+    next,
+  );
+
+  apply_amoebi_menu_motion(
+    tiles,
+    state.hoveredId,
+    next,
+    isolatedIds,
+  );
+
+  onToggle?.(
+    id,
+    next,
+  );
 }
+
 
 function grow_amoebi_tile(parts: AmoebiTileParts): void {
   if (!RECEDED_AMOEBI_TILES.has(parts)) return;

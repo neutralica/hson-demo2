@@ -113,12 +113,21 @@ function menu_key_from_id(id: string): MenuKey | undefined {
   return (MENU_OPTIONS as readonly string[]).includes(id) ? id as MenuKey : undefined;
 }
 
-function active_menu_ids(view: DemoView, widgets: readonly DemoWidget[]): readonly string[] {
+function active_menu_ids(
+  view: DemoView,
+  widgets: readonly DemoWidget[],
+): readonly string[] {
   return [
     ...(view ? [view] : []),
     ...widgets,
   ];
 }
+const ISOLATED_WIDGET_IDS:
+  readonly DemoWidget[] = [
+    "oklch",
+    "point",
+    "motes",
+  ];
 
 function amoebi_menu_items(): readonly AmoebiMenuItem[] {
   return MENU_OPTIONS.map((key) => ({
@@ -428,31 +437,42 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
     toggleWidget: toggle_widget,
     deactivateWidget: deactivate_widget,
   };
-  const amoebiMenu = make_amoebi(menuBox, {
-    items: amoebi_menu_items(),
-    activeIds: active_menu_ids(get_view(), get_widgets() ?? []),
-    showTitle: false,
-    ariaLabel: "Demo navigation",
-    onToggle: (id) => {
-      const key = menu_key_from_id(id);
-      if (!key) return;
+  const amoebiMenu = make_amoebi(
+    menuBox,
+    {
+      activeIds: active_menu_ids(
+        get_view(),
+        get_widgets() ?? [],
+      ),
+      isolatedIds: ISOLATED_WIDGET_IDS,
+      items: amoebi_menu_items(),
+      showTitle: false,
+      ariaLabel: "Demo navigation",
+      onToggle: (id) => {
+        const key = menu_key_from_id(id);
+        if (!key) return;
 
-      if (is_widget_menu_key(key)) {
-        demoController.toggleWidget(key);
-        return;
-      }
+        if (is_widget_menu_key(key)) {
+          demoController.toggleWidget(key);
+          return;
+        }
 
-      if (!is_demo_menu_key(key)) return;
-      if (key === $FLEURS && demoController.getView() === $FLEURS) fleurField.empty();
-      demoController.toggleView(key);
-    },
-  });
+        if (!is_demo_menu_key(key)) return;
+        if (key === $FLEURS && demoController.getView() === $FLEURS) fleurField.empty();
+        demoController.toggleView(key);
+      },
+    });
   const applyView = (): void => {
     const view = get_view();
     const widgets = get_widgets() ?? [];
 
     sync_demo_visibility(viewHosts, widgetHosts, view, widgets);
-    amoebiMenu.setActiveIds(active_menu_ids(view, widgets));
+    amoebiMenu.setActiveIds(
+      active_menu_ids(
+        view,
+        widgets,
+      ),
+    );
   };
 
   // CHANGED: render directly from the store's schema-bound LiveMap.
