@@ -17,7 +17,7 @@ import { _freeze } from "./tests.consts";
 import type { HsonTestApi, CaseKey, TestSuite, TestRunMode } from "./tests.types";
 import { livetree_quid_level_2 } from "../../../tests/livetree/livetree-25-regression-2";
 import { all_livehost_suites } from "../../../tests/livehost/all-livehost-suites";
-import { livemap_suite_rev } from "../../../tests/livemap/revision-suite";
+import { livemap_suite_rev } from "../../../tests/livemap/rev-suite";
 
 
 type FullLoopFn = (atom: FixtureAtom, opts?: Partial<LoopOpts>) => LoopReport;
