@@ -72,6 +72,8 @@ export type TestRunMode =
   | "livetree"
   | "livemap"
   | "livemap-replay"
+  | "livehost-all"
+  | "node-all"
   | "livehost"
   | "legacy"
   | "dev"

@@ -156,7 +156,7 @@ for (const [result, router, mirror, timeline] of [[resultA, routerA, mirrorA, ti
   expect_concurrent(authoritative !== undefined, `${result.runId} retains independent host inspection state`);
   equal(mirror.capture().value, authoritative.map.capture().value, `${result.runId} router mirror reconstructs its authoritative report`);
   expect_concurrent(router.status === "complete" && router.failure === undefined, `${result.runId} router completes without failure`);
-  expect_concurrent(mirror.rev === 48 && mirror.status === "active", `${result.runId} mirror remains active at revision 48`);
+  expect_concurrent(mirror.rev === 5 && mirror.status === "active", `${result.runId} mirror remains active at batched revision 5`);
   expect_concurrent(mirror.capture().value.run.status === "passed", `${result.runId} reconstructs passed status`);
   expect_concurrent(mirror.capture().value.summary.cases === 45, `${result.runId} reconstructs 45 cases`);
   expect_concurrent(mirror.capture().value.summary.fail === 0, `${result.runId} reconstructs zero failures`);

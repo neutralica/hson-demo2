@@ -1,12 +1,14 @@
 import type { JsonValue, LiveHostEventListener } from "hson-live/types";
 import {
   make_hosted_test_panel_adapter,
-  is_hosted_test_panel_mode,
+  hosted_test_suite_for_panel_mode,
   type HostedTestPanelSink,
 } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_hosted_test_panel_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
+import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
 import type { TestEvent, TestSummary } from "../../app/demos/test/tests.types";
 import type { HostedTestRunResult } from "./hosted-replay-action";
+import type { HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite";
 import { make_hosted_test_report } from "./hosted-test-report";
 import { encode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "./hosted-test-report-initial";
 import { encode_hosted_test_report_commit, HOSTED_TEST_REPORT_COMMIT_EVENT } from "./hosted-test-report-wire";
@@ -74,7 +76,7 @@ function fake_client() {
         listeners.add(listener);
         return () => listeners.delete(listener);
       },
-      action(_name: "tests.run", _payload: Readonly<{ suite: "livemap/replay" }>) {
+      action(_name: "tests.run", _payload: Readonly<{ suite: HostedTestSuiteId }>) {
         listenerCountsAtAction.push(listeners.size);
         const action = deferred();
         actions.push(action);
@@ -129,29 +131,68 @@ function emit_fixture(io: ReturnType<typeof fake_client>, value: ReturnType<type
   for (const commit of value.commits) io.emit(HOSTED_TEST_REPORT_COMMIT_EVENT, commit as unknown as JsonValue);
 }
 
-const runtime = make_hosted_test_panel_runtime();
+const runtime = make_hosted_test_panel_runtime(make_registered_hosted_test_suite_registry());
 const visibleSink = make_sink();
 let localReplayInvocations = 0;
-expect_adapter(is_hosted_test_panel_mode("livemap-replay") && !is_hosted_test_panel_mode("livemap"), "only the explicit replay mode selects hosted execution");
+expect_adapter(
+  hosted_test_suite_for_panel_mode("livemap-replay") === "livemap/replay"
+    && hosted_test_suite_for_panel_mode("livehost-all") === "livehost/all"
+    && hosted_test_suite_for_panel_mode("node-all") === "node/all"
+    && hosted_test_suite_for_panel_mode("livemap") === undefined,
+  "both explicit hosted modes share selection while local modes remain local",
+);
 const visibleAdapter = make_hosted_test_panel_adapter(runtime.client, visibleSink.sink);
-const visibleResult = await visibleAdapter.start();
+const visibleResult = await visibleAdapter.start("livemap/replay");
 expect_adapter(localReplayInvocations === 0, "hosted adapter never invokes the browser-local replay runner");
 expect_adapter(visibleResult.ok && visibleAdapter.router?.runId === visibleResult.runId, "real action result correlates with routed run");
-expect_adapter(visibleAdapter.router?.status === "complete" && visibleAdapter.router.mirror?.rev === 48, "real visible route completes at revision 48");
+expect_adapter(visibleAdapter.router?.status === "complete" && visibleAdapter.router.mirror?.rev === 5, "real visible route completes at batched revision 5");
 expect_adapter(visibleSink.summaries[0]?.cases === 0 && visibleSink.summaries[0]?.suites === 0, "authoritative initial state renders first");
 expect_adapter(visibleSink.summaries.some((summary) => summary.cases > 0 && summary.cases < 45), "summary counters update progressively");
 expect_adapter(visibleSink.events.filter((event) => event.t === "case_end").length === 45, "45 progressive case rows are translated");
 const visibleFinal = visibleSink.summaries.at(-1);
 expect_adapter(visibleFinal?.cases === 45 && visibleFinal.pass === 45 && visibleFinal.fail === 0, "visible final summary is 45 passing cases");
-expect_adapter(visibleSink.renders > 45, "initial, start, case, and terminal revisions request panel rendering");
+expect_adapter(visibleSink.renders === 5, "initial, start, two case batches, and terminal revisions request panel rendering");
 visibleAdapter.dispose();
 runtime.dispose();
+
+const livehostRuntime = make_hosted_test_panel_runtime(make_registered_hosted_test_suite_registry());
+const livehostSink = make_sink();
+const livehostAdapter = make_hosted_test_panel_adapter(livehostRuntime.client, livehostSink.sink);
+const livehostResult = await livehostAdapter.start("livehost/all");
+expect_adapter(livehostResult.suite === "livehost/all" && livehostResult.summary.suites === 9, "second visible mode uses the same adapter and returns LiveHost collection identity");
+expect_adapter(livehostAdapter.router?.runId === livehostResult.runId && livehostAdapter.router.mirror?.capture().value.run.suite === "livehost/all", "second router, result, and mirror correlate suite identity");
+expect_adapter(livehostAdapter.router?.mirror?.rev === 13, "157-case LiveHost report reaches batched revision 13");
+expect_adapter(livehostSink.events.filter((event) => event.t === "case_end").length === 157, "second hosted mode progressively translates 157 case rows");
+const livehostFinal = livehostSink.summaries.at(-1);
+expect_adapter(livehostFinal?.suites === 9 && livehostFinal.cases === 157 && livehostFinal.pass === 157 && livehostFinal.fail === 0, "second hosted mode renders the complete passing LiveHost summary");
+livehostAdapter.dispose();
+livehostRuntime.dispose();
+
+const nodeRuntime = make_hosted_test_panel_runtime(make_registered_hosted_test_suite_registry());
+const nodeSink = make_sink();
+const nodeAdapter = make_hosted_test_panel_adapter(nodeRuntime.client, nodeSink.sink);
+const nodePanelStarted = performance.now();
+const nodeResult = await nodeAdapter.start("node/all");
+const nodePanelRoundTripMs = performance.now() - nodePanelStarted;
+expect_adapter(localReplayInvocations === 0, "aggregate hosted mode never invokes the browser-local runner");
+expect_adapter(nodeResult.suite === "node/all" && nodeResult.summary.suites === 41, "aggregate selector uses the shared adapter and canonical 41-suite runner");
+expect_adapter(nodeAdapter.router?.mirror?.rev === 62, "1060-case aggregate report reaches batched revision 62");
+const nodeCaseEvents = nodeSink.events.filter((event) => event.t === "case_end");
+expect_adapter(nodeCaseEvents.length === 1060, "aggregate panel receives exactly 1060 progressive case rows");
+expect_adapter(new Set(nodeCaseEvents.map((event) => event.t === "case_end" ? `${event.suite}\u0000${event.name}` : "")).size === 1060, "aggregate panel case identities are unique");
+expect_adapter(nodeSink.summaries.some((summary) => summary.cases > 0 && summary.cases < 1060), "aggregate summary progresses monotonically before completion");
+expect_adapter(nodeSink.summaries.every((summary, index, values) => index === 0 || summary.cases >= (values[index - 1]?.cases ?? 0)), "aggregate case totals never decrease");
+const nodeFinal = nodeSink.summaries.at(-1);
+expect_adapter(nodeFinal?.cases === 1060 && nodeFinal.pass === 1060 && nodeFinal.fail === 0, "aggregate panel renders 1060 passing cases");
+console.log(JSON.stringify({ nodePanelRoundTripMs, nodePanelRenders: nodeSink.renders }));
+nodeAdapter.dispose();
+nodeRuntime.dispose();
 
 const rerunIo = fake_client();
 const rerunSink = make_sink();
 const rerunAdapter = make_hosted_test_panel_adapter(rerunIo.client, rerunSink.sink);
-const firstPromise = rerunAdapter.start();
-const secondPromise = rerunAdapter.start();
+const firstPromise = rerunAdapter.start("livemap/replay");
+const secondPromise = rerunAdapter.start("livemap/replay");
 expect_adapter(rerunIo.listenerCountsAtAction.join(",") === "1,1", "router listener is installed before each action and previous listener is disposed");
 expect_adapter(rerunIo.listenerCount === 1, "rerun owns only the newest router listener");
 const secondFixture = fixture("second-run", "passed");
@@ -168,7 +209,7 @@ expect_adapter(rerunSink.renders === renderedAfterSecond && rerunAdapter.router?
 const failedIo = fake_client();
 const failedSink = make_sink();
 const failedAdapter = make_hosted_test_panel_adapter(failedIo.client, failedSink.sink);
-const failedPromise = failedAdapter.start();
+const failedPromise = failedAdapter.start("livemap/replay");
 const failedValue = fixture("failed-run", "failed");
 emit_fixture(failedIo, failedValue);
 failedIo.actions[0]?.resolve({ type: "ack", result: failedValue.result });
@@ -179,7 +220,7 @@ expect_adapter(failedAdapter.router?.failure === undefined && failedAdapter.rout
 const errorIo = fake_client();
 const errorSink = make_sink();
 const errorAdapter = make_hosted_test_panel_adapter(errorIo.client, errorSink.sink);
-const errorPromise = errorAdapter.start();
+const errorPromise = errorAdapter.start("livemap/replay");
 const errorValue = fixture("error-run", "error");
 emit_fixture(errorIo, errorValue);
 errorIo.actions[0]?.resolve({ type: "error", error: { code: "LIVEHOST_ACTION_FAILED", message: "synthetic" } });
@@ -192,7 +233,7 @@ expect_adapter(errorSink.infrastructureErrors[0] === "synthetic infrastructure f
 const disposeIo = fake_client();
 const disposeSink = make_sink();
 const disposeAdapter = make_hosted_test_panel_adapter(disposeIo.client, disposeSink.sink);
-const disposedPromise = disposeAdapter.start();
+const disposedPromise = disposeAdapter.start("livemap/replay");
 const rendersBeforeDispose = disposeSink.renders;
 disposeAdapter.dispose();
 expect_adapter(disposeIo.listenerCount === 0, "unmount disposal removes router listener");

@@ -665,7 +665,7 @@ export function livemap_suites_handle_2(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "handle object.deleteMany on non-object throws",
+        name: "handle object.deleteMany on non-object repeated invocation throws",
         input: { items: [0, 1] },
         act: (map) => map.at(["items"]).object.deleteMany(["name"]),
         expectedMessage: "LiveMap path is not an object: [\"items\"]",
@@ -953,4 +953,3 @@ export function livemap_suites_handle_2(): TestSuite {
     ] as const,
   };
 }
-

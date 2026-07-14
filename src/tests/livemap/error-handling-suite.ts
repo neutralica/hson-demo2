@@ -32,8 +32,6 @@ function summarize_issue(
 
 
 export function livemap_error_handling(): TestSuite {
-  const SUITE = "livemap/schema";
-
   return {
     suite: SUITE,
     cases: [

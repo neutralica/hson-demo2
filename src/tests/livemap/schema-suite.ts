@@ -1476,7 +1476,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema rules keep public wildcard paths",
+        name: "schema rules expose wildcard lookup coverage",
         input: {},
         act: () => {
           const schema = define_livemap_schema((s) => ({

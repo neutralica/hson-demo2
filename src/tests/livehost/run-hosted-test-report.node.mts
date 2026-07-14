@@ -80,7 +80,7 @@ const passingResult: RunResult = {
 };
 
 const times = [100, 200];
-const report = make_hosted_test_report(() => times.shift() ?? 300);
+const report = make_hosted_test_report(() => times.shift() ?? 300, undefined, "livemap/replay", { caseBatchSize: 1 });
 const initial = report.map.capture();
 expect_report(initial.rev === 1, "JSON object construction has the expected initial revision");
 equal(initial.value, {
@@ -151,7 +151,7 @@ expect_report(report.commits()[0] === retainedStart, "later report mutation does
 expect_report(Object.isFrozen(retainedStart) && Object.isFrozen(retainedStart.ops), "captured envelope and operations are frozen");
 expect_report(retainedStart.ops.every((op) => Object.isFrozen(op) && Object.isFrozen(op.path)), "captured operations and paths are frozen");
 
-const detached = make_hosted_test_report(() => 1);
+const detached = make_hosted_test_report(() => 1, undefined, "livemap/replay", { caseBatchSize: 1 });
 detached.reduce({ t: "suite_begin", suite: "livemap/replay" });
 const mutableEvent: Extract<TestEvent, { t: "case_end" }> = {
   t: "case_end",
@@ -230,11 +230,11 @@ expect_report(
     && realRun.map.snap(["summary", "cases"]) === (response.result as unknown as HostedTestRunResult).summary.cases,
   "report summary agrees with action result",
 );
-expect_report(realRun.map.rev === 48, "real run revision is initial + start + 45 cases + terminal");
+expect_report(realRun.map.rev === 5, "real run revision is initial + start + two case batches + terminal");
 const realCommits = realRun.commits();
-expect_report(realCommits.length === 47, "real run captures start + 45 cases + terminal");
+expect_report(realCommits.length === 4, "real run captures start + two case batches + terminal");
 expect_report(realCommits[0]?.prevRev === 1 && realCommits[0].rev === 2, "real capture starts at revisions 1 to 2");
-expect_report(realCommits.at(-1)?.prevRev === 47 && realCommits.at(-1)?.rev === 48, "real capture ends at revisions 47 to 48");
+expect_report(realCommits.at(-1)?.prevRev === 4 && realCommits.at(-1)?.rev === 5, "real capture ends at revisions 4 to 5");
 expect_contiguous(realCommits, 1);
 for (const commit of realCommits.slice(1, -1)) {
   expect_report(commit.ops.filter((op) => op.kind === "splice" && path_equal(op.path, ["cases"])).length === 1, `case revision ${commit.rev} has one append`);

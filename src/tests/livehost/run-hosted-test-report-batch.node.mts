@@ -1,0 +1,91 @@
+import { make_hosted_test_report } from "../../app/hosted-test/hosted-test-report";
+import { encode_hosted_test_report_commit } from "../../app/hosted-test/hosted-test-report-wire";
+import type { RunResult, TestEvent } from "../../app/demos/test/tests.types";
+
+function expect_batch(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(`hosted report batching: ${message}`);
+}
+
+const passingResult = (cases: number, pass = cases, fail = 0, skip = 0): RunResult => ({
+  ok: fail === 0,
+  summary: { suites: 1, cases, pass, fail, skip, msTotal: cases, failures: [] },
+});
+const begin: TestEvent = { t: "suite_begin", suite: "batch/test", totalPlanned: 4 };
+const end = (name: string, status: "pass" | "fail" | "skip" = "pass"): TestEvent => ({
+  t: "case_end", suite: "batch/test", name, status, ms: 1, ...(status === "fail" ? { err: "expected" } : {}),
+});
+const suiteEnd: TestEvent = { t: "suite_end", suite: "batch/test", ms: 4 };
+
+let emitted = 0;
+const report = make_hosted_test_report(() => 1, (commit) => {
+  encode_hosted_test_report_commit("batch-run", "livemap/replay", commit);
+  emitted += 1;
+}, "livemap/replay", { caseBatchSize: 3 });
+report.reduce(begin);
+expect_batch(report.commits().length === 1, "suite start emits one commit");
+report.reduce(end("one", "pass"));
+report.reduce(end("two", "fail"));
+expect_batch(report.commits().length === 1 && report.map.capture().value.cases.length === 0, "fewer than batch size remains private and emits no case commit");
+report.reduce(end("three", "skip"));
+expect_batch(report.commits().length === 2, "reaching batch size emits exactly one case commit");
+const firstBatch = report.map.capture().value;
+expect_batch(firstBatch.cases.map((item) => item.name).join(",") === "one,two,three", "batch preserves source order");
+expect_batch(firstBatch.summary.cases === 3 && firstBatch.summary.pass === 1 && firstBatch.summary.fail === 1 && firstBatch.summary.skip === 1, "case append and all counters update atomically");
+const caseCommit = report.commits()[1];
+expect_batch(caseCommit?.ops.some((op) => op.kind === "splice") && caseCommit.ops.length >= 4, "one semantic batch contains append and related counters");
+report.reduce(end("four"));
+report.reduce(suiteEnd);
+expect_batch(report.commits().length === 3 && report.map.capture().value.cases.length === 4, "suite end flushes a partial batch");
+report.complete(passingResult(4, 2, 1, 1));
+expect_batch(report.commits().length === 4 && emitted === 4, "local capture and transport observer remain one-for-one through terminal state");
+expect_batch(new Set(report.map.capture().value.cases.map((item) => item.key)).size === 4, "no case is duplicated");
+report.dispose();
+
+const completionFlush = make_hosted_test_report(() => 1, undefined, "livemap/replay", { caseBatchSize: 8 });
+completionFlush.reduce(begin);
+completionFlush.reduce(end("pending"));
+completionFlush.complete(passingResult(1));
+expect_batch(completionFlush.map.capture().value.cases.length === 1 && completionFlush.commits().length === 3, "terminal completion flushes a partial batch before its terminal commit");
+completionFlush.dispose();
+
+const infrastructureFlush = make_hosted_test_report(() => 1, undefined, "livemap/replay", { caseBatchSize: 8 });
+infrastructureFlush.reduce(begin);
+infrastructureFlush.reduce(end("completed-before-error"));
+infrastructureFlush.failInfrastructure(new Error("synthetic"));
+expect_batch(infrastructureFlush.map.capture().value.cases.length === 1 && infrastructureFlush.map.capture().value.run.status === "error", "infrastructure failure preserves completed pending cases before terminal error");
+expect_batch(infrastructureFlush.commits().length === 3, "error path emits start, pending case batch, and terminal error commits");
+infrastructureFlush.dispose();
+
+const disposeFlush = make_hosted_test_report(() => 1, undefined, "livemap/replay", { caseBatchSize: 8 });
+disposeFlush.reduce(begin);
+disposeFlush.reduce(end("dispose-pending"));
+disposeFlush.dispose();
+expect_batch(disposeFlush.map.capture().value.cases.length === 1, "disposal flushes pending completed cases before detaching feed observation");
+
+const batchOne = make_hosted_test_report(() => 1, undefined, "livemap/replay", { caseBatchSize: 1 });
+batchOne.reduce(begin);
+batchOne.reduce(end("a"));
+batchOne.reduce(end("b"));
+batchOne.complete(passingResult(2));
+expect_batch(batchOne.commits().length === 4 && batchOne.map.rev === 5, "batch size one reproduces one case per commit");
+batchOne.dispose();
+
+for (const invalid of [0, -1, 1.5, Number.NaN]) {
+  let rejected = false;
+  try { make_hosted_test_report(() => 1, undefined, "livemap/replay", { caseBatchSize: invalid }); }
+  catch { rejected = true; }
+  expect_batch(rejected, `invalid batch size ${String(invalid)} rejects clearly`);
+}
+
+let observerThrows = true;
+const observerFailure = make_hosted_test_report(() => 1, (commit) => {
+  if (observerThrows && commit.ops.some((op) => op.kind === "splice")) throw new Error("observer failed after commit");
+}, "livemap/replay", { caseBatchSize: 1 });
+observerFailure.reduce(begin);
+try { observerFailure.reduce(end("committed-once")); } catch {}
+observerThrows = false;
+observerFailure.failInfrastructure(new Error("terminal"));
+expect_batch(observerFailure.map.capture().value.cases.length === 1, "a post-commit observer error cannot cause the committed pending batch to be duplicated");
+observerFailure.dispose();
+
+console.log("hosted report batching: ok");

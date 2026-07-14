@@ -3,7 +3,8 @@ import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
 import {
   create_hosted_test_livehost,
   type HostedTestActions,
-} from "../../../tests/livehost/hosted-replay-action";
+} from "../../hosted-test/hosted-test-action";
+import type { HostedTestSuiteRegistry } from "../../hosted-test/hosted-test-suite";
 
 type MessageListener = (message: string) => void;
 
@@ -50,9 +51,9 @@ function make_socket_pair(): readonly [LiveHostSocketLike, LiveHostSocketLike] {
   ];
 }
 
-export function make_hosted_test_panel_runtime(): HostedTestPanelRuntime {
+export function make_hosted_test_panel_runtime(registry: HostedTestSuiteRegistry): HostedTestPanelRuntime {
   const [clientSocket, hostSocket] = make_socket_pair();
-  const host = create_hosted_test_livehost();
+  const host = create_hosted_test_livehost(registry);
   const client = create_livehost_client<undefined, HostedTestActions>({ socket: clientSocket });
   const disconnectHost = host.connect(hostSocket);
   client.connect();

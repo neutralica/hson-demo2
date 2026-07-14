@@ -176,9 +176,9 @@ expect_wire(realRun !== undefined && initial !== undefined, "real run inspection
 const envelopes = realRun.commits().map((local) =>
   encode_hosted_test_report_commit("real-replay-run", "livemap/replay", local)
 );
-expect_wire(envelopes.length === 47, "real run produces 47 transport envelopes");
+expect_wire(envelopes.length === 4, "real run produces four batched transport envelopes");
 expect_wire(envelopes[0]?.prevRev === 1 && envelopes[0].rev === 2, "real envelope range begins 1 to 2");
-expect_wire(envelopes.at(-1)?.prevRev === 47 && envelopes.at(-1)?.rev === 48, "real envelope range ends 47 to 48");
+expect_wire(envelopes.at(-1)?.prevRev === 4 && envelopes.at(-1)?.rev === 5, "real envelope range ends 4 to 5");
 validate_hosted_test_report_commit_sequence(envelopes, {
   runId: "real-replay-run",
   suite: "livemap/replay",
@@ -191,7 +191,7 @@ const initialJson = structuredClone(initial.value) as unknown as JsonValue;
 const replay = hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA);
 for (const decodedCommit of decoded) replay.replay({ prevRev: decodedCommit.prevRev, ops: decodedCommit.ops });
 equal(replay.capture().value, realRun.map.capture().value, "stringify, parse, decode, and replay reconstruct authoritative final report");
-expect_wire(replay.rev === 48, "decoded transport replay reaches revision 48");
+expect_wire(replay.rev === 5, "decoded transport replay reaches revision 5");
 expect_wire(realRun.map.snap(["run", "status"]) === "passed", "authoritative real report remains passed");
 expect_wire(realRun.map.snap(["summary", "cases"]) === 45, "authoritative real report retains 45 cases");
 expect_wire(response.type === "ack" && (response.result as unknown as HostedTestRunResult).summary.cases === 45, "existing action result remains unchanged");

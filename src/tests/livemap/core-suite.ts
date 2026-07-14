@@ -631,7 +631,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema allows delete unknown field",
+        name: "core schema allows delete unknown field regression coverage",
         meta: {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
@@ -659,7 +659,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects delete required parent before mutation",
+        name: "core schema rejects delete required parent regression coverage",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -1275,5 +1275,4 @@ export function livemap_suites_core(): TestSuite {
     ] as const,
   };
 }
-
 

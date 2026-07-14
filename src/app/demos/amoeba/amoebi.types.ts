@@ -1,5 +1,10 @@
 import type { LiveTree } from "hson-live";
 import type { SvgLiveTree } from "hson-live/types";
+import type {
+  SoftTileContactMetadata,
+  SoftTilePackingDiagnostics,
+  SoftTilePlacementDiagnostics,
+} from "../../ui/soft-tile/soft-tile.types";
 
 
 
@@ -13,21 +18,22 @@ export type AmoebiBounds = Readonly<{
   width: number;
   height: number;
 }>;
-export type AmoebiGeometryConfig = Readonly<{
-  hexSize: number;
-  labelFontSize: number;
-  labelLetterSpacing: number;
-  labelGlyphWidthRatio: number;
+export type AmoebiBodyConfig = Readonly<{
   labelPaddingX: number;
   labelPaddingY: number;
   minCoreRows: number;
   minCoreColumns: number;
+  horizontalFringeRatio: number;
+  verticalFringeRatio: number;
+  maxBodyWidth: number;
+}>;
+export type AmoebiGeometryConfig = AmoebiBodyConfig & Readonly<{
+  hexSize: number;
+  labelFontSize: number;
+  labelLetterSpacing: number;
+  labelGlyphWidthRatio: number;
   minCellCount: number;
-  fringeRatioMin: number;
-  fringeRatioMax: number;
-  contactSkinRatio: number;
   maxAspectRatio: number;
-  buttonGap: number;
 }>;
 export type AmoebaButtonInput = Readonly<{
   id: string;
@@ -82,6 +88,13 @@ export type AmoebiRenderButton = AmoebaButtonLayout & Readonly<{
   cells: readonly HexCoord[];
   coreCells: readonly HexCoord[];
   bounds: AmoebiBounds;
+  placement: SoftTilePlacementDiagnostics;
+  contacts: SoftTileContactMetadata;
+}>;
+export type AmoebiPackedLayout = Readonly<{
+  layout: readonly AmoebiRenderButton[];
+  packingDiagnostics: SoftTilePackingDiagnostics;
+  packingEnergy: number;
 }>;
 export type AmoebiRenderState = Omit<AmoebaState, "layout"> & Readonly<{
   activeIds: readonly string[];

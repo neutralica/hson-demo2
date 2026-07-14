@@ -15,8 +15,9 @@ import  { run_test_suites } from "./test-runner";
 import type { TestRunMode, TestEvent, UiLevel, CaseKey } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
-import { is_hosted_test_panel_mode, make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
+import { hosted_test_suite_for_panel_mode, make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
 import { make_hosted_test_panel_runtime } from "./hosted-test-panel-runtime";
+import type { HostedTestSuiteRegistry } from "../../hosted-test/hosted-test-suite";
 
 const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
 const LOG_HR_PART = " ----------=•=|"
@@ -27,6 +28,8 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "livetree", label: "livetree" },
     { key: "livemap", label: "livemap" },
     { key: "livemap-replay", label: "livemap/replay (hosted)" },
+    { key: "livehost-all", label: "livehost/all (hosted)" },
+    { key: "node-all", label: "all Node-safe (hosted)" },
     { key: "livehost", label: "livehost" },
     { key: "legacy", label: "legacy" },
     { key: "unit", label: "unit" },
@@ -140,7 +143,7 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
     return { leftColumn, rightColumn, inspectorPane, logger };
 }
 
-export function tp_factory(): Outcome<TestPanel> {
+export function tp_factory(hostedSuites: HostedTestSuiteRegistry): Outcome<TestPanel> {
     let mounted = false;
     let level: UiLevel = "normal";
     let mode: TestRunMode = "all";
@@ -292,7 +295,7 @@ export function tp_factory(): Outcome<TestPanel> {
         }
     };
 
-    const hostedRuntime = make_hosted_test_panel_runtime();
+    const hostedRuntime = make_hosted_test_panel_runtime(hostedSuites);
     const hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
         reset() {
             chips.clear();
@@ -378,9 +381,10 @@ export function tp_factory(): Outcome<TestPanel> {
 
         runBtn.listen.onClick(async () => {
 
-            if (is_hosted_test_panel_mode(mode)) {
+            const hostedSuite = hosted_test_suite_for_panel_mode(mode);
+            if (hostedSuite !== undefined) {
                 try {
-                    await hostedAdapter.start();
+                    await hostedAdapter.start(hostedSuite);
                 } catch {
                     // The authoritative terminal error report is already rendered by the adapter.
                 }
@@ -440,7 +444,7 @@ export function tp_factory(): Outcome<TestPanel> {
         },
     } as const);
 }
-export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
+export function mount_test_panels(host: LiveTree, hostedSuites: HostedTestSuiteRegistry): Outcome<TestPanels> {
     try {
         const old = host.find.byId("test-panels-root");
         if (old) old.removeSelf();
@@ -449,7 +453,7 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
             .id.set("test-panels-root")
             .css.setMany(TP_ROOTcss);
 
-        const tp = relay_data(tp_factory());
+        const tp = relay_data(tp_factory(hostedSuites));
         tp.mount(root);
         return relay.data({
             root,

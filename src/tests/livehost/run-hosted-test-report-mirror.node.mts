@@ -42,7 +42,7 @@ function fresh(initial: HostedTestReportInitialEnvelope): HostedTestReportMirror
   return make_hosted_test_report_mirror(initial);
 }
 
-const source = make_hosted_test_report(() => 10);
+const source = make_hosted_test_report(() => 10, undefined, "livemap/replay", { caseBatchSize: 1 });
 const initial = encode_hosted_test_report_initial("mirror-run", "livemap/replay", source.map.capture());
 source.reduce({ t: "suite_begin", suite: "livemap/replay" });
 const startCommit = source.commits()[0];

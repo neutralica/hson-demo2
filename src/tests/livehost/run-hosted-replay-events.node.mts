@@ -125,7 +125,7 @@ expect_events(authoritative !== undefined, "host exposes final authoritative rep
 expect_events(initialsA.length === 1 && initialsB.length === 0, "originating client alone receives exactly one initial state");
 const initialA = initialsA[0];
 expect_events(initialA !== undefined, "originating client initial state is available");
-expect_events(envelopesA.length === 47, "originating client receives 47 report commits");
+expect_events(envelopesA.length === 4, "originating client receives four batched report commits");
 expect_events(envelopesB.length === 0, "non-originating client receives no report commits");
 expect_events(envelopesA.every((envelope) => envelope.runId === "hosted-live-run-a"), "one stable run ID identifies the stream");
 validate_hosted_test_report_commit_sequence(envelopesA, {
@@ -135,15 +135,15 @@ validate_hosted_test_report_commit_sequence(envelopesA, {
 });
 expect_events(timeline[0] === "initial:1" && timeline[1] === "event:2", "initial state precedes the first commit");
 expect_events(envelopesA[0]?.prevRev === 1 && envelopesA[0].rev === 2, "event stream begins at revision 1 to 2");
-expect_events(envelopesA.at(-1)?.prevRev === 47 && envelopesA.at(-1)?.rev === 48, "event stream ends at revision 47 to 48");
-expect_events(timeline.at(-2) === "event:48" && timeline.at(-1) === "result", "terminal event arrives before action result");
+expect_events(envelopesA.at(-1)?.prevRev === 4 && envelopesA.at(-1)?.rev === 5, "event stream ends at revision 4 to 5");
+expect_events(timeline.at(-2) === "event:5" && timeline.at(-1) === "result", "terminal event arrives before action result");
 
 const replay = make_hosted_test_report_mirror(initialA);
 for (const envelope of envelopesA) {
   replay.apply(envelope);
 }
 equal(replay.capture().value, authoritative.map.capture().value, "received events reconstruct authoritative final report through mirror");
-expect_events(replay.rev === 48, "received events replay through final revision 48");
+expect_events(replay.rev === 5, "received events replay through final revision 5");
 expect_events(replay.status === "active" && replay.failure === undefined, "successful report mirror remains lifecycle-active");
 expect_events(replay.capture().value.run.status === "passed", "reconstructed report is passed");
 expect_events(replay.capture().value.summary.cases === 45, "reconstructed report contains 45 cases");

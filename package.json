@@ -18,6 +18,12 @@
     "test:hosted-report-router-node": "tsx src/tests/livehost/run-hosted-test-report-router.node.mts",
     "test:hosted-replay-router-node": "tsx src/tests/livehost/run-hosted-replay-router.node.mts",
     "test:hosted-test-panel-adapter-node": "tsx src/tests/livehost/run-hosted-test-panel-adapter.node.mts",
+    "test:hosted-suite-registry-node": "tsx src/tests/livehost/run-hosted-suite-registry.node.mts",
+    "test:hosted-node-all-node": "tsx src/tests/livehost/run-hosted-node-all.node.mts",
+    "test:hosted-report-batch-node": "tsx src/tests/livehost/run-hosted-test-report-batch.node.mts",
+    "test:hosted-report-performance-node": "tsx src/tests/livehost/run-hosted-report-performance.node.mts",
+    "test:hosted-multi-suite-concurrent-node": "tsx src/tests/livehost/run-hosted-multi-suite-concurrent.node.mts",
+    "test:hosted-app-boundary-node": "tsx src/tests/livehost/run-hosted-app-boundary.node.mts",
     "test:hosted-replay-events-node": "tsx src/tests/livehost/run-hosted-replay-events.node.mts",
     "test:hosted-replay-concurrent-node": "tsx src/tests/livehost/run-hosted-replay-concurrent.node.mts",
     "test:amoebi-geometry": "tsx src/app/demos/amoeba/amoebi-geometry.test.mts"
@@ -32,6 +38,7 @@
   "dependencies": {
     "hson-live": "file:../hson-live",
     "intrastructure": "file:../../intrastructure/",
+    "jsdom": "29.1.0",
     "tsx": "^4.21.0"
   }
 }

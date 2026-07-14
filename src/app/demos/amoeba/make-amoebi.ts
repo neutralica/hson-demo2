@@ -513,7 +513,7 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: `0 0 ${AMOEBA_W} ${viewHeight}`,
       // CHANGED: anchor the SVG viewBox to the left edge instead of centering it.
-      preserveAspectRatio: "xMinYMid meet",
+      preserveAspectRatio: "xMinYMin meet",
       role: "group",
       "aria-label": options.ariaLabel ?? "Amoebi menu experiment",
     })
@@ -697,3 +697,5 @@ function recede_amoebi_tile(parts: AmoebiTileParts): void {
     recede_amoebi_node(cell, hex_center(coord, HEX_SIZE), 35 + orderIndex * 10, 420);
   });
 }
+
+
