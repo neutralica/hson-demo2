@@ -1,6 +1,6 @@
 import { create_test_log } from "../../app/demos/test/test-logger";
 import { TestRecorder } from "../../app/demos/test/test-recorder";
-import { run_test_suites } from "../../app/demos/test/test-runner";
+import { run_test_suites } from "../../hosted-test/test-runner";
 import type { CaseKey, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
 
 type CaseEndEvent = Extract<TestEvent, { t: "case_end" }>;

@@ -1,5 +1,6 @@
 import type { HostedTestSuiteId } from "../app/hosted-test/hosted-test-suite";
 import { all_jsdom_hosted_test_suites, JSDOM_HOSTED_TEST_SUITE_IDS } from "./dom/jsdom-hosted-test-suites";
+import { all_jsdom_hosted_canvas_suites, JSDOM_HOSTED_CANVAS_SUITE_IDS } from "./dom/canvas/jsdom-hosted-canvas-suites";
 
 export type HostedMigrationClassification = "HOSTED" | "HOST_READY" | "DOM_REQUIRED" | "UNKNOWN_OR_MIXED";
 
@@ -12,10 +13,11 @@ export type HostedMigrationInventoryEntry = Readonly<{
   transitiveBlocker?: string;
   nextBulk: boolean;
   hostedBy?: HostedTestSuiteId;
+  includedIn?: readonly HostedTestSuiteId[];
 }>;
 
 function hosted(suite: string, cases: number, runner: string): HostedMigrationInventoryEntry {
-  return Object.freeze({ suite, cases, runner, classification: "HOSTED", browserApis: [], nextBulk: false, hostedBy: "node/all" });
+  return Object.freeze({ suite, cases, runner, classification: "HOSTED", browserApis: [], nextBulk: false, hostedBy: "node/all", includedIn: Object.freeze(["node/all", "hosted/all"] as const) });
 }
 
 function dom(suite: string, cases: number | undefined, runner: string, browserApis: readonly string[], transitiveBlocker = "DOMParser-backed LiveTree/transform construction"): HostedMigrationInventoryEntry {
@@ -112,6 +114,7 @@ const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = O
 ]);
 
 const JSDOM_HOSTED_IDS = new Set<string>(JSDOM_HOSTED_TEST_SUITE_IDS);
+const CANVAS_HOSTED_IDS = new Set<string>(JSDOM_HOSTED_CANVAS_SUITE_IDS);
 
 export const HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
   ...NODE_HOSTED_SUITES,
@@ -123,27 +126,60 @@ export const HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.fr
     browserApis: Object.freeze(["DOMParser", "document"]),
     nextBulk: false,
     hostedBy: "dom/core" as const,
+    includedIn: Object.freeze(["dom/core", "hosted/all"] as const),
+  })),
+  ...all_jsdom_hosted_canvas_suites().map((suite) => Object.freeze({
+    suite: suite.suite,
+    cases: suite.cases.length,
+    runner: "run_jsdom_hosted_canvas_suites",
+    classification: "HOSTED" as const,
+    browserApis: Object.freeze(["HTMLCanvasElement", "CanvasRenderingContext2D", "getBoundingClientRect", "ResizeObserver"]),
+    nextBulk: false,
+    hostedBy: "canvas/core" as const,
+    includedIn: Object.freeze(["canvas/core", "hosted/all"] as const),
   })),
 ]);
 
 export const DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze(
   [
-    ...DECLARED_DOM_REQUIRED_SUITES.filter((entry) => !JSDOM_HOSTED_IDS.has(entry.suite)),
+    ...DECLARED_DOM_REQUIRED_SUITES.filter((entry) => (
+      !JSDOM_HOSTED_IDS.has(entry.suite)
+      && !CANVAS_HOSTED_IDS.has(entry.suite)
+      && !entry.suite.startsWith("transform/fuzz-json/")
+      && !entry.suite.startsWith("generated/json/")
+    )),
     dom(
-      "livetree/construction-parity::fromUntrustedHtml",
+      "livetree/css-pseudo::rendered-pseudo-content",
+      3,
+      "all_livetree_suites",
+      ["getComputedStyle", "pseudo-element rendering"],
+      "jsdom does not render ::before content for computed-style readback",
+    ),
+    dom(
+      "livetree-18/treeselector-surface::rendered-pseudo-attr-content",
       1,
       "all_livetree_suites",
-      ["DOMPurify", "window"],
-      "DOMPurify is imported before the hosted window exists; hson-live needs a runtime-bound sanitizer factory",
+      ["getComputedStyle", "pseudo-element rendering"],
+      "jsdom does not render attr() content in ::before computed style",
+    ),
+    dom(
+      "livetree/canvas-clear::pixel-output",
+      2,
+      "all_livetree_suites",
+      ["CanvasRenderingContext2D", "getImageData", "pixel rasterization"],
+      "requires raster readback after fillRect and clearRect",
+    ),
+    dom(
+      "livetree/canvas-plot::pixel-output",
+      2,
+      "all_livetree_suites",
+      ["CanvasRenderingContext2D", "getImageData", "pixel rasterization"],
+      "requires raster readback after plot callbacks",
     ),
   ],
 );
 
-export const UNKNOWN_OR_MIXED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
-  Object.freeze({ suite: "mode/all", cases: undefined, runner: "all_test_suites(all)", classification: "UNKNOWN_OR_MIXED", browserApis: [], transitiveBlocker: "Combines HOST_READY and DOM_REQUIRED suites", nextBulk: false }),
-  Object.freeze({ suite: "mode/dev", cases: undefined, runner: "all_test_suites(dev)", classification: "UNKNOWN_OR_MIXED", browserApis: [], transitiveBlocker: "Combines livemap/rev with DOM-dependent livetree/quid-level-2", nextBulk: false }),
-  Object.freeze({ suite: "transform/ad-hoc/<format>", cases: 1, runner: "make_ad_hoc_transform_suite", classification: "UNKNOWN_OR_MIXED", browserApis: ["DOMParser"], transitiveBlocker: "Runtime-selected format and panel-owned fixture", nextBulk: false }),
-]);
+export const UNKNOWN_OR_MIXED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([]);
 
 export const HOSTED_TEST_MIGRATION_INVENTORY = Object.freeze([
   ...HOSTED_SUITES,

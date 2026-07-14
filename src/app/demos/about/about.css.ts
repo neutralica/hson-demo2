@@ -57,7 +57,8 @@ export const ABOUT_LIST_ROWcss: CssMap = {
 export const ABOUT_LIST_MARKERcss: CssMap = {
   display: "inline",
   textAlign: "left",
-  userSelect: "none",
+userSelect: "none",
+  webkitUserSelect: "none",
   whiteSpace: "pre",
   // fontSize: "1rem",
   // verticalAlign: "center",

@@ -3,13 +3,15 @@ import {
   type HostedTestSuiteDescriptor,
   type HostedTestSuiteRegistry,
 } from "../app/hosted-test/hosted-test-suite";
-import { run_test_suites } from "../app/demos/test/test-runner";
+import { run_test_suites } from "./test-runner";
 import type { RunOptions, RunResult, TestEvent } from "../app/demos/test/tests.types";
 import { all_livehost_suites } from "../tests/livehost/all-livehost-suites";
 import { run_livemap_replay_suite } from "../tests/livemap/run-replay-suite";
 import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites";
 import { run_jsdom_hosted_test_suites } from "./dom/jsdom-hosted-test-suites";
+import { run_jsdom_hosted_canvas_suites } from "./dom/canvas/jsdom-hosted-canvas-suites";
 import { with_hosted_node_globals } from "./dom/hosted-dom-mutex";
+import { run_hosted_all_test_suites } from "./hosted-all-test-suites";
 
 export async function run_livehost_all_suite(
   onEvent?: (event: TestEvent) => void,
@@ -32,6 +34,11 @@ export async function run_node_all_suite(
 
 export const REGISTERED_HOSTED_TEST_SUITES: readonly HostedTestSuiteDescriptor[] = Object.freeze([
   Object.freeze({
+    id: "hosted/all",
+    label: "all hosted",
+    run: run_hosted_all_test_suites,
+  }),
+  Object.freeze({
     id: "livemap/replay",
     label: "livemap/replay",
     run: (onEvent?: (event: TestEvent) => void, options?: RunOptions) =>
@@ -51,6 +58,11 @@ export const REGISTERED_HOSTED_TEST_SUITES: readonly HostedTestSuiteDescriptor[]
     id: "dom/core",
     label: "DOM core",
     run: run_jsdom_hosted_test_suites,
+  }),
+  Object.freeze({
+    id: "canvas/core",
+    label: "Canvas core",
+    run: run_jsdom_hosted_canvas_suites,
   }),
 ]);
 

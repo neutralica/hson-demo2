@@ -1,4 +1,7 @@
 import { JSDOM } from "jsdom";
+import { install_hosted_dom_geometry, type HostedDomGeometry } from "./hosted-dom-geometry";
+import { install_hosted_canvas_runtime } from "./canvas/hosted-canvas-runtime";
+import type { HostedCanvasRuntime } from "./canvas/hosted-canvas.types";
 
 export type HostedDomRuntimeOptions = Readonly<{
   html?: string;
@@ -9,6 +12,8 @@ export type HostedDomRuntimeOptions = Readonly<{
 export type HostedDomRuntime = Readonly<{
   window: Window;
   document: Document;
+  geometry: HostedDomGeometry;
+  canvas: HostedCanvasRuntime;
   reset_document(): void;
   dispose(): void;
 }>;
@@ -17,9 +22,10 @@ export const HOSTED_DOM_GLOBAL_NAMES = Object.freeze([
   "window", "document", "DOMParser", "XMLSerializer", "Node", "Element", "HTMLElement", "SVGElement",
   "Document", "HTMLDivElement", "HTMLButtonElement", "HTMLInputElement", "HTMLTextAreaElement",
   "HTMLSelectElement", "HTMLOptionElement", "HTMLTemplateElement", "HTMLFormElement", "HTMLStyleElement",
+  "HTMLCanvasElement", "CanvasRenderingContext2D",
   "DocumentFragment", "Text", "Comment", "Attr", "EventTarget", "Event", "CustomEvent", "KeyboardEvent",
   "MouseEvent", "FocusEvent", "InputEvent", "MutationObserver", "DOMTokenList", "NodeList", "HTMLCollection",
-  "CSSStyleDeclaration", "CSSRule", "CSSStyleSheet", "CSS", "navigator", "getComputedStyle", "PointerEvent",
+  "CSSStyleDeclaration", "CSSRule", "CSSStyleSheet", "CSS", "navigator", "getComputedStyle", "PointerEvent", "ResizeObserver",
   "requestAnimationFrame", "cancelAnimationFrame",
 ] as const);
 
@@ -111,6 +117,20 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
     }
   };
   const records: GlobalRecord[] = [];
+  let geometry: HostedDomGeometry | undefined;
+  let canvas: HostedCanvasRuntime | undefined;
+  try {
+    geometry = install_hosted_dom_geometry(window);
+    canvas = install_hosted_canvas_runtime(window);
+  } catch (error) {
+    geometry?.dispose();
+    window.close();
+    throw error;
+  }
+  if (geometry === undefined || canvas === undefined) {
+    window.close();
+    throw new Error("Hosted DOM runtime failed to install its deterministic capabilities.");
+  }
   let disposed = false;
   let nextFrameId = 0;
   const pendingFrames = new Map<number, ReturnType<typeof setImmediate>>();
@@ -141,6 +161,7 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
       ["HTMLSelectElement", window.HTMLSelectElement], ["HTMLOptionElement", window.HTMLOptionElement],
       ["HTMLTemplateElement", window.HTMLTemplateElement], ["HTMLFormElement", window.HTMLFormElement],
       ["HTMLStyleElement", window.HTMLStyleElement],
+      ["HTMLCanvasElement", window.HTMLCanvasElement], ["CanvasRenderingContext2D", canvas.CanvasRenderingContext2D],
       ["DocumentFragment", window.DocumentFragment], ["Text", window.Text], ["Comment", window.Comment],
       ["Attr", window.Attr], ["EventTarget", window.EventTarget], ["Event", window.Event],
       ["CustomEvent", window.CustomEvent], ["KeyboardEvent", window.KeyboardEvent], ["MouseEvent", window.MouseEvent],
@@ -149,7 +170,7 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
       ["CSSStyleDeclaration", window.CSSStyleDeclaration], ["CSSRule", window.CSSRule],
       ["CSSStyleSheet", window.CSSStyleSheet], ["CSS", hostedCss],
       ["navigator", window.navigator], ["getComputedStyle", window.getComputedStyle.bind(window)],
-      ["PointerEvent", HostedPointerEvent],
+      ["PointerEvent", HostedPointerEvent], ["ResizeObserver", window.ResizeObserver],
       ["requestAnimationFrame", requestAnimationFrame], ["cancelAnimationFrame", cancelAnimationFrame],
     ];
     if (globals.map(([name]) => name).join("\n") !== HOSTED_DOM_GLOBAL_NAMES.join("\n")) {
@@ -166,6 +187,8 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
     Object.defineProperty(window, "cancelAnimationFrame", { configurable: true, value: cancelAnimationFrame });
   } catch (error) {
     restore_globals(records);
+    canvas.dispose();
+    geometry.dispose();
     window.close();
     throw error;
   }
@@ -173,8 +196,12 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
   return Object.freeze({
     window,
     document: window.document,
+    geometry,
+    canvas,
     reset_document() {
       if (disposed) throw new Error("Hosted DOM runtime is disposed.");
+      geometry.clear_all_element_rects();
+      canvas.clear_all_canvases();
       window.document.head.replaceChildren();
       window.document.body.replaceChildren();
     },
@@ -183,6 +210,8 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
       disposed = true;
       for (const timer of pendingFrames.values()) clearImmediate(timer);
       pendingFrames.clear();
+      canvas.dispose();
+      geometry.dispose();
       restore_globals(records);
       window.close();
     },

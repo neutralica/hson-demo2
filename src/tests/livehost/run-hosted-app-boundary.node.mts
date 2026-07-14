@@ -7,6 +7,16 @@ import {
   HOST_READY_SUITES,
   UNKNOWN_OR_MIXED_SUITES,
 } from "../../hosted-test/hosted-test-migration-inventory";
+import {
+  DEFERRED_BROWSER_FIDELITY_CASES,
+  FINAL_HARNESS_MIGRATION_INVENTORY,
+  GENERATED_TEST_MODES,
+} from "../../hosted-test/final-harness-migration-inventory";
+import { all_hosted_test_suites } from "../../hosted-test/hosted-all-test-suites";
+import { all_node_safe_hosted_test_suites } from "../../hosted-test/node-safe-hosted-test-suites";
+import { all_deterministic_transform_test_suites } from "../../hosted-test/deterministic-transform-test-suites";
+import { all_jsdom_hosted_test_suites } from "../../hosted-test/dom/jsdom-hosted-test-suites";
+import { all_unit_tests } from "../unit/all-unit-tests";
 
 function expect_boundary(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted app boundary: ${message}`);
@@ -34,18 +44,24 @@ for (const name of hostedFiles) {
 const browserRuntimeSource = readFileSync(new URL("../../app/demos/test/hosted-test-panel-runtime.ts", import.meta.url), "utf8");
 const browserAdapterSource = readFileSync(new URL("../../app/hosted-test/browser-websocket-socket.ts", import.meta.url), "utf8");
 const mainSource = readFileSync(new URL("../../main.ts", import.meta.url), "utf8");
+const panelMountSource = readFileSync(new URL("../../app/demos/test/mount-tp.ts", import.meta.url), "utf8");
 expect_boundary(!browserRuntimeSource.includes("create_hosted_test_livehost"), "visible runtime must not construct a browser LiveHost");
 expect_boundary(!browserRuntimeSource.includes("registered-hosted-test-suites") && !mainSource.includes("registered-hosted-test-suites"), "browser graph must not reach executable suite descriptors");
 expect_boundary(!browserRuntimeSource.includes('from "ws"') && !browserAdapterSource.includes('from "ws"'), "browser runtime must use native WebSocket rather than Node ws");
 expect_boundary(!browserRuntimeSource.includes("jsdom") && !browserAdapterSource.includes("jsdom") && !mainSource.includes("jsdom"), "browser hosted-test graph must not reach jsdom");
+expect_boundary(!browserRuntimeSource.includes("hosted-canvas") && !mainSource.includes("hosted-canvas"), "browser hosted-test graph must not reach the Node canvas recorder");
 for (const file of application_files(appDirectory)) {
   const source = readFileSync(file, "utf8");
   expect_boundary(!source.includes('from "jsdom"') && !source.includes('from "ws"'), `${file} excludes Node-only transport and DOM packages`);
   expect_boundary(!source.includes("registered-hosted-test-suites") && !source.includes("jsdom-hosted-test-suites"), `${file} excludes executable Node descriptors`);
+  expect_boundary(!source.includes("all_test_suites") && !source.includes("run_test_suites"), `${file} excludes browser-local suite execution`);
+  expect_boundary(!source.includes("tests/livemap/") && !source.includes("tests/livetree/") && !source.includes("tests/livehost/") && !source.includes("tests/unit/") && !source.includes("tests/transform/"), `${file} excludes executable test definitions`);
 }
 const nodeRegistrySource = readFileSync(new URL("../../hosted-test/registered-hosted-test-suites.ts", import.meta.url), "utf8");
 expect_boundary(nodeRegistrySource.includes("jsdom-hosted-test-suites"), "Node executable registry may reach the jsdom-backed runner");
 expect_boundary(browserRuntimeSource.includes("VITE_HOSTED_TEST_WS_URL"), "visible runtime reads the explicit WebSocket environment variable");
+expect_boundary(panelMountSource.includes('"hosted-all"') && !panelMountSource.includes('key: "all"') && !panelMountSource.includes('key: "fuzz-json"'), "visible selector list is remote-hosted only");
+expect_boundary(!panelMountSource.includes("make_ad_hoc_transform_suite") && !panelMountSource.includes("flush_dom"), "visible panel has no ad hoc local execution bridge");
 for (const file of panelFiles) {
   const source = readFileSync(file, "utf8");
   expect_boundary(!source.includes("tests/"), `${file.pathname} must not import from src/tests`);
@@ -66,11 +82,25 @@ for (const name of compatibilityFiles) {
   expect_boundary(source.includes("../../app/hosted-test/"), `${name} must remain a narrow application re-export`);
 }
 
-expect_boundary(HOSTED_SUITES.length === 107 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 1929, "inventory pins 41 Node-safe plus 66 jsdom-hosted suites and 1929 canonical cases");
-expect_boundary(HOSTED_SUITES.every((entry) => (entry.hostedBy === "node/all" || entry.hostedBy === "dom/core") && !entry.nextBulk), "every hosted entry names its aggregate descriptor");
-expect_boundary(DOM_REQUIRED_SUITES.length === 16, "inventory retains layout, canvas, generated, and one runtime-bound sanitizer entry");
-expect_boundary(UNKNOWN_OR_MIXED_SUITES.length === 3, "inventory pins mixed runtime modes separately");
+expect_boundary(HOSTED_SUITES.length === 120 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 2045, "inventory pins 41 Node-safe, 73 jsdom-hosted, and 6 canvas-hosted suites with 2045 canonical cases");
+expect_boundary(HOSTED_SUITES.every((entry) => (entry.hostedBy === "node/all" || entry.hostedBy === "dom/core" || entry.hostedBy === "canvas/core") && !entry.nextBulk), "every hosted entry names its aggregate descriptor");
+expect_boundary(DOM_REQUIRED_SUITES.length === 4 && DOM_REQUIRED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 8, "inventory retains exactly eight browser-fidelity cases");
+expect_boundary(UNKNOWN_OR_MIXED_SUITES.length === 0, "no former local mode remains unexplained");
 expect_boundary(HOST_READY_SUITES.length === 0, "no verified Node-safe suite remains merely HOST_READY");
 expect_boundary(DOM_REQUIRED_SUITES.every((entry) => !entry.nextBulk && entry.browserApis.length > 0), "DOM-required entries are excluded from the next bulk migration");
 expect_boundary(join("src", "app", "hosted-test") === "src/app/hosted-test", "boundary test remains workspace-relative");
+const hostedAll = all_hosted_test_suites();
+const hostedAllKeys = hostedAll.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+expect_boundary(hostedAll.length === 120 && hostedAllKeys.length === 2045 && new Set(hostedAllKeys).size === 2045, "hosted/all is canonical and non-overlapping");
+expect_boundary(DEFERRED_BROWSER_FIDELITY_CASES.length === 8 && DEFERRED_BROWSER_FIDELITY_CASES.every((entry) => !new Set(hostedAllKeys).has(entry.id)), "the exact eight fidelity cases remain explicit and excluded");
+expect_boundary(GENERATED_TEST_MODES.length === 2 && GENERATED_TEST_MODES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 250, "generated diagnostics remain separately classified");
+expect_boundary(FINAL_HARNESS_MIGRATION_INVENTORY.every((entry) => entry.status !== "UNKNOWN"), "final harness inventory has no unknown entries");
+const nodeKeys = new Set(all_node_safe_hosted_test_suites().flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`)));
+const unitSuites = all_unit_tests();
+const unitKeys = unitSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+expect_boundary(unitSuites.length === 9 && unitKeys.length === 101 && unitKeys.every((key) => nodeKeys.has(key)), "all nine unit suites / 101 cases are represented by node/all");
+const domKeys = new Set(all_jsdom_hosted_test_suites().flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`)));
+const transformSuites = all_deterministic_transform_test_suites();
+const transformKeys = transformSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+expect_boundary(transformSuites.length === 9 && transformKeys.length === 362 && transformKeys.every((key) => domKeys.has(key)), "all nine deterministic transform suites / 362 cases are represented by dom/core");
 console.log("hosted app boundary: ok");

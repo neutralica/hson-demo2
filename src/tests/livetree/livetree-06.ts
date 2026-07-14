@@ -531,6 +531,7 @@ export function livetree_create_size(): TestSuite {
       dom: true,
       fixture: "dom/clientSize",
       sub: "mounted-soft",
+      hostedGeometry: [{ id: "target", rect: { x: 0, y: 0, width: 120, height: 60 } }],
 
       html: `
         <main id="root">

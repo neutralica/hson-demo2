@@ -2,10 +2,10 @@
 // Purpose: deterministic runner. No DOM, no global state, no “clever” chaining.
 // Emits events to recorder + console via a single callback.
 
-import { _freeze } from "./tests.consts";
-import { TestRecorder } from "./test-recorder";
-import { assertion_failure_message, normalize_assert_rows } from "./assert-row-status";
-import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "./tests.types";
+import { _freeze } from "../app/demos/test/tests.consts";
+import { TestRecorder } from "../app/demos/test/test-recorder";
+import { assertion_failure_message, normalize_assert_rows } from "../app/demos/test/assert-row-status";
+import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "../app/demos/test/tests.types";
 
 // cooperative yield so the browser can paint + process input.
 // - requestAnimationFrame - "UI-friendly" yield.

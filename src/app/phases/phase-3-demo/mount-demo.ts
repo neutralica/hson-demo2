@@ -8,7 +8,6 @@ import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { $PANEL_HIDDEN, $MENU_SHADOW } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
-import type { Fmt } from "../../core/types/core.types";
 import { ABOUT_DOCS } from "../../demos/about/about.consts";
 import { mount_about_panels } from "../../demos/about/mount-about";
 import mount_bar_bar from "../../demos/bar-bar.ts/mount-bar-bar";
@@ -30,14 +29,12 @@ import type { TestPanels } from "../../demos/test/tp.types";
 import type { DemoView, DemoWidget } from "../../state/state.types";
 import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
-import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
 import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $BLING, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS } from "./demo.consts";
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
-import { smoke_test_harness } from "../../demos/test/test-smoke";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "../phase-2-splash/splash.buds";
 import { begin_star } from "../phase-2-splash/mount-splash";
@@ -87,13 +84,7 @@ type DemoHosts = {
 };
 
 type DemoContent = {
-  parse: Panels;
   test: TestPanels;
-};
-
-type ParseCandidate = {
-  fmt: Fmt;
-  text: string;
 };
 
 let stopDemoMount: (() => void) | undefined;
@@ -291,71 +282,14 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
 function mount_demo_content(hosts: DemoHosts): DemoContent {
   relay_data(mount_about_panels(hosts.aboutHost, ABOUT_DOCS));
   const test = relay_data(mount_test_panels(hosts.testHost));
-  const parse = relay_data(mount_parsing_panels(hosts.parseHost));
+  relay_data(mount_parsing_panels(hosts.parseHost));
   relay_data(mount_build_panels(hosts.buildHost));
   relay_void(mount_bar_bar(hosts.barbarHost));
   create_cellsheet_panel(hosts.cellsHost);
   relay_void(mount_point_panel(hosts.pointHost));
   mount_oklch(hosts.oklchHost);
 
-  return { parse, test };
-}
-
-function get_parse_candidate(parse: Panels, preferredFmt?: Fmt): ParseCandidate | undefined {
-  const fallback: readonly Fmt[] = ["json", "hson", "html"];
-  const fmts: readonly Fmt[] = preferredFmt
-    ? [preferredFmt, ...fallback.filter((fmt) => fmt !== preferredFmt)]
-    : fallback;
-
-  for (const fmt of fmts) {
-    const panel = parse.panels[fmt];
-    if (!panel) continue;
-
-    const raw = panel.textarea.form.getValue();
-    const text = typeof raw === "string" ? raw : String(raw ?? "");
-    if (text.trim().length > 0) return { fmt, text };
-  }
-
-  return undefined;
-}
-
-function wire_parse_test_bridge(parse: Panels, test: TestPanels): void {
-  const testPanel = (test.tp ?? test) as any;
-  if (typeof testPanel.setExternalAction !== "function") return;
-
-  let activeFmt: Fmt | undefined;
-
-  const sync = (): void => {
-    testPanel.setExternalAction({
-      label: "test parse",
-      isEnabled: () => Boolean(get_parse_candidate(parse, activeFmt)),
-      run: () => {
-        const candidate = get_parse_candidate(parse, activeFmt);
-        if (!candidate) return;
-
-        if (typeof testPanel.runAdHocTransform === "function") {
-          return testPanel.runAdHocTransform(candidate.fmt, candidate.text);
-        }
-
-        testPanel.clearLogs?.();
-        testPanel.setLog?.(`[parse] ${candidate.fmt} ${candidate.text.length} bytes`);
-        testPanel.setLog?.(candidate.text.slice(0, 600));
-        if (candidate.text.length > 600) testPanel.setLog?.("…");
-      },
-    });
-  };
-
-  Object.values(parse.panels).forEach((panel) => {
-    const markActiveAndSync = (): void => {
-      activeFmt = panel.fmt;
-      sync();
-    };
-
-    panel.textarea.listen.on("input", markActiveAndSync);
-    panel.textarea.listen.on("change", markActiveAndSync);
-  });
-
-  sync();
+  return { test };
 }
 
 function is_mobile_demo_width(stage: LiveTree): boolean {
@@ -425,7 +359,6 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   const { viewHosts, widgetHosts } = hosts;
 
   const content = mount_demo_content(hosts);
-  wire_parse_test_bridge(content.parse, content.test);
   mount_motes(motesLayer);
   mount_deck(stage);
   activate_widget($BLING);
@@ -520,8 +453,5 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
 
   mount_firework(screen);
-  void smoke_test_harness().catch((error) => {
-    console.error("[test-smoke]", error);
-  });
   return relay.ok();
 }

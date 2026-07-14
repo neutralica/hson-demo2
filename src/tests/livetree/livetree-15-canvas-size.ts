@@ -172,6 +172,7 @@ export function livetree_canvas_display(): TestSuite {
       dom: true,
       fixture: "canvas/display",
       sub: "display-size-mounted",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 120, height: 80 } }],
 
       html: `
         <main id="root">
@@ -212,6 +213,7 @@ export function livetree_canvas_display(): TestSuite {
       dom: true,
       fixture: "canvas/display",
       sub: "display-match",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 150, height: 90 } }],
 
       html: `
         <main id="root">
@@ -262,6 +264,7 @@ export function livetree_canvas_display(): TestSuite {
       dom: true,
       fixture: "canvas/display",
       sub: "display-match-chain",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 50, height: 40 } }],
 
       html: `
         <main id="root">
@@ -713,6 +716,7 @@ export function livetree_canvas_display(): TestSuite {
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-no-match-after-detach",
+  hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 80, height: 40 } }],
 
   html: `
     <main id="root">

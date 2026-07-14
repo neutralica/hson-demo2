@@ -5,19 +5,15 @@ import type { JsonValue, LiveMapCommit, LiveMapFeedEvent, LivePath } from "hson-
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 import type { LiveMapFeedEventPreview } from "./types";
-import { make_feed_emit_case, make_path_overlap_case, set_commit } from "../../app/utils/helpers";
+import {
+  make_feed_emit_case,
+  make_path_overlap_case,
+  preview_feed_event,
+  set_commit,
+  type FeedEmitCaseSpec,
+} from "./feed-test-helpers";
 import { json_root_node } from "./core-helpers";
 
-
-
-export type FeedEmitCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  feedPath: LivePath;
-  commit: LiveMapCommit;
-  snapValue: JsonValue | undefined;
-  expectedEvents: readonly LiveMapFeedEventPreview[];
-}>;
 
 
 function make_feed_dispose_case(spec: FeedEmitCaseSpec): TestCase {
@@ -45,16 +41,6 @@ function make_feed_dispose_case(spec: FeedEmitCaseSpec): TestCase {
         ],
       };
     },
-  };
-}
-
-export function preview_feed_event(event: LiveMapFeedEvent): LiveMapFeedEventPreview {
-  return {
-    path: event.path,
-    value: event.value,
-    opPath: event.op.path,
-    opPrev: event.op.prev,
-    opNext: event.op.next,
   };
 }
 

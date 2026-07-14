@@ -95,9 +95,9 @@ try {
   await runtime.ready();
   const adapter = make_hosted_test_panel_adapter(runtime.client, sink.sink);
   const result = await adapter.start("dom/core");
-  expect_stale(result.ok && result.summary.cases === 869 && result.summary.pass === 869, "the same client-known suite succeeds against the updated registry");
-  expect_stale(adapter.router?.status === "complete" && adapter.router.mirror?.capture().value.summary.cases === 869, "reconnected run owns fresh router and mirror state");
-  expect_stale(sink.events.filter((event) => event.t === "case_end").length === 869, "updated server drives the complete visible case stream");
+  expect_stale(result.ok && result.summary.cases === 923 && result.summary.pass === 923, "the same client-known suite succeeds against the updated registry");
+  expect_stale(adapter.router?.status === "complete" && adapter.router.mirror?.capture().value.summary.cases === 923, "reconnected run owns fresh router and mirror state");
+  expect_stale(sink.events.filter((event) => event.t === "case_end").length === 923, "updated server drives the complete visible case stream");
   adapter.dispose();
   runtime.dispose();
 } finally {

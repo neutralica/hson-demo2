@@ -1254,6 +1254,7 @@ export function suite_css_and_content(): TestSuite {
       fixture: "css/rect",
       dom: true,
       sub: "non-zero",
+      hostedGeometry: [{ id: "box", rect: { x: 24, y: 24, width: 160, height: 160 } }],
       html: `
         <main>
           <div id="box">x</div>
@@ -1862,4 +1863,3 @@ function suite_css_regressions(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
-

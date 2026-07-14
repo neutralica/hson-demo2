@@ -4,6 +4,7 @@ import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { notify_hosted_test_resize } from "../../app/demos/test/hosted-test-geometry";
 
 export function livetree_canvas_pointer(): TestSuite {
   const SUITE = "livetree/canvas-pointer";
@@ -15,6 +16,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-local-coords",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 100, height: 50 } }],
 
       html: `
         <main id="root">
@@ -69,6 +71,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "mouseevent-local-coords",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 80, height: 40 } }],
 
       html: `
         <main id="root">
@@ -200,6 +203,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "must-pointer-local-coords",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 120, height: 60 } }],
 
       html: `
         <main id="root">
@@ -343,6 +347,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-after-display-match",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 160, height: 90 } }],
 
       html: `
         <main id="root">
@@ -401,6 +406,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-initial",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 111, height: 57 } }],
 
       html: `
     <main id="root">
@@ -451,6 +457,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-resize",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 80, height: 40 } }],
 
       html: `
     <main id="root">
@@ -479,6 +486,7 @@ export function livetree_canvas_pointer(): TestSuite {
           width: "140px",
           height: "70px",
         });
+        notify_hosted_test_resize(target.canvas.must.el(), { x: 10, y: 20, width: 140, height: 70 });
 
         // ResizeObserver callbacks are async. Two turns makes this less brittle.
         await flush_dom();
@@ -513,6 +521,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-resize",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 80, height: 40 } }],
 
       html: `
     <main id="root">
@@ -541,6 +550,7 @@ export function livetree_canvas_pointer(): TestSuite {
           width: "140px",
           height: "70px",
         });
+        notify_hosted_test_resize(target.canvas.must.el(), { x: 10, y: 20, width: 140, height: 70 });
 
         // ResizeObserver callbacks are async. Two turns makes this less brittle.
         await flush_dom();
@@ -575,6 +585,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-off",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 90, height: 45 } }],
 
       html: `
     <main id="root">
@@ -605,6 +616,7 @@ export function livetree_canvas_pointer(): TestSuite {
           width: "160px",
           height: "80px",
         });
+        notify_hosted_test_resize(target.canvas.must.el(), { x: 10, y: 20, width: 160, height: 80 });
 
         await flush_dom();
         await tick();
@@ -719,6 +731,7 @@ export function livetree_canvas_pointer(): TestSuite {
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-after-watch-resize",
+      hostedGeometry: [{ id: "target", rect: { x: 10, y: 20, width: 100, height: 50 } }],
 
       html: `
     <main id="root">
@@ -745,6 +758,7 @@ export function livetree_canvas_pointer(): TestSuite {
           width: "180px",
           height: "90px",
         });
+        notify_hosted_test_resize(target.canvas.must.el(), { x: 10, y: 20, width: 180, height: 90 });
 
         await flush_dom();
         await tick();

@@ -67,19 +67,12 @@ export type TestSuite = Readonly<{
 
 
 export type TestRunMode =
-  | "all"
-  | "transform"
-  | "livetree"
-  | "livemap"
+  | "hosted-all"
   | "livemap-replay"
   | "livehost-all"
   | "node-all"
   | "dom-core"
-  | "livehost"
-  | "legacy"
-  | "dev"
-  | "unit"
-  | "fuzz-json";
+  | "canvas-core";
 
 export type CaseMeta = Readonly<{
   fixture?: string;

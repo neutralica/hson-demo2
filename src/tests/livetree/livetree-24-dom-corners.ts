@@ -709,6 +709,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
       name: "svg bbox is mounted renderer-backed",
       fixture: "markup/svg-bbox",
       sub: "mounted-detached",
+      hostedGeometry: [{ id: "flower", rect: { x: 10, y: 20, width: 20, height: 20 } }],
       dom: true,
       html: `
         <main id="root">

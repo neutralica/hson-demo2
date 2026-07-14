@@ -6,6 +6,7 @@
 import { LiveTree, hson } from "hson-live";
 import type { TestSuite, TestCase, MetaPatch, Asserter, TestAssertRow } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import { apply_hosted_test_element_rect } from "../../app/demos/test/hosted-test-geometry";
 
 // -----------------------------
 // Implementation
@@ -58,6 +59,10 @@ export function make_livetree_suite(
           (tree as any).__sandboxHost = host;
           (tree as any).__sandboxEl = sandbox;
           host.append(tree);
+          for (const fixture of spec.hostedGeometry ?? []) {
+            const element = tree.find.must.byId(fixture.id).dom.must.el();
+            apply_hosted_test_element_rect(element, fixture.rect);
+          }
         }
 
         await spec.act(tree);

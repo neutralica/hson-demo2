@@ -1,7 +1,7 @@
 import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
 import { _circuit_test } from "hson-live/diagnostics";
-import { all_test_suites } from "../../app/demos/test/all-test-suites";
-import { run_test_suites } from "../../app/demos/test/test-runner";
+import { all_deterministic_transform_test_suites } from "../../hosted-test/deterministic-transform-test-suites";
+import { run_test_suites } from "../../hosted-test/test-runner";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { all_livemap_suites } from "../livemap/all-livemap-suites";
 import { all_livetree_suites } from "../livetree/all-livetree-suites";
@@ -14,7 +14,7 @@ const DOM_LIVEMAP_IDS = new Set([
 const suites: readonly TestSuite[] = [
   ...all_livemap_suites().filter((suite) => DOM_LIVEMAP_IDS.has(suite.suite)),
   ...all_livetree_suites(),
-  ...all_test_suites("transform", { _circuit_test }).filter((suite) => !suite.suite.startsWith("transform/fuzz-json/")),
+  ...all_deterministic_transform_test_suites(),
 ];
 
 const originalLog = console.log;

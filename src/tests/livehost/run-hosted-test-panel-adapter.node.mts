@@ -144,8 +144,9 @@ expect_adapter(
     && hosted_test_suite_for_panel_mode("livehost-all") === "livehost/all"
     && hosted_test_suite_for_panel_mode("node-all") === "node/all"
     && hosted_test_suite_for_panel_mode("dom-core") === "dom/core"
-    && hosted_test_suite_for_panel_mode("livemap") === undefined,
-  "both explicit hosted modes share selection while local modes remain local",
+    && hosted_test_suite_for_panel_mode("canvas-core") === "canvas/core"
+    && hosted_test_suite_for_panel_mode("hosted-all") === "hosted/all",
+  "every visible mode resolves through the shared hosted adapter",
 );
 const visibleAdapter = make_hosted_test_panel_adapter(runtime.client, visibleSink.sink);
 const visibleResult = await visibleAdapter.start("livemap/replay");

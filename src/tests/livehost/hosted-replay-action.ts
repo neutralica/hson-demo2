@@ -9,6 +9,8 @@ import type { HostedTestReportController } from "../../app/hosted-test/hosted-te
 import type { HostedTestRunId } from "../../app/hosted-test/hosted-test-report-wire.types";
 import { run_livehost_all_suite, run_node_all_suite } from "../../hosted-test/registered-hosted-test-suites";
 import { run_jsdom_hosted_test_suites } from "../../hosted-test/dom/jsdom-hosted-test-suites";
+import { run_jsdom_hosted_canvas_suites } from "../../hosted-test/dom/canvas/jsdom-hosted-canvas-suites";
+import { run_hosted_all_test_suites } from "../../hosted-test/hosted-all-test-suites";
 import { run_livemap_replay_suite } from "../livemap/run-replay-suite";
 
 export * from "../../app/hosted-test/hosted-test-action";
@@ -24,10 +26,12 @@ export function create_hosted_test_livehost(
   makeRunId?: HostedTestRunIdFactory,
 ) {
   const registry = make_hosted_test_suite_registry([
+    { id: "hosted/all", label: "all hosted", run: run_hosted_all_test_suites },
     { id: "livemap/replay", label: "livemap/replay", run: runReplay },
     { id: "livehost/all", label: "livehost/all", run: run_livehost_all_suite },
     { id: "node/all", label: "all Node-safe", run: run_node_all_suite },
     { id: "dom/core", label: "DOM core", run: run_jsdom_hosted_test_suites },
+    { id: "canvas/core", label: "Canvas core", run: run_jsdom_hosted_canvas_suites },
   ]);
   return create_hosted_test_livehost_runtime(registry, inspectReport, makeRunId);
 }

@@ -6,17 +6,29 @@ function expect_registry(condition: unknown, message: string): asserts condition
 }
 
 const registered = make_registered_hosted_test_suite_registry();
-expect_registry(registered.list().map((descriptor) => descriptor.id).join(",") === "livemap/replay,livehost/all,node/all,dom/core", "registry exposes the four closed suite IDs");
+expect_registry(registered.list().map((descriptor) => descriptor.id).join(",") === "hosted/all,livemap/replay,livehost/all,node/all,dom/core,canvas/core", "registry exposes the six closed suite IDs");
+expect_registry(registered.get("hosted/all").label === "all hosted", "complete hosted descriptor resolves");
 expect_registry(registered.get("livemap/replay").label === "livemap/replay", "replay descriptor resolves");
 expect_registry(registered.get("livehost/all").label === "livehost/all", "LiveHost descriptor resolves");
 expect_registry(registered.get("node/all").label === "all Node-safe", "aggregate descriptor resolves");
 expect_registry(registered.get("dom/core").label === "DOM core", "DOM descriptor resolves");
+expect_registry(registered.get("canvas/core").label === "Canvas core", "canvas descriptor resolves");
 
 let replayCalls = 0;
 let livehostCalls = 0;
 let nodeCalls = 0;
 let domCalls = 0;
+let canvasCalls = 0;
+let hostedAllCalls = 0;
 const isolated = make_hosted_test_suite_registry([
+  {
+    id: "hosted/all",
+    label: "all hosted",
+    async run() {
+      hostedAllCalls += 1;
+      return { ok: true, summary: { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] } };
+    },
+  },
   {
     id: "livemap/replay",
     label: "replay",
@@ -49,23 +61,39 @@ const isolated = make_hosted_test_suite_registry([
       return { ok: true, summary: { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] } };
     },
   },
+  {
+    id: "canvas/core",
+    label: "canvas",
+    async run() {
+      canvasCalls += 1;
+      return { ok: true, summary: { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] } };
+    },
+  },
 ]);
+await isolated.get("hosted/all").run();
+expect_registry(Number(hostedAllCalls) === 1 && replayCalls === 0, "complete descriptor invokes only complete hosted runner");
 await isolated.get("livemap/replay").run();
-expect_registry(replayCalls === 1 && livehostCalls === 0, "replay descriptor invokes only replay runner");
+expect_registry(Number(replayCalls) === 1 && Number(livehostCalls) === 0, "replay descriptor invokes only replay runner");
 await isolated.get("livehost/all").run();
-expect_registry(replayCalls === 1 && Number(livehostCalls) === 1, "LiveHost descriptor invokes only LiveHost runner");
+expect_registry(Number(replayCalls) === 1 && Number(livehostCalls) === 1, "LiveHost descriptor invokes only LiveHost runner");
 await isolated.get("node/all").run();
-expect_registry(replayCalls === 1 && Number(livehostCalls) === 1 && nodeCalls === 1, "aggregate descriptor invokes only aggregate runner");
+expect_registry(Number(replayCalls) === 1 && Number(livehostCalls) === 1 && Number(nodeCalls) === 1, "aggregate descriptor invokes only aggregate runner");
 await isolated.get("dom/core").run();
-expect_registry(domCalls === 1 && nodeCalls === 1, "DOM descriptor invokes only DOM runner");
+expect_registry(Number(domCalls) === 1 && Number(nodeCalls) === 1, "DOM descriptor invokes only DOM runner");
+await isolated.get("canvas/core").run();
+expect_registry(Number(canvasCalls) === 1 && Number(domCalls) === 1, "canvas descriptor invokes only canvas runner");
 
 const replay = await registered.get("livemap/replay").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const livehost = await registered.get("livehost/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const nodeAll = await registered.get("node/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const domCore = await registered.get("dom/core").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
+const canvasCore = await registered.get("canvas/core").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
+const hostedAll = await registered.get("hosted/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 expect_registry(replay.ok && replay.summary.suites === 1 && replay.summary.cases === 45, "registered replay runner passes 45 cases under Node");
 expect_registry(livehost.ok && livehost.summary.suites === 9 && livehost.summary.cases === 157, "registered LiveHost runner passes 157 cases under Node");
 expect_registry(nodeAll.ok && nodeAll.summary.suites === 41 && nodeAll.summary.cases === 1060, "registered aggregate runner passes every Node-safe case exactly once");
-expect_registry(domCore.ok && domCore.summary.suites === 66 && domCore.summary.cases === 869, "registered DOM runner passes the expanded canonical jsdom tranche");
+expect_registry(domCore.ok && domCore.summary.suites === 73 && domCore.summary.cases === 923, "registered DOM runner passes the expanded canonical jsdom and geometry tranche");
+expect_registry(canvasCore.ok && canvasCore.summary.suites === 6 && canvasCore.summary.cases === 62, "registered canvas runner passes the deterministic command/state tranche");
+expect_registry(hostedAll.ok && hostedAll.summary.suites === 120 && hostedAll.summary.cases === 2045 && hostedAll.summary.pass === 2045, "registered complete runner passes every canonical hosted case exactly once");
 expect_registry(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "both registered runners are Node-safe");
 console.log("hosted suite registry: ok");

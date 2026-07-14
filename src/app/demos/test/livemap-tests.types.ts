@@ -1,6 +1,7 @@
 import type { LivePath, LiveTree } from "hson-live";
 import type { JsonValue, HsonNode, LiveMapEditResult } from "hson-live/types";
 import type { Asserter } from "./tests.types";
+import type { HostedTestGeometryFixture } from "./hosted-test-geometry";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -87,6 +88,7 @@ export type LiveTreeCaseSpec = Readonly<{
   fixture?: string;
   sub?: string;
   dom?: boolean;
+  hostedGeometry?: readonly HostedTestGeometryFixture[];
   // Arrange/Act: mutate tree
   act: (tree: LiveTree) => void | Promise<void>;
 
@@ -123,4 +125,3 @@ export type SetLikeRunner = (
   result: LiveMapEditResult;
   rootSnapshot: JsonValue | undefined;
 }>;
-

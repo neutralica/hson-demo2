@@ -1,4 +1,4 @@
-import { run_test_suites } from "../../app/demos/test/test-runner";
+import { run_test_suites } from "../../hosted-test/test-runner";
 import type { RunOptions, RunResult, TestEvent } from "../../app/demos/test/tests.types";
 import { livemap_suite_replay } from "./replay-suite";
 

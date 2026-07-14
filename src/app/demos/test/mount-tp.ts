@@ -1,18 +1,13 @@
 import { LiveTree, hson } from "hson-live";
-import { type LoopReport, _circuit_test} from "hson-live/diagnostics";
+import type { LoopReport } from "hson-live/diagnostics";
 import { type Outcome, relay, relay_data } from "intrastructure";
-import type { SourceFormat } from "../../../../../hson-live/dist/types/diagnostics.types";
-import  { flush_dom } from "../../../tests/inspector/inspector.helpers";
 import { make_inspector } from "../../../tests/inspector/make-inspector";
 import { $PANEL_HIDDEN } from "../../core/consts/ui-consts";
 import { _snip } from "../../utils/helpers";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
-import { make_ad_hoc_transform_suite, all_test_suites } from "./all-test-suites";
-// import { make_state_smoke_suite } from "./state-smoke-suite";
 import { create_test_chips } from "./test-helpers";
 import { create_test_log } from "./test-logger";
-import  { run_test_suites } from "./test-runner";
-import type { TestRunMode, TestEvent, UiLevel, CaseKey } from "./tests.types";
+import type { TestRunMode, TestEvent, UiLevel } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 import { hosted_test_suite_for_panel_mode, make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
@@ -22,30 +17,16 @@ const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
 const LOG_HR_PART = " ----------=•=|"
 
 const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
-    { key: "all", label: "all" },
-    { key: "transform", label: "transform" },
-    { key: "livetree", label: "livetree" },
-    { key: "livemap", label: "livemap" },
+    { key: "hosted-all", label: "all hosted" },
     { key: "livemap-replay", label: "livemap/replay (hosted)" },
     { key: "livehost-all", label: "livehost/all (hosted)" },
     { key: "node-all", label: "all Node-safe (hosted)" },
     { key: "dom-core", label: "DOM core (hosted)" },
-    { key: "livehost", label: "livehost" },
-    { key: "legacy", label: "legacy" },
-    { key: "unit", label: "unit" },
-    { key: "dev", label: "dev" },
-    { key: "fuzz-json", label: "json fuzzer" },
-    // { key: "demo-meta", label: "demo-meta" },
+    { key: "canvas-core", label: "Canvas core (hosted)" },
 ] as const;
 
 type LogVerbosity = "normal" | "verbose";
 const LOG_VERBOSITY: readonly LogVerbosity[] = ["normal", "verbose"];
-
-export type ExternalTestAction = {
-    label: string;
-    isEnabled: () => boolean;
-    run: () => void | Promise<void>;
-};
 
 function nextVerbosity(current: LogVerbosity): LogVerbosity {
     const i = LOG_VERBOSITY.indexOf(current);
@@ -88,7 +69,6 @@ type TestConsoleParts = {
     suiteSel: LiveTree;
     verbosityBtn: LiveTree;
     clearBtn: LiveTree;
-    externalBtn: LiveTree;
     chips: ReturnType<typeof create_test_chips>;
 };
 
@@ -112,15 +92,9 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         ...TEST_CLEAR_BTNcss,
         gridColumn: "1 / 3",
     });
-    const externalBtn = mk_div_id_txt(controlsRow, "test-external", "test parse").css.setMany({
-        ...TEST_CLEAR_BTNcss,
-        gridColumn: "1 / 3",
-        opacity: "0.3",
-    });
-
     const chips = create_test_chips(rowContainer);
 
-    return { runBtn, suiteSel, verbosityBtn, clearBtn, externalBtn, chips };
+    return { runBtn, suiteSel, verbosityBtn, clearBtn, chips };
 }
 
 type TestSurfaceParts = {
@@ -146,28 +120,22 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
 export function tp_factory(): Outcome<TestPanel> {
     let mounted = false;
     let level: UiLevel = "normal";
-    let mode: TestRunMode = "all";
+    let mode: TestRunMode = "hosted-all";
     let verbosity: LogVerbosity = "normal";
-    let externalAction: ExternalTestAction | null = null;
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
         .css.setMany(TP_BRANCHcss);
 
     const { leftColumn, rightColumn, inspectorPane, logger } = createTestSurface(branch);
-    const { runBtn, suiteSel, verbosityBtn, clearBtn, externalBtn, chips } = create_test_console(leftColumn, rightColumn);
+    const { runBtn, suiteSel, verbosityBtn, clearBtn, chips } = create_test_console(leftColumn, rightColumn);
 
     const tlog = create_test_log();
-    const captureMap = new Map<CaseKey, () => Promise<LoopReport>>();
-
     const inspector = make_inspector(
         inspectorPane,
         tlog,
         { hideClass: $PANEL_HIDDEN },
         async (key) => {
-            const fn = captureMap.get(key);
-            if (fn) return fn();
-
             const c = tlog.getCase(key);
             const m = c?.meta;
 
@@ -231,16 +199,6 @@ export function tp_factory(): Outcome<TestPanel> {
         verbosityBtn.text.set(`log: ${verbosity}`);
     };
 
-    const syncExternalAction = (): void => {
-        const enabled = Boolean(externalAction?.isEnabled());
-        externalBtn.text.set(externalAction?.label ?? "test parse");
-        externalBtn.css.setMany({
-            opacity: enabled ? "1" : "0.3",
-            pointerEvents: enabled ? "auto" : "none",
-            filter: enabled ? "brightness(1.0)" : "brightness(0.72)",
-        });
-    };
-
     const doLogOnEvent = (e: TestEvent): void => {
         tlog.onEvent(e);
         if (!shouldLogEvent(verbosity, e)) return;
@@ -301,7 +259,6 @@ export function tp_factory(): Outcome<TestPanel> {
             chips.clear();
             tlog.clear();
             clearLogLines();
-            captureMap.clear();
             appendLogLine(`running hosted ${suite}…`);
         },
         onEvent: doLogOnEvent,
@@ -320,37 +277,6 @@ export function tp_factory(): Outcome<TestPanel> {
         appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
     });
 
-    const runAdHocTransform = async (fmt: SourceFormat, text: string): Promise<void> => {
-        chips.clear();
-        tlog.clear();
-        clearLogLines();
-        captureMap.clear();
-
-        appendLogLine(`running parse-panel transform: ${fmt} (${text.length} bytes)`);
-        await flush_dom();
-
-        const suites = [make_ad_hoc_transform_suite({ _circuit_test }, fmt, text, captureMap)] as const;
-        const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
-        chips.render(res.summary);
-        inspector.show();
-        inspector.render();
-    };
-
-    // const runBootSmokes = async (): Promise<void> => {
-    //     chips.clear();
-    //     tlog.clear();
-    //     clearLogLines();
-    //     captureMap.clear();
-
-    //     appendLogLine("running smoke tests…");
-    //     await flush_dom();
-
-    //     const res = await run_test_suites([make_state_smoke_suite()], doLogOnEvent, { bail: false });
-    //     chips.render(res.summary);
-    //     inspector.show();
-    //     inspector.render();
-    // };
-
     const mount = (hostBody: LiveTree): void => {
         if (mounted) return;
         mounted = true;
@@ -359,14 +285,13 @@ export function tp_factory(): Outcome<TestPanel> {
         populateModeSelector(suiteSel, mode);
 
         suiteSel.listen.on("change", () => {
-            const v = suiteSel.form.getValue() ?? "all";
-            mode = (MODES.find(m => m.key === v)?.key ?? "all");
+            const v = suiteSel.form.getValue() ?? "hosted-all";
+            mode = (MODES.find(m => m.key === v)?.key ?? "hosted-all");
         });
 
         implClickFeedback(runBtn);
         implClickFeedback(clearBtn);
         implClickFeedback(verbosityBtn);
-        implClickFeedback(externalBtn);
 
         verbosityBtn.listen.onClick(() => {
             verbosity = nextVerbosity(verbosity);
@@ -374,42 +299,19 @@ export function tp_factory(): Outcome<TestPanel> {
             appendLogLine(`log verbosity: ${verbosity}`);
         });
 
-        externalBtn.listen.onClick(() => {
-            if (!externalAction?.isEnabled()) return;
-            void externalAction.run();
-        });
-
         syncVerbosity();
-        syncExternalAction();
 
         runBtn.listen.onClick(async () => {
 
             const hostedSuite = hosted_test_suite_for_panel_mode(mode);
-            if (hostedSuite !== undefined) {
-                try {
-                    await hostedRuntime.ready();
-                    await hostedAdapter.start(hostedSuite);
-                } catch (error) {
-                    if (hostedAdapter.router === undefined) {
-                        appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
-                    }
+            try {
+                await hostedRuntime.ready();
+                await hostedAdapter.start(hostedSuite);
+            } catch (error) {
+                if (hostedAdapter.router === undefined) {
+                    appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
                 }
-                return;
             }
-
-            chips.clear();
-            tlog.clear();
-            clearLogLines();
-            captureMap.clear();
-
-            appendLogLine("running loop test…");
-            await flush_dom();
-
-            const suites = all_test_suites(mode, { _circuit_test }, captureMap);
-            const res = await run_test_suites(suites, doLogOnEvent, { bail: false });
-            chips.render(res.summary);
-            inspector.show();
-            inspector.render();
         });
 
         clearBtn.listen.onClick(() => {
@@ -421,7 +323,6 @@ export function tp_factory(): Outcome<TestPanel> {
             inspector.clear();
         });
 
-        // void runBootSmokes();
     };
 
     return relay.data({
@@ -439,11 +340,6 @@ export function tp_factory(): Outcome<TestPanel> {
         getVerbosity: () => verbosity,
         clearLogs: clearLogLines,
         setLog: appendLogLine,
-        setExternalAction: (action: ExternalTestAction | null) => {
-            externalAction = action;
-            syncExternalAction();
-        },
-        runAdHocTransform,
         dispose: () => {
             hostedAdapter.dispose();
             hostedRuntime.dispose();

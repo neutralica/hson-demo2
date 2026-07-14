@@ -147,6 +147,7 @@ export function livetree_svg_lvl2(): TestSuite {
                 fixture: "svg/api",
                 dom: true,
                 sub: "bbox",
+                hostedGeometry: [{ id: "r", rect: { x: 10, y: 20, width: 30, height: 40 } }],
 
                 async act(tree) {
                     const rect = tree.find.must.byId("r");

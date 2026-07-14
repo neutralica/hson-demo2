@@ -50,6 +50,7 @@ export function livetree_new_dom_doc(): TestSuite {
       dom: true,
       fixture: "dom/doc",
       sub: "doc-point-query-resolves-tree",
+      hostedGeometry: [{ id: "target", rect: { x: 120, y: 120, width: 240, height: 140 } }],
 
       html: `
     <main id="root">
@@ -356,6 +357,7 @@ export function livetree_new_dom_doc(): TestSuite {
       dom: true,
       fixture: "dom/doc",
       sub: "doc-elements-from-point",
+      hostedGeometry: [{ id: "target", rect: { x: 120, y: 120, width: 240, height: 140 } }],
 
       html: `
     <main id="root">

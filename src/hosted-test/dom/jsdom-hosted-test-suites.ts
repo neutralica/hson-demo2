@@ -1,9 +1,8 @@
-import { _circuit_test } from "hson-live/diagnostics";
-import { all_test_suites } from "../../app/demos/test/all-test-suites";
-import { run_test_suites } from "../../app/demos/test/test-runner";
+import { run_test_suites } from "../test-runner";
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
 import { all_livemap_suites } from "../../tests/livemap/all-livemap-suites";
 import { all_livetree_suites } from "../../tests/livetree/all-livetree-suites";
+import { all_deterministic_transform_test_suites } from "../deterministic-transform-test-suites";
 import { with_hosted_dom_runtime } from "./hosted-dom-mutex";
 
 export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
@@ -24,6 +23,8 @@ export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
   "livetree/listen-api-surface", "livetree/quid-scoped-media", "livetree/find-query-surface",
   "livetree/text-content-surface", "livetree/listener-builder-corners", "livetree/dom-helper-surface",
   "livetree/regression-2", "livetree/quid-level-2",
+  "livetree/coverage-css-and-content", "livetree/css-pseudo", "livetree/document", "livetree/create-size",
+  "livetree/new-svg/", "livetree-18/treeselector-surface", "livetree/graph-dom-markup-surface",
   "livetree/append-and-create", "livetree/regressions/css", "livetree/scheduling-and-events",
   "livetree/svg/intermediate", "livetree/document-ownership", "livetree/construction-parity",
   "transform/json/basic-test", "transform/legacy/json", "transform/misc-extra", "transform/hson",
@@ -37,7 +38,10 @@ export const JSDOM_HOSTED_DUPLICATE_CASE_KEYS = Object.freeze([
 ] as const);
 
 export const JSDOM_HOSTED_DEFERRED_CASE_KEYS = Object.freeze([
-  "livetree/construction-parity::construction: liveTree.fromUntrustedHtml returns mutable sanitized branch",
+  "livetree/css-pseudo::css pseudos: before content auto-quotes plain text",
+  "livetree/css-pseudo::css pseudos: before injects empty content when omitted",
+  "livetree/css-pseudo::css pseudos: auto-quoted content matches manually quoted content",
+  "livetree-18/treeselector-surface::css pseudos: attr() content browser readback is accepted",
 ] as const);
 
 const JSDOM_HOSTED_TEST_SUITE_ID_SET = new Set<string>(JSDOM_HOSTED_TEST_SUITE_IDS);
@@ -46,7 +50,7 @@ export function all_jsdom_hosted_test_suites(): readonly TestSuite[] {
   const candidates = [
     ...all_livemap_suites(),
     ...all_livetree_suites(),
-    ...all_test_suites("transform", { _circuit_test }),
+    ...all_deterministic_transform_test_suites(),
   ];
   const byId = new Map(candidates.map((suite) => [suite.suite, suite]));
   const duplicateCaseKeys: string[] = [];
@@ -98,6 +102,7 @@ export async function run_jsdom_hosted_test_suites(
     all_jsdom_hosted_test_suites(),
     (event) => {
       if (event.t === "suite_begin") runtime.reset_document();
+      if (event.t === "case_begin") runtime.geometry.clear_all_element_rects();
       onEvent(event);
     },
     options,

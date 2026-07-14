@@ -1,5 +1,7 @@
 import { performance } from "node:perf_hooks";
+import { JSDOM } from "jsdom";
 import type { RunResult } from "../../app/demos/test/tests.types";
+import { install_hosted_dom_geometry } from "../../hosted-test/dom/hosted-dom-geometry";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
 import {
   all_jsdom_hosted_test_suites,
@@ -10,6 +12,7 @@ import {
   CANVAS_REQUIRED_SUITES,
   BROWSER_ONLY_SUITES,
   GENERATED_DOM_ENTRIES,
+  HOSTED_DOM_LAYOUT_CASES,
   HOSTED_JSDOM_SUITES,
   LAYOUT_REQUIRED_SUITES,
   UNKNOWN_DOM_SUITES,
@@ -31,6 +34,14 @@ const initMs = performance.now() - initStarted;
 const cleanupStarted = performance.now();
 measuredRuntime.dispose();
 const cleanupMs = performance.now() - cleanupStarted;
+const geometryDom = new JSDOM("<!doctype html><html><body></body></html>");
+const geometryStarted = performance.now();
+const measuredGeometry = install_hosted_dom_geometry(geometryDom.window);
+const geometryInstallMs = performance.now() - geometryStarted;
+const geometryCleanupStarted = performance.now();
+measuredGeometry.dispose();
+const geometryCleanupMs = performance.now() - geometryCleanupStarted;
+geometryDom.window.close();
 const started = performance.now();
 let result: RunResult;
 try {
@@ -43,14 +54,21 @@ try {
 const directMs = performance.now() - started;
 const suites = all_jsdom_hosted_test_suites();
 const count = (entries: readonly Readonly<{ cases: number }>[]) => entries.reduce((total, entry) => total + entry.cases, 0);
-expect_collection(suites.length === 66 && suites.reduce((total, suite) => total + suite.cases.length, 0) === 869, "canonical list is 66 suites / 869 unique cases");
+expect_collection(suites.length === 73 && suites.reduce((total, suite) => total + suite.cases.length, 0) === 923, "canonical list is 73 suites / 923 unique cases");
 expect_collection(JSDOM_HOSTED_DUPLICATE_CASE_KEYS.length === 2, "two repeated source declarations are recorded and executed once");
-expect_collection(result.ok && result.summary.suites === 66 && result.summary.cases === 869 && result.summary.pass === 869 && result.summary.fail === 0, "direct jsdom run passes every canonical case");
-expect_collection(HOSTED_JSDOM_SUITES.length === 66 && count(HOSTED_JSDOM_SUITES) === 869, "inventory matches the executable collection");
-expect_collection(LAYOUT_REQUIRED_SUITES.length === 7 && count(LAYOUT_REQUIRED_SUITES) === 57, "layout tranche remains deferred");
-expect_collection(CANVAS_REQUIRED_SUITES.length === 6 && count(CANVAS_REQUIRED_SUITES) === 69, "canvas tranche remains deferred");
-expect_collection(BROWSER_ONLY_SUITES.length === 1 && count(BROWSER_ONLY_SUITES) === 1, "the runtime-bound DOMPurify case remains precisely deferred");
+expect_collection(result.ok && result.summary.suites === 73 && result.summary.cases === 923 && result.summary.pass === 923 && result.summary.fail === 0, "direct jsdom run passes every canonical case");
+expect_collection(HOSTED_JSDOM_SUITES.length === 73 && count(HOSTED_JSDOM_SUITES) === 923, "inventory matches the executable collection");
+expect_collection(LAYOUT_REQUIRED_SUITES.length === 2 && count(LAYOUT_REQUIRED_SUITES) === 4, "only four rendered pseudo-element cases remain deferred");
+expect_collection(CANVAS_REQUIRED_SUITES.length === 2 && count(CANVAS_REQUIRED_SUITES) === 4, "only four pixel-readback canvas cases remain deferred");
+expect_collection(BROWSER_ONLY_SUITES.length === 0 && count(BROWSER_ONLY_SUITES) === 0, "runtime-bound behavioral cases are fully migrated");
+const layoutCount = (status: (typeof HOSTED_DOM_LAYOUT_CASES)[number]["status"]) => HOSTED_DOM_LAYOUT_CASES.filter((entry) => entry.status === status).length;
+expect_collection(HOSTED_DOM_LAYOUT_CASES.length === 57, "layout classification covers every deterministic case");
+expect_collection(layoutCount("MIGRATED_NATIVE") === 47, "47 layout-inventory cases are native jsdom DOM/CSS state tests");
+expect_collection(layoutCount("MIGRATED_RECT_INJECTION") === 4, "four cases use explicit rectangle geometry");
+expect_collection(layoutCount("MIGRATED_OBSERVER_SHIM") === 0, "no layout case requires a ResizeObserver shim");
+expect_collection(layoutCount("MIGRATED_SVG_INJECTION") === 2, "two SVG cases use explicit bbox geometry");
+expect_collection(layoutCount("DEFERRED_REAL_LAYOUT") === 4, "four pseudo-element rendering cases remain deferred");
 expect_collection(UNKNOWN_DOM_SUITES.length === 0 && count(UNKNOWN_DOM_SUITES) === 0, "no unexplained deterministic DOM discrepancy remains");
 expect_collection(count(GENERATED_DOM_ENTRIES) === 250, "generated/fuzz entries remain outside canonical totals");
 expect_collection(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined" && typeof CSS === "undefined", "direct run leaves no DOM globals");
-originalLog(JSON.stringify({ suites: 66, cases: 869, pass: result.summary.pass, initMs, directMs, cleanupMs }));
+originalLog(JSON.stringify({ suites: 73, cases: 923, pass: result.summary.pass, initMs, geometryInstallMs, directMs, geometryCleanupMs, cleanupMs }));

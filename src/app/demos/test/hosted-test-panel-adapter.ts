@@ -34,12 +34,15 @@ type OwnedRun = {
   stopMirror?: () => void;
 };
 
-export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestSuiteId | undefined {
+export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestSuiteId {
+  if (mode === "hosted-all") return "hosted/all";
   if (mode === "livemap-replay") return "livemap/replay";
   if (mode === "livehost-all") return "livehost/all";
   if (mode === "node-all") return "node/all";
   if (mode === "dom-core") return "dom/core";
-  return undefined;
+  if (mode === "canvas-core") return "canvas/core";
+  const exhaustive: never = mode;
+  return exhaustive;
 }
 
 export function hosted_test_report_to_panel_summary(report: HostedTestReport): TestSummary {
