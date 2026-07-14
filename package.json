@@ -17,6 +17,7 @@
     "test:hosted-report-mirror-node": "tsx src/tests/livehost/run-hosted-test-report-mirror.node.mts",
     "test:hosted-report-router-node": "tsx src/tests/livehost/run-hosted-test-report-router.node.mts",
     "test:hosted-replay-router-node": "tsx src/tests/livehost/run-hosted-replay-router.node.mts",
+    "test:hosted-test-panel-adapter-node": "tsx src/tests/livehost/run-hosted-test-panel-adapter.node.mts",
     "test:hosted-replay-events-node": "tsx src/tests/livehost/run-hosted-replay-events.node.mts",
     "test:hosted-replay-concurrent-node": "tsx src/tests/livehost/run-hosted-replay-concurrent.node.mts",
     "test:amoebi-geometry": "tsx src/app/demos/amoeba/amoebi-geometry.test.mts"

@@ -11,6 +11,7 @@ import type {
   HostedTestReportRouterFailure,
   HostedTestReportRouterFailureCode,
   HostedTestReportRouterStatus,
+  HostedTestReportRouterOptions,
 } from "./hosted-test-report-router.types";
 import {
   decode_hosted_test_report_commit_envelope,
@@ -60,7 +61,10 @@ function terminal_status(status: string): status is "passed" | "failed" | "error
   return status === "passed" || status === "failed" || status === "error";
 }
 
-export function make_hosted_test_report_router(client: HostedTestReportRouterClient): HostedTestReportRouter {
+export function make_hosted_test_report_router(
+  client: HostedTestReportRouterClient,
+  options: HostedTestReportRouterOptions = {},
+): HostedTestReportRouter {
   let status: HostedTestReportRouterStatus = "waiting";
   let mirror: HostedTestReportMirror | undefined;
   let retainedFailure: HostedTestReportRouterFailure | undefined;
@@ -108,6 +112,7 @@ export function make_hosted_test_report_router(client: HostedTestReportRouterCli
       try {
         const initial = decode_hosted_test_report_initial(message.payload);
         mirror = make_hosted_test_report_mirror(initial);
+        options.onMirror?.(mirror);
         status = "active";
         mirrorReady.resolve(mirror);
       } catch (error) {

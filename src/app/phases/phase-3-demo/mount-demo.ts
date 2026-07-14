@@ -502,6 +502,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
   stopDemoMount = () => {
     stopStoreBindings();
+    content.test.dispose();
     document.removeEventListener("keydown", onDocumentKeyDown);
   };
 

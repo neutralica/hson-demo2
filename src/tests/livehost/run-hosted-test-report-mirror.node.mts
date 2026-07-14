@@ -53,6 +53,26 @@ const caseCommit = source.commits()[1];
 expect_mirror(caseCommit !== undefined, "source case commit exists");
 const completedCase = encode_hosted_test_report_commit("mirror-run", "livemap/replay", caseCommit);
 
+const observed = fresh(initial);
+const observedRevisions: number[] = [];
+const observedCaptures: ReturnType<HostedTestReportMirror["capture"]>[] = [];
+const stopObserved = observed.subscribe((capture) => {
+  observedRevisions.push(capture.rev);
+  observedCaptures.push(capture);
+});
+observed.apply(start);
+observed.apply(completedCase);
+expect_mirror(observedRevisions.join(",") === "1,2,3", "subscription emits current state and once per successful commit");
+expect_mirror(observedRevisions.every((rev, index) => index === 0 || rev > observedRevisions[index - 1]!), "subscription revisions increase monotonically");
+const firstObserved = observedCaptures[0];
+expect_mirror(firstObserved !== undefined, "subscription exposes revision-1 capture");
+(firstObserved.value as unknown as { run: { status: string } }).run.status = "failed";
+expect_mirror(observed.capture().value.run.status === "running", "subscription capture is detached from mirror state");
+stopObserved();
+stopObserved();
+observed.dispose();
+expect_mirror(observed.status === "disposed", "subscription owner mirror disposes cleanly");
+
 const mutableInitial = JSON.parse(JSON.stringify(initial)) as HostedTestReportInitialEnvelope;
 const mirror = fresh(mutableInitial);
 expect_mirror(mirror.runId === "mirror-run" && mirror.suite === "livemap/replay", "mirror retains correlation identity");
@@ -103,11 +123,20 @@ const outOfOrder = fresh(initial);
 expect_failure(outOfOrder, () => outOfOrder.apply({ ...start, prevRev: 3, rev: 4 }), "REVISION_MISMATCH");
 
 const conflict = fresh(initial);
+let conflictNotifications = 0;
+conflict.subscribe(() => {
+  conflictNotifications += 1;
+});
 const conflictEnvelope = decode_hosted_test_report_commit_envelope({
   ...start,
   ops: start.ops.map((op, index) => index === 0 ? { ...op, prev: { kind: "value", value: "passed" } } : op),
 });
 expect_failure(conflict, () => conflict.apply(conflictEnvelope), "REPLAY_FAILED");
+expect_mirror(conflictNotifications === 1, "failed commit emits no subscription notification");
+try {
+  conflict.apply(start);
+} catch {}
+expect_mirror(conflictNotifications === 1, "failed mirror rejects later commits without notification");
 
 const schemaFailure = fresh(initial);
 const schemaEnvelope = decode_hosted_test_report_commit_envelope({
@@ -119,7 +148,13 @@ const schemaEnvelope = decode_hosted_test_report_commit_envelope({
 expect_failure(schemaFailure, () => schemaFailure.apply(schemaEnvelope), "REPLAY_FAILED");
 
 const disposed = fresh(initial);
+let disposedNotifications = 0;
+const stopDisposed = disposed.subscribe(() => {
+  disposedNotifications += 1;
+});
 const disposedCapture = disposed.capture();
+stopDisposed();
+stopDisposed();
 disposed.dispose();
 disposed.dispose();
 expect_mirror(disposed.status === "disposed" && disposed.failure === undefined, "disposal is idempotent without inventing a failure");
@@ -129,6 +164,18 @@ try {
   expect_mirror(error instanceof HostedTestReportMirrorLifecycleError && error.status === "disposed", "disposed mirror rejects commits first");
 }
 equal(disposed.capture(), disposedCapture, "disposed mirror remains inspectable");
+expect_mirror(disposedNotifications === 1, "disposed subscription receives no later delivery");
+
+const ownerDisposed = fresh(initial);
+let ownerDisposedNotifications = 0;
+ownerDisposed.subscribe(() => {
+  ownerDisposedNotifications += 1;
+});
+ownerDisposed.dispose();
+try {
+  ownerDisposed.apply(start);
+} catch {}
+expect_mirror(ownerDisposedNotifications === 1, "mirror disposal clears active subscriptions and prevents later delivery");
 
 source.dispose();
 expect_mirror(typeof window === "undefined" && typeof document === "undefined", "mirror remains Node-safe");

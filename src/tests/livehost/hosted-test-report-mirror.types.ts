@@ -26,6 +26,7 @@ export type HostedTestReportMirror = Readonly<{
   readonly status: HostedTestReportMirrorStatus;
   readonly failure: HostedTestReportMirrorFailure | undefined;
   capture(): ReturnType<HostedTestReportMap["capture"]>;
+  subscribe(listener: (capture: ReturnType<HostedTestReportMap["capture"]>) => void): () => void;
   apply(envelope: HostedTestReportCommitEnvelope): void;
   dispose(): void;
 }>;

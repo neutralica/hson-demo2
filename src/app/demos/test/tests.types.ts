@@ -71,6 +71,7 @@ export type TestRunMode =
   | "transform"
   | "livetree"
   | "livemap"
+  | "livemap-replay"
   | "livehost"
   | "legacy"
   | "dev"
@@ -235,4 +236,3 @@ export type TestAssertRow = Readonly<{
   actual?: unknown;
   expected?: unknown;
 }>;
-

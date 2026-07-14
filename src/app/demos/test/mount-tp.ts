@@ -15,6 +15,8 @@ import  { run_test_suites } from "./test-runner";
 import type { TestRunMode, TestEvent, UiLevel, CaseKey } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
+import { is_hosted_test_panel_mode, make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
+import { make_hosted_test_panel_runtime } from "./hosted-test-panel-runtime";
 
 const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
 const LOG_HR_PART = " ----------=•=|"
@@ -24,6 +26,7 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "transform", label: "transform" },
     { key: "livetree", label: "livetree" },
     { key: "livemap", label: "livemap" },
+    { key: "livemap-replay", label: "livemap/replay (hosted)" },
     { key: "livehost", label: "livehost" },
     { key: "legacy", label: "legacy" },
     { key: "unit", label: "unit" },
@@ -289,6 +292,28 @@ export function tp_factory(): Outcome<TestPanel> {
         }
     };
 
+    const hostedRuntime = make_hosted_test_panel_runtime();
+    const hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
+        reset() {
+            chips.clear();
+            tlog.clear();
+            clearLogLines();
+            captureMap.clear();
+            appendLogLine("running hosted livemap/replay…");
+        },
+        onEvent: doLogOnEvent,
+        renderSummary(summary) {
+            chips.render(summary);
+        },
+        renderReport() {
+            inspector.show();
+            inspector.render();
+        },
+        showInfrastructureError(message) {
+            appendLogLine(`host error: ${message}`);
+        },
+    });
+
     const runAdHocTransform = async (fmt: SourceFormat, text: string): Promise<void> => {
         chips.clear();
         tlog.clear();
@@ -353,6 +378,15 @@ export function tp_factory(): Outcome<TestPanel> {
 
         runBtn.listen.onClick(async () => {
 
+            if (is_hosted_test_panel_mode(mode)) {
+                try {
+                    await hostedAdapter.start();
+                } catch {
+                    // The authoritative terminal error report is already rendered by the adapter.
+                }
+                return;
+            }
+
             chips.clear();
             tlog.clear();
             clearLogLines();
@@ -369,6 +403,7 @@ export function tp_factory(): Outcome<TestPanel> {
         });
 
         clearBtn.listen.onClick(() => {
+            hostedAdapter.dispose();
             tlog.clear();
             chips.clear();
             clearLogLines();
@@ -399,6 +434,10 @@ export function tp_factory(): Outcome<TestPanel> {
             syncExternalAction();
         },
         runAdHocTransform,
+        dispose: () => {
+            hostedAdapter.dispose();
+            hostedRuntime.dispose();
+        },
     } as const);
 }
 export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
@@ -418,6 +457,10 @@ export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
             inspector: tp.inspector,
             inspectorSurface: tp.inspectorSurface,
             testSurface: tp.branch,
+            dispose: () => {
+                tp.dispose();
+                root.removeSelf();
+            },
         });
     } catch (err) {
         return relay.err(err instanceof Error ? err.message : "unknown error:", err);

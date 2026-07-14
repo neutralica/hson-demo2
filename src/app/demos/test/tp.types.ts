@@ -11,6 +11,7 @@ export type TestPanels = Readonly<{
   // Expose these if you want to poke them elsewhere; otherwise delete.
   tp: TestPanel;
   inspector: InspectorUi;
+  dispose: () => void;
 }>;export type TestPanel = Readonly<{
   branch: LiveTree;
   mount: (hostBody: LiveTree) => void;
@@ -29,7 +30,7 @@ export type TestPanels = Readonly<{
   // setStatus: (txt: string) => void;
   setLog: (txt: string) => void;
   clearLogs: () => void;
+  dispose: () => void;
   inspector: ReturnType<typeof make_inspector>;
   inspectorSurface: LiveTree;
 }>;
-

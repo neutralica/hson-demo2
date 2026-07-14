@@ -52,6 +52,12 @@ export function make_hosted_test_report_mirror(initial: HostedTestReportInitialE
   const suite = initial.suite;
   let status: HostedTestReportMirrorStatus = "active";
   let retainedFailure: HostedTestReportMirrorFailure | undefined;
+  const listeners = new Set<(capture: ReturnType<typeof map.capture>) => void>();
+
+  function notify(): void {
+    const capture = map.capture();
+    for (const listener of [...listeners]) listener(capture);
+  }
 
   function fail(next: HostedTestReportMirrorFailure): never {
     retainedFailure = Object.freeze({ ...next });
@@ -78,6 +84,17 @@ export function make_hosted_test_report_mirror(initial: HostedTestReportInitialE
     },
     capture() {
       return map.capture();
+    },
+    subscribe(listener: (capture: ReturnType<typeof map.capture>) => void) {
+      if (status === "disposed") return () => undefined;
+      listeners.add(listener);
+      listener(map.capture());
+      let active = true;
+      return () => {
+        if (!active) return;
+        active = false;
+        listeners.delete(listener);
+      };
     },
     apply(envelope: HostedTestReportCommitEnvelope) {
       require_active();
@@ -118,10 +135,12 @@ export function make_hosted_test_report_mirror(initial: HostedTestReportInitialE
           receivedPrevRev: envelope.prevRev,
         }));
       }
+      notify();
     },
     dispose() {
       if (status === "disposed") return;
       status = "disposed";
+      listeners.clear();
     },
   });
 }

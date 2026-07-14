@@ -27,6 +27,10 @@ export type HostedTestReportRouterFailure = Readonly<{
 
 export type HostedTestReportRouterClient = Pick<LiveHostClient, "on_event">;
 
+export type HostedTestReportRouterOptions = Readonly<{
+  onMirror?: (mirror: HostedTestReportMirror) => void;
+}>;
+
 export type HostedTestReportRouter = Readonly<{
   readonly status: HostedTestReportRouterStatus;
   readonly runId: HostedTestRunId | undefined;
