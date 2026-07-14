@@ -16,6 +16,7 @@ import {
 } from "./hosted-test-report-wire";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
 import type { HostedTestActions, HostedTestRunResult } from "./hosted-test-action.types";
+import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
 
 export type { HostedTestActions, HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
 export { run_hosted_test_action } from "./hosted-test-client-action";
@@ -80,7 +81,14 @@ export function create_hosted_test_livehost(
 ) {
   const actions: LiveHostActions<HostedTestActions, undefined> = {
     "tests.run": async (context, request) => {
-      const descriptor = registry.get(request.suite);
+      let descriptor;
+      try {
+        descriptor = registry.get(request.suite);
+      } catch {
+        // This happens before report construction, so no initial state or
+        // terminal report can truthfully be emitted.
+        throw new HostedTestUnknownSuiteError(request.suite, true);
+      }
       const runId = makeRunId();
       if (!runId) throw new Error("Hosted test run ID must be non-empty.");
       const report = make_hosted_test_report(Date.now, (commit) => {

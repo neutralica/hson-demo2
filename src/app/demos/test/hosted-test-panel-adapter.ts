@@ -7,6 +7,7 @@ import { make_hosted_test_report_router } from "../../hosted-test/hosted-test-re
 import type { HostedTestReportRouter } from "../../hosted-test/hosted-test-report-router.types";
 import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
 import type { TestEvent, TestRunMode, TestSummary } from "./tests.types";
+import { hosted_test_action_error_message } from "../../hosted-test/hosted-test-action-error";
 
 export type HostedTestPanelSink = Readonly<{
   reset(suite: HostedTestSuiteId): void;
@@ -156,7 +157,17 @@ export function make_hosted_test_panel_adapter(
         return result;
       } catch (error) {
         if (current !== owned || generation !== runGeneration) throw error;
-        router.accept_action_error(error);
+        try {
+          router.accept_action_error(error);
+        } catch {
+          // A rejection before initial state has no authoritative report to
+          // render. Surface the action failure directly and leave the router's
+          // first normalized failure available for inspection.
+          if (router.mirror === undefined) {
+            sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
+            sink.renderReport();
+          }
+        }
         throw error;
       }
     },

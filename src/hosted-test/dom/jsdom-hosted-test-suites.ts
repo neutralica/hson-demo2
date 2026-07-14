@@ -24,13 +24,20 @@ export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
   "livetree/listen-api-surface", "livetree/quid-scoped-media", "livetree/find-query-surface",
   "livetree/text-content-surface", "livetree/listener-builder-corners", "livetree/dom-helper-surface",
   "livetree/regression-2", "livetree/quid-level-2",
+  "livetree/append-and-create", "livetree/regressions/css", "livetree/scheduling-and-events",
+  "livetree/svg/intermediate", "livetree/document-ownership", "livetree/construction-parity",
   "transform/json/basic-test", "transform/legacy/json", "transform/misc-extra", "transform/hson",
   "transform/json/level-2", "transform/_INVALID", "transform/hson/_INVALID",
+  "transform/legacy/html", "transform/html/new",
 ] as const);
 
 export const JSDOM_HOSTED_DUPLICATE_CASE_KEYS = Object.freeze([
   "livetree/css-manager-lifecycle::CssManager lifecycle: setting same value twice does not duplicate declaration",
   "livetree/document-question::multi-instance: find is scoped to instance root, not whole document",
+] as const);
+
+export const JSDOM_HOSTED_DEFERRED_CASE_KEYS = Object.freeze([
+  "livetree/construction-parity::construction: liveTree.fromUntrustedHtml returns mutable sanitized branch",
 ] as const);
 
 const JSDOM_HOSTED_TEST_SUITE_ID_SET = new Set<string>(JSDOM_HOSTED_TEST_SUITE_IDS);
@@ -43,12 +50,18 @@ export function all_jsdom_hosted_test_suites(): readonly TestSuite[] {
   ];
   const byId = new Map(candidates.map((suite) => [suite.suite, suite]));
   const duplicateCaseKeys: string[] = [];
+  const deferredCaseKeys: string[] = [];
+  const deferred = new Set<string>(JSDOM_HOSTED_DEFERRED_CASE_KEYS);
   const selected = JSDOM_HOSTED_TEST_SUITE_IDS.map((id) => {
     const suite = byId.get(id);
     if (suite === undefined) throw new Error(`Missing jsdom-hosted suite: ${id}`);
     const seen = new Set<string>();
     const cases = suite.cases.filter((testCase) => {
       const key = `${testCase.suite}::${testCase.name}`;
+      if (deferred.has(key)) {
+        deferredCaseKeys.push(key);
+        return false;
+      }
       if (seen.has(key)) {
         duplicateCaseKeys.push(key);
         return false;
@@ -70,6 +83,9 @@ export function all_jsdom_hosted_test_suites(): readonly TestSuite[] {
   if (new Set(caseKeys).size !== caseKeys.length) throw new Error("Duplicate case identity in jsdom-hosted collection.");
   if (duplicateCaseKeys.join("\n") !== JSDOM_HOSTED_DUPLICATE_CASE_KEYS.join("\n")) {
     throw new Error("Unexpected duplicate declaration in jsdom-hosted collection.");
+  }
+  if (deferredCaseKeys.join("\n") !== JSDOM_HOSTED_DEFERRED_CASE_KEYS.join("\n")) {
+    throw new Error("Unexpected deferred case selection in jsdom-hosted collection.");
   }
   return Object.freeze(selected);
 }

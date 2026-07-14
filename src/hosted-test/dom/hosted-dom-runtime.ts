@@ -19,7 +19,7 @@ export const HOSTED_DOM_GLOBAL_NAMES = Object.freeze([
   "HTMLSelectElement", "HTMLOptionElement", "HTMLTemplateElement", "HTMLFormElement", "HTMLStyleElement",
   "DocumentFragment", "Text", "Comment", "Attr", "EventTarget", "Event", "CustomEvent", "KeyboardEvent",
   "MouseEvent", "FocusEvent", "InputEvent", "MutationObserver", "DOMTokenList", "NodeList", "HTMLCollection",
-  "CSSStyleDeclaration", "CSSRule", "CSSStyleSheet", "navigator", "getComputedStyle", "PointerEvent",
+  "CSSStyleDeclaration", "CSSRule", "CSSStyleSheet", "CSS", "navigator", "getComputedStyle", "PointerEvent",
   "requestAnimationFrame", "cancelAnimationFrame",
 ] as const);
 
@@ -29,6 +29,26 @@ type GlobalRecord = Readonly<{
 }>;
 
 type FrameRequestCallback = (time: number) => void;
+
+type CssSupportsSurface = Readonly<{
+  supports(property: string, value: string): boolean;
+}>;
+
+function normalize_xml_parser_error(document: Document, input: string): void {
+  const error = document.querySelector("parsererror");
+  if (error === null) return;
+  const message = error.textContent ?? "";
+  if (/documents may contain only one root/i.test(message)) {
+    error.textContent = `extra content: ${message}`;
+    return;
+  }
+  if (
+    /unexpected close tag/i.test(message)
+    && /<(?:li|p|td|th|tr|table|thead|tbody|tfoot)\b/i.test(input)
+  ) {
+    error.textContent = `expected optional HTML end tag (li p td th tr table): ${message}`;
+  }
+}
 
 function install_value(records: GlobalRecord[], name: string, value: unknown): void {
   records.push({ name, descriptor: Object.getOwnPropertyDescriptor(globalThis, name) });
@@ -48,6 +68,36 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
     { url: options.url ?? "http://hosted-test.local/", pretendToBeVisual: true },
   );
   const window = dom.window;
+  const NativeDOMParser = window.DOMParser;
+  const HostedDOMParser = class {
+    parseFromString(input: string, type: DOMParserSupportedType): Document {
+      const parsed = new NativeDOMParser().parseFromString(input, type);
+      if (type === "application/xml" || type === "text/xml" || type === "image/svg+xml") {
+        normalize_xml_parser_error(parsed, input);
+      }
+      return parsed;
+    }
+  };
+  const validationStyle = window.document.createElement("div").style;
+  const cssSupportCache = new Map<string, boolean>();
+  const hostedCss: CssSupportsSurface = Object.freeze({
+    supports(property: string, value: string): boolean {
+      const key = `${property}\u0000${value}`;
+      const cached = cssSupportCache.get(key);
+      if (cached !== undefined) return cached;
+      try {
+        validationStyle.removeProperty(property);
+        validationStyle.setProperty(property, value);
+        const supported = validationStyle.getPropertyValue(property) !== "";
+        validationStyle.removeProperty(property);
+        cssSupportCache.set(key, supported);
+        return supported;
+      } catch {
+        cssSupportCache.set(key, false);
+        return false;
+      }
+    },
+  });
   const HostedPointerEvent = class extends window.MouseEvent {
     readonly pointerId: number;
     readonly pointerType: string;
@@ -63,21 +113,27 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
   const records: GlobalRecord[] = [];
   let disposed = false;
   let nextFrameId = 0;
-  const cancelledFrames = new Set<number>();
+  const pendingFrames = new Map<number, ReturnType<typeof setImmediate>>();
   const requestAnimationFrame = (callback: FrameRequestCallback): number => {
     nextFrameId += 1;
     const id = nextFrameId;
-    queueMicrotask(() => {
-      if (!disposed && !cancelledFrames.has(id)) callback(performance.now());
-      cancelledFrames.delete(id);
+    const timer = setImmediate(() => {
+      pendingFrames.delete(id);
+      if (!disposed) callback(performance.now());
     });
+    pendingFrames.set(id, timer);
     return id;
   };
-  const cancelAnimationFrame = (id: number): void => { cancelledFrames.add(id); };
+  const cancelAnimationFrame = (id: number): void => {
+    const timer = pendingFrames.get(id);
+    if (timer === undefined) return;
+    clearImmediate(timer);
+    pendingFrames.delete(id);
+  };
 
   try {
     const globals: readonly Readonly<[string, unknown]>[] = [
-      ["window", window], ["document", window.document], ["DOMParser", window.DOMParser],
+      ["window", window], ["document", window.document], ["DOMParser", HostedDOMParser],
       ["XMLSerializer", window.XMLSerializer], ["Node", window.Node], ["Element", window.Element],
       ["HTMLElement", window.HTMLElement], ["SVGElement", window.SVGElement], ["Document", window.Document],
       ["HTMLDivElement", window.HTMLDivElement], ["HTMLButtonElement", window.HTMLButtonElement],
@@ -91,7 +147,7 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
       ["FocusEvent", window.FocusEvent], ["InputEvent", window.InputEvent], ["MutationObserver", window.MutationObserver],
       ["DOMTokenList", window.DOMTokenList], ["NodeList", window.NodeList], ["HTMLCollection", window.HTMLCollection],
       ["CSSStyleDeclaration", window.CSSStyleDeclaration], ["CSSRule", window.CSSRule],
-      ["CSSStyleSheet", window.CSSStyleSheet],
+      ["CSSStyleSheet", window.CSSStyleSheet], ["CSS", hostedCss],
       ["navigator", window.navigator], ["getComputedStyle", window.getComputedStyle.bind(window)],
       ["PointerEvent", HostedPointerEvent],
       ["requestAnimationFrame", requestAnimationFrame], ["cancelAnimationFrame", cancelAnimationFrame],
@@ -99,6 +155,8 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
     if (globals.map(([name]) => name).join("\n") !== HOSTED_DOM_GLOBAL_NAMES.join("\n")) {
       throw new Error("Hosted DOM global installation list is inconsistent.");
     }
+    Object.defineProperty(window, "DOMParser", { configurable: true, value: HostedDOMParser });
+    Object.defineProperty(window, "CSS", { configurable: true, value: hostedCss });
     for (const [name, value] of globals) {
       options.beforeInstallGlobal?.(name);
       install_value(records, name, value);
@@ -123,7 +181,8 @@ export function install_hosted_dom_runtime(options: HostedDomRuntimeOptions = {}
     dispose() {
       if (disposed) return;
       disposed = true;
-      cancelledFrames.clear();
+      for (const timer of pendingFrames.values()) clearImmediate(timer);
+      pendingFrames.clear();
       restore_globals(records);
       window.close();
     },

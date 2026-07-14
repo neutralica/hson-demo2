@@ -12,6 +12,11 @@ import type { HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite"
 import { make_hosted_test_report } from "./hosted-test-report";
 import { encode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "./hosted-test-report-initial";
 import { encode_hosted_test_report_commit, HOSTED_TEST_REPORT_COMMIT_EVENT } from "./hosted-test-report-wire";
+import {
+  HostedTestUnknownSuiteError,
+  HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE,
+  hosted_test_unknown_suite_message,
+} from "../../app/hosted-test/hosted-test-action-error";
 
 function expect_adapter(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test panel adapter: ${message}`);
@@ -231,6 +236,39 @@ try {
 expect_adapter(errorAdapter.router?.status === "complete" && errorAdapter.router.mirror?.capture().value.run.status === "error", "infrastructure error preserves terminal mirrored report");
 expect_adapter(errorSink.infrastructureErrors[0] === "synthetic infrastructure failure", "existing error presentation receives normalized infrastructure message");
 
+const staleIo = fake_client();
+const staleSink = make_sink();
+const staleAdapter = make_hosted_test_panel_adapter(staleIo.client, staleSink.sink);
+const stalePromise = staleAdapter.start("dom/core");
+staleIo.actions[0]?.resolve({
+  type: "error",
+  error: {
+    code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+    message: "LiveHost schema validation failed: tests.run requires a registered hosted-test suite ID.",
+  },
+});
+let staleError: unknown;
+try {
+  await stalePromise;
+} catch (error) {
+  staleError = error;
+}
+expect_adapter(
+  staleError instanceof HostedTestUnknownSuiteError && staleError.code === HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE,
+  "pre-report rejection retains stable unknown-suite identity",
+);
+expect_adapter(staleAdapter.router?.status === "failed" && staleAdapter.router.failure?.code === "ACTION_ERROR_BEFORE_INITIAL", "pre-report rejection reaches a terminal router failure");
+expect_adapter(staleIo.listenerCount === 0, "pre-report routing failure removes its event listener");
+expect_adapter(staleSink.infrastructureErrors[0] === hosted_test_unknown_suite_message("dom/core"), "stale server mismatch is visible through the panel error sink");
+
+const recoveredPromise = staleAdapter.start("livemap/replay");
+const recoveredValue = fixture("stale-recovery", "passed");
+emit_fixture(staleIo, recoveredValue);
+staleIo.actions[1]?.resolve({ type: "ack", result: recoveredValue.result });
+const recoveredResult = await recoveredPromise;
+const recoveredStatus: string | undefined = staleAdapter.router?.status;
+expect_adapter(recoveredResult.runId === "stale-recovery" && recoveredStatus === "complete", "a valid run succeeds after an unavailable suite rejection");
+
 const disposeIo = fake_client();
 const disposeSink = make_sink();
 const disposeAdapter = make_hosted_test_panel_adapter(disposeIo.client, disposeSink.sink);
@@ -245,5 +283,6 @@ expect_adapter(disposeSink.renders === rendersBeforeDispose, "late settlement af
 rerunAdapter.dispose();
 failedAdapter.dispose();
 errorAdapter.dispose();
+staleAdapter.dispose();
 expect_adapter(typeof window === "undefined" && typeof document === "undefined", "adapter core remains Node-safe");
 console.log("hosted test panel adapter: ok");

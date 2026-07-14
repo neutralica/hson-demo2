@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "hosted:test-server": "tsx src/hosted-test/server/hosted-test-server-entry.node.ts",
+  "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run hosted:test-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
     "build": "vite build",
     "preview": "vite preview",
     "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts",
@@ -28,6 +29,8 @@
     "test:hosted-jsdom-runtime-node": "tsx src/tests/livehost/run-hosted-jsdom-runtime.node.mts",
     "test:hosted-dom-collection-node": "tsx src/tests/livehost/run-hosted-dom-collection.node.mts",
     "test:hosted-dom-real-websocket-node": "tsx src/tests/livehost/run-hosted-dom-real-websocket.node.mts",
+    "test:hosted-stale-suite-real-websocket-node": "tsx src/tests/livehost/run-hosted-stale-suite-real-websocket.node.mts",
+    "test:hosted-dom-behavior-diagnostics-node": "tsx src/tests/livehost/run-hosted-dom-behavior-diagnostics.node.mts",
     "test:hosted-multi-suite-concurrent-node": "tsx src/tests/livehost/run-hosted-multi-suite-concurrent.node.mts",
     "test:hosted-app-boundary-node": "tsx src/tests/livehost/run-hosted-app-boundary.node.mts",
     "test:hosted-replay-events-node": "tsx src/tests/livehost/run-hosted-replay-events.node.mts",

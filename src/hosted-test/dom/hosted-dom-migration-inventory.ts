@@ -16,7 +16,16 @@ export type HostedDomMigrationEntry = Readonly<{
   hosted: boolean;
 }>;
 
-const SHIM_SUITES = new Set(["livetree/dom-contains-surface", "livetree/listen-api-surface"]);
+const SHIM_SUITES = new Set([
+  "livetree/dom-contains-surface",
+  "livetree/listen-api-surface",
+  "livetree/append-and-create",
+  "livetree/regressions/css",
+  "livetree/scheduling-and-events",
+  "livetree/svg/intermediate",
+  "transform/legacy/html",
+  "transform/html/new",
+]);
 
 export const HOSTED_JSDOM_SUITES: readonly HostedDomMigrationEntry[] = Object.freeze(
   all_jsdom_hosted_test_suites().map((suite) => Object.freeze({
@@ -24,7 +33,7 @@ export const HOSTED_JSDOM_SUITES: readonly HostedDomMigrationEntry[] = Object.fr
     cases: suite.cases.length,
     status: SHIM_SUITES.has(suite.suite) ? "SHIM_READY" as const : "JSDOM_READY" as const,
     requirement: SHIM_SUITES.has(suite.suite)
-      ? "PointerEvent construction/dispatch shim; deterministic RAF runner scheduling"
+      ? "narrow PointerEvent, RAF, CSS.supports, or XML-parser diagnostic compatibility shim"
       : "jsdom parsing/tree/serialization/events; deterministic RAF runner scheduling",
     hosted: true,
   })),
@@ -49,12 +58,13 @@ export const CANVAS_REQUIRED_SUITES = deferred("CANVAS_REQUIRED", "2D context, b
   ["livetree/canvas-clear", 5], ["livetree/canvas-plot", 9], ["livetree/canvas-pointer", 15],
 ]);
 
-export const BROWSER_ONLY_SUITES: readonly HostedDomMigrationEntry[] = Object.freeze([]);
+export const BROWSER_ONLY_SUITES: readonly HostedDomMigrationEntry[] = deferred(
+  "BROWSER_ONLY",
+  "DOMPurify is captured before the hosted window exists; requires a runtime-bound sanitizer factory in hson-live",
+  [["livetree/construction-parity::fromUntrustedHtml", 1]],
+);
 
-export const UNKNOWN_DOM_SUITES = deferred("UNKNOWN", "jsdom/browser semantic discrepancy requires a separate compatibility decision", [
-  ["livetree/append-and-create", 9], ["livetree/regressions/css", 6], ["livetree/scheduling-and-events", 6],
-  ["livetree/svg/intermediate", 38], ["livetree/document-ownership", 7], ["livetree/construction-parity", 8],
-  ["transform/legacy/html", 88], ["transform/html/new", 125],
+export const UNKNOWN_DOM_SUITES = deferred("UNKNOWN", "no unexplained deterministic DOM cases remain", [
 ]);
 
 export const GENERATED_DOM_ENTRIES = Object.freeze([

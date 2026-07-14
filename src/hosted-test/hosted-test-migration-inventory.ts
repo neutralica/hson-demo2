@@ -127,7 +127,16 @@ export const HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.fr
 ]);
 
 export const DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze(
-  DECLARED_DOM_REQUIRED_SUITES.filter((entry) => !JSDOM_HOSTED_IDS.has(entry.suite)),
+  [
+    ...DECLARED_DOM_REQUIRED_SUITES.filter((entry) => !JSDOM_HOSTED_IDS.has(entry.suite)),
+    dom(
+      "livetree/construction-parity::fromUntrustedHtml",
+      1,
+      "all_livetree_suites",
+      ["DOMPurify", "window"],
+      "DOMPurify is imported before the hosted window exists; hson-live needs a runtime-bound sanitizer factory",
+    ),
+  ],
 );
 
 export const UNKNOWN_OR_MIXED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([

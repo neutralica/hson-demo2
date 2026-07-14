@@ -214,6 +214,18 @@ try {
 } catch {}
 expect_failure(earlyError, "ACTION_ERROR_BEFORE_TERMINAL");
 
+const preInitialErrorIo = event_client();
+const preInitialError = make_hosted_test_report_router(preInitialErrorIo.client);
+const preInitialMirror = preInitialError.wait_for_mirror();
+const preInitialTerminal = preInitialError.wait_for_terminal();
+try {
+  preInitialError.accept_action_error(new Error("suite unavailable"));
+} catch {}
+expect_failure(preInitialError, "ACTION_ERROR_BEFORE_INITIAL");
+expect_router(preInitialErrorIo.listenerCount === 0, "pre-initial action rejection removes listener");
+await rejects(preInitialMirror, "pre-initial action error readiness");
+await rejects(preInitialTerminal, "pre-initial action error terminal");
+
 const disposeWaitingIo = event_client();
 const disposeWaiting = make_hosted_test_report_router(disposeWaitingIo.client);
 const waitingMirror = disposeWaiting.wait_for_mirror();

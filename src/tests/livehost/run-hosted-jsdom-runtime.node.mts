@@ -23,10 +23,27 @@ const before = new Map(HOSTED_DOM_GLOBAL_NAMES.map((name) => [name, Object.getOw
 const runtime = install_hosted_dom_runtime();
 expect_runtime(runtime.document === globalThis.document && runtime.window === globalThis.window, "runtime installs its own window and document");
 expect_runtime(new DOMParser().parseFromString("<x/>", "application/xml").documentElement.tagName === "x", "DOMParser is operational");
+const multiRootError = new DOMParser().parseFromString("<x/><y/>", "application/xml").querySelector("parsererror")?.textContent ?? "";
+expect_runtime(multiRootError.includes("extra content"), "XML parser diagnostics activate the existing HSON multi-root repair pass");
+expect_runtime(CSS.supports("display", "grid") && !CSS.supports("color", "light-grey"), "CSS.supports shim delegates declaration validity to jsdom");
 expect_runtime(new PointerEvent("pointerdown", { pointerId: 7 }).pointerId === 7, "PointerEvent shim preserves supported identity fields");
 runtime.document.body.innerHTML = "<div id='run-a'></div>";
 runtime.reset_document();
 expect_runtime(runtime.document.head.childNodes.length === 0 && runtime.document.body.childNodes.length === 0, "reset clears head and body");
+const frameOrder: string[] = [];
+let finishFrames: (() => void) | undefined;
+const framesDone = new Promise<void>((resolve) => { finishFrames = resolve; });
+requestAnimationFrame(() => {
+  frameOrder.push("a");
+  requestAnimationFrame(() => { frameOrder.push("c"); finishFrames?.(); });
+});
+const cancelledFrame = requestAnimationFrame(() => { frameOrder.push("cancelled"); });
+requestAnimationFrame(() => { frameOrder.push("b"); });
+cancelAnimationFrame(cancelledFrame);
+await Promise.resolve();
+expect_runtime(frameOrder.length === 0, "RAF callbacks do not run at the microtask boundary");
+await framesDone;
+expect_runtime(frameOrder.join(",") === "a,b,c", "RAF shim is FIFO, cancellable, and defers nested frames");
 let frameCalled = false;
 requestAnimationFrame(() => { frameCalled = true; });
 runtime.dispose();

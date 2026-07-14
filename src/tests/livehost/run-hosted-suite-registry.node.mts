@@ -66,6 +66,6 @@ const domCore = await registered.get("dom/core").run(undefined, { yieldEveryCase
 expect_registry(replay.ok && replay.summary.suites === 1 && replay.summary.cases === 45, "registered replay runner passes 45 cases under Node");
 expect_registry(livehost.ok && livehost.summary.suites === 9 && livehost.summary.cases === 157, "registered LiveHost runner passes 157 cases under Node");
 expect_registry(nodeAll.ok && nodeAll.summary.suites === 41 && nodeAll.summary.cases === 1060, "registered aggregate runner passes every Node-safe case exactly once");
-expect_registry(domCore.ok && domCore.summary.suites === 58 && domCore.summary.cases === 583, "registered DOM runner passes the canonical jsdom tranche");
+expect_registry(domCore.ok && domCore.summary.suites === 66 && domCore.summary.cases === 869, "registered DOM runner passes the expanded canonical jsdom tranche");
 expect_registry(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "both registered runners are Node-safe");
 console.log("hosted suite registry: ok");

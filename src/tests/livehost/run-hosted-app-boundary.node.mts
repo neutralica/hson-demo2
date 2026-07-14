@@ -66,9 +66,9 @@ for (const name of compatibilityFiles) {
   expect_boundary(source.includes("../../app/hosted-test/"), `${name} must remain a narrow application re-export`);
 }
 
-expect_boundary(HOSTED_SUITES.length === 99 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 1643, "inventory pins 41 Node-safe plus 58 jsdom-hosted suites and 1643 canonical cases");
+expect_boundary(HOSTED_SUITES.length === 107 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 1929, "inventory pins 41 Node-safe plus 66 jsdom-hosted suites and 1929 canonical cases");
 expect_boundary(HOSTED_SUITES.every((entry) => (entry.hostedBy === "node/all" || entry.hostedBy === "dom/core") && !entry.nextBulk), "every hosted entry names its aggregate descriptor");
-expect_boundary(DOM_REQUIRED_SUITES.length === 23, "inventory retains only deferred DOM entries");
+expect_boundary(DOM_REQUIRED_SUITES.length === 16, "inventory retains layout, canvas, generated, and one runtime-bound sanitizer entry");
 expect_boundary(UNKNOWN_OR_MIXED_SUITES.length === 3, "inventory pins mixed runtime modes separately");
 expect_boundary(HOST_READY_SUITES.length === 0, "no verified Node-safe suite remains merely HOST_READY");
 expect_boundary(DOM_REQUIRED_SUITES.every((entry) => !entry.nextBulk && entry.browserApis.length > 0), "DOM-required entries are excluded from the next bulk migration");

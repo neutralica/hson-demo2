@@ -1003,7 +1003,10 @@ export function livetree_document_ownership(): TestSuite {
     {
       suite: SUITE,
       name: "queryBody grafts document.body as mounted root",
-      dom: true,
+      // This case owns document.body itself. Mounting the harness sandbox first
+      // would graft the same body descendants twice and test the harness rather
+      // than queryBody's document ownership.
+      dom: false,
       fixture: "document/ownership",
       sub: "query-body-root-is-body",
 

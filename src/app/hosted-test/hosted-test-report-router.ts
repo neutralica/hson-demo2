@@ -188,7 +188,10 @@ export function make_hosted_test_report_router(
     accept_action_error(_error: unknown) {
       if (status === "disposed") throw new HostedTestReportRouterDisposedError();
       if (status === "failed") throw new HostedTestReportRouterError(retainedFailure!);
-      if (mirror === undefined || status !== "complete") {
+      if (mirror === undefined) {
+        fail_call("ACTION_ERROR_BEFORE_INITIAL", "Action error arrived before initial report state.");
+      }
+      if (status !== "complete") {
         fail_call("ACTION_ERROR_BEFORE_TERMINAL", "Action error arrived before terminal report state.");
       }
       if (mirror.capture().value.run.status !== "error") {
