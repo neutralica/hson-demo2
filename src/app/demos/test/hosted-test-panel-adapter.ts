@@ -9,7 +9,7 @@ import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
 import type { TestEvent, TestRunMode, TestSummary } from "./tests.types";
 
 export type HostedTestPanelSink = Readonly<{
-  reset(): void;
+  reset(suite: HostedTestSuiteId): void;
   onEvent(event: TestEvent): void;
   renderSummary(summary: TestSummary): void;
   renderReport(): void;
@@ -37,6 +37,7 @@ export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestS
   if (mode === "livemap-replay") return "livemap/replay";
   if (mode === "livehost-all") return "livehost/all";
   if (mode === "node-all") return "node/all";
+  if (mode === "dom-core") return "dom/core";
   return undefined;
 }
 
@@ -134,7 +135,7 @@ export function make_hosted_test_panel_adapter(
       generation += 1;
       const runGeneration = generation;
       dispose_current();
-      sink.reset();
+      sink.reset(suite);
 
       let owned: OwnedRun;
       const observe = make_report_observer(sink);

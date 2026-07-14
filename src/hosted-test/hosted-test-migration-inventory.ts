@@ -1,4 +1,5 @@
 import type { HostedTestSuiteId } from "../app/hosted-test/hosted-test-suite";
+import { all_jsdom_hosted_test_suites, JSDOM_HOSTED_TEST_SUITE_IDS } from "./dom/jsdom-hosted-test-suites";
 
 export type HostedMigrationClassification = "HOSTED" | "HOST_READY" | "DOM_REQUIRED" | "UNKNOWN_OR_MIXED";
 
@@ -26,7 +27,7 @@ const LIVETREE_DOM_APIS = Object.freeze([
   "events", "getComputedStyle", "getBoundingClientRect", "ResizeObserver", "canvas",
 ]);
 
-export const HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
+const NODE_HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
   hosted("livemap/editor", 15, "all_node_safe_hosted_test_suites"),
   hosted("livemap/core", 65, "all_node_safe_hosted_test_suites"),
   hosted("livemap/feed", 18, "all_node_safe_hosted_test_suites"),
@@ -72,7 +73,7 @@ export const HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.fr
 
 export const HOST_READY_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([]);
 
-export const DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
+const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
   dom("livemap/node-internals", 37, "all_livemap_suites", ["DOMParser"]),
   dom("livemap/bridge-livetree", 29, "all_livemap_suites", ["DOMParser"]),
   dom("livemap/bridge-livetree-controls", 11, "all_livemap_suites", ["DOMParser", "HTMLElement", "events"]),
@@ -109,6 +110,25 @@ export const DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Obj
   dom("transform/hson/_INVALID", 31, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
   dom("generated/json/seed_<run-seed>", 200, "all_test_suites(fuzz-json)", ["DOMParser"]),
 ]);
+
+const JSDOM_HOSTED_IDS = new Set<string>(JSDOM_HOSTED_TEST_SUITE_IDS);
+
+export const HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
+  ...NODE_HOSTED_SUITES,
+  ...all_jsdom_hosted_test_suites().map((suite) => Object.freeze({
+    suite: suite.suite,
+    cases: suite.cases.length,
+    runner: "run_jsdom_hosted_test_suites",
+    classification: "HOSTED" as const,
+    browserApis: Object.freeze(["DOMParser", "document"]),
+    nextBulk: false,
+    hostedBy: "dom/core" as const,
+  })),
+]);
+
+export const DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze(
+  DECLARED_DOM_REQUIRED_SUITES.filter((entry) => !JSDOM_HOSTED_IDS.has(entry.suite)),
+);
 
 export const UNKNOWN_OR_MIXED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
   Object.freeze({ suite: "mode/all", cases: undefined, runner: "all_test_suites(all)", classification: "UNKNOWN_OR_MIXED", browserApis: [], transitiveBlocker: "Combines HOST_READY and DOM_REQUIRED suites", nextBulk: false }),

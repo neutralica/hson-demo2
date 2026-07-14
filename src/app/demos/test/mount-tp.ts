@@ -29,6 +29,7 @@ const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
     { key: "livemap-replay", label: "livemap/replay (hosted)" },
     { key: "livehost-all", label: "livehost/all (hosted)" },
     { key: "node-all", label: "all Node-safe (hosted)" },
+    { key: "dom-core", label: "DOM core (hosted)" },
     { key: "livehost", label: "livehost" },
     { key: "legacy", label: "legacy" },
     { key: "unit", label: "unit" },
@@ -296,12 +297,12 @@ export function tp_factory(): Outcome<TestPanel> {
 
     const hostedRuntime = make_remote_hosted_test_runtime();
     const hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
-        reset() {
+        reset(suite) {
             chips.clear();
             tlog.clear();
             clearLogLines();
             captureMap.clear();
-            appendLogLine("running hosted livemap/replay…");
+            appendLogLine(`running hosted ${suite}…`);
         },
         onEvent: doLogOnEvent,
         renderSummary(summary) {

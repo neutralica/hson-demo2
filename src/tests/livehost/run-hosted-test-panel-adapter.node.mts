@@ -138,6 +138,7 @@ expect_adapter(
   hosted_test_suite_for_panel_mode("livemap-replay") === "livemap/replay"
     && hosted_test_suite_for_panel_mode("livehost-all") === "livehost/all"
     && hosted_test_suite_for_panel_mode("node-all") === "node/all"
+    && hosted_test_suite_for_panel_mode("dom-core") === "dom/core"
     && hosted_test_suite_for_panel_mode("livemap") === undefined,
   "both explicit hosted modes share selection while local modes remain local",
 );

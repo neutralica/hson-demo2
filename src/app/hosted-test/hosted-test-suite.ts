@@ -1,6 +1,6 @@
 import type { RunOptions, RunResult, TestEvent } from "../demos/test/tests.types";
 
-export const HOSTED_TEST_SUITE_IDS = ["livemap/replay", "livehost/all", "node/all"] as const;
+export const HOSTED_TEST_SUITE_IDS = ["livemap/replay", "livehost/all", "node/all", "dom/core"] as const;
 
 export type HostedTestSuiteId = typeof HOSTED_TEST_SUITE_IDS[number];
 

@@ -59,7 +59,9 @@ expect_ws(transportMetrics.sentMessages === 64 && transportMetrics.sentBytes > 0
 router.dispose();
 stopEvents();
 runtime.dispose();
-await new Promise((resolve) => setTimeout(resolve, 0));
+for (let attempt = 0; attempt < 100 && server.connectionCount() !== 0; attempt += 1) {
+  await new Promise((resolve) => setTimeout(resolve, 5));
+}
 expect_ws(server.connectionCount() === 0, "client disposal closes and removes the server connection");
 await server.stop();
 
