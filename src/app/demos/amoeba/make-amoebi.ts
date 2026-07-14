@@ -67,12 +67,6 @@ function amoeba_path_css(
   const activeList = string_ids(activeIds);
   const hovered = hoveredId === button.id;
   const active = activeList.includes(button.id);
-  const hoveredIsIsolated = typeof hoveredId === "string"
-    && is_isolated_id(
-      isolatedIds,
-      hoveredId,
-    );
-
   const anyBlockingActive = activeList.some((id) => {
     return !is_isolated_id(
       isolatedIds,
@@ -80,15 +74,13 @@ function amoeba_path_css(
     );
   });
 
-  const blockingHover = has_hover(hoveredId)
-    && !hoveredIsIsolated;
+  const hoveredWithoutSelection = hovered
+    && !active
+    && !anyBlockingActive;
 
   const suppressed = !hovered
     && !active
-    && (
-      blockingHover
-      || anyBlockingActive
-    );
+    && anyBlockingActive;
 
   const activeHover = active && hovered;
   const neutralHover = hovered
@@ -98,7 +90,7 @@ function amoeba_path_css(
   return {
     fill: activeHover
       ? set_alpha(OKLCH_NEUTRALS.black, 0.42)
-      : active
+      : active || hoveredWithoutSelection
         ? "transparent"
         : set_alpha(
           button.tone,
@@ -585,7 +577,8 @@ function apply_amoebi_menu_motion(
         || !hasBlockingActive;
     } else {
       shouldGrow = hovered
-        || active;
+          || active
+        || !hasBlockingActive;
     }
 
     if (shouldGrow) {
