@@ -15,21 +15,10 @@ import {
   HOSTED_TEST_REPORT_COMMIT_EVENT,
 } from "./hosted-test-report-wire";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+import type { HostedTestActions, HostedTestRunResult } from "./hosted-test-action.types";
 
-export type HostedTestRunRequest = Readonly<{
-  suite: HostedTestSuiteId;
-}>;
-
-export type HostedTestRunResult = Readonly<{
-  runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
-  ok: boolean;
-  summary: TestSummary;
-}>;
-
-export type HostedTestActions = Readonly<{
-  "tests.run": HostedTestRunRequest;
-}>;
+export type { HostedTestActions, HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
+export { run_hosted_test_action } from "./hosted-test-client-action";
 
 export type HostedTestRunIdFactory = () => string;
 
@@ -138,15 +127,4 @@ export function create_hosted_test_livehost(
   };
 
   return create_livehost<undefined, HostedTestActions>({ actions, schema });
-}
-
-export async function run_hosted_test_action(
-  client: Readonly<{ action: (name: "tests.run", payload: HostedTestRunRequest) => Promise<unknown> }>,
-  suite: HostedTestSuiteId,
-): Promise<HostedTestRunResult> {
-  const response = await client.action("tests.run", { suite });
-  if (typeof response !== "object" || response === null || (response as { type?: unknown }).type !== "ack") {
-    throw new Error(`Hosted test action was rejected for ${suite}.`);
-  }
-  return (response as { result: HostedTestRunResult }).result;
 }

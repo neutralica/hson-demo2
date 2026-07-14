@@ -1,5 +1,5 @@
 import type { LiveHostClient } from "hson-live";
-import type { HostedTestRunResult } from "./hosted-test-action";
+import type { HostedTestRunResult } from "./hosted-test-action.types";
 import type { HostedTestReportMirror } from "./hosted-test-report-mirror.types";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
 

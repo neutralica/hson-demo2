@@ -43,7 +43,6 @@ import { SPLASH_BUDS } from "../phase-2-splash/splash.buds";
 import { begin_star } from "../phase-2-splash/mount-splash";
 import { make_amoebi } from "../../demos/amoeba/make-amoebi";
 import { type AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
-import type { HostedTestSuiteRegistry } from "../../hosted-test/hosted-test-suite";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -289,9 +288,9 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
 }
 
 
-function mount_demo_content(hosts: DemoHosts, hostedSuites: HostedTestSuiteRegistry): DemoContent {
+function mount_demo_content(hosts: DemoHosts): DemoContent {
   relay_data(mount_about_panels(hosts.aboutHost, ABOUT_DOCS));
-  const test = relay_data(mount_test_panels(hosts.testHost, hostedSuites));
+  const test = relay_data(mount_test_panels(hosts.testHost));
   const parse = relay_data(mount_parsing_panels(hosts.parseHost));
   relay_data(mount_build_panels(hosts.buildHost));
   relay_void(mount_bar_bar(hosts.barbarHost));
@@ -404,7 +403,7 @@ function wire_demo_menu(menu: MenuButtons, fleurField: SvgLiveTree, controller: 
   });
 }
 
-export async function mount_demo(stage: LiveTree, hostedSuites: HostedTestSuiteRegistry): OutcomeAsync<void> {
+export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   // CHANGED: release remount-persistent bindings before rebuilding the demo tree.
   stopDemoMount?.();
   stopDemoMount = undefined;
@@ -425,7 +424,7 @@ export async function mount_demo(stage: LiveTree, hostedSuites: HostedTestSuiteR
   const hosts = create_demo_hosts(uiRoot, menuContainer, motesLayer, graffitiLayer);
   const { viewHosts, widgetHosts } = hosts;
 
-  const content = mount_demo_content(hosts, hostedSuites);
+  const content = mount_demo_content(hosts);
   wire_parse_test_bridge(content.parse, content.test);
   mount_motes(motesLayer);
   mount_deck(stage);

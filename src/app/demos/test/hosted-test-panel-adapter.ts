@@ -1,6 +1,6 @@
 import type { LiveHostEventListener } from "hson-live/types";
-import type { HostedTestRunResult } from "../../hosted-test/hosted-test-action";
-import { run_hosted_test_action } from "../../hosted-test/hosted-test-action";
+import type { HostedTestRunResult } from "../../hosted-test/hosted-test-action.types";
+import { run_hosted_test_action } from "../../hosted-test/hosted-test-client-action";
 import type { HostedTestReport } from "../../hosted-test/hosted-test-report.types";
 import type { HostedTestReportMirror } from "../../hosted-test/hosted-test-report-mirror.types";
 import { make_hosted_test_report_router } from "../../hosted-test/hosted-test-report-router";

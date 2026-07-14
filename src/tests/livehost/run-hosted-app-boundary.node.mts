@@ -21,6 +21,15 @@ for (const name of hostedFiles) {
   const source = readFileSync(new URL(name, hostedDirectory), "utf8");
   expect_boundary(!source.includes("tests/"), `${name} must not import from src/tests`);
 }
+
+const browserRuntimeSource = readFileSync(new URL("../../app/demos/test/hosted-test-panel-runtime.ts", import.meta.url), "utf8");
+const browserAdapterSource = readFileSync(new URL("../../app/hosted-test/browser-websocket-socket.ts", import.meta.url), "utf8");
+const mainSource = readFileSync(new URL("../../main.ts", import.meta.url), "utf8");
+expect_boundary(!browserRuntimeSource.includes("create_hosted_test_livehost"), "visible runtime must not construct a browser LiveHost");
+expect_boundary(!browserRuntimeSource.includes("registered-hosted-test-suites") && !mainSource.includes("registered-hosted-test-suites"), "browser graph must not reach executable suite descriptors");
+expect_boundary(!browserRuntimeSource.includes('from "ws"') && !browserAdapterSource.includes('from "ws"'), "browser runtime must use native WebSocket rather than Node ws");
+expect_boundary(!browserRuntimeSource.includes("jsdom") && !browserAdapterSource.includes("jsdom") && !mainSource.includes("jsdom"), "browser hosted-test graph must not reach jsdom");
+expect_boundary(browserRuntimeSource.includes("VITE_HOSTED_TEST_WS_URL"), "visible runtime reads the explicit WebSocket environment variable");
 for (const file of panelFiles) {
   const source = readFileSync(file, "utf8");
   expect_boundary(!source.includes("tests/"), `${file.pathname} must not import from src/tests`);

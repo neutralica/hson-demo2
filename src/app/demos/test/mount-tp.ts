@@ -16,8 +16,7 @@ import type { TestRunMode, TestEvent, UiLevel, CaseKey } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 import { hosted_test_suite_for_panel_mode, make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
-import { make_hosted_test_panel_runtime } from "./hosted-test-panel-runtime";
-import type { HostedTestSuiteRegistry } from "../../hosted-test/hosted-test-suite";
+import { make_remote_hosted_test_runtime } from "./hosted-test-panel-runtime";
 
 const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
 const LOG_HR_PART = " ----------=•=|"
@@ -143,7 +142,7 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
     return { leftColumn, rightColumn, inspectorPane, logger };
 }
 
-export function tp_factory(hostedSuites: HostedTestSuiteRegistry): Outcome<TestPanel> {
+export function tp_factory(): Outcome<TestPanel> {
     let mounted = false;
     let level: UiLevel = "normal";
     let mode: TestRunMode = "all";
@@ -295,7 +294,7 @@ export function tp_factory(hostedSuites: HostedTestSuiteRegistry): Outcome<TestP
         }
     };
 
-    const hostedRuntime = make_hosted_test_panel_runtime(hostedSuites);
+    const hostedRuntime = make_remote_hosted_test_runtime();
     const hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
         reset() {
             chips.clear();
@@ -315,6 +314,9 @@ export function tp_factory(hostedSuites: HostedTestSuiteRegistry): Outcome<TestP
         showInfrastructureError(message) {
             appendLogLine(`host error: ${message}`);
         },
+    });
+    void hostedRuntime.ready().catch((error: unknown) => {
+        appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
     });
 
     const runAdHocTransform = async (fmt: SourceFormat, text: string): Promise<void> => {
@@ -384,9 +386,12 @@ export function tp_factory(hostedSuites: HostedTestSuiteRegistry): Outcome<TestP
             const hostedSuite = hosted_test_suite_for_panel_mode(mode);
             if (hostedSuite !== undefined) {
                 try {
+                    await hostedRuntime.ready();
                     await hostedAdapter.start(hostedSuite);
-                } catch {
-                    // The authoritative terminal error report is already rendered by the adapter.
+                } catch (error) {
+                    if (hostedAdapter.router === undefined) {
+                        appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
+                    }
                 }
                 return;
             }
@@ -444,7 +449,7 @@ export function tp_factory(hostedSuites: HostedTestSuiteRegistry): Outcome<TestP
         },
     } as const);
 }
-export function mount_test_panels(host: LiveTree, hostedSuites: HostedTestSuiteRegistry): Outcome<TestPanels> {
+export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
     try {
         const old = host.find.byId("test-panels-root");
         if (old) old.removeSelf();
@@ -453,7 +458,7 @@ export function mount_test_panels(host: LiveTree, hostedSuites: HostedTestSuiteR
             .id.set("test-panels-root")
             .css.setMany(TP_ROOTcss);
 
-        const tp = relay_data(tp_factory(hostedSuites));
+        const tp = relay_data(tp_factory());
         tp.mount(root);
         return relay.data({
             root,

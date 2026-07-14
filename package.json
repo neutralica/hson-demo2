@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "hosted:test-server": "tsx src/hosted-test/server/hosted-test-server-entry.node.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts",
@@ -22,6 +23,8 @@
     "test:hosted-node-all-node": "tsx src/tests/livehost/run-hosted-node-all.node.mts",
     "test:hosted-report-batch-node": "tsx src/tests/livehost/run-hosted-test-report-batch.node.mts",
     "test:hosted-report-performance-node": "tsx src/tests/livehost/run-hosted-report-performance.node.mts",
+    "test:hosted-real-websocket-node": "tsx src/tests/livehost/run-hosted-real-websocket.node.mts",
+    "test:hosted-websocket-lifecycle-node": "tsx src/tests/livehost/run-hosted-websocket-lifecycle.node.mts",
     "test:hosted-multi-suite-concurrent-node": "tsx src/tests/livehost/run-hosted-multi-suite-concurrent.node.mts",
     "test:hosted-app-boundary-node": "tsx src/tests/livehost/run-hosted-app-boundary.node.mts",
     "test:hosted-replay-events-node": "tsx src/tests/livehost/run-hosted-replay-events.node.mts",
@@ -33,12 +36,14 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.5.2",
+    "@types/ws": "8.18.1",
     "vite": "^7.3.0"
   },
   "dependencies": {
     "hson-live": "file:../hson-live",
     "intrastructure": "file:../../intrastructure/",
     "jsdom": "29.1.0",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "ws": "8.21.0"
   }
 }

@@ -20,6 +20,9 @@ export async function run_node_all_suite(
   onEvent?: (event: TestEvent) => void,
   options?: RunOptions,
 ): Promise<RunResult> {
+  if (typeof window !== "undefined" || typeof document !== "undefined") {
+    throw new Error("node/all must execute in a Node host without browser globals.");
+  }
   return run_test_suites(all_node_safe_hosted_test_suites(), onEvent ?? (() => undefined), options);
 }
 

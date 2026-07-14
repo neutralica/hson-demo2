@@ -4,7 +4,7 @@ import {
   hosted_test_suite_for_panel_mode,
   type HostedTestPanelSink,
 } from "../../app/demos/test/hosted-test-panel-adapter";
-import { make_hosted_test_panel_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
+import { make_in_memory_hosted_test_runtime } from "./in-memory-hosted-test-panel-runtime";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
 import type { TestEvent, TestSummary } from "../../app/demos/test/tests.types";
 import type { HostedTestRunResult } from "./hosted-replay-action";
@@ -131,7 +131,7 @@ function emit_fixture(io: ReturnType<typeof fake_client>, value: ReturnType<type
   for (const commit of value.commits) io.emit(HOSTED_TEST_REPORT_COMMIT_EVENT, commit as unknown as JsonValue);
 }
 
-const runtime = make_hosted_test_panel_runtime(make_registered_hosted_test_suite_registry());
+const runtime = make_in_memory_hosted_test_runtime(make_registered_hosted_test_suite_registry());
 const visibleSink = make_sink();
 let localReplayInvocations = 0;
 expect_adapter(
@@ -155,7 +155,7 @@ expect_adapter(visibleSink.renders === 5, "initial, start, two case batches, and
 visibleAdapter.dispose();
 runtime.dispose();
 
-const livehostRuntime = make_hosted_test_panel_runtime(make_registered_hosted_test_suite_registry());
+const livehostRuntime = make_in_memory_hosted_test_runtime(make_registered_hosted_test_suite_registry());
 const livehostSink = make_sink();
 const livehostAdapter = make_hosted_test_panel_adapter(livehostRuntime.client, livehostSink.sink);
 const livehostResult = await livehostAdapter.start("livehost/all");
@@ -168,7 +168,7 @@ expect_adapter(livehostFinal?.suites === 9 && livehostFinal.cases === 157 && liv
 livehostAdapter.dispose();
 livehostRuntime.dispose();
 
-const nodeRuntime = make_hosted_test_panel_runtime(make_registered_hosted_test_suite_registry());
+const nodeRuntime = make_in_memory_hosted_test_runtime(make_registered_hosted_test_suite_registry());
 const nodeSink = make_sink();
 const nodeAdapter = make_hosted_test_panel_adapter(nodeRuntime.client, nodeSink.sink);
 const nodePanelStarted = performance.now();

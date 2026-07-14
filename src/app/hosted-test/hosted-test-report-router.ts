@@ -1,4 +1,4 @@
-import type { HostedTestRunResult } from "./hosted-test-action";
+import type { HostedTestRunResult } from "./hosted-test-action.types";
 import {
   decode_hosted_test_report_initial,
   HOSTED_TEST_REPORT_INITIAL_EVENT,

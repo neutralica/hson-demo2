@@ -14,7 +14,6 @@ import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
 import { CssManager, LiveTree } from "hson-live";
-import type { HostedTestSuiteRegistry } from "./hosted-test/hosted-test-suite";
 
 
 const gcss = CssManager.api();
@@ -23,7 +22,7 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
   log_oklch_palette(OKLCH_VIBRANT, "vibrant");
   log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
 
-export async function run_app(root: LiveTree, hostedSuites: HostedTestSuiteRegistry): OutcomeAsync<void> {
+export async function run_app(root: LiveTree): OutcomeAsync<void> {
   root.empty();
 
   const app = mk_div_id(root, "app")
@@ -70,7 +69,7 @@ export async function run_app(root: LiveTree, hostedSuites: HostedTestSuiteRegis
 
     // --- phase 3: feature demo ---
     {
-      const demoRes = await run_phase(stage, (demoStage) => mount_demo(demoStage, hostedSuites), _shortpause);
+      const demoRes = await run_phase(stage, mount_demo, _shortpause);
       if (outcome.isErr(demoRes)) return demoRes;
     }
 
