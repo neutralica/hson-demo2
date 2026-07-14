@@ -32,7 +32,7 @@ function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
 
   const layer = root.create.div()
     .id.set("motes-host")
-    .classlist.add("motes")
+    .classlist.add("bling")
     .css.setMany(MOTES_HOSTcss);
 
   const dispose = (): void => void 0; // init patches this

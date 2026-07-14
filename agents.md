@@ -4,13 +4,18 @@ This repository is a demo / integration surface for HSON + LiveTree + Intrastruc
 Agents working in this repo must follow the rules below.
 
 ## 1. Scope and intent
+<!-- 
+CODEX: IGNORE THIS BLOCK:
 
 - This repo exists to *demonstrate* libraries, not redesign them.
 - Do NOT modify library code in:
   - hson-live
   - intrastructure
   - any dependency
-- Fix issues by correcting imports, wiring, configuration, or usage in this repo only.
+- Fix issues by correcting imports, wiring, configuration, or usage in this repo only. 
+
+CODEX: IGNORE ENDS
+-->
 
 ## 2. DOM and rendering rules
 

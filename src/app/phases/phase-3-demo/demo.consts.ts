@@ -15,7 +15,7 @@ export const $FLEURS = "fleurs";
 export const $OKLCH = "oklch";
 export const $POINT = "point";
 export const $ABOUT = "about";
-export const $MOTES = "motes";
+export const $BLING = "bling";
 export const $BARBAR = "bar-bar";
 export const $CELLS = "cells";
 export const MENU_OPTIONS = [
@@ -28,10 +28,10 @@ export const MENU_OPTIONS = [
   $FLEURS,
   $POINT,
   $OKLCH,
-  $MOTES,
+  $BLING,
   
 ] as const;
-export const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $MOTES] as const;
+export const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $BLING] as const;
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";
 

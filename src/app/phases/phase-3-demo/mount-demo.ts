@@ -32,7 +32,7 @@ import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, dem
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import type { Panels } from "../../ui/panels/panels.types";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
-import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $MOTES, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS } from "./demo.consts";
+import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $BLING, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS } from "./demo.consts";
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
@@ -126,7 +126,7 @@ const ISOLATED_WIDGET_IDS:
   readonly DemoWidget[] = [
     "oklch",
     "point",
-    "motes",
+    "bling",
   ];
 
 function amoebi_menu_items(): readonly AmoebiMenuItem[] {
@@ -270,7 +270,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const widgetHosts: WidgetHosts = {
     [$POINT]: [pointHost],
     [$OKLCH]: [oklchHost],
-    [$MOTES]: [motesLayer, graf],
+    [$BLING]: [motesLayer, graf],
   };
 
   return {
@@ -428,7 +428,7 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
   wire_parse_test_bridge(content.parse, content.test);
   mount_motes(motesLayer);
   mount_deck(stage);
-  activate_widget($MOTES);
+  activate_widget($BLING);
   sync_fleur_viewbox(fleurLayer, fleurField);
   const demoController: DemoStateController = {
     getView: get_view,

@@ -1,0 +1,135 @@
+import { make_hosted_test_report } from "./hosted-test-report";
+import {
+  decode_hosted_test_report_initial,
+  encode_hosted_test_report_initial,
+} from "./hosted-test-report-initial";
+import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
+import {
+  make_hosted_test_report_mirror,
+  HostedTestReportMirrorError,
+  HostedTestReportMirrorLifecycleError,
+} from "./hosted-test-report-mirror";
+import type { HostedTestReportMirror, HostedTestReportMirrorFailureCode } from "./hosted-test-report-mirror.types";
+import {
+  decode_hosted_test_report_commit_envelope,
+  encode_hosted_test_report_commit,
+} from "./hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+
+function expect_mirror(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(`hosted report mirror: ${message}`);
+}
+
+function equal(actual: unknown, expected: unknown, message: string): void {
+  expect_mirror(JSON.stringify(actual) === JSON.stringify(expected), `${message}\nactual: ${JSON.stringify(actual)}\nexpected: ${JSON.stringify(expected)}`);
+}
+
+function expect_failure(mirror: HostedTestReportMirror, apply: () => void, code: HostedTestReportMirrorFailureCode): void {
+  const before = mirror.capture();
+  try {
+    apply();
+  } catch (error) {
+    expect_mirror(error instanceof HostedTestReportMirrorError && error.failure.code === code, `${code} throws a mirror error`);
+    expect_mirror(mirror.status === "failed" && mirror.failure?.code === code, `${code} is retained as mirror failure`);
+    expect_mirror(mirror.rev === before.rev, `${code} preserves revision`);
+    equal(mirror.capture().value, before.value, `${code} preserves report value`);
+    return;
+  }
+  throw new Error(`hosted report mirror: expected ${code}`);
+}
+
+function fresh(initial: HostedTestReportInitialEnvelope): HostedTestReportMirror {
+  return make_hosted_test_report_mirror(initial);
+}
+
+const source = make_hosted_test_report(() => 10);
+const initial = encode_hosted_test_report_initial("mirror-run", "livemap/replay", source.map.capture());
+source.reduce({ t: "suite_begin", suite: "livemap/replay" });
+const startCommit = source.commits()[0];
+expect_mirror(startCommit !== undefined, "source start commit exists");
+const start = encode_hosted_test_report_commit("mirror-run", "livemap/replay", startCommit);
+source.reduce({ t: "case_end", suite: "livemap/replay", name: "mirror case", status: "pass", ms: 1 });
+const caseCommit = source.commits()[1];
+expect_mirror(caseCommit !== undefined, "source case commit exists");
+const completedCase = encode_hosted_test_report_commit("mirror-run", "livemap/replay", caseCommit);
+
+const mutableInitial = JSON.parse(JSON.stringify(initial)) as HostedTestReportInitialEnvelope;
+const mirror = fresh(mutableInitial);
+expect_mirror(mirror.runId === "mirror-run" && mirror.suite === "livemap/replay", "mirror retains correlation identity");
+expect_mirror(mirror.status === "active" && mirror.failure === undefined && mirror.rev === initial.rev, "mirror begins active at initial revision");
+equal(mirror.capture().value, initial.value, "mirror begins with decoded initial report state");
+(mutableInitial as unknown as { value: { run: { status: string } } }).value.run.status = "passed";
+expect_mirror(mirror.capture().value.run.status === "idle", "mirror detaches from source initial envelope");
+
+const parsedCommit = JSON.parse(JSON.stringify(start)) as unknown;
+const detachedStart = decode_hosted_test_report_commit_envelope(parsedCommit);
+mirror.apply(detachedStart);
+expect_mirror(mirror.rev === 2 && mirror.capture().value.run.status === "running", "valid commit replays through the real map");
+if (typeof parsedCommit === "object" && parsedCommit !== null && "runId" in parsedCommit) {
+  (parsedCommit as { runId: string }).runId = "changed";
+}
+expect_mirror(mirror.runId === "mirror-run" && mirror.rev === 2, "source commit mutation cannot alter mirror state");
+
+const runMismatch = fresh(initial);
+expect_failure(runMismatch, () => runMismatch.apply({ ...start, runId: "other-run" }), "RUN_MISMATCH");
+const stableFailure = runMismatch.failure;
+try {
+  runMismatch.apply(start);
+} catch (error) {
+  expect_mirror(error instanceof HostedTestReportMirrorLifecycleError && error.status === "failed", "post-failure commit rejects at lifecycle precedence");
+}
+expect_mirror(runMismatch.failure === stableFailure, "first failure record remains stable");
+
+const suiteMismatch = fresh(initial);
+expect_failure(
+  suiteMismatch,
+  () => suiteMismatch.apply({ ...start, suite: "other" } as unknown as HostedTestReportCommitEnvelope),
+  "SUITE_MISMATCH",
+);
+
+const future = fresh(initial);
+expect_failure(future, () => future.apply({ ...start, prevRev: 2, rev: 3 }), "REVISION_MISMATCH");
+
+const duplicate = fresh(initial);
+duplicate.apply(start);
+expect_failure(duplicate, () => duplicate.apply(start), "REVISION_MISMATCH");
+
+const old = fresh(initial);
+old.apply(start);
+old.apply(completedCase);
+expect_failure(old, () => old.apply(start), "REVISION_MISMATCH");
+
+const outOfOrder = fresh(initial);
+expect_failure(outOfOrder, () => outOfOrder.apply({ ...start, prevRev: 3, rev: 4 }), "REVISION_MISMATCH");
+
+const conflict = fresh(initial);
+const conflictEnvelope = decode_hosted_test_report_commit_envelope({
+  ...start,
+  ops: start.ops.map((op, index) => index === 0 ? { ...op, prev: { kind: "value", value: "passed" } } : op),
+});
+expect_failure(conflict, () => conflict.apply(conflictEnvelope), "REPLAY_FAILED");
+
+const schemaFailure = fresh(initial);
+const schemaEnvelope = decode_hosted_test_report_commit_envelope({
+  ...start,
+  ops: start.ops.map((op) => op.path.join("/") === "run/status"
+    ? { ...op, next: { kind: "value", value: "not-a-report-status" } }
+    : op),
+});
+expect_failure(schemaFailure, () => schemaFailure.apply(schemaEnvelope), "REPLAY_FAILED");
+
+const disposed = fresh(initial);
+const disposedCapture = disposed.capture();
+disposed.dispose();
+disposed.dispose();
+expect_mirror(disposed.status === "disposed" && disposed.failure === undefined, "disposal is idempotent without inventing a failure");
+try {
+  disposed.apply(start);
+} catch (error) {
+  expect_mirror(error instanceof HostedTestReportMirrorLifecycleError && error.status === "disposed", "disposed mirror rejects commits first");
+}
+equal(disposed.capture(), disposedCapture, "disposed mirror remains inspectable");
+
+source.dispose();
+expect_mirror(typeof window === "undefined" && typeof document === "undefined", "mirror remains Node-safe");
+console.log("hosted test report mirror: ok");

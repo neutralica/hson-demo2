@@ -616,6 +616,183 @@ export function livehost_pair_suite(): TestSuite {
           readerCount: 1,
         },
       }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "host connection emits one generic event to one client",
+        input: {},
+        act: async () => {
+          const [firstClientSocket, firstHostSocket] = make_socket_pair();
+          const [secondClientSocket, secondHostSocket] = make_socket_pair();
+          const host = create_livehost({ state: { ready: true } });
+          const first = create_livehost_client<{ ready: boolean }>({ socket: firstClientSocket });
+          const second = create_livehost_client<{ ready: boolean }>({ socket: secondClientSocket });
+          const firstEvents: unknown[] = [];
+          const secondEvents: unknown[] = [];
+          first.on_event((message) => firstEvents.push(message));
+          second.on_event((message) => secondEvents.push(message));
+          const firstConnection = host.connect(firstHostSocket);
+          host.connect(secondHostSocket);
+          first.connect();
+          second.connect();
+          await settle_pair();
+          firstConnection.emit_event("notice", { nested: [1, { ok: true }] });
+          await settle_pair();
+          return { firstEvents, secondEvents };
+        },
+        expected: {
+          firstEvents: [{ type: "event", event: "notice", payload: { nested: [1, { ok: true }] } }],
+          secondEvents: [],
+        },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "action context emits ordered events only to invoking client before ack",
+        input: {},
+        act: async () => {
+          type Actions = Readonly<{ emit: undefined }>;
+          const [firstClientSocket, firstHostSocket] = make_socket_pair();
+          const [secondClientSocket, secondHostSocket] = make_socket_pair();
+          const host = create_livehost<undefined, Actions>({
+            actions: {
+              emit: (ctx) => {
+                ctx.emit_event("first", { n: 1 });
+                ctx.emit_event("second", { n: 2 });
+                return { done: true };
+              },
+            },
+          });
+          const first = create_livehost_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "emit-a" });
+          const second = create_livehost_client<undefined, Actions>({ socket: secondClientSocket });
+          const firstEvents: string[] = [];
+          const secondEvents: string[] = [];
+          first.on_event((message) => firstEvents.push(message.event));
+          second.on_event((message) => secondEvents.push(message.event));
+          host.connect(firstHostSocket);
+          host.connect(secondHostSocket);
+          first.connect();
+          second.connect();
+          await settle_pair();
+          const resultPromise = first.action("emit");
+          await settle_pair();
+          const result = await resultPromise;
+          const hostTypes = (firstHostSocket.sent() as Array<Record<string, unknown>>).map((message) => message.type);
+          return {
+            firstEvents,
+            secondEvents,
+            resultType: result.type,
+            result: result.type === "ack" ? result.result : undefined,
+            hostTypes,
+          };
+        },
+        expected: {
+          firstEvents: ["first", "second"],
+          secondEvents: [],
+          resultType: "ack",
+          result: { done: true },
+          hostTypes: ["hello", "event", "event", "ack"],
+        },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "action context emitter returns false after originating connection closes",
+        input: {},
+        act: async () => {
+          type Actions = Readonly<{ delayed: undefined }>;
+          let release: (() => void) | undefined;
+          const gate = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          let emitted: boolean | undefined;
+          const [clientSocket, hostSocket] = make_socket_pair();
+          const host = create_livehost<undefined, Actions>({
+            actions: {
+              delayed: async (ctx) => {
+                await gate;
+                emitted = ctx.emit_event("late", null);
+                return { emitted };
+              },
+            },
+          });
+          const client = create_livehost_client<undefined, Actions>({ socket: clientSocket, actionId: () => "delayed-a" });
+          host.connect(hostSocket);
+          client.connect();
+          await settle_pair();
+          const actionOutcome = client.action("delayed").then(
+            () => "resolved",
+            () => "rejected",
+          );
+          await settle_pair();
+          client.disconnect();
+          clientSocket.close();
+          await settle_pair();
+          release?.();
+          await settle_pair();
+          const hostEvents = (hostSocket.sent() as Array<Record<string, unknown>>).filter((message) => message.type === "event");
+          return { actionOutcome: await actionOutcome, emitted, hostEventCount: hostEvents.length };
+        },
+        expected: { actionOutcome: "rejected", emitted: false, hostEventCount: 0 },
+      }),
+      livehost_pair_read_case({
+        suite: SUITE,
+        name: "concurrent generic actions keep event markers connection scoped",
+        input: {},
+        act: async () => {
+          type Actions = Readonly<{ marked: { marker: string } }>;
+          let started = 0;
+          let release: (() => void) | undefined;
+          const gate = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          let bothStarted: (() => void) | undefined;
+          const entered = new Promise<void>((resolve) => {
+            bothStarted = resolve;
+          });
+          const [firstClientSocket, firstHostSocket] = make_socket_pair();
+          const [secondClientSocket, secondHostSocket] = make_socket_pair();
+          const host = create_livehost<undefined, Actions>({
+            actions: {
+              marked: async (ctx, payload) => {
+                started += 1;
+                if (started === 2) bothStarted?.();
+                await gate;
+                ctx.emit_event("marker", payload);
+                return payload;
+              },
+            },
+          });
+          const first = create_livehost_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "marked-a" });
+          const second = create_livehost_client<undefined, Actions>({ socket: secondClientSocket, actionId: () => "marked-b" });
+          const firstMarkers: unknown[] = [];
+          const secondMarkers: unknown[] = [];
+          first.on_event((message) => firstMarkers.push(message.payload));
+          second.on_event((message) => secondMarkers.push(message.payload));
+          host.connect(firstHostSocket);
+          host.connect(secondHostSocket);
+          first.connect();
+          second.connect();
+          await settle_pair();
+          const firstResult = first.action("marked", { marker: "a" });
+          const secondResult = second.action("marked", { marker: "b" });
+          await entered;
+          release?.();
+          const [firstAck, secondAck] = await Promise.all([firstResult, secondResult]);
+          await settle_pair();
+          return {
+            started,
+            firstMarkers,
+            secondMarkers,
+            firstResult: firstAck.type === "ack" ? firstAck.result : undefined,
+            secondResult: secondAck.type === "ack" ? secondAck.result : undefined,
+          };
+        },
+        expected: {
+          started: 2,
+          firstMarkers: [{ marker: "a" }],
+          secondMarkers: [{ marker: "b" }],
+          firstResult: { marker: "a" },
+          secondResult: { marker: "b" },
+        },
+      }),
     ] as const,
   };
 }

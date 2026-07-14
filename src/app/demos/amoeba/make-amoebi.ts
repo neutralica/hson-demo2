@@ -673,7 +673,6 @@ function toggle_amoebi_active(
 function grow_amoebi_tile(parts: AmoebiTileParts): void {
   if (!RECEDED_AMOEBI_TILES.has(parts)) return;
   RECEDED_AMOEBI_TILES.delete(parts);
-
   ordered_cell_entries(parts).forEach(({ cell, coord }, orderIndex) => {
     const isSpark = orderIndex < 9;
     grow_amoebi_cell(

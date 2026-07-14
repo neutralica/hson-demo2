@@ -14,7 +14,7 @@ export type DemoView = null |
 export type DemoWidget =
   "oklch" |
   "point" |
-  "motes";
+  "bling";
 
 export type DemoUiState = {
   currentView: DemoView;

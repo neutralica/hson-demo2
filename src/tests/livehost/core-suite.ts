@@ -12,6 +12,14 @@ type LiveHostReadCaseSpec = Readonly<{
   expected: unknown;
 }>;
 
+function livehost_response_seq(response: unknown): number | undefined {
+  // changed: generic LiveHost server events do not carry seq, so tests must narrow response messages before reading seq.
+  if (typeof response !== "object" || response === null || !("seq" in response)) return undefined;
+
+  const seq = (response as { seq?: unknown }).seq;
+  return typeof seq === "number" ? seq : undefined;
+}
+
 function livehost_read_case(spec: LiveHostReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
@@ -98,9 +106,9 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             seenSeqs,
-            firstSeq: first.seq,
-            secondSeq: second.seq,
-            hostSeq: host.seq,
+            firstSeq: livehost_response_seq(first),
+            secondSeq: livehost_response_seq(second),
+            hostSeq: livehost_response_seq(host),
           };
         },
         expected: {
@@ -201,8 +209,8 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             responseType: response.type,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             status: host.map.at(["status"]).snap(),
           };
         },
@@ -229,9 +237,9 @@ export function livehost_core_suite(): TestSuite {
           const second = await host.dispatch_action({ type: "action", id: "a2", name: "noop" });
 
           return {
-            firstSeq: first.seq,
-            secondSeq: second.seq,
-            hostSeq: host.seq,
+            firstSeq: livehost_response_seq(first),
+            secondSeq: livehost_response_seq(second),
+            hostSeq: livehost_response_seq(host),
           };
         },
         expected: {
@@ -256,8 +264,8 @@ export function livehost_core_suite(): TestSuite {
             responseType: response.type,
             id: "id" in response ? response.id : undefined,
             ok: "ok" in response ? response.ok : undefined,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
           };
@@ -296,8 +304,8 @@ export function livehost_core_suite(): TestSuite {
             responseType: response.type,
             id: "id" in response ? response.id : undefined,
             ok: "ok" in response ? response.ok : undefined,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
           };
@@ -337,8 +345,8 @@ export function livehost_core_suite(): TestSuite {
             responseType: response.type,
             id: "id" in response ? response.id : undefined,
             ok: "ok" in response ? response.ok : undefined,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
           };
@@ -390,8 +398,8 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             responseType: response.type,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             name: host.map.at(["user", "name"]).snap(),
           };
         },
@@ -440,8 +448,8 @@ export function livehost_core_suite(): TestSuite {
           return {
             responseType: response.type,
             ok: "ok" in response ? response.ok : undefined,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
             name: host.map.at(["user", "name"]).snap(),
@@ -495,8 +503,8 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             responseType: response.type,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             name: host.map.at(["user", "name"]).snap(),
           };
         },
@@ -546,8 +554,8 @@ export function livehost_core_suite(): TestSuite {
           return {
             responseType: response.type,
             ok: "ok" in response ? response.ok : undefined,
-            seq: response.seq,
-            hostSeq: host.seq,
+            seq: livehost_response_seq(response),
+            hostSeq: livehost_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
             name: host.map.at(["user", "name"]).snap(),
@@ -652,6 +660,42 @@ export function livehost_core_suite(): TestSuite {
           root: { user: { name: "Ada" } },
           name: "Ada",
         },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "dispatch action returns json-safe handler result",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: {},
+            actions: {
+              read: () => ({ status: "done", count: 2 }),
+            },
+          });
+          const response = await host.dispatch_action({ type: "action", id: "result-a", name: "read" });
+          return response.type === "ack" ? response.result : undefined;
+        },
+        expected: { status: "done", count: 2 },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "dispatch action rejects non-finite handler result",
+        input: {},
+        act: async () => {
+          const host = create_livehost({
+            state: {},
+            actions: {
+              invalid: () => Number.NaN,
+            },
+          });
+          const response = await host.dispatch_action({ type: "action", id: "invalid-a", name: "invalid" });
+          return {
+            type: response.type,
+            code: response.type === "error" ? response.error.code : undefined,
+            seq: livehost_response_seq(response),
+          };
+        },
+        expected: { type: "error", code: "LIVEHOST_ACTION_FAILED", seq: 0 },
       }),
 
     ] as const,

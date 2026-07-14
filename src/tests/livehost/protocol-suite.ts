@@ -1,6 +1,6 @@
 // livehost/protocol-suite.ts
 
-import { decode_livehost_message, encode_livehost_message } from "hson-live";
+import { decode_livehost_message, decode_livehost_server_message, encode_livehost_message } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "../livemap/handle-helpers";
 
@@ -678,6 +678,84 @@ export function livehost_protocol_suite(): TestSuite {
           path: ["user", "name"],
           value: "Grace",
         },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "encode serializes action result payload",
+        input: {},
+        act: () => JSON.parse(encode_livehost_message({
+          type: "ack",
+          id: "result-a",
+          ok: true,
+          seq: 2,
+          result: { status: "done", count: 2 },
+        })),
+        expected: {
+          type: "ack",
+          id: "result-a",
+          ok: true,
+          seq: 2,
+          result: { status: "done", count: 2 },
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "server event protocol round-trips nested JSON payload",
+        input: {},
+        act: () => {
+          const encoded = encode_livehost_message({
+            type: "event",
+            event: "demo-event",
+            payload: { nested: [1, null, { kind: "undefined" }] },
+          });
+          const decoded = decode_livehost_server_message(encoded);
+          return decoded.ok ? decoded.value : decoded.error;
+        },
+        expected: {
+          type: "event",
+          event: "demo-event",
+          payload: { nested: [1, null, { kind: "undefined" }] },
+        },
+      }),
+      read_case({
+        suite: SUITE,
+        name: "server event decoder rejects malformed generic envelopes",
+        input: {},
+        act: () => [
+          { payload: {} },
+          { type: "unknown", event: "x", payload: {} },
+          { type: "event", payload: {} },
+          { type: "event", event: "", payload: {} },
+          { type: "event", event: "x" },
+          { type: "event", event: "x", payload: {}, extra: true },
+        ].map((message) => decode_livehost_server_message(JSON.stringify(message)).ok),
+        expected: [false, false, false, false, false, false],
+      }),
+      read_case({
+        suite: SUITE,
+        name: "server event encoder rejects non-JSON application payloads",
+        input: {},
+        act: () => {
+          const invalid: unknown[] = [
+            Number.NaN,
+            () => undefined,
+            Symbol("x"),
+            1n,
+            new Date(0),
+            new Map(),
+            new Set(),
+            new (class Value {})(),
+          ];
+          return invalid.map((payload) => {
+            try {
+              encode_livehost_message({ type: "event", event: "x", payload } as never);
+              return false;
+            } catch {
+              return true;
+            }
+          });
+        },
+        expected: [true, true, true, true, true, true, true, true],
       }),
     ] as const,
   };

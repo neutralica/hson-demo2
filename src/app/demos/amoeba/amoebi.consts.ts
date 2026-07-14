@@ -1,10 +1,10 @@
 import { _colors } from "../../core/consts/colors.consts";
 import type { AmoebaButtonInput, AmoebiGeometryConfig, Point } from "./amoebi.types";
 
+/* DO NOT SET HEX_SIZE LESS THAN 5; your CPU will die */
+export const HEX_SIZE = 9;
 export const AMOEBA_W = 720;
 export const AMOEBA_H = 560;
-/* DO NOT MAKE  */
-export const HEX_SIZE = 5;
 export const SQRT3 = Math.sqrt(3);
 
 export const AMOEBI_GEOMETRY: AmoebiGeometryConfig = Object.freeze({
@@ -34,7 +34,7 @@ export const BUTTONS: AmoebaButtonInput[] = [
   { id: "fleurs", label: "fleurs", tone: _colors.txt.menu },
   { id: "point", label: "point", tone: _colors.hson.h },
   { id: "oklch", label: "oklch", tone: _colors.hson.o },
-  { id: "motes", label: "motes", tone: _colors.hson.n },
+  { id: "bling", label: "bling", tone: _colors.hson.n },
 ];
 
 export const TARGETS: readonly Point[] = Object.freeze([
