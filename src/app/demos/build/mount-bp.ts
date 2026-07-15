@@ -193,7 +193,7 @@ function initBuild(bp: BuildDemo): void {
 }
 export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): BuildDemo {
   const old = hostBody.find.byId($BUILD_ROOT);
-  if (old) old.removeSelf();
+  if (old) old.remove();
 
   const root = mk_div_id(hostBody, $BUILD_ROOT)
     .classlist.set("build-root")

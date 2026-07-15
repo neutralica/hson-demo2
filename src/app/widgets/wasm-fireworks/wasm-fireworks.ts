@@ -129,7 +129,7 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
   const ctx0 = canvasLt.canvas.ctx2d();
 
   if (!ctx0) {
-    canvasLt.removeSelf();
+    canvasLt.remove();
     return Object.freeze({
       fire: () => void 0,
       teardown: () => void 0,
@@ -655,8 +655,8 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     clear_layer_timers();
 
     if (rafId !== null) cancelAnimationFrame(rafId);
-    flashLt.removeSelf();
-    canvasLt.removeSelf();
+    flashLt.remove();
+    canvasLt.remove();
   };
 
   return Object.freeze({ fire, teardown });

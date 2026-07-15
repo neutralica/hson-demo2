@@ -126,7 +126,7 @@ async function make_bitmapped_effect(
 
     const href = svg_to_data_url(standaloneSvg2);
 
-    el2.removeChildren();
+    el2.empty();
     const imageEl2 = el2.create.image()
         .attr.setMany({
             x: fmtNum(x2, 3),

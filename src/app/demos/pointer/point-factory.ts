@@ -15,7 +15,7 @@ export function mount_point_panel(host: LiveTree): void {
 function point_factory(host: LiveTree): PointPanelRig {
   // widget owns its own root container under host
   const old = host.find.byId("pointer-panel-root");
-  if (old) old.removeSelf();
+  if (old) old.remove();
 
   const root = mk_div_id(host, "pointer-panel-root")
     .classlist.add("pointer-panel")

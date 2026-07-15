@@ -22,7 +22,7 @@ export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
   "livetree/animation-identifier-preservation", "livetree/dom-contains-surface",
   "livetree/listen-api-surface", "livetree/quid-scoped-media", "livetree/find-query-surface",
   "livetree/text-content-surface", "livetree/listener-builder-corners", "livetree/dom-helper-surface",
-  "livetree/regression-2", "livetree/quid-level-2",
+  "livetree/regression-2", "livetree/quid-level-2", "livetree/lifecycle-public", "livetree/lifecycle-ownership",
   "livetree/coverage-css-and-content", "livetree/css-pseudo", "livetree/document", "livetree/create-size",
   "livetree/new-svg/", "livetree-18/treeselector-surface", "livetree/graph-dom-markup-surface",
   "livetree/append-and-create", "livetree/regressions/css", "livetree/scheduling-and-events",

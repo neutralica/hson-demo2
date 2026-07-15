@@ -264,7 +264,7 @@ export function make_hosted_test_case_list(
     state.row.attr.set("aria-expanded", expanded ? "true" : "false");
     state.disclosure.text.set(expanded ? "▾" : "▸");
     if (!expanded) {
-      state.caseHost?.removeSelf();
+      state.caseHost?.remove();
       state.caseHost = undefined;
       visibleCaseRows -= state.cases.length;
       return;
@@ -379,7 +379,7 @@ export function make_hosted_test_case_list(
       caseKeys.clear();
       dirtySuites.clear();
       visibleCaseRows = 0;
-      root.removeSelf();
+      root.remove();
     },
   });
 }

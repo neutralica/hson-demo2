@@ -69,7 +69,7 @@ export function motes_init(rig: MotesRig, opts: MotesOpts): void {
     // CHANGED: no pointer listener, no 60fps runtime loop, no bbox reads, and
     // no per-frame stylesheet writes. CSS animations own all continuous motion.
     (rig as unknown as { dispose: () => void }).dispose = (): void => {
-        rig.root.removeSelf();
+        rig.root.remove();
     };
 
 }

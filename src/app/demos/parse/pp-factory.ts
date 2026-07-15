@@ -48,7 +48,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
   let viewMode: PanelViewMode = "text";
   const old = hostBody.find.byId($PARSING_PANELS_ROOT);
-  if (old) old.removeSelf();
+  if (old) old.remove();
 
   const root = hostBody.create.div()
     .id.set($PARSING_PANELS_ROOT)

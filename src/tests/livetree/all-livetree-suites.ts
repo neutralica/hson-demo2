@@ -25,6 +25,8 @@ import { livetree_listener_builder_corners, livetree_text_content_surface } from
 import { livetree_dom_helper_surface, livetree_graph_dom_markup_surface } from "./livetree-24-dom-corners";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { livetree_quid_level_2, livetree_regression_2 } from "./livetree-25-regression-2";
+import { livetree_lifecycle_public } from "./livetree-27-lifecycle-public";
+import { livetree_lifecycle_ownership } from "./livetree-28-lifecycle-ownership";
 
 
 /******************************************************
@@ -102,6 +104,8 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_graph_dom_markup_surface(),
     livetree_regression_2(),
     livetree_quid_level_2(),
+    livetree_lifecycle_public(),
+    livetree_lifecycle_ownership(),
 
   ] as const;
 }

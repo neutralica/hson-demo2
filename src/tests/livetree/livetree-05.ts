@@ -112,8 +112,9 @@ export function roundtrip_projection_stability(): TestSuite {
                     const ghost = root.create.div().id.set("ghost");
                     ghost.text.set("from-ir");
 
-                    // remove immediately so handle survives but tree lookup should not
-                    ghost.removeSelf();
+                    // identity-preserving detach keeps the handle useful while
+                    // removing graph membership and DOM projection.
+                    ghost.detach();
 
                     (tree as any).__text = ghost.text.get();
                     (tree as any).__found = tree.find.byId("ghost");
@@ -866,6 +867,5 @@ export function livetree_completionist(): TestSuite {
 
     return make_livetree_suite(SUITE, cases);
 }
-
 
 

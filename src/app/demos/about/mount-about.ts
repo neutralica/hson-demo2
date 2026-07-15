@@ -19,7 +19,7 @@ function makeInitialAboutControlState(activeKey: AboutDocKey): AboutControlState
 
 export function about_factory(host: LiveTree): AboutPanel {
   const old = host.find.byId(ABOUT_ROOT_ID);
-  if (old) old.removeSelf();
+  if (old) old.remove();
 
   const root = host.create.div()
     .id.set(ABOUT_ROOT_ID)

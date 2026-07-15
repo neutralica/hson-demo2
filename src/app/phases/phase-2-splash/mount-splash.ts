@@ -108,10 +108,10 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     flare.animate();
 
     await wait.for(flareBox.tree).anim(FLAREanim).end();
-    flareBox.tree.removeSelf();
+    flareBox.tree.remove();
 
     await wait.for(sun.tree).anim(SUN_DISKanim).end()
-    sunCarrier.tree.removeSelf();
+    sunCarrier.tree.remove();
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });
 
     await wait.for(h).anim(NEON_FLASHanim).end()

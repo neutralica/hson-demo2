@@ -416,7 +416,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: removeSelf detaches branch without releasing persisted quids",
+      name: "identity: detach preserves persisted quid ownership",
       fixture: "identity/string-import",
       sub: "retain-on-remove",
       dom: true,
@@ -434,18 +434,20 @@ export function livetree_regression_2(): TestSuite {
         const first = hson.liveTree.fromTrustedHtml(markup);
         const firstRootMatches = first.find.must.byId("owner").quid === rootQuid;
         const firstChildMatches = first.find.must.byId("owner-child").quid === childQuid;
-        first.removeSelf();
+        tree.find.must.byId("root").append(first);
+        first.detach();
 
         let duplicateMessage = "";
         try {
           const second = hson.liveTree.fromTrustedHtml(markup);
-          second.removeSelf();
+          second.remove();
         } catch (error) {
           duplicateMessage = error instanceof Error ? error.message : String(error);
         }
 
         const stillOwnsRoot = first.find.must.byId("owner").quid === rootQuid;
         const stillOwnsChild = first.find.must.byId("owner-child").quid === childQuid;
+        first.remove();
 
         (tree as any).__result = {
           firstRootMatches,
@@ -460,8 +462,8 @@ export function livetree_regression_2(): TestSuite {
         const r = (tree as any).__result;
         t.eq("first branch adopts persisted root quid", r.firstRootMatches, true);
         t.eq("first branch adopts persisted child quid", r.firstChildMatches, true);
-        t.eq("removed branch retains root quid ownership", r.stillOwnsRoot, true);
-        t.eq("removed branch retains child quid ownership", r.stillOwnsChild, true);
+        t.eq("detached branch retains root quid ownership", r.stillOwnsRoot, true);
+        t.eq("detached branch retains child quid ownership", r.stillOwnsChild, true);
         t.eq("same persisted quids cannot be reused while branch still exists", r.duplicateRejected, true);
       },
     },

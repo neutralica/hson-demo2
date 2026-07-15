@@ -981,10 +981,7 @@ export function error_handling(): TestSuite {
       },
 
       assert(tree, t) {
-        // choose your contract:
-        t.eq("stale handle setText does not throw", (tree as any).__threw, false);
-        // OR if you want strictness:
-        // t.eq("stale handle setText throws", (tree as any).__threw, true);
+        t.eq("disposed handle setText throws", (tree as any).__threw, true);
       },
     },
     {
@@ -1097,4 +1094,3 @@ export function error_handling(): TestSuite {
   ];
   return make_livetree_suite(SUITE, cases);
 }
-

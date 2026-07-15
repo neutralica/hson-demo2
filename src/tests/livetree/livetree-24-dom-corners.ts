@@ -498,7 +498,7 @@ export function livetree_dom_helper_surface(): TestSuite {
         const beforeRemove = target.dom.isConnected();
         const detachedConnected = detached.dom.isConnected();
 
-        target.removeSelf();
+        target.detach();
 
         (tree as any).__result = {
           beforeRemove,

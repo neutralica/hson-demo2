@@ -292,7 +292,7 @@ export function tp_factory(): TestPanel {
 }
 export function mount_test_panels(host: LiveTree): TestPanels {
     const old = host.find.byId("test-panels-root");
-    if (old) old.removeSelf();
+    if (old) old.remove();
 
     const root = host.create.div()
         .id.set("test-panels-root")
@@ -306,7 +306,7 @@ export function mount_test_panels(host: LiveTree): TestPanels {
         testSurface: tp.branch,
         dispose: () => {
             tp.dispose();
-            root.removeSelf();
+            root.remove();
         },
     };
 }
