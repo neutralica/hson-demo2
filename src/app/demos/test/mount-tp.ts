@@ -1,40 +1,18 @@
 import { LiveTree, hson } from "hson-live";
-import { _snip } from "../../utils/helpers";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
 import { create_test_chips } from "./test-helpers";
-import { create_test_log } from "./test-logger";
-import type { TestEvent, UiLevel } from "./tests.types";
-import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
+import type { TestSummary, UiLevel } from "./tests.types";
+import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "./hosted-test-panel-runtime";
 import { HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
 import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
-import { make_hosted_test_case_list } from "./hosted-test-case-list";
+import { make_hosted_test_case_list, type HostedTestCaseList } from "./hosted-test-case-list";
 import { copy_hosted_case_report, open_hosted_case_report, serialize_hosted_run_report } from "./hosted-test-report-view";
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
 
-const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
-const LOG_HR_PART = " ----------=•=|"
-
 const MODES = HOSTED_TEST_VISIBLE_SUITES.map((entry) => Object.freeze({ key: entry.id, label: entry.label }));
-
-type LogVerbosity = "normal" | "verbose";
-const LOG_VERBOSITY: readonly LogVerbosity[] = ["normal", "verbose"];
-
-function nextVerbosity(current: LogVerbosity): LogVerbosity {
-    const i = LOG_VERBOSITY.indexOf(current);
-    return LOG_VERBOSITY[(i + 1) % LOG_VERBOSITY.length] ?? "normal";
-}
-
-function shouldLogEvent(verbosity: LogVerbosity, e: TestEvent): boolean {
-    if (verbosity === "verbose") return true;
-
-    if (e.t === "suite_begin" || e.t === "suite_end") return true;
-    if (e.t === "case_end" && e.status === "fail") return true;
-
-    return false;
-}
 
 function setButtonClicked(btn: LiveTree, on: boolean): void {
     btn.css.setMany(on
@@ -61,7 +39,6 @@ function populateModeSelector(suiteSel: LiveTree, mode: HostedTestSuiteId): void
 type TestConsoleParts = {
     runBtn: LiveTree;
     suiteSel: LiveTree;
-    verbosityBtn: LiveTree;
     clearBtn: LiveTree;
     copyReportsBtn: LiveTree;
     chips: ReturnType<typeof create_test_chips>;
@@ -83,17 +60,13 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         ...TEST_SELECTORcss,
         gridColumn: "1 / 3",
     });
-    const verbosityBtn = mk_div_id_txt(controlsRow, "test-verbosity", "log: normal").css.setMany({
-        ...TEST_CLEAR_BTNcss,
-        gridColumn: "1 / 3",
-    });
     const copyReportsBtn = mk_div_id_txt(controlsRow, "test-copy-reports", "copy reports").css.setMany({
         ...TEST_CLEAR_BTNcss,
         gridColumn: "1 / 3",
     });
     const chips = create_test_chips(rowContainer);
 
-    return { runBtn, suiteSel, verbosityBtn, clearBtn, copyReportsBtn, chips };
+    return { runBtn, suiteSel, clearBtn, copyReportsBtn, chips };
 }
 
 type TestSurfaceParts = {
@@ -120,30 +93,66 @@ export function tp_factory(): TestPanel {
     let mounted = false;
     let level: UiLevel = "normal";
     let mode: HostedTestSuiteId = "hosted/all";
-    let verbosity: LogVerbosity = "normal";
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
         .css.setMany(TP_BRANCHcss);
 
     const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
-    const { runBtn, suiteSel, verbosityBtn, clearBtn, copyReportsBtn, chips } = create_test_console(leftColumn, rightColumn);
-
-    const tlog = create_test_log();
+    const { runBtn, suiteSel, clearBtn, copyReportsBtn, chips } = create_test_console(leftColumn, rightColumn);
     let hostedAdapter: HostedTestPanelAdapter | undefined;
     let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start"]>> | undefined;
-    const caseList = make_hosted_test_case_list(casePane, {
-        async view(key) {
-            if (!hostedAdapter) throw new Error("Hosted runtime is not ready.");
-            open_hosted_case_report(await hostedAdapter.inspect(key));
-        },
-        async copy(key) {
-            if (!hostedAdapter) throw new Error("Hosted runtime is not ready.");
-            await copy_hosted_case_report(await hostedAdapter.inspect(key));
-        },
-    });
+    let caseList: HostedTestCaseList | undefined;
+    let latestSummary: TestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
+    let cancelSummaryFrame: (() => void) | undefined;
 
-    let currentCaseLine: LiveTree | null = null;
+    const make_case_list = (): HostedTestCaseList => {
+        let projection: HostedTestCaseList;
+        projection = make_hosted_test_case_list(casePane, {
+            async view(key) {
+                const adapter = hostedAdapter;
+                if (!adapter) throw new Error("Hosted runtime is not ready.");
+                const diagnostic = await adapter.inspect(key);
+                if (caseList === projection) open_hosted_case_report(diagnostic);
+            },
+            async copy(key) {
+                const adapter = hostedAdapter;
+                if (!adapter) throw new Error("Hosted runtime is not ready.");
+                const diagnostic = await adapter.inspect(key);
+                if (caseList === projection) await copy_hosted_case_report(diagnostic);
+            },
+        });
+        return projection;
+    };
+
+    const replace_case_list = (): void => {
+        caseList?.dispose();
+        caseList = make_case_list();
+    };
+
+    const flush_summary = (): void => {
+        cancelSummaryFrame?.();
+        cancelSummaryFrame = undefined;
+        chips.render(latestSummary);
+    };
+
+    const schedule_summary = (terminal: boolean): void => {
+        if (terminal) {
+            flush_summary();
+            return;
+        }
+        if (cancelSummaryFrame !== undefined) return;
+        let active = true;
+        const id = requestAnimationFrame(() => {
+            cancelSummaryFrame = undefined;
+            if (active) chips.render(latestSummary);
+        });
+        cancelSummaryFrame = () => {
+            if (!active) return;
+            active = false;
+            cancelAnimationFrame(id);
+        };
+    };
 
     const mkLogRow = (line: string): LiveTree => {
         return logger.create.div().css.setMany(TP_LOG_ROWcss(line));
@@ -161,102 +170,43 @@ export function tp_factory(): TestPanel {
         return row;
     };
 
-    const appendLogSpan = (host: LiveTree, line: string): LiveTree => {
-        const span = host.create.span().css.setMany(LOG_SPANcss(line));
-
-        span.text.set(line);
-
-        const el = logger.dom.el();
-        if (el instanceof HTMLElement) {
-            el.scrollTop = el.scrollHeight;
-        }
-
-        return span;
-    };
-
     const clearLogLines = (): void => {
-        currentCaseLine = null;
         logger.empty();
-    };
-
-    const syncVerbosity = (): void => {
-        verbosityBtn.text.set(`log: ${verbosity}`);
-    };
-
-    const doLogOnEvent = (e: TestEvent): void => {
-        tlog.onEvent(e);
-        if (!shouldLogEvent(verbosity, e)) return;
-
-        if (e.t === "suite_begin") {
-            currentCaseLine = null;
-            appendLogLine(LOG_HR_FULL);
-            appendLogLine(`suite: beginning ${e.suite}`);
-            appendLogLine(LOG_HR_PART);
-            return;
-        }
-
-        if (e.t === "case_begin") {
-            currentCaseLine = appendLogLine(`• ${e.name}`);
-            return;
-        }
-
-        if (e.t === "case_end") {
-            const statusText = e.status.toUpperCase();
-
-            if (currentCaseLine) {
-                const t = appendLogLine(statusText);
-
-                if (typeof e.ms === "number") {
-                    appendLogSpan(t, `(${e.ms.toFixed(1)}ms)`);
-                }
-
-                if (e.status === "fail" && e.err) {
-                    appendLogSpan(currentCaseLine, _snip(`— ${e.err}`, 2000));
-                    appendLogLine(LOG_HR_FULL);
-                }
-            } else {
-                const fallback = appendLogLine(statusText);
-
-                if (typeof e.ms === "number") {
-                    appendLogSpan(fallback, `(${e.ms.toFixed(1)}ms)`);
-                }
-
-                if (e.status === "fail" && e.err) {
-                    appendLogSpan(fallback, _snip(`— ${e.err}`, 2000));
-                }
-            }
-            appendLogLine(LOG_HR_PART);
-            currentCaseLine = null;
-            return;
-        }
-
-        if (e.t === "suite_end") {
-            currentCaseLine = null;
-            appendLogLine(`done ${e.suite} (${e.ms.toFixed(1)}ms)`);
-            return;
-        }
     };
 
     const hostedRuntime = make_remote_hosted_test_runtime();
     hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
         reset(suite) {
+            cancelSummaryFrame?.();
+            cancelSummaryFrame = undefined;
             chips.clear();
-            tlog.clear();
             clearLogLines();
-            caseList.reset();
+            replace_case_list();
+            latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             appendLogLine(`running hosted ${suite}…`);
         },
-        onEvent(event) { doLogOnEvent(event); caseList.on_event(event); },
-        renderSummary(summary) {
-            chips.render(summary);
+        ingest(update) {
+            const projection = caseList;
+            if (projection === undefined) return;
+            projection.ingest(update);
+            latestSummary = {
+                suites: projection.suite_count(),
+                cases: update.report.summary.cases,
+                pass: update.report.summary.pass,
+                fail: update.report.summary.fail,
+                skip: update.report.summary.skip,
+                msTotal: update.report.run.timing?.runnerMs ?? 0,
+                failures: [],
+            };
+            schedule_summary(update.terminal);
         },
-        renderReport() {},
         showInfrastructureError(message) {
             appendLogLine(`host error: ${message}`);
-            caseList.show_error(message);
+            caseList?.show_error(message);
         },
         renderTiming(timing) {
-            chips.render({ ...tlog.getSummary(), msTotal: timing.roundTripMs });
+            latestSummary = { ...latestSummary, msTotal: timing.roundTripMs };
+            flush_summary();
             appendLogLine(`elapsed ${format_hosted_test_duration(timing.roundTripMs)} · runner ${format_hosted_test_duration(timing.runnerMs)} · host ${format_hosted_test_duration(timing.hostMs)}`);
         },
     });
@@ -268,6 +218,7 @@ export function tp_factory(): TestPanel {
         if (mounted) return;
         mounted = true;
         hostBody.append(branch);
+        replace_case_list();
 
         populateModeSelector(suiteSel, mode);
 
@@ -278,16 +229,7 @@ export function tp_factory(): TestPanel {
 
         implClickFeedback(runBtn);
         implClickFeedback(clearBtn);
-        implClickFeedback(verbosityBtn);
         implClickFeedback(copyReportsBtn);
-
-        verbosityBtn.listen.onClick(() => {
-            verbosity = nextVerbosity(verbosity);
-            syncVerbosity();
-            appendLogLine(`log verbosity: ${verbosity}`);
-        });
-
-        syncVerbosity();
 
         runBtn.listen.onClick(async () => {
 
@@ -310,16 +252,18 @@ export function tp_factory(): TestPanel {
                 const text = await serialize_hosted_run_report(report, lastResult, (key) => hostedAdapter!.inspect(key));
                 await navigator.clipboard.writeText(text);
                 appendLogLine("reports copied");
-            } catch (error) { caseList.show_error(error instanceof Error ? error.message : String(error)); }
+            } catch (error) { caseList?.show_error(error instanceof Error ? error.message : String(error)); }
         });
 
         clearBtn.listen.onClick(() => {
             hostedAdapter.dispose();
-            tlog.clear();
+            cancelSummaryFrame?.();
+            cancelSummaryFrame = undefined;
             chips.clear();
             clearLogLines();
             appendLogLine("idle");
-            caseList.reset();
+            replace_case_list();
+            latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             lastResult = undefined;
         });
 
@@ -338,6 +282,9 @@ export function tp_factory(): TestPanel {
         clearLogs: clearLogLines,
         setLog: appendLogLine,
         dispose: () => {
+            cancelSummaryFrame?.();
+            cancelSummaryFrame = undefined;
+            caseList?.dispose();
             hostedAdapter?.dispose();
             hostedRuntime.dispose();
         },

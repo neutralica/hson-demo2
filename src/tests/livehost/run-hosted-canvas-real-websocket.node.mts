@@ -10,9 +10,8 @@ import { make_hosted_test_report_mirror } from "../../app/hosted-test/hosted-tes
 import { make_hosted_test_report_router } from "../../app/hosted-test/hosted-test-report-router";
 import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
 import { decode_hosted_test_report_commit_envelope } from "../../app/hosted-test/hosted-test-report-wire";
-import { make_hosted_test_panel_adapter, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
+import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import type { TestEvent, TestSummary } from "../../app/demos/test/tests.types";
 import { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "../../hosted-test/dom/canvas/jsdom-hosted-canvas-suites";
 import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
@@ -95,21 +94,18 @@ try {
 
   const panelRuntime = make_remote_hosted_test_runtime({ url: server.url, WebSocketConstructor });
   await panelRuntime.ready();
-  const panelEvents: TestEvent[] = [];
-  const summaries: TestSummary[] = [];
+  const panelUpdates: HostedTestPanelReportUpdate[] = [];
   let renders = 0;
   const sink: HostedTestPanelSink = {
-    reset() { panelEvents.length = 0; summaries.length = 0; },
-    onEvent(event) { panelEvents.push(event); },
-    renderSummary(value) { summaries.push(value); },
-    renderReport() { renders += 1; },
+    reset() { panelUpdates.length = 0; },
+    ingest(update) { panelUpdates.push(update); renders += 1; },
     showInfrastructureError(message) { throw new Error(message); },
   };
   const adapter = make_hosted_test_panel_adapter(panelRuntime.client, sink);
   const panelResult = await adapter.start("canvas/core");
-  const caseEvents = panelEvents.filter((event) => event.t === "case_end");
-  expect_canvas_ws(caseEvents.length === 62 && new Set(caseEvents.map((event) => `${event.suite}::${event.name}`)).size === 62, "existing panel adapter receives every canvas case once");
-  expect_canvas_ws(summaries.at(-1)?.pass === 62 && summaries.at(-1)?.fail === 0 && renders === 9, "panel renders the initial, batched, and terminal report revisions");
+  const panelCases = panelUpdates.flatMap((update) => update.newCases);
+  expect_canvas_ws(panelCases.length === 62 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 62, "existing panel adapter receives every canvas case once");
+  expect_canvas_ws(panelUpdates.at(-1)?.report.summary.pass === 62 && panelUpdates.at(-1)?.report.summary.fail === 0 && renders === 9, "panel renders the initial, batched, and terminal report revisions");
   expect_canvas_ws(panelResult.runId === adapter.router?.runId, "panel path retains run correlation without a local runner");
   adapter.dispose();
   panelRuntime.dispose();
@@ -120,9 +116,7 @@ try {
   const failureMessages: string[] = [];
   const failureAdapter = make_hosted_test_panel_adapter(failureRuntime.client, {
     reset() { failureMessages.length = 0; },
-    onEvent() { /* report state is inspected through the owned router */ },
-    renderSummary() { /* report state is inspected through the owned router */ },
-    renderReport() { /* report state is inspected through the owned router */ },
+    ingest() { /* report state is inspected through the owned router */ },
     showInfrastructureError(message) { failureMessages.push(message); },
   });
   let actionError: unknown;

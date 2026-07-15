@@ -45,6 +45,8 @@ const browserRuntimeSource = readFileSync(new URL("../../app/demos/test/hosted-t
 const browserAdapterSource = readFileSync(new URL("../../app/hosted-test/browser-websocket-socket.ts", import.meta.url), "utf8");
 const mainSource = readFileSync(new URL("../../main.ts", import.meta.url), "utf8");
 const panelMountSource = readFileSync(new URL("../../app/demos/test/mount-tp.ts", import.meta.url), "utf8");
+const panelAdapterSource = readFileSync(new URL("../../app/demos/test/hosted-test-panel-adapter.ts", import.meta.url), "utf8");
+const panelProjectionSource = readFileSync(new URL("../../app/demos/test/hosted-test-case-list.ts", import.meta.url), "utf8");
 expect_boundary(!browserRuntimeSource.includes("create_hosted_test_livehost"), "visible runtime must not construct a browser LiveHost");
 expect_boundary(!browserRuntimeSource.includes("registered-hosted-test-suites") && !mainSource.includes("registered-hosted-test-suites"), "browser graph must not reach executable suite descriptors");
 expect_boundary(!browserRuntimeSource.includes('from "ws"') && !browserAdapterSource.includes('from "ws"'), "browser runtime must use native WebSocket rather than Node ws");
@@ -62,6 +64,10 @@ expect_boundary(nodeRegistrySource.includes("jsdom-hosted-test-suites"), "Node e
 expect_boundary(browserRuntimeSource.includes("VITE_HOSTED_TEST_WS_URL"), "visible runtime reads the explicit WebSocket environment variable");
 expect_boundary(panelMountSource.includes("HOSTED_TEST_VISIBLE_SUITES") && !panelMountSource.includes('key: "all"') && !panelMountSource.includes('key: "fuzz-json"'), "visible selector list is generated from remote-hosted metadata only");
 expect_boundary(!panelMountSource.includes("make_ad_hoc_transform_suite") && !panelMountSource.includes("flush_dom"), "visible panel has no ad hoc local execution bridge");
+expect_boundary(!panelMountSource.includes("create_test_log") && !panelAdapterSource.includes("TestEvent"), "hosted production panel excludes the duplicate logger and synthetic event bridge");
+expect_boundary(!panelAdapterSource.includes("Object.keys(report.caseBatches)") && !panelAdapterSource.includes("hosted_test_report_cases"), "hosted adapter advances through new batches without rescanning or flattening prior cases");
+expect_boundary(!panelProjectionSource.includes(".listen.onClick(async") && panelProjectionSource.includes("const actionListener = root.listen.onClick"), "case and suite actions share one delegated listener");
+expect_boundary(!panelProjectionSource.includes("row.create.span().css") && !panelProjectionSource.includes("controls.create.button().css"), "dense projection descendants use shared class rules rather than per-element CSS surfaces");
 for (const file of panelFiles) {
   const source = readFileSync(file, "utf8");
   expect_boundary(!source.includes("tests/"), `${file.pathname} must not import from src/tests`);

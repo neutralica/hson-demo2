@@ -26,7 +26,7 @@ const runtime = make_remote_hosted_test_runtime({
 });
 await runtime.ready();
 const sink: HostedTestPanelSink = {
-  reset() {}, onEvent() {}, renderSummary() {}, renderReport() {}, showInfrastructureError(message) { throw new Error(message); },
+  reset() {}, ingest() {}, showInfrastructureError(message) { throw new Error(message); },
 };
 const adapter = make_hosted_test_panel_adapter(runtime.client, sink);
 const result = await adapter.start("category/unit");

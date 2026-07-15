@@ -6,9 +6,8 @@ import {
   hosted_test_unknown_suite_message,
 } from "../../app/hosted-test/hosted-test-action-error";
 import type { HostedTestSuiteId, HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
-import { make_hosted_test_panel_adapter, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
+import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import type { TestEvent, TestSummary } from "../../app/demos/test/tests.types";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
 import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
 
@@ -39,17 +38,14 @@ const staleRegistry: HostedTestSuiteRegistry = Object.freeze({
 });
 
 function sink_state() {
-  const events: TestEvent[] = [];
-  const summaries: TestSummary[] = [];
+  const updates: HostedTestPanelReportUpdate[] = [];
   const errors: string[] = [];
   const sink: HostedTestPanelSink = {
-    reset() { events.length = 0; summaries.length = 0; errors.length = 0; },
-    onEvent(event) { events.push(event); },
-    renderSummary(summary) { summaries.push(summary); },
-    renderReport() {},
+    reset() { updates.length = 0; errors.length = 0; },
+    ingest(update) { updates.push(update); },
     showInfrastructureError(message) { errors.push(message); },
   };
-  return { sink, events, summaries, errors };
+  return { sink, updates, errors };
 }
 
 const serverA = await start_hosted_test_server({ port: 0, registry: staleRegistry });
@@ -97,7 +93,7 @@ try {
   const result = await adapter.start("dom/core");
   expect_stale(result.ok && result.summary.cases === 923 && result.summary.pass === 923, "the same client-known suite succeeds against the updated registry");
   expect_stale(adapter.router?.status === "complete" && adapter.router.mirror?.capture().value.summary.cases === 923, "reconnected run owns fresh router and mirror state");
-  expect_stale(sink.events.filter((event) => event.t === "case_end").length === 923, "updated server drives the complete visible case stream");
+  expect_stale(sink.updates.flatMap((update) => update.newCases).length === 923, "updated server drives the complete visible case stream");
   adapter.dispose();
   runtime.dispose();
 } finally {

@@ -1,20 +1,24 @@
 import type { LiveHostEventListener } from "hson-live/types";
 import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../hosted-test/hosted-test-action.types";
 import { inspect_hosted_test_action, run_hosted_test_action } from "../../hosted-test/hosted-test-client-action";
-import type { HostedTestReport } from "../../hosted-test/hosted-test-report.types";
-import { hosted_test_report_cases } from "../../hosted-test/hosted-test-report.types";
+import type { HostedTestCaseReport, HostedTestReport } from "../../hosted-test/hosted-test-report.types";
 import type { HostedTestReportMirror } from "../../hosted-test/hosted-test-report-mirror.types";
 import { make_hosted_test_report_router } from "../../hosted-test/hosted-test-report-router";
 import type { HostedTestReportRouter } from "../../hosted-test/hosted-test-report-router.types";
 import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
-import type { TestEvent, TestRunMode, TestSummary } from "./tests.types";
+import type { TestRunMode } from "./tests.types";
 import { hosted_test_action_error_message } from "../../hosted-test/hosted-test-action-error";
+
+export type HostedTestPanelReportUpdate = Readonly<{
+  report: HostedTestReport;
+  newCases: readonly HostedTestCaseReport[];
+  newSuiteTimings: readonly Readonly<{ suite: string; ms: number }>[];
+  terminal: boolean;
+}>;
 
 export type HostedTestPanelSink = Readonly<{
   reset(suite: HostedTestSuiteId): void;
-  onEvent(event: TestEvent): void;
-  renderSummary(summary: TestSummary): void;
-  renderReport(): void;
+  ingest(update: HostedTestPanelReportUpdate): void;
   showInfrastructureError(message: string): void;
   renderTiming?(timing: HostedTestPanelRunResult["timing"]): void;
 }>;
@@ -48,74 +52,34 @@ export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestS
   return `category/${mode}`;
 }
 
-export function hosted_test_report_to_panel_summary(report: HostedTestReport): TestSummary {
-  const cases = hosted_test_report_cases(report);
-  const failures = cases
-    .filter((testCase) => testCase.status === "fail")
-    .map((testCase) => ({
-      suite: testCase.suite,
-      name: testCase.name,
-      err: testCase.err ?? "Unknown error",
-      ms: testCase.ms,
-    }));
-  return {
-    suites: report.run.status === "idle"
-      ? 0
-      : Math.max(1, new Set(cases.map((testCase) => testCase.suite)).size),
-    cases: report.summary.cases,
-    pass: report.summary.pass,
-    fail: report.summary.fail,
-    skip: report.summary.skip,
-    msTotal: report.run.timing?.runnerMs ?? 0,
-    failures,
-  };
-}
-
 function make_report_observer(sink: HostedTestPanelSink): (mirror: HostedTestReportMirror) => () => void {
-  const startedSuites = new Set<string>();
-  let emittedCases = 0;
-  let terminalEmitted = false;
+  let consumedCaseBatches = 0;
+  let consumedSuiteTimings = 0;
   let infrastructureErrorShown = false;
 
   return (mirror) => mirror.subscribe((capture) => {
     const report = capture.value;
-    const cases = hosted_test_report_cases(report);
     const terminal = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
-    for (let index = emittedCases; index < cases.length; index += 1) {
-      const testCase = cases[index];
-      if (testCase === undefined) continue;
-      if (!startedSuites.has(testCase.suite)) {
-        startedSuites.add(testCase.suite);
-        sink.onEvent({ t: "suite_begin", suite: testCase.suite });
-      }
-      sink.onEvent({ t: "case_begin", suite: testCase.suite, name: testCase.name });
-      sink.onEvent({
-        t: "case_end",
-        suite: testCase.suite,
-        name: testCase.name,
-        status: testCase.status,
-        ms: testCase.ms,
-        ...(testCase.err !== null ? { err: testCase.err } : {}),
-      });
+    const newCases: HostedTestCaseReport[] = [];
+    while (true) {
+      const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
+      const batch = report.caseBatches[batchKey];
+      if (batch === undefined) break;
+      consumedCaseBatches += 1;
+      newCases.push(...batch);
     }
-    emittedCases = cases.length;
-    if (terminal && !terminalEmitted) {
-      terminalEmitted = true;
-      if (startedSuites.size === 0) startedSuites.add(report.run.suite);
-      for (const suite of startedSuites) {
-        sink.onEvent({
-          t: "suite_end",
-          suite,
-          ms: report.suites.find((entry) => entry.suite === suite)?.ms ?? 0,
-        });
-      }
-    }
+    const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
+    consumedSuiteTimings = report.suites.length;
+    sink.ingest(Object.freeze({
+      report,
+      newCases: Object.freeze(newCases),
+      newSuiteTimings: Object.freeze([...newSuiteTimings]),
+      terminal,
+    }));
     if (report.run.status === "error" && report.error !== null && !infrastructureErrorShown) {
       infrastructureErrorShown = true;
       sink.showInfrastructureError(report.error.message);
     }
-    sink.renderSummary(hosted_test_report_to_panel_summary(report));
-    sink.renderReport();
   });
 }
 
@@ -184,7 +148,6 @@ export function make_hosted_test_panel_adapter(
           // first normalized failure available for inspection.
           if (router.mirror === undefined) {
             sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
-            sink.renderReport();
           }
         }
         throw error;

@@ -20,6 +20,7 @@
     "test:hosted-report-router-node": "tsx src/tests/livehost/run-hosted-test-report-router.node.mts",
     "test:hosted-replay-router-node": "tsx src/tests/livehost/run-hosted-replay-router.node.mts",
     "test:hosted-test-panel-adapter-node": "tsx src/tests/livehost/run-hosted-test-panel-adapter.node.mts",
+    "test:hosted-test-panel-projection-node": "tsx src/tests/livehost/run-hosted-test-panel-projection.node.mts",
     "test:hosted-suite-registry-node": "tsx src/tests/livehost/run-hosted-suite-registry.node.mts",
     "test:hosted-node-all-node": "tsx src/tests/livehost/run-hosted-node-all.node.mts",
     "test:hosted-report-batch-node": "tsx src/tests/livehost/run-hosted-test-report-batch.node.mts",

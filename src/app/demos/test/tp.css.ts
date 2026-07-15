@@ -234,19 +234,3 @@ export const TP_LOG_ROWcss = (line: string): CssMap => {
     color: get_line_color(line),
   };
 };
-
-export const LOG_SPANcss = (line: string): CssMap => {
-  return {
-    whiteSpace: "pre-wrap",
-    minWidth: "0",
-    maxWidth: "100%",          // CHANGED
-    color: get_line_color(line),
-    textAlign: "end",
-    overflowWrap: "anywhere",  // CHANGED
-    wordBreak: "break-word",   // CHANGED
-    display: "inline",
-
-    // remove typo:
-    // overflowx: "visible"
-  };
-};

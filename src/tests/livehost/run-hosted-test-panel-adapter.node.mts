@@ -2,11 +2,12 @@ import type { JsonValue, LiveHostEventListener } from "hson-live/types";
 import {
   make_hosted_test_panel_adapter,
   hosted_test_suite_for_panel_mode,
+  type HostedTestPanelReportUpdate,
   type HostedTestPanelSink,
 } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_in_memory_hosted_test_runtime } from "./in-memory-hosted-test-panel-runtime";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import type { TestEvent, TestSummary } from "../../app/demos/test/tests.types";
+import type { TestSummary } from "../../app/demos/test/tests.types";
 import type { HostedTestRunResult } from "./hosted-replay-action";
 import type { HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite";
 import { make_hosted_test_report } from "./hosted-test-report";
@@ -23,25 +24,18 @@ function expect_adapter(condition: unknown, message: string): asserts condition 
 }
 
 function make_sink() {
-  const events: TestEvent[] = [];
-  const summaries: TestSummary[] = [];
+  const updates: HostedTestPanelReportUpdate[] = [];
   const infrastructureErrors: string[] = [];
   let resets = 0;
   let renders = 0;
   const sink: HostedTestPanelSink = {
     reset() {
       resets += 1;
-      events.length = 0;
-      summaries.length = 0;
+      updates.length = 0;
       infrastructureErrors.length = 0;
     },
-    onEvent(event) {
-      events.push(event);
-    },
-    renderSummary(summary) {
-      summaries.push(summary);
-    },
-    renderReport() {
+    ingest(update) {
+      updates.push(update);
       renders += 1;
     },
     showInfrastructureError(message) {
@@ -50,8 +44,7 @@ function make_sink() {
   };
   return {
     sink,
-    events,
-    summaries,
+    updates,
     infrastructureErrors,
     get resets() { return resets; },
     get renders() { return renders; },
@@ -153,10 +146,10 @@ const visibleResult = await visibleAdapter.start("livemap/replay");
 expect_adapter(localReplayInvocations === 0, "hosted adapter never invokes the browser-local replay runner");
 expect_adapter(visibleResult.ok && visibleAdapter.router?.runId === visibleResult.runId, "real action result correlates with routed run");
 expect_adapter(visibleAdapter.router?.status === "complete" && visibleAdapter.router.mirror?.rev === 5, "real visible route completes at batched revision 5");
-expect_adapter(visibleSink.summaries[0]?.cases === 0 && visibleSink.summaries[0]?.suites === 0, "authoritative initial state renders first");
-expect_adapter(visibleSink.summaries.some((summary) => summary.cases > 0 && summary.cases < 45), "summary counters update progressively");
-expect_adapter(visibleSink.events.filter((event) => event.t === "case_end").length === 45, "45 progressive case rows are translated");
-const visibleFinal = visibleSink.summaries.at(-1);
+expect_adapter(visibleSink.updates[0]?.report.summary.cases === 0, "authoritative initial state renders first");
+expect_adapter(visibleSink.updates.some((update) => update.report.summary.cases > 0 && update.report.summary.cases < 45), "summary counters update progressively");
+expect_adapter(visibleSink.updates.flatMap((update) => update.newCases).length === 45, "45 compact case records are ingested exactly once");
+const visibleFinal = visibleSink.updates.at(-1)?.report.summary;
 expect_adapter(visibleFinal?.cases === 45 && visibleFinal.pass === 45 && visibleFinal.fail === 0, "visible final summary is 45 passing cases");
 expect_adapter(visibleSink.renders === 5, "initial, start, two case batches, and terminal revisions request panel rendering");
 visibleAdapter.dispose();
@@ -169,9 +162,9 @@ const livehostResult = await livehostAdapter.start("livehost/all");
 expect_adapter(livehostResult.suite === "livehost/all" && livehostResult.summary.suites === 9, "second visible mode uses the same adapter and returns LiveHost collection identity");
 expect_adapter(livehostAdapter.router?.runId === livehostResult.runId && livehostAdapter.router.mirror?.capture().value.run.suite === "livehost/all", "second router, result, and mirror correlate suite identity");
 expect_adapter(livehostAdapter.router?.mirror?.rev === 13, "157-case LiveHost report reaches batched revision 13");
-expect_adapter(livehostSink.events.filter((event) => event.t === "case_end").length === 157, "second hosted mode progressively translates 157 case rows");
-const livehostFinal = livehostSink.summaries.at(-1);
-expect_adapter(livehostFinal?.suites === 9 && livehostFinal.cases === 157 && livehostFinal.pass === 157 && livehostFinal.fail === 0, "second hosted mode renders the complete passing LiveHost summary");
+expect_adapter(livehostSink.updates.flatMap((update) => update.newCases).length === 157, "second hosted mode progressively ingests 157 compact cases");
+const livehostFinal = livehostSink.updates.at(-1)?.report.summary;
+expect_adapter(livehostFinal?.cases === 157 && livehostFinal.pass === 157 && livehostFinal.fail === 0, "second hosted mode renders the complete passing LiveHost summary");
 livehostAdapter.dispose();
 livehostRuntime.dispose();
 
@@ -184,12 +177,12 @@ const nodePanelRoundTripMs = performance.now() - nodePanelStarted;
 expect_adapter(localReplayInvocations === 0, "aggregate hosted mode never invokes the browser-local runner");
 expect_adapter(nodeResult.suite === "node/all" && nodeResult.summary.suites === 41, "aggregate selector uses the shared adapter and canonical 41-suite runner");
 expect_adapter(nodeAdapter.router?.mirror?.rev === 62, "1060-case aggregate report reaches batched revision 62");
-const nodeCaseEvents = nodeSink.events.filter((event) => event.t === "case_end");
-expect_adapter(nodeCaseEvents.length === 1060, "aggregate panel receives exactly 1060 progressive case rows");
-expect_adapter(new Set(nodeCaseEvents.map((event) => event.t === "case_end" ? `${event.suite}\u0000${event.name}` : "")).size === 1060, "aggregate panel case identities are unique");
-expect_adapter(nodeSink.summaries.some((summary) => summary.cases > 0 && summary.cases < 1060), "aggregate summary progresses monotonically before completion");
-expect_adapter(nodeSink.summaries.every((summary, index, values) => index === 0 || summary.cases >= (values[index - 1]?.cases ?? 0)), "aggregate case totals never decrease");
-const nodeFinal = nodeSink.summaries.at(-1);
+const nodeCases = nodeSink.updates.flatMap((update) => update.newCases);
+expect_adapter(nodeCases.length === 1060, "aggregate panel receives exactly 1060 compact cases");
+expect_adapter(new Set(nodeCases.map((testCase) => `${testCase.suite}\u0000${testCase.name}`)).size === 1060, "aggregate panel case identities are unique");
+expect_adapter(nodeSink.updates.some((update) => update.report.summary.cases > 0 && update.report.summary.cases < 1060), "aggregate summary progresses monotonically before completion");
+expect_adapter(nodeSink.updates.every((update, index, values) => index === 0 || update.report.summary.cases >= (values[index - 1]?.report.summary.cases ?? 0)), "aggregate case totals never decrease");
+const nodeFinal = nodeSink.updates.at(-1)?.report.summary;
 expect_adapter(nodeFinal?.cases === 1060 && nodeFinal.pass === 1060 && nodeFinal.fail === 0, "aggregate panel renders 1060 passing cases");
 console.log(JSON.stringify({ nodePanelRoundTripMs, nodePanelRenders: nodeSink.renders }));
 nodeAdapter.dispose();

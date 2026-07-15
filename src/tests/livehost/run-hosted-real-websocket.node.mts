@@ -1,13 +1,12 @@
 import { performance } from "node:perf_hooks";
 import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
-import { make_hosted_test_panel_adapter, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
+import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
 import { run_hosted_test_action } from "../../app/hosted-test/hosted-test-action";
 import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
 import { make_hosted_test_report_router } from "../../app/hosted-test/hosted-test-report-router";
 import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
-import type { TestEvent, TestSummary } from "../../app/demos/test/tests.types";
 import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
@@ -68,20 +67,17 @@ await server.stop();
 const panelServer = await start_hosted_test_server({ port: 0 });
 const panelRuntime = make_remote_hosted_test_runtime({ url: panelServer.url, WebSocketConstructor });
 await panelRuntime.ready();
-const panelEvents: TestEvent[] = [];
-const panelSummaries: TestSummary[] = [];
+const panelUpdates: HostedTestPanelReportUpdate[] = [];
 let panelRenders = 0;
 const sink: HostedTestPanelSink = {
-  reset() { panelEvents.length = 0; panelSummaries.length = 0; },
-  onEvent(event) { panelEvents.push(event); },
-  renderSummary(summary) { panelSummaries.push(summary); },
-  renderReport() { panelRenders += 1; },
+  reset() { panelUpdates.length = 0; },
+  ingest(update) { panelUpdates.push(update); panelRenders += 1; },
   showInfrastructureError(message) { throw new Error(message); },
 };
 const adapter = make_hosted_test_panel_adapter(panelRuntime.client, sink);
 const panelResult = await adapter.start("node/all");
-expect_ws(panelEvents.filter((event) => event.t === "case_end").length === 1060, "remote panel adapter receives every progressive case exactly once");
-expect_ws(panelSummaries.at(-1)?.pass === 1060 && panelRenders === 62, "remote panel reaches the complete batched final state");
+expect_ws(panelUpdates.flatMap((update) => update.newCases).length === 1060, "remote panel adapter receives every compact case exactly once");
+expect_ws(panelUpdates.at(-1)?.report.summary.pass === 1060 && panelRenders === 62, "remote panel reaches the complete batched final state");
 expect_ws(panelResult.runId === adapter.router?.runId, "remote panel action correlates through its existing router");
 adapter.dispose();
 panelRuntime.dispose();
