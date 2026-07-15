@@ -27,6 +27,8 @@ import type { TestSuite } from "../../app/demos/test/tests.types";
 import { livetree_quid_level_2, livetree_regression_2 } from "./livetree-25-regression-2";
 import { livetree_lifecycle_public } from "./livetree-27-lifecycle-public";
 import { livetree_lifecycle_ownership } from "./livetree-28-lifecycle-ownership";
+import { livetree_allocation } from "./livetree-29-allocation";
+import { hson_node_representation } from "./livetree-30-node-representation";
 
 
 /******************************************************
@@ -106,6 +108,8 @@ export function all_livetree_suites(): readonly TestSuite[] {
     livetree_quid_level_2(),
     livetree_lifecycle_public(),
     livetree_lifecycle_ownership(),
+    livetree_allocation(),
+    hson_node_representation(),
 
   ] as const;
 }

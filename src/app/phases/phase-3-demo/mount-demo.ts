@@ -218,21 +218,6 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
     .css.setMany(HSON_SUBcss);
 }
 
-function create_demo_menu(menuBox: LiveTree): MenuButtons {
-  const menu = {} as MenuButtons;
-
-  MENU_OPTIONS.forEach((key) => {
-    const isWidget = is_widget_menu_key(key);
-    menu[key] = mk_div_id_txt(menuBox, `${key}-button`, key)
-      .classlist.set(isWidget ? "widget-button" : "view-button")
-      .css.setMany({
-        ...MAIN_MENUcss,
-        color: isWidget ? _colors.txt.widget : _colors.txt.menu
-      });
-  });
-
-  return menu;
-}
 
 function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer: LiveTree, graf: LiveTree): DemoHosts {
   const pointSlot = mk_div_id(menuContainer, "mouse-slot").css.setMany(POINT_SLOTcss);
@@ -312,29 +297,6 @@ function sync_demo_visibility(viewHosts: ViewHosts, widgetHosts: WidgetHosts, vi
   });
 }
 
-function apply_menu_active(menu: MenuButtons, view: DemoView, widgets: readonly DemoWidget[]): void {
-  MENU_OPTIONS.forEach((key) => {
-    const active = is_widget_menu_key(key)
-      ? widgets.includes(key)
-      : view === key;
-    menu[key].data.set("active", active ? "true" : null);
-  });
-}
-
-function wire_demo_menu(menu: MenuButtons, fleurField: SvgLiveTree, controller: DemoStateController): void {
-  MENU_OPTIONS.forEach((key) => {
-    menu[key].listen.stopProp().onClick(() => {
-      if (is_widget_menu_key(key)) {
-        controller.toggleWidget(key);
-        return;
-      }
-
-      if (!is_demo_menu_key(key)) return;
-      if (key === $FLEURS && controller.getView() === $FLEURS) fleurField.empty();
-      controller.toggleView(key);
-    });
-  });
-}
 
 export async function mount_demo(stage: LiveTree): Promise<void> {
   // CHANGED: release remount-persistent bindings before rebuilding the demo tree.

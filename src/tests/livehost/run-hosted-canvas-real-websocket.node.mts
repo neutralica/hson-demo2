@@ -172,7 +172,7 @@ try {
   const domRuntime = make_remote_hosted_test_runtime({ url: server.url, WebSocketConstructor });
   await domRuntime.ready();
   const domResult = await run_hosted_test_action(domRuntime.client, "dom/core");
-  expect_canvas_ws(domResult.summary.cases === 933 && domResult.summary.fail === 0, "following dom/core run remains clean at 933/933");
+  expect_canvas_ws(domResult.summary.cases === 948 && domResult.summary.fail === 0, "following dom/core run remains clean at 948/948");
   domRuntime.dispose();
 
   summary = Object.freeze({

@@ -92,8 +92,8 @@ const hostedAll = await registered.get("hosted/all").run(undefined, { yieldEvery
 expect_registry(replay.ok && replay.summary.suites === 1 && replay.summary.cases === 45, "registered replay runner passes 45 cases under Node");
 expect_registry(livehost.ok && livehost.summary.suites === 9 && livehost.summary.cases === 157, "registered LiveHost runner passes 157 cases under Node");
 expect_registry(nodeAll.ok && nodeAll.summary.suites === 41 && nodeAll.summary.cases === 1060, "registered aggregate runner passes every Node-safe case exactly once");
-expect_registry(domCore.ok && domCore.summary.suites === 75 && domCore.summary.cases === 933, "registered DOM runner passes the expanded canonical jsdom and geometry tranche");
+expect_registry(domCore.ok && domCore.summary.suites === 77 && domCore.summary.cases === 948, "registered DOM runner passes the expanded canonical jsdom and geometry tranche");
 expect_registry(canvasCore.ok && canvasCore.summary.suites === 6 && canvasCore.summary.cases === 62, "registered canvas runner passes the deterministic command/state tranche");
-expect_registry(hostedAll.ok && hostedAll.summary.suites === 122 && hostedAll.summary.cases === 2055 && hostedAll.summary.pass === 2055, "registered complete runner passes every canonical hosted case exactly once");
+expect_registry(hostedAll.ok && hostedAll.summary.suites === 124 && hostedAll.summary.cases === 2070 && hostedAll.summary.pass === 2070, "registered complete runner passes every canonical hosted case exactly once");
 expect_registry(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "both registered runners are Node-safe");
 console.log("hosted suite registry: ok");

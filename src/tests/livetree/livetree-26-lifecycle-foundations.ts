@@ -76,7 +76,7 @@ function recursive_quid_case(suite: string): LiveTreeCaseSpec {
       repeated = _destroy_subtree_quids(root);
       allStrongGone = quids.every((quid) => _get_livetree_node_by_quid(quid) === undefined);
       allWeakGone = nodes.every((node) => !_has_livetree_quid(node) && _get_livetree_quid(node) === undefined);
-      allMetadataGone = nodes.every((node) => !(DATA_QUID in node.$_meta));
+      allMetadataGone = nodes.every((node) => node.$_meta?.[DATA_QUID] === undefined);
     },
     assert(_tree, t) {
       t.eq("all three node identities destroyed", destroyed, 3);
@@ -153,14 +153,14 @@ function weak_and_duplicate_case(suite: string): LiveTreeCaseSpec {
       _ensure_livetree_quid(owner);
       _destroy_subtree_quids(duplicate);
       duplicateCouldNotDeleteOwner = _get_livetree_node_by_quid(duplicateQuid) === owner;
-      duplicateMetadataGone = !(DATA_QUID in duplicate.$_meta);
+      duplicateMetadataGone = duplicate.$_meta?.[DATA_QUID] === undefined;
       _destroy_subtree_quids(owner);
 
       const registryOwner = _CREATE_NODE({ $_tag: "article" });
       const registryQuid = _ensure_livetree_quid(registryOwner, { persist: false });
       const metadataOwner = _CREATE_NODE({ $_tag: "nav" });
       const metadataQuid = _ensure_livetree_quid(metadataOwner);
-      registryOwner.$_meta[DATA_QUID] = metadataQuid;
+      (registryOwner.$_meta ??= {})[DATA_QUID] = metadataQuid;
       _destroy_subtree_quids(registryOwner);
       divergentRegistryReleasedSafely = _get_livetree_node_by_quid(registryQuid) === undefined
         && _get_livetree_node_by_quid(metadataQuid) === metadataOwner;
@@ -209,7 +209,7 @@ function unmounted_terminal_case(suite: string): LiveTreeCaseSpec {
         && child.isDisposed && childAlias.isDisposed;
       identitiesGone = quids.every((quid) => _get_livetree_node_by_quid(quid) === undefined)
         && nodes.every((node) => _get_livetree_quid(node) === undefined);
-      metadataGone = nodes.every((node) => !(DATA_QUID in node.$_meta));
+      metadataGone = nodes.every((node) => node.$_meta?.[DATA_QUID] === undefined);
       _dispose_node_deep(rootNode);
       repeatedStillDisposed = nodes.every((node) => _is_livetree_node_disposed(node));
     },
@@ -413,7 +413,7 @@ function empty_regression_case(suite: string): LiveTreeCaseSpec {
       const childQuid = child.quid;
       root.empty();
       destroyed = _get_livetree_node_by_quid(childQuid) === undefined
-        && childNode.$_meta[DATA_QUID] === undefined
+        && childNode.$_meta?.[DATA_QUID] === undefined
         && child.isDisposed;
       callerActive = !root.isDisposed;
       domEmpty = root.dom.must.el().childNodes.length === 0;

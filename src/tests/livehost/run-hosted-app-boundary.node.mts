@@ -88,7 +88,7 @@ for (const name of compatibilityFiles) {
   expect_boundary(source.includes("../../app/hosted-test/"), `${name} must remain a narrow application re-export`);
 }
 
-expect_boundary(HOSTED_SUITES.length === 122 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 2055, "inventory pins 41 Node-safe, 75 jsdom-hosted, and 6 canvas-hosted suites with 2055 canonical cases");
+expect_boundary(HOSTED_SUITES.length === 124 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 2070, "inventory pins 41 Node-safe, 77 jsdom-hosted, and 6 canvas-hosted suites with 2070 canonical cases");
 expect_boundary(HOSTED_SUITES.every((entry) => (entry.hostedBy === "node/all" || entry.hostedBy === "dom/core" || entry.hostedBy === "canvas/core") && !entry.nextBulk), "every hosted entry names its aggregate descriptor");
 expect_boundary(DOM_REQUIRED_SUITES.length === 4 && DOM_REQUIRED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 8, "inventory retains exactly eight browser-fidelity cases");
 expect_boundary(UNKNOWN_OR_MIXED_SUITES.length === 0, "no former local mode remains unexplained");
@@ -97,7 +97,7 @@ expect_boundary(DOM_REQUIRED_SUITES.every((entry) => !entry.nextBulk && entry.br
 expect_boundary(join("src", "app", "hosted-test") === "src/app/hosted-test", "boundary test remains workspace-relative");
 const hostedAll = all_hosted_test_suites();
 const hostedAllKeys = hostedAll.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
-expect_boundary(hostedAll.length === 122 && hostedAllKeys.length === 2055 && new Set(hostedAllKeys).size === 2055, "hosted/all is canonical and non-overlapping");
+expect_boundary(hostedAll.length === 124 && hostedAllKeys.length === 2070 && new Set(hostedAllKeys).size === 2070, "hosted/all is canonical and non-overlapping");
 expect_boundary(DEFERRED_BROWSER_FIDELITY_CASES.length === 8 && DEFERRED_BROWSER_FIDELITY_CASES.every((entry) => !new Set(hostedAllKeys).has(entry.id)), "the exact eight fidelity cases remain explicit and excluded");
 expect_boundary(GENERATED_TEST_MODES.length === 2 && GENERATED_TEST_MODES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 250, "generated diagnostics remain separately classified");
 expect_boundary(FINAL_HARNESS_MIGRATION_INVENTORY.every((entry) => entry.status !== "UNKNOWN"), "final harness inventory has no unknown entries");

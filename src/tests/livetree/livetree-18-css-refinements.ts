@@ -834,9 +834,9 @@ export function livetree_find_more(): TestSuite {
         }
 
         (tree as any).__result = {
-          alphaId: tree.find.byId("alpha")?.node.$_attrs.id,
+          alphaId: tree.find.byId("alpha")?.node.$_attrs?.id,
           missing: tree.find.byId("missing"),
-          mustAlphaId: tree.find.must.byId("alpha").node.$_attrs.id,
+          mustAlphaId: tree.find.must.byId("alpha").node.$_attrs?.id,
           mustMissThrows,
         };
       },
@@ -877,10 +877,10 @@ export function livetree_find_more(): TestSuite {
         }
 
         (tree as any).__result = {
-          firstCardId: tree.find.byAttribute("data-kind", "card")?.node.$_attrs.id,
-          rankTwoId: tree.find.byAttribute("data-rank", "2")?.node.$_attrs.id,
+          firstCardId: tree.find.byAttribute("data-kind", "card")?.node.$_attrs?.id,
+          rankTwoId: tree.find.byAttribute("data-rank", "2")?.node.$_attrs?.id,
           missing: tree.find.byAttribute("data-kind", "missing"),
-          mustCardId: tree.find.must.byAttribute("data-kind", "card").node.$_attrs.id,
+          mustCardId: tree.find.must.byAttribute("data-kind", "card").node.$_attrs?.id,
           mustMissThrows,
         };
       },
@@ -920,9 +920,9 @@ export function livetree_find_more(): TestSuite {
         }
 
         (tree as any).__result = {
-          disabledId: tree.find.byFlag("disabled")?.node.$_attrs.id,
+          disabledId: tree.find.byFlag("disabled")?.node.$_attrs?.id,
           hidden: tree.find.byFlag("hidden"),
-          mustDisabledId: tree.find.must.byFlag("disabled").node.$_attrs.id,
+          mustDisabledId: tree.find.must.byFlag("disabled").node.$_attrs?.id,
           mustMissThrows,
         };
       },
@@ -956,7 +956,7 @@ export function livetree_find_more(): TestSuite {
 
         (tree as any).__result = {
           alphaLength: alpha.length,
-          alphaId: alpha.first()?.node.$_attrs.id,
+          alphaId: alpha.first()?.node.$_attrs?.id,
 
           missingLength: missing.length,
           missingFirst: missing.first(),
@@ -1000,10 +1000,10 @@ export function livetree_find_more(): TestSuite {
 
         (tree as any).__result = {
           cardLength: cards.length,
-          cardIds: cards.map((item) => item.node.$_attrs.id),
+          cardIds: cards.map((item) => item.node.$_attrs?.id),
 
           noteLength: notes.length,
-          noteIds: notes.map((item) => item.node.$_attrs.id),
+          noteIds: notes.map((item) => item.node.$_attrs?.id),
 
           missingLength: missing.length,
           missingFirst: missing.first(),
@@ -1051,7 +1051,7 @@ export function livetree_find_more(): TestSuite {
 
         (tree as any).__result = {
           disabledLength: disabled.length,
-          disabledIds: disabled.map((item) => item.node.$_attrs.id),
+          disabledIds: disabled.map((item) => item.node.$_attrs?.id),
 
           hiddenLength: hidden.length,
           hiddenFirst: hidden.first(),
@@ -1102,8 +1102,8 @@ export function livetree_find_more(): TestSuite {
 
         (tree as any).__result = {
           length: items.length,
-          firstId: items.first()?.node.$_attrs.id,
-          secondId: items.at(1)?.node.$_attrs.id,
+          firstId: items.first()?.node.$_attrs?.id,
+          secondId: items.at(1)?.node.$_attrs?.id,
 
           firstBackground: tree.find.must.byId("one").css.get.background(),
           secondBackground: tree.find.must.byId("two").css.get.background(),

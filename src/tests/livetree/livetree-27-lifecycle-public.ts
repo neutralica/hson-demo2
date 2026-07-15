@@ -39,7 +39,7 @@ function empty_case(suite: string): LiveTreeCaseSpec {
       const ownerNode = owner.node;
       const ownerQuid = owner.quid;
       const ownerEl = owner.dom.must.el();
-      ownerNode.$_meta["owner-note"] = "preserved";
+      (ownerNode.$_meta ??= {})["owner-note"] = "preserved";
       owner.css.setMany({ color: "red" });
       let clicks = 0;
       owner.listen.onClick(() => { clicks += 1; });
@@ -57,11 +57,11 @@ function empty_case(suite: string): LiveTreeCaseSpec {
       callerPreserved = owner.quid === ownerQuid
         && owner.node === ownerNode
         && owner.attr.get("data-keep") === "yes"
-        && owner.node.$_meta["owner-note"] === "preserved"
+        && owner.node.$_meta?.["owner-note"] === "preserved"
         && owner.dom.el() === ownerEl
         && !owner.isDisposed;
       runtimePreserved = clicks === 1 && CssManager.invoke().hasAnyRules(ownerQuid);
-      descendantsDestroyed = descendants.every((node) => node.$_meta[DATA_QUID] === undefined)
+      descendantsDestroyed = descendants.every((node) => node.$_meta?.[DATA_QUID] === undefined)
         && descendantQuids.every((quid) => _get_livetree_node_by_quid(quid) === undefined)
         && descendants.every((node) => !_has_livetree_element_for_node(node))
         && descendantElements.every((element) => !element.hasAttribute(DATA_QUID));
@@ -120,7 +120,7 @@ function detach_contents_case(suite: string): LiveTreeCaseSpec {
 
       identityStable = branch.quid === branchQuid
         && _get_livetree_node_by_quid(branchQuid) === branch.node
-        && branch.node.$_meta[DATA_QUID] === branchQuid
+        && branch.node.$_meta?.[DATA_QUID] === branchQuid
         && branchEl.getAttribute(DATA_QUID) === branchQuid;
       exactProjectionReused = branch.dom.el() === branchEl && target.dom.must.el().contains(branchEl);
       behaviorStable = clicks === 1
@@ -171,7 +171,7 @@ function detach_case(suite: string): LiveTreeCaseSpec {
         && !element.isConnected
         && !branch.isDisposed
         && branch.quid === quid
-        && branch.node.$_meta[DATA_QUID] === quid
+        && branch.node.$_meta?.[DATA_QUID] === quid
         && element.getAttribute(DATA_QUID) === quid;
       branch.text.set("new").attr.set("data-moved", "yes");
       right.append(branch);
@@ -194,7 +194,7 @@ function detach_case(suite: string): LiveTreeCaseSpec {
       const malformed = hson.liveTree.fromTrustedHtml(`<article></article>`);
       const malformedNode = malformed.node;
       const malformedQuid = malformed.quid;
-      malformedNode.$_meta[DATA_QUID] = tree.quid;
+      (malformedNode.$_meta ??= {})[DATA_QUID] = tree.quid;
       try {
         other.append(malformed);
       } catch (error: unknown) {
@@ -202,7 +202,7 @@ function detach_case(suite: string): LiveTreeCaseSpec {
           && error.message.includes("Duplicate QUID")
           && other.content.all().length === 0;
       } finally {
-        malformedNode.$_meta[DATA_QUID] = malformedQuid;
+        (malformedNode.$_meta ??= {})[DATA_QUID] = malformedQuid;
         malformed.remove();
       }
 
@@ -263,8 +263,8 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
         && child.isDisposed
         && _get_livetree_node_by_quid(targetQuid) === undefined
         && _get_livetree_node_by_quid(childQuid) === undefined
-        && targetNode.$_meta[DATA_QUID] === undefined
-        && childNode.$_meta[DATA_QUID] === undefined;
+        && targetNode.$_meta?.[DATA_QUID] === undefined
+        && childNode.$_meta?.[DATA_QUID] === undefined;
       runtimeGone = !targetEl.isConnected
         && !_has_livetree_element_for_node(targetNode)
         && !_has_livetree_element_for_node(childNode)

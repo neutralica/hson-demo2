@@ -147,7 +147,7 @@ export function make_core_node_tag_case(spec: CoreNodeTagCaseSpec): TestCase {
           equal_row(`${spec.name}: get tag`, node?.$_tag, spec.expectedTag),
           equal_row(`${spec.name}: must tag`, handle.must().$_tag, spec.expectedTag),
           equal_row(`${spec.name}: tag`, handle.tag(), spec.expectedTag),
-          equal_row(`${spec.name}: attrs`, handle.attrs(), node?.$_attrs),
+          equal_row(`${spec.name}: attrs`, handle.attrs(), node === undefined ? undefined : (node.$_attrs ?? {})),
           equal_row(`${spec.name}: meta`, handle.meta(), node?.$_meta),
           equal_row(`${spec.name}: content`, handle.content(), node?.$_content),
         ],

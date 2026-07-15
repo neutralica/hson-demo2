@@ -70,13 +70,13 @@ try {
   const mirror = await router.wait_for_terminal();
   router.accept_result(result);
   const capture = mirror.capture();
-  expect_dom_ws(result.ok && result.summary.suites === 75 && result.summary.cases === 933, "DOM collection passes 75 suites / 933 canonical cases");
-  expect_dom_ws(result.summary.pass === 933 && result.summary.fail === 0, "every migrated DOM and deterministic geometry case passes");
+  expect_dom_ws(result.ok && result.summary.suites === 77 && result.summary.cases === 948, "DOM collection passes 77 suites / 948 canonical cases");
+  expect_dom_ws(result.summary.pass === 948 && result.summary.fail === 0, "every migrated DOM and deterministic geometry case passes");
   expect_dom_ws(initialEvents === 1 && commitEvents > 0, "one initial state precedes a non-empty batched commit stream");
   expect_dom_ws(commitEvents === 83 && initialEvents + commitEvents === 84, "expanded DOM collection retains suite-coherent batching");
   expect_dom_ws(capture.rev === commitEvents + 1, "mirror revision matches contiguous commit count");
   expect_dom_ws(capture.rev === 84, "expanded DOM report terminates at revision 84");
-  expect_dom_ws(capture.value.summary.cases === 933 && capture.value.run.status === "passed", "mirror reconstructs terminal DOM report");
+  expect_dom_ws(capture.value.summary.cases === 948 && capture.value.run.status === "passed", "mirror reconstructs terminal DOM report");
   expect_dom_ws(result.runId === router.runId && result.suite === "dom/core" && mirror.suite === "dom/core", "result, router, and mirror correlate");
   const authoritativeKeys = new Set(hosted_test_report_cases(capture.value).map((testCase) => testCase.key));
   expect_dom_ws(authoritativeKeys.has("livetree/construction-parity::construction: liveTree.fromUntrustedHtml returns mutable sanitized branch"), "runtime-bound DOMPurify case crosses WebSocket");
@@ -114,8 +114,8 @@ try {
   const adapter = make_hosted_test_panel_adapter(panelRuntime.client, sink);
   const panelResult = await adapter.start("dom/core");
   const panelCases = panelUpdates.flatMap((update) => update.newCases);
-  expect_dom_ws(panelCases.length === 933 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 933, "panel receives every DOM case exactly once");
-  expect_dom_ws(panelUpdates.at(-1)?.report.summary.pass === 933 && panelUpdates.at(-1)?.report.summary.fail === 0 && renders > 1, "panel renders progressive batched state");
+  expect_dom_ws(panelCases.length === 948 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 948, "panel receives every DOM case exactly once");
+  expect_dom_ws(panelUpdates.at(-1)?.report.summary.pass === 948 && panelUpdates.at(-1)?.report.summary.fail === 0 && renders > 1, "panel renders progressive batched state");
   expect_dom_ws(panelResult.runId === adapter.router?.runId, "panel uses the existing correlated router path");
   adapter.dispose();
   panelRuntime.dispose();
@@ -134,7 +134,7 @@ try {
   routerB.accept_result(resultB);
   expect_dom_ws(resultA.runId !== resultB.runId, "two DOM clients receive distinct run IDs");
   expect_dom_ws(routerA.runId === resultA.runId && routerB.runId === resultB.runId, "each DOM stream remains connection-scoped");
-  expect_dom_ws(mirrorA.capture().value.summary.cases === 933 && mirrorB.capture().value.summary.cases === 933, "serialized DOM actions both complete without state crossover");
+  expect_dom_ws(mirrorA.capture().value.summary.cases === 948 && mirrorB.capture().value.summary.cases === 948, "serialized DOM actions both complete without state crossover");
   routerA.dispose();
   routerB.dispose();
   runtimeA.dispose();
@@ -147,7 +147,7 @@ try {
     run_hosted_test_action(domRuntime.client, "dom/core"),
     run_hosted_test_action(nodeRuntime.client, "node/all"),
   ]);
-  expect_dom_ws(domResult.summary.cases === 933 && nodeResult.summary.cases === 1060 && nodeResult.summary.fail === 0, "DOM and Node-safe requests coordinate without global corruption");
+  expect_dom_ws(domResult.summary.cases === 948 && nodeResult.summary.cases === 1060 && nodeResult.summary.fail === 0, "DOM and Node-safe requests coordinate without global corruption");
   domRuntime.dispose();
   nodeRuntime.dispose();
   expect_dom_ws(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined" && typeof CSS === "undefined", "concurrent lifecycle leaves no DOM globals");
@@ -189,7 +189,7 @@ try {
     const recoveryRuntime = make_remote_hosted_test_runtime({ url: failureServer.url, WebSocketConstructor });
     await recoveryRuntime.ready();
     const recoveryResult = await run_hosted_test_action(recoveryRuntime.client, "dom/core");
-    expect_dom_ws(recoveryResult.ok && recoveryResult.summary.cases === 933, "mutex releases and a later DOM action succeeds");
+    expect_dom_ws(recoveryResult.ok && recoveryResult.summary.cases === 948, "mutex releases and a later DOM action succeeds");
     recoveryRuntime.dispose();
   } finally {
     await failureServer.stop();
