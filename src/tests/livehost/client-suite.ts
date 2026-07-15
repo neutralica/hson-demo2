@@ -792,7 +792,7 @@ export function livehost_client_suite(): TestSuite {
         expected: {
           instance: true,
           name: "LiveHostDisconnectedError",
-          actionIdCalls: 0,
+          actionIdCalls: 1,
           sentCount: 0,
         },
       }),
@@ -818,7 +818,7 @@ export function livehost_client_suite(): TestSuite {
             sentCount: socket.sent().length,
           };
         },
-        expected: { instance: true, actionIdCalls: 0, sentCount: 1 },
+        expected: { instance: true, actionIdCalls: 1, sentCount: 1 },
       }),
       livehost_client_read_case({
         suite: SUITE,
@@ -842,11 +842,11 @@ export function livehost_client_suite(): TestSuite {
             sentCount: socket.sent().length,
           };
         },
-        expected: { instance: true, actionIdCalls: 0, sentCount: 1 },
+        expected: { instance: true, actionIdCalls: 1, sentCount: 1 },
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "duplicate pending action ID rejects without overwrite or send",
+        name: "duplicate logical request IDs retain independent delivery attempts",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -854,26 +854,23 @@ export function livehost_client_suite(): TestSuite {
           const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => "duplicate" });
           client.connect();
           const first = client.action("wait");
-          const duplicateError = await client.action("wait").catch((reason: unknown) => reason);
-          await socket.receive({ type: "ack", id: "duplicate", ok: true, seq: 1 });
+          const second = client.action("wait");
+          const sent = socket.sent() as Array<Record<string, unknown>>;
+          await socket.receive({ type: "ack", id: "duplicate", attemptId: sent[1]?.attemptId, ok: true, seq: 1 });
+          await socket.receive({ type: "ack", id: "duplicate", attemptId: sent[2]?.attemptId, ok: true, seq: 2 });
           const firstResult = await first;
+          const secondResult = await second;
 
           return {
-            duplicateInstance: duplicateError instanceof LiveHostDuplicateActionIdError,
-            duplicateName: duplicateError instanceof Error ? duplicateError.name : undefined,
-            duplicateCode: typeof duplicateError === "object" && duplicateError !== null && "code" in duplicateError
-              ? duplicateError.code
-              : undefined,
             firstType: firstResult.type,
+            secondType: secondResult.type,
             sentTypes: (socket.sent() as Array<Record<string, unknown>>).map((message) => message.type),
           };
         },
         expected: {
-          duplicateInstance: true,
-          duplicateName: "LiveHostDuplicateActionIdError",
-          duplicateCode: "LIVEHOST_DUPLICATE_ACTION_ID",
           firstType: "ack",
-          sentTypes: ["hello", "action"],
+          secondType: "ack",
+          sentTypes: ["hello", "action", "action"],
         },
       }),
       livehost_client_read_case({

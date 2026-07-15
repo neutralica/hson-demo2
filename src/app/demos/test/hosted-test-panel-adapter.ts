@@ -8,6 +8,7 @@ import type { HostedTestReportRouter } from "../../hosted-test/hosted-test-repor
 import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
 import type { TestRunMode } from "./tests.types";
 import { hosted_test_action_error_message } from "../../hosted-test/hosted-test-action-error";
+import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-panel-runtime";
 
 export type HostedTestPanelReportUpdate = Readonly<{
   report: HostedTestReport;
@@ -84,9 +85,10 @@ function make_report_observer(sink: HostedTestPanelSink): (mirror: HostedTestRep
 }
 
 export function make_hosted_test_panel_adapter(
-  client: HostedTestPanelClient,
+  client: HostedTestPanelClient | HostedTestPanelRuntime,
   sink: HostedTestPanelSink,
 ): HostedTestPanelAdapter {
+  if ("start_run" in client) return make_generic_hosted_test_panel_adapter(client, sink);
   let generation = 0;
   let current: OwnedRun | undefined;
   let lastResult: HostedTestPanelRunResult | undefined;
@@ -168,6 +170,130 @@ export function make_hosted_test_panel_adapter(
     },
     capture() {
       return current?.router.mirror?.capture().value;
+    },
+    dispose() {
+      generation += 1;
+      lastResult = undefined;
+      inspectionRequests.clear();
+      dispose_current();
+    },
+  });
+}
+
+function make_generic_hosted_test_panel_adapter(
+  runtime: HostedTestPanelRuntime,
+  sink: HostedTestPanelSink,
+): HostedTestPanelAdapter {
+  let generation = 0;
+  let current: HostedTestRemoteRun | undefined;
+  let stopChanges: (() => void) | undefined;
+  let lastResult: HostedTestPanelRunResult | undefined;
+  const inspectionRequests = new Map<string, Promise<HostedTestCaseDiagnostic>>();
+
+  function dispose_current(): void {
+    stopChanges?.();
+    stopChanges = undefined;
+    current?.dispose();
+    current = undefined;
+  }
+
+  return Object.freeze({
+    get router() { return undefined; },
+    async start(suite: HostedTestSuiteId) {
+      const roundTripStartedAt = performance.now();
+      generation += 1;
+      const runGeneration = generation;
+      dispose_current();
+      lastResult = undefined;
+      inspectionRequests.clear();
+      sink.reset(suite);
+
+      const run = await runtime.start_run(suite);
+      if (generation !== runGeneration) {
+        run.dispose();
+        throw new Error("Hosted test run was superseded before report recovery.");
+      }
+      current = run;
+      let consumedCaseBatches = 0;
+      let consumedSuiteTimings = 0;
+      let infrastructureErrorShown = false;
+      let terminalResolve: () => void = () => undefined;
+      const terminal = new Promise<void>((resolve) => { terminalResolve = resolve; });
+
+      const project = (): void => {
+        if (current !== run || generation !== runGeneration) return;
+        const report = run.client.recovery.map.capture().value;
+        if (report.run.id !== run.association.runId || report.run.suite !== suite) {
+          throw new Error("Recovered hosted report identity does not match the requested run.");
+        }
+        const terminalState = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
+        const newCases: HostedTestCaseReport[] = [];
+        while (true) {
+          const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
+          const batch = report.caseBatches[batchKey];
+          if (batch === undefined) break;
+          consumedCaseBatches += 1;
+          newCases.push(...batch);
+        }
+        const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
+        consumedSuiteTimings = report.suites.length;
+        sink.ingest(Object.freeze({
+          report,
+          newCases: Object.freeze(newCases),
+          newSuiteTimings: Object.freeze([...newSuiteTimings]),
+          terminal: terminalState,
+        }));
+        if (report.run.status === "error" && report.error !== null && !infrastructureErrorShown) {
+          infrastructureErrorShown = true;
+          sink.showInfrastructureError(report.error.message);
+        }
+        if (terminalState) terminalResolve();
+      };
+
+      stopChanges = run.on_change(project);
+      project();
+      try {
+        const [result] = await Promise.all([run.actionResult, terminal]);
+        if (current !== run || generation !== runGeneration) {
+          return Object.freeze({ ...result, timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }) });
+        }
+        const report = run.client.recovery.map.capture().value;
+        const cursor = run.client.recovery.lastAppliedRev ?? -1;
+        const expectedOk = report.run.status === "passed";
+        if (result.runId !== report.run.id || result.reportHostId !== run.association.reportHostId
+          || result.suite !== report.run.suite || result.reportRev === undefined || cursor < result.reportRev
+          || result.ok !== expectedOk || result.summary.cases !== report.summary.cases
+          || result.summary.pass !== report.summary.pass || result.summary.fail !== report.summary.fail
+          || result.summary.skip !== report.summary.skip) {
+          throw new Error("Hosted action result does not agree with the recovered authoritative report.");
+        }
+        const panelResult: HostedTestPanelRunResult = Object.freeze({
+          ...result,
+          timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }),
+        });
+        lastResult = panelResult;
+        sink.renderTiming?.(panelResult.timing);
+        return panelResult;
+      } catch (error) {
+        if (current === run && generation === runGeneration && !infrastructureErrorShown) {
+          sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
+        }
+        throw error;
+      }
+    },
+    async inspect(caseKey: string) {
+      const result = lastResult;
+      const run = current;
+      if (!result || !run) throw new Error("Hosted case inspection is available after the run settles.");
+      const existing = inspectionRequests.get(caseKey);
+      if (existing) return existing;
+      const pending = run.inspect({ runId: result.runId, caseKey });
+      inspectionRequests.set(caseKey, pending);
+      try { return await pending; }
+      catch (error) { inspectionRequests.delete(caseKey); throw error; }
+    },
+    capture() {
+      return current?.client.recovery.map.capture().value;
     },
     dispose() {
       generation += 1;

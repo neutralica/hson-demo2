@@ -8,6 +8,8 @@ export type HostedTestRunRequest = Readonly<{
 
 export type HostedTestRunResult = Readonly<{
   runId: HostedTestRunId;
+  reportHostId?: string;
+  reportRev?: number;
   suite: HostedTestSuiteId;
   ok: boolean;
   summary: TestSummary;

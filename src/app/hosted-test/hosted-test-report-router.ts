@@ -1,3 +1,4 @@
+/** @deprecated Patch 6 compatibility for event-protocol fixtures only. Production uses LiveHost recovery. */
 import type { HostedTestRunResult } from "./hosted-test-action.types";
 import {
   decode_hosted_test_report_initial,

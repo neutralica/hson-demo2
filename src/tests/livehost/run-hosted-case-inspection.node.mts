@@ -28,7 +28,7 @@ await runtime.ready();
 const sink: HostedTestPanelSink = {
   reset() {}, ingest() {}, showInfrastructureError(message) { throw new Error(message); },
 };
-const adapter = make_hosted_test_panel_adapter(runtime.client, sink);
+const adapter = make_hosted_test_panel_adapter(runtime, sink);
 const result = await adapter.start("category/unit");
 expect_inspect(result.summary.cases === 101, "focused Unit descriptor executes remotely");
 const ordinary = await adapter.inspect("unit/test-harness::failed assertion row fails case and run");

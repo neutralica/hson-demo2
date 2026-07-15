@@ -73,9 +73,17 @@ function make_memory_socket(): MemorySocket {
     receive: async (message) => {
       const raw = JSON.stringify(message);
       for (const listener of [...messageListeners]) await listener(raw);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
     },
     receive_raw: async (message) => {
       for (const listener of [...messageListeners]) await listener(message);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
     },
     sent: () => sentMessages.map((message) => JSON.parse(message) as unknown),
     sent_raw: () => [...sentMessages],

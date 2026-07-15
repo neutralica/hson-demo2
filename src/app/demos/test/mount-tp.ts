@@ -175,7 +175,7 @@ export function tp_factory(): TestPanel {
     };
 
     const hostedRuntime = make_remote_hosted_test_runtime();
-    hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
+    hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime, {
         reset(suite) {
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;

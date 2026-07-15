@@ -1,3 +1,4 @@
+/** @deprecated Patch 6 compatibility for event-protocol fixtures only. Production uses the LiveHost client mirror. */
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import { HOSTED_TEST_REPORT_SCHEMA } from "./hosted-test-report";

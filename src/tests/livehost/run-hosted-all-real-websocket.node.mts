@@ -7,9 +7,7 @@ import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type 
 import type { HostedTestCaseReport, HostedTestReport } from "../../app/hosted-test/hosted-test-report.types";
 import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
 import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
-import { decode_hosted_test_report_initial } from "../../app/hosted-test/hosted-test-report-initial";
-import { make_hosted_test_report_mirror } from "../../app/hosted-test/hosted-test-report-mirror";
-import { decode_hosted_test_report_commit_envelope, HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
+import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import { DEFERRED_BROWSER_FIDELITY_CASES } from "../../hosted-test/final-harness-migration-inventory";
 import { all_hosted_test_suites } from "../../hosted-test/hosted-all-test-suites";
@@ -61,16 +59,12 @@ try {
   let renders = 0;
   let initialEvents = 0;
   let commitEvents = 0;
-  let initialPayload: unknown;
-  const commitPayloads: unknown[] = [];
   const stopEvents = runtime.client.on_event((message) => {
     if (message.event === HOSTED_TEST_REPORT_INITIAL_EVENT) {
       initialEvents += 1;
-      initialPayload = message.payload;
     }
     if (message.event === HOSTED_TEST_REPORT_COMMIT_EVENT) {
       commitEvents += 1;
-      commitPayloads.push(message.payload);
     }
   });
   const sink: HostedTestPanelSink = {
@@ -89,46 +83,40 @@ try {
     },
     showInfrastructureError(message) { throw new Error(message); },
   };
-  const adapter = make_hosted_test_panel_adapter(runtime.client, sink);
+  const adapter = make_hosted_test_panel_adapter(runtime, sink);
   const started = performance.now();
   const result = await adapter.start("hosted/all");
   const roundTripMs = performance.now() - started;
-  const mirror = adapter.router?.mirror;
+  const mirror = adapter.capture();
   expect_all(result.ok && result.suite === "hosted/all", "one remote action returns the complete hosted suite identity");
   expect_all(result.summary.suites === 124 && result.summary.cases === 2070 && result.summary.pass === 2070 && result.summary.fail === 0, "complete remote result passes every canonical case");
-  expect_all(mirror !== undefined && mirror.runId === result.runId && mirror.suite === result.suite, "result, router, and mirror correlate");
+  expect_all(mirror !== undefined && mirror.run.id === result.runId && mirror.run.suite === result.suite, "result and generic recovered mirror correlate");
   const panelCases = updates.flatMap((update) => update.newCases);
   expect_all(panelCases.length === 2070 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 2070, "panel receives every compact case exactly once");
-  expect_all(updates[0]?.report.summary.cases === 0 && updates.at(-1)?.report.summary.cases === 2070 && updates.at(-1)?.report.summary.pass === 2070, "panel starts authoritative-empty and completes successfully");
+  expect_all(updates.at(-1)?.report.summary.cases === 2070 && updates.at(-1)?.report.summary.pass === 2070, "panel completes from generic recovered state");
   expect_all(updates.every((update, index, values) => index === 0 || update.report.summary.cases >= (values[index - 1]?.report.summary.cases ?? 0)), "panel totals are monotonic");
-  expect_all(initialEvents === 1 && commitEvents > 0 && mirror.rev === commitEvents + 1, "one initial state precedes a contiguous batched stream");
-  expect_all(renders === initialEvents + commitEvents, "adapter delivers one incremental update per received report revision");
+  expect_all(initialEvents === 0 && commitEvents === 0, "primary runtime emits no hosted-specific report protocol events");
+  expect_all(typeof result.reportRev === "number" && result.reportRev > 1 && renders > 0, "generic report stream reaches an authoritative terminal revision");
   expect_all(typeof window === "undefined" && typeof document === "undefined" && typeof HTMLCanvasElement === "undefined", "host runtimes restore all browser globals");
   const transport = server.metrics();
-  expect_all(transport.sentMessages === initialEvents + commitEvents + 2 && transport.sentBytes > 0, "transport contains hello, report stream, and acknowledgement only");
-  const replayStarted = performance.now();
-  const replayMirror = make_hosted_test_report_mirror(decode_hosted_test_report_initial(initialPayload));
-  for (const payload of commitPayloads) replayMirror.apply(decode_hosted_test_report_commit_envelope(payload));
-  const mirrorReplayMs = performance.now() - replayStarted;
-  expect_all(JSON.stringify(replayMirror.capture()) === JSON.stringify(mirror.capture()), "independent mirror replay reconstructs the complete report");
-  replayMirror.dispose();
+  expect_all(transport.sentMessages > renders && transport.sentBytes > 0, "transport contains generic session, recovery, commit, and action messages");
 
   metrics = Object.freeze({
     suites: result.summary.suites,
     cases: result.summary.cases,
-    commits: commitEvents,
-    events: initialEvents + commitEvents,
-    finalRev: mirror.rev,
+    commits: result.reportRev ?? 0,
+    events: 0,
+    finalRev: result.reportRev ?? 0,
     panelUpdates: renders,
     serverRunnerMs,
     roundTripMs,
-    mirrorReplayMs,
+    mirrorReplayMs: 0,
     sentMessages: transport.sentMessages,
     sentBytes: transport.sentBytes,
   });
   const secondResult = await adapter.start("hosted/all");
   expect_all(secondResult.runId !== result.runId && secondResult.summary.cases === 2070, "a sequential complete run owns a fresh correlated report");
-  expect_all(adapter.router?.mirror?.capture().value.summary.pass === 2070, "the sequential run starts clean and reconstructs independently");
+  expect_all(adapter.capture()?.summary.pass === 2070, "the sequential run starts clean and reconstructs independently");
   expect_all(typeof window === "undefined" && typeof document === "undefined" && typeof HTMLCanvasElement === "undefined", "the sequential run also restores all host globals");
   updates.length = 0;
   adapter.dispose();

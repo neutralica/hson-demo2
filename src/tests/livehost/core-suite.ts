@@ -695,7 +695,7 @@ export function livehost_core_suite(): TestSuite {
             seq: livehost_response_seq(response),
           };
         },
-        expected: { type: "error", code: "LIVEHOST_ACTION_FAILED", seq: 0 },
+        expected: { type: "error", code: "LIVEHOST_ACTION_OUTCOME_NORMALIZATION_FAILED", seq: 0 },
       }),
 
     ] as const,

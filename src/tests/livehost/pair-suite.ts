@@ -111,6 +111,10 @@ function make_socket_pair(): readonly [PairSocket, PairSocket] {
 async function settle_pair(): Promise<void> {
   await Promise.resolve();
   await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 function livehost_pair_read_case(spec: LiveHostPairReadCaseSpec): TestCase {
@@ -353,7 +357,7 @@ export function livehost_pair_suite(): TestSuite {
           resultType: "error",
           resultSeq: 0,
           message: "Unknown LiveHost action: missing",
-          code: "LIVEHOST_UNKNOWN_ACTION",
+          code: "LIVEHOST_ACTION_UNAVAILABLE",
           clientSeq: 0,
         },
       }),

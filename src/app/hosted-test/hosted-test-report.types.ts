@@ -1,4 +1,5 @@
 import type { LiveMap, LiveMapCommit } from "hson-live";
+import type { JsonValue } from "hson-live/types";
 import type { HostedTestSuiteId } from "./hosted-test-suite";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "error";
@@ -18,6 +19,7 @@ export type HostedTestInfrastructureError = Readonly<{
 
 export type HostedTestReport = Readonly<{
   run: Readonly<{
+    id?: string;
     suite: HostedTestSuiteId;
     status: HostedTestReportStatus;
     startedAt: number | null;
@@ -36,6 +38,9 @@ export type HostedTestReport = Readonly<{
 }>;
 
 export type HostedTestReportMap = LiveMap<HostedTestReport>;
+
+/** LiveHost's low-level wire constraint uses mutable JSON array types. */
+export type HostedTestReportState = HostedTestReport & JsonValue;
 
 export type HostedTestReportCommit = LiveMapCommit;
 

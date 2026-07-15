@@ -21,6 +21,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   const finiteNumber = s.refine(s.number, "finite number", Number.isFinite);
   return s.exact({
     run: s.exact({
+      id: s.string.optional,
       suite: s.pick(...HOSTED_TEST_SUITE_IDS),
       status: s.pick("idle", "running", "passed", "failed", "error"),
       startedAt: finiteNumber.nullable,
@@ -46,9 +47,13 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   });
 });
 
-function initial_report(suite: HostedTestSuiteId): HostedTestReport {
+export function make_initial_hosted_test_report(
+  suite: HostedTestSuiteId,
+  runId?: string,
+): HostedTestReport {
   return {
     run: {
+      ...(runId !== undefined ? { id: runId } : {}),
       suite,
       status: "idle",
       startedAt: null,
@@ -165,6 +170,8 @@ export const DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE = 32;
 
 export type HostedTestReportOptions = Readonly<{
   caseBatchSize?: number;
+  runId?: string;
+  map?: HostedTestReportMap;
 }>;
 
 export function make_hosted_test_report(
@@ -177,8 +184,10 @@ export function make_hosted_test_report(
   if (!Number.isInteger(caseBatchSize) || caseBatchSize <= 0) {
     throw new Error("Hosted test report caseBatchSize must be a positive integer.");
   }
-  const initialJson = JSON.parse(JSON.stringify(initial_report(suite))) as JsonValue;
-  const map = hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as HostedTestReportMap;
+  const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(suite, options.runId))) as JsonValue;
+  const map = options.map === undefined
+    ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as HostedTestReportMap
+    : options.map.schema.use(HOSTED_TEST_REPORT_SCHEMA) as HostedTestReportMap;
   const captured: HostedTestReportCommit[] = [];
   const unsubscribe = map.feed([], (event) => {
     const commit = capture_commit(event.commit);
