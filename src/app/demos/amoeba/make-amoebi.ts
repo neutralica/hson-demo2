@@ -173,7 +173,7 @@ function bind_amoebi_interaction(
     }, 45);
   });
 
-  target.listen.onClick(() => {
+  target.listen.stopProp().onClick(() => {
     toggle_amoebi_active(
       map,
       tiles,
