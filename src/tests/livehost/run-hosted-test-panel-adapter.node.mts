@@ -124,7 +124,7 @@ function fixture(runId: string, status: "passed" | "failed" | "error") {
       failures: passed ? [] : [{ suite: "livemap/replay", name: "synthetic", err: "expected", ms: 1 }],
     };
     report.complete({ ok: passed, summary });
-    result = { runId, suite: "livemap/replay", ok: passed, summary };
+    result = { runId, suite: "livemap/replay", ok: passed, summary, timing: { runnerMs: 1, hostMs: 1 } };
   }
   const commits = report.commits().map((commit) => encode_hosted_test_report_commit(runId, "livemap/replay", commit));
   report.dispose();

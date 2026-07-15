@@ -1,5 +1,4 @@
 import type { LiveTree } from "hson-live";
-import { type Outcome, type OutcomeMaybeVoid, relay } from "intrastructure";
 import { type PointPanelRig, point_init } from "./point";
 import type { CssMap } from "hson-live/types";
 
@@ -8,14 +7,9 @@ import { mk_div_cls, mk_div_id } from "../../utils/makers";
 
 // ---- factory ----
 
-export function mount_point_panel(host: LiveTree): OutcomeMaybeVoid {
-  try {
-    const mousePanel = point_factory(host);
-    point_init(mousePanel);
-    return relay.ok();
-  } catch (err) {
-    return relay.err(err instanceof Error ? err.message : "unknown error");
-  }
+export function mount_point_panel(host: LiveTree): void {
+  const mousePanel = point_factory(host);
+  point_init(mousePanel);
 }
 
 function point_factory(host: LiveTree): PointPanelRig {

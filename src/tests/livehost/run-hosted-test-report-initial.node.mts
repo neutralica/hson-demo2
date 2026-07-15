@@ -46,7 +46,7 @@ expect_initial(encoded.value.run.status === "idle", "encoding detaches from its 
 const parsed = JSON.parse(JSON.stringify(encoded)) as unknown;
 const decoded = decode_hosted_test_report_initial(parsed);
 equal(decoded, encoded, "initial envelope survives JSON stringify and parse");
-expect_initial(Object.isFrozen(decoded) && Object.isFrozen(decoded.value) && Object.isFrozen(decoded.value.run) && Object.isFrozen(decoded.value.cases), "decoded envelope and nested report are frozen");
+expect_initial(Object.isFrozen(decoded) && Object.isFrozen(decoded.value) && Object.isFrozen(decoded.value.run) && Object.isFrozen(decoded.value.caseBatches), "decoded envelope and nested report are frozen");
 if (typeof parsed === "object" && parsed !== null && "value" in parsed) {
   const parsedValue = (parsed as { value: { run: { status: string } } }).value;
   parsedValue.run.status = "passed";

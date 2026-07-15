@@ -1,5 +1,4 @@
 import { type LiveTree } from "hson-live";
-import { relay, relay_data, relay_void, type Outcome } from "intrastructure";
 import { motes_init } from "./motes-init";
 import type { MotesOpts, MotesRig } from "./make-mote";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";
@@ -7,20 +6,15 @@ import { OKLCH_VIBRANT } from "../../core/consts/oklch.consts";
 import { MOTES_HOSTcss, MOTES_ROOTcss } from "./motes.css";
 
 
-export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): Outcome<MotesRig> {
-  try {
-    const opts = relay_data(normalize_motes_opts(optsIn));
-    const rig = relay_data(mote_factory(host, opts));
-    relay_void(motes_init(rig, opts));
-
-    return relay.data(rig);
-  } catch (err) {
-    return relay.err(err instanceof Error ? err.message : "unknown error");
-  }
+export function mount_motes(host: LiveTree, optsIn: Partial<MotesOpts> = {}): MotesRig {
+  const opts = normalize_motes_opts(optsIn);
+  const rig = mote_factory(host, opts);
+  motes_init(rig, opts);
+  return rig;
 }
 
 // ---------------------------
-function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
+function mote_factory(host: LiveTree, opts: MotesOpts): MotesRig {
   // stable root id so remount doesn’t duplicate
   const old = host.find.byId("motes-root");
   if (old) old.removeSelf();
@@ -37,14 +31,14 @@ function mote_factory(host: LiveTree, opts: MotesOpts): Outcome<MotesRig> {
 
   const dispose = (): void => void 0; // init patches this
 
-  return relay.data({ root, layer, dispose });
+  return { root, layer, dispose };
 }
 
 // ---------------------------
 
 
-export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesOpts> {
-  return relay.data({
+export function normalize_motes_opts(inOpts: Partial<MotesOpts>): MotesOpts {
+  return {
     char: inOpts.char ?? "*",
 
     colors: inOpts.colors ?? [OKLCH_VIBRANT.orangeTangerine],
@@ -64,5 +58,5 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): Outcome<MotesO
 
     spawnPadVw: inOpts.spawnPadVw ?? 18,
     pointerEvents: "none",
-  });
+  };
 }

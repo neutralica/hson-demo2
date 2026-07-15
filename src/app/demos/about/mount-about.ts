@@ -1,5 +1,4 @@
 import { hson, type LiveTree } from "hson-live";
-import { type Outcome, relay, relay_data } from "intrastructure";
 import { ABOUT_ROOT_ID } from "../../core/consts/ui-consts";
 import { find_doc } from "./about-helpers";
 import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_TOCcss, ABOUT_DOCcss, DOC_CONTAINER, TOC_BTNcss, TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss } from "./about.css";
@@ -18,7 +17,7 @@ function makeInitialAboutControlState(activeKey: AboutDocKey): AboutControlState
   return { activeKey };
 }
 
-export function about_factory(host: LiveTree): Outcome<AboutPanel> {
+export function about_factory(host: LiveTree): AboutPanel {
   const old = host.find.byId(ABOUT_ROOT_ID);
   if (old) old.removeSelf();
 
@@ -42,7 +41,7 @@ export function about_factory(host: LiveTree): Outcome<AboutPanel> {
     .classlist.add("doc-container")
     .css.setMany(DOC_CONTAINER);
 
-  return relay.data({ root, toc, doc: docContainer });
+  return { root, toc, doc: docContainer };
 }
 export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   const { docs } = deps;
@@ -94,11 +93,11 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   setActive(getActiveKey());
 }
 
-export function mount_about_panels(host: LiveTree, docs: AboutDocs): Outcome<AboutPanel> {
-  const ap = relay_data(about_factory(host)); 
+export function mount_about_panels(host: LiveTree, docs: AboutDocs): AboutPanel {
+  const ap = about_factory(host);
   about_init(
     { toc: ap.toc, doc: ap.doc },
     { docs },
   );
-  return relay.data(ap);
+  return ap;
 }

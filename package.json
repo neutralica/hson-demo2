@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "hosted:test-server": "tsx src/hosted-test/server/hosted-test-server-entry.node.ts",
-  "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run hosted:test-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
+    "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run hosted:test-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
     "build": "vite build",
     "preview": "vite preview",
     "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts",
@@ -37,6 +37,8 @@
     "test:hosted-canvas-collection-node": "tsx src/tests/livehost/run-hosted-canvas-collection.node.mts",
     "test:hosted-canvas-real-websocket-node": "tsx src/tests/livehost/run-hosted-canvas-real-websocket.node.mts",
     "test:hosted-all-real-websocket-node": "tsx src/tests/livehost/run-hosted-all-real-websocket.node.mts",
+    "test:hosted-case-inspection-node": "tsx src/tests/livehost/run-hosted-case-inspection.node.mts",
+    "test:hosted-test-timing-node": "tsx src/tests/livehost/run-hosted-test-timing.node.mts",
     "test:hosted-multi-suite-concurrent-node": "tsx src/tests/livehost/run-hosted-multi-suite-concurrent.node.mts",
     "test:hosted-app-boundary-node": "tsx src/tests/livehost/run-hosted-app-boundary.node.mts",
     "test:generated-json-node": "tsx src/tests/diagnostics/run-generated-json.node.mts",
@@ -54,7 +56,6 @@
   },
   "dependencies": {
     "hson-live": "file:../hson-live",
-    "intrastructure": "file:../../intrastructure/",
     "jsdom": "29.1.0",
     "tsx": "^4.21.0",
     "ws": "8.21.0"

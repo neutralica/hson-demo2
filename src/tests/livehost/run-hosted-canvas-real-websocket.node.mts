@@ -1,6 +1,7 @@
 import { performance } from "node:perf_hooks";
 import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
+import { hosted_test_report_cases } from "../../app/hosted-test/hosted-test-report.types";
 import { run_hosted_test_action } from "../../app/hosted-test/hosted-test-action";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
@@ -76,7 +77,7 @@ try {
   expect_canvas_ws(initialEvents === 1 && commitEvents === 8, "one initial event precedes eight suite-coherent report commits");
   expect_canvas_ws(capture.rev === 9 && capture.value.run.status === "passed", "mirror reconstructs terminal revision 9");
   expect_canvas_ws(result.runId === router.runId && result.suite === "canvas/core" && mirror.suite === "canvas/core", "result, router, mirror, and stream correlate");
-  const keys = new Set(capture.value.cases.map((testCase) => testCase.key));
+  const keys = new Set(hosted_test_report_cases(capture.value).map((testCase) => testCase.key));
   expect_canvas_ws(keys.size === 62, "every migrated canvas identity appears exactly once");
   expect_canvas_ws(JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.every((key) => !keys.has(key)), "pixel-output cases are excluded rather than silently skipped");
   expect_canvas_ws(typeof window === "undefined" && typeof document === "undefined" && typeof HTMLCanvasElement === "undefined" && typeof CanvasRenderingContext2D === "undefined" && typeof ResizeObserver === "undefined", "canvas and DOM globals restore after action completion");

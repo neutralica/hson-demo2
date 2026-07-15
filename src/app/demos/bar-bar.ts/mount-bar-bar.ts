@@ -2,7 +2,6 @@
 
 import type { LiveTree } from "hson-live";
 import type { CssMap } from "hson-live/types";
-import { type Outcome, relay } from "intrastructure";
 
 const W = 720, H = 480, COLS = 10, ROWS = 5, GAP = 7, L = 34, TOP = 122, HEAD = 94;
 const BW = (W - L * 2 - GAP * (COLS - 1)) / COLS, BH = 24, PW = 124, PH = 18, PY = H - 46, R = 8;
@@ -134,7 +133,7 @@ function draw(ctx: CanvasRenderingContext2D, s: State): void {
   if (s.win || s.lose) type(ctx, s.win ? "ОЧИЩЕНО. КЛИК СБРОС." : "ШАР УТЕРЯН. КЛИК СБРОС.", W / 2, 318, "center", 30, C.rot);
 }
 
-export function mount_bar_bar(host: LiveTree): Outcome<void> {
+export function mount_bar_bar(host: LiveTree): void {
   host.empty().css.setMany(ROOTcss).attr.set("tabindex", "0");
   const canvas = host.create.canvas().css.setMany(CANVAScss);
   canvas.canvas.width.set(W); canvas.canvas.height.set(H);
@@ -171,7 +170,6 @@ export function mount_bar_bar(host: LiveTree): Outcome<void> {
 
   const frame = (): void => { tick(s); draw(ctx, s); s.raf = requestAnimationFrame(frame); };
   frame();
-  return relay.ok();
 }
 
 export default mount_bar_bar;

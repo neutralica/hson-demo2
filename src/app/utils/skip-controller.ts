@@ -1,5 +1,4 @@
 import type { LiveTree } from "hson-live";
-import { outcome, type OutcomeAsync } from "intrastructure";
 
 type SkipController = {
   // resolves exactly once when user skips
@@ -65,14 +64,12 @@ export function sleep_ms(ms: number, signal?: AbortSignal): Promise<void> {
 
 export async function run_phase2<T>(
   stage: LiveTree,
-  mountFn: (s: LiveTree, signal: AbortSignal) => OutcomeAsync<T>,
+  mountFn: (s: LiveTree, signal: AbortSignal) => Promise<T> | T,
   holdMs: number,
   signal: AbortSignal,
-): OutcomeAsync<T> {
+): Promise<T> {
   // mount receives signal so it can self-cancel listeners/loops if you add that later
   const mounted = await mountFn(stage, signal);
-  if (outcome.isErr(mounted)) return mounted;
-
   // cancellable hold
   await sleep_ms(holdMs, signal);
 

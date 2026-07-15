@@ -11,7 +11,6 @@ import type { LetterCaps, LetterKey } from "../../core/types/core.types";
 import { CELL_CSS, LETTER_CSS, LETTER_CSS_FINAL } from "../../ui/wordmark/wordmark.css";
 import { mk_span_cls } from "../../utils/makers";
 import { wait } from "../../utils/wait";
-import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { create_clouds } from "./make-cloud";
 import { bud_node } from "../../widgets/buds-deprecate/bud-config";
 import { SPLASH_BUDS } from "./splash.buds";
@@ -25,7 +24,7 @@ import { make_rng } from "../../utils/rng";
 /**
  * this is all very messy but it works; organize/structure calls better TODO
  */
-export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
+export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     /* clear livetree contents */
     stage.empty();
 
@@ -58,7 +57,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
     const sparkles = await mount_firework(sparkleHost);
     /* create clouds */
     const clouds = create_clouds(cloudBox.tree, CLOUD_CONFIG).content.all();
-    if (!clouds?.length) return relay.err("no clouds created");
+    if (!clouds?.length) throw new Error("no clouds created");
 
     /* create H-S-O-N letters */
     const createLetter = (ltr: LetterCaps): readonly [LiveTree, LiveTree] => {
@@ -131,7 +130,7 @@ export async function mount_splash(stage: LiveTree): OutcomeAsync<LiveTree> {
 
     await wait.for(tailC.tree).anim(STAR_TAIL_C_ANIM).end();
     stage.empty();
-    return relay.ok();
+    return stage;
 }
 
 

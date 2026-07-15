@@ -85,7 +85,7 @@ function validate_initial_report(value: unknown): Readonly<{ value: HostedTestRe
     || report.summary.pass !== 0
     || report.summary.fail !== 0
     || report.summary.skip !== 0
-    || report.cases.length !== 0
+    || Object.keys(report.caseBatches).length !== 0
     || report.error !== null
   ) {
     return invalid("value", "report must be the unmutated initial hosted-test state");

@@ -9,6 +9,7 @@ import {
   type HostedTestReportController,
 } from "./hosted-test-report";
 import type { HostedTestReport, HostedTestReportCommit } from "./hosted-test-report.types";
+import { hosted_test_report_cases } from "../../app/hosted-test/hosted-test-report.types";
 
 function expect_report(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test report: ${message}`);
@@ -84,9 +85,10 @@ const report = make_hosted_test_report(() => times.shift() ?? 300, undefined, "l
 const initial = report.map.capture();
 expect_report(initial.rev === 1, "JSON object construction has the expected initial revision");
 equal(initial.value, {
-  run: { suite: "livemap/replay", status: "idle", startedAt: null, completedAt: null },
+  run: { suite: "livemap/replay", status: "idle", startedAt: null, completedAt: null, timing: null },
   summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
-  cases: [],
+  caseBatches: {},
+  suites: [],
   error: null,
 }, "initial shape");
 expect_report(!has_undefined(initial.value), "initial state contains no undefined");
@@ -110,14 +112,14 @@ report.reduce(passEvent);
 expect_report(Number(report.map.rev) === 3, "completed case consumes one revision");
 expect_report(feedEvents.at(-1)?.commit.ops.length === 3, "case list and counters share one commit");
 expect_report(report.map.snap(["summary", "pass"]) === 1, "pass counter increments");
-expect_report(report.map.capture().value.cases.length === 1, "case is appended");
+expect_report(hosted_test_report_cases(report.map.capture().value).length === 1, "case is appended");
 
 const unchanged = report.map.set(["summary", "pass"], 1);
 expect_report(!unchanged.changed && Number(report.map.rev) === 3, "unchanged write consumes no revision or feed event");
 expect_report(feedEvents.length === 2, "feed emits once per changed semantic batch");
 expect_report(report.commits().length === 2, "internal capture ignores unchanged write");
 const caseCommit = must_commit(report.commits()[1], "case commit must exist");
-expect_report(caseCommit.ops.some((op) => op.kind === "splice" && path_equal(op.path, ["cases"])), "case commit includes one splice");
+expect_report(caseCommit.ops.some((op) => op.kind === "set" && op.path[0] === "caseBatches"), "case commit includes one compact batch record");
 expect_report(find_op(caseCommit, ["summary", "cases"])?.next === 1, "case commit increments completed cases");
 expect_report(find_op(caseCommit, ["summary", "pass"])?.next === 1, "case commit increments exactly the pass counter");
 
@@ -125,7 +127,7 @@ report.complete(passingResult);
 expect_report(Number(report.map.rev) === 4, "terminal update consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "passed", "passing result is terminal passed");
 expect_report(report.map.snap(["run", "completedAt"]) === 200, "terminal time is finite");
-expect_report(feedEvents.at(-1)?.commit.ops.length === 2, "unchanged final counters are omitted from terminal commit");
+expect_report(feedEvents.at(-1)?.commit.ops.length === 3, "terminal commit contains completion, status, and timing");
 expect_report(report.commits().length === 3, "normal terminal commit is captured");
 const terminalCommit = must_commit(report.commits()[2], "terminal commit must exist");
 expect_report(find_op(terminalCommit, ["run", "status"])?.next === "passed", "terminal commit records passed status");
@@ -165,9 +167,9 @@ detached.reduce(mutableEvent);
 mutableEvent.name = "mutated name";
 mutableEvent.err = "mutated error";
 const detachedCaseCommit = must_commit(detached.commits()[1], "detached case commit must exist");
-const detachedSplice = detachedCaseCommit.ops.find((op) => op.kind === "splice");
-expect_report(detachedSplice?.kind === "splice", "detached case capture contains splice operation");
-const insertedCase = detachedSplice.inserted[0] as Readonly<{ name?: unknown; err?: unknown }> | undefined;
+const detachedSet = detachedCaseCommit.ops.find((op) => op.kind === "set" && op.path[0] === "caseBatches");
+expect_report(detachedSet?.kind === "set", "detached case capture contains compact batch operation");
+const insertedCase = (detachedSet.next as readonly Readonly<{ name?: unknown; err?: unknown }>[] | undefined)?.[0];
 expect_report(insertedCase?.name === "original name" && insertedCase.err === "original error", "source event mutation cannot alter captured history");
 expect_report(Object.isFrozen(insertedCase), "nested captured JSON values are frozen");
 
@@ -188,7 +190,7 @@ failed.complete({
 });
 expect_report(failed.map.snap(["run", "status"]) === "failed", "normal assertion failure is terminal failed");
 expect_report(failed.map.snap(["summary", "fail"]) === 1, "fail counter increments");
-expect_report(failed.map.snap(["cases", 0, "ms"]) === 0, "non-finite case timing is normalized");
+expect_report(hosted_test_report_cases(failed.map.capture().value)[0]?.ms === 0, "non-finite case timing is normalized");
 expect_report(failed.map.snap(["run", "completedAt"]) === 0, "non-finite terminal timing is normalized");
 expect_report(failed.map.snap(["error"]) === null, "normal assertion failure is not infrastructure error");
 
@@ -220,7 +222,7 @@ const response = await create_hosted_test_livehost(undefined, (run) => {
 });
 expect_report(response.type === "ack", "real hosted replay action resolves with ack");
 expect_report(response.type === "ack" && typeof response.result === "object" && response.result !== null, "action result stays an object");
-expect_report(response.type === "ack" && Object.keys(response.result as object).sort().join(",") === "ok,runId,suite,summary", "action result shape adds only runId");
+expect_report(response.type === "ack" && Object.keys(response.result as object).sort().join(",") === "ok,runId,suite,summary,timing", "action result includes authoritative host timing");
 expect_report(realRun !== undefined, "host exposes the per-action report run through the inspection seam");
 expect_report(realRun.map.snap(["run", "status"]) === "passed", "real replay report is terminal passed");
 expect_report(realRun.map.snap(["summary", "cases"]) === 45, "real replay report contains 45 completed cases");
@@ -237,7 +239,7 @@ expect_report(realCommits[0]?.prevRev === 1 && realCommits[0].rev === 2, "real c
 expect_report(realCommits.at(-1)?.prevRev === 4 && realCommits.at(-1)?.rev === 5, "real capture ends at revisions 4 to 5");
 expect_contiguous(realCommits, 1);
 for (const commit of realCommits.slice(1, -1)) {
-  expect_report(commit.ops.filter((op) => op.kind === "splice" && path_equal(op.path, ["cases"])).length === 1, `case revision ${commit.rev} has one append`);
+  expect_report(commit.ops.filter((op) => op.kind === "set" && op.path[0] === "caseBatches").length === 1, `case revision ${commit.rev} has one compact batch append`);
   expect_report(find_op(commit, ["summary", "cases"]) !== undefined, `case revision ${commit.rev} increments cases`);
   const statusCounters = ["pass", "fail", "skip"].filter((status) => find_op(commit, ["summary", status]) !== undefined);
   expect_report(statusCounters.length === 1, `case revision ${commit.rev} increments exactly one status counter`);

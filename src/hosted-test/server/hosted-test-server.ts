@@ -1,7 +1,8 @@
 import { WebSocketServer, type WebSocket } from "ws";
-import { create_hosted_test_livehost } from "../../app/hosted-test/hosted-test-action";
+import { create_hosted_test_livehost, make_hosted_test_run_retention } from "../../app/hosted-test/hosted-test-action";
 import type { HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
 import { make_registered_hosted_test_suite_registry } from "../registered-hosted-test-suites";
+import { inspect_hosted_test_case } from "../hosted-test-case-inspection";
 import { make_node_websocket_livehost_socket } from "./node-websocket-socket";
 
 export type HostedTestServerOptions = Readonly<{
@@ -22,7 +23,8 @@ export type HostedTestServer = Readonly<{
 export async function start_hosted_test_server(options: HostedTestServerOptions = {}): Promise<HostedTestServer> {
   const bindHost = options.host ?? "127.0.0.1";
   const registry = options.registry ?? make_registered_hosted_test_suite_registry();
-  const liveHost = create_hosted_test_livehost(registry);
+  const retention = make_hosted_test_run_retention(16);
+  const liveHost = create_hosted_test_livehost(registry, undefined, undefined, {}, inspect_hosted_test_case, retention);
   const server = new WebSocketServer({ host: bindHost, port: options.port ?? 8787 });
   const connections = new Map<WebSocket, () => void>();
   let stopped = false;
@@ -67,6 +69,7 @@ export async function start_hosted_test_server(options: HostedTestServerOptions 
         websocket.close(1001, "Hosted-test server stopping.");
       }
       connections.clear();
+      retention.clear();
       await new Promise<void>((resolve, reject) => {
         server.close((error) => error ? reject(error) : resolve());
       });

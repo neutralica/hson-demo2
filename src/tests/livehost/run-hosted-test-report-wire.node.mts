@@ -171,7 +171,7 @@ const response = await create_hosted_test_livehost(undefined, (run) => {
   payload: { suite: "livemap/replay" },
 });
 expect_wire(response.type === "ack", "real hosted action still acknowledges normally");
-expect_wire(response.type === "ack" && Object.keys(response.result as object).sort().join(",") === "ok,runId,suite,summary", "action result shape adds only runId");
+expect_wire(response.type === "ack" && Object.keys(response.result as object).sort().join(",") === "ok,runId,suite,summary,timing", "action result includes authoritative host timing");
 expect_wire(realRun !== undefined && initial !== undefined, "real run inspection captures initial and terminal state");
 const envelopes = realRun.commits().map((local) =>
   encode_hosted_test_report_commit("real-replay-run", "livemap/replay", local)

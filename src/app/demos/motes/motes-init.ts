@@ -5,7 +5,6 @@ import { _colors, _colorVals } from "../../core/consts/colors.consts";
 import type { MotesRig } from "./make-mote";
 import type { MotesOpts, MoteStyle } from "./make-mote";
 import { make_mote } from "./make-mote";
-import { relay, type Outcome } from "intrastructure";
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 const randi = (a: number, b: number): number => Math.floor(rand(a, b + 1));
@@ -37,7 +36,7 @@ export function config_mote(
     };
 }
 
-export function motes_init(rig: MotesRig, opts: MotesOpts): Outcome<void> {
+export function motes_init(rig: MotesRig, opts: MotesOpts): void {
     rig.layer.css.keyframes.setMany(MOTESkf);
 
     const kpx2 = (w: number, h: number): number => (w * h) / 1_000_000;
@@ -73,7 +72,6 @@ export function motes_init(rig: MotesRig, opts: MotesOpts): Outcome<void> {
         rig.root.removeSelf();
     };
 
-    return relay.ok();
 }
 
 export const MOTESkf = [

@@ -1,4 +1,4 @@
-import type { HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
+import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
 import type { HostedTestSuiteId } from "./hosted-test-suite";
 import { decode_hosted_test_action_error } from "./hosted-test-action-error";
 
@@ -30,4 +30,16 @@ export async function run_hosted_test_action(
     throw new Error(`Hosted test action returned an invalid response for ${suite}.`);
   }
   return (response as { result: HostedTestRunResult }).result;
+}
+
+export async function inspect_hosted_test_action(
+  client: Readonly<{ action: (name: "tests.inspect", payload: HostedTestInspectRequest) => Promise<unknown> }>,
+  request: HostedTestInspectRequest,
+): Promise<HostedTestCaseDiagnostic> {
+  const response = await client.action("tests.inspect", request);
+  if (typeof response !== "object" || response === null || (response as { type?: unknown }).type !== "ack") {
+    const message = (response as { error?: { message?: unknown } })?.error?.message;
+    throw new Error(typeof message === "string" ? message : `Hosted case inspection failed for ${request.caseKey}.`);
+  }
+  return (response as { result: HostedTestCaseDiagnostic }).result;
 }

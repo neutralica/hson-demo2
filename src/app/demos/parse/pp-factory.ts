@@ -1,7 +1,6 @@
 // pp_factory.ts
 
 import type { LiveTree } from "hson-live";
-import { type Outcome, relay_data, relay } from "intrastructure";
 import { _colors } from "../../core/consts/colors.consts";
 import { _fontSize, øWATERMARK_FMT_ } from "../../core/consts/ui-consts";
 import type { Fmt } from "../../core/types/core.types";
@@ -38,14 +37,14 @@ const PP_HEADER_LABELcss = {
 };
 
 
-export function mount_parsing_panels(host: LiveTree): Outcome<Panels> {
-  const pp = relay_data(pp_factory(host));
+export function mount_parsing_panels(host: LiveTree): Panels {
+  const pp = pp_factory(host);
   init_parsing_panels(pp);
-  return relay.data(pp);
+  return pp;
 }
 
 
-export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcome<Panels> {
+export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels {
   const fmts = opts.fmts ?? (["json", "hson", "html"] as const);
   let viewMode: PanelViewMode = "text";
   const old = hostBody.find.byId($PARSING_PANELS_ROOT);
@@ -217,5 +216,5 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Outcom
     syncPanelViewMode();
   }
 
-  return relay.data({ root, panels });
+  return { root, panels };
 }

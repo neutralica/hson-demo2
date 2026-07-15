@@ -1,9 +1,8 @@
 import type { LiveTree } from "hson-live";
-import { outcome, relay, type Outcome, type OutcomeAsync, type OutcomeVoid } from "intrastructure";
 
 //  add a tiny sentinel type so Promise.race() is unambiguous
 export type PhaseResult = "ok" | "fail";
-export type RaceResult = "skip" | Outcome<void | LiveTree>;
+export type RaceResult = "skip" | void | LiveTree;
 type SkipPromise = {
     skip: Promise<"skip">;
     cancel: () => void; // CHANGE: unified teardown (off + abort)
@@ -12,11 +11,10 @@ type SkipPromise = {
 //  helper that runs (mount + pause) as a single cancellable chunk
 export async function run_phase<T>(
   stage: LiveTree,
-  mountFn: (s: LiveTree) => OutcomeAsync<T>,
+  mountFn: (s: LiveTree) => Promise<T> | T,
   pauseFn: () => Promise<void>,
-): OutcomeAsync<T> {
+): Promise<T> {
   const mounted = await mountFn(stage);
-  if (outcome.isErr(mounted)) return mounted;
   await pauseFn();
   return mounted;
 }

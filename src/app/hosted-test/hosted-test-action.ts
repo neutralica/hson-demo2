@@ -15,13 +15,43 @@ import {
   HOSTED_TEST_REPORT_COMMIT_EVENT,
 } from "./hosted-test-report-wire";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
-import type { HostedTestActions, HostedTestRunResult } from "./hosted-test-action.types";
+import type { HostedTestActions, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunResult } from "./hosted-test-action.types";
 import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
 
 export type { HostedTestActions, HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
 export { run_hosted_test_action } from "./hosted-test-client-action";
 
 export type HostedTestRunIdFactory = () => string;
+export type HostedTestCaseInspector = (request: Readonly<{
+  runId: HostedTestRunId;
+  suite: HostedTestSuiteId;
+  caseKey: string;
+}>) => Promise<HostedTestCaseDiagnostic>;
+export type HostedTestRunRetention = Readonly<{
+  retain(runId: HostedTestRunId, suite: HostedTestSuiteId): void;
+  get(runId: HostedTestRunId): HostedTestSuiteId | undefined;
+  clear(): void;
+  size(): number;
+}>;
+
+export function make_hosted_test_run_retention(maxRuns = 16): HostedTestRunRetention {
+  if (!Number.isInteger(maxRuns) || maxRuns <= 0) throw new Error("Hosted test retention limit must be a positive integer.");
+  const runs = new Map<HostedTestRunId, HostedTestSuiteId>();
+  return Object.freeze({
+    retain(runId, suite) {
+      runs.delete(runId);
+      runs.set(runId, suite);
+      while (runs.size > maxRuns) {
+        const oldest = runs.keys().next().value as HostedTestRunId | undefined;
+        if (oldest === undefined) break;
+        runs.delete(oldest);
+      }
+    },
+    get: (runId) => runs.get(runId),
+    clear: () => runs.clear(),
+    size: () => runs.size,
+  });
+}
 
 let hostedTestRunId = 0;
 
@@ -73,14 +103,28 @@ function decode_hosted_test_request(value: unknown) {
   } as const;
 }
 
+function decode_hosted_test_inspect_request(value: unknown) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { ok: false, issues: ["tests.inspect requires runId and caseKey strings."] } as const;
+  }
+  const record = value as { runId?: unknown; caseKey?: unknown };
+  if (Object.keys(record).length !== 2 || typeof record.runId !== "string" || !record.runId || typeof record.caseKey !== "string" || !record.caseKey) {
+    return { ok: false, issues: ["tests.inspect requires non-empty runId and caseKey strings."] } as const;
+  }
+  return { ok: true, value: { runId: record.runId as HostedTestRunId, caseKey: record.caseKey } satisfies HostedTestInspectRequest } as const;
+}
+
 export function create_hosted_test_livehost(
   registry: HostedTestSuiteRegistry,
   inspectReport?: (report: HostedTestReportController, runId: HostedTestRunId) => void,
   makeRunId: HostedTestRunIdFactory = make_hosted_test_run_id,
   reportOptions: HostedTestReportOptions = {},
+  inspectCase?: HostedTestCaseInspector,
+  retention: HostedTestRunRetention = make_hosted_test_run_retention(),
 ) {
   const actions: LiveHostActions<HostedTestActions, undefined> = {
     "tests.run": async (context, request) => {
+      const hostStartedAt = performance.now();
       let descriptor;
       try {
         descriptor = registry.get(request.suite);
@@ -91,6 +135,7 @@ export function create_hosted_test_livehost(
       }
       const runId = makeRunId();
       if (!runId) throw new Error("Hosted test run ID must be non-empty.");
+      retention.retain(runId, descriptor.id);
       const report = make_hosted_test_report(Date.now, (commit) => {
         const envelope = encode_hosted_test_report_commit(runId, descriptor.id, commit);
         context.emit_event(
@@ -112,25 +157,39 @@ export function create_hosted_test_livehost(
           yieldEveryCases: 0,
           yieldBetweenSuites: false,
         });
-        report.complete(result);
+        report.complete(result, {
+          runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
+          hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
+        });
       } catch (error) {
         report.failInfrastructure(error);
         throw error;
       } finally {
         report.dispose();
       }
+      const reportTiming = report.map.capture().value.run.timing;
+      if (reportTiming === null) throw new Error("Hosted test report completed without timing.");
       const hostedResult: HostedTestRunResult = {
         runId,
         suite: descriptor.id,
         ok: result.ok,
         summary: normalize_summary(result.summary),
+        timing: reportTiming,
       };
       return JSON.parse(JSON.stringify(hostedResult)) as JsonValue;
+    },
+    "tests.inspect": async (_context, request) => {
+      const suite = retention.get(request.runId);
+      if (suite === undefined) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${request.runId}" is no longer inspectable.`);
+      if (inspectCase === undefined) throw new Error("HOSTED_TEST_INSPECTION_UNAVAILABLE: Case inspection is unavailable on this host.");
+      const diagnostic = await inspectCase({ runId: request.runId, suite, caseKey: request.caseKey });
+      return JSON.parse(JSON.stringify(diagnostic)) as JsonValue;
     },
   };
   const schema: LiveHostSchema<undefined, HostedTestActions> = {
     actions: {
       "tests.run": { payload: decode_hosted_test_request },
+      "tests.inspect": { payload: decode_hosted_test_inspect_request },
     },
   };
 

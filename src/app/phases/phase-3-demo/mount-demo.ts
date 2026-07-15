@@ -2,7 +2,6 @@
 
 import { LiveTree } from "hson-live";
 import type { SvgLiveTree } from "hson-live/types";
-import { relay_data, relay_void, type OutcomeAsync, relay } from "intrastructure";
 import { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
@@ -280,13 +279,13 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
 
 
 function mount_demo_content(hosts: DemoHosts): DemoContent {
-  relay_data(mount_about_panels(hosts.aboutHost, ABOUT_DOCS));
-  const test = relay_data(mount_test_panels(hosts.testHost));
-  relay_data(mount_parsing_panels(hosts.parseHost));
-  relay_data(mount_build_panels(hosts.buildHost));
-  relay_void(mount_bar_bar(hosts.barbarHost));
+  mount_about_panels(hosts.aboutHost, ABOUT_DOCS);
+  const test = mount_test_panels(hosts.testHost);
+  mount_parsing_panels(hosts.parseHost);
+  mount_build_panels(hosts.buildHost);
+  mount_bar_bar(hosts.barbarHost);
   create_cellsheet_panel(hosts.cellsHost);
-  relay_void(mount_point_panel(hosts.pointHost));
+  mount_point_panel(hosts.pointHost);
   mount_oklch(hosts.oklchHost);
 
   return { test };
@@ -337,7 +336,7 @@ function wire_demo_menu(menu: MenuButtons, fleurField: SvgLiveTree, controller: 
   });
 }
 
-export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
+export async function mount_demo(stage: LiveTree): Promise<void> {
   // CHANGED: release remount-persistent bindings before rebuilding the demo tree.
   stopDemoMount?.();
   stopDemoMount = undefined;
@@ -453,5 +452,5 @@ export async function mount_demo(stage: LiveTree): OutcomeAsync<void> {
 
 
   mount_firework(screen);
-  return relay.ok();
+  return;
 }

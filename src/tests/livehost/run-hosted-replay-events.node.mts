@@ -151,7 +151,7 @@ expect_events(replay.capture().value.summary.fail === 0, "reconstructed report c
 expect_events(result.suite === "livemap/replay" && result.ok && result.summary.cases === 45, "existing action result remains correct");
 expect_events(result.runId === "hosted-live-run-a", "action result correlates to every emitted envelope");
 expect_events(initialA.runId === result.runId, "action result correlates to the received initial state");
-expect_events(Object.keys(result).sort().join(",") === "ok,runId,suite,summary", "action result adds only runId");
+expect_events(Object.keys(result).sort().join(",") === "ok,runId,suite,summary,timing", "action result includes authoritative host timing");
 expect_events(authoritative.commits().length === envelopesA.length, "local capture and emitted history have equal length");
 
 const [failedClientSocket, failedHostSocket] = make_socket_pair();

@@ -3,6 +3,7 @@ import { _colors } from "../../core/consts/colors.consts";
 import { mk_div_id, mk_div_cls } from "../../utils/makers";
 import type { TestSummary } from "./tests.types";
 import { TEST_CHIP_ROWcss, TEST_CHIP_DEFcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
+import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
 
 export type ChipDisplay = Readonly<{
   clear: () => void;
@@ -34,7 +35,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
   const total = makeChip("total");
   const pass = makeChip("pass");
   const fail = makeChip("fail");
-  const time = makeChip("ms");
+  const time = makeChip("elapsed");
 
   return {
     clear: () => {
@@ -47,7 +48,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       total.set(s.cases);
       pass.set(s.pass);
       fail.set(s.fail);
-      time.set(Math.round(s.msTotal));
+      time.set(format_hosted_test_duration(s.msTotal));
     },
   };
 }

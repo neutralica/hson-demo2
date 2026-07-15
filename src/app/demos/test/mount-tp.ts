@@ -1,29 +1,23 @@
 import { LiveTree, hson } from "hson-live";
-import type { LoopReport } from "hson-live/diagnostics";
-import { type Outcome, relay, relay_data } from "intrastructure";
-import { make_inspector } from "../../../tests/inspector/make-inspector";
-import { $PANEL_HIDDEN } from "../../core/consts/ui-consts";
 import { _snip } from "../../utils/helpers";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
 import { create_test_chips } from "./test-helpers";
 import { create_test_log } from "./test-logger";
-import type { TestRunMode, TestEvent, UiLevel } from "./tests.types";
+import type { TestEvent, UiLevel } from "./tests.types";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, LOG_SPANcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
-import { hosted_test_suite_for_panel_mode, make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
+import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "./hosted-test-panel-runtime";
+import { HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
+import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
+import { make_hosted_test_case_list } from "./hosted-test-case-list";
+import { copy_hosted_case_report, open_hosted_case_report, serialize_hosted_run_report } from "./hosted-test-report-view";
+import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
 
 const LOG_HR_FULL = "|=•=-----=•=-----=•=|"
 const LOG_HR_PART = " ----------=•=|"
 
-const MODES: readonly Readonly<{ key: TestRunMode; label: string }>[] = [
-    { key: "hosted-all", label: "all hosted" },
-    { key: "livemap-replay", label: "livemap/replay (hosted)" },
-    { key: "livehost-all", label: "livehost/all (hosted)" },
-    { key: "node-all", label: "all Node-safe (hosted)" },
-    { key: "dom-core", label: "DOM core (hosted)" },
-    { key: "canvas-core", label: "Canvas core (hosted)" },
-] as const;
+const MODES = HOSTED_TEST_VISIBLE_SUITES.map((entry) => Object.freeze({ key: entry.id, label: entry.label }));
 
 type LogVerbosity = "normal" | "verbose";
 const LOG_VERBOSITY: readonly LogVerbosity[] = ["normal", "verbose"];
@@ -54,7 +48,7 @@ function implClickFeedback(btn: LiveTree): void {
     btn.listen.onPointerLeave(() => setButtonClicked(btn, false));
 }
 
-function populateModeSelector(suiteSel: LiveTree, mode: TestRunMode): void {
+function populateModeSelector(suiteSel: LiveTree, mode: HostedTestSuiteId): void {
     suiteSel.empty();
     for (const m of MODES) {
         const opt = suiteSel.create.option();
@@ -69,6 +63,7 @@ type TestConsoleParts = {
     suiteSel: LiveTree;
     verbosityBtn: LiveTree;
     clearBtn: LiveTree;
+    copyReportsBtn: LiveTree;
     chips: ReturnType<typeof create_test_chips>;
 };
 
@@ -92,15 +87,19 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         ...TEST_CLEAR_BTNcss,
         gridColumn: "1 / 3",
     });
+    const copyReportsBtn = mk_div_id_txt(controlsRow, "test-copy-reports", "copy reports").css.setMany({
+        ...TEST_CLEAR_BTNcss,
+        gridColumn: "1 / 3",
+    });
     const chips = create_test_chips(rowContainer);
 
-    return { runBtn, suiteSel, verbosityBtn, clearBtn, chips };
+    return { runBtn, suiteSel, verbosityBtn, clearBtn, copyReportsBtn, chips };
 }
 
 type TestSurfaceParts = {
     leftColumn: LiveTree;
     rightColumn: LiveTree;
-    inspectorPane: LiveTree;
+    casePane: LiveTree;
     logger: LiveTree;
 };
 
@@ -108,56 +107,41 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
     const leftColumn = mk_div_id(branch, "test-left-column").css.setMany(TEST_CONTENTcss);
     const rightColumn = mk_div_id(branch, "test-right-column").css.setMany(TEST_LOG_PANEcss);
 
-    const inspectorPane = mk_div_id(leftColumn, "test-inspector-pane")
+    const casePane = mk_div_id(leftColumn, "test-case-pane")
         .css.setMany(TEST_INSPECTOR_PANEcss);
 
     const logger = mk_div_id(rightColumn, "test-logger")
         .css.setMany(TEST_LOGGERcss);
 
-    return { leftColumn, rightColumn, inspectorPane, logger };
+    return { leftColumn, rightColumn, casePane, logger };
 }
 
-export function tp_factory(): Outcome<TestPanel> {
+export function tp_factory(): TestPanel {
     let mounted = false;
     let level: UiLevel = "normal";
-    let mode: TestRunMode = "hosted-all";
+    let mode: HostedTestSuiteId = "hosted/all";
     let verbosity: LogVerbosity = "normal";
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
         .css.setMany(TP_BRANCHcss);
 
-    const { leftColumn, rightColumn, inspectorPane, logger } = createTestSurface(branch);
-    const { runBtn, suiteSel, verbosityBtn, clearBtn, chips } = create_test_console(leftColumn, rightColumn);
+    const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
+    const { runBtn, suiteSel, verbosityBtn, clearBtn, copyReportsBtn, chips } = create_test_console(leftColumn, rightColumn);
 
     const tlog = create_test_log();
-    const inspector = make_inspector(
-        inspectorPane,
-        tlog,
-        { hideClass: $PANEL_HIDDEN },
-        async (key) => {
-            const c = tlog.getCase(key);
-            const m = c?.meta;
-
-            return {
-                ok: c?.status === "pass",
-                entry: key,
-                dir: "livetree",
-                times: 1,
-                failures: c?.status === "fail" ? [{ ok: false, step: "assert", error: c.err ?? "fail" }] : [],
-                trace: [
-                    { ok: true, step: "setup" },
-                    { ok: c?.status !== "fail", step: "assert", error: c?.err },
-                ],
-                artifacts: [
-                    m?.fixture ? { lap: 0, fmt: "json", label: "fixture", text: m.fixture } : undefined,
-                    m?.sub ? { lap: 0, fmt: "json", label: "sub", text: m.sub } : undefined,
-                    m?.preview ? { lap: 0, fmt: "html", label: "preview", text: m.preview } : undefined,
-                    m?.input ? { lap: 0, fmt: "html", label: "input", text: m.input } : undefined,
-                ].filter(Boolean),
-            } as unknown as LoopReport;
+    let hostedAdapter: HostedTestPanelAdapter | undefined;
+    let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start"]>> | undefined;
+    const caseList = make_hosted_test_case_list(casePane, {
+        async view(key) {
+            if (!hostedAdapter) throw new Error("Hosted runtime is not ready.");
+            open_hosted_case_report(await hostedAdapter.inspect(key));
         },
-    );
+        async copy(key) {
+            if (!hostedAdapter) throw new Error("Hosted runtime is not ready.");
+            await copy_hosted_case_report(await hostedAdapter.inspect(key));
+        },
+    });
 
     let currentCaseLine: LiveTree | null = null;
 
@@ -254,23 +238,26 @@ export function tp_factory(): Outcome<TestPanel> {
     };
 
     const hostedRuntime = make_remote_hosted_test_runtime();
-    const hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
+    hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime.client, {
         reset(suite) {
             chips.clear();
             tlog.clear();
             clearLogLines();
+            caseList.reset();
             appendLogLine(`running hosted ${suite}…`);
         },
-        onEvent: doLogOnEvent,
+        onEvent(event) { doLogOnEvent(event); caseList.on_event(event); },
         renderSummary(summary) {
             chips.render(summary);
         },
-        renderReport() {
-            inspector.show();
-            inspector.render();
-        },
+        renderReport() {},
         showInfrastructureError(message) {
             appendLogLine(`host error: ${message}`);
+            caseList.show_error(message);
+        },
+        renderTiming(timing) {
+            chips.render({ ...tlog.getSummary(), msTotal: timing.roundTripMs });
+            appendLogLine(`elapsed ${format_hosted_test_duration(timing.roundTripMs)} · runner ${format_hosted_test_duration(timing.runnerMs)} · host ${format_hosted_test_duration(timing.hostMs)}`);
         },
     });
     void hostedRuntime.ready().catch((error: unknown) => {
@@ -285,13 +272,14 @@ export function tp_factory(): Outcome<TestPanel> {
         populateModeSelector(suiteSel, mode);
 
         suiteSel.listen.on("change", () => {
-            const v = suiteSel.form.getValue() ?? "hosted-all";
-            mode = (MODES.find(m => m.key === v)?.key ?? "hosted-all");
+            const v = suiteSel.form.getValue() ?? "hosted/all";
+            mode = (MODES.find(m => m.key === v)?.key ?? "hosted/all");
         });
 
         implClickFeedback(runBtn);
         implClickFeedback(clearBtn);
         implClickFeedback(verbosityBtn);
+        implClickFeedback(copyReportsBtn);
 
         verbosityBtn.listen.onClick(() => {
             verbosity = nextVerbosity(verbosity);
@@ -303,15 +291,26 @@ export function tp_factory(): Outcome<TestPanel> {
 
         runBtn.listen.onClick(async () => {
 
-            const hostedSuite = hosted_test_suite_for_panel_mode(mode);
+            const hostedSuite = mode;
             try {
                 await hostedRuntime.ready();
-                await hostedAdapter.start(hostedSuite);
+                lastResult = await hostedAdapter!.start(hostedSuite);
             } catch (error) {
                 if (hostedAdapter.router === undefined) {
                     appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
                 }
             }
+        });
+
+        copyReportsBtn.listen.onClick(async () => {
+            try {
+                if (!hostedAdapter || !lastResult) throw new Error("Run a hosted collection before copying reports.");
+                const report = hostedAdapter.capture();
+                if (!report) throw new Error("No hosted report is available.");
+                const text = await serialize_hosted_run_report(report, lastResult, (key) => hostedAdapter!.inspect(key));
+                await navigator.clipboard.writeText(text);
+                appendLogLine("reports copied");
+            } catch (error) { caseList.show_error(error instanceof Error ? error.message : String(error)); }
         });
 
         clearBtn.listen.onClick(() => {
@@ -320,12 +319,13 @@ export function tp_factory(): Outcome<TestPanel> {
             chips.clear();
             clearLogLines();
             appendLogLine("idle");
-            inspector.clear();
+            caseList.reset();
+            lastResult = undefined;
         });
 
     };
 
-    return relay.data({
+    return {
         branch,
         mount,
         runBtn,
@@ -333,42 +333,33 @@ export function tp_factory(): Outcome<TestPanel> {
         suiteSel,
         logger,
         chips,
-        inspector,
-        inspectorSurface: inspectorPane,
         getLevel: () => level,
         getMode: () => mode,
-        getVerbosity: () => verbosity,
         clearLogs: clearLogLines,
         setLog: appendLogLine,
         dispose: () => {
-            hostedAdapter.dispose();
+            hostedAdapter?.dispose();
             hostedRuntime.dispose();
         },
-    } as const);
+    } as const;
 }
-export function mount_test_panels(host: LiveTree): Outcome<TestPanels> {
-    try {
-        const old = host.find.byId("test-panels-root");
-        if (old) old.removeSelf();
+export function mount_test_panels(host: LiveTree): TestPanels {
+    const old = host.find.byId("test-panels-root");
+    if (old) old.removeSelf();
 
-        const root = host.create.div()
-            .id.set("test-panels-root")
-            .css.setMany(TP_ROOTcss);
+    const root = host.create.div()
+        .id.set("test-panels-root")
+        .css.setMany(TP_ROOTcss);
 
-        const tp = relay_data(tp_factory());
-        tp.mount(root);
-        return relay.data({
-            root,
-            tp,
-            inspector: tp.inspector,
-            inspectorSurface: tp.inspectorSurface,
-            testSurface: tp.branch,
-            dispose: () => {
-                tp.dispose();
-                root.removeSelf();
-            },
-        });
-    } catch (err) {
-        return relay.err(err instanceof Error ? err.message : "unknown error:", err);
-    }
+    const tp = tp_factory();
+    tp.mount(root);
+    return {
+        root,
+        tp,
+        testSurface: tp.branch,
+        dispose: () => {
+            tp.dispose();
+            root.removeSelf();
+        },
+    };
 }

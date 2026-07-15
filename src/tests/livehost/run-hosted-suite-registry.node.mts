@@ -6,7 +6,7 @@ function expect_registry(condition: unknown, message: string): asserts condition
 }
 
 const registered = make_registered_hosted_test_suite_registry();
-expect_registry(registered.list().map((descriptor) => descriptor.id).join(",") === "hosted/all,livemap/replay,livehost/all,node/all,dom/core,canvas/core", "registry exposes the six closed suite IDs");
+expect_registry(registered.list().map((descriptor) => descriptor.id).join(",") === "hosted/all,livemap/replay,livehost/all,node/all,dom/core,canvas/core,category/livetree,category/livemap,category/livehost,category/transform,category/unit,category/dev", "registry exposes focused collections and the six visible category IDs");
 expect_registry(registered.get("hosted/all").label === "all hosted", "complete hosted descriptor resolves");
 expect_registry(registered.get("livemap/replay").label === "livemap/replay", "replay descriptor resolves");
 expect_registry(registered.get("livehost/all").label === "livehost/all", "LiveHost descriptor resolves");

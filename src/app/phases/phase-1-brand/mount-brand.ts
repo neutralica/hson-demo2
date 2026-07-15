@@ -4,7 +4,6 @@ import type { LiveTree } from "hson-live";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
 import { mk_div_id } from "../../utils/makers";
-import { relay, type Outcome, type OutcomeAsync } from "intrastructure";
 import { wait } from "../../utils/wait";
 import { Intro_keys, Intro_anim } from "./brand.anim-keys";
 import { Intro_css, NOTEBOXcss } from "./brand.css";
@@ -22,7 +21,7 @@ const zalgoCol2 = $grn_.dragon;
 const zConfig: ZConfig = { above: 6, below: 3, mid: 8, seed: 1007 };
 const zConfig2: ZConfig = { above: 10, below: 4, mid: 2, seed: 9997 };
 
-export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
+export async function mount_brand(s: LiveTree): Promise<void> {
   const stage = s;
   stage.empty();
 
@@ -85,5 +84,5 @@ export async function mount_brand(s: LiveTree): OutcomeAsync<void> {
   });
 
   stage.empty();
-  return relay.ok();
+  return;
 }

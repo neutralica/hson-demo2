@@ -22,6 +22,7 @@ export type HostedTestReport = Readonly<{
     status: HostedTestReportStatus;
     startedAt: number | null;
     completedAt: number | null;
+    timing: Readonly<{ runnerMs: number; hostMs: number }> | null;
   }>;
   summary: Readonly<{
     cases: number;
@@ -29,10 +30,15 @@ export type HostedTestReport = Readonly<{
     fail: number;
     skip: number;
   }>;
-  cases: readonly HostedTestCaseReport[];
+  caseBatches: Readonly<Record<string, readonly HostedTestCaseReport[]>>;
+  suites: readonly Readonly<{ suite: string; ms: number }>[];
   error: HostedTestInfrastructureError | null;
 }>;
 
 export type HostedTestReportMap = LiveMap<HostedTestReport>;
 
 export type HostedTestReportCommit = LiveMapCommit;
+
+export function hosted_test_report_cases(report: HostedTestReport): readonly HostedTestCaseReport[] {
+  return Object.freeze(Object.keys(report.caseBatches).sort().flatMap((key) => report.caseBatches[key] ?? []));
+}

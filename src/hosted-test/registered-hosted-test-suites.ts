@@ -11,7 +11,13 @@ import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites
 import { run_jsdom_hosted_test_suites } from "./dom/jsdom-hosted-test-suites";
 import { run_jsdom_hosted_canvas_suites } from "./dom/canvas/jsdom-hosted-canvas-suites";
 import { with_hosted_node_globals } from "./dom/hosted-dom-mutex";
-import { run_hosted_all_test_suites } from "./hosted-all-test-suites";
+import { run_hosted_all_test_suites, run_hosted_test_category, type HostedTestCategory } from "./hosted-all-test-suites";
+
+const category_descriptor = (category: HostedTestCategory, label: string): HostedTestSuiteDescriptor => Object.freeze({
+  id: `category/${category}` as HostedTestSuiteDescriptor["id"],
+  label,
+  run: (onEvent, options) => run_hosted_test_category(category, onEvent, options),
+});
 
 export async function run_livehost_all_suite(
   onEvent?: (event: TestEvent) => void,
@@ -64,6 +70,12 @@ export const REGISTERED_HOSTED_TEST_SUITES: readonly HostedTestSuiteDescriptor[]
     label: "Canvas core",
     run: run_jsdom_hosted_canvas_suites,
   }),
+  category_descriptor("livetree", "LiveTree"),
+  category_descriptor("livemap", "LiveMap"),
+  category_descriptor("livehost", "LiveHost"),
+  category_descriptor("transform", "Transform"),
+  category_descriptor("unit", "Unit"),
+  category_descriptor("dev", "Dev"),
 ]);
 
 export function make_registered_hosted_test_suite_registry(): HostedTestSuiteRegistry {

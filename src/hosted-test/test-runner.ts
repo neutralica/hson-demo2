@@ -218,10 +218,11 @@ export async function run_test_suites(
         emit(
           rec,
           onEvent,
-          metaPatch
+          metaPatch || (opts.includePassedDiagnostics && assertRows !== undefined)
             ? {
               ...endBase,
-              metaPatch,
+              ...(metaPatch ? { metaPatch } : {}),
+              ...(opts.includePassedDiagnostics && assertRows !== undefined ? { assertRows } : {}),
             }
             : endBase
         );

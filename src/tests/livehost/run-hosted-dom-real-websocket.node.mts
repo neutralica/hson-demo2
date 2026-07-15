@@ -1,6 +1,7 @@
 import { performance } from "node:perf_hooks";
 import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
+import { hosted_test_report_cases } from "../../app/hosted-test/hosted-test-report.types";
 import { run_hosted_test_action } from "../../app/hosted-test/hosted-test-action";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
@@ -78,7 +79,7 @@ try {
   expect_dom_ws(capture.rev === 84, "expanded DOM report terminates at revision 84");
   expect_dom_ws(capture.value.summary.cases === 923 && capture.value.run.status === "passed", "mirror reconstructs terminal DOM report");
   expect_dom_ws(result.runId === router.runId && result.suite === "dom/core" && mirror.suite === "dom/core", "result, router, and mirror correlate");
-  const authoritativeKeys = new Set(capture.value.cases.map((testCase) => testCase.key));
+  const authoritativeKeys = new Set(hosted_test_report_cases(capture.value).map((testCase) => testCase.key));
   expect_dom_ws(authoritativeKeys.has("livetree/construction-parity::construction: liveTree.fromUntrustedHtml returns mutable sanitized branch"), "runtime-bound DOMPurify case crosses WebSocket");
   expect_dom_ws([
     "livetree/coverage-css-and-content::CssManager: element has non-zero rect after QUID CSS",

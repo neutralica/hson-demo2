@@ -25,6 +25,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       status: s.pick("idle", "running", "passed", "failed", "error"),
       startedAt: finiteNumber.nullable,
       completedAt: finiteNumber.nullable,
+      timing: s.exact({ runnerMs: finiteNumber, hostMs: finiteNumber }).nullable,
     }),
     summary: s.exact({
       cases: nonNegativeInteger,
@@ -32,14 +33,15 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       fail: nonNegativeInteger,
       skip: nonNegativeInteger,
     }),
-    cases: s.array(s.exact({
+    caseBatches: s.record(s.array(s.exact({
       key: s.string,
       suite: s.string,
       name: s.string,
       status: s.pick("pass", "fail", "skip"),
       ms: finiteNumber,
       err: s.string.nullable,
-    })),
+    }))),
+    suites: s.array(s.exact({ suite: s.string, ms: finiteNumber })),
     error: s.exact({ message: s.string }).nullable,
   });
 });
@@ -51,9 +53,11 @@ function initial_report(suite: HostedTestSuiteId): HostedTestReport {
       status: "idle",
       startedAt: null,
       completedAt: null,
+      timing: null,
     },
     summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
-    cases: [],
+    caseBatches: {},
+    suites: [],
     error: null,
   };
 }
@@ -153,7 +157,7 @@ export type HostedTestReportController = Readonly<{
   commits: () => readonly HostedTestReportCommit[];
   dispose: () => void;
   reduce: (event: TestEvent) => void;
-  complete: (result: RunResult) => void;
+  complete: (result: RunResult, timing?: Readonly<{ runnerMs: number; hostMs: number }>) => void;
   failInfrastructure: (error: unknown) => void;
 }>;
 
@@ -183,9 +187,10 @@ export function make_hosted_test_report(
   });
   let disposed = false;
   let pendingCases: HostedTestCaseReport[] = [];
+  let caseBatchId = 0;
 
-  function flush_pending_cases(): void {
-    if (pendingCases.length === 0) return;
+  function flush_pending_cases(suiteEnd?: Readonly<{ suite: string; ms: number }>): void {
+    if (pendingCases.length === 0 && suiteEnd === undefined) return;
     const batch = pendingCases;
     const state = map.capture().value;
     let pass = 0;
@@ -199,11 +204,15 @@ export function make_hosted_test_report(
     const beforeRev = map.rev;
     try {
       map.batch((tx) => {
-        tx.splice(["cases"], state.cases.length, 0, ...batch);
-        tx.set(["summary", "cases"], state.summary.cases + batch.length);
-        tx.set(["summary", "pass"], state.summary.pass + pass);
-        tx.set(["summary", "fail"], state.summary.fail + fail);
-        tx.set(["summary", "skip"], state.summary.skip + skip);
+        if (batch.length > 0) {
+          caseBatchId += 1;
+          tx.setMany(["caseBatches"], { [caseBatchId.toString().padStart(6, "0")]: batch });
+          tx.set(["summary", "cases"], state.summary.cases + batch.length);
+          tx.set(["summary", "pass"], state.summary.pass + pass);
+          tx.set(["summary", "fail"], state.summary.fail + fail);
+          tx.set(["summary", "skip"], state.summary.skip + skip);
+        }
+        if (suiteEnd !== undefined) tx.splice(["suites"], state.suites.length, 0, suiteEnd);
       });
       pendingCases = [];
     } catch (error) {
@@ -236,7 +245,7 @@ export function make_hosted_test_report(
       }
 
       if (event.t === "suite_end") {
-        flush_pending_cases();
+        flush_pending_cases({ suite: event.suite, ms: finite_or_zero(event.ms) });
         return;
       }
 
@@ -244,7 +253,7 @@ export function make_hosted_test_report(
       pendingCases.push(case_report(event));
       if (pendingCases.length >= caseBatchSize) flush_pending_cases();
     },
-    complete(result) {
+    complete(result, timing) {
       flush_pending_cases();
       map.batch((tx) => {
         tx.set(["summary", "cases"], result.summary.cases);
@@ -253,6 +262,7 @@ export function make_hosted_test_report(
         tx.set(["summary", "skip"], result.summary.skip);
         tx.set(["run", "completedAt"], finite_time(now));
         tx.set(["run", "status"], result.ok ? "passed" : "failed");
+        tx.replace(["run", "timing"], timing ?? { runnerMs: result.summary.msTotal, hostMs: result.summary.msTotal });
       });
     },
     failInfrastructure(error) {

@@ -68,6 +68,12 @@ export type TestSuite = Readonly<{
 
 export type TestRunMode =
   | "hosted-all"
+  | "livetree"
+  | "livemap"
+  | "livehost"
+  | "transform"
+  | "unit"
+  | "dev"
   | "livemap-replay"
   | "livehost-all"
   | "node-all"
@@ -91,6 +97,7 @@ export type RunOptions = Readonly<{
   filterCase?: string; // substring match
   yieldEveryCases?: number;  // e.g. 1 = every case, 5 = every 5 cases
   yieldBetweenSuites?: boolean;
+  includePassedDiagnostics?: boolean;
 }>;
 
 export type RunResult = Readonly<{

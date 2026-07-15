@@ -1,5 +1,4 @@
 import { LiveTree, hson } from "hson-live";
-import { relay, relay_data, type Outcome } from "intrastructure";
 import { $BUILD_ROOT, BUILD_STRINGhson } from "./build.consts";
 import {
     BUILD_BODYcss,
@@ -43,11 +42,11 @@ function makeInitialBuildControlState(): BuildControlState {
     };
 }
 
-export function mount_build_panels(host: LiveTree): Outcome<BuildDemo> {
-    const bp = relay_data(bp_factory(host));
+export function mount_build_panels(host: LiveTree): BuildDemo {
+    const bp = bp_factory(host);
 
     initBuild(bp);
-    return relay.data(bp);
+    return bp;
 }
 
 function initBuild(bp: BuildDemo): void {
@@ -192,7 +191,7 @@ function initBuild(bp: BuildDemo): void {
     render(getSrc());
 
 }
-export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Outcome<BuildDemo> {
+export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): BuildDemo {
   const old = hostBody.find.byId($BUILD_ROOT);
   if (old) old.removeSelf();
 
@@ -297,7 +296,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
 
   htmlBox.css.setMany({ display: "none" });
 
-  return relay.data({
+  return {
     root,
     src,
     out,
@@ -314,5 +313,5 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Out
       previewHost,
       htmlBox,
     },
-  });
+  };
 }
