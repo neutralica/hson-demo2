@@ -11,3 +11,8 @@ _archive-delete/
 
 # dist/
 dist/
+
+# Playwright browser-test artifacts
+test-results/
+playwright-report/
+blob-report/

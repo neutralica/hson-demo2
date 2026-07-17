@@ -75,10 +75,10 @@ export const FLAREanim: AnimSpec = {
 
 export const FLAREHEXanim: AnimSpec = {
   name: "hson_lens_hex_rail",
-  duration: `${flareLengthNum * 2}`,
+  duration: `${flareLengthNum * 2}ms`,
   // timingFunction: "cubic-bezier(0.22, 0.61, 0.36, 1)",
   timingFunction: "linear",
-  delay: `${flareDelayNum - flareLengthNum}ms`,
+  delay: `${flareDelayNum - (flareLengthNum)}ms`,
   fillMode: "both",
 
 };

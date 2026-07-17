@@ -277,32 +277,32 @@ export const CLOUD_SUN_KISSkf = {
 } as const;
 
 export const LENS_HEX_RAILkf = {
-    name: "hson_lens_hex_rail",
-    steps: {
-        "0%": {
-            opacity: "0",
-            transform:
-                "translate(-50%, -50%) translateX(-90px) rotate(20deg) scale(0.82)",
-        },
-        "18%": {
-            opacity: "1",
-            transform:
-                "translate(-50%, -50%) translateX(-48px) rotate(18deg) scale(0.9)",
-        },
-        "46%": {
-            opacity: "1",
-            transform:
-                "translate(-50%, -50%) translateX(-20px) rotate(6deg) scale(1.1)",
-        },
-        "72%": {
-            opacity: "0.9",
-            transform:
-                "translate(-50%, -50%) translateX(2px) rotate(-8deg) scale(1.47)",
-        },
-        "100%": {
-            opacity: "1",
-            transform:
-                "translate(-50%, -50%) translateX(3px) rotate(-26deg) scale(1.92)",
-        },
+  name: "hson_lens_hex_rail",
+  steps: {
+    "0%": {
+      opacity: "0",
+      transform:
+        "translate(-50%, -50%) translateX(-28px) rotate(8deg)",
     },
+    "18%": {
+      opacity: "0.7",
+      transform:
+        "translate(-50%, -50%) translateX(-24px) rotate(6deg)",
+    },
+    "46%": {
+      opacity: "1",
+      transform:
+        "translate(-50%, -50%) translateX(-20px) rotate(3deg)",
+    },
+    "72%": {
+      opacity: "0.7",
+      transform:
+        "translate(-50%, -50%) translateX(-16px) rotate(0deg)",
+    },
+    "100%": {
+      opacity: "0",
+      transform:
+        "translate(-50%, -50%) translateX(-12px) rotate(-3deg)",
+    },
+  },
 } as const;

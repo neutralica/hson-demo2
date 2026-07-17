@@ -52,6 +52,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
 
   const root = hostBody.create.div()
     .id.set($PARSING_PANELS_ROOT)
+    .attr.set("data-testid", "parse-root")
     .css.setMany(PP_ROOTcss);
 
   root.create.div()
@@ -113,6 +114,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
       });
 
     const status = mk_div_cls(statusBox, "status-number")
+      .attr.set("data-testid", `parse-${fmt}-status`)
       .css.setMany(PP_HEADER_VALUEcss)
       .text.set("--");
 
@@ -139,6 +141,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
 
     const textarea = wrap.create.textarea()
       .data.set("input", fmt)
+      .attr.setMany({ "data-testid": `parse-${fmt}-editor`, "aria-label": `${fmt} source editor` })
       .css.setMany({
         ...UI_TEXTcss,
         background: "transparent",
@@ -147,6 +150,7 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
 
     const nodeBox = panel.create.pre()
       .classlist.set("pp-nodebox")
+      .attr.set("data-testid", `parse-${fmt}-node-output`)
       .css.setMany({
         ...PP_TEXTWRAPcss(null),
         display: "none",

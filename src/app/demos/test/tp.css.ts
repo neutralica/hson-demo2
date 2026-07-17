@@ -190,33 +190,6 @@ export const TEST_INSPECTOR_PANEcss: CssMap = {
   gridRow: "1",
 };
 
-export const TEST_COMPARISON_GRIDcss: CssMap = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 28rem), 1fr))",
-  gap: "0.75rem",
-  width: "100%",
-  minWidth: "0",
-  minHeight: "0",
-  overflow: "auto",
-};
-
-export const TEST_COMPARISON_COLUMNcss: CssMap = {
-  display: "grid",
-  gridTemplateRows: "auto minmax(0, 1fr)",
-  minWidth: "0",
-  minHeight: "0",
-  overflow: "hidden",
-};
-
-export const TEST_COMPARISON_LABELcss: CssMap = {
-  padding: "0.35rem 0.5rem",
-  fontFamily: SYS_MONOfont,
-  fontSize: _fontSize.smol,
-  color: _colors.txt.grey,
-  letterSpacing: "0.06em",
-  textTransform: "lowercase",
-};
-
 export const TEST_LOG_PANEcss: CssMap = {
   display: "grid",
   gridTemplateRows: "minmax(0, 1fr) auto",

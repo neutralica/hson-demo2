@@ -1,7 +1,7 @@
 import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "./hosted-test-suite";
 
 export const TEST_SURFACE_CATEGORIES = [
-  "Transforms", "LiveTree", "LiveMap", "LiveHost", "LiveInspector", "Hosted Runtime", "Real WebSocket", "Build / Types",
+  "Transforms", "LiveTree", "LiveMap", "LiveHost", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
 ] as const;
 
 export type TestSurfaceCategory = typeof TEST_SURFACE_CATEGORIES[number];
@@ -40,7 +40,6 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:hosted-replay-router-node": "src/tests/livehost/run-hosted-replay-router.node.mts",
   "test:hosted-test-panel-adapter-node": "src/tests/livehost/run-hosted-test-panel-adapter.node.mts",
   "test:hosted-test-panel-projection-node": "src/tests/livehost/run-hosted-test-panel-projection.node.mts",
-  "test:hosted-test-inspector-parity-node": "src/tests/livehost/run-hosted-test-inspector-parity.node.mts",
   "test:hosted-suite-registry-node": "src/tests/livehost/run-hosted-suite-registry.node.mts",
   "test:hosted-node-all-node": "src/tests/livehost/run-hosted-node-all.node.mts",
   "test:hosted-report-batch-node": "src/tests/livehost/run-hosted-test-report-batch.node.mts",
@@ -75,16 +74,22 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:hosted-replay-events-node": "src/tests/livehost/run-hosted-replay-events.node.mts",
   "test:hosted-replay-concurrent-node": "src/tests/livehost/run-hosted-replay-concurrent.node.mts",
   "test:amoebi-geometry": "src/app/demos/amoeba/amoebi-geometry.test.mts",
+  "test:soft-tile-node": "src/app/ui/soft-tile/soft-tile-test.mts",
+  "test:browser": "playwright.config.ts",
+  "test:browser:headed": "playwright.config.ts",
+  "test:browser:debug": "playwright.config.ts",
+  "test:browser:install": "playwright.config.ts",
   "test:surface-enumeration-node": "src/tests/test-surface/run-test-surface-enumeration.node.mts",
 } as const);
 
 function category_for(name: string): TestSurfaceCategory {
   if (name.includes("real-websocket") || name.includes("websocket-lifecycle")) return "Real WebSocket";
-  if (name.includes("liveinspect") || name.includes("inspector-parity")) return "LiveInspector";
+  if (name.includes("liveinspect")) return "LiveInspector";
   if (name.includes("livetree") || name.includes("node-representation")) return "LiveTree";
   if (name.includes("replay") || name.includes("liveproject")) return "LiveMap";
   if (name.includes("generated-json")) return "Transforms";
   if (name.includes("surface-enumeration")) return "Build / Types";
+  if (name.includes("browser") || name.includes("amoebi") || name.includes("soft-tile")) return "Application / Demo";
   return name.includes("hosted") ? "Hosted Runtime" : "LiveHost";
 }
 
@@ -92,14 +97,17 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
   const diagnostic = name.includes("diagnostics");
   const realSocket = category_for(name) === "Real WebSocket";
   const jsdom = name.includes("dom-") || name.includes("jsdom");
+  const browser = name.includes("browser");
   return Object.freeze({
     id: `hson-demo2:${name}`,
     label: name.replace(/^test:/, "").replaceAll("-node", "").replaceAll("-", " "),
     category: category_for(name), repository: "hson-demo2", path,
-    behavior: `Permanent ${name} contract declared by hson-demo2/package.json.`,
-    classification: diagnostic ? "temporary diagnostic" : realSocket ? "real transport integration" : "runtime integration",
-    environment: jsdom ? "Node + jsdom" : "Node", transport: realSocket ? "real WebSocket" : name.includes("hosted") ? "in-memory / local runtime" : "none",
-    runner: `npm run ${name}`, appearsInHostedUi: true, status: "available",
+    behavior: browser
+      ? (name === "test:browser" ? "Chromium certifies application boot plus the Parse and Build user journeys." : `Playwright support command ${name}.`)
+      : `Permanent ${name} contract declared by hson-demo2/package.json.`,
+    classification: diagnostic ? "temporary diagnostic" : realSocket ? "real transport integration" : browser ? "runtime integration" : "runtime integration",
+    environment: browser ? "real Chromium" : jsdom ? "Node + jsdom" : "Node", transport: browser ? "localhost Vite" : realSocket ? "real WebSocket" : name.includes("hosted") ? "in-memory / local runtime" : "none",
+    runner: `npm run ${name}`, appearsInHostedUi: !browser, status: "available",
   });
 }
 
@@ -124,7 +132,9 @@ const HOSTED_ENTRIES = HOSTED_TEST_SUITE_IDS.map((suiteId): TestSurfaceCatalogEn
   id: `hosted-suite:${suiteId}`, label: visibleLabelById.get(suiteId) ?? suiteId,
   category: suiteId.includes("livetree") ? "LiveTree" : suiteId.includes("livemap") ? "LiveMap" : suiteId.includes("transform") ? "Transforms" : suiteId.includes("livehost") ? "LiveHost" : "Hosted Runtime",
   repository: "hson-demo2", path: "src/hosted-test/registered-hosted-test-suites.ts",
-  behavior: `Hosted fixture collection ${suiteId}, reachable through a visible category or the all collection.`, classification: "fixture", environment: "browser or hosted Node",
+  behavior: suiteId === "hosted/all"
+    ? "Complete deterministic hosted collection; generated/fuzz transform verification runs separately."
+    : `Hosted fixture collection ${suiteId}, reachable through a visible category or the all collection.`, classification: "fixture", environment: "browser or hosted Node",
   transport: "dedicated LiveHost report host", runner: "Hosted Tests UI", hostedSuiteId: suiteId, appearsInHostedUi: true, status: "available",
 }));
 

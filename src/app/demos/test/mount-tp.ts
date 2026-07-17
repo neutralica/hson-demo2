@@ -2,7 +2,7 @@ import { LiveTree, hson } from "hson-live";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
 import { create_test_chips } from "./test-helpers";
 import type { TestSummary, UiLevel } from "./tests.types";
-import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, TP_ROOTcss, TEST_COMPARISON_GRIDcss, TEST_COMPARISON_COLUMNcss, TEST_COMPARISON_LABELcss } from "./tp.css";
+import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "./hosted-test-panel-runtime";
@@ -11,7 +11,6 @@ import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
 import { make_hosted_test_case_list, type HostedTestCaseList } from "./hosted-test-case-list";
 import { copy_hosted_case_report, open_hosted_case_report, serialize_hosted_run_report } from "./hosted-test-report-view";
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
-import { make_hosted_test_live_inspector, type HostedTestLiveInspector } from "./hosted-test-live-inspector";
 
 // TODO - tidy up selector: keep future display labels separate from canonical suite IDs.
 const MODES = HOSTED_TEST_VISIBLE_SUITES.map((entry) => Object.freeze({ key: entry.id, label: entry.label }));
@@ -58,10 +57,6 @@ function visible_suite_for(suite: HostedTestSuiteId): HostedTestSuiteId {
     return suite;
 }
 
-function supports_live_inspector_comparison(suite: HostedTestSuiteId): boolean {
-    return suite === "livemap/replay" || suite === "category/livemap";
-}
-
 type TestConsoleParts = {
     runBtn: LiveTree;
     suiteSel: LiveTree;
@@ -98,10 +93,7 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
 type TestSurfaceParts = {
     leftColumn: LiveTree;
     rightColumn: LiveTree;
-    comparisonGrid: LiveTree;
-    legacyPane: LiveTree;
-    inspectorColumn: LiveTree;
-    inspectorPane: LiveTree;
+    casePane: LiveTree;
     logger: LiveTree;
 };
 
@@ -109,18 +101,12 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
     const leftColumn = mk_div_id(branch, "test-left-column").css.setMany(TEST_CONTENTcss);
     const rightColumn = mk_div_id(branch, "test-right-column").css.setMany(TEST_LOG_PANEcss);
 
-    const comparisonGrid = mk_div_id(leftColumn, "test-comparison-grid").css.setMany({ ...TEST_INSPECTOR_PANEcss, ...TEST_COMPARISON_GRIDcss });
-    const legacyColumn = mk_div_id(comparisonGrid, "test-legacy-column").css.setMany(TEST_COMPARISON_COLUMNcss);
-    legacyColumn.create.div().text.set("legacy projection").css.setMany(TEST_COMPARISON_LABELcss);
-    const legacyPane = mk_div_id(legacyColumn, "test-case-pane").css.setMany(TEST_INSPECTOR_PANEcss);
-    const inspectorColumn = mk_div_id(comparisonGrid, "test-live-inspector-column").css.setMany(TEST_COMPARISON_COLUMNcss);
-    inspectorColumn.create.div().text.set("live inspector").css.setMany(TEST_COMPARISON_LABELcss);
-    const inspectorPane = mk_div_id(inspectorColumn, "test-live-inspector-pane").css.setMany(TEST_INSPECTOR_PANEcss);
+    const casePane = mk_div_id(leftColumn, "test-case-pane").css.setMany(TEST_INSPECTOR_PANEcss);
 
     const logger = mk_div_id(rightColumn, "test-logger")
         .css.setMany(TEST_LOGGERcss);
 
-    return { leftColumn, rightColumn, comparisonGrid, legacyPane, inspectorColumn, inspectorPane, logger };
+    return { leftColumn, rightColumn, casePane, logger };
 }
 
 export function tp_factory(): TestPanel {
@@ -130,20 +116,21 @@ export function tp_factory(): TestPanel {
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
+        .attr.setMany({ "data-testid": "hosted-test-panel", "data-hosted-execution-count": "0" })
         .css.setMany(TP_BRANCHcss);
 
-    const { leftColumn, rightColumn, comparisonGrid, legacyPane, inspectorColumn, inspectorPane, logger } = createTestSurface(branch);
+    const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
     const { runBtn, suiteSel, clearBtn, copyReportsBtn, chips } = create_test_console(leftColumn, rightColumn);
     let hostedAdapter: HostedTestPanelAdapter | undefined;
     let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start"]>> | undefined;
     let caseList: HostedTestCaseList | undefined;
-    let liveInspector: HostedTestLiveInspector | undefined;
     let latestSummary: TestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
     let cancelSummaryFrame: (() => void) | undefined;
+    let explicitExecutionCount = 0;
 
     const make_case_list = (): HostedTestCaseList => {
         let projection: HostedTestCaseList;
-        projection = make_hosted_test_case_list(legacyPane, {
+        projection = make_hosted_test_case_list(casePane, {
             async view(key) {
                 const adapter = hostedAdapter;
                 if (!adapter) throw new Error("Hosted runtime is not ready.");
@@ -160,17 +147,9 @@ export function tp_factory(): TestPanel {
         return projection;
     };
 
-    const replace_case_list = (suite: HostedTestSuiteId = mode): void => {
+    const replace_case_list = (): void => {
         caseList?.dispose();
-        liveInspector?.dispose();
-        legacyPane.empty();
-        inspectorPane.empty();
         caseList = make_case_list();
-        liveInspector = make_hosted_test_live_inspector(inspectorPane, suite);
-        inspectorColumn.css.setMany({ display: supports_live_inspector_comparison(suite) ? "grid" : "none" });
-        comparisonGrid.css.setMany({ gridTemplateColumns: supports_live_inspector_comparison(suite)
-            ? "repeat(auto-fit, minmax(min(100%, 28rem), 1fr))"
-            : "minmax(0, 1fr)" });
     };
 
     const flush_summary = (): void => {
@@ -224,7 +203,7 @@ export function tp_factory(): TestPanel {
             cancelSummaryFrame = undefined;
             chips.clear();
             clearLogLines();
-            replace_case_list(suite);
+            replace_case_list();
             latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             appendLogLine(`running hosted ${suite}…`);
         },
@@ -232,7 +211,6 @@ export function tp_factory(): TestPanel {
             const projection = caseList;
             if (projection === undefined) return;
             projection.ingest(update);
-            liveInspector?.ingest(update);
             latestSummary = {
                 suites: projection.suite_count(),
                 cases: update.report.summary.cases,
@@ -289,6 +267,8 @@ export function tp_factory(): TestPanel {
 
             const hostedSuite = mode;
             try {
+                explicitExecutionCount += 1;
+                branch.attr.set("data-hosted-execution-count", String(explicitExecutionCount));
                 await hostedRuntime.ready();
                 lastResult = await hostedAdapter!.start(hostedSuite);
                 remember_hosted_test_run(lastResult.runId);
@@ -341,7 +321,6 @@ export function tp_factory(): TestPanel {
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;
             caseList?.dispose();
-            liveInspector?.dispose();
             hostedAdapter?.dispose();
             hostedRuntime.dispose();
         },

@@ -48,30 +48,34 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     const hexRail = mk_span_cls(sunCarrier.tree, "lens-hex-rail");
 
     const HEX_FLARES = [
-        { size: 18, x: 7, opacity: 0.16 },
-        { size: 28, x: 24, opacity: 0.24 },
-        { size: 44, x: 46, opacity: 0.15 },
-        { size: 26, x: 69, opacity: 0.21 },
-        { size: 15, x: 84, opacity: 0.13 },
+        { size: 18, startX: 43, endX: 7, opacity: 0.16 },
+        { size: 28, startX: 53, endX: 24, opacity: 0.24 },
+        { size: 44, startX: 64, endX: 46, opacity: 0.15 },
+        { size: 26, startX: 75, endX: 69, opacity: 0.21 },
+        { size: 15, startX: 84, endX: 84, opacity: 0.13 },
     ] as const;
+
+    const hexFlares: LiveTree[] = [];
     hexRail.css.setMany({
         position: "absolute",
         inset: "0",
         pointerEvents: "none",
-        transformOrigin: "50% 50%",
+        transformOrigin: "84% 50%",
     });
 
     hexRail.css.keyframes.set(LENS_HEX_RAILkf);
 
-    HEX_FLARES.forEach(({ size, x, opacity }, index) => {
+    HEX_FLARES.forEach(({ size, startX, endX, opacity }, index) => {
         const hex = mk_span_cls(hexRail, [
             "lens-hex",
             `lens-hex-${index + 1}`,
         ]);
 
+        const spacingAnimationName = `hson_lens_hex_spacing_${index + 1}`;
+
         hex.css.setMany({
             position: "absolute",
-            left: `${x}%`,
+            left: `${startX}%`,
             top: "50%",
             width: `${size}px`,
             height: `${size}px`,
@@ -83,6 +87,20 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
             boxShadow: "0 0 10px rgba(190, 225, 255, 0.16)",
             filter: "blur(0.25px)",
         });
+
+        hex.css.keyframes.set({
+            name: spacingAnimationName,
+            steps: {
+                "0%": {
+                    left: `${startX}%`,
+                },
+                "100%": {
+                    left: `${endX}%`,
+                },
+            },
+        });
+
+        hexFlares.push(hex);
     });
 
     const gradient = frame.bud(SPLASH_BUDS.gradient);
@@ -148,11 +166,16 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     gradient.animate()
     flare.animate();
     hexRail.css.anim.begin(FLAREHEXanim);
-
+    hexFlares.forEach((hex, index) => {
+        hex.css.anim.begin({
+            ...FLAREHEXanim,
+            name: `hson_lens_hex_spacing_${index + 1}`,
+        });
+    });
     await wait.for(flareBox.tree).anim(FLAREanim).end();
     flareBox.tree.remove();
     hexRail.remove();
-    
+
     await wait.for(sun.tree).anim(SUN_DISKanim).end()
     sunCarrier.tree.remove();
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });

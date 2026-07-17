@@ -4,6 +4,20 @@ This is the declared inventory for hson-live and hson-demo2. “Available” mea
 
 The catalog source and enumeration test reject undeclared runnable entrypoints, package/catalog drift, hosted-suite registration drift, duplicate IDs, and any remaining migration-required entry.
 
+Approved persistent test roots are `src/tests`, `tests/browser`, and explicitly declared standalone application tests. Browser specifications are owned by `test:browser`; support files must be reachable from those specifications. Application/demo tests are cataloged separately from LiveHost and do not become Hosted Tests selector choices.
+
+Focused LiveTree completion work remains separately owned future coverage for lookup, document ownership, event teardown, detached-tree behavior, and construction fencing; the Chromium application suite does not absorb those library contracts.
+
+CI browser-certification sequence:
+
+1. Select a Vite-supported Node version.
+2. Run `npm ci`.
+3. Run `npm run test:browser:install` to install Chromium only.
+4. Run `npm run check`.
+5. Run the declared Node, jsdom, canvas, and real-WebSocket scripts.
+6. Run `npm run test:browser`.
+7. Run `npm run build`.
+
 Audit dispositions outside the retained catalog:
 
 - `src/tests/livetree/livetree-00-expect-fail.ts` — obsolete deliberate-failure styling scratch fixture; removed.
@@ -13,7 +27,7 @@ Audit dispositions outside the retained catalog:
 
 | Test / script | Path | Repository | Behavior guaranteed | Environment | Transport | Declared runner | Hosted UI | Status | Classification | Recommendation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| hosted-suite:hosted/all | src/hosted-test/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection hosted/all. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
+| hosted-suite:hosted/all | src/hosted-test/registered-hosted-test-suites.ts | hson-demo2 | Complete deterministic hosted collection; generated/fuzz transform verification runs separately. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
 | hosted-suite:livemap/replay | src/hosted-test/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection livemap/replay. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
 | hosted-suite:livehost/all | src/hosted-test/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection livehost/all. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
 | hosted-suite:node/all | src/hosted-test/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection node/all. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
@@ -83,4 +97,9 @@ Audit dispositions outside the retained catalog:
 | hson-demo2:test:hosted-replay-events-node | src/tests/livehost/run-hosted-replay-events.node.mts | hson-demo2 | Permanent test:hosted-replay-events-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-replay-events-node | yes | available | runtime integration | keep |
 | hson-demo2:test:hosted-replay-concurrent-node | src/tests/livehost/run-hosted-replay-concurrent.node.mts | hson-demo2 | Permanent test:hosted-replay-concurrent-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-replay-concurrent-node | yes | available | runtime integration | keep |
 | hson-demo2:test:amoebi-geometry | src/app/demos/amoeba/amoebi-geometry.test.mts | hson-demo2 | Permanent test:amoebi-geometry contract declared by hson-demo2/package.json. | Node | none | npm run test:amoebi-geometry | yes | available | runtime integration | keep |
+| hson-demo2:test:soft-tile-node | src/app/ui/soft-tile/soft-tile-test.mts | hson-demo2 | Deterministic soft-tile packing, contact, protected-core, and direction guarantees. | Node | none | npm run test:soft-tile-node | yes | available | runtime integration | promote |
+| hson-demo2:test:browser | tests/browser/*.spec.ts | hson-demo2 | Chromium certifies boot plus Parse and Build user journeys. | real Chromium | localhost Vite | npm run test:browser | no | available | runtime integration | promote |
+| hson-demo2:test:browser:headed | playwright.config.ts | hson-demo2 | Local headed mode for the owned browser suite. | real Chromium | localhost Vite | npm run test:browser:headed | no | available | runtime integration | keep |
+| hson-demo2:test:browser:debug | playwright.config.ts | hson-demo2 | Local Playwright inspector mode for the owned browser suite. | real Chromium | localhost Vite | npm run test:browser:debug | no | available | runtime integration | keep |
+| hson-demo2:test:browser:install | playwright.config.ts | hson-demo2 | Installs the pinned Chromium runtime required by browser certification. | Node | download | npm run test:browser:install | no | available | build/typecheck certification | keep |
 | hson-demo2:test:surface-enumeration-node | src/tests/test-surface/run-test-surface-enumeration.node.mts | hson-demo2 | Permanent test:surface-enumeration-node contract declared by hson-demo2/package.json. | Node | none | npm run test:surface-enumeration-node | yes | available | runtime integration | keep |

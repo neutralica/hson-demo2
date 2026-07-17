@@ -197,6 +197,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
 
   const root = mk_div_id(hostBody, $BUILD_ROOT)
     .classlist.set("build-root")
+    .attr.set("data-testid", "build-root")
     .css.setMany(BUILD_ROOTcss);
   mk_div_cls(root, "panel header")
     .text.set("~ BUILD ~")
@@ -236,6 +237,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
     .css.setMany(UI_2STACKcss);
 
   const status = mk_div_cls(statusBox, "status-number")
+    .attr.set("data-testid", "build-status")
     .css.setMany(BUILD_HEADER_VALUEcss);
 
   mk_div_cls(statusBox, "status-label")
@@ -261,6 +263,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
   const textarea = inputWrap.create.textarea()
     .classlist.set("build-textarea")
     .data.set("input", "hson")
+    .attr.setMany({ "data-testid": "build-source-editor", "aria-label": "build HSON source editor" })
     .css.setMany(BUILD_TEXTAREAcss);
 
   const seed = opts.seed ?? BUILD_STRINGhson;
@@ -287,11 +290,13 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
 
   const previewHost = outWrap.create.div()
     .classlist.set("build-previewHost")
+    .attr.set("data-testid", "build-preview")
     .css.setMany(BUILD_PREVIEWcss);
 
   const htmlBox = outWrap.create.textarea()
     .classlist.set("build-htmlBox")
     .data.set("output", "html")
+    .attr.setMany({ "data-testid": "build-html-output", "aria-label": "build HTML output" })
     .css.setMany(BUILD_HTMLBOXcss);
 
   htmlBox.css.setMany({ display: "none" });
