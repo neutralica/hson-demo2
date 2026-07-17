@@ -11,6 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts",
+    "test:liveproject-keyed-node": "tsx src/tests/liveproject/run-keyed-projection.node.mts",
+    "test:liveinspect-node": "tsx src/tests/liveinspect/run-live-inspector.node.mts",
     "test:hosted-replay-node": "tsx src/tests/livehost/run-hosted-replay-action.node.mts",
     "test:hosted-report-node": "tsx src/tests/livehost/run-hosted-test-report.node.mts",
     "test:hosted-report-wire-node": "tsx src/tests/livehost/run-hosted-test-report-wire.node.mts",
