@@ -32,6 +32,7 @@ export type HostedTestPanelClient = Readonly<{
 export type HostedTestPanelAdapter = Readonly<{
   readonly router: HostedTestReportRouter | undefined;
   start(suite: HostedTestSuiteId): Promise<HostedTestPanelRunResult>;
+  recover(runId: string): Promise<HostedTestPanelRunResult>;
   inspect(caseKey: string): Promise<HostedTestCaseDiagnostic>;
   capture(): HostedTestReport | undefined;
   dispose(): void;
@@ -155,6 +156,9 @@ export function make_hosted_test_panel_adapter(
         throw error;
       }
     },
+    async recover() {
+      throw new Error("Explicit report recovery requires the generic hosted-test runtime.");
+    },
     async inspect(caseKey: string) {
       const result = lastResult;
       if (result === undefined) throw new Error("Hosted case inspection is available after the run settles.");
@@ -197,89 +201,101 @@ function make_generic_hosted_test_panel_adapter(
     current = undefined;
   }
 
+  async function present(
+    open: () => Promise<HostedTestRemoteRun>,
+    requestedSuite?: HostedTestSuiteId,
+  ): Promise<HostedTestPanelRunResult> {
+    const roundTripStartedAt = performance.now();
+    generation += 1;
+    const runGeneration = generation;
+    dispose_current();
+    lastResult = undefined;
+    inspectionRequests.clear();
+    if (requestedSuite !== undefined) sink.reset(requestedSuite);
+
+    const run = await open();
+    const suite = run.association.suite;
+    if (requestedSuite === undefined) sink.reset(suite);
+    if (generation !== runGeneration) {
+      run.dispose();
+      throw new Error("Hosted test run was superseded before report recovery.");
+    }
+    current = run;
+    let consumedCaseBatches = 0;
+    let consumedSuiteTimings = 0;
+    let infrastructureErrorShown = false;
+    let terminalResolve: () => void = () => undefined;
+    const terminal = new Promise<void>((resolve) => { terminalResolve = resolve; });
+
+    const project = (): void => {
+      if (current !== run || generation !== runGeneration) return;
+      const report = run.client.recovery.map.capture().value;
+      if (report.run.id !== run.association.runId || report.run.suite !== suite) {
+        throw new Error("Recovered hosted report identity does not match the requested run.");
+      }
+      const terminalState = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
+      const newCases: HostedTestCaseReport[] = [];
+      while (true) {
+        const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
+        const batch = report.caseBatches[batchKey];
+        if (batch === undefined) break;
+        consumedCaseBatches += 1;
+        newCases.push(...batch);
+      }
+      const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
+      consumedSuiteTimings = report.suites.length;
+      sink.ingest(Object.freeze({
+        report,
+        newCases: Object.freeze(newCases),
+        newSuiteTimings: Object.freeze([...newSuiteTimings]),
+        terminal: terminalState,
+      }));
+      if (report.run.status === "error" && report.error !== null && !infrastructureErrorShown) {
+        infrastructureErrorShown = true;
+        sink.showInfrastructureError(report.error.message);
+      }
+      if (terminalState) terminalResolve();
+    };
+
+    stopChanges = run.on_change(project);
+    project();
+    try {
+      const [result] = await Promise.all([run.actionResult, terminal]);
+      if (current !== run || generation !== runGeneration) {
+        return Object.freeze({ ...result, timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }) });
+      }
+      const report = run.client.recovery.map.capture().value;
+      const cursor = run.client.recovery.lastAppliedRev ?? -1;
+      const expectedOk = report.run.status === "passed";
+      if (result.runId !== report.run.id || result.reportHostId !== run.association.reportHostId
+        || result.suite !== report.run.suite || result.reportRev === undefined || cursor < result.reportRev
+        || result.ok !== expectedOk || result.summary.cases !== report.summary.cases
+        || result.summary.pass !== report.summary.pass || result.summary.fail !== report.summary.fail
+        || result.summary.skip !== report.summary.skip) {
+        throw new Error("Hosted action result does not agree with the recovered authoritative report.");
+      }
+      const panelResult: HostedTestPanelRunResult = Object.freeze({
+        ...result,
+        timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }),
+      });
+      lastResult = panelResult;
+      sink.renderTiming?.(panelResult.timing);
+      return panelResult;
+    } catch (error) {
+      if (current === run && generation === runGeneration && !infrastructureErrorShown) {
+        sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
+      }
+      throw error;
+    }
+  }
+
   return Object.freeze({
     get router() { return undefined; },
     async start(suite: HostedTestSuiteId) {
-      const roundTripStartedAt = performance.now();
-      generation += 1;
-      const runGeneration = generation;
-      dispose_current();
-      lastResult = undefined;
-      inspectionRequests.clear();
-      sink.reset(suite);
-
-      const run = await runtime.start_run(suite);
-      if (generation !== runGeneration) {
-        run.dispose();
-        throw new Error("Hosted test run was superseded before report recovery.");
-      }
-      current = run;
-      let consumedCaseBatches = 0;
-      let consumedSuiteTimings = 0;
-      let infrastructureErrorShown = false;
-      let terminalResolve: () => void = () => undefined;
-      const terminal = new Promise<void>((resolve) => { terminalResolve = resolve; });
-
-      const project = (): void => {
-        if (current !== run || generation !== runGeneration) return;
-        const report = run.client.recovery.map.capture().value;
-        if (report.run.id !== run.association.runId || report.run.suite !== suite) {
-          throw new Error("Recovered hosted report identity does not match the requested run.");
-        }
-        const terminalState = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
-        const newCases: HostedTestCaseReport[] = [];
-        while (true) {
-          const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
-          const batch = report.caseBatches[batchKey];
-          if (batch === undefined) break;
-          consumedCaseBatches += 1;
-          newCases.push(...batch);
-        }
-        const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
-        consumedSuiteTimings = report.suites.length;
-        sink.ingest(Object.freeze({
-          report,
-          newCases: Object.freeze(newCases),
-          newSuiteTimings: Object.freeze([...newSuiteTimings]),
-          terminal: terminalState,
-        }));
-        if (report.run.status === "error" && report.error !== null && !infrastructureErrorShown) {
-          infrastructureErrorShown = true;
-          sink.showInfrastructureError(report.error.message);
-        }
-        if (terminalState) terminalResolve();
-      };
-
-      stopChanges = run.on_change(project);
-      project();
-      try {
-        const [result] = await Promise.all([run.actionResult, terminal]);
-        if (current !== run || generation !== runGeneration) {
-          return Object.freeze({ ...result, timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }) });
-        }
-        const report = run.client.recovery.map.capture().value;
-        const cursor = run.client.recovery.lastAppliedRev ?? -1;
-        const expectedOk = report.run.status === "passed";
-        if (result.runId !== report.run.id || result.reportHostId !== run.association.reportHostId
-          || result.suite !== report.run.suite || result.reportRev === undefined || cursor < result.reportRev
-          || result.ok !== expectedOk || result.summary.cases !== report.summary.cases
-          || result.summary.pass !== report.summary.pass || result.summary.fail !== report.summary.fail
-          || result.summary.skip !== report.summary.skip) {
-          throw new Error("Hosted action result does not agree with the recovered authoritative report.");
-        }
-        const panelResult: HostedTestPanelRunResult = Object.freeze({
-          ...result,
-          timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }),
-        });
-        lastResult = panelResult;
-        sink.renderTiming?.(panelResult.timing);
-        return panelResult;
-      } catch (error) {
-        if (current === run && generation === runGeneration && !infrastructureErrorShown) {
-          sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
-        }
-        throw error;
-      }
+      return present(() => runtime.start_run(suite), suite);
+    },
+    async recover(runId: string) {
+      return present(() => runtime.recover_run(runId));
     },
     async inspect(caseKey: string) {
       const result = lastResult;

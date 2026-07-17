@@ -36,6 +36,7 @@ export type HostedTestPanelRuntime = Readonly<{
   readonly failure: Error | undefined;
   ready(): Promise<void>;
   start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun>;
+  recover_run(runId: string): Promise<HostedTestRemoteRun>;
   dispose(): void;
 }>;
 
@@ -44,7 +45,18 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   WebSocketConstructor?: BrowserWebSocketConstructor;
   /** Fixed bounded schedule; defaults to immediate, 50ms, then 200ms. */
   reconnectDelaysMs?: readonly number[];
+  /** Refresh-safe identity factory. Primarily injectable for deterministic tests. */
+  makeClientId?: () => string;
 }>;
+
+let fallbackClientId = 0;
+
+function make_browser_client_id(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid !== undefined) return `hosted-panel-${uuid}`;
+  fallbackClientId += 1;
+  return `hosted-panel-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${fallbackClientId.toString(36)}`;
+}
 
 function configured_url(): string {
   const meta = import.meta as ImportMeta & { readonly env?: Readonly<{ VITE_HOSTED_TEST_WS_URL?: string }> };
@@ -64,9 +76,27 @@ function association_from(
   return client.recovery.map.capture().value.requests[requestId];
 }
 
+function result_summary_from_report(report: HostedTestReportState): HostedTestRunResult["summary"] {
+  const failures = Object.values(report.caseBatches).flat()
+    .filter((testCase) => testCase.status === "fail")
+    .map((testCase) => ({ suite: testCase.suite, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
+  return Object.freeze({
+    suites: report.suites.length,
+    cases: report.summary.cases,
+    pass: report.summary.pass,
+    fail: report.summary.fail,
+    skip: report.summary.skip,
+    msTotal: report.run.timing?.runnerMs ?? 0,
+    failures: Object.freeze(failures),
+  });
+}
+
 export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeOptions = {}): HostedTestPanelRuntime {
   const baseUrl = options.url ?? configured_url();
   const reconnectDelays = Object.freeze([...(options.reconnectDelaysMs ?? [0, 50, 200])]);
+  const makeClientId = options.makeClientId ?? make_browser_client_id;
+  const coordinatorClientId = makeClientId();
+  if (!coordinatorClientId) throw new Error("Hosted-test client ID must be non-empty.");
   if (reconnectDelays.some((delay) => !Number.isFinite(delay) || delay < 0)) {
     throw new Error("Hosted-test reconnect delays must be finite non-negative numbers.");
   }
@@ -120,7 +150,8 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       : undefined;
     const next = create_livehost_client<HostedTestCoordinatorState, HostedTestActions>({
       socket: transport.socket,
-      ...(previous ? { clientId: previous.clientId, map: previous.recovery.map } : {}),
+      clientId: previous?.clientId ?? coordinatorClientId,
+      ...(previous ? { map: previous.recovery.map } : {}),
       recovery: {
         logicalMapId: HOSTED_TEST_COORDINATOR_HOST_ID,
         ...(cursor ? { cursor } : {}),
@@ -213,14 +244,12 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     });
   }
 
-  async function start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun> {
-    await readiness;
-    if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
-    if (disposed) throw new Error("Hosted-test runtime is disposed.");
-    const action = coordinatorClient.action("tests.run", { suite });
-    const actionResult = retry_safe_result(action, suite);
-    void actionResult.catch(() => undefined);
-    const association = await wait_for_association(action.request.requestId, actionResult);
+  async function attach_run(
+    association: HostedTestRunAssociation,
+    requestedActionResult?: Promise<HostedTestRunResult>,
+  ): Promise<HostedTestRemoteRun> {
+    const reportClientId = makeClientId();
+    if (!reportClientId) throw new Error("Hosted-test report client ID must be non-empty.");
     let reportTransport: HostedTestBrowserSocket | undefined;
     let reportClient: LiveHostClient<HostedTestReportState, HostedTestReportActions>;
     let stopReportClose: (() => void) | undefined;
@@ -242,7 +271,8 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         : undefined;
       const next = create_livehost_client<HostedTestReportState, HostedTestReportActions>({
         socket: nextTransport.socket,
-        ...(previous ? { clientId: previous.clientId, map: previous.recovery.map } : {}),
+        clientId: previous?.clientId ?? reportClientId,
+        ...(previous ? { map: previous.recovery.map } : {}),
         recovery: { logicalMapId: association.reportHostId, ...(cursor ? { cursor } : {}) },
         session: previous?.session.credential ? { credential: previous.session.credential } : {},
       });
@@ -292,6 +322,42 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     }
 
     await open_report();
+    const actionResult = requestedActionResult ?? new Promise<HostedTestRunResult>((resolve, reject) => {
+      const finish = (): boolean => {
+        const report = reportClient.recovery.map.capture().value;
+        if (report.run.id !== association.runId || report.run.suite !== association.suite) {
+          reject(new Error("Recovered hosted report identity does not match the explicitly requested run."));
+          return true;
+        }
+        if (report.run.status !== "passed" && report.run.status !== "failed" && report.run.status !== "error") return false;
+        if (report.run.timing === null) {
+          reject(new Error("Recovered hosted report completed without timing."));
+          return true;
+        }
+        const reportRev = reportClient.recovery.lastAppliedRev;
+        if (reportRev === undefined) {
+          reject(new Error("Recovered hosted report completed without a revision cursor."));
+          return true;
+        }
+        resolve(Object.freeze({
+          runId: association.runId,
+          reportHostId: association.reportHostId,
+          reportRev,
+          suite: association.suite,
+          ok: report.run.status === "passed",
+          summary: result_summary_from_report(report),
+          timing: report.run.timing,
+        }));
+        return true;
+      };
+      if (finish()) return;
+      let stop = (): void => undefined;
+      stop = reportClient.recovery.on_change(() => {
+        if (!finish()) return;
+        stop();
+      });
+    });
+    void actionResult.catch(() => undefined);
     const run: HostedTestRemoteRun = Object.freeze({
       association,
       get client() { return reportClient; },
@@ -326,12 +392,35 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     return run;
   }
 
+  async function start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun> {
+    await readiness;
+    if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
+    if (disposed) throw new Error("Hosted-test runtime is disposed.");
+    const action = coordinatorClient.action("tests.run", { suite });
+    const actionResult = retry_safe_result(action, suite);
+    void actionResult.catch(() => undefined);
+    const association = await wait_for_association(action.request.requestId, actionResult);
+    return attach_run(association, actionResult);
+  }
+
+  async function recover_run(runId: string): Promise<HostedTestRemoteRun> {
+    await readiness;
+    if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
+    if (disposed) throw new Error("Hosted-test runtime is disposed.");
+    if (!runId) throw new Error("Hosted-test recovery requires an explicit non-empty run ID.");
+    const matches = Object.values(coordinatorClient.recovery.map.capture().value.requests)
+      .filter((association) => association.runId === runId);
+    if (matches.length !== 1) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
+    return attach_run(matches[0]!);
+  }
+
   return Object.freeze({
     get client() { return coordinatorClient; },
     get status() { return status; },
     get failure() { return retainedFailure; },
     ready: () => readiness,
     start_run,
+    recover_run,
     dispose() {
       if (disposed) return;
       disposed = true;

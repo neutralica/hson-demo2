@@ -36,15 +36,29 @@ export function mount_inspector_fixture(host: LiveTree): InspectorFixture {
     button.text.set(label);
     button.listen.onClick(run);
   };
+  const replaceFixture = (label: string, next: LiveMap): void => {
+    const started = performance.now();
+    source = next;
+    inspector.replaceSource(source);
+    const elapsedMs = performance.now() - started;
+    output.text.set(JSON.stringify({
+      fixture: label,
+      replaceAndMaterializeMs: Number(elapsedMs.toFixed(2)),
+      diagnostics: inspector.diagnostics(),
+    }, null, 2));
+  };
   command("Change external value", () => source.set(["profile", "visits"], Number(source.snap(["profile", "visits"])) + 1));
   command("Move keyed item", () => source.at(["items"]).array.move(1, 0));
   command("Select profile", () => inspector.select(["profile"]));
   command("Collapse or expand", () => inspector.toggle(["items"]));
   command("Convert selection", () => output.text.set(inspector.serialize("json")));
   command("Replace snapshot source", () => {
-    source = makeSource("replacement");
-    inspector.replaceSource(source);
+    replaceFixture("replacement", makeSource("replacement"));
   });
+  command("Create 100 properties", () => replaceFixture("object-100", makeFlatObject(100)));
+  command("Create 1,000 properties", () => replaceFixture("object-1000", makeFlatObject(1_000)));
+  command("Create 1,000 keyed items", () => replaceFixture("keyed-array-1000", makeKeyedArray(1_000)));
+  command("Show diagnostics", () => output.text.set(JSON.stringify(inspector.diagnostics(), null, 2)));
 
   let disposed = false;
   return Object.freeze({
@@ -69,5 +83,17 @@ function makeSource(snapshot: string): LiveMap {
       { id: "beta", label: "Beta" },
     ],
     empty: {},
+  });
+}
+
+function makeFlatObject(size: number): LiveMap {
+  return hson.liveMap.fromJson(Object.fromEntries(
+    Array.from({ length: size }, (_, index) => [`property-${index}`, index]),
+  ));
+}
+
+function makeKeyedArray(size: number): LiveMap {
+  return hson.liveMap.fromJson({
+    items: Array.from({ length: size }, (_, index) => ({ id: `item-${index}`, value: index })),
   });
 }

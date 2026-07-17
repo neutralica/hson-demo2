@@ -94,7 +94,10 @@ try {
     expect(inspector.diagnostics().serializationRequests === 3, "serialization requests are diagnosed");
     inspector.dispose();
     inspector.dispose();
-    expect(host.content.count() === 0 && inspector.status === "disposed", "disposal is terminal, complete, and idempotent");
+  expect(
+  host.content.count() === 0 && String(inspector.status) === "disposed",
+  "disposal is terminal, complete, and idempotent",
+);
     expect(inspector.diagnostics().delegatedListenerCount === 0, "disposal releases delegated interaction ownership");
     source.set(["title"], "ignored after disposal");
     expectCode(() => inspector.expand([]), LIVE_INSPECTOR_DISPOSED_ERROR_CODE, "disposed inspector use");

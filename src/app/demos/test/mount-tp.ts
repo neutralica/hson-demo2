@@ -13,6 +13,19 @@ import { copy_hosted_case_report, open_hosted_case_report, serialize_hosted_run_
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
 
 const MODES = HOSTED_TEST_VISIBLE_SUITES.map((entry) => Object.freeze({ key: entry.id, label: entry.label }));
+const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
+
+function remembered_hosted_test_run(): string | undefined {
+    try { return globalThis.sessionStorage?.getItem(HOSTED_TEST_RECOVERY_RUN_KEY) ?? undefined; }
+    catch { return undefined; }
+}
+
+function remember_hosted_test_run(runId?: string): void {
+    try {
+        if (runId === undefined) globalThis.sessionStorage?.removeItem(HOSTED_TEST_RECOVERY_RUN_KEY);
+        else globalThis.sessionStorage?.setItem(HOSTED_TEST_RECOVERY_RUN_KEY, runId);
+    } catch { /* Storage may be unavailable in privacy-restricted contexts. */ }
+}
 
 function setButtonClicked(btn: LiveTree, on: boolean): void {
     btn.css.setMany(on
@@ -210,7 +223,17 @@ export function tp_factory(): TestPanel {
             appendLogLine(`elapsed ${format_hosted_test_duration(timing.roundTripMs)} · runner ${format_hosted_test_duration(timing.runnerMs)} · host ${format_hosted_test_duration(timing.hostMs)}`);
         },
     });
-    void hostedRuntime.ready().catch((error: unknown) => {
+    void hostedRuntime.ready().then(async () => {
+        const runId = remembered_hosted_test_run();
+        if (runId === undefined) return;
+        try {
+            lastResult = await hostedAdapter!.recover(runId);
+            mode = lastResult.suite;
+            if (mounted) populateModeSelector(suiteSel, mode);
+        } catch {
+            remember_hosted_test_run();
+        }
+    }).catch((error: unknown) => {
         appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
     });
 
@@ -237,6 +260,7 @@ export function tp_factory(): TestPanel {
             try {
                 await hostedRuntime.ready();
                 lastResult = await hostedAdapter!.start(hostedSuite);
+                remember_hosted_test_run(lastResult.runId);
             } catch (error) {
                 if (hostedAdapter.router === undefined) {
                     appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
@@ -265,6 +289,7 @@ export function tp_factory(): TestPanel {
             replace_case_list();
             latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             lastResult = undefined;
+            remember_hosted_test_run();
         });
 
     };

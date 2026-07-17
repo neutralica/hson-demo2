@@ -1,7 +1,7 @@
 import { create_livehost_client } from "hson-live";
 import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../app/demos/test/hosted-test-panel-runtime";
-import type { HostedTestActions } from "../../app/hosted-test/hosted-test-action.types";
+import type { HostedTestActions, HostedTestRunResult } from "../../app/hosted-test/hosted-test-action.types";
 import { decode_hosted_test_run_response, inspect_hosted_test_action } from "../../app/hosted-test/hosted-test-client-action";
 import type { HostedTestReportState } from "../../app/hosted-test/hosted-test-report.types";
 import type { HostedTestSuiteId, HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
@@ -50,6 +50,59 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
   const readiness = client.session.create().then(() => client.recovery.recover()).then(() => undefined);
   const runs = new Set<HostedTestRemoteRun>();
 
+  async function attach_run(
+    association: HostedTestCoordinatorState["requests"][string],
+    actionResult?: Promise<HostedTestRunResult>,
+  ): Promise<HostedTestRemoteRun> {
+    const reportClient = create_livehost_client<HostedTestReportState, ReportActions>({
+      socket: connect(association.reportHostId),
+      recovery: { logicalMapId: association.reportHostId },
+      session: {},
+    });
+    reportClient.connect();
+    await reportClient.session.create();
+    await reportClient.recovery.recover();
+    const recovered = reportClient.recovery.map.capture().value;
+    const failures = Object.values(recovered.caseBatches).flat()
+      .filter((testCase) => testCase.status === "fail")
+      .map((testCase) => ({ suite: testCase.suite, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
+    const settledResult = actionResult ?? Promise.resolve({
+      runId: association.runId,
+      reportHostId: association.reportHostId,
+      reportRev: reportClient.recovery.lastAppliedRev ?? association.reportRev,
+      suite: association.suite,
+      ok: recovered.run.status === "passed",
+      summary: {
+        suites: recovered.suites.length,
+        cases: recovered.summary.cases,
+        pass: recovered.summary.pass,
+        fail: recovered.summary.fail,
+        skip: recovered.summary.skip,
+        msTotal: recovered.run.timing?.runnerMs ?? 0,
+        failures,
+      },
+      timing: recovered.run.timing ?? { runnerMs: 0, hostMs: 0 },
+    });
+    let runDisposed = false;
+    const run: HostedTestRemoteRun = Object.freeze({
+      association,
+      client: reportClient as LiveHostClient<HostedTestReportState, ReportActions>,
+      actionResult: settledResult,
+      on_change(listener) { return reportClient.recovery.on_change(() => listener()); },
+      inspect(request) { return inspect_hosted_test_action(reportClient, request); },
+      dispose() {
+        if (runDisposed) return;
+        runDisposed = true;
+        runs.delete(run);
+        reportClient.disconnect();
+        reportClient.recovery.dispose();
+        reportClient.session.dispose();
+      },
+    });
+    runs.add(run);
+    return run;
+  }
+
   return Object.freeze({
     client,
     get status() { return disposed ? "disposed" as const : "ready" as const; },
@@ -75,32 +128,14 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
           catch (error) { reject(error); }
         }, reject);
       });
-      const reportClient = create_livehost_client<HostedTestReportState, ReportActions>({
-        socket: connect(association.reportHostId),
-        recovery: { logicalMapId: association.reportHostId },
-        session: {},
-      });
-      reportClient.connect();
-      await reportClient.session.create();
-      await reportClient.recovery.recover();
-      let runDisposed = false;
-      const run: HostedTestRemoteRun = Object.freeze({
-        association,
-        client: reportClient as LiveHostClient<HostedTestReportState, ReportActions>,
-        actionResult: action.then((response) => decode_hosted_test_run_response(response, suite)),
-        on_change(listener) { return reportClient.recovery.on_change(() => listener()); },
-        inspect(request) { return inspect_hosted_test_action(reportClient, request); },
-        dispose() {
-          if (runDisposed) return;
-          runDisposed = true;
-          runs.delete(run);
-          reportClient.disconnect();
-          reportClient.recovery.dispose();
-          reportClient.session.dispose();
-        },
-      });
-      runs.add(run);
-      return run;
+      return attach_run(association, action.then((response) => decode_hosted_test_run_response(response, suite)));
+    },
+    async recover_run(runId: string) {
+      await readiness;
+      const matches = Object.values(client.recovery.map.capture().value.requests)
+        .filter((association) => association.runId === runId);
+      if (matches.length !== 1) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
+      return attach_run(matches[0]!);
     },
     dispose() {
       if (disposed) return;

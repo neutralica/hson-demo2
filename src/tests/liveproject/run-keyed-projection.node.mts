@@ -8,6 +8,7 @@ import {
   LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE,
   LIVE_PROJECTION_SOURCE_REPLACEMENT_ERROR_CODE,
 } from "hson-live";
+import type { LiveMap, LiveMapPathHandle } from "hson-live";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
 
 let checks = 0;
@@ -24,6 +25,10 @@ function expectError(error: unknown, code: string, message: string): void {
 
 type Item = { id: string; label: string };
 
+function itemSource(map: LiveMap, key = "items"): LiveMapPathHandle<readonly Item[]> {
+  return map.at([key]) as unknown as LiveMapPathHandle<readonly Item[]>;
+}
+
 function order(host: ReturnType<typeof hson.liveTree.queryBody>["graft"] extends () => infer T ? T : never): string[] {
   return Array.from(host.dom.must.el().children).map((element) => element.textContent ?? "");
 }
@@ -34,7 +39,7 @@ function makeHost() {
 }
 
 function makeProjection(
-  source: any,
+  source: LiveMapPathHandle<readonly Item[]>,
   host: any,
   hooks: { failCreateFor?: string; failUpdateFor?: string } = {},
 ) {
@@ -75,7 +80,7 @@ try {
   {
     const map = hson.liveMap.fromJson({ items: [{ id: "a", label: "Alpha" }, { id: "b", label: "Beta" }] });
     const host = makeHost();
-    const view = makeProjection(map.at(["items"]), host);
+    const view = makeProjection(itemSource(map), host);
     expect(view.projection.status === "ready", "initial projection is ready");
     expect(view.projection.itemCount === 2, "initial projection owns two records");
     expect(order(host).join("|") === "Alpha|Beta", "initial order and content match");
@@ -133,13 +138,13 @@ try {
       { id: "b", label: "Beta snapshot" },
     ] });
     const surviving = new Map(view.projection.debugMappings().map((mapping) => [mapping.applicationKey, mapping.viewQuid]));
-    view.projection.replaceSource(replacement.at(["items"]));
+    view.projection.replaceSource(itemSource(replacement));
     expect(order(host).join("|") === "Gamma snapshot|Epsilon|Delta snapshot|Beta snapshot", "equivalent snapshot replacement updates content");
     expect(view.projection.debugMappings().every((mapping) => surviving.get(mapping.applicationKey) === mapping.viewQuid), "snapshot replacement reuses all surviving keyed branches");
 
     const invalid = hson.liveMap.fromJson({ items: [{ id: "x", label: "X" }, { id: "x", label: "duplicate" }] });
     let replacementError: unknown;
-    try { view.projection.replaceSource(invalid.at(["items"])); } catch (error) { replacementError = error; }
+    try { view.projection.replaceSource(itemSource(invalid)); } catch (error) { replacementError = error; }
     expectError(replacementError, LIVE_PROJECTION_SOURCE_REPLACEMENT_ERROR_CODE, "invalid source replacement");
     expect(order(host).join("|") === "Gamma snapshot|Epsilon|Delta snapshot|Beta snapshot", "invalid replacement retains prior projection");
     replacement.set(["items", 0, "label"], "Still subscribed");
@@ -147,7 +152,7 @@ try {
     expect(view.projection.diagnostics().failedSourceReplacements === 1, "failed replacement is diagnosed");
 
     view.projection.dispose();
-    expect(view.projection.status === "disposed" && host.content.count() === 0, "disposal removes only owned branches");
+    expect(String(view.projection.status) === "disposed" && host.content.count() === 0, "disposal removes only owned branches");
     expect(view.projection.diagnostics().applicationKeyMappings === 0, "disposal releases projection records");
     const cleanupTotal = [...view.cleanups.values()].reduce((sum, count) => sum + count, 0);
     expect(cleanupTotal === 6, "every created branch cleanup runs exactly once across removals and disposal");
@@ -163,7 +168,7 @@ try {
     let error: unknown;
     try {
       hson.liveProject.keyedCollection({
-        source: duplicate.at(["items"]) as any,
+        source: itemSource(duplicate),
         host: makeHost(),
         key: (item: any) => item.id,
         render() { renders += 1; return hson.liveTree.create.li(); },
@@ -177,7 +182,7 @@ try {
   {
     const map = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }] });
     const host = makeHost();
-    const view = makeProjection(map.at(["items"]), host);
+    const view = makeProjection(itemSource(map), host);
     map.at(["items"]).array.push({ id: "a", label: "duplicate" });
     expect(view.projection.status === "failed", "duplicate-key mutation visibly fails the projection");
     expect(view.projection.failure?.code === LIVE_PROJECTION_DUPLICATE_KEY_ERROR_CODE, "duplicate mutation retains classified first failure");
@@ -192,7 +197,7 @@ try {
     let removedTree: any;
     let listenerHits = 0;
     const projection = hson.liveProject.keyedCollection<Item>({
-      source: map.at(["items"]) as any,
+      source: itemSource(map),
       host,
       key: (item) => item.id,
       render(item) {
@@ -220,7 +225,7 @@ try {
   {
     const map = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }] });
     const host = makeHost();
-    const view = makeProjection(map.at(["items"]), host, { failCreateFor: "bad" });
+    const view = makeProjection(itemSource(map), host, { failCreateFor: "bad" });
     map.at(["items"]).array.push({ id: "bad", label: "Bad" });
     expect(view.projection.status === "failed", "renderer insertion failure marks projection failed");
     expect(view.projection.failure?.code === LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE, "renderer create failure is classified");
@@ -238,7 +243,7 @@ try {
     let error: unknown;
     try {
       hson.liveProject.keyedCollection({
-        source: map.at(["items"]) as any,
+        source: itemSource(map),
         host,
         key: (item: any) => item.id,
         render: () => attached,
@@ -252,9 +257,9 @@ try {
   {
     const map = hson.liveMap.fromJson({ left: [{ id: "a", label: "A" }], right: [{ id: "b", label: "B" }] });
     const root = hson.liveTree.queryBody().graft();
-    const left = makeProjection(map.at(["left"]), root.create.ul());
-    const right = makeProjection(map.at(["right"]), root.create.ul());
-    const secondLeft = makeProjection(map.at(["left"]), root.create.ul());
+    const left = makeProjection(itemSource(map, "left"), root.create.ul());
+    const right = makeProjection(itemSource(map, "right"), root.create.ul());
+    const secondLeft = makeProjection(itemSource(map, "left"), root.create.ul());
     expect(left.trees.get("a") !== secondLeft.trees.get("a"), "multiple views share source identity input but own distinct LiveTrees");
     map.set(["right", 0, "label"], "B2");
     expect((left.updates.get("a") ?? 0) === 0 && (right.updates.get("b") ?? 0) === 1, "independent source paths route commits correctly");
@@ -273,7 +278,7 @@ try {
       { id: "c", label: "C" },
     ] });
     const host = makeHost();
-    const view = makeProjection(source.at(["items"]), host);
+    const view = makeProjection(itemSource(source), host);
     const aQuid = view.trees.get("a").quid;
     const bQuid = view.trees.get("b").quid;
     const removedC = view.trees.get("c");
@@ -282,7 +287,7 @@ try {
       { id: "d", label: "D" },
       { id: "a", label: "A2" },
     ] });
-    view.projection.replaceSource(replacement.at(["items"]));
+    view.projection.replaceSource(itemSource(replacement));
     expect(order(host).join("|") === "B2|D|A2", "changed source replacement applies order, inserts, removals, and content");
     expect(view.projection.debugMappings().find((entry) => entry.applicationKey === "a")?.viewQuid === aQuid, "changed replacement reuses surviving a identity");
     expect(view.projection.debugMappings().find((entry) => entry.applicationKey === "b")?.viewQuid === bQuid, "changed replacement reuses surviving b identity");
@@ -294,7 +299,7 @@ try {
   {
     const authority = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }, { id: "b", label: "B" }] });
     const replay = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }, { id: "b", label: "B" }] });
-    const view = makeProjection(replay.at(["items"]), makeHost());
+    const view = makeProjection(itemSource(replay), makeHost());
     const aQuid = view.trees.get("a").quid;
     const commits = [
       authority.set(["items", 0, "label"], "A2"),
@@ -312,7 +317,7 @@ try {
   runtime.reset_document();
   {
     const map = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }] });
-    const view = makeProjection(map.at(["items"]), makeHost(), { failUpdateFor: "a" });
+    const view = makeProjection(itemSource(map), makeHost(), { failUpdateFor: "a" });
     map.set(["items", 0, "label"], "A2");
     expect(view.projection.status === "failed", "renderer update failure marks projection failed");
     expect(view.projection.failure?.code === "LIVE_PROJECTION_RENDERER_UPDATE_FAILED", "renderer update failure is classified and retained");
@@ -324,7 +329,7 @@ try {
   runtime.reset_document();
   {
     const map = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }] });
-    const view = makeProjection(map.at(["items"]), makeHost());
+    const view = makeProjection(itemSource(map), makeHost());
     const off = view.projection.subscribe(() => { throw new Error("observer"); });
     map.set(["items", 0, "label"], "A2");
     off();
@@ -342,7 +347,7 @@ try {
     let updates = 0;
     const started = performance.now();
     const projection = hson.liveProject.keyedCollection<Item>({
-      source: map.at(["items"]) as any,
+      source: itemSource(map),
       host,
       key: (item) => item.id,
       render(item) {
@@ -363,13 +368,13 @@ try {
     const insertStart = performance.now();
     map.at(["items"]).array.insert(1, { id: "inserted", label: "Inserted" });
     measurements.frontInsertionMs = performance.now() - insertStart;
-    expect(renders === 1_001, "front insertion creates one branch and preserves unaffected siblings");
+    expect(Number(renders) === 1_001, "front insertion creates one branch and preserves unaffected siblings");
 
     const movedQuid = projection.debugMappings().find((mapping) => mapping.applicationKey === "k900")?.viewQuid;
     const moveStart = performance.now();
     map.at(["items"]).array.move(901, 2);
     measurements.movementMs = performance.now() - moveStart;
-    expect(renders === 1_001, "movement recreates no branch");
+    expect(Number(renders) === 1_001, "movement recreates no branch");
     expect(projection.debugMappings().find((mapping) => mapping.applicationKey === "k900")?.viewQuid === movedQuid, "large movement preserves view identity");
 
     const deleteStart = performance.now();
@@ -380,11 +385,11 @@ try {
     projection.resync();
     measurements.completeReconciliationMs = performance.now() - reconcileStart;
 
-    const replacement = hson.liveMap.fromJson({ items: map.at(["items"]).snap() });
+    const replacement = hson.liveMap.fromJson({ items: [...itemSource(map).snap()] });
     const replacementStart = performance.now();
-    projection.replaceSource(replacement.at(["items"]) as any);
+    projection.replaceSource(itemSource(replacement));
     measurements.sourceReplacementMs = performance.now() - replacementStart;
-    expect(renders === 1_001, "equivalent source replacement preserves all keyed branches");
+    expect(Number(renders) === 1_001, "equivalent source replacement preserves all keyed branches");
 
     const disposeStart = performance.now();
     projection.dispose();
