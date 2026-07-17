@@ -48,10 +48,10 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     const hexRail = mk_span_cls(sunCarrier.tree, "lens-hex-rail");
 
     const HEX_FLARES = [
-        { size: 18, startX: 43, endX: 7, opacity: 0.16 },
-        { size: 28, startX: 53, endX: 24, opacity: 0.24 },
-        { size: 44, startX: 64, endX: 46, opacity: 0.15 },
-        { size: 26, startX: 75, endX: 69, opacity: 0.21 },
+        { size: 18, startX: 3, endX: -58, opacity: 0.16 },
+        { size: 28, startX: 23, endX: -22, opacity: 0.24 },
+        { size: 44, startX: 44, endX: 14, opacity: 0.15 },
+        { size: 26, startX: 65, endX: 48, opacity: 0.21 },
         { size: 15, startX: 84, endX: 84, opacity: 0.13 },
     ] as const;
 
@@ -79,7 +79,7 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
             top: "50%",
             width: `${size}px`,
             height: `${size}px`,
-            opacity: String(opacity),
+            opacity:    "0",
             transform: "translate(-50%, -50%) rotate(30deg)",
             clipPath:
                 "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0 50%)",
@@ -88,14 +88,42 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
             filter: "blur(0.25px)",
         });
 
+        const spacingDistance = endX - startX;
+
         hex.css.keyframes.set({
             name: spacingAnimationName,
             steps: {
                 "0%": {
-                    left: `${startX}%`,
-                },
-                "100%": {
+                    opacity:    "0",
                     left: `${endX}%`,
+                },
+                "1%": {
+                    opacity:    "0.01",
+                    left: `${endX}%`,
+                },
+                "38%": {
+                        opacity:    String(opacity),
+                    left: `${startX + spacingDistance * 0.36}%`,
+                },
+                "58%": {
+                        opacity:    String(opacity),
+                    left: `${startX + spacingDistance * 0.58}%`,
+                },
+                "76%": {
+                        opacity:    String(opacity),
+                    left: `${startX + spacingDistance * 0.76}%`,
+                },
+                "90%": {
+                        opacity:    String(opacity),
+                    left: `${startX + spacingDistance * 0.90}%`,
+                },
+                "99%": {
+                    opacity:    "0.01",
+                    left: `${startX + spacingDistance * 0.90}%`,
+                },
+                "100%": { 
+                    opacity:    "0",
+                    left: `${startX + spacingDistance}%`,
                 },
             },
         });
@@ -170,6 +198,8 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
         hex.css.anim.begin({
             ...FLAREHEXanim,
             name: `hson_lens_hex_spacing_${index + 1}`,
+            timingFunction: "linear",
+            fillMode: "forwards"
         });
     });
     await wait.for(flareBox.tree).anim(FLAREanim).end();

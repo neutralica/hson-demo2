@@ -209,34 +209,34 @@ export const SPLASHkfs = [
     },
   },
   {
-  name: "hson_lens_ghost",
-  steps: {
-    "0%": {
-      opacity: "0",
-      transform: "translate(-20%, 10%) scale(0.65)",
+    name: "hson_lens_ghost",
+    steps: {
+      "0%": {
+        opacity: "0",
+        transform: "translate(-20%, 10%) scale(0.65)",
+      },
+      "62%": {
+        opacity: "0",
+        transform: "translate(-20%, 10%) scale(0.65)",
+      },
+      "74%": {
+        opacity: "0.20",
+        transform: "translate(-12%, 4%) scale(0.85)",
+      },
+      "82%": {
+        opacity: "0.72",
+        transform: "translate(0%, -3%) scale(1.05)",
+      },
+      "90%": {
+        opacity: "0.38",
+        transform: "translate(10%, -7%) scale(0.95)",
+      },
+      "100%": {
+        opacity: "0",
+        transform: "translate(18%, -10%) scale(0.72)",
+      },
     },
-    "62%": {
-      opacity: "0",
-      transform: "translate(-20%, 10%) scale(0.65)",
-    },
-    "74%": {
-      opacity: "0.20",
-      transform: "translate(-12%, 4%) scale(0.85)",
-    },
-    "82%": {
-      opacity: "0.72",
-      transform: "translate(0%, -3%) scale(1.05)",
-    },
-    "90%": {
-      opacity: "0.38",
-      transform: "translate(10%, -7%) scale(0.95)",
-    },
-    "100%": {
-      opacity: "0",
-      transform: "translate(18%, -10%) scale(0.72)",
-    },
-  },
-}
+  }
 ]
 
 export const LAYER_FADEkf = {
@@ -277,32 +277,42 @@ export const CLOUD_SUN_KISSkf = {
 } as const;
 
 export const LENS_HEX_RAILkf = {
-  name: "hson_lens_hex_rail",
-  steps: {
-    "0%": {
-      opacity: "0",
-      transform:
-        "translate(-50%, -50%) translateX(-28px) rotate(8deg)",
+    name: "hson_lens_hex_rail",
+    steps: {
+        "0%": {
+            opacity: "0",
+            transform:
+                "translate(-50%, -50%) translateX(-26px) rotate(17deg)",
+        },
+        "14%": {
+            opacity: "0.05",
+            transform:
+                "translate(-50%, -50%) rotate(10deg)",
+        },
+        "36%": {
+            opacity: "0.55",
+            transform:
+                "translate(-50%, -50%)  rotate(5deg)",
+        },
+        "56%": {
+            opacity: "1",
+            transform:
+                "translate(-50%, -50%)  rotate(0deg)",
+        },
+        "76%": {
+            opacity: "0.95",
+            transform:
+                "translate(-50%, -50%)  rotate(-6deg)",
+        },
+        "90%": {
+            opacity: "0.72",
+            transform:
+                "translate(-50%, -50%)  rotate(-12deg)",
+        },
+        "100%": {
+            opacity: "0",
+            transform:
+                "translate(-50%, -50%)  rotate(-20deg)",
+        },
     },
-    "18%": {
-      opacity: "0.7",
-      transform:
-        "translate(-50%, -50%) translateX(-24px) rotate(6deg)",
-    },
-    "46%": {
-      opacity: "1",
-      transform:
-        "translate(-50%, -50%) translateX(-20px) rotate(3deg)",
-    },
-    "72%": {
-      opacity: "0.7",
-      transform:
-        "translate(-50%, -50%) translateX(-16px) rotate(0deg)",
-    },
-    "100%": {
-      opacity: "0",
-      transform:
-        "translate(-50%, -50%) translateX(-12px) rotate(-3deg)",
-    },
-  },
 } as const;
