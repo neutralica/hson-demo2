@@ -1,5 +1,5 @@
-import { create_livehost_client } from "hson-live";
-import type { LiveHostClient, LiveHostClientActionPromise } from "hson-live/types";
+import { create_livehost_client, LiveHostDisconnectedError } from "hson-live";
+import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise } from "hson-live/types";
 import type { HostedTestActions, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunResult } from "../../hosted-test/hosted-test-action.types";
 import { decode_hosted_test_inspect_response, decode_hosted_test_run_response } from "../../hosted-test/hosted-test-client-action";
 import type { HostedTestReportState } from "../../hosted-test/hosted-test-report.types";
@@ -17,6 +17,11 @@ import {
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": Readonly<{ runId: string; caseKey: string }>;
+}>;
+
+type HostedTestAssociationWaiter = Readonly<{
+  suite: HostedTestSuiteId;
+  resolve(association: HostedTestRunAssociation): void;
 }>;
 
 export type HostedTestPanelRuntimeStatus = "connecting" | "ready" | "reconnecting" | "recovering" | "failed" | "disposed";
@@ -47,6 +52,8 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   reconnectDelaysMs?: readonly number[];
   /** Refresh-safe identity factory. Primarily injectable for deterministic tests. */
   makeClientId?: () => string;
+  /** Fresh-action identity factory. Primarily injectable for deterministic tests. */
+  makeActionId?: () => LiveHostActionId;
 }>;
 
 let fallbackClientId = 0;
@@ -73,7 +80,11 @@ function association_from(
   client: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>,
   requestId: string,
 ): HostedTestRunAssociation | undefined {
-  return client.recovery.map.capture().value.requests[requestId];
+  return client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
+}
+
+function all_associations(state: HostedTestCoordinatorState): readonly HostedTestRunAssociation[] {
+  return Object.values(state.requests).flatMap((requests) => Object.values(requests));
 }
 
 function result_summary_from_report(report: HostedTestReportState): HostedTestRunResult["summary"] {
@@ -110,7 +121,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   let reconnecting: Promise<void> | undefined;
   const cancelDelays = new Set<() => void>();
   const activeRuns = new Set<HostedTestRemoteRun>();
-  const associationWaiters = new Map<string, Set<(association: HostedTestRunAssociation) => void>>();
+  const associationWaiters = new Map<string, Set<HostedTestAssociationWaiter>>();
 
   function wait_delay(ms: number): Promise<void> {
     if (ms === 0) return Promise.resolve();
@@ -125,8 +136,12 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     for (const [requestId, listeners] of [...associationWaiters]) {
       const association = association_from(coordinatorClient, requestId);
       if (!association) continue;
-      associationWaiters.delete(requestId);
-      for (const listener of listeners) listener(association);
+      for (const listener of [...listeners]) {
+        if (listener.suite !== association.suite) continue;
+        listeners.delete(listener);
+        listener.resolve(association);
+      }
+      if (listeners.size === 0) associationWaiters.delete(requestId);
     }
   }
 
@@ -151,6 +166,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const next = create_livehost_client<HostedTestCoordinatorState, HostedTestActions>({
       socket: transport.socket,
       clientId: previous?.clientId ?? coordinatorClientId,
+      ...(options.makeActionId ? { actionId: options.makeActionId } : {}),
       ...(previous ? { map: previous.recovery.map } : {}),
       recovery: {
         logicalMapId: HOSTED_TEST_COORDINATOR_HOST_ID,
@@ -219,25 +235,32 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     action: LiveHostClientActionPromise<HostedTestActions, "tests.run">,
     suite: HostedTestSuiteId,
   ): Promise<HostedTestRunResult> {
+    let response: unknown;
     try {
-      return decode_hosted_test_run_response(await action, suite);
+      response = await action;
     } catch (error) {
-      if (disposed) throw error;
+      if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
       await ensure_reconnected();
-      return decode_hosted_test_run_response(await coordinatorClient.retry_action(action.request), suite);
+      response = await coordinatorClient.retry_action(action.request);
     }
+    return decode_hosted_test_run_response(response, suite);
   }
 
-  function wait_for_association(requestId: string, actionResult: Promise<HostedTestRunResult>): Promise<HostedTestRunAssociation> {
+  function wait_for_association(
+    requestId: string,
+    suite: HostedTestSuiteId,
+    actionResult: Promise<HostedTestRunResult>,
+  ): Promise<HostedTestRunAssociation> {
     const current = association_from(coordinatorClient, requestId);
-    if (current) return Promise.resolve(current);
+    if (current?.suite === suite) return Promise.resolve(current);
     return new Promise<HostedTestRunAssociation>((resolve, reject) => {
       const listeners = associationWaiters.get(requestId) ?? new Set();
-      listeners.add(resolve);
+      const waiter = Object.freeze({ suite, resolve });
+      listeners.add(waiter);
       associationWaiters.set(requestId, listeners);
       void actionResult.catch((error) => {
         const pending = associationWaiters.get(requestId);
-        if (!pending?.delete(resolve)) return;
+        if (!pending?.delete(waiter)) return;
         if (pending.size === 0) associationWaiters.delete(requestId);
         reject(error);
       });
@@ -368,12 +391,14 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       },
       async inspect(request) {
         const pending = reportClient.action("tests.inspect", request);
-        try { return decode_hosted_test_inspect_response(await pending, request.caseKey); }
+        let response: unknown;
+        try { response = await pending; }
         catch (error) {
-          if (disposed || runDisposed) throw error;
+          if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
           await ensure_report_reconnected();
-          return decode_hosted_test_inspect_response(await reportClient.retry_action(pending.request), request.caseKey);
+          response = await reportClient.retry_action(pending.request);
         }
+        return decode_hosted_test_inspect_response(response, request.caseKey);
       },
       dispose() {
         if (runDisposed) return;
@@ -399,7 +424,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const action = coordinatorClient.action("tests.run", { suite });
     const actionResult = retry_safe_result(action, suite);
     void actionResult.catch(() => undefined);
-    const association = await wait_for_association(action.request.requestId, actionResult);
+    const association = await wait_for_association(action.request.requestId, suite, actionResult);
     return attach_run(association, actionResult);
   }
 
@@ -408,7 +433,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     if (!runId) throw new Error("Hosted-test recovery requires an explicit non-empty run ID.");
-    const matches = Object.values(coordinatorClient.recovery.map.capture().value.requests)
+    const matches = all_associations(coordinatorClient.recovery.map.capture().value)
       .filter((association) => association.runId === runId);
     if (matches.length !== 1) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
     return attach_run(matches[0]!);

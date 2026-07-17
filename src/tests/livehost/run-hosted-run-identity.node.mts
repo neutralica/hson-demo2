@@ -53,7 +53,13 @@ function sink() {
 const server = await start_hosted_test_server({ port: 0, registry });
 try {
   const firstSink = sink();
-  const firstRuntime = make_remote_hosted_test_runtime({ url: server.url, WebSocketConstructor });
+  const firstActionIds = ["shared-request", "second-request"];
+  const firstRuntime = make_remote_hosted_test_runtime({
+    url: server.url,
+    WebSocketConstructor,
+    makeClientId: () => "browser-one",
+    makeActionId: () => firstActionIds.shift() ?? "unexpected-browser-one-request",
+  });
   const firstAdapter = make_hosted_test_panel_adapter(firstRuntime, firstSink.value);
   await firstRuntime.ready();
 
@@ -63,20 +69,42 @@ try {
   expect_identity(executions === 2, "two user starts execute the suite twice");
   expect_identity(first.ok && second.ok, "the initial fixture version passes both fresh executions");
 
-  const firstBrowserClientId = firstRuntime.client.clientId;
+  const secondBrowserSink = sink();
+  const secondBrowserRuntime = make_remote_hosted_test_runtime({
+    url: server.url,
+    WebSocketConstructor,
+    makeClientId: () => "browser-two",
+    makeActionId: () => "shared-request",
+  });
+  const secondBrowserAdapter = make_hosted_test_panel_adapter(secondBrowserRuntime, secondBrowserSink.value);
+  await secondBrowserRuntime.ready();
+  const sameRequestIdRun = await secondBrowserAdapter.start("livemap/replay");
+  expect_identity(sameRequestIdRun.runId !== first.runId, "two clients sharing one request ID receive distinct run IDs");
+  expect_identity(Number(executions) === 3, "the second client's shared request ID starts a fresh execution");
+  const associations = secondBrowserRuntime.client.recovery.map.capture().value.requests;
+  expect_identity(associations["browser-one"]?.["shared-request"]?.runId === first.runId, "the first client retains its request association");
+  expect_identity(associations["browser-two"]?.["shared-request"]?.runId === sameRequestIdRun.runId, "the second client retains an independent request association");
+
   firstAdapter.dispose();
   firstRuntime.dispose();
+  secondBrowserAdapter.dispose();
+  secondBrowserRuntime.dispose();
 
   const refreshedSink = sink();
-  const refreshedRuntime = make_remote_hosted_test_runtime({ url: server.url, WebSocketConstructor });
+  const refreshedRuntime = make_remote_hosted_test_runtime({
+    url: server.url,
+    WebSocketConstructor,
+    makeClientId: () => "browser-after-reload",
+    makeActionId: () => "shared-request",
+  });
   const refreshedAdapter = make_hosted_test_panel_adapter(refreshedRuntime, refreshedSink.value);
   await refreshedRuntime.ready();
-  expect_identity(refreshedRuntime.client.clientId !== firstBrowserClientId, "a browser refresh receives a new LiveHost client identity");
+  expect_identity(refreshedRuntime.client.clientId !== "browser-one", "a browser refresh receives a new LiveHost client identity");
 
-  const recovered = await refreshedAdapter.recover(second.runId);
-  expect_identity(recovered.runId === second.runId && recovered.ok, "an explicitly known prior run ID recovers its completed report");
-  expect_identity(executions === 2, "report recovery performs no suite execution");
-  expect_identity(refreshedAdapter.capture()?.run.id === second.runId, "the recovered report remains correlated to the explicit run ID");
+  const recovered = await refreshedAdapter.recover(sameRequestIdRun.runId);
+  expect_identity(recovered.runId === sameRequestIdRun.runId && recovered.ok, "an explicitly known prior run ID recovers its completed report");
+  expect_identity(Number(executions) === 3, "report recovery performs no suite execution");
+  expect_identity(refreshedAdapter.capture()?.run.id === sameRequestIdRun.runId, "the recovered report remains correlated to the explicit run ID");
 
   fixtureVersion = 2;
   fixturePasses = false;
@@ -84,14 +112,14 @@ try {
   const freshReport = refreshedAdapter.capture();
   const freshCases = refreshedSink.updates.flatMap((update) => update.newCases);
   expect_identity(fresh.runId !== recovered.runId, "Run after refresh creates a new run instead of returning the recovered report");
-  expect_identity(Number(executions) === 3, "Run after refresh executes the suite again");
+  expect_identity(Number(executions) === 4, "Run after refresh executes the suite again");
   expect_identity(!fresh.ok && freshReport?.run.status === "failed", "changed failing fixture code controls the fresh outcome");
   expect_identity(freshCases.some((testCase) => testCase.name === "fixture-v2" && testCase.status === "fail"), "the next report contains the changed fixture version");
   expect_identity(fresh.runId === freshReport?.run.id && fresh.runId !== second.runId, "a stale completed outcome cannot satisfy the fresh action request");
 
   refreshedAdapter.dispose();
   refreshedRuntime.dispose();
-  console.log(JSON.stringify({ executions, firstRunId: first.runId, recoveredRunId: recovered.runId, freshRunId: fresh.runId }));
+  console.log(JSON.stringify({ executions, firstRunId: first.runId, sharedRequestRunId: sameRequestIdRun.runId, recoveredRunId: recovered.runId, freshRunId: fresh.runId }));
 } finally {
   await server.stop();
 }

@@ -6,7 +6,7 @@ import { decode_hosted_test_run_response, inspect_hosted_test_action } from "../
 import type { HostedTestReportState } from "../../app/hosted-test/hosted-test-report.types";
 import type { HostedTestSuiteId, HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
 import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../hosted-test/hosted-test-application";
-import type { HostedTestCoordinatorState } from "../../app/hosted-test/hosted-test-application.types";
+import type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../../app/hosted-test/hosted-test-application.types";
 
 type MessageListener = (message: string) => void;
 type ReportActions = Readonly<{ "tests.inspect": Readonly<{ runId: string; caseKey: string }> }>;
@@ -51,7 +51,7 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
   const runs = new Set<HostedTestRemoteRun>();
 
   async function attach_run(
-    association: HostedTestCoordinatorState["requests"][string],
+    association: HostedTestRunAssociation,
     actionResult?: Promise<HostedTestRunResult>,
   ): Promise<HostedTestRemoteRun> {
     const reportClient = create_livehost_client<HostedTestReportState, ReportActions>({
@@ -112,11 +112,11 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
       await readiness;
       const action = client.action("tests.run", { suite });
       const requestId = action.request.requestId;
-      const association = await new Promise<HostedTestCoordinatorState["requests"][string]>((resolve, reject) => {
-        const existing = client.recovery.map.capture().value.requests[requestId];
+      const association = await new Promise<HostedTestRunAssociation>((resolve, reject) => {
+        const existing = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
         if (existing) { resolve(existing); return; }
         const stop = client.recovery.on_change(() => {
-          const found = client.recovery.map.capture().value.requests[requestId];
+          const found = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
           if (!found) return;
           stop();
           resolve(found);
@@ -133,6 +133,7 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
     async recover_run(runId: string) {
       await readiness;
       const matches = Object.values(client.recovery.map.capture().value.requests)
+        .flatMap((requests) => Object.values(requests))
         .filter((association) => association.runId === runId);
       if (matches.length !== 1) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
       return attach_run(matches[0]!);

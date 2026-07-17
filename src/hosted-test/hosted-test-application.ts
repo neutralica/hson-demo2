@@ -116,7 +116,7 @@ export function create_hosted_test_application(
 
   const actions: LiveHostActions<HostedTestActions, HostedTestCoordinatorState> = {
     "tests.run": async (context, request, message) => {
-      if (!message.requestId) throw new Error("HOSTED_TEST_REQUEST_ID_REQUIRED: tests.run requires a retry-safe request identity.");
+      if (!message.clientId || !message.requestId) throw new Error("HOSTED_TEST_REQUEST_ID_REQUIRED: tests.run requires a retry-safe client and request identity.");
       let descriptor;
       try { descriptor = registry.get(request.suite); }
       catch { throw new HostedTestUnknownSuiteError(request.suite, true); }
@@ -149,6 +149,7 @@ export function create_hosted_test_application(
       const report = make_hosted_test_report(Date.now, undefined, descriptor.id, report_options(options.report, runId, reportHost.map));
 
       const association: HostedTestRunAssociation = {
+        clientId: message.clientId,
         requestId: message.requestId,
         runId,
         reportHostId,
@@ -158,7 +159,11 @@ export function create_hosted_test_application(
       };
       // The request-to-report association is authoritative before execution can
       // yield, so an uncertain action can always rediscover the one created run.
-      context.map.setMany(["requests"], { [message.requestId]: association });
+      if (context.map.capture().value.requests[message.clientId] === undefined) {
+        context.map.setMany(["requests"], { [message.clientId]: { [message.requestId]: association } });
+      } else {
+        context.map.setMany(["requests", message.clientId], { [message.requestId]: association });
+      }
 
       const hostStartedAt = performance.now();
       let result: RunResult;
@@ -171,7 +176,7 @@ export function create_hosted_test_application(
       } catch (error) {
         report.failInfrastructure(error);
         const failed = { ...association, status: "error" as const, reportRev: reportHost.stream.headRev };
-        context.map.replace(["requests", message.requestId], failed);
+        context.map.replace(["requests", message.clientId, message.requestId], failed);
         report.dispose();
         throw error;
       }
@@ -180,7 +185,7 @@ export function create_hosted_test_application(
       const state = reportHost.map.capture().value;
       const status = state.run.status === "passed" ? "passed" : "failed";
       const terminal: HostedTestRunAssociation = { ...association, status, reportRev: reportHost.stream.headRev };
-      context.map.replace(["requests", message.requestId], terminal);
+      context.map.replace(["requests", message.clientId, message.requestId], terminal);
       const timing = state.run.timing;
       if (timing === null) throw new Error("Hosted test report completed without timing.");
       const hostedResult: HostedTestRunResult = {
