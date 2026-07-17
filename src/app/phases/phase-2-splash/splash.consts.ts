@@ -33,7 +33,7 @@ export const STAR_DELnum = SKY_DURnum * 0.26;
 export const STAR_DELstr = `${STAR_DELnum}ms`;
 
 const flareAt = 0.4659;
-const flareLengthNum = 320;
+export const flareLengthNum = 320;
 export const flareDelayNum = Math.round(SUN_DURnum * flareAt);
 export const flareDurStr = `${flareLengthNum}ms`;
 

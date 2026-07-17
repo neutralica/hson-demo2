@@ -2,9 +2,9 @@
 
 import { CssManager, type LiveTree } from "hson-live";
 import { O_ROT, VER_CSS, VER6_CSS } from "../../ui/wordmark/wordmark.css";
-import { CLOUD_LAYER_FADEanim } from "./splash.anim";
+import { CLOUD_LAYER_FADEanim, FLAREHEXanim } from "./splash.anim";
 import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";
-import { SPLASHkfs } from "./splash.keys";
+import { LENS_HEX_RAILkf, SPLASHkfs } from "./splash.keys";
 import { FLAREanim, NEON_FLASHanim, STAR_CARRIER_ANIM, STAR_HEAD_ANIM, STARSHINEanim, SUN_DISKanim, TAIL_A_ANIM as STAR_TAIL_A_ANIM, TAIL_B_ANIM as STAR_TAIL_B_ANIM, TAIL_C_ANIM as STAR_TAIL_C_ANIM, VERanim } from "./splash.anim";
 import { _rng_xs32, get_letter_key } from "../../utils/helpers";
 import type { LetterCaps, LetterKey } from "../../core/types/core.types";
@@ -44,6 +44,47 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     /* create lighting effects */
     const flareBox = sunCarrier.bud(SPLASH_BUDS.flareBox);
     const flare = flareBox.bud(SPLASH_BUDS.flare);
+
+    const hexRail = mk_span_cls(sunCarrier.tree, "lens-hex-rail");
+
+    const HEX_FLARES = [
+        { size: 18, x: 7, opacity: 0.16 },
+        { size: 28, x: 24, opacity: 0.24 },
+        { size: 44, x: 46, opacity: 0.15 },
+        { size: 26, x: 69, opacity: 0.21 },
+        { size: 15, x: 84, opacity: 0.13 },
+    ] as const;
+    hexRail.css.setMany({
+        position: "absolute",
+        inset: "0",
+        pointerEvents: "none",
+        transformOrigin: "50% 50%",
+    });
+
+    hexRail.css.keyframes.set(LENS_HEX_RAILkf);
+
+    HEX_FLARES.forEach(({ size, x, opacity }, index) => {
+        const hex = mk_span_cls(hexRail, [
+            "lens-hex",
+            `lens-hex-${index + 1}`,
+        ]);
+
+        hex.css.setMany({
+            position: "absolute",
+            left: `${x}%`,
+            top: "50%",
+            width: `${size}px`,
+            height: `${size}px`,
+            opacity: String(opacity),
+            transform: "translate(-50%, -50%) rotate(30deg)",
+            clipPath:
+                "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0 50%)",
+            background: "rgba(210, 235, 255, 0.42)",
+            boxShadow: "0 0 10px rgba(190, 225, 255, 0.16)",
+            filter: "blur(0.25px)",
+        });
+    });
+
     const gradient = frame.bud(SPLASH_BUDS.gradient);
 
     /* create star elements */
@@ -106,10 +147,12 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     sun.animate();
     gradient.animate()
     flare.animate();
+    hexRail.css.anim.begin(FLAREHEXanim);
 
     await wait.for(flareBox.tree).anim(FLAREanim).end();
     flareBox.tree.remove();
-
+    hexRail.remove();
+    
     await wait.for(sun.tree).anim(SUN_DISKanim).end()
     sunCarrier.tree.remove();
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });

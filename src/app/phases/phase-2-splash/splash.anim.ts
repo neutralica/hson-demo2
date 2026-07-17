@@ -1,5 +1,5 @@
 import type { AnimSpec } from "hson-live/types";
-import { SKY_DURstr, SUN_TIMEstr, STAR_DURstr, STAR_DELstr, STAR_DURnum, SHORT_FLASHstr, flareDurStr, flareDelayNum, CLOUD_DURnum, CLOUD_DURstr, CLOUD_BAND_LOOPstr, CLOUD_FADE_ONCEstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr } from "./splash.consts";
+import { SKY_DURstr, SUN_TIMEstr, STAR_DURstr, STAR_DELstr, STAR_DURnum, SHORT_FLASHstr, flareDurStr, flareDelayNum, CLOUD_DURnum, CLOUD_DURstr, CLOUD_BAND_LOOPstr, CLOUD_FADE_ONCEstr, CLOUD_LAYER_FADEstr, CLOUD_SUN_KISSstr, flareLengthNum } from "./splash.consts";
 
 
 export const SKYanim = {
@@ -71,6 +71,16 @@ export const FLAREanim: AnimSpec = {
   delay: `${flareDelayNum}ms`,
   iterationCount: "1",
   fillMode: "both", // keep opacity=0 before, return to 0 after
+};
+
+export const FLAREHEXanim: AnimSpec = {
+  name: "hson_lens_hex_rail",
+  duration: `${flareLengthNum * 2}`,
+  // timingFunction: "cubic-bezier(0.22, 0.61, 0.36, 1)",
+  timingFunction: "linear",
+  delay: `${flareDelayNum - flareLengthNum}ms`,
+  fillMode: "both",
+
 };
 
 const starAnimBase = {

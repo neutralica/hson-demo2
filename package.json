@@ -8,6 +8,7 @@
     "dev": "vite",
     "hosted:test-server": "tsx src/hosted-test/server/hosted-test-server-entry.node.ts",
     "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run hosted:test-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
+    "check": "tsc -p tsconfig.json --noEmit",
     "build": "vite build",
     "preview": "vite preview",
     "test:replay-node": "tsx src/tests/livemap/run-replay-suite.node.mts",
@@ -25,6 +26,7 @@
     "test:hosted-replay-router-node": "tsx src/tests/livehost/run-hosted-replay-router.node.mts",
     "test:hosted-test-panel-adapter-node": "tsx src/tests/livehost/run-hosted-test-panel-adapter.node.mts",
     "test:hosted-test-panel-projection-node": "tsx src/tests/livehost/run-hosted-test-panel-projection.node.mts",
+    "test:hosted-test-inspector-parity-node": "tsx src/tests/livehost/run-hosted-test-inspector-parity.node.mts",
     "test:hosted-suite-registry-node": "tsx src/tests/livehost/run-hosted-suite-registry.node.mts",
     "test:hosted-node-all-node": "tsx src/tests/livehost/run-hosted-node-all.node.mts",
     "test:hosted-report-batch-node": "tsx src/tests/livehost/run-hosted-test-report-batch.node.mts",
@@ -34,6 +36,7 @@
     "test:hosted-websocket-lifecycle-node": "tsx src/tests/livehost/run-hosted-websocket-lifecycle.node.mts",
     "test:hosted-jsdom-runtime-node": "tsx src/tests/livehost/run-hosted-jsdom-runtime.node.mts",
     "test:hosted-dom-collection-node": "tsx src/tests/livehost/run-hosted-dom-collection.node.mts",
+    "test:hosted-dom-compatibility-node": "tsx src/tests/livehost/run-hosted-dom-compatibility.node.mts",
     "test:hosted-dom-real-websocket-node": "tsx src/tests/livehost/run-hosted-dom-real-websocket.node.mts",
     "test:hosted-stale-suite-real-websocket-node": "tsx src/tests/livehost/run-hosted-stale-suite-real-websocket.node.mts",
     "test:hosted-dom-behavior-diagnostics-node": "tsx src/tests/livehost/run-hosted-dom-behavior-diagnostics.node.mts",
@@ -57,7 +60,8 @@
     "test:generated-json-node": "tsx src/tests/diagnostics/run-generated-json.node.mts",
     "test:hosted-replay-events-node": "tsx src/tests/livehost/run-hosted-replay-events.node.mts",
     "test:hosted-replay-concurrent-node": "tsx src/tests/livehost/run-hosted-replay-concurrent.node.mts",
-    "test:amoebi-geometry": "tsx src/app/demos/amoeba/amoebi-geometry.test.mts"
+    "test:amoebi-geometry": "tsx src/app/demos/amoeba/amoebi-geometry.test.mts",
+    "test:surface-enumeration-node": "tsx src/tests/test-surface/run-test-surface-enumeration.node.mts"
   },
   "keywords": [],
   "author": "terminal_gothic",
@@ -65,6 +69,7 @@
   "devDependencies": {
     "@types/node": "^25.5.2",
     "@types/ws": "8.18.1",
+    "typescript": "^5.8.3",
     "vite": "^7.3.0"
   },
   "dependencies": {

@@ -18,13 +18,13 @@ export const HOSTED_TEST_SUITE_IDS = [
 export type HostedTestSuiteId = typeof HOSTED_TEST_SUITE_IDS[number];
 
 export const HOSTED_TEST_VISIBLE_SUITES = Object.freeze([
-  Object.freeze({ id: "hosted/all", label: "All hosted" }),
-  Object.freeze({ id: "category/livetree", label: "LiveTree" }),
-  Object.freeze({ id: "category/livemap", label: "LiveMap" }),
-  Object.freeze({ id: "category/livehost", label: "LiveHost" }),
-  Object.freeze({ id: "category/transform", label: "Transform" }),
-  Object.freeze({ id: "category/unit", label: "Unit" }),
-  Object.freeze({ id: "category/dev", label: "Dev" }),
+  Object.freeze({ id: "hosted/all", label: "all" }),
+  Object.freeze({ id: "category/transform", label: "transform" }),
+  Object.freeze({ id: "category/livetree", label: "livetree" }),
+  Object.freeze({ id: "category/livemap", label: "livemap" }),
+  Object.freeze({ id: "category/livehost", label: "livehost" }),
+  Object.freeze({ id: "category/unit", label: "unit" }),
+  Object.freeze({ id: "category/dev", label: "dev" }),
 ] as const satisfies readonly Readonly<{ id: HostedTestSuiteId; label: string }>[]);
 
 export type HostedTestSuiteRunner = (

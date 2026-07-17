@@ -1,86 +1,25 @@
-import { performance } from "node:perf_hooks";
-import WebSocket from "ws";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
-import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
-import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import { run_hosted_test_action } from "../../app/hosted-test/hosted-test-action";
-import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
-import { make_hosted_test_report_router } from "../../app/hosted-test/hosted-test-report-router";
-import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
 import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
+import { eventually, make_real_websocket_probe, make_real_websocket_runtime } from "./real-websocket-test-runtime";
 
 function expect_ws(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted real WebSocket: ${message}`);
 }
 
-const WebSocketConstructor = WebSocket as unknown as BrowserWebSocketConstructor;
-let serverActionMs = 0;
-const baseRegistry = make_registered_hosted_test_suite_registry();
-const measuredRegistry = make_hosted_test_suite_registry(baseRegistry.list().map((descriptor) => ({
-  ...descriptor,
-  async run(...args: Parameters<typeof descriptor.run>) {
-    const actionStarted = performance.now();
-    try { return await descriptor.run(...args); }
-    finally { if (descriptor.id === "node/all") serverActionMs = performance.now() - actionStarted; }
-  },
-})));
-const server = await start_hosted_test_server({ port: 0, registry: measuredRegistry });
-const runtime = make_remote_hosted_test_runtime({ url: server.url, WebSocketConstructor });
-let initialEvents = 0;
-let commitEvents = 0;
-const eventRunIds = new Set<string>();
-const stopEvents = runtime.client.on_event((message) => {
-  if (message.event === HOSTED_TEST_REPORT_INITIAL_EVENT) initialEvents += 1;
-  if (message.event === HOSTED_TEST_REPORT_COMMIT_EVENT) commitEvents += 1;
-  if (typeof message.payload === "object" && message.payload !== null && "runId" in message.payload) {
-    const runId = (message.payload as { runId?: unknown }).runId;
-    if (typeof runId === "string") eventRunIds.add(runId);
-  }
-});
-await runtime.ready();
-expect_ws(runtime.status === "ready" && server.connectionCount() === 1, "remote runtime connects one real WebSocket");
-const router = make_hosted_test_report_router(runtime.client);
-const started = performance.now();
-const result = await run_hosted_test_action(runtime.client, "node/all");
-const roundTripMs = performance.now() - started;
-const mirror = await router.wait_for_terminal();
-router.accept_result(result);
-expect_ws(initialEvents === 1 && commitEvents === 61, "real socket carries one initial and 61 commit events");
-expect_ws(mirror.rev === 62 && mirror.capture().value.summary.cases === 1060, "real socket mirror reaches revision 62 with 1060 cases");
-expect_ws(mirror.capture().value.summary.pass === 1060 && mirror.capture().value.summary.fail === 0, "real socket report passes every case");
-expect_ws(result.suite === "node/all" && result.runId === router.runId && eventRunIds.size === 1 && eventRunIds.has(result.runId), "result, router, and event stream correlate");
-expect_ws(typeof window === "undefined" && typeof document === "undefined", "server integration process has no browser globals");
-const transportMetrics = server.metrics();
-expect_ws(transportMetrics.sentMessages === 64 && transportMetrics.sentBytes > 0, "server records hello, report events, and action acknowledgement bytes");
-
-router.dispose();
-stopEvents();
-runtime.dispose();
-for (let attempt = 0; attempt < 100 && server.connectionCount() !== 0; attempt += 1) {
-  await new Promise((resolve) => setTimeout(resolve, 5));
+const server = await start_hosted_test_server({ port: 0 });
+try {
+  const runtime = make_real_websocket_runtime(server.url);
+  const probe = make_real_websocket_probe(runtime);
+  await probe.ready();
+  expect_ws(server.connectionCount() === 1, "ready coordinator owns one connection");
+  const result = await probe.start("node/all");
+  const report = probe.adapter.capture();
+  expect_ws(result.ok && result.summary.cases === 1_060, "node/all passes 1,060 cases over a real socket");
+  expect_ws(report?.run.id === result.runId && report.run.suite === result.suite, "dedicated report host retains strict run identity");
+  expect_ws(probe.updates.flatMap((update) => update.newCases).length === 1_060, "report-host recovery projects every case once");
+  expect_ws(server.connectionCount() === 2, "coordinator and report use separate real WebSockets");
+  probe.dispose();
+  await eventually(() => server.connectionCount() === 0, "real WebSocket disposal");
+  console.log(JSON.stringify({ runId: result.runId, cases: result.summary.cases, messages: server.metrics().sentMessages }));
+} finally {
+  await server.stop();
 }
-expect_ws(server.connectionCount() === 0, "client disposal closes and removes the server connection");
-await server.stop();
-
-const panelServer = await start_hosted_test_server({ port: 0 });
-const panelRuntime = make_remote_hosted_test_runtime({ url: panelServer.url, WebSocketConstructor });
-await panelRuntime.ready();
-const panelUpdates: HostedTestPanelReportUpdate[] = [];
-let panelRenders = 0;
-const sink: HostedTestPanelSink = {
-  reset() { panelUpdates.length = 0; },
-  ingest(update) { panelUpdates.push(update); panelRenders += 1; },
-  showInfrastructureError(message) { throw new Error(message); },
-};
-const adapter = make_hosted_test_panel_adapter(panelRuntime.client, sink);
-const panelResult = await adapter.start("node/all");
-expect_ws(panelUpdates.flatMap((update) => update.newCases).length === 1060, "remote panel adapter receives every compact case exactly once");
-expect_ws(panelUpdates.at(-1)?.report.summary.pass === 1060 && panelRenders === 62, "remote panel reaches the complete batched final state");
-expect_ws(panelResult.runId === adapter.router?.runId, "remote panel action correlates through its existing router");
-adapter.dispose();
-panelRuntime.dispose();
-await panelServer.stop();
-
-console.log(JSON.stringify({ serverActionMs, roundTripMs, sentMessages: transportMetrics.sentMessages, sentBytes: transportMetrics.sentBytes, initialEvents, commitEvents, genericEvents: initialEvents + commitEvents, finalRev: mirror.rev }));

@@ -275,3 +275,34 @@ export const CLOUD_SUN_KISSkf = {
     "100%": { "--kiss": "1" },
   },
 } as const;
+
+export const LENS_HEX_RAILkf = {
+    name: "hson_lens_hex_rail",
+    steps: {
+        "0%": {
+            opacity: "0",
+            transform:
+                "translate(-50%, -50%) translateX(-90px) rotate(20deg) scale(0.82)",
+        },
+        "18%": {
+            opacity: "1",
+            transform:
+                "translate(-50%, -50%) translateX(-48px) rotate(18deg) scale(0.9)",
+        },
+        "46%": {
+            opacity: "1",
+            transform:
+                "translate(-50%, -50%) translateX(-20px) rotate(6deg) scale(1.1)",
+        },
+        "72%": {
+            opacity: "0.9",
+            transform:
+                "translate(-50%, -50%) translateX(2px) rotate(-8deg) scale(1.47)",
+        },
+        "100%": {
+            opacity: "1",
+            transform:
+                "translate(-50%, -50%) translateX(3px) rotate(-26deg) scale(1.92)",
+        },
+    },
+} as const;

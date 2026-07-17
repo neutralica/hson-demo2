@@ -38,7 +38,7 @@ function application_files(directory: string): string[] {
 }
 for (const name of hostedFiles) {
   const source = readFileSync(new URL(name, hostedDirectory), "utf8");
-  expect_boundary(!source.includes("tests/"), `${name} must not import from src/tests`);
+  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\//.test(source), `${name} must not import from src/tests`);
 }
 
 const browserRuntimeSource = readFileSync(new URL("../../app/demos/test/hosted-test-panel-runtime.ts", import.meta.url), "utf8");
@@ -55,9 +55,9 @@ expect_boundary(!browserRuntimeSource.includes("hosted-canvas") && !mainSource.i
 for (const file of application_files(appDirectory)) {
   const source = readFileSync(file, "utf8");
   expect_boundary(!source.includes('from "jsdom"') && !source.includes('from "ws"'), `${file} excludes Node-only transport and DOM packages`);
-  expect_boundary(!source.includes("registered-hosted-test-suites") && !source.includes("jsdom-hosted-test-suites"), `${file} excludes executable Node descriptors`);
+  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*(?:registered-hosted-test-suites|jsdom-hosted-test-suites)/.test(source), `${file} excludes executable Node descriptors`);
   expect_boundary(!source.includes("all_test_suites") && !source.includes("run_test_suites"), `${file} excludes browser-local suite execution`);
-  expect_boundary(!source.includes("tests/livemap/") && !source.includes("tests/livetree/") && !source.includes("tests/livehost/") && !source.includes("tests/unit/") && !source.includes("tests/transform/"), `${file} excludes executable test definitions`);
+  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\/(?:livemap|livetree|livehost|unit|transform)\//.test(source), `${file} excludes executable test definitions`);
 }
 const nodeRegistrySource = readFileSync(new URL("../../hosted-test/registered-hosted-test-suites.ts", import.meta.url), "utf8");
 expect_boundary(nodeRegistrySource.includes("jsdom-hosted-test-suites"), "Node executable registry may reach the jsdom-backed runner");
@@ -70,7 +70,7 @@ expect_boundary(!panelProjectionSource.includes(".listen.onClick(async") && pane
 expect_boundary(!panelProjectionSource.includes("row.create.span().css") && !panelProjectionSource.includes("controls.create.button().css"), "dense projection descendants use shared class rules rather than per-element CSS surfaces");
 for (const file of panelFiles) {
   const source = readFileSync(file, "utf8");
-  expect_boundary(!source.includes("tests/"), `${file.pathname} must not import from src/tests`);
+  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\//.test(source), `${file.pathname} must not import from src/tests`);
   if (file.pathname.endsWith("hosted-test-panel-adapter.ts")) {
     expect_boundary(!source.includes("run_test_suites") && !source.includes("all_test_suites"), "hosted panel adapter must not invoke either browser-local runner");
   }
