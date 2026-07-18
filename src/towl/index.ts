@@ -1,4 +1,4 @@
-export { TOWL_SEATS, TOWL_WIN_POSITION } from "./towl.consts";
+export { TOWL_HOST_ID, TOWL_SEATS, TOWL_WIN_POSITION } from "./towl.consts";
 export { TOWL_SCHEMA } from "./towl.schema";
 export { create_towl_runtime } from "./towl.runtime";
 export {

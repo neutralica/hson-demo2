@@ -30,6 +30,7 @@ import {
   type HostedTestCoordinatorState,
   type HostedTestRunAssociation,
 } from "../app/hosted-test/hosted-test-application.types";
+import { create_towl_runtime, TOWL_HOST_ID, type TowlRuntime } from "../towl";
 
 export { HOSTED_TEST_COORDINATOR_HOST_ID } from "../app/hosted-test/hosted-test-application.types";
 export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../app/hosted-test/hosted-test-application.types";
@@ -41,6 +42,7 @@ type HostedTestReportActions = Readonly<{
 export type HostedTestApplication = Readonly<{
   store: LiveHostStore;
   coordinator: LiveHost<HostedTestCoordinatorState, HostedTestActions>;
+  towl: TowlRuntime;
   retention: HostedTestRunRetention;
   dispose(): void;
 }>;
@@ -219,12 +221,23 @@ export function create_hosted_test_application(
   });
   const registered = store.set(HOSTED_TEST_COORDINATOR_HOST_ID, coordinator);
   if (!registered.ok) throw new Error(registered.error.message);
+  const towl = create_towl_runtime({ logicalMapId: TOWL_HOST_ID });
+  const towlRegistered = store.set(TOWL_HOST_ID, towl.host);
+  if (!towlRegistered.ok) {
+    towl.dispose();
+    coordinator.dispose();
+    store.delete(HOSTED_TEST_COORDINATOR_HOST_ID);
+    throw new Error(towlRegistered.error.message);
+  }
 
   return Object.freeze({
     store,
     coordinator,
+    towl,
     retention,
     dispose() {
+      towl.dispose();
+      store.delete(TOWL_HOST_ID);
       coordinator.dispose();
       for (const id of reportHostIds) {
         const host = store.get(id);

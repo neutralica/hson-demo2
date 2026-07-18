@@ -8,6 +8,7 @@ export type DemoView = null |
   "parse" |
   "build" |
   "bar-bar" |
+  "towl" |
   "cells" | // added
   "fleurs";
 

@@ -25,11 +25,12 @@ import { mount_json_render_demo } from "../../demos/render/render-json";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
 import { mount_test_panels } from "../../demos/test/mount-tp";
 import type { TestPanels } from "../../demos/test/tp.types";
+import { mount_towl_panel, type TowlPanel } from "../../demos/towl/mount-towl";
 import type { DemoView, DemoWidget } from "../../state/state.types";
 import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
-import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $BLING, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS } from "./demo.consts";
+import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $BLING, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS, $TOWL } from "./demo.consts";
 import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
@@ -77,6 +78,7 @@ type DemoHosts = {
   aboutHost: LiveTree;
   barbarHost: LiveTree;
   cellsHost: LiveTree;
+  towlHost: LiveTree;
   oklchHost: LiveTree;
   viewHosts: ViewHosts;
   widgetHosts: WidgetHosts;
@@ -84,6 +86,7 @@ type DemoHosts = {
 
 type DemoContent = {
   test: TestPanels;
+  towl: TowlPanel;
 };
 
 let stopDemoMount: (() => void) | undefined;
@@ -228,6 +231,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
   const aboutHost = mount_panel_simple(uiRoot, $ABOUT);
   const barbarHost = mount_panel_simple(uiRoot, $BARBAR);
   const cellsHost = mount_panel_simple(uiRoot, $CELLS);
+  const towlHost = mount_panel_simple(uiRoot, $TOWL);
   const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
     ...OKLCH_HOSTcss,
 
@@ -240,6 +244,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     [$ABOUT]: aboutHost,
     [$BARBAR]: barbarHost,
     [$CELLS]: cellsHost,
+    [$TOWL]: towlHost,
   };
 
   const widgetHosts: WidgetHosts = {
@@ -256,6 +261,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
     aboutHost,
     barbarHost,
     cellsHost,
+    towlHost,
     oklchHost,
     viewHosts,
     widgetHosts,
@@ -266,6 +272,7 @@ function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer
 function mount_demo_content(hosts: DemoHosts): DemoContent {
   mount_about_panels(hosts.aboutHost, ABOUT_DOCS);
   const test = mount_test_panels(hosts.testHost);
+  const towl = mount_towl_panel(hosts.towlHost);
   mount_parsing_panels(hosts.parseHost);
   mount_build_panels(hosts.buildHost);
   mount_bar_bar(hosts.barbarHost);
@@ -273,7 +280,7 @@ function mount_demo_content(hosts: DemoHosts): DemoContent {
   mount_point_panel(hosts.pointHost);
   mount_oklch(hosts.oklchHost);
 
-  return { test };
+  return { test, towl };
 }
 
 function is_mobile_demo_width(stage: LiveTree): boolean {
@@ -397,6 +404,7 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
   stopDemoMount = () => {
     stopStoreBindings();
     content.test.dispose();
+    content.towl.dispose();
     document.removeEventListener("keydown", onDocumentKeyDown);
   };
 

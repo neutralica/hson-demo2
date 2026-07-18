@@ -17,6 +17,7 @@ export const $POINT = "point";
 export const $ABOUT = "about";
 export const $BLING = "bling";
 export const $BARBAR = "bar-bar";
+export const $TOWL = "towl";
 export const $CELLS = "cells";
 export const MENU_OPTIONS = [
   $ABOUT,
@@ -24,6 +25,7 @@ export const MENU_OPTIONS = [
   $PARSE,
   $BUILD,
   $BARBAR,
+  $TOWL,
   $CELLS,
   $FLEURS,
   $POINT,
@@ -52,4 +54,3 @@ export const shade_class = (l: string) => {
   console.warn("shadeClass function failed");
   return "shadeclass-fail";
 };
-
