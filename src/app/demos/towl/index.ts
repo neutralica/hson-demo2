@@ -1,4 +1,18 @@
-export { TOWL_HOST_ID, TOWL_SEATS, TOWL_WIN_POSITION } from "./towl.consts";
+export { TOWL_SEATS, TOWL_WIN_POSITION } from "./towl.consts";
+export {
+  TOWL_ROOM_HOST_PREFIX,
+  TOWL_ROOM_ID_LENGTH,
+  TOWL_ROOM_ID_MAX_LENGTH,
+  TOWL_ROOM_ID_MIN_LENGTH,
+  TOWL_ROOM_PARAM,
+  generate_towl_room_id,
+  normalize_towl_room_id,
+  resolve_towl_room_url,
+  towl_host_id_for_room,
+  towl_room_credential_key,
+  towl_room_id_from_host_id,
+  type TowlRoomUrl,
+} from "./towl.room";
 export { TOWL_SCHEMA } from "./towl.schema";
 export { create_towl_runtime } from "./towl.runtime";
 export {

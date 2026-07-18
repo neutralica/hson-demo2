@@ -1,7 +1,7 @@
 import type { LiveHostSocketLike } from "hson-live";
 import type { TestCase } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "../livemap-tests/test-helpers";
-import type { TowlActions, TowlRuntime } from "../../towl";
+import type { TowlActions, TowlRuntime } from "../../app/demos/towl";
 
 export type TowlMemorySocket = LiveHostSocketLike & Readonly<{
   receive: (message: unknown) => Promise<void>;

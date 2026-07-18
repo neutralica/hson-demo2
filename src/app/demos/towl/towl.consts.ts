@@ -8,8 +8,6 @@ export const TOWL_SEATS = Object.freeze([
   "player2",
 ] as const satisfies readonly TowlSeatId[]);
 
-export const TOWL_HOST_ID = "towl";
-
 export const TOWL_WIN_POSITION = 10;
 
 export const TOWL_MIN_POSITION = -TOWL_WIN_POSITION;

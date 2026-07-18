@@ -1,7 +1,16 @@
 import type { LiveTree } from "hson-live";
 import type { LiveHostSessionCredential } from "hson-live/types";
-import { TOWL_HOST_ID, TOWL_WIN_POSITION, create_towl_client, type TowlClient, type TowlSeat, type TowlState } from "../../../towl";
 import { make_hosted_test_browser_websocket, type HostedTestBrowserSocket } from "../../hosted-test/browser-websocket-socket";
+import {
+  TOWL_WIN_POSITION,
+  create_towl_client,
+  resolve_towl_room_url,
+  towl_host_id_for_room,
+  towl_room_credential_key,
+  type TowlClient,
+  type TowlSeat,
+  type TowlState,
+} from "./index";
 import {
   TOWL_ACTIONS_CSS,
   TOWL_BUTTON_CSS,
@@ -9,7 +18,9 @@ import {
   TOWL_ERROR_CSS,
   TOWL_MARKER_CSS,
   TOWL_META_CSS,
+  TOWL_INVITE_STATUS_CSS,
   TOWL_RESULT_CSS,
+  TOWL_ROOM_CSS,
   TOWL_ROOT_CSS,
   TOWL_ROPE_CSS,
   TOWL_SEAT_CSS,
@@ -19,8 +30,6 @@ import {
   TOWL_TRACK_CSS,
 } from "./towl.css";
 
-const TOWL_CREDENTIAL_KEY = "hson-livedemo.towl.livehost-credential";
-
 type TowlActionName = "join" | "ready" | "pull" | "reset";
 
 export type TowlPanel = Readonly<{
@@ -29,6 +38,9 @@ export type TowlPanel = Readonly<{
 }>;
 
 type TowlView = Readonly<{
+  room: LiveTree;
+  copyInvite: LiveTree;
+  inviteStatus: LiveTree;
   status: LiveTree;
   localSeat: LiveTree;
   phase: LiveTree;
@@ -45,29 +57,26 @@ type TowlView = Readonly<{
   reset: LiveTree;
 }>;
 
-function configured_url(): string {
-  const meta = import.meta as ImportMeta & { readonly env?: Readonly<{
-    VITE_TOWL_WS_URL?: string;
-    VITE_HOSTED_TEST_WS_URL?: string;
-  }> };
-  const base = meta.env?.VITE_TOWL_WS_URL ?? meta.env?.VITE_HOSTED_TEST_WS_URL ?? "ws://127.0.0.1:8787";
+function configured_url(roomId: string): string {
+  const base = import.meta.env.VITE_TOWL_WS_URL ?? import.meta.env.VITE_HOSTED_TEST_WS_URL ?? "ws://127.0.0.1:8787";
   const url = new URL(base);
-  url.searchParams.set("livehost", TOWL_HOST_ID);
+  url.searchParams.set("livehost", towl_host_id_for_room(roomId));
   return url.toString();
 }
 
-function remembered_credential(): LiveHostSessionCredential | undefined {
+function remembered_credential(roomId: string): LiveHostSessionCredential | undefined {
   try {
-    return globalThis.localStorage?.getItem(TOWL_CREDENTIAL_KEY) ?? undefined;
+    return globalThis.localStorage?.getItem(towl_room_credential_key(roomId)) ?? undefined;
   } catch {
     return undefined;
   }
 }
 
-function remember_credential(credential: LiveHostSessionCredential | undefined): void {
+function remember_credential(roomId: string, credential: LiveHostSessionCredential | undefined): void {
   try {
-    if (credential === undefined) globalThis.localStorage?.removeItem(TOWL_CREDENTIAL_KEY);
-    else globalThis.localStorage?.setItem(TOWL_CREDENTIAL_KEY, credential);
+    const key = towl_room_credential_key(roomId);
+    if (credential === undefined) globalThis.localStorage?.removeItem(key);
+    else globalThis.localStorage?.setItem(key, credential);
   } catch {
     // Storage can be unavailable in privacy-restricted browser contexts.
   }
@@ -95,21 +104,26 @@ function seat_text(state: TowlState, seat: TowlSeat, localSeat: TowlSeat | undef
   return `${label}${local}\njoined · ${player.connected ? "connected" : "disconnected"}\n${player.ready ? "ready" : "not ready"}`;
 }
 
-function create_view(host: LiveTree): TowlView & Readonly<{ root: LiveTree }> {
+function create_view(host: LiveTree, roomId: string): TowlView & Readonly<{ root: LiveTree }> {
   host.empty();
-  const root = host.create.section().attr.set("data-demo-towl", "true").css.setMany(TOWL_ROOT_CSS);
+  const root = host.create.section().attr.setMany({ "data-demo-towl": "true", "data-testid": "towl-root" }).css.setMany(TOWL_ROOT_CSS);
   const card = root.create.div().css.setMany(TOWL_CARD_CSS);
   card.create.h1().text.set("TOWL").css.setMany(TOWL_TITLE_CSS);
 
+  const roomRow = card.create.div().css.setMany(TOWL_ROOM_CSS);
+  const room = roomRow.create.span().attr.set("data-testid", "towl-room").text.set(`room ${roomId}`);
+  const copyInvite = roomRow.create.button().attr.set("type", "button").text.set("copy invite link").css.setMany(TOWL_BUTTON_CSS);
+  const inviteStatus = roomRow.create.span().attr.setMany({ "aria-live": "polite", "data-testid": "towl-invite-status" }).css.setMany(TOWL_INVITE_STATUS_CSS);
+
   const meta = card.create.div().css.setMany(TOWL_META_CSS);
-  const status = meta.create.div().text.set("connection: starting");
-  const localSeat = meta.create.div().text.set("local seat: unseated");
-  const phase = meta.create.div().text.set("phase: —");
+  const status = meta.create.div().attr.set("data-testid", "towl-status").text.set("connection: starting");
+  const localSeat = meta.create.div().attr.set("data-testid", "towl-local-seat").text.set("local seat: unseated");
+  const phase = meta.create.div().attr.set("data-testid", "towl-phase").text.set("phase: —");
   const round = meta.create.div().text.set("round: —");
 
   const seats = card.create.div().css.setMany(TOWL_SEATS_CSS);
-  const player1 = seats.create.div().text.set("player 1\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
-  const player2 = seats.create.div().text.set("player 2\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
+  const player1 = seats.create.div().attr.set("data-testid", "towl-player1").text.set("player 1\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
+  const player2 = seats.create.div().attr.set("data-testid", "towl-player2").text.set("player 2\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
 
   const rope = card.create.div().css.setMany(TOWL_ROPE_CSS);
   const ropeValue = rope.create.div().text.set("rope: —");
@@ -125,15 +139,22 @@ function create_view(host: LiveTree): TowlView & Readonly<{ root: LiveTree }> {
   const reset = button("reset round");
   const error = card.create.div().attr.set("role", "alert").css.setMany(TOWL_ERROR_CSS);
 
-  return { root, status, localSeat, phase, round, player1, player2, ropeValue, ropeMarker, result, error, join, ready, pull, reset };
+  return { root, room, copyInvite, inviteStatus, status, localSeat, phase, round, player1, player2, ropeValue, ropeMarker, result, error, join, ready, pull, reset };
 }
 
 export function mount_towl_panel(host: LiveTree): TowlPanel {
-  const view = create_view(host);
+  const roomAddress = resolve_towl_room_url(new URL(globalThis.location.href));
+  if (roomAddress.changed) {
+    globalThis.history.replaceState(globalThis.history.state, "", roomAddress.url.toString());
+  }
+  const { roomId } = roomAddress;
+  const inviteUrl = roomAddress.url.toString();
+  const view = create_view(host, roomId);
   let transport: HostedTestBrowserSocket | undefined;
   let client: TowlClient | undefined;
   let state: TowlState | undefined;
   let pending: TowlActionName | undefined;
+  let copyPending = false;
   let connectionStatus = "starting";
   let disposed = false;
   let stopMap: (() => void) | undefined;
@@ -191,17 +212,40 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
   }));
   const pullListener = view.pull.listen.onClick(() => void run_action("pull", (active) => active.pull()));
   const resetListener = view.reset.listen.onClick(() => void run_action("reset", (active) => active.reset()));
+  const copyInviteListener = view.copyInvite.listen.onClick(() => {
+    if (disposed || copyPending) return;
+    copyPending = true;
+    set_disabled(view.copyInvite, true);
+    view.inviteStatus.text.set("");
+    const writeText = globalThis.navigator?.clipboard?.writeText;
+    const copied = writeText === undefined
+      ? Promise.reject(new Error("Clipboard access is unavailable."))
+      : writeText.call(globalThis.navigator.clipboard, inviteUrl);
+    void copied.then(
+      () => {
+        if (!disposed) view.inviteStatus.text.set("copied");
+      },
+      (error: unknown) => {
+        if (!disposed) view.inviteStatus.text.set(error_message(error));
+      },
+    ).finally(() => {
+      if (!disposed) {
+        copyPending = false;
+        set_disabled(view.copyInvite, false);
+      }
+    });
+  });
 
   async function initialize(): Promise<void> {
     try {
       connectionStatus = "connecting";
       render();
-      const nextTransport = make_hosted_test_browser_websocket(configured_url());
+      const nextTransport = make_hosted_test_browser_websocket(configured_url(roomId));
       transport = nextTransport;
       await nextTransport.ready;
       if (disposed) return;
 
-      const credential = remembered_credential();
+      const credential = remembered_credential(roomId);
       const nextClient = create_towl_client({
         socket: nextTransport.socket,
         ...(credential !== undefined ? { credential } : {}),
@@ -225,7 +269,7 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
         try {
           await nextClient.reattachSession(credential);
         } catch {
-          remember_credential(undefined);
+          remember_credential(roomId, undefined);
           if (disposed) return;
           connectionStatus = "creating replacement session";
           render();
@@ -235,7 +279,7 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
         await nextClient.createSession();
       }
       if (disposed) return;
-      remember_credential(nextClient.livehost.session.credential);
+      remember_credential(roomId, nextClient.livehost.session.credential);
       connectionStatus = "connected · session attached";
       render();
     } catch (error) {
@@ -258,6 +302,7 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
       readyListener.off();
       pullListener.off();
       resetListener.off();
+      copyInviteListener.off();
       stopMap?.();
       stopClose?.();
       if (client !== undefined) {

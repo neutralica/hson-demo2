@@ -1,6 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const localDevelopment = process.env.CI !== "true";
+const hostedTestPort = Number(process.env.HOSTED_TEST_PORT ?? "8787");
+const appPort = Number(process.env.PLAYWRIGHT_APP_PORT ?? "4173");
+const hostedTestUrl = `ws://127.0.0.1:${hostedTestPort}`;
+const appUrl = `http://127.0.0.1:${appPort}`;
 
 export default defineConfig({
   testDir: "tests/browser",
@@ -13,7 +17,7 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 5_000 },
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: appUrl,
     actionTimeout: 5_000,
     navigationTimeout: 15_000,
     screenshot: "only-on-failure",
@@ -26,16 +30,16 @@ export default defineConfig({
   }],
   webServer: [
     {
-      command: "npm run hosted:test-server",
-      port: 8787,
+      command: `HOSTED_TEST_PORT=${hostedTestPort} npm run hosted:test-server`,
+      port: hostedTestPort,
       timeout: 30_000,
       reuseExistingServer: localDevelopment,
       stdout: "ignore",
       stderr: "pipe",
     },
     {
-      command: "npm run dev -- --host 127.0.0.1 --port 4173 --strictPort",
-      url: "http://127.0.0.1:4173",
+      command: `VITE_TOWL_WS_URL=${hostedTestUrl} npm run dev -- --host 127.0.0.1 --port ${appPort} --strictPort`,
+      url: appUrl,
       timeout: 30_000,
       reuseExistingServer: localDevelopment,
       stdout: "ignore",

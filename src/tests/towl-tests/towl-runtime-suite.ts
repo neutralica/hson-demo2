@@ -4,7 +4,7 @@ import {
   create_towl_runtime,
   TOWL_WIN_POSITION,
   type TowlRuntime,
-} from "../../towl";
+} from "../../app/demos/towl";
 import {
   create_towl_session,
   join_towl_pair,

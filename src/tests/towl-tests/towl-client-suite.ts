@@ -10,9 +10,9 @@ import {
   create_towl_runtime,
 
   type TowlRuntime,
-} from "../../towl";
+} from "../../app/demos/towl";
 import { towl_case } from "./towl-test-helpers";
-import { create_towl_client, type TowlClient } from "../../towl/towl.client";
+import { create_towl_client, towl_host_id_for_room, type TowlClient } from "../../app/demos/towl";
 
 type SocketEndpoint = LiveHostSocketLike & Readonly<{
   listener_count: () => number;
@@ -170,6 +170,7 @@ async function with_runtime<TResult>(
   let nextSession = 0;
 
   const runtime = create_towl_runtime({
+    logicalMapId: towl_host_id_for_room("client-room"),
     sessionId: () => `towl-client-session-${++nextSession}`,
   });
 

@@ -5,7 +5,7 @@ import {
   create_towl_state,
   TOWL_SCHEMA,
   TOWL_WIN_POSITION,
-} from "../../towl";
+} from "../../app/demos/towl";
 import { towl_case } from "./towl-test-helpers";
 
 function schema_accepts(value: JsonValue): boolean {

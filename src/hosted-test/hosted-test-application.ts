@@ -1,5 +1,6 @@
 import { create_livehost, create_livehost_store } from "hson-live";
 import type { LiveHost, LiveHostActions, LiveHostSchema, LiveHostStore } from "hson-live";
+import type { LiveHostSocketLike } from "hson-live/types";
 import type { JsonValue } from "hson-live/types";
 import type { RunResult, TestFailure, TestSummary } from "../app/demos/test/tests.types";
 import { HostedTestUnknownSuiteError } from "../app/hosted-test/hosted-test-action-error";
@@ -30,7 +31,11 @@ import {
   type HostedTestCoordinatorState,
   type HostedTestRunAssociation,
 } from "../app/hosted-test/hosted-test-application.types";
-import { create_towl_runtime, TOWL_HOST_ID, type TowlRuntime } from "../towl";
+import {
+  create_towl_runtime,
+  towl_room_id_from_host_id,
+  type TowlRuntime,
+} from "../app/demos/towl";
 
 export { HOSTED_TEST_COORDINATOR_HOST_ID } from "../app/hosted-test/hosted-test-application.types";
 export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../app/hosted-test/hosted-test-application.types";
@@ -42,8 +47,8 @@ type HostedTestReportActions = Readonly<{
 export type HostedTestApplication = Readonly<{
   store: LiveHostStore;
   coordinator: LiveHost<HostedTestCoordinatorState, HostedTestActions>;
-  towl: TowlRuntime;
   retention: HostedTestRunRetention;
+  connect(hostId: string, socket: LiveHostSocketLike): ReturnType<LiveHostStore["connect"]>;
   dispose(): void;
 }>;
 
@@ -115,6 +120,7 @@ export function create_hosted_test_application(
   const retention = options.retention ?? make_hosted_test_run_retention(16);
   const makeRunId = options.makeRunId ?? make_hosted_test_run_id;
   const reportHostIds = new Set<string>();
+  const towlRooms = new Map<string, TowlRuntime>();
 
   const actions: LiveHostActions<HostedTestActions, HostedTestCoordinatorState> = {
     "tests.run": async (context, request, message) => {
@@ -221,23 +227,32 @@ export function create_hosted_test_application(
   });
   const registered = store.set(HOSTED_TEST_COORDINATOR_HOST_ID, coordinator);
   if (!registered.ok) throw new Error(registered.error.message);
-  const towl = create_towl_runtime({ logicalMapId: TOWL_HOST_ID });
-  const towlRegistered = store.set(TOWL_HOST_ID, towl.host);
-  if (!towlRegistered.ok) {
-    towl.dispose();
-    coordinator.dispose();
-    store.delete(HOSTED_TEST_COORDINATOR_HOST_ID);
-    throw new Error(towlRegistered.error.message);
+
+  function ensure_towl_room(hostId: string): void {
+    if (towl_room_id_from_host_id(hostId) === undefined || store.has(hostId)) return;
+    const runtime = create_towl_runtime({ logicalMapId: hostId });
+    const stored = store.set(hostId, runtime.host);
+    if (!stored.ok) {
+      runtime.dispose();
+      throw new Error(stored.error.message);
+    }
+    towlRooms.set(hostId, runtime);
   }
 
   return Object.freeze({
     store,
     coordinator,
-    towl,
     retention,
+    connect(hostId, socket) {
+      ensure_towl_room(hostId);
+      return store.connect(hostId, socket);
+    },
     dispose() {
-      towl.dispose();
-      store.delete(TOWL_HOST_ID);
+      for (const [hostId, runtime] of towlRooms) {
+        runtime.dispose();
+        store.delete(hostId);
+      }
+      towlRooms.clear();
       coordinator.dispose();
       for (const id of reportHostIds) {
         const host = store.get(id);

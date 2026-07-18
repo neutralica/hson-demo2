@@ -45,6 +45,20 @@ export const TOWL_META_CSS: CssMap = {
   fontSize: _fontSize.smol,
 };
 
+export const TOWL_ROOM_CSS: CssMap = {
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: "0.5rem 1rem",
+  color: _colors.txt.menu,
+  fontSize: _fontSize.smol,
+};
+
+export const TOWL_INVITE_STATUS_CSS: CssMap = {
+  minWidth: "5rem",
+  color: _colors.greenlike,
+};
+
 export const TOWL_SEATS_CSS: CssMap = {
   display: "grid",
   gridTemplateColumns: "repeat(2, minmax(0, 1fr))",

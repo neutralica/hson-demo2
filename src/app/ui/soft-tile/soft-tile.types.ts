@@ -1,10 +1,3 @@
-/* 
-OK thank you. Now I'm linking the soft-tile code, which is the amoebi code I think extracted into a more generalizable form. I believe this was done to create a more flexible placement system from the amoebi's prior  more grid-constrained layout. 
-I want to develop this into a UI builder. It needs to be able to accept a config or option object and some args and adapt the amoebi into a variety of layouts, orientations, and 'physics'. For your own disambiguation, when I say 'amoebi' that's the same thing as 'soft tile'. The general pattern I'd call 'soft-tiling'; the livedemo implementation I'll probably call 'amoebi' as often as not. 
-
-I am anxious not to invent an amoebi DSL here. My idea is that since we have basically CSS as a value we can reference here, I would love to get this working in conjunction with CSS as much as possible--as in, take its styling cues from CSS first and  from arguments second. As I
- */
-
 export type SoftTileHexCoord = Readonly<{ q: number; r: number }>;
 export type SoftTilePoint = Readonly<{ x: number; y: number }>;
 export type SoftTileBounds = Readonly<{

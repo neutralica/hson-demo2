@@ -12,7 +12,7 @@ import {
   set_towl_ready,
   TOWL_WIN_POSITION,
   type TowlState,
-} from "../../towl";
+} from "../../app/demos/towl";
 import { towl_case } from "./towl-test-helpers";
 
 function accepted<T>(result: Readonly<{ ok: true; state: T }> | Readonly<{ ok: false }>): T {

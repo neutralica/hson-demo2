@@ -36,7 +36,7 @@ export async function start_hosted_test_server(options: HostedTestServerOptions 
   server.on("connection", (websocket, request) => {
     const requestUrl = new URL(request.url ?? "/", `ws://${request.headers.host ?? bindHost}`);
     const hostId = requestUrl.searchParams.get("livehost") ?? HOSTED_TEST_COORDINATOR_HOST_ID;
-    const connected = application.store.connect(hostId, make_node_websocket_livehost_socket(websocket, (message) => {
+    const connected = application.connect(hostId, make_node_websocket_livehost_socket(websocket, (message) => {
       sentMessages += 1;
       sentBytes += Buffer.byteLength(message, "utf8");
     }));
