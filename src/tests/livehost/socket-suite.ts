@@ -719,6 +719,65 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
+        name: "lazy socket action receives trusted non-resumable session origin",
+        input: {},
+        act: async () => {
+          let origin: unknown;
+          const host = create_livehost({
+            state: {},
+            sessionId: () => "server-lazy-session",
+            actions: { inspect: (ctx) => { origin = ctx.origin; } },
+          });
+          const socket = make_memory_socket();
+          host.connect(socket);
+          await socket.receive({
+            type: "action",
+            id: "lazy-origin-a",
+            clientId: "spoofed-session",
+            requestId: "lazy-origin-request-a",
+            name: "inspect",
+          });
+          return origin;
+        },
+        expected: {
+          kind: "session",
+          sessionId: "server-lazy-session",
+          epoch: 1,
+          resumable: false,
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
+        name: "explicit socket session action receives trusted resumable origin",
+        input: {},
+        act: async () => {
+          let origin: unknown;
+          const host = create_livehost({
+            state: {},
+            sessionId: () => "server-resumable-session",
+            actions: { inspect: (ctx) => { origin = ctx.origin; } },
+          });
+          const socket = make_memory_socket();
+          host.connect(socket);
+          await socket.receive({ type: "session-create", id: "create-a" });
+          await socket.receive({
+            type: "action",
+            id: "resumable-origin-a",
+            clientId: "spoofed-session",
+            requestId: "resumable-origin-request-a",
+            name: "inspect",
+          });
+          return origin;
+        },
+        expected: {
+          kind: "session",
+          sessionId: "server-resumable-session",
+          epoch: 1,
+          resumable: true,
+        },
+      }),
+      livehost_socket_read_case({
+        suite: SUITE,
         name: "connect disposer detaches socket listeners",
         input: {},
         act: async () => {

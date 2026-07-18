@@ -357,7 +357,7 @@ export function livehost_pair_suite(): TestSuite {
           resultType: "error",
           resultSeq: 0,
           message: "Unknown LiveHost action: missing",
-          code: "LIVEHOST_ACTION_UNAVAILABLE",
+          code: "LIVEHOST_UNKNOWN_ACTION",
           clientSeq: 0,
         },
       }),
@@ -707,10 +707,13 @@ export function livehost_pair_suite(): TestSuite {
             release = resolve;
           });
           let emitted: boolean | undefined;
+          let origin: unknown;
           const [clientSocket, hostSocket] = make_socket_pair();
           const host = create_livehost<undefined, Actions>({
+            sessionId: () => "async-detach-session",
             actions: {
               delayed: async (ctx) => {
+                origin = ctx.origin;
                 await gate;
                 emitted = ctx.emit_event("late", null);
                 return { emitted };
@@ -732,9 +735,14 @@ export function livehost_pair_suite(): TestSuite {
           release?.();
           await settle_pair();
           const hostEvents = (hostSocket.sent() as Array<Record<string, unknown>>).filter((message) => message.type === "event");
-          return { actionOutcome: await actionOutcome, emitted, hostEventCount: hostEvents.length };
+          return { actionOutcome: await actionOutcome, origin, emitted, hostEventCount: hostEvents.length };
         },
-        expected: { actionOutcome: "rejected", emitted: false, hostEventCount: 0 },
+        expected: {
+          actionOutcome: "rejected",
+          origin: { kind: "session", sessionId: "async-detach-session", epoch: 1, resumable: false },
+          emitted: false,
+          hostEventCount: 0,
+        },
       }),
       livehost_pair_read_case({
         suite: SUITE,
@@ -797,6 +805,326 @@ export function livehost_pair_suite(): TestSuite {
           secondResult: { marker: "b" },
         },
       }),
+      livehost_pair_read_case({
+  suite: SUITE,
+  name: "client supplied id cannot manufacture session authority",
+  input: {},
+
+  act: async () => {
+    type Actions = Readonly<{
+      inspect: undefined;
+    }>;
+
+    const [clientSocket, hostSocket] = make_socket_pair();
+
+    const host = create_livehost<undefined, Actions>({
+      sessionId: () => "server-session-a",
+
+      actions: {
+        inspect: (ctx) => {
+          return ctx.origin;
+        },
+      },
+    });
+
+    const client = create_livehost_client<undefined, Actions>({
+      socket: clientSocket,
+      clientId: "impersonated-session",
+      actionId: () => "inspect-a",
+    });
+
+    host.connect(hostSocket);
+    client.connect();
+
+    await settle_pair();
+
+    const result = await client.action("inspect");
+
+    await settle_pair();
+
+    return {
+      resultType: result.type,
+      origin: result.type === "ack"
+        ? result.result
+        : undefined,
+    };
+  },
+
+  expected: {
+    resultType: "ack",
+    origin: {
+      kind: "session",
+      sessionId: "server-session-a",
+      epoch: 1,
+      resumable: false,
+    },
+  },
+      }),
+      livehost_pair_read_case({
+  suite: SUITE,
+  name: "clients sharing a claimed id retain distinct session authority",
+  input: {},
+
+  act: async () => {
+    type Actions = Readonly<{
+      inspect: undefined;
+    }>;
+
+    let nextSession = 0;
+
+    const [firstClientSocket, firstHostSocket] = make_socket_pair();
+    const [secondClientSocket, secondHostSocket] = make_socket_pair();
+
+    const host = create_livehost<undefined, Actions>({
+      sessionId: () => {
+        nextSession += 1;
+        return `server-session-${nextSession}`;
+      },
+
+      actions: {
+        inspect: (ctx) => {
+          return ctx.origin;
+        },
+      },
+    });
+
+    const first = create_livehost_client<undefined, Actions>({
+      socket: firstClientSocket,
+      clientId: "shared-claimed-id",
+      actionId: () => "inspect-a",
+    });
+
+    const second = create_livehost_client<undefined, Actions>({
+      socket: secondClientSocket,
+      clientId: "shared-claimed-id",
+      actionId: () => "inspect-b",
+    });
+
+    host.connect(firstHostSocket);
+    host.connect(secondHostSocket);
+
+    first.connect();
+    second.connect();
+
+    await settle_pair();
+
+    const [firstResult, secondResult] = await Promise.all([
+      first.action("inspect"),
+      second.action("inspect"),
+    ]);
+
+    await settle_pair();
+
+    return {
+      firstOrigin: firstResult.type === "ack"
+        ? firstResult.result
+        : undefined,
+
+      secondOrigin: secondResult.type === "ack"
+        ? secondResult.result
+        : undefined,
+    };
+  },
+
+  expected: {
+    firstOrigin: {
+      kind: "session",
+      sessionId: "server-session-1",
+      epoch: 1,
+      resumable: false,
+    },
+
+    secondOrigin: {
+      kind: "session",
+      sessionId: "server-session-2",
+      epoch: 1,
+      resumable: false,
+    },
+  },
+      }),
+      livehost_pair_read_case({
+  suite: SUITE,
+  name: "client invalid payload is rejected before handler and mutation",
+  input: {},
+
+  act: async () => {
+    type Actions = Readonly<{
+      update: { value: string };
+    }>;
+
+    let calls = 0;
+
+    const [clientSocket, hostSocket] = make_socket_pair();
+
+    const host = create_livehost<{ value: string }, Actions>({
+      state: {
+        value: "unchanged",
+      },
+
+      schema: {
+        actions: {
+          update: {
+            payload: (value): value is { value: string } => {
+              return typeof value === "object"
+                && value !== null
+                && !Array.isArray(value)
+                && typeof (value as { value?: unknown }).value === "string";
+            },
+          },
+        },
+      },
+
+      actions: {
+        update: (ctx, payload) => {
+          calls += 1;
+          ctx.map.set(["value"], payload.value);
+        },
+      },
+    });
+
+    const client = create_livehost_client<
+      { value: string },
+      Actions
+    >({
+      socket: clientSocket,
+      actionId: () => "invalid-update-a",
+    });
+
+    host.connect(hostSocket);
+    client.connect();
+
+    await settle_pair();
+
+    const result = await client.action(
+      "update",
+      {
+        label: "changed",
+      } as unknown as { value: string },
+    );
+
+    await settle_pair();
+
+    return {
+      calls,
+      resultType: result.type,
+      code: result.type === "error"
+        ? result.error.code
+        : undefined,
+      resultSeq: result.seq,
+      hostSeq: host.seq,
+      value: host.map.at(["value"]).snap(),
+    };
+  },
+
+  expected: {
+    calls: 0,
+    resultType: "error",
+    code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+    resultSeq: 0,
+    hostSeq: 0,
+    value: "unchanged",
+  },
+      }),
+      livehost_pair_read_case({
+  suite: SUITE,
+  name: "repeated session action id returns cached outcome without rerunning handler",
+  input: {},
+
+  act: async () => {
+    type Actions = Readonly<{
+      increment: undefined;
+    }>;
+
+    let calls = 0;
+
+    const [clientSocket, hostSocket] = make_socket_pair();
+
+    const host = create_livehost<{ count: number }, Actions>({
+      state: {
+        count: 0,
+      },
+
+      actions: {
+        increment: (ctx) => {
+          calls += 1;
+
+          const count = ctx.map.at(["count"]).snap();
+
+          ctx.map.set(
+            ["count"],
+            typeof count === "number"
+              ? count + 1
+              : 1,
+          );
+
+          return {
+            calls,
+          };
+        },
+      },
+    });
+
+    const client = create_livehost_client<
+      { count: number },
+      Actions
+    >({
+      socket: clientSocket,
+      actionId: () => "same-action-id",
+    });
+
+    host.connect(hostSocket);
+    client.connect();
+
+    await settle_pair();
+
+    const first = await client.action("increment");
+
+    await settle_pair();
+
+    const second = await client.action("increment");
+
+    await settle_pair();
+
+    return {
+      calls,
+
+      firstType: first.type,
+      firstSeq: first.seq,
+      firstResult: first.type === "ack"
+        ? first.result
+        : undefined,
+
+      secondType: second.type,
+      secondSeq: second.seq,
+      secondResult: second.type === "ack"
+        ? second.result
+        : undefined,
+
+      hostSeq: host.seq,
+      count: host.map.at(["count"]).snap(),
+    };
+  },
+
+  expected: {
+    calls: 1,
+
+    firstType: "ack",
+    firstSeq: 1,
+    firstResult: {
+      calls: 1,
+    },
+
+    secondType: "ack",
+    secondSeq: 1,
+    secondResult: {
+      calls: 1,
+    },
+
+    hostSeq: 1,
+    count: 1,
+  },
+      }),
+      
     ] as const,
   };
 }

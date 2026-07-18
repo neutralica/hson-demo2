@@ -40,7 +40,7 @@ const registry = make_registered_hosted_test_suite_registry();
 const directStarted = performance.now();
 const direct = await registry.get("node/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const hostRunnerMs = performance.now() - directStarted;
-expect_node_all(direct.ok && direct.summary.suites === 41 && direct.summary.cases === 1060 && direct.summary.pass === 1060, "direct aggregate runner passes 1060 cases exactly once");
+expect_node_all(direct.ok && direct.summary.suites === 43 && direct.summary.cases === 1081 && direct.summary.pass === 1081, "direct aggregate runner passes 1081 cases exactly once");
 
 let authoritative: HostedTestReportController | undefined;
 const [clientSocket, hostSocket] = make_socket_pair();
@@ -75,13 +75,13 @@ const mirror = await router.wait_for_terminal();
 router.accept_result(result);
 
 expect_node_all(initialEvents === 1, "one authoritative initial event arrives first");
-expect_node_all(commitEvents === 61, "suite-coherent batching reduces the aggregate stream to 61 commits");
-expect_node_all(mirror.rev === 62, "mirror reaches batched revision 62");
+expect_node_all(commitEvents === 63, "suite-coherent batching reduces the aggregate stream to 63 commits");
+expect_node_all(mirror.rev === 64, "mirror reaches batched revision 64");
 expect_node_all(result.runId === "node-all-run" && router.runId === result.runId, "result and routed stream share one run ID");
-expect_node_all(result.suite === "node/all" && result.summary.cases === 1060 && result.summary.fail === 0, "action returns aggregate identity and totals");
-expect_node_all(mirror.capture().value.summary.cases === 1060 && mirror.capture().value.run.status === "passed", "router mirror reconstructs the complete terminal report");
+expect_node_all(result.suite === "node/all" && result.summary.cases === 1081 && result.summary.fail === 0, "action returns aggregate identity and totals");
+expect_node_all(mirror.capture().value.summary.cases === 1081 && mirror.capture().value.run.status === "passed", "router mirror reconstructs the complete terminal report");
 expect_node_all(authoritative !== undefined && JSON.stringify(mirror.capture()) === JSON.stringify(authoritative.map.capture()), "client mirror equals authoritative host capture");
-expect_node_all(authoritative.commits().length === 61, "local semantic history matches the delivered commit count");
+expect_node_all(authoritative.commits().length === 63, "local semantic history matches the delivered commit count");
 expect_node_all(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "aggregate hosted path remains Node-safe");
 
 expect_node_all(receivedInitial !== undefined, "transport replay has its received authoritative base state");

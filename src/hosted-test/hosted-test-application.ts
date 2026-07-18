@@ -225,12 +225,10 @@ export function create_hosted_test_application(
     coordinator,
     retention,
     dispose() {
-      coordinator.actionRequests.dispose();
-      coordinator.sessions.dispose();
+      coordinator.dispose();
       for (const id of reportHostIds) {
         const host = store.get(id);
-        host?.actionRequests.dispose();
-        host?.sessions.dispose();
+        host?.dispose();
         store.delete(id);
       }
       reportHostIds.clear();

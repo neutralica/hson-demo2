@@ -73,7 +73,7 @@ export const FINAL_HARNESS_MIGRATION_INVENTORY: readonly FinalHarnessMigrationEn
   Object.freeze({
     id: "hosted/all",
     status: "HOSTED",
-    cases: 2070,
+    cases: 2091,
     execution: "real Node/WebSocket LiveHost",
     reason: "canonical fixed deterministic collection",
   }),

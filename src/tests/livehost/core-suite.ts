@@ -120,6 +120,53 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
+        name: "direct dispatch receives immutable direct action origin",
+        input: {},
+        act: async () => {
+          let origin: unknown;
+          let contextFrozen = false;
+          let originFrozen = false;
+          const host = create_livehost({
+            state: {},
+            actions: {
+              inspect: (ctx) => {
+                origin = ctx.origin;
+                contextFrozen = Object.isFrozen(ctx);
+                originFrozen = Object.isFrozen(ctx.origin);
+              },
+            },
+          });
+          await host.dispatch_action({ type: "action", id: "direct-a", name: "inspect" });
+          return { origin, contextFrozen, originFrozen };
+        },
+        expected: {
+          origin: { kind: "direct" },
+          contextFrozen: true,
+          originFrozen: true,
+        },
+      }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "direct dispatch clientId cannot manufacture session authority",
+        input: {},
+        act: async () => {
+          let origin: unknown;
+          const host = create_livehost({
+            state: {},
+            actions: { inspect: (ctx) => { origin = ctx.origin; } },
+          });
+          await host.dispatch_action({
+            type: "action",
+            id: "direct-client-a",
+            clientId: "impersonated-session",
+            name: "inspect",
+          });
+          return origin;
+        },
+        expected: { kind: "direct" },
+      }),
+      livehost_read_case({
+        suite: SUITE,
         name: "dispatch action calls registered handler",
         input: {},
         act: async () => {
@@ -697,7 +744,61 @@ export function livehost_core_suite(): TestSuite {
         },
         expected: { type: "error", code: "LIVEHOST_ACTION_OUTCOME_NORMALIZATION_FAILED", seq: 0 },
       }),
+      livehost_read_case({
+        suite: SUITE,
+        name: "schema payload rejection does not invoke handler",
+        input: {},
+        act: async () => {
+          let calls = 0;
+          const host = create_livehost({
+            state: { value: "unchanged" },
+            schema: {
+              actions: {
+                update: {
+                  payload: (value): value is { value: string } => {
+                    return typeof value === "object"
+                      && value !== null
+                      && !Array.isArray(value)
+                      && typeof (value as { value?: unknown }).value === "string";
+                  },
+                },
+              },
+            },
+            actions: {
+              update: (ctx, payload) => {
+                calls += 1;
+                if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+                const value = (payload as { value?: unknown }).value;
+                if (typeof value === "string") ctx.map.set(["value"], value);
+              },
+            },
+          });
 
+          const response = await host.dispatch_action({
+            type: "action",
+            id: "invalid-update",
+            name: "update",
+            payload: { label: "changed" },
+          });
+
+          return {
+            calls,
+            responseType: response.type,
+            code: response.type === "error" ? response.error.code : undefined,
+            responseSeq: livehost_response_seq(response),
+            hostSeq: host.seq,
+            value: host.map.at(["value"]).snap(),
+          };
+        },
+        expected: {
+          calls: 0,
+          responseType: "error",
+          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+          responseSeq: 0,
+          hostSeq: 0,
+          value: "unchanged",
+        },
+      }),
     ] as const,
   };
 }
