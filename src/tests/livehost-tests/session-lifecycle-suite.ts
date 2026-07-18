@@ -5,7 +5,7 @@ import type {
   LiveHostSocketLike,
 } from "hson-live";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { equal_row, preview_value } from "../livemap/test-helpers";
+import { equal_row, preview_value } from "../livemap-tests/test-helpers";
 
 type MemorySocket = LiveHostSocketLike & Readonly<{
   receive: (message: unknown) => Promise<void>;

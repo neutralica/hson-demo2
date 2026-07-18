@@ -3,8 +3,8 @@ import { _circuit_test } from "hson-live/diagnostics";
 import { all_deterministic_transform_test_suites } from "../../hosted-test/deterministic-transform-test-suites";
 import { run_test_suites } from "../../hosted-test/test-runner";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { all_livemap_suites } from "../livemap/all-livemap-suites";
-import { all_livetree_suites } from "../livetree/all-livetree-suites";
+import { all_livemap_suites } from "../livemap-tests/all-livemap-suites";
+import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
 
 const DOM_LIVEMAP_IDS = new Set([
   "livemap/node-internals", "livemap/bridge-livetree", "livemap/bridge-livetree-controls",

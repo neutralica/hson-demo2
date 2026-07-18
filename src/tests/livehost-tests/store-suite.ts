@@ -2,7 +2,7 @@
 
 import { create_livehost, create_livehost_store } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { read_case } from "../livemap/handle-helpers";
+import { read_case } from "../livemap-tests/handle-helpers";
 
 type StoreSocketMessageListener = (message: string) => void;
 type StoreSocketCloseListener = () => void;

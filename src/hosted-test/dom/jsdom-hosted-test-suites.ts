@@ -1,7 +1,7 @@
 import { run_test_suites } from "../test-runner";
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
-import { all_livemap_suites } from "../../tests/livemap/all-livemap-suites";
-import { all_livetree_suites } from "../../tests/livetree/all-livetree-suites";
+import { all_livemap_suites } from "../../tests/livemap-tests/all-livemap-suites";
+import { all_livetree_suites } from "../../tests/livetree-tests/all-livetree-suites";
 import { all_deterministic_transform_test_suites } from "../deterministic-transform-test-suites";
 import { with_hosted_dom_runtime } from "./hosted-dom-mutex";
 

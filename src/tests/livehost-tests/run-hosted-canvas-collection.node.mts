@@ -11,7 +11,7 @@ import {
 } from "../../hosted-test/dom/hosted-dom-migration-inventory";
 import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
-import { all_livetree_suites } from "../livetree/all-livetree-suites";
+import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
 
 function expect_collection(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted canvas collection: ${message}`);

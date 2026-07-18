@@ -2,7 +2,7 @@
 
 import { decode_livehost_message, decode_livehost_server_message, encode_livehost_message } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { read_case } from "../livemap/handle-helpers";
+import { read_case } from "../livemap-tests/handle-helpers";
 
 
 export function livehost_protocol_suite(): TestSuite {

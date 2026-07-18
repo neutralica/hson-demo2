@@ -1,5 +1,6 @@
 export { TOWL_SEATS, TOWL_WIN_POSITION } from "./towl.consts";
 export { TOWL_SCHEMA } from "./towl.schema";
+export { create_towl_runtime } from "./towl.runtime";
 export {
   create_towl_state,
   derive_lobby_phase,
@@ -15,7 +16,6 @@ export {
   seat_for_session,
   set_towl_ready,
 } from "./towl.transitions";
-export { create_towl_runtime } from "./towl.runtime";
 export type {
   TowlActionErrorCode,
   TowlActions,
@@ -33,3 +33,9 @@ export type {
   TowlState,
   TowlTransitionResult,
 } from "./towl.types";
+export {
+  create_towl_client,
+  type TowlClient,
+  type TowlClientOptions,
+  type TowlSeat,
+} from "./towl.client";

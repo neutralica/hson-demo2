@@ -1,6 +1,6 @@
 import { run_test_suites } from "../../hosted-test/test-runner";
 import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
-import { livetree_allocation } from "../livetree/livetree-29-allocation";
+import { livetree_allocation } from "../livetree-tests/livetree-29-allocation";
 
 const result = await with_hosted_dom_runtime(() => run_test_suites(
   [livetree_allocation()],

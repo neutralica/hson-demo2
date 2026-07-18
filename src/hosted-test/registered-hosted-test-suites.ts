@@ -5,8 +5,8 @@ import {
 } from "../app/hosted-test/hosted-test-suite";
 import { run_test_suites } from "./test-runner";
 import type { RunOptions, RunResult, TestEvent } from "../app/demos/test/tests.types";
-import { all_livehost_suites } from "../tests/livehost/all-livehost-suites";
-import { run_livemap_replay_suite } from "../tests/livemap/run-replay-suite";
+import { all_livehost_suites } from "../tests/livehost-tests/all-livehost-suites";
+import { run_livemap_replay_suite } from "../tests/livemap-tests/run-replay-suite";
 import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites";
 import { run_jsdom_hosted_test_suites } from "./dom/jsdom-hosted-test-suites";
 import { run_jsdom_hosted_canvas_suites } from "./dom/canvas/jsdom-hosted-canvas-suites";

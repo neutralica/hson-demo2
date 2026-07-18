@@ -1,6 +1,6 @@
 import { run_test_suites } from "../../test-runner";
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../../app/demos/test/tests.types";
-import { all_livetree_suites } from "../../../tests/livetree/all-livetree-suites";
+import { all_livetree_suites } from "../../../tests/livetree-tests/all-livetree-suites";
 import { with_hosted_dom_runtime } from "../hosted-dom-mutex";
 
 export const JSDOM_HOSTED_CANVAS_SUITE_IDS = Object.freeze([

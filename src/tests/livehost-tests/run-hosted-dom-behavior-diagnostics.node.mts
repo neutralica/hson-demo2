@@ -3,7 +3,7 @@ import { all_deterministic_transform_test_suites } from "../../hosted-test/deter
 import { run_test_suites } from "../../hosted-test/test-runner";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
-import { all_livetree_suites } from "../livetree/all-livetree-suites";
+import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
 
 const BEHAVIOR_SUITE_IDS = Object.freeze([
   "livetree/append-and-create",

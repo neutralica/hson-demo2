@@ -1,7 +1,7 @@
 // client-suite.ts
 
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { preview_value, equal_row } from "../livemap/test-helpers";
+import { preview_value, equal_row } from "../livemap-tests/test-helpers";
 import {
   create_livehost_client,
   LiveHostDisconnectedError,

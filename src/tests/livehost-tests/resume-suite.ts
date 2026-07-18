@@ -2,7 +2,7 @@
 
 import { make_livehost_resume_log } from "hson-live";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { preview_value, equal_row } from "../livemap/test-helpers";
+import { preview_value, equal_row } from "../livemap-tests/test-helpers";
 
 
 type LiveHostResumeReadCaseSpec = Readonly<{

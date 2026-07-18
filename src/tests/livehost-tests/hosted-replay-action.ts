@@ -11,7 +11,7 @@ import { run_livehost_all_suite, run_node_all_suite } from "../../hosted-test/re
 import { run_jsdom_hosted_test_suites } from "../../hosted-test/dom/jsdom-hosted-test-suites";
 import { run_jsdom_hosted_canvas_suites } from "../../hosted-test/dom/canvas/jsdom-hosted-canvas-suites";
 import { run_hosted_all_test_suites } from "../../hosted-test/hosted-all-test-suites";
-import { run_livemap_replay_suite } from "../livemap/run-replay-suite";
+import { run_livemap_replay_suite } from "../livemap-tests/run-replay-suite";
 
 export * from "../../app/hosted-test/hosted-test-action";
 

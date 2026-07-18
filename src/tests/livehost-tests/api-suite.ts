@@ -2,7 +2,7 @@
 
 import { hson } from "hson-live";
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { read_case } from "../livemap/handle-helpers";
+import { read_case } from "../livemap-tests/handle-helpers";
 
 type ApiSocketMessageListener = (message: string) => void;
 type ApiSocketCloseListener = () => void;

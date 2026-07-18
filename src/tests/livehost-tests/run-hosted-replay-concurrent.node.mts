@@ -9,7 +9,7 @@ import {
 import type { HostedTestReportController } from "./hosted-test-report";
 import { make_hosted_test_report_router } from "./hosted-test-report-router";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
-import { run_livemap_replay_suite } from "../livemap/run-replay-suite";
+import { run_livemap_replay_suite } from "../livemap-tests/run-replay-suite";
 
 type Listener = (message: string) => void;
 
