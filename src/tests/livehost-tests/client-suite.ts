@@ -205,6 +205,40 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
+        name: "sync at empty path replaces client map",
+        input: {},
+        act: async () => {
+          const socket = make_memory_socket();
+          const client = create_livehost_client<{ user: { name: string } }>({ socket });
+
+          client.connect();
+          await socket.receive({
+            type: "hello",
+            sessionId: "session-a",
+            seq: 0,
+            snapshot: { user: { name: "Ada" } },
+          });
+          await socket.receive({
+            type: "sync",
+            seq: 1,
+            path: [],
+            value: { user: { name: "Grace" } },
+          });
+
+          return {
+            seq: client.seq,
+            root: client.map.snap(),
+            name: client.map.at(["user", "name"]).snap(),
+          };
+        },
+        expected: {
+          seq: 1,
+          root: { user: { name: "Grace" } },
+          name: "Grace",
+        },
+      }),
+      livehost_client_read_case({
+        suite: SUITE,
         name: "subscribe sends path message",
         input: {},
         act: () => {
