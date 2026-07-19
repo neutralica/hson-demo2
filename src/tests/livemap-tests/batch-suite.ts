@@ -586,5 +586,5 @@ function make_set_many_editor_reject_case(spec: SetManyRejectCaseSpec): TestCase
 }
 
 function json_root_node(input: JsonValue) {
-  return hson.fromJson(input).toHson().parse();
+  return hson.fromJson(input).toNode();
 }

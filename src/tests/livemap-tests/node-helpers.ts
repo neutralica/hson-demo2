@@ -686,7 +686,7 @@ function make_test_node(tag: string): HsonNode {
   };
 }
 function html_root_node(input: string) {
-  return hson.fromTrustedHtml(input).toHson().parse();
+  return hson.fromTrustedHtml(input).toNode();
 }
 export function make_node_insert_child_case(spec: NodeInsertChildCaseSpec): TestCase {
   return {

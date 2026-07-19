@@ -524,8 +524,7 @@ export function livetree_construction_parity(): TestSuite {
         const host = tree.find.must.byId("root");
         const node = hson
           .fromTrustedHtml(`<aside id="from-node" data-source="node"><span id="node-label">seed</span></aside>`)
-          .toHson()
-          .parse();
+          .toNode();
 
         const branch = hson.liveTree.fromNode(node);
         branch.find.must.byId("node-label").text.set("node-mutated");

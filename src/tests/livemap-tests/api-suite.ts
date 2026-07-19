@@ -88,7 +88,7 @@ export function livemap_suites_api(): TestSuite {
         name: "api liveMap fromNode creates projected map",
         input: {},
         act: () => {
-          const node = hson.fromJson({ user: { name: "Ada" } }).toHson().parse();
+          const node = hson.fromJson({ user: { name: "Ada" } }).toNode();
           return hson.liveMap.fromNode(node).snap();
         },
         expected: { user: { name: "Ada" } },

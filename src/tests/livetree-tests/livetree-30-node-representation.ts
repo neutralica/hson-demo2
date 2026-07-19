@@ -151,7 +151,7 @@ function serialization_case(suite: string): LiveTreeCaseSpec {
     html: `<main></main>`,
     act() {
       const input = { alpha: "x", nested: { value: 2 } };
-      const parsed = hson.fromJson(input).toHson().parse();
+      const parsed = hson.fromJson(input).toNode();
       const hsonText = hson.fromNode(parsed).toHson().serialize();
       const jsonText = hson.fromNode(parsed).toJson().serialize();
       const htmlText = hson.fromNode(parsed).toHtml().serialize();
@@ -242,9 +242,9 @@ function parser_paths_case(suite: string): LiveTreeCaseSpec {
     dom: true,
     html: `<main></main>`,
     act() {
-      const jsonNode = hson.fromJson({ plain: "x", items: [1, 2] }).toHson().parse();
-      const htmlNode = hson.fromTrustedHtml(`<section><span>x</span></section>`).toHson().parse();
-      const svgNode = hson.fromTrustedHtml(`<svg><path></path></svg>`).toHson().parse();
+      const jsonNode = hson.fromJson({ plain: "x", items: [1, 2] }).toNode();
+      const htmlNode = hson.fromTrustedHtml(`<section><span>x</span></section>`).toNode();
+      const svgNode = hson.fromTrustedHtml(`<svg><path></path></svg>`).toNode();
       const nodes = [jsonNode, htmlNode, svgNode]
         .flatMap((node) => _collect_subtree_nodes(node, "pre"));
       canonical = containers_are_canonical(nodes);

@@ -112,7 +112,7 @@ export function livemap_suites_node(): TestSuite {
         suite: SUITE,
         name: "node attr mutation does not emit LiveMap subscription event",
         run: () => {
-          const map = hson.liveMap.fromNode(hson.fromTrustedHtml("<button>Press</button>").toHson().parse());
+          const map = hson.liveMap.fromNode(hson.fromTrustedHtml("<button>Press</button>").toNode());
           const events: unknown[] = [];
           const stop = map.sub((next) => {
             events.push(next);
@@ -137,7 +137,7 @@ export function livemap_suites_node(): TestSuite {
             button: {},
           }));
           const map = hson.liveMap
-            .fromNode(hson.fromTrustedHtml("<button>Press</button>").toHson().parse())
+            .fromNode(hson.fromTrustedHtml("<button>Press</button>").toNode())
             .schema.use(schema);
           const before = map.snap();
 

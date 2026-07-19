@@ -1,7 +1,7 @@
 // init-pp.ts
 
-import  { hson } from "hson-live";
-import  { _colors } from "../../core/consts/colors.consts";
+import { hson } from "hson-live";
+import { _colors } from "../../core/consts/colors.consts";
 import type { Fmt } from "../../core/types/core.types";
 import type { PanelShell, Panels } from "../../ui/panels/panels.types";
 import { PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss, PP_IDLEcss } from "./pp.css";
@@ -150,7 +150,8 @@ export function init_parsing_panels(pp: Panels): void {
     return getActive() !== null && getIsValid();
   }
   function setNodeViewForAll(t: ReturnType<typeof hson.fromJson> | ReturnType<typeof hson.fromHson> | ReturnType<typeof hson.fromTrustedHtml>): void {
-    const nodeTxt = JSON.stringify(t.toHson().parse(), null, 2);
+
+    const nodeTxt = JSON.stringify(t.toNode(), null, 2);
 
     for (const fmt of FMTS) {
       pp.panels[fmt].nodeText.text.set(nodeTxt);
@@ -230,7 +231,7 @@ export function init_parsing_panels(pp: Panels): void {
 
       if (isThisActiveInvalid(f)) {
         p.textBox.css.setMany(PP_ACTIVE_INVALIDcss(f));
-        p.wmFmt.style.set.color( "transparent")
+        p.wmFmt.style.set.color("transparent")
         unlockTextarea(p);
         continue;
       }
@@ -244,26 +245,26 @@ export function init_parsing_panels(pp: Panels): void {
 
       if (isActiveValid()) {
         p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
-        p.wmFmt.style.set.color( "transparent")
+        p.wmFmt.style.set.color("transparent")
         lockTextarea(p);
         continue;
       }
       if (isIdleInvalid()) {
         p.textBox.css.setMany(PP_INACTIVE_INVALIDcss(f));
-        p.wmFmt.style.set.color( _colors.txt.grey)
+        p.wmFmt.style.set.color(_colors.txt.grey)
         unlockTextarea(p);
         continue;
       }
 
       if (isIdleValid()) {
         p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
-        p.wmFmt.style.set.color( "transparent")
+        p.wmFmt.style.set.color("transparent")
         unlockTextarea(p);
         continue;
       }
 
       p.textBox.css.setMany(PP_IDLEcss(f));
-      p.wmFmt.style.set.color( _colors.txt.grey)
+      p.wmFmt.style.set.color(_colors.txt.grey)
       if (getActive() === null) {
         unlockTextarea(p);
       } else {

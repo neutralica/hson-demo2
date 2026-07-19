@@ -200,7 +200,7 @@ type HtmlSchemaCaseSpec = Readonly<{
 
 function html_map(html: string): LiveMap<JsonValue> {
   return hson.liveMap.fromNode(
-    hson.fromTrustedHtml(html).toHson().parse(),
+    hson.fromTrustedHtml(html).toNode(),
   ) as LiveMap<JsonValue>;
 }
 
