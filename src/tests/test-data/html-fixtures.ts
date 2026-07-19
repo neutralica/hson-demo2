@@ -105,7 +105,7 @@ const htmlLevel3: { [name: string]: string } = {
   inlineWhitespace: `<span> a <b>b</b> c </span>`,
 
   // Reserved meta on standard tag → must land in _meta, not _attrs
-  quidTest: `<section data-_quid="abc123">x</section>`,
+  quidTest: `<section data-_quid="0000000000000001">x</section>`,
 
 };
 

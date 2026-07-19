@@ -7,7 +7,7 @@ export const json_INVALID = {
 export const html_INVALID = {
   simple: `<p>INVALID`,
   // Reserved meta on VSN 
-  meta_quid_on_vsn: `<_hson_arr data-_quid="qqq"><_hson_ii data-_index="0"><p>one</p></_hson_ii></_hson_arr>`,
+  meta_quid_on_vsn: `<_hson_arr data-_quid="0000000000000001"><_hson_ii data-_index="0"><p>one</p></_hson_ii></_hson_arr>`,
   // Empty unquoted value (edge in HTML, observed in the wild)
   empty_unquoted: `<div data-flag=>e</div>`,
   // Valid array indices (contiguous 0..n)

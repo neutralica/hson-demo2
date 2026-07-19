@@ -10,12 +10,6 @@ import type { TestSuite } from "../../app/demos/test/tests.types.js";
 
 type IdentitySnapshot = Readonly<Record<string, string>>;
 
-function makeTestQuid(label: string): string {
-  const bytes = new Uint32Array(2);
-  globalThis.crypto.getRandomValues(bytes);
-  return `${label}-${bytes[0]!.toString(16)}${bytes[1]!.toString(16)}`;
-}
-
 function identitySnapshot(tree: LiveTree, ids: readonly string[]): IdentitySnapshot {
   const snapshot: Record<string, string> = {};
 
@@ -170,8 +164,8 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const sectionQuid = makeTestQuid("section");
-        const childQuid = makeTestQuid("child");
+        const sectionQuid = "0000000000000001";
+        const childQuid = "0000000000000002";
         const imported = hson.liveTree.fromTrustedHtml(`
           <section id="persisted" data-_quid="${sectionQuid}">
             <span id="persisted-child" data-_quid="${childQuid}">child</span>
@@ -212,7 +206,7 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const duplicateQuid = makeTestQuid("duplicate");
+        const duplicateQuid = "0000000000000001";
         let message = "";
         let imported: LiveTree | undefined;
 
@@ -256,7 +250,7 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const duplicateQuid = makeTestQuid("cross-branch");
+        const duplicateQuid = "0000000000000001";
         const first = hson.liveTree.fromTrustedHtml(
           `<section id="owner" data-_quid="${duplicateQuid}"></section>`,
         );
@@ -423,8 +417,8 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const rootQuid = makeTestQuid("retain-root");
-        const childQuid = makeTestQuid("retain-child");
+        const rootQuid = "0000000000000001";
+        const childQuid = "0000000000000002";
         const markup = `
           <section id="owner" data-_quid="${rootQuid}">
             <span id="owner-child" data-_quid="${childQuid}">child</span>
@@ -477,7 +471,7 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const duplicateQuid = makeTestQuid("root-child-duplicate");
+        const duplicateQuid = "0000000000000001";
         let message = "";
         let imported: LiveTree | undefined;
 
