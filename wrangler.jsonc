@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hson-demo2-hosted-tests",
+  "main": "src/hosted-test/cloudflare/worker.ts",
+  "compatibility_date": "2026-07-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "HOSTED_TESTS",
+        "class_name": "HostedTestDurableObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["HostedTestDurableObject"]
+    }
+  ]
+}

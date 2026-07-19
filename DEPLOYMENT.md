@@ -12,7 +12,14 @@ upgrade route.
 Consequently, the checked-in deployment model requires two services:
 
 1. a static host for the Vite `dist/` output; and
-2. a WebSocket-capable host running the hosted-test Node process.
+2. a WebSocket-capable host running either the complete hosted-test Node
+   process or the bounded Cloudflare Durable Object adapter.
+
+The repository also contains a Cloudflare Workers + Durable Objects
+proof-of-deployment option. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
+explicitly non-hibernating and currently exposes only the Worker-compatible
+suite subset documented there; the conventional Node service remains the
+complete hosted-test deployment.
 
 Cloudflare in front of the current site is not evidence that the static origin
 can execute a persistent Node process. Do not point the browser at a Worker,

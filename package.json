@@ -11,10 +11,14 @@
     "host": "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run hosted:test-server\"' -e 'tell application \"Terminal\" to do script \"cd \\\"'\"$PWD\"'\\\" && npm run dev\"' -e 'tell application \"Terminal\" to activate'",
     "check": "tsc -p tsconfig.json --noEmit",
     "build": "vite build",
+    "check:cloudflare": "tsc -p tsconfig.cloudflare.json --noEmit",
+    "cloudflare:dev": "wrangler dev --config wrangler.jsonc",
+    "cloudflare:deploy": "wrangler deploy --config wrangler.jsonc",
+    "cloudflare:types": "wrangler types --config wrangler.jsonc --include-runtime false src/hosted-test/cloudflare/worker-configuration.d.ts",
     "preview": "vite preview",
     "test:towl": "tsx src/tests/towl-tests/run-towl-suites.node.mts",
     "test:towl-room": "tsx src/tests/towl-tests/run-towl-room-suite.node.mts",
-       "test:browser": "playwright test",
+    "test:browser": "playwright test",
     "test:browser:headed": "playwright test --headed",
     "test:browser:debug": "PWDEBUG=1 playwright test",
     "test:browser:install": "playwright install chromium",
@@ -41,6 +45,7 @@
     "test:hosted-generic-livehost-node": "tsx src/tests/livehost/run-hosted-generic-livehost.node.mts",
     "test:hosted-websocket-lifecycle-node": "tsx src/tests/livehost/run-hosted-websocket-lifecycle.node.mts",
     "test:hosted-deployment-node": "tsx src/tests/livehost-tests/run-hosted-deployment.node.mts",
+    "test:hosted-cloudflare": "tsx tests/cloudflare/run-hosted-cloudflare.node.mts",
     "test:hosted-jsdom-runtime-node": "tsx src/tests/livehost/run-hosted-jsdom-runtime.node.mts",
     "test:hosted-dom-collection-node": "tsx src/tests/livehost/run-hosted-dom-collection.node.mts",
     "test:hosted-dom-compatibility-node": "tsx src/tests/livehost/run-hosted-dom-compatibility.node.mts",
@@ -79,7 +84,8 @@
     "@types/node": "^25.5.2",
     "@types/ws": "8.18.1",
     "typescript": "^5.8.3",
-    "vite": "^7.3.0"
+    "vite": "^7.3.0",
+    "wrangler": "^4.112.0"
   },
   "dependencies": {
     "hson-live": "file:../hson-live",

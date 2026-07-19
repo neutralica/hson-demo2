@@ -4,6 +4,7 @@ node_modules/
 
 # vite caches
 **/.vite/
+.wrangler/
 
 .DS_Store
 _archive-delete/
