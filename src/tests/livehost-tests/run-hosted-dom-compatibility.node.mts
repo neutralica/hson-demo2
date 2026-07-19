@@ -9,6 +9,7 @@ import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
 const DOM_LIVEMAP_IDS = new Set([
   "livemap/node-internals", "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
   "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind",
+  "livemap/document-foundation",
 ]);
 
 const suites: readonly TestSuite[] = [

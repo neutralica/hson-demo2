@@ -83,7 +83,7 @@ const passingResult: RunResult = {
 const times = [100, 200];
 const report = make_hosted_test_report(() => times.shift() ?? 300, undefined, "livemap/replay", { caseBatchSize: 1 });
 const initial = report.map.capture();
-expect_report(initial.rev === 1, "JSON object construction has the expected initial revision");
+expect_report(initial.rev === 0, "JSON object construction has the expected initial revision");
 equal(initial.value, {
   run: { suite: "livemap/replay", status: "idle", startedAt: null, completedAt: null, timing: null },
   summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
@@ -97,25 +97,25 @@ expect_report(JSON.parse(JSON.stringify(initial.value)).run.status === "idle", "
 const feedEvents: LiveMapFeedEvent[] = [];
 report.map.feed([], (event) => feedEvents.push(event));
 report.reduce({ t: "suite_begin", suite: "livemap/replay", totalPlanned: 2 });
-expect_report(report.map.rev === 2, "start consumes one revision");
+expect_report(report.map.rev === 1, "start consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "running", "start sets running");
 expect_report(feedEvents.at(-1)?.commit.ops.length === 2, "start commit contains only changed semantic writes");
 expect_report(report.commits().length === 1, "capture begins before start mutation");
 const startCommit = must_commit(report.commits()[0], "start commit must exist");
-expect_report(startCommit.prevRev === 1 && startCommit.rev === 2, "start capture begins at initial revision");
+expect_report(startCommit.prevRev === 0 && startCommit.rev === 1, "start capture begins at initial revision");
 expect_report(find_op(startCommit, ["run", "status"])?.next === "running", "start commit records running status");
 expect_report(find_op(startCommit, ["run", "startedAt"])?.next === 100, "start commit records start time");
 
 report.reduce({ t: "case_begin", suite: "livemap/replay", name: "round trips a commit" });
-expect_report(report.map.rev === 2, "ignored case_begin consumes no revision");
+expect_report(report.map.rev === 1, "ignored case_begin consumes no revision");
 report.reduce(passEvent);
-expect_report(Number(report.map.rev) === 3, "completed case consumes one revision");
+expect_report(Number(report.map.rev) === 2, "completed case consumes one revision");
 expect_report(feedEvents.at(-1)?.commit.ops.length === 3, "case list and counters share one commit");
 expect_report(report.map.snap(["summary", "pass"]) === 1, "pass counter increments");
 expect_report(hosted_test_report_cases(report.map.capture().value).length === 1, "case is appended");
 
 const unchanged = report.map.set(["summary", "pass"], 1);
-expect_report(!unchanged.changed && Number(report.map.rev) === 3, "unchanged write consumes no revision or feed event");
+expect_report(!unchanged.changed && Number(report.map.rev) === 2, "unchanged write consumes no revision or feed event");
 expect_report(feedEvents.length === 2, "feed emits once per changed semantic batch");
 expect_report(report.commits().length === 2, "internal capture ignores unchanged write");
 const caseCommit = must_commit(report.commits()[1], "case commit must exist");
@@ -124,7 +124,7 @@ expect_report(find_op(caseCommit, ["summary", "cases"])?.next === 1, "case commi
 expect_report(find_op(caseCommit, ["summary", "pass"])?.next === 1, "case commit increments exactly the pass counter");
 
 report.complete(passingResult);
-expect_report(Number(report.map.rev) === 4, "terminal update consumes one revision");
+expect_report(Number(report.map.rev) === 3, "terminal update consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "passed", "passing result is terminal passed");
 expect_report(report.map.snap(["run", "completedAt"]) === 200, "terminal time is finite");
 expect_report(feedEvents.at(-1)?.commit.ops.length === 3, "terminal commit contains completion, status, and timing");
@@ -232,12 +232,12 @@ expect_report(
     && realRun.map.snap(["summary", "cases"]) === (response.result as unknown as HostedTestRunResult).summary.cases,
   "report summary agrees with action result",
 );
-expect_report(realRun.map.rev === 5, "real run revision is initial + start + two case batches + terminal");
+expect_report(realRun.map.rev === 4, "real run revision is start + two case batches + terminal");
 const realCommits = realRun.commits();
 expect_report(realCommits.length === 4, "real run captures start + two case batches + terminal");
-expect_report(realCommits[0]?.prevRev === 1 && realCommits[0].rev === 2, "real capture starts at revisions 1 to 2");
-expect_report(realCommits.at(-1)?.prevRev === 4 && realCommits.at(-1)?.rev === 5, "real capture ends at revisions 4 to 5");
-expect_contiguous(realCommits, 1);
+expect_report(realCommits[0]?.prevRev === 0 && realCommits[0].rev === 1, "real capture starts at revisions 0 to 1");
+expect_report(realCommits.at(-1)?.prevRev === 3 && realCommits.at(-1)?.rev === 4, "real capture ends at revisions 3 to 4");
+expect_contiguous(realCommits, 0);
 for (const commit of realCommits.slice(1, -1)) {
   expect_report(commit.ops.filter((op) => op.kind === "set" && op.path[0] === "caseBatches").length === 1, `case revision ${commit.rev} has one compact batch append`);
   expect_report(find_op(commit, ["summary", "cases"]) !== undefined, `case revision ${commit.rev} increments cases`);

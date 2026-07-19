@@ -7,7 +7,7 @@ import { with_hosted_dom_runtime } from "./hosted-dom-mutex";
 
 export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
   "livemap/node-internals", "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
-  "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind",
+  "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind", "livemap/document-foundation",
   "livetree/find", "livetree/attrs-and-flags", "livetree/mixed-regression", "livetree/extra cases",
   "livetree/regressions/graft", "livetree/legacy-attrs-flags", "livetree/legacy-empty-append",
   "livetree/legacy-dataset", "livetree/identity-stability", "livetree/legacy-css-value-selection",

@@ -101,7 +101,7 @@ expect_bridge(receivedEnvelope !== undefined && receivedCommit !== undefined, "c
 equal(receivedEnvelope, expectedEnvelope, "generic protocol preserves the complete hosted-report envelope");
 expect_bridge(receivedEnvelope.runId === "protocol-run-1", "run ID survives protocol delivery");
 expect_bridge(receivedEnvelope.suite === "livemap/replay", "suite survives protocol delivery");
-expect_bridge(receivedCommit.prevRev === 1 && receivedCommit.rev === 2, "revisions survive protocol delivery");
+expect_bridge(receivedCommit.prevRev === 0 && receivedCommit.rev === 1, "revisions survive protocol delivery");
 equal(receivedCommit.ops, localCommit.ops, "operations survive protocol delivery");
 
 const initialJson = structuredClone(initial.value) as unknown as JsonValue;

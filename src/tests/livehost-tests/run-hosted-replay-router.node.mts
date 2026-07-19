@@ -76,7 +76,7 @@ successRouter.accept_result(successResult);
 expect_integration(successTimeline.join(",") === "terminal,result", "terminal report precedes action result");
 expect_integration(successRouter.status === "complete" && successRouter.failure === undefined, "successful router completes cleanly");
 expect_integration(successRouter.runId === successResult.runId && successMirror.runId === successResult.runId, "result correlates to router and mirror");
-expect_integration(successMirror.rev === 5 && successMirror.capture().value.run.status === "passed", "real mirror reaches passed batched revision 5");
+expect_integration(successMirror.rev === 4 && successMirror.capture().value.run.status === "passed", "real mirror reaches passed batched revision 4");
 expect_integration(successMirror.capture().value.summary.cases === 45 && successMirror.capture().value.summary.fail === 0, "real mirror contains 45 cases and zero failures");
 expect_integration(authoritative !== undefined && JSON.stringify(successMirror.capture().value) === JSON.stringify(authoritative.map.capture().value), "router mirror equals authoritative host report");
 successRouter.dispose();

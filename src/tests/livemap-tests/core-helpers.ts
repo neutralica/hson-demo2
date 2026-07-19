@@ -138,7 +138,7 @@ export function make_core_node_tag_case(spec: CoreNodeTagCaseSpec): TestCase {
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const node = handle.get();
 
       return {
@@ -165,7 +165,7 @@ export function make_core_node_missing_case(spec: CoreNodeMissingCaseSpec): Test
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       let message = "";
 
       try {
@@ -198,7 +198,7 @@ export function make_core_node_path_copy_case(spec: CoreNodePathCopyCaseSpec): T
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const returnedPath = handle.path() as (string | number)[];
 
       returnedPath.splice(0, returnedPath.length, ...spec.mutateReturnedPathTo);
@@ -223,7 +223,7 @@ export function make_core_node_original_path_stability_case(spec: CoreNodeOrigin
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
       const originalPath = [...spec.path];
-      const handle = map.node(originalPath);
+      const handle = map.debug.node(originalPath);
 
       originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
 

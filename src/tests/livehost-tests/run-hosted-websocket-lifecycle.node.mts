@@ -26,7 +26,7 @@ try {
   ]);
   expect_lifecycle(resultA.runId !== resultB.runId, "two clients receive distinct run IDs");
   expect_lifecycle(resultA.summary.cases === 45 && probeA.adapter.capture()?.run.id === resultA.runId, "client A follows only its dedicated replay report host");
-  expect_lifecycle(resultB.summary.cases === 178 && probeB.adapter.capture()?.run.id === resultB.runId, "client B follows only its dedicated LiveHost report host");
+  expect_lifecycle(resultB.summary.cases === 184 && probeB.adapter.capture()?.run.id === resultB.runId, "client B follows only its dedicated LiveHost report host");
   expect_lifecycle(probeA.errors.length === 0 && probeB.errors.length === 0, "report streams never cross clients");
 } finally {
   probeA.dispose();

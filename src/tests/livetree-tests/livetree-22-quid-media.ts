@@ -402,7 +402,7 @@ export function livetree_construction_parity(): TestSuite {
         const jsonValue = hson
           .fromTrustedHtml(`<article id="from-json" data-source="json"><span id="json-label">seed</span></article>`)
           .toJson()
-          .parse();
+          .value();
 
         const branch = hson.liveTree.fromJson(jsonValue as any);
         branch.find.must.byId("json-label").text.set("json-mutated");

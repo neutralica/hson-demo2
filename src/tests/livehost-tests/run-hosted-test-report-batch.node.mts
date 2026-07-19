@@ -68,7 +68,7 @@ batchOne.reduce(begin);
 batchOne.reduce(end("a"));
 batchOne.reduce(end("b"));
 batchOne.complete(passingResult(2));
-expect_batch(batchOne.commits().length === 4 && batchOne.map.rev === 5, "batch size one reproduces one case per commit");
+expect_batch(batchOne.commits().length === 4 && batchOne.map.rev === 4, "batch size one reproduces one case per commit");
 batchOne.dispose();
 
 for (const invalid of [0, -1, 1.5, Number.NaN]) {

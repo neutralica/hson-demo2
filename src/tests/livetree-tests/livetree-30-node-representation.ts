@@ -155,7 +155,7 @@ function serialization_case(suite: string): LiveTreeCaseSpec {
       const hsonText = hson.fromNode(parsed).toHson().serialize();
       const jsonText = hson.fromNode(parsed).toJson().serialize();
       const htmlText = hson.fromNode(parsed).toHtml().serialize();
-      const roundTrip = hson.fromHson(hsonText).toJson().parse();
+      const roundTrip = hson.fromHson(hsonText).toJson().value();
       stable = !hsonText.includes("$_attrs")
         && !hsonText.includes("$_meta")
         && !jsonText.includes("$_attrs")

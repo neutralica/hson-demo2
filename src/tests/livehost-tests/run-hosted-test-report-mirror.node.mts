@@ -62,10 +62,10 @@ const stopObserved = observed.subscribe((capture) => {
 });
 observed.apply(start);
 observed.apply(completedCase);
-expect_mirror(observedRevisions.join(",") === "1,2,3", "subscription emits current state and once per successful commit");
+expect_mirror(observedRevisions.join(",") === "0,1,2", "subscription emits current state and once per successful commit");
 expect_mirror(observedRevisions.every((rev, index) => index === 0 || rev > observedRevisions[index - 1]!), "subscription revisions increase monotonically");
 const firstObserved = observedCaptures[0];
-expect_mirror(firstObserved !== undefined, "subscription exposes revision-1 capture");
+expect_mirror(firstObserved !== undefined, "subscription exposes revision-0 construction capture");
 (firstObserved.value as unknown as { run: { status: string } }).run.status = "failed";
 expect_mirror(observed.capture().value.run.status === "running", "subscription capture is detached from mirror state");
 stopObserved();
@@ -84,11 +84,11 @@ expect_mirror(mirror.capture().value.run.status === "idle", "mirror detaches fro
 const parsedCommit = JSON.parse(JSON.stringify(start)) as unknown;
 const detachedStart = decode_hosted_test_report_commit_envelope(parsedCommit);
 mirror.apply(detachedStart);
-expect_mirror(mirror.rev === 2 && mirror.capture().value.run.status === "running", "valid commit replays through the real map");
+expect_mirror(mirror.rev === 1 && mirror.capture().value.run.status === "running", "valid commit replays through the real map");
 if (typeof parsedCommit === "object" && parsedCommit !== null && "runId" in parsedCommit) {
   (parsedCommit as { runId: string }).runId = "changed";
 }
-expect_mirror(mirror.runId === "mirror-run" && mirror.rev === 2, "source commit mutation cannot alter mirror state");
+expect_mirror(mirror.runId === "mirror-run" && mirror.rev === 1, "source commit mutation cannot alter mirror state");
 
 const runMismatch = fresh(initial);
 expect_failure(runMismatch, () => runMismatch.apply({ ...start, runId: "other-run" }), "RUN_MISMATCH");

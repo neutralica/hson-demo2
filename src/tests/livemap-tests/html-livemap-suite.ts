@@ -2,7 +2,7 @@
 
 // livemap-suites-html-proof.ts
 
-import { hson } from "hson-live";
+import { hson, make_livemap_core } from "hson-live";
 import type { JsonValue, LiveMap } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
@@ -199,7 +199,7 @@ type HtmlSchemaCaseSpec = Readonly<{
 }>;
 
 function html_map(html: string): LiveMap<JsonValue> {
-  return hson.liveMap.fromNode(
+  return make_livemap_core(
     hson.fromTrustedHtml(html).toNode(),
   ) as LiveMap<JsonValue>;
 }
@@ -281,7 +281,7 @@ function make_html_node_attr_case(spec: HtmlNodeAttrCaseSpec): TestCase {
     },
     run: () => {
       const map = html_map(spec.html);
-      const node = map.node(spec.path);
+      const node = map.debug.node(spec.path);
 
       return {
         assertRows: [
@@ -305,7 +305,7 @@ function make_html_node_set_attr_case(spec: HtmlNodeSetAttrCaseSpec): TestCase {
     },
     run: () => {
       const map = html_map(spec.html);
-      const node = map.node(spec.path);
+      const node = map.debug.node(spec.path);
 
       node.setAttr(spec.attrName, spec.attrValue);
 

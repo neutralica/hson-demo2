@@ -1,7 +1,7 @@
 // suites-node.ts
 
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { ELEM_TAG, hson, OBJ_TAG } from "hson-live";
+import { ELEM_TAG, hson, make_livemap_core, OBJ_TAG } from "hson-live";
 import { equal_row } from "./test-helpers";
 import { make_node_live_after_delete_case, make_node_live_after_set_case, make_node_parent_content_case, make_node_attrs_copy_case, make_node_set_attr_case, make_node_set_attrs_case, make_node_remove_attr_case, make_node_clear_attrs_case, make_node_existing_attrs_case, make_node_attr_missing_path_throw_case, make_node_attr_json_backed_throw_case, make_node_json_html_tag_name_case, make_node_children_case, make_node_child_lookup_case, make_node_must_child_throw_case, make_node_append_case, make_node_append_missing_path_throw_case, make_node_append_html_case, make_node_insert_child_case, make_node_insert_child_append_case, make_node_insert_child_bad_index_throw_case, make_node_insert_missing_path_throw_case, make_node_move_child_case, make_node_move_child_backward_case, make_node_move_child_bad_to_index_throw_case, make_node_move_child_bad_from_index_throw_case, make_node_move_missing_path_throw_case, make_node_remove_children_case, make_node_remove_child_case, make_node_remove_child_bad_index_throw_case, make_node_remove_missing_path_throw_case, make_node_replace_children_case, make_node_replace_child_case, make_node_replace_child_bad_index_throw_case, make_node_replace_missing_path_throw_case } from "./node-helpers";
 
@@ -112,19 +112,19 @@ export function livemap_suites_node(): TestSuite {
         suite: SUITE,
         name: "node attr mutation does not emit LiveMap subscription event",
         run: () => {
-          const map = hson.liveMap.fromNode(hson.fromTrustedHtml("<button>Press</button>").toNode());
+          const map = make_livemap_core(hson.fromTrustedHtml("<button>Press</button>").toNode());
           const events: unknown[] = [];
           const stop = map.sub((next) => {
             events.push(next);
           });
 
-          map.node(["button"]).setAttr("class", "active");
+          map.debug.node(["button"]).setAttr("class", "active");
           stop();
 
           return {
             assertRows: [
               equal_row("node attr mutation does not emit LiveMap subscription event: events", events, []),
-              equal_row("node attr mutation does not emit LiveMap subscription event: attr", map.node(["button"]).attr("class"), "active"),
+              equal_row("node attr mutation does not emit LiveMap subscription event: attr", map.debug.node(["button"]).attr("class"), "active"),
             ],
           };
         },
@@ -136,16 +136,16 @@ export function livemap_suites_node(): TestSuite {
           const schema = hson.liveMap.schema.define(() => ({
             button: {},
           }));
-          const map = hson.liveMap
-            .fromNode(hson.fromTrustedHtml("<button>Press</button>").toNode())
-            .schema.use(schema);
+          const map = make_livemap_core(
+            hson.fromTrustedHtml("<button>Press</button>").toNode(),
+          ).schema.use(schema);
           const before = map.snap();
 
-          map.node(["button"]).setAttr("data-extra", "ok");
+          map.debug.node(["button"]).setAttr("data-extra", "ok");
 
           return {
             assertRows: [
-              equal_row("node attr mutation bypasses schema validation: attr", map.node(["button"]).attr("data-extra"), "ok"),
+              equal_row("node attr mutation bypasses schema validation: attr", map.debug.node(["button"]).attr("data-extra"), "ok"),
               equal_row("node attr mutation bypasses schema validation: root", map.snap(), before),
             ],
           };

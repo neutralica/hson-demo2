@@ -80,7 +80,13 @@ export function livemap_suites_api(): TestSuite {
         suite: SUITE,
         name: "api liveMap fromHson creates projected map",
         input: {},
-        act: () => hson.liveMap.fromHson('<user<name"Ada">>').snap(),
+        act: () => {
+          const map = hson.liveMap.fromHson('<user<name"Ada">>');
+          if (map.mode !== "data-object" && map.mode !== "data-array") {
+            throw new Error(`Expected data LiveMap; observed ${map.mode}.`);
+          }
+          return map.snap();
+        },
         expected: { user: { name: "Ada" } },
       }),
       read_case({
@@ -89,7 +95,11 @@ export function livemap_suites_api(): TestSuite {
         input: {},
         act: () => {
           const node = hson.fromJson({ user: { name: "Ada" } }).toNode();
-          return hson.liveMap.fromNode(node).snap();
+          const map = hson.liveMap.fromNode(node);
+          if (map.mode !== "data-object" && map.mode !== "data-array") {
+            throw new Error(`Expected data LiveMap; observed ${map.mode}.`);
+          }
+          return map.snap();
         },
         expected: { user: { name: "Ada" } },
       }),

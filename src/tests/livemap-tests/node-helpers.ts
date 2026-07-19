@@ -17,7 +17,7 @@ export function make_node_live_after_delete_case(spec: NodeLiveAfterDeleteCaseSp
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const initialTag = handle.tag();
 
       map.delete(spec.deletePath);
@@ -44,7 +44,7 @@ export function make_node_live_after_set_case(spec: NodeLiveAfterSetCaseSpec): T
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const initial = handle.get();
 
       map.set(spec.setPath, spec.value);
@@ -70,7 +70,7 @@ export function make_node_parent_content_case(spec: NodeParentContentCaseSpec): 
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const initialContentLength = handle.content()?.length;
 
       map.set(spec.setPath, spec.value);
@@ -94,7 +94,7 @@ export function make_node_attrs_copy_case(spec: NodeAttrsCopyCaseSpec): TestCase
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
 
       handle.setAttr(spec.setName, spec.setValue);
       const attrs = handle.attrs() as Record<string, LiveMapNodeAttrValue>;
@@ -121,7 +121,7 @@ export function make_node_set_attr_case(spec: NodeSetAttrCaseSpec): TestCase {
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const returned = handle.setAttr(spec.nameToSet, spec.valueToSet);
 
       return {
@@ -145,7 +145,7 @@ export function make_node_set_attrs_case(spec: NodeSetAttrsCaseSpec): TestCase {
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
 
       handle.setAttr(spec.firstName, spec.firstValue);
       const returned = handle.setAttrs(spec.attrsToSet);
@@ -171,7 +171,7 @@ export function make_node_remove_attr_case(spec: NodeRemoveAttrCaseSpec): TestCa
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
 
       handle.setAttrs(spec.attrsToSet);
       const returned = handle.removeAttr(spec.nameToRemove);
@@ -197,7 +197,7 @@ export function make_node_clear_attrs_case(spec: NodeClearAttrsCaseSpec): TestCa
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
 
       handle.setAttrs(spec.attrsToSet);
       const returned = handle.clearAttrs();
@@ -221,7 +221,7 @@ export function make_node_existing_attrs_case(spec: NodeExistingAttrsCaseSpec): 
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
 
       return {
         assertRows: [
@@ -243,7 +243,7 @@ export function make_node_attr_missing_path_throw_case(spec: NodeAttrMissingPath
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       let setAttrMessage = "";
       let setAttrsMessage = "";
       let removeAttrMessage = "";
@@ -294,7 +294,7 @@ export function make_node_attr_json_backed_throw_case(spec: NodeAttrJsonBackedTh
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       let setAttrMessage = "";
       let setAttrsMessage = "";
       let removeAttrMessage = "";
@@ -345,7 +345,7 @@ export function make_node_json_html_tag_name_case(spec: NodeJsonHtmlTagNameCaseS
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       let message = "";
 
       try {
@@ -374,8 +374,8 @@ export function make_node_children_case(spec: NodeChildrenCaseSpec): TestCase {
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
-      const missingHandle = map.node(["missing"]);
+      const handle = map.debug.node(spec.path);
+      const missingHandle = map.debug.node(["missing"]);
 
       return {
         assertRows: [
@@ -398,7 +398,7 @@ export function make_node_child_lookup_case(spec: NodeChildLookupCaseSpec): Test
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
 
       return {
         assertRows: [
@@ -423,7 +423,7 @@ export function make_node_must_child_throw_case(spec: NodeMustChildThrowCaseSpec
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.mustChild(spec.missingTag);
     },
   }, spec.expectedMessage);
@@ -439,7 +439,7 @@ export function make_node_append_case(spec: NodeAppendCaseSpec): TestCase {
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const child = make_test_node(spec.childTag);
       const returned = handle.append(child);
 
@@ -465,7 +465,7 @@ export function make_node_append_missing_path_throw_case(spec: NodeAppendMissing
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.append(make_test_node(spec.childTag));
     },
   }, spec.expectedMessage);
@@ -481,7 +481,7 @@ export function make_node_append_html_case(spec: NodeAppendHtmlCaseSpec): TestCa
     },
     run: () => {
       const map = make_livemap_core(html_root_node(spec.html));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const child = make_test_node(spec.childTag);
       const returned = handle.append(child);
 
@@ -506,7 +506,7 @@ export function make_node_remove_children_case(spec: NodeRemoveChildrenCaseSpec)
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.must().$_content.push(spec.primitiveContent);
       handle.append(make_test_node(spec.appendedTag));
       const beforeChildTags = handle.children().map((node) => node.$_tag);
@@ -534,7 +534,7 @@ export function make_node_remove_child_case(spec: NodeRemoveChildCaseSpec): Test
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.append(make_test_node(spec.firstAppendedTag));
       handle.must().$_content.splice(1, 0, spec.primitiveContent);
       handle.append(make_test_node(spec.secondAppendedTag));
@@ -563,7 +563,7 @@ export function make_node_remove_child_bad_index_throw_case(spec: NodeRemoveChil
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.remove.child(spec.badIndex);
     },
   }, spec.expectedMessage);
@@ -578,7 +578,7 @@ export function make_node_remove_missing_path_throw_case(spec: NodeRemoveMissing
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.remove.children();
     },
   }, spec.expectedMessage);
@@ -594,7 +594,7 @@ export function make_node_replace_children_case(spec: NodeReplaceChildrenCaseSpe
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.must().$_content.push(spec.primitiveContent);
       handle.append(make_test_node(spec.appendedTag));
       const beforeChildTags = handle.children().map((node) => node.$_tag);
@@ -623,7 +623,7 @@ export function make_node_replace_child_case(spec: NodeReplaceChildCaseSpec): Te
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.append(make_test_node(spec.firstAppendedTag));
       handle.must().$_content.splice(1, 0, spec.primitiveContent);
       handle.append(make_test_node(spec.secondAppendedTag));
@@ -653,7 +653,7 @@ export function make_node_replace_child_bad_index_throw_case(spec: NodeReplaceCh
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.replace.child(spec.badIndex, make_test_node(spec.replacementTag));
     },
   }, spec.expectedMessage);
@@ -669,7 +669,7 @@ export function make_node_replace_missing_path_throw_case(spec: NodeReplaceMissi
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.replace.children([make_test_node(spec.replacementTag)]);
     },
   }, spec.expectedMessage);
@@ -699,7 +699,7 @@ export function make_node_insert_child_case(spec: NodeInsertChildCaseSpec): Test
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.append(make_test_node(spec.firstAppendedTag));
       handle.must().$_content.splice(1, 0, spec.primitiveContent);
       handle.append(make_test_node(spec.secondAppendedTag));
@@ -728,7 +728,7 @@ export function make_node_insert_child_append_case(spec: NodeInsertChildAppendCa
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       const returned = handle.insert.child(spec.indexToInsert, make_test_node(spec.insertedTag));
 
       return {
@@ -752,7 +752,7 @@ export function make_node_insert_child_bad_index_throw_case(spec: NodeInsertChil
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.insert.child(spec.badIndex, make_test_node(spec.insertedTag));
     },
   }, spec.expectedMessage);
@@ -768,7 +768,7 @@ export function make_node_insert_missing_path_throw_case(spec: NodeInsertMissing
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.insert.child(0, make_test_node(spec.insertedTag));
     },
   }, spec.expectedMessage);
@@ -785,7 +785,7 @@ export function make_node_move_child_case(spec: NodeMoveChildCaseSpec): TestCase
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.append(make_test_node(spec.firstAppendedTag));
       handle.must().$_content.splice(1, 0, spec.primitiveContent);
       handle.append(make_test_node(spec.secondAppendedTag));
@@ -815,7 +815,7 @@ export function make_node_move_child_backward_case(spec: NodeMoveChildBackwardCa
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.append(make_test_node(spec.firstAppendedTag));
       handle.append(make_test_node(spec.secondAppendedTag));
       const beforeChildTags = handle.children().map((node) => node.$_tag);
@@ -843,7 +843,7 @@ export function make_node_move_child_bad_to_index_throw_case(spec: NodeMoveChild
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.move.child(spec.fromIndex, spec.badToIndex);
     },
   }, spec.expectedMessage);
@@ -860,7 +860,7 @@ export function make_node_move_child_bad_from_index_throw_case(spec: NodeMoveChi
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.move.child(spec.badFromIndex, spec.toIndex);
     },
   }, spec.expectedMessage);
@@ -877,7 +877,7 @@ export function make_node_move_missing_path_throw_case(spec: NodeMoveMissingPath
     },
     run: () => {
       const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.node(spec.path);
+      const handle = map.debug.node(spec.path);
       handle.move.child(spec.fromIndex, spec.toIndex);
     },
   }, spec.expectedMessage);

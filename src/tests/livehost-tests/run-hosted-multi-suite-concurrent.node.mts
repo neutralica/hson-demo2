@@ -97,8 +97,8 @@ expect_multi(resultA.runId === "multi-replay" && resultB.runId === "multi-node-a
 expect_multi(resultA.suite === "livemap/replay" && resultB.suite === "node/all", "results retain requested suite identities");
 expect_multi(routerA.runId === resultA.runId && routerB.runId === resultB.runId, "each router binds only its connection run");
 expect_multi(mirrorA.suite === "livemap/replay" && mirrorB.suite === "node/all", "each mirror binds the correct suite");
-expect_multi(mirrorA.rev === 5 && mirrorB.rev === 62, "focused and aggregate streams reach batched revisions 5 and 62");
-expect_multi(mirrorA.capture().value.summary.cases === 45 && mirrorB.capture().value.summary.cases === 1081, "suite-specific mirrors contain 45 and 1081 cases");
+expect_multi(mirrorA.rev === 4 && mirrorB.rev === 63, "focused and aggregate streams reach batched revisions 4 and 63");
+expect_multi(mirrorA.capture().value.summary.cases === 45 && mirrorB.capture().value.summary.cases === 1087, "suite-specific mirrors contain 45 and 1087 cases");
 expect_multi(JSON.stringify(mirrorA.capture().value) === JSON.stringify(reports.get("livemap/replay")?.map.capture().value), "replay mirror equals its authoritative host report");
 expect_multi(JSON.stringify(mirrorB.capture().value) === JSON.stringify(reports.get("node/all")?.map.capture().value), "aggregate mirror equals its authoritative host report");
 

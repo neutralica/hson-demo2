@@ -38,7 +38,7 @@ const encoded = encode_hosted_test_report_initial("initial-run", "livemap/replay
   rev: capture.rev,
   value: mutableValue as unknown as typeof capture.value,
 });
-expect_initial(report.map.rev === 1 && encoded.rev === 1, "encoding preserves the authoritative revision 1");
+expect_initial(report.map.rev === 0 && encoded.rev === 0, "encoding preserves the authoritative construction revision 0");
 equal(encoded.value, capture.value, "encoded state equals the authoritative map capture");
 mutableValue.run.status = "running";
 expect_initial(encoded.value.run.status === "idle", "encoding detaches from its input");

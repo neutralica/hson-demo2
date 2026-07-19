@@ -54,11 +54,11 @@ try {
 const directMs = performance.now() - started;
 const suites = all_jsdom_hosted_test_suites();
 const count = (entries: readonly Readonly<{ cases: number }>[]) => entries.reduce((total, entry) => total + entry.cases, 0);
-expect_collection(suites.length === 77 && suites.reduce((total, suite) => total + suite.cases.length, 0) === 948, "canonical list is 77 suites / 948 unique cases");
+expect_collection(suites.length === 78 && suites.reduce((total, suite) => total + suite.cases.length, 0) === 953, "canonical list is 78 suites / 953 unique cases");
 expect_collection(JSDOM_HOSTED_DUPLICATE_CASE_KEYS.length === 2, "two repeated source declarations are recorded and executed once");
 if (!result.ok) originalLog(JSON.stringify(result.summary.failures, null, 2));
-expect_collection(result.ok && result.summary.suites === 77 && result.summary.cases === 948 && result.summary.pass === 948 && result.summary.fail === 0, "direct jsdom run passes every canonical case");
-expect_collection(HOSTED_JSDOM_SUITES.length === 77 && count(HOSTED_JSDOM_SUITES) === 948, "inventory matches the executable collection");
+expect_collection(result.ok && result.summary.suites === 78 && result.summary.cases === 953 && result.summary.pass === 953 && result.summary.fail === 0, "direct jsdom run passes every canonical case");
+expect_collection(HOSTED_JSDOM_SUITES.length === 78 && count(HOSTED_JSDOM_SUITES) === 953, "inventory matches the executable collection");
 expect_collection(LAYOUT_REQUIRED_SUITES.length === 2 && count(LAYOUT_REQUIRED_SUITES) === 4, "only four rendered pseudo-element cases remain deferred");
 expect_collection(CANVAS_REQUIRED_SUITES.length === 2 && count(CANVAS_REQUIRED_SUITES) === 4, "only four pixel-readback canvas cases remain deferred");
 expect_collection(BROWSER_ONLY_SUITES.length === 0 && count(BROWSER_ONLY_SUITES) === 0, "runtime-bound behavioral cases are fully migrated");
@@ -72,4 +72,4 @@ expect_collection(layoutCount("DEFERRED_REAL_LAYOUT") === 4, "four pseudo-elemen
 expect_collection(UNKNOWN_DOM_SUITES.length === 0 && count(UNKNOWN_DOM_SUITES) === 0, "no unexplained deterministic DOM discrepancy remains");
 expect_collection(count(GENERATED_DOM_ENTRIES) === 250, "generated/fuzz entries remain outside canonical totals");
 expect_collection(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined" && typeof CSS === "undefined", "direct run leaves no DOM globals");
-originalLog(JSON.stringify({ suites: 77, cases: 948, pass: result.summary.pass, initMs, geometryInstallMs, directMs, geometryCleanupMs, cleanupMs }));
+originalLog(JSON.stringify({ suites: 78, cases: 953, pass: result.summary.pass, initMs, geometryInstallMs, directMs, geometryCleanupMs, cleanupMs }));
