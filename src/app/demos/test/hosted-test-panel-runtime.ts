@@ -47,6 +47,8 @@ export type HostedTestPanelRuntime = Readonly<{
 
 export type HostedTestPanelRuntimeOptions = Readonly<{
   url?: string;
+  /** Build environment override. Primarily injectable for deterministic configuration tests. */
+  environment?: HostedTestBuildEnvironment;
   WebSocketConstructor?: BrowserWebSocketConstructor;
   /** Fixed bounded schedule; defaults to immediate, 50ms, then 200ms. */
   reconnectDelaysMs?: readonly number[];
@@ -55,6 +57,15 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   /** Fresh-action identity factory. Primarily injectable for deterministic tests. */
   makeActionId?: () => LiveHostActionId;
 }>;
+
+export type HostedTestBuildEnvironment = Readonly<{
+  DEV?: boolean;
+  PROD?: boolean;
+  VITE_HOSTED_TEST_WS_URL?: string;
+}>;
+
+export const HOSTED_TEST_WS_CONFIGURATION_ERROR =
+  "Hosted tests are unavailable because VITE_HOSTED_TEST_WS_URL was not configured for this deployment.";
 
 let fallbackClientId = 0;
 
@@ -65,12 +76,33 @@ function make_browser_client_id(): string {
   return `hosted-panel-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${fallbackClientId.toString(36)}`;
 }
 
-function configured_url(): string {
-  const meta = import.meta as ImportMeta & { readonly env?: Readonly<{ VITE_HOSTED_TEST_WS_URL?: string }> };
-  return meta.env?.VITE_HOSTED_TEST_WS_URL ?? "ws://127.0.0.1:8787";
+function current_build_environment(): HostedTestBuildEnvironment {
+  const meta = import.meta as ImportMeta & { readonly env?: HostedTestBuildEnvironment };
+  return meta.env ?? Object.freeze({ DEV: true, PROD: false });
 }
 
-function host_url(base: string, hostId: string): string {
+export function resolve_hosted_test_websocket_url(
+  environment: HostedTestBuildEnvironment,
+  explicitUrl?: string,
+): string {
+  const configured = explicitUrl ?? environment.VITE_HOSTED_TEST_WS_URL;
+  if (configured === undefined || configured.trim() === "") {
+    if (environment.PROD === true) throw new Error(HOSTED_TEST_WS_CONFIGURATION_ERROR);
+    return "ws://127.0.0.1:8787";
+  }
+  let url: URL;
+  try { url = new URL(configured); }
+  catch { throw new Error(`Hosted-test WebSocket URL is invalid: ${configured}`); }
+  if (url.protocol !== "ws:" && url.protocol !== "wss:") {
+    throw new Error(`Hosted-test WebSocket URL must use ws:// or wss://, received ${url.protocol}`);
+  }
+  if (environment.PROD === true && url.protocol !== "wss:") {
+    throw new Error("Hosted-test WebSocket URL must use wss:// in a production build.");
+  }
+  return url.toString();
+}
+
+export function hosted_test_host_url(base: string, hostId: string): string {
   const url = new URL(base);
   url.searchParams.set("livehost", hostId);
   return url.toString();
@@ -103,7 +135,9 @@ function result_summary_from_report(report: HostedTestReportState): HostedTestRu
 }
 
 export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeOptions = {}): HostedTestPanelRuntime {
-  const baseUrl = options.url ?? configured_url();
+  const environment = options.environment ?? current_build_environment();
+  let baseUrl: string | undefined;
+  const configured_base_url = (): string => baseUrl ??= resolve_hosted_test_websocket_url(environment, options.url);
   const reconnectDelays = Object.freeze([...(options.reconnectDelaysMs ?? [0, 50, 200])]);
   const makeClientId = options.makeClientId ?? make_browser_client_id;
   const coordinatorClientId = makeClientId();
@@ -155,7 +189,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     previous?: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>,
   ): Promise<void> {
     const transport = make_hosted_test_browser_websocket(
-      host_url(baseUrl, HOSTED_TEST_COORDINATOR_HOST_ID),
+      hosted_test_host_url(configured_base_url(), HOSTED_TEST_COORDINATOR_HOST_ID),
       options.WebSocketConstructor,
     );
     await transport.ready;
@@ -286,7 +320,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     }
 
     async function open_report(previous?: LiveHostClient<HostedTestReportState, HostedTestReportActions>): Promise<void> {
-      const nextTransport = make_hosted_test_browser_websocket(host_url(baseUrl, association.reportHostId), options.WebSocketConstructor);
+      const nextTransport = make_hosted_test_browser_websocket(hosted_test_host_url(configured_base_url(), association.reportHostId), options.WebSocketConstructor);
       await nextTransport.ready;
       if (disposed || runDisposed) { nextTransport.dispose(); throw new Error("Hosted-test run was disposed while attaching its report."); }
       const cursor = previous?.recovery.incarnationId !== undefined && previous.recovery.lastAppliedRev !== undefined
