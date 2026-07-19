@@ -24,11 +24,11 @@ export const htmlStub = `
 </body>
 `;
 
-export const htmlHson = hson.fromTrustedHtml(htmlStub).toHson().spaced().serialize();
+export const htmlHson = hson.fromTrustedHtml(htmlStub).toHson().serialize();
 export const htmlJson = hson.fromTrustedHtml(htmlStub).toJson().serialize();
 
 export const jsonHson = hson.fromJson(jsonStub).toHson().serialize();
-export const jsonHtml = hson.fromJson(jsonStub).toHtml().spaced().serialize();
+export const jsonHtml = hson.fromJson(jsonStub).toHtml().serialize();
 
 export const SLIDES: readonly DeckSlideConfig[] = [
   {

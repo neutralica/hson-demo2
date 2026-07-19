@@ -28,19 +28,21 @@ export function normalize_towl_room_id(value: unknown): string | undefined {
 }
 
 export function generate_towl_room_id(
-  fill: (bytes: Uint8Array) => Uint8Array = (bytes) => {
+  fill: (bytes: Uint8Array<ArrayBuffer>) => void = (bytes) => {
     const crypto = globalThis.crypto;
     if (crypto?.getRandomValues === undefined) {
       throw new Error("Secure random room generation is unavailable.");
     }
-    return crypto.getRandomValues(bytes);
+    crypto.getRandomValues(bytes);
   },
 ): string {
-  const bytes = fill(new Uint8Array(TOWL_ROOM_ID_LENGTH));
-  if (bytes.length !== TOWL_ROOM_ID_LENGTH) {
-    throw new Error(`TOWL room generation requires ${TOWL_ROOM_ID_LENGTH} random bytes.`);
-  }
-  return Array.from(bytes, (value) => TOWL_ROOM_ALPHABET[value & 31]).join("");
+  const bytes = new Uint8Array(TOWL_ROOM_ID_LENGTH);
+  fill(bytes);
+
+  return Array.from(
+    bytes,
+    (value) => TOWL_ROOM_ALPHABET[value & 31],
+  ).join("");
 }
 
 export function towl_host_id_for_room(roomId: string): string {
