@@ -123,11 +123,11 @@ export function suite_attrs_and_flags(): TestSuite {
 
         // remove via null
         btn.attrs.set("data-temp", "x");
-        btn.attrs.set("data-temp", null);
+        btn.attrs.drop("data-temp");
 
         // remove via false
         btn.attrs.set("aria-busy", true);
-        btn.attrs.set("aria-busy", false);
+        btn.attrs.drop("aria-busy");
       },
 
       assert(tree: LiveTree, t) {
@@ -162,7 +162,7 @@ export function suite_attrs_and_flags(): TestSuite {
       assert(tree: LiveTree, t) {
         const i = tree.find.must.byId("i");
 
-        t.ok(`disabled present`, i.attrs.get("disabled") !== undefined);
+        t.ok(`disabled present`, i.flags.has("disabled") !== false);
         t.eq(`readonly removed`, i.attrs.get("readonly"), undefined);
       },
     },
