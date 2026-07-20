@@ -77,8 +77,11 @@ function make_browser_client_id(): string {
 }
 
 function current_build_environment(): HostedTestBuildEnvironment {
-  const meta = import.meta as ImportMeta & { readonly env?: HostedTestBuildEnvironment };
-  return meta.env ?? Object.freeze({ DEV: true, PROD: false });
+    return Object.freeze({
+    DEV: import.meta.env.DEV,
+    PROD: import.meta.env.PROD,
+    VITE_HOSTED_TEST_WS_URL: import.meta.env.VITE_HOSTED_TEST_WS_URL,
+  });
 }
 
 export function resolve_hosted_test_websocket_url(
