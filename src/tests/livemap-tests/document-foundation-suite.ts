@@ -46,7 +46,7 @@ export function livemap_document_foundation_suite(): TestSuite {
         name: "flat trusted HTML constructor classifies repeated elements as fragment",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("<div>One</div><div>Two</div>");
-          const content = map.mode === "fragment" ? map.fragment.content() : [];
+          const content = map.mode === "fragment" ? map.document.content() : [];
           return {
             assertRows: [
               equal_row("trusted fragment mode", map.mode, "fragment"),
@@ -84,7 +84,7 @@ export function livemap_document_foundation_suite(): TestSuite {
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("before <em>middle</em> after");
           const before = map.root();
-          const content = map.mode === "fragment" ? map.fragment.content() : [];
+          const content = map.mode === "fragment" ? map.document.content() : [];
           const first = content[0];
           if (first !== undefined && is_node(first)) first.$_tag = "changed";
           return {
@@ -102,8 +102,8 @@ export function livemap_document_foundation_suite(): TestSuite {
         run: () => {
           const empty = hson.liveMap.fromTrustedHtml("");
           const text = hson.liveMap.fromTrustedHtml("text only");
-          const emptyContent = empty.mode === "fragment" ? empty.fragment.content() : [];
-          const textContent = text.mode === "fragment" ? text.fragment.content() : [];
+          const emptyContent = empty.mode === "fragment" ? empty.document.content() : [];
+          const textContent = text.mode === "fragment" ? text.document.content() : [];
           return {
             assertRows: [
               equal_row("empty HTML fragment mode", empty.mode, "fragment"),
