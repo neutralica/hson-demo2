@@ -178,9 +178,9 @@ export function render_md_doc(
 
       const a = host.create.a()
         .classlist.add("md-link-line")
-        .attr.set("href", url)
-        .attr.set("target", "_blank")
-        .attr.set("rel", "noopener noreferrer");
+        .attrs.set("href", url)
+        .attrs.set("target", "_blank")
+        .attrs.set("rel", "noopener noreferrer");
 
       a.text.set(url);
       a.css.setMany(MD_LINK_LINEcss);

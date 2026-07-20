@@ -608,8 +608,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             };
 
             const input = grid.create.input();
-            input.attr.set("aria-label", key);
-            input.attr.set("data-cellsheet-key", key);
+            input.attrs.set("aria-label", key);
+            input.attrs.set("data-cellsheet-key", key);
             input.css.setMany(CELLcss)
                 .css.setMany({
                     width: "100%",

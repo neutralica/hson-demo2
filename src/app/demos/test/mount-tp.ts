@@ -44,9 +44,9 @@ function populateModeSelector(suiteSel: LiveTree, mode: HostedTestSuiteId): void
     suiteSel.empty();
     for (const m of MODES) {
         const opt = suiteSel.create.option();
-        opt.attr.set("value", m.key);
+        opt.attrs.set("value", m.key);
         opt.text.set(m.label);
-        if (m.key === mode) opt.flag.set("selected");
+        if (m.key === mode) opt.flags.set("selected");
     }
 }
 
@@ -116,7 +116,7 @@ export function tp_factory(): TestPanel {
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
-        .attr.setMany({ "data-testid": "hosted-test-panel", "data-hosted-execution-count": "0" })
+        .attrs.setMany({ "data-testid": "hosted-test-panel", "data-hosted-execution-count": "0" })
         .css.setMany(TP_BRANCHcss);
 
     const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
@@ -268,7 +268,7 @@ export function tp_factory(): TestPanel {
             const hostedSuite = mode;
             try {
                 explicitExecutionCount += 1;
-                branch.attr.set("data-hosted-execution-count", String(explicitExecutionCount));
+                branch.attrs.set("data-hosted-execution-count", String(explicitExecutionCount));
                 await hostedRuntime.ready();
                 lastResult = await hostedAdapter!.start(hostedSuite);
                 remember_hosted_test_run(lastResult.runId);

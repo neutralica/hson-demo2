@@ -588,7 +588,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
         const target = tree.find.must.byId("target");
         const detached = target.cloneBranch();
 
-        detached.attr.set("data-extra", "clone-only");
+        detached.attrs.set("data-extra", "clone-only");
 
         (tree as any).__result = {
           detachedOuter: detached.content.markup.outerHTML,
@@ -778,12 +778,12 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
         const svg = tree.find.must.asSvg.byId("svg-root");
 
         const branch = svg.create.g()
-          .attr.set("id", "typed-branch");
+          .attrs.set("id", "typed-branch");
 
         const clone = branch.cloneBranch();
 
         clone.create.circle()
-          .attr.setMany({
+          .attrs.setMany({
             id: "clone-dot",
             cx: "12",
             cy: "14",
@@ -824,10 +824,10 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
         const target = tree.find.must.byId("target");
         const detached = target.cloneBranch();
 
-        detached.attr.set("data-state", "detached");
+        detached.attrs.set("data-state", "detached");
         detached.empty();
         detached.create.div()
-          .attr.set("id", "replacement")
+          .attrs.set("id", "replacement")
           .text.set("after");
 
         (tree as any).__result = {
@@ -878,7 +878,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
         (tree as any).__result = {
           ids: deep
-            .map(t => t.attr.get("id"))
+            .map(t => t.attrs.get("id"))
             .filter((id): id is string => id !== undefined),
 
           tags: deep.map(t => t.node.$_tag),

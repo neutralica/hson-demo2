@@ -19,7 +19,7 @@ export function livetree_svg_lvl2(): TestSuite {
                     svg.svg.viewBox.set("0 0 100 100");
 
                     (tree as any).__result = {
-                        viewBox: svg.attr.get("viewBox"),
+                        viewBox: svg.attrs.get("viewBox"),
                         readback: svg.svg.viewBox.get(),
                     };
                 },
@@ -42,7 +42,7 @@ export function livetree_svg_lvl2(): TestSuite {
                     svg.svg.viewBox.set(0, 0, 640, 480);
 
                     (tree as any).__result = {
-                        viewBox: svg.attr.get("viewBox"),
+                        viewBox: svg.attrs.get("viewBox"),
                     };
                 },
 
@@ -63,7 +63,7 @@ export function livetree_svg_lvl2(): TestSuite {
                     svg.svg.preserveAspectRatio.none();
 
                     (tree as any).__result = {
-                        value: svg.attr.get("preserveAspectRatio"),
+                        value: svg.attrs.get("preserveAspectRatio"),
                         readback: svg.svg.preserveAspectRatio.get(),
                     };
                 },

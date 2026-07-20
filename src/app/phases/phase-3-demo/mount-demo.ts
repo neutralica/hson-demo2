@@ -145,7 +145,7 @@ function sync_fleur_viewbox(fleurLayer: LiveTree, fleurField: SvgLiveTree): void
   const w = Math.max(1, rect.width);
   const h = Math.max(1, rect.height);
 
-  fleurField.attr.setMany({
+  fleurField.attrs.setMany({
     width: fmtNum(w, 0),
     height: fmtNum(h, 0),
     viewBox: `0 0 ${w} ${h}`,
@@ -185,7 +185,7 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 
   const fleurField = fleurLayer.create.svg()
     .id.set("fleurs-field")
-    .attr.setMany({
+    .attrs.setMany({
       xmlns: "http://www.w3.org/2000/svg",
       width: "100%",
       height: "100%",

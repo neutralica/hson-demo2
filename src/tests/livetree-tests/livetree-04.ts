@@ -1077,7 +1077,7 @@ export function error_handling(): TestSuite {
         let threw = false;
 
         try {
-          box.attr.setMany?.({ 'bad name': "x" });
+          box.attrs.setMany?.({ 'bad name': "x" });
         } catch {
           threw = true;
         }

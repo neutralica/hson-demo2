@@ -76,7 +76,7 @@ const tryParse = (raw: string): PrimParse => {
 };
 
 const lockTextarea = (p: PanelShell): void => {
-  p.textarea.flag.set("readonly");
+  p.textarea.flags.set("readonly");
 
   p.textarea.css.setMany({
     pointerEvents: "auto",
@@ -86,7 +86,7 @@ const lockTextarea = (p: PanelShell): void => {
 };
 
 const unlockTextarea = (p: PanelShell): void => {
-  p.textarea.flag.clear("readonly");
+  p.textarea.flags.clear("readonly");
 
   p.textarea.css.setMany({
     pointerEvents: "auto",

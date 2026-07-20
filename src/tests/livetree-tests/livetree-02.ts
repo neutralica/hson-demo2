@@ -38,12 +38,12 @@ function suite_attrs_flags_refresh(): TestSuite {
         const spanX = tree.find.must.byId("x");
 
         // set
-        spanX.attr.set("data-test", "ok");
-        spanX.flag.set("hidden");
+        spanX.attrs.set("data-test", "ok");
+        spanX.flags.set("hidden");
 
         // clear again
-        spanX.attr.drop("data-test");
-        spanX.flag.clear("hidden");
+        spanX.attrs.drop("data-test");
+        spanX.flags.clear("hidden");
       },
 
       assert(tree, t) {
@@ -77,8 +77,8 @@ function suite_attrs_flags_refresh(): TestSuite {
 
       act(tree) {
         const spanX = tree.find.must.byId("x");
-        spanX.attr.set("data-test", "ok");
-        spanX.flag.set("hidden");
+        spanX.attrs.set("data-test", "ok");
+        spanX.flags.set("hidden");
       },
 
       assert(tree, t) {
@@ -142,7 +142,7 @@ function suite_empty_append(): TestSuite {
 
         const child = kids.at(0);
         t.eq("child tag is p", child?.node.$_tag ?? "", "p");
-        t.eq("child class is new", String(child?.attr.get("class") ?? ""), "new");
+        t.eq("child class is new", String(child?.attrs.get("class") ?? ""), "new");
         t.eq("child text is hello", child?.text.get() ?? "", "hello");
 
         const newEl = el?.querySelector("p.new");
@@ -1031,7 +1031,7 @@ function suite_find_more(): TestSuite {
 
         const classes: string[] = [];
         allSpans.each((branch) => {
-          classes.push(String(branch.attr.get("class") ?? ""));
+          classes.push(String(branch.attrs.get("class") ?? ""));
         });
 
         t.eq("findAll preserves class order", classes.join(","), "a,b");
@@ -1059,7 +1059,7 @@ function suite_find_more(): TestSuite {
         const liveNode = tree.node;
         const snapshot = JSON.parse(JSON.stringify(liveNode));
 
-        tree.attr.set("data-state", "mutated");
+        tree.attrs.set("data-state", "mutated");
 
         (tree as unknown as {
           __liveNode?: HsonNode;

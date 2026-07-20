@@ -142,8 +142,8 @@ export function render_cell_from_derived(cell: CellModel, derived: CellsheetDeri
     if (!cell.input) return;
 
     cell.input.form.setValue(derived.display, { silent: true });
-    cell.input.attr.set("data-cellsheet-cell", derived.kind);
-    cell.input.attr.set("data-cellsheet-relation", derived.relation);
+    cell.input.attrs.set("data-cellsheet-cell", derived.kind);
+    cell.input.attrs.set("data-cellsheet-relation", derived.relation);
     cell.input.css.setMany(css_for_cell_state(derived));
 }
 export function apply_authored_raw(cell: CellModel, raw: string): void {

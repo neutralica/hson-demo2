@@ -68,7 +68,7 @@ export function roundtrip_projection_stability(): TestSuite {
 
                 async act(tree) {
                     const box = tree.find.must.byId("box");
-                    box.attr.set("title", "greeting");
+                    box.attrs.set("title", "greeting");
                     box.data.set("mode", "warm");
                     box.text.set("hello");
 
@@ -258,7 +258,7 @@ export function roundtrip_projection_stability(): TestSuite {
                 async act(tree) {
                     const box = tree.find.must.byId("box");
                     box.data.set("state", "open");
-                    box.attr.set("title", "hello");
+                    box.attrs.set("title", "hello");
                     box.text.set("y");
 
                     await tick();

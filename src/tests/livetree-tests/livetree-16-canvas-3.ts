@@ -434,8 +434,8 @@ export function livetree_canvas_pointer(): TestSuite {
         watcher.off();
 
         (tree as any).__result = {
-          attrWidth: target.attr.get("width"),
-          attrHeight: target.attr.get("height"),
+          attrWidth: target.attrs.get("width"),
+          attrHeight: target.attrs.get("height"),
           width: cvs.width,
           height: cvs.height,
         };
@@ -498,8 +498,8 @@ export function livetree_canvas_pointer(): TestSuite {
         watcher.off();
 
         (tree as any).__result = {
-          attrWidth: target.attr.get("width"),
-          attrHeight: target.attr.get("height"),
+          attrWidth: target.attrs.get("width"),
+          attrHeight: target.attrs.get("height"),
           width: cvs.width,
           height: cvs.height,
         };
@@ -562,8 +562,8 @@ export function livetree_canvas_pointer(): TestSuite {
         watcher.off();
 
         (tree as any).__result = {
-          attrWidth: target.attr.get("width"),
-          attrHeight: target.attr.get("height"),
+          attrWidth: target.attrs.get("width"),
+          attrHeight: target.attrs.get("height"),
           width: cvs.width,
           height: cvs.height,
         };
@@ -625,8 +625,8 @@ export function livetree_canvas_pointer(): TestSuite {
         const cvs = target.canvas.must.el();
 
         (tree as any).__result = {
-          attrWidth: target.attr.get("width"),
-          attrHeight: target.attr.get("height"),
+          attrWidth: target.attrs.get("width"),
+          attrHeight: target.attrs.get("height"),
           width: cvs.width,
           height: cvs.height,
         };
@@ -664,8 +664,8 @@ export function livetree_canvas_pointer(): TestSuite {
         watcher.off();
 
         (tree as any).__result = {
-          width: target.attr.get("width"),
-          height: target.attr.get("height"),
+          width: target.attrs.get("width"),
+          height: target.attrs.get("height"),
           inScope: target.canvas.inScope(),
         };
       },
@@ -710,8 +710,8 @@ export function livetree_canvas_pointer(): TestSuite {
         watcher.off();
 
         (tree as any).__result = {
-          width: target.attr.get("width"),
-          height: target.attr.get("height"),
+          width: target.attrs.get("width"),
+          height: target.attrs.get("height"),
           inScope: target.canvas.inScope(),
         };
       },
@@ -869,7 +869,7 @@ export function livetree_document_ownership(): TestSuite {
         await flush_dom();
 
         const child = host.create.div()
-          .attr.set("id", "created-child")
+          .attrs.set("id", "created-child")
           .text.set("created");
 
         await flush_dom();
@@ -909,9 +909,9 @@ export function livetree_document_ownership(): TestSuite {
 
         await flush_dom();
 
-        const outer = host.create.div().attr.set("id", "outer-created");
-        const inner = outer.create.div().attr.set("id", "inner-created");
-        const leaf = inner.create.span().attr.set("id", "leaf-created").text.set("leaf");
+        const outer = host.create.div().attrs.set("id", "outer-created");
+        const inner = outer.create.div().attrs.set("id", "inner-created");
+        const leaf = inner.create.span().attrs.set("id", "leaf-created").text.set("leaf");
 
         await flush_dom();
 
@@ -1073,7 +1073,7 @@ export function livetree_document_ownership(): TestSuite {
         await flush_dom();
 
         const created = host.create.div()
-          .attr.set("id", "created-target")
+          .attrs.set("id", "created-target")
           .text.set("created target");
 
         await flush_dom();

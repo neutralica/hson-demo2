@@ -48,9 +48,9 @@ function attrs_case(suite: string): LiveTreeCaseSpec {
       const node = _CREATE_NODE({ $_tag: "div" });
       const branch = hson.liveTree.fromNode(node);
       const absent = !Object.hasOwn(node, "$_attrs");
-      branch.attr.set("data-state", "ready");
+      branch.attrs.set("data-state", "ready");
       const present = node.$_attrs?.["data-state"] === "ready";
-      branch.attr.drop("data-state");
+      branch.attrs.drop("data-state");
       lazy = absent && present && !Object.hasOwn(node, "$_attrs");
       branch.remove();
     },

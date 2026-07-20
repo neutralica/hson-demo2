@@ -113,7 +113,7 @@ function first_control_input(tree: LiveTreeControlViewTarget): LiveTreeControlVi
 }
 
 function control_input_by_path(tree: LiveTreeControlViewTarget, path: string): LiveTreeControlViewTarget {
-  const match = TEST_GENERATED_INPUTS.get(tree as object)?.find((input) => input.attr.get("data-livemap-control-path") === path);
+  const match = TEST_GENERATED_INPUTS.get(tree as object)?.find((input) => input.attrs.get("data-livemap-control-path") === path);
   if (match === undefined) throw new Error(`Expected generated control input for path ${path}.`);
   return match;
 }
@@ -149,8 +149,8 @@ function make_controls_snap_string_writeback_case(suite: string): TestCase {
       emit_input(input as object);
 
       const rows = [
-        equal_row("generated string control input type", input.attr.get("type"), "text"),
-        equal_row("generated string control path", input.attr.get("data-livemap-control-path"), "ui.label"),
+        equal_row("generated string control input type", input.attrs.get("type"), "text"),
+        equal_row("generated string control path", input.attrs.get("data-livemap-control-path"), "ui.label"),
         equal_row("generated string control writes back", map.snap(), { ui: { label: "Running" } }),
       ];
       binding.dispose();
@@ -178,7 +178,7 @@ function make_controls_snap_number_writeback_case(suite: string): TestCase {
       emit_input(input as object);
 
       const rows = [
-        equal_row("generated number control input type", input.attr.get("type"), "number"),
+        equal_row("generated number control input type", input.attrs.get("type"), "number"),
         equal_row("generated number control writes number", map.snap(), { count: 2 }),
       ];
       binding.dispose();
@@ -258,12 +258,12 @@ function make_controls_snap_markup_attrs_case(suite: string): TestCase {
       const html = tree.content.markup.innerHTML;
 
       const rows = [
-        equal_row("generated control root kind", tree.attr.get("data-livemap-control-kind"), "object"),
-        equal_row("generated control root path", tree.attr.get("data-livemap-control-path"), "ui"),
+        equal_row("generated control root kind", tree.attrs.get("data-livemap-control-kind"), "object"),
+        equal_row("generated control root path", tree.attrs.get("data-livemap-control-path"), "ui"),
         equal_row("generated control markup includes key row", html.includes('data-livemap-control-key="label"'), true),
-        equal_row("generated control input role", input.attr.get("data-livemap-control-role"), "input"),
-        equal_row("generated control input kind", input.attr.get("data-livemap-control-kind"), "string"),
-        equal_row("generated control input path", input.attr.get("data-livemap-control-path"), "ui.label"),
+        equal_row("generated control input role", input.attrs.get("data-livemap-control-role"), "input"),
+        equal_row("generated control input kind", input.attrs.get("data-livemap-control-kind"), "string"),
+        equal_row("generated control input path", input.attrs.get("data-livemap-control-path"), "ui.label"),
       ];
       binding.dispose();
 
@@ -288,9 +288,9 @@ function make_controls_snap_binding_count_case(suite: string): TestCase {
       const rows = [
         equal_row("generated primitive input count", generated_inputs(tree).length, 3),
         equal_row("generated primitive binding count", binding.bindings.length, 3),
-        equal_row("generated string primitive exists", control_input_by_path(tree, "ui.label").attr.get("data-livemap-control-kind"), "string"),
-        equal_row("generated number primitive exists", control_input_by_path(tree, "ui.count").attr.get("data-livemap-control-kind"), "number"),
-        equal_row("generated boolean primitive exists", control_input_by_path(tree, "ui.nested.enabled").attr.get("data-livemap-control-kind"), "boolean"),
+        equal_row("generated string primitive exists", control_input_by_path(tree, "ui.label").attrs.get("data-livemap-control-kind"), "string"),
+        equal_row("generated number primitive exists", control_input_by_path(tree, "ui.count").attrs.get("data-livemap-control-kind"), "number"),
+        equal_row("generated boolean primitive exists", control_input_by_path(tree, "ui.nested.enabled").attrs.get("data-livemap-control-kind"), "boolean"),
       ];
       binding.dispose();
 
@@ -321,8 +321,8 @@ function make_controls_snap_boolean_writeback_case(suite: string): TestCase {
       emit_input(input as object);
 
       const rows = [
-        equal_row("generated boolean control input type", input.attr.get("type"), "checkbox"),
-        equal_row("generated boolean control kind", input.attr.get("data-livemap-control-kind"), "boolean"),
+        equal_row("generated boolean control input type", input.attrs.get("type"), "checkbox"),
+        equal_row("generated boolean control kind", input.attrs.get("data-livemap-control-kind"), "boolean"),
         equal_row("generated boolean control writes boolean", map.snap(), { enabled: false }),
       ];
       binding.dispose();
@@ -353,11 +353,11 @@ function make_controls_snap_rerender_replaces_inputs_case(suite: string): TestCa
       const secondInput = control_input_by_path(tree, "ui.count");
 
       const rows = [
-        equal_row("rerender generated controls latest input kind", secondInput.attr.get("data-livemap-control-kind"), "number"),
-        equal_row("rerender generated controls latest input type", secondInput.attr.get("type"), "number"),
+        equal_row("rerender generated controls latest input kind", secondInput.attrs.get("data-livemap-control-kind"), "number"),
+        equal_row("rerender generated controls latest input type", secondInput.attrs.get("type"), "number"),
         equal_row("rerender generated controls binding count", secondBinding.bindings.length, 1),
         equal_row("rerender generated controls replaces markup", tree.content.markup.innerHTML.includes('data-livemap-control-key="label"'), false),
-        equal_row("rerender generated controls old input remains detached", firstInput.attr.get("data-livemap-control-path"), "ui.label"),
+        equal_row("rerender generated controls old input remains detached", firstInput.attrs.get("data-livemap-control-path"), "ui.label"),
       ];
       secondBinding.dispose();
 
@@ -419,7 +419,7 @@ function make_controls_snap_dotted_keys_preserve_internal_path_case(suite: strin
       emit_input(input as object);
 
       const rows = [
-        equal_row("dotted key control readable path is dotted", input.attr.get("data-livemap-control-path"), "ui.panel.label.text"),
+        equal_row("dotted key control readable path is dotted", input.attrs.get("data-livemap-control-path"), "ui.panel.label.text"),
         equal_row("dotted key control writes exact internal path", map.snap(), { "ui.panel": { "label.text": "Running" } }),
         equal_row("dotted key control does not create nested ui key", map.snap(["ui"]), undefined),
         equal_row("dotted key control does not create nested label key", map.snap(["ui.panel", "label"]), undefined),
@@ -449,10 +449,10 @@ function make_controls_snap_number_nonfinite_falls_back_to_text_case(suite: stri
       emit_input(input as object);
 
       const rows = [
-        equal_row("schema-blind number control remains number input", input.attr.get("type"), "number"),
+        equal_row("schema-blind number control remains number input", input.attrs.get("type"), "number"),
         equal_row("schema-blind number non-finite write falls back to text", map.snap(), { count: "abc" }),
-        equal_row("schema-blind number non-finite write does not mark invalid", input.attr.get("data-livemap-control-valid"), undefined),
-        equal_row("schema-blind number non-finite write does not set error", input.attr.get("data-livemap-control-error"), undefined),
+        equal_row("schema-blind number non-finite write does not mark invalid", input.attrs.get("data-livemap-control-valid"), undefined),
+        equal_row("schema-blind number non-finite write does not set error", input.attrs.get("data-livemap-control-error"), undefined),
       ];
       binding.dispose();
 

@@ -27,7 +27,7 @@ export function setMeta(
     role: JsonRenderRole,
     kind: JsonRenderKind,
 ): void {
-    tree.attr.setMany({
+    tree.attrs.setMany({
         "data-json-role": role,
         "data-json-kind": kind,
         "data-json-path": pathText(path),
@@ -142,7 +142,7 @@ function sync_overlay_viewbox(root: LiveTree, overlay: PathOverlay): RectLike {
     const height = Math.max(rootRect.height, 1);
 
     // CHANGED: keep SVG user units aligned with DOM pixel coordinates.
-    overlay.svg.attr.setMany({
+    overlay.svg.attrs.setMany({
         viewBox: `0 0 ${width} ${height}`,
     });
 
@@ -152,7 +152,7 @@ function sync_overlay_viewbox(root: LiveTree, overlay: PathOverlay): RectLike {
 export function make_path_overlay(root: LiveTree): PathOverlay | undefined {
     const tree = root.create.div().css.setMany(PATH_OVERLAY_CSS);
     const svg = tree.create.svg()
-        .attr.setMany({
+        .attrs.setMany({
             width: "100%",
             height: "100%",
             viewBox: "0 0 1 1",
@@ -161,7 +161,7 @@ export function make_path_overlay(root: LiveTree): PathOverlay | undefined {
         .css.setMany(PATH_OVERLAY_SVG_CSS);
 
     const path = svg.create.path()
-        .attr.setMany({
+        .attrs.setMany({
             d: "",
             fill: "none",
             stroke: _colors.yellowlike,

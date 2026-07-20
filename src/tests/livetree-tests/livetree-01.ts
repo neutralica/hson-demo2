@@ -118,30 +118,30 @@ export function suite_attrs_and_flags(): TestSuite {
       act(tree: LiveTree) {
         const btn = tree.find.must.byId("btn");
 
-        btn.attr.set("data-state", "open");
-        btn.attr.set("disabled", true);
+        btn.attrs.set("data-state", "open");
+        btn.attrs.set("disabled", true);
 
         // remove via null
-        btn.attr.set("data-temp", "x");
-        btn.attr.set("data-temp", null);
+        btn.attrs.set("data-temp", "x");
+        btn.attrs.set("data-temp", null);
 
         // remove via false
-        btn.attr.set("aria-busy", true);
-        btn.attr.set("aria-busy", false);
+        btn.attrs.set("aria-busy", true);
+        btn.attrs.set("aria-busy", false);
       },
 
       assert(tree: LiveTree, t) {
         const btn = tree.find.must.byId("btn");
 
         // String attr
-        t.eq(`getAttr("data-state")`, btn.attr.get("data-state"), "open");
+        t.eq(`getAttr("data-state")`, btn.attrs.get("data-state"), "open");
 
         // Boolean-present attrs: don't assume representation (true vs "" vs "disabled")
-        t.ok(`getAttr("disabled") is present`, btn.attr.get("disabled") !== undefined);
+        t.ok(`getAttr("disabled") is present`, btn.attrs.get("disabled") !== undefined);
 
         // Removals
-        t.eq(`data-temp removed`, btn.attr.get("data-temp"), undefined);
-        t.eq(`aria-busy removed`, btn.attr.get("aria-busy"), undefined);
+        t.eq(`data-temp removed`, btn.attrs.get("data-temp"), undefined);
+        t.eq(`aria-busy removed`, btn.attrs.get("aria-busy"), undefined);
       },
     },
 
@@ -154,16 +154,16 @@ export function suite_attrs_and_flags(): TestSuite {
 
       act(tree: LiveTree) {
         const i = tree.find.must.byId("i");
-        i.flag.set("disabled");
-        i.flag.set("readonly");
-        i.flag.clear("readonly");
+        i.flags.set("disabled");
+        i.flags.set("readonly");
+        i.flags.clear("readonly");
       },
 
       assert(tree: LiveTree, t) {
         const i = tree.find.must.byId("i");
 
-        t.ok(`disabled present`, i.attr.get("disabled") !== undefined);
-        t.eq(`readonly removed`, i.attr.get("readonly"), undefined);
+        t.ok(`disabled present`, i.attrs.get("disabled") !== undefined);
+        t.eq(`readonly removed`, i.attrs.get("readonly"), undefined);
       },
     },
   ];
@@ -202,7 +202,7 @@ export function suite_append_and_create(): TestSuite {
         const kids = tree.content.all();
         t.eq("elem child count", kids.length, 3);
 
-        const cls = kids.map((k) => String(k.attr.get("class") ?? ""));
+        const cls = kids.map((k) => String(k.attrs.get("class") ?? ""));
         const txt = kids.map((k) => k.text.get());
 
         t.eq("class[0]", cls[0], "orig");
@@ -218,7 +218,7 @@ export function suite_append_and_create(): TestSuite {
         const kids = tree.content.all();
         return kids
           .map((k, i) => {
-            const cls = String(k.attr.get("class") ?? "");
+            const cls = String(k.attrs.get("class") ?? "");
             const txt = k.text.get();
             return `${i}: <${String(k.node?.$_tag ?? "node")}> class="${cls}" text="${txt}"`;
           })
@@ -273,7 +273,7 @@ export function suite_append_and_create(): TestSuite {
         const kids = tree.content.all();
         t.eq("count", kids.length, 3);
 
-        const cls = kids.map((k) => String(k.attr.get("class") ?? ""));
+        const cls = kids.map((k) => String(k.attrs.get("class") ?? ""));
         t.eq("cls", cls.join(","), "orig,a,b");
       },
     },
@@ -691,7 +691,7 @@ export function mixedRegression() {
         // stash quids or tags for debug
         (tree as unknown as { __createdTag?: string }).__createdTag = div.node.$_tag;
 
-        div.attr.set("class", "created");
+        div.attrs.set("class", "created");
       },
 
       assert(tree, t) {
@@ -1008,7 +1008,7 @@ export function extraCases(): readonly TestSuite[] {
           .fromTrustedHtml(`<section id="box"></section>`);
 
         const child = branch.create.div();
-        child.attr.set("class", "child");
+        child.attrs.set("class", "child");
 
         (tree as any).__branch = branch;
       },

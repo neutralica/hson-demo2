@@ -134,8 +134,8 @@ function make_schema_number_max_rejects_writeback_case(suite: string): TestCase 
 
       const rows = [
         equal_row("schema max rejection leaves map unchanged", map.snap(), { count: 5 }),
-        equal_row("schema max rejection marks control invalid", input.attr.get("data-livemap-control-valid"), "false"),
-        equal_row("schema max rejection stores error", input.attr.get("data-livemap-control-error"), "Expected number <= 10"),
+        equal_row("schema max rejection marks control invalid", input.attrs.get("data-livemap-control-valid"), "false"),
+        equal_row("schema max rejection stores error", input.attrs.get("data-livemap-control-error"), "Expected number <= 10"),
       ];
       binding.dispose();
 
@@ -164,8 +164,8 @@ function make_schema_number_min_rejects_writeback_case(suite: string): TestCase 
 
       const rows = [
         equal_row("schema min rejection leaves map unchanged", map.snap(), { count: 5 }),
-        equal_row("schema min rejection marks control invalid", input.attr.get("data-livemap-control-valid"), "false"),
-        equal_row("schema min rejection stores error", input.attr.get("data-livemap-control-error"), "Expected number >= 0"),
+        equal_row("schema min rejection marks control invalid", input.attrs.get("data-livemap-control-valid"), "false"),
+        equal_row("schema min rejection stores error", input.attrs.get("data-livemap-control-error"), "Expected number >= 0"),
       ];
       binding.dispose();
 
@@ -197,8 +197,8 @@ function make_schema_number_valid_after_invalid_clears_error_case(suite: string)
 
       const rows = [
         equal_row("schema valid recovery writes number", map.snap(), { count: 7 }),
-        equal_row("schema valid recovery marks control valid", input.attr.get("data-livemap-control-valid"), "true"),
-        equal_row("schema valid recovery clears error", input.attr.get("data-livemap-control-error"), undefined),
+        equal_row("schema valid recovery marks control valid", input.attrs.get("data-livemap-control-valid"), "true"),
+        equal_row("schema valid recovery clears error", input.attrs.get("data-livemap-control-error"), undefined),
       ];
       binding.dispose();
 

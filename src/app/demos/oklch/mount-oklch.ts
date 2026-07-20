@@ -90,7 +90,7 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
   const root = mk_div_cls(stage, "oklch-demo-root").css.setMany(ROOT_CSS);
   const controls = mk_div_cls(root, "oklch-demo-controls").css.setMany(PANEL_CSS);
   const code = mk_div_cls(controls, "oklch-demo-title")
-    .attr.set("role", "button")
+    .attrs.set("role", "button")
     .css.setMany({
       ...TITLE_CSS,
       cursor: "copy",
@@ -98,7 +98,7 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
   for (const channel of channels) {
     const row = mk_div_cls_txt(controls, `oklch-row-${channel}`, channel).css.setMany(ROW_CSS);
     const input = row.create.input()
-      .attr.setMany(mk_rangeAttrs(channel))
+      .attrs.setMany(mk_rangeAttrs(channel))
       .form.setValue(String(model.state[channel]))
       .css.setMany(RANGE_CSS);
     const value = mk_div_cls(row, `oklch-value-${channel}`);
@@ -108,7 +108,7 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
   const previewPanel = mk_div_cls(root, "oklch-demo-preview-panel").css.setMany(PREVIEW_PANEL_CSS);
   const preview = mk_div_cls(previewPanel, "oklch-demo-preview").css.setMany(PREVIEW_CSS);
   const resetBtn = mk_div_cls_txt(previewPanel, "oklch-demo-factory", "[reset]")
-    .attr.set("role", "button")
+    .attrs.set("role", "button")
     .css.setMany(RESET_CSS);
   const targetPanel = mk_div_cls(controls, "oklch-demo-targets").css.setMany({
     ...PANEL_CSS,
@@ -119,7 +119,7 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 
   const targetRows = model.targets.map((target) => {
     const row = mk_div_cls_txt(targetPanel, "oklch-demo-target-row", target.label)
-      .attr.set("role", "button")
+      .attrs.set("role", "button")
       .css.setMany(TARGET_ROW_CSS);
     return row;
   });
@@ -234,7 +234,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
       const targetColor = oklchToCss(targetState);
       const changed = isTokenChanged(target.path);
       row.text.set(`${target.label.padEnd(labelWidth, " ")}${targetColor}`);
-      row.attr.set("title", targetColor);
+      row.attrs.set("title", targetColor);
       row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
       row.css.setMany(changed
         ? {
@@ -383,7 +383,7 @@ const renderPrev = (rig: OklchRig, model: OklchPickerModel, state: OklchValues):
 
   gcss.var.set(CURRENT_OKLCHname, value);
   rig.code.text.set(`[${value}]`);
-  rig.code.attr.set("title", `copy ${value}`);
+  rig.code.attrs.set("title", `copy ${value}`);
 
   for (const item of rig.inputs) {
     const n = state[item.channel];

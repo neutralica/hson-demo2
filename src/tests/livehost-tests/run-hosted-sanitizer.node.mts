@@ -27,11 +27,11 @@ await with_hosted_dom_runtime((runtime) => {
   documentA = runtime.document;
   const branch = hson.liveTree.fromUntrustedHtml("<article id='safe'><span id='safe-child'>ok</span><script>bad()</script></article>");
   branch.find.must.byId("safe-child").classlist.add("seen");
-  branch.attr.set("data-after", "ok");
+  branch.attrs.set("data-after", "ok");
   expect_sanitizer(
     branch.id.get() === "safe"
       && branch.find.must.byId("safe-child").classlist.has("seen")
-      && branch.attr.get("data-after") === "ok"
+      && branch.attrs.get("data-after") === "ok"
       && !branch.content.markup.outerHTML.includes("script"),
     "fromUntrustedHtml returns a mutable sanitized branch",
   );

@@ -363,7 +363,7 @@ export function livetree_construction_parity(): TestSuite {
         );
 
         branch.find.must.byId("safe-child").classlist.add("seen");
-        branch.attr.set("data-after", "ok");
+        branch.attrs.set("data-after", "ok");
         host.append(branch);
 
         const mounted = tree.find.must.byId("from-untrusted");
@@ -487,7 +487,7 @@ export function livetree_construction_parity(): TestSuite {
         `);
 
         branch.find.must.byId("hson-label").text.set("hson-mutated");
-        branch.attr.set("data-after", "ok");
+        branch.attrs.set("data-after", "ok");
         host.append(branch);
 
         const mounted = tree.find.must.byId("from-hson");
@@ -607,9 +607,9 @@ export function livetree_construction_parity(): TestSuite {
 
         const svg = hson.liveTree.create.svg()
           .id.set("created-svg")
-          .attr.set("viewBox", "0 0 10 10");
+          .attrs.set("viewBox", "0 0 10 10");
 
-        svg.create.circle().id.set("created-circle").attr.setMany({
+        svg.create.circle().id.set("created-circle").attrs.setMany({
           cx: "5",
           cy: "5",
           r: "3",
@@ -627,7 +627,7 @@ export function livetree_construction_parity(): TestSuite {
           cardClass: mountedCard.classlist.get(),
           cardText: mountedCard.text.get(),
           svgTag: mountedSvg.node.$_tag,
-          viewBox: mountedSvg.attr.get("viewBox"),
+          viewBox: mountedSvg.attrs.get("viewBox"),
           circleTag: mountedCircle.node.$_tag,
           circleDomNamespace: mountedCircle.dom.must.el().namespaceURI,
         };

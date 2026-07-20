@@ -89,8 +89,8 @@ export function point_init(rig: PointPanelRig): void {
 
 
             const tag = item.node.$_tag;
-            const idValue = item.attr.get("id");
-            const classValue = item.attr.get("class");
+            const idValue = item.attrs.get("id");
+            const classValue = item.attrs.get("class");
             const classText = typeof classValue === "string" ? classValue : "";
             const id = idValue ? `#${idValue}` : "";
             const cls = classText

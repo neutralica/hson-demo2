@@ -88,11 +88,11 @@ function error_message(error: unknown): string {
 
 function set_disabled(button: LiveTree, disabled: boolean): void {
   if (disabled) {
-    button.flag.set("disabled");
-    button.attr.set("aria-disabled", "true");
+    button.flags.set("disabled");
+    button.attrs.set("aria-disabled", "true");
   } else {
-    button.flag.clear("disabled");
-    button.attr.drop("aria-disabled");
+    button.flags.clear("disabled");
+    button.attrs.drop("aria-disabled");
   }
 }
 
@@ -106,38 +106,38 @@ function seat_text(state: TowlState, seat: TowlSeat, localSeat: TowlSeat | undef
 
 function create_view(host: LiveTree, roomId: string): TowlView & Readonly<{ root: LiveTree }> {
   host.empty();
-  const root = host.create.section().attr.setMany({ "data-demo-towl": "true", "data-testid": "towl-root" }).css.setMany(TOWL_ROOT_CSS);
+  const root = host.create.section().attrs.setMany({ "data-demo-towl": "true", "data-testid": "towl-root" }).css.setMany(TOWL_ROOT_CSS);
   const card = root.create.div().css.setMany(TOWL_CARD_CSS);
   card.create.h1().text.set("TOWL").css.setMany(TOWL_TITLE_CSS);
 
   const roomRow = card.create.div().css.setMany(TOWL_ROOM_CSS);
-  const room = roomRow.create.span().attr.set("data-testid", "towl-room").text.set(`room ${roomId}`);
-  const copyInvite = roomRow.create.button().attr.set("type", "button").text.set("copy invite link").css.setMany(TOWL_BUTTON_CSS);
-  const inviteStatus = roomRow.create.span().attr.setMany({ "aria-live": "polite", "data-testid": "towl-invite-status" }).css.setMany(TOWL_INVITE_STATUS_CSS);
+  const room = roomRow.create.span().attrs.set("data-testid", "towl-room").text.set(`room ${roomId}`);
+  const copyInvite = roomRow.create.button().attrs.set("type", "button").text.set("copy invite link").css.setMany(TOWL_BUTTON_CSS);
+  const inviteStatus = roomRow.create.span().attrs.setMany({ "aria-live": "polite", "data-testid": "towl-invite-status" }).css.setMany(TOWL_INVITE_STATUS_CSS);
 
   const meta = card.create.div().css.setMany(TOWL_META_CSS);
-  const status = meta.create.div().attr.set("data-testid", "towl-status").text.set("connection: starting");
-  const localSeat = meta.create.div().attr.set("data-testid", "towl-local-seat").text.set("local seat: unseated");
-  const phase = meta.create.div().attr.set("data-testid", "towl-phase").text.set("phase: —");
+  const status = meta.create.div().attrs.set("data-testid", "towl-status").text.set("connection: starting");
+  const localSeat = meta.create.div().attrs.set("data-testid", "towl-local-seat").text.set("local seat: unseated");
+  const phase = meta.create.div().attrs.set("data-testid", "towl-phase").text.set("phase: —");
   const round = meta.create.div().text.set("round: —");
 
   const seats = card.create.div().css.setMany(TOWL_SEATS_CSS);
-  const player1 = seats.create.div().attr.set("data-testid", "towl-player1").text.set("player 1\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
-  const player2 = seats.create.div().attr.set("data-testid", "towl-player2").text.set("player 2\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
+  const player1 = seats.create.div().attrs.set("data-testid", "towl-player1").text.set("player 1\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
+  const player2 = seats.create.div().attrs.set("data-testid", "towl-player2").text.set("player 2\nwaiting for state").css.setMany(TOWL_SEAT_CSS);
 
   const rope = card.create.div().css.setMany(TOWL_ROPE_CSS);
   const ropeValue = rope.create.div().text.set("rope: —");
-  const track = rope.create.div().attr.set("aria-label", "TOWL rope position").css.setMany(TOWL_TRACK_CSS);
+  const track = rope.create.div().attrs.set("aria-label", "TOWL rope position").css.setMany(TOWL_TRACK_CSS);
   const ropeMarker = track.create.div().css.setMany({ ...TOWL_MARKER_CSS, left: "50%" });
-  const result = card.create.div().attr.set("aria-live", "polite").css.setMany(TOWL_RESULT_CSS);
+  const result = card.create.div().attrs.set("aria-live", "polite").css.setMany(TOWL_RESULT_CSS);
 
   const actions = card.create.div().css.setMany(TOWL_ACTIONS_CSS);
-  const button = (label: string): LiveTree => actions.create.button().attr.set("type", "button").text.set(label).css.setMany(TOWL_BUTTON_CSS);
+  const button = (label: string): LiveTree => actions.create.button().attrs.set("type", "button").text.set(label).css.setMany(TOWL_BUTTON_CSS);
   const join = button("join");
   const ready = button("ready");
   const pull = button("pull");
   const reset = button("reset round");
-  const error = card.create.div().attr.set("role", "alert").css.setMany(TOWL_ERROR_CSS);
+  const error = card.create.div().attrs.set("role", "alert").css.setMany(TOWL_ERROR_CSS);
 
   return { root, room, copyInvite, inviteStatus, status, localSeat, phase, round, player1, player2, ropeValue, ropeMarker, result, error, join, ready, pull, reset };
 }

@@ -435,7 +435,7 @@ export function livetree_new_dom_doc(): TestSuite {
         const svg = root.create.svg();
         const path = svg.create.path();
 
-        path.attr.set("d", "M 0 0 L 10 10 Z");
+        path.attrs.set("d", "M 0 0 L 10 10 Z");
 
         (tree as any).__result = {
           d: path.dom.el()?.getAttribute("d"),

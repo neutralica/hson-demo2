@@ -21,7 +21,7 @@ export function livetree_new_form_api(): TestSuite {
             assert(tree: LiveTree, t) {
                 const field = tree.find.must.byId("field");
 
-                t.eq(`value attr written`, field.attr.get("value"), "abc");
+                t.eq(`value attr written`, field.attrs.get("value"), "abc");
                 t.eq(`form.getValue() reads value`, field.form.getValue(), "abc");
             },
         },
@@ -35,12 +35,12 @@ export function livetree_new_form_api(): TestSuite {
             act(tree: LiveTree) {
                 const field = tree.find.must.byId("field");
 
-                field.form.setValue("abc").attr.set("data-after", "ok");
+                field.form.setValue("abc").attrs.set("data-after", "ok");
             },
             assert(tree: LiveTree, t) {
                 const field = tree.find.must.byId("field");
 
-                t.eq(`chained attr write works`, field.attr.get("data-after"), "ok");
+                t.eq(`chained attr write works`, field.attrs.get("data-after"), "ok");
                 t.eq(`value retained`, field.form.getValue(), "abc");
             },
         },
@@ -94,7 +94,7 @@ export function livetree_new_form_api(): TestSuite {
                 const check = tree.find.must.byId("check");
 
                 t.eq(`checked state true`, check.form.getChecked(), true);
-                t.ok(`checked attr present`, check.attr.get("checked") !== undefined);
+                t.ok(`checked attr present`, check.attrs.get("checked") !== undefined);
             },
         },
         {
@@ -125,13 +125,13 @@ export function livetree_new_form_api(): TestSuite {
             act(tree: LiveTree) {
                 const check = tree.find.must.byId("check");
 
-                check.form.setChecked(true).attr.set("data-after", "ok");
+                check.form.setChecked(true).attrs.set("data-after", "ok");
             },
             assert(tree: LiveTree, t) {
                 const check = tree.find.must.byId("check");
 
                 t.eq(`checked state true`, check.form.getChecked(), true);
-                t.eq(`chained attr write works`, check.attr.get("data-after"), "ok");
+                t.eq(`chained attr write works`, check.attrs.get("data-after"), "ok");
             },
         },
         {

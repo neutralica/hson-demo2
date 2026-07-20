@@ -62,7 +62,7 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
     const centerFill = pick_center_color(spec.palette, rng, spec.cultivar);
 
     const g = host.create.g()
-        .attr.setMany({
+        .attrs.setMany({
             transform: `translate(${fmtNum(spec.x, 3)} ${fmtNum(spec.y, 3)}) rotate(${fmtNum(spec.rotation, 3)}) scale(${fmtNum(spec.scale, 4)})`,
             opacity: fmtNum(spec.opacity, 4),
         });
@@ -74,7 +74,7 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
         g.create.g(`<g>${stamens}</g>`);
     }
 
-    g.create.circle().attr.setMany({
+    g.create.circle().attrs.setMany({
         cx: "0",
         cy: "0",
         r: fmtNum(spec.centerRadius, 3),
@@ -113,8 +113,8 @@ async function make_bitmapped_effect(
     const y2 = bb2.y;
 
     const clone2 = el2.cloneBranch();
-    clone2.attr.drop("transform");
-    clone2.attr.drop("opacity");
+    clone2.attrs.drop("transform");
+    clone2.attrs.drop("opacity");
 
     const standaloneSvg2 =
         `<svg xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +128,7 @@ async function make_bitmapped_effect(
 
     el2.empty();
     const imageEl2 = el2.create.image()
-        .attr.setMany({
+        .attrs.setMany({
             x: fmtNum(x2, 3),
             y: fmtNum(y2, 3),
             width: fmtNum(w2, 3),

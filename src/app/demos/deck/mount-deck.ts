@@ -359,7 +359,7 @@ function mount_deck_markdown(state: DeckState, host: LiveTree, markdown: string,
 function mount_body(state: DeckState, host: LiveTree, body: DeckSlideBody, stackAlign?: DeckSlideConfig["stackAlign"]): void {
   if (body.kind === "image") {
     host.create.img()
-      .attr.setMany({ src: body.src, alt: body.alt ?? "" })
+      .attrs.setMany({ src: body.src, alt: body.alt ?? "" })
       .css.setMany(IMGcss);
     return;
   }

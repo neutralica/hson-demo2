@@ -185,7 +185,7 @@ function make_livetree_attr_initial_case(suite: string): TestCase {
 
       const binding = bind_livetree_attr(map, ["ui", "tone"], tree, "data-tone");
 
-      const rows = [equal_row("initial LiveTree attr", tree.attr.get("data-tone"), "active")];
+      const rows = [equal_row("initial LiveTree attr", tree.attrs.get("data-tone"), "active")];
       binding.dispose();
 
       return { assertRows: rows };
@@ -206,12 +206,12 @@ function make_livetree_attr_remove_case(suite: string): TestCase {
       const tree = make_livetree_attr_target();
 
       const binding = bind_livetree_attr(map, ["ui", "enabled"], tree, "data-enabled");
-      const initial = tree.attr.get("data-enabled");
+      const initial = tree.attrs.get("data-enabled");
       map.set(["ui", "enabled"], false);
 
       const rows = [
         equal_row("initial LiveTree truthy attr", initial, "true"),
-        equal_row("false removes LiveTree attr", tree.attr.get("data-enabled"), undefined),
+        equal_row("false removes LiveTree attr", tree.attrs.get("data-enabled"), undefined),
       ];
       binding.dispose();
 
@@ -399,8 +399,8 @@ function make_livetree_snap_view_primitive_case(suite: string): TestCase {
 
       return {
         assertRows: [
-          equal_row("primitive snap view kind", tree.attr.get("data-livemap-snap-kind"), "string"),
-          equal_row("primitive snap view path", tree.attr.get("data-livemap-snap-path"), "ui.label"),
+          equal_row("primitive snap view kind", tree.attrs.get("data-livemap-snap-kind"), "string"),
+          equal_row("primitive snap view path", tree.attrs.get("data-livemap-snap-path"), "ui.label"),
           equal_row("primitive snap view text", tree.text.get(), "Ready"),
         ],
       };
@@ -425,7 +425,7 @@ function make_livetree_snap_view_object_case(suite: string): TestCase {
 
       return {
         assertRows: [
-          equal_row("object snap view kind", tree.attr.get("data-livemap-snap-kind"), "object"),
+          equal_row("object snap view kind", tree.attrs.get("data-livemap-snap-kind"), "object"),
           equal_row("object snap view includes label key", html.includes('data-livemap-snap-key="label"'), true),
           equal_row("object snap view includes enabled key", html.includes('data-livemap-snap-key="enabled"'), true),
           equal_row("object snap view includes Ready value", html.includes("Ready"), true),
@@ -453,7 +453,7 @@ function make_livetree_snap_view_array_case(suite: string): TestCase {
 
       return {
         assertRows: [
-          equal_row("array snap view kind", tree.attr.get("data-livemap-snap-kind"), "array"),
+          equal_row("array snap view kind", tree.attrs.get("data-livemap-snap-kind"), "array"),
           equal_row("array snap view includes index 0", html.includes('data-livemap-snap-index="0"'), true),
           equal_row("array snap view includes index 1", html.includes('data-livemap-snap-index="1"'), true),
           equal_row("array snap view includes first value", html.includes("one"), true),
@@ -508,7 +508,7 @@ function make_livetree_snap_view_nested_object_paths_case(suite: string): TestCa
 
       return {
         assertRows: [
-          equal_row("nested object root path", tree.attr.get("data-livemap-snap-path"), "ui"),
+          equal_row("nested object root path", tree.attrs.get("data-livemap-snap-path"), "ui"),
           equal_row("nested object includes panel path", html.includes('data-livemap-snap-path="ui.panel"'), true),
           equal_row("nested object includes label path", html.includes('data-livemap-snap-path="ui.panel.label"'), true),
           equal_row("nested object includes leaf value", html.includes("Ready"), true),
@@ -561,8 +561,8 @@ function make_livetree_snap_view_null_case(suite: string): TestCase {
 
       return {
         assertRows: [
-          equal_row("null snap view kind", tree.attr.get("data-livemap-snap-kind"), "null"),
-          equal_row("null snap view path", tree.attr.get("data-livemap-snap-path"), "ui.value"),
+          equal_row("null snap view kind", tree.attrs.get("data-livemap-snap-kind"), "null"),
+          equal_row("null snap view path", tree.attrs.get("data-livemap-snap-path"), "ui.value"),
           equal_row("null snap view text", tree.text.get(), ""),
         ],
       };
@@ -588,13 +588,13 @@ function make_livetree_snap_view_empty_containers_case(suite: string): TestCase 
 
       return {
         assertRows: [
-          equal_row("empty object snap view kind", objectTree.attr.get("data-livemap-snap-kind"), "object"),
+          equal_row("empty object snap view kind", objectTree.attrs.get("data-livemap-snap-kind"), "object"),
           equal_row(
             "empty object has no key rows",
             objectTree.content.markup.innerHTML.includes("data-livemap-snap-key"),
             false,
           ),
-          equal_row("empty array snap view kind", arrayTree.attr.get("data-livemap-snap-kind"), "array"),
+          equal_row("empty array snap view kind", arrayTree.attrs.get("data-livemap-snap-kind"), "array"),
           equal_row(
             "empty array has no index rows",
             arrayTree.content.markup.innerHTML.includes("data-livemap-snap-index"),
@@ -620,7 +620,7 @@ function make_livetree_attr_zero_case(suite: string): TestCase {
 
       const binding = bind_livetree_attr(map, ["ui", "count"], tree, "data-count");
 
-      const rows = [equal_row("zero LiveTree attr", tree.attr.get("data-count"), "0")];
+      const rows = [equal_row("zero LiveTree attr", tree.attrs.get("data-count"), "0")];
       binding.dispose();
 
       return { assertRows: rows };

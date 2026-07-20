@@ -116,7 +116,7 @@ function initBuild(bp: BuildDemo): void {
         bp.tabs.view.data.set("tab", getActiveTab());
         bp.tabs.view.data.set("active", "true");
         bp.tabs.view.text.set(getActiveTab());
-        bp.tabs.view.attr.set("aria-label", getActiveTab() === "render" ? "show html output" : "show render preview");
+        bp.tabs.view.attrs.set("aria-label", getActiveTab() === "render" ? "show html output" : "show render preview");
     };
 
     const render = (raw: string): void => {
@@ -197,7 +197,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
 
   const root = mk_div_id(hostBody, $BUILD_ROOT)
     .classlist.set("build-root")
-    .attr.set("data-testid", "build-root")
+    .attrs.set("data-testid", "build-root")
     .css.setMany(BUILD_ROOTcss);
   mk_div_cls(root, "panel header")
     .text.set("~ BUILD ~")
@@ -227,7 +227,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
   const clearBtn = mk_span_cls(src.head, "build-btn build-btn--clear")
     .text.set("clear")
     .css.setMany(BUILD_HEADER_BTNcss)
-    .attr.setMany({
+    .attrs.setMany({
       role: "button",
       tabindex: "0",
       "aria-label": "clear input",
@@ -237,7 +237,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
     .css.setMany(UI_2STACKcss);
 
   const status = mk_div_cls(statusBox, "status-number")
-    .attr.set("data-testid", "build-status")
+    .attrs.set("data-testid", "build-status")
     .css.setMany(BUILD_HEADER_VALUEcss);
 
   mk_div_cls(statusBox, "status-label")
@@ -250,7 +250,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
   const copyBtn = mk_span_cls(src.head, "build-btn build-btn--copy")
     .text.set("copy")
     .css.setMany(BUILD_HEADER_BTNcss)
-    .attr.setMany({
+    .attrs.setMany({
       role: "button",
       tabindex: "0",
       "aria-label": "copy input",
@@ -263,7 +263,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
   const textarea = inputWrap.create.textarea()
     .classlist.set("build-textarea")
     .data.set("input", "hson")
-    .attr.setMany({ "data-testid": "build-source-editor", "aria-label": "build HSON source editor" })
+    .attrs.setMany({ "data-testid": "build-source-editor", "aria-label": "build HSON source editor" })
     .css.setMany(BUILD_TEXTAREAcss);
 
   const seed = opts.seed ?? BUILD_STRINGhson;
@@ -278,7 +278,7 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
     .data.set("tab", "render")
     .text.set("render")
     .css.setMany(BUILD_TABcss)
-    .attr.setMany({
+    .attrs.setMany({
       role: "button",
       tabindex: "0",
       "aria-label": "toggle output view",
@@ -290,13 +290,13 @@ export function bp_factory(hostBody: LiveTree, opts: BuildFactoryOpts = {}): Bui
 
   const previewHost = outWrap.create.div()
     .classlist.set("build-previewHost")
-    .attr.set("data-testid", "build-preview")
+    .attrs.set("data-testid", "build-preview")
     .css.setMany(BUILD_PREVIEWcss);
 
   const htmlBox = outWrap.create.textarea()
     .classlist.set("build-htmlBox")
     .data.set("output", "html")
-    .attr.setMany({ "data-testid": "build-html-output", "aria-label": "build HTML output" })
+    .attrs.setMany({ "data-testid": "build-html-output", "aria-label": "build HTML output" })
     .css.setMany(BUILD_HTMLBOXcss);
 
   htmlBox.css.setMany({ display: "none" });

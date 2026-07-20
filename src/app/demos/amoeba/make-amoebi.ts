@@ -192,7 +192,7 @@ function render_amoebi_body(
   isolatedIds: readonly string[],
 ): SvgLiveTree {
   const path = svg.create.path()
-    .attr.setMany({
+    .attrs.setMany({
       d: button.path,
       "data-amoeba-id": button.id,
     })
@@ -218,7 +218,7 @@ function render_amoebi_body(
 function render_amoebi_label(svg: SvgLiveTree, button: AmoebiRenderButton, index: number): SvgLiveTree {
   const label = svg.create.text()
     .text.set(button.label)
-    .attr.setMany({
+    .attrs.setMany({
       x: button.cx.toFixed(2),
       y: button.cy.toFixed(2),
     });
@@ -230,7 +230,7 @@ function render_amoebi_label(svg: SvgLiveTree, button: AmoebiRenderButton, index
 
 function render_amoebi_hit_target(svg: SvgLiveTree, button: AmoebiRenderButton): SvgLiveTree {
   return svg.create.path()
-    .attr.setMany({
+    .attrs.setMany({
       d: button.path,
       tabindex: "0",
       role: "button",
@@ -417,7 +417,7 @@ function grow_amoebi_cell(cell: SvgLiveTree, coord: HexCoord, delay: number, dur
 
 function render_amoebi_cell(svg: SvgLiveTree, map: LiveMap<AmoebiRenderState>, button: AmoebiRenderButton, cell: HexCoord, buttonIndex: number, cellIndex: number): SvgLiveTree {
   const cellPath = svg.create.path()
-    .attr.setMany({
+    .attrs.setMany({
       d: hex_cell_path(cell, HEX_SIZE),
       "data-amoebi-cell": button.id,
     })
@@ -509,7 +509,7 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
   }
 
   const svg = root.create.svg()
-    .attr.setMany({
+    .attrs.setMany({
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: `0 0 ${AMOEBA_W} ${viewHeight}`,
       // CHANGED: anchor the SVG viewBox to the left edge instead of centering it.

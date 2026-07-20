@@ -56,7 +56,7 @@ function empty_case(suite: string): LiveTreeCaseSpec {
 
       callerPreserved = owner.quid === ownerQuid
         && owner.node === ownerNode
-        && owner.attr.get("data-keep") === "yes"
+        && owner.attrs.get("data-keep") === "yes"
         && owner.node.$_meta?.["owner-note"] === "preserved"
         && owner.dom.el() === ownerEl
         && !owner.isDisposed;
@@ -113,7 +113,7 @@ function detach_contents_case(suite: string): LiveTreeCaseSpec {
         && !branchEl.isConnected
         && !branch.isDisposed;
 
-      branch.attr.set("data-detached", "yes");
+      branch.attrs.set("data-detached", "yes");
       map.set(["label"], "updated while detached");
       detached.appendTo(target);
       branchEl.dispatchEvent(new MouseEvent("click"));
@@ -125,7 +125,7 @@ function detach_contents_case(suite: string): LiveTreeCaseSpec {
       exactProjectionReused = branch.dom.el() === branchEl && target.dom.must.el().contains(branchEl);
       behaviorStable = clicks === 1
         && branch.text.get() === "updated while detached"
-        && branch.attr.get("data-detached") === "yes"
+        && branch.attrs.get("data-detached") === "yes"
         && CssManager.invoke().hasAnyRules(branchQuid);
       try {
         detached.appendTo(source);
@@ -173,7 +173,7 @@ function detach_case(suite: string): LiveTreeCaseSpec {
         && branch.quid === quid
         && branch.node.$_meta?.[DATA_QUID] === quid
         && element.getAttribute(DATA_QUID) === quid;
-      branch.text.set("new").attr.set("data-moved", "yes");
+      branch.text.set("new").attrs.set("data-moved", "yes");
       right.append(branch);
       element.dispatchEvent(new MouseEvent("click"));
       reattached = branch.dom.el() === element
@@ -243,7 +243,7 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
       const childQuid = child.quid;
       const targetEl = target.dom.must.el();
       const cachedCss = target.css;
-      const cachedAttr = target.attr;
+      const cachedAttr = target.attrs;
       const cachedDom = target.dom;
       const cachedEvents = target.events;
       const cachedContent = target.content;
@@ -280,11 +280,11 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
         () => target.detachContents(),
         () => target.find.byId("child"),
         () => target.findAll({ tag: "button" }),
-        () => target.attr.set("title", "x"),
+        () => target.attrs.set("title", "x"),
         () => target.data.set("x", "y"),
         () => target.id.set("x"),
         () => target.classlist.add("x"),
-        () => target.flag.has("hidden"),
+        () => target.flags.has("hidden"),
         () => target.text.set("x"),
         () => target.form,
         () => target.style.setMany({ color: "red" }),

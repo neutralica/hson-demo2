@@ -129,12 +129,12 @@ function make_bind_attr_boolean_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ disabled: true });
 
             const dispose = input.bind.attr(map, ["disabled"], "disabled");
-            const initial = input.attr.has("disabled");
+            const initial = input.attrs.has("disabled");
 
             map.at(["disabled"]).set(false);
             const rows = [
                 equal_row("true value sets attr", initial, true),
-                equal_row("false value drops attr", input.attr.has("disabled"), false),
+                equal_row("false value drops attr", input.attrs.has("disabled"), false),
             ];
             dispose();
 
@@ -161,15 +161,15 @@ function make_bind_attrs_mapper_case(suite: string): TestCase {
                 "data-selected": selected ? "yes" : null,
             }));
 
-            const initialAria = button.attr.get("aria-pressed");
-            const initialSelected = button.attr.has("data-selected");
+            const initialAria = button.attrs.get("aria-pressed");
+            const initialSelected = button.attrs.has("data-selected");
             map.at(["selected"]).set(true);
 
             const rows = [
                 equal_row("initial mapped attr is set", initialAria, "false"),
                 equal_row("initial null mapped attr is absent", initialSelected, false),
-                equal_row("mapped attr updates", button.attr.get("aria-pressed"), "true"),
-                equal_row("mapped nullable attr appears", button.attr.get("data-selected"), "yes"),
+                equal_row("mapped attr updates", button.attrs.get("aria-pressed"), "true"),
+                equal_row("mapped nullable attr appears", button.attrs.get("data-selected"), "yes"),
             ];
             dispose();
 
@@ -230,12 +230,12 @@ function make_bind_attrs_drop_on_update_case(suite: string): TestCase {
                 "data-selected": selected ? "yes" : null,
             }));
 
-            const initialSelected = button.attr.get("data-selected");
+            const initialSelected = button.attrs.get("data-selected");
             map.at(["selected"]).set(false);
 
             const rows = [
                 equal_row("initial nullable attr appears", initialSelected, "yes"),
-                equal_row("later null mapped attr is dropped", button.attr.has("data-selected"), false),
+                equal_row("later null mapped attr is dropped", button.attrs.has("data-selected"), false),
             ];
             dispose();
 
@@ -350,12 +350,12 @@ function make_bind_attr_mapper_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ index: 2 });
 
             const dispose = item.bind.attr(map, ["index"], "data-index", (index) => `item-${String(index ?? "none")}`);
-            const initial = item.attr.get("data-index");
+            const initial = item.attrs.get("data-index");
             map.at(["index"]).set(7);
 
             const rows = [
                 equal_row("initial mapped attr value is formatted", initial, "item-2"),
-                equal_row("updated mapped attr value is formatted", item.attr.get("data-index"), "item-7"),
+                equal_row("updated mapped attr value is formatted", item.attrs.get("data-index"), "item-7"),
             ];
             dispose();
 
@@ -501,10 +501,10 @@ function make_bind_attrs_paths_case(suite: string): TestCase {
                 };
             });
 
-            const initialCurrent = button.attr.get("aria-current");
-            const initialHovered = button.attr.has("data-hovered");
+            const initialCurrent = button.attrs.get("aria-current");
+            const initialHovered = button.attrs.has("data-hovered");
             map.at(["hoveredId"]).set("about");
-            const hoverValue = button.attr.get("data-hovered");
+            const hoverValue = button.attrs.get("data-hovered");
             map.at(["selectedId"]).set("parse");
             map.at(["hoveredId"]).set(null);
 
@@ -512,8 +512,8 @@ function make_bind_attrs_paths_case(suite: string): TestCase {
                 equal_row("initial attrsPaths selected attr is set", initialCurrent, "page"),
                 equal_row("initial attrsPaths hover attr is absent", initialHovered, false),
                 equal_row("hover attrsPaths attr appears", hoverValue, "yes"),
-                equal_row("selected attrsPaths attr is dropped", button.attr.has("aria-current"), false),
-                equal_row("hover attrsPaths attr is dropped", button.attr.has("data-hovered"), false),
+                equal_row("selected attrsPaths attr is dropped", button.attrs.has("aria-current"), false),
+                equal_row("hover attrsPaths attr is dropped", button.attrs.has("data-hovered"), false),
             ];
             dispose();
 

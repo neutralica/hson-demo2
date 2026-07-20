@@ -12,14 +12,14 @@ export type InspectorFixture = Readonly<{
 /** Restrained development fixture for examining Patch 7B's neutral grammar. */
 export function mount_inspector_fixture(host: LiveTree): InspectorFixture {
   const root = host.create.section();
-  root.attr.set("data-demo-inspector-fixture", "true");
+  root.attrs.set("data-demo-inspector-fixture", "true");
   const heading = root.create.h2();
   heading.text.set("Structured data inspector fixture");
   const commands = root.create.div();
-  commands.attr.set("aria-label", "External source commands");
+  commands.attrs.set("aria-label", "External source commands");
   const inspectorHost = root.create.div();
   const output = root.create.pre();
-  output.attr.set("aria-live", "polite");
+  output.attrs.set("aria-live", "polite");
 
   let source = makeSource("primary");
   const inspector = hson.inspect.create({

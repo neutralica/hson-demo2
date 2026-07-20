@@ -56,8 +56,8 @@ export function livetree_canvas_display(): TestSuite {
 
         (tree as any).__result = {
           size: target.canvas.size.get(),
-          widthAttr: target.attr.get("width"),
-          heightAttr: target.attr.get("height"),
+          widthAttr: target.attrs.get("width"),
+          heightAttr: target.attrs.get("height"),
         };
       },
 
@@ -88,11 +88,11 @@ export function livetree_canvas_display(): TestSuite {
 
         target.canvas.size
           .set(200, 100)
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
           size: target.canvas.size.get(),
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
         };
       },
 
@@ -124,8 +124,8 @@ export function livetree_canvas_display(): TestSuite {
 
         (tree as any).__result = {
           size: target.canvas.size.get(),
-          widthAttr: target.attr.get("width"),
-          heightAttr: target.attr.get("height"),
+          widthAttr: target.attrs.get("width"),
+          heightAttr: target.attrs.get("height"),
         };
       },
 
@@ -239,8 +239,8 @@ export function livetree_canvas_display(): TestSuite {
 
         (tree as any).__result = {
           size: target.canvas.size.get(),
-          widthAttr: target.attr.get("width"),
-          heightAttr: target.attr.get("height"),
+          widthAttr: target.attrs.get("width"),
+          heightAttr: target.attrs.get("height"),
           elWidth: target.canvas.must.el().width,
           elHeight: target.canvas.must.el().height,
         };
@@ -285,11 +285,11 @@ export function livetree_canvas_display(): TestSuite {
 
         target.canvas.display
           .match({ dpr: 1, scaleContext: false })
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
           size: target.canvas.size.get(),
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
         };
       },
 
@@ -745,8 +745,8 @@ export function livetree_canvas_display(): TestSuite {
     await flush_dom();
     await tick();
 
-    const beforeWidth = target.attr.get("width");
-    const beforeHeight = target.attr.get("height");
+    const beforeWidth = target.attrs.get("width");
+    const beforeHeight = target.attrs.get("height");
 
     host.removeChildren();
 
@@ -766,8 +766,8 @@ export function livetree_canvas_display(): TestSuite {
       beforeWidth,
       beforeHeight,
       afterCount,
-      afterWidth: target.attr.get("width"),
-      afterHeight: target.attr.get("height"),
+      afterWidth: target.attrs.get("width"),
+      afterHeight: target.attrs.get("height"),
     };
   },
 
@@ -917,10 +917,10 @@ export function livetree_canvas_clear(): TestSuite {
 
         target.canvas
           .clear()
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
         };
       },
 
@@ -984,10 +984,10 @@ export function livetree_canvas_clear(): TestSuite {
 
         target.canvas
           .clear()
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
           inScope: target.canvas.inScope(),
         };
       },
@@ -1081,10 +1081,10 @@ export function livetree_canvas_plot(): TestSuite {
             ctx.fillStyle = "rgb(0, 0, 255)";
             ctx.fillRect(0, 0, 10, 10);
           })
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
         };
       },
 
@@ -1116,11 +1116,11 @@ export function livetree_canvas_plot(): TestSuite {
           .plot(() => {
             called = true;
           })
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
           called,
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
           inScope: target.canvas.inScope(),
         };
       },
@@ -1158,11 +1158,11 @@ export function livetree_canvas_plot(): TestSuite {
           .plot(() => {
             called = true;
           })
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
           called,
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
           inScope: target.canvas.inScope(),
         };
       },
@@ -1249,10 +1249,10 @@ export function livetree_canvas_plot(): TestSuite {
             ctx.fillStyle = "rgb(0, 0, 0)";
             ctx.fillRect(0, 0, 1, 1);
           })
-          .attr.set("data-after", "ok");
+          .attrs.set("data-after", "ok");
 
         (tree as any).__result = {
-          after: target.attr.get("data-after"),
+          after: target.attrs.get("data-after"),
         };
       },
 

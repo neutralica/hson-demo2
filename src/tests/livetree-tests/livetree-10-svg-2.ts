@@ -590,7 +590,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const svg = root.create.svg()
-                        .attr.set("viewBox", "0 0 10 10");
+                        .attrs.set("viewBox", "0 0 10 10");
 
                     const g = svg.create.g().id.set("g1");
 
@@ -618,7 +618,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const svg = root.create.svg()
-                        .attr.setMany({
+                        .attrs.setMany({
                             viewBox: "0 0 20 20",
                             preserveAspectRatio: "xMidYMid meet",
                         });
@@ -648,7 +648,7 @@ export function livetree_svg_ingermediate(): TestSuite {
                 dom: true,
 
                 act: async (root) => {
-                    const svg = root.create.svg().flag.set("data-active");
+                    const svg = root.create.svg().flags.set("data-active");
 
                     const g = svg.create.g().id.set("g1");
 
@@ -673,8 +673,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                 dom: true,
 
                 act: async (root) => {
-                    const svg0 = root.create.svg().flag.set("data-active");
-                    const svg = svg0.flag.clear("data-active");
+                    const svg0 = root.create.svg().flags.set("data-active");
+                    const svg = svg0.flags.clear("data-active");
 
                     const g = svg.create.g().id.set("g1");
 
@@ -700,7 +700,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const host = root.find.must.byId("root")
-                        .attr.setMany({
+                        .attrs.setMany({
                             title: "hello",
                             "data-x": "1",
                         });
@@ -730,14 +730,14 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                 act: async (root) => {
                     const svg = root.create.svg()
-                        .attr.set("viewBox", "0 0 30 30")
-                        .attr.set("preserveAspectRatio", "none");
+                        .attrs.set("viewBox", "0 0 30 30")
+                        .attrs.set("preserveAspectRatio", "none");
 
                     (root as any).__result = {
-                        viewBox: svg.attr.get("viewBox"),
-                        preserveAspectRatio: svg.attr.get("preserveAspectRatio"),
-                        hasViewBox: svg.attr.has("viewBox"),
-                        hasPreserveAspectRatio: svg.attr.has("preserveAspectRatio"),
+                        viewBox: svg.attrs.get("viewBox"),
+                        preserveAspectRatio: svg.attrs.get("preserveAspectRatio"),
+                        hasViewBox: svg.attrs.has("viewBox"),
+                        hasPreserveAspectRatio: svg.attrs.has("preserveAspectRatio"),
                     };
                 },
 
@@ -758,8 +758,8 @@ export function livetree_svg_ingermediate(): TestSuite {
                 dom: true,
 
                 act: async (root) => {
-                    const svg0 = root.create.svg().attr.set("viewBox", "0 0 40 40");
-                    const svg = svg0.attr.drop("viewBox");
+                    const svg0 = root.create.svg().attrs.set("viewBox", "0 0 40 40");
+                    const svg = svg0.attrs.drop("viewBox");
 
                     const g = svg.create.g().id.set("g1");
 
@@ -871,7 +871,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
                     (root as any).__result = {
                         camelRead: svg.data.get("preserveAspectRatioMode"),
-                        rawRead: svg.attr.get("data-preserve-aspect-ratio-mode"),
+                        rawRead: svg.attrs.get("data-preserve-aspect-ratio-mode"),
                     };
                 },
 

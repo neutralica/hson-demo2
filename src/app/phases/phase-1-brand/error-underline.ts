@@ -79,7 +79,7 @@ export function makeSvgErrUnderline(opts: {
   //  create a detached svg root directly
   const svg = hson.liveTree.create.svg();
 
-  svg.attr.setMany({
+  svg.attrs.setMany({
     xmlns: "http://www.w3.org/2000/svg",
     width: String(w),
     height: String(h),
@@ -91,12 +91,12 @@ export function makeSvgErrUnderline(opts: {
 
   //  build defs/clipPath/rect natively
   const defs = svg.create.defs();
-  const clipPath = defs.create.clipPath().attr.setMany({
+  const clipPath = defs.create.clipPath().attrs.setMany({
     id: clipId,
     clipPathUnits: "userSpaceOnUse",
   });
 
-  clipPath.create.rect().attr.setMany({
+  clipPath.create.rect().attrs.setMany({
     x: "0",
     y: String(clipY + 2),
     width: String(w),
@@ -104,7 +104,7 @@ export function makeSvgErrUnderline(opts: {
   });
 
   //  build underline path natively
-  svg.create.path().attr.setMany({
+  svg.create.path().attrs.setMany({
     d,
     "clip-path": `url(#${clipId})`,
     fill: "none",

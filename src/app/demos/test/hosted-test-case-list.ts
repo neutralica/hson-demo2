@@ -176,7 +176,7 @@ export function make_hosted_test_case_list(
     const existing = suites.get(suite);
     if (existing !== undefined) return existing;
     const group = root.create.div().classlist.set("hosted-suite-group");
-    const row = group.create.button().classlist.set("hosted-suite-row").attr.setMany({
+    const row = group.create.button().classlist.set("hosted-suite-row").attrs.setMany({
       type: "button",
       "data-hosted-action": "toggle-suite",
       "data-hosted-suite": suite,
@@ -240,15 +240,15 @@ export function make_hosted_test_case_list(
   function append_case(state: SuiteProjection, testCase: HostedTestCaseReport): void {
     const caseHost = state.caseHost;
     if (caseHost === undefined) return;
-    const row = caseHost.create.div().classlist.set("hosted-case-row").attr.set("data-case-key", testCase.key);
+    const row = caseHost.create.div().classlist.set("hosted-case-row").attrs.set("data-case-key", testCase.key);
     row.create.span().classlist.set(`hosted-case-status is-${testCase.status}`).text.set(testCase.status.toUpperCase());
-    row.create.span().classlist.set("hosted-case-name").attr.set("title", testCase.err ?? testCase.key).text.set(testCase.name);
+    row.create.span().classlist.set("hosted-case-name").attrs.set("title", testCase.err ?? testCase.key).text.set(testCase.name);
     row.create.span().classlist.set("hosted-case-duration").text.set(format_hosted_test_duration(testCase.ms));
     const controls = row.create.span().classlist.set("hosted-case-actions");
-    controls.create.button().classlist.set("hosted-case-action").attr.setMany({
+    controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
       type: "button", "data-hosted-action": "view", "data-case-key": testCase.key, "aria-label": `View report for ${testCase.name}`,
     }).text.set("view");
-    controls.create.button().classlist.set("hosted-case-action").attr.setMany({
+    controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
       type: "button", "data-hosted-action": "copy", "data-case-key": testCase.key, "aria-label": `Copy report for ${testCase.name}`,
     }).text.set("copy");
     liveTreesConstructed += 7;
@@ -261,7 +261,7 @@ export function make_hosted_test_case_list(
     const state = suites.get(suite);
     if (state === undefined || state.expanded === expanded) return;
     state.expanded = expanded;
-    state.row.attr.set("aria-expanded", expanded ? "true" : "false");
+    state.row.attrs.set("aria-expanded", expanded ? "true" : "false");
     state.disclosure.text.set(expanded ? "▾" : "▸");
     if (!expanded) {
       state.caseHost?.remove();
@@ -278,8 +278,8 @@ export function make_hosted_test_case_list(
     const actionGeneration = generation;
     const quid = element.getAttribute("data-_quid");
     const button = quid === null ? undefined : root.find.byQuid(quid);
-    button?.flag.set("disabled");
-    button?.attr.set("aria-busy", "true");
+    button?.flags.set("disabled");
+    button?.attrs.set("aria-busy", "true");
     button?.text.set("…");
     try {
       await actions[action](caseKey);
@@ -287,8 +287,8 @@ export function make_hosted_test_case_list(
       if (!disposed && generation === actionGeneration) show_error(error instanceof Error ? error.message : String(error));
     } finally {
       if (!disposed && generation === actionGeneration) {
-        button?.attr.drop("disabled");
-        button?.attr.drop("aria-busy");
+        button?.attrs.drop("disabled");
+        button?.attrs.drop("aria-busy");
         button?.text.set(action);
       }
     }

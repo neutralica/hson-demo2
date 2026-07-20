@@ -389,10 +389,10 @@ export function livetree_regression_2(): TestSuite {
 
         (tree as any).__result = {
           quidReminted: panel.quid !== sourceQuid,
-          classPreserved: panel.attr.get("class") === "panel featured",
-          rolePreserved: panel.attr.get("data-role") === "demo",
-          ariaPreserved: panel.attr.get("aria-label") === "Demo panel",
-          childDataPreserved: accent.attr.get("data-kind") === "accent",
+          classPreserved: panel.attrs.get("class") === "panel featured",
+          rolePreserved: panel.attrs.get("data-role") === "demo",
+          ariaPreserved: panel.attrs.get("aria-label") === "Demo panel",
+          childDataPreserved: accent.attrs.get("data-kind") === "accent",
         };
 
         hydrated.removeSelf();

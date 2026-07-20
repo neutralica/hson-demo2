@@ -380,7 +380,7 @@ export function livetree_svg_basic(): TestSuite {
             width: "10px",
             height: "10px",
           })
-          .attr.set("viewBox", "0 0 10 10");
+          .attrs.set("viewBox", "0 0 10 10");
 
         const g = svg.create.g().id.set("g");
         const c = g.create.circle().id.set("c");
@@ -675,11 +675,11 @@ export function livetree_svg_basic(): TestSuite {
       dom: true,
 
       act: async (root) => {
-        const svg = root.create.svg().attr.set("viewBox", "0 0 20 20");
+        const svg = root.create.svg().attrs.set("viewBox", "0 0 20 20");
         const circle = svg.create.circle()
-          .attr.set("cx", "7")
-          .attr.set("cy", "8")
-          .attr.set("r", "9");
+          .attrs.set("cx", "7")
+          .attrs.set("cy", "8")
+          .attrs.set("r", "9");
 
         const svgEl = svg.dom.el();
         const cEl = circle.dom.el();

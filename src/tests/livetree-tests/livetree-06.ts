@@ -736,7 +736,7 @@ export function livetree_create_size(): TestSuite {
         const svg = hson.liveTree.create.svg();
         const path = hson.liveTree.create.path();
 
-        path.attr.set("d", "M 0 0 L 10 10 Z");
+        path.attrs.set("d", "M 0 0 L 10 10 Z");
 
         root.append(svg);
         svg.append(path);

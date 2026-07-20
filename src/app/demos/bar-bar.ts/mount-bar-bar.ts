@@ -134,7 +134,7 @@ function draw(ctx: CanvasRenderingContext2D, s: State): void {
 }
 
 export function mount_bar_bar(host: LiveTree): void {
-  host.empty().css.setMany(ROOTcss).attr.set("tabindex", "0");
+  host.empty().css.setMany(ROOTcss).attrs.set("tabindex", "0");
   const canvas = host.create.canvas().css.setMany(CANVAScss);
   canvas.canvas.width.set(W); canvas.canvas.height.set(H);
 
