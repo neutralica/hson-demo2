@@ -108,7 +108,7 @@ function create_view(host: LiveTree, roomId: string): TowlView & Readonly<{ root
   host.empty();
   const root = host.create.section().attrs.setMany({ "data-demo-towl": "true", "data-testid": "towl-root" }).css.setMany(TOWL_ROOT_CSS);
   const card = root.create.div().css.setMany(TOWL_CARD_CSS);
-  card.create.h1().text.set("TOWL").css.setMany(TOWL_TITLE_CSS);
+  card.create.h1().text.set("tug of war live").css.setMany(TOWL_TITLE_CSS);
 
   const roomRow = card.create.div().css.setMany(TOWL_ROOM_CSS);
   const room = roomRow.create.span().attrs.set("data-testid", "towl-room").text.set(`room ${roomId}`);
