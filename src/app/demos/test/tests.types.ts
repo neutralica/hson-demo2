@@ -67,6 +67,35 @@ export type TestEvent =
     assertRows?: readonly TestAssertRow[];
     expected?: TestExpected;
     metaPatch?: Record<string, string>; // ADDED
+  }
+  | {
+    t: "external_state";
+    id: string;
+    suite: string;
+    name: string;
+    subject: TestSubject;
+    runtime: string;
+    executableChecks: number;
+    collections: readonly string[];
+    status: "queued" | "running";
+  }
+  | {
+    t: "external_end";
+    id: string;
+    suite: string;
+    name: string;
+    subject: TestSubject;
+    runtime: string;
+    executableChecks: number;
+    collections: readonly string[];
+    status: "pass" | "fail";
+    ms: number;
+    stdout: string;
+    stderr: string;
+    exitCode: number | null;
+    signal: string | null;
+    timedOut: boolean;
+    spawnError?: string;
   };
 
 export type TestFailure = Readonly<{

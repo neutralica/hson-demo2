@@ -31,31 +31,83 @@ test("hosted panel discovers curated categories and runs one canonical category"
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
   await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
-  await expect(page.getByTestId("hosted-test-executor")).toContainText("2103 tests");
+  await expect(page.getByTestId("hosted-test-executor")).toContainText("2103 canonical cases");
+  await open_demo(page, "test");
 
   const selector = page.locator("#test-select");
-  await expect(selector.locator("option").first()).toContainText("All discovered tests (2103)");
-  await expect(selector.locator('option[value^="suite:"]')).toHaveCount(0);
-  await expect(selector.locator('option[value^="test:"]')).toHaveCount(0);
-  await expect(selector.locator('option[value="subject:transform"]')).toContainText("Transform (362)");
-  await expect(selector.locator('option[value="collection:dev"]')).toContainText("Dev (32)");
-  await expect(page.locator("#test-targeted-suite").locator('option[value^="suite:"]')).not.toHaveCount(0);
   const targetedSuite = page.locator("#test-targeted-suite");
   const targetedCase = page.locator("#test-targeted-case");
+  await expect(selector.locator("option").first()).toHaveText("all (2605)");
+  await expect(selector.locator("option")).toHaveText(
+    await selector.locator("option").allTextContents().then((labels) => labels.map((label) => label.toLowerCase())),
+  );
+  await expect(selector.locator('option[value^="suite:"]')).toHaveCount(0);
+  await expect(selector.locator('option[value^="test:"]')).toHaveCount(0);
+  await expect(selector.locator('option[value="subject:transform"]')).toHaveText("transform (503)");
+  await expect(selector.locator('option[value="collection:dev"]')).toHaveText("dev (37)");
+  await expect(selector.locator('option[value="collection:library"]')).toHaveCount(0);
+  await expect(targetedSuite).toBeDisabled();
+  await expect(targetedSuite).toHaveValue("");
+  await expect(targetedSuite.locator("option")).toHaveText(["all suites"]);
+  await expect(targetedCase).toBeDisabled();
+  await expect(targetedCase).toHaveValue("");
+  await expect(targetedCase.locator("option")).toHaveText(["all cases"]);
+
+  await selector.selectOption("subject:livetree");
+  await expect(targetedSuite).toBeEnabled();
+  await expect(targetedSuite.locator("option").first()).toHaveText(/^all livetree suites \(\d+\)$/);
+  await expect(targetedSuite.locator('option[value^="suite:livemap/"]')).toHaveCount(0);
+  await expect(targetedCase).toBeDisabled();
   await targetedSuite.selectOption("suite:livetree/canvas-clear");
   await expect(targetedCase).toBeEnabled();
-  await expect(targetedCase.locator("option").first()).toHaveText("Entire suite");
+  await expect(targetedCase.locator("option").first()).toHaveText("all cases (3)");
   await expect(targetedCase.locator('option[value^="test:livetree/canvas-clear::"]')).toHaveCount(3);
   await targetedCase.selectOption({ index: 1 });
   await expect(panel).toHaveAttribute("data-hosted-selection-count", "1");
-  await targetedSuite.selectOption("suite:livemap/replay");
+  await targetedSuite.selectOption("suite:livetree/canvas");
   await expect(targetedCase).toHaveValue("");
-  await selector.selectOption("collection:dev");
-  await expect(panel).toHaveAttribute("data-hosted-selection-count", "32");
+  await targetedSuite.selectOption("");
+  await expect(targetedCase).toBeDisabled();
+  await expect(targetedCase).toHaveValue("");
+
+  await selector.selectOption("subject:livehost");
+  await expect(targetedSuite).toBeEnabled();
+  await targetedSuite.selectOption("suite:library::livehost.authority");
+  await expect(targetedCase).toBeDisabled();
+  await expect(targetedCase.locator("option")).toHaveText(["all cases (19)"]);
+
+  await selector.selectOption("all");
+  await expect(targetedSuite).toBeDisabled();
+  await expect(targetedSuite).toHaveValue("");
+  await expect(targetedCase).toBeDisabled();
+  await expect(targetedCase).toHaveValue("");
+
+  await selector.selectOption("subject:livetree");
+  await expect(targetedSuite).toBeEnabled();
+  await expect(targetedCase).toBeDisabled();
+  await targetedSuite.selectOption("suite:livetree/canvas-clear");
+  await expect(targetedCase).toBeEnabled();
+  await expect(targetedCase).toHaveValue("");
+  await expect(panel).toHaveAttribute("data-hosted-selection-count", "3");
   await page.locator("#test-run").click();
 
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "1");
   await expect(page.locator("#test-logger")).toContainText("elapsed", { timeout: 15_000 });
+  await expect(page.locator("#test-logger")).toContainText("pass livetree/canvas-clear — 3 cases");
   await expect(page.locator("#test-case-pane [data-hosted-suite]")).toHaveCount(1);
+
+  await selector.selectOption("subject:livehost");
+  await targetedSuite.selectOption("suite:library::livehost.authority");
+  await page.locator("#test-run").click();
+  await expect(panel).toHaveAttribute("data-hosted-execution-count", "2");
+  await expect(page.locator("#test-logger")).toContainText(
+    "pass library::livehost.authority — 19 cases",
+    { timeout: 15_000 },
+  );
+  await expect(page.locator("#test-logger")).not.toContainText("ok 1 -");
+  const externalRow = page.locator('[data-hosted-suite="library::livehost.authority"]');
+  await externalRow.click();
+  await expect(page.locator(".hosted-external-output")).toContainText("ok 1 -");
+  await expect(page.locator("#test-chips .test-chip-value")).toHaveText(["19", "19", "0", /\d/]);
   assertNoErrors();
 });

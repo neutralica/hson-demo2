@@ -25,6 +25,9 @@ export function normalize_test_event(
   if (event.t === "suite_end") {
     return Object.freeze({ type: "suite-finished", suite: event.suite, durationMs: event.ms });
   }
+  if (event.t === "external_end" || event.t === "external_state") {
+    throw new Error(`External launcher events are not canonical TestCase events: ${event.id}`);
+  }
   const descriptor = descriptorFor(event.suite, event.name);
   if (descriptor === undefined) throw new Error(`No canonical descriptor for ${event.suite}::${event.name}`);
   if (event.t === "case_begin") {

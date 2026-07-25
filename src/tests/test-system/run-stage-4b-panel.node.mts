@@ -2,18 +2,41 @@ import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate } from "../../app/demos/test/hosted-test-panel-adapter";
 import {
   hosted_test_panel_selected_ids,
+  hosted_test_panel_display_label,
   hosted_test_panel_primary_choices,
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
 } from "../../app/demos/test/hosted-test-panel-selection";
+import type { ExternalLibraryLauncherTarget } from "../../test-system/external-library-launchers";
 import { decode_selected_hosted_test_run_response } from "../../app/hosted-test/hosted-test-client-action";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import { make_test_executor_registry, type TestExecutorDescriptor } from "../../test-system/test-executor";
 import { make_in_memory_hosted_test_runtime } from "../livehost-tests/in-memory-hosted-test-panel-runtime";
+import { visible_external_launcher_stderr } from "../../app/demos/test/hosted-test-report-view";
 
 function expect_panel(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 4B panel: ${message}`);
 }
+
+const bootstrapStderr = [
+  "(node:123) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:",
+  "--import 'data:text/javascript,register(\"ts-node/esm\")'",
+  "(Use `node --trace-warnings ...` to show where the warning was created)",
+  "(node:123) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.",
+  "(Use `node --trace-deprecation ...` to show where the warning was created)",
+  "meaningful warning",
+].join("\n");
+expect_panel(
+  visible_external_launcher_stderr(bootstrapStderr) === "meaningful warning"
+    && bootstrapStderr.includes("ExperimentalWarning"),
+  "visible stderr removes only known ts-node/esm bootstrap blocks while raw diagnostics remain unchanged",
+);
+const originalReportName = "Original Report Name";
+expect_panel(
+  hosted_test_panel_display_label(originalReportName) === "original report name"
+    && originalReportName === "Original Report Name",
+  "lowercase selector projection does not mutate report-facing names",
+);
 
 let executions = 0;
 const alphaCase: TestCase = Object.freeze({
@@ -59,17 +82,42 @@ function executor(kind: "node" | "cloudflare-worker"): TestExecutorDescriptor {
 
 const nodeRegistry = make_test_executor_registry(executor("node"), fixtureSuites);
 const workerRegistry = make_test_executor_registry(executor("cloudflare-worker"), fixtureSuites);
+const externalTarget = Object.freeze({
+  id: "library::livehost.authority",
+  launcherId: "livehost.authority",
+  subject: "livehost",
+  displayName: "Exclusive LiveHost authority",
+  runtime: "node",
+  executableChecks: 19,
+  collections: Object.freeze(["authority"]),
+}) satisfies ExternalLibraryLauncherTarget;
 for (const registry of [nodeRegistry, workerRegistry]) {
-  const choices = hosted_test_panel_primary_choices(registry.catalog.tests);
-  expect_panel(choices[0]?.key === "all", `${registry.executor.kind} projection begins with all discovered tests`);
+  const targets = registry.executor.kind === "node" ? Object.freeze([externalTarget]) : Object.freeze([]);
+  const choices = hosted_test_panel_primary_choices(registry.catalog.tests, targets);
+  const expectedAllCases = registry.catalog.tests.length + (registry.executor.kind === "node" ? 19 : 0);
+  expect_panel(
+    choices[0]?.key === "all"
+      && choices[0].label === `all (${expectedAllCases})`
+      && !choices.some((choice) => choice.label.includes("All discovered tests")),
+    `${registry.executor.kind} projection begins with the quiet all label`,
+  );
   expect_panel(
     choices.map((choice) => choice.key).join("|") === "all|subject:livehost",
     `${registry.executor.kind} primary projection is curated`,
   );
   expect_panel(
-    hosted_test_panel_suite_choices(registry.catalog.tests).map((choice) => choice.key).join("|")
-      === "suite:alpha/suite|suite:beta/suite",
-    `${registry.executor.kind} targeted suites sort alphabetically outside the primary projection`,
+    choices.every((choice) => hosted_test_panel_display_label(choice.label) === hosted_test_panel_display_label(choice.label).toLowerCase()),
+    `${registry.executor.kind} visible primary labels are lowercase`,
+  );
+  const livehostPrimary = choices.find((choice) => choice.key === "subject:livehost");
+  expect_panel(livehostPrimary !== undefined, `${registry.executor.kind} exposes the fixture category`);
+  expect_panel(
+    hosted_test_panel_suite_choices(registry.catalog.tests, targets, livehostPrimary.selection)
+      .map((choice) => choice.key).join("|")
+      === (registry.executor.kind === "node"
+        ? "suite:beta/suite|suite:library::livehost.authority"
+        : "suite:beta/suite"),
+    `${registry.executor.kind} suite choices are filtered to the active primary category`,
   );
   const betaChoices = hosted_test_panel_test_choices(registry.catalog.tests, "beta/suite");
   expect_panel(
@@ -79,15 +127,28 @@ for (const registry of [nodeRegistry, workerRegistry]) {
     `${registry.executor.kind} targeted cases contain only the selected suite in deterministic order`,
   );
   expect_panel(
+    betaChoices.every((choice) => hosted_test_panel_display_label(choice.label) === choice.label.toLowerCase())
+      && betaChoices[0]?.selection.kind === "test"
+      && betaChoices[0].selection.testId === "beta/suite::second",
+    `${registry.executor.kind} lowercase display projection does not mutate canonical IDs`,
+  );
+  expect_panel(
     hosted_test_panel_test_choices(registry.catalog.tests, "alpha/suite")
       .every((choice) => !betaChoices.some((beta) => beta.key === choice.key)),
     `${registry.executor.kind} changing suites cannot retain a stale case choice`,
   );
-  const all = hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "all" });
+  const all = hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "all" }, targets);
   const subject = hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "subject", subject: "livehost" });
   const suite = hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "suite", suite: "beta/suite" });
   const exact = hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "test", testId: "alpha/suite::first" });
-  expect_panel(all.length === 3 && new Set(all).size === 3, `${registry.executor.kind} all selection is duplicate-free`);
+  expect_panel(
+    all.length === (registry.executor.kind === "node" ? 4 : 3) && new Set(all).size === all.length,
+    `${registry.executor.kind} all selection is duplicate-free`,
+  );
+  expect_panel(
+    all.filter((id) => id.startsWith("library::")).length === (registry.executor.kind === "node" ? 1 : 0),
+    `${registry.executor.kind} all includes each available external target exactly once`,
+  );
   expect_panel(subject.join() === "beta/suite::second", `${registry.executor.kind} subject projection is exact`);
   expect_panel(suite.join("|") === "beta/suite::second|beta/suite::third", `${registry.executor.kind} suite projection is exact`);
   expect_panel(exact.join() === "alpha/suite::first", `${registry.executor.kind} exact-test projection preserves the stable ID`);
@@ -95,6 +156,27 @@ for (const registry of [nodeRegistry, workerRegistry]) {
     hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "suite", suite: "missing" }).length === 0,
     `${registry.executor.kind} empty selections remain empty`,
   );
+  if (registry.executor.kind === "node") {
+    expect_panel(
+      !choices.some((choice) => choice.key === "collection:library" || choice.label.includes("library verification")),
+      "library verification is absent from the primary selector",
+    );
+    const librarySuites = hosted_test_panel_suite_choices(registry.catalog.tests, targets, livehostPrimary.selection)
+      .filter((choice) => choice.key.startsWith("suite:library::"));
+    expect_panel(
+      librarySuites.length === 1
+        && librarySuites[0]?.label === "library · Exclusive LiveHost authority (19)"
+        && hosted_test_panel_display_label(librarySuites[0].label)
+          === "library · exclusive livehost authority (19)",
+      "external suite label is lowercased for display without mutating launcher metadata",
+    );
+    expect_panel(
+      hosted_test_panel_test_choices(registry.catalog.tests, externalTarget.id, targets).length === 0,
+      "external launcher exposes no fabricated internal case choices",
+    );
+    expect_panel(hosted_test_panel_selected_ids(registry.catalog.tests, livehostPrimary.selection, targets)
+      .includes(externalTarget.id), "all livehost suites includes the external suite");
+  }
 }
 
 const runtime = make_in_memory_hosted_test_runtime(make_hosted_test_suite_registry([]), nodeRegistry);

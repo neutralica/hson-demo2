@@ -1,6 +1,6 @@
 # Hosted-test deployment
 
-## Architecture discovered
+## Architecture
 
 The browser application is a static Vite build. The repository contains no
 provider manifest, container, process declaration, or deployment workflow. The
@@ -105,3 +105,32 @@ persistent Node service, set its build context and start command, attach a
 public TLS hostname, enable WebSocket forwarding, then set
 `VITE_HOSTED_TEST_WS_URL` in the frontend build settings and rebuild the static
 site.
+
+## Hosted-test timing boundaries
+
+Hosted-test durations use the monotonic `performance.now()` clock:
+
+- `canonical phase` begins when the canonical executor task starts and ends
+  when that task becomes terminal, including a reported failure.
+- `external phase` begins when the external pool task starts and ends after
+  every selected launcher has closed and reported.
+- `runner` or `hosted total` begins when the accepted selection is dispatched
+  to the combined Node runner and ends after both execution phases are
+  terminal.
+- `host` begins immediately before the host invokes the runner and ends when
+  the runner returns, immediately before the terminal report commit.
+- Panel `elapsed` begins when the panel accepts the user's run action, before
+  dispatch, and ends after the terminal mirrored report has been applied. It
+  includes action round-trip and final report application, but excludes
+  application boot and discovery.
+
+The reproducible performance probe is:
+
+```sh
+npm run test:hosted-performance-node -- --repeats=3 --policies=fixed:1,fixed:2 --invocation=tsx
+```
+
+Each sample runs the same 2,605-case inclusive selection in a fresh Node
+process. The matrix driver reports phase medians, inclusive median and range,
+observed concurrency, launcher starts, and pass/fail totals. Timing values are
+diagnostic measurements, not correctness thresholds.

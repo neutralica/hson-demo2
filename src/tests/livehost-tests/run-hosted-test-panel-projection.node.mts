@@ -3,6 +3,16 @@ import type { HostedTestCaseReport, HostedTestReport } from "../../app/hosted-te
 import type { HostedTestPanelReportUpdate } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_hosted_test_case_list, type HostedTestFrameScheduler } from "../../app/demos/test/hosted-test-case-list";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import {
+  hosted_test_projection_footer,
+  hosted_test_projection_summary,
+} from "../../app/demos/test/hosted-test-report-summary";
+import {
+  hosted_external_launcher_log_projection,
+  serialize_hosted_run_report,
+} from "../../app/demos/test/hosted-test-report-view";
+import { create_test_chips } from "../../app/demos/test/test-helpers";
+import { TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "../../app/demos/test/tp.css";
 
 function expect_projection(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted panel projection: ${message}`);
@@ -12,7 +22,39 @@ function test_case(suite: string, name: string, status: HostedTestCaseReport["st
   return Object.freeze({ key: `${suite}::${name}`, suite, name, status, ms: 1, err: status === "fail" ? "expected" : null });
 }
 
-function report(cases: number, pass: number, fail: number, terminal = false): HostedTestReport {
+function external_result(
+  id: string,
+  executableChecks: number,
+  status: "queued" | "running" | "pass" | "fail",
+  ms = 1,
+): HostedTestReport["externalResults"][string] {
+  return Object.freeze({
+    id,
+    suite: id,
+    name: id.slice("library::".length),
+    subject: "livehost",
+    runtime: "node",
+    executableChecks,
+    collections: Object.freeze(["library"]),
+    status,
+    ms,
+    stdout: status === "pass" || status === "fail" ? "verbatim stdout\n" : "",
+    stderr: status === "fail" ? "meaningful stderr\n" : "",
+    exitCode: status === "pass" ? 0 : status === "fail" ? 1 : null,
+    signal: null,
+    timedOut: false,
+    spawnError: null,
+  });
+}
+
+function report(
+  cases: number,
+  pass: number,
+  fail: number,
+  terminal = false,
+  externalResults: HostedTestReport["externalResults"] = Object.freeze({}),
+  caseBatches: HostedTestReport["caseBatches"] = Object.freeze({}),
+): HostedTestReport {
   return Object.freeze({
     run: Object.freeze({
       suite: "hosted/all",
@@ -22,8 +64,9 @@ function report(cases: number, pass: number, fail: number, terminal = false): Ho
       timing: terminal ? Object.freeze({ runnerMs: 1, hostMs: 2 }) : null,
     }),
     summary: Object.freeze({ cases, pass, fail, skip: 0 }),
-    caseBatches: Object.freeze({}),
+    caseBatches,
     suites: Object.freeze([]),
+    externalResults,
     error: null,
   });
 }
@@ -130,6 +173,243 @@ try {
   replacement.ingest(update(report(1, 1, 0, true), [test_case("suite/new", "fresh")], [{ suite: "suite/new", ms: 1 }], true));
   expect_projection(replacement.snapshot().cases === 1 && replacement.snapshot().metrics.visibleCaseRows === 0, "a rerun owns a fresh collapsed projection");
   replacement.dispose();
+
+  const externalProjection = make_hosted_test_case_list(host, { async view() {}, async copy() {} }, scheduler);
+  const passing = external_result("library::livehost.persistence", 16, "pass", 1010);
+  const failing = external_result("library::livehost.protocol-document", 8, "fail", 946);
+  const queuedPassing = external_result(passing.id, 16, "queued");
+  const queuedFailing = external_result(failing.id, 8, "queued");
+  externalProjection.ingest(update(report(0, 0, 0, false, Object.freeze({
+    [queuedPassing.id]: queuedPassing,
+    [queuedFailing.id]: queuedFailing,
+  })), []));
+  externalProjection.flush();
+  const queuedSnapshot = externalProjection.snapshot();
+  const externalRowsBefore = Array.from(runtime.document.querySelectorAll("[data-hosted-suite]"));
+  expect_projection(
+    queuedSnapshot.statusesBySuite[passing.id] === "queued"
+      && queuedSnapshot.statusesBySuite[failing.id] === "queued"
+      && externalRowsBefore.map((row) => row.getAttribute("data-hosted-suite")).join(",")
+        === `${passing.id},${failing.id}`,
+    "external rows exist in deterministic selection order before processes finish",
+  );
+  const runningPassing = external_result(passing.id, 16, "running");
+  const runningFailing = external_result(failing.id, 8, "running");
+  externalProjection.ingest(update(report(0, 0, 0, false, Object.freeze({
+    [runningPassing.id]: runningPassing,
+    [runningFailing.id]: runningFailing,
+  })), []));
+  externalProjection.flush();
+  expect_projection(
+    externalProjection.snapshot().statusesBySuite[passing.id] === "running"
+      && Array.from(runtime.document.querySelectorAll("[data-hosted-suite]"))
+        .every((row, index) => row === externalRowsBefore[index]),
+    "queued rows transition to running in place without changing DOM identity",
+  );
+  externalProjection.ingest(update(report(1, 1, 0, false, Object.freeze({
+    [passing.id]: passing,
+    [runningFailing.id]: runningFailing,
+  })), []));
+  externalProjection.flush();
+  expect_projection(
+    externalProjection.snapshot().statusesBySuite[passing.id] === "pass"
+      && externalProjection.snapshot().statusesBySuite[failing.id] === "running",
+    "one launcher completion is projected before the complete selection settles",
+  );
+  const externalOnlyReport = report(2, 1, 1, true, Object.freeze({
+    [passing.id]: passing,
+    [failing.id]: failing,
+  }));
+  externalProjection.ingest(update(externalOnlyReport, [], [
+    { suite: passing.suite, ms: passing.ms },
+    { suite: failing.suite, ms: failing.ms },
+  ], true));
+  const externalSnapshot = externalProjection.snapshot();
+  expect_projection(externalSnapshot.cases === 0 && externalSnapshot.launchers === 2, "external launchers do not enter canonical case totals");
+  expect_projection(externalSnapshot.summariesBySuite[passing.id] === "16 cases · pass", "passing external suite displays its manifest case count");
+  expect_projection(externalSnapshot.summariesBySuite[failing.id] === "8 cases · fail", "failing external suite displays its case count and process-authoritative status");
+  externalProjection.set_expanded(passing.id, true);
+  expect_projection(
+    runtime.document.querySelector(`[data-hosted-suite="${passing.id}"]`) === externalRowsBefore[0]
+      && runtime.document.querySelector(
+        `[data-hosted-suite="${passing.id}"] + .hosted-case-block .hosted-external-output`,
+      )?.textContent?.includes("verbatim stdout") === true,
+    "passing raw stdout remains available behind the stable suite disclosure",
+  );
+  expect_projection(
+    Array.from(runtime.document.querySelectorAll(".hosted-external-output"))
+      .some((element) => element.textContent?.includes("meaningful stderr")),
+    "failed launcher output remains visible beneath its failing suite",
+  );
+  const passingLog = hosted_external_launcher_log_projection(passing);
+  const failingLog = hosted_external_launcher_log_projection(failing);
+  expect_projection(
+    passingLog.line.startsWith(`pass ${passing.id}`)
+      && passingLog.failureDiagnostics.length === 0
+      && !passingLog.line.includes("verbatim stdout"),
+    "passing TAP stdout is not dumped into the ordinary concise log",
+  );
+  expect_projection(
+    failingLog.line.startsWith(`fail ${failing.id}`)
+      && failingLog.failureDiagnostics.join("\n").includes("meaningful stderr")
+      && failingLog.failureDiagnostics.join("\n").includes("verbatim stdout"),
+    "failing launcher output remains in visible failure diagnostics",
+  );
+  const externalSummary = hosted_test_projection_summary(externalOnlyReport);
+  const externalFooter = hosted_test_projection_footer(externalSummary, 1956);
+  expect_projection(
+    externalFooter.map((entry) => entry.label).join("|")
+      === "cases|passed|failed|elapsed"
+      && externalFooter.slice(0, 3).map((entry) => entry.value).join("|") === "24|16|1 suite",
+    "external-only footer uses stable ordinary case terminology without fabricated failed cases",
+  );
+
+  const mixedReport = report(
+    1,
+    1,
+    0,
+    true,
+    Object.freeze({ [passing.id]: passing }),
+    Object.freeze({ "000001": Object.freeze([test_case("suite/canonical", "ordinary")]) }),
+  );
+  const mixedSummary = hosted_test_projection_summary(mixedReport);
+  const mixedFooter = hosted_test_projection_footer(mixedSummary, 10);
+  expect_projection(
+    mixedFooter.map((entry) => entry.label).join("|")
+      === "cases|passed|failed|elapsed"
+      && mixedFooter.slice(0, 3).map((entry) => entry.value).join("|") === "17|17|0"
+      && !mixedFooter.some((entry) => entry.label === "canonical cases" || entry.label === "library cases"),
+    "an all-green mixed summary presents one ordinary case total",
+  );
+  const allGreenFooter = hosted_test_projection_footer(Object.freeze({
+    canonical: Object.freeze({ total: 2103, pass: 2103, fail: 0, skip: 0 }),
+    launchers: Object.freeze({ total: 28, pass: 28, fail: 0, declaredChecks: 502, passedChecks: 502 }),
+  }), 10);
+  expect_projection(
+    allGreenFooter.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`).join("|")
+      === "cases:2605|passed:2605|failed:0",
+    "the complete successful mixed run displays 2,605 total and passed cases",
+  );
+  expect_projection(
+    externalSnapshot.summariesBySuite[passing.id]?.startsWith("16 cases · pass") === true
+      && passing.id.startsWith("library::"),
+    "external suite rows retain their library source identity",
+  );
+
+  const failedMixedReport = report(
+    2,
+    1,
+    1,
+    true,
+    Object.freeze({ [failing.id]: failing }),
+    Object.freeze({ "000001": Object.freeze([test_case("suite/canonical", "ordinary")]) }),
+  );
+  const failedMixedFooter = hosted_test_projection_footer(
+    hosted_test_projection_summary(failedMixedReport),
+    10,
+  );
+  expect_projection(
+    failedMixedFooter.map((entry) => entry.label).join("|") === "cases|passed|failed|elapsed"
+      && failedMixedFooter.find((entry) => entry.label === "failed")?.value === "1 suite"
+      && failedMixedFooter.find((entry) => entry.label === "passed")?.value === 1
+      && failedMixedFooter.find((entry) => entry.label === "failed")?.value !== failing.executableChecks,
+    "a failed external suite is identified without fabricating failed internal cases",
+  );
+
+  const canonicalFooter = hosted_test_projection_footer(hosted_test_projection_summary(
+    report(1, 1, 0, true, Object.freeze({}), Object.freeze({
+      "000001": Object.freeze([test_case("suite/canonical", "ordinary")]),
+    })),
+  ), 10);
+  expect_projection(
+    canonicalFooter.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`).join("|")
+      === "cases:1|passed:1|failed:0",
+    "canonical-only and Worker-compatible summaries retain their ordinary counters",
+  );
+
+  const copiedMixed = await serialize_hosted_run_report(
+    mixedReport,
+    Object.freeze({
+      runId: "projection-run",
+      suite: "canonical/selected",
+      testIds: Object.freeze(["canonical-id", passing.id]),
+      ok: true,
+      summary: Object.freeze({
+        suites: 2,
+        cases: 2,
+        pass: 2,
+        fail: 0,
+        skip: 0,
+        msTotal: 10,
+        failures: Object.freeze([]),
+      }),
+      timing: Object.freeze({ runnerMs: 10, hostMs: 10, roundTripMs: 10 }),
+    }),
+    async () => { throw new Error("passing report should not inspect diagnostics"); },
+  );
+  expect_projection(
+    copiedMixed.includes("canonical cases: 1 passed")
+      && copiedMixed.includes("library suites: 1/1 passed")
+      && copiedMixed.includes(passing.id)
+      && mixedReport.externalResults[passing.id]?.runtime === "node",
+    "copied and raw reports preserve canonical versus external execution provenance",
+  );
+
+  const allLaunchers = Object.freeze(Object.fromEntries(Array.from({ length: 28 }, (_, index) => {
+    const id = `library::launcher-${index}`;
+    return [id, external_result(id, index === 27 ? 502 - 27 : 1, "pass")];
+  })));
+  const allSummary = hosted_test_projection_summary(report(28, 28, 0, true, allLaunchers));
+  expect_projection(
+    allSummary.canonical.total === 0
+      && allSummary.launchers.total === 28
+      && allSummary.launchers.pass === 28
+      && allSummary.launchers.declaredChecks === 502,
+    "28-suite projection reports 28 passed library suites and 502 manifest cases without fabricated structured cases",
+  );
+  externalProjection.dispose();
+
+  const chipHost = host.create.div();
+  const chipDisplay = create_test_chips(chipHost);
+  const chipNodes = Array.from(runtime.document.querySelectorAll("#test-chips .test-chip"));
+  chipDisplay.renderEntries([
+    { label: "cases", value: 9 },
+    { label: "passed", value: 8 },
+    { label: "failed", value: 1 },
+    { label: "elapsed", value: "9 ms" },
+  ]);
+  const metricsAfterFirstChipUpdate = chipDisplay.metrics();
+  chipDisplay.renderEntries([
+    { label: "cases", value: 2605 },
+    { label: "passed", value: 2605 },
+    { label: "failed", value: 0 },
+    { label: "elapsed", value: "15.0 s" },
+  ]);
+  const metricsAfterSecondChipUpdate = chipDisplay.metrics();
+  chipDisplay.renderEntries([
+    { label: "cases", value: 2605 },
+    { label: "passed", value: 2605 },
+    { label: "failed", value: 0 },
+    { label: "elapsed", value: "15.0 s" },
+  ]);
+  expect_projection(
+    Array.from(runtime.document.querySelectorAll("#test-chips .test-chip"))
+      .every((node, index) => node === chipNodes[index])
+      && chipDisplay.metrics().layoutBuilds === 1,
+    "summary DOM identity remains stable across progressive and terminal updates",
+  );
+  expect_projection(
+    chipDisplay.metrics().valueUpdates === metricsAfterSecondChipUpdate.valueUpdates
+      && metricsAfterSecondChipUpdate.valueUpdates > metricsAfterFirstChipUpdate.valueUpdates,
+    "summary values update only when their displayed value changes",
+  );
+  expect_projection(
+    TEST_CHIP_ROWcss.gridTemplateColumns === "repeat(4, minmax(9ch, 1fr))"
+      && TEST_CHIP_VALUEcss.fontVariantNumeric === "tabular-nums"
+      && TEST_CHIP_VALUEcss.minWidth === "8ch",
+    "summary geometry is fixed and uses stable tabular numeric widths",
+  );
+  chipHost.remove();
 
   console.log(JSON.stringify({
     collapsedSuiteRows: collapsed.metrics.suiteRowsCreated,

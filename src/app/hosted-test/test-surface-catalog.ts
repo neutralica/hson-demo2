@@ -93,6 +93,8 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:stage5a-corpus-node": "src/tests/test-system/run-stage-5a-corpus.node.mts",
   "test:stage5b-dom-node": "src/tests/test-system/run-stage-5b-dom.node.mts",
   "test:stage5c-closeout-node": "src/tests/test-system/run-stage-5c-closeout.node.mts",
+  "test:external-library-node": "src/tests/test-system/run-external-library-launchers.node.mts",
+  "test:external-library-all-node": "src/tests/test-system/run-external-library-launchers.node.mts",
 } as const);
 
 function category_for(name: string): TestSurfaceCategory {

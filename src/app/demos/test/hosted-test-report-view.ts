@@ -2,9 +2,57 @@ import type { HostedTestCaseDiagnostic, HostedTestPanelRunResult } from "../../h
 import type { HostedTestReport } from "../../hosted-test/hosted-test-report.types";
 import { hosted_test_report_cases } from "../../hosted-test/hosted-test-report.types";
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
+import { hosted_test_projection_summary } from "./hosted-test-report-summary";
+
+type ExternalLauncherReport = HostedTestReport["externalResults"][string];
 
 function escape_html(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+
+/**
+ * Removes only the known ts-node/esm bootstrap notices from the panel's
+ * visible stderr. The report retains the original stderr verbatim.
+ */
+export function visible_external_launcher_stderr(stderr: string): string {
+  const lines = stderr.split("\n");
+  const visible: string[] = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    if (/^\(node:\d+\) ExperimentalWarning: `--experimental-loader` may be removed/.test(line)
+      && lines[index + 1]?.includes("register(\"ts-node/esm\"")) {
+      index += 1;
+      if (lines[index + 1]?.startsWith("(Use `node --trace-warnings")) index += 1;
+      continue;
+    }
+    if (/^\(node:\d+\) \[DEP0180\] DeprecationWarning: fs\.Stats constructor is deprecated\.$/.test(line)) {
+      if (lines[index + 1]?.startsWith("(Use `node --trace-deprecation")) index += 1;
+      continue;
+    }
+    visible.push(line);
+  }
+  return visible.join("\n");
+}
+
+export function hosted_external_launcher_log_projection(
+  launcher: ExternalLauncherReport,
+): Readonly<{ line: string; failureDiagnostics: readonly string[] }> {
+  const prefix = launcher.status === "running" ? "run " : launcher.status.padEnd(4);
+  const line = `${prefix} ${launcher.id} — ${launcher.executableChecks} cases${launcher.status === "pass" || launcher.status === "fail"
+    ? ` — ${format_hosted_test_duration(launcher.ms)}`
+    : ""}`;
+  if (launcher.status !== "fail") {
+    return Object.freeze({ line, failureDiagnostics: Object.freeze([]) });
+  }
+  const visibleStderr = visible_external_launcher_stderr(launcher.stderr);
+  return Object.freeze({
+    line,
+    failureDiagnostics: Object.freeze([
+      ...(launcher.stdout ? [`stdout\n${launcher.stdout}`] : []),
+      ...(visibleStderr ? [`stderr\n${visibleStderr}`] : []),
+      ...(launcher.spawnError ? [`spawn error\n${launcher.spawnError}`] : []),
+    ]),
+  });
 }
 
 export function serialize_hosted_case_diagnostic(diagnostic: HostedTestCaseDiagnostic): string {
@@ -66,12 +114,33 @@ export async function serialize_hosted_run_report(
   inspect: (caseKey: string) => Promise<HostedTestCaseDiagnostic>,
 ): Promise<string> {
   const cases = hosted_test_report_cases(report);
+  const external = Object.values(report.externalResults);
+  const summary = hosted_test_projection_summary(report);
   const lines = [
     `${result.suite} :: ${result.runId}`,
-    `${result.ok ? "PASS" : "FAIL"} ${result.summary.pass}/${result.summary.cases} · round trip ${format_hosted_test_duration(result.timing.roundTripMs)} · runner ${format_hosted_test_duration(result.timing.runnerMs)} · host ${format_hosted_test_duration(result.timing.hostMs)}`,
+    `${result.ok ? "PASS" : "FAIL"} · round trip ${format_hosted_test_duration(result.timing.roundTripMs)} · runner ${format_hosted_test_duration(result.timing.runnerMs)} · host ${format_hosted_test_duration(result.timing.hostMs)}`,
+    ...(summary.canonical.total > 0
+      ? [`canonical cases: ${summary.canonical.pass} passed · ${summary.canonical.fail} failed · ${summary.canonical.skip} skipped`]
+      : []),
+    ...(summary.launchers.total > 0
+      ? [`library suites: ${summary.launchers.pass}/${summary.launchers.total} passed · ${summary.launchers.fail} failed · ${summary.launchers.declaredChecks} cases`]
+      : []),
     "",
     ...cases.map((testCase) => `${testCase.status.toUpperCase().padEnd(4)} ${format_hosted_test_duration(testCase.ms).padStart(9)} ${testCase.suite} :: ${testCase.name}${testCase.err ? ` — ${testCase.err}` : ""}`),
   ];
+  for (const launcher of external) {
+    lines.push(
+      "",
+      `${launcher.id} — ${launcher.executableChecks} cases · ${launcher.status} — ${format_hosted_test_duration(launcher.ms)}`,
+      `launcher: ${launcher.id}`,
+      `runtime: ${launcher.runtime}`,
+      `exit: ${launcher.exitCode ?? "none"}${launcher.signal ? ` signal ${launcher.signal}` : ""}${launcher.timedOut ? " timeout" : ""}`,
+      "stdout:",
+      launcher.stdout,
+      "stderr:",
+      launcher.stderr,
+    );
+  }
   const failed = cases.filter((testCase) => testCase.status === "fail");
   for (let offset = 0; offset < failed.length; offset += 4) {
     const batch = failed.slice(offset, offset + 4);

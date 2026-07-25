@@ -43,6 +43,23 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       err: s.string.nullable,
     }))),
     suites: s.array(s.exact({ suite: s.string, ms: finiteNumber })),
+    externalResults: s.record(s.exact({
+      id: s.string,
+      suite: s.string,
+      name: s.string,
+      subject: s.string,
+      runtime: s.string,
+      executableChecks: nonNegativeInteger,
+      collections: s.array(s.string),
+      status: s.pick("queued", "running", "pass", "fail"),
+      ms: finiteNumber,
+      stdout: s.string,
+      stderr: s.string,
+      exitCode: s.number.nullable,
+      signal: s.string.nullable,
+      timedOut: s.boolean,
+      spawnError: s.string.nullable,
+    })),
     error: s.exact({ message: s.string }).nullable,
   });
 });
@@ -63,6 +80,7 @@ export function make_initial_hosted_test_report(
     summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
     caseBatches: {},
     suites: [],
+    externalResults: {},
     error: null,
   };
 }
@@ -255,6 +273,54 @@ export function make_hosted_test_report(
 
       if (event.t === "suite_end") {
         flush_pending_cases({ suite: event.suite, ms: finite_or_zero(event.ms) });
+        return;
+      }
+
+      if (event.t === "external_end") {
+        flush_pending_cases();
+        map.setMany(["externalResults"], {
+          [event.id]: {
+            id: event.id,
+            suite: event.suite,
+            name: event.name,
+            subject: event.subject,
+            runtime: event.runtime,
+            executableChecks: event.executableChecks,
+            collections: [...event.collections],
+            status: event.status,
+            ms: finite_or_zero(event.ms),
+            stdout: event.stdout,
+            stderr: event.stderr,
+            exitCode: event.exitCode,
+            signal: event.signal,
+            timedOut: event.timedOut,
+            spawnError: event.spawnError ?? null,
+          },
+        });
+        return;
+      }
+
+      if (event.t === "external_state") {
+        flush_pending_cases();
+        map.setMany(["externalResults"], {
+          [event.id]: {
+            id: event.id,
+            suite: event.suite,
+            name: event.name,
+            subject: event.subject,
+            runtime: event.runtime,
+            executableChecks: event.executableChecks,
+            collections: [...event.collections],
+            status: event.status,
+            ms: 0,
+            stdout: "",
+            stderr: "",
+            exitCode: null,
+            signal: null,
+            timedOut: false,
+            spawnError: null,
+          },
+        });
         return;
       }
 

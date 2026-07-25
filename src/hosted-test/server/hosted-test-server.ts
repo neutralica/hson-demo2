@@ -9,6 +9,11 @@ import type { TestExecutorRegistry } from "../../test-system/test-executor";
 import { make_test_executor_discovery } from "../../test-system/test-discovery";
 import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
+import {
+  resolve_external_library_launchers,
+  terminate_external_library_launchers,
+} from "../../test-system/external-library-launchers";
+import { run_node_selected_verifications } from "../run-node-selected-verifications";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
@@ -32,11 +37,22 @@ export async function start_hosted_test_server(options: HostedTestServerOptions 
   const bindHost = options.host ?? "127.0.0.1";
   const registry = options.registry ?? make_registered_hosted_test_suite_registry();
   const executorRegistry = options.executorRegistry ?? make_local_node_livehost_executor_registry();
+  const externalLaunchers = options.executorRegistry === undefined
+    ? await resolve_external_library_launchers()
+    : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
   const application = create_hosted_test_application(registry, {
     inspectCase: options.inspectCase ?? inspect_hosted_test_case,
-    discovery: make_test_executor_discovery(executorRegistry),
+    discovery: make_test_executor_discovery(executorRegistry, externalLaunchers.targets),
     executorRegistry,
-    runSelected: run_fresh_node_selected_test_ids,
+    runSelected: externalLaunchers.targets.length === 0
+      ? run_fresh_node_selected_test_ids
+      : (selectedRegistry, ids, onEvent, runOptions) => run_node_selected_verifications(
+        selectedRegistry,
+        externalLaunchers,
+        ids,
+        onEvent,
+        runOptions,
+      ),
   });
   const server = new WebSocketServer({ host: bindHost, port: options.port ?? 8787 });
   const connections = new Map<WebSocket, Readonly<{ hostId: string; disconnect: () => void }>>();
@@ -96,6 +112,7 @@ export async function start_hosted_test_server(options: HostedTestServerOptions 
         websocket.close(1001, "Hosted-test server stopping.");
       }
       connections.clear();
+      terminate_external_library_launchers();
       application.dispose();
       await new Promise<void>((resolve, reject) => {
         server.close((error) => error ? reject(error) : resolve());

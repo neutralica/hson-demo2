@@ -34,6 +34,23 @@ export type HostedTestReport = Readonly<{
   }>;
   caseBatches: Readonly<Record<string, readonly HostedTestCaseReport[]>>;
   suites: readonly Readonly<{ suite: string; ms: number }>[];
+  externalResults: Readonly<Record<string, Readonly<{
+    id: string;
+    suite: string;
+    name: string;
+    subject: string;
+    runtime: string;
+    executableChecks: number;
+    collections: readonly string[];
+    status: "queued" | "running" | "pass" | "fail";
+    ms: number;
+    stdout: string;
+    stderr: string;
+    exitCode: number | null;
+    signal: string | null;
+    timedOut: boolean;
+    spawnError: string | null;
+  }>>>;
   error: HostedTestInfrastructureError | null;
 }>;
 

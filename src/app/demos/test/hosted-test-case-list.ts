@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live";
-import type { HostedTestCaseReport } from "../../hosted-test/hosted-test-report.types";
+import type { HostedTestCaseReport, HostedTestReport } from "../../hosted-test/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
 
@@ -25,6 +25,9 @@ export type HostedTestPanelProjectionMetrics = Readonly<{
 export type HostedTestPanelProjectionSnapshot = Readonly<{
   suites: number;
   cases: number;
+  launchers: number;
+  summariesBySuite: Readonly<Record<string, string>>;
+  statusesBySuite: Readonly<Record<string, string>>;
   expandedSuites: readonly string[];
   caseKeysBySuite: Readonly<Record<string, readonly string[]>>;
   metrics: HostedTestPanelProjectionMetrics;
@@ -58,6 +61,7 @@ type SuiteProjection = {
   summary: LiveTree;
   duration: LiveTree;
   caseHost: LiveTree | undefined;
+  external?: HostedTestReport["externalResults"][string];
 };
 
 const PANEL_STYLES = Object.freeze({
@@ -92,6 +96,10 @@ const PANEL_STYLES = Object.freeze({
   },
   caseActionHover: { color: "#d7ff70", borderColor: "#d7ff70", background: "rgba(215,255,112,.08)" },
   error: { color: "#ff8778", padding: "5px 8px", borderBottom: "1px solid rgba(255,135,120,.3)" },
+  externalOutput: {
+    margin: "0", padding: "8px 26px", borderTop: "1px solid rgba(125,216,207,.12)",
+    color: "#b7c3bb", whiteSpace: "pre-wrap", overflowWrap: "anywhere",
+  },
 } as const);
 
 function default_frame_scheduler(): HostedTestFrameScheduler {
@@ -171,6 +179,7 @@ export function make_hosted_test_case_list(
   css.selector("& .hosted-case-action:hover").setMany(PANEL_STYLES.caseActionHover);
   css.selector("& .hosted-case-action:focus-visible").setMany(PANEL_STYLES.caseActionHover);
   css.selector("& .hosted-case-error").setMany(PANEL_STYLES.error);
+  css.selector("& .hosted-external-output").setMany(PANEL_STYLES.externalOutput);
 
   function ensure_suite(suite: string): SuiteProjection {
     const existing = suites.get(suite);
@@ -209,9 +218,13 @@ export function make_hosted_test_case_list(
   }
 
   function render_suite(state: SuiteProjection): void {
-    state.summary.text.set(`${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`);
-    state.duration.text.set(state.ms === undefined ? "running" : format_hosted_test_duration(state.ms));
-    if (state.fail > 0) state.row.classlist.add("is-failed");
+    state.summary.text.set(state.external === undefined
+      ? `${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
+      : `${state.external.executableChecks} cases · ${state.external.status}`);
+    state.duration.text.set(state.ms === undefined
+      ? state.external?.status ?? "running"
+      : format_hosted_test_duration(state.ms));
+    if (state.fail > 0 || state.external?.status === "fail") state.row.classlist.add("is-failed");
     else state.row.classlist.remove("is-failed");
   }
 
@@ -256,6 +269,27 @@ export function make_hosted_test_case_list(
     visibleCaseRows += 1;
   }
 
+  function render_external_output(state: SuiteProjection): void {
+    const caseHost = state.caseHost;
+    const external = state.external;
+    if (caseHost === undefined || external === undefined) return;
+    caseHost.empty();
+    if (external.status === "queued" || external.status === "running") {
+      caseHost.create.div().classlist.set("hosted-external-output").text.set(external.status);
+      liveTreesConstructed += 1;
+      return;
+    }
+    const lines = [
+      `status: ${external.status}`,
+      `exit: ${external.exitCode ?? "none"}${external.signal ? ` · signal ${external.signal}` : ""}${external.timedOut ? " · timeout" : ""}`,
+      ...(external.stdout ? ["", "stdout:", external.stdout] : []),
+      ...(external.stderr ? ["", "stderr:", external.stderr] : []),
+      ...(external.spawnError ? ["", "spawn error:", external.spawnError] : []),
+    ];
+    caseHost.create.div().classlist.set("hosted-external-output").text.set(lines.join("\n"));
+    liveTreesConstructed += 1;
+  }
+
   function set_expanded(suite: string, expanded: boolean): void {
     if (disposed) return;
     const state = suites.get(suite);
@@ -271,6 +305,10 @@ export function make_hosted_test_case_list(
     }
     state.caseHost = state.group.create.div().classlist.set("hosted-case-block");
     liveTreesConstructed += 1;
+    if (state.external !== undefined) {
+      render_external_output(state);
+      return;
+    }
     for (const testCase of state.cases) append_case(state, testCase);
   }
 
@@ -318,6 +356,14 @@ export function make_hosted_test_case_list(
   return Object.freeze({
     ingest(update: HostedTestPanelReportUpdate) {
       if (disposed) return;
+      for (const external of Object.values(update.report.externalResults)) {
+        const state = ensure_suite(external.suite);
+        state.external = external;
+        state.ms = external.status === "pass" || external.status === "fail" ? external.ms : undefined;
+        dirtySuites.add(state.suite);
+        if (state.expanded) render_external_output(state);
+        else if (external.status === "fail") set_expanded(state.suite, true);
+      }
       for (const testCase of update.newCases) {
         if (caseKeys.has(testCase.key)) continue;
         caseKeys.add(testCase.key);
@@ -345,11 +391,23 @@ export function make_hosted_test_case_list(
     flush,
     snapshot() {
       const caseKeysBySuite: Record<string, readonly string[]> = {};
+      const summariesBySuite: Record<string, string> = {};
+      const statusesBySuite: Record<string, string> = {};
       for (const [suite, state] of suites) caseKeysBySuite[suite] = Object.freeze(state.cases.map((testCase) => testCase.key));
+      for (const [suite, state] of suites) {
+        statusesBySuite[suite] = state.external?.status
+          ?? (state.ms === undefined ? "running" : state.fail > 0 ? "fail" : "pass");
+        summariesBySuite[suite] = state.external === undefined
+          ? `${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
+          : `${state.external.executableChecks} cases · ${state.external.status}`;
+      }
       const expandedSuites = Object.freeze([...suites.values()].filter((state) => state.expanded).map((state) => state.suite));
       return Object.freeze({
         suites: suites.size,
         cases: caseKeys.size,
+        launchers: [...suites.values()].filter((state) => state.external !== undefined).length,
+        summariesBySuite: Object.freeze(summariesBySuite),
+        statusesBySuite: Object.freeze(statusesBySuite),
         expandedSuites,
         caseKeysBySuite: Object.freeze(caseKeysBySuite),
         metrics: Object.freeze({

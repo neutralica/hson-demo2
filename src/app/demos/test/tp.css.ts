@@ -75,7 +75,7 @@ export const TP_CONTROL_ROWcss: CssMap = {
 
 export const TEST_CHIP_ROWcss = {
   display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(7ch, auto))",
+  gridTemplateColumns: "repeat(4, minmax(9ch, 1fr))",
   gap: "6px",
   gridRow: "1",
   gridColumn: "1",
@@ -111,6 +111,9 @@ export const TEST_CHIP_VALUEcss = {
   fontWeight: _fontWeight.fat,
   lineHeight: "1",
   letterSpacing: "0.04em",
+  minWidth: "8ch",
+  textAlign: "center",
+  fontVariantNumeric: "tabular-nums",
 }
 
 export const TEST_CHIP_LABELcss = {
