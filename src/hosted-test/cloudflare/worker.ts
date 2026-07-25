@@ -2,6 +2,8 @@ import { create_hosted_test_application } from "../hosted-test-application";
 import { make_hosted_test_durable_object_runtime } from "./hosted-test-durable-object-runtime";
 import type { CloudflareAcceptedWebSocket } from "./cloudflare-websocket-socket";
 import { make_cloudflare_hosted_test_suite_registry } from "./cloudflare-hosted-test-suites";
+import { make_cloudflare_livehost_executor_registry } from "./cloudflare-test-executor";
+import { make_test_executor_discovery } from "../../test-system/test-discovery";
 import {
   is_websocket_upgrade,
   livehost_id,
@@ -23,8 +25,13 @@ type HostedTestWebSocketPair = Readonly<{
 declare const WebSocketPair: { new(): HostedTestWebSocketPair };
 
 export class HostedTestDurableObject {
+  private readonly executorRegistry = make_cloudflare_livehost_executor_registry();
   private readonly application = create_hosted_test_application(
     make_cloudflare_hosted_test_suite_registry(),
+    {
+      discovery: make_test_executor_discovery(this.executorRegistry),
+      executorRegistry: this.executorRegistry,
+    },
   );
   private readonly sockets = make_hosted_test_durable_object_runtime(this.application);
 

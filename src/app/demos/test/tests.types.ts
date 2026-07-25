@@ -2,6 +2,47 @@
 
 import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
 
+export type TestCapability =
+  | "javascript"
+  | "node"
+  | "synthetic-dom"
+  | "browser-dom"
+  | "worker"
+  | "filesystem"
+  | "websocket";
+
+export type TestSubject =
+  | "transform"
+  | "livetree"
+  | "livemap"
+  | "livehost"
+  | "integration"
+  | "livedemo"
+  | "dev";
+
+export type TestCollection = "unit" | "dev";
+
+export type TestDescriptorMetadata = Readonly<{
+  subject: TestSubject;
+  requirements: readonly TestCapability[];
+  collections?: readonly TestCollection[];
+}>;
+
+export type TestDescriptorMetadataOverride = Readonly<{
+  subject?: TestSubject;
+  requirements?: readonly TestCapability[];
+  collections?: readonly TestCollection[];
+}>;
+
+export type TestDescriptor = Readonly<{
+  id: string;
+  suite: string;
+  name: string;
+  subject: TestSubject;
+  requirements: readonly TestCapability[];
+  collections: readonly TestCollection[];
+}>;
+
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 
 export type TestStatus = "pass" | "fail" | "skip";
@@ -49,6 +90,7 @@ export type TestSummary = Readonly<{
 export type TestCase = Readonly<{
   suite: string;
   name: string;
+  descriptor?: TestDescriptorMetadataOverride;
   meta?: Record<string, string>;
   expected?: TestExpected;
   expectedError?: TestExpectedError;
@@ -62,6 +104,7 @@ export type RunCaseRet = Readonly<{
 
 export type TestSuite = Readonly<{
   suite: string;
+  descriptor?: TestDescriptorMetadata;
   cases: readonly TestCase[];
 }>;
 

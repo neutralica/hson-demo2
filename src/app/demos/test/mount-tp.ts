@@ -6,14 +6,19 @@ import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_B
 import type { TestPanel, TestPanels } from "./tp.types";
 import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "./hosted-test-panel-runtime";
-import { HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
 import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
 import { make_hosted_test_case_list, type HostedTestCaseList } from "./hosted-test-case-list";
 import { copy_hosted_case_report, open_hosted_case_report, serialize_hosted_run_report } from "./hosted-test-report-view";
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
+import type { TestExecutorDiscovery } from "../../../test-system/test-discovery";
+import {
+    hosted_test_panel_selected_ids,
+    hosted_test_panel_primary_choices,
+    hosted_test_panel_suite_choices,
+    hosted_test_panel_test_choices,
+    type HostedTestPanelSelectionChoice,
+} from "./hosted-test-panel-selection";
 
-// TODO - tidy up selector: keep future display labels separate from canonical suite IDs.
-const MODES = HOSTED_TEST_VISIBLE_SUITES.map((entry) => Object.freeze({ key: entry.id, label: entry.label }));
 const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
 
 function remembered_hosted_test_run(): string | undefined {
@@ -40,28 +45,64 @@ function implClickFeedback(btn: LiveTree): void {
     btn.listen.onPointerLeave(() => setButtonClicked(btn, false));
 }
 
-function populateModeSelector(suiteSel: LiveTree, mode: HostedTestSuiteId): void {
+function populate_discovered_selector(
+    suiteSel: LiveTree,
+    choices: readonly HostedTestPanelSelectionChoice[],
+    selectedKey: string,
+): void {
     suiteSel.empty();
-    for (const m of MODES) {
-        const opt = suiteSel.create.option();
-        opt.attrs.set("value", m.key);
-        opt.text.set(m.label);
-        if (m.key === mode) opt.flags.set("selected");
+    for (const choice of choices) {
+        const option = suiteSel.create.option();
+        option.attrs.set("value", choice.key);
+        option.text.set(choice.label);
+        if (choice.key === selectedKey) option.flags.set("selected");
     }
 }
 
-function visible_suite_for(suite: HostedTestSuiteId): HostedTestSuiteId {
-    if (suite === "livemap/replay") return "category/livemap";
-    if (suite === "livehost/all") return "category/livehost";
-    if (suite === "node/all" || suite === "dom/core" || suite === "canvas/core") return "hosted/all";
-    return suite;
+function populate_targeted_suite_selector(
+    suiteSel: LiveTree,
+    choices: readonly HostedTestPanelSelectionChoice[],
+    selectedKey?: string,
+): void {
+    suiteSel.empty();
+    const placeholder = suiteSel.create.option();
+    placeholder.attrs.set("value", "");
+    placeholder.text.set("Advanced / Targeted suite…");
+    if (selectedKey === undefined) placeholder.flags.set("selected");
+    for (const choice of choices) {
+        const option = suiteSel.create.option();
+        option.attrs.set("value", choice.key);
+        option.text.set(choice.label);
+        if (choice.key === selectedKey) option.flags.set("selected");
+    }
+}
+
+function populate_targeted_test_selector(
+    testSel: LiveTree,
+    choices: readonly HostedTestPanelSelectionChoice[],
+    selectedKey?: string,
+): void {
+    testSel.empty();
+    const entireSuite = testSel.create.option();
+    entireSuite.attrs.set("value", "");
+    entireSuite.text.set("Entire suite");
+    if (selectedKey === undefined) entireSuite.flags.set("selected");
+    for (const choice of choices) {
+        const option = testSel.create.option();
+        option.attrs.set("value", choice.key);
+        option.text.set(choice.label);
+        if (choice.key === selectedKey) option.flags.set("selected");
+    }
 }
 
 type TestConsoleParts = {
     runBtn: LiveTree;
     suiteSel: LiveTree;
+    targetedSuiteSel: LiveTree;
+    targetedTestSel: LiveTree;
     clearBtn: LiveTree;
     copyReportsBtn: LiveTree;
+    executorLabel: LiveTree;
     chips: ReturnType<typeof create_test_chips>;
 };
 
@@ -81,13 +122,32 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         ...TEST_SELECTORcss,
         gridColumn: "1 / 3",
     });
+    const targetedSuiteSel = controlsRow.create.select().id.set("test-targeted-suite").css.setMany({
+        ...TEST_SELECTORcss,
+        gridColumn: "1 / 3",
+        opacity: "0.82",
+    });
+    const targetedTestSel = controlsRow.create.select().id.set("test-targeted-case").css.setMany({
+        ...TEST_SELECTORcss,
+        gridColumn: "1 / 3",
+        opacity: "0.82",
+    });
     const copyReportsBtn = mk_div_id_txt(controlsRow, "test-copy-reports", "copy reports").css.setMany({
         ...TEST_CLEAR_BTNcss,
         gridColumn: "1 / 3",
     });
+    const executorLabel = mk_div_id_txt(controlsRow, "test-executor", "connecting…")
+        .attrs.set("data-testid", "hosted-test-executor")
+        .css.setMany({
+            gridColumn: "1 / 3",
+            fontSize: "0.72rem",
+            opacity: "0.75",
+            textAlign: "center",
+            cursor: "pointer",
+        });
     const chips = create_test_chips(rowContainer);
 
-    return { runBtn, suiteSel, clearBtn, copyReportsBtn, chips };
+    return { runBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips };
 }
 
 type TestSurfaceParts = {
@@ -112,15 +172,25 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
 export function tp_factory(): TestPanel {
     let mounted = false;
     let level: UiLevel = "normal";
-    let mode: HostedTestSuiteId = "hosted/all";
+    let discovery: TestExecutorDiscovery | undefined;
+    let selectionKey = "all";
+    let selectionChoices: readonly HostedTestPanelSelectionChoice[] = Object.freeze([]);
+    let targetedSuiteChoices: readonly HostedTestPanelSelectionChoice[] = Object.freeze([]);
+    let targetedSuiteKey: string | undefined;
+    let targetedTestChoices: readonly HostedTestPanelSelectionChoice[] = Object.freeze([]);
+    let targetedTestKey: string | undefined;
 
     const branch = hson.liveTree.create.div()
         .id.set("test-panel-branch")
-        .attrs.setMany({ "data-testid": "hosted-test-panel", "data-hosted-execution-count": "0" })
+        .attrs.setMany({
+            "data-testid": "hosted-test-panel",
+            "data-hosted-execution-count": "0",
+            "data-hosted-panel-state": "connecting",
+        })
         .css.setMany(TP_BRANCHcss);
 
     const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
-    const { runBtn, suiteSel, clearBtn, copyReportsBtn, chips } = create_test_console(leftColumn, rightColumn);
+    const { runBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips } = create_test_console(leftColumn, rightColumn);
     let hostedAdapter: HostedTestPanelAdapter | undefined;
     let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start"]>> | undefined;
     let caseList: HostedTestCaseList | undefined;
@@ -232,13 +302,85 @@ export function tp_factory(): TestPanel {
             appendLogLine(`elapsed ${format_hosted_test_duration(timing.roundTripMs)} · runner ${format_hosted_test_duration(timing.runnerMs)} · host ${format_hosted_test_duration(timing.hostMs)}`);
         },
     });
+    runBtn.flags.set("disabled");
+    suiteSel.flags.set("disabled");
+    targetedSuiteSel.flags.set("disabled");
+    targetedTestSel.flags.set("disabled");
+
+    const selected_choice = (): HostedTestPanelSelectionChoice | undefined => (
+        targetedTestKey !== undefined
+            ? targetedTestChoices.find((entry) => entry.key === targetedTestKey)
+            : targetedSuiteKey !== undefined
+                ? targetedSuiteChoices.find((entry) => entry.key === targetedSuiteKey)
+                : selectionChoices.find((entry) => entry.key === selectionKey)
+    );
+
+    const update_selected_presentation = (): void => {
+        const choice = selected_choice();
+        if (discovery !== undefined) {
+            executorLabel.text.set(
+                `${discovery.executor.label} · ${discovery.catalog.tests.length} tests · ${choice?.label ?? "no selection"}`,
+            );
+        }
+        branch.attrs.setMany({
+            "data-hosted-selection": choice?.key ?? "",
+            "data-hosted-selection-count": String(choice?.count ?? 0),
+        });
+    };
+
+    const apply_discovery = (next: TestExecutorDiscovery): void => {
+        discovery = next;
+        selectionChoices = hosted_test_panel_primary_choices(next.catalog.tests);
+        targetedSuiteChoices = hosted_test_panel_suite_choices(next.catalog.tests);
+        selectionKey = selectionChoices[0]?.key ?? "all";
+        targetedSuiteKey = undefined;
+        targetedTestChoices = Object.freeze([]);
+        targetedTestKey = undefined;
+        if (mounted) populate_discovered_selector(suiteSel, selectionChoices, selectionKey);
+        if (mounted) populate_targeted_suite_selector(targetedSuiteSel, targetedSuiteChoices);
+        if (mounted) populate_targeted_test_selector(targetedTestSel, targetedTestChoices);
+        branch.attrs.setMany({
+            "data-hosted-executor": next.executor.id,
+            "data-hosted-catalog-version": next.catalogVersion,
+            "data-hosted-panel-state": "ready",
+        });
+        suiteSel.flags.clear("disabled");
+        targetedSuiteSel.flags.clear("disabled");
+        targetedTestSel.flags.set("disabled");
+        update_selected_presentation();
+        if (next.catalog.tests.length > 0) runBtn.flags.clear("disabled");
+        else {
+            runBtn.flags.set("disabled");
+            appendLogLine("host discovery returned no executable tests");
+        }
+    };
+
+    const refresh_discovery = async (): Promise<void> => {
+        branch.attrs.set("data-hosted-panel-state", "discovering");
+        executorLabel.text.set("discovering…");
+        runBtn.flags.set("disabled");
+        suiteSel.flags.set("disabled");
+        targetedSuiteSel.flags.set("disabled");
+        targetedTestSel.flags.set("disabled");
+        apply_discovery(await hostedRuntime.discover());
+    };
+
     void hostedRuntime.ready().then(async () => {
+        try {
+            await refresh_discovery();
+        } catch (error) {
+            branch.attrs.set("data-hosted-panel-state", "discovery-failed");
+            executorLabel.text.set("host discovery failed");
+            suiteSel.flags.set("disabled");
+            targetedSuiteSel.flags.set("disabled");
+            targetedTestSel.flags.set("disabled");
+            runBtn.flags.set("disabled");
+            appendLogLine(`host discovery failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
         const runId = remembered_hosted_test_run();
         if (runId === undefined) return;
         try {
             lastResult = await hostedAdapter!.recover(runId);
-            mode = visible_suite_for(lastResult.suite);
-            if (mounted) populateModeSelector(suiteSel, mode);
         } catch {
             remember_hosted_test_run();
         }
@@ -252,29 +394,116 @@ export function tp_factory(): TestPanel {
         hostBody.append(branch);
         replace_case_list();
 
-        populateModeSelector(suiteSel, mode);
+        populate_discovered_selector(suiteSel, selectionChoices, selectionKey);
+        populate_targeted_suite_selector(targetedSuiteSel, Object.freeze([]));
+        populate_targeted_test_selector(targetedTestSel, Object.freeze([]));
+        targetedTestSel.flags.set("disabled");
 
         suiteSel.listen.on("change", () => {
-            const v = suiteSel.form.getValue() ?? "hosted/all";
-            mode = (MODES.find(m => m.key === v)?.key ?? "hosted/all");
+            const value = suiteSel.form.getValue() ?? "";
+            if (discovery !== undefined) {
+                selectionKey = selectionChoices.some((choice) => choice.key === value) ? value : "all";
+                targetedSuiteKey = undefined;
+                targetedTestChoices = Object.freeze([]);
+                targetedTestKey = undefined;
+                populate_targeted_suite_selector(targetedSuiteSel, targetedSuiteChoices);
+                populate_targeted_test_selector(targetedTestSel, targetedTestChoices);
+                targetedTestSel.flags.set("disabled");
+                const choice = selected_choice();
+                const testIds = choice === undefined
+                    ? Object.freeze([])
+                    : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection);
+                update_selected_presentation();
+                if (testIds.length > 0) runBtn.flags.clear("disabled");
+                else runBtn.flags.set("disabled");
+                return;
+            }
+        });
+
+        targetedSuiteSel.listen.on("change", () => {
+            if (discovery === undefined) return;
+            const value = targetedSuiteSel.form.getValue() ?? "";
+            targetedSuiteKey = targetedSuiteChoices.some((choice) => choice.key === value) ? value : undefined;
+            targetedTestKey = undefined;
+            const targetedSuite = targetedSuiteChoices.find((choice) => choice.key === targetedSuiteKey);
+            targetedTestChoices = targetedSuite?.selection.kind === "suite"
+                ? hosted_test_panel_test_choices(discovery.catalog.tests, targetedSuite.selection.suite)
+                : Object.freeze([]);
+            populate_targeted_test_selector(targetedTestSel, targetedTestChoices);
+            if (targetedSuiteKey === undefined) targetedTestSel.flags.set("disabled");
+            else targetedTestSel.flags.clear("disabled");
+            const choice = selected_choice();
+            const testIds = choice === undefined
+                ? Object.freeze([])
+                : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection);
+            update_selected_presentation();
+            if (testIds.length > 0) runBtn.flags.clear("disabled");
+            else runBtn.flags.set("disabled");
+        });
+
+        targetedTestSel.listen.on("change", () => {
+            if (discovery === undefined || targetedSuiteKey === undefined) return;
+            const value = targetedTestSel.form.getValue() ?? "";
+            targetedTestKey = targetedTestChoices.some((choice) => choice.key === value) ? value : undefined;
+            const choice = selected_choice();
+            const testIds = choice === undefined
+                ? Object.freeze([])
+                : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection);
+            update_selected_presentation();
+            if (testIds.length > 0) runBtn.flags.clear("disabled");
+            else runBtn.flags.set("disabled");
         });
 
         implClickFeedback(runBtn);
         implClickFeedback(clearBtn);
         implClickFeedback(copyReportsBtn);
 
+        executorLabel.listen.onClick(async () => {
+            try {
+                await refresh_discovery();
+                appendLogLine("host catalog refreshed");
+            } catch (error) {
+                branch.attrs.set("data-hosted-panel-state", "discovery-failed");
+                appendLogLine(`host discovery failed: ${error instanceof Error ? error.message : String(error)}`);
+                suiteSel.flags.set("disabled");
+                targetedSuiteSel.flags.set("disabled");
+                targetedTestSel.flags.set("disabled");
+                runBtn.flags.set("disabled");
+            }
+        });
+
         runBtn.listen.onClick(async () => {
 
-            const hostedSuite = mode;
             try {
+                branch.attrs.set("data-hosted-panel-state", "running");
+                runBtn.flags.set("disabled");
+                suiteSel.flags.set("disabled");
+                targetedSuiteSel.flags.set("disabled");
+                targetedTestSel.flags.set("disabled");
                 explicitExecutionCount += 1;
                 branch.attrs.set("data-hosted-execution-count", String(explicitExecutionCount));
                 await hostedRuntime.ready();
-                lastResult = await hostedAdapter!.start(hostedSuite);
+                if (discovery !== undefined) {
+                    const choice = selected_choice();
+                    const testIds = choice === undefined
+                        ? Object.freeze([])
+                        : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection);
+                    if (testIds.length === 0) throw new Error("The active discovered selection contains no tests.");
+                    lastResult = await hostedAdapter!.start_selected(testIds);
+                } else throw new Error("Canonical hosted-test discovery has not completed.");
                 remember_hosted_test_run(lastResult.runId);
+                branch.attrs.set("data-hosted-panel-state", "completed");
             } catch (error) {
+                branch.attrs.set("data-hosted-panel-state", "run-rejected");
                 if (hostedAdapter.router === undefined) {
-                    appendLogLine(`host connection error: ${error instanceof Error ? error.message : String(error)}`);
+                    appendLogLine(`run rejected: ${error instanceof Error ? error.message : String(error)}`);
+                }
+            } finally {
+                suiteSel.flags.clear("disabled");
+                if (discovery !== undefined) {
+                    targetedSuiteSel.flags.clear("disabled");
+                    if (targetedSuiteKey !== undefined) targetedTestSel.flags.clear("disabled");
+                    if (discovery.catalog.tests.length > 0) runBtn.flags.clear("disabled");
                 }
             }
         });
@@ -314,7 +543,7 @@ export function tp_factory(): TestPanel {
         logger,
         chips,
         getLevel: () => level,
-        getMode: () => mode,
+        getMode: () => selectionKey,
         clearLogs: clearLogLines,
         setLog: appendLogLine,
         dispose: () => {

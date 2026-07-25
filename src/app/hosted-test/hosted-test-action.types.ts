@@ -1,6 +1,9 @@
 import type { TestSummary } from "../demos/test/tests.types";
 import type { HostedTestSuiteId } from "./hosted-test-suite";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+import type { TestExecutorDiscoveryRequest } from "../../test-system/test-discovery";
+import type { RunSelectedTestsRequest } from "../../test-system/test-selected-run";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 
 export type HostedTestRunRequest = Readonly<{
   suite: HostedTestSuiteId;
@@ -19,9 +22,30 @@ export type HostedTestRunResult = Readonly<{
   }>;
 }>;
 
-export type HostedTestPanelRunResult = Omit<HostedTestRunResult, "timing"> & Readonly<{
-  timing: HostedTestRunResult["timing"] & Readonly<{ roundTripMs: number }>;
+export type HostedTestSelectedRunResult = Readonly<{
+  runId: HostedTestRunId;
+  reportHostId?: string;
+  reportRev?: number;
+  suite: "canonical/selected";
+  testIds: readonly string[];
+  ok: boolean;
+  summary: TestSummary;
+  timing: Readonly<{
+    runnerMs: number;
+    hostMs: number;
+  }>;
 }>;
+
+export type HostedTestAnyRunResult = HostedTestRunResult | HostedTestSelectedRunResult;
+
+type HostedTestPanelResultFor<T extends HostedTestAnyRunResult> =
+  T extends HostedTestAnyRunResult
+    ? Omit<T, "timing"> & Readonly<{
+      timing: T["timing"] & Readonly<{ roundTripMs: number }>;
+    }>
+    : never;
+
+export type HostedTestPanelRunResult = HostedTestPanelResultFor<HostedTestAnyRunResult>;
 
 export type HostedTestInspectRequest = Readonly<{
   runId: HostedTestRunId;
@@ -36,7 +60,7 @@ export type HostedTestDiagnosticText = Readonly<{
 export type HostedTestCaseDiagnostic = Readonly<{
   type: "ordinary" | "transform";
   runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   caseKey: string;
   caseSuite: string;
   name: string;
@@ -50,6 +74,8 @@ export type HostedTestCaseDiagnostic = Readonly<{
 }>;
 
 export type HostedTestActions = Readonly<{
+  "tests.discover": TestExecutorDiscoveryRequest;
   "tests.run": HostedTestRunRequest;
+  "tests.runSelected": RunSelectedTestsRequest;
   "tests.inspect": HostedTestInspectRequest;
 }>;

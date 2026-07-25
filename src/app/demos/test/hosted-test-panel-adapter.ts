@@ -5,7 +5,7 @@ import type { HostedTestCaseReport, HostedTestReport } from "../../hosted-test/h
 import type { HostedTestReportMirror } from "../../hosted-test/hosted-test-report-mirror.types";
 import { make_hosted_test_report_router } from "../../hosted-test/hosted-test-report-router";
 import type { HostedTestReportRouter } from "../../hosted-test/hosted-test-report-router.types";
-import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
+import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
 import type { TestRunMode } from "./tests.types";
 import { hosted_test_action_error_message } from "../../hosted-test/hosted-test-action-error";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-panel-runtime";
@@ -18,7 +18,7 @@ export type HostedTestPanelReportUpdate = Readonly<{
 }>;
 
 export type HostedTestPanelSink = Readonly<{
-  reset(suite: HostedTestSuiteId): void;
+  reset(target: HostedTestRunTarget): void;
   ingest(update: HostedTestPanelReportUpdate): void;
   showInfrastructureError(message: string): void;
   renderTiming?(timing: HostedTestPanelRunResult["timing"]): void;
@@ -32,6 +32,7 @@ export type HostedTestPanelClient = Readonly<{
 export type HostedTestPanelAdapter = Readonly<{
   readonly router: HostedTestReportRouter | undefined;
   start(suite: HostedTestSuiteId): Promise<HostedTestPanelRunResult>;
+  start_selected(testIds: readonly string[]): Promise<HostedTestPanelRunResult>;
   recover(runId: string): Promise<HostedTestPanelRunResult>;
   inspect(caseKey: string): Promise<HostedTestCaseDiagnostic>;
   capture(): HostedTestReport | undefined;
@@ -156,6 +157,9 @@ export function make_hosted_test_panel_adapter(
         throw error;
       }
     },
+    async start_selected() {
+      throw new Error("Canonical selected execution requires the generic hosted-test runtime.");
+    },
     async recover() {
       throw new Error("Explicit report recovery requires the generic hosted-test runtime.");
     },
@@ -203,7 +207,7 @@ function make_generic_hosted_test_panel_adapter(
 
   async function present(
     open: () => Promise<HostedTestRemoteRun>,
-    requestedSuite?: HostedTestSuiteId,
+    requestedTarget?: HostedTestRunTarget,
   ): Promise<HostedTestPanelRunResult> {
     const roundTripStartedAt = performance.now();
     generation += 1;
@@ -211,11 +215,11 @@ function make_generic_hosted_test_panel_adapter(
     dispose_current();
     lastResult = undefined;
     inspectionRequests.clear();
-    if (requestedSuite !== undefined) sink.reset(requestedSuite);
+    if (requestedTarget !== undefined) sink.reset(requestedTarget);
 
     const run = await open();
-    const suite = run.association.suite;
-    if (requestedSuite === undefined) sink.reset(suite);
+    const target = run.association.suite;
+    if (requestedTarget === undefined) sink.reset(target);
     if (generation !== runGeneration) {
       run.dispose();
       throw new Error("Hosted test run was superseded before report recovery.");
@@ -230,7 +234,7 @@ function make_generic_hosted_test_panel_adapter(
     const project = (): void => {
       if (current !== run || generation !== runGeneration) return;
       const report = run.client.recovery.map.capture().value;
-      if (report.run.id !== run.association.runId || report.run.suite !== suite) {
+      if (report.run.id !== run.association.runId || report.run.suite !== target) {
         throw new Error("Recovered hosted report identity does not match the requested run.");
       }
       const terminalState = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
@@ -283,7 +287,11 @@ function make_generic_hosted_test_panel_adapter(
       return panelResult;
     } catch (error) {
       if (current === run && generation === runGeneration && !infrastructureErrorShown) {
-        sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
+        sink.showInfrastructureError(
+          is_hosted_test_suite_id(target)
+            ? hosted_test_action_error_message(error, target)
+            : error instanceof Error ? error.message : String(error),
+        );
       }
       throw error;
     }
@@ -293,6 +301,9 @@ function make_generic_hosted_test_panel_adapter(
     get router() { return undefined; },
     async start(suite: HostedTestSuiteId) {
       return present(() => runtime.start_run(suite), suite);
+    },
+    async start_selected(testIds: readonly string[]) {
+      return present(() => runtime.start_selected(testIds), "canonical/selected");
     },
     async recover(runId: string) {
       return present(() => runtime.recover_run(runId));

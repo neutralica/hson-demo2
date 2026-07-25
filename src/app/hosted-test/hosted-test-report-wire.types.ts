@@ -1,5 +1,5 @@
 import type { JsonValue, LivePath } from "hson-live/types";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 
 export type HostedTestRunId = string;
 
@@ -47,7 +47,7 @@ export type HostedTestReportWireOp =
 export type HostedTestReportCommitEnvelope = Readonly<{
   type: "hosted-test-report-commit";
   runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   prevRev: number;
   rev: number;
   ops: readonly HostedTestReportWireOp[];
@@ -55,6 +55,6 @@ export type HostedTestReportCommitEnvelope = Readonly<{
 
 export type HostedTestReportCommitSequenceExpected = Readonly<{
   runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   prevRev: number;
 }>;

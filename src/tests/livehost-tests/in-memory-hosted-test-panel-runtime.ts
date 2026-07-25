@@ -1,12 +1,27 @@
 import { create_livehost_client } from "hson-live";
 import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../app/demos/test/hosted-test-panel-runtime";
-import type { HostedTestActions, HostedTestRunResult } from "../../app/hosted-test/hosted-test-action.types";
-import { decode_hosted_test_run_response, inspect_hosted_test_action } from "../../app/hosted-test/hosted-test-client-action";
+import type {
+  HostedTestActions,
+  HostedTestAnyRunResult,
+} from "../../app/hosted-test/hosted-test-action.types";
+import {
+  decode_hosted_test_discovery_response,
+  decode_hosted_test_run_response,
+  decode_selected_hosted_test_run_response,
+  inspect_hosted_test_action,
+} from "../../app/hosted-test/hosted-test-client-action";
 import type { HostedTestReportState } from "../../app/hosted-test/hosted-test-report.types";
-import type { HostedTestSuiteId, HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
+import {
+  HOSTED_TEST_SELECTED_RUN_TARGET,
+  type HostedTestSuiteId,
+  type HostedTestSuiteRegistry,
+} from "../../app/hosted-test/hosted-test-suite";
 import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../hosted-test/hosted-test-application";
 import type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../../app/hosted-test/hosted-test-application.types";
+import type { TestExecutorRegistry } from "../../test-system/test-executor";
+import { run_fresh_node_selected_test_ids } from "../../hosted-test/run-node-selected-test-suites";
+import { make_test_executor_discovery, type TestExecutorDiscovery } from "../../test-system/test-discovery";
 
 type MessageListener = (message: string) => void;
 type ReportActions = Readonly<{ "tests.inspect": Readonly<{ runId: string; caseKey: string }> }>;
@@ -30,8 +45,19 @@ function make_socket_pair(): readonly [LiveHostSocketLike, LiveHostSocketLike] {
   ];
 }
 
-export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegistry): HostedTestPanelRuntime {
-  const application = create_hosted_test_application(registry);
+export function make_in_memory_hosted_test_runtime(
+  registry: HostedTestSuiteRegistry,
+  executorRegistry?: TestExecutorRegistry,
+): HostedTestPanelRuntime {
+  const application = create_hosted_test_application(registry, executorRegistry === undefined
+    ? {}
+    : {
+      executorRegistry,
+      ...(executorRegistry.executor.id === "local-node-livehost"
+        ? { runSelected: run_fresh_node_selected_test_ids }
+        : {}),
+      discovery: make_test_executor_discovery(executorRegistry),
+    });
   const disposers: (() => void)[] = [];
   function connect(id: string): LiveHostSocketLike {
     const [clientSocket, hostSocket] = make_socket_pair();
@@ -47,12 +73,13 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
   });
   client.connect();
   let disposed = false;
+  let discovery: TestExecutorDiscovery | undefined;
   const readiness = client.session.create().then(() => client.recovery.recover()).then(() => undefined);
   const runs = new Set<HostedTestRemoteRun>();
 
   async function attach_run(
     association: HostedTestRunAssociation,
-    actionResult?: Promise<HostedTestRunResult>,
+    actionResult?: Promise<HostedTestAnyRunResult>,
   ): Promise<HostedTestRemoteRun> {
     const reportClient = create_livehost_client<HostedTestReportState, ReportActions>({
       socket: connect(association.reportHostId),
@@ -66,11 +93,10 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
     const failures = Object.values(recovered.caseBatches).flat()
       .filter((testCase) => testCase.status === "fail")
       .map((testCase) => ({ suite: testCase.suite, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
-    const settledResult = actionResult ?? Promise.resolve({
+    const common = {
       runId: association.runId,
       reportHostId: association.reportHostId,
       reportRev: reportClient.recovery.lastAppliedRev ?? association.reportRev,
-      suite: association.suite,
       ok: recovered.run.status === "passed",
       summary: {
         suites: recovered.suites.length,
@@ -82,7 +108,18 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
         failures,
       },
       timing: recovered.run.timing ?? { runnerMs: 0, hostMs: 0 },
-    });
+    };
+    const settledResult = actionResult ?? Promise.resolve(
+      association.suite === HOSTED_TEST_SELECTED_RUN_TARGET
+        ? {
+          ...common,
+          suite: HOSTED_TEST_SELECTED_RUN_TARGET,
+          testIds: Object.keys(recovered.caseBatches).sort().flatMap((key) => (
+            recovered.caseBatches[key]?.map((testCase) => testCase.key) ?? []
+          )),
+        }
+        : { ...common, suite: association.suite },
+    );
     let runDisposed = false;
     const run: HostedTestRemoteRun = Object.freeze({
       association,
@@ -107,7 +144,13 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
     client,
     get status() { return disposed ? "disposed" as const : "ready" as const; },
     get failure() { return undefined; },
+    get discovery() { return discovery; },
     ready: () => readiness,
+    async discover() {
+      await readiness;
+      discovery = decode_hosted_test_discovery_response(await client.action("tests.discover", {}));
+      return discovery;
+    },
     async start_run(suite: HostedTestSuiteId) {
       await readiness;
       const action = client.action("tests.run", { suite });
@@ -129,6 +172,28 @@ export function make_in_memory_hosted_test_runtime(registry: HostedTestSuiteRegi
         }, reject);
       });
       return attach_run(association, action.then((response) => decode_hosted_test_run_response(response, suite)));
+    },
+    async start_selected(testIds: readonly string[]) {
+      await readiness;
+      if (discovery === undefined) throw new Error("HOSTED_TEST_DISCOVERY_REQUIRED: Discover before selected execution.");
+      const action = client.action("tests.runSelected", { testIds: [...testIds] });
+      const requestId = action.request.requestId;
+      const result = action.then(decode_selected_hosted_test_run_response);
+      const association = await new Promise<HostedTestRunAssociation>((resolve, reject) => {
+        const existing = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
+        if (existing) { resolve(existing); return; }
+        const stop = client.recovery.on_change(() => {
+          const found = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
+          if (!found) return;
+          stop();
+          resolve(found);
+        });
+        void result.catch((error) => {
+          stop();
+          reject(error);
+        });
+      });
+      return attach_run(association, result);
     },
     async recover_run(runId: string) {
       await readiness;

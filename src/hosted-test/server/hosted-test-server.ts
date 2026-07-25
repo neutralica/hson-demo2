@@ -5,12 +5,17 @@ import { inspect_hosted_test_case } from "../hosted-test-case-inspection";
 import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../hosted-test-application";
 import type { HostedTestCaseInspector } from "../../app/hosted-test/hosted-test-action";
 import { make_node_websocket_livehost_socket } from "./node-websocket-socket";
+import type { TestExecutorRegistry } from "../../test-system/test-executor";
+import { make_test_executor_discovery } from "../../test-system/test-discovery";
+import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
   port?: number;
   registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
+  executorRegistry?: TestExecutorRegistry;
 }>;
 
 export type HostedTestServer = Readonly<{
@@ -26,7 +31,13 @@ export type HostedTestServer = Readonly<{
 export async function start_hosted_test_server(options: HostedTestServerOptions = {}): Promise<HostedTestServer> {
   const bindHost = options.host ?? "127.0.0.1";
   const registry = options.registry ?? make_registered_hosted_test_suite_registry();
-  const application = create_hosted_test_application(registry, { inspectCase: options.inspectCase ?? inspect_hosted_test_case });
+  const executorRegistry = options.executorRegistry ?? make_local_node_livehost_executor_registry();
+  const application = create_hosted_test_application(registry, {
+    inspectCase: options.inspectCase ?? inspect_hosted_test_case,
+    discovery: make_test_executor_discovery(executorRegistry),
+    executorRegistry,
+    runSelected: run_fresh_node_selected_test_ids,
+  });
   const server = new WebSocketServer({ host: bindHost, port: options.port ?? 8787 });
   const connections = new Map<WebSocket, Readonly<{ hostId: string; disconnect: () => void }>>();
   let stopped = false;

@@ -1,9 +1,26 @@
 import { create_livehost_client, LiveHostDisconnectedError } from "hson-live";
 import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise } from "hson-live/types";
-import type { HostedTestActions, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunResult } from "../../hosted-test/hosted-test-action.types";
-import { decode_hosted_test_inspect_response, decode_hosted_test_run_response } from "../../hosted-test/hosted-test-client-action";
+import type {
+  HostedTestActions,
+  HostedTestAnyRunResult,
+  HostedTestCaseDiagnostic,
+  HostedTestInspectRequest,
+  HostedTestRunResult,
+  HostedTestSelectedRunResult,
+} from "../../hosted-test/hosted-test-action.types";
+import {
+  decode_hosted_test_discovery_response,
+  decode_hosted_test_inspect_response,
+  decode_hosted_test_run_response,
+  decode_selected_hosted_test_run_response,
+} from "../../hosted-test/hosted-test-client-action";
 import type { HostedTestReportState } from "../../hosted-test/hosted-test-report.types";
-import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
+import {
+  HOSTED_TEST_SELECTED_RUN_TARGET,
+  type HostedTestRunTarget,
+  type HostedTestSuiteId,
+} from "../../hosted-test/hosted-test-suite";
+import type { TestExecutorDiscovery } from "../../../test-system/test-discovery";
 import {
   HOSTED_TEST_COORDINATOR_HOST_ID,
   type HostedTestCoordinatorState,
@@ -20,16 +37,27 @@ type HostedTestReportActions = Readonly<{
 }>;
 
 type HostedTestAssociationWaiter = Readonly<{
-  suite: HostedTestSuiteId;
+  target: HostedTestRunTarget;
   resolve(association: HostedTestRunAssociation): void;
 }>;
 
-export type HostedTestPanelRuntimeStatus = "connecting" | "ready" | "reconnecting" | "recovering" | "failed" | "disposed";
+export type HostedTestPanelRuntimeStatus =
+  | "connecting"
+  | "discovering"
+  | "ready"
+  | "running"
+  | "completed"
+  | "reconnecting"
+  | "recovering"
+  | "discovery-failed"
+  | "run-rejected"
+  | "failed"
+  | "disposed";
 
 export type HostedTestRemoteRun = Readonly<{
   association: HostedTestRunAssociation;
   readonly client: LiveHostClient<HostedTestReportState, HostedTestReportActions>;
-  actionResult: Promise<HostedTestRunResult>;
+  actionResult: Promise<HostedTestAnyRunResult>;
   on_change(listener: () => void): () => void;
   inspect(request: HostedTestInspectRequest): Promise<HostedTestCaseDiagnostic>;
   dispose(): void;
@@ -39,8 +67,11 @@ export type HostedTestPanelRuntime = Readonly<{
   readonly client: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>;
   readonly status: HostedTestPanelRuntimeStatus;
   readonly failure: Error | undefined;
+  readonly discovery: TestExecutorDiscovery | undefined;
   ready(): Promise<void>;
+  discover(): Promise<TestExecutorDiscovery>;
   start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun>;
+  start_selected(testIds: readonly string[]): Promise<HostedTestRemoteRun>;
   recover_run(runId: string): Promise<HostedTestRemoteRun>;
   dispose(): void;
 }>;
@@ -137,6 +168,12 @@ function result_summary_from_report(report: HostedTestReportState): HostedTestRu
   });
 }
 
+function selected_ids_from_report(report: HostedTestReportState): readonly string[] {
+  return Object.freeze(Object.keys(report.caseBatches).sort().flatMap((batchKey) => (
+    report.caseBatches[batchKey]?.map((testCase) => testCase.key) ?? []
+  )));
+}
+
 export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeOptions = {}): HostedTestPanelRuntime {
   const environment = options.environment ?? current_build_environment();
   let baseUrl: string | undefined;
@@ -150,6 +187,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   }
   let status: HostedTestPanelRuntimeStatus = "connecting";
   let retainedFailure: Error | undefined;
+  let discoveredExecutor: TestExecutorDiscovery | undefined;
   let disposed = false;
   let coordinatorTransport: HostedTestBrowserSocket | undefined;
   let coordinatorClient: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>;
@@ -174,7 +212,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       const association = association_from(coordinatorClient, requestId);
       if (!association) continue;
       for (const listener of [...listeners]) {
-        if (listener.suite !== association.suite) continue;
+        if (listener.target !== association.suite) continue;
         listeners.delete(listener);
         listener.resolve(association);
       }
@@ -268,6 +306,26 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     throw retainedFailure;
   });
 
+  async function discover(): Promise<TestExecutorDiscovery> {
+    await readiness;
+    if (disposed) throw new Error("Hosted-test runtime is disposed.");
+    status = "discovering";
+    try {
+      const discovery = decode_hosted_test_discovery_response(
+        await coordinatorClient.action("tests.discover", {}),
+      );
+      discoveredExecutor = discovery;
+      retainedFailure = undefined;
+      status = "ready";
+      return discovery;
+    } catch (cause) {
+      const failure = cause instanceof Error ? cause : new Error(String(cause));
+      retainedFailure = failure;
+      status = "discovery-failed";
+      throw failure;
+    }
+  }
+
   async function retry_safe_result(
     action: LiveHostClientActionPromise<HostedTestActions, "tests.run">,
     suite: HostedTestSuiteId,
@@ -283,16 +341,30 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     return decode_hosted_test_run_response(response, suite);
   }
 
+  async function retry_safe_selected_result(
+    action: LiveHostClientActionPromise<HostedTestActions, "tests.runSelected">,
+  ): Promise<HostedTestSelectedRunResult> {
+    let response: unknown;
+    try {
+      response = await action;
+    } catch (error) {
+      if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+      await ensure_reconnected();
+      response = await coordinatorClient.retry_action(action.request);
+    }
+    return decode_selected_hosted_test_run_response(response);
+  }
+
   function wait_for_association(
     requestId: string,
-    suite: HostedTestSuiteId,
-    actionResult: Promise<HostedTestRunResult>,
+    target: HostedTestRunTarget,
+    actionResult: Promise<HostedTestAnyRunResult>,
   ): Promise<HostedTestRunAssociation> {
     const current = association_from(coordinatorClient, requestId);
-    if (current?.suite === suite) return Promise.resolve(current);
+    if (current?.suite === target) return Promise.resolve(current);
     return new Promise<HostedTestRunAssociation>((resolve, reject) => {
       const listeners = associationWaiters.get(requestId) ?? new Set();
-      const waiter = Object.freeze({ suite, resolve });
+      const waiter = Object.freeze({ target, resolve });
       listeners.add(waiter);
       associationWaiters.set(requestId, listeners);
       void actionResult.catch((error) => {
@@ -306,8 +378,9 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
 
   async function attach_run(
     association: HostedTestRunAssociation,
-    requestedActionResult?: Promise<HostedTestRunResult>,
+    requestedActionResult?: Promise<HostedTestAnyRunResult>,
   ): Promise<HostedTestRemoteRun> {
+    const target = association.suite;
     const reportClientId = makeClientId();
     if (!reportClientId) throw new Error("Hosted-test report client ID must be non-empty.");
     let reportTransport: HostedTestBrowserSocket | undefined;
@@ -382,7 +455,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     }
 
     await open_report();
-    const actionResult = requestedActionResult ?? new Promise<HostedTestRunResult>((resolve, reject) => {
+    const actionResult = requestedActionResult ?? new Promise<HostedTestAnyRunResult>((resolve, reject) => {
       const finish = (): boolean => {
         const report = reportClient.recovery.map.capture().value;
         if (report.run.id !== association.runId || report.run.suite !== association.suite) {
@@ -399,15 +472,21 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
           reject(new Error("Recovered hosted report completed without a revision cursor."));
           return true;
         }
-        resolve(Object.freeze({
+        const common = {
           runId: association.runId,
           reportHostId: association.reportHostId,
           reportRev,
-          suite: association.suite,
           ok: report.run.status === "passed",
           summary: result_summary_from_report(report),
           timing: report.run.timing,
-        }));
+        };
+        resolve(target === HOSTED_TEST_SELECTED_RUN_TARGET
+          ? Object.freeze({
+            ...common,
+            suite: HOSTED_TEST_SELECTED_RUN_TARGET,
+            testIds: selected_ids_from_report(report),
+          })
+          : Object.freeze({ ...common, suite: target }));
         return true;
       };
       if (finish()) return;
@@ -458,10 +537,47 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     await readiness;
     if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
+    status = "running";
     const action = coordinatorClient.action("tests.run", { suite });
-    const actionResult = retry_safe_result(action, suite);
+    const actionResult = retry_safe_result(action, suite).then((result) => {
+      status = "completed";
+      return result;
+    }, (cause: unknown) => {
+      status = "run-rejected";
+      throw cause;
+    });
     void actionResult.catch(() => undefined);
     const association = await wait_for_association(action.request.requestId, suite, actionResult);
+    return attach_run(association, actionResult);
+  }
+
+  async function start_selected(testIds: readonly string[]): Promise<HostedTestRemoteRun> {
+    await readiness;
+    if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
+    if (disposed) throw new Error("Hosted-test runtime is disposed.");
+    const discovery = discoveredExecutor;
+    if (discovery === undefined) throw new Error("Hosted-test selected execution requires successful executor discovery.");
+    const ids = Object.freeze([...new Set(testIds)]);
+    if (ids.length === 0) throw new Error("Hosted-test selected execution requires at least one test ID.");
+    if (ids.length !== testIds.length) throw new Error("Hosted-test selected execution does not accept duplicate test IDs.");
+    const advertised = new Set(discovery.catalog.tests.map((descriptor) => descriptor.id));
+    const unknown = ids.find((id) => !advertised.has(id));
+    if (unknown !== undefined) throw new Error(`Hosted-test selection contains an undiscovered test ID "${unknown}".`);
+    status = "running";
+    const action = coordinatorClient.action("tests.runSelected", { testIds: [...ids] });
+    const actionResult = retry_safe_selected_result(action).then((result) => {
+      status = "completed";
+      return result;
+    }, (cause: unknown) => {
+      status = "run-rejected";
+      throw cause;
+    });
+    void actionResult.catch(() => undefined);
+    const association = await wait_for_association(
+      action.request.requestId,
+      HOSTED_TEST_SELECTED_RUN_TARGET,
+      actionResult,
+    );
     return attach_run(association, actionResult);
   }
 
@@ -480,8 +596,11 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     get client() { return coordinatorClient; },
     get status() { return status; },
     get failure() { return retainedFailure; },
+    get discovery() { return discoveredExecutor; },
     ready: () => readiness,
+    discover,
     start_run,
+    start_selected,
     recover_run,
     dispose() {
       if (disposed) return;

@@ -1,5 +1,5 @@
 import type { LiveHostActionRequestId, LiveHostId } from "hson-live/types";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
 
 export const HOSTED_TEST_COORDINATOR_HOST_ID = "hosted-tests";
@@ -9,7 +9,7 @@ export type HostedTestRunAssociation = Readonly<{
   requestId: LiveHostActionRequestId;
   runId: HostedTestRunId;
   reportHostId: string;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   status: "running" | "passed" | "failed" | "error";
   reportRev: number;
 }>;

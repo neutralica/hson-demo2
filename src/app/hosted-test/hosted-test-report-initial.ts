@@ -5,8 +5,8 @@ import { HOSTED_TEST_REPORT_SCHEMA } from "./hosted-test-report";
 import type { HostedTestReport } from "./hosted-test-report.types";
 import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
-import { is_hosted_test_suite_id } from "./hosted-test-suite";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import { is_hosted_test_run_target } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_INITIAL_EVENT = "hosted-test-report-initial";
 
@@ -96,11 +96,11 @@ function validate_initial_report(value: unknown): Readonly<{ value: HostedTestRe
 
 export function encode_hosted_test_report_initial(
   runId: HostedTestRunId,
-  suite: HostedTestSuiteId,
+  suite: HostedTestRunTarget,
   capture: Readonly<{ rev: number; value: HostedTestReport }>,
 ): HostedTestReportInitialEnvelope {
   const validRunId = must_run_id(runId);
-  if (!is_hosted_test_suite_id(suite)) invalid("suite", "suite is not registered for hosted execution");
+  if (!is_hosted_test_run_target(suite)) invalid("suite", "suite is not a recognized hosted-test run target");
   const rev = must_revision(capture.rev);
   const validated = validate_initial_report(capture.value);
   if (validated.value.run.suite !== suite) invalid("value.run.suite", "report suite must match envelope suite");
@@ -114,7 +114,7 @@ export function decode_hosted_test_report_initial(input: unknown): HostedTestRep
   exact_keys(input, ["type", "runId", "suite", "rev", "value"], "envelope");
   if (input.type !== "hosted-test-report-initial") invalid("type", "unexpected envelope type");
   const runId = must_run_id(input.runId);
-  if (!is_hosted_test_suite_id(input.suite)) invalid("suite", "suite is not registered for hosted execution");
+  if (!is_hosted_test_run_target(input.suite)) invalid("suite", "suite is not a recognized hosted-test run target");
   const rev = must_revision(input.rev);
   const validated = validate_initial_report(input.value);
   if (validated.value.run.suite !== input.suite) invalid("value.run.suite", "report suite must match envelope suite");

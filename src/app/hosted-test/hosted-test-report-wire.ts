@@ -10,8 +10,7 @@ import type {
   HostedTestWireUndefined,
   HostedTestWireValue,
 } from "./hosted-test-report-wire.types";
-import { is_hosted_test_suite_id } from "./hosted-test-suite";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import { is_hosted_test_run_target, type HostedTestRunTarget } from "./hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_COMMIT_EVENT = "hosted-test-report-commit";
 
@@ -190,11 +189,11 @@ function must_revision(value: unknown, path: string): number {
 
 export function encode_hosted_test_report_commit(
   runId: HostedTestRunId,
-  suite: HostedTestSuiteId,
+  suite: HostedTestRunTarget,
   commit: LiveMapCommit,
 ): HostedTestReportCommitEnvelope {
   must_run_id(runId, "runId");
-  if (!is_hosted_test_suite_id(suite)) invalid("suite", "suite is not registered for hosted execution");
+  if (!is_hosted_test_run_target(suite)) invalid("suite", "suite is not a recognized hosted-test run target");
   const prevRev = must_revision(commit.prevRev, "prevRev");
   const rev = must_revision(commit.rev, "rev");
   if (rev !== prevRev + 1) invalid("rev", "rev must equal prevRev + 1");
@@ -209,7 +208,7 @@ export function decode_hosted_test_report_commit_envelope(input: unknown): Hoste
   exact_keys(input, ["type", "runId", "suite", "prevRev", "rev", "ops"], "envelope");
   if (input.type !== "hosted-test-report-commit") invalid("type", "unexpected envelope type");
   const runId = must_run_id(input.runId, "runId");
-  if (!is_hosted_test_suite_id(input.suite)) invalid("suite", "suite is not registered for hosted execution");
+  if (!is_hosted_test_run_target(input.suite)) invalid("suite", "suite is not a recognized hosted-test run target");
   const prevRev = must_revision(input.prevRev, "prevRev");
   const rev = must_revision(input.rev, "rev");
   if (rev !== prevRev + 1) invalid("rev", "rev must equal prevRev + 1");

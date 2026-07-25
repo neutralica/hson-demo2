@@ -1,7 +1,7 @@
 import type { LoopReport } from "hson-live/diagnostics";
 import type { HostedTestCaseDiagnostic } from "../app/hosted-test/hosted-test-action.types";
 import type { HostedTestRunId } from "../app/hosted-test/hosted-test-report-wire.types";
-import type { HostedTestSuiteId } from "../app/hosted-test/hosted-test-suite";
+import type { HostedTestRunTarget } from "../app/hosted-test/hosted-test-suite";
 import type { CaseKey, TestAssertRow, TestEvent, TestSuite } from "../app/demos/test/tests.types";
 import { all_hosted_executable_suites, type HostedTestRuntimeKind } from "./hosted-all-test-suites";
 import { all_deterministic_transform_test_suites } from "./deterministic-transform-test-suites";
@@ -51,7 +51,7 @@ async function run_one(runtime: HostedTestRuntimeKind, suite: TestSuite): Promis
 
 function normalize_loop_report(
   runId: HostedTestRunId,
-  suiteId: HostedTestSuiteId,
+  suiteId: HostedTestRunTarget,
   caseKey: string,
   caseSuite: string,
   name: string,
@@ -86,7 +86,7 @@ function normalize_loop_report(
 
 export async function inspect_hosted_test_case(request: Readonly<{
   runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   caseKey: string;
 }>): Promise<HostedTestCaseDiagnostic> {
   const matches = all_hosted_executable_suites().flatMap((entry) => entry.suite.cases

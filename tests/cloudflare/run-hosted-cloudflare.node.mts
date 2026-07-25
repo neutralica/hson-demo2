@@ -6,6 +6,15 @@ import {
   HOSTED_TEST_DURABLE_OBJECT_NAME,
   route_hosted_test_worker_request,
 } from "../../src/hosted-test/cloudflare/worker-routing";
+import { create_hosted_test_application } from "../../src/hosted-test/hosted-test-application";
+import { make_cloudflare_livehost_executor_registry } from "../../src/hosted-test/cloudflare/cloudflare-test-executor";
+import {
+  decode_test_executor_discovery,
+  make_test_executor_discovery,
+} from "../../src/test-system/test-discovery";
+import { test_catalog_version } from "../../src/test-system/test-catalog";
+import type { HostedTestSelectedRunResult } from "../../src/app/hosted-test/hosted-test-action.types";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../src/app/hosted-test/hosted-test-report.types";
 
 function expect_cloudflare(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted Cloudflare: ${message}`);
@@ -148,6 +157,8 @@ expect_cloudflare(
 );
 const replay = await registry.get("livemap/replay").run();
 expect_cloudflare(replay.ok && replay.summary.cases === 45, "the Worker-compatible replay route executes through the existing runner");
+const advertisedRun = await registry.get("livehost/all").run();
+expect_cloudflare(advertisedRun.ok && advertisedRun.summary.cases === 184, "an advertised Worker test family remains executable through the legacy run surface");
 let unavailable: unknown;
 try { await registry.get("hosted/all").run(); }
 catch (error) { unavailable = error; }
@@ -156,9 +167,185 @@ expect_cloudflare(
   "Node/jsdom-only routes remain explicit and fail without importing a shadow implementation",
 );
 
+const workerExecutorRegistry = make_cloudflare_livehost_executor_registry();
+const workerDiscovery = make_test_executor_discovery(workerExecutorRegistry);
+const workerApplication = create_hosted_test_application(registry, {
+  discovery: workerDiscovery,
+  executorRegistry: workerExecutorRegistry,
+});
+const discoveryResponse = await workerApplication.coordinator.dispatch_action({
+  type: "action",
+  id: "worker-discover",
+  clientId: "worker-test",
+  requestId: "worker-discover-request",
+  name: "tests.discover",
+  payload: {},
+});
+expect_cloudflare(discoveryResponse.type === "ack", "the Worker-hosted application registers tests.discover");
+const decodedDiscovery = discoveryResponse.type === "ack"
+  ? decode_test_executor_discovery(JSON.parse(JSON.stringify(discoveryResponse.result)))
+  : undefined;
+expect_cloudflare(decodedDiscovery?.ok === true, "the Worker discovery response is JSON-safe and strictly decodable");
+if (decodedDiscovery?.ok !== true) throw new Error("hosted Cloudflare: decoded discovery unexpectedly unavailable");
+expect_cloudflare(
+  decodedDiscovery.value.executor.id === "cloudflare-livehost"
+    && decodedDiscovery.value.executor.kind === "cloudflare-worker",
+  "the Worker executor has stable Worker identity",
+);
+expect_cloudflare(
+  decodedDiscovery.value.executor.capabilities.provides.join(",") === "javascript",
+  "the Worker advertises only the capability required by its canonical proof registry",
+);
+expect_cloudflare(
+  decodedDiscovery.value.catalog.tests.length === workerExecutorRegistry.registrations.length
+    && decodedDiscovery.value.catalog.tests.every((test) => workerExecutorRegistry.get(test.id) !== undefined),
+  "every advertised Worker descriptor has exactly one executable registration",
+);
+expect_cloudflare(
+  decodedDiscovery.value.catalogVersion === test_catalog_version(decodedDiscovery.value.catalog),
+  "the Worker catalog version matches its descriptor content",
+);
+const unsupportedDiscoveryRoutes = [
+  "hosted/all", "node/all", "dom/core", "canvas/core", "category/livetree", "category/livemap", "category/dev",
+];
+expect_cloudflare(
+  !decodedDiscovery.value.catalog.tests.some((test) => unsupportedDiscoveryRoutes.includes(test.id) || unsupportedDiscoveryRoutes.includes(test.suite)),
+  "legacy unsupported route IDs are absent from Worker discovery",
+);
+
+let selectedActionNumber = 0;
+async function run_worker_selected(testIds: readonly string[]): Promise<Readonly<{
+  result: HostedTestSelectedRunResult;
+  report: HostedTestReportState;
+}>> {
+  selectedActionNumber += 1;
+  const response = await workerApplication.coordinator.dispatch_action({
+    type: "action",
+    id: `worker-selected-${selectedActionNumber}`,
+    clientId: "worker-selected-test",
+    requestId: `worker-selected-request-${selectedActionNumber}`,
+    name: "tests.runSelected",
+    payload: { testIds: [...testIds] },
+  });
+  expect_cloudflare(response.type === "ack", `Worker selected action ${selectedActionNumber} is acknowledged`);
+  const result = response.result as unknown as HostedTestSelectedRunResult;
+  expect_cloudflare(typeof result.reportHostId === "string", "Worker selected action exposes its streamed report host");
+  const reportHost = workerApplication.store.get(result.reportHostId);
+  expect_cloudflare(reportHost !== undefined, "Worker selected report remains available through the existing report store");
+  return Object.freeze({
+    result,
+    report: reportHost.map.capture().value as HostedTestReportState,
+  });
+}
+
+const workerFirst = workerExecutorRegistry.catalog.tests[0];
+expect_cloudflare(workerFirst !== undefined, "Worker executor has an advertised exact test");
+const workerSingle = await run_worker_selected([workerFirst.id]);
+expect_cloudflare(
+  workerSingle.result.ok
+    && workerSingle.result.summary.cases === 1
+    && hosted_test_report_cases(workerSingle.report)[0]?.key === workerFirst.id,
+  "one exact advertised Worker test executes through canonical selection",
+);
+const workerSameSuite = workerExecutorRegistry.catalog.tests
+  .filter((descriptor) => descriptor.suite === workerFirst.suite)
+  .slice(0, 3);
+const workerSeveral = await run_worker_selected(workerSameSuite.map((descriptor) => descriptor.id).reverse());
+expect_cloudflare(
+  hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.key).join("|")
+    === workerSameSuite.map((descriptor) => descriptor.id).sort().join("|"),
+  "several Worker tests execute once in canonical ID order",
+);
+const workerSecondSuite = workerExecutorRegistry.catalog.tests.find((descriptor) => descriptor.suite !== workerFirst.suite);
+expect_cloudflare(workerSecondSuite !== undefined, "Worker catalog includes multiple original suites");
+const workerCross = await run_worker_selected([workerSecondSuite.id, workerFirst.id]);
+expect_cloudflare(
+  workerCross.result.summary.cases === 2 && workerCross.result.summary.suites === 2,
+  "Worker exact selection spans original suites without a legacy route",
+);
+const workerWhole = await run_worker_selected(workerExecutorRegistry.catalog.tests.map((descriptor) => descriptor.id));
+expect_cloudflare(
+  workerWhole.result.ok
+    && workerWhole.result.summary.cases === workerExecutorRegistry.catalog.tests.length
+    && hosted_test_report_cases(workerWhole.report).length === workerExecutorRegistry.catalog.tests.length,
+  "the entire discovered Worker catalog is canonically executable",
+);
+const nodeOnlyId = "livehost/hosted-replay-action-in-memory::hosted replay action preserves request, result, and failure semantics";
+const nodeOnlyWorkerResponse = await workerApplication.coordinator.dispatch_action({
+  type: "action",
+  id: "worker-selected-node-only",
+  clientId: "worker-selected-test",
+  requestId: "worker-selected-node-only-request",
+  name: "tests.runSelected",
+  payload: { testIds: [nodeOnlyId] },
+});
+expect_cloudflare(
+  nodeOnlyWorkerResponse.type === "error"
+    && nodeOnlyWorkerResponse.error.message.includes("HOSTED_TEST_UNAVAILABLE_ON_EXECUTOR")
+    && nodeOnlyWorkerResponse.error.message.includes("cloudflare-livehost"),
+  "the Worker rejects a Node-only stable ID before execution",
+);
+const transformOnlyId = "transform/json/basic-test::test.unknownFail";
+const transformWorkerResponse = await workerApplication.coordinator.dispatch_action({
+  type: "action",
+  id: "worker-selected-transform-only",
+  clientId: "worker-selected-test",
+  requestId: "worker-selected-transform-only-request",
+  name: "tests.runSelected",
+  payload: { testIds: [transformOnlyId] },
+});
+expect_cloudflare(
+  transformWorkerResponse.type === "error"
+    && transformWorkerResponse.error.message.includes("HOSTED_TEST_UNAVAILABLE_ON_EXECUTOR"),
+  "the Worker rejects a synthetic-DOM Transform ID before report construction",
+);
+const canvasOnlyId = "livetree/canvas::canvas.inScope false on non-canvas node";
+const canvasWorkerResponse = await workerApplication.coordinator.dispatch_action({
+  type: "action",
+  id: "worker-selected-canvas-only",
+  clientId: "worker-selected-test",
+  requestId: "worker-selected-canvas-only-request",
+  name: "tests.runSelected",
+  payload: { testIds: [canvasOnlyId] },
+});
+expect_cloudflare(
+  canvasWorkerResponse.type === "error"
+    && canvasWorkerResponse.error.message.includes("HOSTED_TEST_UNAVAILABLE_ON_EXECUTOR"),
+  "the Worker rejects a deterministic-canvas Node ID before report construction",
+);
+const legacyWorkerRun = await workerApplication.coordinator.dispatch_action({
+  type: "action",
+  id: "worker-legacy-after-selected",
+  clientId: "worker-selected-test",
+  requestId: "worker-legacy-after-selected-request",
+  name: "tests.run",
+  payload: { suite: "livehost/all" },
+});
+expect_cloudflare(legacyWorkerRun.type === "ack", "legacy Worker tests.run remains operational after canonical selection");
+workerApplication.dispose();
+
 console.log(JSON.stringify({
   durableObjectName: HOSTED_TEST_DURABLE_OBJECT_NAME,
   routedRequests: routedRequests.map((request) => request.url),
   hostIds,
   detachments,
+  discovery: {
+    executor: workerDiscovery.executor.id,
+    tests: workerDiscovery.catalog.tests.length,
+    selectedCases: workerWhole.result.summary.cases,
+    selectedSuites: workerWhole.result.summary.suites,
+    nodeOnlyRejection: nodeOnlyWorkerResponse.type === "error"
+      ? {
+        code: nodeOnlyWorkerResponse.error.code,
+        message: nodeOnlyWorkerResponse.error.message,
+      }
+      : null,
+    transformRejection: transformWorkerResponse.type === "error"
+      ? transformWorkerResponse.error.code
+      : null,
+    canvasRejection: canvasWorkerResponse.type === "error"
+      ? canvasWorkerResponse.error.code
+      : null,
+    payloadBytes: new TextEncoder().encode(JSON.stringify(workerDiscovery)).byteLength,
+  },
 }));

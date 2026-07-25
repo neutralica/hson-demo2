@@ -50,7 +50,7 @@ for (const path of await findEntrypoints(resolve(demoRoot, "src"))) {
 const browserRoot = resolve(demoRoot, "tests/browser");
 const browserSources = await sourceFiles(browserRoot);
 const browserSpecs = browserSources.filter((path) => path.endsWith(".spec.ts"));
-expect_surface(browserSpecs.length === 3, `expected three owned browser journey specs, found ${browserSpecs.length}`);
+expect_surface(browserSpecs.length === 4, `expected four owned browser journey specs, found ${browserSpecs.length}`);
 expect_surface(TEST_SURFACE_CATALOG.some((entry) => entry.runner === "npm run test:browser" && entry.category === "Application / Demo"), "browser aggregate is missing its application/demo catalog owner");
 expect_surface(TEST_SURFACE_CATALOG.filter((entry) => entry.runner.startsWith("npm run test:browser")).every((entry) => !entry.appearsInHostedUi), "browser commands must remain outside the Hosted Tests UI");
 expect_surface(TEST_SURFACE_CATALOG.find((entry) => entry.id === "hson-demo2:test:amoebi-geometry")?.category === "Application / Demo", "Amoebi geometry must be owned by Application / Demo");

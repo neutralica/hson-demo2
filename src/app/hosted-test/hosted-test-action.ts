@@ -3,7 +3,7 @@ import type { LiveHostActions, LiveHostSchema } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { RunResult, TestFailure, TestSummary } from "../demos/test/tests.types";
 import { is_hosted_test_suite_id } from "./hosted-test-suite";
-import type { HostedTestSuiteId, HostedTestSuiteRegistry } from "./hosted-test-suite";
+import type { HostedTestRunTarget, HostedTestSuiteId, HostedTestSuiteRegistry } from "./hosted-test-suite";
 import { make_hosted_test_report } from "./hosted-test-report";
 import type { HostedTestReportController, HostedTestReportOptions } from "./hosted-test-report";
 import {
@@ -17,26 +17,43 @@ import {
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
 import type { HostedTestActions, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunResult } from "./hosted-test-action.types";
 import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
+import type { TestExecutorDiscovery } from "../../test-system/test-discovery";
+import { decode_test_executor_discovery_request } from "../../test-system/test-discovery";
+import type { TestExecutorRegistry } from "../../test-system/test-executor";
+import { decode_run_selected_tests_request } from "../../test-system/test-selected-run";
+import { run_selected_test_ids } from "../../hosted-test/run-selected-test-suites";
+import { HOSTED_TEST_SELECTED_RUN_TARGET } from "./hosted-test-suite";
+import type { HostedTestSelectedRunResult } from "./hosted-test-action.types";
 
-export type { HostedTestActions, HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
-export { run_hosted_test_action } from "./hosted-test-client-action";
+export type {
+  HostedTestActions,
+  HostedTestRunRequest,
+  HostedTestRunResult,
+  HostedTestSelectedRunResult,
+} from "./hosted-test-action.types";
+export type { RunSelectedTestsRequest } from "../../test-system/test-selected-run";
+export {
+  discover_hosted_test_executor,
+  run_hosted_test_action,
+  run_selected_hosted_tests_action,
+} from "./hosted-test-client-action";
 
 export type HostedTestRunIdFactory = () => string;
 export type HostedTestCaseInspector = (request: Readonly<{
   runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   caseKey: string;
 }>) => Promise<HostedTestCaseDiagnostic>;
 export type HostedTestRunRetention = Readonly<{
-  retain(runId: HostedTestRunId, suite: HostedTestSuiteId): void;
-  get(runId: HostedTestRunId): HostedTestSuiteId | undefined;
+  retain(runId: HostedTestRunId, suite: HostedTestRunTarget): void;
+  get(runId: HostedTestRunId): HostedTestRunTarget | undefined;
   clear(): void;
   size(): number;
 }>;
 
 export function make_hosted_test_run_retention(maxRuns = 16): HostedTestRunRetention {
   if (!Number.isInteger(maxRuns) || maxRuns <= 0) throw new Error("Hosted test retention limit must be a positive integer.");
-  const runs = new Map<HostedTestRunId, HostedTestSuiteId>();
+  const runs = new Map<HostedTestRunId, HostedTestRunTarget>();
   return Object.freeze({
     retain(runId, suite) {
       runs.delete(runId);
@@ -121,8 +138,24 @@ export function create_hosted_test_livehost(
   reportOptions: HostedTestReportOptions = {},
   inspectCase?: HostedTestCaseInspector,
   retention: HostedTestRunRetention = make_hosted_test_run_retention(),
+  discovery?: TestExecutorDiscovery,
+  executorRegistry?: TestExecutorRegistry,
+  runSelected: typeof run_selected_test_ids = run_selected_test_ids,
 ) {
+  if (
+    executorRegistry?.catalog.tests.some((descriptor) => descriptor.requirements.includes("synthetic-dom"))
+    && runSelected === run_selected_test_ids
+  ) {
+    throw new Error(
+      "HOSTED_TEST_EXECUTOR_CONFIGURATION_INVALID:"
+      + " An executor advertising synthetic-dom tests must install a selected-run execution strategy.",
+    );
+  }
   const actions: LiveHostActions<HostedTestActions, undefined> = {
+    "tests.discover": async () => {
+      if (discovery === undefined) throw new Error("HOSTED_TEST_DISCOVERY_UNAVAILABLE: This compatibility host has no canonical executor registry.");
+      return JSON.parse(JSON.stringify(discovery)) as JsonValue;
+    },
     "tests.run": async (context, request) => {
       const hostStartedAt = performance.now();
       let descriptor;
@@ -178,6 +211,58 @@ export function create_hosted_test_livehost(
       };
       return JSON.parse(JSON.stringify(hostedResult)) as JsonValue;
     },
+    "tests.runSelected": async (context, request) => {
+      if (executorRegistry === undefined) {
+        throw new Error("HOSTED_TEST_SELECTED_EXECUTION_UNAVAILABLE: This compatibility host has no canonical executor registry.");
+      }
+      const hostStartedAt = performance.now();
+      const runId = makeRunId();
+      if (!runId) throw new Error("Hosted test run ID must be non-empty.");
+      retention.retain(runId, HOSTED_TEST_SELECTED_RUN_TARGET);
+      const report = make_hosted_test_report(Date.now, (commit) => {
+        const envelope = encode_hosted_test_report_commit(runId, HOSTED_TEST_SELECTED_RUN_TARGET, commit);
+        context.emit_event(HOSTED_TEST_REPORT_COMMIT_EVENT, envelope as unknown as JsonValue);
+      }, HOSTED_TEST_SELECTED_RUN_TARGET, reportOptions);
+      try {
+        const initial = encode_hosted_test_report_initial(
+          runId,
+          HOSTED_TEST_SELECTED_RUN_TARGET,
+          report.map.capture(),
+        );
+        context.emit_event(HOSTED_TEST_REPORT_INITIAL_EVENT, initial as unknown as JsonValue);
+        inspectReport?.(report, runId);
+      } catch (error) {
+        report.dispose();
+        throw error;
+      }
+      let result: RunResult;
+      try {
+        result = await runSelected(executorRegistry, request.testIds, report.reduce, {
+          yieldEveryCases: 0,
+          yieldBetweenSuites: false,
+        });
+        report.complete(result, {
+          runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
+          hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
+        });
+      } catch (error) {
+        report.failInfrastructure(error);
+        throw error;
+      } finally {
+        report.dispose();
+      }
+      const reportTiming = report.map.capture().value.run.timing;
+      if (reportTiming === null) throw new Error("Hosted test report completed without timing.");
+      const hostedResult: HostedTestSelectedRunResult = {
+        runId,
+        suite: HOSTED_TEST_SELECTED_RUN_TARGET,
+        testIds: request.testIds,
+        ok: result.ok,
+        summary: normalize_summary(result.summary),
+        timing: reportTiming,
+      };
+      return JSON.parse(JSON.stringify(hostedResult)) as JsonValue;
+    },
     "tests.inspect": async (_context, request) => {
       const suite = retention.get(request.runId);
       if (suite === undefined) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${request.runId}" is no longer inspectable.`);
@@ -188,7 +273,9 @@ export function create_hosted_test_livehost(
   };
   const schema: LiveHostSchema<undefined, HostedTestActions> = {
     actions: {
+      "tests.discover": { payload: decode_test_executor_discovery_request },
       "tests.run": { payload: decode_hosted_test_request },
+      "tests.runSelected": { payload: decode_run_selected_tests_request },
       "tests.inspect": { payload: decode_hosted_test_inspect_request },
     },
   };

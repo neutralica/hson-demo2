@@ -7,7 +7,11 @@ import {
 } from "../../app/hosted-test/hosted-test-action";
 import type { HostedTestReportController } from "../../app/hosted-test/hosted-test-report";
 import { make_hosted_test_report_router } from "../../app/hosted-test/hosted-test-report-router";
-import { make_hosted_test_suite_registry, type HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite";
+import {
+  is_hosted_test_suite_id,
+  make_hosted_test_suite_registry,
+  type HostedTestSuiteId,
+} from "../../app/hosted-test/hosted-test-suite";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
 
 type Listener = (message: string) => void;
@@ -61,7 +65,11 @@ let nextId = 0;
 const reports = new Map<HostedTestSuiteId, HostedTestReportController>();
 const host = create_hosted_test_livehost(
   registry,
-  (report) => reports.set(report.map.capture().value.run.suite, report),
+  (report) => {
+    const suite = report.map.capture().value.run.suite;
+    if (!is_hosted_test_suite_id(suite)) throw new Error("Expected a legacy suite report.");
+    reports.set(suite, report);
+  },
   () => ids[nextId++] ?? (() => { throw new Error("run ID factory exhausted"); })(),
 );
 

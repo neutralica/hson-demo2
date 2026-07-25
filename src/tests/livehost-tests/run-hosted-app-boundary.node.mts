@@ -62,7 +62,14 @@ for (const file of application_files(appDirectory)) {
 const nodeRegistrySource = readFileSync(new URL("../../hosted-test/registered-hosted-test-suites.ts", import.meta.url), "utf8");
 expect_boundary(nodeRegistrySource.includes("jsdom-hosted-test-suites"), "Node executable registry may reach the jsdom-backed runner");
 expect_boundary(browserRuntimeSource.includes("VITE_HOSTED_TEST_WS_URL"), "visible runtime reads the explicit WebSocket environment variable");
-expect_boundary(panelMountSource.includes("HOSTED_TEST_VISIBLE_SUITES") && !panelMountSource.includes('key: "all"') && !panelMountSource.includes('key: "fuzz-json"'), "visible selector list is generated from remote-hosted metadata only");
+expect_boundary(
+  panelMountSource.includes("hosted_test_panel_primary_choices")
+    && panelMountSource.includes("hosted_test_panel_test_choices")
+    && !panelMountSource.includes("HOSTED_TEST_VISIBLE_SUITES")
+    && !panelMountSource.includes("usingLegacyFallback")
+    && !panelMountSource.includes("using legacy routes"),
+  "visible selectors are descriptor-derived and discovery failure cannot silently activate legacy routes",
+);
 expect_boundary(!panelMountSource.includes("make_ad_hoc_transform_suite") && !panelMountSource.includes("flush_dom"), "visible panel has no ad hoc local execution bridge");
 expect_boundary(!panelMountSource.includes("create_test_log") && !panelAdapterSource.includes("TestEvent"), "hosted production panel excludes the duplicate logger and synthetic event bridge");
 expect_boundary(!panelAdapterSource.includes("Object.keys(report.caseBatches)") && !panelAdapterSource.includes("hosted_test_report_cases"), "hosted adapter advances through new batches without rescanning or flattening prior cases");

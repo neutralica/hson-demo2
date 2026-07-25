@@ -9,8 +9,8 @@ import type {
   HostedTestReportCommit,
   HostedTestReportMap,
 } from "./hosted-test-report.types";
-import { HOSTED_TEST_SUITE_IDS } from "./hosted-test-suite";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   const nonNegativeInteger = s.refine(
@@ -22,7 +22,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   return s.exact({
     run: s.exact({
       id: s.string.optional,
-      suite: s.pick(...HOSTED_TEST_SUITE_IDS),
+      suite: s.pick(...HOSTED_TEST_SUITE_IDS, HOSTED_TEST_SELECTED_RUN_TARGET),
       status: s.pick("idle", "running", "passed", "failed", "error"),
       startedAt: finiteNumber.nullable,
       completedAt: finiteNumber.nullable,
@@ -48,7 +48,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
 });
 
 export function make_initial_hosted_test_report(
-  suite: HostedTestSuiteId,
+  suite: HostedTestRunTarget,
   runId?: string,
 ): HostedTestReport {
   return {
@@ -177,7 +177,7 @@ export type HostedTestReportOptions = Readonly<{
 export function make_hosted_test_report(
   now: () => number = Date.now,
   onCommit?: (commit: HostedTestReportCommit) => void,
-  suite: HostedTestSuiteId = "livemap/replay",
+  suite: HostedTestRunTarget = "livemap/replay",
   options: HostedTestReportOptions = {},
 ): HostedTestReportController {
   const caseBatchSize = options.caseBatchSize ?? DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE;

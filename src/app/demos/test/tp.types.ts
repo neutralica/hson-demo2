@@ -23,7 +23,7 @@ export type TestPanels = Readonly<{
   chips: ChipDisplay;
   // state accessors (so callsite doesn’t poke DOM attrs directly)
   getLevel: () => UiLevel;
-  getMode: () => HostedTestSuiteId;
+  getMode: () => string;
 
   // setStatus: (txt: string) => void;
   setLog: (txt: string) => void;

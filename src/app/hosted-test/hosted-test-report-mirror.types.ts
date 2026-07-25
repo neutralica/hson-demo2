@@ -1,6 +1,6 @@
 import type { HostedTestReportMap } from "./hosted-test-report.types";
 import type { HostedTestReportCommitEnvelope, HostedTestRunId } from "./hosted-test-report-wire.types";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 
 export type HostedTestReportMirrorStatus = "active" | "failed" | "disposed";
 
@@ -22,7 +22,7 @@ export type HostedTestReportMirrorFailure = Readonly<{
 
 export type HostedTestReportMirror = Readonly<{
   runId: HostedTestRunId;
-  suite: HostedTestSuiteId;
+  suite: HostedTestRunTarget;
   readonly rev: number;
   readonly status: HostedTestReportMirrorStatus;
   readonly failure: HostedTestReportMirrorFailure | undefined;

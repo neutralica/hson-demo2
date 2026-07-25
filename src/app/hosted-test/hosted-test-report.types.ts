@@ -1,6 +1,6 @@
 import type { LiveMap, LiveMapCommit } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "error";
 
@@ -20,7 +20,7 @@ export type HostedTestInfrastructureError = Readonly<{
 export type HostedTestReport = Readonly<{
   run: Readonly<{
     id?: string;
-    suite: HostedTestSuiteId;
+    suite: HostedTestRunTarget;
     status: HostedTestReportStatus;
     startedAt: number | null;
     completedAt: number | null;

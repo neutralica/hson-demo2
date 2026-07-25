@@ -1,6 +1,31 @@
-import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunRequest, HostedTestRunResult } from "./hosted-test-action.types";
+import type {
+  HostedTestCaseDiagnostic,
+  HostedTestInspectRequest,
+  HostedTestRunRequest,
+  HostedTestRunResult,
+  HostedTestSelectedRunResult,
+} from "./hosted-test-action.types";
 import type { HostedTestSuiteId } from "./hosted-test-suite";
 import { decode_hosted_test_action_error } from "./hosted-test-action-error";
+import type { TestExecutorDiscovery, TestExecutorDiscoveryRequest } from "../../test-system/test-discovery";
+import { decode_test_executor_discovery } from "../../test-system/test-discovery";
+import type { RunSelectedTestsRequest } from "../../test-system/test-selected-run";
+
+export async function discover_hosted_test_executor(
+  client: Readonly<{ action: (name: "tests.discover", payload: TestExecutorDiscoveryRequest) => Promise<unknown> }>,
+): Promise<TestExecutorDiscovery> {
+  return decode_hosted_test_discovery_response(await client.action("tests.discover", {}));
+}
+
+export function decode_hosted_test_discovery_response(response: unknown): TestExecutorDiscovery {
+  if (typeof response !== "object" || response === null || (response as { type?: unknown }).type !== "ack") {
+    const message = (response as { error?: { message?: unknown } })?.error?.message;
+    throw new Error(typeof message === "string" ? message : "Hosted test executor discovery failed.");
+  }
+  const decoded = decode_test_executor_discovery((response as { result?: unknown }).result);
+  if (!decoded.ok) throw new Error(decoded.issues.join(" "));
+  return decoded.value;
+}
 
 export async function run_hosted_test_action(
   client: Readonly<{ action: (name: "tests.run", payload: HostedTestRunRequest) => Promise<unknown> }>,
@@ -8,6 +33,41 @@ export async function run_hosted_test_action(
 ): Promise<HostedTestRunResult> {
   const response = await client.action("tests.run", { suite });
   return decode_hosted_test_run_response(response, suite);
+}
+
+export async function run_selected_hosted_tests_action(
+  client: Readonly<{
+    action: (name: "tests.runSelected", payload: RunSelectedTestsRequest) => Promise<unknown>;
+  }>,
+  testIds: readonly string[],
+): Promise<HostedTestSelectedRunResult> {
+  const response = await client.action("tests.runSelected", { testIds: [...testIds] });
+  return decode_selected_hosted_test_run_response(response);
+}
+
+export function decode_selected_hosted_test_run_response(
+  response: unknown,
+): HostedTestSelectedRunResult {
+  if (typeof response !== "object" || response === null) {
+    throw new Error("Selected hosted test action returned an invalid response.");
+  }
+  if ((response as { type?: unknown }).type === "error") {
+    const message = (response as { error?: { message?: unknown } }).error?.message;
+    throw new Error(typeof message === "string" ? message : "Selected hosted test action was rejected.");
+  }
+  if ((response as { type?: unknown }).type !== "ack") {
+    throw new Error("Selected hosted test action returned an invalid response.");
+  }
+  const result = (response as { result?: unknown }).result;
+  if (
+    typeof result !== "object"
+    || result === null
+    || (result as { suite?: unknown }).suite !== "canonical/selected"
+    || !Array.isArray((result as { testIds?: unknown }).testIds)
+  ) {
+    throw new Error("Selected hosted test action returned an invalid result.");
+  }
+  return result as HostedTestSelectedRunResult;
 }
 
 export function decode_hosted_test_run_response(
