@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { LetterKey } from "../../../core/types/core.types";
 import { CELL_CSS, O_ROT } from "../wordmark.css";
 import { FRAME_CSS } from "../../../phases/phase-2-splash/splash.css";

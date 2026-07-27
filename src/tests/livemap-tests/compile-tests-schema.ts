@@ -1,4 +1,4 @@
-import { type InferLiveMapSchemaToken, LIVEMAP_SCHEMA, define_livemap_schema, type InferLiveMapSchema, type LiveMapSchemaValue } from "hson-live";
+import { type InferLiveMapSchemaToken, LIVEMAP_SCHEMA, define_livemap_schema, type InferLiveMapSchema, type LiveMapSchemaValue } from "hson-live/livemap";
 
 type TypeExpect<TValue extends true> = TValue;
 type TypeExtends<TActual, TExpected> = TActual extends TExpected ? true : false;

@@ -1,6 +1,6 @@
 // bud-config.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { CssMap, KeyframesInput, AnimSpec } from "hson-live/types";
 import type { PropertyRegistration } from "../../../../../hson-live/dist/types/at-property.types";
 

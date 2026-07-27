@@ -2,7 +2,7 @@ import type { CssMap, JsonValue, SvgLiveTree } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import { CONNECTOR_CSS, PATH_OVERLAY_CSS, PATH_OVERLAY_SVG_CSS } from "./render.css";
 import type { ConnectorPosition, JsonPathPart, JsonRenderBuckets, JsonRenderGroup, JsonRenderKind, JsonRenderPart, JsonRenderRole } from "./render.types";
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 
 export function connectorPosition(index: number, count: number): ConnectorPosition {

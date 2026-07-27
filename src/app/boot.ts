@@ -1,7 +1,7 @@
 // bootstrap_root_tree.ts
 
-import { LiveTree, hson } from "hson-live";
-
+import {  hson } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 
 
 export function boot_livetree(): LiveTree {

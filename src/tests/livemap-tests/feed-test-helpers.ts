@@ -1,4 +1,4 @@
-import { make_livemap_feed_hub, paths_overlap, type LiveMapCommit, type LiveMapFeedEvent, type LivePath } from "hson-live";
+import { make_livemap_feed_hub, paths_overlap, type LiveMapCommit, type LiveMapFeedEvent, type LivePath } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./assert-helpers";

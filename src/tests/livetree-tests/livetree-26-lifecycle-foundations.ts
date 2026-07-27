@@ -1,4 +1,4 @@
-import { CssManager, hson, LiveTree } from "hson-live";
+import { CssManager, hsonLiveTree, LiveTree } from "hson-live/livetree";
 import type { HsonNode } from "hson-live/types";
 import {
   LIVETREE_DISPOSED_ERROR_CODE,
@@ -190,7 +190,7 @@ function unmounted_terminal_case(suite: string): LiveTreeCaseSpec {
     name: "terminal disposal marks every unmounted node and every alias",
     html: `<main></main>`,
     act() {
-      const branch = hson.liveTree.fromTrustedHtml(
+      const branch = hsonLiveTree.fromTrustedHtml(
         `<section id="owner"><span id="child">x</span></section>`,
       );
       const child = branch.find.must.byId("child");
@@ -305,7 +305,7 @@ function bounded_reentrant_case(suite: string): LiveTreeCaseSpec {
     name: "terminal disposable drain bounds pathological re-registration",
     html: `<main></main>`,
     act() {
-      const branch = hson.liveTree.fromTrustedHtml(`<section></section>`);
+      const branch = hsonLiveTree.fromTrustedHtml(`<section></section>`);
       const quid = branch.quid;
       const repeat = (): void => {
         calls += 1;
@@ -336,7 +336,7 @@ function detach_state_case(suite: string): LiveTreeCaseSpec {
     name: "runtime detach preserves active state and identity",
     html: `<main></main>`,
     act() {
-      const branch = hson.liveTree.fromTrustedHtml(`<section><span>x</span></section>`);
+      const branch = hsonLiveTree.fromTrustedHtml(`<section><span>x</span></section>`);
       const quid = branch.quid;
       _detach_node_deep(branch.node);
       active = !branch.isDisposed && !_is_livetree_node_disposed(branch.node);
@@ -363,7 +363,7 @@ function disposed_error_case(suite: string): LiveTreeCaseSpec {
     name: "disposed guard throws the stable LiveTreeDisposedError",
     html: `<main></main>`,
     act() {
-      const branch = hson.liveTree.fromTrustedHtml(`<section></section>`);
+      const branch = hsonLiveTree.fromTrustedHtml(`<section></section>`);
       const formerQuid = branch.quid;
       const node = branch.node;
       _dispose_node_deep(node);
@@ -450,7 +450,7 @@ function remove_self_regression_case(suite: string): LiveTreeCaseSpec {
         && target.isDisposed
         && child.isDisposed;
 
-      const rootBranch = hson.liveTree.fromTrustedHtml(`<aside></aside>`);
+      const rootBranch = hsonLiveTree.fromTrustedHtml(`<aside></aside>`);
       const rootQuid = rootBranch.quid;
       const rootNode = rootBranch.node;
       const rootRemoved = rootBranch.removeSelf();

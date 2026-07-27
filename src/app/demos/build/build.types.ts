@@ -1,6 +1,6 @@
 // build.factory.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { BUILD_PANEcss, BUILD_TITLEcss } from "./build.css";
 
 // keep this parallel to pp_factory return shape: root + handles

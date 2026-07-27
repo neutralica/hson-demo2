@@ -1,13 +1,8 @@
 // client-suite.ts
 
+import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { preview_value, equal_row } from "../livemap-tests/test-helpers";
-import {
-  create_livehost_client,
-  LiveHostDisconnectedError,
-  LiveHostDuplicateActionIdError,
-} from "hson-live";
-
 
 type MemorySocketMessageListener = (message: string) => void;
 type MemorySocketCloseListener = () => void;

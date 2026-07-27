@@ -8,19 +8,19 @@
  * are still rejected by the type surface.
  */
 
-import { type InferLiveMapSchemaToken, hson, type InferLiveMapSchema, type LiveMapSchemaValue } from "hson-live";
+import { type InferLiveMapSchemaToken, type InferLiveMapSchema, type LiveMapSchemaValue, hsonLiveMap } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TypeExpect, TypeExtends } from "./api-suite";
 
 // --- Schema token inference ---
 // If this section fails, start in hson-live's schema token types/builders:
-// `api/livemap/schema.ts`, then confirm the public `hson.liveMap.schema` export
+// `api/livemap/schema.ts`, then confirm the public `hsonLiveMap.schema` export
 // in `hson.ts` is preserving token generics.
-type _ApiSchemaTokenString = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.string>, string>>;
-type _ApiSchemaTokenStringArray = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.string.array>, readonly string[]>>;
-type _ApiSchemaTokenOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.number.optional>, number | undefined>>;
-type _ApiSchemaTokenNullableBoolean = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hson.liveMap.schema.boolean.nullable>, boolean | null>>;
-const API_SCHEMA_TYPE_SAMPLE = hson.liveMap.schema.define((s) => ({
+type _ApiSchemaTokenString = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.string>, string>>;
+type _ApiSchemaTokenStringArray = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.string.array>, readonly string[]>>;
+type _ApiSchemaTokenOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.number.optional>, number | undefined>>;
+type _ApiSchemaTokenNullableBoolean = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.boolean.nullable>, boolean | null>>;
+const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => ({
   user: {
     id: s.string,
     name: s.string,
@@ -67,12 +67,12 @@ type _ApiSchemaUserStatus = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["
 type _ApiSchemaUserResult = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["result"], { kind: "success"; value: string; } | { kind: "failure"; code: number; }>>;
 // --- Schema-bound map/root/path inference ---
 // If this section fails, inspect the public factories and schema binding path:
-// `hson.ts` for `hson.liveMap.fromJson(...)`, then `api/livemap/core.ts` and
+// `hson.ts` for `hsonLiveMap.fromJson(...)`, then `api/livemap/core.ts` and
 // `api/livemap/livemap.types.ts` for `LiveMap<TValue>`, `schema.use(...)`,
 // `withSchema(...)`, `snap()`, `at(...)`, and `LiveMapPathValue`.
-const API_TYPED_MAP_SAMPLE = hson.liveMap
+const API_TYPED_MAP_SAMPLE = hsonLiveMap
   .fromJson({ user: { name: "Ada" } })
-  .schema.use(hson.liveMap.schema.define((s) => ({
+  .schema.use(hsonLiveMap.schema.define((s) => ({
     user: {
       name: s.string,
       age: s.number.optional,
@@ -127,14 +127,14 @@ type _ApiTypedMapUserObjectEntries = TypeExpect<TypeExtends<ApiTypedMapUserObjec
 // --- Array schema/path inference setup ---
 // If this setup fails, check schema array inference in `api/livemap/schema.ts`,
 // then `LiveMapPathValue` in `api/livemap/livemap.types.ts` for numeric path parts.
-const API_TYPED_ARRAY_MAP_SAMPLE = hson.liveMap
+const API_TYPED_ARRAY_MAP_SAMPLE = hsonLiveMap
   .fromJson({
     items: [
       { id: "a", count: 1 },
       { id: "b", count: 2 },
     ],
   })
-  .schema.use(hson.liveMap.schema.define((s) => ({
+  .schema.use(hsonLiveMap.schema.define((s) => ({
     items: s.array({
       id: s.string,
       count: s.number,
@@ -396,7 +396,7 @@ API_TYPED_ARRAY_PROXY.items[0]!.$_.object.setKey("label", "Z");
 // If this section fails, the strict-object policy may be over-tightened.
 // Unschemaed/dynamic object handles should still allow arbitrary string keys
 // with JsonValue writes via `LiveMapObjectShape<TValue>` / `LiveMapObjectKey<TValue>`.
-const API_DYNAMIC_OBJECT_MAP = hson.liveMap.fromJson({ bag: {} });
+const API_DYNAMIC_OBJECT_MAP = hsonLiveMap.fromJson({ bag: {} });
 const API_DYNAMIC_OBJECT_HANDLE = API_DYNAMIC_OBJECT_MAP.at(["bag"]);
 
 API_DYNAMIC_OBJECT_HANDLE.object.setKey("missing", "dynamic");

@@ -1,6 +1,6 @@
 // core-suite.ts
 
-import { define_livemap_schema, make_livemap_core } from "hson-live";
+import { define_livemap_schema, make_livemap_core } from "hson-live/livemap";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, make_core_set_case, make_core_snap_case, preview_value } from "./test-helpers";
 import type { LiveMapFeedEventPreview } from "./types";

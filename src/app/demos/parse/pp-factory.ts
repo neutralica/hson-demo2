@@ -1,6 +1,6 @@
 // pp_factory.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { _fontSize, øWATERMARK_FMT_ } from "../../core/consts/ui-consts";
 import type { Fmt } from "../../core/types/core.types";

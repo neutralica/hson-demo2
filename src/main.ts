@@ -1,6 +1,6 @@
 // main.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { boot_livetree as graft_livetree } from "./app/boot";
 import { run_app } from "./app/app";
 

@@ -1,6 +1,6 @@
 // mount-bar-bar.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { CssMap } from "hson-live/types";
 
 const W = 720, H = 480, COLS = 10, ROWS = 5, GAP = 7, L = 34, TOP = 122, HEAD = 94;

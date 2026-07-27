@@ -1,4 +1,4 @@
-import type { LiveHostDisposer } from "hson-live";
+import type { LiveHostDisposer } from "hson-live/livehost";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import {
   create_towl_runtime,

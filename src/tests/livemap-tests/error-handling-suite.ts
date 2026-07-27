@@ -1,4 +1,4 @@
-import { define_livemap_schema, LiveMapSchemaError, make_livemap_core } from "hson-live";
+import { define_livemap_schema, LiveMapSchemaError, make_livemap_core } from "hson-live/livemap";
 import { read_case } from "./handle-helpers";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { json_root_node } from "./core-helpers";

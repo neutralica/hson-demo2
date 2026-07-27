@@ -1,5 +1,5 @@
 // stipple.system.ts
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { make_rng } from "../../utils/rng";
 import type { KeyframesInput } from "hson-live/types";
 import { _clamp01, _lerp } from "../../utils/helpers";

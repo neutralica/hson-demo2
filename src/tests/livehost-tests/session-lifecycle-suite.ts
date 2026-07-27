@@ -1,9 +1,9 @@
-import { create_livehost } from "hson-live";
+import { create_livehost } from "hson-live/livehost";
 import type {
   LiveHostDisposer,
   LiveHostSessionLifecycleEvent,
   LiveHostSocketLike,
-} from "hson-live";
+} from "hson-live/livehost";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "../livemap-tests/test-helpers";
 

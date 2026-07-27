@@ -1,15 +1,15 @@
 import { performance } from "node:perf_hooks";
 import {
   hson,
-  CssManager,
   LiveProjectionError,
   LIVE_PROJECTION_BRANCH_ATTACHED_ERROR_CODE,
   LIVE_PROJECTION_DUPLICATE_KEY_ERROR_CODE,
   LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE,
   LIVE_PROJECTION_SOURCE_REPLACEMENT_ERROR_CODE,
 } from "hson-live";
-import type { LiveMap, LiveMapPathHandle } from "hson-live";
+import type { LiveMap, LiveMapPathHandle } from "hson-live/livemap";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { CssManager } from "hson-live/livetree";
 
 let checks = 0;
 

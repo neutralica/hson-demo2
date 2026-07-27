@@ -1,6 +1,7 @@
 // make-amoebi.ts
 
-import { hson, type LiveTree } from "hson-live";
+import { hson, } from "hson-live";
+import {  LiveTree } from "hson-live/livetree";
 import type { JsonValue, LiveMap, SvgLiveTree } from "hson-live/types";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
 import { set_alpha } from "../../core/helpers/color-helpers";

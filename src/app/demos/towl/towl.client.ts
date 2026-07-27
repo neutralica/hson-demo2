@@ -1,19 +1,9 @@
 // towl.client.ts
 
-import {
-  create_livehost_client,
-  type LiveHostClient,
-  type LiveHostClientActionResult,
-  type LiveHostClientOptions,
-  type LiveHostClientSessionResult,
-  type LiveHostDisposer,
-  type LiveHostSessionCredential,
-} from "hson-live";
-import type {
-  TowlActions,
-  TowlState,
-} from "./towl.types";
-import type { JsonValue } from "hson-live/types";
+import { create_livehost_client } from "hson-live/livehost";
+import type { LiveHostClientOptions, LiveHostSessionCredential, LiveHostClient, LiveHostDisposer, LiveHostClientSessionResult, LiveHostClientActionResult, JsonValue } from "hson-live/types";
+import type { TowlState, TowlActions } from "./towl.types";
+
 
 export type TowlSeat = "player1" | "player2";
 

@@ -1,4 +1,4 @@
-import { hson, LiveTree } from "hson-live";
+import {  hsonLiveTree, LiveTree } from "hson-live/livetree";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
@@ -124,8 +124,7 @@ function suite_empty_append(): TestSuite {
 
         root.empty();
 
-        const branch = hson
-          .liveTree
+        const branch = hsonLiveTree
           .fromTrustedHtml(`<p class="new">hello</p>`);
 
         root.append(branch);
@@ -386,7 +385,7 @@ export function suite_identity_stability(): TestSuite {
       act(tree) {
         const root = tree.find.must.byId("root");
 
-        const branch = hson.liveTree.fromTrustedHtml(`<div id="child">hello</div>`);
+        const branch = hsonLiveTree.fromTrustedHtml(`<div id="child">hello</div>`);
 
         root.append(branch);
       },
@@ -431,8 +430,8 @@ export function suite_identity_stability(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const first = hson.liveTree.queryDom("#identity-graft-host").graft();
-        const second = hson.liveTree.queryDom("#identity-graft-host").graft();
+        const first = hsonLiveTree.queryDom("#identity-graft-host").graft();
+        const second = hsonLiveTree.queryDom("#identity-graft-host").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;

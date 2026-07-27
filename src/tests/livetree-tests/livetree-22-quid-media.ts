@@ -1,7 +1,8 @@
-import { CssManager, hson } from "hson-live";
+import { CssManager, hsonLiveTree } from "hson-live/livetree";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { hson } from "hson-live";
 
 
 type QuidScopedCssResult = Record<string, unknown>;
@@ -318,7 +319,7 @@ export function livetree_construction_parity(): TestSuite {
 
       act(tree) {
         const host = tree.find.must.byId("root");
-        const branch = hson.liveTree.fromTrustedHtml(
+        const branch = hsonLiveTree.fromTrustedHtml(
           `<section id="from-trusted" data-source="trusted"><span id="trusted-label">seed</span></section>`,
         );
 
@@ -358,7 +359,7 @@ export function livetree_construction_parity(): TestSuite {
 
       act(tree) {
         const host = tree.find.must.byId("root");
-        const branch = hson.liveTree.fromUntrustedHtml(
+        const branch = hsonLiveTree.fromUntrustedHtml(
           `<article id="from-untrusted" data-source="untrusted"><span id="safe-child">safe</span></article>`,
         );
 
@@ -404,7 +405,7 @@ export function livetree_construction_parity(): TestSuite {
           .toJson()
           .value();
 
-        const branch = hson.liveTree.fromJson(jsonValue as any);
+        const branch = hsonLiveTree.fromJson(jsonValue as any);
         branch.find.must.byId("json-label").text.set("json-mutated");
         branch.classlist.add("constructed");
         host.append(branch);
@@ -446,7 +447,7 @@ export function livetree_construction_parity(): TestSuite {
           .toJson()
           .serialize();
 
-        const branch = hson.liveTree.fromJson(jsonText);
+        const branch = hsonLiveTree.fromJson(jsonText);
         branch.find.must.byId("json-string-child").text.set("string-mutated");
         host.append(branch);
 
@@ -480,7 +481,7 @@ export function livetree_construction_parity(): TestSuite {
 
       act(tree) {
         const host = tree.find.must.byId("root");
-        const branch = hson.liveTree.fromHson(`
+        const branch = hsonLiveTree.fromHson(`
           <section id="from-hson" data-source="hson"
             <span id="hson-label" "seed"/>
           />
@@ -526,7 +527,7 @@ export function livetree_construction_parity(): TestSuite {
           .fromTrustedHtml(`<aside id="from-node" data-source="node"><span id="node-label">seed</span></aside>`)
           .toNode();
 
-        const branch = hson.liveTree.fromNode(node);
+        const branch = hsonLiveTree.fromNode(node);
         branch.find.must.byId("node-label").text.set("node-mutated");
         branch.data.set("wrapped", "yes");
         host.append(branch);
@@ -565,7 +566,7 @@ export function livetree_construction_parity(): TestSuite {
         const host = tree.find.must.byId("root");
         host.create.div().id.set("construction-graft-host").text.set("seed");
 
-        const grafted = hson.liveTree.queryDom("#construction-graft-host").graft();
+        const grafted = hsonLiveTree.queryDom("#construction-graft-host").graft();
         grafted.text.set("grafted");
         grafted.create.span().id.set("grafted-child").text.set("child");
 
@@ -600,12 +601,12 @@ export function livetree_construction_parity(): TestSuite {
       act(tree) {
         const host = tree.find.must.byId("root");
 
-        const card = hson.liveTree.create.section()
+        const card = hsonLiveTree.create.section()
           .id.set("created-card")
           .classlist.add("created")
           .text.set("card");
 
-        const svg = hson.liveTree.create.svg()
+        const svg = hsonLiveTree.create.svg()
           .id.set("created-svg")
           .attrs.set("viewBox", "0 0 10 10");
 

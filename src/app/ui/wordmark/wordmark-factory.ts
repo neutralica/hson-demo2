@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { LetterKey } from "../../core/types/core.types";
 import type { WordmarkParts } from "./wordmark.types";
 import { mk_div_cls, mk_span_cls } from "../../utils/makers";

@@ -19,7 +19,7 @@ import { livemap_suite_batch } from "./batch-suite";
 import { livemap_editor_contract, livemap_object_exact } from "./editor-contract-tests";
 import { livemap_schema_contract_suite } from "./editor-contract-tests";
 import { livemap_link_contract_suites } from "./link-contract-suite";
-import { snap_live_path } from "hson-live";
+import { snap_live_path } from "hson-live/livemap";
 import { livemap_suite_html_proof } from "./html-livemap-suite";
 import { livemap_suites_bridge } from "./bridge-suite";
 import { livemap_suites_bridge_livetree } from "./bridge-livetree-suite";

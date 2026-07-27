@@ -2,7 +2,7 @@
 
 
 import type { Fmt } from "../types/core.types";
-import { CssManager } from "hson-live";
+import { CssManager } from "hson-live/livetree";
 
 export const øWATERMARK_FMT_: Record<Fmt, string> = {
   json: "{JSON}",

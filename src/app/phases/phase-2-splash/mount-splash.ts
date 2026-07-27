@@ -1,6 +1,6 @@
 // mount-splash.ts
 
-import { CssManager, type LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live/livetree";
 import { O_ROT, VER_CSS, VER6_CSS } from "../../ui/wordmark/wordmark.css";
 import { CLOUD_LAYER_FADEanim, FLAREHEXanim } from "./splash.anim";
 import { CLOUD_CONFIG, SUN_DELnum } from "./splash.consts";

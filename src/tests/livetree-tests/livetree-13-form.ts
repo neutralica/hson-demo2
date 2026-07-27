@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";

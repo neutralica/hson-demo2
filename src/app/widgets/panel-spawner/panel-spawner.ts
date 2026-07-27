@@ -1,4 +1,4 @@
-import { LiveTree } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 

@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { ChipDisplay } from "./test-helpers";
 import type { UiLevel } from "./tests.types";
 import type { HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";

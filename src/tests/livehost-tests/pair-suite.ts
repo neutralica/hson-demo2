@@ -1,6 +1,6 @@
 // pair-suite.ts
 
-import { create_livehost, create_livehost_client } from "hson-live";
+import { create_livehost, create_livehost_client } from "hson-live/livehost";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "../livemap-tests/test-helpers";
 

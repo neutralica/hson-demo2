@@ -1,4 +1,4 @@
-import { make_livemap_core, type LiveMapFeedEvent } from "hson-live";
+import { make_livemap_core, type LiveMapFeedEvent } from "hson-live/livemap";
 import type { TestCase } from "../../app/demos/test/tests.types";
 import type { CoreAtSnapCaseSpec, CoreAtSetCaseSpec, CoreAtFeedCaseSpec, CoreAtPathCopyCaseSpec, CoreAtOriginalPathStabilityCaseSpec, CoreNodeTagCaseSpec, CoreNodeMissingCaseSpec, CoreNodePathCopyCaseSpec, CoreNodeOriginalPathStabilityCaseSpec, CoreSetPathCopyCaseSpec, CoreSetManyCaseSpec, CoreSetManyFeedCaseSpec, CoreSetManyPathCopyCaseSpec, CoreDeleteCaseSpec, CoreDeleteFeedCaseSpec, CoreDeletePathCopyCaseSpec, CoreDeleteThrowCaseSpec } from "./core.types";
 import { preview_value, equal_row } from "./test-helpers";

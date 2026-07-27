@@ -1,4 +1,4 @@
-import  { CssManager } from "hson-live";
+import  { CssManager } from "hson-live/livetree";
 import { COLOR_VAR_SOURCES } from "../../core/consts/colors.consts";
 import { $PANEL_HIDDEN, _fontSize } from "../../core/consts/ui-consts";
 import { MENU_OPTIONS, MIN_DESKTOP_WIDTH } from "./demo.consts";

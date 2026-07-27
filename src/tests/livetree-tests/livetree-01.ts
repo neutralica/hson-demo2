@@ -1,4 +1,4 @@
-import { CssManager, hson, type LiveTree } from "hson-live";
+import { CssManager, hsonLiveTree, type LiveTree } from "hson-live/livetree";
 import type { TestSuite, Asserter } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
@@ -287,8 +287,8 @@ export function suite_append_and_create(): TestSuite {
       act(tree) {
         const root = tree.find.must.byId("root");
 
-        root.append(hson.liveTree.fromTrustedHtml(`<div id="a"></div>`));
-        root.append(hson.liveTree.fromTrustedHtml(`<div id="b"></div>`));
+        root.append(hsonLiveTree.fromTrustedHtml(`<div id="a"></div>`));
+        root.append(hsonLiveTree.fromTrustedHtml(`<div id="b"></div>`));
 
         // inject a primitive into the semantic content container (_hson_elem)
         // (works in no-dom mode; matches your “_hson_elem is invisible” rule)
@@ -486,8 +486,7 @@ export function mixedRegression() {
         const root = tree.find.must.byId("root");
 
         // 1) append a layer
-        const layer1 = hson
-          .liveTree
+        const layer1 = hsonLiveTree
           .fromTrustedHtml(`<layer id="layer"></layer>`);
 
         root.append(layer1);
@@ -497,8 +496,7 @@ export function mixedRegression() {
         firstLayer.removeSelf();
 
         // 2) append a new one with same id
-        const layer2 = hson
-          .liveTree
+        const layer2 = hsonLiveTree
           .fromTrustedHtml(`<layer id="layer"></layer>`);
 
         root.append(layer2);
@@ -857,7 +855,7 @@ export function extraCases(): readonly TestSuite[] {
         const root = tree.find.must.byId("root");
 
         root.append(
-          hson.liveTree.fromTrustedHtml(`<layer id="layer"></layer>`)
+          hsonLiveTree.fromTrustedHtml(`<layer id="layer"></layer>`)
         );
 
         const first = root.find.must.byId("layer");
@@ -866,7 +864,7 @@ export function extraCases(): readonly TestSuite[] {
         first.removeSelf();
 
         root.append(
-          hson.liveTree.fromTrustedHtml(`<layer id="layer"></layer>`)
+          hsonLiveTree.fromTrustedHtml(`<layer id="layer"></layer>`)
         );
 
         const second = root.find.must.byId("layer");
@@ -1003,8 +1001,7 @@ export function extraCases(): readonly TestSuite[] {
       sub: "detached",
 
       act(tree) {
-        const branch = hson
-          .liveTree
+        const branch = hsonLiveTree
           .fromTrustedHtml(`<section id="box"></section>`);
 
         const child = branch.create.div();
@@ -1443,7 +1440,7 @@ function suite_graft_regressions(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const grafted = hson.liveTree.queryDom("#graft-host-1").graft();
+        const grafted = hsonLiveTree.queryDom("#graft-host-1").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;
@@ -1510,7 +1507,7 @@ function suite_graft_regressions(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const grafted = hson.liveTree.queryDom("#graft-host-2").graft();
+        const grafted = hsonLiveTree.queryDom("#graft-host-2").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;
@@ -1577,8 +1574,8 @@ function suite_graft_regressions(): TestSuite {
         wrapper.appendChild(host);
         document.body.appendChild(wrapper);
 
-        const first = hson.liveTree.queryDom("#graft-host-3").graft();
-        const second = hson.liveTree.queryDom("#graft-host-3").graft();
+        const first = hsonLiveTree.queryDom("#graft-host-3").graft();
+        const second = hsonLiveTree.queryDom("#graft-host-3").graft();
 
         (tree as unknown as {
           __wrapper?: HTMLElement;

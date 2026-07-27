@@ -1,9 +1,10 @@
 // batch-suite.ts
 
-import { hson, make_livemap_core } from "hson-live";
+import { hsonLiveMap, make_livemap_core } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
+import { hsonTransform } from "hson-live/transform";
 
 export function livemap_suite_batch(): TestSuite {
   const SUITE = "livemap/batch";
@@ -425,7 +426,7 @@ function make_batch_schema_reject_case(spec: BatchRejectCaseSpec): TestCase {
       input: preview_value(spec.input),
     },
     run: () => {
-      const schema = hson.liveMap.schema.define((s) =>
+      const schema = hsonLiveMap.schema.define((s) =>
         s.exact({
           user: s.exact({
             name: s.string,
@@ -433,7 +434,7 @@ function make_batch_schema_reject_case(spec: BatchRejectCaseSpec): TestCase {
           }),
         }),
       );
-      const map = hson.liveMap.fromJson(spec.input).schema.use(schema);
+      const map = hsonLiveMap.fromJson(spec.input).schema.use(schema);
       let message = "";
 
       try {
@@ -528,7 +529,7 @@ function make_set_many_schema_reject_case(spec: SetManyRejectCaseSpec): TestCase
       values: preview_value(spec.values),
     },
     run: () => {
-      const schema = hson.liveMap.schema.define((s) =>
+      const schema = hsonLiveMap.schema.define((s) =>
         s.exact({
           user: s.exact({
             name: s.string,
@@ -538,7 +539,7 @@ function make_set_many_schema_reject_case(spec: SetManyRejectCaseSpec): TestCase
       );
       let message = "";
 
-      const map = hson.liveMap.fromJson(spec.input).schema.use(schema);
+      const map = hsonLiveMap.fromJson(spec.input).schema.use(schema);
 
       try {
         map.setMany(spec.path, spec.values);
@@ -586,5 +587,5 @@ function make_set_many_editor_reject_case(spec: SetManyRejectCaseSpec): TestCase
 }
 
 function json_root_node(input: JsonValue) {
-  return hson.fromJson(input).toNode();
+  return hsonTransform.fromJson(input).toNode();
 }

@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { type PointPanelRig, point_init } from "./point";
 import type { CssMap } from "hson-live/types";
 

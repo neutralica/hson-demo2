@@ -1,20 +1,16 @@
 import { performance } from "node:perf_hooks";
 import {
-  CssManager,
-  hson,
-  LiveProjectionError,
-  LiveTreeBatchError,
-  LiveTreeDisposedError,
-  LIVETREE_BATCH_VALIDATION_ERROR_CODE,
-  LIVETREE_DISPOSED_ERROR_CODE,
-  LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE,
-} from "hson-live";
-import {
   _append_livetree_branches_atomic,
   begin_livetree_materialization_profile,
+  LIVETREE_DISPOSED_ERROR_CODE,
+  LiveTreeDisposedError,
   type LiveTreeMaterializationProfile,
 } from "hson-live/diagnostics";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { LiveProjectionError, LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE, hson } from "hson-live";
+import { hsonLiveMap } from "hson-live/livemap";
+import { hsonLiveTree } from "hson-live/livetree";
+import { LIVETREE_BATCH_VALIDATION_ERROR_CODE, LiveTreeBatchError, CssManager } from "hson-live/livetree";
 
 let checks = 0;
 function expect(condition: unknown, message: string): asserts condition {
@@ -23,17 +19,17 @@ function expect(condition: unknown, message: string): asserts condition {
 }
 
 const runtime = install_hosted_dom_runtime();
-const root = hson.liveTree.queryBody().graft();
+const root = hsonLiveTree.queryBody().graft();
 const measurements: Record<string, number> = {};
 
 try {
   root.empty();
   {
     const host = root.create.div();
-    const first = hson.liveTree.create.section();
+    const first = hsonLiveTree.create.section();
     const firstChild = first.create.button();
     firstChild.text.set("nested");
-    const second = hson.liveTree.create.aside();
+    const second = hsonLiveTree.create.aside();
     _append_livetree_branches_atomic(host, [first, second]);
     expect(host.content.count() === 2, "valid batch attaches every branch in order");
     expect(host.content.at(0)?.quid === first.quid && host.content.at(1)?.quid === second.quid, "batch preserves ordered LiveTree identity");
@@ -49,7 +45,7 @@ try {
   {
     const host = root.create.div();
     const elsewhere = root.create.div();
-    const valid = hson.liveTree.create.span();
+    const valid = hsonLiveTree.create.span();
     const attached = elsewhere.create.span();
     let error: unknown;
     try { _append_livetree_branches_atomic(host, [valid, attached]); } catch (caught) { error = caught; }
@@ -62,8 +58,8 @@ try {
   root.empty();
   {
     const host = root.create.div();
-    const first = hson.liveTree.create.div();
-    const duplicate = hson.liveTree.create.div();
+    const first = hsonLiveTree.create.div();
+    const duplicate = hsonLiveTree.create.div();
     const original = duplicate.node.$_meta?.["data-_quid"];
     duplicate.node.$_meta = { ...duplicate.node.$_meta, "data-_quid": first.quid };
     let error: unknown;
@@ -79,7 +75,7 @@ try {
   root.empty();
   {
     const host = root.create.div();
-    const branch = hson.liveTree.create.button();
+    const branch = hsonLiveTree.create.button();
     const branchQuid = branch.quid;
     branch.css.setMany({ color: "red" });
     let events = 0;
@@ -96,7 +92,7 @@ try {
   {
     const disposedHost = root.create.div();
     disposedHost.remove();
-    const branch = hson.liveTree.create.div();
+    const branch = hsonLiveTree.create.div();
     let error: unknown;
     try { _append_livetree_branches_atomic(disposedHost, [branch]); } catch (caught) { error = caught; }
     expect(error instanceof LiveTreeDisposedError && error.code === LIVETREE_DISPOSED_ERROR_CODE, "disposed batch host fails before attachment");
@@ -107,7 +103,7 @@ try {
   root.empty();
   {
     const host = root.create.div();
-    const source = hson.liveMap.fromJson({ items: [{ id: "a" }, { id: "bad" }, { id: "c" }] });
+    const source = hsonLiveMap.fromJson({ items: [{ id: "a" }, { id: "bad" }, { id: "c" }] });
     let error: unknown;
     try {
       hson.liveProject.keyedCollection({
@@ -116,7 +112,7 @@ try {
         key: (item: any) => item.id,
         render(item: any) {
           if (item.snap().id === "bad") throw new Error("renderer fixture");
-          return hson.liveTree.create.div();
+          return hsonLiveTree.create.div();
         },
       });
     } catch (caught) { error = caught; }
@@ -140,7 +136,7 @@ try {
   root.empty();
   {
     const value = Object.fromEntries(Array.from({ length: 1_000 }, (_, index) => [`p${index}`, index]));
-    const source = hson.liveMap.fromJson(value);
+    const source = hsonLiveMap.fromJson(value);
     const expanded = hson.inspect.create({ source, host: root.create.div(), initialDepth: 1 });
     const lazy = hson.inspect.create({ source, host: root.create.div(), initialDepth: 0 });
     expect(expanded.diagnostics().totalBranchCount === 1_001 && lazy.diagnostics().totalBranchCount === 1, "materialization state remains isolated across two inspectors");
@@ -174,7 +170,7 @@ function profileObject(size: number): Readonly<{
 }> {
   root.empty();
   const value = Object.fromEntries(Array.from({ length: size }, (_, index) => [`property-${index}`, index]));
-  const source = hson.liveMap.fromJson(value);
+  const source = hsonLiveMap.fromJson(value);
   const host = root.create.div();
   const profiler = begin_livetree_materialization_profile();
   const started = performance.now();

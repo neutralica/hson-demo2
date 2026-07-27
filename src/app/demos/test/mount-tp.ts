@@ -1,4 +1,5 @@
-import { LiveTree, hson } from "hson-live";
+import { hson } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
 import { create_test_chips } from "./test-helpers";
 import type { TestSummary, UiLevel } from "./tests.types";

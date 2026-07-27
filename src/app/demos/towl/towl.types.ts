@@ -1,7 +1,7 @@
 import type {
   LiveHost,
   LiveHostSessionOptions,
-} from "hson-live";
+} from "hson-live/livehost";
 
 export type TowlSeatId = "player1" | "player2";
 export type TowlPhase = "lobby" | "ready" | "playing" | "finished";

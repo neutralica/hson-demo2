@@ -1,6 +1,6 @@
 // livetree-25-regression-2.ts
 
-import { hson, type LiveTree } from "hson-live";
+import {  hsonLiveTree, type LiveTree } from "hson-live/livetree";
 
 import {
   make_livetree_suite,
@@ -57,7 +57,7 @@ export function livetree_regression_2(): TestSuite {
 
       act(tree) {
         const source = identitySnapshot(tree, ROUNDTRIP_IDS);
-        const hydrated = hson.liveTree.fromTrustedHtml(tree.dom.must.el());
+        const hydrated = hsonLiveTree.fromTrustedHtml(tree.dom.must.el());
         const next = identitySnapshot(hydrated, ROUNDTRIP_IDS);
 
         (tree as any).__result = {
@@ -95,7 +95,7 @@ export function livetree_regression_2(): TestSuite {
         const htmlBefore = sourceElement.innerHTML;
         const identityBefore = identitySnapshot(tree, ROUNDTRIP_IDS);
 
-        const hydrated = hson.liveTree.fromTrustedHtml(sourceElement);
+        const hydrated = hsonLiveTree.fromTrustedHtml(sourceElement);
 
         const htmlAfter = sourceElement.innerHTML;
         const identityAfter = identitySnapshot(tree, ROUNDTRIP_IDS);
@@ -136,8 +136,8 @@ export function livetree_regression_2(): TestSuite {
 
       act(tree) {
         const sourceElement = tree.dom.must.el();
-        const first = hson.liveTree.fromTrustedHtml(sourceElement);
-        const second = hson.liveTree.fromTrustedHtml(sourceElement);
+        const first = hsonLiveTree.fromTrustedHtml(sourceElement);
+        const second = hsonLiveTree.fromTrustedHtml(sourceElement);
         const firstIds = identitySnapshot(first, ROUNDTRIP_IDS);
         const secondIds = identitySnapshot(second, ROUNDTRIP_IDS);
 
@@ -166,7 +166,7 @@ export function livetree_regression_2(): TestSuite {
       act(tree) {
         const sectionQuid = "0000000000000001";
         const childQuid = "0000000000000002";
-        const imported = hson.liveTree.fromTrustedHtml(`
+        const imported = hsonLiveTree.fromTrustedHtml(`
           <section id="persisted" data-_quid="${sectionQuid}">
             <span id="persisted-child" data-_quid="${childQuid}">child</span>
           </section>
@@ -211,7 +211,7 @@ export function livetree_regression_2(): TestSuite {
         let imported: LiveTree | undefined;
 
         try {
-          imported = hson.liveTree.fromTrustedHtml(`
+          imported = hsonLiveTree.fromTrustedHtml(`
       <main id="duplicate-root">
         <section id="first" data-_quid="${duplicateQuid}"></section>
         <section id="second" data-_quid="${duplicateQuid}"></section>
@@ -251,13 +251,13 @@ export function livetree_regression_2(): TestSuite {
 
       act(tree) {
         const duplicateQuid = "0000000000000001";
-        const first = hson.liveTree.fromTrustedHtml(
+        const first = hsonLiveTree.fromTrustedHtml(
           `<section id="owner" data-_quid="${duplicateQuid}"></section>`,
         );
         let message = "";
 
         try {
-          const second = hson.liveTree.fromTrustedHtml(
+          const second = hsonLiveTree.fromTrustedHtml(
             `<section id="contender" data-_quid="${duplicateQuid}"></section>`,
           );
           second.removeSelf();
@@ -306,7 +306,7 @@ export function livetree_regression_2(): TestSuite {
         const wrapper = document.createElement("div");
         wrapper.append(target.dom.must.el().cloneNode(true));
 
-        const hydrated = hson.liveTree.fromTrustedHtml(wrapper);
+        const hydrated = hsonLiveTree.fromTrustedHtml(wrapper);
         const next = identitySnapshot(hydrated, ids);
 
         (tree as any).__result = {
@@ -343,7 +343,7 @@ export function livetree_regression_2(): TestSuite {
 
       act(tree) {
         tree.find.must.byId("removed").removeSelf();
-        const hydrated = hson.liveTree.fromTrustedHtml(tree.dom.must.el());
+        const hydrated = hsonLiveTree.fromTrustedHtml(tree.dom.must.el());
 
         (tree as any).__result = {
           survivorExists: hydrated.find.byId("survivor") !== undefined,
@@ -383,7 +383,7 @@ export function livetree_regression_2(): TestSuite {
       act(tree) {
         const sourcePanel = tree.find.must.byId("panel");
         const sourceQuid = sourcePanel.quid;
-        const hydrated = hson.liveTree.fromTrustedHtml(tree.dom.must.el());
+        const hydrated = hsonLiveTree.fromTrustedHtml(tree.dom.must.el());
         const panel = hydrated.find.must.byId("panel");
         const accent = hydrated.find.must.byId("accent");
 
@@ -425,7 +425,7 @@ export function livetree_regression_2(): TestSuite {
           </section>
         `;
 
-        const first = hson.liveTree.fromTrustedHtml(markup);
+        const first = hsonLiveTree.fromTrustedHtml(markup);
         const firstRootMatches = first.find.must.byId("owner").quid === rootQuid;
         const firstChildMatches = first.find.must.byId("owner-child").quid === childQuid;
         tree.find.must.byId("root").append(first);
@@ -433,7 +433,7 @@ export function livetree_regression_2(): TestSuite {
 
         let duplicateMessage = "";
         try {
-          const second = hson.liveTree.fromTrustedHtml(markup);
+          const second = hsonLiveTree.fromTrustedHtml(markup);
           second.remove();
         } catch (error) {
           duplicateMessage = error instanceof Error ? error.message : String(error);
@@ -476,7 +476,7 @@ export function livetree_regression_2(): TestSuite {
         let imported: LiveTree | undefined;
 
         try {
-          imported = hson.liveTree.fromTrustedHtml(`
+          imported = hsonLiveTree.fromTrustedHtml(`
             <section id="duplicate-owner" data-_quid="${duplicateQuid}">
               <span id="duplicate-child" data-_quid="${duplicateQuid}">child</span>
             </section>

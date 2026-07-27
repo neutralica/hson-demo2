@@ -1,7 +1,7 @@
 
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
-import { CssManager } from "hson-live";
+import { CssManager } from "hson-live/livetree";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
 import { _fontSize } from "../../app/core/consts/ui-consts";
 import { selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";

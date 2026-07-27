@@ -1,6 +1,6 @@
-import { hson } from "hson-live";
-import type { LiveInspector, LiveMap } from "hson-live";
-import type { LiveTree } from "hson-live";
+import { hson, type LiveInspector } from "hson-live";
+import type {  LiveMap } from "hson-live/livemap";
+import type { LiveTree } from "hson-live/livetree";
 
 export type InspectorFixture = Readonly<{
   root: LiveTree;

@@ -1,5 +1,5 @@
 // panels.types.ts
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { Fmt } from "../../core/types/core.types";
 
 export type PanelViewMode = "text" | "node";

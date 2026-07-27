@@ -1,4 +1,4 @@
-import { hson, LiveTree, make_tree_selector } from "hson-live";
+import {  hsonLiveTree, LiveTree } from "hson-live/livetree";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
@@ -183,7 +183,7 @@ export function livetree_svg_basic(): TestSuite {
         root.create.svg(`<svg id="s"><circle cx="1" cy="2" r="3"></circle></svg>`);
 
         const rootEl = root.dom.el();
-        const round = hson.liveTree.fromTrustedHtml(rootEl!);
+        const round = hsonLiveTree.fromTrustedHtml(rootEl!);
 
         const sandboxHost = (tree as any).__sandboxHost;
         sandboxHost.append(round);
@@ -552,7 +552,7 @@ export function livetree_svg_basic(): TestSuite {
     `);
 
         const rootEl = root.dom.el();
-        const round = hson.liveTree.fromTrustedHtml(rootEl!);
+        const round = hsonLiveTree.fromTrustedHtml(rootEl!);
 
         const sandboxHost = (root as any).__sandboxHost;
         sandboxHost.append(round);

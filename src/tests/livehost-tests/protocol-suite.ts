@@ -1,6 +1,11 @@
 // livehost/protocol-suite.ts
 
-import { decode_livehost_message, decode_livehost_server_message, encode_livehost_message } from "hson-live";
+
+import {
+  decode_livehost_message,
+  decode_livehost_server_message,
+  encode_livehost_message,
+} from "hson-live/livehost";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "../livemap-tests/handle-helpers";
 

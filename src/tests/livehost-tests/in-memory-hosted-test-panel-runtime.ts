@@ -1,4 +1,4 @@
-import { create_livehost_client } from "hson-live";
+import { create_livehost_client } from "hson-live/livehost";
 import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../app/demos/test/hosted-test-panel-runtime";
 import type {

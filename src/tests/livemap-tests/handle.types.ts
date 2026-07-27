@@ -1,4 +1,4 @@
-import type { LivePath } from "hson-live";
+import type { LivePath } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TestLiveMap, TestHandle } from "./handle-suite";
 import type { LiveMapFeedEventPreview } from "./types";

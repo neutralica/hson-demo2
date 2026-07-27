@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import type { DeckSlideConfig, DeckState, DeckSlideBody } from "./deck.types";
 import { _fontSize } from "../../core/consts/ui-consts";

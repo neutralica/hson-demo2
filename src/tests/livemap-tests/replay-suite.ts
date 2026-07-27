@@ -1,6 +1,6 @@
 // replay-suite.ts
 
-import { define_livemap_schema, make_livemap_core } from "hson-live";
+import { define_livemap_schema, make_livemap_core } from "hson-live/livemap";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "./handle-helpers";
 import { json_root_node } from "./json-root-node";

@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { HostedTestCaseReport, HostedTestReport } from "../../hosted-test/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
 import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";

@@ -2,7 +2,7 @@
 // Fireworks tuning knobs
 // -------------------------
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 type FireworksWasm = {
   memory: WebAssembly.Memory;

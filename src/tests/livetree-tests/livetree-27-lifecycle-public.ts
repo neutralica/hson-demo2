@@ -1,11 +1,11 @@
 import {
   CssManager,
-  hson,
+  hsonLiveTree,
   LiveTree,
   LiveTreeAlreadyAttachedError,
   LiveTreeDisposedError,
   LiveTreeProtectedRootError,
-} from "hson-live";
+} from "hson-live/livetree";
 import {
   _collect_subtree_nodes,
   _CREATE_NODE,
@@ -18,6 +18,7 @@ import {
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { hsonLiveMap } from "hson-live/livemap";
 
 const DATA_QUID = "data-_quid";
 
@@ -104,7 +105,7 @@ function detach_contents_case(suite: string): LiveTreeCaseSpec {
       let clicks = 0;
       branch.listen.onClick(() => { clicks += 1; });
       branch.css.setMany({ color: "blue" });
-      const map = hson.liveMap.fromJson({ label: "initial" });
+      const map = hsonLiveMap.fromJson({ label: "initial" });
       const off = branch.bind.text(map, ["label"]);
 
       const detached = source.detachContents();
@@ -191,7 +192,7 @@ function detach_case(suite: string): LiveTreeCaseSpec {
           && other.content.all().length === 0;
       }
 
-      const malformed = hson.liveTree.fromTrustedHtml(`<article></article>`);
+      const malformed = hsonLiveTree.fromTrustedHtml(`<article></article>`);
       const malformedNode = malformed.node;
       const malformedQuid = malformed.quid;
       (malformedNode.$_meta ??= {})[DATA_QUID] = tree.quid;
@@ -291,7 +292,7 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
         () => target.css.setMany({ color: "red" }),
         () => target.events.emit("x"),
         () => target.listen.onClick(() => undefined),
-        () => target.bind.text(hson.liveMap.fromJson({ x: "y" }), ["x"]),
+        () => target.bind.text(hsonLiveMap.fromJson({ x: "y" }), ["x"]),
         () => target.svg.inScope(),
         () => target.canvas.inScope(),
         () => target.dom.el(),
@@ -308,7 +309,7 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
         () => cachedText.set("cached"),
         () => cachedData.set("cached", "yes"),
         () => cachedListen.onClick(() => undefined),
-        () => cachedBind.text(hson.liveMap.fromJson({ x: "y" }), ["x"]),
+        () => cachedBind.text(hsonLiveMap.fromJson({ x: "y" }), ["x"]),
       ];
       for (const operation of operations) {
         try {
@@ -339,7 +340,7 @@ function roots_and_legacy_case(suite: string): LiveTreeCaseSpec {
     dom: true,
     html: `<main><section id="legacy">before<span id="legacy-child">x</span>after</section><aside id="legacy-remove"></aside></main>`,
     act(tree) {
-      const detachedRoot = hson.liveTree.fromTrustedHtml(`<article></article>`);
+      const detachedRoot = hsonLiveTree.fromTrustedHtml(`<article></article>`);
       const detachedRootRemoved = detachedRoot.detach() === 0
         && detachedRoot.remove() === 1
         && detachedRoot.isDisposed;
@@ -347,7 +348,7 @@ function roots_and_legacy_case(suite: string): LiveTreeCaseSpec {
       const ownedElement = document.createElement("section");
       ownedElement.id = `owned-lifecycle-${crypto.randomUUID()}`;
       document.body.appendChild(ownedElement);
-      const ownedTree = hson.liveTree.queryDom(`#${ownedElement.id}`).graft();
+      const ownedTree = hsonLiveTree.queryDom(`#${ownedElement.id}`).graft();
       const ownedDetached = ownedTree.detach() === 1
         && !ownedElement.isConnected
         && !ownedTree.isDisposed;

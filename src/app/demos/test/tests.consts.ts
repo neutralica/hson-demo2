@@ -1,6 +1,6 @@
 // tests.consts.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 export const $CHIP_WIDTHnum = 1;
 export const $CHIP_WIDTHstr = ` ${$CHIP_WIDTHnum}ch`;

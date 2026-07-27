@@ -1,6 +1,6 @@
 // schema-suites.ts
 
-import { make_livemap_schema, LIVEMAP_SCHEMA, define_livemap_schema, make_livemap_core } from "hson-live";
+import { make_livemap_schema, LIVEMAP_SCHEMA, define_livemap_schema, make_livemap_core } from "hson-live/livemap";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { json_root_node } from "./core-helpers";
 import { read_case } from "./handle-helpers";

@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { LiveMapCommit, LiveMapOp } from "hson-live";
+import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
 import type { RunResult, TestEvent } from "../../app/demos/test/tests.types";
 import type {

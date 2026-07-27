@@ -1,7 +1,7 @@
 
 // link-contract-suites.ts
 
-import { link_livemap, make_livemap_core } from "hson-live";
+import { link_livemap, make_livemap_core } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";

@@ -1,4 +1,6 @@
-import { LiveTree, hson } from "hson-live";
+
+import { hson } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 import { $BUILD_ROOT, BUILD_STRINGhson } from "./build.consts";
 import {
     BUILD_BODYcss,

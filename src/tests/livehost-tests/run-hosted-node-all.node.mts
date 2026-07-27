@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { create_livehost_client } from "hson-live";
+import { create_livehost_client } from "hson-live/livehost";
 import type { LiveHostSocketLike } from "hson-live/types";
 import { create_hosted_test_livehost, run_hosted_test_action, type HostedTestActions } from "../../app/hosted-test/hosted-test-action";
 import type { HostedTestReportController } from "../../app/hosted-test/hosted-test-report";

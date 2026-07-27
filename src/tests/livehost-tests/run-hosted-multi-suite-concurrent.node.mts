@@ -1,4 +1,4 @@
-import { create_livehost_client } from "hson-live";
+import { create_livehost_client } from "hson-live/livehost";
 import type { LiveHostSocketLike } from "hson-live/types";
 import {
   create_hosted_test_livehost,

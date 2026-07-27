@@ -1,4 +1,5 @@
-import { hson, type LiveTree } from "hson-live";
+import { hson } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 import { ABOUT_ROOT_ID } from "../../core/consts/ui-consts";
 import { find_doc } from "./about-helpers";
 import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_TOCcss, ABOUT_DOCcss, DOC_CONTAINER, TOC_BTNcss, TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss } from "./about.css";

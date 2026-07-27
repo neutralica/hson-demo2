@@ -1,4 +1,4 @@
-import { define_livemap_schema } from "hson-live";
+import { define_livemap_schema } from "hson-live/livemap";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { read_case, throwCase, commitCase } from "./handle-helpers";
 

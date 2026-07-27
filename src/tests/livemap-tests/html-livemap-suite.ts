@@ -1,11 +1,12 @@
 // html-livemap-suite.ts
 
-// livemap-suites-html-proof.ts
 
-import { hson, make_livemap_core } from "hson-live";
+
+import {  make_livemap_core } from "hson-live/livemap";
 import type { JsonValue, LiveMap } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
+import  { hson } from "hson-live";
 
 export function livemap_suite_html_proof(): TestSuite {
   const SUITE = "livemap/html-proof";

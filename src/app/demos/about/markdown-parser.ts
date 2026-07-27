@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { ABOUT_P_TEXTcss, ABOUT_LIST_ROWcss, ANTI_LIST_MARKERcss, ABOUT_LIST_MARKERcss, ANTI_LIST_TEXTcss, LIST_TEXTcss, MD_CODE_PREcss, MD_LINK_LINEcss, MD_COPY_LINEcss, HRcss, ABOUT_HEADERcss, WARNINGcss, FLUSH_LISTcss } from "./about.css";
 import { extractUrl, isIndented, parse_list_item, render_line_with_comment } from "./about-helpers";

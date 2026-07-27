@@ -1,4 +1,4 @@
-import { make_livemap_core } from "hson-live";
+import { make_livemap_core } from "hson-live/livemap";
 import type { TestCase } from "../../app/demos/test/tests.types";
 import { json_root_node } from "./json-root-node";
 import type { CommitCaseSpec, FeedCaseSpec, LinkCaseSpec, ThrowCaseSpec, ReadCaseSpec, HandleSnapCaseSpec, HandleSetCaseSpec, HandleSetManyCaseSpec, HandleSetManyFeedCaseSpec, HandleDeleteCaseSpec, HandleDeleteFeedCaseSpec, HandleUpdateCaseSpec, HandleUpdateFeedCaseSpec, HandlePathCopyCaseSpec, HandleOriginalPathStabilityCaseSpec } from "./handle.types";

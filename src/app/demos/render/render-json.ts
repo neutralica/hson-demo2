@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import type { CssMap, JsonValue } from "hson-live/types";
 import type { JsonRenderKind, JsonPathPart, JsonRenderDraft, JsonRenderRole, JsonRenderPart, JsonRenderOptions, JsonRender, ConnectorPosition } from "./render.types";
 import { COMPLEX_VALUE_CSS, CONNECTOR_CSS, CONNECTOR_RAIL_CLEAR_CSS, DEMO_COLUMN_CSS, DEMO_ERROR_CSS, DEMO_LABEL_CSS, DEMO_OUTPUT_CSS, DEMO_ROOT_CSS, DEMO_TEXTAREA_CSS, HIGHLIGHT_CLEAR_CSS, HIGHLIGHT_CONNECTOR_CSS, HIGHLIGHT_RELATED_CSS, HIGHLIGHT_SELF_CSS, KEY_CSS, NODE_HIT_CSS, PATH_TEXT_CSS, PRIMITIVE_CSS, ROOT_CSS, ROW_CSS, TRIGGER_CSS, VALUE_CSS } from "./render.css";

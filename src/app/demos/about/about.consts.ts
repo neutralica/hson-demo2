@@ -1,12 +1,12 @@
 import type { AboutDocs } from "./about.types";
 import README from "../../../../../hson-live/README.md?raw";
-import HSON_TRANSFORM_MD from "../../../../../hson-live/docs/api-transform.md?raw";
-import HSON_CSS_API from "../../../../../hson-live/docs/api-css-manager.md?raw";
+import HSON_TRANSFORM_MD from "../../../../../hson-live/docs/transform/api-transform.md?raw";
+import HSON_CSS_API from "../../../../../hson-live/docs/livetree/api-css-manager.md?raw";
 import HSON_SPEC_SYNTAX from "../../../../../hson-live/docs/hson-syntax.md?raw";
 import HSON_SPEC_NODE_GRAPH from "../../../../../hson-live/docs/hson-nodes.md?raw";
 import HSON_SPEC_JSON from "../../../../../hson-live/docs/hson-json.md?raw";
 import HSON_SPEC_HTML from "../../../../../hson-live/docs/hson-html.md?raw";
-import LIVETREE_LIST from "../../../../../hson-live/docs/api-livetree.md?raw";
+import LIVETREE_LIST from "../../../../../hson-live/docs/livetree/api-livetree.md?raw";
 import LIVEDEMO_README from "../../../../README.md?raw";
 
 

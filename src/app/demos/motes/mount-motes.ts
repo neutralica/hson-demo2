@@ -1,4 +1,4 @@
-import { type LiveTree } from "hson-live";
+import { type LiveTree } from "hson-live/livetree";
 import { motes_init } from "./motes-init";
 import type { MotesOpts, MotesRig } from "./make-mote";
 import { OKLCH_FLEURS } from "../fleurs/fleurs.consts";

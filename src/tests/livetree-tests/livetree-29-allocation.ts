@@ -1,4 +1,4 @@
-import { hson, LiveTree } from "hson-live";
+import {  hsonLiveTree, LiveTree } from "hson-live/livetree";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
@@ -65,7 +65,7 @@ function prototype_methods_case(suite: string): LiveTreeCaseSpec {
     name: "append and empty are prototype-backed without changing chaining",
     html: `<main></main>`,
     act(tree) {
-      const branch = hson.liveTree.create.span();
+      const branch = hsonLiveTree.create.span();
       prototypeBacked = !Object.hasOwn(tree, "append")
         && !Object.hasOwn(tree, "empty")
         && tree.append === LiveTree.prototype.append

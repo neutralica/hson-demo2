@@ -1,6 +1,6 @@
 // ---- types ----
 
-import { LiveTree } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 
 export type PointPanelRig = Readonly<{
     root: LiveTree;

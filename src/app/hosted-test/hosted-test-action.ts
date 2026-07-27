@@ -1,5 +1,5 @@
-import { create_livehost } from "hson-live";
-import type { LiveHostActions, LiveHostSchema } from "hson-live";
+import { create_livehost } from "hson-live/livehost";
+import type { LiveHostActions, LiveHostSchema } from "hson-live/livehost";
 import type { JsonValue } from "hson-live/types";
 import type { RunResult, TestFailure, TestSummary } from "../demos/test/tests.types";
 import { is_hosted_test_suite_id } from "./hosted-test-suite";

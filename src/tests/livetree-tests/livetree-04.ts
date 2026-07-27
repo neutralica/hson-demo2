@@ -1,4 +1,4 @@
-import { CssManager, hson, LiveTree } from "hson-live";
+import { CssManager, hsonLiveTree} from "hson-live/livetree";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { get_hson_css_rules, get_rule_for_quid, tick } from "./livetree-03";
@@ -478,8 +478,8 @@ export function document_question(): TestSuite {
         const hostB = tree.find.must.byId("host-b").node;
 
         // replace with your real constructor / branch API
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         (tree as any).__trees = { treeA, treeB };
       },
@@ -510,8 +510,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         (tree as any).__results = {
           aFindA: treeA.find.byId("only-a"),
@@ -549,8 +549,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         (tree as any).__results = {
           aFindA: treeA.find.byId("only-a"),
@@ -588,8 +588,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         const elA = treeA.find.must.byAttribute("class", "box").dom.el() as HTMLElement;
         const elB = treeB.find.must.byAttribute("class", "box").dom.el() as HTMLElement;
@@ -626,8 +626,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         const boxA = treeA.find.must.byAttribute("class", "box");
         const boxB = treeB.find.must.byAttribute("class", "box");
@@ -679,8 +679,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         const b = treeB.find.must.byId("b");
         b.css.setMany({ opacity: "0.4" });
@@ -720,8 +720,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         let hitsA = 0;
         let hitsB = 0;
@@ -758,8 +758,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         const aIds = treeA.findAll.byAttribute("class", "box").map((n: any) => {
           const el = n.dom.el() as HTMLElement;
@@ -798,8 +798,8 @@ export function document_question(): TestSuite {
         const hostA = tree.find.must.byId("host-a").node;
         const hostB = tree.find.must.byId("host-b").node;
 
-        const treeA = hson.liveTree.fromNode(hostA);
-        const treeB = hson.liveTree.fromNode(hostB);
+        const treeA = hsonLiveTree.fromNode(hostA);
+        const treeB = hsonLiveTree.fromNode(hostB);
 
         const a = treeA.find.must.byId("a");
         const b = treeB.find.must.byId("b");

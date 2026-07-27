@@ -1,4 +1,4 @@
-import { create_livehost, create_livehost_client, hson } from "hson-live";
+import { create_livehost, create_livehost_client } from "hson-live/livehost";
 import type { JsonValue, LiveHostSocketLike } from "hson-live/types";
 import { HOSTED_TEST_REPORT_SCHEMA, make_hosted_test_report } from "./hosted-test-report";
 import {
@@ -9,6 +9,7 @@ import {
   HostedTestReportCommitDecodeError,
 } from "./hosted-test-report-wire";
 import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+import { hsonLiveMap } from "hson-live/livemap";
 
 type Listener = (message: string) => void;
 
@@ -105,7 +106,7 @@ expect_bridge(receivedCommit.prevRev === 0 && receivedCommit.rev === 1, "revisio
 equal(receivedCommit.ops, localCommit.ops, "operations survive protocol delivery");
 
 const initialJson = structuredClone(initial.value) as unknown as JsonValue;
-const replay = hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA);
+const replay = hsonLiveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA);
 replay.replay({ prevRev: receivedCommit.prevRev, ops: receivedCommit.ops });
 equal(replay.capture().value, report.map.capture().value, "protocol-delivered commit replays to expected report state");
 

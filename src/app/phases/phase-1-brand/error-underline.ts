@@ -1,6 +1,6 @@
 // error-underline.ts
 
-import { hson, LiveTree } from "hson-live";
+import { hsonLiveTree, type LiveTree } from "hson-live/livetree";
 import type { SvgLiveTree } from "hson-live/types";
 
 
@@ -77,7 +77,7 @@ export function makeSvgErrUnderline(opts: {
   const clipH = Math.max(1, h - pad * 2);
 
   //  create a detached svg root directly
-  const svg = hson.liveTree.create.svg();
+  const svg = hsonLiveTree.create.svg();
 
   svg.attrs.setMany({
     xmlns: "http://www.w3.org/2000/svg",

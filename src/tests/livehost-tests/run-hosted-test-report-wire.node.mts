@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { LiveMapCommit, LiveMapOp } from "hson-live";
+import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import { create_hosted_test_livehost, type HostedTestRunResult } from "./hosted-replay-action";
 import { HOSTED_TEST_REPORT_SCHEMA, type HostedTestReportController } from "./hosted-test-report";

@@ -12,7 +12,7 @@ import { _colors } from "./core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
-import { CssManager, LiveTree } from "hson-live";
+import { CssManager,  LiveTree } from "hson-live/livetree";
 
 
 const gcss = CssManager.api();
@@ -39,7 +39,6 @@ export async function run_app(root: LiveTree): Promise<void> {
   const hard_cut = (): void => {
     stage.empty();
   };
-
   try {
     // --- phase 1: intro ---
     {

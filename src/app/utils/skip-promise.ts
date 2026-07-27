@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 //  add a tiny sentinel type so Promise.race() is unambiguous
 export type PhaseResult = "ok" | "fail";

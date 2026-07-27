@@ -3,7 +3,7 @@
 // Types
 // -----------------------------
 
-import { LiveTree, hson } from "hson-live";
+import { hsonLiveTree, LiveTree} from "hson-live/livetree";
 import type { TestSuite, TestCase, MetaPatch, Asserter, TestAssertRow } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { apply_hosted_test_element_rect } from "../../app/demos/test/hosted-test-geometry";
@@ -35,7 +35,7 @@ export function make_livetree_suite(
         );
       }
 
-      const tree = hson.liveTree.fromTrustedHtml(html);
+      const tree = hsonLiveTree.fromTrustedHtml(html);
       // ADDED: DOM mount
       let sandbox: HTMLDivElement | null = null;
       
@@ -55,7 +55,7 @@ export function make_livetree_suite(
 
           // this is the key — create DOM now
           // If graft is sync in your implementation, await is harmless.
-          const host = hson.liveTree.queryDom("#hson-sandbox").graft();
+          const host = hsonLiveTree.queryDom("#hson-sandbox").graft();
           (tree as any).__sandboxHost = host;
           (tree as any).__sandboxEl = sandbox;
           host.append(tree);

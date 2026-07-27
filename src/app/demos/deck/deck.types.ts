@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 export type DeckBodyKind = "text" | "code" | "image";
 

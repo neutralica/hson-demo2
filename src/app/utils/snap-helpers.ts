@@ -1,6 +1,6 @@
 // snap-helpers.ts
 
-import { LiveTree } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 
 export type SnapUnit = number; // pixels
 

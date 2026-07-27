@@ -1,4 +1,5 @@
-import { hson, type LiveTree } from "hson-live";
+
+import type {  LiveTree } from "hson-live/livetree";
 import  { mk_div_cls } from "../../utils/makers";
 
 

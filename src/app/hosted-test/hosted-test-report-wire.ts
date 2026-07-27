@@ -1,5 +1,5 @@
 /** @deprecated Patch 6 compatibility codec. Generic canonical commits are the production wire format. */
-import type { LiveMapCommit, LiveMapOp } from "hson-live";
+import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
 import type {
   HostedTestReportCommitEnvelope,

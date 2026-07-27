@@ -1,6 +1,6 @@
 // guard-suites.ts
 
-import { make_livemap_core } from "hson-live";
+import { make_livemap_core } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { json_root_node } from "./json-root-node";

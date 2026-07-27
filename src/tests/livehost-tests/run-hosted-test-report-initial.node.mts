@@ -1,4 +1,4 @@
-import { decode_livehost_server_message, encode_livehost_message } from "hson-live";
+import { decode_livehost_server_message, encode_livehost_message } from "hson-live/livehost";
 import type { JsonValue } from "hson-live/types";
 import { make_hosted_test_report } from "./hosted-test-report";
 import {

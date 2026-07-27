@@ -1,4 +1,4 @@
-import { CssManager, type LiveTree } from "hson-live";
+import { CssManager, type LiveTree } from "hson-live/livetree";
 import { mk_div_cls, mk_div_id } from "../../utils/makers";
 import { CLOUD_TILE_W, CLOUD_DURnum, CLOUD_BAND_LOOPstr, CLOUD_SUN_KISSstr } from "./splash.consts";
 import { _hash01, _lerp } from "../../utils/helpers";

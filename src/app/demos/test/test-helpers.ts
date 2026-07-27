@@ -1,4 +1,4 @@
-import  { LiveTree } from "hson-live";
+import  { LiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { mk_div_id, mk_div_cls } from "../../utils/makers";
 import type { TestSummary } from "./tests.types";

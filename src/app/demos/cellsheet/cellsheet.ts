@@ -1,9 +1,11 @@
 // cellsheet.ts
 
-import { bind_paths, derive_from_paths, hson, make_microtask_scheduler, type LiveTree } from "hson-live";
+import { hson  } from "hson-live";
 import type { CellsheetDerivedCellState, Operator, CellModel, OperationModel, CellsheetOperationState, CellsheetPanel } from "./cellsheet.types";
 import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, CARDcss, LABELcss, METAcss, RESETcss, FOOTERcss, RESIZE_EDGE, SEL_EDGE, AUTH_TEXT, DER_TEXT, OPERATOR_COLOR, ERR_TEXT, RELAT_EDGE, BORDER, DER_BORDER, ERR_BORDER } from "./cellsheet.css";
 import { create_initial_cellsheet_state, ROWS, COLS, is_record, apply_authored_raw, derived_cell_from_model, operation_state_from_model, summary_state_from_models, read_summary_from_snap, read_derived_cell_from_snap, read_operations_from_snap, operation_touches_cell, format_operation_state, render_cell_from_derived, is_operator, compute_result, operation_error, mark_related_cell, read_selected_from_snap, reset_derived_state, MAX_EVALUATION_PASSES, remember_operation_once, result_target_error, model_value_changed, value_text, cell_key } from "./cellsheet-helpers";
+import { derive_from_paths, make_microtask_scheduler, bind_paths } from "hson-live/livemap";
+import type { LiveTree } from "hson-live/livetree";
 
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellModel[] = [];

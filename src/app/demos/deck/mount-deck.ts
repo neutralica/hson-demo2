@@ -1,6 +1,6 @@
 // mount-deck.ts
 
-import { LiveTree } from "hson-live";
+import { type LiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { ABOUT_P_TEXTcss, ABOUT_HEADERcss, ABOUT_LIST_ROWcss, ABOUT_LIST_MARKERcss, LIST_TEXTcss, FLUSH_LISTcss } from "../about/about.css";
 import { set_alpha } from "../../core/helpers/color-helpers";

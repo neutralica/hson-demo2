@@ -1,4 +1,4 @@
-import { make_livemap_core } from "hson-live";
+import { make_livemap_core } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";

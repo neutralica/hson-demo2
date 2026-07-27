@@ -1,6 +1,6 @@
 // mount-demo.ts
 
-import { LiveTree } from "hson-live";
+import { LiveTree } from "hson-live/livetree";
 import type { SvgLiveTree } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
@@ -35,9 +35,6 @@ import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
-import { bud_node } from "../../widgets/buds-deprecate/bud-config";
-import { SPLASH_BUDS } from "../phase-2-splash/splash.buds";
-import { begin_star } from "../phase-2-splash/mount-splash";
 import { make_amoebi } from "../../demos/amoeba/make-amoebi";
 import { type AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
 

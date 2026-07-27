@@ -1,15 +1,15 @@
 // quid-suite.ts
 
 import {
-  hson,
   debug_livemap_quids,
   drop_livemap_quid,
   ensure_livemap_quid,
   get_livemap_owner,
   get_livemap_quid,
+  hsonLiveMap,
   reindex_livemap_quid,
   remint_livemap_quid,
-} from "hson-live";
+} from "hson-live/livemap";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "./handle-helpers";
 
@@ -384,7 +384,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "path handle quid is stable for repeated property reads",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
           const handle = map.at(["user"]);
           const first = handle.quid;
           const second = handle.quid;
@@ -408,7 +408,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "path handle quid is stable for same map and same path",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
           const firstHandle = map.at(["user"]);
           const secondHandle = map.at(["user"]);
           const firstQuid = firstHandle.quid;
@@ -433,7 +433,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "path handle quid differs for same map and different paths",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" }, settings: { theme: "dark" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" }, settings: { theme: "dark" } });
           const userHandle = map.at(["user"]);
           const settingsHandle = map.at(["settings"]);
           const userQuid = userHandle.quid;
@@ -458,8 +458,8 @@ export function livemap_suites_quid(): TestSuite {
         name: "path handle quid differs for different maps and same path",
         input: {},
         act: () => {
-          const firstMap = hson.liveMap.fromJson({ user: { name: "Ada" } });
-          const secondMap = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const firstMap = hsonLiveMap.fromJson({ user: { name: "Ada" } });
+          const secondMap = hsonLiveMap.fromJson({ user: { name: "Ada" } });
           const firstHandle = firstMap.at(["user"]);
           const secondHandle = secondMap.at(["user"]);
           const firstQuid = firstHandle.quid;
@@ -484,7 +484,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "path handle quid survives value mutation at same path",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
           const handle = map.at(["user"]);
           const before = handle.quid;
 
@@ -506,7 +506,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "proxy handle quid matches core at same path",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
           const proxy = map.proxy() as any;
           const proxyHandle = proxy.user.$_;
           const atHandle = map.at(["user"]);
@@ -530,7 +530,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "proxy handle quid is stable for repeated same path access",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
           const proxy = map.proxy() as any;
           const firstHandle = proxy.user.$_;
           const secondHandle = proxy.user.$_;
@@ -554,7 +554,7 @@ export function livemap_suites_quid(): TestSuite {
         name: "proxy handle quid differs for different paths",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromJson({ user: { name: "Ada" }, settings: { theme: "dark" } });
+          const map = hsonLiveMap.fromJson({ user: { name: "Ada" }, settings: { theme: "dark" } });
           const proxy = map.proxy() as any;
           const userHandle = proxy.user.$_;
           const settingsHandle = proxy.settings.$_;

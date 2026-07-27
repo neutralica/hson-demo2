@@ -3,7 +3,7 @@
 import type {
   LiveHostDisposer,
   LiveHostSocketLike,
-} from "hson-live";
+} from "hson-live/livehost";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import {
 

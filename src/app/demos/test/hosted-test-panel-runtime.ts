@@ -1,4 +1,4 @@
-import { create_livehost_client, LiveHostDisconnectedError } from "hson-live";
+import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
 import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise } from "hson-live/types";
 import type {
   HostedTestActions,

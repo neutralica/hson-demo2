@@ -1,6 +1,6 @@
 // panels.simple.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 import { FONT_FAM_MONO } from "../../core/consts/css.consts";
 

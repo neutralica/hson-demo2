@@ -1,6 +1,6 @@
 // livemap-suites-feed.ts
 
-import { make_livemap_core, make_livemap_feed_hub, paths_overlap } from "hson-live";
+import { make_livemap_core, make_livemap_feed_hub, paths_overlap } from "hson-live/livemap";
 import type { JsonValue, LiveMapCommit, LiveMapFeedEvent, LivePath } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";

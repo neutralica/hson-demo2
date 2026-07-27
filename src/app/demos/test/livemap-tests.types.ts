@@ -1,4 +1,5 @@
-import type { LivePath, LiveTree } from "hson-live";
+import type { LivePath } from "hson-live/livemap";
+import type { LiveTree } from "hson-live/livetree";
 import type { JsonValue, HsonNode, LiveMapEditResult } from "hson-live/types";
 import type { Asserter } from "./tests.types";
 import type { HostedTestGeometryFixture } from "./hosted-test-geometry";

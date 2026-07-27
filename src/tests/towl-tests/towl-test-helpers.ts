@@ -1,4 +1,4 @@
-import type { LiveHostSocketLike } from "hson-live";
+import type { LiveHostSocketLike } from "hson-live/livehost";
 import type { TestCase } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "../livemap-tests/test-helpers";
 import type { TowlActions, TowlRuntime } from "../../app/demos/towl";

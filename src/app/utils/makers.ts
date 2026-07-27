@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 export const mk_div = (lt: LiveTree) => lt.create.div();
 export const mk_div_cls = (lt: LiveTree, cls: string | string[]) => lt.create.div().classlist.set(cls);

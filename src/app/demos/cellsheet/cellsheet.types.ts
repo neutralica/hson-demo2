@@ -1,4 +1,4 @@
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 
 export type Operator = "+" | "-" | "*" | "/";
 export type CellKind = "blank" | "text" | "number" | "operator" | "result" | "error";

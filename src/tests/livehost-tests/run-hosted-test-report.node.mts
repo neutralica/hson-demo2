@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { LiveMapFeedEvent, LiveMapOp } from "hson-live";
+import type { LiveMapFeedEvent, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
 import type { RunResult, TestEvent } from "../../app/demos/test/tests.types";
 import { create_hosted_test_livehost, type HostedTestRunResult } from "./hosted-replay-action";

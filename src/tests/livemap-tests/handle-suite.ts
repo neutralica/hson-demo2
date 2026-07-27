@@ -1,6 +1,6 @@
 // suites-handle.ts
 
-import { make_livemap_core } from "hson-live";
+import { make_livemap_core } from "hson-live/livemap";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { snapCase, setCase, setManyCase, setManyFeedCase, deleteCase, deleteFeedCase, updateCase, updateFeedCase, read_case, commitCase, throwCase, feedCase, linkCase, pathCopyCase, originalPathCase } from "./handle-helpers";
 

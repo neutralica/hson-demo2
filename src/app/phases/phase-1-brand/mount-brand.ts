@@ -1,6 +1,6 @@
 // intro.ts
 
-import type { LiveTree } from "hson-live";
+import type { LiveTree } from "hson-live/livetree";
 import { attach_error_underline } from "./error-underline";
 import { zalgo_unicode, type ZConfig } from "./zalgo";
 import { mk_div_id } from "../../utils/makers";

@@ -1,4 +1,4 @@
-import { hson, type LiveTree } from "hson-live";
+import {  type LiveTree } from "hson-live/livetree";
 import type { LiveHostSessionCredential } from "hson-live/types";
 import { make_hosted_test_browser_websocket, type HostedTestBrowserSocket } from "../../hosted-test/browser-websocket-socket";
 import {
