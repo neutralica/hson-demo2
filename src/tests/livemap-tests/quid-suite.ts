@@ -13,12 +13,15 @@ import {
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { read_case } from "./handle-helpers";
 
-const TEST_RUN_ID = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+let testRunId: string | undefined;
 let testQuidIndex = 0;
 
 function make_test_livemap_quid(label: string): string {
+  testRunId ??= globalThis.crypto?.randomUUID?.()
+    ?? `${Date.now()}-${Math.random()}`;
+
   testQuidIndex += 1;
-  return `lmq-test-${label}-${TEST_RUN_ID}-${testQuidIndex}`;
+  return `lmq-test-${label}-${testRunId}-${testQuidIndex}`;
 }
 
 export function livemap_suites_quid(): TestSuite {
