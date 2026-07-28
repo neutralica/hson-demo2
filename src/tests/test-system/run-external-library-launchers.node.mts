@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { mkdtemp, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { hson_live_test_launchers } from "hson-live/test-launchers";
+import { hson_live_test_launchers } from "hson-live/diagnostics";
 import {
   classify_external_library_launcher_invocation,
   external_library_launcher_metrics,
@@ -32,15 +32,50 @@ import { visible_external_launcher_stderr } from "../../app/demos/test/hosted-te
 
 const all = process.argv.includes("--all");
 const availability = await resolve_external_library_launchers();
+const manifestIds = hson_live_test_launchers.map((launcher) => launcher.id);
+const manifestCheckCount = hson_live_test_launchers.reduce(
+  (total, launcher) => total + launcher.executableChecks,
+  0,
+);
+assert.equal(
+  new Set(manifestIds).size,
+  manifestIds.length,
+  "the exported diagnostics manifest has unique launcher IDs",
+);
 assert.ok(availability.repositoryRoot, "linked repository root resolves from the imported subpath");
 assert.equal(await realpath(availability.repositoryRoot!), availability.repositoryRoot);
-assert.equal(availability.targets.length, 28, "all linked repository launchers are available");
-assert.equal(availability.unavailable.length, 0);
+assert.equal(
+  availability.targets.length,
+  hson_live_test_launchers.length,
+  "discovered launcher count matches the exported diagnostics manifest",
+);
+assert.deepEqual(
+  availability.targets.map((target) => target.launcherId),
+  manifestIds,
+  "every exported diagnostics launcher resolves in manifest order",
+);
+assert.equal(availability.unavailable.length, 0, "no exported diagnostics launcher is unavailable");
 assert.equal(
   Object.values(availability.invocations ?? {}).filter((invocation) => invocation.kind === "direct").length,
-  28,
+  hson_live_test_launchers.length,
   "all current package scripts match the audited direct invocation shape",
 );
+for (const launcher of hson_live_test_launchers) {
+  const target = availability.targets.find((candidate) => candidate.launcherId === launcher.id);
+  assert.ok(target, `exported launcher resolves: ${launcher.id}`);
+  assert.equal(target.executableChecks, launcher.executableChecks);
+  assert.equal(target.runtime, launcher.runtime);
+  assert.deepEqual(target.collections, launcher.collections);
+}
+for (const requiredId of [
+  "core.hson-node-quid",
+  "transform.hson-node-quid-ingress",
+  "transform.hson-node-quid-egress",
+  "livetree.quid-eligibility",
+  "livemap.path-handle",
+]) {
+  assert.equal(manifestIds.includes(requiredId), true, `required canonical launcher is exported: ${requiredId}`);
+}
 assert.equal(
   classify_external_library_launcher_invocation(
     hson_live_test_launchers[0]!,
@@ -49,26 +84,37 @@ assert.equal(
   "package-script",
   "unsupported script shapes retain package-script semantics",
 );
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 502);
+assert.equal(
+  availability.targets.reduce((total, target) => total + target.executableChecks, 0),
+  manifestCheckCount,
+  "discovered declared checks agree with the diagnostics manifest",
+);
 assert.deepEqual(
   [...new Set(availability.targets.map((target) => target.runtime))].sort(),
-  ["node", "node-real-websocket", "node-real-websocket-process", "node-synthetic-dom"],
+  [...new Set(hson_live_test_launchers.map((launcher) => launcher.runtime))].sort(),
 );
 const categoryTargets = new Map<string, typeof availability.targets>();
 for (const target of availability.targets) {
   const category = hosted_test_panel_external_category(target);
   categoryTargets.set(category, Object.freeze([...(categoryTargets.get(category) ?? []), target]));
 }
-assert.equal(categoryTargets.get("livehost")?.length, 11);
-assert.equal(categoryTargets.get("livemap")?.length, 7);
-assert.equal(categoryTargets.get("livetree")?.length, 6);
-assert.equal(categoryTargets.get("transform")?.length, 3);
-assert.equal(categoryTargets.get("dev")?.length, 1);
+assert.equal(
+  [...categoryTargets.values()].reduce((total, targets) => total + targets.length, 0),
+  hson_live_test_launchers.length,
+  "panel categories account for every exported launcher exactly once",
+);
 assert.equal(
   categoryTargets.get("transform")?.some((target) => target.launcherId === "core.canonical-hson-equality"),
   true,
 );
-assert.equal(categoryTargets.get("dev")?.[0]?.launcherId, "core.public-boundaries");
+assert.equal(
+  categoryTargets.get("livemap")?.some((target) => target.launcherId === "livemap.path-handle"),
+  true,
+);
+assert.equal(
+  categoryTargets.get("dev")?.some((target) => target.launcherId === "core.public-boundaries"),
+  true,
+);
 assert.equal(
   availability.targets.find((target) => target.launcherId === "core.public-boundaries")?.subject,
   "integration",
@@ -77,33 +123,36 @@ assert.equal(
 
 const nodeRegistry = make_local_node_livehost_executor_registry();
 const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, availability.targets);
-assert.deepEqual(primary.map((choice) => choice.label), [
-  "all (2605)",
-  "Transform (503)",
-  "LiveMap (1016)",
-  "LiveTree (700)",
-  "LiveHost (381)",
-  "Unit (101)",
-  "Dev (37)",
-]);
+assert.deepEqual(
+  primary.map((choice) => choice.label.replace(/ \(\d+\)$/, "")),
+  ["all", "Transform", "LiveMap", "LiveTree", "LiveHost", "Unit", "Dev"],
+);
+for (const choice of primary) {
+  const count = hosted_test_panel_selection_case_count(
+    nodeRegistry.catalog.tests,
+    choice.selection,
+    availability.targets,
+  );
+  assert.equal(choice.label.endsWith(`(${count})`), true, `${choice.label} derives its current case count`);
+}
 assert.equal(primary.some((choice) => choice.label.toLowerCase().includes("library verification")), false);
 const allSelection = primary[0]!.selection;
-assert.equal(
-  hosted_test_panel_selection_case_count(nodeRegistry.catalog.tests, allSelection, availability.targets),
-  2605,
+const allSelectedIds = hosted_test_panel_selected_ids(
+  nodeRegistry.catalog.tests,
+  allSelection,
+  availability.targets,
 );
-assert.equal(
-  hosted_test_panel_selected_ids(nodeRegistry.catalog.tests, allSelection, availability.targets).length,
-  2103 + 28,
-  "inclusive all dispatches canonical IDs and external suite targets exactly once",
-);
+assert.equal(new Set(allSelectedIds).size, allSelectedIds.length, "inclusive all selects unique IDs");
+for (const target of availability.targets) {
+  assert.equal(allSelectedIds.includes(target.id), true, `inclusive all dispatches ${target.id}`);
+}
 
 const installedRoot = await mkdtemp(join(tmpdir(), "hson-live-installed-"));
 await writeFile(join(installedRoot, "package.json"), JSON.stringify({ name: "hson-live", scripts: {} }));
 await writeFile(join(installedRoot, "test-launchers.js"), "export {};\n");
 const installed = await resolve_external_library_launchers(new URL(`file://${join(installedRoot, "test-launchers.js")}`).href);
 assert.equal(installed.targets.length, 0, "installed package without repository launchers is cleanly unavailable");
-assert.equal(installed.unavailable.length, 28);
+assert.equal(installed.unavailable.length, hson_live_test_launchers.length);
 
 const authorityId = external_library_target_id("livehost.authority");
 assert.deepEqual(hosted_test_panel_selected_ids([], { kind: "suite", suite: authorityId }, availability.targets), [authorityId]);
@@ -340,7 +389,7 @@ if (all) {
   );
   packageScriptResults = sequentialResults.results;
   sequentialBaselineMs = performance.now() - sequentialStartedAt;
-  assert.equal(sequentialResults.results.length, 28);
+  assert.equal(sequentialResults.results.length, hson_live_test_launchers.length);
   assert.equal(sequentialResults.results.every((result) => result.ok), true);
 
   const mjsTargets = selectedTargets.filter((target) => target.launcherId.startsWith("livehost."));

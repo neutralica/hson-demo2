@@ -7,6 +7,7 @@ import {
 } from "../../app/demos/test/hosted-test-panel-adapter";
 import { make_in_memory_hosted_test_runtime } from "./in-memory-hosted-test-panel-runtime";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
+import { all_node_safe_hosted_test_suites } from "../../hosted-test/node-safe-hosted-test-suites";
 import type { TestSummary } from "../../app/demos/test/tests.types";
 import type { HostedTestRunResult } from "./hosted-replay-action";
 import type { HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite";
@@ -166,21 +167,24 @@ expect_adapter(livehostFinal?.cases === 184 && livehostFinal.pass === 184 && liv
 livehostAdapter.dispose();
 livehostRuntime.dispose();
 
-const nodeRuntime = make_in_memory_hosted_test_runtime(make_registered_hosted_test_suite_registry());
+const nodeRegistry = make_registered_hosted_test_suite_registry();
+const expectedNodeSuites = all_node_safe_hosted_test_suites();
+const expectedNodeCases = expectedNodeSuites.reduce((total, suite) => total + suite.cases.length, 0);
+const nodeRuntime = make_in_memory_hosted_test_runtime(nodeRegistry);
 const nodeSink = make_sink();
 const nodeAdapter = make_hosted_test_panel_adapter(nodeRuntime, nodeSink.sink);
 const nodePanelStarted = performance.now();
 const nodeResult = await nodeAdapter.start("node/all");
 const nodePanelRoundTripMs = performance.now() - nodePanelStarted;
 expect_adapter(localReplayInvocations === 0, "aggregate hosted mode never invokes the browser-local runner");
-expect_adapter(nodeResult.suite === "node/all" && nodeResult.summary.suites === 43, "aggregate selector uses the shared adapter and canonical 43-suite runner");
-expect_adapter(nodeResult.reportRev === 63, "1087-case aggregate report reaches batched revision 63");
+expect_adapter(nodeResult.suite === "node/all" && nodeResult.summary.suites === expectedNodeSuites.length, "aggregate selector uses the shared adapter and complete canonical suite catalog");
+expect_adapter(nodeResult.reportRev === nodeSink.updates.length, "aggregate report revision matches its complete sequence of batched updates");
 const nodeCases = nodeSink.updates.flatMap((update) => update.newCases);
-expect_adapter(nodeCases.length === 1087, "aggregate panel receives exactly 1087 compact cases");
-expect_adapter(new Set(nodeCases.map((testCase) => `${testCase.suite}\u0000${testCase.name}`)).size === 1087, "aggregate panel case identities are unique");
+expect_adapter(nodeCases.length === expectedNodeCases, "aggregate panel receives every canonical compact case");
+expect_adapter(new Set(nodeCases.map((testCase) => `${testCase.suite}\u0000${testCase.name}`)).size === expectedNodeCases, "aggregate panel case identities are unique");
 expect_adapter(nodeSink.updates.every((update, index, values) => index === 0 || update.report.summary.cases >= (values[index - 1]?.report.summary.cases ?? 0)), "aggregate case totals never decrease");
 const nodeFinal = nodeSink.updates.at(-1)?.report.summary;
-expect_adapter(nodeFinal?.cases === 1087 && nodeFinal.pass === 1087 && nodeFinal.fail === 0, "aggregate panel renders 1087 passing cases");
+expect_adapter(nodeFinal?.cases === expectedNodeCases && nodeFinal.pass === expectedNodeCases && nodeFinal.fail === 0, "aggregate panel renders every canonical case as passing");
 console.log(JSON.stringify({ nodePanelRoundTripMs, nodePanelRenders: nodeSink.renders }));
 nodeAdapter.dispose();
 nodeRuntime.dispose();

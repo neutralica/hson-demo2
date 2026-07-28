@@ -26,7 +26,7 @@ import {
 import { livemap_link_contract_suites } from "../tests/livemap-tests/link-contract-suite";
 import { livemap_suites_bridge } from "../tests/livemap-tests/bridge-suite";
 import { livemap_misc_suite } from "../tests/livemap-tests/misc-suite";
-import { livemap_suites_quid } from "../tests/livemap-tests/quid-suite";
+import { livemap_path_handle_suite } from "../tests/livemap-tests/path-handle-suite";
 import { livemap_error_handling } from "../tests/livemap-tests/error-handling-suite";
 import { livemap_suite_rev } from "../tests/livemap-tests/rev-suite";
 import { livemap_suite_replay } from "../tests/livemap-tests/replay-suite";
@@ -86,7 +86,7 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_link_contract_suites(),
     livemap_suites_bridge(),
     livemap_misc_suite(),
-    livemap_suites_quid(),
+    livemap_path_handle_suite(),
     livemap_error_handling(),
     livemap_suite_rev(),
     livemap_suite_replay(),

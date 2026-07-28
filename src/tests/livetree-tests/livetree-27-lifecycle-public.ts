@@ -28,6 +28,7 @@ function empty_case(suite: string): LiveTreeCaseSpec {
   let runtimePreserved = false;
   let callerReusable = false;
   let registryStable = false;
+  let structuralWrappersUnquidded = false;
 
   return {
     suite,
@@ -46,7 +47,12 @@ function empty_case(suite: string): LiveTreeCaseSpec {
       owner.listen.onClick(() => { clicks += 1; });
 
       const descendants = _collect_subtree_nodes(ownerNode, "pre").slice(1);
-      const descendantQuids = descendants.map((node) => _ensure_livetree_quid(node));
+      const eligibleDescendants = descendants.filter((node) => !node.$_tag.startsWith("_hson_"));
+      const structuralWrappers = descendants.filter((node) => node.$_tag.startsWith("_hson_"));
+      const descendantQuids = eligibleDescendants.map((node) => _ensure_livetree_quid(node));
+      structuralWrappersUnquidded = structuralWrappers.every(
+        (node) => node.$_meta?.[DATA_QUID] === undefined,
+      );
       const descendantElements = [
         child.dom.must.el(),
         tree.find.must.byId("leaf").dom.must.el(),
@@ -78,6 +84,7 @@ function empty_case(suite: string): LiveTreeCaseSpec {
       t.eq("caller graph identity attrs metadata and mapping survive", callerPreserved, true);
       t.eq("caller listeners and managed CSS survive", runtimePreserved, true);
       t.eq("all descendant identity mapping and DOM metadata are destroyed", descendantsDestroyed, true);
+      t.eq("structural VSN wrappers remain unquidded", structuralWrappersUnquidded, true);
       t.eq("caller remains usable after empty", callerReusable, true);
       t.eq("create-empty does not retain the created identity", registryStable, true);
     },

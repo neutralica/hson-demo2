@@ -42,7 +42,7 @@ export function livetree_regression_2(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "identity: Element rehydration remints every imported node",
+      name: "identity: explicit clone remints every eligible node",
       fixture: "identity/element-rehydrate",
       sub: "recursive-remint",
       dom: true,
@@ -57,8 +57,8 @@ export function livetree_regression_2(): TestSuite {
 
       act(tree) {
         const source = identitySnapshot(tree, ROUNDTRIP_IDS);
-        const hydrated = hsonLiveTree.fromTrustedHtml(tree.dom.must.el());
-        const next = identitySnapshot(hydrated, ROUNDTRIP_IDS);
+        const clone = tree.cloneBranch();
+        const next = identitySnapshot(clone, ROUNDTRIP_IDS);
 
         (tree as any).__result = {
           allReminted: identitiesDiffer(source, next, ROUNDTRIP_IDS),
@@ -66,7 +66,7 @@ export function livetree_regression_2(): TestSuite {
           next,
         };
 
-        hydrated.removeSelf();
+        clone.removeSelf();
       },
 
       assert(tree, t) {
@@ -77,7 +77,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: Element rehydration leaves source DOM and source quids untouched",
+      name: "identity: active Element ownership conflict leaves source untouched",
       fixture: "identity/element-rehydrate",
       sub: "source-untouched",
       dom: true,
@@ -94,13 +94,20 @@ export function livetree_regression_2(): TestSuite {
         const sourceElement = tree.dom.must.el();
         const htmlBefore = sourceElement.innerHTML;
         const identityBefore = identitySnapshot(tree, ROUNDTRIP_IDS);
-
-        const hydrated = hsonLiveTree.fromTrustedHtml(sourceElement);
+        let rejected = false;
+        let hydrated: LiveTree | undefined;
+        try {
+          hydrated = hsonLiveTree.fromTrustedHtml(sourceElement);
+        } catch (error) {
+          rejected = error instanceof Error && error.message.includes("Duplicate QUID");
+        }
 
         const htmlAfter = sourceElement.innerHTML;
         const identityAfter = identitySnapshot(tree, ROUNDTRIP_IDS);
 
         (tree as any).__result = {
+          rejected,
+          noPartialBranch: hydrated === undefined,
           htmlUnchanged: htmlAfter === htmlBefore,
           identityUnchanged: identitiesMatch(
             identityBefore,
@@ -109,11 +116,13 @@ export function livetree_regression_2(): TestSuite {
           ),
         };
 
-        hydrated.removeSelf();
+        hydrated?.removeSelf();
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
+        t.eq("second active owner is rejected explicitly", r.rejected, true);
+        t.eq("failed admission returns no partial branch", r.noPartialBranch, true);
         t.eq("source DOM markup is unchanged", r.htmlUnchanged, true);
         t.eq("source branch retains its original quids", r.identityUnchanged, true);
       },
@@ -121,7 +130,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: repeated Element rehydration produces independent branches",
+      name: "identity: repeated explicit clones produce independent branches",
       fixture: "identity/element-rehydrate",
       sub: "repeated-independent",
       dom: true,
@@ -135,9 +144,8 @@ export function livetree_regression_2(): TestSuite {
       `,
 
       act(tree) {
-        const sourceElement = tree.dom.must.el();
-        const first = hsonLiveTree.fromTrustedHtml(sourceElement);
-        const second = hsonLiveTree.fromTrustedHtml(sourceElement);
+        const first = tree.cloneBranch();
+        const second = tree.cloneBranch();
         const firstIds = identitySnapshot(first, ROUNDTRIP_IDS);
         const secondIds = identitySnapshot(second, ROUNDTRIP_IDS);
 
@@ -282,7 +290,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: subtree Element rehydration preserves shape and remints descendants",
+      name: "identity: explicit subtree clone preserves shape and remints descendants",
       fixture: "identity/subtree-rehydrate",
       sub: "subtree-boundary",
       dom: true,
@@ -301,23 +309,18 @@ export function livetree_regression_2(): TestSuite {
         const ids = ["target", "target-heading", "target-copy"] as const;
         const source = identitySnapshot(tree, ids);
 
-        // CHANGED: Element input imports the element's children. Wrap a cloned
-        // subtree so the article itself is the single imported branch root.
-        const wrapper = document.createElement("div");
-        wrapper.append(target.dom.must.el().cloneNode(true));
-
-        const hydrated = hsonLiveTree.fromTrustedHtml(wrapper);
-        const next = identitySnapshot(hydrated, ids);
+        const clone = target.cloneBranch();
+        const next = identitySnapshot(clone, ids);
 
         (tree as any).__result = {
           shapePreserved:
-            hydrated.find.must.byId("target-heading").text.get() === "Title"
-            && hydrated.find.must.byId("target-copy").text.get() === "Body",
+            clone.find.must.byId("target-heading").text.get() === "Title"
+            && clone.find.must.byId("target-copy").text.get() === "Body",
           identitiesReminted: identitiesDiffer(source, next, ids),
-          outsideAbsent: hydrated.find.byId("outside") === undefined,
+          outsideAbsent: clone.find.byId("outside") === undefined,
         };
 
-        hydrated.removeSelf();
+        clone.removeSelf();
       },
 
       assert(tree, t) {
@@ -330,7 +333,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: removed DOM sibling is not resurrected during rehydration",
+      name: "identity: explicit clone does not resurrect a removed sibling",
       fixture: "identity/element-rehydrate",
       sub: "no-resurrection",
       dom: true,
@@ -343,14 +346,14 @@ export function livetree_regression_2(): TestSuite {
 
       act(tree) {
         tree.find.must.byId("removed").removeSelf();
-        const hydrated = hsonLiveTree.fromTrustedHtml(tree.dom.must.el());
+        const clone = tree.cloneBranch();
 
         (tree as any).__result = {
-          survivorExists: hydrated.find.byId("survivor") !== undefined,
-          removedAbsent: hydrated.find.byId("removed") === undefined,
+          survivorExists: clone.find.byId("survivor") !== undefined,
+          removedAbsent: clone.find.byId("removed") === undefined,
         };
 
-        hydrated.removeSelf();
+        clone.removeSelf();
       },
 
       assert(tree, t) {
@@ -363,7 +366,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: Element rehydration strips only runtime quid metadata",
+      name: "identity: explicit clone remints identity and preserves ordinary metadata",
       fixture: "identity/element-rehydrate",
       sub: "preserve-non-quid-attrs",
       dom: true,
@@ -383,9 +386,9 @@ export function livetree_regression_2(): TestSuite {
       act(tree) {
         const sourcePanel = tree.find.must.byId("panel");
         const sourceQuid = sourcePanel.quid;
-        const hydrated = hsonLiveTree.fromTrustedHtml(tree.dom.must.el());
-        const panel = hydrated.find.must.byId("panel");
-        const accent = hydrated.find.must.byId("accent");
+        const clone = tree.cloneBranch();
+        const panel = clone.find.must.byId("panel");
+        const accent = clone.find.must.byId("accent");
 
         (tree as any).__result = {
           quidReminted: panel.quid !== sourceQuid,
@@ -395,7 +398,7 @@ export function livetree_regression_2(): TestSuite {
           childDataPreserved: accent.attrs.get("data-kind") === "accent",
         };
 
-        hydrated.removeSelf();
+        clone.removeSelf();
       },
 
       assert(tree, t) {

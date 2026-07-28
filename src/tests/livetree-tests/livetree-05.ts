@@ -8,16 +8,26 @@ import { CssManager } from "hson-live/livetree";
 
 const gcss = CssManager.invoke();
 
+function restore_from_current_markup(tree: LiveTree) {
+    const markup = tree.dom.must.el().outerHTML;
+    const sandboxHost = (tree as any).__sandboxHost;
+    tree.removeSelf();
+    const restored = hson.liveTree.fromTrustedHtml(markup);
+    sandboxHost.append(restored);
+    return restored;
+}
+
 export function roundtrip_projection_stability(): TestSuite {
     const SUITE = "livetree/roundtrip-projection";
     const cases: readonly LiveTreeCaseSpec[] =
         [
             {
                 suite: SUITE,
-                name: "serialization: IR to DOM to branch preserves basic structure",
+                name: "serialization: terminal restoration preserves basic structure and identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "basic-shape",
+                preview: () => "<terminal-restoration>",
 
                 html: `
                     <main id="root">
@@ -29,11 +39,9 @@ export function roundtrip_projection_stability(): TestSuite {
                 `,
 
                 async act(tree) {
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
-
-                    const sandboxHost = (tree as any).__sandboxHost;
-                    sandboxHost.append(round);
+                    const rootQuid = tree.find.must.byId("root").quid;
+                    const cardQuid = tree.find.must.byId("card").quid;
+                    const round = restore_from_current_markup(tree);
 
                     const card = round.find.must.byId("card");
                     const cardEl = card.dom.el() as HTMLElement;
@@ -43,6 +51,8 @@ export function roundtrip_projection_stability(): TestSuite {
                         state: cardEl.getAttribute("data-state"),
                         h1Text: round.find.must.byTag("h1").text.get(),
                         pText: round.find.must.byTag("p").text.get(),
+                        rootIdentityRestored: round.find.must.byId("root").quid === rootQuid,
+                        cardIdentityRestored: card.quid === cardQuid,
                     };
                 },
 
@@ -52,14 +62,17 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.eq("data-state preserved", r.state, "open");
                     t.eq("h1 text preserved", r.h1Text, "Title");
                     t.eq("p text preserved", r.pText, "Hello world");
+                    t.eq("root identity is reclaimed after terminal destruction", r.rootIdentityRestored, true);
+                    t.eq("card identity is reclaimed after terminal destruction", r.cardIdentityRestored, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: hydrated DOM survives mutation and rehydrate",
+                name: "serialization: terminal restoration preserves DOM mutations and identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "hydrate-mutate-rehydrate",
+                preview: () => "<terminal-restoration>",
 
                 html: `
                     <main id="root">
@@ -72,13 +85,11 @@ export function roundtrip_projection_stability(): TestSuite {
                     box.attrs.set("title", "greeting");
                     box.data.set("mode", "warm");
                     box.text.set("hello");
+                    const boxQuid = box.quid;
+                    const rootQuid = tree.find.must.byId("root").quid;
 
                     await tick();
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
-
-                    const sandboxHost = (tree as any).__sandboxHost;
-                    sandboxHost.append(round);
+                    const round = restore_from_current_markup(tree);
 
                     const box2 = round.find.must.byId("box");
                     const el2 = box2.dom.el() as HTMLElement;
@@ -87,6 +98,8 @@ export function roundtrip_projection_stability(): TestSuite {
                         mode: el2.getAttribute("data-mode"),
                         title: el2.getAttribute("title"),
                         text: box2.text.get(),
+                        rootIdentityRestored: round.find.must.byId("root").quid === rootQuid,
+                        boxIdentityRestored: box2.quid === boxQuid,
                     };
                 },
 
@@ -96,6 +109,8 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.eq("data-mode updated", r.mode, "warm");
                     t.eq("title added", r.title, "greeting");
                     t.eq("text updated", r.text, "hello");
+                    t.eq("root identity is reclaimed", r.rootIdentityRestored, true);
+                    t.eq("mutated box identity is reclaimed", r.boxIdentityRestored, true);
                 },
             },
             {
@@ -128,10 +143,11 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: rehydrate preserves shape but remints identity",
+                name: "serialization: terminal restoration preserves shape and supplied identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "shape-not-quid",
+                preview: () => "<terminal-restoration>",
 
                 html: `
                     <main id="root">
@@ -144,12 +160,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const oldEl = box.dom.el() as HTMLElement;
                     const oldQuid = oldEl.getAttribute("data-_quid") ?? "";
 
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
-
-                    // mount detached rehydrated branch into existing sandbox
-                    const sandboxHost = (tree as any).__sandboxHost;
-                    sandboxHost.append(round);
+                    const round = restore_from_current_markup(tree);
 
                     const box2 = round.find.must.byId("box");
                     const newEl = box2.dom.el() as HTMLElement;
@@ -169,13 +180,12 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.ok("new quid exists", r.newQuid.length > 0);
                     t.eq("shape text preserved", r.text, "x");
                     t.eq("shape tag preserved", r.tag, "div");
-                    // CHANGED: rehydration creates a distinct branch, so identity must be reminted.
-                    t.eq("quid reminted", r.oldQuid === r.newQuid, false);
+                    t.eq("supplied quid is reclaimed", r.oldQuid === r.newQuid, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: hydration of one subtree is unaffected by separate sibling mutation",
+                name: "serialization: explicit subtree clone is unaffected by sibling mutation",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "sibling-independence",
@@ -191,15 +201,17 @@ export function roundtrip_projection_stability(): TestSuite {
                     tree.find.must.byId("a1").text.set("AA");
                     await tick();
 
-                    // hydrate only subtree B, not the whole root
-                    const bEl = tree.find.must.byId("b").dom.el();
-                    const bTree = hson.liveTree.fromTrustedHtml(bEl!);
+                    // Explicitly copy only subtree B while the source remains active.
+                    const sourceB = tree.find.must.byId("b");
+                    const sourceBQuid = sourceB.quid;
+                    const bTree = sourceB.cloneBranch();
 
                     const b1 = bTree.find.must.byId("b1");
 
                     (tree as any).__result = {
                         bText: b1.text.get(),
                         aText: tree.find.must.byId("a1").text.get(),
+                        identityFresh: bTree.quid !== sourceBQuid,
                     };
                 },
 
@@ -207,14 +219,16 @@ export function roundtrip_projection_stability(): TestSuite {
                     const r = (tree as any).__result;
                     t.eq("A mutation stayed in A", r.aText, "AA");
                     t.eq("B subtree hydrates cleanly", r.bText, "B");
+                    t.eq("explicit B clone receives fresh identity", r.identityFresh, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: rehydrate from surviving DOM does not resurrect removed sibling",
+                name: "serialization: terminal restoration does not resurrect removed sibling",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "no-resurrection",
+                preview: () => "<terminal-restoration>",
 
                 html: `
     <main id="root">
@@ -227,13 +241,14 @@ export function roundtrip_projection_stability(): TestSuite {
                     tree.find.must.byId("drop").removeSelf();
                     await tick();
 
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
+                    const keepQuid = tree.find.must.byId("keep").quid;
+                    const round = restore_from_current_markup(tree);
 
 
                     (tree as any).__result = {
                         keep: !!round.find.byId("keep"),
                         drop: round.find.byId("drop"),
+                        keepIdentityRestored: round.find.must.byId("keep").quid === keepQuid,
                     };
                 },
 
@@ -241,14 +256,16 @@ export function roundtrip_projection_stability(): TestSuite {
                     const r = (tree as any).__result;
                     t.eq("keep survives", r.keep, true);
                     t.eq("drop is not resurrected", r.drop, undefined);
+                    t.eq("surviving identity is reclaimed", r.keepIdentityRestored, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: outerHTML shape remains stable after mutate and rehydrate",
+                name: "serialization: outerHTML shape remains stable after terminal restoration",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "html-shape-stable",
+                preview: () => "<terminal-restoration>",
 
                 html: `
     <main id="root">
@@ -261,19 +278,16 @@ export function roundtrip_projection_stability(): TestSuite {
                     box.data.set("state", "open");
                     box.attrs.set("title", "hello");
                     box.text.set("y");
+                    const boxQuid = box.quid;
 
                     await tick();
 
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
-
-                    // mount detached rehydrated branch before DOM lookup
-                    const sandboxHost = (tree as any).__sandboxHost;
-                    sandboxHost.append(round);
+                    const round = restore_from_current_markup(tree);
 
                     const out = round.find.must.byId("box").dom.el() as HTMLElement;
 
                     (tree as any).__html = out.outerHTML;
+                    (tree as any).__identityRestored = round.find.must.byId("box").quid === boxQuid;
                 },
 
                 assert(tree, t) {
@@ -282,6 +296,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.ok("title preserved", html.includes(`title="hello"`));
                     t.ok("data-state preserved", html.includes(`data-state="open"`));
                     t.ok("text preserved", html.includes(`>y</`));
+                    t.eq("box identity is reclaimed", (tree as any).__identityRestored, true);
                 },
             },
 
@@ -633,10 +648,11 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "serialization: mounted rehydrated branch gains DOM handle",
+            name: "serialization: mounted restored branch gains DOM handle",
             dom: true,
             fixture: "serialization/partial",
             sub: "mounted-branch-has-dom",
+            preview: () => "<terminal-restoration>",
 
             html: `
         <main id="root">
@@ -645,11 +661,8 @@ export function livetree_sync_perf(): TestSuite {
     `,
 
             async act(tree) {
-                const rootEl = tree.find.must.byId("root").dom.el();
-                const round = hson.liveTree.fromTrustedHtml(rootEl!);
-
-                const sandboxHost = (tree as any).__sandboxHost;
-                sandboxHost.append(round);
+                const boxQuid = tree.find.must.byId("box").quid;
+                const round = restore_from_current_markup(tree);
 
                 const box = round.find.must.byId("box");
                 const el = box.dom.el() as HTMLElement;
@@ -657,6 +670,7 @@ export function livetree_sync_perf(): TestSuite {
                 (tree as any).__result = {
                     tag: el.tagName.toLowerCase(),
                     text: box.text.get(),
+                    identityRestored: box.quid === boxQuid,
                 };
             },
 
@@ -664,6 +678,7 @@ export function livetree_sync_perf(): TestSuite {
                 const r = (tree as any).__result;
                 t.eq("mounted branch yields DOM", r.tag, "div");
                 t.eq("text preserved", r.text, "x");
+                t.eq("mounted restored branch reclaims identity", r.identityRestored, true);
             },
         },
 
@@ -734,7 +749,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "interaction: listener works after grafted rehydrate without duplicate firing",
+                name: "interaction: listener works after grafted explicit clone without duplicate firing",
                 dom: true,
                 fixture: "interaction",
                 sub: "listeners-graft",
@@ -749,12 +764,12 @@ export function livetree_completionist(): TestSuite {
                     let count = 0;
 
                     const btn = tree.find.must.byId("btn");
+                    const sourceQuid = btn.quid;
                     btn.listen.onClick(() => {
                         count += 1;
                     });
 
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
+                    const round = tree.cloneBranch();
 
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
@@ -767,7 +782,10 @@ export function livetree_completionist(): TestSuite {
                     const el2 = btn2.dom.el() as HTMLElement;
                     el2.click();
 
-                    (tree as any).__result = { count };
+                    (tree as any).__result = {
+                        count,
+                        identityFresh: btn2.quid !== sourceQuid,
+                    };
                 },
 
                 assert(tree, t) {
@@ -775,11 +793,12 @@ export function livetree_completionist(): TestSuite {
 
                     // only the rehydrated branch listener should fire from clicking grafted btn2
                     t.eq("grafted listener fires once", r.count, 10);
+                    t.eq("explicit clone receives fresh button identity", r.identityFresh, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "interaction: dataset survives refind on cloned branch and stays independent",
+                name: "interaction: dataset survives refind on explicit clone and stays independent",
                 dom: true,
                 fixture: "interaction",
                 sub: "dataset-refind-clone",
@@ -791,8 +810,8 @@ export function livetree_completionist(): TestSuite {
     `,
 
                 async act(tree) {
-                    const rootEl = tree.find.must.byId("root").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rootEl!);
+                    const sourceQuid = tree.find.must.byId("box").quid;
+                    const round = tree.cloneBranch();
 
                     const sandboxHost = (tree as any).__sandboxHost;
                     sandboxHost.append(round);
@@ -809,6 +828,7 @@ export function livetree_completionist(): TestSuite {
                         originalText: original.text.get(),
                         clonedMode: cloned.data.get("mode"),
                         clonedText: cloned.text.get(),
+                        identityFresh: cloned.quid !== sourceQuid,
                     };
                 },
 
@@ -819,11 +839,12 @@ export function livetree_completionist(): TestSuite {
                     t.eq("original text preserved", r.originalText, "x");
                     t.eq("clone dataset updated independently", r.clonedMode, "warm");
                     t.eq("clone text updated independently", r.clonedText, "y");
+                    t.eq("explicit clone receives fresh identity", r.identityFresh, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: partial rehydrate of nested subtree ignores external sibling mutation",
+                name: "serialization: explicit nested subtree clone ignores external sibling mutation",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "nested-partial-hydrate",
@@ -843,9 +864,10 @@ export function livetree_completionist(): TestSuite {
                     tree.find.must.byId("left-inner").text.set("LL");
                     await tick();
 
-                    // hydrate only the nested right subtree
-                    const rightEl = tree.find.must.byId("right").dom.el();
-                    const round = hson.liveTree.fromTrustedHtml(rightEl!);
+                    // Explicitly copy only the nested right subtree.
+                    const sourceRight = tree.find.must.byId("right");
+                    const sourceRightQuid = sourceRight.quid;
+                    const round = sourceRight.cloneBranch();
 
                     const rightInner = round.find.must.byId("right-inner");
 
@@ -853,6 +875,7 @@ export function livetree_completionist(): TestSuite {
                         leftText: tree.find.must.byId("left-inner").text.get(),
                         rightText: rightInner.text.get(),
                         leakedLeft: !!round.find.byId("left-inner"),
+                        identityFresh: round.quid !== sourceRightQuid,
                     };
                 },
 
@@ -862,11 +885,10 @@ export function livetree_completionist(): TestSuite {
                     t.eq("left mutation stayed left", r.leftText, "LL");
                     t.eq("right subtree rehydrates cleanly", r.rightText, "R");
                     t.eq("partial hydrate does not include left subtree", r.leakedLeft, false);
+                    t.eq("explicit right clone receives fresh identity", r.identityFresh, true);
                 },
             },
         ];
 
     return make_livetree_suite(SUITE, cases);
 }
-
-
