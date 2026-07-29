@@ -1,14 +1,13 @@
 // generated-control-suite.ts
 
 import { hson } from "hson-live";
-import type { JsonValue } from "../../../../hson-live/src/core/types";
-import type { LiveMap } from "../../../../hson-live/src/types/livemap.types";
+import type { JsonValue, LiveMap } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { equal_row, preview_value } from "./test-helpers";
 import {
   render_livemap_schema_controls_snap,
-} from "../../../../hson-live/src/api/livemap/livemap.bridge";
-import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/src/types/bridge.types";
+} from "../../../../hson-live/dist/api/livemap/livemap.bridge";
+import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/dist/types/bridge.types";
 
 type BridgeMap = LiveMap;
 type LiveTreeControlViewTarget = LiveControlViewBridgeTarget &

@@ -49,7 +49,7 @@ const NODE_HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.free
   hosted("livemap/link-contract", 8, "all_node_safe_hosted_test_suites"),
   hosted("livemap/bridge", 20, "all_node_safe_hosted_test_suites"),
   hosted("livemap/misc", 44, "all_node_safe_hosted_test_suites"),
-  hosted("livemap/quid", 26, "all_node_safe_hosted_test_suites"),
+  hosted("livemap/path-handle", 8, "all_node_safe_hosted_test_suites"),
   hosted("livemap/schema-errors", 14, "all_node_safe_hosted_test_suites"),
   hosted("livemap/rev", 25, "all_node_safe_hosted_test_suites"),
   hosted("livemap/replay", 45, "all_node_safe_hosted_test_suites"),

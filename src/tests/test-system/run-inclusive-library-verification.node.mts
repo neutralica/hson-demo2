@@ -18,9 +18,9 @@ import type { TestEvent } from "../../app/demos/test/tests.types";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
-assert.equal(registry.catalog.tests.length, 2103);
-assert.equal(availability.targets.length, 28);
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 502);
+assert.equal(registry.catalog.tests.length, 2085);
+assert.equal(availability.targets.length, 34);
+assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 597);
 
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
@@ -64,8 +64,8 @@ const footer = hosted_test_projection_footer(projection, timing.overlappedTotalM
 const processMetrics = external_library_launcher_metrics();
 
 assert.equal(result.ok, true);
-assert.equal(canonicalCases, 2103);
-assert.equal(completedExternalIds.length, 28);
+assert.equal(canonicalCases, 2085);
+assert.equal(completedExternalIds.length, 34);
 assert.deepEqual(queuedExternalIds, availability.targets.map((target) => target.id));
 assert.deepEqual(Object.keys(captured.externalResults), availability.targets.map((target) => target.id));
 assert.equal(firstSuiteCompletionSawBothPhases, true, "both phases become active before either suite completes");
@@ -75,13 +75,13 @@ assert.ok(
 );
 assert.deepEqual(
   footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  ["cases:2605", "passed:2605", "failed:0"],
+  ["cases:2682", "passed:2682", "failed:0"],
 );
-assert.equal(projection.canonical.total, 2103);
-assert.equal(projection.launchers.total, 28);
-assert.equal(projection.launchers.declaredChecks, 502);
+assert.equal(projection.canonical.total, 2085);
+assert.equal(projection.launchers.total, 34);
+assert.equal(projection.launchers.declaredChecks, 597);
 assert.equal(processMetrics.activeChildren, 0);
-assert.equal(processMetrics.directLauncherStarts, 28);
+assert.equal(processMetrics.directLauncherStarts, 34);
 assert.equal(processMetrics.packageScriptStarts, 0);
 assert.ok(timing.overlappedTotalMs >= timing.canonicalPhaseMs);
 assert.ok(timing.overlappedTotalMs >= timing.externalPhaseMs);

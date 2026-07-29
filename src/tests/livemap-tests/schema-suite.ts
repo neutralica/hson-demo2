@@ -1,11 +1,11 @@
 // schema-suites.ts
 
 import { make_livemap_schema, LIVEMAP_SCHEMA, define_livemap_schema, make_livemap_core } from "hson-live/livemap";
+import type { LiveMapSchemaInput } from "hson-live/livemap";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { json_root_node } from "./core-helpers";
 import { read_case } from "./handle-helpers";
 import { preview_value, equal_row } from "./test-helpers";
-import type { LiveMapSchemaInput } from "../../../../hson-live/src/api/livemap/livemap.schema";
 
 
 export function livemap_suites_schema(): TestSuite {
