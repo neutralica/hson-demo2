@@ -1,26 +1,24 @@
-import { WebSocketServer, type WebSocket } from "ws";
-import type { HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
-import { make_registered_hosted_test_suite_registry } from "../registered-hosted-test-suites";
-import { inspect_hosted_test_case } from "../hosted-test-case-inspection";
-import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../hosted-test-application";
 import type { HostedTestCaseInspector } from "../../app/hosted-test/hosted-test-action";
-import { make_node_websocket_livehost_socket } from "./node-websocket-socket";
+import type { HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
 import type { TestExecutorRegistry } from "../../test-system/test-executor";
-import { make_test_executor_discovery } from "../../test-system/test-discovery";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
 import {
-  resolve_external_library_launchers,
-  terminate_external_library_launchers,
-} from "../../test-system/external-library-launchers";
-import { run_node_selected_verifications } from "../run-node-selected-verifications";
+  start_node_application_host,
+  type NodeApplicationHost,
+  type NodeHostOperationalEvent,
+} from "./node-application-host";
+import {
+  create_node_hosted_tests_application,
+} from "./node-hosted-tests-application";
+import { create_node_towl_application } from "./node-towl-application";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
   port?: number;
+  shutdownTimeoutMs?: number;
   registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
+  log?: (event: NodeHostOperationalEvent) => void;
 }>;
 
 export type HostedTestServer = Readonly<{
@@ -33,90 +31,38 @@ export type HostedTestServer = Readonly<{
   stop(): Promise<void>;
 }>;
 
-export async function start_hosted_test_server(options: HostedTestServerOptions = {}): Promise<HostedTestServer> {
-  const bindHost = options.host ?? "127.0.0.1";
-  const registry = options.registry ?? make_registered_hosted_test_suite_registry();
-  const executorRegistry = options.executorRegistry ?? make_local_node_livehost_executor_registry();
-  const externalLaunchers = options.executorRegistry === undefined
-    ? await resolve_external_library_launchers()
-    : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
-  const application = create_hosted_test_application(registry, {
-    inspectCase: options.inspectCase ?? inspect_hosted_test_case,
-    discovery: make_test_executor_discovery(executorRegistry, externalLaunchers.targets),
-    executorRegistry,
-    runSelected: externalLaunchers.targets.length === 0
-      ? run_fresh_node_selected_test_ids
-      : (selectedRegistry, ids, onEvent, runOptions) => run_node_selected_verifications(
-        selectedRegistry,
-        externalLaunchers,
-        ids,
-        onEvent,
-        runOptions,
-      ),
+export async function start_hosted_test_server(
+  options: HostedTestServerOptions = {},
+): Promise<HostedTestServer> {
+  const hostedTests = await create_node_hosted_tests_application({
+    ...(options.registry === undefined ? {} : { registry: options.registry }),
+    ...(options.inspectCase === undefined ? {} : { inspectCase: options.inspectCase }),
+    ...(options.executorRegistry === undefined ? {} : { executorRegistry: options.executorRegistry }),
   });
-  const server = new WebSocketServer({ host: bindHost, port: options.port ?? 8787 });
-  const connections = new Map<WebSocket, Readonly<{ hostId: string; disconnect: () => void }>>();
-  let stopped = false;
-  let sentMessages = 0;
-  let sentBytes = 0;
-
-  server.on("connection", (websocket, request) => {
-    const requestUrl = new URL(request.url ?? "/", `ws://${request.headers.host ?? bindHost}`);
-    const hostId = requestUrl.searchParams.get("livehost") ?? HOSTED_TEST_COORDINATOR_HOST_ID;
-    const connected = application.connect(hostId, make_node_websocket_livehost_socket(websocket, (message) => {
-      sentMessages += 1;
-      sentBytes += Buffer.byteLength(message, "utf8");
-    }));
-    if (!connected.ok) {
-      websocket.close(1008, connected.error.code ?? "Unknown hosted-test LiveHost.");
-      return;
-    }
-    const disconnect = connected.value;
-    connections.set(websocket, { hostId, disconnect });
-    websocket.once("close", () => {
-      connections.get(websocket)?.disconnect();
-      connections.delete(websocket);
+  const towl = create_node_towl_application();
+  let host: NodeApplicationHost;
+  try {
+    host = await start_node_application_host({
+      host: options.host ?? "127.0.0.1",
+      port: options.port ?? 8787,
+      shutdownTimeoutMs: options.shutdownTimeoutMs ?? 5_000,
+      applications: [hostedTests.registration, towl.registration],
+      ...(options.log === undefined ? {} : { log: options.log }),
     });
-    websocket.once("error", () => websocket.close(1011, "Hosted-test WebSocket error."));
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    server.once("listening", resolve);
-    server.once("error", reject);
-  });
-  const address = server.address();
-  if (typeof address === "string" || address === null) {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-    throw new Error("Hosted-test server did not expose a TCP port.");
+  } catch (error) {
+    await hostedTests.registration.dispose();
+    await towl.registration.dispose();
+    throw error;
   }
-  const port = address.port;
-
   return Object.freeze({
-    host: bindHost,
-    port,
-    url: `ws://${bindHost}:${port}`,
-    connectionCount: () => connections.size,
+    host: host.host,
+    port: host.port,
+    url: host.url,
+    connectionCount: host.connectionCount,
     disconnectConnections(hostId) {
-      for (const [websocket, connection] of [...connections]) {
-        if (hostId !== undefined && connection.hostId !== hostId) continue;
-        connection.disconnect();
-        websocket.close(1012, "Hosted-test connection interrupted.");
-      }
+      hostedTests.disconnectConnections(hostId);
     },
-    metrics: () => Object.freeze({ sentMessages, sentBytes }),
-    async stop() {
-      if (stopped) return;
-      stopped = true;
-      for (const [websocket, connection] of [...connections]) {
-        connection.disconnect();
-        websocket.close(1001, "Hosted-test server stopping.");
-      }
-      connections.clear();
-      terminate_external_library_launchers();
-      application.dispose();
-      await new Promise<void>((resolve, reject) => {
-        server.close((error) => error ? reject(error) : resolve());
-      });
-    },
+    metrics: hostedTests.metrics,
+    stop: host.stop,
   });
 }

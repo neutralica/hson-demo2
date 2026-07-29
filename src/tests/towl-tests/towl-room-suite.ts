@@ -1,5 +1,4 @@
 import type { TestSuite } from "../../app/demos/test/tests.types";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import {
   normalize_towl_room_id,
   resolve_towl_room_url,
@@ -8,11 +7,11 @@ import {
   towl_room_id_from_host_id,
   type TowlState,
 } from "../../app/demos/towl";
-import { create_hosted_test_application } from "../../hosted-test/hosted-test-application";
+import { create_towl_authority_application } from "../../hosted-test/towl-authority-application";
 import { make_towl_socket, send_towl_action, towl_case } from "./towl-test-helpers";
 
 function empty_application() {
-  return create_hosted_test_application(make_hosted_test_suite_registry([]));
+  return create_towl_authority_application();
 }
 
 export function towl_room_suite(): TestSuite {

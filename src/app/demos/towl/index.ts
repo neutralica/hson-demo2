@@ -4,6 +4,7 @@ export {
   TOWL_ROOM_ID_LENGTH,
   TOWL_ROOM_ID_MAX_LENGTH,
   TOWL_ROOM_ID_MIN_LENGTH,
+  TOWL_ROOM_ID_PATTERN,
   TOWL_ROOM_PARAM,
   generate_towl_room_id,
   normalize_towl_room_id,

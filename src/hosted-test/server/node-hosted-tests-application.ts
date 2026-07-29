@@ -1,0 +1,122 @@
+import type { WebSocket } from "ws";
+import type { HostedTestCaseInspector } from "../../app/hosted-test/hosted-test-action";
+import { make_hosted_test_run_id_factory } from "../../app/hosted-test/hosted-test-action";
+import type { HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
+import type { TestExecutorRegistry } from "../../test-system/test-executor";
+import {
+  create_external_library_launcher_service,
+  resolve_external_library_launchers,
+} from "../../test-system/external-library-launchers";
+import { make_test_executor_discovery } from "../../test-system/test-discovery";
+import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+import { create_node_selected_verification_service } from "../run-node-selected-verifications";
+import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
+import { inspect_hosted_test_case } from "../hosted-test-case-inspection";
+import {
+  create_hosted_test_application,
+  HOSTED_TEST_COORDINATOR_HOST_ID,
+  type HostedTestApplication,
+} from "../hosted-test-application";
+import { make_registered_hosted_test_suite_registry } from "../registered-hosted-test-suites";
+import { make_node_websocket_livehost_socket } from "./node-websocket-socket";
+import type { NodeHostedApplication } from "./node-application-host";
+
+export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
+export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
+
+export type NodeHostedTestsApplicationOptions = Readonly<{
+  registry?: HostedTestSuiteRegistry;
+  inspectCase?: HostedTestCaseInspector;
+  executorRegistry?: TestExecutorRegistry;
+}>;
+
+export type NodeHostedTestsApplication = Readonly<{
+  registration: NodeHostedApplication;
+  authorities: HostedTestApplication;
+  connectionCount(): number;
+  disconnectConnections(authorityId?: string): void;
+  metrics(): Readonly<{ sentMessages: number; sentBytes: number }>;
+}>;
+
+export async function create_node_hosted_tests_application(
+  options: NodeHostedTestsApplicationOptions = {},
+): Promise<NodeHostedTestsApplication> {
+  const registry = options.registry ?? make_registered_hosted_test_suite_registry();
+  const executorRegistry = options.executorRegistry ?? make_local_node_livehost_executor_registry();
+  const externalLaunchers = options.executorRegistry === undefined
+    ? await resolve_external_library_launchers()
+    : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
+  const launcherService = create_external_library_launcher_service();
+  const selectedVerification = create_node_selected_verification_service(launcherService);
+  const authorities = create_hosted_test_application(registry, {
+    makeRunId: make_hosted_test_run_id_factory(),
+    inspectCase: options.inspectCase ?? inspect_hosted_test_case,
+    discovery: make_test_executor_discovery(executorRegistry, externalLaunchers.targets),
+    executorRegistry,
+    runSelected: externalLaunchers.targets.length === 0
+      ? run_fresh_node_selected_test_ids
+      : (selectedRegistry, ids, onEvent, runOptions) => selectedVerification.run(
+        selectedRegistry,
+        externalLaunchers,
+        ids,
+        onEvent,
+        runOptions,
+      ),
+  });
+  const connections = new Map<WebSocket, Readonly<{ authorityId: string; disconnect: () => void }>>();
+  let disposed = false;
+  let sentMessages = 0;
+  let sentBytes = 0;
+
+  const registration: NodeHostedApplication = Object.freeze({
+    name: NODE_HOSTED_TESTS_APPLICATION_NAME,
+    authorities: Object.freeze([
+      Object.freeze({ kind: "exact" as const, value: HOSTED_TEST_COORDINATOR_HOST_ID }),
+      Object.freeze({ kind: "prefix" as const, value: HOSTED_TEST_REPORT_AUTHORITY_PREFIX }),
+    ]),
+    ready: () => !disposed,
+    acceptWebSocket(authorityId, websocket) {
+      if (disposed) {
+        websocket.close(1012, "Hosted-tests application stopping.");
+        return;
+      }
+      const connected = authorities.connect(authorityId, make_node_websocket_livehost_socket(websocket, (message) => {
+        sentMessages += 1;
+        sentBytes += Buffer.byteLength(message, "utf8");
+      }));
+      if (!connected.ok) {
+        websocket.close(1008, connected.error.code ?? "Unknown hosted-test LiveHost.");
+        return;
+      }
+      const disconnect = connected.value;
+      connections.set(websocket, { authorityId, disconnect });
+      websocket.once("close", () => {
+        connections.get(websocket)?.disconnect();
+        connections.delete(websocket);
+      });
+      websocket.once("error", () => websocket.close(1011, "Hosted-test WebSocket error."));
+    },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      launcherService.terminate();
+      for (const connection of connections.values()) connection.disconnect();
+      connections.clear();
+      authorities.dispose();
+    },
+  });
+
+  return Object.freeze({
+    registration,
+    authorities,
+    connectionCount: () => connections.size,
+    disconnectConnections(authorityId) {
+      for (const [websocket, connection] of [...connections]) {
+        if (authorityId !== undefined && connection.authorityId !== authorityId) continue;
+        connection.disconnect();
+        websocket.close(1012, "Hosted-test connection interrupted.");
+      }
+    },
+    metrics: () => Object.freeze({ sentMessages, sentBytes }),
+  });
+}

@@ -7,6 +7,8 @@ import {
   route_hosted_test_worker_request,
 } from "../../src/hosted-test/cloudflare/worker-routing";
 import { create_hosted_test_application } from "../../src/hosted-test/hosted-test-application";
+import { compose_worker_authority_application } from "../../src/hosted-test/livehost-authority-composition";
+import { create_towl_authority_application } from "../../src/hosted-test/towl-authority-application";
 import { make_cloudflare_livehost_executor_registry } from "../../src/hosted-test/cloudflare/cloudflare-test-executor";
 import {
   decode_test_executor_discovery,
@@ -15,6 +17,7 @@ import {
 import { test_catalog_version } from "../../src/test-system/test-catalog";
 import type { HostedTestSelectedRunResult } from "../../src/app/hosted-test/hosted-test-action.types";
 import { hosted_test_report_cases, type HostedTestReportState } from "../../src/app/hosted-test/hosted-test-report.types";
+import { make_towl_socket } from "../../src/tests/towl-tests/towl-test-helpers";
 
 function expect_cloudflare(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted Cloudflare: ${message}`);
@@ -322,7 +325,16 @@ const legacyWorkerRun = await workerApplication.coordinator.dispatch_action({
   payload: { suite: "livehost/all" },
 });
 expect_cloudflare(legacyWorkerRun.type === "ack", "legacy Worker tests.run remains operational after canonical selection");
-workerApplication.dispose();
+const workerTowl = create_towl_authority_application();
+const composedWorkerApplication = compose_worker_authority_application(workerApplication, workerTowl);
+const workerTowlConnection = composedWorkerApplication.connect("towl:worker-room", make_towl_socket());
+expect_cloudflare(
+  workerTowlConnection.ok
+    && workerTowl.store.has("towl:worker-room")
+    && !workerApplication.store.has("towl:worker-room"),
+  "the Worker explicitly composes TOWL while keeping its authority store separate from hosted tests",
+);
+composedWorkerApplication.dispose();
 
 console.log(JSON.stringify({
   durableObjectName: HOSTED_TEST_DURABLE_OBJECT_NAME,

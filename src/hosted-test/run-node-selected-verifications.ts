@@ -3,6 +3,7 @@ import type { TestExecutorRegistry } from "../test-system/test-executor";
 import {
   external_library_launcher_termination_generation,
   run_external_library_launcher,
+  type ExternalLibraryLauncherService,
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
   type ExternalLibraryLauncherTarget,
@@ -46,18 +47,58 @@ export type NodeSelectedVerificationScheduling =
 export type NodeSelectedVerificationConfiguration = Readonly<{
   externalScheduling?: NodeSelectedVerificationScheduling;
   externalInvocation?: "verified" | "tsx";
+  launcherService?: Pick<ExternalLibraryLauncherService, "run" | "terminationGeneration">;
+  recordMetrics?: (metrics: NodeSelectedVerificationMetrics) => void;
 }>;
 
-let latestMetrics: NodeSelectedVerificationMetrics = Object.freeze({
+export type NodeSelectedVerificationService = Readonly<{
+  run(
+    registry: TestExecutorRegistry,
+    availability: ExternalLibraryLauncherAvailability,
+    selectedIds: readonly string[],
+    onEvent?: (event: TestEvent) => void,
+    options?: RunOptions,
+    configuration?: Omit<NodeSelectedVerificationConfiguration, "launcherService" | "recordMetrics">,
+  ): Promise<RunResult>;
+  metrics(): NodeSelectedVerificationMetrics;
+}>;
+
+const EMPTY_NODE_SELECTED_VERIFICATION_METRICS: NodeSelectedVerificationMetrics = Object.freeze({
   canonicalPhaseMs: 0,
   externalPhaseMs: 0,
   overlappedTotalMs: 0,
   maximumOrdinaryLauncherConcurrency: 0,
   maximumSpecialLauncherConcurrency: 0,
 });
+// Direct CLI verification exposes its most recent process result through the
+// legacy accessor. Node hosted-tests registrations use an instance recorder.
+let latestMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
 
 export function node_selected_verification_metrics(): NodeSelectedVerificationMetrics {
   return latestMetrics;
+}
+
+export function create_node_selected_verification_service(
+  launcherService: Pick<ExternalLibraryLauncherService, "run" | "terminationGeneration">,
+): NodeSelectedVerificationService {
+  let metrics: NodeSelectedVerificationMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
+  return Object.freeze({
+    run(registry, availability, selectedIds, onEvent, options, configuration) {
+      return run_node_selected_verifications(
+        registry,
+        availability,
+        selectedIds,
+        onEvent,
+        options,
+        {
+          ...configuration,
+          launcherService,
+          recordMetrics(value) { metrics = value; },
+        },
+      );
+    },
+    metrics: () => metrics,
+  });
 }
 
 function pooled_runtime(target: ExternalLibraryLauncherTarget): boolean {
@@ -318,7 +359,8 @@ export async function run_node_selected_verifications(
   let externalPass = 0;
   let externalFail = 0;
   const externalFailures: TestFailure[] = [];
-  const terminationGeneration = external_library_launcher_termination_generation();
+  const terminationGeneration = configuration.launcherService?.terminationGeneration()
+    ?? external_library_launcher_termination_generation();
   let releaseCanonicalTerminal = (): void => undefined;
   const canonicalTerminal = new Promise<void>((resolve) => {
     releaseCanonicalTerminal = resolve;
@@ -352,7 +394,7 @@ export async function run_node_selected_verifications(
         externalTargets,
         async (target) => {
           try {
-            return await run_external_library_launcher(availability, target.id, {
+            return await (configuration.launcherService?.run ?? run_external_library_launcher)(availability, target.id, {
               terminationGeneration,
               forceTsx: configuration.externalInvocation === "tsx",
               forceVerifiedDirect: configuration.externalInvocation === "verified",
@@ -393,13 +435,15 @@ export async function run_node_selected_verifications(
   );
 
   const overlappedTotalMs = performance.now() - overallStartedAt;
-  latestMetrics = Object.freeze({
+  const completedMetrics = Object.freeze({
     canonicalPhaseMs,
     externalPhaseMs,
     overlappedTotalMs,
     maximumOrdinaryLauncherConcurrency: external.maximumOrdinaryConcurrent,
     maximumSpecialLauncherConcurrency: external.maximumSpecialConcurrent,
   });
+  if (configuration.recordMetrics === undefined) latestMetrics = completedMetrics;
+  else configuration.recordMetrics(completedMetrics);
   const fail = canonical.summary.fail + externalFail;
   return Object.freeze({
     ok: fail === 0,

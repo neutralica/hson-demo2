@@ -10,12 +10,6 @@ import {
 import type { TestSubject } from "../app/demos/test/tests.types";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS = 120_000;
-const activeChildren = new Set<ChildProcess>();
-const activeLaunchers = new Map<string, Promise<ExternalLibraryLauncherResult>>();
-let maximumObservedConcurrentChildren = 0;
-let terminationGeneration = 0;
-let directLauncherStarts = 0;
-let packageScriptStarts = 0;
 const TSX_IMPORT_PATH = fileURLToPath(import.meta.resolve("tsx"));
 
 export type ExternalLibraryLauncherInvocationKind = "direct" | "package-script";
@@ -57,6 +51,54 @@ export type ExternalLibraryLauncherResult = Readonly<{
   invocationKind: ExternalLibraryLauncherInvocationKind;
   ok: boolean;
 }>;
+
+type ExternalLibraryLauncherState = {
+  readonly activeChildren: Set<ChildProcess>;
+  readonly activeLaunchers: Map<string, Promise<ExternalLibraryLauncherResult>>;
+  maximumObservedConcurrentChildren: number;
+  terminationGeneration: number;
+  directLauncherStarts: number;
+  packageScriptStarts: number;
+};
+
+export type ExternalLibraryLauncherRunOptions = Readonly<{
+  timeoutMs?: number;
+  signal?: AbortSignal;
+  command?: string;
+  terminationGeneration?: number;
+  forcePackageScript?: boolean;
+  forceTsx?: boolean;
+  forcePlainNode?: boolean;
+  forceVerifiedDirect?: boolean;
+}>;
+
+export type ExternalLibraryLauncherService = Readonly<{
+  run(
+    availability: ExternalLibraryLauncherAvailability,
+    targetId: string,
+    options?: ExternalLibraryLauncherRunOptions,
+  ): Promise<ExternalLibraryLauncherResult>;
+  terminate(): void;
+  terminationGeneration(): number;
+  resetMetrics(): void;
+  metrics(): Readonly<{
+    activeChildren: number;
+    maximumObservedConcurrentChildren: number;
+    directLauncherStarts: number;
+    packageScriptStarts: number;
+  }>;
+}>;
+
+function make_external_library_launcher_state(): ExternalLibraryLauncherState {
+  return {
+    activeChildren: new Set(),
+    activeLaunchers: new Map(),
+    maximumObservedConcurrentChildren: 0,
+    terminationGeneration: 0,
+    directLauncherStarts: 0,
+    packageScriptStarts: 0,
+  };
+}
 
 const SUBJECTS: Readonly<Record<HsonLiveTestLauncher["subject"], TestSubject>> = Object.freeze({
   Transform: "transform",
@@ -235,21 +277,13 @@ function terminate_process_tree(child: ChildProcess): void {
   child.kill("SIGTERM");
 }
 
-export async function run_external_library_launcher(
+async function run_external_library_launcher_with_state(
+  state: ExternalLibraryLauncherState,
   availability: ExternalLibraryLauncherAvailability,
   targetId: string,
-  options: Readonly<{
-    timeoutMs?: number;
-    signal?: AbortSignal;
-    command?: string;
-    terminationGeneration?: number;
-    forcePackageScript?: boolean;
-    forceTsx?: boolean;
-    forcePlainNode?: boolean;
-    forceVerifiedDirect?: boolean;
-  }> = {},
+  options: ExternalLibraryLauncherRunOptions = {},
 ): Promise<ExternalLibraryLauncherResult> {
-  if (options.terminationGeneration !== undefined && options.terminationGeneration !== terminationGeneration) {
+  if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.terminationGeneration) {
     throw new Error(`External library launcher was cancelled before start: ${targetId}`);
   }
   if (availability.repositoryRoot === undefined) throw new Error("External hson-live repository is unavailable.");
@@ -258,7 +292,7 @@ export async function run_external_library_launcher(
   const launcher = hson_live_test_launchers.find((entry) => entry.id === selectedTarget.launcherId);
   if (launcher === undefined) throw new Error(`External library launcher manifest identity changed: ${targetId}`);
   const timeoutMs = options.timeoutMs ?? EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS;
-  const active = activeLaunchers.get(targetId);
+  const active = state.activeLaunchers.get(targetId);
   if (active !== undefined) return active;
   const startedAt = performance.now();
   const execution = new Promise<ExternalLibraryLauncherResult>((resolve) => {
@@ -300,16 +334,19 @@ export async function run_external_library_launcher(
     const invocation = options.command === undefined
       ? resolvedInvocation
       : Object.freeze({ ...resolvedInvocation, command: options.command });
-    if (invocation.kind === "direct") directLauncherStarts += 1;
-    else packageScriptStarts += 1;
+    if (invocation.kind === "direct") state.directLauncherStarts += 1;
+    else state.packageScriptStarts += 1;
     const child = spawn(invocation.command, invocation.args, {
       cwd: availability.repositoryRoot,
       env: { ...process.env, ...invocation.env, FORCE_COLOR: "0", NO_COLOR: "1" },
       stdio: ["ignore", "pipe", "pipe"],
       detached: process.platform !== "win32",
     });
-    activeChildren.add(child);
-    maximumObservedConcurrentChildren = Math.max(maximumObservedConcurrentChildren, activeChildren.size);
+    state.activeChildren.add(child);
+    state.maximumObservedConcurrentChildren = Math.max(
+      state.maximumObservedConcurrentChildren,
+      state.activeChildren.size,
+    );
     child.stdout?.setEncoding("utf8");
     child.stderr?.setEncoding("utf8");
     child.stdout?.on("data", (chunk: string) => { stdout += chunk; });
@@ -322,7 +359,7 @@ export async function run_external_library_launcher(
     child.once("close", (exitCode, signal) => {
       if (settled) return;
       settled = true;
-      activeChildren.delete(child);
+      state.activeChildren.delete(child);
       clearTimeout(timer);
       options.signal?.removeEventListener("abort", abort);
       const durationMs = performance.now() - startedAt;
@@ -340,24 +377,59 @@ export async function run_external_library_launcher(
       }));
     });
   });
-  activeLaunchers.set(targetId, execution);
-  return execution.finally(() => activeLaunchers.delete(targetId));
+  state.activeLaunchers.set(targetId, execution);
+  return execution.finally(() => state.activeLaunchers.delete(targetId));
+}
+
+export function create_external_library_launcher_service(): ExternalLibraryLauncherService {
+  const state = make_external_library_launcher_state();
+  return Object.freeze({
+    run: (availability, targetId, options) =>
+      run_external_library_launcher_with_state(state, availability, targetId, options ?? {}),
+    terminate() {
+      state.terminationGeneration += 1;
+      for (const child of [...state.activeChildren]) terminate_process_tree(child);
+    },
+    terminationGeneration: () => state.terminationGeneration,
+    resetMetrics() {
+      if (state.activeChildren.size !== 0) {
+        throw new Error("Cannot reset external launcher metrics while children are active.");
+      }
+      state.maximumObservedConcurrentChildren = 0;
+      state.directLauncherStarts = 0;
+      state.packageScriptStarts = 0;
+    },
+    metrics: () => Object.freeze({
+      activeChildren: state.activeChildren.size,
+      maximumObservedConcurrentChildren: state.maximumObservedConcurrentChildren,
+      directLauncherStarts: state.directLauncherStarts,
+      packageScriptStarts: state.packageScriptStarts,
+    }),
+  });
+}
+
+// Direct CLI verification intentionally shares one process-wide service. Node
+// hosted applications create their own service so shutdown cannot cancel peers.
+const defaultExternalLibraryLauncherService = create_external_library_launcher_service();
+
+export function run_external_library_launcher(
+  availability: ExternalLibraryLauncherAvailability,
+  targetId: string,
+  options: ExternalLibraryLauncherRunOptions = {},
+): Promise<ExternalLibraryLauncherResult> {
+  return defaultExternalLibraryLauncherService.run(availability, targetId, options);
 }
 
 export function terminate_external_library_launchers(): void {
-  terminationGeneration += 1;
-  for (const child of [...activeChildren]) terminate_process_tree(child);
+  defaultExternalLibraryLauncherService.terminate();
 }
 
 export function external_library_launcher_termination_generation(): number {
-  return terminationGeneration;
+  return defaultExternalLibraryLauncherService.terminationGeneration();
 }
 
 export function reset_external_library_launcher_metrics(): void {
-  if (activeChildren.size !== 0) throw new Error("Cannot reset external launcher metrics while children are active.");
-  maximumObservedConcurrentChildren = 0;
-  directLauncherStarts = 0;
-  packageScriptStarts = 0;
+  defaultExternalLibraryLauncherService.resetMetrics();
 }
 
 export function external_library_launcher_metrics(): Readonly<{
@@ -366,10 +438,5 @@ export function external_library_launcher_metrics(): Readonly<{
   directLauncherStarts: number;
   packageScriptStarts: number;
 }> {
-  return Object.freeze({
-    activeChildren: activeChildren.size,
-    maximumObservedConcurrentChildren,
-    directLauncherStarts,
-    packageScriptStarts,
-  });
+  return defaultExternalLibraryLauncherService.metrics();
 }

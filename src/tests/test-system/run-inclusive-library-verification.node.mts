@@ -18,7 +18,7 @@ import type { TestEvent } from "../../app/demos/test/tests.types";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
-assert.equal(registry.catalog.tests.length, 2085);
+assert.equal(registry.catalog.tests.length, 2098);
 assert.equal(availability.targets.length, 34);
 assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 597);
 
@@ -64,7 +64,7 @@ const footer = hosted_test_projection_footer(projection, timing.overlappedTotalM
 const processMetrics = external_library_launcher_metrics();
 
 assert.equal(result.ok, true);
-assert.equal(canonicalCases, 2085);
+assert.equal(canonicalCases, 2098);
 assert.equal(completedExternalIds.length, 34);
 assert.deepEqual(queuedExternalIds, availability.targets.map((target) => target.id));
 assert.deepEqual(Object.keys(captured.externalResults), availability.targets.map((target) => target.id));
@@ -75,9 +75,9 @@ assert.ok(
 );
 assert.deepEqual(
   footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  ["cases:2682", "passed:2682", "failed:0"],
+  ["cases:2695", "passed:2695", "failed:0"],
 );
-assert.equal(projection.canonical.total, 2085);
+assert.equal(projection.canonical.total, 2098);
 assert.equal(projection.launchers.total, 34);
 assert.equal(projection.launchers.declaredChecks, 597);
 assert.equal(processMetrics.activeChildren, 0);

@@ -121,6 +121,7 @@ The test environment contains more than 2,500 system and unit tests covering:
 - repeated three-format transformation circuits
 - parser and serializer fidelity
 - HSON graph invariants
+- system-wide regression coverage
 - LiveTree construction, mutation, styling, events, SVG, canvas, and forms
 - LiveMap paths, schemas, subscriptions, history, batching, proxies, links, and node operations
 - LiveHost actions, commits, recovery, permissions, sessions, snapshots, and protocol behavior
@@ -129,14 +130,9 @@ Circuit tests expose intermediate string and node artifacts, allowing every stag
 
 Test execution is hosted through LiveHost. Independent suites run concurrently on the server, while ordered progress and results are streamed to the browser as they complete.
 
-Demonstrates:
-
-- hosted test execution
 - server-side concurrency
+- hosted test execution
 - progressive result streaming
-- transformation-chain fidelity
-- direct inspection of intermediate artifacts
-- system-wide regression coverage
 
 ---
 
@@ -144,21 +140,16 @@ Demonstrates:
 
 Interactive transformation between HTML, JSON, and HSON. As input changes, each panel updates synchronously.
 
-Demonstrates:
-
-- canonical intermediate representation
+- canonical IR expressed in all formats
 - deterministic transforms
-- round-trip stability
 - mixed-content handling
-- realtime parsing
+- realtime parsing & DOM updates 
 
 ---
 
 ### [build]
 
-A live HSON markup editor. Valid HSON in the left panel is parsed and immediately reflected as browser DOM on the right.
-
-Demonstrates:
+A live HSON markup editor. Valid HSON in the left panel is parsed and immediately reflected as browser DOM in the right panel.
 
 - HSON as viable document markup
 - direct graph-to-DOM reflection
@@ -235,25 +226,23 @@ Demonstrates:
 ---
 
 ### [TOWL]
+Tug Of War Live
+A deliberately simple multiplayer proof of concept for LiveHost as a server-hosted state authority. The game state is an authoritative HSON graph which connected clients follow.
 
-**Tug Of War Live**
+Players join the same 'lobby' via invite links. The players, teams, round status, scores, and rope position value exist and are managed in LiveHost. Each browser maintains a local LiveMap mirror of that hosted graph. 
 
-A deliberately simple multiplayer game built around one authoritative LiveHost graph.
+Player input is sent to LiveHost as requests to change the state. There is no direct client-side mutation — LiveHost validates the change request and schema, applies the accepted change to the authoritative graph, assigns the next revision, and streams the resulting pathwise commit to every subscribed client.
+Once accepted, the rope’s new position becomes part of the authoritative graph, and every subscribed interface reflects that same committed fact.
 
-Two browsers enter the same room through an invite link and connect to the same server-owned game state. Neither browser owns a separate canonical game. The rope position exists once, inside LiveHost.
+Both clients apply that same ordered stream to their local mirrors and their LiveTree interfaces update from the new graph state. The browsers stay aligned because they are not negotiating with each other or independently reproducing the game: they are continuously following the same canonical graph and revision history from LiveHost.
 
-Player actions are sent to the server over WebSocket. LiveHost validates each action, mutates the authoritative graph, and streams the resulting pathwise commit to every client. Each browser then applies that commit to its local LiveMap and reflects the result through LiveTree.
-
-The clients remain synchronized because they follow the same ordered authority rather than attempting to reconcile competing state.
-
-Demonstrates:
-
-- one source of truth shared across multiple clients
-- server-owned multiplayer state
-- schema and action validation at the server
-- pathwise commit streaming over WebSocket
-- browser state updated from accepted revisions
-- synchronized LiveTree interfaces driven by one hosted graph
+• one canonical game state graph shared by multiple clients
+• browser-local LiveMap mirrors kept aligned with a hosted authority
+• player input expressed as validated requests to mutate shared state
+• ordered, revisioned, pathwise commits streamed over WebSocket
+• server-owned schema, action, and game-rule enforcement
+• synchronized LiveTree interfaces derived from the same accepted graph state
+• multiplayer consistency without peer-to-peer coordination or independent client simulation
 
 ---
 

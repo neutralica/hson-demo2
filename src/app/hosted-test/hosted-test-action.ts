@@ -70,12 +70,19 @@ export function make_hosted_test_run_retention(maxRuns = 16): HostedTestRunReten
   });
 }
 
-let hostedTestRunId = 0;
-
-export function make_hosted_test_run_id(): string {
-  hostedTestRunId += 1;
-  return `hosted-run-${Date.now().toString(36)}-${hostedTestRunId.toString(36)}`;
+export function make_hosted_test_run_id_factory(): HostedTestRunIdFactory {
+  let nextRunId = 0;
+  return () => {
+    nextRunId += 1;
+    return `hosted-run-${Date.now().toString(36)}-${nextRunId.toString(36)}`;
+  };
 }
+
+const defaultHostedTestRunId = make_hosted_test_run_id_factory();
+
+// Compatibility callers outside the Node application host retain one default
+// factory. Each Node hosted-tests registration installs its own factory.
+export const make_hosted_test_run_id: HostedTestRunIdFactory = () => defaultHostedTestRunId();
 
 function finite(value: number, field: string): number {
   if (!Number.isFinite(value)) throw new Error(`Hosted test result has non-finite ${field}.`);

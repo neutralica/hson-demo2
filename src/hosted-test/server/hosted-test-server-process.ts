@@ -3,6 +3,7 @@ import { start_hosted_test_server, type HostedTestServer } from "./hosted-test-s
 export type HostedTestServerEnvironment = Readonly<{
   HOST?: string;
   PORT?: string;
+  SHUTDOWN_TIMEOUT_MS?: string;
 }>;
 
 export type HostedTestServerProcess = Readonly<{
@@ -13,14 +14,14 @@ export type HostedTestServerProcess = Readonly<{
 export type HostedTestServerProcessOptions = Readonly<{
   environment?: HostedTestServerEnvironment;
   process?: HostedTestServerProcess;
-  startServer?: (options: Readonly<{ host: string; port: number }>) => Promise<HostedTestServer>;
+  startServer?: (options: Readonly<{ host: string; port: number; shutdownTimeoutMs: number }>) => Promise<HostedTestServer>;
   log?: (message: string) => void;
   logError?: (message: string) => void;
 }>;
 
 export function hosted_test_server_bind_options(
   environment: HostedTestServerEnvironment,
-): Readonly<{ host: string; port: number }> {
+): Readonly<{ host: string; port: number; shutdownTimeoutMs: number }> {
   const host = environment.HOST ?? "127.0.0.1";
   if (host.trim() === "") throw new Error("HOST must be a non-empty bind address.");
   const rawPort = environment.PORT ?? "8787";
@@ -29,7 +30,15 @@ export function hosted_test_server_bind_options(
   if (!Number.isSafeInteger(port) || port < 1 || port > 65535) {
     throw new Error("PORT must be an integer from 1 through 65535.");
   }
-  return Object.freeze({ host, port });
+  const rawShutdownTimeout = environment.SHUTDOWN_TIMEOUT_MS ?? "5000";
+  if (!/^\d+$/.test(rawShutdownTimeout)) {
+    throw new Error("SHUTDOWN_TIMEOUT_MS must be a positive integer.");
+  }
+  const shutdownTimeoutMs = Number(rawShutdownTimeout);
+  if (!Number.isSafeInteger(shutdownTimeoutMs) || shutdownTimeoutMs <= 0) {
+    throw new Error("SHUTDOWN_TIMEOUT_MS must be a positive integer.");
+  }
+  return Object.freeze({ host, port, shutdownTimeoutMs });
 }
 
 export async function run_hosted_test_server_process(
@@ -37,11 +46,15 @@ export async function run_hosted_test_server_process(
 ): Promise<HostedTestServer> {
   const environment = options.environment ?? process.env;
   const processHandle = options.process ?? process;
-  const startServer = options.startServer ?? start_hosted_test_server;
   const log = options.log ?? console.log;
   const logError = options.logError ?? console.error;
   const bind = hosted_test_server_bind_options(environment);
-  const server = await startServer(bind);
+  const server = options.startServer === undefined
+    ? await start_hosted_test_server({
+        ...bind,
+        log(event) { log(JSON.stringify(event)); },
+      })
+    : await options.startServer(bind);
   log(`Hosted-test server listening at ${server.url} (bind address).`);
 
   let shutdown: Promise<void> | undefined;

@@ -400,17 +400,16 @@ export function towl_runtime_suite(): TestSuite {
           state: runtime.host.map.snap(),
         };
       }), {
-        commits: 6,
+        commits: 5,
         revs: [
           [1, 2],
           [2, 3],
           [3, 4],
           [4, 5],
           [5, 6],
-          [6, 7],
         ],
-        headRev: 7,
-        mapRev: 7,
+        headRev: 6,
+        mapRev: 6,
         state: {
           phase: "playing",
           player1: {

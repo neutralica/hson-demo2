@@ -148,15 +148,29 @@ try {
 }
 
 expect_deployment(
-  JSON.stringify(hosted_test_server_bind_options({})) === JSON.stringify({ host: "127.0.0.1", port: 8787 })
-    && JSON.stringify(hosted_test_server_bind_options({ HOST: "0.0.0.0", PORT: "4321" })) === JSON.stringify({ host: "0.0.0.0", port: 4321 }),
-  "server process reads HOST and PORT with local defaults",
+  JSON.stringify(hosted_test_server_bind_options({}))
+    === JSON.stringify({ host: "127.0.0.1", port: 8787, shutdownTimeoutMs: 5000 })
+    && JSON.stringify(hosted_test_server_bind_options({
+      HOST: "0.0.0.0",
+      PORT: "4321",
+      SHUTDOWN_TIMEOUT_MS: "9000",
+    })) === JSON.stringify({ host: "0.0.0.0", port: 4321, shutdownTimeoutMs: 9000 }),
+  "server process reads HOST, PORT, and bounded shutdown timeout with local defaults",
 );
 for (const port of ["", "0", "1.5", "abc", "65536", " 8787"] as const) {
   let error: unknown;
   try { hosted_test_server_bind_options({ PORT: port }); }
   catch (cause) { error = cause; }
   expect_deployment(error instanceof Error && error.message.includes("PORT"), `invalid PORT ${JSON.stringify(port)} fails startup validation`);
+}
+for (const timeout of ["", "0", "1.5", "abc", "-1"] as const) {
+  let error: unknown;
+  try { hosted_test_server_bind_options({ SHUTDOWN_TIMEOUT_MS: timeout }); }
+  catch (cause) { error = cause; }
+  expect_deployment(
+    error instanceof Error && error.message.includes("SHUTDOWN_TIMEOUT_MS"),
+    `invalid shutdown timeout ${JSON.stringify(timeout)} fails startup validation`,
+  );
 }
 const invalidEntry = spawnSync(
   process.execPath,
@@ -171,7 +185,7 @@ expect_deployment(
 const signalListeners = new Map<string, () => void>();
 const exits: number[] = [];
 let stopCalls = 0;
-let receivedBind: Readonly<{ host: string; port: number }> | undefined;
+let receivedBind: Readonly<{ host: string; port: number; shutdownTimeoutMs: number }> | undefined;
 const fakeServer: HostedTestServer = {
   host: "0.0.0.0",
   port: 4321,
@@ -195,7 +209,11 @@ signalListeners.get("SIGINT")?.();
 signalListeners.get("SIGTERM")?.();
 await new Promise<void>((resolve) => setTimeout(resolve, 0));
 expect_deployment(
-  receivedBind?.host === "0.0.0.0" && receivedBind.port === 4321 && stopCalls === 1 && exits.every((code) => code === 0),
+  receivedBind?.host === "0.0.0.0"
+    && receivedBind.port === 4321
+    && receivedBind.shutdownTimeoutMs === 5000
+    && stopCalls === 1
+    && exits.every((code) => code === 0),
   "signals share the existing server stop path exactly once",
 );
 

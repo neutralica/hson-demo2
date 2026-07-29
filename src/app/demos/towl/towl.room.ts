@@ -5,7 +5,7 @@ export const TOWL_ROOM_ID_MAX_LENGTH = 24;
 export const TOWL_ROOM_ID_LENGTH = 10;
 
 const TOWL_ROOM_ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
-const TOWL_ROOM_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+export const TOWL_ROOM_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
 export type TowlRoomUrl = Readonly<{
   roomId: string;
@@ -19,8 +19,7 @@ export function normalize_towl_room_id(value: unknown): string | undefined {
   if (
     normalized.length < TOWL_ROOM_ID_MIN_LENGTH
     || normalized.length > TOWL_ROOM_ID_MAX_LENGTH
-    || !TOWL_ROOM_PATTERN.test(normalized)
-    || normalized.endsWith("-")
+    || !TOWL_ROOM_ID_PATTERN.test(normalized)
   ) {
     return undefined;
   }

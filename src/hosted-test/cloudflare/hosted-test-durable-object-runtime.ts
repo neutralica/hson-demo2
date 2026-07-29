@@ -1,10 +1,10 @@
-import type { HostedTestApplication } from "../hosted-test-application";
+import type { LiveHostAuthorityConnector } from "../livehost-authority-composition";
 import {
   make_cloudflare_websocket_livehost_socket,
   type CloudflareAcceptedWebSocket,
 } from "./cloudflare-websocket-socket";
 
-type CloudflareHostedTestApplication = Pick<HostedTestApplication, "connect">;
+type CloudflareHostedTestApplication = Pick<LiveHostAuthorityConnector, "connect">;
 
 export type HostedTestDurableObjectRuntime = Readonly<{
   accept(hostId: string, websocket: CloudflareAcceptedWebSocket): void;

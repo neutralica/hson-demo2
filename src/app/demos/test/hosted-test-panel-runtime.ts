@@ -108,10 +108,19 @@ function make_browser_client_id(): string {
 }
 
 function current_build_environment(): HostedTestBuildEnvironment {
-    return Object.freeze({
-    DEV: import.meta.env.DEV,
-    PROD: import.meta.env.PROD,
-    VITE_HOSTED_TEST_WS_URL: import.meta.env.VITE_HOSTED_TEST_WS_URL,
+  const environment = (import.meta as ImportMeta & {
+    readonly env?: Readonly<{
+      DEV?: boolean;
+      PROD?: boolean;
+      VITE_HOSTED_TEST_WS_URL?: string;
+    }>;
+  }).env;
+  return Object.freeze({
+    DEV: environment?.DEV ?? false,
+    PROD: environment?.PROD ?? false,
+    ...(environment?.VITE_HOSTED_TEST_WS_URL === undefined
+      ? {}
+      : { VITE_HOSTED_TEST_WS_URL: environment.VITE_HOSTED_TEST_WS_URL }),
   });
 }
 

@@ -98,7 +98,10 @@ reconnectServer.disconnectConnections(HOSTED_TEST_COORDINATOR_HOST_ID);
 release();
 const recovered = await uncertain;
 expect_generic(recovered.ok && executions === 1, "uncertain tests.run retries the same request identity without duplicate execution");
-expect_generic(reconnectRuntime.status === "ready" && reconnectRuntime.failure === undefined, "bounded reconnect reattaches or creates a session and recovers coordinator state");
+expect_generic(
+  reconnectRuntime.status === "completed" && reconnectRuntime.failure === undefined,
+  `bounded reconnect reattaches or creates a session and completes recovered coordinator work (status=${reconnectRuntime.status}, failure=${reconnectRuntime.failure?.message ?? "none"})`,
+);
 expect_generic(reconnectAdapter.capture()?.run.id === recovered.runId, "report recovery remains correlated after coordinator transport loss");
 reconnectAdapter.dispose();
 reconnectRuntime.dispose();
