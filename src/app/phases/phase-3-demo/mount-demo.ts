@@ -37,6 +37,7 @@ import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
 import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
 import { make_amoebi } from "../../demos/amoeba/make-amoebi";
 import { type AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
+import mount_color_sudoku from "../../demos/mount-color-sudoku";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
@@ -417,7 +418,7 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
     void spawn_flower(fleurField, x, y);
   });
 
-
+  mount_color_sudoku(stage);
   mount_firework(screen);
   return;
 }

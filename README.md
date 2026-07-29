@@ -30,81 +30,43 @@ hson-live is built on this shared canonical representation.
 
 ### LiveTree
 
-LiveTree reflects a live browser document directly from a HSON graph and provides a dense but concise API for mutating the graph underlying the DOM.
+LiveTree creates live browser documents, projecting to the DOM from the source graph and providing a unified API for creating, modifying, styling, and interacting with graph-backed markup.
 
-Each node in a LiveTree graph corresponds to an element. Complex documents can be constructed, modified, styled, animated, and decommissioned through a unified API. Mutations to the underlying HSON graph are synchronously reflected in browser DOM.
+Element creation, SVG and canvas support, animations, and events are managed through LiveTree. Structure, CSS, events, and interaction all operate through the same model with changes reflected directly in the browser.
 
-Within a single typed, low-friction interface, LiveTree provides:
+Combined with LiveMap bindings, LiveTree creates "live" interfaces where application state and visual output are directly linked.
 
-- typed construction and lifecycle management across HTML, SVG, forms, and canvas
-- native SVG creation with automatic namespace propagation
-- complete CSS systems scoped to individual nodes
-- keyframes, animation, custom properties, and `@property`
-- managed events and event listeners
-- canvas creation, context access, and drawing utilities
-- typed form, textarea, select, and input handling
-- automatic teardown of styles, listeners, bindings, and other resources when nodes are removed
+(LiveTree "is" HTML.)
 
 ---
 
 ### LiveMap
 
-LiveMap builds a general-purpose state system onto the HSON graph. Where LiveTree handles the HTML side of HSON, LiveMap handles the JSON side.
+LiveMap turns the graph model into application state.
 
-LiveMap provides:
+State, schemas, history, subscriptions, derived views, and bindings all operate directly on the same graph structure. LiveMap edits the graph and emits changes via commits.
 
-- graph-backed application state held as a single source of truth
-- typed projections from canonical graph state into ordinary application data
-- schema validation with runtime enforcement of TypeScript-defined contracts
-- subscriptions to values, paths, selections, and structured change records
-- selectors that derive and observe focused views of larger state
-- revision history with replay, rewind, and recovery
-- atomic batches and fluent writes across nested graph state
-- immutable snapshots for fixed views of state
-- live links between maps and two-way bindings between data and interface
-- node handles exposing conventional object and array operations through one typed API
-- typed path proxies for direct traversal, reading, and mutation through familiar JavaScript syntax
+Graph commits become the shared language of the system, allowing state changes to flow consistently between local interfaces, derived views, and hosted environments.
 
-LiveMap schemas extend compile-time guarantees into the running application. Changes are validated before entering the canonical graph, keeping state within its declared contract after deployment.
+Together, LiveMap and LiveTree create a direct data-to-interface pipeline without a separate synchronization layer.
 
-LiveMap's flexibility as both local state machine and shared application store is demonstrated throughout LiveDemo.
-
-#### Live interfaces
-
-LiveMap values can be bound directly to LiveTree content, attributes, form controls, and styles. When the source graph changes, those bindings update the browser document immediately.
-
-The same mechanism works in both directions: user input can update LiveMap state, and accepted state changes can flow back into the interface without a separate reconciliation layer.
+(LiveMap "is" JSON.)
 
 ---
 
 ### LiveHost
 
-LiveHost moves the canonical graph to the server.
+LiveHost extends the graph into an authoritative server runtime.
 
-It extends LiveMap across the network, establishing a single authoritative state graph and the protocol used to access it. Browser clients do not own competing copies of application state. They submit actions to LiveHost, which validates permissions, payloads, schemas, and revisions before accepting a change.
+LiveMap-LiveTree browser clients interact via server requests over HTTP or WebSocket
 
-Accepted mutations become ordered canonical commits. Those commits are streamed to connected clients, which apply the same pathwise changes to their local LiveMap and LiveTree interfaces.
+Validated actions become ordered commits, updating the canonical state and distributing changes to connected clients.
 
-LiveHost provides:
-
-- authoritative server-owned graph state
-- ordered commit streaming over persistent connections
-- schema and permission enforcement at the authority boundary
-- hosted actions that convert client intent into validated mutations
-- concurrent access by multiple clients
-- revision tracking, replay, and gap recovery
-- snapshots for initial connection and recovery
-- session resumption from the last confirmed revision
-- persistence and restoration of hosted state
-- path-scoped subscriptions and targeted state publication
-
-LiveHost keeps the source of truth on the server while allowing the browser client to remain thin. Clients receive state changes rather than rendered pages and reflect accepted commits directly into their own HSON graphs.
+The result is a shared application model where multiple clients remain synchronized through the same underlying graph, with revision tracking, recovery, and state coordination built into the system.
 
 ---
 
 ## Demos
-
-Each demo exists to showcase an architectural capability of hson-live or prove a claim made here.
 
 ---
 
@@ -162,7 +124,7 @@ A live HSON markup editor. Valid HSON in the left panel is parsed and immediatel
 
 A diagnostic interface for pointer position, browser geometry, document hierarchy, and direction.
 
-Pointer data and inspected DOM state are continuously reflected into a LiveTree display, turning changing browser conditions into directly observable graph state.
+Pointer data and inspected DOM state are continuously reflected in a LiveTree display, turning dynamic browser conditions into directly observable graph state.
 
 Demonstrates:
 
@@ -225,23 +187,21 @@ Demonstrates:
 
 ---
 
-### [TOWL]
-Tug Of War Live
-A deliberately simple multiplayer proof of concept for LiveHost as a server-hosted state authority. The game state is an authoritative HSON graph which connected clients follow.
+### [TOWL - Tug Of War Live]
 
-Players join the same 'lobby' via invite links. The players, teams, round status, scores, and rope position value exist and are managed in LiveHost. Each browser maintains a local LiveMap mirror of that hosted graph. 
+A deliberately simple multiplayer proof of concept demonstrating LiveHost as a server-hosted state authority. The game state is an authoritative HSON graph which client connect to via 'room'-scoped invite links. Player status, rounds, scores, and rope position exist and are managed in LiveHost. Each browser maintains a local LiveMap mirror of that hosted graph. 
 
 Player input is sent to LiveHost as requests to change the state. There is no direct client-side mutation — LiveHost validates the change request and schema, applies the accepted change to the authoritative graph, assigns the next revision, and streams the resulting pathwise commit to every subscribed client.
-Once accepted, the rope’s new position becomes part of the authoritative graph, and every subscribed interface reflects that same committed fact.
+Once accepted, the rope’s new position becomes part of the authoritative graph.
 
-Both clients apply that same ordered stream to their local mirrors and their LiveTree interfaces update from the new graph state. The browsers stay aligned because they are not negotiating with each other or independently reproducing the game: they are continuously following the same canonical graph and revision history from LiveHost.
+Subscribed clients apply that same ordered commit stream to local LiveMap mirrors;  LiveTree bindings update per changes in graph state. The browsers stay aligned because they are following the same canonical graph and revision history from LiveHost.
 
+• LiveHost server-owned schema, action, and game-rule enforcement
 • one canonical game state graph shared by multiple clients
 • browser-local LiveMap mirrors kept aligned with a hosted authority
 • player input expressed as validated requests to mutate shared state
-• ordered, revisioned, pathwise commits streamed over WebSocket
-• server-owned schema, action, and game-rule enforcement
-• synchronized LiveTree interfaces derived from the same accepted graph state
+• ordered, revisioned, pathwise graph changes streamed over WebSocket 
+• LiveTree interfaces derived from the same accepted graph state, synchronized across client
 • multiplayer consistency without peer-to-peer coordination or independent client simulation
 
 ---
