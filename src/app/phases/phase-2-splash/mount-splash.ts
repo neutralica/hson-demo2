@@ -17,6 +17,7 @@ import { SPLASH_BUDS } from "./splash.buds";
 import { _colors } from "../../core/consts/colors.consts";
 import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
 import { make_rng } from "../../utils/rng";
+import type { SplashRunContext } from "./splash-lifecycle";
 
 
 
@@ -24,11 +25,18 @@ import { make_rng } from "../../utils/rng";
 /**
  * this is all very messy but it works; organize/structure calls better TODO
  */
-export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
+export async function mount_splash(
+    stage: LiveTree,
+    lifecycle: SplashRunContext,
+): Promise<LiveTree> {
+    lifecycle.throwIfCancelled();
+    lifecycle.onCleanup(() => {
+        stage.empty();
+    });
     /* clear livetree contents */
     stage.empty();
 
-    const b = bud_node(stage)
+    const b = bud_node(stage, lifecycle.queue)
     /* create structural layers */
     const sky = b.bud(SPLASH_BUDS.sky);
     const logoBox = sky.bud(SPLASH_BUDS.logoBox);
@@ -140,8 +148,11 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     const tailA = starWrap.bud(SPLASH_BUDS.starTailA);
     const tailB = starWrap.bud(SPLASH_BUDS.starTailB);
     const tailC = starWrap.bud(SPLASH_BUDS.starTailC);
+    lifecycle.throwIfCancelled();
     const sparkleHost = stage.create.div();
-    const sparkles = await mount_firework(sparkleHost);
+    const sparkles = await mount_firework(sparkleHost, lifecycle.signal);
+    lifecycle.onCleanup(sparkles.teardown);
+    lifecycle.throwIfCancelled();
     /* create clouds */
     const clouds = create_clouds(cloudBox.tree, CLOUD_CONFIG).content.all();
     if (!clouds?.length) throw new Error("no clouds created");
@@ -182,13 +193,15 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
     ver.css.setMany(VER_CSS);
     ver6.css.setMany(VER6_CSS);
 
+    lifecycle.throwIfCancelled();
     frame.animate()
 
     clouds.array().forEach((cl, i) => {
         cl.css.anim.begin(CLOUD_LAYER_FADEanim(i));
     });
 
-    await wait.timer(SUN_DELnum);
+    await lifecycle.wait(SUN_DELnum);
+    lifecycle.throwIfCancelled();
     sunCarrier.animate();
     sun.animate();
     gradient.animate()
@@ -202,30 +215,34 @@ export async function mount_splash(stage: LiveTree): Promise<LiveTree> {
             fillMode: "forwards"
         });
     });
-    await wait.for(flareBox.tree).anim(FLAREanim).end();
+    await wait.for(flareBox.tree).anim(FLAREanim).end({ signal: lifecycle.signal });
+    lifecycle.throwIfCancelled();
     flareBox.tree.remove();
     hexRail.remove();
 
-    await wait.for(sun.tree).anim(SUN_DISKanim).end()
+    await wait.for(sun.tree).anim(SUN_DISKanim).end({ signal: lifecycle.signal })
+    lifecycle.throwIfCancelled();
     sunCarrier.tree.remove();
     letters.forEach(l => { l.css.anim.begin(NEON_FLASHanim) });
 
-    await wait.for(h).anim(NEON_FLASHanim).end()
+    await wait.for(h).anim(NEON_FLASHanim).end({ signal: lifecycle.signal })
+    lifecycle.throwIfCancelled();
     begin_star(starCarrier.tree, starHead.tree, tailA.tree, tailB.tree, tailC.tree);
     ver.css.anim.begin(VERanim);
     for (let i = 0; i < 15; i++) {
         const rng = Math.random() * 2000;
-        setTimeout(() => {
+        lifecycle.schedule(() => {
             sparkles.fire(2)
         }, rng);
     }
+    lifecycle.throwIfCancelled();
     letters.forEach((l) => {
         l.css.setMany(LETTER_CSS_FINAL);
         l.css.anim.begin(STARSHINEanim);
     });
 
-    await wait.for(tailC.tree).anim(STAR_TAIL_C_ANIM).end();
-    stage.empty();
+    await wait.for(tailC.tree).anim(STAR_TAIL_C_ANIM).end({ signal: lifecycle.signal });
+    lifecycle.throwIfCancelled();
     return stage;
 }
 

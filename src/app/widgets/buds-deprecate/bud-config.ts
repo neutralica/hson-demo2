@@ -27,7 +27,12 @@ export type BudFob = Readonly<{
   animate: () => void;
 }>;
 
-export function bud_node(parent: LiveTree) {
+type BudScheduler = (callback: () => void) => void;
+
+export function bud_node(
+  parent: LiveTree,
+  schedule: BudScheduler = queueMicrotask,
+) {
   const newBud = (spec: BudSpec): BudFob => {
     const node = spec.make(parent);
 
@@ -42,13 +47,13 @@ export function bud_node(parent: LiveTree) {
     const animate = (): void => {
       const ani = Array.isArray(spec.anim) ? spec.anim : [spec.anim];
       if (!ani || ani.length === 0) return;
-      queueMicrotask(() => {
+      schedule(() => {
         for (const a of ani) node.css.anim.begin(a);
       });
     };
 
     // return a new bud rooted at this node (chainable)
-    const budlet = bud_node(node);
+    const budlet = bud_node(node, schedule);
 
     return {
       tree: node,

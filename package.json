@@ -2,6 +2,9 @@
   "name": "hson-demo2",
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0 <25"
+  },
   "description": "interactive demo for hson-live and liveTree",
   "main": "index.js",
   "scripts": {
@@ -14,6 +17,8 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "prebuild": "npm run build:hson-live",
     "build": "vite build",
+    "build:node-production": "npm run build:hson-live && esbuild src/hosted-test/server/hosted-test-server-production-entry.node.ts --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/livehost-server.mjs",
+    "start:production": "node dist-node/livehost-server.mjs",
     "check:cloudflare": "tsc -p tsconfig.cloudflare.json --noEmit",
     "cloudflare:dev": "wrangler dev --config wrangler.jsonc",
     "cloudflare:deploy": "wrangler deploy --config wrangler.jsonc",
@@ -51,6 +56,7 @@
     "test:node-application-host": "node --import=tsx src/tests/test-system/run-canonical-tests.node.mts --suite livehost/node-application-host",
     "test:node-application-host-entry": "node --import=tsx src/tests/livehost-tests/run-node-application-host-entry.node.mts",
     "test:livehost-bootstrap-integration": "node --import=tsx src/tests/livehost-tests/run-livehost-bootstrap-integration.node.mts",
+    "test:node-production-runtime": "node --import=tsx src/tests/livehost-tests/run-node-production-runtime.node.mts",
     "test:hosted-cloudflare": "tsx tests/cloudflare/run-hosted-cloudflare.node.mts",
     "test:hosted-jsdom-runtime-node": "tsx src/tests/livehost-tests/run-hosted-jsdom-runtime.node.mts",
     "test:hosted-dom-collection-node": "tsx src/tests/livehost-tests/run-hosted-dom-collection.node.mts",
@@ -92,6 +98,9 @@
     "test:stage5c-closeout-node": "node --import=tsx src/tests/test-system/run-stage-5c-closeout.node.mts",
     "test:external-library-node": "node --import=tsx src/tests/test-system/run-external-library-launchers.node.mts",
     "test:external-library-all-node": "node --import=tsx src/tests/test-system/run-external-library-launchers.node.mts --all",
+    "test:external-launcher-protocol-node": "node --import=tsx src/tests/test-system/run-external-launcher-protocol.node.mts",
+    "test:runner-truthfulness-node": "node --import=tsx src/tests/test-system/run-test-runner-truthfulness.node.mts",
+    "test:splash-lifecycle-node": "node --import=tsx src/tests/app/run-splash-lifecycle.node.mts",
     "test:inclusive-library-node": "node --import=tsx src/tests/test-system/run-inclusive-library-verification.node.mts",
     "test:hosted-performance-node": "node --import=tsx src/tests/test-system/run-hosted-test-performance.node.mts"
   },
@@ -102,12 +111,16 @@
     "@playwright/test": "^1.61.1",
     "@types/node": "^25.5.2",
     "@types/ws": "8.18.1",
+    "esbuild": "0.27.3",
     "typescript": "^5.8.3",
     "vite": "^7.3.0",
     "wrangler": "^4.112.0"
   },
   "dependencies": {
+    "domhandler": "5.0.3",
+    "dompurify": "3.3.1",
     "hson-live": "file:../hson-live",
+    "htmlparser2": "10.0.0",
     "jsdom": "29.1.0",
     "tsx": "^4.21.0",
     "ws": "8.21.0"

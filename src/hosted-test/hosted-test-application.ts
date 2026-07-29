@@ -1,5 +1,15 @@
 
-import type { LiveHost, LiveHostActions, LiveHostSchema, LiveHostSocketLike, LiveHostStore } from "hson-live/types";
+import type {
+  LiveHost,
+  LiveHostActions,
+  LiveHostAuthorityAcquisition,
+  LiveHostAuthorityEvictionResult,
+  LiveHostAuthorityRegistry,
+  LiveHostConnectionContext,
+  LiveHostSchema,
+  LiveHostSocketLike,
+  LiveHostStore,
+} from "hson-live/types";
 import type { JsonValue } from "hson-live/types";
 import type { TestExecutorDiscovery } from "../test-system/test-discovery";
 import { decode_test_executor_discovery_request } from "../test-system/test-discovery";
@@ -44,7 +54,11 @@ import {
   type HostedTestCoordinatorState,
   type HostedTestRunAssociation,
 } from "../app/hosted-test/hosted-test-application.types";
-import { create_livehost_store, create_livehost } from "hson-live/livehost";
+import {
+  create_livehost,
+  create_livehost_authority_registry,
+  create_livehost_store,
+} from "hson-live/livehost";
 
 export { HOSTED_TEST_COORDINATOR_HOST_ID } from "../app/hosted-test/hosted-test-application.types";
 export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../app/hosted-test/hosted-test-application.types";
@@ -57,8 +71,21 @@ export type HostedTestApplication = Readonly<{
   store: LiveHostStore;
   coordinator: LiveHost<HostedTestCoordinatorState, HostedTestActions>;
   retention: HostedTestRunRetention;
-  connect(hostId: string, socket: LiveHostSocketLike): ReturnType<LiveHostStore["connect"]>;
-  dispose(): void;
+  connect(
+    hostId: string,
+    socket: LiveHostSocketLike,
+    context?: LiveHostConnectionContext,
+  ): ReturnType<LiveHostStore["connect"]>;
+  connectBounded(
+    hostId: string,
+    socket: LiveHostSocketLike,
+    context?: LiveHostConnectionContext,
+  ): Promise<ReturnType<LiveHostStore["connect"]>>;
+  reportCount(): number;
+  hasReport(hostId: string): boolean;
+  evictReport(hostId: string): Promise<LiveHostAuthorityEvictionResult>;
+  sweepReports(): Promise<number>;
+  dispose(): void | Promise<void>;
 }>;
 
 export type HostedTestApplicationOptions = Readonly<{
@@ -74,6 +101,13 @@ export type HostedTestApplicationOptions = Readonly<{
     onEvent?: (event: TestEvent) => void,
     options?: RunOptions,
   ) => Promise<RunResult>;
+  lifecycle?: Readonly<{
+    maxReports: number;
+    terminalRetentionMs: number;
+    sweepIntervalMs?: number;
+    now?: () => number;
+    schedule?: (delayMs: number, callback: () => void) => () => void;
+  }>;
 }>;
 
 function finite(value: number, field: string): number {
@@ -167,17 +201,12 @@ export function create_hosted_test_application(
     run: HostedTestSuiteRunner;
     testIds?: readonly string[];
   }>;
+  type ReportHost = LiveHost<HostedTestReportState, HostedTestReportActions>;
+  type ReportBlueprint = Readonly<{ runId: HostedTestRunId; plan: RunPlan }>;
+  const reportBlueprints = new Map<string, ReportBlueprint>();
 
-  async function execute_run(
-    plan: RunPlan,
-    clientId: HostedTestRunAssociation["clientId"],
-    requestId: HostedTestRunAssociation["requestId"],
-    retainAssociation: (association: HostedTestRunAssociation) => void,
-    replaceAssociation: (association: HostedTestRunAssociation) => void,
-  ): Promise<HostedTestRunResult | HostedTestSelectedRunResult> {
-    const runId = makeRunId() as HostedTestRunId;
-    if (!runId) throw new Error("Hosted test run ID must be non-empty.");
-    const reportHostId = `hosted-report:${runId}`;
+  function create_report_host(reportHostId: string, blueprint: ReportBlueprint): ReportHost {
+    const { runId, plan } = blueprint;
     const reportActions: LiveHostActions<HostedTestReportActions, HostedTestReportState> = {
       "tests.inspect": async (_reportContext, inspectRequest) => {
         if (inspectRequest.runId !== runId) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${inspectRequest.runId}" is not owned by this report host.`);
@@ -194,75 +223,130 @@ export function create_hosted_test_application(
     const reportSchema: LiveHostSchema<HostedTestReportState, HostedTestReportActions> = {
       actions: { "tests.inspect": { payload: decode_inspect } },
     };
-    const reportHost = create_livehost<HostedTestReportState, HostedTestReportActions>({
+    return create_livehost<HostedTestReportState, HostedTestReportActions>({
       state: make_initial_hosted_test_report(plan.target, runId) as HostedTestReportState,
       actions: reportActions,
       schema: reportSchema,
       logicalMapId: reportHostId,
     });
-    const stored = store.set(reportHostId, reportHost);
-    if (!stored.ok) throw new Error(stored.error.message);
-    reportHostIds.add(reportHostId);
-    retention.retain(runId, plan.target);
-    const report = make_hosted_test_report(Date.now, undefined, plan.target, report_options(options.report, runId, reportHost.map));
+  }
 
-    const association: HostedTestRunAssociation = {
-      clientId,
-      requestId,
-      runId,
-      reportHostId,
-      suite: plan.target,
-      status: "running",
-      reportRev: reportHost.stream.headRev,
-    };
-    retainAssociation(association);
-
-    const hostStartedAt = performance.now();
-    let result: RunResult;
-    try {
-      result = await plan.run(report.reduce, { yieldEveryCases: 0, yieldBetweenSuites: false });
-      report.complete(result, {
-        runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
-        hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
+  const reportRegistry: LiveHostAuthorityRegistry<ReportHost> | undefined = options.lifecycle === undefined
+    ? undefined
+    : create_livehost_authority_registry<ReportHost>({
+        maxAuthorities: options.lifecycle.maxReports,
+        idleMs: options.lifecycle.terminalRetentionMs,
+        ...(options.lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: options.lifecycle.sweepIntervalMs }),
+        ...(options.lifecycle.now === undefined ? {} : { now: options.lifecycle.now }),
+        ...(options.lifecycle.schedule === undefined ? {} : { schedule: options.lifecycle.schedule }),
+        create(reportHostId) {
+          const blueprint = reportBlueprints.get(reportHostId);
+          if (blueprint === undefined) throw new Error("Hosted report authority is unknown or evicted.");
+          return create_report_host(reportHostId, blueprint);
+        },
+        dispose(host) {
+          const runId = host.stream.logicalMapId.slice("hosted-report:".length) as HostedTestRunId;
+          reportBlueprints.delete(host.stream.logicalMapId);
+          reportHostIds.delete(host.stream.logicalMapId);
+          retention.remove(runId);
+          host.dispose();
+        },
       });
-    } catch (error) {
-      report.failInfrastructure(error);
-      replaceAssociation({ ...association, status: "error", reportRev: reportHost.stream.headRev });
-      report.dispose();
-      throw error;
-    }
 
-    report.dispose();
-    const state = reportHost.map.capture().value;
-    const status = state.run.status === "passed" ? "passed" : "failed";
-    replaceAssociation({ ...association, status, reportRev: reportHost.stream.headRev });
-    const timing = state.run.timing;
-    if (timing === null) throw new Error("Hosted test report completed without timing.");
-    const summary = normalize_summary(result.summary);
-    if (plan.testIds !== undefined) {
+  async function execute_run(
+    plan: RunPlan,
+    clientId: HostedTestRunAssociation["clientId"],
+    requestId: HostedTestRunAssociation["requestId"],
+    retainAssociation: (association: HostedTestRunAssociation) => void,
+    replaceAssociation: (association: HostedTestRunAssociation) => void,
+  ): Promise<HostedTestRunResult | HostedTestSelectedRunResult> {
+    const runId = makeRunId() as HostedTestRunId;
+    if (!runId) throw new Error("Hosted test run ID must be non-empty.");
+    const reportHostId = `hosted-report:${runId}`;
+    let reportAcquisition: LiveHostAuthorityAcquisition<ReportHost> | undefined;
+    let reportHost: ReportHost;
+    if (reportRegistry === undefined) {
+      reportHost = create_report_host(reportHostId, { runId, plan });
+      const stored = store.set(reportHostId, reportHost);
+      if (!stored.ok) throw new Error(stored.error.message);
+    } else {
+      if (reportRegistry.has(reportHostId) || reportBlueprints.has(reportHostId)) {
+        throw new Error(`LIVEHOST_STORE_DUPLICATE_ID: Hosted report authority already exists: ${reportHostId}`);
+      }
+      reportBlueprints.set(reportHostId, { runId, plan });
+      const acquired = await reportRegistry.acquire(reportHostId);
+      if (!acquired.ok) {
+        reportBlueprints.delete(reportHostId);
+        throw new Error(`${acquired.error.code}: ${acquired.error.message}`);
+      }
+      reportAcquisition = acquired.value;
+      reportHost = acquired.value.authority;
+    }
+    try {
+      reportHostIds.add(reportHostId);
+      retention.retain(runId, plan.target);
+      const report = make_hosted_test_report(Date.now, undefined, plan.target, report_options(options.report, runId, reportHost.map));
+
+      const association: HostedTestRunAssociation = {
+        clientId,
+        requestId,
+        runId,
+        reportHostId,
+        suite: plan.target,
+        status: "running",
+        reportRev: reportHost.stream.headRev,
+      };
+      retainAssociation(association);
+
+      const hostStartedAt = performance.now();
+      let result: RunResult;
+      try {
+        result = await plan.run(report.reduce, { yieldEveryCases: 0, yieldBetweenSuites: false });
+        report.complete(result, {
+          runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
+          hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
+        });
+      } catch (error) {
+        report.failInfrastructure(error);
+        replaceAssociation({ ...association, status: "error", reportRev: reportHost.stream.headRev });
+        report.dispose();
+        throw error;
+      }
+
+      report.dispose();
+      const state = reportHost.map.capture().value;
+      const status = state.run.status === "passed" ? "passed" : "failed";
+      replaceAssociation({ ...association, status, reportRev: reportHost.stream.headRev });
+      const timing = state.run.timing;
+      if (timing === null) throw new Error("Hosted test report completed without timing.");
+      const summary = normalize_summary(result.summary);
+      if (plan.testIds !== undefined) {
+        return {
+          runId,
+          reportHostId,
+          reportRev: reportHost.stream.headRev,
+          suite: HOSTED_TEST_SELECTED_RUN_TARGET,
+          testIds: plan.testIds,
+          ok: result.ok,
+          summary,
+          timing,
+        };
+      }
+      if (!is_hosted_test_suite_id(plan.target)) {
+        throw new Error(`Hosted test legacy run has invalid report target "${plan.target}".`);
+      }
       return {
         runId,
         reportHostId,
         reportRev: reportHost.stream.headRev,
-        suite: HOSTED_TEST_SELECTED_RUN_TARGET,
-        testIds: plan.testIds,
+        suite: plan.target,
         ok: result.ok,
         summary,
         timing,
       };
+    } finally {
+      reportAcquisition?.release();
     }
-    if (!is_hosted_test_suite_id(plan.target)) {
-      throw new Error(`Hosted test legacy run has invalid report target "${plan.target}".`);
-    }
-    return {
-      runId,
-      reportHostId,
-      reportRev: reportHost.stream.headRev,
-      suite: plan.target,
-      ok: result.ok,
-      summary,
-      timing,
-    };
   }
 
   const actions: LiveHostActions<HostedTestActions, HostedTestCoordinatorState> = {
@@ -359,17 +443,45 @@ export function create_hosted_test_application(
     store,
     coordinator,
     retention,
-    connect(hostId, socket) {
-      return store.connect(hostId, socket);
+    connect(hostId, socket, context) {
+      return store.connect(hostId, socket, context);
     },
-    dispose() {
+    async connectBounded(hostId, socket, context) {
+      if (hostId === HOSTED_TEST_COORDINATOR_HOST_ID || reportRegistry === undefined) {
+        return store.connect(hostId, socket, context);
+      }
+      if (!reportRegistry.has(hostId)) {
+        return { ok: false, error: { code: "LIVEHOST_STORE_UNKNOWN_ID", message: `Unknown hosted report authority: ${hostId}` } };
+      }
+      const acquired = await reportRegistry.acquire(hostId);
+      if (!acquired.ok) return acquired;
+      try {
+        return { ok: true, value: acquired.value.authority.connect(socket, context) };
+      } finally {
+        acquired.value.release();
+      }
+    },
+    reportCount: () => reportRegistry?.diagnostics().entryCount ?? reportHostIds.size,
+    hasReport: (hostId) => reportRegistry?.has(hostId) ?? reportHostIds.has(hostId),
+    evictReport: (hostId) => reportRegistry?.evict(hostId) ?? Promise.resolve(
+      reportHostIds.has(hostId)
+        ? { status: "busy" as const, blockers: Object.freeze(["acquisition" as const]) }
+        : { status: "not-found" as const },
+    ),
+    sweepReports: () => reportRegistry?.sweep() ?? Promise.resolve(0),
+    async dispose() {
       coordinator.dispose();
-      for (const id of reportHostIds) {
-        const host = store.get(id);
-        host?.dispose();
-        store.delete(id);
+      if (reportRegistry !== undefined) {
+        await reportRegistry.dispose();
+      } else {
+        for (const id of reportHostIds) {
+          const host = store.get(id);
+          host?.dispose();
+          store.delete(id);
+        }
       }
       reportHostIds.clear();
+      reportBlueprints.clear();
       retention.clear();
       store.delete(HOSTED_TEST_COORDINATOR_HOST_ID);
     },

@@ -430,6 +430,14 @@ for (const result of results) {
   assert.equal(result.exitCode, 0);
   assert.equal(result.signal, null);
   assert.equal(result.invocationKind, "direct");
+  assert.deepEqual(result.completion, {
+    version: 1,
+    launcherId,
+    executed: result.target.executableChecks,
+    passed: result.target.executableChecks,
+    failed: 0,
+  });
+  assert.equal(result.completionError, undefined);
 }
 assert.equal(new Set(results.map((result) => result.target.id)).size, selected.length, "each selected launcher executes exactly once");
 assert.deepEqual(

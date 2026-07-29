@@ -1,6 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
 
+test("splash completes naturally without retaining work or disposed nodes", async ({ page }) => {
+  test.setTimeout(55_000);
+  const assertNoErrors = monitor_application_errors(page);
+  await page.goto("/");
+  const stage = page.locator("#stage");
+  await expect(stage).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
+  await expect(stage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 45_000 });
+  await expect(page.locator("#sky, #logo-box")).toHaveCount(0);
+  await expect(page.locator("#wasm-fireworks")).toHaveCount(1);
+  assertNoErrors();
+});
+
 test("application boot reaches one clean usable demo without auto-running hosted tests", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
@@ -31,20 +43,20 @@ test("hosted panel discovers curated categories and runs one canonical category"
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
   await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
-  await expect(page.getByTestId("hosted-test-executor")).toContainText("2103 canonical cases");
+  await expect(page.getByTestId("hosted-test-executor")).toContainText("2100 canonical cases");
   await open_demo(page, "test");
 
   const selector = page.locator("#test-select");
   const targetedSuite = page.locator("#test-targeted-suite");
   const targetedCase = page.locator("#test-targeted-case");
-  await expect(selector.locator("option").first()).toHaveText("all (2605)");
+  await expect(selector.locator("option").first()).toHaveText("all (2792)");
   await expect(selector.locator("option")).toHaveText(
     await selector.locator("option").allTextContents().then((labels) => labels.map((label) => label.toLowerCase())),
   );
   await expect(selector.locator('option[value^="suite:"]')).toHaveCount(0);
   await expect(selector.locator('option[value^="test:"]')).toHaveCount(0);
-  await expect(selector.locator('option[value="subject:transform"]')).toHaveText("transform (503)");
-  await expect(selector.locator('option[value="collection:dev"]')).toHaveText("dev (37)");
+  await expect(selector.locator('option[value="subject:transform"]')).toHaveText("transform (558)");
+  await expect(selector.locator('option[value="collection:dev"]')).toHaveText("dev (38)");
   await expect(selector.locator('option[value="collection:library"]')).toHaveCount(0);
   await expect(targetedSuite).toBeDisabled();
   await expect(targetedSuite).toHaveValue("");

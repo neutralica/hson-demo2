@@ -13,6 +13,7 @@ import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo } from "./phases/phase-3-demo/mount-demo";
 import { CssManager,  LiveTree } from "hson-live/livetree";
+import { create_splash_run, type SplashRun } from "./phases/phase-2-splash/splash-lifecycle";
 
 
 const gcss = CssManager.api();
@@ -35,6 +36,7 @@ export async function run_app(root: LiveTree): Promise<void> {
     .css.setMany(STAGE_CSS);
 
   const { skip, cancel } = make_skip_promise(stage);
+  let splashRun: SplashRun | undefined;
 
   const hard_cut = (): void => {
     stage.empty();
@@ -54,12 +56,17 @@ export async function run_app(root: LiveTree): Promise<void> {
     // --- phase 2: splash ---
     {
       stage.attrs.set("data-app-phase", "splash");
-      const splashP = run_phase(stage, mount_splash, _shortpause);
+      splashRun = create_splash_run((lifecycle) => mount_splash(stage, lifecycle));
+      const splashP = (async (): Promise<void> => {
+        const terminal = await splashRun!.completion;
+        if (terminal === "completed") await _shortpause();
+      })();
       const res = await Promise.race([splashP, skip]);
       if (res === "skip") {
-        hard_cut();
+        await splashRun.cancel();
         // continue to demo
       }
+      splashRun = undefined;
     }
 
     // once we reach demo, disable skip entirely (avoid lingering listener)
@@ -74,6 +81,7 @@ export async function run_app(root: LiveTree): Promise<void> {
 
     return;
   } finally {
+    if (splashRun && !splashRun.signal.aborted) await splashRun.cancel();
     // always tear down listener if anything throws/returns early
     cancel();
   }

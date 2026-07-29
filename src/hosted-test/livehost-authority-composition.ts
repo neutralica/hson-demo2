@@ -1,10 +1,14 @@
-import type { LiveHostSocketLike, LiveHostStore } from "hson-live/types";
+import type { LiveHostConnectionContext, LiveHostSocketLike, LiveHostStore } from "hson-live/types";
 import { towl_room_id_from_host_id } from "../app/demos/towl";
 import type { HostedTestApplication } from "./hosted-test-application";
 import type { TowlAuthorityApplication } from "./towl-authority-application";
 
 export type LiveHostAuthorityConnector = Readonly<{
-  connect(hostId: string, socket: LiveHostSocketLike): ReturnType<LiveHostStore["connect"]>;
+  connect(
+    hostId: string,
+    socket: LiveHostSocketLike,
+    context?: LiveHostConnectionContext,
+  ): ReturnType<LiveHostStore["connect"]>;
   dispose(): void;
 }>;
 
@@ -14,10 +18,10 @@ export function compose_worker_authority_application(
 ): LiveHostAuthorityConnector {
   let disposed = false;
   return Object.freeze({
-    connect(hostId, socket) {
+    connect(hostId, socket, context) {
       return towl_room_id_from_host_id(hostId) === undefined
-        ? hostedTests.connect(hostId, socket)
-        : towl.connect(hostId, socket);
+        ? hostedTests.connect(hostId, socket, context)
+        : towl.connect(hostId, socket, context);
     },
     dispose() {
       if (disposed) return;

@@ -21,6 +21,8 @@ export type TestExecutorDescriptor = Readonly<{
 export type ExecutableTestRegistration = Readonly<{
   descriptor: TestDescriptor;
   testCase: TestCase;
+  suiteSetup?: TestSuite["setup"];
+  suiteTimeoutMs?: number;
 }>;
 
 export type TestExecutorRegistry = Readonly<{
@@ -44,6 +46,7 @@ export function make_test_executor_registry(
 ): TestExecutorRegistry {
   const catalog = catalog_from_test_suites(suites);
   const cases = new Map<string, TestCase>();
+  const suiteById = new Map(suites.map((suite) => [suite.suite, suite]));
   for (const suite of suites) {
     for (const testCase of suite.cases) {
       const id = `${suite.suite}::${testCase.name}`;
@@ -54,7 +57,14 @@ export function make_test_executor_registry(
   const registrations: readonly ExecutableTestRegistration[] = Object.freeze(catalog.tests.map((descriptor) => {
     const testCase = cases.get(descriptor.id);
     if (testCase === undefined) throw new Error(`Missing executable registration for ${descriptor.id}`);
-    return Object.freeze({ descriptor, testCase });
+    const suite = suiteById.get(descriptor.suite);
+    if (suite === undefined) throw new Error(`Missing executable suite for ${descriptor.id}`);
+    return Object.freeze({
+      descriptor,
+      testCase,
+      ...(suite.setup === undefined ? {} : { suiteSetup: suite.setup }),
+      ...(suite.timeoutMs === undefined ? {} : { suiteTimeoutMs: suite.timeoutMs }),
+    });
   }));
   return make_test_executor_registry_from_registrations(executor, catalog, registrations);
 }
@@ -94,6 +104,7 @@ export function make_test_executor_registry_from_registrations(
     descriptors.set(descriptor.id, descriptor);
   }
   const byId = new Map<string, ExecutableTestRegistration>();
+  const suiteExecution = new Map<string, Readonly<{ setup?: TestSuite["setup"]; timeoutMs?: number }>>();
   for (const registration of registrations) {
     const id = registration.descriptor.id;
     if (byId.has(id)) throw new Error(`Duplicate executable registration ID: ${id}`);
@@ -108,6 +119,16 @@ export function make_test_executor_registry_from_registrations(
     if (!executor_supports(executor, descriptor)) {
       throw new Error(`Executor ${executor.id} lacks capabilities required by ${id}.`);
     }
+    const existingSuite = suiteExecution.get(descriptor.suite);
+    if (existingSuite !== undefined
+      && (existingSuite.setup !== registration.suiteSetup
+        || existingSuite.timeoutMs !== registration.suiteTimeoutMs)) {
+      throw new Error(`Executable registrations for suite ${descriptor.suite} disagree on suite execution configuration.`);
+    }
+    suiteExecution.set(descriptor.suite, Object.freeze({
+      ...(registration.suiteSetup === undefined ? {} : { setup: registration.suiteSetup }),
+      ...(registration.suiteTimeoutMs === undefined ? {} : { timeoutMs: registration.suiteTimeoutMs }),
+    }));
     byId.set(id, registration);
   }
   for (const id of descriptors.keys()) {

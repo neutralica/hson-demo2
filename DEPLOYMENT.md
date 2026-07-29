@@ -72,26 +72,85 @@ npm ci
 npm run check
 ```
 
-Use this start command on a persistent Node service:
+Build and start the deterministic JavaScript artifact on supported Node
+`>=22.12.0 <25`:
 
 ```sh
-HOST=0.0.0.0 PORT="$PORT" npm run start:hosted-test-server
+npm run build:node-production
+HOST=0.0.0.0 PORT="$PORT" \
+LIVEHOST_ALLOWED_ORIGINS=https://hson.example.com \
+LIVEHOST_BEARER_TOKEN="$LIVEHOST_BEARER_TOKEN" \
+npm run start:production
 ```
 
 `HOST` defaults to `127.0.0.1` and `PORT` defaults to `8787` for local use.
 Production platforms normally supply `PORT`; bind `HOST` to `0.0.0.0` so the
 platform proxy can reach the process. A bind address such as
 `ws://0.0.0.0:8787` is diagnostic only and must never be used as the browser
-configuration.
+configuration. The production entry defaults to
+`LIVEHOST_DEPLOYMENT=production` and fails before listening when origins,
+credentials, runtime, or numeric configuration are invalid. It runs
+`dist-node/livehost-server.mjs`, not TypeScript or `tsx`.
+
+## Authority lifetime and restart contract
+
+The Node process owns two finite application registries, separate from
+transport limits:
+
+- TOWL defaults to at most 128 loaded rooms, eligible for eviction 30 minutes
+  after connections and resumable-session grace are gone.
+- hosted tests default to at most 16 loaded reports, retained for 10 minutes
+  after terminal execution and subscribers are gone.
+- one unreferenced 30-second sweep applies both policies.
+
+Configure these with `LIVEHOST_MAX_TOWL_ROOMS`, `LIVEHOST_TOWL_IDLE_MS`,
+`LIVEHOST_MAX_HOSTED_REPORTS`, `LIVEHOST_HOSTED_REPORT_RETENTION_MS`, and
+`LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS`. Values are finite positive integers.
+TOWL idle time cannot be shorter than its 30-second resumable-session grace,
+and the sweep interval cannot exceed either retention duration. Invalid values
+fail before listening.
+
+Running reports, attached clients, resumable sessions inside grace, actions,
+recovery, persistence, and request acquisitions cannot be automatically
+evicted. Capacity exhaustion rejects new room/report creation; it never removes
+an active authority. The hosted-test coordinator and canonical catalog remain
+process-lifetime application state.
+
+TOWL rooms and hosted reports are ephemeral projected-data authorities.
+Eviction or process restart loses their state, sessions, history, and
+credentials. Returning to the same TOWL room key creates initial game state
+with a new incarnation; old bootstrap state uses the existing incarnation-
+replacement recovery path. Reports are not reconstructed after eviction.
+Document persistence in `hson-live` does not make these projected authorities
+durable.
+
+The supported Node topology is one process and one application registry owning
+each logical authority. Multi-process service of one authority namespace is
+unsupported; a shared database alone is not distributed locking. Cloudflare
+Durable Objects retain their platform-keyed ownership and existing Worker
+behavior instead of using this Node policy.
 
 ## Proxy and network requirements
 
 The public service must terminate TLS and expose a `wss://` URL. Its reverse
 proxy must forward HTTP Upgrade and Connection headers to the Node process and
-must retain the full path and query string. The server does not validate the
-`Origin` header, so a separately hosted frontend works without additional
-origin configuration. No special path is required; a path such as `/socket`
-may be used when the proxy forwards it unchanged.
+must retain the full path and query string. Exact browser origins are required
+through `LIVEHOST_ALLOWED_ORIGINS`; missing and `null` origins reject in this
+production composition. Bootstrap HTTP and WebSocket requests independently
+authenticate the same principal. Non-browser clients may use an
+`Authorization: Bearer` header. Browser deployments provision an HttpOnly
+`livehost_auth` cookie (name configurable with
+`LIVEHOST_AUTH_COOKIE_NAME`) at the proxy/application identity boundary; this
+server does not create login routes or cookies. The token is never placed in
+bootstrap state or query parameters.
+
+Direct mode ignores all forwarded identity headers. To trust a TLS-terminating
+proxy, set `LIVEHOST_TRUSTED_PROXY_PEERS` to the comma-separated immediate peer
+addresses and optionally `LIVEHOST_FORWARDED_FOR_HOP=first|last`. Only trusted
+peers influence effective scheme, host, and client address through
+`X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Forwarded-Host`.
+The `Forwarded` header is intentionally unsupported and rejected in trusted
+mode.
 
 The browser preserves existing query parameters and adds or replaces
 `livehost=<host-id>` for coordinator, report, and reconnect sockets. Do not

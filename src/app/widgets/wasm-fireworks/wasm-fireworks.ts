@@ -27,10 +27,13 @@ const FIREWORKS = {
 const MAX_LIVE_FIREWORKS = 100;
 let _wasmCache: FireworksWasm | undefined;
 
-async function load_fireworks_wasm(): Promise<FireworksWasm> {
+async function load_fireworks_wasm(signal?: AbortSignal): Promise<FireworksWasm> {
   if (_wasmCache) return _wasmCache;
 
-  const res = await fetch(FIREWORKS.wasmPath);
+  const res = await fetch(
+    FIREWORKS.wasmPath,
+    signal ? { signal } : undefined,
+  );
   const buf = await res.arrayBuffer();
   const wasm = await WebAssembly.instantiate(buf, {});
   const exp = wasm.instance.exports as Partial<FireworksWasm>;
@@ -111,8 +114,13 @@ type ScreenFlash = {
   tailAlpha: number;
 };
 
-export async function mount_firework(stage: LiveTree): Promise<FireworkController> {
-  const fw = await load_fireworks_wasm();
+export async function mount_firework(
+  stage: LiveTree,
+  signal?: AbortSignal,
+): Promise<FireworkController> {
+  if (signal?.aborted) throw new DOMException("Firework mount cancelled.", "AbortError");
+  const fw = await load_fireworks_wasm(signal);
+  if (signal?.aborted) throw new DOMException("Firework mount cancelled.", "AbortError");
 
   // Create one canvas and keep it. Everything draws here.
   const canvasLt = stage.create.canvas()
@@ -633,8 +641,8 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     clear_layer_timers();
   };
 
-  canvasLt.listen.window.onKeyDown(onKeyDown);
-  canvasLt.listen.window.onKeyUp(onKeyUp)
+  const keyDownSubscription = canvasLt.listen.window.onKeyDown(onKeyDown);
+  const keyUpSubscription = canvasLt.listen.window.onKeyUp(onKeyUp);
 
   function random_fire_key(): string {
     return FIRE_KEYS[randInt(0, FIRE_KEYS.length - 1)] ?? "h";
@@ -651,13 +659,22 @@ export async function mount_firework(stage: LiveTree): Promise<FireworkControlle
     }
   }
 
+  let tornDown = false;
   const teardown = (): void => {
+    if (tornDown) return;
+    tornDown = true;
+    signal?.removeEventListener("abort", teardown);
     clear_layer_timers();
-
-    if (rafId !== null) cancelAnimationFrame(rafId);
+    keyDownSubscription.off();
+    keyUpSubscription.off();
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
     flashLt.remove();
     canvasLt.remove();
   };
 
+  signal?.addEventListener("abort", teardown, { once: true });
   return Object.freeze({ fire, teardown });
 }

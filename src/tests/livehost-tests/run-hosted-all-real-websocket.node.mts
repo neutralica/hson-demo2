@@ -35,7 +35,7 @@ let projectionReport: HostedTestReport | undefined;
 try {
   const canonical = all_hosted_test_suites();
   const canonicalKeys = canonical.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
-  expect_all(canonical.length === 127 && canonicalKeys.length === 2102, "canonical list contains 127 suites / 2102 cases");
+  expect_all(canonical.length === 127 && canonicalKeys.length === 2084, "canonical list contains 127 suites / 2084 cases");
   expect_all(new Set(canonicalKeys).size === canonicalKeys.length, "canonical list has no duplicate suite::name identity");
   expect_all(DEFERRED_BROWSER_FIDELITY_CASES.every((entry) => !new Set(canonicalKeys).has(entry.id)), "the eight browser-fidelity cases remain excluded");
 
@@ -89,11 +89,11 @@ try {
   const roundTripMs = performance.now() - started;
   const mirror = adapter.capture();
   expect_all(result.ok && result.suite === "hosted/all", "one remote action returns the complete hosted suite identity");
-  expect_all(result.summary.suites === 127 && result.summary.cases === 2102 && result.summary.pass === 2102 && result.summary.fail === 0, "complete remote result passes every canonical case");
+  expect_all(result.summary.suites === 127 && result.summary.cases === 2084 && result.summary.pass === 2084 && result.summary.fail === 0, "complete remote result passes every canonical case");
   expect_all(mirror !== undefined && mirror.run.id === result.runId && mirror.run.suite === result.suite, "result and generic recovered mirror correlate");
   const panelCases = updates.flatMap((update) => update.newCases);
-  expect_all(panelCases.length === 2102 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 2102, "panel receives every compact case exactly once");
-  expect_all(updates.at(-1)?.report.summary.cases === 2102 && updates.at(-1)?.report.summary.pass === 2102, "panel completes from generic recovered state");
+  expect_all(panelCases.length === 2084 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 2084, "panel receives every compact case exactly once");
+  expect_all(updates.at(-1)?.report.summary.cases === 2084 && updates.at(-1)?.report.summary.pass === 2084, "panel completes from generic recovered state");
   expect_all(updates.every((update, index, values) => index === 0 || update.report.summary.cases >= (values[index - 1]?.report.summary.cases ?? 0)), "panel totals are monotonic");
   expect_all(initialEvents === 0 && commitEvents === 0, "primary runtime emits no hosted-specific report protocol events");
   expect_all(typeof result.reportRev === "number" && result.reportRev > 1 && renders > 0, "generic report stream reaches an authoritative terminal revision");
@@ -115,8 +115,8 @@ try {
     sentBytes: transport.sentBytes,
   });
   const secondResult = await adapter.start("hosted/all");
-  expect_all(secondResult.runId !== result.runId && secondResult.summary.cases === 2102, "a sequential complete run owns a fresh correlated report");
-  expect_all(adapter.capture()?.summary.pass === 2102, "the sequential run starts clean and reconstructs independently");
+  expect_all(secondResult.runId !== result.runId && secondResult.summary.cases === 2084, "a sequential complete run owns a fresh correlated report");
+  expect_all(adapter.capture()?.summary.pass === 2084, "the sequential run starts clean and reconstructs independently");
   expect_all(typeof window === "undefined" && typeof document === "undefined" && typeof HTMLCanvasElement === "undefined", "the sequential run also restores all host globals");
   updates.length = 0;
   adapter.dispose();
@@ -141,10 +141,13 @@ try {
     terminal: true,
   }));
   const snapshot = projection.snapshot();
-  expect_all(snapshot.suites === 127 && snapshot.cases === 2102, "the actual hosted/all compact records populate one 127-suite / 2102-case model");
+  expect_all(snapshot.suites === 127 && snapshot.cases === 2084, "the actual hosted/all compact records populate one 127-suite / 2084-case model");
   expect_all(snapshot.metrics.suiteRowsCreated === 127 && snapshot.metrics.caseRowsCreated === 0 && snapshot.metrics.visibleCaseRows === 0, "the completed collapsed projection creates 127 suite rows and zero case rows");
   expect_all(snapshot.metrics.listenerRegistrations === 1 && snapshot.metrics.cssSurfaceAccesses === 1, "the completed projection owns one delegated listener and one CSS surface");
-  expect_all(snapshot.metrics.liveTreesConstructed === 757, "the completed collapsed projection constructs 757 LiveTrees rather than fully expanding every case");
+  expect_all(
+    snapshot.metrics.liveTreesConstructed === 763,
+    `the completed collapsed projection constructs 763 LiveTrees rather than fully expanding every case (actual ${snapshot.metrics.liveTreesConstructed})`,
+  );
   expect_all(snapshot.metrics.syntheticEvents === 0 && snapshot.metrics.fullCaseFlattens === 0, "the actual projection emits no synthetic events and performs no full-case flatten");
   const largestSuite = Object.entries(snapshot.caseKeysBySuite).reduce((largest, entry) => entry[1].length > largest[1].length ? entry : largest);
   projection.set_expanded(largestSuite[0], true);

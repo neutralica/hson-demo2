@@ -1,4 +1,5 @@
 import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "./hosted-test-suite";
+import { hson_live_test_launchers } from "hson-live/test-launchers";
 
 export const TEST_SURFACE_CATEGORIES = [
   "Transforms", "LiveTree", "LiveMap", "LiveHost", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
@@ -7,6 +8,14 @@ export const TEST_SURFACE_CATEGORIES = [
 export type TestSurfaceCategory = typeof TEST_SURFACE_CATEGORIES[number];
 export type TestClassification = "fixture" | "library acceptance" | "runtime integration" | "real transport integration" | "build/typecheck certification" | "temporary diagnostic" | "obsolete";
 export type TestCatalogStatus = "available" | "skipped" | "unavailable" | "migration-required";
+export type TestSurfaceRole =
+  | "canonical selectable suite"
+  | "external diagnostic launcher"
+  | "aggregate verification command"
+  | "integration journey"
+  | "production artifact verification"
+  | "developer utility";
+export type TestSurfaceExposure = "hosted selectable" | "command only" | "explicitly excluded";
 
 export type TestSurfaceCatalogEntry = Readonly<{
   id: string;
@@ -16,6 +25,10 @@ export type TestSurfaceCatalogEntry = Readonly<{
   path: string;
   behavior: string;
   classification: TestClassification;
+  role: TestSurfaceRole;
+  exposure: TestSurfaceExposure;
+  exclusionReason?: string;
+  aliasOf?: string;
   environment: string;
   transport: string;
   runner: string;
@@ -50,6 +63,10 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:hosted-generic-livehost-node": "src/tests/livehost-tests/run-hosted-generic-livehost.node.mts",
   "test:hosted-websocket-lifecycle-node": "src/tests/livehost-tests/run-hosted-websocket-lifecycle.node.mts",
   "test:hosted-deployment-node": "src/tests/livehost-tests/run-hosted-deployment.node.mts",
+  "test:node-application-host": "src/tests/test-system/run-canonical-tests.node.mts",
+  "test:node-application-host-entry": "src/tests/livehost-tests/run-node-application-host-entry.node.mts",
+  "test:livehost-bootstrap-integration": "src/tests/livehost-tests/run-livehost-bootstrap-integration.node.mts",
+  "test:node-production-runtime": "src/tests/livehost-tests/run-node-production-runtime.node.mts",
   "test:hosted-cloudflare": "tests/cloudflare/run-hosted-cloudflare.node.mts",
   "test:hosted-jsdom-runtime-node": "src/tests/livehost-tests/run-hosted-jsdom-runtime.node.mts",
   "test:hosted-dom-collection-node": "src/tests/livehost-tests/run-hosted-dom-collection.node.mts",
@@ -95,7 +112,83 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:stage5c-closeout-node": "src/tests/test-system/run-stage-5c-closeout.node.mts",
   "test:external-library-node": "src/tests/test-system/run-external-library-launchers.node.mts",
   "test:external-library-all-node": "src/tests/test-system/run-external-library-launchers.node.mts",
+  "test:external-launcher-protocol-node": "src/tests/test-system/run-external-launcher-protocol.node.mts",
+  "test:runner-truthfulness-node": "src/tests/test-system/run-test-runner-truthfulness.node.mts",
+  "test:splash-lifecycle-node": "src/tests/app/run-splash-lifecycle.node.mts",
+  "test:inclusive-library-node": "src/tests/test-system/run-inclusive-library-verification.node.mts",
+  "test:hosted-performance-node": "src/tests/test-system/run-hosted-test-performance.node.mts",
 } as const);
+
+const CANONICAL_COMMANDS = new Set(["test:canonical-node", "test:node-application-host"]);
+const AGGREGATE_COMMANDS = new Set([
+  "test:surface-enumeration-node",
+  "test:stage2-contracts-node",
+  "test:stage3-discovery-node",
+  "test:stage4a-selected-node",
+  "test:stage4a-selected-worker",
+  "test:stage4b-panel-node",
+  "test:stage5a-corpus-node",
+  "test:stage5b-dom-node",
+  "test:stage5c-closeout-node",
+  "test:external-library-node",
+  "test:external-library-all-node",
+  "test:inclusive-library-node",
+]);
+const ARTIFACT_COMMANDS = new Set(["test:node-production-runtime"]);
+const UTILITY_REASONS = Object.freeze({
+  "test:browser:headed": "Interactive headed variant of the authoritative test:browser journey.",
+  "test:browser:debug": "Interactive Playwright debugging variant; not a durable independent verification.",
+  "test:browser:install": "Installs the browser runtime and executes no tests.",
+  "test:hosted-dom-behavior-diagnostics-node": "Developer diagnostic output; durable DOM assertions live in canonical suites.",
+  "test:hosted-dom-layout-diagnostics-node": "Developer layout diagnostic output; it is not a rendering certification.",
+  "test:hosted-performance-node": "Developer performance matrix that repeatedly composes canonical and external inventories.",
+} satisfies Readonly<Record<string, string>>);
+const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
+  "test:node-application-host": Object.freeze({ environment: "Node", transport: "real HTTP + WebSocket" }),
+  "test:node-application-host-entry": Object.freeze({ environment: "Node child process", transport: "real HTTP + WebSocket" }),
+  "test:livehost-bootstrap-integration": Object.freeze({ environment: "Node", transport: "real HTTP + WebSocket" }),
+  "test:node-production-runtime": Object.freeze({ environment: "built Node production artifact", transport: "real HTTP + WebSocket" }),
+  "test:inclusive-library-node": Object.freeze({ environment: "Node + synthetic DOM + child processes", transport: "mixed canonical and external" }),
+  "test:hosted-performance-node": Object.freeze({ environment: "Node child processes", transport: "mixed canonical and external" }),
+  "test:hosted-cloudflare": Object.freeze({ environment: "checked-in Cloudflare Worker adapter", transport: "in-memory Durable Object sockets" }),
+} satisfies Readonly<Record<string, Readonly<{ environment: string; transport: string }>>>);
+
+function demo_role(name: string): Readonly<{
+  role: TestSurfaceRole;
+  exposure: TestSurfaceExposure;
+  exclusionReason?: string;
+  aliasOf?: string;
+}> {
+  if (CANONICAL_COMMANDS.has(name)) {
+    return Object.freeze({ role: "canonical selectable suite", exposure: "hosted selectable" });
+  }
+  if (AGGREGATE_COMMANDS.has(name)) {
+    return Object.freeze({
+      role: "aggregate verification command",
+      exposure: "command only",
+      ...(name === "test:stage4a-selected-worker"
+        ? { aliasOf: "hson-demo2:test:hosted-cloudflare" }
+        : name === "test:external-library-all-node"
+          ? { aliasOf: "hson-demo2:test:external-library-node" }
+          : {}),
+    });
+  }
+  if (ARTIFACT_COMMANDS.has(name)) {
+    return Object.freeze({ role: "production artifact verification", exposure: "command only" });
+  }
+  const exclusionReason = Reflect.get(UTILITY_REASONS, name) as string | undefined;
+  if (exclusionReason !== undefined) {
+    return Object.freeze({
+      role: "developer utility",
+      exposure: "explicitly excluded",
+      exclusionReason,
+      ...(name === "test:browser:headed" || name === "test:browser:debug"
+        ? { aliasOf: "hson-demo2:test:browser" }
+        : {}),
+    });
+  }
+  return Object.freeze({ role: "integration journey", exposure: "command only" });
+}
 
 function category_for(name: string): TestSurfaceCategory {
   if (name.includes("real-websocket") || name.includes("websocket-lifecycle")) return "Real WebSocket";
@@ -104,7 +197,7 @@ function category_for(name: string): TestSurfaceCategory {
   if (name.includes("replay") || name.includes("liveproject")) return "LiveMap";
   if (name.includes("generated-json")) return "Transforms";
   if (name.includes("surface-enumeration")) return "Build / Types";
-  if (name.includes("browser") || name.includes("amoebi") || name.includes("soft-tile")) return "Application / Demo";
+  if (name.includes("browser") || name.includes("amoebi") || name.includes("soft-tile") || name.includes("splash")) return "Application / Demo";
   return name.includes("hosted") ? "Hosted Runtime" : "LiveHost";
 }
 
@@ -113,6 +206,10 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
   const realSocket = category_for(name) === "Real WebSocket";
   const jsdom = name.includes("dom-") || name.includes("jsdom");
   const browser = name.includes("browser");
+  const policy = demo_role(name);
+  const environmentOverride = Reflect.get(DEMO_ENVIRONMENT_OVERRIDES, name) as
+    | Readonly<{ environment: string; transport: string }>
+    | undefined;
   return Object.freeze({
     id: `hson-demo2:${name}`,
     label: name.replace(/^test:/, "").replaceAll("-node", "").replaceAll("-", " "),
@@ -121,8 +218,10 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
       ? (name === "test:browser" ? "Chromium certifies application boot plus the Parse and Build user journeys." : `Playwright support command ${name}.`)
       : `Permanent ${name} contract declared by hson-demo2/package.json.`,
     classification: diagnostic ? "temporary diagnostic" : realSocket ? "real transport integration" : browser ? "runtime integration" : "runtime integration",
-    environment: browser ? "real Chromium" : jsdom ? "Node + jsdom" : "Node", transport: browser ? "localhost Vite" : realSocket ? "real WebSocket" : name.includes("hosted") ? "in-memory / local runtime" : "none",
-    runner: `npm run ${name}`, appearsInHostedUi: !browser, status: "available",
+    ...policy,
+    environment: environmentOverride?.environment ?? (browser ? "real Chromium" : jsdom ? "Node + jsdom" : "Node"),
+    transport: environmentOverride?.transport ?? (browser ? "localhost Vite" : realSocket ? "real WebSocket" : name.includes("hosted") ? "in-memory / local runtime" : "none"),
+    runner: `npm run ${name}`, appearsInHostedUi: policy.exposure === "hosted selectable", status: "available",
   });
 }
 
@@ -130,11 +229,20 @@ const LIVE_RUNNERS: readonly (readonly [string, string, TestClassification])[] =
   ["build", "tsc production emit", "build/typecheck certification"],
   ["check", "strict no-emit typecheck", "build/typecheck certification"],
   ["test:hson-tokenizer", "HSON tokenizer acceptance", "library acceptance"],
+  ["test:hson-node-quid", "canonical HsonNode QUID acceptance", "library acceptance"],
+  ["test:hson-node-quid-ingress", "canonical HsonNode QUID ingress acceptance", "library acceptance"],
+  ["test:hson-node-quid-egress", "canonical HsonNode QUID egress acceptance", "library acceptance"],
+  ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
   ["test:hson-serializer", "HSON serializer acceptance", "library acceptance"],
   ["test:canonical-hson-equality", "canonical HSON equality acceptance", "library acceptance"],
   ["test:view-state-snapshot-codec", "view-state snapshot codec acceptance", "library acceptance"],
+  ["test:livehost-graph-content-codec", "LiveHost graph-content codec acceptance", "library acceptance"],
   ["test:public-boundaries", "public package boundary acceptance", "library acceptance"],
+  ["test:root-compatibility", "root compatibility acceptance", "library acceptance"],
+  ["test:transform-worker", "Worker transform entrypoint acceptance", "library acceptance"],
   ["test:livetree-attrs", "LiveTree attribute acceptance", "library acceptance"],
+  ["test:livetree-quid-eligibility", "LiveTree QUID eligibility acceptance", "library acceptance"],
+  ["test:livetree-runtime-scope", "LiveTree runtime-scope acceptance", "library acceptance"],
   ["test:liveproject-document-attrs", "LiveProject document attributes acceptance", "library acceptance"],
   ["test:liveproject-document-structure", "LiveProject document structure acceptance", "library acceptance"],
   ["test:liveproject-document-delegation", "LiveProject document delegation acceptance", "library acceptance"],
@@ -145,6 +253,7 @@ const LIVE_RUNNERS: readonly (readonly [string, string, TestClassification])[] =
   ["test:livemap-document-mutation", "LiveMap document mutation acceptance", "library acceptance"],
   ["test:livemap-document-attrs-read", "LiveMap document attribute reads acceptance", "library acceptance"],
   ["test:livemap-document-replay", "LiveMap document replay acceptance", "library acceptance"],
+  ["test:livemap-path-handle", "LiveMap path-handle acceptance", "library acceptance"],
   ["test:livemap-staged-authority", "LiveMap staged authority acceptance", "library acceptance"],
   ["test:livehost-authority", "LiveHost authority acceptance", "library acceptance"],
   ["test:livehost-persistence", "LiveHost persistence acceptance", "library acceptance"],
@@ -157,13 +266,51 @@ const LIVE_RUNNERS: readonly (readonly [string, string, TestClassification])[] =
   ["test:livehost-action-dedupe", "client/request identity, retry stability, and reload-safe defaults", "library acceptance"],
   ["test:livehost-trace", "LiveHost trace acceptance", "library acceptance"],
   ["test:livehost-authorization", "LiveHost authorization acceptance", "library acceptance"],
+  ["test:livehost-node-hosting", "LiveHost Node hosting acceptance", "library acceptance"],
+  ["test:livehost-bootstrap", "LiveHost bootstrap acceptance", "library acceptance"],
+  ["test:livehost-authority-lifecycle", "LiveHost authority lifecycle acceptance", "library acceptance"],
 ];
+
+function live_role(name: string): Readonly<{
+  role: TestSurfaceRole;
+  exposure: TestSurfaceExposure;
+}> {
+  if (name === "build" || name === "check" || name === "test:root-compatibility") {
+    return Object.freeze({ role: "production artifact verification", exposure: "command only" });
+  }
+  if (name === "test:diagnostics-inventory") {
+    return Object.freeze({ role: "aggregate verification command", exposure: "command only" });
+  }
+  if (name === "test:livehost-graph-content-codec" || name === "test:transform-worker") {
+    return Object.freeze({ role: "integration journey", exposure: "command only" });
+  }
+  return Object.freeze({ role: "external diagnostic launcher", exposure: "hosted selectable" });
+}
+
+function live_environment(name: string): Readonly<{ environment: string; transport: string }> {
+  const launcher = hson_live_test_launchers.find((candidate) => candidate.packageScript === name);
+  if (launcher === undefined) return Object.freeze({ environment: "Node", transport: "none" });
+  if (launcher.runtime === "node-synthetic-dom") {
+    return Object.freeze({ environment: "Node + synthetic DOM", transport: "none" });
+  }
+  if (launcher.runtime === "node-real-websocket-process") {
+    return Object.freeze({ environment: "Node child processes", transport: "real WebSocket" });
+  }
+  if (launcher.runtime === "node-real-websocket") {
+    return Object.freeze({ environment: "Node", transport: "real WebSocket" });
+  }
+  return Object.freeze({ environment: "Node", transport: "in-memory or none" });
+}
 
 const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = LIVE_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
   id: `hson-live:${name}`, label: name, category: name === "build" || name === "check" ? "Build / Types" : "LiveHost",
   repository: "hson-live", path: name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
-  behavior, classification, environment: "Node", transport: name.includes("recovery") || name.includes("session") || name.includes("dedupe") ? "in-memory socket" : "none",
-  runner: `npm run ${name}`, appearsInHostedUi: true, status: "available",
+  behavior, classification,
+  ...live_role(name),
+  ...live_environment(name),
+  runner: `npm run ${name}`,
+  appearsInHostedUi: live_role(name).exposure === "hosted selectable",
+  status: "available",
 }) as TestSurfaceCatalogEntry);
 
 const visibleLabelById = new Map<HostedTestSuiteId, string>(HOSTED_TEST_VISIBLE_SUITES.map((suite) => [suite.id, suite.label]));
@@ -173,7 +320,8 @@ const HOSTED_ENTRIES = HOSTED_TEST_SUITE_IDS.map((suiteId): TestSurfaceCatalogEn
   repository: "hson-demo2", path: "src/hosted-test/registered-hosted-test-suites.ts",
   behavior: suiteId === "hosted/all"
     ? "Complete deterministic hosted collection; generated/fuzz transform verification runs separately."
-    : `Hosted fixture collection ${suiteId}, reachable through a visible category or the all collection.`, classification: "fixture", environment: "browser or hosted Node",
+    : `Hosted fixture collection ${suiteId}, reachable through a visible category or the all collection.`, classification: "fixture",
+  role: "canonical selectable suite", exposure: "hosted selectable", environment: "browser or hosted Node",
   transport: "dedicated LiveHost report host", runner: "Hosted Tests UI", hostedSuiteId: suiteId, appearsInHostedUi: true, status: "available",
 }));
 
@@ -181,15 +329,18 @@ const LIVE_IDENTITY_FIXTURE: TestSurfaceCatalogEntry = Object.freeze({
   id: "hson-live:fixture:default-identity-runtime", label: "default identity browser-runtime fixture", category: "LiveHost",
   repository: "hson-live", path: "tests/fixtures/livehost-default-identity-runtime.mts",
   behavior: "Separately initialized runtimes generate reload-safe default client and fresh action request identities.",
-  classification: "fixture", environment: "separate Node processes modeling browser reloads", transport: "in-memory socket",
-  runner: "npm run test:livehost-action-dedupe", appearsInHostedUi: true, status: "available",
+  classification: "fixture", role: "integration journey", exposure: "command only",
+  aliasOf: "hson-live:test:livehost-action-dedupe",
+  environment: "separate Node processes modeling browser reloads", transport: "in-memory socket",
+  runner: "npm run test:livehost-action-dedupe", appearsInHostedUi: false, status: "available",
 });
 
 const DEMO_CERTIFICATIONS: readonly TestSurfaceCatalogEntry[] = ["build", "check"].map((name): TestSurfaceCatalogEntry => Object.freeze({
   id: `hson-demo2:${name}`, label: name, category: "Build / Types", repository: "hson-demo2", path: "package.json",
   behavior: name === "build" ? "Production Vite build completes." : "Strict TypeScript no-emit check completes.",
-  classification: "build/typecheck certification", environment: "Node", transport: "none", runner: `npm run ${name}`,
-  appearsInHostedUi: true, status: "available",
+  classification: "build/typecheck certification", role: "production artifact verification", exposure: "command only",
+  environment: "Node", transport: "none", runner: `npm run ${name}`,
+  appearsInHostedUi: false, status: "available",
 }));
 
 export const TEST_SURFACE_CATALOG = Object.freeze([

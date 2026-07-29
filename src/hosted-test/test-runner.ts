@@ -7,6 +7,9 @@ import { TestRecorder } from "../app/demos/test/test-recorder";
 import { assertion_failure_message, normalize_assert_rows } from "../app/demos/test/assert-row-status";
 import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "../app/demos/test/tests.types";
 
+export const DEFAULT_TEST_CASE_TIMEOUT_MS = 30_000;
+export const TEST_FAILURE_DETAIL_LIMIT = 16 * 1024;
+
 // cooperative yield so the browser can paint + process input.
 // - requestAnimationFrame - "UI-friendly" yield.
 // - fallback to setTimeout for non-DOM contexts.
@@ -19,9 +22,20 @@ async function yield_to_ui(): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 
+class TestEventDeliveryError extends Error {
+  constructor(readonly cause: unknown) {
+    super(`[TEST_EVENT_DELIVERY_FAILED] ${asErrMessage(cause)}`, { cause });
+    this.name = "TestEventDeliveryError";
+  }
+}
+
 function emit(rec: TestRecorder, onEvent: (e: TestEvent) => void, e: TestEvent): void {
   rec.ingest(e);
-  onEvent(e);
+  try {
+    onEvent(e);
+  } catch (error) {
+    throw new TestEventDeliveryError(error);
+  }
 }
 
 function now(): number {
@@ -29,8 +43,14 @@ function now(): number {
 }
 
 function asErrMsg(err: unknown): string {
-  if (err instanceof Error) return err.stack ? `${err.message}\n${err.stack}` : err.message;
-  return String(err);
+  const message = err instanceof Error
+    ? err.stack ? `${err.message}\n${err.stack}` : err.message
+    : String(err);
+  if (message.length <= TEST_FAILURE_DETAIL_LIMIT) return message;
+  const marker = `\n<TEST_FAILURE_DETAIL_TRUNCATED:${message.length - TEST_FAILURE_DETAIL_LIMIT} characters omitted>\n`;
+  const available = TEST_FAILURE_DETAIL_LIMIT - marker.length;
+  const head = Math.ceil(available / 2);
+  return `${message.slice(0, head)}${marker}${message.slice(message.length - (available - head))}`;
 }
 
 function asErrMessage(err: unknown): string {
@@ -85,11 +105,100 @@ function expected_error_matches(msg: string, expectedError: TestExpectedError | 
   return true;
 }
 
+function validated_timeout(value: number, label: string): number {
+  if (!Number.isFinite(value) || !Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`[TEST_RUNNER_INVALID_TIMEOUT] ${label} must be a positive finite safe integer.`);
+  }
+  return value;
+}
+
+function effective_timeout(
+  suite: TestSuite,
+  testCase: TestSuite["cases"][number] | undefined,
+  options: RunOptions,
+): number {
+  return validated_timeout(
+    testCase?.timeoutMs ?? suite.timeoutMs ?? options.caseTimeoutMs ?? DEFAULT_TEST_CASE_TIMEOUT_MS,
+    testCase === undefined ? `Suite "${suite.suite}" timeout` : `Test "${suite.suite}::${testCase.name}" timeout`,
+  );
+}
+
+function validate_run_configuration(suites: readonly TestSuite[], options: RunOptions): void {
+  if (options.caseTimeoutMs !== undefined) {
+    validated_timeout(options.caseTimeoutMs, "Run default timeout");
+  }
+  for (const suite of suites) {
+    if (suite.timeoutMs !== undefined) validated_timeout(suite.timeoutMs, `Suite "${suite.suite}" timeout`);
+    for (const testCase of suite.cases) {
+      if (testCase.suite !== suite.suite) {
+        throw new Error(`[TEST_RUNNER_CASE_IDENTITY_INVALID] Case "${testCase.name}" belongs to "${testCase.suite}", not "${suite.suite}".`);
+      }
+      if (testCase.timeoutMs !== undefined) {
+        validated_timeout(testCase.timeoutMs, `Test "${suite.suite}::${testCase.name}" timeout`);
+      }
+    }
+  }
+}
+
+function deadline_error(kind: "case" | "setup" | "cleanup", id: string, timeoutMs: number): Error {
+  const code = kind === "case"
+    ? "TEST_CASE_TIMEOUT"
+    : kind === "setup"
+      ? "TEST_SUITE_SETUP_TIMEOUT"
+      : "TEST_CASE_CLEANUP_TIMEOUT";
+  return new Error(`[${code}] ${id} exceeded ${timeoutMs}ms.`);
+}
+
+function cancelled_error(id: string): Error {
+  return new Error(`[TEST_CASE_CANCELLED] ${id} was cancelled before completion.`);
+}
+
+async function run_bounded<T>(
+  run: () => T | Promise<T>,
+  timeoutMs: number,
+  kind: "case" | "setup" | "cleanup",
+  id: string,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (signal?.aborted) throw cancelled_error(id);
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const finish = (complete: () => void): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+      complete();
+    };
+    const abort = (): void => finish(() => reject(cancelled_error(id)));
+    const timer = setTimeout(
+      () => finish(() => reject(deadline_error(kind, id, timeoutMs))),
+      timeoutMs,
+    );
+    signal?.addEventListener("abort", abort, { once: true });
+    Promise.resolve()
+      .then(run)
+      .then(
+        (value) => finish(() => resolve(value)),
+        (error) => finish(() => reject(error)),
+      );
+  });
+}
+
+function combined_case_error(runError: unknown, cleanupError: unknown): Error {
+  const runMessage = asErrMsg(runError);
+  const cleanupMessage = asErrMsg(cleanupError);
+  return new Error(
+    `[TEST_CASE_CLEANUP_FAILED] ${cleanupMessage}\n[TEST_CASE_ORIGINAL_FAILURE] ${runMessage}`,
+  );
+}
+
 export async function run_test_suites(
   suites: readonly TestSuite[],
   onEvent: (e: TestEvent) => void,
   opts: RunOptions = {},
 ): Promise<RunResult> {
+  validate_run_configuration(suites, opts);
   const rec = new TestRecorder();
   const clearLog = (onEvent as unknown as { clear?: () => void }).clear;
   clearLog?.();
@@ -101,19 +210,51 @@ export async function run_test_suites(
 
   for (const suite of suites) {
     if (opts.filterSuite && suite.suite !== opts.filterSuite) continue;
+    const selectedCases = suite.cases.filter(
+      (testCase) => !opts.filterCase || testCase.name.includes(opts.filterCase),
+    );
+    if (selectedCases.length === 0) continue;
 
     const s0 = now();
     emit(rec, onEvent, {
       t: "suite_begin",
       suite: suite.suite,
-      totalPlanned: suite.cases.length,
+      totalPlanned: selectedCases.length,
     });
 
     await yield_to_ui();
 
-    for (const tc of suite.cases) {
-      if (opts.filterSuite && tc.suite !== opts.filterSuite) continue;
-      if (opts.filterCase && !tc.name.includes(opts.filterCase)) continue;
+    if (suite.setup !== undefined) {
+      try {
+        await run_bounded(
+          suite.setup,
+          effective_timeout(suite, undefined, opts),
+          "setup",
+          suite.suite,
+          opts.signal,
+        );
+      } catch (error) {
+        for (const tc of selectedCases) {
+          const c0 = now();
+          const begin = { t: "case_begin", suite: tc.suite, name: tc.name } as const;
+          emit(rec, onEvent, tc.meta ? { ...begin, meta: tc.meta } : begin);
+          emit(rec, onEvent, {
+            t: "case_end",
+            suite: tc.suite,
+            name: tc.name,
+            status: "fail",
+            ms: now() - c0,
+            err: `[TEST_SUITE_SETUP_FAILED] ${asErrMsg(error)}`,
+          });
+          caseCounter += 1;
+        }
+        emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
+        if (opts.bail || opts.signal?.aborted) break;
+        continue;
+      }
+    }
+
+    for (const tc of selectedCases) {
 
       const c0 = now();
       const evBase = { t: "case_begin", suite: tc.suite, name: tc.name } as const;
@@ -123,7 +264,39 @@ export async function run_test_suites(
       const expectedError = readExpectedError(tc);
 
       try {
-        const ret = await tc.run();
+        let ret: void | RunCaseRet = undefined;
+        let runError: unknown;
+        try {
+          ret = await run_bounded(
+            tc.run,
+            effective_timeout(suite, tc, opts),
+            "case",
+            `${tc.suite}::${tc.name}`,
+            opts.signal,
+          );
+        } catch (error) {
+          runError = error;
+        }
+        let cleanupError: unknown;
+        if (tc.cleanup !== undefined) {
+          try {
+            await run_bounded(
+              tc.cleanup,
+              effective_timeout(suite, tc, opts),
+              "cleanup",
+              `${tc.suite}::${tc.name}`,
+            );
+          } catch (error) {
+            cleanupError = error;
+          }
+        }
+        if (runError !== undefined && cleanupError !== undefined) {
+          throw combined_case_error(runError, cleanupError);
+        }
+        if (cleanupError !== undefined) {
+          throw new Error(`[TEST_CASE_CLEANUP_FAILED] ${asErrMsg(cleanupError)}`);
+        }
+        if (runError !== undefined) throw runError;
 
         const runRet = (ret && typeof ret === "object")
           ? ret as RunCaseRet
@@ -172,7 +345,7 @@ export async function run_test_suites(
             await yield_to_ui();
           }
 
-          if (!failedAsExpected && opts.bail) break;
+          if ((!failedAsExpected && opts.bail) || opts.signal?.aborted) break;
           continue;
         }
 
@@ -203,7 +376,7 @@ export async function run_test_suites(
             await yield_to_ui();
           }
 
-          if (opts.bail) break;
+          if (opts.bail || opts.signal?.aborted) break;
           continue;
         }
 
@@ -227,14 +400,16 @@ export async function run_test_suites(
             : endBase
         );
       } catch (err) {
+        if (err instanceof TestEventDeliveryError) throw err;
         const msg = asErrMsg(err);
         const shortMsg = asErrMessage(err);
         const metaPatch = readMetaPatch(err);
         const assertRowsStatus = normalize_assert_rows(readAssertRows(err));
         const assertRows = assertRowsStatus.assertRows;
         const malformedRows = assertRowsStatus.malformedRows;
+        const runnerFailure = /^\[(?:TEST_CASE_TIMEOUT|TEST_CASE_CANCELLED|TEST_CASE_CLEANUP_FAILED)\]/.test(shortMsg);
 
-        if (expected === "fail" && expected_error_matches(shortMsg, expectedError) && malformedRows.length === 0) {
+        if (expected === "fail" && !runnerFailure && expected_error_matches(shortMsg, expectedError) && malformedRows.length === 0) {
           const endBase = {
             t: "case_end",
             suite: tc.suite,
@@ -285,7 +460,7 @@ export async function run_test_suites(
           await yield_to_ui();
         }
 
-        if (opts.bail) break;
+        if (opts.bail || opts.signal?.aborted) break;
       }
 
       // yield periodically so UI can paint + pointer events can run

@@ -9,8 +9,10 @@ import {
 } from "hson-live/livehost";
 import {
   create_node_livehost_socket,
+  create_node_exact_origin_policy,
   handle_node_livehost_bootstrap_request,
   start_node_application_host,
+  type NodeApplicationSecurity,
   type NodeHostedApplication,
 } from "hson-live/livehost/node";
 import WebSocket from "ws";
@@ -26,13 +28,33 @@ const authorities = new Map([
 ]);
 const resolvedByHttp: object[] = [];
 const resolvedByWebSocket: object[] = [];
+const authenticatedTransports: string[] = [];
+const authorizedOperations: string[] = [];
+const security: NodeApplicationSecurity = {
+  origin: create_node_exact_origin_policy({ allowedOrigins: ["https://demo.example"] }),
+  authenticate(context) {
+    authenticatedTransports.push(context.transport);
+    return context.headers.get("authorization") === "Bearer demo-bootstrap-secret"
+      ? { ok: true, value: { id: "demo-principal", anonymous: false } }
+      : { ok: false, status: 401, code: "AUTH_REQUIRED" };
+  },
+  authorizeAuthority(context, principal, operation) {
+    assert.equal(principal.id, "demo-principal");
+    assert.equal(context.authorityId, selector);
+    authorizedOperations.push(operation);
+    return { ok: true, value: undefined };
+  },
+};
 
 const application: NodeHostedApplication = {
   name: "bootstrap-probe",
   authorities: [{ kind: "exact", value: selector }],
+  security,
   httpRoutes: [{
     method: "GET",
     path: "/_test/livehost-bootstrap",
+    access: "bootstrap-read",
+    bodyless: true,
     handle(request: IncomingMessage, response: ServerResponse) {
       return handle_node_livehost_bootstrap_request(request, response, {
         resolve(candidate) {
@@ -55,14 +77,17 @@ const application: NodeHostedApplication = {
       });
     },
   }],
-  acceptWebSocket(candidate, websocket) {
+  acceptWebSocket(candidate, websocket, context) {
     const authority = authorities.get(candidate);
     if (authority === undefined) {
       websocket.close(1008, "Unknown bootstrap probe authority.");
       return;
     }
     resolvedByWebSocket.push(authority);
-    authority.connect(create_node_livehost_socket(websocket));
+    authority.connect(create_node_livehost_socket(websocket), {
+      ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
+      attachment: context.principal.value,
+    });
   },
   dispose() {
     for (const authority of authorities.values()) authority.dispose();
@@ -73,13 +98,26 @@ const application: NodeHostedApplication = {
 const host = await start_node_application_host({
   host: "127.0.0.1",
   port: 0,
+  deployment: { mode: "production" },
   applications: [application],
 });
 
 try {
+  const unauthorized = await fetch(
+    `${host.httpUrl}/_test/livehost-bootstrap?livehost=${encodeURIComponent(selector)}`,
+    { headers: { accept: LIVEHOST_BOOTSTRAP_MEDIA_TYPE, origin: "https://demo.example" } },
+  );
+  assert.equal(unauthorized.status, 401);
+  assert.equal(resolvedByHttp.length, 0);
   const response = await fetch(
     `${host.httpUrl}/_test/livehost-bootstrap?livehost=${encodeURIComponent(selector)}`,
-    { headers: { accept: LIVEHOST_BOOTSTRAP_MEDIA_TYPE } },
+    {
+      headers: {
+        accept: LIVEHOST_BOOTSTRAP_MEDIA_TYPE,
+        origin: "https://demo.example",
+        authorization: "Bearer demo-bootstrap-secret",
+      },
+    },
   );
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("content-type"), LIVEHOST_BOOTSTRAP_MEDIA_TYPE);
@@ -89,7 +127,12 @@ try {
   assert.ok(authority);
   authority.map.set(["value"], 2);
 
-  const websocket = new WebSocket(new URL(bootstrap.continuation.endpoint, host.url));
+  const websocket = new WebSocket(new URL(bootstrap.continuation.endpoint, host.url), {
+    headers: {
+      Origin: "https://demo.example",
+      Authorization: "Bearer demo-bootstrap-secret",
+    },
+  });
   await new Promise<void>((resolve, reject) => {
     websocket.once("open", resolve);
     websocket.once("error", reject);
@@ -108,6 +151,8 @@ try {
   assert.equal(resolvedByWebSocket.length, 1);
   assert.equal(resolvedByHttp[0], authority);
   assert.equal(resolvedByWebSocket[0], authority);
+  assert.deepEqual(authenticatedTransports, ["http", "http", "websocket"]);
+  assert.deepEqual(authorizedOperations, ["bootstrap-read", "websocket-connect"]);
 
   mirror.dispose();
   websocket.close();

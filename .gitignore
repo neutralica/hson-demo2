@@ -12,6 +12,7 @@ _archive-delete/
 
 # dist/
 dist/
+dist-node/
 
 # Playwright browser-test artifacts
 test-results/

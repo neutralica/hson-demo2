@@ -18,7 +18,11 @@ import {
   type HostedTestApplication,
 } from "../hosted-test-application";
 import { make_registered_hosted_test_suite_registry } from "../registered-hosted-test-suites";
-import { create_node_livehost_socket, type NodeHostedApplication } from "hson-live/livehost/node";
+import {
+  create_node_livehost_socket,
+  type NodeApplicationSecurity,
+  type NodeHostedApplication,
+} from "hson-live/livehost/node";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
@@ -27,6 +31,12 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
   registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
+  security?: NodeApplicationSecurity;
+  lifecycle?: Readonly<{
+    maxReports: number;
+    terminalRetentionMs: number;
+    sweepIntervalMs?: number;
+  }>;
 }>;
 
 export type NodeHostedTestsApplication = Readonly<{
@@ -61,6 +71,7 @@ export async function create_node_hosted_tests_application(
         onEvent,
         runOptions,
       ),
+    ...(options.lifecycle === undefined ? {} : { lifecycle: options.lifecycle }),
   });
   const connections = new Map<WebSocket, Readonly<{ authorityId: string; disconnect: () => void }>>();
   let disposed = false;
@@ -73,16 +84,45 @@ export async function create_node_hosted_tests_application(
       Object.freeze({ kind: "exact" as const, value: HOSTED_TEST_COORDINATOR_HOST_ID }),
       Object.freeze({ kind: "prefix" as const, value: HOSTED_TEST_REPORT_AUTHORITY_PREFIX }),
     ]),
+    ...(options.security === undefined ? {} : { security: options.security }),
     ready: () => !disposed,
-    acceptWebSocket(authorityId, websocket) {
+    async acceptWebSocket(authorityId, websocket, context) {
       if (disposed) {
         websocket.close(1012, "Hosted-tests application stopping.");
         return;
       }
-      const connected = authorities.connect(authorityId, create_node_livehost_socket(websocket, (message) => {
-        sentMessages += 1;
-        sentBytes += Buffer.byteLength(message, "utf8");
-      }));
+      const socket = create_node_livehost_socket(websocket, {
+          onSend(message) {
+            sentMessages += 1;
+            sentBytes += Buffer.byteLength(message, "utf8");
+          },
+          maxBufferedAmount: context.transportPolicy.maxBufferedAmount,
+          onBackpressure: context.transportPolicy.onBackpressure,
+      });
+      const bounded = options.lifecycle !== undefined;
+      if (bounded) websocket.pause();
+      let connected;
+      try {
+        connected = bounded
+          ? await authorities.connectBounded(
+              authorityId,
+              socket,
+              {
+                ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
+                attachment: context.principal.value,
+              },
+            )
+          : authorities.connect(
+              authorityId,
+              socket,
+              {
+                ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
+                attachment: context.principal.value,
+              },
+            );
+      } finally {
+        if (bounded) websocket.resume();
+      }
       if (!connected.ok) {
         websocket.close(1008, connected.error.code ?? "Unknown hosted-test LiveHost.");
         return;
@@ -94,13 +134,13 @@ export async function create_node_hosted_tests_application(
         connections.delete(websocket);
       });
     },
-    dispose() {
+    async dispose() {
       if (disposed) return;
       disposed = true;
       launcherService.terminate();
       for (const connection of connections.values()) connection.disconnect();
       connections.clear();
-      authorities.dispose();
+      await authorities.dispose();
     },
   });
 

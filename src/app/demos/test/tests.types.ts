@@ -123,7 +123,9 @@ export type TestCase = Readonly<{
   meta?: Record<string, string>;
   expected?: TestExpected;
   expectedError?: TestExpectedError;
+  timeoutMs?: number;
   run: () => void | RunCaseRet | Promise<void | RunCaseRet>;
+  cleanup?: () => void | Promise<void>;
 }>;
 
 export type RunCaseRet = Readonly<{
@@ -134,6 +136,8 @@ export type RunCaseRet = Readonly<{
 export type TestSuite = Readonly<{
   suite: string;
   descriptor?: TestDescriptorMetadata;
+  timeoutMs?: number;
+  setup?: () => void | Promise<void>;
   cases: readonly TestCase[];
 }>;
 
@@ -170,6 +174,8 @@ export type RunOptions = Readonly<{
   yieldEveryCases?: number;  // e.g. 1 = every case, 5 = every 5 cases
   yieldBetweenSuites?: boolean;
   includePassedDiagnostics?: boolean;
+  caseTimeoutMs?: number;
+  signal?: AbortSignal;
 }>;
 
 export type RunResult = Readonly<{

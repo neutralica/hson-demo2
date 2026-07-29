@@ -418,6 +418,7 @@ export async function run_node_selected_verifications(
                 name: launcherResult.target.displayName,
                 err: [
                   launcherResult.timedOut ? "External library launcher timed out." : "",
+                  launcherResult.forceKilled ? "External library launcher required forced termination." : "",
                   launcherResult.spawnError ?? "",
                   launcherResult.stderr,
                 ].filter(Boolean).join("\n"),

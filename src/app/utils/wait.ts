@@ -37,18 +37,24 @@ function withControls<T>(p: Promise<T>, opts?: WaitOpts): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     let done = false;
     let to: number | undefined;
+    const onAbort = () => finishErr(abortErr());
+
+    const clearControls = (): void => {
+      if (to !== undefined) window.clearTimeout(to);
+      signal?.removeEventListener("abort", onAbort);
+    };
 
     const finish_ok = (v: T) => {
       if (done) return;
       done = true;
-      if (to !== undefined) window.clearTimeout(to);
+      clearControls();
       resolve(v);
     };
 
     const finishErr = (e: unknown) => {
       if (done) return;
       done = true;
-      if (to !== undefined) window.clearTimeout(to);
+      clearControls();
       reject(e);
     };
 
@@ -65,7 +71,6 @@ function withControls<T>(p: Promise<T>, opts?: WaitOpts): Promise<T> {
         return;
       }
 
-      const onAbort = () => finishErr(abortErr());
       signal.addEventListener("abort", onAbort, { once: true });
     }
 
@@ -75,11 +80,19 @@ function withControls<T>(p: Promise<T>, opts?: WaitOpts): Promise<T> {
 
 function timer(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    const id = setTimeout(resolve, ms);
-    signal?.addEventListener("abort", () => {
+    if (signal?.aborted) {
+      reject(abortErr());
+      return;
+    }
+    const id = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
       clearTimeout(id);
-      reject(new DOMException("Aborted", "AbortError"));
-    });
+      reject(abortErr());
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 }
 
@@ -101,21 +114,25 @@ function waitAnimEvent(
     }
 
     // capture the subscription so we can .off() on match/abort
+    let onAbort: (() => void) | undefined;
+    const finish = (event: AnimationEvent): void => {
+      sub.off();
+      if (onAbort) signal?.removeEventListener("abort", onAbort);
+      resolve(event);
+    };
     const sub =
       kind === "start"
         ? lt.listen.onAnimationStart((ev) => {
           if (ev.animationName !== name) return;
-          sub.off();
-          resolve(ev);
+          finish(ev);
         })
         : lt.listen.onAnimationEnd((ev) => {
           if (ev.animationName !== name) return;
-          sub.off();
-          resolve(ev);
+          finish(ev);
         });
 
     if (signal) {
-      const onAbort = () => {
+      onAbort = () => {
         sub.off();
         reject(abortErr());
       };
@@ -139,14 +156,16 @@ function waitPointerDown(lt: LiveTree, opts?: WaitPointerOpts): Promise<PointerE
       return;
     }
 
+    let onAbort: (() => void) | undefined;
     const sub = lt.listen.onPointerDown((ev) => {
       if (opts?.leftOnly && "button" in ev && (ev as PointerEvent).button !== 0) return;
       sub.off();
+      if (onAbort) signal?.removeEventListener("abort", onAbort);
       resolve(ev as PointerEvent);
     });
 
     if (signal) {
-      const onAbort = () => {
+      onAbort = () => {
         sub.off();
         reject(abortErr());
       };
@@ -216,4 +235,3 @@ timer,
   // keep race as a plain function (no builder needed)
   race: race,
 } as const;
-

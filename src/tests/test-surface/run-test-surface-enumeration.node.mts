@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../app/hosted-test/hosted-test-suite";
 import { DECLARED_DEMO_TEST_SCRIPTS, TEST_SURFACE_CATALOG, TEST_SURFACE_CATEGORIES } from "../../app/hosted-test/test-surface-catalog";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
+import { hson_live_test_launchers } from "hson-live/test-launchers";
 
 function expect_surface(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`test surface enumeration: ${message}`);
@@ -17,6 +18,12 @@ const livePackage = JSON.parse(await readFile(resolve(liveRoot, "package.json"),
 
 const demoTests = Object.keys(demoPackage.scripts).filter((name) => name.startsWith("test:")).sort();
 expect_surface(JSON.stringify(demoTests) === JSON.stringify([...DECLARED_DEMO_TEST_SCRIPTS].sort()), "catalog and hson-demo2 test scripts must match exactly");
+for (const name of demoTests) {
+  const entries = TEST_SURFACE_CATALOG.filter(
+    (entry) => entry.repository === "hson-demo2" && entry.runner === `npm run ${name}`,
+  );
+  expect_surface(entries.length === 1, `package script ${name} must have exactly one command classification`);
+}
 expect_surface(
   HOSTED_TEST_VISIBLE_SUITES.map((entry) => `${entry.label}:${entry.id}`).join("|")
     === "all:hosted/all|transform:category/transform|livetree:category/livetree|livemap:category/livemap|livehost:category/livehost|unit:category/unit|dev:category/dev",
@@ -102,6 +109,91 @@ expect_surface(JSON.stringify(catalogSuites) === JSON.stringify([...HOSTED_TEST_
 const ids = TEST_SURFACE_CATALOG.map((entry) => entry.id);
 expect_surface(new Set(ids).size === ids.length, "catalog IDs must be unique");
 expect_surface(TEST_SURFACE_CATALOG.every((entry) => entry.status !== "migration-required"), "no permanent suite may remain migration-required");
+expect_surface(
+  TEST_SURFACE_CATALOG
+    .filter((entry) => entry.exposure === "explicitly excluded")
+    .every((entry) => entry.role === "developer utility" && (entry.exclusionReason?.trim().length ?? 0) > 0),
+  "every intentionally excluded command must be a developer utility with a reason",
+);
+expect_surface(
+  TEST_SURFACE_CATALOG
+    .filter((entry) => entry.role === "aggregate verification command")
+    .every((entry) => entry.exposure === "command only" && !entry.appearsInHostedUi),
+  "aggregate verification commands must not be counted as hosted selectable tests",
+);
+expect_surface(
+  TEST_SURFACE_CATALOG
+    .filter((entry) => entry.role === "canonical selectable suite")
+    .every((entry) => entry.exposure === "hosted selectable"),
+  "canonical selectable suites cannot be mislabeled as aggregates or command-only checks",
+);
+for (const entry of TEST_SURFACE_CATALOG) {
+  if (entry.aliasOf === undefined) continue;
+  expect_surface(entry.aliasOf !== entry.id && ids.includes(entry.aliasOf), `catalog alias ${entry.id} must name another catalog entry`);
+}
+const commandClaims = new Map<string, typeof TEST_SURFACE_CATALOG[number][]>();
+for (const entry of TEST_SURFACE_CATALOG.filter((candidate) => candidate.hostedSuiteId === undefined)) {
+  const key = `${entry.repository}:${entry.runner}`;
+  const claims = commandClaims.get(key) ?? [];
+  claims.push(entry);
+  commandClaims.set(key, claims);
+}
+for (const [command, claims] of commandClaims) {
+  expect_surface(
+    claims.length === 1 || claims.slice(1).every((entry) => entry.aliasOf !== undefined),
+    `command ${command} has duplicate catalog owners without an explicit alias`,
+  );
+}
+const externalManifestRunners = new Set(
+  hson_live_test_launchers.map((launcher) => `npm run ${launcher.packageScript}`),
+);
+const externalCatalogRunners = new Set(
+  TEST_SURFACE_CATALOG
+    .filter((entry) => entry.repository === "hson-live" && entry.role === "external diagnostic launcher")
+    .map((entry) => entry.runner),
+);
+expect_surface(
+  JSON.stringify([...externalManifestRunners].sort()) === JSON.stringify([...externalCatalogRunners].sort()),
+  "external launcher catalog entries must exactly match the manifested diagnostics",
+);
+for (const launcher of hson_live_test_launchers) {
+  const entry = TEST_SURFACE_CATALOG.find(
+    (candidate) => candidate.repository === "hson-live"
+      && candidate.runner === `npm run ${launcher.packageScript}`,
+  );
+  const environmentMatches = launcher.runtime === "node"
+    ? entry?.environment === "Node"
+    : launcher.runtime === "node-synthetic-dom"
+      ? entry?.environment === "Node + synthetic DOM"
+      : launcher.runtime === "node-real-websocket"
+        ? entry?.environment === "Node" && entry.transport === "real WebSocket"
+        : entry?.environment === "Node child processes" && entry.transport === "real WebSocket";
+  expect_surface(environmentMatches, `external launcher ${launcher.id} has environment metadata inconsistent with ${launcher.runtime}`);
+}
+expect_surface(
+  TEST_SURFACE_CATALOG
+    .filter((entry) => entry.role === "external diagnostic launcher")
+    .every((entry) => entry.hostedSuiteId === undefined),
+  "external launchers must not be duplicated as canonical hosted suites",
+);
+const exactPolicies = new Map(TEST_SURFACE_CATALOG.map((entry) => [entry.id, entry]));
+expect_surface(
+  exactPolicies.get("hson-demo2:test:node-application-host")?.role === "canonical selectable suite",
+  "the node application host command must retain its canonical suite identity",
+);
+expect_surface(
+  exactPolicies.get("hson-demo2:test:livehost-bootstrap-integration")?.role === "integration journey"
+    && exactPolicies.get("hson-demo2:test:livehost-bootstrap-integration")?.transport === "real HTTP + WebSocket",
+  "the bootstrap integration must be classified explicitly",
+);
+expect_surface(
+  exactPolicies.get("hson-demo2:test:node-production-runtime")?.role === "production artifact verification",
+  "the production runtime command must be classified as an artifact verification",
+);
+expect_surface(
+  exactPolicies.get("hson-demo2:test:hosted-performance-node")?.exposure === "explicitly excluded",
+  "the performance matrix must be explicitly excluded from ordinary hosted discovery",
+);
 const hostedAll = TEST_SURFACE_CATALOG.find((entry) => entry.id === "hosted-suite:hosted/all");
 expect_surface(hostedAll?.behavior.includes("deterministic") === true && hostedAll.behavior.includes("generated/fuzz") === true, "hosted/all must explicitly exclude separately-run generated/fuzz verification");
 

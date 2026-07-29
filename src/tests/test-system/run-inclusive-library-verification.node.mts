@@ -18,9 +18,9 @@ import type { TestEvent } from "../../app/demos/test/tests.types";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
-assert.equal(registry.catalog.tests.length, 2098);
-assert.equal(availability.targets.length, 36);
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 654);
+assert.equal(registry.catalog.tests.length, 2100);
+assert.equal(availability.targets.length, 37);
+assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 692);
 
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
@@ -63,9 +63,17 @@ const projection = hosted_test_projection_summary(captured);
 const footer = hosted_test_projection_footer(projection, timing.overlappedTotalMs);
 const processMetrics = external_library_launcher_metrics();
 
-assert.equal(result.ok, true);
-assert.equal(canonicalCases, 2098);
-assert.equal(completedExternalIds.length, 36);
+const failedExternalEvents = events.filter(
+  (event): event is Extract<TestEvent, { readonly t: "external_end" }> =>
+    event.t === "external_end" && event.status === "fail",
+);
+assert.equal(
+  result.ok,
+  true,
+  failedExternalEvents.map((event) => `${event.id}: ${event.stderr}`).join("\n"),
+);
+assert.equal(canonicalCases, 2100);
+assert.equal(completedExternalIds.length, 37);
 assert.deepEqual(queuedExternalIds, availability.targets.map((target) => target.id));
 assert.deepEqual(Object.keys(captured.externalResults), availability.targets.map((target) => target.id));
 assert.equal(firstSuiteCompletionSawBothPhases, true, "both phases become active before either suite completes");
@@ -75,13 +83,13 @@ assert.ok(
 );
 assert.deepEqual(
   footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  ["cases:2752", "passed:2752", "failed:0"],
+  ["cases:2792", "passed:2792", "failed:0"],
 );
-assert.equal(projection.canonical.total, 2098);
-assert.equal(projection.launchers.total, 36);
-assert.equal(projection.launchers.declaredChecks, 654);
+assert.equal(projection.canonical.total, 2100);
+assert.equal(projection.launchers.total, 37);
+assert.equal(projection.launchers.declaredChecks, 692);
 assert.equal(processMetrics.activeChildren, 0);
-assert.equal(processMetrics.directLauncherStarts, 36);
+assert.equal(processMetrics.directLauncherStarts, 37);
 assert.equal(processMetrics.packageScriptStarts, 0);
 assert.ok(timing.overlappedTotalMs >= timing.canonicalPhaseMs);
 assert.ok(timing.overlappedTotalMs >= timing.externalPhaseMs);

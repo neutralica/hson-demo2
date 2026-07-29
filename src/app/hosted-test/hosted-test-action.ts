@@ -47,6 +47,7 @@ export type HostedTestCaseInspector = (request: Readonly<{
 export type HostedTestRunRetention = Readonly<{
   retain(runId: HostedTestRunId, suite: HostedTestRunTarget): void;
   get(runId: HostedTestRunId): HostedTestRunTarget | undefined;
+  remove(runId: HostedTestRunId): boolean;
   clear(): void;
   size(): number;
 }>;
@@ -65,6 +66,7 @@ export function make_hosted_test_run_retention(maxRuns = 16): HostedTestRunReten
       }
     },
     get: (runId) => runs.get(runId),
+    remove: (runId) => runs.delete(runId),
     clear: () => runs.clear(),
     size: () => runs.size,
   });

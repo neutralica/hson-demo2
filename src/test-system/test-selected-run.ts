@@ -38,6 +38,15 @@ export class SelectedTestSelectionSizeError extends Error {
   }
 }
 
+export class SelectedTestDuplicateIdError extends Error {
+  readonly code = "HOSTED_TEST_DUPLICATE_SELECTION";
+
+  constructor(readonly testId: string) {
+    super(`[HOSTED_TEST_DUPLICATE_SELECTION] Selection contains duplicate test ID "${testId}".`);
+    this.name = "SelectedTestDuplicateIdError";
+  }
+}
+
 function is_record(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -93,6 +102,16 @@ export function selected_test_suites(
   registry: TestExecutorRegistry,
   requestedTestIds: readonly string[],
 ): readonly TestSuite[] {
+  const uniqueRequested = new Set(requestedTestIds);
+  if (uniqueRequested.size !== requestedTestIds.length) {
+    const seen = new Set<string>();
+    const duplicate = requestedTestIds.find((testId) => {
+      if (seen.has(testId)) return true;
+      seen.add(testId);
+      return false;
+    });
+    throw new SelectedTestDuplicateIdError(duplicate ?? "unknown");
+  }
   if (requestedTestIds.length > registry.catalog.tests.length) {
     throw new SelectedTestSelectionSizeError(
       requestedTestIds.length,
@@ -145,6 +164,15 @@ export function selected_test_suites(
         requirements: registration.descriptor.requirements,
         collections: registration.descriptor.collections,
       });
+    })(),
+    ...(() => {
+      const first = casesBySuite.get(suite)?.[0];
+      const registration = first === undefined ? undefined : registry.get(`${suite}::${first.name}`);
+      if (registration === undefined) throw new Error(`Executor ${registry.executor.id} lost suite execution configuration for ${suite}.`);
+      return {
+        ...(registration.suiteSetup === undefined ? {} : { setup: registration.suiteSetup }),
+        ...(registration.suiteTimeoutMs === undefined ? {} : { timeoutMs: registration.suiteTimeoutMs }),
+      };
     })(),
     cases: Object.freeze([...(casesBySuite.get(suite) ?? [])]),
   }));

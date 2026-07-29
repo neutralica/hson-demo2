@@ -503,6 +503,137 @@ export function node_application_host_suite(): TestSuite {
           }
         },
       }),
+      Object.freeze({
+        suite,
+        name: "bounded TOWL rooms honor resumable grace then recreate a fresh incarnation",
+        run: async () => {
+          let now = 1_000;
+          let expireSession: (() => void) | undefined;
+          const application = create_towl_authority_application({
+            maxRooms: 1,
+            idleMs: 100,
+            sweepIntervalMs: 50,
+            now: () => now,
+            schedule: () => () => {},
+            sessions: {
+              graceMs: 50,
+              credential: () => "towl-lifecycle-credential-0001",
+              schedule: (_delay, callback) => {
+                expireSession = callback;
+                return () => { expireSession = undefined; };
+              },
+            },
+          });
+          const roomId = "towl:lifecycle-room";
+          const first = make_towl_socket();
+          const connected = await application.connectBounded(roomId, first);
+          expect_node_host(connected.ok, "bounded TOWL room must acquire");
+          await first.receive({ type: "session-create", id: "create-old" });
+          const created = first.sent().find((message) => message.type === "session-created");
+          await first.receive({ type: "recover", id: "recover-old", logicalMapId: roomId });
+          const oldPlan = first.sent().find((message) => message.type === "recovery-plan");
+          first.emit_close();
+          const retained = await application.evictRoom(roomId);
+          expect_node_host(
+            typeof created?.credential === "string"
+              && typeof oldPlan?.incarnationId === "string"
+              && retained.status === "busy",
+            "detached resumable session must retain the room",
+          );
+          expireSession?.();
+          now += 101;
+          expect_node_host(
+            await application.sweep() === 1 && application.roomCount() === 0,
+            "expired idle room must evict",
+          );
+          const second = make_towl_socket();
+          const recreated = await application.connectBounded(roomId, second);
+          expect_node_host(recreated.ok, "same room key must recreate");
+          await second.receive({ type: "session-attach", id: "attach-old", credential: created?.credential });
+          const rejection = second.sent().find((message) => message.type === "session-rejected");
+          await second.receive({ type: "session-create", id: "create-new" });
+          await second.receive({ type: "recover", id: "recover-new", logicalMapId: roomId });
+          const newPlan = second.sent().find((message) => message.type === "recovery-plan");
+          expect_node_host(
+            rejection?.code === "LIVEHOST_SESSION_CREDENTIAL_UNKNOWN"
+              && typeof newPlan?.incarnationId === "string"
+              && newPlan.incarnationId !== oldPlan?.incarnationId,
+            "evicted room must reject old credentials and mint a new incarnation",
+          );
+          second.emit_close();
+          await application.dispose();
+        },
+      }),
+      Object.freeze({
+        suite,
+        name: "hosted report execution, subscribers, retention, and capacity are lifecycle-owned",
+        run: async () => {
+          let now = 1_000;
+          let releaseRun!: () => void;
+          const runGate = new Promise<void>((resolve) => { releaseRun = resolve; });
+          let nextRun = 0;
+          const registry = make_hosted_test_suite_registry([{
+            id: "livemap/replay",
+            label: "report lifecycle fixture",
+            async run() {
+              await runGate;
+              return Object.freeze({
+                ok: true,
+                summary: Object.freeze({
+                  suites: 1,
+                  cases: 0,
+                  pass: 0,
+                  fail: 0,
+                  skip: 0,
+                  msTotal: 0,
+                  failures: Object.freeze([]),
+                }),
+              });
+            },
+          }]);
+          const application = create_hosted_test_application(registry, {
+            makeRunId: () => `lifecycle-run-${++nextRun}`,
+            lifecycle: {
+              maxReports: 1,
+              terminalRetentionMs: 100,
+              sweepIntervalMs: 50,
+              now: () => now,
+              schedule: () => () => {},
+            },
+          });
+          const request = (id: string) => ({
+            type: "action" as const,
+            id,
+            clientId: "lifecycle-client",
+            requestId: id,
+            name: "tests.run" as const,
+            payload: { suite: "livemap/replay" as const },
+          });
+          const running = application.coordinator.dispatch_action(request("run-one"));
+          for (let index = 0; index < 8 && !application.hasReport("hosted-report:lifecycle-run-1"); index += 1) {
+            await Promise.resolve();
+          }
+          const blocked = await application.evictReport("hosted-report:lifecycle-run-1");
+          const capacity = await application.coordinator.dispatch_action(request("run-two"));
+          expect_node_host(
+            blocked.status === "busy"
+              && capacity.type === "error"
+              && application.reportCount() === 1,
+            "running report must block eviction and finite capacity must reject new work",
+          );
+          releaseRun();
+          const completed = await running;
+          now += 101;
+          expect_node_host(
+            completed.type === "ack"
+              && await application.sweepReports() === 1
+              && application.reportCount() === 0
+              && application.coordinator.activity.snapshot().state === "idle",
+            "terminal report must evict after retention without disposing the coordinator",
+          );
+          await application.dispose();
+        },
+      }),
     ]),
   });
 }

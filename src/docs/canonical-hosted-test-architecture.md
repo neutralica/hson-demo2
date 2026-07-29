@@ -61,6 +61,29 @@ IDs are resolved directly through the executor registry. They are never
 translated into `hosted/all`, `category/*`, or another legacy route. Selected
 cases retain original suite grouping and execute in canonical suite/case order.
 
+## Runner completion contract
+
+`run_test_suites()` executes cases sequentially. Every case has a finite
+effective timeout: a case override, then a suite override, then a run override,
+or the conservative 30-second default. Timeout values must be positive finite
+safe integers and are validated before execution begins.
+
+The runner awaits the value returned by `TestCase.run`. A case may optionally
+provide cleanup, which runs after pass, failure, cancellation, or timeout and
+must finish before the terminal case event. Cleanup uses the same finite
+deadline. A cleanup failure turns a would-be pass into a failure and remains
+visible alongside an earlier case failure. Suite setup is likewise bounded; a
+setup failure emits an explicit failure for every affected selected case.
+
+Timeout or cancellation settles exactly one terminal result. A later resolve or
+reject from the abandoned promise is observed but cannot replace or duplicate
+that result. Recorder lifecycle checks reject duplicate begins, duplicate ends,
+ends without begins, and terminal summaries with active cases.
+
+Portable JavaScript cannot attribute arbitrary detached asynchronous work to a
+case without a scoped runtime mechanism. Test bodies must therefore return or
+await every asynchronous operation that contributes to their result.
+
 ## Node execution contexts
 
 The Node LiveHost advertises `javascript`, `node`, and `synthetic-dom`.
