@@ -392,6 +392,8 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
 
   // CHANGED: use an explicit document listener so remount teardown can remove it.
   const onDocumentKeyDown = (ke: KeyboardEvent): void => {
+    if (ke.key === "`") {mount_color_sudoku(stage);};
+    
     if (ke.key !== "Escape") return;
     demoController.deactivateWidget($OKLCH);
     demoController.deactivateWidget($POINT);
@@ -418,7 +420,7 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
     void spawn_flower(fleurField, x, y);
   });
 
-  mount_color_sudoku(stage);
+  
   mount_firework(screen);
   return;
 }
