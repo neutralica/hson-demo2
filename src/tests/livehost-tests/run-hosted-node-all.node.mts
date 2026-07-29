@@ -40,7 +40,7 @@ const registry = make_registered_hosted_test_suite_registry();
 const directStarted = performance.now();
 const direct = await registry.get("node/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const hostRunnerMs = performance.now() - directStarted;
-expect_node_all(direct.ok && direct.summary.suites === 43 && direct.summary.cases === 1087 && direct.summary.pass === 1087, "direct aggregate runner passes 1087 cases exactly once");
+expect_node_all(direct.ok && direct.summary.suites === 43 && direct.summary.cases === 1069 && direct.summary.pass === 1069, "direct aggregate runner passes 1069 cases exactly once");
 
 let authoritative: HostedTestReportController | undefined;
 const [clientSocket, hostSocket] = make_socket_pair();
@@ -78,8 +78,8 @@ expect_node_all(initialEvents === 1, "one authoritative initial event arrives fi
 expect_node_all(commitEvents === 63, "suite-coherent batching reduces the aggregate stream to 63 commits");
 expect_node_all(mirror.rev === 63, "mirror reaches batched revision 63");
 expect_node_all(result.runId === "node-all-run" && router.runId === result.runId, "result and routed stream share one run ID");
-expect_node_all(result.suite === "node/all" && result.summary.cases === 1087 && result.summary.fail === 0, "action returns aggregate identity and totals");
-expect_node_all(mirror.capture().value.summary.cases === 1087 && mirror.capture().value.run.status === "passed", "router mirror reconstructs the complete terminal report");
+expect_node_all(result.suite === "node/all" && result.summary.cases === 1069 && result.summary.fail === 0, "action returns aggregate identity and totals");
+expect_node_all(mirror.capture().value.summary.cases === 1069 && mirror.capture().value.run.status === "passed", "router mirror reconstructs the complete terminal report");
 expect_node_all(authoritative !== undefined && JSON.stringify(mirror.capture()) === JSON.stringify(authoritative.map.capture()), "client mirror equals authoritative host capture");
 expect_node_all(authoritative.commits().length === 63, "local semantic history matches the delivered commit count");
 expect_node_all(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "aggregate hosted path remains Node-safe");

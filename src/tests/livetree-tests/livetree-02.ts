@@ -472,6 +472,15 @@ export function suite_identity_stability(): TestSuite {
             "same host re-graft returns same DOM element",
             first.dom.el() === second.dom.el(),
           );
+          const graftedElement = first.dom.el();
+          const unexpectedRuntimeMarkup = graftedElement
+            ?.getAttributeNames()
+            .filter((name) => name !== "id" && name !== "data-_quid") ?? [];
+          t.eq(
+            "graft adds no runtime ownership markup",
+            unexpectedRuntimeMarkup.length,
+            0,
+          );
         } finally {
           stash.__wrapper?.remove();
         }
@@ -1258,7 +1267,10 @@ function suite_css_value_and_selection(): TestSuite {
 
         for (const quid of quids) {
           const selector = `[data-_quid="${quid}"]`;
-          const hits = flat.split(`${selector} {`).length - 1;
+          const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const hits = flat.match(
+            new RegExp(`${escaped}\\s*\\{`, "g"),
+          )?.length ?? 0;
           t.eq(`exactly one block for ${selector}`, hits, 1);
         }
 

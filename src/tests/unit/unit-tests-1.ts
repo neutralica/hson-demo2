@@ -717,7 +717,10 @@ export function unit_test_css_manager(): TestSuite {
       // escape for regex
       const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-      const re = new RegExp(`${esc}\\s*\\{[^}]*color\\s*:\\s*red\\s*;`, "s");
+      const re = new RegExp(
+        `${esc}\\s*\\{[^}]*color\\s*:\\s*red\\s*;`,
+        "s",
+      );
 
       if (!re.test(css)) {
         cleanup_quid(m, quid);
