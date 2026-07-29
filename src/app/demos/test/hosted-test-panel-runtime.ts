@@ -27,10 +27,10 @@ import {
   type HostedTestRunAssociation,
 } from "../../hosted-test/hosted-test-application.types";
 import {
-  make_hosted_test_browser_websocket,
+  create_browser_livehost_socket as make_hosted_test_browser_websocket,
   type BrowserWebSocketConstructor,
-  type HostedTestBrowserSocket,
-} from "../../hosted-test/browser-websocket-socket";
+  type BrowserLiveHostSocket as HostedTestBrowserSocket,
+} from "hson-live/livehost";
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": Readonly<{ runId: string; caseKey: string }>;

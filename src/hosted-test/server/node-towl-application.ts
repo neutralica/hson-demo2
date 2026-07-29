@@ -9,8 +9,7 @@ import {
   create_towl_authority_application,
   type TowlAuthorityApplication,
 } from "../towl-authority-application";
-import { make_node_websocket_livehost_socket } from "./node-websocket-socket";
-import type { NodeHostedApplication } from "./node-application-host";
+import { create_node_livehost_socket, type NodeHostedApplication } from "hson-live/livehost/node";
 
 export const NODE_TOWL_APPLICATION_NAME = "towl";
 
@@ -44,7 +43,7 @@ export function create_node_towl_application(): NodeTowlApplication {
         websocket.close(1012, "TOWL application stopping.");
         return;
       }
-      const connected = authorities.connect(authorityId, make_node_websocket_livehost_socket(websocket));
+      const connected = authorities.connect(authorityId, create_node_livehost_socket(websocket));
       if (!connected.ok) {
         websocket.close(1008, connected.error.code ?? "Unknown TOWL room.");
         return;
@@ -55,7 +54,6 @@ export function create_node_towl_application(): NodeTowlApplication {
         connections.get(websocket)?.();
         connections.delete(websocket);
       });
-      websocket.once("error", () => websocket.close(1011, "TOWL WebSocket error."));
     },
     dispose() {
       if (disposed) return;

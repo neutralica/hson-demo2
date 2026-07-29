@@ -10,16 +10,16 @@ import {
   start_node_application_host,
   type NodeAuthorityNamespace,
   type NodeHostedApplication,
-} from "../../hosted-test/server/node-application-host";
+} from "hson-live/livehost/node";
 import { create_node_hosted_tests_application } from "../../hosted-test/server/node-hosted-tests-application";
 import { create_node_towl_application } from "../../hosted-test/server/node-towl-application";
 import { make_towl_socket, send_towl_action } from "../towl-tests/towl-test-helpers";
 import type { TowlState } from "../../app/demos/towl";
 import { create_towl_client } from "../../app/demos/towl";
 import {
-  make_hosted_test_browser_websocket,
+  create_browser_livehost_socket,
   type BrowserWebSocketConstructor,
-} from "../../app/hosted-test/browser-websocket-socket";
+} from "hson-live/livehost";
 
 function expect_node_host(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`node application host: ${message}`);
@@ -389,7 +389,7 @@ export function node_application_host_suite(): TestSuite {
         run: async () => {
           const towl = create_node_towl_application();
           const host = await start_node_application_host({ port: 0, applications: [towl.registration] });
-          const transport = make_hosted_test_browser_websocket(
+          const transport = create_browser_livehost_socket(
             `${host.url}?livehost=towl%3Aroute-room`,
             WebSocket as unknown as BrowserWebSocketConstructor,
           );

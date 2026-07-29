@@ -5,7 +5,7 @@ import {
   start_node_application_host,
   type NodeApplicationHost,
   type NodeHostOperationalEvent,
-} from "./node-application-host";
+} from "hson-live/livehost/node";
 import {
   create_node_hosted_tests_application,
 } from "./node-hosted-tests-application";

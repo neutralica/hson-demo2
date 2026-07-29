@@ -18,8 +18,7 @@ import {
   type HostedTestApplication,
 } from "../hosted-test-application";
 import { make_registered_hosted_test_suite_registry } from "../registered-hosted-test-suites";
-import { make_node_websocket_livehost_socket } from "./node-websocket-socket";
-import type { NodeHostedApplication } from "./node-application-host";
+import { create_node_livehost_socket, type NodeHostedApplication } from "hson-live/livehost/node";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
@@ -80,7 +79,7 @@ export async function create_node_hosted_tests_application(
         websocket.close(1012, "Hosted-tests application stopping.");
         return;
       }
-      const connected = authorities.connect(authorityId, make_node_websocket_livehost_socket(websocket, (message) => {
+      const connected = authorities.connect(authorityId, create_node_livehost_socket(websocket, (message) => {
         sentMessages += 1;
         sentBytes += Buffer.byteLength(message, "utf8");
       }));
@@ -94,7 +93,6 @@ export async function create_node_hosted_tests_application(
         connections.get(websocket)?.disconnect();
         connections.delete(websocket);
       });
-      websocket.once("error", () => websocket.close(1011, "Hosted-test WebSocket error."));
     },
     dispose() {
       if (disposed) return;
