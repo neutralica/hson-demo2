@@ -39,4 +39,5 @@ export const html_INVALID = {
         <div id="t1" data-json='{"a":"b"}'></div>
       </_-_-main>
     `,
+  meta_index_on_standard: `<div data-_index="7">x</div>`,
 };
