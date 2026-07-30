@@ -33,7 +33,7 @@ const CAPABILITIES: readonly TestCapability[] = Object.freeze([
   "javascript", "node", "synthetic-dom", "browser-dom", "worker", "filesystem", "websocket",
 ]);
 const SUBJECTS: readonly TestSubject[] = Object.freeze([
-  "transform", "livetree", "livemap", "livehost", "integration", "livedemo", "dev",
+  "transform", "livetree", "livemap", "reflect", "livehost", "integration", "livedemo", "dev",
 ]);
 const COLLECTIONS: readonly TestCollection[] = Object.freeze(["unit", "dev"]);
 const EXECUTOR_KINDS: readonly TestExecutorKind[] = Object.freeze(["node", "cloudflare-worker", "browser"]);
@@ -55,6 +55,43 @@ function string_set<T extends string>(value: unknown, allowed: readonly T[]): re
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string" && allowed.includes(item as T))) return undefined;
   if (new Set(value).size !== value.length) return undefined;
   return Object.freeze([...(value as T[])]);
+}
+
+function external_target_issue(
+  value: unknown,
+  index: number,
+): string | undefined {
+  const path = `externalTargets[${index}]`;
+  const target = record(value);
+  if (target === undefined) return `${path}: expected an object.`;
+  if (!exact_keys(target, [
+    "id", "launcherId", "subject", "displayName", "runtime", "executableChecks", "collections",
+  ])) return `${path}: fields do not match the external-target contract.`;
+  const runtimes = ["node", "node-synthetic-dom", "node-real-websocket", "node-real-websocket-process"] as const;
+  if (typeof target.id !== "string" || !target.id.startsWith("library::")) {
+    return `${path}.id: expected a library:: identifier.`;
+  }
+  if (typeof target.launcherId !== "string" || !target.launcherId) {
+    return `${path}.launcherId: expected a non-empty string.`;
+  }
+  if (typeof target.subject !== "string" || !SUBJECTS.includes(target.subject as TestSubject)) {
+    return `${path}.subject: unsupported test subject ${JSON.stringify(target.subject)}.`;
+  }
+  if (typeof target.displayName !== "string" || !target.displayName) {
+    return `${path}.displayName: expected a non-empty string.`;
+  }
+  if (typeof target.runtime !== "string" || !runtimes.includes(target.runtime as typeof runtimes[number])) {
+    return `${path}.runtime: unsupported launcher runtime ${JSON.stringify(target.runtime)}.`;
+  }
+  if (typeof target.executableChecks !== "number"
+    || !Number.isInteger(target.executableChecks)
+    || target.executableChecks < 1) {
+    return `${path}.executableChecks: expected a positive integer.`;
+  }
+  if (!Array.isArray(target.collections) || !target.collections.every((entry) => typeof entry === "string")) {
+    return `${path}.collections: expected an array of strings.`;
+  }
+  return undefined;
 }
 
 export function decode_test_executor_discovery_request(value: unknown): TestDecodeResult<TestExecutorDiscoveryRequest> {
@@ -141,19 +178,28 @@ export function decode_test_executor_discovery(value: unknown): TestDecodeResult
     ? catalogInput.tests
     : undefined;
   const descriptors = rawTests?.map(decode_descriptor);
-  const externalTargets = Array.isArray(input.externalTargets) ? input.externalTargets.map((value) => {
+  const externalTargetIssues = Array.isArray(input.externalTargets)
+    ? input.externalTargets.flatMap((value, index) => {
+      const issue = external_target_issue(value, index);
+      return issue === undefined ? [] : [issue];
+    })
+    : ["externalTargets: expected an array."];
+  const externalTargets = externalTargetIssues.length === 0 && Array.isArray(input.externalTargets)
+    ? input.externalTargets.map((value) => {
     const target = record(value);
-    if (target === undefined || !exact_keys(target, [
-      "id", "launcherId", "subject", "displayName", "runtime", "executableChecks", "collections",
-    ])) return undefined;
+    if (target === undefined) return undefined;
     const runtimes = ["node", "node-synthetic-dom", "node-real-websocket", "node-real-websocket-process"] as const;
-    if (typeof target.id !== "string" || !target.id.startsWith("library::")
-      || typeof target.launcherId !== "string" || !target.launcherId
+    const collections = Array.isArray(target.collections)
+      && target.collections.every((entry) => typeof entry === "string")
+      ? target.collections
+      : undefined;
+    if (typeof target.id !== "string"
+      || typeof target.launcherId !== "string"
       || typeof target.subject !== "string" || !SUBJECTS.includes(target.subject as TestSubject)
-      || typeof target.displayName !== "string" || !target.displayName
+      || typeof target.displayName !== "string"
       || typeof target.runtime !== "string" || !runtimes.includes(target.runtime as typeof runtimes[number])
-      || typeof target.executableChecks !== "number" || !Number.isInteger(target.executableChecks) || target.executableChecks < 1
-      || !Array.isArray(target.collections) || !target.collections.every((entry) => typeof entry === "string")) return undefined;
+      || typeof target.executableChecks !== "number"
+      || collections === undefined) return undefined;
     return Object.freeze({
       id: target.id,
       launcherId: target.launcherId,
@@ -161,9 +207,12 @@ export function decode_test_executor_discovery(value: unknown): TestDecodeResult
       displayName: target.displayName,
       runtime: target.runtime as typeof runtimes[number],
       executableChecks: target.executableChecks,
-      collections: Object.freeze([...target.collections] as string[]),
+      collections: Object.freeze([...collections] as string[]),
     });
   }) : undefined;
+  if (externalTargetIssues.length > 0) {
+    return Object.freeze({ ok: false, issues: Object.freeze(externalTargetIssues) });
+  }
   if (executor === undefined
     || input.protocolVersion !== TEST_EXECUTOR_PROTOCOL_VERSION
     || typeof input.catalogVersion !== "string" || !input.catalogVersion

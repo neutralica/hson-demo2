@@ -7,7 +7,12 @@ import {
   type LiveTreeMaterializationProfile,
 } from "hson-live/diagnostics";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
-import { LiveProjectionError, LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE, hson } from "hson-live";
+import { hson } from "hson-live";
+import {
+  CollectionReflectError,
+  COLLECTION_REFLECT_RENDERER_CREATE_ERROR_CODE,
+  hsonReflect,
+} from "hson-live/reflect";
 import { hsonLiveMap } from "hson-live/livemap";
 import { hsonLiveTree } from "hson-live/livetree";
 import { LIVETREE_BATCH_VALIDATION_ERROR_CODE, LiveTreeBatchError, CssManager } from "hson-live/livetree";
@@ -106,7 +111,7 @@ try {
     const source = hsonLiveMap.fromJson({ items: [{ id: "a" }, { id: "bad" }, { id: "c" }] });
     let error: unknown;
     try {
-      hson.liveProject.keyedCollection({
+      hsonReflect.collection({
         source: source.at(["items"]) as any,
         host,
         key: (item: any) => item.id,
@@ -116,7 +121,7 @@ try {
         },
       });
     } catch (caught) { error = caught; }
-    expect(error instanceof LiveProjectionError && error.code === LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE, "renderer failure remains classified through initial projection");
+    expect(error instanceof CollectionReflectError && error.code === COLLECTION_REFLECT_RENDERER_CREATE_ERROR_CODE, "renderer failure remains classified through initial projection");
     expect(host.content.count() === 0 && host.dom.must.el().children.length === 0, "renderer failure before batch attachment leaks no branch");
   }
 

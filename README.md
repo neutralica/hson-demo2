@@ -34,7 +34,7 @@ LiveTree creates live browser documents, projecting to the DOM from the source g
 
 Element creation, SVG and canvas support, animations, and events are managed through LiveTree. Structure, CSS, events, and interaction all operate through the same model with changes reflected directly in the browser.
 
-Combined with LiveMap bindings, LiveTree creates "live" interfaces where application state and visual output are directly linked.
+LiveTree owns DOM, CSS, event, and runtime projection resources. It does not share canonical application-state authority with LiveMap.
 
 (LiveTree "is" HTML.)
 
@@ -46,9 +46,22 @@ LiveMap turns the graph model into application state.
 
 State, schemas, history, subscriptions, derived views, and bindings all operate directly on the same graph structure. LiveMap edits the graph and emits changes via commits.
 
-Graph commits become the shared language of the system, allowing state changes to flow consistently between local interfaces, derived views, and hosted environments.
+Graph commits become the shared language of the system, allowing state changes to flow consistently between local interfaces, derived views, and hosted environments. LiveMap remains the sole authority for canonical revisioned state.
 
-Together, LiveMap and LiveTree create a direct data-to-interface pipeline without a separate synchronization layer.
+An interface may optionally connect that state to a view through Reflect:
+
+```text
+LiveMap
+  owns canonical revisioned state
+      ↓
+Reflect
+  observes commits and reconciles projection state
+      ↓
+LiveTree
+  owns DOM, CSS, event, and runtime projection resources
+```
+
+Reflect is an optional projection and reconciliation layer, not an automatic part of every LiveMap.
 
 (LiveMap "is" JSON.)
 
@@ -183,7 +196,7 @@ Demonstrates:
 - shared state interacting with per-entity state
 - independent mutation within a common graph
 - automatic visual updates from data changes
-- immediate synchronization without reconciliation
+- optional state-to-view reflection with explicit reconciliation
 
 ---
 

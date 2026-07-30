@@ -15,6 +15,7 @@ export type TestSubject =
   | "transform"
   | "livetree"
   | "livemap"
+  | "reflect"
   | "livehost"
   | "integration"
   | "livedemo"

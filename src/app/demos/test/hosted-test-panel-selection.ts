@@ -30,6 +30,7 @@ const PRIMARY_DEFINITIONS: readonly PrimaryDefinition[] = Object.freeze([
   Object.freeze({ key: "all", label: "all", selection: Object.freeze({ kind: "all" }) }),
   Object.freeze({ key: "subject:transform", label: "Transform", selection: Object.freeze({ kind: "subject", subject: "transform" }) }),
   Object.freeze({ key: "subject:livemap", label: "LiveMap", selection: Object.freeze({ kind: "subject", subject: "livemap" }) }),
+  Object.freeze({ key: "subject:reflect", label: "Reflect", selection: Object.freeze({ kind: "subject", subject: "reflect" }) }),
   Object.freeze({ key: "subject:livetree", label: "LiveTree", selection: Object.freeze({ kind: "subject", subject: "livetree" }) }),
   Object.freeze({ key: "subject:livehost", label: "LiveHost", selection: Object.freeze({ kind: "subject", subject: "livehost" }) }),
   Object.freeze({ key: "collection:unit", label: "Unit", selection: Object.freeze({ kind: "collection", collection: "unit" }) }),
@@ -58,10 +59,10 @@ function canonical_for_selection(
 
 export function hosted_test_panel_external_category(
   target: ExternalLibraryLauncherTarget,
-): "transform" | "livemap" | "livetree" | "livehost" | "dev" {
+): "transform" | "livemap" | "reflect" | "livetree" | "livehost" | "dev" {
   if (target.launcherId === "core.canonical-hson-equality") return "transform";
   if (target.launcherId === "core.public-boundaries") return "dev";
-  if (target.subject === "transform" || target.subject === "livemap"
+  if (target.subject === "transform" || target.subject === "livemap" || target.subject === "reflect"
     || target.subject === "livetree" || target.subject === "livehost") return target.subject;
   throw new Error(`External library target has no panel category projection: ${target.launcherId}`);
 }

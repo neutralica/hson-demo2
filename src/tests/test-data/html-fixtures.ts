@@ -433,8 +433,8 @@ const htmlAttributeCases: { [key: string]: string } = {
   // 14) Attribute with escaped quotes via entity (robust quoted-value scan)
   // quote_entities: `<div data-q="&quot;hello&quot; 'world'">q</div>`,
 
-  // 15) Upper/lower/duplicate attribute names (first-wins semantics)
-  duplicate_attrs_first_wins: `<input TYPE="text" type="password" value="x">`,
+  // 15) Upper/lower/duplicate attribute names (last-wins semantics)
+  duplicate_attrs_last_wins: `<input TYPE="text" type="password" value="x">`,
 
   // 16) Weird-but-allowed spacing in tags/attrs
   weird_spacing: `<div    data-a =  "1"    data-b=2    data-c =3  >w</div>`,
@@ -443,8 +443,8 @@ const htmlAttributeCases: { [key: string]: string } = {
   punctuation_value: `<meta http-equiv="refresh" content="0; url=https://example.com?a=1,2;mode:x">`,
 
 
-  // 18) Unicode in attribute names and values
-  unicode_attrs: `<div data–en-dash="–" lang="ja" title="ひらがな">u</div>`,
+  // 18) Unicode values with names inside the canonical ASCII attribute grammar
+  unicode_attr_values: `<div data-en-dash="–" lang="ja" title="ひらがな">u</div>`,
 
   // 19) Entity + URL mix inside quoted attribute
   attr_url_mix: `<a href="https://example.com/?q=Tom&amp;Jerry&ref=mail">link</a>`

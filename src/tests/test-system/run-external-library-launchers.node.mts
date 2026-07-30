@@ -125,7 +125,7 @@ const nodeRegistry = make_local_node_livehost_executor_registry();
 const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, availability.targets);
 assert.deepEqual(
   primary.map((choice) => choice.label.replace(/ \(\d+\)$/, "")),
-  ["all", "Transform", "LiveMap", "LiveTree", "LiveHost", "Unit", "Dev"],
+  ["all", "Transform", "LiveMap", "Reflect", "LiveTree", "LiveHost", "Unit", "Dev"],
 );
 for (const choice of primary) {
   const count = hosted_test_panel_selection_case_count(

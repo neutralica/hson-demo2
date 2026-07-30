@@ -1,12 +1,13 @@
 import { performance } from "node:perf_hooks";
+import { hson } from "hson-live";
 import {
-  hson,
-  LiveProjectionError,
-  LIVE_PROJECTION_BRANCH_ATTACHED_ERROR_CODE,
-  LIVE_PROJECTION_DUPLICATE_KEY_ERROR_CODE,
-  LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE,
-  LIVE_PROJECTION_SOURCE_REPLACEMENT_ERROR_CODE,
-} from "hson-live";
+  CollectionReflectError,
+  COLLECTION_REFLECT_BRANCH_ATTACHED_ERROR_CODE,
+  COLLECTION_REFLECT_DUPLICATE_KEY_ERROR_CODE,
+  COLLECTION_REFLECT_RENDERER_CREATE_ERROR_CODE,
+  COLLECTION_REFLECT_SOURCE_REPLACEMENT_ERROR_CODE,
+  hsonReflect,
+} from "hson-live/reflect";
 import type { LiveMap, LiveMapPathHandle } from "hson-live/livemap";
 import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
 import { CssManager } from "hson-live/livetree";
@@ -15,11 +16,11 @@ let checks = 0;
 
 function expect(condition: unknown, message: string): asserts condition {
   checks += 1;
-  if (!condition) throw new Error(`liveproject/keyed: ${message}`);
+  if (!condition) throw new Error(`reflect/collection: ${message}`);
 }
 
 function expectError(error: unknown, code: string, message: string): void {
-  expect(error instanceof LiveProjectionError, `${message}: classified LiveProjectionError`);
+  expect(error instanceof CollectionReflectError, `${message}: classified CollectionReflectError`);
   expect(error.code === code, `${message}: expected ${code}, got ${error.code}`);
 }
 
@@ -47,7 +48,7 @@ function makeProjection(
   const renders = new Map<string, number>();
   const updates = new Map<string, number>();
   const cleanups = new Map<string, number>();
-  const projection = hson.liveProject.keyedCollection<Item>({
+  const projection = hsonReflect.collection<Item>({
     source,
     host,
     key: (item) => item.id,
@@ -145,7 +146,7 @@ try {
     const invalid = hson.liveMap.fromJson({ items: [{ id: "x", label: "X" }, { id: "x", label: "duplicate" }] });
     let replacementError: unknown;
     try { view.projection.replaceSource(itemSource(invalid)); } catch (error) { replacementError = error; }
-    expectError(replacementError, LIVE_PROJECTION_SOURCE_REPLACEMENT_ERROR_CODE, "invalid source replacement");
+    expectError(replacementError, COLLECTION_REFLECT_SOURCE_REPLACEMENT_ERROR_CODE, "invalid source replacement");
     expect(order(host).join("|") === "Gamma snapshot|Epsilon|Delta snapshot|Beta snapshot", "invalid replacement retains prior projection");
     replacement.set(["items", 0, "label"], "Still subscribed");
     expect(order(host)[0] === "Still subscribed", "invalid replacement retains prior source subscription");
@@ -167,14 +168,14 @@ try {
     const duplicate = hson.liveMap.fromJson({ items: [{ id: "a", label: "A" }, { id: "a", label: "A2" }] });
     let error: unknown;
     try {
-      hson.liveProject.keyedCollection({
+      hsonReflect.collection({
         source: itemSource(duplicate),
         host: makeHost(),
         key: (item: any) => item.id,
         render() { renders += 1; return hson.liveTree.create.li(); },
       });
     } catch (caught) { error = caught; }
-    expectError(error, LIVE_PROJECTION_DUPLICATE_KEY_ERROR_CODE, "duplicate initial key");
+    expectError(error, COLLECTION_REFLECT_DUPLICATE_KEY_ERROR_CODE, "duplicate initial key");
     expect(renders === 0, "duplicate initial keys reject before renderer or host mutation");
   }
 
@@ -185,7 +186,7 @@ try {
     const view = makeProjection(itemSource(map), host);
     map.at(["items"]).array.push({ id: "a", label: "duplicate" });
     expect(view.projection.status === "failed", "duplicate-key mutation visibly fails the projection");
-    expect(view.projection.failure?.code === LIVE_PROJECTION_DUPLICATE_KEY_ERROR_CODE, "duplicate mutation retains classified first failure");
+    expect(view.projection.failure?.code === COLLECTION_REFLECT_DUPLICATE_KEY_ERROR_CODE, "duplicate mutation retains classified first failure");
     expect(order(host).join("|") === "A", "duplicate mutation does not corrupt prior projection");
     view.projection.dispose();
   }
@@ -196,7 +197,7 @@ try {
     const host = makeHost();
     let removedTree: any;
     let listenerHits = 0;
-    const projection = hson.liveProject.keyedCollection<Item>({
+    const projection = hsonReflect.collection<Item>({
       source: itemSource(map),
       host,
       key: (item) => item.id,
@@ -228,7 +229,7 @@ try {
     const view = makeProjection(itemSource(map), host, { failCreateFor: "bad" });
     map.at(["items"]).array.push({ id: "bad", label: "Bad" });
     expect(view.projection.status === "failed", "renderer insertion failure marks projection failed");
-    expect(view.projection.failure?.code === LIVE_PROJECTION_RENDERER_CREATE_ERROR_CODE, "renderer create failure is classified");
+    expect(view.projection.failure?.code === COLLECTION_REFLECT_RENDERER_CREATE_ERROR_CODE, "renderer create failure is classified");
     expect(host.content.count() === 1, "failed insertion leaks no branch");
     view.projection.dispose();
   }
@@ -242,14 +243,14 @@ try {
     const attached = elsewhere.create.li();
     let error: unknown;
     try {
-      hson.liveProject.keyedCollection({
+      hsonReflect.collection({
         source: itemSource(map),
         host,
         key: (item: any) => item.id,
         render: () => attached,
       });
     } catch (caught) { error = caught; }
-    expectError(error, LIVE_PROJECTION_BRANCH_ATTACHED_ERROR_CODE, "renderer attached branch");
+    expectError(error, COLLECTION_REFLECT_BRANCH_ATTACHED_ERROR_CODE, "renderer attached branch");
     expect(attached.dom.must.el().parentElement === elsewhere.dom.must.el(), "projector never steals an attached renderer branch");
   }
 
@@ -320,7 +321,7 @@ try {
     const view = makeProjection(itemSource(map), makeHost(), { failUpdateFor: "a" });
     map.set(["items", 0, "label"], "A2");
     expect(view.projection.status === "failed", "renderer update failure marks projection failed");
-    expect(view.projection.failure?.code === "LIVE_PROJECTION_RENDERER_UPDATE_FAILED", "renderer update failure is classified and retained");
+    expect(view.projection.failure?.code === "COLLECTION_REFLECT_RENDERER_UPDATE_FAILED", "renderer update failure is classified and retained");
     expect(view.projection.diagnostics().rendererFailures === 1, "renderer update failure is diagnosed once");
     view.projection.dispose();
     expect((view.cleanups.get("a") ?? 0) === 1, "failed renderer branch still receives exactly one terminal cleanup");
@@ -346,7 +347,7 @@ try {
     let renders = 0;
     let updates = 0;
     const started = performance.now();
-    const projection = hson.liveProject.keyedCollection<Item>({
+    const projection = hsonReflect.collection<Item>({
       source: itemSource(map),
       host,
       key: (item) => item.id,
@@ -382,7 +383,7 @@ try {
     measurements.deletionMs = performance.now() - deleteStart;
 
     const reconcileStart = performance.now();
-    projection.resync();
+    projection.synchronize();
     measurements.completeReconciliationMs = performance.now() - reconcileStart;
 
     const replacement = hson.liveMap.fromJson({ items: [...itemSource(map).snap()] });

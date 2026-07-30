@@ -116,6 +116,7 @@ presentation. Its primary taxonomy is:
 All discovered tests
 Transform
 LiveMap
+Reflect
 LiveTree
 LiveHost
 Unit

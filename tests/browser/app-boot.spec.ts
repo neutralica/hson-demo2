@@ -49,13 +49,14 @@ test("hosted panel discovers curated categories and runs one canonical category"
   const selector = page.locator("#test-select");
   const targetedSuite = page.locator("#test-targeted-suite");
   const targetedCase = page.locator("#test-targeted-case");
-  await expect(selector.locator("option").first()).toHaveText("all (2810)");
+  await expect(selector.locator("option").first()).toHaveText("all (2817)");
   await expect(selector.locator("option")).toHaveText(
     await selector.locator("option").allTextContents().then((labels) => labels.map((label) => label.toLowerCase())),
   );
   await expect(selector.locator('option[value^="suite:"]')).toHaveCount(0);
   await expect(selector.locator('option[value^="test:"]')).toHaveCount(0);
   await expect(selector.locator('option[value="subject:transform"]')).toHaveText("transform (571)");
+  await expect(selector.locator('option[value="subject:reflect"]')).toHaveText("reflect (46)");
   await expect(selector.locator('option[value="collection:dev"]')).toHaveText("dev (38)");
   await expect(selector.locator('option[value="collection:library"]')).toHaveCount(0);
   await expect(targetedSuite).toBeDisabled();

@@ -2,7 +2,7 @@ import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuite
 import { hson_live_test_launchers } from "hson-live/test-launchers";
 
 export const TEST_SURFACE_CATEGORIES = [
-  "Transforms", "LiveTree", "LiveMap", "LiveHost", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
+  "Transforms", "LiveTree", "LiveMap", "Reflect", "LiveHost", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
 ] as const;
 
 export type TestSurfaceCategory = typeof TEST_SURFACE_CATEGORIES[number];
@@ -41,7 +41,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:towl": "src/tests/towl-tests/run-towl-suites.node.mts",
   "test:towl-room": "src/tests/towl-tests/run-towl-room-suite.node.mts",
   "test:replay-node": "src/tests/livemap-tests/run-replay-suite.node.mts",
-  "test:liveproject-keyed-node": "src/tests/liveproject-tests/run-keyed-projection.node.mts",
+  "test:reflect-keyed-node": "src/tests/reflect-tests/run-keyed-projection.node.mts",
   "test:liveinspect-node": "src/tests/liveinspect-tests/run-live-inspector.node.mts",
   "test:liveinspect-scaling-node": "src/tests/liveinspect-tests/run-live-inspector-scaling.node.mts",
   "test:liveinspect-materialization-node": "src/tests/liveinspect-tests/run-live-inspector-materialization.node.mts",
@@ -194,7 +194,8 @@ function category_for(name: string): TestSurfaceCategory {
   if (name.includes("real-websocket") || name.includes("websocket-lifecycle")) return "Real WebSocket";
   if (name.includes("liveinspect")) return "LiveInspector";
   if (name.includes("livetree") || name.includes("node-representation")) return "LiveTree";
-  if (name.includes("replay") || name.includes("liveproject")) return "LiveMap";
+  if (name.includes("reflect")) return "Reflect";
+  if (name.includes("replay")) return "LiveMap";
   if (name.includes("generated-json")) return "Transforms";
   if (name.includes("surface-enumeration")) return "Build / Types";
   if (name.includes("browser") || name.includes("amoebi") || name.includes("soft-tile") || name.includes("splash")) return "Application / Demo";
@@ -232,6 +233,8 @@ const LIVE_RUNNERS: readonly (readonly [string, string, TestClassification])[] =
   ["test:hson-node-quid", "canonical HsonNode QUID acceptance", "library acceptance"],
   ["test:hson-node-quid-ingress", "canonical HsonNode QUID ingress acceptance", "library acceptance"],
   ["test:hson-node-quid-egress", "canonical HsonNode QUID egress acceptance", "library acceptance"],
+  ["test:hson-array-index", "HSON array-index acceptance", "library acceptance"],
+  ["test:hson-attribute-transport", "HSON attribute transport acceptance", "library acceptance"],
   ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
   ["test:hson-serializer", "HSON serializer acceptance", "library acceptance"],
   ["test:canonical-hson-equality", "canonical HSON equality acceptance", "library acceptance"],
@@ -243,11 +246,11 @@ const LIVE_RUNNERS: readonly (readonly [string, string, TestClassification])[] =
   ["test:livetree-attrs", "LiveTree attribute acceptance", "library acceptance"],
   ["test:livetree-quid-eligibility", "LiveTree QUID eligibility acceptance", "library acceptance"],
   ["test:livetree-runtime-scope", "LiveTree runtime-scope acceptance", "library acceptance"],
-  ["test:liveproject-document-attrs", "LiveProject document attributes acceptance", "library acceptance"],
-  ["test:liveproject-document-structure", "LiveProject document structure acceptance", "library acceptance"],
-  ["test:liveproject-document-delegation", "LiveProject document delegation acceptance", "library acceptance"],
-  ["test:liveproject-document-root", "LiveProject document root acceptance", "library acceptance"],
-  ["test:liveproject-document-snapshot", "LiveProject document snapshot acceptance", "library acceptance"],
+  ["test:reflect-document-attrs", "Reflect document attributes acceptance", "library acceptance"],
+  ["test:reflect-document-structure", "Reflect document structure acceptance", "library acceptance"],
+  ["test:reflect-document-delegation", "Reflect document delegation acceptance", "library acceptance"],
+  ["test:reflect-document-root", "Reflect document root acceptance", "library acceptance"],
+  ["test:reflect-document-snapshot", "Reflect document snapshot acceptance", "library acceptance"],
   ["test:livemap-document", "LiveMap document acceptance", "library acceptance"],
   ["test:livemap-document-install", "LiveMap document installation acceptance", "library acceptance"],
   ["test:livemap-document-mutation", "LiveMap document mutation acceptance", "library acceptance"],
@@ -281,7 +284,10 @@ function live_role(name: string): Readonly<{
   if (name === "test:diagnostics-inventory") {
     return Object.freeze({ role: "aggregate verification command", exposure: "command only" });
   }
-  if (name === "test:livehost-graph-content-codec" || name === "test:transform-worker") {
+  if (name === "test:hson-array-index"
+    || name === "test:hson-attribute-transport"
+    || name === "test:livehost-graph-content-codec"
+    || name === "test:transform-worker") {
     return Object.freeze({ role: "integration journey", exposure: "command only" });
   }
   return Object.freeze({ role: "external diagnostic launcher", exposure: "hosted selectable" });
@@ -303,7 +309,8 @@ function live_environment(name: string): Readonly<{ environment: string; transpo
 }
 
 const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = LIVE_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
-  id: `hson-live:${name}`, label: name, category: name === "build" || name === "check" ? "Build / Types" : "LiveHost",
+  id: `hson-live:${name}`, label: name,
+  category: name === "build" || name === "check" ? "Build / Types" : name.includes("reflect") ? "Reflect" : "LiveHost",
   repository: "hson-live", path: name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
   behavior, classification,
   ...live_role(name),

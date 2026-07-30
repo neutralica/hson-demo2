@@ -20,7 +20,7 @@ const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
 assert.equal(registry.catalog.tests.length, 2100);
 assert.equal(availability.targets.length, 37);
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 710);
+assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 717);
 
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
@@ -83,11 +83,11 @@ assert.ok(
 );
 assert.deepEqual(
   footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  ["cases:2810", "passed:2810", "failed:0"],
+  ["cases:2817", "passed:2817", "failed:0"],
 );
 assert.equal(projection.canonical.total, 2100);
 assert.equal(projection.launchers.total, 37);
-assert.equal(projection.launchers.declaredChecks, 710);
+assert.equal(projection.launchers.declaredChecks, 717);
 assert.equal(processMetrics.activeChildren, 0);
 assert.equal(processMetrics.directLauncherStarts, 37);
 assert.equal(processMetrics.packageScriptStarts, 0);

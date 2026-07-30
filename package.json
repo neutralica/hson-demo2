@@ -31,7 +31,7 @@
     "test:browser:debug": "PWDEBUG=1 playwright test",
     "test:browser:install": "playwright install chromium",
     "test:replay-node": "tsx src/tests/livemap-tests/run-replay-suite.node.mts",
-    "test:liveproject-keyed-node": "tsx src/tests/liveproject-tests/run-keyed-projection.node.mts",
+    "test:reflect-keyed-node": "tsx src/tests/reflect-tests/run-keyed-projection.node.mts",
     "test:liveinspect-node": "tsx src/tests/liveinspect-tests/run-live-inspector.node.mts",
     "test:liveinspect-scaling-node": "tsx src/tests/liveinspect-tests/run-live-inspector-scaling.node.mts",
     "test:liveinspect-materialization-node": "tsx src/tests/liveinspect-tests/run-live-inspector-materialization.node.mts",

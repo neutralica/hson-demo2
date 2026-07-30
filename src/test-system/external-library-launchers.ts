@@ -123,12 +123,13 @@ const SUBJECTS: Readonly<Record<HsonLiveTestLauncher["subject"], TestSubject>> =
   Transform: "transform",
   LiveTree: "livetree",
   LiveMap: "livemap",
+  Reflect: "reflect",
   LiveHost: "livehost",
   Core: "integration",
 });
 
 const TSX_PARITY_MANIFEST_FINGERPRINT =
-  "4b70a0101420cbc96ae5c2f0c393bc5c2d21dc452f0b464c17d18e0d566b3469";
+  "c5df4805b402d1f37df1e4f8f8872da809650c0dbbe23cb6082550ff7cf5af0f";
 
 function launcher_manifest_fingerprint(): string {
   return createHash("sha256").update(hson_live_test_launchers.map((launcher) => [

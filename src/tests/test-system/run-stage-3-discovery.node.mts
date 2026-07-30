@@ -1,4 +1,6 @@
 import type { TestCapability, TestCase, TestCollection, TestDescriptor, TestSuite } from "../../app/demos/test/tests.types";
+import { decode_hosted_test_discovery_response } from "../../app/hosted-test/hosted-test-client-action";
+import { hosted_test_panel_primary_choices } from "../../app/demos/test/hosted-test-panel-selection";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
 import { create_hosted_test_application } from "../../hosted-test/hosted-test-application";
 import { run_livehost_all_suite } from "../../hosted-test/registered-hosted-test-suites";
@@ -17,6 +19,7 @@ import {
   type TestExecutorDescriptor,
 } from "../../test-system/test-executor";
 import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+import { resolve_external_library_launchers } from "../../test-system/external-library-launchers";
 import { run_fresh_node_selected_test_ids } from "../../hosted-test/run-node-selected-test-suites";
 
 function expect_discovery(condition: unknown, message: string): asserts condition {
@@ -69,10 +72,45 @@ expect_discovery(!decode_test_executor_discovery_request({ extra: true }).ok, "u
 const nodeRegistry = make_local_node_livehost_executor_registry();
 const workerRegistry = make_cloudflare_livehost_executor_registry();
 const nodeDiscovery = make_test_executor_discovery(nodeRegistry);
+const externalAvailability = await resolve_external_library_launchers();
+const completeNodeDiscovery = make_test_executor_discovery(nodeRegistry, externalAvailability.targets);
 const workerDiscovery = make_test_executor_discovery(workerRegistry);
 const decodedNode = decode_test_executor_discovery(JSON.parse(JSON.stringify(nodeDiscovery)));
 const decodedWorker = decode_test_executor_discovery(JSON.parse(JSON.stringify(workerDiscovery)));
 expect_discovery(decodedNode.ok && decodedWorker.ok, "Node and Worker discovery responses strictly decode after a JSON round trip");
+const decodedCompleteNode = decode_test_executor_discovery(JSON.parse(JSON.stringify(completeNodeDiscovery)));
+expect_discovery(
+  decodedCompleteNode.ok
+    && decodedCompleteNode.value.externalTargets.length === externalAvailability.targets.length
+    && decodedCompleteNode.value.externalTargets.every((target) => target.subject !== undefined),
+  "the complete current Node discovery payload strictly validates every external entry",
+);
+expect_discovery(
+  completeNodeDiscovery.externalTargets.some((target) => target.subject === "reflect"),
+  "complete discovery includes the Reflect subject",
+);
+expect_discovery(
+  hosted_test_panel_primary_choices(completeNodeDiscovery.catalog.tests, completeNodeDiscovery.externalTargets)
+    .map((choice) => choice.label.replace(/ \(\d+\)$/, ""))
+    .join(",")
+    === "all,Transform,LiveMap,Reflect,LiveTree,LiveHost,Unit,Dev",
+  "complete discovery exposes every current hosted panel category",
+);
+const reflectTargetIndex = completeNodeDiscovery.externalTargets.findIndex((target) => target.subject === "reflect");
+expect_discovery(reflectTargetIndex >= 0, "a Reflect target is available for obsolete-subject rejection coverage");
+const obsoleteSubject = ["live", "project"].join("");
+const obsoleteDiscovery = Object.freeze({
+  ...completeNodeDiscovery,
+  externalTargets: Object.freeze(completeNodeDiscovery.externalTargets.map((target, index) =>
+    index === reflectTargetIndex ? Object.freeze({ ...target, subject: obsoleteSubject }) : target)),
+});
+const obsoleteDecoded = decode_test_executor_discovery(obsoleteDiscovery);
+expect_discovery(
+  !obsoleteDecoded.ok
+    && obsoleteDecoded.issues.join(" ").includes(`externalTargets[${reflectTargetIndex}].subject`)
+    && obsoleteDecoded.issues.join(" ").includes(JSON.stringify(obsoleteSubject)),
+  "the production guard rejects the obsolete project subject and identifies its exact entry and field",
+);
 expect_discovery(
   !decode_test_executor_discovery({ ...JSON.parse(JSON.stringify(nodeDiscovery)), catalogVersion: "fnv1a32-00000000" }).ok,
   "a discovery response with an inconsistent catalog version is rejected",
@@ -135,7 +173,7 @@ const legacyRegistry = make_hosted_test_suite_registry([
   Object.freeze({ id: "livehost/all", label: "livehost/all", run: run_livehost_all_suite }),
 ]);
 const application = create_hosted_test_application(legacyRegistry, {
-  discovery: nodeDiscovery,
+  discovery: completeNodeDiscovery,
   executorRegistry: nodeRegistry,
   runSelected: run_fresh_node_selected_test_ids,
 });
@@ -144,7 +182,13 @@ const discoveryResponse = await application.coordinator.dispatch_action({
 });
 expect_discovery(discoveryResponse.type === "ack", "tests.discover is registered on the hosted application");
 const actionDecoded = discoveryResponse.type === "ack" ? decode_test_executor_discovery(discoveryResponse.result) : undefined;
-expect_discovery(actionDecoded?.ok === true && actionDecoded.value.executor.id === nodeDiscovery.executor.id, "tests.discover returns the executor-centered response");
+expect_discovery(actionDecoded?.ok === true && actionDecoded.value.executor.id === completeNodeDiscovery.executor.id, "tests.discover returns the executor-centered response");
+const browserDecoded = decode_hosted_test_discovery_response(discoveryResponse);
+expect_discovery(
+  browserDecoded.externalTargets.some((target) => target.subject === "reflect")
+    && browserDecoded.externalTargets.length === completeNodeDiscovery.externalTargets.length,
+  "the production browser-side response guard accepts the complete action response",
+);
 const malformed = await application.coordinator.dispatch_action({
   type: "action", id: "discover-bad", clientId: "stage-3", requestId: "discover-bad-request", name: "tests.discover", payload: { extra: true },
 } as never);

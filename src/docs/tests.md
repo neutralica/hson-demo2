@@ -98,7 +98,7 @@ livetree
 livemap
 livehost
 liveinspect
-liveproject
+reflect
 towl
 integration
 dev
