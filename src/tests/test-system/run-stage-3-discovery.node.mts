@@ -93,7 +93,7 @@ expect_discovery(
   hosted_test_panel_primary_choices(completeNodeDiscovery.catalog.tests, completeNodeDiscovery.externalTargets)
     .map((choice) => choice.label.replace(/ \(\d+\)$/, ""))
     .join(",")
-    === "all,Transform,LiveMap,Reflect,LiveTree,LiveHost,Unit,Dev",
+    === "all,Transform,LiveTree,LiveMap,LiveHost,Reflect,Unit,Dev",
   "complete discovery exposes every current hosted panel category",
 );
 const reflectTargetIndex = completeNodeDiscovery.externalTargets.findIndex((target) => target.subject === "reflect");

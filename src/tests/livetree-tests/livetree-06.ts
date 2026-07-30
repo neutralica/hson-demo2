@@ -3,9 +3,15 @@ import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 import { livetree_gnarly_svg } from "./livetree-11-svg-3";
-import { tick } from "./livetree-03";
+import { get_hson_style_rule, tick } from "./livetree-03";
 import { flush_dom, next_frame } from "../inspector/inspector.helpers";
 import { hson } from "hson-live";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+
+function before_rule_for(tree: Parameters<LiveTreeCaseSpec["assert"]>[0], id: string): CSSStyleRule | undefined {
+  const quid = tree.find.must.byId(id).dom.must.el().getAttribute("hson:quid") ?? "";
+  return get_hson_style_rule(`${hson_quid_selector(quid)}::before`);
+}
 
 export function livetree_css_pseudo(): TestSuite {
   const SUITE = "livetree/css-pseudo";
@@ -13,7 +19,7 @@ export function livetree_css_pseudo(): TestSuite {
     [
       {
         suite: SUITE,
-        name: "css pseudos: before content auto-quotes plain text",
+        name: "css pseudos: before plain text generates exact quoted CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-auto-quotes",
@@ -36,22 +42,23 @@ export function livetree_css_pseudo(): TestSuite {
 
           await flush_dom();
 
-          const el = target.dom.el() as HTMLElement;
-          const before = getComputedStyle(el, "::before");
-
           (tree as any).__result = {
-            content: before.content,
+            content: target.css.selector("&::before").get.property("content"),
           };
         },
 
         assert(tree, t) {
           const r = (tree as any).__result;
-          t.eq("before content rendered", r.content, `"X"`);
+          const rule = before_rule_for(tree, "target");
+          t.eq("selector getter exposes canonical quoted content", r.content, `"X"`);
+          t.ok("exact ::before CSSOM rule exists", !!rule);
+          t.eq("CSSOM contains exact quoted content", rule?.style.getPropertyValue("content"), `"X"`);
+          t.eq("CSSOM contains exact pseudo color", rule?.style.getPropertyValue("color"), "rgb(255, 0, 255)");
         },
       },
       {
         suite: SUITE,
-        name: "css pseudos: before injects empty content when omitted",
+        name: "css pseudos: before omission generates exact empty content CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-empty-fallback",
@@ -73,17 +80,18 @@ export function livetree_css_pseudo(): TestSuite {
 
           await flush_dom();
 
-          const el = target.dom.el() as HTMLElement;
-          const before = getComputedStyle(el, "::before");
-
           (tree as any).__result = {
-            content: before.content,
+            content: target.css.selector("&::before").get.property("content"),
           };
         },
 
         assert(tree, t) {
           const r = (tree as any).__result;
-          t.eq("empty content injected", r.content, `""`);
+          const rule = before_rule_for(tree, "target");
+          t.eq("selector getter exposes injected empty content", r.content, `""`);
+          t.ok("exact ::before CSSOM rule exists", !!rule);
+          t.eq("CSSOM contains exact empty content", rule?.style.getPropertyValue("content"), `""`);
+          t.eq("CSSOM contains exact pseudo color", rule?.style.getPropertyValue("color"), "rgb(255, 0, 255)");
         },
       },
       {
@@ -125,7 +133,7 @@ export function livetree_css_pseudo(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "css pseudos: auto-quoted content matches manually quoted content",
+        name: "css pseudos: manual and auto quoted content generate exact CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-manual-vs-auto",
@@ -157,23 +165,20 @@ export function livetree_css_pseudo(): TestSuite {
 
           await flush_dom();
 
-          const manualEl = manual.dom.el() as HTMLElement;
-          const autoEl = auto.dom.el() as HTMLElement;
-
-          const autoBefore = getComputedStyle(autoEl, "::before");
-          const manualBefore = getComputedStyle(manualEl, "::before");
-          const manualBase = manual.dom.computed() ?? { content: "" };
-          const autoBase = auto.dom.computed() ?? { content: "" };
           (tree as any).__result = {
-            manualContent: manualBefore.content,
-            autoContent: autoBefore.content,
+            manualContent: manual.css.selector("&::before").get.property("content"),
+            autoContent: auto.css.selector("&::before").get.property("content"),
           };
         },
 
         assert(tree, t) {
           const r = (tree as any).__result;
-          t.eq("manual quoted content rendered", r.manualContent, `"M"`); // removed escapes
-          t.eq("auto quoted content rendered", r.autoContent, `"A"`); // removed escapes
+          const manualRule = before_rule_for(tree, "manual");
+          const autoRule = before_rule_for(tree, "auto");
+          t.eq("manual quoted content is preserved in managed state", r.manualContent, `"M"`);
+          t.eq("auto quoted content is canonicalized in managed state", r.autoContent, `"A"`);
+          t.eq("manual CSSOM content is exact", manualRule?.style.getPropertyValue("content"), `"M"`);
+          t.eq("auto CSSOM content is exact", autoRule?.style.getPropertyValue("content"), `"A"`);
         },
       },
     ];

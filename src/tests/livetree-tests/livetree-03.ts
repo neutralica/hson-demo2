@@ -16,9 +16,20 @@ export function get_hson_css_rules(): string[] {
     return Array.from(sheet.cssRules).map((r) => r.cssText);
 }
 
+export function get_hson_style_rule(selectorText: string): CSSStyleRule | undefined {
+    const host = document.querySelector("#css-manager");
+    const styleEl = host?.querySelector("#_hson") as HTMLStyleElement | null;
+    const sheet = styleEl?.sheet as CSSStyleSheet | null;
+    if (!sheet) return undefined;
+
+    return Array.from(sheet.cssRules).find(
+        (rule): rule is CSSStyleRule => "selectorText" in rule && rule.selectorText === selectorText,
+    );
+}
+
 export function get_rule_for_quid(quid: string): string | undefined {
     const sel = hson_quid_selector(quid);
-    return get_hson_css_rules().find((r) => r.includes(sel));
+    return get_hson_style_rule(sel)?.cssText;
 }
 
 function count_occurrences(src: string, needle: string): number {
@@ -26,7 +37,7 @@ function count_occurrences(src: string, needle: string): number {
     return src.split(needle).length - 1;
 }
 
-function get_hson_css_text(): string {
+export function get_hson_css_text(): string {
     const host = document.querySelector("#css-manager");
     const styleEl = host?.querySelector("#_hson") as HTMLStyleElement | null;
     return styleEl?.textContent ?? "";
@@ -128,7 +139,7 @@ export function suite_schedules_events(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager scheduling: read before flush is stale",
+            name: "CssManager scheduling: managed write remains absent from CSSOM before flush",
             dom: true,
             fixture: "css/scheduling",
             sub: "stale-before-flush",
@@ -143,18 +154,17 @@ export function suite_schedules_events(): TestSuite {
 
             assert(tree, t) {
                 const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
-
-                // this is intentionally "wrong" from user POV but correct for system
-                t.eq("opacity still default", cs.opacity, "1");
+                const quid = el.getAttribute("hson:quid") ?? "";
+                t.eq("managed opacity records the pending write", gcss.getForQuid(quid, "opacity"), "0.5");
+                t.eq("no QUID rule is emitted before flush", get_rule_for_quid(quid), undefined);
             },
         },
         {
             suite: SUITE,
-            name: "CssManager scheduling: flush boundary applies styles",
+            name: "CssManager scheduling: flush boundary emits the exact managed rule",
             dom: true,
             fixture: "css/scheduling",
-            sub: "visible-after-flush",
+            sub: "emitted-after-flush",
 
             html: `<main><div id="box">x</div></main>`,
 
@@ -189,9 +199,9 @@ export function suite_schedules_events(): TestSuite {
 
                 box.css.setMany({ opacity: "0.2" });
 
-                // read mid-cycle (should not force flush)
                 const el = box.dom.el() as HTMLElement;
-                void getComputedStyle(el).opacity;
+                const quid = el.getAttribute("hson:quid") ?? "";
+                (tree as any).__ruleBeforeSecondWrite = get_rule_for_quid(quid);
 
                 box.css.setMany({ opacity: "0.8" });
 
@@ -200,6 +210,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
+                t.eq("first pending write did not emit a CSSOM rule", (tree as any).__ruleBeforeSecondWrite, undefined);
                 t.eq("final interleaved opacity wins in managed state", managed_value(tree, "box", "opacity"), "0.8");
             },
         },
@@ -273,14 +284,12 @@ export function css_manager_lifecycle(): TestSuite {
 
             assert(tree, t) {
                 const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
                 const quid = el.getAttribute("hson:quid") ?? "";
                 const cssText = get_hson_css_text();
 
-                t.eq("opacity reset", cs.opacity, "1");
-                t.eq("position reset", cs.position, "static");
-                t.eq("background reset", cs.backgroundColor, "rgba(0, 0, 0, 0)");
-
+                t.eq("managed opacity is removed", gcss.getForQuid(quid, "opacity"), undefined);
+                t.eq("managed position is removed", gcss.getForQuid(quid, "position"), undefined);
+                t.eq("managed background is removed", gcss.getForQuid(quid, "backgroundColor"), undefined);
                 t.ok("no surviving rule for quid", !cssText.includes(hson_quid_selector(quid)));
             },
         },
@@ -623,6 +632,7 @@ export function node_lifecycle(): TestSuite {
                 await tick();
                 gcss.syncNow();
 
+                const oldQuid = oldBox.dom.must.el().getAttribute("hson:quid") ?? "";
                 oldBox.removeSelf();
 
                 await tick();
@@ -635,19 +645,19 @@ export function node_lifecycle(): TestSuite {
                 gcss.syncNow();
 
                 const newEl = newBox.dom.el() as HTMLElement;
+                (tree as any).__oldQuid = oldQuid;
                 (tree as any).__newQuid = newEl.getAttribute("hson:quid") ?? "";
             },
 
             assert(tree, t) {
-                const box = tree.find.must.byId("box");
-                const el = box.dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
-                const quid = (tree as any).__newQuid as string;
-                const rule = get_rule_for_quid(quid) ?? "";
+                const oldQuid = (tree as any).__oldQuid as string;
+                const newQuid = (tree as any).__newQuid as string;
 
-                t.eq("new node opacity is default", cs.opacity, "1");
-                t.eq("new node position is default", cs.position, "static");
-                t.ok("new node has no inherited rule block", rule === "");
+                t.ok("recreated node receives a distinct QUID", oldQuid !== newQuid);
+                t.eq("old node rule is released", get_rule_for_quid(oldQuid), undefined);
+                t.eq("new node has no managed opacity", gcss.getForQuid(newQuid, "opacity"), undefined);
+                t.eq("new node has no managed position", gcss.getForQuid(newQuid, "position"), undefined);
+                t.eq("new node has no inherited rule block", get_rule_for_quid(newQuid), undefined);
             },
         },
         {

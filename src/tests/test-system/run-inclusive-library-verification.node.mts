@@ -18,9 +18,9 @@ import type { TestEvent } from "../../app/demos/test/tests.types";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
-assert.equal(registry.catalog.tests.length, 2100);
-assert.equal(availability.targets.length, 37);
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 717);
+assert.equal(registry.catalog.tests.length, 2104);
+assert.equal(availability.targets.length, 38);
+assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 731);
 
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
@@ -72,8 +72,8 @@ assert.equal(
   true,
   failedExternalEvents.map((event) => `${event.id}: ${event.stderr}`).join("\n"),
 );
-assert.equal(canonicalCases, 2100);
-assert.equal(completedExternalIds.length, 37);
+assert.equal(canonicalCases, 2104);
+assert.equal(completedExternalIds.length, 38);
 assert.deepEqual(queuedExternalIds, availability.targets.map((target) => target.id));
 assert.deepEqual(Object.keys(captured.externalResults), availability.targets.map((target) => target.id));
 assert.equal(firstSuiteCompletionSawBothPhases, true, "both phases become active before either suite completes");
@@ -83,13 +83,13 @@ assert.ok(
 );
 assert.deepEqual(
   footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  ["cases:2817", "passed:2817", "failed:0"],
+  ["cases:2835", "passed:2835", "failed:0"],
 );
-assert.equal(projection.canonical.total, 2100);
-assert.equal(projection.launchers.total, 37);
-assert.equal(projection.launchers.declaredChecks, 717);
+assert.equal(projection.canonical.total, 2104);
+assert.equal(projection.launchers.total, 38);
+assert.equal(projection.launchers.declaredChecks, 731);
 assert.equal(processMetrics.activeChildren, 0);
-assert.equal(processMetrics.directLauncherStarts, 37);
+assert.equal(processMetrics.directLauncherStarts, 38);
 assert.equal(processMetrics.packageScriptStarts, 0);
 assert.ok(timing.overlappedTotalMs >= timing.canonicalPhaseMs);
 assert.ok(timing.overlappedTotalMs >= timing.externalPhaseMs);

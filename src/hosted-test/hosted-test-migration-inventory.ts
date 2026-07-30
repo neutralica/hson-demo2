@@ -152,20 +152,6 @@ export const DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Obj
       && !entry.suite.startsWith("generated/json/")
     )),
     dom(
-      "livetree/css-pseudo::rendered-pseudo-content",
-      3,
-      "all_livetree_suites",
-      ["getComputedStyle", "pseudo-element rendering"],
-      "jsdom does not render ::before content for computed-style readback",
-    ),
-    dom(
-      "livetree-18/treeselector-surface::rendered-pseudo-attr-content",
-      1,
-      "all_livetree_suites",
-      ["getComputedStyle", "pseudo-element rendering"],
-      "jsdom does not render attr() content in ::before computed style",
-    ),
-    dom(
       "livetree/canvas-clear::pixel-output",
       2,
       "all_livetree_suites",

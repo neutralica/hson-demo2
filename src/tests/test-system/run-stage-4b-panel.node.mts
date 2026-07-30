@@ -115,7 +115,7 @@ for (const registry of [nodeRegistry, workerRegistry]) {
     hosted_test_panel_suite_choices(registry.catalog.tests, targets, livehostPrimary.selection)
       .map((choice) => choice.key).join("|")
       === (registry.executor.kind === "node"
-        ? "suite:beta/suite|suite:library::livehost.authority"
+        ? "suite:library::livehost.authority|suite:beta/suite"
         : "suite:beta/suite"),
     `${registry.executor.kind} suite choices are filtered to the active primary category`,
   );

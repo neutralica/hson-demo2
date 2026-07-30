@@ -48,10 +48,10 @@ try {
 }
 
 expect_layout(HOSTED_DOM_LAYOUT_CASES.length === 57, "inventory must classify all 57 cases");
-expect_layout(counts.get("MIGRATED_NATIVE") === 47, "native count");
+expect_layout(counts.get("MIGRATED_NATIVE") === 51, "native count");
 expect_layout(counts.get("MIGRATED_RECT_INJECTION") === 4, "rectangle count");
 expect_layout((counts.get("MIGRATED_OBSERVER_SHIM") ?? 0) === 0, "observer count");
 expect_layout(counts.get("MIGRATED_SVG_INJECTION") === 2, "SVG count");
-expect_layout(counts.get("DEFERRED_REAL_LAYOUT") === 4, "real-layout count");
+expect_layout((counts.get("DEFERRED_REAL_LAYOUT") ?? 0) === 0, "real-layout count");
 
 originalLog(JSON.stringify({ cases: 57, counts: Object.fromEntries(counts), deferred }, null, 2));

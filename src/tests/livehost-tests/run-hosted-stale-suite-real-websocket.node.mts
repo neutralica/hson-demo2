@@ -38,7 +38,7 @@ try {
   const probe = make_real_websocket_probe(make_real_websocket_runtime(currentServer.url));
   await probe.ready();
   const current = await probe.start("dom/core");
-  expect_stale(current.ok && current.summary.cases === 953, "updated registry executes the formerly unavailable suite");
+  expect_stale(current.ok && current.summary.cases === 957, "updated registry executes the formerly unavailable suite");
   expect_stale(probe.adapter.capture()?.run.id === current.runId, "updated report remains strictly correlated");
   probe.dispose();
 } finally {

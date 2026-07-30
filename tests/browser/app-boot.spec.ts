@@ -43,7 +43,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
   await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
-  await expect(page.getByTestId("hosted-test-executor")).toContainText("2100 canonical cases");
+  await expect(page.getByTestId("hosted-test-executor")).toContainText("2104 canonical cases");
   await open_demo(page, "test");
 
   const selector = page.locator("#test-select");

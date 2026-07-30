@@ -1191,13 +1191,12 @@ export function suite_css_and_content(): TestSuite {
       },
     },
 
-    // // -----------------------------------------------------------------------
-    // // CssManager: computed style reflects QUID CSS after flush
-    // // NOTE: This requires DOM + layout. If your harness sometimes runs headless/no-dom,
-    // //       the test will fail. This test *should* scream in that case.
+    // -----------------------------------------------------------------------
+    // CssManager: exact QUID CSSOM and managed state after flush.
+    // Chromium owns selector application and computed-style behavior.
     {
       suite: SUITE,
-      name: "CssManager: computed style reflects QUID CSS after flush",
+      name: "CssManager: CSSOM and managed state contain QUID rule after flush",
       dom: true,
       fixture: "css/computed-style",
       sub: "after-flush",
@@ -1240,12 +1239,12 @@ export function suite_css_and_content(): TestSuite {
       },
     },
 
-    // // -----------------------------------------------------------------------
-    // // CssManager: element has non-zero rect after QUID CSS
-    // // This one is “layout-ish”: if position/size didn’t apply, rect likely stays 0.
+    // -----------------------------------------------------------------------
+    // Explicit hosted geometry verifies the geometry consumer independently
+    // from browser layout; CSS application remains browser-owned.
     {
       suite: SUITE,
-      name: "CssManager: element has non-zero rect after QUID CSS",
+      name: "CssManager: emitted QUID CSS coexists with registered hosted geometry",
       fixture: "css/rect",
       dom: true,
       sub: "non-zero",
@@ -1300,7 +1299,7 @@ export function suite_css_and_content(): TestSuite {
         t.ok("css includes height", cssText.includes("height: 160px;"));
         t.ok("css includes background-color", cssText.includes("background-color: rgb(255, 0, 0);"));
 
-        // layout assertion (application correctness)
+        // Explicit hosted-geometry assertion, not browser layout proof.
         const r = el.getBoundingClientRect();
         t.ok("rect width > 0", r.width > 0);
         t.ok("rect height > 0", r.height > 0);

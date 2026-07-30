@@ -21,7 +21,7 @@ const primary = hosted_test_panel_primary_choices(node.catalog.tests);
 const primaryKeys = primary.map((choice) => choice.key);
 expect_stage5a(
   primaryKeys.join("|")
-    === "all|subject:transform|subject:livemap|subject:livetree|subject:livehost|collection:unit|collection:dev",
+    === "all|subject:transform|subject:livetree|subject:livemap|subject:livehost|collection:unit|collection:dev",
   "the primary taxonomy remains curated as executor categories expand",
 );
 expect_stage5a(
@@ -93,7 +93,7 @@ expect_stage5a(
 const domPending = all_jsdom_hosted_test_suites();
 const canvasPending = all_jsdom_hosted_canvas_suites();
 expect_stage5a(
-  domPending.length === 78 && domPending.reduce((total, suite) => total + suite.cases.length, 0) === 953,
+  domPending.length === 78 && domPending.reduce((total, suite) => total + suite.cases.length, 0) === 957,
   "pending synthetic-DOM inventory remains explicit",
 );
 expect_stage5a(

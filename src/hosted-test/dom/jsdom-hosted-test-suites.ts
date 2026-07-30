@@ -37,12 +37,7 @@ export const JSDOM_HOSTED_DUPLICATE_CASE_KEYS = Object.freeze([
   "livetree/document-question::multi-instance: find is scoped to instance root, not whole document",
 ] as const);
 
-export const JSDOM_HOSTED_DEFERRED_CASE_KEYS = Object.freeze([
-  "livetree/css-pseudo::css pseudos: before content auto-quotes plain text",
-  "livetree/css-pseudo::css pseudos: before injects empty content when omitted",
-  "livetree/css-pseudo::css pseudos: auto-quoted content matches manually quoted content",
-  "livetree-18/treeselector-surface::css pseudos: attr() content browser readback is accepted",
-] as const);
+export const JSDOM_HOSTED_DEFERRED_CASE_KEYS = Object.freeze([] as const);
 
 const JSDOM_HOSTED_TEST_SUITE_ID_SET = new Set<string>(JSDOM_HOSTED_TEST_SUITE_IDS);
 

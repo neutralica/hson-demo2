@@ -139,7 +139,7 @@ const LAYOUT_SUITE_IDS = Object.freeze([
   "livetree/graph-dom-markup-surface",
 ] as const);
 const RECT_INJECTION_CASES = new Set([
-  "livetree/coverage-css-and-content::CssManager: element has non-zero rect after QUID CSS",
+  "livetree/coverage-css-and-content::CssManager: emitted QUID CSS coexists with registered hosted geometry",
   "livetree/document::dom.doc: point queries resolve mounted target tree",
   "livetree/document::dom.doc: elementsFromPoint returns a stack",
   "livetree/create-size::dom.clientSize: mounted html element returns size",
@@ -215,10 +215,7 @@ function deferred(
   return Object.freeze(entries.map(([suite, cases]) => Object.freeze({ suite, cases, status, requirement, hosted: false })));
 }
 
-export const LAYOUT_REQUIRED_SUITES = deferred("LAYOUT_REQUIRED", "rendered pseudo-element computed-style content", [
-  ["livetree/css-pseudo::rendered-pseudo-content", 3],
-  ["livetree-18/treeselector-surface::rendered-pseudo-attr-content", 1],
-]);
+export const LAYOUT_REQUIRED_SUITES = deferred("LAYOUT_REQUIRED", "no rendered CSS application remains synthetic-owned", []);
 
 export const CANVAS_REQUIRED_SUITES = deferred("CANVAS_REQUIRED", "pixel readback requires real rasterization", [
   ["livetree/canvas-clear::pixel-output", 2], ["livetree/canvas-plot::pixel-output", 2],

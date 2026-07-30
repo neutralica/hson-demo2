@@ -11,9 +11,9 @@ try {
   await first.ready();
   const result = await first.start("dom/core");
   const report = first.adapter.capture();
-  expect_dom_ws(result.ok && result.summary.cases === 953 && result.summary.pass === 953, "DOM collection passes 953 canonical cases");
+  expect_dom_ws(result.ok && result.summary.cases === 957 && result.summary.pass === 957, "DOM collection passes 957 canonical cases");
   expect_dom_ws(report?.run.id === result.runId && report.run.suite === "dom/core", "dedicated DOM report host preserves identity");
-  expect_dom_ws(first.updates.flatMap((update) => update.newCases).length === 953, "progressive report recovery projects all DOM cases once");
+  expect_dom_ws(first.updates.flatMap((update) => update.newCases).length === 957, "progressive report recovery projects all DOM cases once");
   first.dispose();
 
   const runtimeA = make_real_websocket_runtime(server.url);

@@ -13,29 +13,48 @@ Canonical QUID stylesheet selectors are emitted as
 jsdom parses the rule into CSSOM and supports DOM selector matching, but does
 not apply escaped-colon attribute selectors through `getComputedStyle`.
 
-The following synthetic-DOM cases therefore retain their distinct LiveTree
-state, batching, isolation, and cleanup contracts without treating jsdom as a
-browser rendering engine. Actual HTML and SVG style application, replacement,
-isolation, and cleanup are consolidated in
-`tests/browser/quid-selector.spec.ts`.
+## CSS assertion ownership
 
-| Synthetic-DOM case | Former rendering assertion | Synthetic replacement |
+The CSS-focused LiveTree, Reflect, and browser surfaces use the following
+division. The inventory covers `getComputedStyle`, stylesheet `cssRules` and
+`selectorText`, DOM selector helpers, pseudo selectors, scheduling, cleanup,
+and keyframe/animation assertions.
+
+| Assertion class | Synthetic-DOM ownership | Browser ownership |
 | --- | --- | --- |
-| `livetree/coverage-css-and-content::CssManager: computed style reflects QUID CSS after flush` | HTML computed opacity, position, and background | exact QUID selector plus managed declarations |
-| `livetree/scheduling-and-events::CssManager batching: multiple writes collapse to final state` | final computed opacity | final managed declaration |
-| `livetree/scheduling-and-events::CssManager batching: successive writes merge properties` | three computed properties | three merged managed declarations |
-| `livetree/scheduling-and-events::CssManager batching: multiple nodes flush together` | two computed opacities | two independently managed declarations |
-| `livetree/scheduling-and-events::CssManager scheduling: flush boundary applies styles` | computed opacity after flush | CSSOM rule insertion, exact selector, and declaration |
-| `livetree/scheduling-and-events::CssManager scheduling: interleaved writes resolve to final state` | final computed opacity | final managed declaration after the interleaving |
-| `livetree/css-manager-lifecycle::CssManager lifecycle: updating a prop overwrites prior value` | updated computed opacity | managed value plus exact old/new CSS text |
-| `livetree/css-manager-lifecycle::CssManager lifecycle: clearing one node does not affect sibling rule` | cleared and surviving computed opacity | removed owner registration and preserved sibling rule |
-| `livetree/css-manager-lifecycle::CssManager lifecycle: remove(prop) preserves sibling declarations` | reset/retained computed properties | removed/retained managed properties plus CSSOM contents |
-| `livetree/node-lifecycle::node lifecycle: removing one styled node preserves sibling CSS` | sibling computed opacity | removed owner rule plus preserved sibling registration and rule |
-| `livetree/root-multi-isolation::multi-root: CSS applied in one tree does not affect another tree` | target and sibling computed opacity | target-only registration and exact target-only rule |
-| `livetree/root-multi-isolation::multi-root: removing one root does not clear CSS of another root` | surviving computed opacity | surviving registration and stylesheet rule |
-| `livetree/document-question::multi-instance: CSS in one instance does not affect sibling instance` | target and sibling computed opacity/position | target-only managed declarations |
-| `livetree/document-question::multi-instance: removing one instance does not clear sibling instance CSS` | surviving computed opacity | surviving registration and stylesheet rule |
-| `livetree/document-question::multi-instance: shared document and shared stylesheet still preserve instance isolation` | target and sibling computed opacity | exact target selector, target registration, and absent sibling registration |
+| managed state | declaration maps, selector handles, ownership, isolation, replacement, cleanup, pending writes | none |
+| CSSOM/source | exact escaped QUID selectors, exact declarations, insertion/removal, one-owner rules, pseudo-rule source | none |
+| selector engine | ordinary class/attribute/compound `matches()` and structural `querySelector()` cases that jsdom supports | escaped-QUID selector matching as applied to HTML and SVG |
+| rendered/computed style | none | preflush/postflush opacity, replacement, cleanup, sibling/root isolation, and `::before` generated content |
+| animation engine | keyframe source, ownership, replacement, and lifecycle only | no animation execution claim in the current baseline |
+
+`tests/browser/quid-selector.spec.ts` owns actual HTML and SVG application,
+preflush and postflush visible effect, replacement, cleanup, cross-root
+isolation, stable QUID targeting, and the rendered `::before` content cases.
+It synchronizes through the fixture’s explicit install/flush state rather than
+sleeping.
+
+The synthetic cases below were corrected because their former assertions used
+jsdom defaults or their names claimed more than their assertions proved.
+
+| Case | Former assertion/claim | Synthetic replacement | Browser owner |
+| --- | --- | --- | --- |
+| `livetree/coverage-css-and-content::CssManager: CSSOM and managed state contain QUID rule after flush` | title claimed computed-style application | exact QUID rule plus managed declarations | HTML/SVG postflush computed opacity |
+| `livetree/coverage-css-and-content::CssManager: emitted QUID CSS coexists with registered hosted geometry` | title implied CSS created a real layout rectangle | exact emitted declarations plus explicitly registered hosted rectangle | selector application is covered separately; browser layout is not claimed |
+| `livetree/scheduling-and-events::CssManager scheduling: managed write remains absent from CSSOM before flush` | default computed opacity was treated as preflush proof | pending managed value plus exact rule absence | synchronous preflush computed opacity and rule absence |
+| `livetree/scheduling-and-events::CssManager scheduling: flush boundary emits the exact managed rule` | title claimed style application | exact selector, declaration, and managed value | postflush computed opacity |
+| `livetree/scheduling-and-events::CssManager scheduling: interleaved writes resolve to final state` | a computed-style read was used to infer that no flush occurred | exact rule absence before the second write plus final managed value | replacement effect after explicit flush |
+| `livetree/css-manager-lifecycle::CssManager lifecycle: clear() removes all declarations for node` | browser-default computed values were treated as cleanup proof | declaration removal and exact rule absence | computed opacity returns to the unmanaged value |
+| `livetree/node-lifecycle::node lifecycle: recreated same-id node does not inherit old CSS` | default computed values were treated as noninheritance proof | distinct QUID, released old rule, absent new managed state/rule | cleanup and stable-target behavior |
+| `livetree/css-pseudo::css pseudos: before plain text generates exact quoted CSS` | pseudo computed content in jsdom | selector getter and exact CSSOM content/color | Chromium `::before` content `"X"` |
+| `livetree/css-pseudo::css pseudos: before omission generates exact empty content CSS` | pseudo computed content in jsdom | selector getter and exact CSSOM empty content/color | Chromium `::before` content `""` |
+| `livetree/css-pseudo::css pseudos: manual and auto quoted content generate exact CSS` | pseudo computed content in jsdom | exact managed and CSSOM values | Chromium manual/automatic content `"M"`/`"A"` |
+| `livetree-18/treeselector-surface::css pseudos: attr() content generates exact composed-selector CSS` | accepted either source text or resolved computed text | exact selector, managed value, and emitted source | Chromium resolved content `"HELLO"` |
+
+The four pseudo cases are now part of the 78-suite hosted jsdom collection as
+CSS-generation assertions. None remains deferred as a synthetic rendering
+test. The only browser-fidelity cases excluded from the hosted collection are
+the four canvas pixel-readback cases.
 
 Three additional failures in `livetree/css-refinements` were not jsdom
 rendering failures. Their test-only keyframe owner strings were not valid

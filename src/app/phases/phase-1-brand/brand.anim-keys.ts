@@ -21,8 +21,8 @@ const ZALGO_FADE = {
   name: 'zalgo-fade',
   steps: {
     "0%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
-    "78%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
-    "95%": { opacity: "0.4", transform: "translateX(3px) rotate(2deg) scale(1.05)" },
+    "8%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1)" },
+    "75%": { opacity: "0.4", transform: "translateX(3px) rotate(2deg) scale(1.05)" },
     "99%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
     "100%": { opacity: "0", transform: "translateX(5px) rotate(4deg) scale(1.1)" },
 
@@ -32,8 +32,8 @@ const ZALGO_FADE_2 = {
   name: 'zalgo-fade2',
   steps: {
     "0%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1.1)" },
-    "32%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1.1)" },
-    "90%": { opacity: "0.3", transform: "translateX(0px) rotate(-2deg)  scale(1.05)" },
+    "12%": { opacity: "0", transform: "translateX(1px) rotate(0deg) scale(1.1)" },
+    "80%": { opacity: "0.4", transform: "translateX(0px) rotate(-2deg)  scale(1.05)" },
     "98%": { opacity: "0", transform: "translateX(-1px) rotate(-4deg) scale(1.1)" },
     "100%": { opacity: "0", transform: "translateX(-1px) rotate(-4deg) scale(1.12)" },
 

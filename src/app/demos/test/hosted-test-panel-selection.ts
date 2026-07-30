@@ -29,16 +29,37 @@ type PrimaryDefinition = Readonly<{
 const PRIMARY_DEFINITIONS: readonly PrimaryDefinition[] = Object.freeze([
   Object.freeze({ key: "all", label: "all", selection: Object.freeze({ kind: "all" }) }),
   Object.freeze({ key: "subject:transform", label: "Transform", selection: Object.freeze({ kind: "subject", subject: "transform" }) }),
-  Object.freeze({ key: "subject:livemap", label: "LiveMap", selection: Object.freeze({ kind: "subject", subject: "livemap" }) }),
-  Object.freeze({ key: "subject:reflect", label: "Reflect", selection: Object.freeze({ kind: "subject", subject: "reflect" }) }),
   Object.freeze({ key: "subject:livetree", label: "LiveTree", selection: Object.freeze({ kind: "subject", subject: "livetree" }) }),
+  Object.freeze({ key: "subject:livemap", label: "LiveMap", selection: Object.freeze({ kind: "subject", subject: "livemap" }) }),
   Object.freeze({ key: "subject:livehost", label: "LiveHost", selection: Object.freeze({ kind: "subject", subject: "livehost" }) }),
+  Object.freeze({ key: "subject:reflect", label: "Reflect", selection: Object.freeze({ kind: "subject", subject: "reflect" }) }),
   Object.freeze({ key: "collection:unit", label: "Unit", selection: Object.freeze({ kind: "collection", collection: "unit" }) }),
   Object.freeze({ key: "collection:dev", label: "Dev", selection: Object.freeze({ kind: "collection", collection: "dev" }) }),
 ]);
 
 function compare(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
+}
+
+const VISITOR_CATEGORY_ORDER = Object.freeze([
+  "transform",
+  "livetree",
+  "livemap",
+  "livehost",
+  "library",
+  "unit",
+] as const);
+
+function visitor_category(value: string): string {
+  return value.startsWith("library::") ? "library" : value.split("/", 1)[0] ?? value;
+}
+
+export function compare_hosted_test_visitor_order(left: string, right: string): number {
+  const leftRank = VISITOR_CATEGORY_ORDER.indexOf(visitor_category(left) as typeof VISITOR_CATEGORY_ORDER[number]);
+  const rightRank = VISITOR_CATEGORY_ORDER.indexOf(visitor_category(right) as typeof VISITOR_CATEGORY_ORDER[number]);
+  const normalizedLeftRank = leftRank < 0 ? VISITOR_CATEGORY_ORDER.length : leftRank;
+  const normalizedRightRank = rightRank < 0 ? VISITOR_CATEGORY_ORDER.length : rightRank;
+  return normalizedLeftRank - normalizedRightRank || compare(left, right);
 }
 
 /** User-visible projection only. Identities and report strings remain untouched. */
@@ -99,7 +120,7 @@ export function hosted_test_panel_selected_ids(
   return Object.freeze([...new Set([
     ...selected.map((descriptor) => descriptor.id),
     ...external.map((entry) => entry.id),
-  ])].sort(compare));
+  ])].sort(compare_hosted_test_visitor_order));
 }
 
 export function hosted_test_panel_primary_choices(
@@ -129,7 +150,8 @@ export function hosted_test_panel_suite_choices(
   const scopedExternalTargets = primarySelection === undefined
     ? externalTargets
     : externalTargets.filter((target) => external_matches(target, primarySelection));
-  const suites = [...new Set(scopedDescriptors.map((descriptor) => descriptor.suite))].sort(compare);
+  const suites = [...new Set(scopedDescriptors.map((descriptor) => descriptor.suite))]
+    .sort(compare_hosted_test_visitor_order);
   const canonical = suites.map((suite) => {
     const selection = Object.freeze({ kind: "suite" as const, suite });
     const count = hosted_test_panel_selection_case_count(descriptors, selection);
@@ -146,7 +168,11 @@ export function hosted_test_panel_suite_choices(
     selection: Object.freeze({ kind: "suite" as const, suite: target.id }),
     count: target.executableChecks,
   }));
-  return Object.freeze([...canonical, ...external]);
+  return Object.freeze([...canonical, ...external].sort((left, right) =>
+    compare_hosted_test_visitor_order(
+      left.selection.kind === "suite" ? left.selection.suite : left.key,
+      right.selection.kind === "suite" ? right.selection.suite : right.key,
+    )));
 }
 
 export function hosted_test_panel_test_choices(

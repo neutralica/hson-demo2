@@ -35,7 +35,7 @@ expect_stage5b(
     && !worker.executor.capabilities.provides.includes("synthetic-dom"),
   "only Node advertises the installed synthetic-DOM capability",
 );
-expect_stage5b(domDescriptors.length === 953, "all 953 existing synthetic-DOM cases are registered");
+expect_stage5b(domDescriptors.length === 957, "all 957 existing synthetic-DOM cases are registered");
 expect_stage5b(new Set(domDescriptors.map((descriptor) => descriptor.suite)).size === 78, "all 78 original DOM suites are registered");
 expect_stage5b(
   domDescriptors.filter((descriptor) => descriptor.subject === "transform").length === 362

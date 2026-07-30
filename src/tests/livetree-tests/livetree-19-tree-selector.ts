@@ -2,6 +2,8 @@ import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { flush_dom } from "../inspector/inspector.helpers";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { get_hson_css_text, get_hson_style_rule } from "./livetree-03";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 export function livetree_tree_selector_surface(): TestSuite {
   const SUITE = "livetree-18/treeselector-surface";
@@ -486,7 +488,7 @@ export function livetree_tree_selector_surface(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "css pseudos: attr() content browser readback is accepted",
+        name: "css pseudos: attr() content generates exact composed-selector CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-attr-content-browser-readback",
@@ -508,22 +510,25 @@ export function livetree_tree_selector_surface(): TestSuite {
 
           await flush_dom();
 
-          const el = target.dom.el() as HTMLElement;
-          const before = getComputedStyle(el, "::before");
+          const quid = target.dom.must.el().getAttribute("hson:quid") ?? "";
+          const selector = `${hson_quid_selector(quid)}::before`;
+          const renderedRule = get_hson_css_text()
+            .split("\n\n")
+            .find((block) => block.startsWith(`${selector}{`));
 
           (tree as any).__result = {
-            content: before.content,
+            selector,
+            managedContent: target.css.selector("&::before").get.property("content"),
+            renderedRule,
           };
         },
 
         assert(tree, t) {
           const r = (tree as any).__result;
-
-          const accepted =
-            r.content === "attr(data-label)"
-            || r.content === `"HELLO"`;
-
-          t.eq("browser exposes attr() pseudo content in an accepted form", accepted, true);
+          const rule = get_hson_style_rule(r.selector);
+          t.ok("exact composed ::before selector exists in CSSOM", !!rule);
+          t.eq("selector getter preserves raw attr() content", r.managedContent, "attr(data-label)");
+          t.eq("rendered source preserves exact attr() content", r.renderedRule, `${r.selector}{content:attr(data-label);}`);
         },
       },
     ];
