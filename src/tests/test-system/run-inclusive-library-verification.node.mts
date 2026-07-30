@@ -20,7 +20,7 @@ const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
 assert.equal(registry.catalog.tests.length, 2104);
 assert.equal(availability.targets.length, 38);
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 731);
+assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 732);
 
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
