@@ -60,14 +60,14 @@ try {
     const host = root.create.div();
     const first = hsonLiveTree.create.div();
     const duplicate = hsonLiveTree.create.div();
-    const original = duplicate.node.$_meta?.["data-_quid"];
-    duplicate.node.$_meta = { ...duplicate.node.$_meta, "data-_quid": first.quid };
+    const original = duplicate.node.$_meta?.quid;
+    duplicate.node.$_meta = { ...duplicate.node.$_meta, "quid": first.quid };
     let error: unknown;
     try { _append_livetree_branches_atomic(host, [first, duplicate]); } catch (caught) { error = caught; }
     expect(error instanceof LiveTreeBatchError && error.code === LIVETREE_BATCH_VALIDATION_ERROR_CODE, "duplicate QUID receives stable batch validation error");
     expect(host.content.count() === 0, "duplicate QUID leaves no partial graph attachment");
-    if (original === undefined) delete duplicate.node.$_meta?.["data-_quid"];
-    else duplicate.node.$_meta = { ...duplicate.node.$_meta, "data-_quid": original };
+    if (original === undefined) delete duplicate.node.$_meta?.quid;
+    else duplicate.node.$_meta = { ...duplicate.node.$_meta, "quid": original };
     first.remove();
     duplicate.remove();
   }

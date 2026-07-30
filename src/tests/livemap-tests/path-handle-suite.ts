@@ -153,7 +153,7 @@ export function livemap_path_handle_suite(): TestSuite {
           const proxy = map.proxy() as any;
           void proxy.nested.$_;
 
-          return JSON.stringify(map.root()).includes("data-_quid");
+          return JSON.stringify(map.root()).includes('"quid"');
         },
         expected: false,
       }),

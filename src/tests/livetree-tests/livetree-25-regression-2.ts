@@ -175,8 +175,8 @@ export function livetree_regression_2(): TestSuite {
         const sectionQuid = "0000000000000001";
         const childQuid = "0000000000000002";
         const imported = hsonLiveTree.fromTrustedHtml(`
-          <section id="persisted" data-_quid="${sectionQuid}">
-            <span id="persisted-child" data-_quid="${childQuid}">child</span>
+          <section id="persisted" hson:quid="${sectionQuid}">
+            <span id="persisted-child" hson:quid="${childQuid}">child</span>
           </section>
         `);
 
@@ -221,8 +221,8 @@ export function livetree_regression_2(): TestSuite {
         try {
           imported = hsonLiveTree.fromTrustedHtml(`
       <main id="duplicate-root">
-        <section id="first" data-_quid="${duplicateQuid}"></section>
-        <section id="second" data-_quid="${duplicateQuid}"></section>
+        <section id="first" hson:quid="${duplicateQuid}"></section>
+        <section id="second" hson:quid="${duplicateQuid}"></section>
       </main>
     `);
 
@@ -260,13 +260,13 @@ export function livetree_regression_2(): TestSuite {
       act(tree) {
         const duplicateQuid = "0000000000000001";
         const first = hsonLiveTree.fromTrustedHtml(
-          `<section id="owner" data-_quid="${duplicateQuid}"></section>`,
+          `<section id="owner" hson:quid="${duplicateQuid}"></section>`,
         );
         let message = "";
 
         try {
           const second = hsonLiveTree.fromTrustedHtml(
-            `<section id="contender" data-_quid="${duplicateQuid}"></section>`,
+            `<section id="contender" hson:quid="${duplicateQuid}"></section>`,
           );
           second.removeSelf();
         } catch (error) {
@@ -423,8 +423,8 @@ export function livetree_regression_2(): TestSuite {
         const rootQuid = "0000000000000001";
         const childQuid = "0000000000000002";
         const markup = `
-          <section id="owner" data-_quid="${rootQuid}">
-            <span id="owner-child" data-_quid="${childQuid}">child</span>
+          <section id="owner" hson:quid="${rootQuid}">
+            <span id="owner-child" hson:quid="${childQuid}">child</span>
           </section>
         `;
 
@@ -480,8 +480,8 @@ export function livetree_regression_2(): TestSuite {
 
         try {
           imported = hsonLiveTree.fromTrustedHtml(`
-            <section id="duplicate-owner" data-_quid="${duplicateQuid}">
-              <span id="duplicate-child" data-_quid="${duplicateQuid}">child</span>
+            <section id="duplicate-owner" hson:quid="${duplicateQuid}">
+              <span id="duplicate-child" hson:quid="${duplicateQuid}">child</span>
             </section>
           `);
 
@@ -529,14 +529,14 @@ export function livetree_quid_level_2(): TestSuite {
         const html = tree.dom.must.el().outerHTML;
 
         (tree as any).__result = {
-          includesDataQuid: html.includes("data-_quid"),
+          includesDataQuid: html.includes("hson:quid"),
           includesRootQuid: html.includes(rootQuid),
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
-        t.eq("outerHTML includes data-_quid by default", r.includesDataQuid, true);
+        t.eq("outerHTML includes hson:quid by default", r.includesDataQuid, true);
         t.eq("outerHTML includes the resolved root quid", r.includesRootQuid, true);
       },
     },
@@ -661,7 +661,7 @@ export function livetree_quid_level_2(): TestSuite {
           includesRootQuid: html.includes(rootQuid),
           includesPanelQuid: html.includes(panel.quid),
           includesSiblingQuid: html.includes(sibling.quid),
-          quidCount: html.match(/data-_quid=/g)?.length ?? 0,
+          quidCount: html.match(/hson:quid=/g)?.length ?? 0,
         };
       },
 
@@ -699,8 +699,8 @@ export function livetree_quid_level_2(): TestSuite {
           includesRootQuid: html.includes(rootQuid),
           includesPanelQuid: html.includes(panelQuid),
           includesSiblingQuid: html.includes(siblingQuid),
-          siblingHasQuid: /<aside\b[^>]*\bdata-_quid=/.test(html),
-          quidCount: html.match(/data-_quid=/g)?.length ?? 0,
+          siblingHasQuid: /<aside\b[^>]*\bhson:quid=/.test(html),
+          quidCount: html.match(/hson:quid=/g)?.length ?? 0,
         };
       },
 
@@ -709,7 +709,7 @@ export function livetree_quid_level_2(): TestSuite {
         t.eq("outerHTML includes resolved root quid", r.includesRootQuid, true);
         t.eq("outerHTML includes resolved descendant quid", r.includesPanelQuid, true);
         t.eq("outerHTML includes materialized sibling quid", r.includesSiblingQuid, true);
-        t.eq("outerHTML marks mounted sibling with data-_quid", r.siblingHasQuid, true);
+        t.eq("outerHTML marks mounted sibling with hson:quid", r.siblingHasQuid, true);
         t.eq("mounted root, descendant, and sibling quids serialize", r.quidCount, 3);
       },
     },
@@ -743,7 +743,7 @@ export function livetree_quid_level_2(): TestSuite {
           includesPanelQuid: secondHtml.includes(panel.quid),
           includesAccentQuid: secondHtml.includes(accent.quid),
           includesSiblingQuid: secondHtml.includes(sibling.quid),
-          quidCount: secondHtml.match(/data-_quid=/g)?.length ?? 0,
+          quidCount: secondHtml.match(/hson:quid=/g)?.length ?? 0,
         };
       },
 

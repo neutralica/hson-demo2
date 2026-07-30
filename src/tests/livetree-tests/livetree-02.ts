@@ -5,6 +5,7 @@ import { make_livetree_suite } from "./make-livetree-suite";
 import type { HsonNode } from "hson-live/types";
 import { tick } from "./livetree-03";
 import type {  DatasetValue } from "../../../../hson-live/dist/api/livetree/managers/data-manager";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 export function legacy_suites_3(): readonly TestSuite[] {
   return [
@@ -475,7 +476,7 @@ export function suite_identity_stability(): TestSuite {
           const graftedElement = first.dom.el();
           const unexpectedRuntimeMarkup = graftedElement
             ?.getAttributeNames()
-            .filter((name) => name !== "id" && name !== "data-_quid") ?? [];
+            .filter((name) => name !== "id" && name !== "hson:quid") ?? [];
           t.eq(
             "graft adds no runtime ownership markup",
             unexpectedRuntimeMarkup.length,
@@ -812,7 +813,7 @@ function suite_css_more(): TestSuite {
   };
 
   const find_rule_slice = (cssText: string, quid: string): string => {
-    const start = cssText.indexOf(`[data-_quid="${quid}"]`);
+    const start = cssText.indexOf(hson_quid_selector(quid));
     return start >= 0 ? cssText.slice(start, start + 400) : "";
   };
 
@@ -841,21 +842,21 @@ function suite_css_more(): TestSuite {
 
         t.ok("box DOM exists", !!el);
 
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         t.ok("box has quid", quid.length > 0);
 
         const cssText = css_snapshot(tree);
         const rule = find_rule_slice(cssText, quid);
 
         t.ok("rule exists for box quid", rule.length > 0);
-        t.ok("rule contains selector", rule.includes(`[data-_quid="${quid}"]`));
+        t.ok("rule contains selector", rule.includes(hson_quid_selector(quid)));
         t.ok("rule contains background-color red", rule.includes("background-color: red"));
       },
 
       preview(tree) {
         const box = tree.find.byId("box");
         const el = box?.dom.el?.();
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         const cssText = css_snapshot(tree);
         return find_rule_slice(cssText, quid) || "<no scoped rule>";
       },
@@ -891,13 +892,13 @@ function suite_css_more(): TestSuite {
 
         for (let i = 0; i < arr.length; i += 1) {
           const el = arr[i]?.dom.el();
-          const quid = el?.getAttribute("data-_quid") ?? "";
+          const quid = el?.getAttribute("hson:quid") ?? "";
 
           t.ok(`.x[${i}] has quid`, quid.length > 0);
 
           const rule = find_rule_slice(cssText, quid);
           t.ok(`rule exists for quid ${quid}`, rule.length > 0);
-          t.ok(`rule contains selector for quid ${quid}`, rule.includes(`[data-_quid="${quid}"]`));
+          t.ok(`rule contains selector for quid ${quid}`, rule.includes(hson_quid_selector(quid)));
           t.ok(`rule contains color red for quid ${quid}`, rule.includes("color: red"));
         }
       },
@@ -932,7 +933,7 @@ function suite_css_more(): TestSuite {
 
         t.ok("box DOM exists", !!el);
 
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         t.ok("box has quid", quid.length > 0);
 
         const cssText = css_snapshot(tree);
@@ -945,7 +946,7 @@ function suite_css_more(): TestSuite {
       preview(tree) {
         const box = tree.find.byId("box");
         const el = box?.dom.el?.();
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         const cssText = css_snapshot(tree);
         return find_rule_slice(cssText, quid) || "<no scoped rule>";
       },
@@ -1132,7 +1133,7 @@ function suite_css_value_and_selection(): TestSuite {
   };
 
   const rule_for_quid = (cssText: string, quid: string): string => {
-    const start = cssText.indexOf(`[data-_quid="${quid}"]`);
+    const start = cssText.indexOf(hson_quid_selector(quid));
     return start >= 0 ? cssText.slice(start, start + 400) : "";
   };
 
@@ -1161,7 +1162,7 @@ function suite_css_value_and_selection(): TestSuite {
 
         t.ok("box DOM exists", !!el);
 
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         t.ok("box has quid", quid.length > 0);
 
         const cssText = snapshot_from(tree, "box");
@@ -1174,7 +1175,7 @@ function suite_css_value_and_selection(): TestSuite {
       preview(tree) {
         const box = tree.find.byId("box");
         const el = box?.dom.el?.();
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         const cssText = snapshot_from(tree, "box");
         return rule_for_quid(cssText, quid) || "<no scoped rule>";
       },
@@ -1212,13 +1213,13 @@ function suite_css_value_and_selection(): TestSuite {
 
         for (let i = 0; i < arr.length; i += 1) {
           const el = arr[i]?.dom.el();
-          const quid = el?.getAttribute("data-_quid") ?? "";
+          const quid = el?.getAttribute("hson:quid") ?? "";
 
           t.ok(`.x[${i}] has quid`, quid.length > 0);
 
           const rule = rule_for_quid(cssText, quid);
           t.ok(`rule exists for quid ${quid}`, rule.length > 0);
-          t.ok(`rule contains selector for quid ${quid}`, rule.includes(`[data-_quid="${quid}"]`));
+          t.ok(`rule contains selector for quid ${quid}`, rule.includes(hson_quid_selector(quid)));
           t.ok(`rule contains color red for quid ${quid}`, rule.includes("color: red"));
         }
       },
@@ -1262,11 +1263,11 @@ function suite_css_value_and_selection(): TestSuite {
         const flat = cssText.replace(/\s+/g, " ");
 
         const quids = arr
-          .map((n) => n.dom.el()?.getAttribute("data-_quid") ?? "")
+          .map((n) => n.dom.el()?.getAttribute("hson:quid") ?? "")
           .filter(Boolean);
 
         for (const quid of quids) {
-          const selector = `[data-_quid="${quid}"]`;
+          const selector = hson_quid_selector(quid);
           const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const hits = flat.match(
             new RegExp(`${escaped}\\s*\\{`, "g"),

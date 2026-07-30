@@ -33,7 +33,7 @@ export function livemap_document_foundation_suite(): TestSuite {
             assertRows: [
               equal_row("trusted element mode", map.mode, "element"),
               equal_row("trusted element tag", button?.$_tag, "button"),
-              equal_row("trusted element remains unquidded", button?.$_meta?.["data-_quid"], undefined),
+              equal_row("trusted element remains unquidded", button?.$_meta?.quid, undefined),
               equal_row("trusted element begins at revision zero", map.rev, 0),
               equal_row("trusted element capture begins at revision zero", map.capture().rev, 0),
               equal_row("document facade omits projected set", "set" in map, false),
@@ -51,7 +51,7 @@ export function livemap_document_foundation_suite(): TestSuite {
             assertRows: [
               equal_row("trusted fragment mode", map.mode, "fragment"),
               equal_row("trusted fragment ordered tags", content.map((item) => is_node(item) ? item.$_tag : item), ["div", "div"]),
-              equal_row("trusted repeated elements remain unquidded", content.map((item) => is_node(item) ? item.$_meta?.["data-_quid"] : undefined), [undefined, undefined]),
+              equal_row("trusted repeated elements remain unquidded", content.map((item) => is_node(item) ? item.$_meta?.quid : undefined), [undefined, undefined]),
               equal_row("trusted fragment begins at revision zero", map.rev, 0),
             ],
           };
@@ -73,7 +73,7 @@ export function livemap_document_foundation_suite(): TestSuite {
               equal_row("untrusted retains safe attr", untrustedButton?.$_attrs?.["data-safe"], "yes"),
               equal_row("trusted construction begins at revision zero", trusted.rev, 0),
               equal_row("untrusted construction begins at revision zero", untrusted.rev, 0),
-              equal_row("untrusted construction does not mint QUID", untrustedButton?.$_meta?.["data-_quid"], undefined),
+              equal_row("untrusted construction does not mint QUID", untrustedButton?.$_meta?.quid, undefined),
             ],
           };
         },

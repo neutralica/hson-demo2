@@ -13,6 +13,7 @@ import {
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
+import type { HsonNode } from "hson-live/types";
 
 function containers_are_canonical(nodes: readonly ReturnType<typeof _CREATE_NODE>[]): boolean {
   return nodes.every((node) =>
@@ -90,7 +91,7 @@ function persisted_quid_case(suite: string): LiveTreeCaseSpec {
     act() {
       const node = _CREATE_NODE({ $_tag: "div" });
       const quid = _ensure_livetree_quid(node);
-      const materialized = node.$_meta?.["data-_quid"] === quid;
+      const materialized = node.$_meta?.quid === quid;
       _destroy_subtree_quids(node);
       exact = materialized
         && !Object.hasOwn(node, "$_meta")
@@ -160,7 +161,7 @@ function serialization_case(suite: string): LiveTreeCaseSpec {
         && !hsonText.includes("$_meta")
         && !jsonText.includes("$_attrs")
         && !jsonText.includes("$_meta")
-        && !htmlText.includes("data-_")
+        && !htmlText.includes("hson:")
         && JSON.stringify(roundTrip) === JSON.stringify(input);
     },
     assert(_tree, t) {
@@ -190,7 +191,9 @@ function invariants_case(suite: string): LiveTreeCaseSpec {
         new NodeInstance(),
         Object.assign(_CREATE_NODE({ $_tag: "div" }), { $_attrs: [] }),
         Object.assign(_CREATE_NODE({ $_tag: "div" }), { $_meta: null }),
-        _CREATE_NODE({ $_tag: "div", $_meta: { illegal: "x" } }),
+        _CREATE_NODE({ $_tag: "div", $_meta: { illegal: "x" } } as unknown as HsonNode),
+        _CREATE_NODE({ $_tag: "div", $_meta: { "data-_quid": "0000000000000001" } } as unknown as HsonNode),
+        _CREATE_NODE({ $_tag: "_hson_ii", $_meta: { "data-_index": "0" } } as unknown as HsonNode),
         _CREATE_NODE({ $_tag: "_hson_elem", $_attrs: { id: "bad" } }),
         Object.assign(_CREATE_NODE({ $_tag: "div" }), { $_meta: { "data-_bad": 1 } }),
       ];
@@ -223,7 +226,7 @@ function clone_case(suite: string): LiveTreeCaseSpec {
       const source = hson.liveTree.fromNode(sourceNode);
       const clone = source.cloneBranch();
       attrsCanonical = !Object.hasOwn(clone.node, "$_attrs");
-      metaCanonical = Object.keys(clone.node.$_meta ?? {}).join(",") === "data-_quid";
+      metaCanonical = Object.keys(clone.node.$_meta ?? {}).join(",") === "quid";
       source.remove();
       clone.remove();
     },
@@ -236,6 +239,7 @@ function clone_case(suite: string): LiveTreeCaseSpec {
 
 function parser_paths_case(suite: string): LiveTreeCaseSpec {
   let canonical = false;
+  let boundaries = false;
   return {
     suite,
     name: "JSON HTML and SVG parser paths produce canonical storage",
@@ -243,14 +247,43 @@ function parser_paths_case(suite: string): LiveTreeCaseSpec {
     html: `<main></main>`,
     act() {
       const jsonNode = hson.fromJson({ plain: "x", items: [1, 2] }).toNode();
-      const htmlNode = hson.fromTrustedHtml(`<section><span>x</span></section>`).toNode();
-      const svgNode = hson.fromTrustedHtml(`<svg><path></path></svg>`).toNode();
-      const nodes = [jsonNode, htmlNode, svgNode]
+      const htmlNode = hson.fromTrustedHtml(
+        `<section hson:quid="0000000000000001" data-_quid="user-quid" data-_index="user-index">x</section>`,
+      ).toNode();
+      const arrayNode = hson.fromTrustedHtml(
+        `<_hson_arr><_hson_ii hson:index="0"><p>A</p></_hson_ii></_hson_arr>`,
+      ).toNode();
+      const svgNode = hson.fromTrustedHtml(
+        `<svg xmlns="http://www.w3.org/2000/svg" xmlns:hson="urn:hson-live" hson:quid="0000000000000002"><g></g></svg>`,
+      ).toNode();
+      const nodes = [jsonNode, htmlNode, arrayNode, svgNode]
         .flatMap((node) => _collect_subtree_nodes(node, "pre"));
       canonical = containers_are_canonical(nodes);
+      const section = nodes.find((node) => node.$_tag === "section");
+      const indexedItem = nodes.find((node) => node.$_tag === "_hson_ii");
+      const svg = nodes.find((node) => node.$_tag === "svg");
+      const serializedHtml = hson.fromNode(htmlNode).toHtml().serialize();
+      const serializedSvg = hson.fromNode(svgNode).toHtml().serialize();
+      let unknownMetadataRejected = false;
+      try {
+        hson.fromTrustedHtml(`<div hson:unknown="x">x</div>`).toNode();
+      } catch {
+        unknownMetadataRejected = true;
+      }
+      boundaries = section?.$_meta?.quid === "0000000000000001"
+        && section.$_attrs?.["data-_quid"] === "user-quid"
+        && section.$_attrs?.["data-_index"] === "user-index"
+        && indexedItem?.$_meta?.index === "0"
+        && svg?.$_meta?.quid === "0000000000000002"
+        && serializedHtml.includes(`data-_index="user-index"`)
+        && serializedHtml.includes(`data-_quid="user-quid"`)
+        && serializedHtml.includes(`hson:quid="0000000000000001"`)
+        && serializedSvg.includes(`hson:quid="0000000000000002"`)
+        && unknownMetadataRejected;
     },
     assert(_tree, t) {
       t.eq("direct transform constructors omit empty attrs and meta", canonical, true);
+      t.eq("graph metadata, markup metadata, and ordinary data attributes remain distinct", boundaries, true);
     },
   };
 }

@@ -314,7 +314,7 @@ export function make_hosted_test_case_list(
 
   async function run_case_action(element: Element, action: "view" | "copy", caseKey: string): Promise<void> {
     const actionGeneration = generation;
-    const quid = element.getAttribute("data-_quid");
+    const quid = element.getAttribute("hson:quid");
     const button = quid === null ? undefined : root.find.byQuid(quid);
     button?.flags.set("disabled");
     button?.attrs.set("aria-busy", "true");

@@ -14,7 +14,7 @@ export type PointPanelRig = Readonly<{
         rows: ReadonlyArray<{
             ix: LiveTree;        // index
             tag: LiveTree;       // tag#id.class
-            // quid: LiveTree;      // data-_quid
+            // quid: LiveTree;      // hson:quid
         }>;
     };
     dispose: () => void;

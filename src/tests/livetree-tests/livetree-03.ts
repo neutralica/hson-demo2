@@ -2,6 +2,7 @@ import { CssManager } from "hson-live/livetree";
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 export const tick = async (): Promise<void> => {
     await new Promise<void>((r) => setTimeout(() => r(), 0));
@@ -16,7 +17,7 @@ export function get_hson_css_rules(): string[] {
 }
 
 export function get_rule_for_quid(quid: string): string | undefined {
-    const sel = `[data-_quid="${quid}"]`;
+    const sel = hson_quid_selector(quid);
     return get_hson_css_rules().find((r) => r.includes(sel));
 }
 
@@ -32,6 +33,14 @@ function get_hson_css_text(): string {
 }
 
 const gcss = CssManager.invoke();
+
+// jsdom parses and exposes `[hson\:quid="…"]` CSS rules, but does not apply
+// them through getComputedStyle. Chromium application behavior is covered by
+// tests/browser/quid-selector.spec.ts; these suites own CSSOM and lifecycle state.
+function managed_value(tree: Parameters<LiveTreeCaseSpec["assert"]>[0], id: string, prop: string): string | undefined {
+    const quid = tree.find.must.byId(id).dom.must.el().getAttribute("hson:quid") ?? "";
+    return gcss.getForQuid(quid, prop);
+}
 
 export function suite_schedules_events(): TestSuite {
     const SUITE = "livetree/scheduling-and-events";
@@ -58,10 +67,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
-
-                t.eq("final opacity wins", cs.opacity, "0.9");
+                t.eq("final opacity wins in managed state", managed_value(tree, "box", "opacity"), "0.9");
             },
         },
         {
@@ -85,12 +91,9 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
-
-                t.eq("opacity", cs.opacity, "0.5");
-                t.eq("position", cs.position, "fixed");
-                t.eq("top", cs.top, "10px");
+                t.eq("opacity is merged", managed_value(tree, "box", "opacity"), "0.5");
+                t.eq("position is merged", managed_value(tree, "box", "position"), "fixed");
+                t.eq("top is merged", managed_value(tree, "box", "top"), "10px");
             },
         },
         {
@@ -119,14 +122,8 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const a = tree.find.must.byId("a").dom.el() as HTMLElement;
-                const b = tree.find.must.byId("b").dom.el() as HTMLElement;
-
-                const csA = getComputedStyle(a);
-                const csB = getComputedStyle(b);
-
-                t.eq("a opacity", csA.opacity, "0.3");
-                t.eq("b opacity", csB.opacity, "0.7");
+                t.eq("a opacity is flushed", managed_value(tree, "a", "opacity"), "0.3");
+                t.eq("b opacity is flushed", managed_value(tree, "b", "opacity"), "0.7");
             },
         },
         {
@@ -170,10 +167,12 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
-
-                t.eq("opacity applied", cs.opacity, "0.5");
+                const box = tree.find.must.byId("box");
+                const quid = box.dom.must.el().getAttribute("hson:quid") ?? "";
+                const rule = get_rule_for_quid(quid) ?? "";
+                t.eq("opacity reaches managed state", gcss.getForQuid(quid, "opacity"), "0.5");
+                t.ok("flush inserts the exact QUID rule", rule.includes(hson_quid_selector(quid)));
+                t.ok("flush inserts the opacity declaration", rule.includes("opacity: 0.5;"));
             },
         },
         {
@@ -201,10 +200,7 @@ export function suite_schedules_events(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const cs = getComputedStyle(el);
-
-                t.eq("final opacity wins", cs.opacity, "0.8");
+                t.eq("final interleaved opacity wins in managed state", managed_value(tree, "box", "opacity"), "0.8");
             },
         },
 
@@ -243,10 +239,9 @@ export function css_manager_lifecycle(): TestSuite {
             },
 
             assert(tree, t) {
-                const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cssText = get_hson_css_text();
 
-                t.eq("computed opacity", getComputedStyle(el).opacity, "0.8");
+                t.eq("managed opacity", managed_value(tree, "box", "opacity"), "0.8");
                 t.ok("css contains final opacity", cssText.includes("opacity: 0.8;"));
                 t.ok("css does not contain old opacity", !cssText.includes("opacity: 0.2;"));
                 t.ok("css still contains untouched prop", cssText.includes("position: fixed;"));
@@ -279,14 +274,14 @@ export function css_manager_lifecycle(): TestSuite {
             assert(tree, t) {
                 const el = tree.find.must.byId("box").dom.el() as HTMLElement;
                 const cs = getComputedStyle(el);
-                const quid = el.getAttribute("data-_quid") ?? "";
+                const quid = el.getAttribute("hson:quid") ?? "";
                 const cssText = get_hson_css_text();
 
                 t.eq("opacity reset", cs.opacity, "1");
                 t.eq("position reset", cs.position, "static");
                 t.eq("background reset", cs.backgroundColor, "rgba(0, 0, 0, 0)");
 
-                t.ok("no surviving rule for quid", !cssText.includes(`[data-_quid="${quid}"]`));
+                t.ok("no surviving rule for quid", !cssText.includes(hson_quid_selector(quid)));
             },
         },
         {
@@ -311,7 +306,7 @@ export function css_manager_lifecycle(): TestSuite {
 
             assert(tree, t) {
                 const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const quid = el.getAttribute("data-_quid") ?? "";
+                const quid = el.getAttribute("hson:quid") ?? "";
                 const cssText = get_hson_css_text();
 
                 const ruleBlock = get_rule_for_quid(quid) ?? "";
@@ -352,14 +347,14 @@ export function css_manager_lifecycle(): TestSuite {
                 const bEl = tree.find.must.byId("b").dom.el() as HTMLElement;
                 const cssText = get_hson_css_text();
 
-                const aQuid = aEl.getAttribute("data-_quid") ?? "";
-                const bQuid = bEl.getAttribute("data-_quid") ?? "";
+                const aQuid = aEl.getAttribute("hson:quid") ?? "";
+                const bQuid = bEl.getAttribute("hson:quid") ?? "";
 
-                t.eq("a reset", getComputedStyle(aEl).opacity, "1");
-                t.eq("b survives", getComputedStyle(bEl).opacity, "0.8");
+                t.eq("a managed declaration is removed", gcss.getForQuid(aQuid, "opacity"), undefined);
+                t.eq("b managed declaration survives", gcss.getForQuid(bQuid, "opacity"), "0.8");
 
-                t.ok("a rule removed", !cssText.includes(`[data-_quid="${aQuid}"]`));
-                t.ok("b rule remains", cssText.includes(`[data-_quid="${bQuid}"]`));
+                t.ok("a rule removed", !cssText.includes(hson_quid_selector(aQuid)));
+                t.ok("b rule remains", cssText.includes(hson_quid_selector(bQuid)));
             },
         },
         {
@@ -384,7 +379,7 @@ export function css_manager_lifecycle(): TestSuite {
 
             assert(tree, t) {
                 const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const quid = el.getAttribute("data-_quid") ?? "";
+                const quid = el.getAttribute("hson:quid") ?? "";
 
                 t.ok("box has quid", quid.length > 0);
 
@@ -420,19 +415,16 @@ export function css_manager_lifecycle(): TestSuite {
 
             assert(tree, t) {
                 const el = tree.find.must.byId("box").dom.el() as HTMLElement;
-                const quid = el.getAttribute("data-_quid") ?? "";
-                const cs = getComputedStyle(el);
-
+                const quid = el.getAttribute("hson:quid") ?? "";
                 t.ok("box has quid", quid.length > 0);
 
                 const ruleBlock = get_rule_for_quid(quid) ?? "";
 
                 t.ok("rule block exists", !!ruleBlock);
 
-                // computed style = behavior
-                t.eq("opacity removed", cs.opacity, "1");
-                t.eq("position remains", cs.position, "fixed");
-                t.eq("top remains", cs.top, "24px");
+                t.eq("opacity removed from managed state", gcss.getForQuid(quid, "opacity"), undefined);
+                t.eq("position remains in managed state", gcss.getForQuid(quid, "position"), "fixed");
+                t.eq("top remains in managed state", gcss.getForQuid(quid, "top"), "24px");
 
                 // rule block = serialization
                 t.ok("css omits removed opacity", !ruleBlock.includes("opacity: 0.5;"));
@@ -463,7 +455,7 @@ export function node_lifecycle(): TestSuite {
                 const box = tree.find.must.byId("box");
                 const el = box.dom.el() as HTMLElement;
 
-                (tree as any).__removedQuid = el.getAttribute("data-_quid") ?? "";
+                (tree as any).__removedQuid = el.getAttribute("hson:quid") ?? "";
 
                 box.css.setMany({
                     opacity: "0.5",
@@ -510,7 +502,7 @@ export function node_lifecycle(): TestSuite {
                 const b = tree.find.must.byId("b");
 
                 const aEl = a.dom.el() as HTMLElement;
-                (tree as any).__aQuid = aEl.getAttribute("data-_quid") ?? "";
+                (tree as any).__aQuid = aEl.getAttribute("hson:quid") ?? "";
 
                 a.css.setMany({ opacity: "0.2" });
                 b.css.setMany({ opacity: "0.8" });
@@ -528,14 +520,14 @@ export function node_lifecycle(): TestSuite {
                 const a = tree.find.byId("a");
                 const b = tree.find.must.byId("b");
                 const bEl = b.dom.el() as HTMLElement;
-                const bQuid = bEl.getAttribute("data-_quid") ?? "";
+                const bQuid = bEl.getAttribute("hson:quid") ?? "";
                 const bRule = get_rule_for_quid(bQuid) ?? "";
 
                 const aQuid = (tree as any).__aQuid as string;
                 const aRule = get_rule_for_quid(aQuid) ?? "";
 
                 t.eq("a removed", a, undefined);
-                t.eq("b opacity survives", getComputedStyle(bEl).opacity, "0.8");
+                t.eq("b managed opacity survives", gcss.getForQuid(bQuid, "opacity"), "0.8");
                 t.eq("a rule removed", aRule, "");
                 t.ok("b rule still exists", !!bRule);
                 t.ok("b rule contains opacity", bRule.includes("opacity: 0.8;"));
@@ -643,7 +635,7 @@ export function node_lifecycle(): TestSuite {
                 gcss.syncNow();
 
                 const newEl = newBox.dom.el() as HTMLElement;
-                (tree as any).__newQuid = newEl.getAttribute("data-_quid") ?? "";
+                (tree as any).__newQuid = newEl.getAttribute("hson:quid") ?? "";
             },
 
             assert(tree, t) {
@@ -677,7 +669,7 @@ export function node_lifecycle(): TestSuite {
                 const child = tree.find.must.byId("child");
                 const childEl = child.dom.el() as HTMLElement;
 
-                (tree as any).__childQuid = childEl.getAttribute("data-_quid") ?? "";
+                (tree as any).__childQuid = childEl.getAttribute("hson:quid") ?? "";
 
                 child.css.setMany({
                     opacity: "0.4",

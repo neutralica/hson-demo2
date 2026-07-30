@@ -24,7 +24,7 @@ import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types"
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 
-const DATA_QUID = "data-_quid";
+const HSON_QUID_ATTR = "hson:quid";
 
 function traversal_case(suite: string): LiveTreeCaseSpec {
   let pre = "";
@@ -76,7 +76,7 @@ function recursive_quid_case(suite: string): LiveTreeCaseSpec {
       repeated = _destroy_subtree_quids(root);
       allStrongGone = quids.every((quid) => _get_livetree_node_by_quid(quid) === undefined);
       allWeakGone = nodes.every((node) => !_has_livetree_quid(node) && _get_livetree_quid(node) === undefined);
-      allMetadataGone = nodes.every((node) => node.$_meta?.[DATA_QUID] === undefined);
+      allMetadataGone = nodes.every((node) => node.$_meta?.quid === undefined);
     },
     assert(_tree, t) {
       t.eq("all three node identities destroyed", destroyed, 3);
@@ -114,8 +114,8 @@ function mapped_quid_case(suite: string): LiveTreeCaseSpec {
       destroyed = _destroy_subtree_quids(targetNode);
       rootRegistryGone = _get_livetree_node_by_quid(targetQuid) === undefined;
       childRegistryGone = _get_livetree_node_by_quid(childQuid) === undefined;
-      rootDomScrubbed = !targetEl.hasAttribute(DATA_QUID);
-      childDomScrubbed = !childEl.hasAttribute(DATA_QUID);
+      rootDomScrubbed = !targetEl.hasAttribute(HSON_QUID_ATTR);
+      childDomScrubbed = !childEl.hasAttribute(HSON_QUID_ATTR);
       mappingsRemain = _has_livetree_element_for_node(targetNode)
         && _has_livetree_element_for_node(childNode);
     },
@@ -148,19 +148,19 @@ function weak_and_duplicate_case(suite: string): LiveTreeCaseSpec {
         && _get_livetree_node_by_quid(weakQuid) === undefined;
 
       const duplicateQuid = `lifecycle-duplicate-${crypto.randomUUID()}`;
-      const owner = _CREATE_NODE({ $_tag: "section", $_meta: { [DATA_QUID]: duplicateQuid } });
-      const duplicate = _CREATE_NODE({ $_tag: "div", $_meta: { [DATA_QUID]: duplicateQuid } });
+      const owner = _CREATE_NODE({ $_tag: "section", $_meta: { quid: duplicateQuid } });
+      const duplicate = _CREATE_NODE({ $_tag: "div", $_meta: { quid: duplicateQuid } });
       _ensure_livetree_quid(owner);
       _destroy_subtree_quids(duplicate);
       duplicateCouldNotDeleteOwner = _get_livetree_node_by_quid(duplicateQuid) === owner;
-      duplicateMetadataGone = duplicate.$_meta?.[DATA_QUID] === undefined;
+      duplicateMetadataGone = duplicate.$_meta?.quid === undefined;
       _destroy_subtree_quids(owner);
 
       const registryOwner = _CREATE_NODE({ $_tag: "article" });
       const registryQuid = _ensure_livetree_quid(registryOwner, { persist: false });
       const metadataOwner = _CREATE_NODE({ $_tag: "nav" });
       const metadataQuid = _ensure_livetree_quid(metadataOwner);
-      (registryOwner.$_meta ??= {})[DATA_QUID] = metadataQuid;
+      (registryOwner.$_meta ??= {}).quid = metadataQuid;
       _destroy_subtree_quids(registryOwner);
       divergentRegistryReleasedSafely = _get_livetree_node_by_quid(registryQuid) === undefined
         && _get_livetree_node_by_quid(metadataQuid) === metadataOwner;
@@ -209,7 +209,7 @@ function unmounted_terminal_case(suite: string): LiveTreeCaseSpec {
         && child.isDisposed && childAlias.isDisposed;
       identitiesGone = quids.every((quid) => _get_livetree_node_by_quid(quid) === undefined)
         && nodes.every((node) => _get_livetree_quid(node) === undefined);
-      metadataGone = nodes.every((node) => node.$_meta?.[DATA_QUID] === undefined);
+      metadataGone = nodes.every((node) => node.$_meta?.quid === undefined);
       _dispose_node_deep(rootNode);
       repeatedStillDisposed = nodes.every((node) => _is_livetree_node_disposed(node));
     },
@@ -275,7 +275,7 @@ function runtime_terminal_case(suite: string): LiveTreeCaseSpec {
         && _get_livetree_node_by_quid(buttonQuid) === undefined
         && _get_livetree_quid(targetNode) === undefined
         && _get_livetree_quid(buttonNode) === undefined;
-      domIdentityGone = !targetEl.hasAttribute(DATA_QUID) && !buttonEl.hasAttribute(DATA_QUID);
+      domIdentityGone = !targetEl.hasAttribute(HSON_QUID_ATTR) && !buttonEl.hasAttribute(HSON_QUID_ATTR);
       disposed = target.isDisposed && button.isDisposed;
       drainReachedFixedPoint = successfulCleanups === 1
         && reentrantCleanups === 1
@@ -413,7 +413,7 @@ function empty_regression_case(suite: string): LiveTreeCaseSpec {
       const childQuid = child.quid;
       root.empty();
       destroyed = _get_livetree_node_by_quid(childQuid) === undefined
-        && childNode.$_meta?.[DATA_QUID] === undefined
+        && childNode.$_meta?.quid === undefined
         && child.isDisposed;
       callerActive = !root.isDisposed;
       domEmpty = root.dom.must.el().childNodes.length === 0;

@@ -5,6 +5,7 @@ import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types"
 import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./make-livetree-suite";
 import { CssManager } from "hson-live/livetree";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 const gcss = CssManager.invoke();
 
@@ -158,13 +159,13 @@ export function roundtrip_projection_stability(): TestSuite {
                 async act(tree) {
                     const box = tree.find.must.byId("box");
                     const oldEl = box.dom.el() as HTMLElement;
-                    const oldQuid = oldEl.getAttribute("data-_quid") ?? "";
+                    const oldQuid = oldEl.getAttribute("hson:quid") ?? "";
 
                     const round = restore_from_current_markup(tree);
 
                     const box2 = round.find.must.byId("box");
                     const newEl = box2.dom.el() as HTMLElement;
-                    const newQuid = newEl.getAttribute("data-_quid") ?? "";
+                    const newQuid = newEl.getAttribute("hson:quid") ?? "";
 
                     (tree as any).__result = {
                         oldQuid,
@@ -402,10 +403,10 @@ export function livetree_sync_perf(): TestSuite {
             async act(tree) {
                 const box = tree.find.must.byId("box");
                 const boxEl = box.dom.el() as HTMLElement;
-                const quid = boxEl.getAttribute("data-_quid") ?? "";
+                const quid = boxEl.getAttribute("hson:quid") ?? "";
 
                 // selector guess based on your emitted CSS shape seen in devtools
-                const selector = quid ? `[data-_quid="${quid}"]` : "";
+                const selector = quid ? hson_quid_selector(quid) : "";
 
                 box.css.setMany({
                     width: "12px",
@@ -455,7 +456,7 @@ export function livetree_sync_perf(): TestSuite {
             async act(tree) {
                 const box = tree.find.must.byId("box");
                 const boxEl = box.dom.el() as HTMLElement;
-                const quid = boxEl.getAttribute("data-_quid") ?? "";
+                const quid = boxEl.getAttribute("hson:quid") ?? "";
 
                 box.css.setMany({ width: "10px" });
                 box.css.setMany({ width: "20px" });
@@ -500,8 +501,8 @@ export function livetree_sync_perf(): TestSuite {
             async act(tree) {
                 const box = tree.find.must.byId("box");
                 const boxEl = box.dom.el() as HTMLElement;
-                const quid = boxEl.getAttribute("data-_quid") ?? "";
-                const selector = quid ? `[data-_quid="${quid}"]` : "";
+                const quid = boxEl.getAttribute("hson:quid") ?? "";
+                const selector = quid ? hson_quid_selector(quid) : "";
 
                 box.css.setMany({
                     width: "44px",
@@ -546,7 +547,7 @@ export function livetree_sync_perf(): TestSuite {
             async act(tree) {
                 const box = tree.find.must.byId("box");
                 const boxEl = box.dom.el() as HTMLElement;
-                const quid = boxEl.getAttribute("data-_quid") ?? "";
+                const quid = boxEl.getAttribute("hson:quid") ?? "";
 
                 box.css.setMany({
                     __after: { content: `"A"` },
@@ -583,7 +584,7 @@ export function livetree_sync_perf(): TestSuite {
 
             async act(tree) {
                 const box = tree.find.must.byId("box");
-                const quid = (box.dom.el() as HTMLElement).getAttribute("data-_quid") ?? "";
+                const quid = (box.dom.el() as HTMLElement).getAttribute("hson:quid") ?? "";
 
                 box.css.setMany({ width: "33px", height: "11px" });
                 gcss.syncNow();
@@ -625,7 +626,7 @@ export function livetree_sync_perf(): TestSuite {
                 a.css.setMany({ width: "10px" });
                 gcss.syncNow?.();
 
-                const quidA = (a.dom.el() as HTMLElement).getAttribute("data-_quid") ?? "";
+                const quidA = (a.dom.el() as HTMLElement).getAttribute("hson:quid") ?? "";
                 a.removeSelf();
                 gcss.syncNow?.();
 
@@ -633,7 +634,7 @@ export function livetree_sync_perf(): TestSuite {
                 b.css.setMany({ width: "20px" });
                 gcss.syncNow?.();
 
-                const quidB = (b.dom.el() as HTMLElement).getAttribute("data-_quid") ?? "";
+                const quidB = (b.dom.el() as HTMLElement).getAttribute("hson:quid") ?? "";
                 const snap = CssManager.invoke().snapshot?.() ?? "";
 
                 (tree as any).__result = { quidA, quidB, snap };
@@ -716,7 +717,7 @@ export function livetree_completionist(): TestSuite {
                     gcss.syncNow?.();
 
                     const firstEl = first.dom.el() as HTMLElement;
-                    const firstQuid = firstEl.getAttribute("data-_quid") ?? "";
+                    const firstQuid = firstEl.getAttribute("hson:quid") ?? "";
 
                     first.removeSelf();
                     gcss.syncNow?.();
@@ -726,7 +727,7 @@ export function livetree_completionist(): TestSuite {
                     gcss.syncNow?.();
 
                     const secondEl = second.dom.el() as HTMLElement;
-                    const secondQuid = secondEl.getAttribute("data-_quid") ?? "";
+                    const secondQuid = secondEl.getAttribute("hson:quid") ?? "";
 
                     const cssText = CssManager.invoke().snapshot?.() ?? "";
 

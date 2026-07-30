@@ -202,7 +202,7 @@ export function livetree_recent_api(): TestSuite {
 
       async act(tree) {
         const target = tree.find.must.byId("target");
-        const quid = target.dom.must.el().getAttribute("data-_quid") ?? "";
+        const quid = target.dom.must.el().getAttribute("hson:quid") ?? "";
 
         const hit = tree.find.byQuid(quid);
 
@@ -236,7 +236,7 @@ export function livetree_recent_api(): TestSuite {
 
       async act(tree) {
         const target = tree.find.must.byId("target");
-        const quid = target.dom.must.el().getAttribute("data-_quid") ?? "";
+        const quid = target.dom.must.el().getAttribute("hson:quid") ?? "";
 
         const hit = tree.find.must.byQuid(quid);
 
@@ -272,7 +272,7 @@ export function livetree_recent_api(): TestSuite {
       async act(tree) {
         const rootA = tree.find.must.byId("rootA");
         const targetB = tree.find.must.byId("targetB");
-        const quidB = targetB.dom.must.el().getAttribute("data-_quid") ?? "";
+        const quidB = targetB.dom.must.el().getAttribute("hson:quid") ?? "";
 
         const hit = rootA.find.byQuid(quidB);
 

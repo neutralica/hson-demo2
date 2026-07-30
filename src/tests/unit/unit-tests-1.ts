@@ -1,8 +1,9 @@
 
 import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
 import { cleanup_quid, make_unit_case } from "./all-unit-tests";
-import { CssManager, pseudo_to_suffix, selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
+import { CssManager, pseudo_to_suffix } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
 import  { normalize_css_value, canon_to_css_prop, normalize_css_key, normalize_decls, render_rule } from "hson-live/diagnostics/test-exports";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 const gcss = CssManager.api();
 
@@ -260,9 +261,10 @@ export function unit_test_internals(): TestSuite {
       suite: SUITE,
       name: "selectorForQuid: basic mapping",
       run() {
-        const out = selector_for_quid("abc123");
+        const quid = "0123456789abcdfg";
+        const out = hson_quid_selector(quid);
 
-        if (!out.includes(`"abc123"`)) {
+        if (!out.includes(`"${quid}"`)) {
           throw new Error(`selector missing quid: ${out}`);
         }
 
@@ -546,35 +548,29 @@ export function unit_test_internals_2(): TestSuite {
     // ----------------------------
 
     make_unit_case(SUITE, "selector_for_quid: basic mapping", () => {
-      const out = selector_for_quid("abc123");
+      const out = hson_quid_selector("0123456789abcdfg");
 
-      if (out !== `[data-_quid="abc123"]`) {
-        throw new Error(`expected [data-_quid="abc123"], got ${out}`);
+      if (out !== `[hson\\:quid="0123456789abcdfg"]`) {
+        throw new Error(`expected canonical escaped QUID selector, got ${out}`);
       }
     }),
 
-    make_unit_case(SUITE, "selector_for_quid: preserves hyphenated quid", () => {
-      const out = selector_for_quid("abc-123-def");
-
-      if (out !== `[data-_quid="abc-123-def"]`) {
-        throw new Error(`expected hyphenated quid preserved, got ${out}`);
-      }
+    make_unit_case(SUITE, "selector_for_quid: rejects hyphenated non-QUID", () => {
+      let rejected = false;
+      try { hson_quid_selector("abc-123-def"); } catch { rejected = true; }
+      if (!rejected) throw new Error("expected hyphenated non-QUID rejection");
     }),
 
-    make_unit_case(SUITE, "selector_for_quid: preserves underscore quid", () => {
-      const out = selector_for_quid("abc_123");
-
-      if (out !== `[data-_quid="abc_123"]`) {
-        throw new Error(`expected underscore quid preserved, got ${out}`);
-      }
+    make_unit_case(SUITE, "selector_for_quid: rejects underscore non-QUID", () => {
+      let rejected = false;
+      try { hson_quid_selector("abc_123"); } catch { rejected = true; }
+      if (!rejected) throw new Error("expected underscore non-QUID rejection");
     }),
 
-    make_unit_case(SUITE, "selector_for_quid: preserves mixed-case quid", () => {
-      const out = selector_for_quid("AbC123xYz");
-
-      if (out !== `[data-_quid="AbC123xYz"]`) {
-        throw new Error(`expected mixed-case quid preserved, got ${out}`);
-      }
+    make_unit_case(SUITE, "selector_for_quid: rejects mixed-case non-QUID", () => {
+      let rejected = false;
+      try { hson_quid_selector("AbC123xYz"); } catch { rejected = true; }
+      if (!rejected) throw new Error("expected mixed-case non-QUID rejection");
     }),
   ];
 
@@ -589,7 +585,7 @@ export function unit_test_css_manager(): TestSuite {
   const cases: readonly TestCase[] = [
     make_unit_case(SUITE, "setForQuid stores a value", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q1";
+      const quid = "0000000000000001";
 
       cleanup_quid(m, quid);
 
@@ -606,7 +602,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "setForQuid overwrites existing value", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q2";
+      const quid = "0000000000000002";
 
       cleanup_quid(m, quid);
 
@@ -624,7 +620,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "setManyForQuid merges multiple values", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q3";
+      const quid = "0000000000000003";
 
       cleanup_quid(m, quid);
 
@@ -654,7 +650,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "unsetForQuid removes one property", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q4";
+      const quid = "0000000000000004";
 
       cleanup_quid(m, quid);
 
@@ -683,7 +679,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "clearQuid removes all properties for a quid", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q5";
+      const quid = "0000000000000005";
 
       cleanup_quid(m, quid);
 
@@ -705,14 +701,14 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "snapshot includes emitted rule for quid styles", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q6";
+      const quid = "0000000000000006";
 
       cleanup_quid(m, quid);
 
       m.setForQuid(quid, "color", "red");
       m.syncNow();
       const css = m.snapshot();
-      const selector = `[data-_quid="${quid}"]`;
+      const selector = hson_quid_selector(quid);
 
       // escape for regex
       const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -732,7 +728,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "setting same prop twice does not duplicate storage", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q7";
+      const quid = "0000000000000007";
 
       cleanup_quid(m, quid);
 
@@ -762,7 +758,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "selector rule stores pseudo rule under explicit rule key", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q8";
+      const quid = "0000000000000008";
       const key = `unit:${quid}:before`;
 
       cleanup_quid(m, quid);
@@ -771,11 +767,11 @@ export function unit_test_css_manager(): TestSuite {
       // CHANGED: pseudos are selector rules now; this replaces the removed
       // setPseudoForQuid storage path.
       gcss
-        .rule(key, `${selector_for_quid(quid)}::before`)
+        .rule(key, `${hson_quid_selector(quid)}::before`)
         .setProp("content", `"X"`);
       const css = gcss.get(key);
 
-      if (!css?.includes(`[data-_quid="${quid}"]::before`)) {
+      if (!css?.includes(`${hson_quid_selector(quid)}::before`)) {
         gcss.drop(key);
         cleanup_quid(m, quid);
         throw new Error(`rule missing ::before selector: ${String(css)}`);
@@ -793,7 +789,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "selector rule drop removes only one pseudo selector", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q9";
+      const quid = "0000000000000009";
       const beforeKey = `unit:${quid}:before`;
       const afterKey = `unit:${quid}:after`;
 
@@ -802,10 +798,10 @@ export function unit_test_css_manager(): TestSuite {
       gcss.drop(afterKey);
 
       gcss
-        .rule(beforeKey, `${selector_for_quid(quid)}::before`)
+        .rule(beforeKey, `${hson_quid_selector(quid)}::before`)
         .setProp("content", `"A"`);
       gcss
-        .rule(afterKey, `${selector_for_quid(quid)}::after`)
+        .rule(afterKey, `${hson_quid_selector(quid)}::after`)
         .setProp("content", `"B"`);
 
       gcss.drop(beforeKey);
@@ -819,7 +815,7 @@ export function unit_test_css_manager(): TestSuite {
         throw new Error(`expected ::before removed, css was:\n${beforeCss}`);
       }
 
-      if (!afterCss?.includes(`[data-_quid="${quid}"]::after`)) {
+      if (!afterCss?.includes(`${hson_quid_selector(quid)}::after`)) {
         gcss.drop(afterKey);
         cleanup_quid(m, quid);
         throw new Error(`expected ::after preserved, css was:\n${String(afterCss)}`);
@@ -831,7 +827,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "selector rule drops remove all pseudo selectors for one quid", () => {
       const m = CssManager.invoke();
-      const quid = "__test_css_manager_Q10";
+      const quid = "0000000000000010";
       const beforeKey = `unit:${quid}:before`;
       const afterKey = `unit:${quid}:after`;
 
@@ -840,10 +836,10 @@ export function unit_test_css_manager(): TestSuite {
       gcss.drop(afterKey);
 
       gcss
-        .rule(beforeKey, `${selector_for_quid(quid)}::before`)
+        .rule(beforeKey, `${hson_quid_selector(quid)}::before`)
         .setProp("content", `"A"`);
       gcss
-        .rule(afterKey, `${selector_for_quid(quid)}::after`)
+        .rule(afterKey, `${hson_quid_selector(quid)}::after`)
         .setProp("content", `"B"`);
 
       gcss.drop(beforeKey);

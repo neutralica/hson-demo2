@@ -236,9 +236,9 @@ JSON-derived HSON tags use an angle closer:
       </_-_-daily_x4c-imit>
       <_-_-favorite_x43-olors>
         <_hson_arr>
-          <_hson_ii data-_index="0">green</_hson_ii>
-          <_hson_ii data-_index="1">black</_hson_ii>
-          <_hson_ii data-_index="2">ivory</_hson_ii>
+          <_hson_ii hson:index="0">green</_hson_ii>
+          <_hson_ii hson:index="1">black</_hson_ii>
+          <_hson_ii hson:index="2">ivory</_hson_ii>
         </_hson_arr>
       </_-_-favorite_x43-olors>
     </_hson_obj>

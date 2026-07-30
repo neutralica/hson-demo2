@@ -1,6 +1,7 @@
 import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 export function livetree_anim_key_preservation(): TestSuite {
   const SUITE = "livetree/animation-identifier-preservation";
@@ -9,7 +10,7 @@ export function livetree_anim_key_preservation(): TestSuite {
   const MANUAL_UNDERSCORE = "lt_manual_probe_name";
 
   const ruleFor = (snapshot: string, quid: string): string => {
-    const selector = `[data-_quid="${quid}"]`;
+    const selector = hson_quid_selector(quid);
     return snapshot.split("\n").find(line => line.startsWith(selector)) ?? "";
   };
 
@@ -1194,4 +1195,3 @@ export function livetree_dom_contains_surface(): TestSuite {
 
   return make_livetree_suite(SUITE, cases);
 }
-

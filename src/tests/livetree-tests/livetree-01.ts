@@ -1,4 +1,5 @@
 import { CssManager, hsonLiveTree, type LiveTree } from "hson-live/livetree";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 import type { TestSuite, Asserter } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
@@ -769,9 +770,9 @@ export function mixedRegression() {
           return;
         }
 
-        const quid = el.getAttribute("data-_quid") ?? "";
+        const quid = el.getAttribute("hson:quid") ?? "";
         t.ok("quid exists", quid.length > 0);
-        t.ok("css includes quid selector", cssText.includes(`[data-_quid="${quid}"]`));
+        t.ok("css includes quid selector", cssText.includes(hson_quid_selector(quid)));
       },
 
       preview(tree) {
@@ -816,14 +817,14 @@ export function mixedRegression() {
 
         const cssText = styleEl?.textContent ?? "";
         const box = tree.find.must.byId("box");
-        const quid = box.dom.el()?.getAttribute("data-_quid") ?? "";
+        const quid = box.dom.el()?.getAttribute("hson:quid") ?? "";
 
         if (!quid) {
           t.ok("DOM mode: no quid (skipping)", true);
           return;
         }
 
-        t.ok("css includes quid selector", cssText.includes(`[data-_quid="${quid}"]`));
+        t.ok("css includes quid selector", cssText.includes(hson_quid_selector(quid)));
         t.ok("css includes opacity", cssText.includes("opacity: 0.5;"));
       },
 
@@ -1178,10 +1179,10 @@ export function suite_css_and_content(): TestSuite {
         const el = box.dom.el();
         t.ok("box dom exists", !!el);
         const snapFn = box.css.devSnapshot;
-        const quid = el?.getAttribute("data-_quid") ?? "";
-        t.ok("box has data-_quid", quid.length > 0);
+        const quid = el?.getAttribute("hson:quid") ?? "";
+        t.ok("box has hson:quid", quid.length > 0);
 
-        t.ok("css includes quid selector", cssText.includes(`[data-_quid="${quid}"]`));
+        t.ok("css includes quid selector", cssText.includes(hson_quid_selector(quid)));
         t.ok("css includes opacity", cssText.includes("opacity: 0.5;"));
       },
       preview(tree: LiveTree) {
@@ -1221,20 +1222,17 @@ export function suite_css_and_content(): TestSuite {
         CssManager.invoke().syncNow();
       },
       assert(tree: LiveTree, t: Asserter) {
-        after_paint();
         const el0 = tree.find.must.byId("box").dom.el();
         t.ok("box dom exists", !!el0);
-
-        // getComputedStyle wants an Element, but you usually care about HTMLElement behavior.
-        const el = el0 instanceof HTMLElement ? el0 : null;
-        t.ok("box dom is HTMLElement", !!el);
-
-        if (!el) return;
-
-        const cs = getComputedStyle(el);
-        t.eq("opacity", cs.opacity, "0.5");
-        t.eq("position", cs.position, "fixed");
-        t.eq("backgroundColor", cs.backgroundColor, "rgb(0, 255, 0)");
+        const quid = el0?.getAttribute("hson:quid") ?? "";
+        const manager = CssManager.invoke();
+        const rule = manager.snapshot();
+        // jsdom does not apply escaped-colon attribute selectors in computed
+        // style. Chromium application behavior is covered by the browser gate.
+        t.ok("stylesheet contains exact QUID selector", rule.includes(hson_quid_selector(quid)));
+        t.eq("managed opacity", manager.getForQuid(quid, "opacity"), "0.5");
+        t.eq("managed position", manager.getForQuid(quid, "position"), "fixed");
+        t.eq("managed background", manager.getForQuid(quid, "backgroundColor"), "rgb(0, 255, 0)");
       },
       preview(tree: LiveTree) {
         const el = tree.find.byId("box")?.dom.el?.();
@@ -1291,10 +1289,10 @@ export function suite_css_and_content(): TestSuite {
 
         const cssText = styleEl?.textContent ?? "";
 
-        const quid = el.getAttribute("data-_quid") ?? "";
-        t.ok("box has data-_quid", quid.length > 0);
+        const quid = el.getAttribute("hson:quid") ?? "";
+        t.ok("box has hson:quid", quid.length > 0);
 
-        t.ok("css includes quid selector", cssText.includes(`[data-_quid="${quid}"]`));
+        t.ok("css includes quid selector", cssText.includes(hson_quid_selector(quid)));
         t.ok("css includes position fixed", cssText.includes("position: fixed;"));
         t.ok("css includes top", cssText.includes("top: 24px;"));
         t.ok("css includes left", cssText.includes("left: 24px;"));
@@ -1674,10 +1672,10 @@ function suite_css_regressions(): TestSuite {
         const el = box.dom.el();
         t.ok("box DOM exists", !!el);
 
-        const quid = el?.getAttribute("data-_quid") ?? "";
+        const quid = el?.getAttribute("hson:quid") ?? "";
         t.ok("box has quid", quid.length > 0);
 
-        const ruleStart = cssText.indexOf(`[data-_quid="${quid}"]`);
+        const ruleStart = cssText.indexOf(hson_quid_selector(quid));
         t.ok("box rule exists", ruleStart >= 0);
 
         const ruleSlice = ruleStart >= 0 ? cssText.slice(ruleStart, ruleStart + 300) : "";

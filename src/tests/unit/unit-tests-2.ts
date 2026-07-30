@@ -4,8 +4,8 @@ import { cleanup_quid, make_unit_case } from "./all-unit-tests";
 import { CssManager } from "hson-live/livetree";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
 import { _fontSize } from "../../app/core/consts/ui-consts";
-import { selector_for_quid } from "../../../../hson-live/dist/api/livetree/managers/css-manager";
 import  { normalize_css_value, normalize_css_key, canon_to_css_prop, render_rule, normalize_decls } from "hson-live/diagnostics/test-exports";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 const gcss = CssManager.api();
 
@@ -80,8 +80,8 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "pseudo rules scoped to correct quid only", () => {
             const m = CssManager.invoke();
-            const q1 = "__test_q1";
-            const q2 = "__test_q2";
+            const q1 = "1000000000000001";
+            const q2 = "1000000000000002";
 
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
@@ -89,17 +89,17 @@ export function unit_test_more_css(): TestSuite {
             // CHANGED: pseudo shorthand now routes through selector-rule storage.
             const q1BeforeKey = `unit:${q1}:before`;
             CssManager.api()
-                .rule(q1BeforeKey, `${selector_for_quid(q1)}::before`)
+                .rule(q1BeforeKey, `${hson_quid_selector(q1)}::before`)
                 .setProp("content", `"A"`);
 
             const q1Rendered = CssManager.api().get(q1BeforeKey);
 
-            if (!q1Rendered?.includes(`[data-_quid="${q1}"]::before`)) {
+            if (!q1Rendered?.includes(`${hson_quid_selector(q1)}::before`)) {
                 CssManager.api().drop(q1BeforeKey);
                 throw new Error(`missing q1 pseudo`);
             }
 
-            if (q1Rendered.includes(`[data-_quid="${q2}"]::before`)) {
+            if (q1Rendered.includes(`${hson_quid_selector(q2)}::before`)) {
                 CssManager.api().drop(q1BeforeKey);
                 throw new Error(`pseudo leaked to q2`);
             }
@@ -110,7 +110,7 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "no empty rule blocks emitted", () => {
             const m = CssManager.invoke();
-            const quid = "__test_empty";
+            const quid = "1000000000000003";
 
             cleanup_quid(m, quid);
 
@@ -120,7 +120,7 @@ export function unit_test_more_css(): TestSuite {
             m.syncNow();
             const css = m.snapshot();
 
-            const sel = `[data-_quid="${quid}"]`;
+            const sel = hson_quid_selector(quid);
 
             if (css.includes(`${sel} {}`)) {
                 throw new Error(`empty rule block emitted:\n${css}`);
@@ -130,8 +130,8 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "multiple quids do not interfere", () => {
             const m = CssManager.invoke();
-            const q1 = "__test_multi_1";
-            const q2 = "__test_multi_2";
+            const q1 = "1000000000000004";
+            const q2 = "1000000000000005";
 
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
@@ -151,7 +151,7 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "operation ordering produces correct final state", () => {
             const m = CssManager.invoke();
-            const quid = "__test_chaos";
+            const quid = "1000000000000006";
 
             cleanup_quid(m, quid);
 
@@ -169,7 +169,7 @@ export function unit_test_more_css(): TestSuite {
             // QUID declarations and can be dropped without touching base state.
             const beforeKey = `unit:${quid}:before`;
             CssManager.api()
-                .rule(beforeKey, `${selector_for_quid(quid)}::before`)
+                .rule(beforeKey, `${hson_quid_selector(quid)}::before`)
                 .setProp("content", `"X"`);
 
             CssManager.api().drop(beforeKey);
@@ -561,14 +561,14 @@ export function unit_css_pseudo_unification(): TestSuite {
 
             make_unit_case(SUITE, "selector rule drop is idempotent", () => {
                 const m = CssManager.invoke();
-                const quid = "__test_drop_idempotent";
+                const quid = "1000000000000007";
                 const key = `unit:${quid}:before`;
 
                 cleanup_quid(m, quid);
                 CssManager.api().drop(key);
 
                 CssManager.api()
-                    .rule(key, `${selector_for_quid(quid)}::before`)
+                    .rule(key, `${hson_quid_selector(quid)}::before`)
                     .setProp("content", `"X"`);
 
                 CssManager.api().drop(key);
@@ -576,7 +576,7 @@ export function unit_css_pseudo_unification(): TestSuite {
 
                 const css = m.snapshot();
 
-                if (css.includes(`[data-_quid="${quid}"]::before`)) {
+                if (css.includes(`${hson_quid_selector(quid)}::before`)) {
                     cleanup_quid(m, quid);
                     throw new Error(`expected selector rule dropped idempotently, css was:\n${css}`);
                 }

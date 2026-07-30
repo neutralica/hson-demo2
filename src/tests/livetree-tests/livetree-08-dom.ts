@@ -278,7 +278,7 @@ export function livetree_new_dom_doc(): TestSuite {
       async act(tree) {
         const target = tree.find.must.byId("target");
         const el = target.dom.must.el();
-        const quid = el.getAttribute("data-_quid");
+        const quid = el.getAttribute("hson:quid");
 
         const hit = quid ? tree.find.byQuid?.(quid) : undefined;
 
@@ -309,7 +309,7 @@ export function livetree_new_dom_doc(): TestSuite {
 
       async act(tree) {
         const target = tree.find.must.byId("target");
-        const quid = target.dom.must.el().getAttribute("data-_quid")!;
+        const quid = target.dom.must.el().getAttribute("hson:quid")!;
 
         const hit = tree.find.must.byQuid?.(quid);
 

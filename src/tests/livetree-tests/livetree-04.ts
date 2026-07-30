@@ -3,6 +3,7 @@ import type { TestSuite } from "../../app/demos/test/tests.types";
 import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
 import { get_hson_css_rules, get_rule_for_quid, tick } from "./livetree-03";
 import { make_livetree_suite } from "./make-livetree-suite";
+import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
 
 const gcss = CssManager.invoke();
 
@@ -291,8 +292,8 @@ export function root_multi_isolation(): TestSuite {
         const elB = b.dom.el() as HTMLElement;
 
         (tree as any).__quids = [
-          elA.getAttribute("data-_quid"),
-          elB.getAttribute("data-_quid"),
+          elA.getAttribute("hson:quid"),
+          elB.getAttribute("hson:quid"),
         ];
       },
 
@@ -331,17 +332,18 @@ export function root_multi_isolation(): TestSuite {
         const elA = boxA.dom.el() as HTMLElement;
         const elB = boxB.dom.el() as HTMLElement;
 
-        (tree as any).__computed = [
-          getComputedStyle(elA).opacity,
-          getComputedStyle(elB).opacity,
+        (tree as any).__quids = [
+          elA.getAttribute("hson:quid") ?? "",
+          elB.getAttribute("hson:quid") ?? "",
         ];
       },
 
       assert(tree, t) {
-        const [a, b] = (tree as any).__computed as string[];
-
-        t.eq("A is styled", a, "0.25");
-        t.eq("B is unaffected", b, "1");
+        const [aQuid, bQuid] = (tree as any).__quids as [string, string];
+        t.eq("A has managed opacity", gcss.getForQuid(aQuid, "opacity"), "0.25");
+        t.eq("B has no managed opacity", gcss.getForQuid(bQuid, "opacity"), undefined);
+        t.ok("A has one exact selector rule", (get_rule_for_quid(aQuid) ?? "").includes(hson_quid_selector(aQuid)));
+        t.eq("B has no selector rule", get_rule_for_quid(bQuid), undefined);
       },
     },
     {
@@ -406,12 +408,13 @@ export function root_multi_isolation(): TestSuite {
         gcss.syncNow();
 
         const elB = tree.find.must.byId("b").dom.el() as HTMLElement;
-
-        (tree as any).__opacity = getComputedStyle(elB).opacity;
+        (tree as any).__bQuid = elB.getAttribute("hson:quid") ?? "";
       },
 
       assert(tree, t) {
-        t.eq("B CSS survives A removal", (tree as any).__opacity, "0.4");
+        const bQuid = (tree as any).__bQuid as string;
+        t.eq("B managed CSS survives A removal", gcss.getForQuid(bQuid, "opacity"), "0.4");
+        t.ok("B stylesheet rule survives A removal", (get_rule_for_quid(bQuid) ?? "").includes("opacity: 0.4;"));
       },
     },
     {
@@ -595,8 +598,8 @@ export function document_question(): TestSuite {
         const elB = treeB.find.must.byAttribute("class", "box").dom.el() as HTMLElement;
 
         (tree as any).__quids = [
-          elA.getAttribute("data-_quid"),
-          elB.getAttribute("data-_quid"),
+          elA.getAttribute("hson:quid"),
+          elB.getAttribute("hson:quid"),
         ];
       },
 
@@ -643,22 +646,18 @@ export function document_question(): TestSuite {
         const elA = boxA.dom.el() as HTMLElement;
         const elB = boxB.dom.el() as HTMLElement;
 
-        (tree as any).__computed = {
-          aOpacity: getComputedStyle(elA).opacity,
-          aPosition: getComputedStyle(elA).position,
-          bOpacity: getComputedStyle(elB).opacity,
-          bPosition: getComputedStyle(elB).position,
+        (tree as any).__quids = {
+          a: elA.getAttribute("hson:quid") ?? "",
+          b: elB.getAttribute("hson:quid") ?? "",
         };
       },
 
       assert(tree, t) {
-        const c = (tree as any).__computed;
-
-        t.eq("A opacity styled", c.aOpacity, "0.25");
-        t.eq("A position styled", c.aPosition, "fixed");
-
-        t.eq("B opacity unaffected", c.bOpacity, "1");
-        t.eq("B position unaffected", c.bPosition, "static");
+        const quids = (tree as any).__quids;
+        t.eq("A managed opacity", gcss.getForQuid(quids.a, "opacity"), "0.25");
+        t.eq("A managed position", gcss.getForQuid(quids.a, "position"), "fixed");
+        t.eq("B has no managed opacity", gcss.getForQuid(quids.b, "opacity"), undefined);
+        t.eq("B has no managed position", gcss.getForQuid(quids.b, "position"), undefined);
       },
     },
     {
@@ -695,11 +694,13 @@ export function document_question(): TestSuite {
         gcss.syncNow();
 
         const bEl = b.dom.el() as HTMLElement;
-        (tree as any).__bOpacity = getComputedStyle(bEl).opacity;
+        (tree as any).__bQuid = bEl.getAttribute("hson:quid") ?? "";
       },
 
       assert(tree, t) {
-        t.eq("B CSS survives A teardown", (tree as any).__bOpacity, "0.4");
+        const bQuid = (tree as any).__bQuid as string;
+        t.eq("B managed CSS survives A teardown", gcss.getForQuid(bQuid, "opacity"), "0.4");
+        t.ok("B stylesheet rule survives A teardown", (get_rule_for_quid(bQuid) ?? "").includes("opacity: 0.4;"));
       },
     },
     {
@@ -815,20 +816,18 @@ export function document_question(): TestSuite {
 
         (tree as any).__result = {
           cssRules,
-          aQuid: aEl.getAttribute("data-_quid") ?? "",
-          bQuid: bEl.getAttribute("data-_quid") ?? "",
-          aOpacity: getComputedStyle(aEl).opacity,
-          bOpacity: getComputedStyle(bEl).opacity,
+          aQuid: aEl.getAttribute("hson:quid") ?? "",
+          bQuid: bEl.getAttribute("hson:quid") ?? "",
         };
       },
 
       assert(tree, t) {
         const r = (tree as any).__result;
 
-        t.ok("A quid appears in stylesheet", r.cssRules.includes(`[data-_quid="${r.aQuid}"]`));
+        t.ok("A quid appears in stylesheet", r.cssRules.includes(hson_quid_selector(r.aQuid)));
         t.ok("B quid does not get A's style block", !((get_rule_for_quid(r.bQuid) ?? "").includes("opacity: 0.33;")));
-        t.eq("A styled", r.aOpacity, "0.33");
-        t.eq("B untouched", r.bOpacity, "1");
+        t.eq("A managed opacity is isolated", gcss.getForQuid(r.aQuid, "opacity"), "0.33");
+        t.eq("B has no managed opacity", gcss.getForQuid(r.bQuid, "opacity"), undefined);
       },
     },
 

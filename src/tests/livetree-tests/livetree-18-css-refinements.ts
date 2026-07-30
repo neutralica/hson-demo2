@@ -60,7 +60,7 @@ export function livetree_css_refinements(): TestSuite {
 
       async act(tree) {
         const mgr = CssManager.invoke();
-        const owner = "owned-kf-owner-a";
+        const owner = "2000000000000001";
         const name = "owned_kf_release_a";
 
         mgr.keyframes.delete(name);
@@ -118,7 +118,7 @@ export function livetree_css_refinements(): TestSuite {
       async act(tree) {
         const css = CssManager.api();
         const mgr = CssManager.invoke();
-        const owner = "durable-kf-owner-a";
+        const owner = "2000000000000002";
         const name = "durable_kf_survives_a";
 
         css.keyframes.delete(name);
@@ -175,7 +175,7 @@ export function livetree_css_refinements(): TestSuite {
       async act(tree) {
         const css = CssManager.api();
         const mgr = CssManager.invoke();
-        const owner = "owned-kf-owner-b";
+        const owner = "2000000000000003";
         const name = "owned_then_global_kf_b";
 
         css.keyframes.delete(name);

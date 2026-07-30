@@ -215,7 +215,7 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
     label: name.replace(/^test:/, "").replaceAll("-node", "").replaceAll("-", " "),
     category: category_for(name), repository: "hson-demo2", path,
     behavior: browser
-      ? (name === "test:browser" ? "Chromium certifies application boot plus the Parse and Build user journeys." : `Playwright support command ${name}.`)
+      ? (name === "test:browser" ? "Chromium certifies application boot, Parse and Build journeys, and canonical HTML/SVG QUID selector application." : `Playwright support command ${name}.`)
       : `Permanent ${name} contract declared by hson-demo2/package.json.`,
     classification: diagnostic ? "temporary diagnostic" : realSocket ? "real transport integration" : browser ? "runtime integration" : "runtime integration",
     ...policy,
