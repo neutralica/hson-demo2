@@ -107,6 +107,20 @@ therefore reconstructs original suites for each selected request, then verifies
 that the fresh ordered ID set and fingerprint match the advertised registry
 before execution.
 
+## Transform semantic oracle
+
+Transform semantic closure uses hson-live's test-only portable oracle. The
+oracle compares already-admitted graphs strictly, reports the first canonical
+path divergence, preserves structured Transform error identity, and emits a
+deterministic named witness. It performs no comparison-time normalization or
+root transparency. Exact tokenizer, formatting, browser presentation, and
+launcher-completion assertions remain specialized.
+
+The same support module is importable in Node, browser, and Worker-safe test
+contexts without filesystem, process, Node assertion, or inspection utilities.
+The external launcher manifest remains the accounting authority for its oracle
+self-test launcher; Demo catalog and inclusive totals derive from that manifest.
+
 ## Panel
 
 The browser panel is limited to discovery, selection, dispatch, and report

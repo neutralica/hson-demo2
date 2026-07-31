@@ -112,3 +112,27 @@ test("browser HSON parsing enforces authored names, duplicates, and escape gramm
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"A": "A"/);
   assertNoErrors();
 });
+
+test("browser executes the portable strict Transform oracle and structured witness", async ({ page }) => {
+  await page.goto("/");
+  const result = await page.evaluate(async () => {
+    const modulePath = "/src/tests/transform/browser-transform-oracle.ts";
+    const probe = await import(/* @vite-ignore */ modulePath) as {
+      run_browser_transform_oracle_probe(): {
+        closureTag: string;
+        rejectionCode: string;
+        rejectionStage?: string;
+        source?: { index: number; line: number; column: number };
+        stableWitness: boolean;
+      };
+    };
+    return probe.run_browser_transform_oracle_probe();
+  });
+  expect(result).toEqual({
+    closureTag: "_hson_elem",
+    rejectionCode: "authored-reserved-name",
+    rejectionStage: "tokenization",
+    source: { index: 1, line: 1, column: 2 },
+    stableWitness: true,
+  });
+});

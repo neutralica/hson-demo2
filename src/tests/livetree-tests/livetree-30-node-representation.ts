@@ -173,42 +173,126 @@ function serialization_case(suite: string): LiveTreeCaseSpec {
 function invariants_case(suite: string): LiveTreeCaseSpec {
   let accepted = false;
   let rejected = false;
+  let unexpectedlyAccepted: string[] = [];
+
   return {
     suite,
-    name: "invariants accept absence and reject malformed optional containers",
+    name: "invariants accept canonical absence and reject malformed optional containers",
     html: `<main></main>`,
     act() {
-      _assert_invariants(_CREATE_NODE({ $_tag: "div" }), "compact absence");
-      const explicitEmpty = { $_tag: "div", $_content: [], $_attrs: {}, $_meta: {} };
-      _assert_invariants(explicitEmpty, "explicit empty equivalence");
-      accepted = true;
+      const acceptedNodes = [
+        {
+          label: "compact absence",
+          node: _CREATE_NODE({ $_tag: "div" }),
+        },
+        {
+          label: "populated attributes",
+          node: _CREATE_NODE({
+            $_tag: "div",
+            $_attrs: { id: "ok" },
+          }),
+        },
+      ];
+
+      accepted = acceptedNodes.every(({ label, node }) => {
+        try {
+          _assert_invariants(node, label);
+          return true;
+        } catch {
+          return false;
+        }
+      });
 
       class NodeInstance {
         public $_tag = "div";
         public $_content = [];
       }
-      const malformed = [
-        new NodeInstance(),
-        Object.assign(_CREATE_NODE({ $_tag: "div" }), { $_attrs: [] }),
-        Object.assign(_CREATE_NODE({ $_tag: "div" }), { $_meta: null }),
-        _CREATE_NODE({ $_tag: "div", $_meta: { illegal: "x" } } as unknown as HsonNode),
-        _CREATE_NODE({ $_tag: "div", $_meta: { "data-_quid": "0000000000000001" } } as unknown as HsonNode),
-        _CREATE_NODE({ $_tag: "_hson_ii", $_meta: { "data-_index": "0" } } as unknown as HsonNode),
-        _CREATE_NODE({ $_tag: "_hson_elem", $_attrs: { id: "bad" } }),
-        Object.assign(_CREATE_NODE({ $_tag: "div" }), { $_meta: { "data-_bad": 1 } }),
+
+      const malformed: Array<{ label: string; node: HsonNode }> = [
+        {
+          label: "explicit empty attributes",
+          node: {
+            $_tag: "div",
+            $_content: [],
+            $_attrs: {},
+          } as unknown as HsonNode,
+        },
+        {
+          label: "class instance",
+          node: new NodeInstance() as unknown as HsonNode,
+        },
+        {
+          label: "attributes are an array",
+          node: Object.assign(_CREATE_NODE({ $_tag: "div" }), {
+            $_attrs: [],
+          }) as unknown as HsonNode,
+        },
+        {
+          label: "metadata is null",
+          node: Object.assign(_CREATE_NODE({ $_tag: "div" }), {
+            $_meta: null,
+          }) as unknown as HsonNode,
+        },
+        {
+          label: "illegal metadata key",
+          node: {
+            $_tag: "div",
+            $_meta: { illegal: "x" },
+          } as unknown as HsonNode,
+        },
+        {
+          label: "legacy QUID metadata key",
+          node: {
+            $_tag: "div",
+            $_meta: { "data-_quid": "0000000000000001" },
+          } as unknown as HsonNode,
+        },
+        {
+          label: "legacy array-index metadata key",
+          node: {
+            $_tag: "_hson_ii",
+            $_meta: { "data-_index": "0" },
+          } as unknown as HsonNode,
+        },
+        {
+          label: "element cluster attributes",
+          node: _CREATE_NODE({
+            $_tag: "_hson_elem",
+            $_attrs: { id: "bad" },
+          }),
+        },
+        {
+          label: "malformed internal metadata value",
+          node: Object.assign(_CREATE_NODE({ $_tag: "div" }), {
+            $_meta: { "data-_bad": 1 },
+          }) as unknown as HsonNode,
+        },
       ];
-      rejected = malformed.every((node) => {
+
+      unexpectedlyAccepted = malformed.flatMap(({ label, node }) => {
         try {
-          _assert_invariants(node, "malformed representation");
-          return false;
+          _assert_invariants(node, label);
+          return [label];
         } catch {
-          return true;
+          return [];
         }
       });
+
+      rejected = unexpectedlyAccepted.length === 0;
     },
     assert(_tree, t) {
-      t.eq("absent and explicit-empty containers are equivalent", accepted, true);
-      t.eq("arrays, null, classes, illegal keys and malformed values are rejected", rejected, true);
+      t.eq(
+        "canonical absence and populated optional containers are accepted",
+        accepted,
+        true,
+      );
+      t.eq(
+        `malformed representations are rejected; unexpectedly accepted: ${
+          unexpectedlyAccepted.join(", ") || "<none>"
+        }`,
+        rejected,
+        true,
+      );
     },
   };
 }
