@@ -63,6 +63,32 @@ test("HSON bare primitives expose one root-free semantic node in every browser p
   assertNoErrors();
 });
 
+test("browser object parsing and serialization use one stable angle pair per object", async ({ page }) => {
+  const assertNoErrors = monitor_application_errors(page);
+  await reach_demo(page);
+  await open_demo(page, "parse");
+
+  const hson = page.getByTestId("parse-hson-editor");
+  const json = page.getByTestId("parse-json-editor");
+  const status = page.getByTestId("parse-hson-status");
+
+  await hson.fill(`<record <a 1 b 2> items «<name "Ada">»>`);
+  await expect(status).toHaveText("OK");
+  await expect(json).toHaveValue(/"record": \{/);
+  await expect(json).toHaveValue(/"items": \[/);
+
+  await json.fill(`{"record":{"a":1,"b":2},"items":[{"name":"Ada"}]}`);
+  await expect(page.getByTestId("parse-json-status")).toHaveText("OK");
+  const serialized = await hson.inputValue();
+  expect(serialized).toMatch(/record\s+<\s*a\s+1\s+b\s+2\s*>/s);
+  expect(serialized).toMatch(/items\s+«\s*<\s*name\s+"Ada"\s*>\s*»/s);
+  expect(serialized).not.toContain("<<");
+
+  await hson.fill(`<<a 1>>`);
+  await expect(status).toHaveText("XX");
+  assertNoErrors();
+});
+
 test("browser HSON parsing enforces authored names, duplicates, and escape grammars", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);

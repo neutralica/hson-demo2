@@ -164,9 +164,10 @@ HSON can express any XML-compliant HTML. HSON derived from HTML uses a slash-clo
       kind: "text",
       text: `
   #__#
-HSON can express any valid JSON, usually in a smaller file size.
+HSON can express any valid JSON, usually in a smaller file size. Object members
+are punctuation-free name/value pairs inside one object angle pair.
 #__#
-JSON-derived HSON tags use an angle closer:
+JSON-derived HSON object values use an angle closer:
 ### >
       `,
     },

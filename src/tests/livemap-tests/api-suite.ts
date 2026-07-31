@@ -81,7 +81,7 @@ export function livemap_suites_api(): TestSuite {
         name: "api liveMap fromHson creates projected map",
         input: {},
         act: () => {
-          const map = hson.liveMap.fromHson('<user<name"Ada">>');
+          const map = hson.liveMap.fromHson('<user <name "Ada">>');
           if (map.mode !== "data-object" && map.mode !== "data-array") {
             throw new Error(`Expected data LiveMap; observed ${map.mode}.`);
           }
