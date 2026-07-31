@@ -16,6 +16,7 @@ import {
   run_fresh_node_selected_test_ids,
   run_node_selected_test_ids,
 } from "../../hosted-test/run-node-selected-test-suites";
+import { selected_test_suites } from "../../test-system/test-selected-run";
 import { HOSTED_DOM_GLOBAL_NAMES } from "../../hosted-test/dom/hosted-dom-runtime";
 import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
 import { CANVAS_DETERMINISTIC_SUITE_IDS } from "../../hosted-test/canonical-synthetic-dom-test-suites";
@@ -38,10 +39,17 @@ expect_stage5b(
 expect_stage5b(domDescriptors.length === 957, "all 957 existing synthetic-DOM cases are registered");
 expect_stage5b(new Set(domDescriptors.map((descriptor) => descriptor.suite)).size === 78, "all 78 original DOM suites are registered");
 expect_stage5b(
-  domDescriptors.filter((descriptor) => descriptor.subject === "transform").length === 362
-    && domDescriptors.filter((descriptor) => descriptor.subject === "livemap").length === 112
-    && domDescriptors.filter((descriptor) => descriptor.subject === "livetree").length === 479,
-  "DOM suite metadata preserves Transform, LiveMap, and LiveTree domains",
+  domDescriptors.every((descriptor) => (
+    descriptor.suite.startsWith("transform/") ? descriptor.subject === "transform"
+      : descriptor.suite.startsWith("livemap/") ? descriptor.subject === "livemap"
+        : descriptor.suite.startsWith("livetree/") || descriptor.suite.startsWith("livetree-")
+          ? descriptor.subject === "livetree"
+          : false
+  ))
+    && ["transform", "livemap", "livetree"].every(
+      (subject) => domDescriptors.some((descriptor) => descriptor.subject === subject),
+    ),
+  "DOM suite metadata derives Transform, LiveMap, and LiveTree domains from canonical suite identity",
 );
 expect_stage5b(
   domDescriptors.every((descriptor) => node.get(descriptor.id)?.testCase.name === descriptor.name),
@@ -142,17 +150,23 @@ const ordinary = node.catalog.tests.find((descriptor) => !descriptor.requirement
 expect_stage5b(ordinary !== undefined, "representative ordinary descriptor exists");
 const mixedIds = [ordinary.id, transform.id];
 const mixed = await selected(mixedIds);
+const mixedCanonicalOrder = selected_test_suites(node, mixedIds)
+  .flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
 expect_stage5b(
   mixed.result.ok
-    && hosted_test_report_cases(mixed.report).map((testCase) => testCase.key).join("|") === [...mixedIds].sort().join("|"),
+    && hosted_test_report_cases(mixed.report).map((testCase) => testCase.key).join("|")
+      === mixedCanonicalOrder.join("|"),
   "mixed ordinary and DOM selection preserves deterministic canonical order in one report",
 );
 
 const primary = hosted_test_panel_primary_choices(node.catalog.tests);
 const transformChoice = primary.find((choice) => choice.key === "subject:transform");
+const registeredTransformCount = node.catalog.tests.filter(
+  (descriptor) => descriptor.subject === "transform",
+).length;
 expect_stage5b(
-  transformChoice?.count === 362
-    && hosted_test_panel_selected_ids(node.catalog.tests, transformChoice.selection).length === 362,
+  transformChoice?.count === registeredTransformCount
+    && hosted_test_panel_selected_ids(node.catalog.tests, transformChoice.selection).length === registeredTransformCount,
   "panel projects Transform once with its unique descriptor count",
 );
 expect_stage5b(

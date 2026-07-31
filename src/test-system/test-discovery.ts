@@ -1,8 +1,11 @@
+import {
+  TEST_SUBJECT_IDENTIFIERS,
+  type TestSubject,
+} from "../app/demos/test/tests.types";
 import type {
   TestCapability,
   TestCollection,
   TestDescriptor,
-  TestSubject,
 } from "../app/demos/test/tests.types";
 import { make_test_catalog, test_catalog_version, type TestCatalog } from "./test-catalog";
 import type {
@@ -32,9 +35,7 @@ export type TestDecodeResult<T> =
 const CAPABILITIES: readonly TestCapability[] = Object.freeze([
   "javascript", "node", "synthetic-dom", "browser-dom", "worker", "filesystem", "websocket",
 ]);
-const SUBJECTS: readonly TestSubject[] = Object.freeze([
-  "transform", "livetree", "livemap", "reflect", "livehost", "integration", "livedemo", "dev",
-]);
+const SUBJECTS: readonly TestSubject[] = TEST_SUBJECT_IDENTIFIERS;
 const COLLECTIONS: readonly TestCollection[] = Object.freeze(["unit", "dev"]);
 const EXECUTOR_KINDS: readonly TestExecutorKind[] = Object.freeze(["node", "cloudflare-worker", "browser"]);
 const EXECUTOR_LOCATIONS: readonly TestExecutorLocation[] = Object.freeze(["hosted", "local"]);

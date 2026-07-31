@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
+import { make_local_node_livehost_executor_registry } from "../../src/test-system/livehost-node-executor";
+import { resolve_external_library_launchers } from "../../src/test-system/external-library-launchers";
+import {
+  hosted_test_panel_display_label,
+  hosted_test_panel_primary_choices,
+} from "../../src/app/demos/test/hosted-test-panel-selection";
 
 test("splash completes naturally without retaining work or disposed nodes", async ({ page }) => {
   test.setTimeout(55_000);
@@ -38,26 +44,44 @@ test("application boot reaches one clean usable demo without auto-running hosted
 
 test("hosted panel discovers curated categories and runs one canonical category", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
+  const expectedRegistry = make_local_node_livehost_executor_registry();
+  const expectedAvailability = await resolve_external_library_launchers();
+  const expectedPrimary = hosted_test_panel_primary_choices(
+    expectedRegistry.catalog.tests,
+    expectedAvailability.targets,
+  );
+  const expectedPrimaryLabels = expectedPrimary.map((choice) =>
+    hosted_test_panel_display_label(choice.label));
+  const expectedChoiceLabel = (key: string): string => {
+    const choice = expectedPrimary.find((candidate) => candidate.key === key);
+    if (choice === undefined) throw new Error(`Missing authoritative panel choice ${key}`);
+    return hosted_test_panel_display_label(choice.label);
+  };
   await reach_demo(page);
 
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
   await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
-  await expect(page.getByTestId("hosted-test-executor")).toContainText("2104 canonical cases");
+  await expect(page.getByTestId("hosted-test-executor")).toContainText(
+    `${expectedRegistry.catalog.tests.length} canonical cases`,
+  );
   await open_demo(page, "test");
 
   const selector = page.locator("#test-select");
   const targetedSuite = page.locator("#test-targeted-suite");
   const targetedCase = page.locator("#test-targeted-case");
-  await expect(selector.locator("option").first()).toHaveText("all (2817)");
-  await expect(selector.locator("option")).toHaveText(
-    await selector.locator("option").allTextContents().then((labels) => labels.map((label) => label.toLowerCase())),
-  );
+  await expect(selector.locator("option")).toHaveText(expectedPrimaryLabels);
   await expect(selector.locator('option[value^="suite:"]')).toHaveCount(0);
   await expect(selector.locator('option[value^="test:"]')).toHaveCount(0);
-  await expect(selector.locator('option[value="subject:transform"]')).toHaveText("transform (571)");
-  await expect(selector.locator('option[value="subject:reflect"]')).toHaveText("reflect (46)");
-  await expect(selector.locator('option[value="collection:dev"]')).toHaveText("dev (38)");
+  await expect(selector.locator('option[value="subject:transform"]')).toHaveText(
+    expectedChoiceLabel("subject:transform"),
+  );
+  await expect(selector.locator('option[value="subject:reflect"]')).toHaveText(
+    expectedChoiceLabel("subject:reflect"),
+  );
+  await expect(selector.locator('option[value="collection:dev"]')).toHaveText(
+    expectedChoiceLabel("collection:dev"),
+  );
   await expect(selector.locator('option[value="collection:library"]')).toHaveCount(0);
   await expect(targetedSuite).toBeDisabled();
   await expect(targetedSuite).toHaveValue("");

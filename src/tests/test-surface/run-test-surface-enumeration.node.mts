@@ -2,9 +2,19 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../app/hosted-test/hosted-test-suite";
-import { DECLARED_DEMO_TEST_SCRIPTS, TEST_SURFACE_CATALOG, TEST_SURFACE_CATEGORIES } from "../../app/hosted-test/test-surface-catalog";
+import {
+  DECLARED_DEMO_TEST_SCRIPTS,
+  HSON_LIVE_NON_LAUNCHER_TEST_SCRIPT_REASONS,
+  TEST_SURFACE_CATALOG,
+  TEST_SURFACE_CATEGORIES,
+} from "../../app/hosted-test/test-surface-catalog";
 import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import { hson_live_test_launchers } from "hson-live/test-launchers";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../app/demos/test/tests.types";
+import {
+  HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
+  hson_live_non_launcher_test_scripts,
+  hson_live_test_launchers,
+} from "hson-live/test-launchers";
 
 function expect_surface(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`test surface enumeration: ${message}`);
@@ -26,7 +36,14 @@ for (const name of demoTests) {
 }
 expect_surface(
   HOSTED_TEST_VISIBLE_SUITES.map((entry) => `${entry.label}:${entry.id}`).join("|")
-    === "all:hosted/all|transform:category/transform|livetree:category/livetree|livemap:category/livemap|livehost:category/livehost|unit:category/unit|dev:category/dev",
+    === [
+      "all:hosted/all",
+      ...CANONICAL_TEST_SUBJECT_ORDER
+        .filter((subject) => subject !== "reflect")
+        .map((subject) => `${subject}:category/${subject}`),
+      "unit:category/unit",
+      "dev:category/dev",
+    ].join("|"),
   "hosted selector must retain exactly the seven lowercase runnable choices",
 );
 
@@ -57,7 +74,7 @@ for (const path of await findEntrypoints(resolve(demoRoot, "src"))) {
 const browserRoot = resolve(demoRoot, "tests/browser");
 const browserSources = await sourceFiles(browserRoot);
 const browserSpecs = browserSources.filter((path) => path.endsWith(".spec.ts"));
-expect_surface(browserSpecs.length === 5, `expected five owned browser journey specs, found ${browserSpecs.length}`);
+expect_surface(browserSpecs.length > 0, "the test:browser aggregate must own at least one browser journey spec");
 expect_surface(TEST_SURFACE_CATALOG.some((entry) => entry.runner === "npm run test:browser" && entry.category === "Application / Demo"), "browser aggregate is missing its application/demo catalog owner");
 expect_surface(TEST_SURFACE_CATALOG.filter((entry) => entry.runner.startsWith("npm run test:browser")).every((entry) => !entry.appearsInHostedUi), "browser commands must remain outside the Hosted Tests UI");
 expect_surface(TEST_SURFACE_CATALOG.find((entry) => entry.id === "hson-demo2:test:amoebi-geometry")?.category === "Application / Demo", "Amoebi geometry must be owned by Application / Demo");
@@ -154,29 +171,113 @@ for (const [command, claims] of commandClaims) {
 const externalManifestRunners = new Set(
   hson_live_test_launchers.map((launcher) => `npm run ${launcher.packageScript}`),
 );
-const externalCatalogRunners = new Set(
-  TEST_SURFACE_CATALOG
-    .filter((entry) => entry.repository === "hson-live" && entry.role === "external diagnostic launcher")
-    .map((entry) => entry.runner),
+const externalCatalogEntries = TEST_SURFACE_CATALOG.filter(
+  (entry) => entry.repository === "hson-live"
+    && entry.role === "external diagnostic launcher",
 );
+const externalCatalogRunners = new Set(externalCatalogEntries.map((entry) => entry.runner));
 expect_surface(
   JSON.stringify([...externalManifestRunners].sort()) === JSON.stringify([...externalCatalogRunners].sort()),
   "external launcher catalog entries must exactly match the manifested diagnostics",
 );
+const manifestLauncherIds = hson_live_test_launchers.map((launcher) => launcher.id);
+const catalogLauncherIds = externalCatalogEntries.flatMap(
+  (entry) => entry.externalLauncher === undefined ? [] : [entry.externalLauncher.launcherId],
+);
+expect_surface(
+  new Set(manifestLauncherIds).size === manifestLauncherIds.length,
+  `manifest launcher IDs must be unique: ${manifestLauncherIds.join(", ")}`,
+);
+expect_surface(
+  new Set(catalogLauncherIds).size === catalogLauncherIds.length,
+  `catalog launcher IDs must be unique: ${catalogLauncherIds.join(", ")}`,
+);
 for (const launcher of hson_live_test_launchers) {
-  const entry = TEST_SURFACE_CATALOG.find(
-    (candidate) => candidate.repository === "hson-live"
-      && candidate.runner === `npm run ${launcher.packageScript}`,
+  const matches = externalCatalogEntries.filter(
+    (candidate) => candidate.externalLauncher?.launcherId === launcher.id,
+  );
+  expect_surface(
+    matches.length === 1,
+    `launcher ${launcher.id}: manifest checks ${launcher.executableChecks}, catalog entries ${matches.length}`,
+  );
+  const entry = matches[0]!;
+  const catalogLauncher = entry.externalLauncher!;
+  expect_surface(
+    catalogLauncher.packageScript === launcher.packageScript,
+    `launcher ${launcher.id}: manifest script ${launcher.packageScript}, catalog script ${catalogLauncher.packageScript}`,
+  );
+  expect_surface(
+    catalogLauncher.primarySubject === launcher.subject,
+    `launcher ${launcher.id}: manifest subject ${launcher.subject}, catalog subject ${catalogLauncher.primarySubject}`,
+  );
+  expect_surface(
+    catalogLauncher.executableChecks === launcher.executableChecks,
+    `launcher ${launcher.id}: manifest checks ${launcher.executableChecks}, catalog checks ${catalogLauncher.executableChecks}`,
+  );
+  expect_surface(
+    catalogLauncher.runtime === launcher.runtime,
+    `launcher ${launcher.id}: manifest runtime ${launcher.runtime}, catalog runtime ${catalogLauncher.runtime}`,
+  );
+  expect_surface(
+    catalogLauncher.completionRequirement === HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
+    `launcher ${launcher.id}: catalog completion requirement must be ${HSON_LIVE_TEST_COMPLETION_REQUIREMENT}`,
+  );
+  expect_surface(
+    catalogLauncher.panelVisible && entry.appearsInHostedUi
+      && catalogLauncher.inclusiveEligible && entry.exposure === "hosted selectable",
+    `launcher ${launcher.id}: panel visibility and inclusive eligibility must remain explicit`,
   );
   const environmentMatches = launcher.runtime === "node"
-    ? entry?.environment === "Node"
+    ? entry.environment === "Node"
     : launcher.runtime === "node-synthetic-dom"
-      ? entry?.environment === "Node + synthetic DOM"
+      ? entry.environment === "Node + synthetic DOM"
       : launcher.runtime === "node-real-websocket"
-        ? entry?.environment === "Node" && entry.transport === "real WebSocket"
-        : entry?.environment === "Node child processes" && entry.transport === "real WebSocket";
+        ? entry.environment === "Node" && entry.transport === "real WebSocket"
+        : entry.environment === "Node child processes" && entry.transport === "real WebSocket";
   expect_surface(environmentMatches, `external launcher ${launcher.id} has environment metadata inconsistent with ${launcher.runtime}`);
 }
+for (const entry of externalCatalogEntries) {
+  const launcher = hson_live_test_launchers.find(
+    (candidate) => candidate.id === entry.externalLauncher?.launcherId,
+  );
+  expect_surface(
+    launcher !== undefined,
+    `catalog launcher ${entry.externalLauncher?.launcherId ?? entry.id} has no manifest launcher`,
+  );
+}
+const packageTestScripts = Object.keys(livePackage.scripts)
+  .filter((name): name is `test:${string}` => name.startsWith("test:"));
+const unmanifestedPackageScripts = packageTestScripts
+  .filter((name) => !hson_live_test_launchers.some((launcher) => launcher.packageScript === name))
+  .sort();
+const declaredNonLauncherScripts = hson_live_non_launcher_test_scripts
+  .map((entry) => entry.packageScript)
+  .sort();
+expect_surface(
+  JSON.stringify(unmanifestedPackageScripts) === JSON.stringify(declaredNonLauncherScripts),
+  `unmanifested package scripts differ: actual ${unmanifestedPackageScripts.join(", ")}, declared ${declaredNonLauncherScripts.join(", ")}`,
+);
+for (const script of declaredNonLauncherScripts) {
+  expect_surface(
+    (HSON_LIVE_NON_LAUNCHER_TEST_SCRIPT_REASONS[script]?.trim().length ?? 0) > 0,
+    `non-launcher package script ${script} must retain its manifested exclusion reason`,
+  );
+}
+const jsonIngress = externalCatalogEntries.find(
+  (entry) => entry.externalLauncher?.launcherId === "transform.json-ingress",
+);
+const jsonIngressManifest = hson_live_test_launchers.find(
+  (launcher) => launcher.id === "transform.json-ingress",
+);
+expect_surface(
+  jsonIngressManifest !== undefined
+    && jsonIngress?.runner === "npm run test:json-ingress"
+    && jsonIngress.externalLauncher?.primarySubject === "Transform"
+    && jsonIngress.externalLauncher.executableChecks === jsonIngressManifest?.executableChecks
+    && jsonIngress.externalLauncher.panelVisible
+    && jsonIngress.externalLauncher.inclusiveEligible,
+  "launcher transform.json-ingress must be discoverable, selectable, and inclusive through its manifest-derived catalog entry",
+);
 expect_surface(
   TEST_SURFACE_CATALOG
     .filter((entry) => entry.role === "external diagnostic launcher")

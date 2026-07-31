@@ -1,5 +1,10 @@
 import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "./hosted-test-suite";
-import { hson_live_test_launchers } from "hson-live/test-launchers";
+import {
+  HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
+  hson_live_non_launcher_test_scripts,
+  hson_live_test_launchers,
+  type HsonLiveTestLauncher,
+} from "hson-live/test-launchers";
 
 export const TEST_SURFACE_CATEGORIES = [
   "Transforms", "LiveTree", "LiveMap", "Reflect", "LiveHost", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
@@ -16,6 +21,16 @@ export type TestSurfaceRole =
   | "production artifact verification"
   | "developer utility";
 export type TestSurfaceExposure = "hosted selectable" | "command only" | "explicitly excluded";
+export type ExternalLauncherCatalogProjection = Readonly<{
+  launcherId: string;
+  packageScript: `test:${string}`;
+  primarySubject: HsonLiveTestLauncher["subject"];
+  executableChecks: number;
+  runtime: HsonLiveTestLauncher["runtime"];
+  completionRequirement: typeof HSON_LIVE_TEST_COMPLETION_REQUIREMENT;
+  panelVisible: boolean;
+  inclusiveEligible: boolean;
+}>;
 
 export type TestSurfaceCatalogEntry = Readonly<{
   id: string;
@@ -33,6 +48,7 @@ export type TestSurfaceCatalogEntry = Readonly<{
   transport: string;
   runner: string;
   hostedSuiteId?: HostedTestSuiteId;
+  externalLauncher?: ExternalLauncherCatalogProjection;
   appearsInHostedUi: boolean;
   status: TestCatalogStatus;
 }>;
@@ -226,55 +242,18 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
   });
 }
 
-const LIVE_RUNNERS: readonly (readonly [string, string, TestClassification])[] = [
+const LIVE_SUPPORT_RUNNERS: readonly (readonly [string, string, TestClassification])[] = [
   ["build", "tsc production emit", "build/typecheck certification"],
   ["check", "strict no-emit typecheck", "build/typecheck certification"],
-  ["test:hson-tokenizer", "HSON tokenizer acceptance", "library acceptance"],
-  ["test:hson-node-quid", "canonical HsonNode QUID acceptance", "library acceptance"],
-  ["test:hson-node-quid-ingress", "canonical HsonNode QUID ingress acceptance", "library acceptance"],
-  ["test:hson-node-quid-egress", "canonical HsonNode QUID egress acceptance", "library acceptance"],
   ["test:hson-array-index", "HSON array-index acceptance", "library acceptance"],
   ["test:hson-attribute-transport", "HSON attribute transport acceptance", "library acceptance"],
   ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
-  ["test:hson-serializer", "HSON serializer acceptance", "library acceptance"],
-  ["test:canonical-hson-equality", "canonical HSON equality acceptance", "library acceptance"],
-  ["test:view-state-snapshot-codec", "view-state snapshot codec acceptance", "library acceptance"],
   ["test:livehost-graph-content-codec", "LiveHost graph-content codec acceptance", "library acceptance"],
-  ["test:public-boundaries", "public package boundary acceptance", "library acceptance"],
   ["test:root-compatibility", "root compatibility acceptance", "library acceptance"],
   ["test:transform-worker", "Worker transform entrypoint acceptance", "library acceptance"],
-  ["test:livetree-attrs", "LiveTree attribute acceptance", "library acceptance"],
-  ["test:livetree-quid-eligibility", "LiveTree QUID eligibility acceptance", "library acceptance"],
-  ["test:livetree-runtime-scope", "LiveTree runtime-scope acceptance", "library acceptance"],
-  ["test:reflect-document-attrs", "Reflect document attributes acceptance", "library acceptance"],
-  ["test:reflect-document-structure", "Reflect document structure acceptance", "library acceptance"],
-  ["test:reflect-document-delegation", "Reflect document delegation acceptance", "library acceptance"],
-  ["test:reflect-document-root", "Reflect document root acceptance", "library acceptance"],
-  ["test:reflect-document-snapshot", "Reflect document snapshot acceptance", "library acceptance"],
-  ["test:livemap-document", "LiveMap document acceptance", "library acceptance"],
-  ["test:livemap-document-install", "LiveMap document installation acceptance", "library acceptance"],
-  ["test:livemap-document-mutation", "LiveMap document mutation acceptance", "library acceptance"],
-  ["test:livemap-document-attrs-read", "LiveMap document attribute reads acceptance", "library acceptance"],
-  ["test:livemap-document-replay", "LiveMap document replay acceptance", "library acceptance"],
-  ["test:livemap-path-handle", "LiveMap path-handle acceptance", "library acceptance"],
-  ["test:livemap-staged-authority", "LiveMap staged authority acceptance", "library acceptance"],
-  ["test:livehost-authority", "LiveHost authority acceptance", "library acceptance"],
-  ["test:livehost-persistence", "LiveHost persistence acceptance", "library acceptance"],
-  ["test:livehost-recovery", "server recovery and replay", "library acceptance"],
-  ["test:livehost-client-recovery", "client recovery lifecycle", "library acceptance"],
-  ["test:livehost-document-recovery", "LiveHost document recovery acceptance", "library acceptance"],
-  ["test:livehost-document-actions", "LiveHost document action acceptance", "library acceptance"],
-  ["test:livehost-protocol-document", "LiveHost document protocol acceptance", "library acceptance"],
-  ["test:livehost-session", "session identity and lifecycle", "library acceptance"],
-  ["test:livehost-action-dedupe", "client/request identity, retry stability, and reload-safe defaults", "library acceptance"],
-  ["test:livehost-trace", "LiveHost trace acceptance", "library acceptance"],
-  ["test:livehost-authorization", "LiveHost authorization acceptance", "library acceptance"],
-  ["test:livehost-node-hosting", "LiveHost Node hosting acceptance", "library acceptance"],
-  ["test:livehost-bootstrap", "LiveHost bootstrap acceptance", "library acceptance"],
-  ["test:livehost-authority-lifecycle", "LiveHost authority lifecycle acceptance", "library acceptance"],
 ];
 
-function live_role(name: string): Readonly<{
+function live_support_role(name: string): Readonly<{
   role: TestSurfaceRole;
   exposure: TestSurfaceExposure;
 }> {
@@ -290,12 +269,12 @@ function live_role(name: string): Readonly<{
     || name === "test:transform-worker") {
     return Object.freeze({ role: "integration journey", exposure: "command only" });
   }
-  return Object.freeze({ role: "external diagnostic launcher", exposure: "hosted selectable" });
+  throw new Error(`Unclassified hson-live support runner: ${name}`);
 }
 
-function live_environment(name: string): Readonly<{ environment: string; transport: string }> {
-  const launcher = hson_live_test_launchers.find((candidate) => candidate.packageScript === name);
-  if (launcher === undefined) return Object.freeze({ environment: "Node", transport: "none" });
+function live_environment(
+  launcher: HsonLiveTestLauncher,
+): Readonly<{ environment: string; transport: string }> {
   if (launcher.runtime === "node-synthetic-dom") {
     return Object.freeze({ environment: "Node + synthetic DOM", transport: "none" });
   }
@@ -308,17 +287,74 @@ function live_environment(name: string): Readonly<{ environment: string; transpo
   return Object.freeze({ environment: "Node", transport: "in-memory or none" });
 }
 
-const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = LIVE_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
+function live_launcher_category(launcher: HsonLiveTestLauncher): TestSurfaceCategory {
+  if (launcher.subject === "Transform") return "Transforms";
+  if (launcher.subject === "LiveTree") return "LiveTree";
+  if (launcher.subject === "LiveMap") return "LiveMap";
+  if (launcher.subject === "Reflect") return "Reflect";
+  if (launcher.subject === "LiveHost") return "LiveHost";
+  return launcher.id === "core.public-boundaries" ? "Build / Types" : "Transforms";
+}
+
+function live_launcher_entry(launcher: HsonLiveTestLauncher): TestSurfaceCatalogEntry {
+  const externalLauncher: ExternalLauncherCatalogProjection = Object.freeze({
+    launcherId: launcher.id,
+    packageScript: launcher.packageScript,
+    primarySubject: launcher.subject,
+    executableChecks: launcher.executableChecks,
+    runtime: launcher.runtime,
+    completionRequirement: HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
+    panelVisible: true,
+    inclusiveEligible: true,
+  });
+  return Object.freeze({
+    id: `hson-live:${launcher.packageScript}`,
+    label: launcher.displayName,
+    category: live_launcher_category(launcher),
+    repository: "hson-live",
+    path: launcher.repositoryModule,
+    behavior: `${launcher.displayName} acceptance (${launcher.executableChecks} executable checks).`,
+    classification: launcher.runtime === "node-real-websocket"
+      || launcher.runtime === "node-real-websocket-process"
+      ? "real transport integration"
+      : "library acceptance",
+    role: "external diagnostic launcher",
+    exposure: "hosted selectable",
+    ...live_environment(launcher),
+    runner: `npm run ${launcher.packageScript}`,
+    externalLauncher,
+    appearsInHostedUi: externalLauncher.panelVisible,
+    status: "available",
+  });
+}
+
+const LIVE_SUPPORT_ENTRIES: readonly TestSurfaceCatalogEntry[] =
+LIVE_SUPPORT_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
   id: `hson-live:${name}`, label: name,
-  category: name === "build" || name === "check" ? "Build / Types" : name.includes("reflect") ? "Reflect" : "LiveHost",
+  category: name === "build" || name === "check" || name === "test:root-compatibility"
+    ? "Build / Types"
+    : name.includes("hson") || name.includes("transform") ? "Transforms" : "LiveHost",
   repository: "hson-live", path: name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
   behavior, classification,
-  ...live_role(name),
-  ...live_environment(name),
+  ...live_support_role(name),
+  environment: "Node",
+  transport: "none",
   runner: `npm run ${name}`,
-  appearsInHostedUi: live_role(name).exposure === "hosted selectable",
+  appearsInHostedUi: false,
   status: "available",
 }) as TestSurfaceCatalogEntry);
+
+export const HSON_LIVE_NON_LAUNCHER_TEST_SCRIPT_REASONS = Object.freeze(
+  Object.fromEntries(hson_live_non_launcher_test_scripts.map((entry) => [
+    entry.packageScript,
+    entry.reason,
+  ])) as Readonly<Record<`test:${string}`, string>>,
+);
+
+const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = Object.freeze([
+  ...hson_live_test_launchers.map(live_launcher_entry),
+  ...LIVE_SUPPORT_ENTRIES,
+]);
 
 const visibleLabelById = new Map<HostedTestSuiteId, string>(HOSTED_TEST_VISIBLE_SUITES.map((suite) => [suite.id, suite.label]));
 const HOSTED_ENTRIES = HOSTED_TEST_SUITE_IDS.map((suiteId): TestSurfaceCatalogEntry => Object.freeze({

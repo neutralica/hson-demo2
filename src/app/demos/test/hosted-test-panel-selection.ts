@@ -1,7 +1,10 @@
+import {
+  CANONICAL_TEST_SUBJECT_ORDER,
+  type TestSubject,
+} from "./tests.types";
 import type {
   TestCollection,
   TestDescriptor,
-  TestSubject,
 } from "./tests.types";
 import { select_test_descriptors } from "../../../test-system/test-selection";
 import type { ExternalLibraryLauncherTarget } from "../../../test-system/external-library-launchers";
@@ -28,11 +31,14 @@ type PrimaryDefinition = Readonly<{
 
 const PRIMARY_DEFINITIONS: readonly PrimaryDefinition[] = Object.freeze([
   Object.freeze({ key: "all", label: "all", selection: Object.freeze({ kind: "all" }) }),
-  Object.freeze({ key: "subject:transform", label: "Transform", selection: Object.freeze({ kind: "subject", subject: "transform" }) }),
-  Object.freeze({ key: "subject:livetree", label: "LiveTree", selection: Object.freeze({ kind: "subject", subject: "livetree" }) }),
-  Object.freeze({ key: "subject:livemap", label: "LiveMap", selection: Object.freeze({ kind: "subject", subject: "livemap" }) }),
-  Object.freeze({ key: "subject:livehost", label: "LiveHost", selection: Object.freeze({ kind: "subject", subject: "livehost" }) }),
-  Object.freeze({ key: "subject:reflect", label: "Reflect", selection: Object.freeze({ kind: "subject", subject: "reflect" }) }),
+  ...CANONICAL_TEST_SUBJECT_ORDER.map((subject) => Object.freeze({
+    key: `subject:${subject}`,
+    label: subject === "livemap" ? "LiveMap"
+      : subject === "livetree" ? "LiveTree"
+        : subject === "livehost" ? "LiveHost"
+          : subject[0]!.toUpperCase() + subject.slice(1),
+    selection: Object.freeze({ kind: "subject" as const, subject }),
+  })),
   Object.freeze({ key: "collection:unit", label: "Unit", selection: Object.freeze({ kind: "collection", collection: "unit" }) }),
   Object.freeze({ key: "collection:dev", label: "Dev", selection: Object.freeze({ kind: "collection", collection: "dev" }) }),
 ]);
@@ -78,13 +84,57 @@ function canonical_for_selection(
   return select_test_descriptors(descriptors, { test: selection.testId });
 }
 
+export type ExternalLibraryPanelCategory =
+  | typeof CANONICAL_TEST_SUBJECT_ORDER[number]
+  | "dev";
+
+export type ExternalLibraryPanelProjectionRule = Readonly<{
+  launcherId: string;
+  primarySubject: ExternalLibraryLauncherTarget["subject"];
+  projectedCategory: ExternalLibraryPanelCategory;
+  rationale: string;
+}>;
+
+/**
+ * Explicit cross-subject views. These affect panel selection only; complete
+ * external and inclusive totals continue to count each launcher target once.
+ */
+export const EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES:
+readonly ExternalLibraryPanelProjectionRule[] = Object.freeze([
+  Object.freeze({
+    launcherId: "core.canonical-hson-equality",
+    primarySubject: "integration",
+    projectedCategory: "transform",
+    rationale: "Canonical equality verifies graph equivalence used by Transform results.",
+  }),
+  Object.freeze({
+    launcherId: "core.public-boundaries",
+    primarySubject: "integration",
+    projectedCategory: "dev",
+    rationale: "Public package-boundary checks belong to the developer-facing collection view.",
+  }),
+]);
+
 export function hosted_test_panel_external_category(
   target: ExternalLibraryLauncherTarget,
-): "transform" | "livemap" | "reflect" | "livetree" | "livehost" | "dev" {
-  if (target.launcherId === "core.canonical-hson-equality") return "transform";
-  if (target.launcherId === "core.public-boundaries") return "dev";
-  if (target.subject === "transform" || target.subject === "livemap" || target.subject === "reflect"
-    || target.subject === "livetree" || target.subject === "livehost") return target.subject;
+): ExternalLibraryPanelCategory {
+  const rule = EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.find(
+    (candidate) => candidate.launcherId === target.launcherId,
+  );
+  if (rule !== undefined) {
+    if (rule.primarySubject !== target.subject) {
+      throw new Error(
+        `External panel projection subject mismatch for ${target.launcherId}: `
+        + `rule declares ${rule.primarySubject}, target declares ${target.subject}`,
+      );
+    }
+    return rule.projectedCategory;
+  }
+  if (CANONICAL_TEST_SUBJECT_ORDER.includes(
+    target.subject as typeof CANONICAL_TEST_SUBJECT_ORDER[number],
+  )) {
+    return target.subject as typeof CANONICAL_TEST_SUBJECT_ORDER[number];
+  }
   throw new Error(`External library target has no panel category projection: ${target.launcherId}`);
 }
 

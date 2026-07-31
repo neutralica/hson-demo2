@@ -11,15 +11,24 @@ export type TestCapability =
   | "filesystem"
   | "websocket";
 
-export type TestSubject =
-  | "transform"
-  | "livetree"
-  | "livemap"
-  | "reflect"
-  | "livehost"
-  | "integration"
-  | "livedemo"
-  | "dev";
+/** Stable presentation and serialization order for selectable library subjects. */
+export const CANONICAL_TEST_SUBJECT_ORDER = Object.freeze([
+  "transform",
+  "livemap",
+  "reflect",
+  "livetree",
+  "livehost",
+] as const);
+
+/** Complete protocol vocabulary: selectable subjects first, auxiliary subjects last. */
+export const TEST_SUBJECT_IDENTIFIERS = Object.freeze([
+  ...CANONICAL_TEST_SUBJECT_ORDER,
+  "integration",
+  "livedemo",
+  "dev",
+] as const);
+
+export type TestSubject = typeof TEST_SUBJECT_IDENTIFIERS[number];
 
 export type TestCollection = "unit" | "dev";
 

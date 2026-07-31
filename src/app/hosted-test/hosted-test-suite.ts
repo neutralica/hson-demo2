@@ -7,10 +7,10 @@ export const HOSTED_TEST_SUITE_IDS = [
   "node/all",
   "dom/core",
   "canvas/core",
-  "category/livetree",
-  "category/livemap",
-  "category/livehost",
   "category/transform",
+  "category/livemap",
+  "category/livetree",
+  "category/livehost",
   "category/unit",
   "category/dev",
 ] as const;
@@ -24,8 +24,8 @@ export type HostedTestRunTarget = HostedTestSuiteId | typeof HOSTED_TEST_SELECTE
 export const HOSTED_TEST_VISIBLE_SUITES = Object.freeze([
   Object.freeze({ id: "hosted/all", label: "all" }),
   Object.freeze({ id: "category/transform", label: "transform" }),
-  Object.freeze({ id: "category/livetree", label: "livetree" }),
   Object.freeze({ id: "category/livemap", label: "livemap" }),
+  Object.freeze({ id: "category/livetree", label: "livetree" }),
   Object.freeze({ id: "category/livehost", label: "livehost" }),
   Object.freeze({ id: "category/unit", label: "unit" }),
   Object.freeze({ id: "category/dev", label: "dev" }),

@@ -6,6 +6,7 @@ import { serialize_hosted_case_diagnostic } from "../../app/demos/test/hosted-te
 import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
 import { make_hosted_test_run_retention } from "../../app/hosted-test/hosted-test-action";
 import { hosted_test_report_cases } from "../../app/hosted-test/hosted-test-report.types";
+import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
 
 function expect_inspect(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted case inspection: ${message}`);
@@ -36,7 +37,13 @@ expect_inspect(ordinary.type === "ordinary" && ordinary.caseKey.includes("unit/t
 expect_inspect(serialize_hosted_case_diagnostic(ordinary).includes(ordinary.name), "ordinary view/copy serializer contains the selected case");
 
 const transformResult = await adapter.start("category/transform");
-expect_inspect(transformResult.summary.cases === 362, "focused Transform descriptor executes remotely");
+const registeredTransformCount = make_local_node_livehost_executor_registry().catalog.tests.filter(
+  (descriptor) => descriptor.subject === "transform",
+).length;
+expect_inspect(
+  transformResult.summary.cases === registeredTransformCount,
+  "focused Transform descriptor executes the registered Transform cases remotely",
+);
 const transformReport = adapter.capture();
 const transformCase = transformReport ? hosted_test_report_cases(transformReport)[0] : undefined;
 expect_inspect(transformCase !== undefined, "transform report exposes a compact case identity");

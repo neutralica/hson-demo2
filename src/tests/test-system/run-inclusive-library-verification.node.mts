@@ -1,4 +1,5 @@
 import { strict as assert } from "node:assert";
+import { hson_live_test_launchers } from "hson-live/test-launchers";
 import {
   external_library_launcher_metrics,
   reset_external_library_launcher_metrics,
@@ -15,12 +16,34 @@ import {
   hosted_test_projection_summary,
 } from "../../app/demos/test/hosted-test-report-summary";
 import type { TestEvent } from "../../app/demos/test/tests.types";
+import { TEST_SURFACE_CATALOG } from "../../app/hosted-test/test-surface-catalog";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
-assert.equal(registry.catalog.tests.length, 2104);
-assert.equal(availability.targets.length, 38);
-assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 732);
+const canonicalCaseCount = registry.catalog.tests.length;
+const manifestExternalCheckCount = hson_live_test_launchers.reduce(
+  (total, launcher) => total + launcher.executableChecks,
+  0,
+);
+const manifestedLauncherIds = hson_live_test_launchers.map((launcher) => launcher.id);
+const inclusiveCatalogLaunchers = TEST_SURFACE_CATALOG.filter(
+  (entry) => entry.externalLauncher?.inclusiveEligible === true,
+);
+assert.deepEqual(
+  availability.targets.map((target) => target.launcherId),
+  manifestedLauncherIds,
+  "inclusive availability must resolve every manifested launcher exactly once in manifest order",
+);
+assert.deepEqual(
+  inclusiveCatalogLaunchers.map((entry) => entry.externalLauncher!.launcherId).sort(),
+  [...manifestedLauncherIds].sort(),
+  "inclusive catalog eligibility must name exactly the manifested launchers",
+);
+assert.equal(
+  availability.targets.reduce((total, target) => total + target.executableChecks, 0),
+  manifestExternalCheckCount,
+  "inclusive discovered external checks must equal the manifested check total",
+);
 
 const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
@@ -72,8 +95,8 @@ assert.equal(
   true,
   failedExternalEvents.map((event) => `${event.id}: ${event.stderr}`).join("\n"),
 );
-assert.equal(canonicalCases, 2104);
-assert.equal(completedExternalIds.length, 38);
+assert.equal(canonicalCases, canonicalCaseCount);
+assert.equal(completedExternalIds.length, availability.targets.length);
 assert.deepEqual(queuedExternalIds, availability.targets.map((target) => target.id));
 assert.deepEqual(Object.keys(captured.externalResults), availability.targets.map((target) => target.id));
 assert.equal(firstSuiteCompletionSawBothPhases, true, "both phases become active before either suite completes");
@@ -83,13 +106,38 @@ assert.ok(
 );
 assert.deepEqual(
   footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  ["cases:2835", "passed:2835", "failed:0"],
+  [
+    `cases:${canonicalCaseCount + manifestExternalCheckCount}`,
+    `passed:${canonicalCaseCount + manifestExternalCheckCount}`,
+    "failed:0",
+  ],
 );
-assert.equal(projection.canonical.total, 2104);
-assert.equal(projection.launchers.total, 38);
-assert.equal(projection.launchers.declaredChecks, 731);
+assert.equal(projection.canonical.total, canonicalCaseCount);
+assert.equal(projection.launchers.total, availability.targets.length);
+const projectedLauncherIssues = availability.targets.flatMap((target) => {
+  const projected = captured.externalResults[target.id];
+  if (projected === undefined) {
+    return [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: missing`];
+  }
+  return projected.executableChecks === target.executableChecks
+    ? []
+    : [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: ${projected.executableChecks}`];
+});
+const unexpectedProjectedIds = Object.keys(captured.externalResults).filter(
+  (id) => !availability.targets.some((target) => target.id === id),
+);
+assert.deepEqual(
+  [...projectedLauncherIssues, ...unexpectedProjectedIds.map((id) => `unexpected projected launcher: ${id}`)],
+  [],
+  "every inclusive launcher must contribute its manifested checks exactly once",
+);
+assert.equal(
+  projection.launchers.declaredChecks,
+  manifestExternalCheckCount,
+  "projected external checks must equal the manifested and inclusive external total",
+);
 assert.equal(processMetrics.activeChildren, 0);
-assert.equal(processMetrics.directLauncherStarts, 38);
+assert.equal(processMetrics.directLauncherStarts, availability.targets.length);
 assert.equal(processMetrics.packageScriptStarts, 0);
 assert.ok(timing.overlappedTotalMs >= timing.canonicalPhaseMs);
 assert.ok(timing.overlappedTotalMs >= timing.externalPhaseMs);

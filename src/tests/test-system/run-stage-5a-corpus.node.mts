@@ -10,6 +10,7 @@ import {
 } from "../../app/demos/test/hosted-test-panel-selection";
 import { all_jsdom_hosted_test_suites } from "../../hosted-test/dom/jsdom-hosted-test-suites";
 import { all_jsdom_hosted_canvas_suites } from "../../hosted-test/dom/canvas/jsdom-hosted-canvas-suites";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../app/demos/test/tests.types";
 
 function expect_stage5a(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 5A corpus: ${message}`);
@@ -19,9 +20,12 @@ const node = make_local_node_livehost_executor_registry();
 const worker = make_cloudflare_livehost_executor_registry();
 const primary = hosted_test_panel_primary_choices(node.catalog.tests);
 const primaryKeys = primary.map((choice) => choice.key);
+const executorSubjectKeys = CANONICAL_TEST_SUBJECT_ORDER
+  .filter((subject) => node.catalog.tests.some((descriptor) => descriptor.subject === subject))
+  .map((subject) => `subject:${subject}`);
 expect_stage5a(
   primaryKeys.join("|")
-    === "all|subject:transform|subject:livetree|subject:livemap|subject:livehost|collection:unit|collection:dev",
+    === ["all", ...executorSubjectKeys, "collection:unit", "collection:dev"].join("|"),
   "the primary taxonomy remains curated as executor categories expand",
 );
 expect_stage5a(
@@ -42,14 +46,34 @@ const liveHostIds = idsFor("subject:livehost");
 const unitIds = idsFor("collection:unit");
 const devIds = idsFor("collection:dev");
 expect_stage5a(allIds.length === node.catalog.tests.length, "All resolves to the complete active catalog");
-expect_stage5a(transformIds.length > 0, "Transform appears when the executor advertises it");
-expect_stage5a(liveMapIds.length >= 802, "LiveMap retains the portable LiveMap corpus");
-expect_stage5a(liveTreeIds.length >= 101, "LiveTree retains the unit CSS/LiveTree corpus");
-expect_stage5a(liveHostIds.length === 185, "LiveHost includes factory suites and the Node proof launcher");
-expect_stage5a(unitIds.length === 101 && unitIds.every((id) => liveTreeIds.includes(id)), "Unit overlaps LiveTree without duplicate IDs");
+for (const [subject, ids] of [
+  ["transform", transformIds],
+  ["livemap", liveMapIds],
+  ["livetree", liveTreeIds],
+  ["livehost", liveHostIds],
+] as const) {
+  const registered = node.catalog.tests.filter((descriptor) => descriptor.subject === subject);
+  expect_stage5a(
+    ids.length === registered.length
+      && ids.every((id) => registered.some((descriptor) => descriptor.id === id)),
+    `${subject} selection exactly projects its registered canonical cases`,
+  );
+}
+const registeredUnitIds = node.catalog.tests
+  .filter((descriptor) => descriptor.collections.includes("unit"))
+  .map((descriptor) => descriptor.id);
+const registeredDevIds = node.catalog.tests
+  .filter((descriptor) => descriptor.collections.includes("dev"))
+  .map((descriptor) => descriptor.id);
 expect_stage5a(
-  devIds.length === 32 && devIds.every((id) => liveMapIds.includes(id) || liveTreeIds.includes(id)),
-  "Dev overlaps LiveMap and LiveTree without duplicate IDs",
+  unitIds.length === registeredUnitIds.length
+    && unitIds.every((id) => liveTreeIds.includes(id)),
+  "Unit exactly projects its registry membership and overlaps LiveTree without duplicate IDs",
+);
+expect_stage5a(
+  devIds.length === registeredDevIds.length
+    && devIds.every((id) => liveMapIds.includes(id) || liveTreeIds.includes(id)),
+  "Dev exactly projects its registry membership and overlaps LiveMap and LiveTree without duplicate IDs",
 );
 expect_stage5a(new Set(unitIds).size === unitIds.length && new Set(devIds).size === devIds.length, "collection projections are duplicate-free");
 

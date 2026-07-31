@@ -1,4 +1,5 @@
 import type { TestCapability, TestCase, TestCollection, TestDescriptor, TestSuite } from "../../app/demos/test/tests.types";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../app/demos/test/tests.types";
 import { decode_hosted_test_discovery_response } from "../../app/hosted-test/hosted-test-client-action";
 import { hosted_test_panel_primary_choices } from "../../app/demos/test/hosted-test-panel-selection";
 import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
@@ -91,9 +92,14 @@ expect_discovery(
 );
 expect_discovery(
   hosted_test_panel_primary_choices(completeNodeDiscovery.catalog.tests, completeNodeDiscovery.externalTargets)
-    .map((choice) => choice.label.replace(/ \(\d+\)$/, ""))
-    .join(",")
-    === "all,Transform,LiveTree,LiveMap,LiveHost,Reflect,Unit,Dev",
+    .filter((choice) => choice.selection.kind === "subject")
+    .every((choice, index) => choice.selection.kind === "subject"
+      && choice.selection.subject === CANONICAL_TEST_SUBJECT_ORDER[index])
+    && hosted_test_panel_primary_choices(
+      completeNodeDiscovery.catalog.tests,
+      completeNodeDiscovery.externalTargets,
+    ).filter((choice) => choice.selection.kind === "subject").length
+      === CANONICAL_TEST_SUBJECT_ORDER.length,
   "complete discovery exposes every current hosted panel category",
 );
 const reflectTargetIndex = completeNodeDiscovery.externalTargets.findIndex((target) => target.subject === "reflect");

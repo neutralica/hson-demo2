@@ -20,6 +20,7 @@ import {
   run_node_verification_phases,
 } from "../../hosted-test/run-node-selected-verifications";
 import {
+  EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES,
   hosted_test_panel_external_category,
   hosted_test_panel_primary_choices,
   hosted_test_panel_selection_case_count,
@@ -27,6 +28,10 @@ import {
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
 } from "../../app/demos/test/hosted-test-panel-selection";
+import {
+  CANONICAL_TEST_SUBJECT_ORDER,
+  TEST_SUBJECT_IDENTIFIERS,
+} from "../../app/demos/test/tests.types";
 import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
 import { visible_external_launcher_stderr } from "../../app/demos/test/hosted-test-report-view";
 
@@ -124,8 +129,31 @@ assert.equal(
 const nodeRegistry = make_local_node_livehost_executor_registry();
 const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, availability.targets);
 assert.deepEqual(
-  primary.map((choice) => choice.label.replace(/ \(\d+\)$/, "")),
-  ["all", "Transform", "LiveMap", "Reflect", "LiveTree", "LiveHost", "Unit", "Dev"],
+  CANONICAL_TEST_SUBJECT_ORDER,
+  ["transform", "livemap", "reflect", "livetree", "livehost"],
+  "the canonical selectable-subject order has one explicit contract owner",
+);
+assert.equal(
+  new Set(TEST_SUBJECT_IDENTIFIERS).size,
+  TEST_SUBJECT_IDENTIFIERS.length,
+  "every known subject identifier appears exactly once in the protocol vocabulary",
+);
+assert.deepEqual(
+  primary
+    .filter((choice) => choice.selection.kind === "subject")
+    .map((choice) => choice.selection.kind === "subject" ? choice.selection.subject : undefined),
+  CANONICAL_TEST_SUBJECT_ORDER,
+  "panel subject choices preserve the canonical subject order",
+);
+assert.deepEqual(
+  hosted_test_panel_primary_choices(
+    [...nodeRegistry.catalog.tests].reverse(),
+    [...availability.targets].reverse(),
+  )
+    .filter((choice) => choice.selection.kind === "subject")
+    .map((choice) => choice.selection.kind === "subject" ? choice.selection.subject : undefined),
+  CANONICAL_TEST_SUBJECT_ORDER,
+  "suite registration, launcher discovery, and completion order cannot reorder subjects",
 );
 for (const choice of primary) {
   const count = hosted_test_panel_selection_case_count(
@@ -146,6 +174,76 @@ assert.equal(new Set(allSelectedIds).size, allSelectedIds.length, "inclusive all
 for (const target of availability.targets) {
   assert.equal(allSelectedIds.includes(target.id), true, `inclusive all dispatches ${target.id}`);
 }
+assert.equal(
+  hosted_test_panel_selection_case_count(
+    nodeRegistry.catalog.tests,
+    allSelection,
+    availability.targets,
+  ),
+  nodeRegistry.catalog.tests.length + manifestCheckCount,
+  "complete selection derives canonical plus each manifested external check exactly once",
+);
+assert.equal(
+  [...categoryTargets.values()].reduce(
+    (total, targets) => total + targets.reduce(
+      (categoryTotal, target) => categoryTotal + target.executableChecks,
+      0,
+    ),
+    0,
+  ),
+  manifestCheckCount,
+  "subject projections do not inflate the complete external total",
+);
+assert.equal(
+  new Set(EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.map((rule) => rule.launcherId)).size,
+  EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.length,
+  "cross-subject projection rules have unique launcher IDs",
+);
+for (const rule of EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES) {
+  const projected = availability.targets.find((target) => target.launcherId === rule.launcherId);
+  assert.ok(projected, `projection rule resolves manifested launcher ${rule.launcherId}`);
+  assert.equal(projected.subject, rule.primarySubject, `projection rule preserves ${rule.launcherId} primary subject`);
+  assert.equal(hosted_test_panel_external_category(projected), rule.projectedCategory);
+  assert.ok(rule.rationale.trim().length > 0, `projection rule ${rule.launcherId} explains its subject view`);
+}
+const transformSelection = primary.find(
+  (choice) => choice.selection.kind === "subject"
+    && choice.selection.subject === "transform",
+)?.selection;
+assert.ok(transformSelection, "Transform remains an exact selectable subject");
+const transformCanonicalCount = nodeRegistry.catalog.tests.filter(
+  (descriptor) => descriptor.subject === "transform",
+).length;
+const transformExternalTargets = availability.targets.filter(
+  (target) => hosted_test_panel_external_category(target) === "transform",
+);
+const transformExternalCount = transformExternalTargets.reduce(
+  (total, target) => total + target.executableChecks,
+  0,
+);
+assert.equal(
+  hosted_test_panel_selection_case_count(
+    nodeRegistry.catalog.tests,
+    transformSelection,
+    availability.targets,
+  ),
+  transformCanonicalCount + transformExternalCount,
+  "Transform total derives from canonical cases plus its intentional external projection",
+);
+const jsonIngressTarget = availability.targets.find(
+  (target) => target.launcherId === "transform.json-ingress",
+);
+assert.ok(jsonIngressTarget, "JSON ingress is externally discoverable");
+assert.equal(hosted_test_panel_external_category(jsonIngressTarget), "transform");
+assert.equal(
+  hosted_test_panel_selected_ids(
+    nodeRegistry.catalog.tests,
+    transformSelection,
+    availability.targets,
+  ).includes(jsonIngressTarget.id),
+  true,
+  "JSON ingress is selectable through the Transform projection",
+);
 
 const installedRoot = await mkdtemp(join(tmpdir(), "hson-live-installed-"));
 await writeFile(join(installedRoot, "package.json"), JSON.stringify({ name: "hson-live", scripts: {} }));
