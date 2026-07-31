@@ -251,7 +251,7 @@ function parser_paths_case(suite: string): LiveTreeCaseSpec {
         `<section hson:quid="0000000000000001" data-_quid="user-quid" data-_index="user-index">x</section>`,
       ).toNode();
       const arrayNode = hson.fromTrustedHtml(
-        `<_hson_arr><_hson_ii hson:index="0"><p>A</p></_hson_ii></_hson_arr>`,
+        `<_hson_arr><_hson_ii hson:index="0"><_hson_obj/></_hson_ii></_hson_arr>`,
       ).toNode();
       const svgNode = hson.fromTrustedHtml(
         `<svg xmlns="http://www.w3.org/2000/svg" xmlns:hson="urn:hson-live" hson:quid="0000000000000002"><g></g></svg>`,

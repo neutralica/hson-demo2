@@ -52,10 +52,10 @@ export function run_sanitizer_metadata_fixture(): Record<string, SanitizerMetada
       malformedQuid: compare(`<main hson:quid="bad"/>`),
       unknownMetadata: compare(`<main hson:unknown="value"/>`),
       validIndex: compare(
-        `<_hson_arr><_hson_ii hson:index="0"><span>A</span></_hson_ii></_hson_arr>`,
+        `<_hson_arr><_hson_ii hson:index="0"><_hson_obj><span><_hson_obj/></span></_hson_obj></_hson_ii></_hson_arr>`,
       ),
       malformedIndex: compare(
-        `<_hson_arr><_hson_ii hson:index="banana"><span>A</span></_hson_ii></_hson_arr>`,
+        `<_hson_arr><_hson_ii hson:index="banana"><_hson_obj><span><_hson_obj/></span></_hson_obj></_hson_ii></_hson_arr>`,
       ),
       misplacedIndex: compare(`<main hson:index="0"/>`),
       duplicateQuid: compare(
