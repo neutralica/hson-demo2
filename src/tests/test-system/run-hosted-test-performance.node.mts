@@ -68,9 +68,11 @@ async function run_sample(
 ): Promise<Sample> {
   const registry = make_local_node_livehost_executor_registry();
   const availability = await resolve_external_library_launchers();
-  assert.equal(registry.catalog.tests.length, 2103);
-  assert.equal(availability.targets.length, 28);
-  assert.equal(availability.targets.reduce((total, target) => total + target.executableChecks, 0), 502);
+  const canonicalChecks = registry.catalog.tests.length;
+  const externalChecks = availability.targets.reduce(
+    (total, target) => total + target.executableChecks,
+    0,
+  );
   const selectedIds = Object.freeze([
     ...registry.catalog.tests.map((test) => test.id),
     ...availability.targets.map((target) => target.id),
@@ -118,9 +120,9 @@ async function run_sample(
     })}`);
   }
   report.dispose();
-  assert.equal(sample.passedCases, 2605);
+  assert.equal(sample.passedCases, canonicalChecks + externalChecks);
   assert.equal(sample.failedCases, 0);
-  assert.equal(sample.launcherStarts, 28);
+  assert.equal(sample.launcherStarts, availability.targets.length);
   return sample;
 }
 

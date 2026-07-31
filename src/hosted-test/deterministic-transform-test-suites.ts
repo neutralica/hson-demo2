@@ -20,7 +20,7 @@ export function all_deterministic_transform_test_suites(
     make_transform_test_suite({ _circuit_test }, HTML_FIXTURES_LEGACY, "transform/legacy/html", captureMap),
     make_transform_test_suite({ _circuit_test }, HTML_FIXTURES_NEW, "transform/html/new", captureMap),
     make_transform_test_suite({ _circuit_test }, EXTRA_FIXTURES, "transform/misc-extra", captureMap),
-    make_transform_test_suite({ _circuit_test }, HSON_FIXTURES, "transform/hson", captureMap),
+    make_transform_test_suite({ _circuit_test }, HSON_FIXTURES, "transform/hson", captureMap, "hson"),
     make_transform_test_suite({ _circuit_test }, JSON_FIXTURES_LEVEL2, "transform/json/level-2", captureMap),
     make_transform_test_suite({ _circuit_test }, TRANSFORM_FAILS, "transform/_INVALID", captureMap, "auto", "fail"),
     make_transform_test_suite({ _circuit_test }, HSON_FXT_INVALID, "transform/hson/_INVALID", captureMap, "hson", "fail"),

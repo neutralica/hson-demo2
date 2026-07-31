@@ -69,7 +69,7 @@ for (const [scenario, pattern] of [
   ["wrong-id", /expected "transform\.hson-tokenizer"/],
   ["malformed", /malformed completion data/],
   ["duplicate", /more than one completion record/],
-  ["failed", /reported 54 passed and 1 failed/],
+  ["failed", new RegExp(`reported ${target.executableChecks - 1} passed and 1 failed`)],
 ] as const) {
   const observed = await run(scenario);
   assert.equal(observed.result.ok, false, `${scenario} completion fails`);

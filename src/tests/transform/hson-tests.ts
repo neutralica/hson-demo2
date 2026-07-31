@@ -37,7 +37,6 @@ font-size: 10px
   strayTextAfter_attr: `<div id="x" hello/>`, // OK as well--a flag
   childBeforeHeaderClosed: `<div <span/>/>`, // OK -- accepted but normalized
   attrThen_childBeforeClose: `<div id="x" <span/>/>`, // OK -- accepted but normalized 
-  singleQuotedAttr: `<div id='x'/>`, // accept/normailize
   spaceAfterOpenBeforeName: `< div/>`,
 };
 
@@ -75,6 +74,7 @@ const hsonShouldFail: Record<string, string> = {
   // ----------------------------
   
   singleQuotedText: `<div 'hi'/>`,
+  singleQuotedAttr: `<div id='x'/>`,
   unclosedDoubleQuoteAttr: `<div id="x/>`,
   mismatchedQuotesAttr: `<div id="x'/>`,
   strayQuoteRun: `<div """"""/>`,

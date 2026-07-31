@@ -62,3 +62,27 @@ test("HSON bare primitives expose one root-free semantic node in every browser p
   await expect(node).not.toContainText('"$_tag": "_hson_elem"');
   assertNoErrors();
 });
+
+test("browser HSON parsing enforces authored names, duplicates, and escape grammars", async ({ page }) => {
+  const assertNoErrors = monitor_application_errors(page);
+  await reach_demo(page);
+  await open_demo(page, "parse");
+
+  const editor = page.getByTestId("parse-hson-editor");
+  const status = page.getByTestId("parse-hson-status");
+  for (const invalid of [
+    `<_hson_obj>`,
+    `<tag a="1" a="2"/>`,
+    String.raw`<tag value="\q"/>`,
+    "<`name\\u0041` 1>",
+  ]) {
+    await editor.fill(invalid);
+    await expect(status).toHaveText("XX");
+  }
+
+  await editor.fill(String.raw`<tag a="\/" A="\u0041"/>`);
+  await expect(status).toHaveText("OK");
+  await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"a": "\/"/);
+  await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"A": "A"/);
+  assertNoErrors();
+});
