@@ -153,7 +153,7 @@ function serialization_case(suite: string): LiveTreeCaseSpec {
     act() {
       const input = { alpha: "x", nested: { value: 2 } };
       const parsed = hson.fromJson(input).toNode();
-      const hsonText = hson.fromNode(parsed).toHson().serialize();
+      const hsonText = hson.fromJson(input).toHson().serialize();
       const jsonText = hson.fromNode(parsed).toJson().serialize();
       const htmlText = hson.fromNode(parsed).toHtml().serialize();
       const roundTrip = hson.fromHson(hsonText).toJson().value();

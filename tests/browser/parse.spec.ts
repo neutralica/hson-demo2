@@ -43,3 +43,22 @@ test("Parse transforms valid-invalid-valid input without duplicate surfaces", as
   await expect(hson).toBeVisible();
   assertNoErrors();
 });
+
+test("HSON bare primitives expose one root-free semantic node in every browser panel", async ({ page }) => {
+  const assertNoErrors = monitor_application_errors(page);
+  await reach_demo(page);
+  await open_demo(page, "parse");
+
+  const hson = page.getByTestId("parse-hson-editor");
+  await hson.fill("42");
+  await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+  await expect(page.getByTestId("parse-json-editor")).toHaveValue("42");
+  await expect(page.getByTestId("parse-html-editor")).toHaveValue("<_val>42</_val>");
+
+  await page.getByRole("button", { name: "toggle hson panel view mode" }).click();
+  const node = page.getByTestId("parse-hson-node-output");
+  await expect(node).toContainText('"$_tag": "_hson_val"');
+  await expect(node).not.toContainText('"$_tag": "_hson_root"');
+  await expect(node).not.toContainText('"$_tag": "_hson_elem"');
+  assertNoErrors();
+});

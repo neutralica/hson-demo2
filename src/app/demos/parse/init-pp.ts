@@ -341,7 +341,9 @@ export function init_parsing_panels(pp: Panels): void {
           setPanelValueAndBytes("hson", outH);
           setPanelValueAndBytes("html", outX);
 
-          const tPrim = hson.fromJson(outJ);
+          const tPrim = origin === "hson"
+            ? hson.fromHson(outH)
+            : hson.fromJson(outJ);
           setNodeViewForAll(tPrim);
 
           markActiveValid(origin);
