@@ -11,6 +11,7 @@ export function run_browser_transform_oracle_probe(): Readonly<{
   rejectionStage: string | undefined;
   source: Readonly<{ index: number; line: number; column: number }> | undefined;
   stableWitness: boolean;
+  negativeZero: boolean;
 }> {
   const closure = assertCanonicalClosure({
     launcher: "browser.transform-oracle",
@@ -36,5 +37,6 @@ export function run_browser_transform_oracle_probe(): Readonly<{
     rejectionStage: rejection.details.stage,
     source: rejection.details.source,
     stableWitness: rejection.witnessBody.includes('"actualClassification": "expected-rejection"'),
+    negativeZero: Object.is(hsonTransform.fromHson("-0").toNode().$_content[0], -0),
   });
 }

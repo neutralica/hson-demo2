@@ -106,6 +106,13 @@ dev
 
 Subject is used for organization and selection. It does not describe the runtime.
 
+The deterministic Transform inventory currently contains nine suites and 368
+cases. Its authored-HSON portion contains 26 accepted cases and 30 rejection
+cases. The accepted inventory includes the six bare primitive families and the
+two established adjacent-text element sources (`<div "a" "b"/>` and
+`<div """"""/>`). These totals are derived from the registered suites; generated
+or fuzz declarations are outside this inventory.
+
 ### `requirements`
 
 The minimum environment needed to execute the test:

@@ -1,36 +1,24 @@
 
 const hsonTestsA = {
-  a: `<img alt="x" style="
-color: red; font-size: 10px
-"/>`,
+  a: `<img alt="x" style="\\ncolor: red; font-size: 10px\\n"/>`,
   1: `<figure
   <img alt="x" src="x.png"/>
 />`,
-  c: `<img alt="x" style="color: red;
-font-size: 10px
-"/>`,
+  c: `<img alt="x" style="color: red;\\nfont-size: 10px\\n"/>`,
   2: `<figure
   <img alt="x" style="color: red; font-size: 10px"/>
 />`,
   3: `<figure
-  <img alt="x" style="color: red;
-  font-size: 10px
-  "/>
+  <img alt="x" style="color: red;\\n  font-size: 10px\\n  "/>
 />`,
   4: `<figure
-  <img alt="x" style="
-  color: red; font-size: 10px"/>
+  <img alt="x" style="\\n  color: red; font-size: 10px"/>
 />`,
   5: `<figure
-  <img alt="x" style="
-  color: red;
-  font-size: 10px"/>
+  <img alt="x" style="\\n  color: red;\\n  font-size: 10px"/>
 />`,
   6: `<figure
-  <img alt="x" style="
-  color: red;
-  font-size: 10px
-  "/>
+  <img alt="x" style="\\n  color: red;\\n  font-size: 10px\\n  "/>
   />`,
   bareWordInHeader: `<div hello/>`, // OK -- this is a flag
   quotedWordInHeader: `<div "hello"/>`, // OK, idiomatically
@@ -38,6 +26,17 @@ font-size: 10px
   childBeforeHeaderClosed: `<div <span/>/>`, // OK -- accepted but normalized
   attrThen_childBeforeClose: `<div id="x" <span/>/>`, // OK -- accepted but normalized 
   spaceAfterOpenBeforeName: `< div/>`,
+  adjacentTextContent: `<div "a" "b"/>`,
+  threeEmptyTextItems: `<div """"""/>`,
+};
+
+const hsonPrimitiveParity = {
+  zero: `0`,
+  negativeZero: `-0`,
+  string: `"demo"`,
+  true: `true`,
+  false: `false`,
+  null: `null`,
 };
 
 const hsonShouldFail: Record<string, string> = {
@@ -77,14 +76,6 @@ const hsonShouldFail: Record<string, string> = {
   singleQuotedAttr: `<div id='x'/>`,
   unclosedDoubleQuoteAttr: `<div id="x/>`,
   mismatchedQuotesAttr: `<div id="x'/>`,
-  strayQuoteRun: `<div """"""/>`,
-  
-  // ----------------------------
-  // stray text in tag header
-  // ----------------------------
-  
-  contentThenSecondContent: `<div "a" "b"/>`, 
-  
   // ----------------------------
   // malformed closing / self-close
   // ----------------------------
@@ -141,6 +132,7 @@ const tricksyAttrsINVALID = {
 
 export const HSON_FIXTURES = {
   hson: hsonTestsA,
+  primitives: hsonPrimitiveParity,
   attrsFlags: tricksyFlagsAttrs,
 };
 

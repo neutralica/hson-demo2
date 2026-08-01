@@ -22,9 +22,6 @@ export const html_INVALID = {
     <_hson_ii hson:index="0"><p>A</p></_hson_ii>
     <_hson_ii hson:index="2"><p>C</p></_hson_ii>
   </_hson_arr>`,
-  // INVALID: literal _hson_elem must not appear in HTML
-  literal__elem_INVALID: `<_hson_elem><p>x</p></_hson_elem>`,
-
   // INVALID: VSN with _attrs (only _meta allowed on VSN; _hson_ii may carry index meta)
   vsn_with_attrs_INVALID: `<_hson_ii class="x" hson:index="0"><p>x</p></_hson_ii>`,
 

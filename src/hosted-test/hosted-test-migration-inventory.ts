@@ -107,11 +107,11 @@ const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = O
   dom("transform/fuzz-json/seed_<startup-seed>", 50, "all_test_suites(transform)", ["DOMParser"]),
   dom("transform/legacy/json", 29, "all_test_suites(transform|legacy)", ["DOMParser"]),
   dom("transform/legacy/html", 88, "all_test_suites(transform|legacy)", ["DOMParser", "document", "serialization"]),
-  dom("transform/html/new", 125, "all_test_suites(transform)", ["DOMParser", "document", "serialization"]),
+  dom("transform/html/new", 126, "all_test_suites(transform)", ["DOMParser", "document", "serialization"]),
   dom("transform/misc-extra", 9, "all_test_suites(transform)", ["DOMParser"]),
   dom("transform/hson", 19, "all_test_suites(transform)", ["DOMParser"]),
   dom("transform/json/level-2", 42, "all_test_suites(transform)", ["DOMParser"]),
-  dom("transform/_INVALID", 11, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
+  dom("transform/_INVALID", 10, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
   dom("transform/hson/_INVALID", 31, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
   dom("generated/json/seed_<run-seed>", 200, "all_test_suites(fuzz-json)", ["DOMParser"]),
 ]);

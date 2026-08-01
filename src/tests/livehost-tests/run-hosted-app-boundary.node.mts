@@ -115,5 +115,5 @@ expect_boundary(unitSuites.length === 9 && unitKeys.length === 101 && unitKeys.e
 const domKeys = new Set(all_jsdom_hosted_test_suites().flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`)));
 const transformSuites = all_deterministic_transform_test_suites();
 const transformKeys = transformSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
-expect_boundary(transformSuites.length === 9 && transformKeys.length === 362 && transformKeys.every((key) => domKeys.has(key)), "all nine deterministic transform suites / 362 cases are represented by dom/core");
+expect_boundary(transformSuites.length === 9 && transformKeys.length === 368 && transformKeys.every((key) => domKeys.has(key)), "all nine deterministic transform suites / 368 cases are represented by dom/core");
 console.log("hosted app boundary: ok");

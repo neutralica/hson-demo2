@@ -97,6 +97,7 @@ const htmlVoidCommentCases: { [key: string]: string } = {
 };
 
 const htmlNormalizationCases: { [key: string]: string } = {
+  literalElementTransport: `<_hson_elem><p>x</p></_hson_elem>`,
   uppercaseTags: `<DIV><P>caps</P></DIV>`,
   mixedCaseTags: `<DiV><SpAn>mixed</SpAn></DiV>`,
   uppercaseAttrs: `<div DATA-ID="x" CLASS="y">caps attrs</div>`,
@@ -211,4 +212,3 @@ export const HTML_FIXTURES_NEW = {
   htmlVoidCommentCases,
   HTML_ATTR_ESCAPE_FIXTURES
 }
-

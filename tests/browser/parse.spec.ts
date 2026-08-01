@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
+import type * as BrowserTransformOracle from "../../src/tests/transform/browser-transform-oracle";
 
 const VALID_HSON = '<div id="browser-parse" "hello browser"/>';
 
@@ -44,22 +45,56 @@ test("Parse transforms valid-invalid-valid input without duplicate surfaces", as
   assertNoErrors();
 });
 
-test("HSON bare primitives expose one root-free semantic node in every browser panel", async ({ page }) => {
+test("HSON bare primitives preserve Demo and Transform semantic identity", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
   await open_demo(page, "parse");
 
   const hson = page.getByTestId("parse-hson-editor");
-  await hson.fill("42");
-  await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
-  await expect(page.getByTestId("parse-json-editor")).toHaveValue("42");
-  await expect(page.getByTestId("parse-html-editor")).toHaveValue("<_val>42</_val>");
+  for (const [source, json, html] of [
+    ["0", "0", "<_hson_val>0</_hson_val>"],
+    ["-0", "0", "<_hson_val>0</_hson_val>"],
+    [`"browser string"`, `"browser string"`, "browser string"],
+    ["true", "true", "<_hson_val>true</_hson_val>"],
+    ["false", "false", "<_hson_val>false</_hson_val>"],
+    ["null", "null", "<_hson_val>null</_hson_val>"],
+  ] as const) {
+    await hson.fill(source);
+    await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+    await expect(hson).toHaveValue(source);
+    await expect(page.getByTestId("parse-json-editor")).toHaveValue(json);
+    await expect(page.getByTestId("parse-html-editor")).toHaveValue(html);
+  }
 
   await page.getByRole("button", { name: "toggle hson panel view mode" }).click();
   const node = page.getByTestId("parse-hson-node-output");
   await expect(node).toContainText('"$_tag": "_hson_val"');
   await expect(node).not.toContainText('"$_tag": "_hson_root"');
   await expect(node).not.toContainText('"$_tag": "_hson_elem"');
+  assertNoErrors();
+});
+
+test("Demo accepts adjacent and empty element text items without collapsing order", async ({ page }) => {
+  const assertNoErrors = monitor_application_errors(page);
+  await reach_demo(page);
+  await open_demo(page, "parse");
+
+  const editor = page.getByTestId("parse-hson-editor");
+  for (const [source, expected] of [
+    [`<div "a" "b"/>`, ["a", "b"]],
+    [`<div """"""/>`, ["", "", ""]],
+  ] as const) {
+    await editor.fill(source);
+    await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+    await page.getByRole("button", { name: "toggle hson panel view mode" }).click();
+    const rawNode = await page.getByTestId("parse-hson-node-output").textContent();
+    const parsed = JSON.parse(rawNode ?? "null") as {
+      $_content: readonly [{ $_content: readonly [{ $_content: readonly { $_content: readonly string[] }[] }] }];
+    };
+    const values = parsed.$_content[0].$_content[0].$_content.map((item) => item.$_content[0]);
+    expect(values).toEqual(expected);
+    await page.getByRole("button", { name: "toggle hson panel view mode" }).click();
+  }
   assertNoErrors();
 });
 
@@ -100,7 +135,7 @@ test("browser HSON parsing enforces authored names, duplicates, and escape gramm
     `<_hson_obj>`,
     `<tag a="1" a="2"/>`,
     String.raw`<tag value="\q"/>`,
-    "<`name\\u0041` 1>",
+    String.raw`<tag value="\u00G1"/>`,
   ]) {
     await editor.fill(invalid);
     await expect(status).toHaveText("XX");
@@ -110,6 +145,9 @@ test("browser HSON parsing enforces authored names, duplicates, and escape gramm
   await expect(status).toHaveText("OK");
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"a": "\/"/);
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"A": "A"/);
+  await editor.fill("<`name\\u0041` 1>");
+  await expect(status).toHaveText("OK");
+  await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"nameA": 1/);
   assertNoErrors();
 });
 
@@ -117,15 +155,7 @@ test("browser executes the portable strict Transform oracle and structured witne
   await page.goto("/");
   const result = await page.evaluate(async () => {
     const modulePath = "/src/tests/transform/browser-transform-oracle.ts";
-    const probe = await import(/* @vite-ignore */ modulePath) as {
-      run_browser_transform_oracle_probe(): {
-        closureTag: string;
-        rejectionCode: string;
-        rejectionStage?: string;
-        source?: { index: number; line: number; column: number };
-        stableWitness: boolean;
-      };
-    };
+    const probe = await import(/* @vite-ignore */ modulePath) as typeof BrowserTransformOracle;
     return probe.run_browser_transform_oracle_probe();
   });
   expect(result).toEqual({
@@ -134,5 +164,6 @@ test("browser executes the portable strict Transform oracle and structured witne
     rejectionStage: "tokenization",
     source: { index: 1, line: 1, column: 2 },
     stableWitness: true,
+    negativeZero: true,
   });
 });

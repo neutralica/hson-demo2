@@ -545,7 +545,7 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
   closeButton.listen.stopProp().onClick(close);
 
   root.listen.document.onKeyDown((ke) => {
-    if (ke.key === "`" || ke.key === "~") {
+    if (ke.key === "~" || ke.key === "~") {
       ke.preventDefault();
       toggle();
       return;

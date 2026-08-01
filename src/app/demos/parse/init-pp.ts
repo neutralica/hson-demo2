@@ -326,7 +326,7 @@ export function init_parsing_panels(pp: Panels): void {
     }
 
     try {
-      if (origin === "json" || origin === "hson") {
+      if (origin === "json") {
         const prim = tryParse(raw);
 
         if (prim.ok) {
@@ -341,9 +341,7 @@ export function init_parsing_panels(pp: Panels): void {
           setPanelValueAndBytes("hson", outH);
           setPanelValueAndBytes("html", outX);
 
-          const tPrim = origin === "hson"
-            ? hson.fromHson(outH)
-            : hson.fromJson(outJ);
+          const tPrim = hson.fromJson(outJ);
           setNodeViewForAll(tPrim);
 
           markActiveValid(origin);
@@ -351,16 +349,6 @@ export function init_parsing_panels(pp: Panels): void {
           return;
         }
 
-        if (origin === "hson") {
-          const t = raw.trim();
-          const looksLikeBareWord = /^[A-Za-z_][A-Za-z0-9_]*$/.test(t);
-
-          if (looksLikeBareWord) {
-            markActiveInvalid(origin);
-            setInProgress(false);
-            return;
-          }
-        }
       }
 
       const t =
