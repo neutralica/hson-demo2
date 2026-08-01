@@ -113,7 +113,7 @@ adjacent-text element sources (`<div "a" "b"/>` and `<div """"""/>`).
 
 The authoritative authored-language contract now lives in hson-live's
 `transform.certified-authored-hson-corpus` external launcher. It materializes
-339 certified descriptors and 2,637 atomic assertions. The demo cases are not
+366 candidate descriptors and 2,844 weighted assertions. The demo cases are not
 counted again as certified descriptors. Specialized scale and implementation
 fixtures remain with their existing suites; in particular,
 `transform/legacy/html::html__largeFormat.html_wikipedia` remains the legacy
