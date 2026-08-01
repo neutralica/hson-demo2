@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { soft_tile_key, soft_tile_project, soft_tile_translate } from "./soft-tile-candidates";
-import { pack_soft_tiles } from "./soft-tile-field";
-import type { SoftTileBody, SoftTileFieldConfig, SoftTileHexCoord } from "./soft-tile.types";
+import { soft_tile_key, soft_tile_project, soft_tile_translate } from "../../../src/app/ui/soft-tile/soft-tile-candidates";
+import { pack_soft_tiles } from "../../../src/app/ui/soft-tile/soft-tile-field";
+import type { SoftTileBody, SoftTileFieldConfig, SoftTileHexCoord } from "../../../src/app/ui/soft-tile/soft-tile.types";
 
 function rectangle(id: string, columns: number, rows: number, requiredParentId?: string): SoftTileBody {
   const cells: SoftTileHexCoord[] = [];

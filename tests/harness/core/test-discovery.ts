@@ -1,12 +1,12 @@
 import {
   TEST_SUBJECT_IDENTIFIERS,
   type TestSubject,
-} from "../app/demos/test/tests.types";
+} from "./test-contracts";
 import type {
   TestCapability,
   TestCollection,
   TestDescriptor,
-} from "../app/demos/test/tests.types";
+} from "./test-contracts";
 import { make_test_catalog, test_catalog_version, type TestCatalog } from "./test-catalog";
 import type {
   TestExecutorDescriptor,
@@ -14,7 +14,7 @@ import type {
   TestExecutorLocation,
   TestExecutorRegistry,
 } from "./test-executor";
-import type { ExternalLibraryLauncherTarget } from "./external-library-launchers";
+import type { ExternalLibraryLauncherTarget } from "./external-launcher-contract";
 
 export const TEST_EXECUTOR_PROTOCOL_VERSION = 2;
 

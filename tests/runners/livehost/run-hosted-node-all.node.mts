@@ -1,15 +1,15 @@
 import { performance } from "node:perf_hooks";
 import { create_livehost_client } from "hson-live/livehost";
 import type { LiveHostSocketLike } from "hson-live/types";
-import { create_hosted_test_livehost, run_hosted_test_action, type HostedTestActions } from "../../app/hosted-test/hosted-test-action";
-import type { HostedTestReportController } from "../../app/hosted-test/hosted-test-report";
-import { decode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
-import type { HostedTestReportInitialEnvelope } from "../../app/hosted-test/hosted-test-report-initial.types";
-import { make_hosted_test_report_mirror } from "../../app/hosted-test/hosted-test-report-mirror";
-import { make_hosted_test_report_router } from "../../app/hosted-test/hosted-test-report-router";
-import { decode_hosted_test_report_commit_envelope, HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../app/hosted-test/hosted-test-report-wire.types";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
+import { create_hosted_test_livehost, run_hosted_test_action, type HostedTestActions } from "../../harness/hosted/hosted-test-action";
+import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
+import { decode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../harness/reporting/hosted/hosted-test-report-initial";
+import type { HostedTestReportInitialEnvelope } from "../../harness/reporting/hosted/hosted-test-report-initial.types";
+import { make_hosted_test_report_mirror } from "../../harness/reporting/hosted/hosted-test-report-mirror";
+import { make_hosted_test_report_router } from "../../harness/reporting/hosted/hosted-test-report-router";
+import { decode_hosted_test_report_commit_envelope, HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 
 type Listener = (message: string) => void;
 

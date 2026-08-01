@@ -1,9 +1,9 @@
 import  { LiveTree } from "hson-live/livetree";
-import { _colors } from "../../core/consts/colors.consts";
-import { mk_div_id, mk_div_cls } from "../../utils/makers";
-import type { TestSummary } from "./tests.types";
+import { _colors } from "../../../core/consts/colors.consts";
+import { mk_div_id, mk_div_cls } from "../../../utils/makers";
+import type { TestSummary } from "../../../../../tests/harness/core/test-contracts";
 import { TEST_CHIP_ROWcss, TEST_CHIP_DEFcss, TEST_CHIP_VALUEcss, TEST_CHIP_LABELcss } from "./tp.css";
-import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
+import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
 
 export type ChipDisplay = Readonly<{
   clear: () => void;

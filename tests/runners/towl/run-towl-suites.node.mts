@@ -1,5 +1,5 @@
-import { run_test_suites } from "../../hosted-test/test-runner";
-import { all_towl_suites } from "./all-towl-suites";
+import { run_test_suites } from "../../harness/core/test-runner";
+import { all_towl_suites } from "../../suites/towl/suite-registry";
 
 const result = await run_test_suites(all_towl_suites(), () => undefined);
 if (!result.ok) {

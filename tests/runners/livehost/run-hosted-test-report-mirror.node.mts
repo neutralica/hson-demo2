@@ -1,20 +1,20 @@
-import { make_hosted_test_report } from "./hosted-test-report";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   decode_hosted_test_report_initial,
   encode_hosted_test_report_initial,
-} from "./hosted-test-report-initial";
-import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
+} from "../../harness/reporting/hosted/hosted-test-report-initial";
+import type { HostedTestReportInitialEnvelope } from "../../harness/reporting/hosted/hosted-test-report-initial.types";
 import {
   make_hosted_test_report_mirror,
   HostedTestReportMirrorError,
   HostedTestReportMirrorLifecycleError,
-} from "./hosted-test-report-mirror";
-import type { HostedTestReportMirror, HostedTestReportMirrorFailureCode } from "./hosted-test-report-mirror.types";
+} from "../../harness/reporting/hosted/hosted-test-report-mirror";
+import type { HostedTestReportMirror, HostedTestReportMirrorFailureCode } from "../../harness/reporting/hosted/hosted-test-report-mirror.types";
 import {
   decode_hosted_test_report_commit_envelope,
   encode_hosted_test_report_commit,
-} from "./hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+} from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
 
 function expect_mirror(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted report mirror: ${message}`);

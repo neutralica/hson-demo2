@@ -1,9 +1,9 @@
-import type { TestEvent, TestSubject } from "../../app/demos/test/tests.types";
-import { run_node_selected_test_ids } from "../../hosted-test/run-node-selected-test-suites";
-import { find_test_descriptor } from "../../test-system/test-catalog";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { normalize_test_event } from "../../test-system/test-run-events";
-import { select_test_descriptors, type TestSelection } from "../../test-system/test-selection";
+import type { TestEvent, TestSubject } from "../../harness/core/test-contracts";
+import { run_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
+import { find_test_descriptor } from "../../harness/core/test-catalog";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { normalize_test_event } from "../../harness/core/test-run-events";
+import { select_test_descriptors, type TestSelection } from "../../harness/core/test-selection";
 
 function usage(): never {
   throw new Error("Usage: test:canonical-node [--subject <subject>] [--suite <suite-id>] [--test <suite-id::test-name>]");

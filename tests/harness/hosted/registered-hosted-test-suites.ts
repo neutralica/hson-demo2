@@ -2,15 +2,15 @@ import {
   make_hosted_test_suite_registry,
   type HostedTestSuiteDescriptor,
   type HostedTestSuiteRegistry,
-} from "../app/hosted-test/hosted-test-suite";
-import { run_test_suites } from "./test-runner";
-import type { RunOptions, RunResult, TestEvent } from "../app/demos/test/tests.types";
-import { all_livehost_suites } from "../tests/livehost-tests/all-livehost-suites";
-import { run_livemap_replay_suite } from "../tests/livemap-tests/run-replay-suite";
+} from "./hosted-test-suite";
+import { run_test_suites } from "../core/test-runner";
+import type { RunOptions, RunResult, TestEvent } from "../core/test-contracts";
+import { all_livehost_suites } from "../../suites/livehost/suite-registry";
+import { run_livemap_replay_suite } from "../../runners/livemap/run-replay-suite";
 import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites";
-import { run_jsdom_hosted_test_suites } from "./dom/jsdom-hosted-test-suites";
-import { run_jsdom_hosted_canvas_suites } from "./dom/canvas/jsdom-hosted-canvas-suites";
-import { with_hosted_node_globals } from "./dom/hosted-dom-mutex";
+import { run_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-suites";
+import { run_jsdom_hosted_canvas_suites } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
+import { with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
 import { run_hosted_all_test_suites, run_hosted_test_category, type HostedTestCategory } from "./hosted-all-test-suites";
 
 const category_descriptor = (category: HostedTestCategory, label: string): HostedTestSuiteDescriptor => Object.freeze({

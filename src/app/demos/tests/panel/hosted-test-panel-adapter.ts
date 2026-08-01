@@ -1,13 +1,13 @@
 import type { LiveHostEventListener } from "hson-live/types";
-import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../hosted-test/hosted-test-action.types";
-import { inspect_hosted_test_action, run_hosted_test_action } from "../../hosted-test/hosted-test-client-action";
-import type { HostedTestCaseReport, HostedTestReport } from "../../hosted-test/hosted-test-report.types";
-import type { HostedTestReportMirror } from "../../hosted-test/hosted-test-report-mirror.types";
-import { make_hosted_test_report_router } from "../../hosted-test/hosted-test-report-router";
-import type { HostedTestReportRouter } from "../../hosted-test/hosted-test-report-router.types";
-import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuiteId } from "../../hosted-test/hosted-test-suite";
-import type { TestRunMode } from "./tests.types";
-import { hosted_test_action_error_message } from "../../hosted-test/hosted-test-action-error";
+import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../../../../tests/harness/hosted/hosted-test-action.types";
+import { inspect_hosted_test_action, run_hosted_test_action } from "../../../../../tests/harness/hosted/hosted-test-client-action";
+import type { HostedTestCaseReport, HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestReportMirror } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-mirror.types";
+import { make_hosted_test_report_router } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-router";
+import type { HostedTestReportRouter } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-router.types";
+import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuiteId } from "../../../../../tests/harness/hosted/hosted-test-suite";
+import type { TestRunMode } from "../../../../../tests/harness/core/test-contracts";
+import { hosted_test_action_error_message } from "../../../../../tests/harness/hosted/hosted-test-action-error";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-panel-runtime";
 
 export type HostedTestPanelReportUpdate = Readonly<{

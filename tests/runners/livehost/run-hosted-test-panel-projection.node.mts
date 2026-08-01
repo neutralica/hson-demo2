@@ -1,18 +1,18 @@
 import { hson } from "hson-live";
-import type { HostedTestCaseReport, HostedTestReport } from "../../app/hosted-test/hosted-test-report.types";
-import type { HostedTestPanelReportUpdate } from "../../app/demos/test/hosted-test-panel-adapter";
-import { make_hosted_test_case_list, type HostedTestFrameScheduler } from "../../app/demos/test/hosted-test-case-list";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import type { HostedTestCaseReport, HostedTestReport } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestPanelReportUpdate } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
+import { make_hosted_test_case_list, type HostedTestFrameScheduler } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import {
   hosted_test_projection_footer,
   hosted_test_projection_summary,
-} from "../../app/demos/test/hosted-test-report-summary";
+} from "../../../src/app/demos/tests/panel/hosted-test-report-summary";
 import {
   hosted_external_launcher_log_projection,
   serialize_hosted_run_report,
-} from "../../app/demos/test/hosted-test-report-view";
-import { create_test_chips } from "../../app/demos/test/test-helpers";
-import { TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "../../app/demos/test/tp.css";
+} from "../../../src/app/demos/tests/panel/hosted-test-report-view";
+import { create_test_chips } from "../../../src/app/demos/tests/panel/test-helpers";
+import { TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "../../../src/app/demos/tests/panel/tp.css";
 
 function expect_projection(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted panel projection: ${message}`);

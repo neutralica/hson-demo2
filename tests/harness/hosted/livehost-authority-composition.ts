@@ -1,5 +1,5 @@
 import type { LiveHostConnectionContext, LiveHostSocketLike, LiveHostStore } from "hson-live/types";
-import { towl_room_id_from_host_id } from "../app/demos/towl";
+import { towl_room_id_from_host_id } from "../../../src/app/demos/towl/index";
 import type { HostedTestApplication } from "./hosted-test-application";
 import type { TowlAuthorityApplication } from "./towl-authority-application";
 

@@ -1,13 +1,13 @@
-import type { RunOptions, RunResult, TestEvent, TestFailure } from "../app/demos/test/tests.types";
-import type { TestExecutorRegistry } from "../test-system/test-executor";
+import type { RunOptions, RunResult, TestEvent, TestFailure } from "../../core/test-contracts";
+import type { TestExecutorRegistry } from "../../core/test-executor";
 import {
   external_library_launcher_termination_generation,
   run_external_library_launcher,
   type ExternalLibraryLauncherService,
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
-  type ExternalLibraryLauncherTarget,
-} from "../test-system/external-library-launchers";
+} from "./external-library-launchers";
+import type { ExternalLibraryLauncherTarget } from "../../core/external-launcher-contract";
 import { run_fresh_node_selected_test_ids } from "./run-node-selected-test-suites";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY = 2;

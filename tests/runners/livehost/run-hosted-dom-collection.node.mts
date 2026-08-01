@@ -1,13 +1,13 @@
 import { performance } from "node:perf_hooks";
 import { JSDOM } from "jsdom";
-import type { RunResult } from "../../app/demos/test/tests.types";
-import { install_hosted_dom_geometry } from "../../hosted-test/dom/hosted-dom-geometry";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import type { RunResult } from "../../harness/core/test-contracts";
+import { install_hosted_dom_geometry } from "../../harness/runtimes/dom/hosted-dom-geometry";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import {
   all_jsdom_hosted_test_suites,
   JSDOM_HOSTED_DUPLICATE_CASE_KEYS,
   run_jsdom_hosted_test_suites,
-} from "../../hosted-test/dom/jsdom-hosted-test-suites";
+} from "../../harness/runtimes/dom/jsdom-hosted-test-suites";
 import {
   CANVAS_REQUIRED_SUITES,
   BROWSER_ONLY_SUITES,
@@ -16,7 +16,7 @@ import {
   HOSTED_JSDOM_SUITES,
   LAYOUT_REQUIRED_SUITES,
   UNKNOWN_DOM_SUITES,
-} from "../../hosted-test/dom/hosted-dom-migration-inventory";
+} from "../../harness/runtimes/dom/hosted-dom-migration-inventory";
 
 function expect_collection(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted DOM collection: ${message}`);

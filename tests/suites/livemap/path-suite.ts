@@ -2,7 +2,7 @@
 
 import { format_live_path, path_is_prefix, paths_overlap } from "hson-live/livemap";
 import type { LivePath } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
 
 export function livemap_suites_path(): TestSuite {

@@ -4,15 +4,15 @@ import {
   create_hosted_test_livehost,
   run_hosted_test_action,
   type HostedTestActions,
-} from "../../app/hosted-test/hosted-test-action";
-import type { HostedTestReportController } from "../../app/hosted-test/hosted-test-report";
-import { make_hosted_test_report_router } from "../../app/hosted-test/hosted-test-report-router";
+} from "../../harness/hosted/hosted-test-action";
+import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
+import { make_hosted_test_report_router } from "../../harness/reporting/hosted/hosted-test-report-router";
 import {
   is_hosted_test_suite_id,
   make_hosted_test_suite_registry,
   type HostedTestSuiteId,
-} from "../../app/hosted-test/hosted-test-suite";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
+} from "../../harness/hosted/hosted-test-suite";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 
 type Listener = (message: string) => void;
 

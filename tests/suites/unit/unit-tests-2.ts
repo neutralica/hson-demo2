@@ -1,11 +1,11 @@
 
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { cleanup_quid, make_unit_case } from "./all-unit-tests";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { cleanup_quid, make_unit_case } from "./suite-registry";
 import { CssManager } from "hson-live/livetree";
 import { _parse_selector, _parse_style_string, _serialize_style } from "hson-live/diagnostics";
-import { _fontSize } from "../../app/core/consts/ui-consts";
+import { _fontSize } from "../../../src/app/core/consts/ui-consts";
 import  { normalize_css_value, normalize_css_key, canon_to_css_prop, render_rule, normalize_decls } from "hson-live/diagnostics/test-exports";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 const gcss = CssManager.api();
 

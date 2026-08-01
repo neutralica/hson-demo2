@@ -1,7 +1,7 @@
 import { hson } from "hson-live";
 import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
-import type { RunResult, TestEvent } from "../../app/demos/test/tests.types";
+import type { RunResult, TestEvent } from "../../core/test-contracts";
 import type {
   HostedTestCaseReport,
   HostedTestInfrastructureError,
@@ -9,8 +9,8 @@ import type {
   HostedTestReportCommit,
   HostedTestReportMap,
 } from "./hosted-test-report.types";
-import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "./hosted-test-suite";
-import type { HostedTestRunTarget } from "./hosted-test-suite";
+import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "../../hosted/hosted-test-suite";
+import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   const nonNegativeInteger = s.refine(

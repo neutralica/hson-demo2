@@ -1,11 +1,11 @@
 import { performance } from "node:perf_hooks";
 import type { JsonValue } from "hson-live/types";
-import { make_hosted_test_report } from "../../app/hosted-test/hosted-test-report";
-import { encode_hosted_test_report_initial } from "../../app/hosted-test/hosted-test-report-initial";
-import { make_hosted_test_report_mirror } from "../../app/hosted-test/hosted-test-report-mirror";
-import { decode_hosted_test_report_commit_envelope, encode_hosted_test_report_commit } from "../../app/hosted-test/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../app/hosted-test/hosted-test-report-wire.types";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
+import { encode_hosted_test_report_initial } from "../../harness/reporting/hosted/hosted-test-report-initial";
+import { make_hosted_test_report_mirror } from "../../harness/reporting/hosted/hosted-test-report-mirror";
+import { decode_hosted_test_report_commit_envelope, encode_hosted_test_report_commit } from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 
 type Sample = Readonly<{
   batchSize: number;

@@ -1,14 +1,14 @@
 import WebSocket from "ws";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
+import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
 import {
   make_hosted_test_panel_adapter,
   type HostedTestPanelReportUpdate,
-} from "../../app/demos/test/hosted-test-panel-adapter";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
 import {
   make_remote_hosted_test_runtime,
   type HostedTestPanelRuntime,
-} from "../../app/demos/test/hosted-test-panel-runtime";
-import type { HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import type { HostedTestSuiteId } from "../../harness/hosted/hosted-test-suite";
 
 export const TEST_WEBSOCKET_CONSTRUCTOR = WebSocket as unknown as BrowserWebSocketConstructor;
 

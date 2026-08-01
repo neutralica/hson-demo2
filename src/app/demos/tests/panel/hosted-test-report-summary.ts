@@ -1,6 +1,6 @@
-import type { HostedTestReport } from "../../hosted-test/hosted-test-report.types";
-import { hosted_test_report_cases } from "../../hosted-test/hosted-test-report.types";
-import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
+import type { HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
+import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
 
 export type HostedTestProjectionSummary = Readonly<{
   canonical: Readonly<{

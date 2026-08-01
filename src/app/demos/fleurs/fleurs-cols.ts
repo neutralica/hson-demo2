@@ -1,6 +1,6 @@
 import  { parse_oklch, format_oklch } from "../../core/helpers/color-helpers";
 import { make_rng } from "../../utils/rng";
-import type { Rng } from "../test/tests.types";
+import type { Rng } from "../../../../tests/harness/core/test-contracts";
 import { clamp, lerp } from "./fleurs-helpers";
 import { randSigned } from "./fleurs-helpers";
 import { HUE_BANDS } from "./fleurs.consts";

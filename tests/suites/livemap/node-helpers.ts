@@ -1,6 +1,6 @@
 import { make_livemap_core } from "hson-live/livemap";
 import type { LiveMapNodeAttrValue, HsonNode } from "hson-live/types";
-import type { TestCase } from "../../app/demos/test/tests.types";
+import type { TestCase } from "../../harness/core/test-contracts";
 import { json_root_node } from "./json-root-node";
 import { preview_value, equal_row } from "./test-helpers";
 import type { NodeLiveAfterDeleteCaseSpec, NodeLiveAfterSetCaseSpec, NodeParentContentCaseSpec, NodeAttrsCopyCaseSpec, NodeSetAttrCaseSpec, NodeSetAttrsCaseSpec, NodeRemoveAttrCaseSpec, NodeClearAttrsCaseSpec, NodeExistingAttrsCaseSpec, NodeAttrMissingPathThrowCaseSpec, NodeAttrJsonBackedThrowCaseSpec, NodeJsonHtmlTagNameCaseSpec, NodeChildrenCaseSpec, NodeChildLookupCaseSpec, NodeMustChildThrowCaseSpec, NodeAppendCaseSpec, NodeAppendMissingPathThrowCaseSpec, NodeAppendHtmlCaseSpec, NodeRemoveChildrenCaseSpec, NodeRemoveChildCaseSpec, NodeRemoveChildBadIndexThrowCaseSpec, NodeRemoveMissingPathThrowCaseSpec, NodeReplaceChildrenCaseSpec, NodeReplaceChildCaseSpec, NodeReplaceChildBadIndexThrowCaseSpec, NodeReplaceMissingPathThrowCaseSpec, NodeInsertChildCaseSpec, NodeInsertChildAppendCaseSpec, NodeInsertChildBadIndexThrowCaseSpec, NodeInsertMissingPathThrowCaseSpec, NodeMoveChildCaseSpec, NodeMoveChildBackwardCaseSpec, NodeMoveChildBadToIndexThrowCaseSpec, NodeMoveChildBadFromIndexThrowCaseSpec, NodeMoveMissingPathThrowCaseSpec } from "./node-types";

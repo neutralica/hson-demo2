@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
-import { TestRecorder } from "../../app/demos/test/test-recorder";
-import type { TestEvent, TestSuite } from "../../app/demos/test/tests.types";
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
+import { TestRecorder } from "../../harness/reporting/test-recorder";
+import type { TestEvent, TestSuite } from "../../harness/core/test-contracts";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
 import {
   DEFAULT_TEST_CASE_TIMEOUT_MS,
   TEST_FAILURE_DETAIL_LIMIT,
   run_test_suites,
-} from "../../hosted-test/test-runner";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../test-system/test-executor";
+} from "../../harness/core/test-runner";
+import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
 import {
   selected_test_suites,
   SelectedTestDuplicateIdError,
   SelectedTestResolutionError,
-} from "../../test-system/test-selected-run";
+} from "../../harness/core/test-selected-run";
 
 const executor: TestExecutorDescriptor = Object.freeze({
   id: "runner-truthfulness",

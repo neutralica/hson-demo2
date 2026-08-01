@@ -1,9 +1,9 @@
 // json-fixtures.ts
 
-import { _freeze } from "../../app/demos/test/tests.consts";
-import type { FixtureBundle } from "../../app/demos/test/tests.types";
-import { json_CARS, json_invertebrae } from "./large-fixtures/json-chunks.mock";
-import { json_homepage } from "./large-fixtures/json-homepage-string.mock";
+import { freeze as _freeze } from "../../../helpers/freeze";
+import type { FixtureBundle } from "../../../harness/core/test-contracts";
+import { json_CARS, json_invertebrae } from "../large/json-chunks.mock";
+import { json_homepage } from "../large/json-homepage-string.mock";
 
 
 

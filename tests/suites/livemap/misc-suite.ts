@@ -1,7 +1,7 @@
 // misc-suite.ts
 
 import { bind_path, bind_paths, derive_from_paths, make_microtask_scheduler, stop_all, subscribe_paths } from "hson-live/livemap";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "./handle-helpers";
 
 type CapturedMicrotaskResult<T> = Readonly<{

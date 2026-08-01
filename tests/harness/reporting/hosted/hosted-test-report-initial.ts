@@ -5,8 +5,8 @@ import { HOSTED_TEST_REPORT_SCHEMA } from "./hosted-test-report";
 import type { HostedTestReport } from "./hosted-test-report.types";
 import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
-import { is_hosted_test_run_target } from "./hosted-test-suite";
-import type { HostedTestRunTarget } from "./hosted-test-suite";
+import { is_hosted_test_run_target } from "../../hosted/hosted-test-suite";
+import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_INITIAL_EVENT = "hosted-test-report-initial";
 

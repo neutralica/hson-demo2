@@ -1,7 +1,7 @@
 // bind-suite.ts
 
 import { hson } from "hson-live";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
 
 export function livemap_bind_suite(): TestSuite {

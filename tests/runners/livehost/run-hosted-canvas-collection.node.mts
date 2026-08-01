@@ -1,17 +1,17 @@
 import { performance } from "node:perf_hooks";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import { run_test_suites } from "../../harness/core/test-runner";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   all_jsdom_hosted_canvas_suites,
   JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS,
-} from "../../hosted-test/dom/canvas/jsdom-hosted-canvas-suites";
+} from "../../harness/runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 import {
   HOSTED_CANVAS_MIGRATION_CASES,
   type HostedCanvasMigrationStatus,
-} from "../../hosted-test/dom/hosted-dom-migration-inventory";
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
-import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
+} from "../../harness/runtimes/dom/hosted-dom-migration-inventory";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
+import { all_livetree_suites } from "../../suites/livetree/suite-registry";
 
 function expect_collection(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted canvas collection: ${message}`);

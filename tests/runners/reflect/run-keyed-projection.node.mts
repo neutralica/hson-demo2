@@ -9,7 +9,7 @@ import {
   hsonReflect,
 } from "hson-live/reflect";
 import type { LiveMap, LiveMapPathHandle } from "hson-live/livemap";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import { CssManager } from "hson-live/livetree";
 
 let checks = 0;

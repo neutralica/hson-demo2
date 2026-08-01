@@ -1,6 +1,6 @@
 import type { LiveHostActionRequestId, LiveHostId } from "hson-live/types";
 import type { HostedTestRunTarget } from "./hosted-test-suite";
-import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
 
 export const HOSTED_TEST_COORDINATOR_HOST_ID = "hosted-tests";
 

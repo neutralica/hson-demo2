@@ -1,19 +1,19 @@
 import { performance } from "node:perf_hooks";
 import WebSocket from "ws";
 import { hson } from "hson-live";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
-import { make_hosted_test_case_list } from "../../app/demos/test/hosted-test-case-list";
-import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
-import type { HostedTestCaseReport, HostedTestReport } from "../../app/hosted-test/hosted-test-report.types";
-import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../app/hosted-test/hosted-test-report-initial";
-import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../app/hosted-test/hosted-test-report-wire";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { DEFERRED_BROWSER_FIDELITY_CASES } from "../../hosted-test/final-harness-migration-inventory";
-import { all_hosted_test_suites } from "../../hosted-test/hosted-all-test-suites";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
+import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
+import { make_hosted_test_case_list } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
+import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
+import type { HostedTestCaseReport, HostedTestReport } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../harness/reporting/hosted/hosted-test-report-initial";
+import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../harness/reporting/hosted/hosted-test-report-wire";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { DEFERRED_BROWSER_FIDELITY_CASES } from "../../harness/hosted/final-harness-migration-inventory";
+import { all_hosted_test_suites } from "../../harness/hosted/hosted-all-test-suites";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 function expect_all(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted/all real WebSocket: ${message}`);

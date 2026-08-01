@@ -11,36 +11,36 @@ import type {
   LiveHostStore,
 } from "hson-live/types";
 import type { JsonValue } from "hson-live/types";
-import type { TestExecutorDiscovery } from "../test-system/test-discovery";
-import { decode_test_executor_discovery_request } from "../test-system/test-discovery";
-import type { RunOptions, RunResult, TestEvent, TestFailure, TestSummary } from "../app/demos/test/tests.types";
-import type { TestExecutorRegistry } from "../test-system/test-executor";
-import { decode_run_selected_tests_request } from "../test-system/test-selected-run";
-import { test_catalog_version } from "../test-system/test-catalog";
-import { run_selected_test_ids } from "./run-selected-test-suites";
-import { HostedTestUnknownSuiteError } from "../app/hosted-test/hosted-test-action-error";
+import type { TestExecutorDiscovery } from "../core/test-discovery";
+import { decode_test_executor_discovery_request } from "../core/test-discovery";
+import type { RunOptions, RunResult, TestEvent, TestFailure, TestSummary } from "../core/test-contracts";
+import type { TestExecutorRegistry } from "../core/test-executor";
+import { decode_run_selected_tests_request } from "../core/test-selected-run";
+import { test_catalog_version } from "../core/test-catalog";
+import { run_selected_test_ids } from "../core/run-selected-test-suites";
+import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
 import type {
   HostedTestActions,
   HostedTestCaseDiagnostic,
   HostedTestInspectRequest,
   HostedTestRunResult,
   HostedTestSelectedRunResult,
-} from "../app/hosted-test/hosted-test-action.types";
+} from "./hosted-test-action.types";
 import {
   make_hosted_test_run_id,
   make_hosted_test_run_retention,
   type HostedTestCaseInspector,
   type HostedTestRunIdFactory,
   type HostedTestRunRetention,
-} from "../app/hosted-test/hosted-test-action";
+} from "./hosted-test-action";
 import {
   HOSTED_TEST_REPORT_SCHEMA,
   make_hosted_test_report,
   make_initial_hosted_test_report,
   type HostedTestReportOptions,
-} from "../app/hosted-test/hosted-test-report";
-import type { HostedTestReport, HostedTestReportMap, HostedTestReportState } from "../app/hosted-test/hosted-test-report.types";
-import type { HostedTestRunId } from "../app/hosted-test/hosted-test-report-wire.types";
+} from "../reporting/hosted/hosted-test-report";
+import type { HostedTestReport, HostedTestReportMap, HostedTestReportState } from "../reporting/hosted/hosted-test-report.types";
+import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
 import {
   HOSTED_TEST_SELECTED_RUN_TARGET,
   is_hosted_test_suite_id,
@@ -48,20 +48,20 @@ import {
   type HostedTestSuiteId,
   type HostedTestSuiteRegistry,
   type HostedTestSuiteRunner,
-} from "../app/hosted-test/hosted-test-suite";
+} from "./hosted-test-suite";
 import {
   HOSTED_TEST_COORDINATOR_HOST_ID,
   type HostedTestCoordinatorState,
   type HostedTestRunAssociation,
-} from "../app/hosted-test/hosted-test-application.types";
+} from "./hosted-test-application.types";
 import {
   create_livehost,
   create_livehost_authority_registry,
   create_livehost_store,
 } from "hson-live/livehost";
 
-export { HOSTED_TEST_COORDINATOR_HOST_ID } from "../app/hosted-test/hosted-test-application.types";
-export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../app/hosted-test/hosted-test-application.types";
+export { HOSTED_TEST_COORDINATOR_HOST_ID } from "./hosted-test-application.types";
+export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "./hosted-test-application.types";
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": HostedTestInspectRequest;

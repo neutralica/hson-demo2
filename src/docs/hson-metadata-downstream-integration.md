@@ -28,7 +28,7 @@ and keyframe/animation assertions.
 | rendered/computed style | none | preflush/postflush opacity, replacement, cleanup, sibling/root isolation, and `::before` generated content |
 | animation engine | keyframe source, ownership, replacement, and lifecycle only | no animation execution claim in the current baseline |
 
-`tests/browser/quid-selector.spec.ts` owns actual HTML and SVG application,
+`tests/integration/browser/quid-selector.spec.ts` owns actual HTML and SVG application,
 preflush and postflush visible effect, replacement, cleanup, cross-root
 isolation, stable QUID targeting, and the rendered `::before` content cases.
 It synchronizes through the fixture’s explicit install/flush state rather than

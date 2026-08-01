@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { soft_tile_key, soft_tile_project } from "../../ui/soft-tile/soft-tile-candidates";
-import { AMOEBI_GEOMETRY, AMOEBI_TILE_FIELD, BUTTONS } from "./amoebi.consts";
+import { soft_tile_key, soft_tile_project } from "../../../src/app/ui/soft-tile/soft-tile-candidates";
+import { AMOEBI_GEOMETRY, AMOEBI_TILE_FIELD, BUTTONS } from "../../../src/app/demos/amoeba/amoebi.consts";
 import {
   bounds_for_cells,
   core_dimensions,
   label_footprint,
   pack_amoebi_layout,
   path_for_cells,
-} from "./amoebi-geometry";
+} from "../../../src/app/demos/amoeba/amoebi-geometry";
 
 function median(values: readonly number[]): number {
   const sorted = [...values].sort((a, b) => a - b);

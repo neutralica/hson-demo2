@@ -1,8 +1,8 @@
 import type { LoopReport } from "hson-live/diagnostics";
 import type { SourceFormat } from "../../../../hson-live/dist/types/diagnostics.types";
-import { _snip } from "../../app/utils/helpers";
-import { _freeze } from "../../app/demos/test/tests.consts";
-import type { HsonTestApi, FixtureBundle, CaseKey, TestSuite, TestCase } from "../../app/demos/test/tests.types";
+import { _snip } from "../../../src/app/utils/helpers";
+import { freeze as _freeze } from "../../helpers/freeze";
+import type { HsonTestApi, FixtureBundle, CaseKey, TestSuite, TestCase } from "../../harness/core/test-contracts";
 
 // add an explicit entryFmt param
 

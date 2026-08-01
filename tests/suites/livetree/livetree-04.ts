@@ -1,9 +1,9 @@
 import { CssManager, hsonLiveTree} from "hson-live/livetree";
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { get_hson_css_rules, get_rule_for_quid, tick } from "./livetree-03";
 import { make_livetree_suite } from "./make-livetree-suite";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 const gcss = CssManager.invoke();
 

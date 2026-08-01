@@ -1,4 +1,4 @@
-import type { TestSuite } from "../app/demos/test/tests.types";
+import type { TestSuite } from "../core/test-contracts";
 import { all_canonical_portable_test_suites } from "./canonical-portable-test-suites";
 
 /** Canonical, deterministic, non-overlapping list used by the node/all host runner. */

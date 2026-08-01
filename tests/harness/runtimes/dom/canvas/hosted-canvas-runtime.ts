@@ -1,7 +1,7 @@
 import {
   HOSTED_TEST_RESIZE_SERVICE,
   type HostedTestResizeService,
-} from "../../../app/demos/test/hosted-test-geometry";
+} from "../hosted-test-geometry";
 import {
   HostedCanvasUnsupportedError,
   type HostedCanvasCommand,

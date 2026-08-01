@@ -1,20 +1,20 @@
 import type { JsonValue, LiveHostEventListener } from "hson-live/types";
-import type { HostedTestRunResult } from "./hosted-replay-action";
-import { make_hosted_test_report } from "./hosted-test-report";
+import type { HostedTestRunResult } from "../../suites/livehost/hosted-replay-action";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   encode_hosted_test_report_initial,
   HOSTED_TEST_REPORT_INITIAL_EVENT,
-} from "./hosted-test-report-initial";
+} from "../../harness/reporting/hosted/hosted-test-report-initial";
 import {
   make_hosted_test_report_router,
   HostedTestReportRouterError,
-} from "./hosted-test-report-router";
-import type { HostedTestReportRouter, HostedTestReportRouterFailureCode } from "./hosted-test-report-router.types";
+} from "../../harness/reporting/hosted/hosted-test-report-router";
+import type { HostedTestReportRouter, HostedTestReportRouterFailureCode } from "../../harness/reporting/hosted/hosted-test-report-router.types";
 import {
   encode_hosted_test_report_commit,
   HOSTED_TEST_REPORT_COMMIT_EVENT,
-} from "./hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+} from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
 
 function expect_router(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted report router: ${message}`);

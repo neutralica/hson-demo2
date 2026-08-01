@@ -12,7 +12,7 @@ import {
   LIVE_INSPECTOR_SOURCE_REPLACEMENT_ERROR_CODE,
   LIVE_INSPECTOR_UNREPRESENTABLE_CONVERSION_ERROR_CODE,
 } from "hson-live";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 
 let checks = 0;
 function expect(condition: unknown, message: string): asserts condition {

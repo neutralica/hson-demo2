@@ -3,7 +3,7 @@ import { monitor_application_errors } from "./app-test-support";
 
 test("canonical QUID selectors schedule, apply, update, isolate, and clean up in HTML and SVG", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
-  await page.goto("/tests/browser/quid-selector-fixture.html");
+  await page.goto("/tests/fixtures/browser/quid-selector-fixture.html");
 
   const fixture = page.locator("#fixture-root");
   const isolatedFixture = page.locator("#fixture-isolated-root");
@@ -18,7 +18,7 @@ test("canonical QUID selectors schedule, apply, update, isolate, and clean up in
       }>;
     }>;
     return module.install_quid_selector_fixture();
-  }, "/tests/browser/quid-selector-fixture.ts");
+  }, "/tests/fixtures/browser/quid-selector-fixture.ts");
 
   const htmlTarget = page.locator("#quid-html-target");
   const htmlSibling = page.locator("#quid-html-sibling");
@@ -39,7 +39,7 @@ test("canonical QUID selectors schedule, apply, update, isolate, and clean up in
       flush_quid_selector_fixture(): void;
     }>;
     module.flush_quid_selector_fixture();
-  }, "/tests/browser/quid-selector-fixture.ts");
+  }, "/tests/fixtures/browser/quid-selector-fixture.ts");
   await expect(fixture).toHaveAttribute("data-fixture-state", "initial");
   await expect(isolatedFixture).toHaveAttribute("data-fixture-state", "initial");
 

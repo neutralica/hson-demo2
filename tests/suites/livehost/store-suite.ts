@@ -1,8 +1,8 @@
 // livehost/store-suite.ts
 
 import { create_livehost, create_livehost_store } from "hson-live/livehost";
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import { read_case } from "../livemap-tests/handle-helpers";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import { read_case } from "../livemap/handle-helpers";
 
 type StoreSocketMessageListener = (message: string) => void;
 type StoreSocketCloseListener = () => void;

@@ -1,16 +1,16 @@
-import { run_node_selected_test_ids } from "../../hosted-test/run-node-selected-test-suites";
-import { selected_test_suites } from "../../test-system/test-selected-run";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { make_cloudflare_livehost_executor_registry } from "../../hosted-test/cloudflare/cloudflare-test-executor";
+import { run_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
+import { selected_test_suites } from "../../harness/core/test-selected-run";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import {
   hosted_test_panel_primary_choices,
   hosted_test_panel_selected_ids,
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
-} from "../../app/demos/test/hosted-test-panel-selection";
-import { all_jsdom_hosted_test_suites } from "../../hosted-test/dom/jsdom-hosted-test-suites";
-import { all_jsdom_hosted_canvas_suites } from "../../hosted-test/dom/canvas/jsdom-hosted-canvas-suites";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "../../app/demos/test/tests.types";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
+import { all_jsdom_hosted_test_suites } from "../../harness/runtimes/dom/jsdom-hosted-test-suites";
+import { all_jsdom_hosted_canvas_suites } from "../../harness/runtimes/dom/canvas/jsdom-hosted-canvas-suites";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../harness/core/test-contracts";
 
 function expect_stage5a(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 5A corpus: ${message}`);

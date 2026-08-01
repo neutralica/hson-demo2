@@ -1,7 +1,7 @@
-import { create_test_log } from "../../app/demos/test/test-logger";
-import { TestRecorder } from "../../app/demos/test/test-recorder";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import type { CaseKey, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
+import { create_test_log } from "../../../src/app/demos/tests/panel/test-logger";
+import { TestRecorder } from "../../harness/reporting/test-recorder";
+import { run_test_suites } from "../../harness/core/test-runner";
+import type { CaseKey, TestEvent, TestSuite } from "../../harness/core/test-contracts";
 
 type CaseEndEvent = Extract<TestEvent, { t: "case_end" }>;
 

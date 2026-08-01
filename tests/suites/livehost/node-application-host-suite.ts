@@ -1,21 +1,21 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import WebSocket, { type RawData } from "ws";
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { create_external_library_launcher_service } from "../../test-system/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { create_hosted_test_application } from "../../hosted-test/hosted-test-application";
-import { create_towl_authority_application } from "../../hosted-test/towl-authority-application";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { create_external_library_launcher_service } from "../../harness/runtimes/node/external-library-launchers";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
+import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
 import {
   start_node_application_host,
   type NodeAuthorityNamespace,
   type NodeHostedApplication,
 } from "hson-live/livehost/node";
-import { create_node_hosted_tests_application } from "../../hosted-test/server/node-hosted-tests-application";
-import { create_node_towl_application } from "../../hosted-test/server/node-towl-application";
-import { make_towl_socket, send_towl_action } from "../towl-tests/towl-test-helpers";
-import type { TowlState } from "../../app/demos/towl";
-import { create_towl_client } from "../../app/demos/towl";
+import { create_node_hosted_tests_application } from "../../harness/runtimes/node/server/node-hosted-tests-application";
+import { create_node_towl_application } from "../../harness/runtimes/node/server/node-towl-application";
+import { make_towl_socket, send_towl_action } from "../towl/towl-test-helpers";
+import type { TowlState } from "../../../src/app/demos/towl/index";
+import { create_towl_client } from "../../../src/app/demos/towl/index";
 import {
   create_browser_livehost_socket,
   type BrowserWebSocketConstructor,

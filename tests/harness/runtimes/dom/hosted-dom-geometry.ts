@@ -1,7 +1,7 @@
 import {
   HOSTED_TEST_GEOMETRY_SERVICE,
   type HostedTestElementRect,
-} from "../../app/demos/test/hosted-test-geometry";
+} from "./hosted-test-geometry";
 
 export type HostedElementRect = HostedTestElementRect;
 

@@ -4,7 +4,7 @@ import {
   begin_livetree_materialization_profile,
   type LiveTreeMaterializationProfile,
 } from "hson-live/diagnostics";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 
 type Measurement = Readonly<{
   scenario: "object-primitives" | "keyed-structural-array" | "positional-primitives";

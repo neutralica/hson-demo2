@@ -1,7 +1,7 @@
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
-import { make_real_websocket_probe, make_real_websocket_runtime } from "./real-websocket-test-runtime";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
+import { make_real_websocket_probe, make_real_websocket_runtime } from "../../suites/livehost/real-websocket-test-runtime";
 
 function expect_canvas_ws(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted canvas real WebSocket: ${message}`);

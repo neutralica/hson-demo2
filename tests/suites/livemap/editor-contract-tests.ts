@@ -2,7 +2,7 @@
 
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { preview_value, equal_row } from "./test-helpers";
 
 

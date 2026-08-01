@@ -1,8 +1,8 @@
 import type { LivePath } from "hson-live/livemap";
 import type { LiveTree } from "hson-live/livetree";
 import type { JsonValue, HsonNode, LiveMapEditResult } from "hson-live/types";
-import type { Asserter } from "./tests.types";
-import type { HostedTestGeometryFixture } from "./hosted-test-geometry";
+import type { Asserter } from "../../harness/core/test-contracts";
+import type { HostedTestGeometryFixture } from "../../harness/runtimes/dom/hosted-test-geometry";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -67,7 +67,7 @@ export type SetCaseSpec = Readonly<{
   expectedPrev: JsonValue | undefined;
   expectedNext: JsonValue | undefined;
   expectedRoot: JsonValue;
-}>;// src/tests/livetree-suite.types.ts
+}>;
 
 export type LiveTreeFx = {
   name: string;

@@ -1,7 +1,7 @@
 // core-suite.ts
 
 import { define_livemap_schema, make_livemap_core } from "hson-live/livemap";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, make_core_set_case, make_core_snap_case, preview_value } from "./test-helpers";
 import type { LiveMapFeedEventPreview } from "./types";
 import { make_core_set_path_copy_case, make_core_set_many_case, make_core_set_many_feed_case, make_core_set_many_path_copy_case, json_root_node, preview_core_feed_event, make_core_delete_case, make_core_delete_feed_case, make_core_delete_path_copy_case, make_core_delete_throw_case, make_core_feed_case, make_core_feed_dispose_case, make_core_at_snap_case, make_core_at_set_case, make_core_at_feed_case, make_core_at_path_copy_case, make_core_at_original_path_stability_case, make_core_node_tag_case, make_core_node_missing_case, make_core_node_path_copy_case, make_core_node_original_path_stability_case } from "./core-helpers";

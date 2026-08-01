@@ -4,9 +4,9 @@
 // -----------------------------
 
 import { hsonLiveTree, LiveTree} from "hson-live/livetree";
-import type { TestSuite, TestCase, MetaPatch, Asserter, TestAssertRow } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
-import { apply_hosted_test_element_rect } from "../../app/demos/test/hosted-test-geometry";
+import type { TestSuite, TestCase, MetaPatch, Asserter, TestAssertRow } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
+import { apply_hosted_test_element_rect } from "../../harness/runtimes/dom/hosted-test-geometry";
 
 // -----------------------------
 // Implementation

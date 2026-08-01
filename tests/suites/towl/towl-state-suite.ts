@@ -1,11 +1,11 @@
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_state,
   TOWL_SCHEMA,
   TOWL_WIN_POSITION,
-} from "../../app/demos/towl";
+} from "../../../src/app/demos/towl/index";
 import { towl_case } from "./towl-test-helpers";
 
 function schema_accepts(value: JsonValue): boolean {

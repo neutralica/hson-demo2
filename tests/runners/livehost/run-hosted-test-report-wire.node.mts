@@ -1,15 +1,15 @@
 import { hson } from "hson-live";
 import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
-import { create_hosted_test_livehost, type HostedTestRunResult } from "./hosted-replay-action";
-import { HOSTED_TEST_REPORT_SCHEMA, type HostedTestReportController } from "./hosted-test-report";
+import { create_hosted_test_livehost, type HostedTestRunResult } from "../../suites/livehost/hosted-replay-action";
+import { HOSTED_TEST_REPORT_SCHEMA, type HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   decode_hosted_test_report_commit,
   encode_hosted_test_report_commit,
   HostedTestReportCommitDecodeError,
   validate_hosted_test_report_commit_sequence,
-} from "./hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+} from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
 
 function expect_wire(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test report wire: ${message}`);

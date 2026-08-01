@@ -6,7 +6,7 @@ import {
   render_livemap_schema_controls_snap,
 } from "../../../../hson-live/dist/api/livemap/livemap.bridge";
 import type { JsonValue, LiveMap } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
 import type { LiveControlViewBridgeTarget, LiveInputListenerResult, LiveMapSchemaControlSpec } from "../../../../hson-live/dist/types/bridge.types";
 

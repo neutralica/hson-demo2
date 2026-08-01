@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live/livetree";
-import type { HostedTestCaseReport, HostedTestReport } from "../../hosted-test/hosted-test-report.types";
+import type { HostedTestCaseReport, HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
-import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
+import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
 
 export type HostedTestCaseActions = Readonly<{
   view(caseKey: string): Promise<void>;

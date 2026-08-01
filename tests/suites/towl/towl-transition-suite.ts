@@ -1,4 +1,4 @@
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_state,
   join_towl_session,
@@ -12,7 +12,7 @@ import {
   set_towl_ready,
   TOWL_WIN_POSITION,
   type TowlState,
-} from "../../app/demos/towl";
+} from "../../../src/app/demos/towl/index";
 import { towl_case } from "./towl-test-helpers";
 
 function accepted<T>(result: Readonly<{ ok: true; state: T }> | Readonly<{ ok: false }>): T {

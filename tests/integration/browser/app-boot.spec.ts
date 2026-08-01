@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
-import { make_local_node_livehost_executor_registry } from "../../src/test-system/livehost-node-executor";
-import { resolve_external_library_launchers } from "../../src/test-system/external-library-launchers";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
 import {
   hosted_test_panel_display_label,
   hosted_test_panel_primary_choices,
-} from "../../src/app/demos/test/hosted-test-panel-selection";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 
 test("splash completes naturally without retaining work or disposed nodes", async ({ page }) => {
   test.setTimeout(55_000);

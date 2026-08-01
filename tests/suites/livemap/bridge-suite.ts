@@ -2,7 +2,7 @@
 
 import { hson } from "hson-live";
 import type { JsonValue, LiveMapCommit, LivePath } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "./test-helpers";
 
 type TextTarget = Readonly<{

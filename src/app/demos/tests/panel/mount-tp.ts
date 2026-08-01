@@ -1,8 +1,8 @@
 import { hson } from "hson-live";
 import { LiveTree } from "hson-live/livetree";
-import  { mk_div_id, mk_div_id_txt } from "../../utils/makers";
+import  { mk_div_id, mk_div_id_txt } from "../../../utils/makers";
 import { create_test_chips } from "./test-helpers";
-import type { TestSummary, UiLevel } from "./tests.types";
+import type { TestSummary, UiLevel } from "../../../../../tests/harness/core/test-contracts";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
@@ -20,8 +20,8 @@ import {
     hosted_test_projection_summary,
     type HostedTestProjectionSummary,
 } from "./hosted-test-report-summary";
-import { format_hosted_test_duration } from "../../hosted-test/hosted-test-timing";
-import type { TestExecutorDiscovery } from "../../../test-system/test-discovery";
+import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import type { TestExecutorDiscovery } from "../../../../../tests/harness/core/test-discovery";
 import {
     hosted_test_panel_selected_ids,
     hosted_test_panel_display_label,

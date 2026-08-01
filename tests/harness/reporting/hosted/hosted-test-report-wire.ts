@@ -10,7 +10,7 @@ import type {
   HostedTestWireUndefined,
   HostedTestWireValue,
 } from "./hosted-test-report-wire.types";
-import { is_hosted_test_run_target, type HostedTestRunTarget } from "./hosted-test-suite";
+import { is_hosted_test_run_target, type HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_COMMIT_EVENT = "hosted-test-report-commit";
 

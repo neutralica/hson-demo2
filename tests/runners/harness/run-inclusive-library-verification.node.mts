@@ -4,19 +4,19 @@ import {
   external_library_launcher_metrics,
   reset_external_library_launcher_metrics,
   resolve_external_library_launchers,
-} from "../../test-system/external-library-launchers";
+} from "../../harness/runtimes/node/external-library-launchers";
 import {
   node_selected_verification_metrics,
   run_node_selected_verifications,
-} from "../../hosted-test/run-node-selected-verifications";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { make_hosted_test_report } from "../../app/hosted-test/hosted-test-report";
+} from "../../harness/runtimes/node/run-node-selected-verifications";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   hosted_test_projection_footer,
   hosted_test_projection_summary,
-} from "../../app/demos/test/hosted-test-report-summary";
-import type { TestEvent } from "../../app/demos/test/tests.types";
-import { TEST_SURFACE_CATALOG } from "../../app/hosted-test/test-surface-catalog";
+} from "../../../src/app/demos/tests/panel/hosted-test-report-summary";
+import type { TestEvent } from "../../harness/core/test-contracts";
+import { TEST_SURFACE_CATALOG } from "../../harness/hosted/test-surface-catalog";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();

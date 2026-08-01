@@ -1,6 +1,6 @@
 import {  hsonLiveTree, LiveTree } from "hson-live/livetree";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { make_livetree_suite } from "./make-livetree-suite";
 
 function fresh_shape_case(suite: string): LiveTreeCaseSpec {

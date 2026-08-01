@@ -1,6 +1,6 @@
 import { hson } from "hson-live";
 import type { HsonNode, Primitive } from "hson-live/types";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { equal_row } from "./assert-helpers";
 
 const SUITE = "livemap/document-foundation";

@@ -1,6 +1,6 @@
-import type { TestExecutorDescriptor, TestExecutorRegistry } from "../../test-system/test-executor";
-import { make_test_executor_registry } from "../../test-system/test-executor";
-import { all_canonical_portable_test_suites } from "../canonical-portable-test-suites";
+import type { TestExecutorDescriptor, TestExecutorRegistry } from "../../core/test-executor";
+import { make_test_executor_registry } from "../../core/test-executor";
+import { all_canonical_portable_test_suites } from "../../hosted/canonical-portable-test-suites";
 
 export const CLOUDFLARE_LIVEHOST_EXECUTOR = Object.freeze({
   id: "cloudflare-livehost",

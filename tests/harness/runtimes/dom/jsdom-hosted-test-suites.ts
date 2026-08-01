@@ -1,8 +1,8 @@
-import { run_test_suites } from "../test-runner";
-import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
-import { all_livemap_suites } from "../../tests/livemap-tests/all-livemap-suites";
-import { all_livetree_suites } from "../../tests/livetree-tests/all-livetree-suites";
-import { all_deterministic_transform_test_suites } from "../deterministic-transform-test-suites";
+import { run_test_suites } from "../../core/test-runner";
+import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../core/test-contracts";
+import { all_livemap_suites } from "../../../suites/livemap/suite-registry";
+import { all_livetree_suites } from "../../../suites/livetree/suite-registry";
+import { all_deterministic_transform_test_suites } from "../../hosted/deterministic-transform-test-suites";
 import { with_hosted_dom_runtime } from "./hosted-dom-mutex";
 
 export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([

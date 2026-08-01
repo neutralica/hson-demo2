@@ -2,13 +2,13 @@
 
 // import { html_mdn } from "./html-mdn";
 
-import { _freeze } from "../../app/demos/test/tests.consts";
-import type { FixtureBundle } from "../../app/demos/test/tests.types";
-import { html_gwern } from "./large-fixtures/html-gwern.mock";
-import { html_hackerNews } from "./large-fixtures/html-hackernews.mock";
-import { html_wikipedia } from "./large-fixtures/html-wikipedia.mock";
-import { html_INVALID, json_INVALID } from "./large-fixtures/invalid-html";
-import { html_homepage } from "./large-fixtures/json-homepage-string.mock";
+import { freeze as _freeze } from "../../../helpers/freeze";
+import type { FixtureBundle } from "../../../harness/core/test-contracts";
+import { html_gwern } from "../large/html-gwern.mock";
+import { html_hackerNews } from "../large/html-hackernews.mock";
+import { html_wikipedia } from "../large/html-wikipedia.mock";
+import { html_INVALID, json_INVALID } from "../large/invalid-html";
+import { html_homepage } from "../large/json-homepage-string.mock";
 
 
 

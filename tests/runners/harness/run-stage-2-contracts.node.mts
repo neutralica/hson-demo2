@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { TestCase, TestDescriptor, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
-import { make_test_catalog, resolve_test_descriptor } from "../../test-system/test-catalog";
-import { executor_supports, select_executor, type TestExecutorDescriptor } from "../../test-system/test-executor";
-import { normalize_test_event } from "../../test-system/test-run-events";
-import { select_test_descriptors } from "../../test-system/test-selection";
-import { all_livehost_suites } from "../livehost-tests/all-livehost-suites";
-import { hosted_replay_action_in_memory_suite } from "../livehost-tests/hosted-replay-action-in-memory-suite";
+import type { TestCase, TestDescriptor, TestEvent, TestSuite } from "../../harness/core/test-contracts";
+import { make_test_catalog, resolve_test_descriptor } from "../../harness/core/test-catalog";
+import { executor_supports, select_executor, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { normalize_test_event } from "../../harness/core/test-run-events";
+import { select_test_descriptors } from "../../harness/core/test-selection";
+import { all_livehost_suites } from "../../suites/livehost/suite-registry";
+import { hosted_replay_action_in_memory_suite } from "../../suites/livehost/hosted-replay-action-in-memory-suite";
 
 function expect_stage_2(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 2 contracts: ${message}`);
@@ -101,12 +101,12 @@ const livehostSuites = [...all_livehost_suites(), hosted_replay_action_in_memory
 expect_stage_2(livehostSuites.length === 12 && livehostSuites.every((entry) => entry.descriptor?.subject === "livehost"), "all proof LiveHost suites carry canonical metadata");
 
 const neutralFiles = [
-  "src/test-system/test-catalog.ts",
-  "src/test-system/test-selection.ts",
-  "src/test-system/test-executor.ts",
-  "src/test-system/test-run-events.ts",
-  "src/test-system/test-discovery.ts",
-  "src/test-system/test-selected-run.ts",
+  "tests/harness/core/test-catalog.ts",
+  "tests/harness/core/test-selection.ts",
+  "tests/harness/core/test-executor.ts",
+  "tests/harness/core/test-run-events.ts",
+  "tests/harness/core/test-discovery.ts",
+  "tests/harness/core/test-selected-run.ts",
 ];
 const incompatibleImport = /(?:from\s+|import\s*\()["'][^"']*(?:livehost-node-executor|hosted-test\/dom|node:|jsdom|server\/|cloudflare\/)[^"']*["']/;
 for (const file of neutralFiles) {

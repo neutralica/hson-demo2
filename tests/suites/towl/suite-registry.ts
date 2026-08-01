@@ -1,4 +1,4 @@
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { towl_client_suite } from "./towl-client-suite";
 import { towl_runtime_suite } from "./towl-runtime-suite";
 import { towl_room_suite } from "./towl-room-suite";

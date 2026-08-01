@@ -5,7 +5,7 @@ import {
   run_hosted_replay_action,
   type HostedTestActions,
 } from "./hosted-replay-action";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 
 type Listener = (message: string) => void;
 

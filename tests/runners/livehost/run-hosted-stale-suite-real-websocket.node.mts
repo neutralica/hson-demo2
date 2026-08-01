@@ -1,8 +1,8 @@
-import { HostedTestUnknownSuiteError } from "../../app/hosted-test/hosted-test-action-error";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
-import { make_real_websocket_probe, make_real_websocket_runtime } from "./real-websocket-test-runtime";
+import { HostedTestUnknownSuiteError } from "../../harness/hosted/hosted-test-action-error";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { run_test_suites } from "../../harness/core/test-runner";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
+import { make_real_websocket_probe, make_real_websocket_runtime } from "../../suites/livehost/real-websocket-test-runtime";
 
 function expect_stale(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted stale suite: ${message}`);

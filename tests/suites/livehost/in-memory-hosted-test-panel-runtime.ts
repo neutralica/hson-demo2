@@ -1,27 +1,27 @@
 import { create_livehost_client } from "hson-live/livehost";
 import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
-import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../app/demos/test/hosted-test-panel-runtime";
+import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import type {
   HostedTestActions,
   HostedTestAnyRunResult,
-} from "../../app/hosted-test/hosted-test-action.types";
+} from "../../harness/hosted/hosted-test-action.types";
 import {
   decode_hosted_test_discovery_response,
   decode_hosted_test_run_response,
   decode_selected_hosted_test_run_response,
   inspect_hosted_test_action,
-} from "../../app/hosted-test/hosted-test-client-action";
-import type { HostedTestReportState } from "../../app/hosted-test/hosted-test-report.types";
+} from "../../harness/hosted/hosted-test-client-action";
+import type { HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
 import {
   HOSTED_TEST_SELECTED_RUN_TARGET,
   type HostedTestSuiteId,
   type HostedTestSuiteRegistry,
-} from "../../app/hosted-test/hosted-test-suite";
-import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../hosted-test/hosted-test-application";
-import type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../../app/hosted-test/hosted-test-application.types";
-import type { TestExecutorRegistry } from "../../test-system/test-executor";
-import { run_fresh_node_selected_test_ids } from "../../hosted-test/run-node-selected-test-suites";
-import { make_test_executor_discovery, type TestExecutorDiscovery } from "../../test-system/test-discovery";
+} from "../../harness/hosted/hosted-test-suite";
+import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application";
+import type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../../harness/hosted/hosted-test-application.types";
+import type { TestExecutorRegistry } from "../../harness/core/test-executor";
+import { run_fresh_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
+import { make_test_executor_discovery, type TestExecutorDiscovery } from "../../harness/core/test-discovery";
 
 type MessageListener = (message: string) => void;
 type ReportActions = Readonly<{ "tests.inspect": Readonly<{ runId: string; caseKey: string }> }>;

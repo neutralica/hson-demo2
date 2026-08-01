@@ -1,8 +1,8 @@
 // resume-suite.ts
 
 import { make_livehost_resume_log } from "hson-live/livehost";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { preview_value, equal_row } from "../livemap-tests/test-helpers";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { preview_value, equal_row } from "../livemap/test-helpers";
 
 
 type LiveHostResumeReadCaseSpec = Readonly<{

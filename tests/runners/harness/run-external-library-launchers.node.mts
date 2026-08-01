@@ -13,12 +13,12 @@ import {
   run_external_library_launcher,
   terminate_external_library_launchers,
   type ExternalLibraryLauncherResult,
-} from "../../test-system/external-library-launchers";
+} from "../../harness/runtimes/node/external-library-launchers";
 import {
   EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY,
   run_external_library_launcher_pool,
   run_node_verification_phases,
-} from "../../hosted-test/run-node-selected-verifications";
+} from "../../harness/runtimes/node/run-node-selected-verifications";
 import {
   EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES,
   hosted_test_panel_external_category,
@@ -27,13 +27,13 @@ import {
   hosted_test_panel_selected_ids,
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
-} from "../../app/demos/test/hosted-test-panel-selection";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 import {
   CANONICAL_TEST_SUBJECT_ORDER,
   TEST_SUBJECT_IDENTIFIERS,
-} from "../../app/demos/test/tests.types";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { visible_external_launcher_stderr } from "../../app/demos/test/hosted-test-report-view";
+} from "../../harness/core/test-contracts";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 
 const all = process.argv.includes("--all");
 const availability = await resolve_external_library_launchers();

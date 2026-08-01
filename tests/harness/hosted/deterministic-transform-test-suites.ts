@@ -1,14 +1,14 @@
 import { _circuit_test } from "hson-live/diagnostics";
-import type { TestSuite } from "../app/demos/test/tests.types";
-import type { CaseKey } from "../app/demos/test/tests.types";
+import type { TestSuite } from "../core/test-contracts";
+import type { CaseKey } from "../core/test-contracts";
 import type { LoopReport } from "hson-live/diagnostics";
-import { HTML_FIXTURES_LEGACY, TRANSFORM_FAILS } from "../tests/test-data/html-fixtures";
-import { JSON_FIXTURES_LEGACY, JSON_FIXTURES_DEV } from "../tests/test-data/json-fixtures";
-import { EXTRA_FIXTURES } from "../tests/transform/extra-fixtures";
-import { HSON_FIXTURES, HSON_FXT_INVALID } from "../tests/transform/hson-tests";
-import { JSON_FIXTURES_LEVEL2 } from "../tests/transform/json-level-2";
-import { make_transform_test_suite } from "../tests/transform/make-transform-suite";
-import { HTML_FIXTURES_NEW } from "../tests/transform/new-html-fixtures";
+import { HTML_FIXTURES_LEGACY, TRANSFORM_FAILS } from "../../fixtures/transform/html/html-fixtures";
+import { JSON_FIXTURES_LEGACY, JSON_FIXTURES_DEV } from "../../fixtures/transform/json/json-fixtures";
+import { EXTRA_FIXTURES } from "../../fixtures/transform/html/extra-fixtures";
+import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../fixtures/transform/hson/hson-tests";
+import { JSON_FIXTURES_LEVEL2 } from "../../fixtures/transform/json/json-level-2";
+import { make_transform_test_suite } from "../../suites/transform/make-transform-suite";
+import { HTML_FIXTURES_NEW } from "../../fixtures/transform/html/new-html-fixtures";
 
 /** Fixed, reproducible transform suites. Generated/fuzz declarations are intentionally excluded. */
 export function all_deterministic_transform_test_suites(

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
-import type * as BrowserTransformOracle from "../../src/tests/transform/browser-transform-oracle";
+import type * as BrowserTransformOracle from "../../helpers/transform/browser-transform-oracle";
 
 const VALID_HSON = '<div id="browser-parse" "hello browser"/>';
 
@@ -154,7 +154,7 @@ test("browser HSON parsing enforces authored names, duplicates, and escape gramm
 test("browser executes the portable strict Transform oracle and structured witness", async ({ page }) => {
   await page.goto("/");
   const result = await page.evaluate(async () => {
-    const modulePath = "/src/tests/transform/browser-transform-oracle.ts";
+    const modulePath = "/tests/helpers/transform/browser-transform-oracle.ts";
     const probe = await import(/* @vite-ignore */ modulePath) as typeof BrowserTransformOracle;
     return probe.run_browser_transform_oracle_probe();
   });

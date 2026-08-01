@@ -1,12 +1,12 @@
 import { decode_livehost_server_message, encode_livehost_message } from "hson-live/livehost";
 import type { JsonValue } from "hson-live/types";
-import { make_hosted_test_report } from "./hosted-test-report";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   decode_hosted_test_report_initial,
   encode_hosted_test_report_initial,
   HOSTED_TEST_REPORT_INITIAL_EVENT,
   HostedTestReportInitialDecodeError,
-} from "./hosted-test-report-initial";
+} from "../../harness/reporting/hosted/hosted-test-report-initial";
 
 function expect_initial(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted report initial: ${message}`);

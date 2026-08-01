@@ -1,9 +1,9 @@
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { flush_dom } from "../inspector/inspector.helpers";
 import { make_livetree_suite } from "./make-livetree-suite";
 import { get_hson_css_text, get_hson_style_rule } from "./livetree-03";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 export function livetree_tree_selector_surface(): TestSuite {
   const SUITE = "livetree-18/treeselector-surface";

@@ -1,3 +1,9 @@
+# Test-system instructions
+
+`tests/` is the authoritative repository test root. Keep shipped LiveDemo panel code in `src/app/demos/tests`; place harness code, runtime adapters, suites, runners, fixtures, helpers, integrations, tools, and test documentation here according to [`README.md`](./README.md).
+
+Do not reintroduce `src/tests`, `src/test-system`, `src/hosted-test`, `src/app/hosted-test`, `tests/browser`, or `tests/cloudflare`.
+
 ## Public test visibility
 
 Any automated test added, restored, split, renamed, or materially expanded must also be reachable from the LiveDemo hosted-test panel.

@@ -1,11 +1,11 @@
 import WebSocket from "ws";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
-import { HostedTestActionRejectedError } from "../../app/hosted-test/hosted-test-action-error";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { make_hosted_test_panel_adapter } from "../../app/demos/test/hosted-test-panel-adapter";
-import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
+import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
+import { HostedTestActionRejectedError } from "../../harness/hosted/hosted-test-action-error";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { make_hosted_test_panel_adapter } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
+import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import { run_test_suites } from "../../harness/core/test-runner";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 function expect_classification(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted retry classification: ${message}`);

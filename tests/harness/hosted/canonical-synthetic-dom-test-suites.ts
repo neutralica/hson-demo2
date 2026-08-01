@@ -3,13 +3,13 @@ import type {
   TestDescriptorMetadata,
   TestSubject,
   TestSuite,
-} from "../app/demos/test/tests.types";
-import { all_jsdom_hosted_test_suites } from "./dom/jsdom-hosted-test-suites";
+} from "../core/test-contracts";
+import { all_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-suites";
 import {
   all_jsdom_hosted_canvas_suites,
   JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS,
   JSDOM_HOSTED_CANVAS_SUITE_IDS,
-} from "./dom/canvas/jsdom-hosted-canvas-suites";
+} from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 
 const DEV_SUITES = new Set(["livetree/quid-level-2"]);
 

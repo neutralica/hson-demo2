@@ -1,6 +1,6 @@
-import type { HostedTestCaseInspector } from "../../app/hosted-test/hosted-test-action";
-import type { HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
-import type { TestExecutorRegistry } from "../../test-system/test-executor";
+import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action";
+import type { HostedTestSuiteRegistry } from "../../../hosted/hosted-test-suite";
+import type { TestExecutorRegistry } from "../../../core/test-executor";
 import {
   start_node_application_host,
   type NodeApplicationHost,

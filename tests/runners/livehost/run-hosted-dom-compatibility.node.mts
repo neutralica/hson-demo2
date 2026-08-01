@@ -1,10 +1,10 @@
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
 import { _circuit_test } from "hson-live/diagnostics";
-import { all_deterministic_transform_test_suites } from "../../hosted-test/deterministic-transform-test-suites";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import { all_livemap_suites } from "../livemap-tests/all-livemap-suites";
-import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
+import { all_deterministic_transform_test_suites } from "../../harness/hosted/deterministic-transform-test-suites";
+import { run_test_suites } from "../../harness/core/test-runner";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import { all_livemap_suites } from "../../suites/livemap/suite-registry";
+import { all_livetree_suites } from "../../suites/livetree/suite-registry";
 
 const DOM_LIVEMAP_IDS = new Set([
   "livemap/node-internals", "livemap/bridge-livetree", "livemap/bridge-livetree-controls",

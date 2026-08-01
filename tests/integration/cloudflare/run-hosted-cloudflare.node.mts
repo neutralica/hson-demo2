@@ -1,23 +1,23 @@
 import type { LiveHostSocketLike } from "hson-live/types";
-import { make_hosted_test_durable_object_runtime } from "../../src/hosted-test/cloudflare/hosted-test-durable-object-runtime";
-import { make_cloudflare_hosted_test_suite_registry } from "../../src/hosted-test/cloudflare/cloudflare-hosted-test-suites";
-import { HOSTED_TEST_SUITE_IDS } from "../../src/app/hosted-test/hosted-test-suite";
+import { make_hosted_test_durable_object_runtime } from "../../harness/runtimes/cloudflare/hosted-test-durable-object-runtime";
+import { make_cloudflare_hosted_test_suite_registry } from "../../harness/runtimes/cloudflare/cloudflare-hosted-test-suites";
+import { HOSTED_TEST_SUITE_IDS } from "../../harness/hosted/hosted-test-suite";
 import {
   HOSTED_TEST_DURABLE_OBJECT_NAME,
   route_hosted_test_worker_request,
-} from "../../src/hosted-test/cloudflare/worker-routing";
-import { create_hosted_test_application } from "../../src/hosted-test/hosted-test-application";
-import { compose_worker_authority_application } from "../../src/hosted-test/livehost-authority-composition";
-import { create_towl_authority_application } from "../../src/hosted-test/towl-authority-application";
-import { make_cloudflare_livehost_executor_registry } from "../../src/hosted-test/cloudflare/cloudflare-test-executor";
+} from "../../harness/runtimes/cloudflare/worker-routing";
+import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
+import { compose_worker_authority_application } from "../../harness/hosted/livehost-authority-composition";
+import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
+import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import {
   decode_test_executor_discovery,
   make_test_executor_discovery,
-} from "../../src/test-system/test-discovery";
-import { test_catalog_version } from "../../src/test-system/test-catalog";
-import type { HostedTestSelectedRunResult } from "../../src/app/hosted-test/hosted-test-action.types";
-import { hosted_test_report_cases, type HostedTestReportState } from "../../src/app/hosted-test/hosted-test-report.types";
-import { make_towl_socket } from "../../src/tests/towl-tests/towl-test-helpers";
+} from "../../harness/core/test-discovery";
+import { test_catalog_version } from "../../harness/core/test-catalog";
+import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { make_towl_socket } from "../../suites/towl/towl-test-helpers";
 
 function expect_cloudflare(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted Cloudflare: ${message}`);

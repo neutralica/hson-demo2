@@ -6,7 +6,7 @@ import { pickFlowerPalette, pick_center_color, fmtNum } from "./fleurs-cols";
 import { lerp, pickOne } from "./fleurs-helpers";
 import type { CultivarShape, FlowerCultivar, FlowerSpec } from "./fleurs.types";
 import { appendDaisySpotsMarkup, appendPetalRingMarkup, appendStamensMarkup } from "./render-fleurs";
-import type { Rng } from "../test/tests.types";
+import type { Rng } from "../../../../tests/harness/core/test-contracts";
 import { DAISYshape, SUNBURSTshape, PINWHEELshape, SCISSORshape, WILDshape, DANDYshape, ROSETTEshape } from "./fleurs.consts";
 
 

@@ -1,4 +1,4 @@
-import { all_livetree_suites } from "../../tests/livetree-tests/all-livetree-suites";
+import { all_livetree_suites } from "../../../suites/livetree/suite-registry";
 import {
   all_jsdom_hosted_test_suites,
   JSDOM_HOSTED_DEFERRED_CASE_KEYS,

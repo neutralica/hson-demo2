@@ -4,21 +4,21 @@ import {
   hosted_test_suite_for_panel_mode,
   type HostedTestPanelReportUpdate,
   type HostedTestPanelSink,
-} from "../../app/demos/test/hosted-test-panel-adapter";
-import { make_in_memory_hosted_test_runtime } from "./in-memory-hosted-test-panel-runtime";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import { all_node_safe_hosted_test_suites } from "../../hosted-test/node-safe-hosted-test-suites";
-import type { TestSummary } from "../../app/demos/test/tests.types";
-import type { HostedTestRunResult } from "./hosted-replay-action";
-import type { HostedTestSuiteId } from "../../app/hosted-test/hosted-test-suite";
-import { make_hosted_test_report } from "./hosted-test-report";
-import { encode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "./hosted-test-report-initial";
-import { encode_hosted_test_report_commit, HOSTED_TEST_REPORT_COMMIT_EVENT } from "./hosted-test-report-wire";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
+import { make_in_memory_hosted_test_runtime } from "../../suites/livehost/in-memory-hosted-test-panel-runtime";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
+import { all_node_safe_hosted_test_suites } from "../../harness/hosted/node-safe-hosted-test-suites";
+import type { TestSummary } from "../../harness/core/test-contracts";
+import type { HostedTestRunResult } from "../../suites/livehost/hosted-replay-action";
+import type { HostedTestSuiteId } from "../../harness/hosted/hosted-test-suite";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
+import { encode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../harness/reporting/hosted/hosted-test-report-initial";
+import { encode_hosted_test_report_commit, HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../harness/reporting/hosted/hosted-test-report-wire";
 import {
   HostedTestUnknownSuiteError,
   HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE,
   hosted_test_unknown_suite_message,
-} from "../../app/hosted-test/hosted-test-action-error";
+} from "../../harness/hosted/hosted-test-action-error";
 
 function expect_adapter(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test panel adapter: ${message}`);

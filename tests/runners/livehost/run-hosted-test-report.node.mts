@@ -1,15 +1,15 @@
 import { hson } from "hson-live";
 import type { LiveMapFeedEvent, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
-import type { RunResult, TestEvent } from "../../app/demos/test/tests.types";
-import { create_hosted_test_livehost, type HostedTestRunResult } from "./hosted-replay-action";
+import type { RunResult, TestEvent } from "../../harness/core/test-contracts";
+import { create_hosted_test_livehost, type HostedTestRunResult } from "../../suites/livehost/hosted-replay-action";
 import {
   HOSTED_TEST_REPORT_SCHEMA,
   make_hosted_test_report,
   type HostedTestReportController,
-} from "./hosted-test-report";
-import type { HostedTestReport, HostedTestReportCommit } from "./hosted-test-report.types";
-import { hosted_test_report_cases } from "../../app/hosted-test/hosted-test-report.types";
+} from "../../harness/reporting/hosted/hosted-test-report";
+import type { HostedTestReport, HostedTestReportCommit } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../harness/reporting/hosted/hosted-test-report.types";
 
 function expect_report(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test report: ${message}`);

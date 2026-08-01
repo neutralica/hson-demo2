@@ -1,15 +1,15 @@
-import type { RunOptions, TestEvent, TestSuite } from "../../app/demos/test/tests.types";
+import type { RunOptions, TestEvent, TestSuite } from "../../core/test-contracts";
 import {
   HOSTED_TEST_SUITE_IDS,
   make_hosted_test_suite_registry,
   type HostedTestSuiteDescriptor,
   type HostedTestSuiteId,
-} from "../../app/hosted-test/hosted-test-suite";
-import { all_deterministic_transform_test_suites } from "../deterministic-transform-test-suites";
-import { run_test_suites } from "../test-runner";
-import { all_livehost_suites } from "../../tests/livehost-tests/all-livehost-suites";
-import { run_livemap_replay_suite } from "../../tests/livemap-tests/run-replay-suite";
-import { all_unit_tests } from "../../tests/unit/all-unit-tests";
+} from "../../hosted/hosted-test-suite";
+import { all_deterministic_transform_test_suites } from "../../hosted/deterministic-transform-test-suites";
+import { run_test_suites } from "../../core/test-runner";
+import { all_livehost_suites } from "../../../suites/livehost/suite-registry";
+import { run_livemap_replay_suite } from "../../../runners/livemap/run-replay-suite";
+import { all_unit_tests } from "../../../suites/unit/suite-registry";
 
 const unsupported = new Set<HostedTestSuiteId>([
   "hosted/all",

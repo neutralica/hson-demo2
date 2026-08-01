@@ -8,7 +8,8 @@ import {
   hson_live_test_launchers,
   type HsonLiveTestLauncher,
 } from "hson-live/test-launchers";
-import type { TestSubject } from "../app/demos/test/tests.types";
+import type { TestSubject } from "../../core/test-contracts";
+import type { ExternalLibraryLauncherTarget } from "../../core/external-launcher-contract";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS = 120_000;
 export const EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS = 1_000;
@@ -28,16 +29,6 @@ type ExternalLibraryLauncherInvocation = Readonly<{
   args: readonly string[];
   env: Readonly<Record<string, string>>;
   fallback?: ExternalLibraryLauncherInvocation;
-}>;
-
-export type ExternalLibraryLauncherTarget = Readonly<{
-  id: string;
-  launcherId: string;
-  subject: TestSubject;
-  displayName: string;
-  runtime: HsonLiveTestLauncher["runtime"];
-  executableChecks: number;
-  collections: readonly string[];
 }>;
 
 export type ExternalLibraryLauncherAvailability = Readonly<{

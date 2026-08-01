@@ -1,23 +1,23 @@
 import type { WebSocket } from "ws";
-import type { HostedTestCaseInspector } from "../../app/hosted-test/hosted-test-action";
-import { make_hosted_test_run_id_factory } from "../../app/hosted-test/hosted-test-action";
-import type { HostedTestSuiteRegistry } from "../../app/hosted-test/hosted-test-suite";
-import type { TestExecutorRegistry } from "../../test-system/test-executor";
+import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action";
+import { make_hosted_test_run_id_factory } from "../../../hosted/hosted-test-action";
+import type { HostedTestSuiteRegistry } from "../../../hosted/hosted-test-suite";
+import type { TestExecutorRegistry } from "../../../core/test-executor";
 import {
   create_external_library_launcher_service,
   resolve_external_library_launchers,
-} from "../../test-system/external-library-launchers";
-import { make_test_executor_discovery } from "../../test-system/test-discovery";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+} from "../external-library-launchers";
+import { make_test_executor_discovery } from "../../../core/test-discovery";
+import { make_local_node_livehost_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
-import { inspect_hosted_test_case } from "../hosted-test-case-inspection";
+import { inspect_hosted_test_case } from "../../../hosted/hosted-test-case-inspection";
 import {
   create_hosted_test_application,
   HOSTED_TEST_COORDINATOR_HOST_ID,
   type HostedTestApplication,
-} from "../hosted-test-application";
-import { make_registered_hosted_test_suite_registry } from "../registered-hosted-test-suites";
+} from "../../../hosted/hosted-test-application";
+import { make_registered_hosted_test_suite_registry } from "../../../hosted/registered-hosted-test-suites";
 import {
   create_node_livehost_socket,
   type NodeApplicationSecurity,

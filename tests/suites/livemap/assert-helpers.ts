@@ -1,4 +1,4 @@
-import type { TestAssertRow } from "../../app/demos/test/tests.types";
+import type { TestAssertRow } from "../../harness/core/test-contracts";
 
 export function equal_row(label: string, actual: unknown, expected: unknown): TestAssertRow {
   const actualText = preview_value(actual);

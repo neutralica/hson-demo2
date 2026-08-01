@@ -5,11 +5,11 @@ import type {
   TestFailure,
   TestSuite,
   TestSummary,
-} from "../app/demos/test/tests.types";
-import { run_test_suites } from "./test-runner";
-import { all_jsdom_hosted_canvas_suites } from "./dom/canvas/jsdom-hosted-canvas-suites";
-import { with_hosted_dom_runtime, with_hosted_node_globals } from "./dom/hosted-dom-mutex";
-import { all_jsdom_hosted_test_suites } from "./dom/jsdom-hosted-test-suites";
+} from "../core/test-contracts";
+import { run_test_suites } from "../core/test-runner";
+import { all_jsdom_hosted_canvas_suites } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
+import { with_hosted_dom_runtime, with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
+import { all_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-suites";
 import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites";
 
 export type HostedTestRuntimeKind = "node" | "dom" | "canvas";

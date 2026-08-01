@@ -1,6 +1,6 @@
 import { make_livemap_core } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { make_snap_case, make_set_case, preview_value, equal_row } from "./test-helpers";
 import { json_root_node } from "./json-root-node";
 

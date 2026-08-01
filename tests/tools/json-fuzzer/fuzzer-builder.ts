@@ -1,4 +1,4 @@
-import type { FixtureBundle, FixtureMap, Jsonish } from "../../app/demos/test/tests.types";
+import type { FixtureBundle, FixtureMap, Jsonish } from "../../harness/core/test-contracts";
 
 export type JsonFixtureMap = Record<string, string>;
 type JsonPrimitive = string | number | boolean | null;

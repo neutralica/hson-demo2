@@ -2,10 +2,10 @@
 // Purpose: deterministic runner. No DOM, no global state, no “clever” chaining.
 // Emits events to recorder + console via a single callback.
 
-import { _freeze } from "../app/demos/test/tests.consts";
-import { TestRecorder } from "../app/demos/test/test-recorder";
-import { assertion_failure_message, normalize_assert_rows } from "../app/demos/test/assert-row-status";
-import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "../app/demos/test/tests.types";
+import { freeze as _freeze } from "../../helpers/freeze";
+import { TestRecorder } from "../reporting/test-recorder";
+import { assertion_failure_message, normalize_assert_rows } from "../reporting/assert-row-status";
+import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestExpectedError, TestSuite } from "./test-contracts";
 
 export const DEFAULT_TEST_CASE_TIMEOUT_MS = 30_000;
 export const TEST_FAILURE_DETAIL_LIMIT = 16 * 1024;

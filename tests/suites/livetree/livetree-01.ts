@@ -1,7 +1,7 @@
 import { CssManager, hsonLiveTree, type LiveTree } from "hson-live/livetree";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
-import type { TestSuite, Asserter } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
+import type { TestSuite, Asserter } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 import type { HsonNode, Primitive } from "hson-live/types";
 import { _CREATE_NODE } from "hson-live/diagnostics";

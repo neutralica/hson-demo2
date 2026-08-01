@@ -1,10 +1,10 @@
 import type { LiveHostDisposer } from "hson-live/livehost";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_runtime,
   TOWL_WIN_POSITION,
   type TowlRuntime,
-} from "../../app/demos/towl";
+} from "../../../src/app/demos/towl/index";
 import {
   create_towl_session,
   join_towl_pair,

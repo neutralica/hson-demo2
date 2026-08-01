@@ -1,8 +1,8 @@
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
-import { _freeze } from "./tests.consts";
-import type { TestEvent, TestSummary, SuiteLog, CaseLog, CaseKey, TestFailure } from "./tests.types";
-import { normalize_case_end_event } from "./assert-row-status";
+import { freeze as _freeze } from "../../../../../tests/helpers/freeze";
+import type { TestEvent, TestSummary, SuiteLog, CaseLog, CaseKey, TestFailure } from "../../../../../tests/harness/core/test-contracts";
+import { normalize_case_end_event } from "../../../../../tests/harness/reporting/assert-row-status";
 
 export type TestLog = Readonly<{
   onEvent: (e: TestEvent) => void;

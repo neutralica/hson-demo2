@@ -1,27 +1,27 @@
-import type { TestCase } from "../../app/demos/test/tests.types";
+import type { TestCase } from "../../harness/core/test-contracts";
 import {
   hosted_test_panel_primary_choices,
   hosted_test_panel_selected_ids,
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
-} from "../../app/demos/test/hosted-test-panel-selection";
-import { hosted_test_report_cases, type HostedTestReportState } from "../../app/hosted-test/hosted-test-report.types";
-import type { HostedTestSelectedRunResult } from "../../app/hosted-test/hosted-test-action.types";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import {
   CANVAS_BROWSER_RASTER_CASE_IDS,
   CANVAS_DETERMINISTIC_SUITE_IDS,
-} from "../../hosted-test/canonical-synthetic-dom-test-suites";
-import { make_cloudflare_livehost_executor_registry } from "../../hosted-test/cloudflare/cloudflare-test-executor";
-import { HOSTED_CANVAS_MIGRATION_CASES } from "../../hosted-test/dom/hosted-dom-migration-inventory";
-import { create_hosted_test_application } from "../../hosted-test/hosted-test-application";
+} from "../../harness/hosted/canonical-synthetic-dom-test-suites";
+import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { HOSTED_CANVAS_MIGRATION_CASES } from "../../harness/runtimes/dom/hosted-dom-migration-inventory";
+import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
 import {
   run_fresh_node_selected_test_ids,
   run_node_selected_test_ids,
-} from "../../hosted-test/run-node-selected-test-suites";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
-import { make_test_executor_discovery } from "../../test-system/test-discovery";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../test-system/test-executor";
+} from "../../harness/runtimes/node/run-node-selected-test-suites";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
 
 function expect_closeout(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 5C closeout: ${message}`);

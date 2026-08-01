@@ -1,5 +1,5 @@
 import { _lerp } from "../../utils/helpers";
-import type { Rng } from "../test/tests.types";
+import type { Rng } from "../../../../tests/harness/core/test-contracts";
 import type { CultivarShape, FlowerCultivar, HueBand } from "./fleurs.types";
 
 

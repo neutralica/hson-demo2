@@ -1,8 +1,8 @@
 // livehost/sync-suite.ts
 
 import { create_livehost, make_livehost_sync_manager } from "hson-live/livehost";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { equal_row, preview_value } from "../livemap-tests/test-helpers";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { equal_row, preview_value } from "../livemap/test-helpers";
 
 type LiveHostSyncReadCaseSpec = Readonly<{
   suite: string;

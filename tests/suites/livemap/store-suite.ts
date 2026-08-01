@@ -1,7 +1,7 @@
 // store-suites.ts
 
 import { hson } from "hson-live";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import type { LiveMap } from "hson-live/types";
 
 export const SUITE = "livemap/store";

@@ -1,6 +1,6 @@
 import type { LiveMap, LiveMapCommit } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
-import type { HostedTestRunTarget } from "./hosted-test-suite";
+import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "error";
 

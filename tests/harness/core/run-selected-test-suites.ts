@@ -1,6 +1,6 @@
-import type { RunOptions, RunResult, TestEvent } from "../app/demos/test/tests.types";
-import type { TestExecutorRegistry } from "../test-system/test-executor";
-import { selected_test_suites } from "../test-system/test-selected-run";
+import type { RunOptions, RunResult, TestEvent } from "./test-contracts";
+import type { TestExecutorRegistry } from "./test-executor";
+import { selected_test_suites } from "./test-selected-run";
 import { run_test_suites } from "./test-runner";
 
 export function run_selected_test_ids(

@@ -1,20 +1,20 @@
 import WebSocket from "ws";
 import { spawnSync } from "node:child_process";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
+import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
 import {
   HOSTED_TEST_WS_CONFIGURATION_ERROR,
   hosted_test_host_url,
   make_remote_hosted_test_runtime,
   resolve_hosted_test_websocket_url,
-} from "../../app/demos/test/hosted-test-panel-runtime";
-import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../app/hosted-test/hosted-test-application.types";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import { start_hosted_test_server, type HostedTestServer } from "../../hosted-test/server/hosted-test-server";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application.types";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { run_test_suites } from "../../harness/core/test-runner";
+import { start_hosted_test_server, type HostedTestServer } from "../../harness/runtimes/node/server/hosted-test-server";
 import {
   hosted_test_server_bind_options,
   run_hosted_test_server_process,
-} from "../../hosted-test/server/hosted-test-server-process";
+} from "../../harness/runtimes/node/server/hosted-test-server-process";
 
 function expect_deployment(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted deployment: ${message}`);
@@ -174,7 +174,7 @@ for (const timeout of ["", "0", "1.5", "abc", "-1"] as const) {
 }
 const invalidEntry = spawnSync(
   process.execPath,
-  ["--import", "tsx", "src/hosted-test/server/hosted-test-server-entry.node.ts"],
+  ["--import", "tsx", "tests/harness/runtimes/node/server/hosted-test-server-entry.node.ts"],
   { cwd: process.cwd(), env: { ...process.env, PORT: "invalid" }, encoding: "utf8" },
 );
 expect_deployment(

@@ -5,13 +5,13 @@ import type {
   TestFailure,
   TestSuite,
   TestSummary,
-} from "../app/demos/test/tests.types";
-import type { TestExecutorRegistry } from "../test-system/test-executor";
-import { make_local_node_livehost_executor_registry } from "../test-system/livehost-node-executor";
-import { test_catalog_version } from "../test-system/test-catalog";
-import { selected_test_suites } from "../test-system/test-selected-run";
-import { run_test_suites } from "./test-runner";
-import { with_hosted_dom_runtime, with_hosted_node_globals } from "./dom/hosted-dom-mutex";
+} from "../../core/test-contracts";
+import type { TestExecutorRegistry } from "../../core/test-executor";
+import { make_local_node_livehost_executor_registry } from "./livehost-node-executor";
+import { test_catalog_version } from "../../core/test-catalog";
+import { selected_test_suites } from "../../core/test-selected-run";
+import { run_test_suites } from "../../core/test-runner";
+import { with_hosted_dom_runtime, with_hosted_node_globals } from "../dom/hosted-dom-mutex";
 
 type SelectedRuntime = "node" | "synthetic-dom";
 type SelectedGroup = Readonly<{ runtime: SelectedRuntime; suites: readonly TestSuite[] }>;

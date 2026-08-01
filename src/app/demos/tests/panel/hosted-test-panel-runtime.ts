@@ -7,25 +7,25 @@ import type {
   HostedTestInspectRequest,
   HostedTestRunResult,
   HostedTestSelectedRunResult,
-} from "../../hosted-test/hosted-test-action.types";
+} from "../../../../../tests/harness/hosted/hosted-test-action.types";
 import {
   decode_hosted_test_discovery_response,
   decode_hosted_test_inspect_response,
   decode_hosted_test_run_response,
   decode_selected_hosted_test_run_response,
-} from "../../hosted-test/hosted-test-client-action";
-import type { HostedTestReportState } from "../../hosted-test/hosted-test-report.types";
+} from "../../../../../tests/harness/hosted/hosted-test-client-action";
+import type { HostedTestReportState } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import {
   HOSTED_TEST_SELECTED_RUN_TARGET,
   type HostedTestRunTarget,
   type HostedTestSuiteId,
-} from "../../hosted-test/hosted-test-suite";
-import type { TestExecutorDiscovery } from "../../../test-system/test-discovery";
+} from "../../../../../tests/harness/hosted/hosted-test-suite";
+import type { TestExecutorDiscovery } from "../../../../../tests/harness/core/test-discovery";
 import {
   HOSTED_TEST_COORDINATOR_HOST_ID,
   type HostedTestCoordinatorState,
   type HostedTestRunAssociation,
-} from "../../hosted-test/hosted-test-application.types";
+} from "../../../../../tests/harness/hosted/hosted-test-application.types";
 import {
   create_browser_livehost_socket as make_hosted_test_browser_websocket,
   type BrowserWebSocketConstructor,

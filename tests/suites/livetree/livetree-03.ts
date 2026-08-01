@@ -1,8 +1,8 @@
 import { CssManager } from "hson-live/livetree";
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 export const tick = async (): Promise<void> => {
     await new Promise<void>((r) => setTimeout(() => r(), 0));
@@ -47,7 +47,7 @@ const gcss = CssManager.invoke();
 
 // jsdom parses and exposes `[hson\:quid="…"]` CSS rules, but does not apply
 // them through getComputedStyle. Chromium application behavior is covered by
-// tests/browser/quid-selector.spec.ts; these suites own CSSOM and lifecycle state.
+// tests/integration/browser/quid-selector.spec.ts; these suites own CSSOM and lifecycle state.
 function managed_value(tree: Parameters<LiveTreeCaseSpec["assert"]>[0], id: string, prop: string): string | undefined {
     const quid = tree.find.must.byId(id).dom.must.el().getAttribute("hson:quid") ?? "";
     return gcss.getForQuid(quid, prop);

@@ -1,4 +1,4 @@
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   normalize_towl_room_id,
   resolve_towl_room_url,
@@ -6,8 +6,8 @@ import {
   towl_room_credential_key,
   towl_room_id_from_host_id,
   type TowlState,
-} from "../../app/demos/towl";
-import { create_towl_authority_application } from "../../hosted-test/towl-authority-application";
+} from "../../../src/app/demos/towl/index";
+import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
 import { make_towl_socket, send_towl_action, towl_case } from "./towl-test-helpers";
 
 function empty_application() {

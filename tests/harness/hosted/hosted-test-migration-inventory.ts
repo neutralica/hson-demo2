@@ -1,6 +1,6 @@
-import type { HostedTestSuiteId } from "../app/hosted-test/hosted-test-suite";
-import { all_jsdom_hosted_test_suites, JSDOM_HOSTED_TEST_SUITE_IDS } from "./dom/jsdom-hosted-test-suites";
-import { all_jsdom_hosted_canvas_suites, JSDOM_HOSTED_CANVAS_SUITE_IDS } from "./dom/canvas/jsdom-hosted-canvas-suites";
+import type { HostedTestSuiteId } from "./hosted-test-suite";
+import { all_jsdom_hosted_test_suites, JSDOM_HOSTED_TEST_SUITE_IDS } from "../runtimes/dom/jsdom-hosted-test-suites";
+import { all_jsdom_hosted_canvas_suites, JSDOM_HOSTED_CANVAS_SUITE_IDS } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 
 export type HostedMigrationClassification = "HOSTED" | "HOST_READY" | "DOM_REQUIRED" | "UNKNOWN_OR_MIXED";
 

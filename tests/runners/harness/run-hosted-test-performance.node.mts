@@ -1,19 +1,19 @@
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { make_hosted_test_report } from "../../app/hosted-test/hosted-test-report";
-import { hosted_test_projection_summary } from "../../app/demos/test/hosted-test-report-summary";
+import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
+import { hosted_test_projection_summary } from "../../../src/app/demos/tests/panel/hosted-test-report-summary";
 import {
   node_selected_verification_metrics,
   run_node_selected_verifications,
   type NodeSelectedVerificationScheduling,
-} from "../../hosted-test/run-node-selected-verifications";
+} from "../../harness/runtimes/node/run-node-selected-verifications";
 import {
   external_library_launcher_metrics,
   reset_external_library_launcher_metrics,
   resolve_external_library_launchers,
-} from "../../test-system/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+} from "../../harness/runtimes/node/external-library-launchers";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 
 type Policy = Readonly<{
   label: string;

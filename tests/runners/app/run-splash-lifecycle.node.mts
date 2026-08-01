@@ -1,7 +1,7 @@
 import {
   create_splash_run,
   type SplashScheduler,
-} from "../../app/phases/phase-2-splash/splash-lifecycle";
+} from "../../../src/app/phases/phase-2-splash/splash-lifecycle";
 
 type Timer = ReturnType<typeof setTimeout>;
 

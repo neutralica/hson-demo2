@@ -1,7 +1,7 @@
 // api-suite.ts
 
 import { hson } from "hson-live";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { commitCase, read_case, throwCase } from "./handle-helpers";
 
 export type TypeExpect<TValue extends true> = TValue;

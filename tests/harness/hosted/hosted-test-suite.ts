@@ -1,4 +1,4 @@
-import type { RunOptions, RunResult, TestEvent } from "../demos/test/tests.types";
+import type { RunOptions, RunResult, TestEvent } from "../core/test-contracts";
 
 export const HOSTED_TEST_SUITE_IDS = [
   "hosted/all",

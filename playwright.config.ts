@@ -7,7 +7,7 @@ const hostedTestUrl = `ws://127.0.0.1:${hostedTestPort}`;
 const appUrl = `http://127.0.0.1:${appPort}`;
 
 export default defineConfig({
-  testDir: "tests/browser",
+  testDir: "tests/integration/browser",
   outputDir: "test-results/playwright",
   fullyParallel: false,
   forbidOnly: process.env.CI === "true",

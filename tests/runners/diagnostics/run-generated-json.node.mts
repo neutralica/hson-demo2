@@ -1,8 +1,8 @@
 import { _circuit_test } from "hson-live/diagnostics";
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
-import { run_test_suites } from "../../hosted-test/test-runner";
-import { make_json_fuzz_suite } from "../json-fuzzer/fuzzer-builder";
-import { make_transform_test_suite } from "../transform/make-transform-suite";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
+import { run_test_suites } from "../../harness/core/test-runner";
+import { make_json_fuzz_suite } from "../../tools/json-fuzzer/fuzzer-builder";
+import { make_transform_test_suite } from "../../suites/transform/make-transform-suite";
 
 function positive_integer(name: string, fallback: number): number {
   const raw = process.env[name];

@@ -6,7 +6,7 @@ The following surfaces require a materially different execution boundary.
 
 ## Real browser and Playwright
 
-- **Sources:** `tests/browser`, application boot/panel fixtures, rendered
+- **Sources:** `tests/integration/browser`, application boot/panel fixtures, rendered
   pseudo-element cases recorded in `DEFERRED_BROWSER_FIDELITY_CASES`.
 - **Coverage:** four known pseudo-element readback cases plus browser application
   scenarios; browser scenarios are not represented as a speculative case total.
@@ -58,7 +58,7 @@ The following surfaces require a materially different execution boundary.
 
 ## Cloudflare binding integration
 
-- **Sources:** Durable Object and Worker adapter tests in `tests/cloudflare`.
+- **Sources:** Durable Object and Worker adapter tests in `tests/integration/cloudflare`.
 - **Coverage:** checked-in Worker runtime verification; no excluded canonical
   suite currently requires a Cloudflare-only binding.
 - **Requirement:** Worker and Durable Object bindings.

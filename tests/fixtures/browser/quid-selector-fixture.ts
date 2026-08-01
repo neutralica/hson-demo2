@@ -1,5 +1,5 @@
 import { CssManager, hson } from "hson-live";
-import { hson_quid_selector } from "../../src/tests/test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 function error_message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

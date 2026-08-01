@@ -1,23 +1,23 @@
 import type { JsonValue } from "hson-live/types";
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import type { HostedTestSelectedRunResult } from "../../app/hosted-test/hosted-test-action.types";
-import { create_hosted_test_livehost } from "../../app/hosted-test/hosted-test-action";
-import { run_selected_hosted_tests_action } from "../../app/hosted-test/hosted-test-client-action";
-import { hosted_test_report_cases, type HostedTestReportState } from "../../app/hosted-test/hosted-test-report.types";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { create_hosted_test_application } from "../../hosted-test/hosted-test-application";
-import { run_livehost_all_suite } from "../../hosted-test/registered-hosted-test-suites";
-import { make_test_executor_discovery } from "../../test-system/test-discovery";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../test-system/test-executor";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
+import { create_hosted_test_livehost } from "../../harness/hosted/hosted-test-action";
+import { run_selected_hosted_tests_action } from "../../harness/hosted/hosted-test-client-action";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
+import { run_livehost_all_suite } from "../../harness/hosted/registered-hosted-test-suites";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import {
   run_fresh_node_selected_test_ids,
   run_node_selected_test_ids,
-} from "../../hosted-test/run-node-selected-test-suites";
+} from "../../harness/runtimes/node/run-node-selected-test-suites";
 import {
   decode_run_selected_tests_request,
   selected_test_suites,
-} from "../../test-system/test-selected-run";
+} from "../../harness/core/test-selected-run";
 
 function expect_stage4(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 4A selected execution: ${message}`);
@@ -269,7 +269,7 @@ expect_stage4(
   "the same ID set has stable order regardless of request and registry construction order",
 );
 const proofEvents: JsonValue[] = [];
-const proofResult = await import("../../hosted-test/test-runner").then(({ run_test_suites }) => run_test_suites(
+const proofResult = await import("../../harness/core/test-runner").then(({ run_test_suites }) => run_test_suites(
   proofSuites,
   (event) => proofEvents.push(JSON.parse(JSON.stringify(event)) as JsonValue),
   { yieldEveryCases: 0, yieldBetweenSuites: false, includePassedDiagnostics: true },

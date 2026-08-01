@@ -23,7 +23,7 @@ import { livetree_anim_key_preservation, livetree_dom_contains_surface, livetree
 import { livetree_construction_parity, livetree_find_query_surface, livetree_quid_media } from "./livetree-22-quid-media";
 import { livetree_listener_builder_corners, livetree_text_content_surface } from "./livetree-23-coverage-gaps";
 import { livetree_dom_helper_surface, livetree_graph_dom_markup_surface } from "./livetree-24-dom-corners";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { livetree_quid_level_2, livetree_regression_2 } from "./livetree-25-regression-2";
 import { livetree_lifecycle_public } from "./livetree-27-lifecycle-public";
 import { livetree_lifecycle_ownership } from "./livetree-28-lifecycle-ownership";

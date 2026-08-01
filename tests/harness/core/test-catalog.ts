@@ -3,7 +3,7 @@ import type {
   TestDescriptor,
   TestDescriptorMetadata,
   TestSuite,
-} from "../app/demos/test/tests.types";
+} from "./test-contracts";
 
 export type TestCatalog = Readonly<{
   tests: readonly TestDescriptor[];

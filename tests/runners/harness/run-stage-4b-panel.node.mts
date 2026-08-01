@@ -1,18 +1,18 @@
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
-import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate } from "../../app/demos/test/hosted-test-panel-adapter";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
 import {
   hosted_test_panel_selected_ids,
   hosted_test_panel_display_label,
   hosted_test_panel_primary_choices,
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
-} from "../../app/demos/test/hosted-test-panel-selection";
-import type { ExternalLibraryLauncherTarget } from "../../test-system/external-library-launchers";
-import { decode_selected_hosted_test_run_response } from "../../app/hosted-test/hosted-test-client-action";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../test-system/test-executor";
-import { make_in_memory_hosted_test_runtime } from "../livehost-tests/in-memory-hosted-test-panel-runtime";
-import { visible_external_launcher_stderr } from "../../app/demos/test/hosted-test-report-view";
+} from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
+import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
+import { decode_selected_hosted_test_run_response } from "../../harness/hosted/hosted-test-client-action";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { make_in_memory_hosted_test_runtime } from "../../suites/livehost/in-memory-hosted-test-panel-runtime";
+import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 
 function expect_panel(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 4B panel: ${message}`);

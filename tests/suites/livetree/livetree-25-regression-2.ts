@@ -5,8 +5,8 @@ import {  hsonLiveTree, type LiveTree } from "hson-live/livetree";
 import {
   make_livetree_suite,
 } from "./make-livetree-suite.js";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types.js";
-import type { TestSuite } from "../../app/demos/test/tests.types.js";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types.js";
+import type { TestSuite } from "../../harness/core/test-contracts.js";
 
 type IdentitySnapshot = Readonly<Record<string, string>>;
 

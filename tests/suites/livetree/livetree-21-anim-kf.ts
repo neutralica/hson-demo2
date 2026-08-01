@@ -1,7 +1,7 @@
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 export function livetree_anim_key_preservation(): TestSuite {
   const SUITE = "livetree/animation-identifier-preservation";

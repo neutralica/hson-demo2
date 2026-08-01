@@ -1,27 +1,27 @@
 import { create_livehost } from "hson-live/livehost";
 import type { LiveHostActions, LiveHostSchema } from "hson-live/livehost";
 import type { JsonValue } from "hson-live/types";
-import type { RunResult, TestFailure, TestSummary } from "../demos/test/tests.types";
+import type { RunResult, TestFailure, TestSummary } from "../core/test-contracts";
 import { is_hosted_test_suite_id } from "./hosted-test-suite";
 import type { HostedTestRunTarget, HostedTestSuiteId, HostedTestSuiteRegistry } from "./hosted-test-suite";
-import { make_hosted_test_report } from "./hosted-test-report";
-import type { HostedTestReportController, HostedTestReportOptions } from "./hosted-test-report";
+import { make_hosted_test_report } from "../reporting/hosted/hosted-test-report";
+import type { HostedTestReportController, HostedTestReportOptions } from "../reporting/hosted/hosted-test-report";
 import {
   encode_hosted_test_report_initial,
   HOSTED_TEST_REPORT_INITIAL_EVENT,
-} from "./hosted-test-report-initial";
+} from "../reporting/hosted/hosted-test-report-initial";
 import {
   encode_hosted_test_report_commit,
   HOSTED_TEST_REPORT_COMMIT_EVENT,
-} from "./hosted-test-report-wire";
-import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+} from "../reporting/hosted/hosted-test-report-wire";
+import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
 import type { HostedTestActions, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunResult } from "./hosted-test-action.types";
 import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
-import type { TestExecutorDiscovery } from "../../test-system/test-discovery";
-import { decode_test_executor_discovery_request } from "../../test-system/test-discovery";
-import type { TestExecutorRegistry } from "../../test-system/test-executor";
-import { decode_run_selected_tests_request } from "../../test-system/test-selected-run";
-import { run_selected_test_ids } from "../../hosted-test/run-selected-test-suites";
+import type { TestExecutorDiscovery } from "../core/test-discovery";
+import { decode_test_executor_discovery_request } from "../core/test-discovery";
+import type { TestExecutorRegistry } from "../core/test-executor";
+import { decode_run_selected_tests_request } from "../core/test-selected-run";
+import { run_selected_test_ids } from "../core/run-selected-test-suites";
 import { HOSTED_TEST_SELECTED_RUN_TARGET } from "./hosted-test-suite";
 import type { HostedTestSelectedRunResult } from "./hosted-test-action.types";
 
@@ -31,7 +31,7 @@ export type {
   HostedTestRunResult,
   HostedTestSelectedRunResult,
 } from "./hosted-test-action.types";
-export type { RunSelectedTestsRequest } from "../../test-system/test-selected-run";
+export type { RunSelectedTestsRequest } from "../core/test-selected-run";
 export {
   discover_hosted_test_executor,
   run_hosted_test_action,

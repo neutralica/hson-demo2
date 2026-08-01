@@ -1,12 +1,12 @@
 import { JSDOM } from "jsdom";
 import { make_sanitizer } from "hson-live";
-import { HOSTED_TEST_GEOMETRY_SERVICE } from "../../app/demos/test/hosted-test-geometry";
-import { HOSTED_DOM_GLOBAL_NAMES, install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { HOSTED_TEST_GEOMETRY_SERVICE } from "../../harness/runtimes/dom/hosted-test-geometry";
+import { HOSTED_DOM_GLOBAL_NAMES, install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import {
   with_hosted_dom_lock,
   with_hosted_dom_runtime,
   with_hosted_node_globals,
-} from "../../hosted-test/dom/hosted-dom-mutex";
+} from "../../harness/runtimes/dom/hosted-dom-mutex";
 
 function expect_runtime(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted jsdom runtime: ${message}`);

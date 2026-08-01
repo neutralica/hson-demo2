@@ -4,12 +4,12 @@ import {
   TOWL_ROOM_ID_MAX_LENGTH,
   TOWL_ROOM_ID_MIN_LENGTH,
   TOWL_ROOM_ID_PATTERN,
-} from "../../app/demos/towl";
+} from "../../../../../src/app/demos/towl/index";
 import {
   create_towl_authority_application,
   type TowlAuthorityApplication,
   type TowlAuthorityLifecycleOptions,
-} from "../towl-authority-application";
+} from "../../../hosted/towl-authority-application";
 import {
   create_node_livehost_socket,
   type NodeApplicationSecurity,

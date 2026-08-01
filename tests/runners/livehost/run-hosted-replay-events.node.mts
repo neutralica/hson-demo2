@@ -4,21 +4,21 @@ import {
   create_hosted_test_livehost,
   run_hosted_replay_action,
   type HostedTestActions,
-} from "./hosted-replay-action";
-import type { HostedTestReportController } from "./hosted-test-report";
+} from "../../suites/livehost/hosted-replay-action";
+import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   decode_hosted_test_report_initial,
   HOSTED_TEST_REPORT_INITIAL_EVENT,
-} from "./hosted-test-report-initial";
-import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
-import { make_hosted_test_report_mirror } from "./hosted-test-report-mirror";
+} from "../../harness/reporting/hosted/hosted-test-report-initial";
+import type { HostedTestReportInitialEnvelope } from "../../harness/reporting/hosted/hosted-test-report-initial.types";
+import { make_hosted_test_report_mirror } from "../../harness/reporting/hosted/hosted-test-report-mirror";
 import {
   decode_hosted_test_report_commit,
   decode_hosted_test_report_commit_envelope,
   HOSTED_TEST_REPORT_COMMIT_EVENT,
   validate_hosted_test_report_commit_sequence,
-} from "./hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+} from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
 
 type Listener = (message: string) => void;
 

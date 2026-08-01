@@ -1,5 +1,5 @@
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
-import { make_real_websocket_probe, make_real_websocket_runtime } from "./real-websocket-test-runtime";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
+import { make_real_websocket_probe, make_real_websocket_runtime } from "../../suites/livehost/real-websocket-test-runtime";
 
 function expect_dom_ws(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted DOM real WebSocket: ${message}`);

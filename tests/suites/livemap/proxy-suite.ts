@@ -1,7 +1,7 @@
 // proxy-suites.ts
 
 import { define_livemap_schema } from "hson-live/livemap";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case, commitCase, throwCase } from "./handle-helpers";
 
 

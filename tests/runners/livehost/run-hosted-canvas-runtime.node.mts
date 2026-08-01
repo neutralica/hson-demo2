@@ -1,8 +1,8 @@
 import { JSDOM } from "jsdom";
-import { apply_hosted_test_element_rect, notify_hosted_test_resize } from "../../app/demos/test/hosted-test-geometry";
-import { install_hosted_canvas_runtime } from "../../hosted-test/dom/canvas/hosted-canvas-runtime";
-import { HostedCanvasUnsupportedError } from "../../hosted-test/dom/canvas/hosted-canvas.types";
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
+import { apply_hosted_test_element_rect, notify_hosted_test_resize } from "../../harness/runtimes/dom/hosted-test-geometry";
+import { install_hosted_canvas_runtime } from "../../harness/runtimes/dom/canvas/hosted-canvas-runtime";
+import { HostedCanvasUnsupportedError } from "../../harness/runtimes/dom/canvas/hosted-canvas.types";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
 
 function expect_canvas(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted canvas runtime: ${message}`);

@@ -14,7 +14,7 @@ import {
   create_towl_runtime,
   towl_room_id_from_host_id,
   type TowlRuntime,
-} from "../app/demos/towl";
+} from "../../../src/app/demos/towl/index";
 
 export type TowlAuthorityApplication = Readonly<{
   store: LiveHostStore;

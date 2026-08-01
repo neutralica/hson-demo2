@@ -1,14 +1,14 @@
 import { create_livehost, create_livehost_client } from "hson-live/livehost";
 import type { JsonValue, LiveHostSocketLike } from "hson-live/types";
-import { HOSTED_TEST_REPORT_SCHEMA, make_hosted_test_report } from "./hosted-test-report";
+import { HOSTED_TEST_REPORT_SCHEMA, make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   decode_hosted_test_report_commit,
   decode_hosted_test_report_commit_envelope,
   encode_hosted_test_report_commit,
   HOSTED_TEST_REPORT_COMMIT_EVENT,
   HostedTestReportCommitDecodeError,
-} from "./hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+} from "../../harness/reporting/hosted/hosted-test-report-wire";
+import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
 import { hsonLiveMap } from "hson-live/livemap";
 
 type Listener = (message: string) => void;

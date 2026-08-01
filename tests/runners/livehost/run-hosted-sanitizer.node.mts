@@ -1,7 +1,7 @@
 import { performance } from "node:perf_hooks";
 import { JSDOM } from "jsdom";
 import { hson, make_sanitizer } from "hson-live";
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
 
 function expect_sanitizer(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted sanitizer: ${message}`);

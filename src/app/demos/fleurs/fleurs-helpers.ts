@@ -1,4 +1,4 @@
-import type { Rng } from "../test/tests.types";
+import type { Rng } from "../../../../tests/harness/core/test-contracts";
 
 
 

@@ -4,15 +4,15 @@ import type {
   LiveHostDisposer,
   LiveHostSocketLike,
 } from "hson-live/livehost";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
 
   create_towl_runtime,
 
   type TowlRuntime,
-} from "../../app/demos/towl";
+} from "../../../src/app/demos/towl/index";
 import { towl_case } from "./towl-test-helpers";
-import { create_towl_client, towl_host_id_for_room, type TowlClient } from "../../app/demos/towl";
+import { create_towl_client, towl_host_id_for_room, type TowlClient } from "../../../src/app/demos/towl/index";
 
 type SocketEndpoint = LiveHostSocketLike & Readonly<{
   listener_count: () => number;

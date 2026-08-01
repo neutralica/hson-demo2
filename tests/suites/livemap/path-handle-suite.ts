@@ -1,7 +1,7 @@
 // path-handle-suite.ts
 
 import { hsonLiveMap } from "hson-live/livemap";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "./handle-helpers";
 
 export function livemap_path_handle_suite(): TestSuite {

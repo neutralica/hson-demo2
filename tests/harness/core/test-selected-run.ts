@@ -1,5 +1,5 @@
-import type { TestSuite } from "../app/demos/test/tests.types";
-import { compare_hosted_test_visitor_order } from "../app/demos/test/hosted-test-panel-selection";
+import type { TestSuite } from "./test-contracts";
+import { compare_test_visitor_order } from "./test-selection";
 import type { TestExecutorRegistry } from "./test-executor";
 
 /**
@@ -126,7 +126,7 @@ export function selected_test_suites(
   const casesBySuite = new Map<string, TestSuite["cases"][number][]>();
   const descriptors = registry.catalog.tests
     .filter((descriptor) => requested.has(descriptor.id))
-    .sort((left, right) => compare_hosted_test_visitor_order(left.id, right.id));
+    .sort((left, right) => compare_test_visitor_order(left.id, right.id));
 
   for (const descriptor of descriptors) {
     if (!requested.has(descriptor.id)) continue;

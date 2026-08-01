@@ -1,12 +1,12 @@
 import type { LoopReport } from "hson-live/diagnostics";
-import type { HostedTestCaseDiagnostic } from "../app/hosted-test/hosted-test-action.types";
-import type { HostedTestRunId } from "../app/hosted-test/hosted-test-report-wire.types";
-import type { HostedTestRunTarget } from "../app/hosted-test/hosted-test-suite";
-import type { CaseKey, TestAssertRow, TestEvent, TestSuite } from "../app/demos/test/tests.types";
+import type { HostedTestCaseDiagnostic } from "./hosted-test-action.types";
+import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestRunTarget } from "./hosted-test-suite";
+import type { CaseKey, TestAssertRow, TestEvent, TestSuite } from "../core/test-contracts";
 import { all_hosted_executable_suites, type HostedTestRuntimeKind } from "./hosted-all-test-suites";
 import { all_deterministic_transform_test_suites } from "./deterministic-transform-test-suites";
-import { with_hosted_dom_runtime, with_hosted_node_globals } from "./dom/hosted-dom-mutex";
-import { run_test_suites } from "./test-runner";
+import { with_hosted_dom_runtime, with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
+import { run_test_suites } from "../core/test-runner";
 
 function display_value(value: unknown): string | null {
   if (value === null) return "null";

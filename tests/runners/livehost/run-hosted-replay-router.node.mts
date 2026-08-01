@@ -4,9 +4,9 @@ import {
   create_hosted_test_livehost,
   run_hosted_replay_action,
   type HostedTestActions,
-} from "./hosted-replay-action";
-import type { HostedTestReportController } from "./hosted-test-report";
-import { make_hosted_test_report_router } from "./hosted-test-report-router";
+} from "../../suites/livehost/hosted-replay-action";
+import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
+import { make_hosted_test_report_router } from "../../harness/reporting/hosted/hosted-test-report-router";
 
 type Listener = (message: string) => void;
 

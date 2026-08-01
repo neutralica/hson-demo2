@@ -1,4 +1,4 @@
-import type { TestCapability, TestCase, TestDescriptor, TestSuite } from "../app/demos/test/tests.types";
+import type { TestCapability, TestCase, TestDescriptor, TestSuite } from "./test-contracts";
 import { catalog_from_test_suites, type TestCatalog } from "./test-catalog";
 
 export type TestExecutorCapabilities = Readonly<{

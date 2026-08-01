@@ -9,10 +9,10 @@ import {
   resolve_external_library_launchers,
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
-  type ExternalLibraryLauncherTarget,
-} from "../../test-system/external-library-launchers";
+} from "../../harness/runtimes/node/external-library-launchers";
+import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
 
-const fixturePath = fileURLToPath(new URL("./fixtures/external-launcher-protocol-fixture.mjs", import.meta.url));
+const fixturePath = fileURLToPath(new URL("../../fixtures/protocol/external-launcher-protocol-fixture.mjs", import.meta.url));
 const discovered = await resolve_external_library_launchers();
 const discoveredTarget = discovered.targets.find((entry) => entry.launcherId === "transform.hson-tokenizer");
 if (discoveredTarget === undefined) throw new Error("Protocol fixture requires the manifested tokenizer launcher.");

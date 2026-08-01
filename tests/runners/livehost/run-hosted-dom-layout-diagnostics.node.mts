@@ -1,11 +1,11 @@
-import { run_test_suites } from "../../hosted-test/test-runner";
-import type { TestSuite } from "../../app/demos/test/tests.types";
+import { run_test_suites } from "../../harness/core/test-runner";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   HOSTED_DOM_LAYOUT_CASES,
   type HostedDomLayoutCaseStatus,
-} from "../../hosted-test/dom/hosted-dom-migration-inventory";
-import { with_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-mutex";
-import { all_livetree_suites } from "../livetree-tests/all-livetree-suites";
+} from "../../harness/runtimes/dom/hosted-dom-migration-inventory";
+import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-mutex";
+import { all_livetree_suites } from "../../suites/livetree/suite-registry";
 
 function expect_layout(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted layout diagnostics: ${message}`);

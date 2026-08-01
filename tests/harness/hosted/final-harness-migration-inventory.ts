@@ -1,5 +1,5 @@
-import { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "./dom/canvas/jsdom-hosted-canvas-suites";
-import { JSDOM_HOSTED_DEFERRED_CASE_KEYS } from "./dom/jsdom-hosted-test-suites";
+import { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
+import { JSDOM_HOSTED_DEFERRED_CASE_KEYS } from "../runtimes/dom/jsdom-hosted-test-suites";
 
 export type FinalHarnessMigrationStatus =
   | "HOSTED"

@@ -1,8 +1,8 @@
 // livehost/core-suite.ts
 
-import type { TestCase, TestSuite } from "../../app/demos/test/tests.types";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { create_livehost } from "hson-live/livehost";
-import { equal_row, preview_value } from "../livemap-tests/test-helpers";
+import { equal_row, preview_value } from "../livemap/test-helpers";
 
 type LiveHostReadCaseSpec = Readonly<{
   suite: string;

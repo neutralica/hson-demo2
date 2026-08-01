@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { monitor_application_errors } from "./app-test-support";
 import type {
   SanitizerMetadataCase,
-} from "./sanitizer-metadata-fixture";
+} from "../../fixtures/browser/sanitizer-metadata-fixture";
 
 type FixtureResults = Record<string, SanitizerMetadataCase>;
 
@@ -27,7 +27,7 @@ function expect_equal_rejection(
 
 test("production browser and Worker sanitizers share HSON metadata admission", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
-  await page.goto("/tests/browser/sanitizer-metadata-fixture.html");
+  await page.goto("/tests/fixtures/browser/sanitizer-metadata-fixture.html");
   const fixture = page.locator("#fixture-root");
   await expect(fixture).toHaveAttribute("data-fixture-state", "uninitialized");
 
@@ -36,7 +36,7 @@ test("production browser and Worker sanitizers share HSON metadata admission", a
       run_sanitizer_metadata_fixture(): FixtureResults;
     }>;
     return module.run_sanitizer_metadata_fixture();
-  }, "/tests/browser/sanitizer-metadata-fixture.ts");
+  }, "/tests/fixtures/browser/sanitizer-metadata-fixture.ts");
 
   await expect(fixture).toHaveAttribute("data-fixture-state", "complete");
 

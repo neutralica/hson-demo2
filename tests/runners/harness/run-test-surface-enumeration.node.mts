@@ -1,15 +1,15 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../app/hosted-test/hosted-test-suite";
+import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../harness/hosted/hosted-test-suite";
 import {
   DECLARED_DEMO_TEST_SCRIPTS,
   HSON_LIVE_NON_LAUNCHER_TEST_SCRIPT_REASONS,
   TEST_SURFACE_CATALOG,
   TEST_SURFACE_CATEGORIES,
-} from "../../app/hosted-test/test-surface-catalog";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "../../app/demos/test/tests.types";
+} from "../../harness/hosted/test-surface-catalog";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../harness/core/test-contracts";
 import {
   HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
   hson_live_non_launcher_test_scripts,
@@ -53,7 +53,7 @@ for (const name of ["build", "check", ...Object.keys(livePackage.scripts).filter
 }
 
 const declaredEntrypoints = new Set(Object.values(demoPackage.scripts).flatMap((command) => {
-  const match = command.match(/(?:tsx|node\s+[^ ]+)\s+(src\/[^ ]+\.(?:mts|ts))/);
+  const match = command.match(/(?:tsx|node\s+[^ ]+)\s+((?:src|tests)\/[^ ]+\.(?:mts|ts))/);
   return match?.[1] === undefined ? [] : [match[1]];
 }));
 const browserOwner = demoPackage.scripts["test:browser"];
@@ -67,11 +67,12 @@ async function findEntrypoints(dir: string): Promise<string[]> {
   }
   return found;
 }
-for (const path of await findEntrypoints(resolve(demoRoot, "src"))) {
+for (const path of await findEntrypoints(resolve(demoRoot, "tests"))) {
   expect_surface(declaredEntrypoints.has(path), `runnable entrypoint ${path} has no package.json script`);
 }
 
-const browserRoot = resolve(demoRoot, "tests/browser");
+const browserRoot = resolve(demoRoot, "tests/integration/browser");
+const browserFixtureRoot = resolve(demoRoot, "tests/fixtures/browser");
 const browserSources = await sourceFiles(browserRoot);
 const browserSpecs = browserSources.filter((path) => path.endsWith(".spec.ts"));
 expect_surface(browserSpecs.length > 0, "the test:browser aggregate must own at least one browser journey spec");
@@ -85,7 +86,7 @@ async function sourceFiles(dir: string): Promise<string[]> {
   for (const item of await readdir(dir, { withFileTypes: true })) {
     const path = resolve(dir, item.name);
     if (item.isDirectory()) found.push(...await sourceFiles(path));
-    else if (/\.(?:ts|mts)$/.test(item.name)) found.push(path);
+    else if (/\.(?:ts|mts|mjs)$/.test(item.name) && !item.name.endsWith(".d.ts")) found.push(path);
   }
   return found;
 }
@@ -99,15 +100,18 @@ async function resolvableImport(from: string, specifier: string): Promise<string
 }
 const roots = [...declaredEntrypoints].map((path) => resolve(demoRoot, path));
 roots.push(...browserSpecs);
-for (const name of await readdir(browserRoot)) {
+for (const name of await readdir(browserFixtureRoot)) {
   if (!name.endsWith(".html")) continue;
-  const html = await readFile(resolve(browserRoot, name), "utf8");
+  const html = await readFile(resolve(browserFixtureRoot, name), "utf8");
   for (const match of html.matchAll(/<script\b[^>]*\bsrc=["']\/([^"']+\.(?:ts|mts))["']/g)) {
     if (match[1] !== undefined) roots.push(resolve(demoRoot, match[1]));
   }
 }
-roots.push(resolve(demoRoot, "src/hosted-test/registered-hosted-test-suites.ts"));
-roots.push(...(await sourceFiles(resolve(demoRoot, "src/tests"))).filter((path) => /compile-tests-.*\.ts$/.test(path)));
+roots.push(resolve(demoRoot, "tests/harness/hosted/registered-hosted-test-suites.ts"));
+roots.push(resolve(demoRoot, "tests/harness/index.ts"));
+roots.push(resolve(demoRoot, "tests/harness/runtimes/cloudflare/worker.ts"));
+roots.push(resolve(demoRoot, "tests/harness/runtimes/node/server/hosted-test-server-production-entry.node.ts"));
+roots.push(...(await sourceFiles(resolve(demoRoot, "tests/suites/livemap"))).filter((path) => /compile-tests-.*\.ts$/.test(path)));
 const reachable = new Set<string>();
 const queue = [...roots];
 while (queue.length > 0) {
@@ -115,13 +119,13 @@ while (queue.length > 0) {
   if (file === undefined || reachable.has(file)) continue;
   reachable.add(file);
   const source = await readFile(file, "utf8");
-  for (const match of source.matchAll(/(?:from\s+|import\s*\()?["'](\.[^"']+)["']/g)) {
+  for (const match of source.matchAll(/(?:from\s+|import\s*\(|new\s+URL\()["'](\.[^"']+)["']/g)) {
     const imported = match[1] === undefined ? undefined : await resolvableImport(file, match[1]);
     if (imported !== undefined) queue.push(imported);
   }
 }
-const testSources = await sourceFiles(resolve(demoRoot, "src/tests"));
-const approvedPersistentSources = [...testSources, ...browserSources];
+const testSources = await sourceFiles(resolve(demoRoot, "tests"));
+const approvedPersistentSources = testSources;
 const unreachable = approvedPersistentSources.filter((path) => !reachable.has(path));
 expect_surface(unreachable.length === 0, `test source files are unreachable from declared runners or the hosted factory: ${unreachable.map((path) => relative(demoRoot, path)).join(", ")}`);
 

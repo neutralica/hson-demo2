@@ -1,12 +1,12 @@
 import WebSocket from "ws";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
-import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate } from "../../app/demos/test/hosted-test-panel-adapter";
-import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
-import { make_hosted_test_suite_registry } from "../../app/hosted-test/hosted-test-suite";
-import { make_registered_hosted_test_suite_registry } from "../../hosted-test/registered-hosted-test-suites";
-import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../app/hosted-test/hosted-test-application.types";
-import { inspect_hosted_test_case } from "../../hosted-test/hosted-test-case-inspection";
+import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
+import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
+import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
+import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
+import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application.types";
+import { inspect_hosted_test_case } from "../../harness/hosted/hosted-test-case-inspection";
 
 function expect_generic(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted generic LiveHost: ${message}`);

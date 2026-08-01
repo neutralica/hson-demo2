@@ -7,9 +7,9 @@ import type {
 } from "./hosted-test-action.types";
 import type { HostedTestSuiteId } from "./hosted-test-suite";
 import { decode_hosted_test_action_error } from "./hosted-test-action-error";
-import type { TestExecutorDiscovery, TestExecutorDiscoveryRequest } from "../../test-system/test-discovery";
-import { decode_test_executor_discovery } from "../../test-system/test-discovery";
-import type { RunSelectedTestsRequest } from "../../test-system/test-selected-run";
+import type { TestExecutorDiscovery, TestExecutorDiscoveryRequest } from "../core/test-discovery";
+import { decode_test_executor_discovery } from "../core/test-discovery";
+import type { RunSelectedTestsRequest } from "../core/test-selected-run";
 
 export async function discover_hosted_test_executor(
   client: Readonly<{ action: (name: "tests.discover", payload: TestExecutorDiscoveryRequest) => Promise<unknown> }>,

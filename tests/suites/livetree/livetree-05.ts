@@ -1,11 +1,11 @@
 import {  hson } from "hson-live";
 import { LiveTree } from "../../../../hson-live/dist/api/livetree/livetree";
-import type { TestSuite } from "../../app/demos/test/tests.types";
-import type { LiveTreeCaseSpec } from "../../app/demos/test/livemap-tests.types";
+import type { TestSuite } from "../../harness/core/test-contracts";
+import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { tick } from "./livetree-03";
 import { make_livetree_suite } from "./make-livetree-suite";
 import { CssManager } from "hson-live/livetree";
-import { hson_quid_selector } from "../test-data/hson-metadata-helpers";
+import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 const gcss = CssManager.invoke();
 

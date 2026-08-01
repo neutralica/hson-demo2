@@ -1,7 +1,7 @@
 // all-livemap-suites.ts
 
 import type { HsonNode, JsonValue, LivePath } from "hson-live/types";
-import type { Asserter, TestSuite } from "../../app/demos/test/tests.types";
+import type { Asserter, TestSuite } from "../../harness/core/test-contracts";
 import { livemap_suites_core } from "./core-suite";
 import { livemap_suite_editor } from "./editor-suite";
 import { livemap_suite_feed } from "./feed-suite";

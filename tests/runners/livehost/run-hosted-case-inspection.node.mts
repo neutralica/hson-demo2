@@ -1,12 +1,12 @@
 import WebSocket from "ws";
-import type { BrowserWebSocketConstructor } from "../../app/hosted-test/browser-websocket-socket";
-import { make_remote_hosted_test_runtime } from "../../app/demos/test/hosted-test-panel-runtime";
-import { make_hosted_test_panel_adapter, type HostedTestPanelSink } from "../../app/demos/test/hosted-test-panel-adapter";
-import { serialize_hosted_case_diagnostic } from "../../app/demos/test/hosted-test-report-view";
-import { start_hosted_test_server } from "../../hosted-test/server/hosted-test-server";
-import { make_hosted_test_run_retention } from "../../app/hosted-test/hosted-test-action";
-import { hosted_test_report_cases } from "../../app/hosted-test/hosted-test-report.types";
-import { make_local_node_livehost_executor_registry } from "../../test-system/livehost-node-executor";
+import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
+import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import { make_hosted_test_panel_adapter, type HostedTestPanelSink } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
+import { serialize_hosted_case_diagnostic } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
+import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
+import { make_hosted_test_run_retention } from "../../harness/hosted/hosted-test-action";
+import { hosted_test_report_cases } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 
 function expect_inspect(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted case inspection: ${message}`);

@@ -1,4 +1,4 @@
-import type { TestAssertRow, TestEvent } from "./tests.types";
+import type { TestAssertRow, TestEvent } from "../core/test-contracts";
 
 type CaseEndEvent = Extract<TestEvent, { t: "case_end" }>;
 

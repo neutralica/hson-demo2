@@ -32,5 +32,5 @@ There is no silent in-browser fallback. Static public deployment therefore
 requires a separately deployed persistent Node-compatible hosted-test service
 and an appropriate `VITE_HOSTED_TEST_WS_URL` value.
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for production build, proxy, TLS, package
+See [DEPLOYMENT.md](../../DEPLOYMENT.md) for production build, proxy, TLS, package
 boundary, and provider-dashboard requirements.

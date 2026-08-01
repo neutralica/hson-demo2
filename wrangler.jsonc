@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "hson-demo2-hosted-tests",
-  "main": "src/hosted-test/cloudflare/worker.ts",
+  "main": "tests/harness/runtimes/cloudflare/worker.ts",
   "compatibility_date": "2026-07-19",
   "compatibility_flags": ["nodejs_compat"],
   "durable_objects": {

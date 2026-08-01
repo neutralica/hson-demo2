@@ -6,7 +6,7 @@ import {
   LiveTreeDisposedError,
   type LiveTreeMaterializationProfile,
 } from "hson-live/diagnostics";
-import { install_hosted_dom_runtime } from "../../hosted-test/dom/hosted-dom-runtime";
+import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import { hson } from "hson-live";
 import {
   CollectionReflectError,

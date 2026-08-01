@@ -1,4 +1,4 @@
-import type { LiveHostAuthorityConnector } from "../livehost-authority-composition";
+import type { LiveHostAuthorityConnector } from "../../hosted/livehost-authority-composition";
 import {
   make_cloudflare_websocket_livehost_socket,
   type CloudflareAcceptedWebSocket,

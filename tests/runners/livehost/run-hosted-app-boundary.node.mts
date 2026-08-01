@@ -6,29 +6,29 @@ import {
   HOSTED_SUITES,
   HOST_READY_SUITES,
   UNKNOWN_OR_MIXED_SUITES,
-} from "../../hosted-test/hosted-test-migration-inventory";
+} from "../../harness/hosted/hosted-test-migration-inventory";
 import {
   DEFERRED_BROWSER_FIDELITY_CASES,
   FINAL_HARNESS_MIGRATION_INVENTORY,
   GENERATED_TEST_MODES,
-} from "../../hosted-test/final-harness-migration-inventory";
-import { all_hosted_test_suites } from "../../hosted-test/hosted-all-test-suites";
-import { all_node_safe_hosted_test_suites } from "../../hosted-test/node-safe-hosted-test-suites";
-import { all_deterministic_transform_test_suites } from "../../hosted-test/deterministic-transform-test-suites";
-import { all_jsdom_hosted_test_suites } from "../../hosted-test/dom/jsdom-hosted-test-suites";
-import { all_unit_tests } from "../unit/all-unit-tests";
+} from "../../harness/hosted/final-harness-migration-inventory";
+import { all_hosted_test_suites } from "../../harness/hosted/hosted-all-test-suites";
+import { all_node_safe_hosted_test_suites } from "../../harness/hosted/node-safe-hosted-test-suites";
+import { all_deterministic_transform_test_suites } from "../../harness/hosted/deterministic-transform-test-suites";
+import { all_jsdom_hosted_test_suites } from "../../harness/runtimes/dom/jsdom-hosted-test-suites";
+import { all_unit_tests } from "../../suites/unit/suite-registry";
 
 function expect_boundary(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted app boundary: ${message}`);
 }
 
-const hostedDirectory = new URL("../../app/hosted-test/", import.meta.url);
-const hostedFiles = readdirSync(hostedDirectory).filter((name) => name.endsWith(".ts"));
+const hostedClientDirectory = new URL("../../../src/app/demos/tests/hosted-client/", import.meta.url);
+const hostedClientFiles = readdirSync(hostedClientDirectory).filter((name) => name.endsWith(".ts"));
 const panelFiles = [
-  new URL("../../app/demos/test/hosted-test-panel-adapter.ts", import.meta.url),
-  new URL("../../app/demos/test/hosted-test-panel-runtime.ts", import.meta.url),
+  new URL("../../../src/app/demos/tests/panel/hosted-test-panel-adapter.ts", import.meta.url),
+  new URL("../../../src/app/demos/tests/panel/hosted-test-panel-runtime.ts", import.meta.url),
 ];
-const appDirectory = fileURLToPath(new URL("../../app/", import.meta.url));
+const appDirectory = fileURLToPath(new URL("../../../src/app/", import.meta.url));
 function application_files(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const child = join(directory, entry.name);
@@ -36,17 +36,20 @@ function application_files(directory: string): string[] {
     return entry.name.endsWith(".ts") ? [child] : [];
   });
 }
-for (const name of hostedFiles) {
-  const source = readFileSync(new URL(name, hostedDirectory), "utf8");
-  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\//.test(source), `${name} must not import from src/tests`);
+for (const name of hostedClientFiles) {
+  const source = readFileSync(new URL(name, hostedClientDirectory), "utf8");
+  expect_boundary(
+    !/(?:from\s+|import\s*\()["'][^"']*tests\/(?:suites|runners|fixtures|integration|tools|harness\/runtimes)\//.test(source),
+    `${name} must depend only on browser-safe shared harness contracts`,
+  );
 }
 
-const browserRuntimeSource = readFileSync(new URL("../../app/demos/test/hosted-test-panel-runtime.ts", import.meta.url), "utf8");
-const browserAdapterSource = readFileSync(new URL("../../app/hosted-test/browser-websocket-socket.ts", import.meta.url), "utf8");
-const mainSource = readFileSync(new URL("../../main.ts", import.meta.url), "utf8");
-const panelMountSource = readFileSync(new URL("../../app/demos/test/mount-tp.ts", import.meta.url), "utf8");
-const panelAdapterSource = readFileSync(new URL("../../app/demos/test/hosted-test-panel-adapter.ts", import.meta.url), "utf8");
-const panelProjectionSource = readFileSync(new URL("../../app/demos/test/hosted-test-case-list.ts", import.meta.url), "utf8");
+const browserRuntimeSource = readFileSync(new URL("../../../src/app/demos/tests/panel/hosted-test-panel-runtime.ts", import.meta.url), "utf8");
+const browserAdapterSource = readFileSync(new URL("../../../src/app/demos/tests/hosted-client/browser-websocket-socket.ts", import.meta.url), "utf8");
+const mainSource = readFileSync(new URL("../../../src/main.ts", import.meta.url), "utf8");
+const panelMountSource = readFileSync(new URL("../../../src/app/demos/tests/panel/mount-tp.ts", import.meta.url), "utf8");
+const panelAdapterSource = readFileSync(new URL("../../../src/app/demos/tests/panel/hosted-test-panel-adapter.ts", import.meta.url), "utf8");
+const panelProjectionSource = readFileSync(new URL("../../../src/app/demos/tests/panel/hosted-test-case-list.ts", import.meta.url), "utf8");
 expect_boundary(!browserRuntimeSource.includes("create_hosted_test_livehost"), "visible runtime must not construct a browser LiveHost");
 expect_boundary(!browserRuntimeSource.includes("registered-hosted-test-suites") && !mainSource.includes("registered-hosted-test-suites"), "browser graph must not reach executable suite descriptors");
 expect_boundary(!browserRuntimeSource.includes('from "ws"') && !browserAdapterSource.includes('from "ws"'), "browser runtime must use native WebSocket rather than Node ws");
@@ -57,9 +60,9 @@ for (const file of application_files(appDirectory)) {
   expect_boundary(!source.includes('from "jsdom"') && !source.includes('from "ws"'), `${file} excludes Node-only transport and DOM packages`);
   expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*(?:registered-hosted-test-suites|jsdom-hosted-test-suites)/.test(source), `${file} excludes executable Node descriptors`);
   expect_boundary(!source.includes("all_test_suites") && !source.includes("run_test_suites"), `${file} excludes browser-local suite execution`);
-  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\/(?:livemap|livetree|livehost|unit|transform)\//.test(source), `${file} excludes executable test definitions`);
+  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\/(?:suites|runners|fixtures|integration|tools|harness\/runtimes)\//.test(source), `${file} excludes executable test definitions and runtime adapters`);
 }
-const nodeRegistrySource = readFileSync(new URL("../../hosted-test/registered-hosted-test-suites.ts", import.meta.url), "utf8");
+const nodeRegistrySource = readFileSync(new URL("../../harness/hosted/registered-hosted-test-suites.ts", import.meta.url), "utf8");
 expect_boundary(nodeRegistrySource.includes("jsdom-hosted-test-suites"), "Node executable registry may reach the jsdom-backed runner");
 expect_boundary(browserRuntimeSource.includes("VITE_HOSTED_TEST_WS_URL"), "visible runtime reads the explicit WebSocket environment variable");
 expect_boundary(
@@ -77,7 +80,7 @@ expect_boundary(!panelProjectionSource.includes(".listen.onClick(async") && pane
 expect_boundary(!panelProjectionSource.includes("row.create.span().css") && !panelProjectionSource.includes("controls.create.button().css"), "dense projection descendants use shared class rules rather than per-element CSS surfaces");
 for (const file of panelFiles) {
   const source = readFileSync(file, "utf8");
-  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\//.test(source), `${file.pathname} must not import from src/tests`);
+  expect_boundary(!/(?:from\s+|import\s*\()["'][^"']*tests\/(?:suites|runners|fixtures|integration|tools|harness\/runtimes)\//.test(source), `${file.pathname} must depend only on browser-safe shared harness contracts`);
   if (file.pathname.endsWith("hosted-test-panel-adapter.ts")) {
     expect_boundary(!source.includes("run_test_suites") && !source.includes("all_test_suites"), "hosted panel adapter must not invoke either browser-local runner");
   }
@@ -89,10 +92,10 @@ const compatibilityFiles = [
   "hosted-test-report-mirror.ts", "hosted-test-report-mirror.types.ts", "hosted-test-report-router.ts",
   "hosted-test-report-router.types.ts",
 ];
-const compatibilityDirectory = new URL("./", import.meta.url);
+const canonicalReportingDirectory = new URL("../../harness/reporting/hosted/", import.meta.url);
 for (const name of compatibilityFiles) {
-  const source = readFileSync(new URL(name, compatibilityDirectory), "utf8");
-  expect_boundary(source.includes("../../app/hosted-test/"), `${name} must remain a narrow application re-export`);
+  const source = readFileSync(new URL(name, canonicalReportingDirectory), "utf8");
+  expect_boundary(!source.includes("app/hosted-test"), `${name} must be owned directly by canonical harness reporting`);
 }
 
 expect_boundary(HOSTED_SUITES.length === 127 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 2088, "inventory pins 43 Node-safe, 78 jsdom-hosted, and 6 canvas-hosted suites with 2088 canonical cases");
@@ -101,7 +104,7 @@ expect_boundary(DOM_REQUIRED_SUITES.length === 2 && DOM_REQUIRED_SUITES.reduce((
 expect_boundary(UNKNOWN_OR_MIXED_SUITES.length === 0, "no former local mode remains unexplained");
 expect_boundary(HOST_READY_SUITES.length === 0, "no verified Node-safe suite remains merely HOST_READY");
 expect_boundary(DOM_REQUIRED_SUITES.every((entry) => !entry.nextBulk && entry.browserApis.length > 0), "DOM-required entries are excluded from the next bulk migration");
-expect_boundary(join("src", "app", "hosted-test") === "src/app/hosted-test", "boundary test remains workspace-relative");
+expect_boundary(join("tests", "harness", "reporting", "hosted") === "tests/harness/reporting/hosted", "boundary test remains workspace-relative");
 const hostedAll = all_hosted_test_suites();
 const hostedAllKeys = hostedAll.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
 expect_boundary(hostedAll.length === 127 && hostedAllKeys.length === 2088 && new Set(hostedAllKeys).size === 2088, "hosted/all is canonical and non-overlapping");

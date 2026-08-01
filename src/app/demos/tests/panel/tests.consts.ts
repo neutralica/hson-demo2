@@ -15,6 +15,3 @@ const ops: Op[] = [
   (t) => t.find.must.byId("btn").classlist.add("on"),
   (t) => t.find.must.byId("btn").data.set("x", null),
 ];
-// typed freeze wrapper preserves generics
-
-export const _freeze = <T>(x: T): Readonly<T> => Object.freeze(x);
