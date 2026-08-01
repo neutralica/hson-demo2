@@ -109,6 +109,10 @@ assert.equal(
   "panel categories account for every exported launcher exactly once",
 );
 assert.equal(
+  categoryTargets.get("transform")?.some((target) => target.launcherId === "core.hson-number"),
+  true,
+);
+assert.equal(
   categoryTargets.get("transform")?.some((target) => target.launcherId === "core.canonical-hson-equality"),
   true,
 );

@@ -102,6 +102,12 @@ export type ExternalLibraryPanelProjectionRule = Readonly<{
 export const EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES:
 readonly ExternalLibraryPanelProjectionRule[] = Object.freeze([
   Object.freeze({
+    launcherId: "core.hson-number",
+    primarySubject: "integration",
+    projectedCategory: "transform",
+    rationale: "Universal HSON number admission is a Transform-facing semantic boundary.",
+  }),
+  Object.freeze({
     launcherId: "core.canonical-hson-equality",
     primarySubject: "integration",
     projectedCategory: "transform",
