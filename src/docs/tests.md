@@ -107,11 +107,18 @@ dev
 Subject is used for organization and selection. It does not describe the runtime.
 
 The deterministic Transform inventory currently contains nine suites and 368
-cases. Its authored-HSON portion contains 26 accepted cases and 30 rejection
-cases. The accepted inventory includes the six bare primitive families and the
-two established adjacent-text element sources (`<div "a" "b"/>` and
-`<div """"""/>`). These totals are derived from the registered suites; generated
-or fuzz declarations are outside this inventory.
+legacy/demo cases. Its earlier authored-HSON subset remains registered for
+continuity, including the six bare primitive families and the two established
+adjacent-text element sources (`<div "a" "b"/>` and `<div """"""/>`).
+
+The authoritative authored-language contract now lives in hson-live's
+`transform.certified-authored-hson-corpus` external launcher. It materializes
+339 certified descriptors and 2,637 atomic assertions. The demo cases are not
+counted again as certified descriptors. Specialized scale and implementation
+fixtures remain with their existing suites; in particular,
+`transform/legacy/html::html__largeFormat.html_wikipedia` remains the legacy
+HTML closure/performance regression and is not part of the authored-HSON
+descriptor inventory.
 
 ### `requirements`
 
