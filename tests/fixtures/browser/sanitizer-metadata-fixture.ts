@@ -37,7 +37,7 @@ function compare(source: string): SanitizerMetadataCase {
   };
 }
 
-export function run_sanitizer_metadata_fixture(): Record<string, SanitizerMetadataCase> {
+export function run_sanitizer_metadata_fixture() {
   const root = document.querySelector("#fixture-root");
   if (!(root instanceof HTMLElement)) {
     throw new Error("sanitizer metadata fixture root is unavailable");

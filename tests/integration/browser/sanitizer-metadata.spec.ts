@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors } from "./app-test-support";
 import type {
+  run_sanitizer_metadata_fixture,
   SanitizerMetadataCase,
 } from "../../fixtures/browser/sanitizer-metadata-fixture";
 
-type FixtureResults = Record<string, SanitizerMetadataCase>;
+type FixtureResults = ReturnType<typeof run_sanitizer_metadata_fixture>;
 
 function expect_equal_success(result: SanitizerMetadataCase): unknown {
   expect(result.browser.ok).toBe(true);

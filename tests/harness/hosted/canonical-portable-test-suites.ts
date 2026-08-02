@@ -42,6 +42,10 @@ import { livemap_exact_transport_rejection_suite } from "../../suites/livemap/ex
 import { livemap_exact_propagation_suite } from "../../suites/livemap/exact-propagation-suite";
 import { livemap_schema_value_boundary_suite } from "../../suites/livemap/schema-value-boundary-suite";
 import { livemap_ordered_object_array_helpers_suite } from "../../suites/livemap/ordered-object-array-helpers-suite";
+import { livemap_equivalence_mutation_matrix_suite } from "../../suites/livemap/equivalence-mutation-matrix-suite";
+import { livemap_equivalence_schema_helper_matrix_suite } from "../../suites/livemap/equivalence-schema-helper-matrix-suite";
+import { livemap_equivalence_transport_propagation_suite } from "../../suites/livemap/equivalence-transport-propagation-suite";
+import { livemap_equivalence_rejection_isolation_suite } from "../../suites/livemap/equivalence-rejection-isolation-suite";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
 
@@ -110,6 +114,10 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_exact_propagation_suite(),
     livemap_schema_value_boundary_suite(),
     livemap_ordered_object_array_helpers_suite(),
+    livemap_equivalence_mutation_matrix_suite(),
+    livemap_equivalence_schema_helper_matrix_suite(),
+    livemap_equivalence_transport_propagation_suite(),
+    livemap_equivalence_rejection_isolation_suite(),
     ...all_livehost_suites(),
     ...all_unit_tests(),
   ];

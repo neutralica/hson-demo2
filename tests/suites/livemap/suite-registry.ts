@@ -44,6 +44,10 @@ import { livemap_exact_transport_rejection_suite } from "./exact-transport-rejec
 import { livemap_exact_propagation_suite } from "./exact-propagation-suite";
 import { livemap_schema_value_boundary_suite } from "./schema-value-boundary-suite";
 import { livemap_ordered_object_array_helpers_suite } from "./ordered-object-array-helpers-suite";
+import { livemap_equivalence_mutation_matrix_suite } from "./equivalence-mutation-matrix-suite";
+import { livemap_equivalence_schema_helper_matrix_suite } from "./equivalence-schema-helper-matrix-suite";
+import { livemap_equivalence_transport_propagation_suite } from "./equivalence-transport-propagation-suite";
+import { livemap_equivalence_rejection_isolation_suite } from "./equivalence-rejection-isolation-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -131,6 +135,10 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_exact_propagation_suite(),
     livemap_schema_value_boundary_suite(),
     livemap_ordered_object_array_helpers_suite(),
+    livemap_equivalence_mutation_matrix_suite(),
+    livemap_equivalence_schema_helper_matrix_suite(),
+    livemap_equivalence_transport_propagation_suite(),
+    livemap_equivalence_rejection_isolation_suite(),
 
     
     // livemap_suite_html_proof(), // non-supported currently

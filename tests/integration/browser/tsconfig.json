@@ -1,0 +1,14 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "@playwright/test"],
+    "skipLibCheck": false
+  },
+  "include": [
+    "./**/*.ts",
+    "../../fixtures/browser/**/*.ts",
+    "../../helpers/transform/browser-transform-oracle.ts",
+    "../../harness/runtimes/dom/jsdom.types.d.ts"
+  ],
+  "exclude": []
+}
