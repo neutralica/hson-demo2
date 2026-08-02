@@ -1,21 +1,32 @@
 import { hson } from "hson-live";
 import type { HostedTestCaseReport, HostedTestReport } from "../../harness/reporting/hosted/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
-import { make_hosted_test_case_list, type HostedTestFrameScheduler } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
+import { make_hosted_test_case_list, type HostedTestCaseList, type HostedTestFrameScheduler } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import {
   hosted_test_projection_footer,
   hosted_test_projection_summary,
 } from "../../../src/app/demos/tests/panel/hosted-test-report-summary";
 import {
+  copy_hosted_case_report,
   hosted_external_launcher_log_projection,
+  open_hosted_case_report,
+  render_hosted_case_diagnostic_html,
   serialize_hosted_run_report,
 } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
+import { make_hosted_test_case_inspector } from "../../harness/hosted/hosted-test-case-inspection";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { create_test_chips } from "../../../src/app/demos/tests/panel/test-helpers";
 import { TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "../../../src/app/demos/tests/panel/tp.css";
 
 function expect_projection(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted panel projection: ${message}`);
+}
+
+async function wait_for_projection(condition: () => boolean, message: string): Promise<void> {
+  const deadline = Date.now() + 5_000;
+  while (!condition() && Date.now() < deadline) await new Promise<void>((resolve) => setTimeout(resolve, 5));
+  expect_projection(condition(), message);
 }
 
 function test_case(suite: string, name: string, status: HostedTestCaseReport["status"] = "pass"): HostedTestCaseReport {
@@ -173,6 +184,122 @@ try {
   replacement.ingest(update(report(1, 1, 0, true), [test_case("suite/new", "fresh")], [{ suite: "suite/new", ms: 1 }], true));
   expect_projection(replacement.snapshot().cases === 1 && replacement.snapshot().metrics.visibleCaseRows === 0, "a rerun owns a fresh collapsed projection");
   replacement.dispose();
+
+  const portableCaseKey = "unit/test-harness::failed assertion row fails case and run";
+  const circuitCaseKey = "livehost/circuit-worker-service::starts exactly one persistent worker";
+  const inspectionRegistry = make_local_node_livehost_executor_registry();
+  const inspect = make_hosted_test_case_inspector(inspectionRegistry);
+  expect_projection(
+    inspectionRegistry.get(portableCaseKey)?.descriptor.id === portableCaseKey
+      && inspectionRegistry.get(circuitCaseKey)?.descriptor.id === circuitCaseKey,
+    "portable and Node-owned circuit cases share canonical executor lookup IDs",
+  );
+  const inspectionCases = Object.freeze([
+    test_case("unit/test-harness", "failed assertion row fails case and run"),
+    test_case("livehost/circuit-worker-service", "starts exactly one persistent worker"),
+  ]);
+  const inspectionReport = report(2, 2, 0, true, Object.freeze({}), Object.freeze({
+    "000001": inspectionCases,
+  }));
+  const viewedKeys: string[] = [];
+  const copiedKeys: string[] = [];
+  const renderedViews = new Map<string, string>();
+  const copiedReports = new Map<string, string>();
+  const diagnostics = new Map<string, ReturnType<typeof inspect>>();
+  let openedViews = 0;
+  Object.defineProperty(runtime.window, "open", {
+    configurable: true,
+    value: () => {
+      openedViews += 1;
+      return runtime.window;
+    },
+  });
+  Object.defineProperty(runtime.window.navigator, "clipboard", {
+    configurable: true,
+    value: Object.freeze({
+      async writeText(text: string) {
+        copiedReports.set(text.split("\n", 1)[0] ?? "", text);
+      },
+    }),
+  });
+  const inspect_once = (caseKey: string) => {
+    const existing = diagnostics.get(caseKey);
+    if (existing !== undefined) return existing;
+    const pending = inspect({ runId: "panel-inspection-run", suite: "canonical/selected", caseKey });
+    diagnostics.set(caseKey, pending);
+    return pending;
+  };
+  const inspectionActions = Object.freeze({
+    async view(caseKey: string) {
+      const diagnostic = await inspect_once(caseKey);
+      viewedKeys.push(diagnostic.caseKey);
+      renderedViews.set(diagnostic.caseKey, render_hosted_case_diagnostic_html(diagnostic));
+      const originalSetTimeout = globalThis.setTimeout;
+      globalThis.setTimeout = ((callback: () => void) => {
+        callback();
+        return 0;
+      }) as typeof globalThis.setTimeout;
+      try { open_hosted_case_report(diagnostic); }
+      finally { globalThis.setTimeout = originalSetTimeout; }
+    },
+    async copy(caseKey: string) {
+      const diagnostic = await inspect_once(caseKey);
+      await copy_hosted_case_report(diagnostic);
+      copiedKeys.push(diagnostic.caseKey);
+    },
+  });
+  const mount_inspection_projection = (): HostedTestCaseList => {
+    const inspectionProjection = make_hosted_test_case_list(host, inspectionActions, scheduler);
+    inspectionProjection.ingest(update(inspectionReport, inspectionCases, [
+      { suite: "unit/test-harness", ms: 1 },
+      { suite: "livehost/circuit-worker-service", ms: 1 },
+    ], true));
+    inspectionProjection.set_expanded("unit/test-harness", true);
+    inspectionProjection.set_expanded("livehost/circuit-worker-service", true);
+    return inspectionProjection;
+  };
+  const initialInspectionProjection = mount_inspection_projection();
+  expect_projection(
+    runtime.document.querySelectorAll('[data-hosted-action="view"]').length === 2
+      && runtime.document.querySelectorAll('[data-hosted-action="copy"]').length === 2,
+    "portable and Node-owned rows both expose inspection controls before remount",
+  );
+  initialInspectionProjection.dispose();
+
+  const remountedInspectionProjection = mount_inspection_projection();
+  expect_projection(
+    remountedInspectionProjection.snapshot().metrics.listenerRegistrations === 1,
+    "remounted panel owns one fresh delegated inspection listener",
+  );
+  for (const caseKey of [portableCaseKey, circuitCaseKey]) {
+    const row = Array.from(runtime.document.querySelectorAll<HTMLElement>(".hosted-case-row"))
+      .find((candidate) => candidate.getAttribute("data-case-key") === caseKey);
+    const view = row?.querySelector<HTMLElement>('[data-hosted-action="view"]');
+    const copy = row?.querySelector<HTMLElement>('[data-hosted-action="copy"]');
+    expect_projection(
+      view?.getAttribute("data-case-key") === caseKey && copy?.getAttribute("data-case-key") === caseKey,
+      `remounted controls retain the intended case ID ${caseKey}`,
+    );
+    view.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+    copy.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+  }
+  await wait_for_projection(
+    () => viewedKeys.length === 2 && copiedKeys.length === 2,
+    "both remounted view and copy paths settle",
+  );
+  for (const caseKey of [portableCaseKey, circuitCaseKey]) {
+    const [suite, name] = caseKey.split("::");
+    const heading = `${suite} :: ${name}`;
+    expect_projection(
+      viewedKeys.includes(caseKey)
+        && copiedKeys.includes(caseKey)
+        && renderedViews.get(caseKey)?.includes(heading) === true
+        && copiedReports.get(heading)?.includes(heading) === true,
+      `view and copy resolve and serialize the same intended case ${caseKey}`,
+    );
+  }
+  expect_projection(openedViews === 2, "portable and Node-owned rows both open their rendered inspection view after remount");
+  remountedInspectionProjection.dispose();
 
   const externalProjection = make_hosted_test_case_list(host, { async view() {}, async copy() {} }, scheduler);
   const passing = external_result("library::livehost.persistence", 16, "pass", 1010);

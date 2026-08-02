@@ -11,7 +11,7 @@ import { make_test_executor_discovery } from "../../../core/test-discovery";
 import { make_local_node_livehost_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
-import { inspect_hosted_test_case } from "../../../hosted/hosted-test-case-inspection";
+import { make_hosted_test_case_inspector } from "../../../hosted/hosted-test-case-inspection";
 import {
   create_hosted_test_application,
   HOSTED_TEST_COORDINATOR_HOST_ID,
@@ -59,7 +59,7 @@ export async function create_node_hosted_tests_application(
   const selectedVerification = create_node_selected_verification_service(launcherService);
   const authorities = create_hosted_test_application(registry, {
     makeRunId: make_hosted_test_run_id_factory(),
-    inspectCase: options.inspectCase ?? inspect_hosted_test_case,
+    inspectCase: options.inspectCase ?? make_hosted_test_case_inspector(executorRegistry),
     discovery: make_test_executor_discovery(executorRegistry, externalLaunchers.targets),
     executorRegistry,
     runSelected: externalLaunchers.targets.length === 0

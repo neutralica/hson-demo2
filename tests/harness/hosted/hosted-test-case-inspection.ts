@@ -3,6 +3,7 @@ import type { HostedTestCaseDiagnostic } from "./hosted-test-action.types";
 import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
 import type { HostedTestRunTarget } from "./hosted-test-suite";
 import type { CaseKey, TestAssertRow, TestEvent, TestSuite } from "../core/test-contracts";
+import type { ExecutableTestRegistration, TestExecutorRegistry } from "../core/test-executor";
 import { all_hosted_executable_suites, type HostedTestRuntimeKind } from "./hosted-all-test-suites";
 import { all_deterministic_transform_test_suites } from "./deterministic-transform-test-suites";
 import { with_hosted_dom_runtime, with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
@@ -49,6 +50,40 @@ async function run_one(runtime: HostedTestRuntimeKind, suite: TestSuite): Promis
   return finished;
 }
 
+type HostedTestCaseInspectionRequest = Readonly<{
+  runId: HostedTestRunId;
+  suite: HostedTestRunTarget;
+  caseKey: string;
+}>;
+
+type HostedTestCaseInspectionMatch = Readonly<{
+  runtime: HostedTestRuntimeKind;
+  suite: TestSuite;
+  testCase: TestSuite["cases"][number];
+}>;
+
+function runtime_for_registration(registration: ExecutableTestRegistration): HostedTestRuntimeKind {
+  const established = all_hosted_executable_suites().find((entry) => entry.suite.cases.some(
+    (testCase) => `${testCase.suite}::${testCase.name}` === registration.descriptor.id,
+  ));
+  if (established !== undefined) return established.runtime;
+  return registration.descriptor.requirements.includes("synthetic-dom") ? "dom" : "node";
+}
+
+function match_registration(registration: ExecutableTestRegistration): HostedTestCaseInspectionMatch {
+  const suite: TestSuite = Object.freeze({
+    suite: registration.descriptor.suite,
+    cases: Object.freeze([registration.testCase]),
+    ...(registration.suiteSetup === undefined ? {} : { setup: registration.suiteSetup }),
+    ...(registration.suiteTimeoutMs === undefined ? {} : { timeoutMs: registration.suiteTimeoutMs }),
+  });
+  return Object.freeze({
+    runtime: runtime_for_registration(registration),
+    suite,
+    testCase: registration.testCase,
+  });
+}
+
 function normalize_loop_report(
   runId: HostedTestRunId,
   suiteId: HostedTestRunTarget,
@@ -84,17 +119,10 @@ function normalize_loop_report(
   });
 }
 
-export async function inspect_hosted_test_case(request: Readonly<{
-  runId: HostedTestRunId;
-  suite: HostedTestRunTarget;
-  caseKey: string;
-}>): Promise<HostedTestCaseDiagnostic> {
-  const matches = all_hosted_executable_suites().flatMap((entry) => entry.suite.cases
-    .filter((testCase) => `${testCase.suite}::${testCase.name}` === request.caseKey)
-    .map((testCase) => ({ entry, testCase })));
-  if (matches.length === 0) throw new Error(`HOSTED_TEST_UNKNOWN_CASE: Unknown hosted test case "${request.caseKey}".`);
-  if (matches.length !== 1) throw new Error(`HOSTED_TEST_AMBIGUOUS_CASE: Ambiguous hosted test case "${request.caseKey}".`);
-  const match = matches[0]!;
+async function inspect_match(
+  request: HostedTestCaseInspectionRequest,
+  match: HostedTestCaseInspectionMatch,
+): Promise<HostedTestCaseDiagnostic> {
   if (match.testCase.suite.startsWith("transform/")) {
     const captures = new Map<CaseKey, () => Promise<LoopReport>>();
     all_deterministic_transform_test_suites(captures);
@@ -117,8 +145,7 @@ export async function inspect_hosted_test_case(request: Readonly<{
     }
   }
 
-  const selectedSuite = Object.freeze({ suite: match.entry.suite.suite, cases: Object.freeze([match.testCase]) });
-  const event = await run_one(match.entry.runtime, selectedSuite);
+  const event = await run_one(match.runtime, match.suite);
 
   return Object.freeze({
     type: "ordinary",
@@ -135,4 +162,29 @@ export async function inspect_hosted_test_case(request: Readonly<{
     artifacts: Object.freeze([]),
     trace: Object.freeze([]),
   });
+}
+
+/** Bind inspection to the same canonical registrations advertised by one executor. */
+export function make_hosted_test_case_inspector(
+  registry: TestExecutorRegistry,
+): (request: HostedTestCaseInspectionRequest) => Promise<HostedTestCaseDiagnostic> {
+  return async (request) => {
+    const registration = registry.get(request.caseKey);
+    if (registration === undefined) {
+      throw new Error(`HOSTED_TEST_UNKNOWN_CASE: Unknown hosted test case "${request.caseKey}".`);
+    }
+    return inspect_match(request, match_registration(registration));
+  };
+}
+
+/** Compatibility inspector for the established hosted/all suite inventory. */
+export async function inspect_hosted_test_case(
+  request: HostedTestCaseInspectionRequest,
+): Promise<HostedTestCaseDiagnostic> {
+  const matches = all_hosted_executable_suites().flatMap((entry) => entry.suite.cases
+    .filter((testCase) => `${testCase.suite}::${testCase.name}` === request.caseKey)
+    .map((testCase) => Object.freeze({ runtime: entry.runtime, suite: entry.suite, testCase })));
+  if (matches.length === 0) throw new Error(`HOSTED_TEST_UNKNOWN_CASE: Unknown hosted test case "${request.caseKey}".`);
+  if (matches.length !== 1) throw new Error(`HOSTED_TEST_AMBIGUOUS_CASE: Ambiguous hosted test case "${request.caseKey}".`);
+  return inspect_match(request, matches[0]!);
 }
