@@ -839,7 +839,7 @@ export function livemap_suites_handle_2(): TestSuite {
 
           return map.at(["user", "name"]).delete();
         },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received missing",
       }),
       commitCase({
         suite: SUITE,
@@ -875,7 +875,7 @@ export function livemap_suites_handle_2(): TestSuite {
 
           return map.at(["user"]).object.deleteKey("name");
         },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received missing",
       }),
       commitCase({
         suite: SUITE,

@@ -593,7 +593,7 @@ export function livemap_suites_core(): TestSuite {
               equal_row(
                 "core schema rejects delete required field before mutation: error",
                 message,
-                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received missing",
               ),
               equal_row("core schema rejects delete required field before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
             ],
@@ -685,7 +685,7 @@ export function livemap_suites_core(): TestSuite {
               equal_row(
                 "core schema rejects delete required parent before mutation: error",
                 message,
-                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected object at [\"user\"], received undefined",
+                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected object at [\"user\"], received missing",
               ),
               equal_row("core schema rejects delete required parent before mutation: root", map.snap(), { user: { name: "Ada" } }),
             ],
@@ -1022,7 +1022,7 @@ export function livemap_suites_core(): TestSuite {
               equal_row(
                 "core schema rejects delete required parent before mutation: error",
                 message,
-                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected object at [\"user\"], received undefined",
+                "LiveMap schema rejected value at [\"user\"]:\n- LiveMap schema expected object at [\"user\"], received missing",
               ),
               equal_row("core schema rejects delete required parent before mutation: root", map.snap(), { user: { name: "Ada" } }),
             ],
@@ -1275,4 +1275,3 @@ export function livemap_suites_core(): TestSuite {
     ] as const,
   };
 }
-

@@ -301,7 +301,7 @@ export function livemap_schema_contract_suite(): TestSuite {
               equal_row(
                 "schema contract delete required field fails before mutation: error",
                 message,
-                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined"
+                "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received missing"
               ),
               equal_row("schema contract delete required field fails before mutation: root", map.snap(), { user: { name: "Ada", age: 37 } }),
             ],

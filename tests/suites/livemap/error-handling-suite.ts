@@ -90,9 +90,9 @@ export function livemap_error_handling(): TestSuite {
           issue: {
             code: "MISSING_REQUIRED",
             path: ["user", "name"],
-            message: "LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+            message: "LiveMap schema expected string at [\"user\",\"name\"], received missing",
             expected: "string",
-            received: "undefined",
+            received: "missing",
           },
         },
       }),

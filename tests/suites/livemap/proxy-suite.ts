@@ -647,7 +647,7 @@ export function livemap_suites_proxy(): TestSuite {
 
           return proxy.user.name.$_.delete();
         },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received missing",
       }),
       commitCase({
         suite: SUITE,
@@ -685,7 +685,7 @@ export function livemap_suites_proxy(): TestSuite {
 
           return proxy.user.$_.object.deleteKey("name");
         },
-        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received undefined",
+        expectedMessage: "LiveMap schema rejected value at [\"user\",\"name\"]:\n- LiveMap schema expected string at [\"user\",\"name\"], received missing",
       }),
       commitCase({
         suite: SUITE,

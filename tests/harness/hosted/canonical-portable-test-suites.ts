@@ -40,6 +40,8 @@ import { livemap_carrier_mutation_planning_suite } from "../../suites/livemap/ca
 import { livemap_exact_transport_suite } from "../../suites/livemap/exact-transport-suite";
 import { livemap_exact_transport_rejection_suite } from "../../suites/livemap/exact-transport-rejection-suite";
 import { livemap_exact_propagation_suite } from "../../suites/livemap/exact-propagation-suite";
+import { livemap_schema_value_boundary_suite } from "../../suites/livemap/schema-value-boundary-suite";
+import { livemap_ordered_object_array_helpers_suite } from "../../suites/livemap/ordered-object-array-helpers-suite";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
 
@@ -106,6 +108,8 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_exact_transport_suite(),
     livemap_exact_transport_rejection_suite(),
     livemap_exact_propagation_suite(),
+    livemap_schema_value_boundary_suite(),
+    livemap_ordered_object_array_helpers_suite(),
     ...all_livehost_suites(),
     ...all_unit_tests(),
   ];
