@@ -37,6 +37,8 @@ import {
 } from "../../suites/livemap/projected-ingress-suite";
 import { livemap_projected_equality_suite } from "../../suites/livemap/projected-equality-suite";
 import { livemap_carrier_mutation_planning_suite } from "../../suites/livemap/carrier-mutation-planning-suite";
+import { livemap_exact_transport_suite } from "../../suites/livemap/exact-transport-suite";
+import { livemap_exact_transport_rejection_suite } from "../../suites/livemap/exact-transport-rejection-suite";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
 
@@ -100,6 +102,8 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_projected_ingress_rejection_suite(),
     livemap_projected_equality_suite(),
     livemap_carrier_mutation_planning_suite(),
+    livemap_exact_transport_suite(),
+    livemap_exact_transport_rejection_suite(),
     ...all_livehost_suites(),
     ...all_unit_tests(),
   ];

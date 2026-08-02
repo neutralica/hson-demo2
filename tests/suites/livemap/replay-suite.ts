@@ -963,9 +963,10 @@ export function livemap_suite_replay(): TestSuite {
             items: ["a", "b"],
           }));
 
-          const mismatchedOp: Parameters<
-            typeof target.replay
-          >[0]["ops"][number] = {
+          const mismatchedOp: Extract<
+            Parameters<typeof target.replay>[0],
+            Readonly<{ ops: readonly unknown[] }>
+          >["ops"][number] = {
             kind: "splice",
             path: ["items"],
             start: 1,
