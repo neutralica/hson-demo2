@@ -128,7 +128,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "subscribeDiff skips unchanged root signature",
+                name: "subscribeDiff skips unchanged ordered projected state",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -165,7 +165,7 @@ export function livemap_suites_store(): TestSuite {
 
                     return {
                         assertRows: [
-                            equal_row("diff suppressed unchanged JSON signature", events, expected),
+                            equal_row("diff suppressed unchanged ordered state", events, expected),
                         ],
                     };
                 },

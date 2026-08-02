@@ -1041,7 +1041,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay structural equality ignores object key order",
+        name: "replay structural equality conflicts on object key order",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1058,7 +1058,7 @@ export function livemap_suite_replay(): TestSuite {
             },
           }));
 
-          const sourceCommit = source.set(
+          const sourceCommit = source.replace(
             ["user"],
             {
               name: "Grace",
@@ -1066,28 +1066,23 @@ export function livemap_suite_replay(): TestSuite {
             },
           );
 
-          const replayCommit = target.replay({
-            prevRev: 0,
-            ops: sourceCommit.ops,
-          });
+          let code = "NO_ERROR";
+          try {
+            target.replay({ prevRev: 0, ops: sourceCommit.ops });
+          } catch (error) {
+            code = String((error as Error & { code?: unknown }).code);
+          }
 
           return {
-            changed: replayCommit.changed,
-            prevRev: replayCommit.prevRev,
-            rev: replayCommit.rev,
+            code,
             targetRev: target.rev,
-            targetUser: target.snap(["user"]),
+            targetOrderPreserved: Reflect.ownKeys(target.snap(["user"]) as object).join("|") === "age|name",
           };
         },
         expected: {
-          changed: true,
-          prevRev: 0,
-          rev: 1,
-          targetRev: 1,
-          targetUser: {
-            age: 38,
-            name: "Grace",
-          },
+          code: "REPLAY_CONFLICT",
+          targetRev: 0,
+          targetOrderPreserved: true,
         },
       }),
 

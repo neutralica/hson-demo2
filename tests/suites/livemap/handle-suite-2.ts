@@ -68,10 +68,10 @@ export function livemap_suites_handle_2(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "handle array.includes uses deep object equality",
+        name: "handle array.includes rejects reordered object entries",
         input: { items: [{ name: "Ada", role: "user" }] },
         act: (map) => map.at(["items"]).array.includes({ role: "user", name: "Ada" }),
-        expected: true,
+        expected: false,
       }),
       read_case({
         suite: SUITE,
@@ -110,10 +110,10 @@ export function livemap_suites_handle_2(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "handle array.indexOf uses deep object equality",
+        name: "handle array.indexOf rejects reordered object entries",
         input: { items: [{ name: "Ada", role: "user" }] },
         act: (map) => map.at(["items"]).array.indexOf({ role: "user", name: "Ada" }),
-        expected: 0,
+        expected: -1,
       }),
       read_case({
         suite: SUITE,
