@@ -145,7 +145,7 @@ test("browser HSON parsing enforces authored names, duplicates, and escape gramm
   await expect(status).toHaveText("OK");
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"a": "\/"/);
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"A": "A"/);
-  await editor.fill("<`name\\u0041` 1>");
+  await editor.fill("<'name\\u0041' 1>");
   await expect(status).toHaveText("OK");
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"nameA": 1/);
   assertNoErrors();

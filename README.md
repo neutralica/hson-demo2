@@ -12,6 +12,12 @@ Its interactive demos showcase the working features and components of hson-live 
 
 HSON (Hypertext Structured Object Notation) is a "glue format." It models the tree structure shared by JSON and HTML, and can fully express both in a single notation.
 
+Authored HSON names are bare or single-quoted: `<name 1>` and
+`<'display name' "Ada">`. Double quotes delimit string values. Backticks have
+no HSON syntactic role, though they remain ordinary data inside quoted names
+and strings. JavaScript template literals can therefore embed ordinary quoted
+HSON names directly without escaping every name delimiter.
+
 *By parsing to HSON as an intermediary step, HTML can be represented as valid JSON, and vice versa. This is the key insight that powers hson-live.*
 
 ---

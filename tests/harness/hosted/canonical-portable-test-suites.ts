@@ -46,6 +46,10 @@ import { livemap_equivalence_mutation_matrix_suite } from "../../suites/livemap/
 import { livemap_equivalence_schema_helper_matrix_suite } from "../../suites/livemap/equivalence-schema-helper-matrix-suite";
 import { livemap_equivalence_transport_propagation_suite } from "../../suites/livemap/equivalence-transport-propagation-suite";
 import { livemap_equivalence_rejection_isolation_suite } from "../../suites/livemap/equivalence-rejection-isolation-suite";
+import {
+  transform_quoted_name_acceptance_suite,
+  transform_quoted_name_rejection_suite,
+} from "../../suites/transform/quoted-name-suites";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
 
@@ -72,6 +76,9 @@ function annotate(suite: TestSuite): TestSuite {
   }
   if (suite.suite.startsWith("unit/")) {
     return Object.freeze({ ...suite, descriptor: metadata("livetree", Object.freeze(["unit"] as const)) });
+  }
+  if (suite.suite.startsWith("transform/")) {
+    return Object.freeze({ ...suite, descriptor: metadata("transform") });
   }
   throw new Error(`Missing canonical portable-suite metadata mapping: ${suite.suite}`);
 }
@@ -118,6 +125,8 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_equivalence_schema_helper_matrix_suite(),
     livemap_equivalence_transport_propagation_suite(),
     livemap_equivalence_rejection_isolation_suite(),
+    transform_quoted_name_acceptance_suite(),
+    transform_quoted_name_rejection_suite(),
     ...all_livehost_suites(),
     ...all_unit_tests(),
   ];

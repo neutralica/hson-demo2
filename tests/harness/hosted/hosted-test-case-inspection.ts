@@ -96,24 +96,25 @@ export async function inspect_hosted_test_case(request: Readonly<{
   if (matches.length !== 1) throw new Error(`HOSTED_TEST_AMBIGUOUS_CASE: Ambiguous hosted test case "${request.caseKey}".`);
   const match = matches[0]!;
   if (match.testCase.suite.startsWith("transform/")) {
-    return with_hosted_dom_runtime(async () => {
-      const captures = new Map<CaseKey, () => Promise<LoopReport>>();
-      all_deterministic_transform_test_suites(captures);
-      const capture = captures.get(request.caseKey as CaseKey);
-      if (capture === undefined) throw new Error(`HOSTED_TEST_INSPECTION_FAILED: Transform capture is unavailable for "${request.caseKey}".`);
-      const startedAt = performance.now();
-      const report = await capture();
-      return normalize_loop_report(
-        request.runId,
-        request.suite,
-        request.caseKey,
-        match.testCase.suite,
-        match.testCase.name,
-        performance.now() - startedAt,
-        report,
-        match.testCase.meta?.input ?? null,
-      );
-    });
+    const captures = new Map<CaseKey, () => Promise<LoopReport>>();
+    all_deterministic_transform_test_suites(captures);
+    const capture = captures.get(request.caseKey as CaseKey);
+    if (capture !== undefined) {
+      return with_hosted_dom_runtime(async () => {
+        const startedAt = performance.now();
+        const report = await capture();
+        return normalize_loop_report(
+          request.runId,
+          request.suite,
+          request.caseKey,
+          match.testCase.suite,
+          match.testCase.name,
+          performance.now() - startedAt,
+          report,
+          match.testCase.meta?.input ?? null,
+        );
+      });
+    }
   }
 
   const selectedSuite = Object.freeze({ suite: match.entry.suite.suite, cases: Object.freeze([match.testCase]) });
