@@ -36,6 +36,7 @@ import {
   livemap_projected_ingress_suite,
 } from "../../suites/livemap/projected-ingress-suite";
 import { livemap_projected_equality_suite } from "../../suites/livemap/projected-equality-suite";
+import { livemap_carrier_mutation_planning_suite } from "../../suites/livemap/carrier-mutation-planning-suite";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
 
@@ -98,6 +99,7 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_projected_ingress_suite(),
     livemap_projected_ingress_rejection_suite(),
     livemap_projected_equality_suite(),
+    livemap_carrier_mutation_planning_suite(),
     ...all_livehost_suites(),
     ...all_unit_tests(),
   ];

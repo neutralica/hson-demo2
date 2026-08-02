@@ -38,6 +38,7 @@ import {
   livemap_projected_ingress_suite,
 } from "./projected-ingress-suite";
 import { livemap_projected_equality_suite } from "./projected-equality-suite";
+import { livemap_carrier_mutation_planning_suite } from "./carrier-mutation-planning-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -119,6 +120,7 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_projected_ingress_suite(),
     livemap_projected_ingress_rejection_suite(),
     livemap_projected_equality_suite(),
+    livemap_carrier_mutation_planning_suite(),
 
     
     // livemap_suite_html_proof(), // non-supported currently
