@@ -121,7 +121,15 @@ export function livehost_sync_suite(): TestSuite {
         },
         expected: {
           sentCount: 1,
-          first: { type: "sync", seq: 0, path: ["count"], value: 0 },
+          first: {
+            type: "sync",
+            seq: 0,
+            path: ["count"],
+            value: 0,
+            format: "structural-json",
+            formatVersion: 1,
+            payload: "0",
+          },
         },
       }),
       livehost_sync_read_case({

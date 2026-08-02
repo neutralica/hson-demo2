@@ -41,6 +41,7 @@ import { livemap_projected_equality_suite } from "./projected-equality-suite";
 import { livemap_carrier_mutation_planning_suite } from "./carrier-mutation-planning-suite";
 import { livemap_exact_transport_suite } from "./exact-transport-suite";
 import { livemap_exact_transport_rejection_suite } from "./exact-transport-rejection-suite";
+import { livemap_exact_propagation_suite } from "./exact-propagation-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -125,6 +126,7 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_carrier_mutation_planning_suite(),
     livemap_exact_transport_suite(),
     livemap_exact_transport_rejection_suite(),
+    livemap_exact_propagation_suite(),
 
     
     // livemap_suite_html_proof(), // non-supported currently
