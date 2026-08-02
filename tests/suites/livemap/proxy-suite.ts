@@ -1,9 +1,20 @@
 // proxy-suites.ts
 
 import { define_livemap_schema } from "hson-live/livemap";
+import type { JsonValue } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case, commitCase, throwCase } from "./handle-helpers";
 
+function own_proto_data_input(): JsonValue {
+  const input: Record<string, JsonValue> = {};
+  Object.defineProperty(input, "__proto__", {
+    value: "data",
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  });
+  return input;
+}
 
 
 export function livemap_suites_proxy(): TestSuite {
@@ -408,13 +419,20 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy __proto__ access returns undefined",
-        input: { __proto__: "data" },
+        name: "proxy direct __proto__ reservation hides an actual own data property",
+        input: own_proto_data_input(),
         act: (map) => {
           const proxy = map.proxy() as any;
           return proxy.__proto__;
         },
         expected: undefined,
+      }),
+      read_case({
+        suite: SUITE,
+        name: "proxy $_ escape reaches an actual own __proto__ data property",
+        input: own_proto_data_input(),
+        act: (map) => map.proxy().$_.object.getKey("__proto__"),
+        expected: "data",
       }),
       read_case({
         suite: SUITE,

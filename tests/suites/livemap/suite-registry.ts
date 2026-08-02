@@ -33,6 +33,10 @@ import { livemap_error_handling } from "./error-handling-suite";
 import { livemap_suite_rev } from "./rev-suite";
 import { livemap_suite_replay } from "./replay-suite";
 import { livemap_document_foundation_suite } from "./document-foundation-suite";
+import {
+  livemap_projected_ingress_rejection_suite,
+  livemap_projected_ingress_suite,
+} from "./projected-ingress-suite";
 
 
 export type LiveMapCaseContext = Readonly<{
@@ -111,6 +115,8 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suite_rev(),
     livemap_suite_replay(),
     livemap_document_foundation_suite(),
+    livemap_projected_ingress_suite(),
+    livemap_projected_ingress_rejection_suite(),
 
     
     // livemap_suite_html_proof(), // non-supported currently
