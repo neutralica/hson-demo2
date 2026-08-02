@@ -127,8 +127,8 @@ expect_discovery(workerDiscovery.catalogVersion === test_catalog_version(workerD
 expect_discovery(nodeRegistry.registrations.length === nodeDiscovery.catalog.tests.length && nodeDiscovery.catalog.tests.every((test) => nodeRegistry.get(test.id) !== undefined), "Node descriptors and registrations have exact parity");
 expect_discovery(workerRegistry.registrations.length === workerDiscovery.catalog.tests.length && workerDiscovery.catalog.tests.every((test) => workerRegistry.get(test.id) !== undefined), "Worker descriptors and registrations have exact parity");
 expect_discovery(
-  nodeDiscovery.executor.capabilities.provides.join(",") === "javascript,node,synthetic-dom",
-  "Node capabilities describe its installed portable and synthetic-DOM contexts",
+  nodeDiscovery.executor.capabilities.provides.join(",") === "javascript,node,synthetic-dom,worker",
+  "Node capabilities describe its installed portable, synthetic-DOM, and worker contexts",
 );
 expect_discovery(workerDiscovery.executor.capabilities.provides.join(",") === "javascript", "Worker capabilities remain conservative");
 

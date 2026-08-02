@@ -12,6 +12,8 @@ import {
   create_node_hosted_tests_application,
 } from "./node-hosted-tests-application";
 import { create_node_towl_application } from "./node-towl-application";
+import { create_node_circuit_verification_application } from "./node-circuit-verification-application";
+import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../hosted/circuit-verification-contract";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
@@ -71,6 +73,16 @@ export async function start_hosted_test_server(
       sweepIntervalMs: authorityLifecycle.sweepIntervalMs,
     },
   });
+  let circuitVerification;
+  try {
+    circuitVerification = await create_node_circuit_verification_application({
+      ...(options.security === undefined ? {} : { security: options.security }),
+    });
+  } catch (error) {
+    await hostedTests.registration.dispose();
+    await towl.registration.dispose();
+    throw error;
+  }
   let host: NodeApplicationHost;
   try {
     host = await start_node_application_host({
@@ -78,12 +90,13 @@ export async function start_hosted_test_server(
       port: options.port ?? 8787,
       shutdownTimeoutMs: options.shutdownTimeoutMs ?? 5_000,
       deployment: options.deployment ?? { mode: "development" },
-      applications: [hostedTests.registration, towl.registration],
+      applications: [hostedTests.registration, towl.registration, circuitVerification.registration],
       ...(options.log === undefined ? {} : { log: options.log }),
     });
   } catch (error) {
     await hostedTests.registration.dispose();
     await towl.registration.dispose();
+    await circuitVerification.registration.dispose();
     throw error;
   }
   return Object.freeze({
@@ -92,9 +105,21 @@ export async function start_hosted_test_server(
     url: host.url,
     connectionCount: host.connectionCount,
     disconnectConnections(hostId) {
-      hostedTests.disconnectConnections(hostId);
+      if (hostId === undefined || hostId === CIRCUIT_VERIFICATION_HOST_ID) {
+        circuitVerification.disconnectConnections();
+      }
+      if (hostId === undefined || hostId !== CIRCUIT_VERIFICATION_HOST_ID) {
+        hostedTests.disconnectConnections(hostId);
+      }
     },
-    metrics: hostedTests.metrics,
+    metrics() {
+      const hosted = hostedTests.metrics();
+      const circuit = circuitVerification.metrics();
+      return Object.freeze({
+        sentMessages: hosted.sentMessages + circuit.sentMessages,
+        sentBytes: hosted.sentBytes + circuit.sentBytes,
+      });
+    },
     stop: host.stop,
   });
 }

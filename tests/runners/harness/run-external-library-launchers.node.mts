@@ -494,7 +494,12 @@ if (all) {
   assert.equal(sequentialResults.results.length, hson_live_test_launchers.length);
   assert.equal(sequentialResults.results.every((result) => result.ok), true);
 
-  const mjsTargets = selectedTargets.filter((target) => target.launcherId.startsWith("livehost."));
+  const mjsLauncherIds = new Set(
+    hson_live_test_launchers
+      .filter((launcher) => launcher.repositoryModule.endsWith(".mjs"))
+      .map((launcher) => launcher.id),
+  );
+  const mjsTargets = selectedTargets.filter((target) => mjsLauncherIds.has(target.launcherId));
   const plainMjsResults = await run_external_library_launcher_pool(
     mjsTargets,
     (target) => run_external_library_launcher(availability, target.id, { forcePlainNode: true }),

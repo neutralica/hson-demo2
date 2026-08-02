@@ -67,6 +67,7 @@ assert.deepEqual(await health.json(), {
   applications: [
     { name: "hosted-tests", ready: true },
     { name: "towl", ready: true },
+    { name: "circuit-verification", ready: true },
   ],
 });
 

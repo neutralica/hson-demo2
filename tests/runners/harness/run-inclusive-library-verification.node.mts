@@ -90,10 +90,17 @@ const failedExternalEvents = events.filter(
   (event): event is Extract<TestEvent, { readonly t: "external_end" }> =>
     event.t === "external_end" && event.status === "fail",
 );
+const failedCanonicalEvents = events.filter(
+  (event): event is Extract<TestEvent, { readonly t: "case_end" }> =>
+    event.t === "case_end" && event.status === "fail",
+);
 assert.equal(
   result.ok,
   true,
-  failedExternalEvents.map((event) => `${event.id}: ${event.stderr}`).join("\n"),
+  [
+    ...failedCanonicalEvents.map((event) => `${event.suite}::${event.name}: ${event.err ?? "failed"}`),
+    ...failedExternalEvents.map((event) => `${event.id}: ${event.stderr}`),
+  ].join("\n"),
 );
 assert.equal(canonicalCases, canonicalCaseCount);
 assert.equal(completedExternalIds.length, availability.targets.length);
