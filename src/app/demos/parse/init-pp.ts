@@ -1,446 +1,259 @@
-// init-pp.ts
-
 import { hson } from "hson-live";
+import type { HsonNode } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import type { Fmt } from "../../core/types/core.types";
 import type { PanelShell, Panels } from "../../ui/panels/panels.types";
-import { PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_INACTIVE_INVALIDcss, PP_IDLEcss } from "./pp.css";
+import { certify_browser_circuit_boundary, type BrowserCircuitAdmission } from "./browser-circuit-certificate";
+import { create_browser_circuit_verification_transport } from "./circuit-verification-browser-transport";
+import {
+  create_parsing_verification_coordinator,
+  type ParsingVerificationCoordinator,
+  type ParsingVerificationCoordinatorOptions,
+  type ParsingVerificationFailure,
+  type ParsingVerificationState,
+  type ParsingVerificationTransport,
+} from "./parsing-verification-coordinator";
+import { PP_ACTIVE_INVALIDcss, PP_ACTIVE_VALIDcss, PP_INACTIVE_VALIDcss, PP_IDLEcss } from "./pp.css";
 
-type PrimParse =
-  | { ok: true; value: string | number | boolean | null; kind: "string" | "scalar" }
-  | { ok: false };
+const INVALID_SOURCE_RETENTION_MS = 30_000;
+let parsingPanelInstance = 0;
 
-type ParsePanelControlState = {
-  inProgress: boolean;
-  active: Fmt | null;
-  isValid: boolean;
-  invalidOwner: Fmt | null;
+const encBytes = (source: string): number => new TextEncoder().encode(source).length;
+const getValue = (panel: PanelShell): string => panel.textarea.form.getValue() ?? "";
+const setValue = (panel: PanelShell, value: string): void => {
+  void panel.textarea.form.setValue(value, { silent: true });
 };
 
-const PARSE_PANEL_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => ({
-  inProgress: scm.boolean,
-  active: scm.pick("json", "hson", "html").nullable,
-  isValid: scm.boolean,
-  invalidOwner: scm.pick("json", "hson", "html").nullable,
-}));
+export type ParsingPanelsController = Readonly<{
+  verification: ParsingVerificationCoordinator;
+  dispose(): void;
+}>;
 
-function makeInitialParsePanelControlState(): ParsePanelControlState {
-  return {
-    inProgress: false,
-    active: null,
-    isValid: false,
-    invalidOwner: null,
-  };
+export type ParsingPanelsInitOptions = Readonly<{
+  panelId?: string;
+  debounceMs?: number;
+  scheduler?: ParsingVerificationCoordinatorOptions<BrowserCircuitAdmission>["scheduler"];
+  transport?: ParsingVerificationTransport;
+  certify?: ParsingVerificationCoordinatorOptions<BrowserCircuitAdmission>["certify"];
+}>;
+
+function make_panel_id(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid !== undefined) return `parsing-panel-${uuid}`;
+  parsingPanelInstance += 1;
+  return `parsing-panel-${Date.now().toString(36)}-${parsingPanelInstance.toString(36)}`;
 }
 
-const isJsonStringLiteral = (s: string): boolean => /^"(?:\\.|[^"\\])*"$/.test(s);
-const isScalarLiteral = (s: string): boolean =>
-  s === "null" ||
-  s === "true" ||
-  s === "false" ||
-  /^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(s);
-
-const encBytes = (s: string) => new TextEncoder().encode(s).length;
-
-const getValue = (p: PanelShell): string => p.textarea.form.getValue() ?? "";
-const setValue = (p: PanelShell, v: string): void =>
-  void p.textarea.form.setValue(v, { silent: true });
-
-const tryParse = (raw: string): PrimParse => {
-  const t = raw.trim();
-  if (!t) return { ok: false };
-
-  if (isJsonStringLiteral(t)) {
-    try {
-      const v = JSON.parse(t);
-      if (typeof v === "string") return { ok: true, value: v, kind: "string" };
-      return { ok: false };
-    } catch {
-      return { ok: false };
-    }
-  }
-
-  if (isScalarLiteral(t)) {
-    try {
-      const v = JSON.parse(t);
-      if (v === null || typeof v === "number" || typeof v === "boolean") {
-        return { ok: true, value: v, kind: "scalar" };
-      }
-      return { ok: false };
-    } catch {
-      return { ok: false };
-    }
-  }
-
-  return { ok: false };
-};
-
-const lockTextarea = (p: PanelShell): void => {
-  p.textarea.flags.set("readonly");
-
-  p.textarea.css.setMany({
-    pointerEvents: "auto",
-    userSelect: "none",
-    caretColor: "transparent",
+function immediate_failure(entry: Fmt, error?: unknown): ParsingVerificationFailure {
+  const candidate = error as { code?: unknown };
+  const parserCode = typeof candidate?.code === "string" && candidate.code.length <= 64
+    ? candidate.code.toUpperCase().replace(/[^A-Z0-9_]/g, "_")
+    : undefined;
+  return Object.freeze({
+    category: "immediate",
+    code: parserCode === undefined ? "IMMEDIATE_PARSE_FAILED" : `IMMEDIATE_${parserCode}`,
+    message: `${entry.toUpperCase()} source could not be admitted by the browser Transform facade.`,
+    stage: "immediate-admission",
   });
-};
+}
 
-const unlockTextarea = (p: PanelShell): void => {
-  p.textarea.flags.clear("readonly");
+function state_label(state: ParsingVerificationState): string {
+  if (state.status === "idle") return "--";
+  if (state.status === "invalid") return "Invalid";
+  if (state.status === "parsed") return "Parsed · waiting";
+  if (state.status === "queued") return "Queued";
+  if (state.status === "verifying") {
+    const completed = Math.min(6, state.progress?.completed ?? 0);
+    return `Verifying ${completed}/6`;
+  }
+  if (state.status === "browser-check") return "Checking browser";
+  if (state.status === "verified") return "Verified";
+  if (state.status === "failed") return "Verification failed";
+  return "Verification unavailable";
+}
 
-  p.textarea.css.setMany({
-    pointerEvents: "auto",
-    userSelect: "text",
-    caretColor: "auto",
-  });
-};
+function state_failure(state: ParsingVerificationState): ParsingVerificationFailure | undefined {
+  if (state.status === "invalid") return state.diagnostic;
+  if (state.status === "failed" || state.status === "unavailable") return state.failure;
+  return undefined;
+}
 
-export function init_parsing_panels(pp: Panels): void {
-  const FMTS = Object.keys(pp.panels) as readonly Fmt[];
+export function init_parsing_panels(
+  pp: Panels,
+  options: ParsingPanelsInitOptions = {},
+): ParsingPanelsController {
+  const formats = Object.keys(pp.panels) as readonly Fmt[];
+  let active: Fmt | null = null;
+  let invalidOwner: Fmt | null = null;
+  let invalidClearTimer: ReturnType<typeof setTimeout> | undefined;
+  let disposed = false;
 
-  const parseState = hson.liveMap
-    .fromJson(makeInitialParsePanelControlState())
-    .schema.use(PARSE_PANEL_CONTROL_SCHEMA);
-
-  function getParseState(): ParsePanelControlState {
-    return parseState.snap() as ParsePanelControlState;
+  function clear_invalid_timer(): void {
+    if (invalidClearTimer === undefined) return;
+    clearTimeout(invalidClearTimer);
+    invalidClearTimer = undefined;
   }
 
-  function getInProgress(): boolean {
-    return getParseState().inProgress;
+  function setPanelValueAndBytes(format: Fmt, value: string): void {
+    setValue(pp.panels[format], value);
+    pp.panels[format].bytes.text.set(`${encBytes(value)}`);
   }
 
-  function setInProgress(next: boolean): void {
-    parseState.at(["inProgress"]).set(next);
+  function setNodeViewForAll(node: HsonNode): void {
+    const nodeText = JSON.stringify(node, null, 2);
+    for (const format of formats) pp.panels[format].nodeText.text.set(nodeText);
   }
 
-  function getActive(): Fmt | null {
-    return getParseState().active;
-  }
-
-  function setActive(next: Fmt | null): void {
-    parseState.at(["active"]).set(next);
-  }
-
-  function getIsValid(): boolean {
-    return getParseState().isValid;
-  }
-
-  function setIsValid(next: boolean): void {
-    parseState.at(["isValid"]).set(next);
-  }
-
-  function getInvalidOwner(): Fmt | null {
-    return getParseState().invalidOwner;
-  }
-
-  function setInvalidOwner(next: Fmt | null): void {
-    parseState.at(["invalidOwner"]).set(next);
-  }
-
-  function isIdleValid(): boolean {
-    return getActive() === null && getIsValid();
-  }
-
-  function isIdleInvalid(): boolean {
-    return getActive() === null && !getIsValid();
-  }
-
-  function isActiveValid(): boolean {
-    return getActive() !== null && getIsValid();
-  }
-  function setNodeViewForAll(t: ReturnType<typeof hson.fromJson> | ReturnType<typeof hson.fromHson> | ReturnType<typeof hson.fromTrustedHtml>): void {
-
-    const nodeTxt = JSON.stringify(t.toNode(), null, 2);
-
-    for (const fmt of FMTS) {
-      pp.panels[fmt].nodeText.text.set(nodeTxt);
+  function admit(entry: Fmt, source: string) {
+    if (source.trim().length === 0) return Object.freeze({ ok: false as const, diagnostic: immediate_failure(entry) });
+    try {
+      const transformed = entry === "json"
+        ? hson.fromJson(source)
+        : entry === "hson"
+          ? hson.fromHson(source)
+          : hson.fromTrustedHtml(source);
+      let node = transformed.toNode();
+      let derivedHson: string | undefined;
+      if (entry !== "hson") {
+        derivedHson = transformed.toHson().serialize();
+        node = hson.fromHson(derivedHson).toNode();
+      }
+      if (entry !== "json") setPanelValueAndBytes("json", transformed.toJson().serialize());
+      if (entry !== "hson") setPanelValueAndBytes("hson", derivedHson ?? transformed.toHson().serialize());
+      if (entry !== "html") setPanelValueAndBytes("html", transformed.toHtml().serialize());
+      setNodeViewForAll(node);
+      invalidOwner = null;
+      clear_invalid_timer();
+      return Object.freeze({ ok: true as const, admission: Object.freeze({ node }) });
+    } catch (error) {
+      invalidOwner = entry;
+      return Object.freeze({ ok: false as const, diagnostic: immediate_failure(entry, error) });
     }
   }
 
-  function isThisActiveValid(fmt: Fmt): boolean {
-    return getActive() === fmt && getIsValid();
-  }
-
-  function isThisActiveInvalid(fmt: Fmt): boolean {
-    return getActive() === fmt && !getIsValid();
-  }
-
-  let invalidClearTimer: ReturnType<typeof setTimeout> | null = null;
-
-  function clearTimer(): void {
-    if (invalidClearTimer) clearTimeout(invalidClearTimer);
-    invalidClearTimer = null;
-  }
-
-  function clearInvalidOwner(): void {
-    setInvalidOwner(null);
-    clearTimer();
-  }
-
-  function markInvalidOwner(fmt: Fmt): void {
-    setInvalidOwner(fmt);
-  }
-
-  function scheduleClearInvalid(fmt: Fmt): void {
-    clearTimer();
-    setInvalidOwner(fmt);
-
-    invalidClearTimer = setTimeout(() => {
-      if (getInvalidOwner() !== fmt) return;
-
-      setValue(pp.panels[fmt], "");
-      pp.panels[fmt].bytes.text.set("0");
-      setInvalidOwner(null);
-      invalidClearTimer = null;
-    }, 30000);
-  }
-
-
-  function setStatus(fmt: Fmt, kind: "idle" | "typing" | "valid" | "invalid"): void {
-    const p = pp.panels[fmt];
-
-    if (kind === "idle") {
-      p.status.text.set("--");
-      p.status.css.setMany({ opacity: "0" });
-      return;
+  function render(state: ParsingVerificationState): void {
+    if (disposed) return;
+    const origin = state.status === "idle" ? undefined : state.entry;
+    const label = state_label(state);
+    const failure = state_failure(state);
+    pp.root.data.set("verification-status", state.status);
+    pp.root.attrs.set("data-verification-revision", state.status === "idle" ? "0" : `${state.inputRevision}`);
+    if (origin === undefined) pp.root.attrs.drop("data-verification-origin");
+    else pp.root.attrs.set("data-verification-origin", origin);
+    if (state.status === "verified") {
+      pp.root.attrs.setMany({
+        "data-worker-duration-ms": `${state.certificate.workerDurationMs}`,
+        "data-browser-check-duration-ms": `${state.certificate.browserCheckDurationMs}`,
+        "data-circuit-serializations": `${state.certificate.operationCounts.serializations}`,
+        "data-circuit-parses": `${state.certificate.operationCounts.parses}`,
+        "data-circuit-comparisons": `${state.certificate.operationCounts.comparisons}`,
+      });
+    } else {
+      pp.root.attrs.drop("data-worker-duration-ms");
+      pp.root.attrs.drop("data-browser-check-duration-ms");
+      pp.root.attrs.drop("data-circuit-serializations");
+      pp.root.attrs.drop("data-circuit-parses");
+      pp.root.attrs.drop("data-circuit-comparisons");
     }
+    for (const format of formats) {
+      const panel = pp.panels[format];
+      const ownsState = origin === format;
+      panel.status.text.set(ownsState ? label : "--");
+      panel.status.attrs.setMany({
+        "aria-label": ownsState ? label : `${format.toUpperCase()} has no authored verification state`,
+        "data-verification-status": ownsState ? state.status : "derived",
+        "data-verification-revision": ownsState && state.status !== "idle" ? `${state.inputRevision}` : "0",
+        "title": ownsState && failure !== undefined ? failure.message : "",
+      });
+      panel.status.css.setMany({
+        opacity: ownsState ? "1" : "0",
+        color: state.status === "verified"
+          ? _colors.hson.n
+          : state.status === "failed" || state.status === "invalid"
+            ? "red"
+            : state.status === "unavailable"
+              ? _colors.yellowlike
+              : _colors.txt.code,
+      });
 
-    if (kind === "typing") {
-      p.status.text.set("••");
-      p.status.css.setMany({ opacity: "1" });
-      return;
-    }
-
-    if (kind === "valid") {
-      for (const f of FMTS) {
-        const fmtt = pp.panels[f];
-        fmtt.status.text.set("OK");
-      }
-      p.status.css.setMany({ opacity: "1", color: _colors.hson.n });
-      return;
-    }
-
-    p.status.text.set("XX");
-    p.status.css.setMany({ opacity: "1", color: "red" });
-  }
-
-  function syncUiState(): void {
-    for (const f of FMTS) {
-      const p = pp.panels[f];
-
-      if (isThisActiveInvalid(f)) {
-        p.textBox.css.setMany(PP_ACTIVE_INVALIDcss(f));
-        p.wmFmt.style.set.color("transparent")
-        unlockTextarea(p);
-        continue;
-      }
-
-      if (isThisActiveValid(f)) {
-        p.textBox.css.setMany(PP_ACTIVE_VALIDcss(f));
-        p.wmFmt.style.set.color("transparent")
-        unlockTextarea(p);
-        continue;
-      }
-
-      if (isActiveValid()) {
-        p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
-        p.wmFmt.style.set.color("transparent")
-        lockTextarea(p);
-        continue;
-      }
-      if (isIdleInvalid()) {
-        p.textBox.css.setMany(PP_INACTIVE_INVALIDcss(f));
-        p.wmFmt.style.set.color(_colors.txt.grey)
-        unlockTextarea(p);
-        continue;
-      }
-
-      if (isIdleValid()) {
-        p.textBox.css.setMany(PP_INACTIVE_VALIDcss(f));
-        p.wmFmt.style.set.color("transparent")
-        unlockTextarea(p);
-        continue;
-      }
-
-      p.textBox.css.setMany(PP_IDLEcss(f));
-      p.wmFmt.style.set.color(_colors.txt.grey)
-      if (getActive() === null) {
-        unlockTextarea(p);
+      if (origin === format && state.status === "invalid") {
+        panel.textBox.css.setMany(PP_ACTIVE_INVALIDcss(format));
+        panel.wmFmt.style.set.color("transparent");
+      } else if (origin === format) {
+        panel.textBox.css.setMany(PP_ACTIVE_VALIDcss(format));
+        panel.wmFmt.style.set.color("transparent");
+      } else if (origin !== undefined) {
+        panel.textBox.css.setMany(PP_INACTIVE_VALIDcss(format));
+        panel.wmFmt.style.set.color("transparent");
       } else {
-        lockTextarea(p);
-      }
-    }
-  }
-
-  function clearOthers(origin: Fmt): void {
-    for (const f of FMTS) {
-      if (f === origin) continue;
-      setValue(pp.panels[f], "");
-      pp.panels[f].bytes.text.set("0");
-      setStatus(f, "idle");
-    }
-  }
-
-  function setPanelValueAndBytes(fmt: Fmt, value: string): void {
-    setValue(pp.panels[fmt], value);
-    pp.panels[fmt].bytes.text.set(`${encBytes(value)}`);
-  }
-
-  function markActiveValid(fmt: Fmt): void {
-    if (getActive() !== fmt) return;
-    setIsValid(true);
-    clearInvalidOwner();
-    setStatus(fmt, "valid");
-    syncUiState();
-  }
-
-  function markActiveInvalid(fmt: Fmt): void {
-    if (getActive() !== fmt) return;
-    setIsValid(false);
-    markInvalidOwner(fmt);
-    setStatus(fmt, "invalid");
-    syncUiState();
-  }
-
-  function update(origin: Fmt): void {
-    if (getInProgress()) return;
-    setInProgress(true);
-
-    const srcParts = pp.panels[origin];
-    const raw = getValue(srcParts);
-    srcParts.bytes.text.set(`${encBytes(raw)}`);
-
-    if (getActive() === origin) setStatus(origin, "typing");
-
-    if (raw.trim().length === 0) {
-      if (getActive() === origin) {
-        setIsValid(false);
-        markInvalidOwner(origin);
-        setStatus(origin, "invalid");
-        srcParts.bytes.text.set("0");
-        syncUiState();
-      }
-      setInProgress(false);
-      return;
-    }
-
-    try {
-      if (origin === "json") {
-        const prim = tryParse(raw);
-
-        if (prim.ok) {
-          const outJ = JSON.stringify(prim.value);
-          const outH = outJ;
-          const outX =
-            prim.kind === "string"
-              ? prim.value as string
-              : `<_val>${String(prim.value)}</_val>`;
-
-          setPanelValueAndBytes("json", outJ);
-          setPanelValueAndBytes("hson", outH);
-          setPanelValueAndBytes("html", outX);
-
-          const tPrim = hson.fromJson(outJ);
-          setNodeViewForAll(tPrim);
-
-          markActiveValid(origin);
-          setInProgress(false);
-          return;
-        }
-
+        panel.textBox.css.setMany(PP_IDLEcss(format));
+        panel.wmFmt.style.set.color(_colors.txt.grey);
       }
 
-      const t =
-        origin === "json"
-          ? hson.fromJson(raw)
-          : origin === "hson"
-            ? hson.fromHson(raw)
-            : hson.fromTrustedHtml(raw);
-
-      if (origin !== "json") {
-        setPanelValueAndBytes("json", t.toJson().serialize());
-      }
-      if (origin !== "hson") {
-        setPanelValueAndBytes("hson", t.toHson().serialize());
-      }
-      if (origin !== "html") {
-        setPanelValueAndBytes("html", t.toHtml().serialize());
-      }
-
-      setNodeViewForAll(t);
-      markActiveValid(origin);
-    } catch {
-      markActiveInvalid(origin);
-    } finally {
-      setInProgress(false);
+      // All three explicit origins remain editable. Silent derived writes do
+      // not dispatch input events, so editability does not create update loops.
+      panel.textarea.flags.clear("readonly");
+      panel.textarea.css.setMany({ pointerEvents: "auto", userSelect: "text", caretColor: "auto" });
     }
   }
 
-  function handleFocus(fmt: Fmt): void {
-    const owner = getInvalidOwner();
+  const transport = options.transport ?? create_browser_circuit_verification_transport();
+  const verification = create_parsing_verification_coordinator<BrowserCircuitAdmission>({
+    panelId: options.panelId ?? make_panel_id(),
+    ...(options.debounceMs === undefined ? {} : { debounceMs: options.debounceMs }),
+    ...(options.scheduler === undefined ? {} : { scheduler: options.scheduler }),
+    transport,
+    admit,
+    certify: options.certify ?? ((input) => certify_browser_circuit_boundary(input)),
+    onState: render,
+  });
 
-    if (owner && owner !== fmt) {
-      setValue(pp.panels[owner], "");
-      pp.panels[owner].bytes.text.set("0");
-      clearInvalidOwner();
-    }
-
-    setActive(fmt);
-    clearTimer();
-
-    syncUiState();
-
-    const v = getValue(pp.panels[fmt]);
-
-    if (v.trim().length === 0) {
-      setIsValid(false);
-      markInvalidOwner(fmt);
-      setStatus(fmt, "invalid");
-      syncUiState();
-      return;
-    }
-    setStatus(fmt, "typing");
+  function handleFocus(format: Fmt): void {
+    if (disposed) return;
+    active = format;
+    clear_invalid_timer();
   }
 
-  function handleBlur(fmt: Fmt): void {
-    if (getActive() !== fmt) return;
-
-    const raw = getValue(pp.panels[fmt]);
-    const empty = raw.trim().length === 0;
-
-    const leavingInvalid = empty || !getIsValid();
-
-    if (leavingInvalid) {
-      setIsValid(false);
-      clearOthers(fmt);
-      scheduleClearInvalid(fmt);
-      markInvalidOwner(fmt);
-    }
-
-    setActive(null);
-
-    setStatus(fmt, "idle");
-    syncUiState();
+  function handleInput(format: Fmt): void {
+    if (disposed) return;
+    active = format;
+    const source = getValue(pp.panels[format]);
+    pp.panels[format].bytes.text.set(`${encBytes(source)}`);
+    verification.edit(format, source);
   }
 
-  for (const fmt of FMTS) {
-    const p = pp.panels[fmt];
-
-    p.textarea.listen.onFocus(() => handleFocus(fmt));
-    p.textarea.listen.onBlur(() => handleBlur(fmt));
-    p.textarea.listen.onInput(() => update(fmt));
+  function handleBlur(format: Fmt): void {
+    if (disposed || active !== format) return;
+    active = null;
+    verification.flush();
+    if (invalidOwner !== format) return;
+    clear_invalid_timer();
+    invalidClearTimer = setTimeout(() => {
+      if (disposed || invalidOwner !== format) return;
+      setValue(pp.panels[format], "");
+      pp.panels[format].bytes.text.set("0");
+      invalidOwner = null;
+      invalidClearTimer = undefined;
+    }, INVALID_SOURCE_RETENTION_MS);
   }
 
-  setActive(null);
-  setIsValid(false);
-  clearInvalidOwner();
-  syncUiState();
-
-  for (const fmt of FMTS) {
-    const parts = pp.panels[fmt];
-    parts.bytes.text.set(`${encBytes(getValue(parts))}`);
-    parts.status.text.set("--");
-    parts.status.css.setMany({ opacity: "0" });
+  for (const format of formats) {
+    const panel = pp.panels[format];
+    panel.textarea.listen.onFocus(() => handleFocus(format));
+    panel.textarea.listen.onBlur(() => handleBlur(format));
+    panel.textarea.listen.onInput(() => handleInput(format));
+    panel.bytes.text.set(`${encBytes(getValue(panel))}`);
   }
+  render(verification.snapshot());
+
+  return Object.freeze({
+    verification,
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      clear_invalid_timer();
+      verification.dispose();
+      pp.root.data.set("verification-status", "disposed");
+    },
+  });
 }

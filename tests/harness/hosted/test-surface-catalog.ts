@@ -83,6 +83,8 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:circuit-worker-service": "tests/runners/harness/run-canonical-tests.node.mts",
   "test:circuit-livehost-integration": "tests/runners/harness/run-canonical-tests.node.mts",
   "test:circuit-worker-parity": "tests/runners/harness/run-canonical-tests.node.mts",
+  "test:parsing-verification-coordinator": "tests/runners/harness/run-canonical-tests.node.mts",
+  "test:parsing-browser-certificate": "tests/runners/harness/run-canonical-tests.node.mts",
   "test:node-application-host-entry": "tests/runners/livehost/run-node-application-host-entry.node.mts",
   "test:livehost-bootstrap-integration": "tests/runners/livehost/run-livehost-bootstrap-integration.node.mts",
   "test:node-production-runtime": "tests/runners/livehost/run-node-production-runtime.node.mts",
@@ -170,6 +172,7 @@ const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
   "test:inclusive-library-node": Object.freeze({ environment: "Node + synthetic DOM + child processes", transport: "mixed canonical and external" }),
   "test:hosted-performance-node": Object.freeze({ environment: "Node child processes", transport: "mixed canonical and external" }),
   "test:hosted-cloudflare": Object.freeze({ environment: "checked-in Cloudflare Worker adapter", transport: "in-memory Durable Object sockets" }),
+  "test:parsing-browser-certificate": Object.freeze({ environment: "Node + synthetic DOM", transport: "none" }),
 } satisfies Readonly<Record<string, Readonly<{ environment: string; transport: string }>>>);
 
 function demo_role(name: string): Readonly<{
@@ -210,6 +213,7 @@ function demo_role(name: string): Readonly<{
 }
 
 function category_for(name: string): TestSurfaceCategory {
+  if (name === "test:parsing-browser-certificate" || name === "test:parsing-verification-coordinator") return "Transforms";
   if (name.includes("real-websocket") || name.includes("websocket-lifecycle")) return "Real WebSocket";
   if (name.includes("liveinspect")) return "LiveInspector";
   if (name.includes("livetree") || name.includes("node-representation")) return "LiveTree";
@@ -225,7 +229,10 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
   const diagnostic = name.includes("diagnostics");
   const realSocket = category_for(name) === "Real WebSocket";
   const jsdom = name.includes("dom-") || name.includes("jsdom");
-  const browser = name.includes("browser");
+  const browser = name === "test:browser"
+    || name === "test:browser:headed"
+    || name === "test:browser:debug"
+    || name === "test:browser:install";
   const policy = demo_role(name);
   const environmentOverride = Reflect.get(DEMO_ENVIRONMENT_OVERRIDES, name) as
     | Readonly<{ environment: string; transport: string }>

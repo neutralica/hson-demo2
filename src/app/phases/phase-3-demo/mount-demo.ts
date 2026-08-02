@@ -19,7 +19,7 @@ import { FLOWER_LAYERcss, FLOWER_FIELDcss } from "../../demos/fleurs/fleurs.css"
 import { MOTES_LAYERcss } from "../../demos/motes/motes.css";
 import { mount_motes } from "../../demos/motes/mount-motes";
 import { mount_oklch } from "../../demos/oklch/mount-oklch";
-import { mount_parsing_panels } from "../../demos/parse/pp-factory";
+import { mount_parsing_panels, type MountedParsingPanels } from "../../demos/parse/pp-factory";
 import { mount_point_panel } from "../../demos/pointer/point-factory";
 import { mount_json_render_demo } from "../../demos/render/render-json";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
@@ -83,6 +83,7 @@ type DemoHosts = {
 };
 
 type DemoContent = {
+  parse: MountedParsingPanels;
   test: TestPanels;
   towl: TowlPanel;
 };
@@ -271,14 +272,14 @@ function mount_demo_content(hosts: DemoHosts): DemoContent {
   mount_about_panels(hosts.aboutHost, ABOUT_DOCS);
   const test = mount_test_panels(hosts.testHost);
   const towl = mount_towl_panel(hosts.towlHost);
-  mount_parsing_panels(hosts.parseHost);
+  const parse = mount_parsing_panels(hosts.parseHost);
   mount_build_panels(hosts.buildHost);
   mount_bar_bar(hosts.barbarHost);
   create_cellsheet_panel(hosts.cellsHost);
   mount_point_panel(hosts.pointHost);
   mount_oklch(hosts.oklchHost);
 
-  return { test, towl };
+  return { parse, test, towl };
 }
 
 function is_mobile_demo_width(stage: LiveTree): boolean {
@@ -403,6 +404,7 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
 
   stopDemoMount = () => {
     stopStoreBindings();
+    content.parse.dispose();
     content.test.dispose();
     content.towl.dispose();
     document.removeEventListener("keydown", onDocumentKeyDown);

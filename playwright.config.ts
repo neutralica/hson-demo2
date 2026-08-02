@@ -38,7 +38,7 @@ export default defineConfig({
       stderr: "pipe",
     },
     {
-      command: `VITE_TOWL_WS_URL=${hostedTestUrl} npm run dev -- --host 127.0.0.1 --port ${appPort} --strictPort`,
+      command: `VITE_TOWL_WS_URL=${hostedTestUrl} VITE_CIRCUIT_VERIFICATION_WS_URL=${hostedTestUrl} npm run dev -- --host 127.0.0.1 --port ${appPort} --strictPort`,
       url: appUrl,
       timeout: 30_000,
       reuseExistingServer: localDevelopment,

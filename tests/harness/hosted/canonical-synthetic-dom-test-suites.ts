@@ -10,6 +10,7 @@ import {
   JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS,
   JSDOM_HOSTED_CANVAS_SUITE_IDS,
 } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
+import { parsing_browser_certificate_suite } from "../../suites/transform/parsing-browser-certificate-suite";
 
 const DEV_SUITES = new Set(["livetree/quid-level-2"]);
 
@@ -33,6 +34,7 @@ export const TRANSFORM_SYNTHETIC_DOM_CLASSIFICATION: Readonly<Record<string, Tra
   "transform/html/new": "implementation and test/assertion dependency",
   "transform/misc-extra": "implementation and test/assertion dependency",
   "transform/_INVALID": "implementation and test/assertion dependency",
+  "transform/parsing-browser-certificate": "implementation and test/assertion dependency",
 });
 
 export const CANVAS_DETERMINISTIC_SUITE_IDS = JSDOM_HOSTED_CANVAS_SUITE_IDS;
@@ -67,5 +69,6 @@ export function all_canonical_synthetic_dom_test_suites(): readonly TestSuite[] 
   return Object.freeze([
     ...all_jsdom_hosted_test_suites(),
     ...all_jsdom_hosted_canvas_suites(),
+    parsing_browser_certificate_suite(),
   ].map(annotate));
 }

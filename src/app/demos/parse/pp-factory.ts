@@ -8,13 +8,18 @@ import { $PARSING_PANELS_ROOT, $PP_HEAD } from "../../phases/phase-3-demo/demo.c
 import { UI_BTNcss, UI_2STACK_VALcss, UI_STACK_LABELcss, UI_PANEL_HEADERcss, UI_PANELcss, UI_PANEL_HEADcss, UI_2STACKcss, UI_TEXTcss, UI_BTN_HOVERcss } from "../../ui/panels/panels.css";
 import type { Panels, PanelViewMode, PanelShell } from "../../ui/panels/panels.types";
 import { mk_div_id, mk_div_cls, mk_span_cls } from "../../utils/makers";
-import { init_parsing_panels } from "./init-pp";
+import { init_parsing_panels, type ParsingPanelsController, type ParsingPanelsInitOptions } from "./init-pp";
 import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
 
 
 export type PpFactoryOpts = {
   fmts?: readonly Fmt[];
 };
+
+export type MountedParsingPanels = Panels & Readonly<{
+  verification: ParsingPanelsController["verification"];
+  dispose(): void;
+}>;
 
 const PP_HEADER_BTNcss = {
   ...UI_BTNcss,
@@ -37,10 +42,13 @@ const PP_HEADER_LABELcss = {
 };
 
 
-export function mount_parsing_panels(host: LiveTree): Panels {
+export function mount_parsing_panels(
+  host: LiveTree,
+  options: ParsingPanelsInitOptions = {},
+): MountedParsingPanels {
   const pp = pp_factory(host);
-  init_parsing_panels(pp);
-  return pp;
+  const controller = init_parsing_panels(pp, options);
+  return Object.freeze({ ...pp, verification: controller.verification, dispose: controller.dispose });
 }
 
 
@@ -114,7 +122,12 @@ export function pp_factory(hostBody: LiveTree, opts: PpFactoryOpts = {}): Panels
       });
 
     const status = mk_div_cls(statusBox, "status-number")
-      .attrs.set("data-testid", `parse-${fmt}-status`)
+      .attrs.setMany({
+        "data-testid": `parse-${fmt}-status`,
+        "role": "status",
+        "aria-live": "polite",
+        "aria-atomic": "true",
+      })
       .css.setMany(PP_HEADER_VALUEcss)
       .text.set("--");
 

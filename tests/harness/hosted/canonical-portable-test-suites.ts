@@ -50,6 +50,7 @@ import {
   transform_quoted_name_acceptance_suite,
   transform_quoted_name_rejection_suite,
 } from "../../suites/transform/quoted-name-suites";
+import { parsing_verification_coordinator_suite } from "../../suites/transform/parsing-verification-coordinator-suite";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
 
@@ -127,6 +128,7 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_equivalence_rejection_isolation_suite(),
     transform_quoted_name_acceptance_suite(),
     transform_quoted_name_rejection_suite(),
+    parsing_verification_coordinator_suite(),
     ...all_livehost_suites(),
     ...all_unit_tests(),
   ];

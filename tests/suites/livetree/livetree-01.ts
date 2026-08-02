@@ -1803,9 +1803,7 @@ function suite_css_regressions(): TestSuite {
         const box = tree.find.must.byId("box");
 
         box.css.setMany({ opacity: "0.6" });
-
-        await Promise.resolve();
-        await new Promise(r => setTimeout(r, 0));
+        CssManager.invoke().syncNow();
 
         (tree as any).__result = {
           quid: box.quid,

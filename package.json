@@ -57,6 +57,8 @@
     "test:circuit-worker-service": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-service",
     "test:circuit-livehost-integration": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-action",
     "test:circuit-worker-parity": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-parity",
+    "test:parsing-verification-coordinator": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite transform/parsing-verification-coordinator",
+    "test:parsing-browser-certificate": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite transform/parsing-browser-certificate",
     "measure:circuit-worker": "node --import=tsx tests/runners/livehost/measure-circuit-worker.node.mts",
     "test:node-application-host-entry": "node --import=tsx tests/runners/livehost/run-node-application-host-entry.node.mts",
     "test:livehost-bootstrap-integration": "node --import=tsx tests/runners/livehost/run-livehost-bootstrap-integration.node.mts",

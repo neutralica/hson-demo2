@@ -3,6 +3,7 @@ import { monitor_application_errors, open_demo, reach_demo } from "./app-test-su
 import type * as BrowserTransformOracle from "../../helpers/transform/browser-transform-oracle";
 
 const VALID_HSON = '<div id="browser-parse" "hello browser"/>';
+const LOCALLY_PARSED = /^(Parsed · waiting|Queued|Verifying \d\/6|Checking browser|Verified)$/;
 
 test("Parse transforms valid-invalid-valid input without duplicate surfaces", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
@@ -17,7 +18,7 @@ test("Parse transforms valid-invalid-valid input without duplicate surfaces", as
   await expect(hson).toBeVisible();
 
   await hson.fill(VALID_HSON);
-  await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+  await expect(page.getByTestId("parse-hson-status")).toHaveText(LOCALLY_PARSED);
   await expect(json).toHaveValue(/browser-parse/);
   await expect(html).toHaveValue(/<div id="browser-parse">hello browser<\/div>/);
   let lastValidHtml = await html.inputValue();
@@ -28,11 +29,11 @@ test("Parse transforms valid-invalid-valid input without duplicate surfaces", as
 
   for (let cycle = 0; cycle < 3; cycle += 1) {
     await hson.fill("<div");
-    await expect(page.getByTestId("parse-hson-status")).toHaveText("XX");
+    await expect(page.getByTestId("parse-hson-status")).toHaveText("Invalid");
     await expect(html).toHaveValue(lastValidHtml);
     await expect(root).toBeVisible();
     await hson.fill(VALID_HSON.replace("hello browser", `hello browser ${cycle}`));
-    await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+    await expect(page.getByTestId("parse-hson-status")).toHaveText(LOCALLY_PARSED);
     await expect(html).toHaveValue(new RegExp(`hello browser ${cycle}`));
     lastValidHtml = await html.inputValue();
     await expect(page.getByTestId("parse-root")).toHaveCount(1);
@@ -52,15 +53,15 @@ test("HSON bare primitives preserve Demo and Transform semantic identity", async
 
   const hson = page.getByTestId("parse-hson-editor");
   for (const [source, json, html] of [
-    ["0", "0", "<_hson_val>0</_hson_val>"],
-    ["-0", "0", "<_hson_val>0</_hson_val>"],
-    [`"browser string"`, `"browser string"`, "browser string"],
-    ["true", "true", "<_hson_val>true</_hson_val>"],
-    ["false", "false", "<_hson_val>false</_hson_val>"],
-    ["null", "null", "<_hson_val>null</_hson_val>"],
+    ["0", "0", "<_hson_obj><_hson_val>0</_hson_val></_hson_obj>"],
+    ["-0", "-0", "<_hson_obj><_hson_val>-0</_hson_val></_hson_obj>"],
+    [`"browser string"`, `"browser string"`, "<_hson_obj><_hson_str>&quot;browser string&quot;</_hson_str></_hson_obj>"],
+    ["true", "true", "<_hson_obj><_hson_val>true</_hson_val></_hson_obj>"],
+    ["false", "false", "<_hson_obj><_hson_val>false</_hson_val></_hson_obj>"],
+    ["null", "null", "<_hson_obj><_hson_val>null</_hson_val></_hson_obj>"],
   ] as const) {
     await hson.fill(source);
-    await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+    await expect(page.getByTestId("parse-hson-status")).toHaveText(LOCALLY_PARSED);
     await expect(hson).toHaveValue(source);
     await expect(page.getByTestId("parse-json-editor")).toHaveValue(json);
     await expect(page.getByTestId("parse-html-editor")).toHaveValue(html);
@@ -85,7 +86,7 @@ test("Demo accepts adjacent and empty element text items without collapsing orde
     [`<div """"""/>`, ["", "", ""]],
   ] as const) {
     await editor.fill(source);
-    await expect(page.getByTestId("parse-hson-status")).toHaveText("OK");
+    await expect(page.getByTestId("parse-hson-status")).toHaveText(LOCALLY_PARSED);
     await page.getByRole("button", { name: "toggle hson panel view mode" }).click();
     const rawNode = await page.getByTestId("parse-hson-node-output").textContent();
     const parsed = JSON.parse(rawNode ?? "null") as {
@@ -108,19 +109,19 @@ test("browser object parsing and serialization use one stable angle pair per obj
   const status = page.getByTestId("parse-hson-status");
 
   await hson.fill(`<record <a 1 b 2> items «<name "Ada">»>`);
-  await expect(status).toHaveText("OK");
+  await expect(status).toHaveText(LOCALLY_PARSED);
   await expect(json).toHaveValue(/"record": \{/);
   await expect(json).toHaveValue(/"items": \[/);
 
   await json.fill(`{"record":{"a":1,"b":2},"items":[{"name":"Ada"}]}`);
-  await expect(page.getByTestId("parse-json-status")).toHaveText("OK");
+  await expect(page.getByTestId("parse-json-status")).toHaveText(LOCALLY_PARSED);
   const serialized = await hson.inputValue();
   expect(serialized).toMatch(/record\s+<\s*a\s+1\s+b\s+2\s*>/s);
   expect(serialized).toMatch(/items\s+«\s*<\s*name\s+"Ada"\s*>\s*»/s);
   expect(serialized).not.toContain("<<");
 
   await hson.fill(`<<a 1>>`);
-  await expect(status).toHaveText("XX");
+  await expect(status).toHaveText("Invalid");
   assertNoErrors();
 });
 
@@ -138,15 +139,15 @@ test("browser HSON parsing enforces authored names, duplicates, and escape gramm
     String.raw`<tag value="\u00G1"/>`,
   ]) {
     await editor.fill(invalid);
-    await expect(status).toHaveText("XX");
+    await expect(status).toHaveText("Invalid");
   }
 
   await editor.fill(String.raw`<tag a="\/" A="\u0041"/>`);
-  await expect(status).toHaveText("OK");
+  await expect(status).toHaveText(LOCALLY_PARSED);
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"a": "\/"/);
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"A": "A"/);
   await editor.fill("<'name\\u0041' 1>");
-  await expect(status).toHaveText("OK");
+  await expect(status).toHaveText(LOCALLY_PARSED);
   await expect(page.getByTestId("parse-json-editor")).toHaveValue(/"nameA": 1/);
   assertNoErrors();
 });
