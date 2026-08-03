@@ -114,6 +114,31 @@ export function livemap_document_foundation_suite(): TestSuite {
           };
         },
       },
+      {
+        suite: SUITE,
+        name: "document identity acquisition is sparse and handle-first",
+        run: () => {
+          const map = hson.liveMap.fromTrustedHtml("<button>Save</button>");
+          if (map.mode !== "element") throw new Error("Expected element LiveMap");
+          const handle = map.document.ensureIdentity({ kind: "path", path: [] });
+          const snapshot = handle.snap();
+          const revision = map.rev;
+          const second = map.document.ensureIdentity({ kind: "path", path: [] });
+          handle.dispose();
+          return {
+            assertRows: [
+              equal_row("explicit acquisition advances one revision", revision, 1),
+              equal_row("identity handle starts active", second.active, true),
+              equal_row("identity handle resolves root path", second.path(), []),
+              equal_row("identity handle snapshots the element", snapshot?.$_tag, "button"),
+              equal_row("second acquisition is a no-op", map.rev, revision),
+              equal_row("disposed handle is inactive", handle.active, false),
+              equal_row("one handle disposal preserves canonical identity", map.document.byQuid(snapshot?.$_meta?.quid ?? "")?.$_tag, "button"),
+              equal_row("handle does not expose raw-QUID reconstruction", Reflect.get(second, "quid"), undefined),
+            ],
+          };
+        },
+      },
     ],
   };
 }
