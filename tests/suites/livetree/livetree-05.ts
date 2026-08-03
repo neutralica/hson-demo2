@@ -9,8 +9,12 @@ import { hson_quid_selector } from "../../helpers/hson/hson-metadata-helpers";
 
 const gcss = CssManager.invoke();
 
-function restore_from_current_markup(tree: LiveTree) {
-    const markup = tree.dom.must.el().outerHTML;
+function reimport_current_markup_with_fresh_identity(tree: LiveTree) {
+    const copied = tree.dom.must.el().cloneNode(true) as Element;
+    [copied, ...copied.querySelectorAll("*")].forEach((element) => {
+        element.removeAttribute("hson:quid");
+    });
+    const markup = copied.outerHTML;
     const sandboxHost = (tree as any).__sandboxHost;
     tree.removeSelf();
     const restored = hson.liveTree.fromTrustedHtml(markup);
@@ -24,7 +28,7 @@ export function roundtrip_projection_stability(): TestSuite {
         [
             {
                 suite: SUITE,
-                name: "serialization: terminal restoration preserves basic structure and identity",
+                name: "serialization: terminal reimport preserves basic structure with fresh identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "basic-shape",
@@ -42,7 +46,7 @@ export function roundtrip_projection_stability(): TestSuite {
                 async act(tree) {
                     const rootQuid = tree.find.must.byId("root").quid;
                     const cardQuid = tree.find.must.byId("card").quid;
-                    const round = restore_from_current_markup(tree);
+                    const round = reimport_current_markup_with_fresh_identity(tree);
 
                     const card = round.find.must.byId("card");
                     const cardEl = card.dom.el() as HTMLElement;
@@ -52,8 +56,8 @@ export function roundtrip_projection_stability(): TestSuite {
                         state: cardEl.getAttribute("data-state"),
                         h1Text: round.find.must.byTag("h1").text.get(),
                         pText: round.find.must.byTag("p").text.get(),
-                        rootIdentityRestored: round.find.must.byId("root").quid === rootQuid,
-                        cardIdentityRestored: card.quid === cardQuid,
+                        rootIdentityFresh: round.find.must.byId("root").quid !== rootQuid,
+                        cardIdentityFresh: card.quid !== cardQuid,
                     };
                 },
 
@@ -63,13 +67,13 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.eq("data-state preserved", r.state, "open");
                     t.eq("h1 text preserved", r.h1Text, "Title");
                     t.eq("p text preserved", r.pText, "Hello world");
-                    t.eq("root identity is reclaimed after terminal destruction", r.rootIdentityRestored, true);
-                    t.eq("card identity is reclaimed after terminal destruction", r.cardIdentityRestored, true);
+                    t.eq("root receives fresh identity after terminal destruction", r.rootIdentityFresh, true);
+                    t.eq("card receives fresh identity after terminal destruction", r.cardIdentityFresh, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: terminal restoration preserves DOM mutations and identity",
+                name: "serialization: terminal reimport preserves DOM mutations with fresh identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "hydrate-mutate-rehydrate",
@@ -90,7 +94,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const rootQuid = tree.find.must.byId("root").quid;
 
                     await tick();
-                    const round = restore_from_current_markup(tree);
+                    const round = reimport_current_markup_with_fresh_identity(tree);
 
                     const box2 = round.find.must.byId("box");
                     const el2 = box2.dom.el() as HTMLElement;
@@ -99,8 +103,8 @@ export function roundtrip_projection_stability(): TestSuite {
                         mode: el2.getAttribute("data-mode"),
                         title: el2.getAttribute("title"),
                         text: box2.text.get(),
-                        rootIdentityRestored: round.find.must.byId("root").quid === rootQuid,
-                        boxIdentityRestored: box2.quid === boxQuid,
+                        rootIdentityFresh: round.find.must.byId("root").quid !== rootQuid,
+                        boxIdentityFresh: box2.quid !== boxQuid,
                     };
                 },
 
@@ -110,8 +114,8 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.eq("data-mode updated", r.mode, "warm");
                     t.eq("title added", r.title, "greeting");
                     t.eq("text updated", r.text, "hello");
-                    t.eq("root identity is reclaimed", r.rootIdentityRestored, true);
-                    t.eq("mutated box identity is reclaimed", r.boxIdentityRestored, true);
+                    t.eq("root identity is fresh", r.rootIdentityFresh, true);
+                    t.eq("mutated box identity is fresh", r.boxIdentityFresh, true);
                 },
             },
             {
@@ -144,7 +148,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: terminal restoration preserves shape and supplied identity",
+                name: "serialization: terminal reimport preserves shape with fresh identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "shape-not-quid",
@@ -161,7 +165,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     const oldEl = box.dom.el() as HTMLElement;
                     const oldQuid = oldEl.getAttribute("hson:quid") ?? "";
 
-                    const round = restore_from_current_markup(tree);
+                    const round = reimport_current_markup_with_fresh_identity(tree);
 
                     const box2 = round.find.must.byId("box");
                     const newEl = box2.dom.el() as HTMLElement;
@@ -181,7 +185,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.ok("new quid exists", r.newQuid.length > 0);
                     t.eq("shape text preserved", r.text, "x");
                     t.eq("shape tag preserved", r.tag, "div");
-                    t.eq("supplied quid is reclaimed", r.oldQuid === r.newQuid, true);
+                    t.eq("terminal reimport receives fresh quid", r.oldQuid === r.newQuid, false);
                 },
             },
             {
@@ -225,7 +229,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: terminal restoration does not resurrect removed sibling",
+                name: "serialization: terminal reimport does not resurrect removed sibling",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "no-resurrection",
@@ -243,13 +247,13 @@ export function roundtrip_projection_stability(): TestSuite {
                     await tick();
 
                     const keepQuid = tree.find.must.byId("keep").quid;
-                    const round = restore_from_current_markup(tree);
+                    const round = reimport_current_markup_with_fresh_identity(tree);
 
 
                     (tree as any).__result = {
                         keep: !!round.find.byId("keep"),
                         drop: round.find.byId("drop"),
-                        keepIdentityRestored: round.find.must.byId("keep").quid === keepQuid,
+                        keepIdentityFresh: round.find.must.byId("keep").quid !== keepQuid,
                     };
                 },
 
@@ -257,12 +261,12 @@ export function roundtrip_projection_stability(): TestSuite {
                     const r = (tree as any).__result;
                     t.eq("keep survives", r.keep, true);
                     t.eq("drop is not resurrected", r.drop, undefined);
-                    t.eq("surviving identity is reclaimed", r.keepIdentityRestored, true);
+                    t.eq("surviving content receives fresh identity", r.keepIdentityFresh, true);
                 },
             },
             {
                 suite: SUITE,
-                name: "serialization: outerHTML shape remains stable after terminal restoration",
+                name: "serialization: outerHTML shape remains stable after terminal reimport",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "html-shape-stable",
@@ -283,12 +287,12 @@ export function roundtrip_projection_stability(): TestSuite {
 
                     await tick();
 
-                    const round = restore_from_current_markup(tree);
+                    const round = reimport_current_markup_with_fresh_identity(tree);
 
                     const out = round.find.must.byId("box").dom.el() as HTMLElement;
 
                     (tree as any).__html = out.outerHTML;
-                    (tree as any).__identityRestored = round.find.must.byId("box").quid === boxQuid;
+                    (tree as any).__identityFresh = round.find.must.byId("box").quid !== boxQuid;
                 },
 
                 assert(tree, t) {
@@ -297,7 +301,7 @@ export function roundtrip_projection_stability(): TestSuite {
                     t.ok("title preserved", html.includes(`title="hello"`));
                     t.ok("data-state preserved", html.includes(`data-state="open"`));
                     t.ok("text preserved", html.includes(`>y</`));
-                    t.eq("box identity is reclaimed", (tree as any).__identityRestored, true);
+                    t.eq("box identity is fresh", (tree as any).__identityFresh, true);
                 },
             },
 
@@ -649,7 +653,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "serialization: mounted restored branch gains DOM handle",
+            name: "serialization: mounted reimported branch gains DOM handle",
             dom: true,
             fixture: "serialization/partial",
             sub: "mounted-branch-has-dom",
@@ -663,7 +667,7 @@ export function livetree_sync_perf(): TestSuite {
 
             async act(tree) {
                 const boxQuid = tree.find.must.byId("box").quid;
-                const round = restore_from_current_markup(tree);
+                const round = reimport_current_markup_with_fresh_identity(tree);
 
                 const box = round.find.must.byId("box");
                 const el = box.dom.el() as HTMLElement;
@@ -671,7 +675,7 @@ export function livetree_sync_perf(): TestSuite {
                 (tree as any).__result = {
                     tag: el.tagName.toLowerCase(),
                     text: box.text.get(),
-                    identityRestored: box.quid === boxQuid,
+                    identityFresh: box.quid !== boxQuid,
                 };
             },
 
@@ -679,7 +683,7 @@ export function livetree_sync_perf(): TestSuite {
                 const r = (tree as any).__result;
                 t.eq("mounted branch yields DOM", r.tag, "div");
                 t.eq("text preserved", r.text, "x");
-                t.eq("mounted restored branch reclaims identity", r.identityRestored, true);
+                t.eq("mounted reimported branch has fresh identity", r.identityFresh, true);
             },
         },
 

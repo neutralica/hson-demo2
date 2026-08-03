@@ -3,8 +3,12 @@ import type { TestSuite } from "../../harness/core/test-contracts";
 import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 
-function restore_svg_fixture(tree: LiveTree): LiveTree {
-  const markup = tree.dom.must.el().outerHTML;
+function reimport_svg_fixture_with_fresh_identity(tree: LiveTree): LiveTree {
+  const copied = tree.dom.must.el().cloneNode(true) as Element;
+  [copied, ...copied.querySelectorAll("*")].forEach((element) => {
+    element.removeAttribute("hson:quid");
+  });
+  const markup = copied.outerHTML;
   const sandboxHost = (tree as any).__sandboxHost;
   tree.removeSelf();
   const restored = hsonLiveTree.fromTrustedHtml(markup);
@@ -179,7 +183,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg(string) survives terminal identity restoration",
+      name: "create: svg(string) survives terminal reimport with fresh identity",
       dom: true,
       fixture: "create/svg",
       sub: "roundtrip",
@@ -194,7 +198,7 @@ export function livetree_svg_basic(): TestSuite {
         const sourceSvg = tree.find.must.byId("s");
         const svgQuid = sourceSvg.quid;
 
-        const round = restore_svg_fixture(tree);
+        const round = reimport_svg_fixture_with_fresh_identity(tree);
 
         const svg = round.find.must.byId("s");
         const el = svg.dom.el() as Element;
@@ -202,7 +206,7 @@ export function livetree_svg_basic(): TestSuite {
         (tree as any).__result = {
           tag: el.tagName.toLowerCase(),
           child: el.children[0]?.tagName.toLowerCase(),
-          identityRestored: svg.quid === svgQuid,
+          identityFresh: svg.quid !== svgQuid,
         };
       },
 
@@ -210,7 +214,7 @@ export function livetree_svg_basic(): TestSuite {
         const r = (tree as any).__result;
         t.eq("tag preserved", r.tag, "svg");
         t.eq("child preserved", r.child, "circle");
-        t.eq("SVG identity is reclaimed", r.identityRestored, true);
+        t.eq("SVG identity is fresh", r.identityFresh, true);
       },
     },
     {
@@ -546,7 +550,7 @@ export function livetree_svg_basic(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg: g(string) survives terminal identity restoration",
+      name: "svg: g(string) survives terminal reimport with fresh identity",
       fixture: "svg/create-extended",
       sub: "g-string-roundtrip",
       preview: () => "<terminal-svg-restoration>",
@@ -564,7 +568,7 @@ export function livetree_svg_basic(): TestSuite {
         const sourceGroup = root.find.must.byId("g1");
         const groupQuid = sourceGroup.quid;
 
-        const round = restore_svg_fixture(root);
+        const round = reimport_svg_fixture_with_fresh_identity(root);
 
         const g = round.find.must.byId("g1");
         const el = g.dom.el();
@@ -573,7 +577,7 @@ export function livetree_svg_basic(): TestSuite {
           gTag: el?.tagName,
           childTag: el?.children[0]?.tagName,
           childId: el?.children[0]?.getAttribute("id"),
-          identityRestored: g.quid === groupQuid,
+          identityFresh: g.quid !== groupQuid,
         };
       },
 
@@ -583,7 +587,7 @@ export function livetree_svg_basic(): TestSuite {
         t.eq("g survives roundtrip", r.gTag?.toLowerCase(), "g");
         t.eq("circle survives roundtrip", r.childTag?.toLowerCase(), "circle");
         t.eq("circle id survives roundtrip", r.childId, "c1");
-        t.eq("group identity is reclaimed", r.identityRestored, true);
+        t.eq("group identity is fresh", r.identityFresh, true);
       },
     },
     {

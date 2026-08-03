@@ -172,8 +172,8 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const sectionQuid = "0000000000000001";
-        const childQuid = "0000000000000002";
+        const sectionQuid = "0000000000000011";
+        const childQuid = "0000000000000012";
         const imported = hsonLiveTree.fromTrustedHtml(`
           <section id="persisted" hson:quid="${sectionQuid}">
             <span id="persisted-child" hson:quid="${childQuid}">child</span>
@@ -214,7 +214,7 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const duplicateQuid = "0000000000000001";
+        const duplicateQuid = "0000000000000021";
         let message = "";
         let imported: LiveTree | undefined;
 
@@ -258,7 +258,7 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const duplicateQuid = "0000000000000001";
+        const duplicateQuid = "0000000000000031";
         const first = hsonLiveTree.fromTrustedHtml(
           `<section id="owner" hson:quid="${duplicateQuid}"></section>`,
         );
