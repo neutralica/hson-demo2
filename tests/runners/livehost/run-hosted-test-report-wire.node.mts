@@ -106,8 +106,28 @@ const spliceCommit = commit(4, {
 });
 equal(round_trip(spliceCommit), spliceCommit, "splice removed, inserted, prev, and next round-trip");
 
+const renameCommit = commit(5, {
+  kind: "rename",
+  path: ["record"],
+  from: "source",
+  to: "destination",
+  prev: { source: { nested: true }, destination: false },
+  next: { destination: { nested: true } },
+});
+equal(round_trip(renameCommit), renameCommit, "rename intent and witnesses round-trip");
+
+const moveCommit = commit(6, {
+  kind: "move",
+  path: ["items"],
+  from: 0,
+  to: 2,
+  prev: [{ id: 1 }, { id: 2 }, { id: 3 }],
+  next: [{ id: 2 }, { id: 3 }, { id: 1 }],
+});
+equal(round_trip(moveCommit), moveCommit, "move intent and witnesses round-trip");
+
 const mutableNext: JsonValue = { nested: [1, { label: "original" }] };
-const mutableCommit = commit(5, { kind: "set", path: ["mutable"], prev: undefined, next: mutableNext });
+const mutableCommit = commit(7, { kind: "set", path: ["mutable"], prev: undefined, next: mutableNext });
 const detachedEnvelope = encode_hosted_test_report_commit("wire-test-run", "livemap/replay", mutableCommit);
 (mutableNext as { nested: Array<number | { label: string }> }).nested[1] = { label: "changed" };
 expect_wire(JSON.stringify(detachedEnvelope).includes("original"), "encoded envelope is detached from local commit values");
@@ -136,13 +156,15 @@ expect_decode_error(null, "envelope", "envelope must be an object");
 expect_decode_error({ ...validObject, extra: true }, "envelope", "expected exactly");
 expect_decode_error({ ...validObject, rev: 9 }, "rev", "prevRev + 1");
 expect_decode_error({ ...validObject, ops: [] }, "ops", "non-empty");
-expect_decode_error({ ...validObject, ops: [{ kind: "move", path: [], prev: { kind: "undefined" }, next: { kind: "undefined" } }] }, "ops[0].kind", "unsupported");
+expect_decode_error({ ...validObject, ops: [{ kind: "future", path: [], prev: { kind: "undefined" }, next: { kind: "undefined" } }] }, "ops[0].kind", "unsupported");
 expect_decode_error({ ...validObject, ops: [{ kind: "delete", path: [-1], prev: { kind: "value", value: 1 }, next: { kind: "undefined" } }] }, "ops[0].path[0]", "path segment");
 expect_decode_error({ ...validObject, ops: [{ kind: "delete", path: [], prev: { kind: "value" }, next: { kind: "undefined" } }] }, "ops[0].prev", "expected exactly");
 expect_decode_error({ ...validObject, ops: [{ kind: "delete", path: [], prev: { kind: "wat" }, next: { kind: "undefined" } }] }, "ops[0].prev.kind", "expected undefined or value");
 expect_decode_error({ ...validObject, ops: [{ kind: "delete", path: [], prev: { kind: "value", value: Number.NaN }, next: { kind: "undefined" } }] }, "ops[0].prev.value", "finite");
 expect_decode_error({ ...validObject, ops: [{ kind: "set", path: [], prev: { kind: "undefined" } }] }, "ops[0]", "expected exactly");
 expect_decode_error({ ...validObject, ops: [{ kind: "splice", path: [], start: -1, removed: [], inserted: [], prev: { kind: "value", value: [] }, next: { kind: "value", value: [] } }] }, "ops[0].start", "non-negative integer");
+expect_decode_error({ ...validObject, ops: [{ kind: "move", path: [], from: -1, to: 0, prev: { kind: "value", value: [1, 2] }, next: { kind: "value", value: [2, 1] } }] }, "ops[0]", "non-negative safe integers");
+expect_decode_error({ ...validObject, ops: [{ kind: "rename", path: [], from: "source", to: "destination", prev: { kind: "value", value: [] }, next: { kind: "value", value: [] } }] }, "ops[0]", "witnesses must encode objects");
 
 const sequence = [1, 2, 3].map((prevRev) => encode_hosted_test_report_commit(
   "sequence-run",

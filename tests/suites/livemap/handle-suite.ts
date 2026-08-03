@@ -212,7 +212,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["items"]).array.move(0, 3),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [0, 1, 2, 3, 4, 5], next: [1, 2, 3, 0, 4, 5] },
+          { kind: "move", path: ["items"], from: 0, to: 3, prev: [0, 1, 2, 3, 4, 5], next: [1, 2, 3, 0, 4, 5] },
         ],
         expectedRoot: { items: [1, 2, 3, 0, 4, 5] },
       }),
@@ -223,7 +223,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["items"]).array.move(4, 1),
         expectedChanged: true,
         expectedOps: [
-          { kind: "set", path: ["items"], prev: [0, 1, 2, 3, 4, 5], next: [0, 4, 1, 2, 3, 5] },
+          { kind: "move", path: ["items"], from: 4, to: 1, prev: [0, 1, 2, 3, 4, 5], next: [0, 4, 1, 2, 3, 5] },
         ],
         expectedRoot: { items: [0, 4, 1, 2, 3, 5] },
       }),
@@ -379,18 +379,16 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.renameKey("role", "kind"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "replace", path: ["user"], prev: { name: "Ada", role: "user" }, next: { name: "Ada", kind: "user" } },
+          { kind: "rename", path: ["user"], from: "role", to: "kind", prev: { name: "Ada", role: "user" }, next: { name: "Ada", kind: "user" } },
         ],
         expectedRoot: { user: { name: "Ada", kind: "user" } },
       }),
-      commitCase({
+      throwCase({
         suite: SUITE,
-        name: "handle object.renameKey missing key unchanged",
+        name: "handle object.renameKey missing key rejects",
         input: { user: { name: "Ada" } },
         act: (map) => map.at(["user"]).object.renameKey("role", "kind"),
-        expectedChanged: false,
-        expectedOps: [],
-        expectedRoot: { user: { name: "Ada" } },
+        expectedMessage: "Invalid LiveMap projected rename at [\"user\"]: source key \"role\" is not an own entry",
       }),
       commitCase({
         suite: SUITE,
@@ -408,7 +406,7 @@ export function livemap_suites_handle(): TestSuite {
         act: (map) => map.at(["user"]).object.renameKey("role", "kind"),
         expectedChanged: true,
         expectedOps: [
-          { kind: "replace", path: ["user"], prev: { name: "Ada", role: "user", kind: "person" }, next: { name: "Ada", kind: "user" } },
+          { kind: "rename", path: ["user"], from: "role", to: "kind", prev: { name: "Ada", role: "user", kind: "person" }, next: { name: "Ada", kind: "user" } },
         ],
         expectedRoot: { user: { name: "Ada", kind: "user" } },
       }),
@@ -979,4 +977,3 @@ export function livemap_suites_handle(): TestSuite {
     ] as const,
   };
 }
-

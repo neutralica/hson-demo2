@@ -122,6 +122,26 @@ function encode_op(op: LiveMapOp): HostedTestReportWireOp {
       next: encode_undefined(),
     });
   }
+  if (op.kind === "rename") {
+    return Object.freeze({
+      kind: op.kind,
+      path,
+      from: op.from,
+      to: op.to,
+      prev: encode_json_value(op.prev),
+      next: encode_json_value(op.next),
+    });
+  }
+  if (op.kind === "move") {
+    return Object.freeze({
+      kind: op.kind,
+      path,
+      from: op.from,
+      to: op.to,
+      prev: encode_json_value(op.prev),
+      next: encode_json_value(op.next),
+    });
+  }
   if (op.next === undefined) invalid(`op.next`, `${op.kind} next must be a JSON value`);
   return Object.freeze({
     kind: op.kind,
@@ -135,7 +155,7 @@ function decode_op(value: unknown, index: number): LiveMapOp {
   const base = `ops[${index}]`;
   if (!is_record(value)) return invalid(base, "operation must be an object");
   const kind = value.kind;
-  if (kind !== "set" && kind !== "delete" && kind !== "replace" && kind !== "splice") {
+  if (kind !== "set" && kind !== "delete" && kind !== "replace" && kind !== "splice" && kind !== "rename" && kind !== "move") {
     return invalid(`${base}.kind`, "unsupported operation kind");
   }
   const path = clone_path(value.path, `${base}.path`);
@@ -143,6 +163,8 @@ function decode_op(value: unknown, index: number): LiveMapOp {
     value,
     kind === "splice"
       ? ["kind", "path", "start", "removed", "inserted", "prev", "next"]
+      : kind === "rename" || kind === "move"
+        ? ["kind", "path", "from", "to", "prev", "next"]
       : ["kind", "path", "prev", "next"],
     base,
   );
@@ -166,6 +188,21 @@ function decode_op(value: unknown, index: number): LiveMapOp {
     if (next === undefined) return invalid(`${base}.next`, `${kind} next must encode a JSON value`);
     return Object.freeze({ kind, path, prev, next });
   }
+  if (kind === "rename") {
+    if (typeof value.from !== "string" || typeof value.to !== "string") return invalid(base, "rename keys must be strings");
+    if (prev === undefined || next === undefined || Array.isArray(prev) || Array.isArray(next)
+      || prev === null || next === null || typeof prev !== "object" || typeof next !== "object") {
+      return invalid(base, "rename witnesses must encode objects");
+    }
+    return Object.freeze({ kind, path, from: value.from, to: value.to, prev, next });
+  }
+  if (kind === "move") {
+    if (!is_nonnegative_safe_integer(value.from) || !is_nonnegative_safe_integer(value.to)) {
+      return invalid(base, "move indexes must be non-negative safe integers");
+    }
+    if (!Array.isArray(prev) || !Array.isArray(next)) return invalid(base, "move witnesses must encode arrays");
+    return Object.freeze({ kind, path, from: value.from, to: value.to, prev, next });
+  }
   if (!Array.isArray(prev)) return invalid(`${base}.prev`, "splice prev must encode an array");
   if (!Array.isArray(next)) return invalid(`${base}.next`, "splice next must encode an array");
   const removedInput = value.removed as unknown[];
@@ -175,6 +212,10 @@ function decode_op(value: unknown, index: number): LiveMapOp {
   Object.freeze(removed);
   Object.freeze(inserted);
   return Object.freeze({ kind, path, start: value.start as number, removed, inserted, prev, next });
+}
+
+function is_nonnegative_safe_integer(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function must_run_id(value: unknown, path: string): HostedTestRunId {

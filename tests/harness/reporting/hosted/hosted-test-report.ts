@@ -156,6 +156,26 @@ function clone_op(op: LiveMapOp): LiveMapOp {
       next: undefined,
     });
   }
+  if (op.kind === "rename") {
+    return Object.freeze({
+      kind: op.kind,
+      path: clone_path(op.path),
+      from: op.from,
+      to: op.to,
+      prev: clone_value(op.prev),
+      next: clone_value(op.next),
+    });
+  }
+  if (op.kind === "move") {
+    return Object.freeze({
+      kind: op.kind,
+      path: clone_path(op.path),
+      from: op.from,
+      to: op.to,
+      prev: clone_value(op.prev),
+      next: clone_value(op.next),
+    });
+  }
   return Object.freeze({
     kind: op.kind,
     path: clone_path(op.path),

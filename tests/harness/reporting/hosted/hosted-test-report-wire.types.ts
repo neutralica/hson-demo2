@@ -38,11 +38,31 @@ export type HostedTestReportWireSpliceOp = Readonly<{
   next: HostedTestWireJsonValue;
 }>;
 
+export type HostedTestReportWireRenameOp = Readonly<{
+  kind: "rename";
+  path: LivePath;
+  from: string;
+  to: string;
+  prev: HostedTestWireJsonValue;
+  next: HostedTestWireJsonValue;
+}>;
+
+export type HostedTestReportWireMoveOp = Readonly<{
+  kind: "move";
+  path: LivePath;
+  from: number;
+  to: number;
+  prev: HostedTestWireJsonValue;
+  next: HostedTestWireJsonValue;
+}>;
+
 export type HostedTestReportWireOp =
   | HostedTestReportWireSetOp
   | HostedTestReportWireDeleteOp
   | HostedTestReportWireReplaceOp
-  | HostedTestReportWireSpliceOp;
+  | HostedTestReportWireSpliceOp
+  | HostedTestReportWireRenameOp
+  | HostedTestReportWireMoveOp;
 
 export type HostedTestReportCommitEnvelope = Readonly<{
   type: "hosted-test-report-commit";

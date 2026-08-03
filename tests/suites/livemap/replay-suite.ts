@@ -147,7 +147,7 @@ export function livemap_suite_replay(): TestSuite {
         },
         {
           name: "replay rejects unsupported operation kind",
-          input: { prevRev: 0, ops: [{ kind: "move" }] },
+          input: { prevRev: 0, ops: [{ kind: "future" }] },
           expectedReason: "kind is not supported",
           expectedOpIndex: 0,
         },

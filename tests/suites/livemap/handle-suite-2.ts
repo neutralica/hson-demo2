@@ -561,16 +561,12 @@ export function livemap_suites_handle_2(): TestSuite {
         ],
         expectedRoot: { items: ["a", "b", "x"] },
       }),
-      commitCase({
+      throwCase({
         suite: SUITE,
-        name: "handle array.move supports negative from index",
+        name: "handle array.move rejects negative from index",
         input: { items: ["a", "b", "c"] },
         act: (map) => map.at(["items"]).array.move(-1, 0),
-        expectedChanged: true,
-        expectedOps: [
-          { kind: "set", path: ["items"], prev: ["a", "b", "c"], next: ["c", "a", "b"] },
-        ],
-        expectedRoot: { items: ["c", "a", "b"] },
+        expectedMessage: "Invalid LiveMap projected move at [\"items\"]: source index -1 does not resolve in the staged array",
       }),
       throwCase({
         suite: SUITE,
