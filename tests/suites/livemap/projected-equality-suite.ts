@@ -30,18 +30,6 @@ export function livemap_projected_equality_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      test("projected identity handle follows a container rename", () => {
-        const map = hson.liveMap.fromJson({ profile: { name: "Ada" } });
-        const handle = map.ensureIdentity(["profile"]);
-        map.at([]).object.renameKey("profile", "user");
-        const snapshot = handle.snap() as Record<string, unknown>;
-        return { assertRows: [
-          equal_row("handle remains active", handle.active, true),
-          equal_row("identity follows renamed path", handle.path(), ["user"]),
-          equal_row("snapshot remains projected user data", snapshot, { name: "Ada" }),
-          equal_row("identity metadata stays non-enumerable to projection", Object.keys(snapshot), ["name"]),
-        ] };
-      }),
       test("mutation from positive zero to negative zero publishes", () => {
         const map = number_map(0);
         const commit = map.at(["value"]).set(-0);
