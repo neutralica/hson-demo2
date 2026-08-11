@@ -54,10 +54,10 @@ export type HostedTestReport = Readonly<{
   error: HostedTestInfrastructureError | null;
 }>;
 
-export type HostedTestReportMap = LiveMap<HostedTestReport>;
-
 /** LiveHost's low-level wire constraint uses mutable JSON array types. */
 export type HostedTestReportState = HostedTestReport & JsonValue;
+
+export type HostedTestReportMap = LiveMap<HostedTestReport>;
 
 export type HostedTestReportCommit = LiveMapCommit;
 

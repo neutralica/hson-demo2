@@ -73,17 +73,11 @@ function make_memory_socket(): MemorySocket {
     receive: async (message) => {
       const raw = JSON.stringify(message);
       for (const listener of [...messageListeners]) await listener(raw);
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
+      for (let index = 0; index < 16; index += 1) await Promise.resolve();
     },
     receive_raw: async (message) => {
       for (const listener of [...messageListeners]) await listener(message);
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
+      for (let index = 0; index < 16; index += 1) await Promise.resolve();
     },
     sent: () => sentMessages.map((message) => JSON.parse(message) as unknown),
     sent_raw: () => [...sentMessages],
@@ -120,7 +114,7 @@ export function livehost_socket_suite(): TestSuite {
           const socket = make_memory_socket();
 
           host.connect(socket);
-          await socket.receive({ type: "hello", clientId: "client-a", lastSeq: 0 });
+          await socket.receive({ type: "hello", clientId: "client-a" });
 
           const [message] = socket.sent() as Array<Record<string, unknown>>;
           return {
@@ -172,7 +166,7 @@ export function livehost_socket_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -301,7 +295,7 @@ export function livehost_socket_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -314,7 +308,7 @@ export function livehost_socket_suite(): TestSuite {
             name: "rename_user",
             payload: { name: "Grace" },
           });
-          await socket.receive({ type: "hello", clientId: "client-a", lastSeq: 0 });
+          await socket.receive({ type: "hello", clientId: "client-a" });
 
           const [, hello] = socket.sent() as Array<Record<string, unknown>>;
           return {
@@ -341,7 +335,7 @@ export function livehost_socket_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });
@@ -423,7 +417,7 @@ export function livehost_socket_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -479,7 +473,7 @@ export function livehost_socket_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -537,7 +531,7 @@ export function livehost_socket_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -581,7 +575,7 @@ export function livehost_socket_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -631,7 +625,7 @@ export function livehost_socket_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });
@@ -673,7 +667,7 @@ export function livehost_socket_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });

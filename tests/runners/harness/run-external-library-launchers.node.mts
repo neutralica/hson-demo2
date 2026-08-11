@@ -259,7 +259,7 @@ assert.equal(installed.unavailable.length, hson_live_test_launchers.length);
 const authorityId = external_library_target_id("livehost.authority");
 assert.deepEqual(hosted_test_panel_selected_ids([], { kind: "suite", suite: authorityId }, availability.targets), [authorityId]);
 assert.equal(hosted_test_panel_test_choices([], authorityId, availability.targets).length, 0);
-assert.ok(hosted_test_panel_suite_choices([], availability.targets).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(19)"));
+assert.ok(hosted_test_panel_suite_choices([], availability.targets).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(21)"));
 
 const spawnFailure = await run_external_library_launcher(availability, authorityId, {
   command: join(installedRoot, "missing-npm"),

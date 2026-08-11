@@ -34,9 +34,11 @@ function rejects(run: () => unknown): boolean {
 }
 
 function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[] {
-  const host = hson.liveHost.create<JsonValue | undefined>({ state: { value: initial(route), guard: 1 } });
-  const source = host.map; const target = hson.liveMap.fromJson({ value: initial(route), guard: 1 });
-  source.schema.use(hson.liveMap.schema.define((s) => ({ value: s.unknown, guard: s.number })));
+  const sourceMap = hson.liveMap.fromJson({ value: initial(route), guard: 1 })
+    .schema.use(hson.liveMap.schema.define((s) => ({ value: s.unknown, guard: s.number })));
+  const host = hson.liveHost.create({ map: sourceMap });
+  const source = host.map as unknown as LiveMap;
+  const target = hson.liveMap.fromJson({ value: initial(route), guard: 1 });
   link_livemap(source, target, { path: ["value"] });
   const sourceBefore = source.capture(); const targetBefore = target.capture();
   let commits = 0; let feeds = 0; let stores = 0; let hostCommits = 0;

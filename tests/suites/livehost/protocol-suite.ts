@@ -24,21 +24,18 @@ export function livehost_protocol_suite(): TestSuite {
           const decoded = decode_livehost_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
-            lastSeq: 12,
           }));
 
           return {
             ok: decoded.ok,
             type: decoded.ok ? decoded.value.type : undefined,
             clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
-            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
           };
         },
         expected: {
           ok: true,
           type: "hello",
           clientId: "client-a",
-          lastSeq: 12,
         },
       }),
       read_case({
@@ -49,26 +46,23 @@ export function livehost_protocol_suite(): TestSuite {
           const decoded = decode_livehost_message(JSON.stringify({
             type: "hello",
             clientId: 123,
-            lastSeq: -1,
           }));
 
           return {
             ok: decoded.ok,
             type: decoded.ok ? decoded.value.type : undefined,
             clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
-            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
           };
         },
         expected: {
           ok: true,
           type: "hello",
           clientId: undefined,
-          lastSeq: undefined,
         },
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts zero hello lastSeq",
+        name: "decode rejects historical hello lastSeq cursor",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -79,14 +73,12 @@ export function livehost_protocol_suite(): TestSuite {
 
           return {
             ok: decoded.ok,
-            type: decoded.ok ? decoded.value.type : undefined,
-            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+            message: decoded.ok ? undefined : decoded.error.message,
           };
         },
         expected: {
-          ok: true,
-          type: "hello",
-          lastSeq: 0,
+          ok: false,
+          message: "LiveHost hello no longer accepts an action-sequence recovery cursor.",
         },
       }),
       read_case({
@@ -98,7 +90,6 @@ export function livehost_protocol_suite(): TestSuite {
             type: "hello",
             clientId: "client-a",
             hostId: "counter-a",
-            lastSeq: 0,
           }));
 
           return {
@@ -106,7 +97,6 @@ export function livehost_protocol_suite(): TestSuite {
             type: decoded.ok ? decoded.value.type : undefined,
             clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
             hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
-            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
           };
         },
         expected: {
@@ -114,7 +104,6 @@ export function livehost_protocol_suite(): TestSuite {
           type: "hello",
           clientId: "client-a",
           hostId: "counter-a",
-          lastSeq: 0,
         },
       }),
       read_case({
@@ -126,7 +115,6 @@ export function livehost_protocol_suite(): TestSuite {
             type: "hello",
             clientId: "client-a",
             hostId: 123,
-            lastSeq: 0,
           }));
 
           return {
@@ -134,7 +122,6 @@ export function livehost_protocol_suite(): TestSuite {
             type: decoded.ok ? decoded.value.type : undefined,
             clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
             hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
-            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
           };
         },
         expected: {
@@ -142,12 +129,11 @@ export function livehost_protocol_suite(): TestSuite {
           type: "hello",
           clientId: "client-a",
           hostId: undefined,
-          lastSeq: 0,
         },
       }),
       read_case({
         suite: SUITE,
-        name: "decode ignores fractional hello lastSeq",
+        name: "decode rejects fractional historical hello cursor",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -158,14 +144,12 @@ export function livehost_protocol_suite(): TestSuite {
 
           return {
             ok: decoded.ok,
-            type: decoded.ok ? decoded.value.type : undefined,
-            lastSeq: decoded.ok && decoded.value.type === "hello" ? decoded.value.lastSeq : undefined,
+            message: decoded.ok ? undefined : decoded.error.message,
           };
         },
         expected: {
-          ok: true,
-          type: "hello",
-          lastSeq: undefined,
+          ok: false,
+          message: "LiveHost hello no longer accepts an action-sequence recovery cursor.",
         },
       }),
       read_case({

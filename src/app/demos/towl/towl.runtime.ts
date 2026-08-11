@@ -1,4 +1,5 @@
 import { create_livehost } from "hson-live/livehost";
+import { hson } from "hson-live";
 import type { LiveHostActionContext, LiveHostSessionLifecycleEvent, LiveHostActions, LiveHostSchema } from "hson-live/types";
 import { TOWL_SCHEMA } from "./towl.schema";
 import { reflect_towl_session_attached, reflect_towl_session_detached, remove_towl_session, join_towl_session, leave_towl_session, set_towl_ready, pull_towl_rope, reset_towl_round, create_towl_state } from "./towl.transitions";
@@ -47,21 +48,21 @@ function require_session(context: LiveHostActionContext<TowlState>): string {
   return context.origin.sessionId;
 }
 
-function apply_transition<TResult extends
+async function apply_transition<TResult extends
   TowlJoinResult | TowlLeaveResult | TowlReadyResult | TowlPullResult | TowlResetResult>(
   context: LiveHostActionContext<TowlState>,
   transition: TowlTransitionResult<TResult>,
-): TResult {
+): Promise<TResult> {
   if (!transition.ok) throw new TowlActionError(transition.error);
-  context.map.replace(transition.state);
+  await context.mutate((draft) => draft.replace(transition.state));
   return transition.result;
 }
 
 function reflect_lifecycle(
-  map: TowlRuntime["host"]["map"],
+  host: TowlRuntime["host"],
   event: LiveHostSessionLifecycleEvent,
 ): void {
-  const state = map.snap();
+  const state = host.map.snap();
 
   const next = event.kind === "attached"
     ? reflect_towl_session_attached(state, event.session.sessionId)
@@ -85,7 +86,7 @@ function reflect_lifecycle(
     && next.player2.ready === state.player2.ready;
 
   if (!unchanged) {
-    map.replace(next);
+    void host.mutate((draft) => draft.replace(next)).catch(() => undefined);
   }
 }
 
@@ -109,20 +110,19 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
       reset_round: { payload: decode_empty },
     },
   };
-  const host = create_livehost<TowlState, TowlActions>({
-    state: create_towl_state(),
+  const map = hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
+  const host = create_livehost({
+    map,
     actions,
     schema,
     ...(options.logicalMapId !== undefined ? { logicalMapId: options.logicalMapId } : {}),
     ...(options.sessionId !== undefined ? { sessionId: options.sessionId } : {}),
     ...(options.sessions !== undefined ? { sessions: options.sessions } : {}),
   });
-  host.map.schema.use(TOWL_SCHEMA);
-
   let disposed = false;
   const stopLifecycle = host.sessions.on_change((event) => {
     if (!disposed && !(event.kind === "revoked" && event.reason === "host_disposed")) {
-      reflect_lifecycle(host.map, event);
+      reflect_lifecycle(host, event);
     }
   });
 

@@ -159,7 +159,7 @@ export function livehost_pair_suite(): TestSuite {
           await settle_pair();
           clientSocket.close();
           await settle_pair();
-          clientSocket.send(JSON.stringify({ type: "hello", clientId: "client-a", lastSeq: 0 }));
+          clientSocket.send(JSON.stringify({ type: "hello", clientId: "client-a" }));
           await settle_pair();
 
           const clientMessages = clientSocket.sent() as Array<Record<string, unknown>>;
@@ -208,7 +208,7 @@ export function livehost_pair_suite(): TestSuite {
 
           return {
             clientSentType: clientHello?.type,
-            clientSentLastSeq: clientHello?.lastSeq,
+            clientSentHasLastSeq: Object.hasOwn(clientHello ?? {}, "lastSeq"),
             hostSentType: hostHello?.type,
             hostSentSeq: hostHello?.seq,
             clientSeq: client.seq,
@@ -217,7 +217,7 @@ export function livehost_pair_suite(): TestSuite {
         },
         expected: {
           clientSentType: "hello",
-          clientSentLastSeq: 0,
+          clientSentHasLastSeq: false,
           hostSentType: "hello",
           hostSentSeq: 0,
           clientSeq: 0,
@@ -274,7 +274,7 @@ export function livehost_pair_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -375,7 +375,7 @@ export function livehost_pair_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });
@@ -417,7 +417,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client reconnect with stale seq receives replayed sync",
+        name: "fresh client receives current snapshot without historical sync",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -430,7 +430,7 @@ export function livehost_pair_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });
@@ -461,7 +461,7 @@ export function livehost_pair_suite(): TestSuite {
           const [hostHello, replay] = secondHostSocket.sent() as Array<Record<string, unknown>>;
 
           return {
-            secondLastSeq: secondHello?.lastSeq,
+            secondHasLastSeq: Object.hasOwn(secondHello ?? {}, "lastSeq"),
             hostHelloType: hostHello?.type,
             hostHelloSeq: hostHello?.seq,
             replayType: replay?.type,
@@ -473,20 +473,20 @@ export function livehost_pair_suite(): TestSuite {
           };
         },
         expected: {
-          secondLastSeq: 0,
+          secondHasLastSeq: false,
           hostHelloType: "hello",
           hostHelloSeq: 1,
-          replayType: "sync",
-          replaySeq: 1,
-          replayPath: ["count"],
-          replayValue: 1,
+          replayType: undefined,
+          replaySeq: undefined,
+          replayPath: undefined,
+          replayValue: undefined,
           secondSeq: 1,
           secondCount: 1,
         },
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client reconnect after latest seq receives only hello",
+        name: "client reconnect receives current hello without resume cursor",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -499,7 +499,7 @@ export function livehost_pair_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });
@@ -536,8 +536,8 @@ export function livehost_pair_suite(): TestSuite {
 
           return {
             clientHelloCount: secondClientMessages.length,
-            firstLastSeq: secondClientMessages[0]?.lastSeq,
-            secondLastSeq: secondClientMessages[1]?.lastSeq,
+            firstHasLastSeq: Object.hasOwn(secondClientMessages[0] ?? {}, "lastSeq"),
+            secondHasLastSeq: Object.hasOwn(secondClientMessages[1] ?? {}, "lastSeq"),
             hostSentCount: secondHostMessages.length,
             replayCount: replayMessages.length,
             lastHostType: lastHello?.type,
@@ -548,10 +548,10 @@ export function livehost_pair_suite(): TestSuite {
         },
         expected: {
           clientHelloCount: 2,
-          firstLastSeq: 0,
-          secondLastSeq: 1,
-          hostSentCount: 3,
-          replayCount: 1,
+          firstHasLastSeq: false,
+          secondHasLastSeq: false,
+          hostSentCount: 2,
+          replayCount: 0,
           lastHostType: "hello",
           lastHostSeq: 1,
           clientSeq: 1,
@@ -560,7 +560,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client reconnect too far behind receives snapshot without replay",
+        name: "current hello snapshot is not followed by historical sync",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -573,7 +573,7 @@ export function livehost_pair_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const current = ctx.map.at(["count"]).snap();
-                ctx.map.set(["count"], typeof current === "number" ? current + 1 : 1);
+                void ctx.mutate((draft) => draft.set(["count"], typeof current === "number" ? current + 1 : 1));
               },
             },
           });
@@ -611,8 +611,8 @@ export function livehost_pair_suite(): TestSuite {
           };
         },
         expected: {
-          hostSentCount: 2,
-          replayCount: 1,
+          hostSentCount: 1,
+          replayCount: 0,
           helloType: "hello",
           helloSeq: 1,
           readerSeq: 1,
@@ -977,7 +977,7 @@ export function livehost_pair_suite(): TestSuite {
       actions: {
         update: (ctx, payload) => {
           calls += 1;
-          ctx.map.set(["value"], payload.value);
+          void ctx.mutate((draft) => draft.set(["value"], payload.value));
         },
       },
     });
@@ -1050,12 +1050,12 @@ export function livehost_pair_suite(): TestSuite {
 
           const count = ctx.map.at(["count"]).snap();
 
-          ctx.map.set(
+          void ctx.mutate((draft) => draft.set(
             ["count"],
             typeof count === "number"
               ? count + 1
               : 1,
-          );
+          ));
 
           return {
             calls,

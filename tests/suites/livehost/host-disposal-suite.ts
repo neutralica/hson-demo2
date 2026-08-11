@@ -198,7 +198,14 @@ export function livehost_host_disposal_suite(): TestSuite {
         });
         const before = socket.sent().length;
         host.dispose();
-        host.map.set(["count"], 1);
+        let mutationCode: string | undefined;
+        try {
+          await host.mutate((draft) => draft.set(["count"], 1));
+        } catch (cause) {
+          mutationCode = cause instanceof Error && "code" in cause
+            ? String(cause.code)
+            : undefined;
+        }
         await Promise.resolve();
         return {
           before,
@@ -206,13 +213,15 @@ export function livehost_host_disposal_suite(): TestSuite {
           listeners: socket.listener_count(),
           map: host.map.snap(),
           closeCount: socket.close_count(),
+          mutationCode,
         };
       }, {
         before: 3,
         after: 3,
         listeners: 0,
-        map: { count: 1 },
+        map: { count: 0 },
         closeCount: 0,
+        mutationCode: "LIVEHOST_AUTHORITY_CLOSED",
       }),
 
       disposal_case("pending async action keeps origin but cannot regain connection authority", async () => {
@@ -226,7 +235,7 @@ export function livehost_host_disposal_suite(): TestSuite {
             delayed: async (ctx) => {
               origin = ctx.origin;
               await gate;
-              ctx.map.set(["finished"], true);
+              await ctx.mutate((draft) => draft.set(["finished"], true));
               emitted = ctx.emit_event("late", null);
             },
           },
@@ -240,9 +249,9 @@ export function livehost_host_disposal_suite(): TestSuite {
         return { origin, emitted, sent: socket.sent(), map: host.map.snap(), listeners: socket.listener_count() };
       }, {
         origin: { kind: "session", sessionId: "pending-dispose", epoch: 1, resumable: false },
-        emitted: false,
+        emitted: undefined,
         sent: [],
-        map: { finished: true },
+        map: { finished: false },
         listeners: 0,
       }),
 
@@ -250,7 +259,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         const store = create_livehost_store();
         const created = store.create("room-a", {
           state: { count: 0 },
-          actions: { increment: (ctx) => { ctx.map.set(["count"], 1); } },
+          actions: { increment: (ctx) => { void ctx.mutate((draft) => draft.set(["count"], 1)); } },
         });
         if (!created.ok) throw new Error(created.error.message);
         const host = created.value;

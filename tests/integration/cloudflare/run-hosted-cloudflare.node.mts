@@ -161,7 +161,7 @@ expect_cloudflare(
 const replay = await registry.get("livemap/replay").run();
 expect_cloudflare(replay.ok && replay.summary.cases === 45, "the Worker-compatible replay route executes through the existing runner");
 const advertisedRun = await registry.get("livehost/all").run();
-expect_cloudflare(advertisedRun.ok && advertisedRun.summary.cases === 184, "an advertised Worker test family remains executable through the legacy run surface");
+expect_cloudflare(advertisedRun.ok && advertisedRun.summary.cases === 174, "an advertised Worker test family remains executable through the legacy run surface");
 let unavailable: unknown;
 try { await registry.get("hosted/all").run(); }
 catch (error) { unavailable = error; }

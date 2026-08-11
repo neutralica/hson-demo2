@@ -187,17 +187,16 @@ export function livemap_exact_propagation_suite(): TestSuite {
         map.set(["value"], -0);
         return { assertRows: [equal_row("selector calls", calls, 1)] };
       }),
-      test("LiveHost canonical commits carry exact transport", () => {
+      test("LiveHost canonical commits carry exact transport", async () => {
         const host = hson.liveHost.create({ state: { value: 0 } });
         let payload: unknown;
         host.stream.on_commit((commit) => { payload = commit.payload; });
-        host.map.set(["value"], -0);
+        await host.mutate((draft) => draft.set(["value"], -0));
         return { assertRows: [equal_row("payload type", typeof payload, "string")] };
       }),
       test("LiveHost recovery snapshots preserve exact canonical order", () => {
-        const host = hson.liveHost.create({ state: { value: { a: 1 } } });
-        const ordered = hson.liveMap.fromJson('{"value":{"10":10,"2":2,"1":1}}').capture();
-        host.map.restore({ rev: host.map.rev, format: ordered.format, formatVersion: ordered.formatVersion, payload: ordered.payload });
+        const map = hson.liveMap.fromJson('{"value":{"10":10,"2":2,"1":1}}');
+        const host = hson.liveHost.create({ map });
         const plan = host.recovery.plan({ logicalMapId: host.stream.logicalMapId });
         if (plan.outcome !== "snapshot") return { assertRows: [equal_row("outcome", plan.outcome, "snapshot")] };
         const restored = hson.liveMap.fromHson(plan.body.hson);

@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
+import type { LiveMapAnyOp, LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
 import type { RunResult, TestEvent } from "../../core/test-contracts";
 import type {
@@ -210,6 +210,7 @@ export type HostedTestReportOptions = Readonly<{
   caseBatchSize?: number;
   runId?: string;
   map?: HostedTestReportMap;
+  mutate?: (mutation: (draft: HostedTestReportMap) => LiveMapCommit) => Promise<LiveMapCommit<LiveMapAnyOp>>;
 }>;
 
 export function make_hosted_test_report(
@@ -224,8 +225,8 @@ export function make_hosted_test_report(
   }
   const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(suite, options.runId))) as JsonValue;
   const map = options.map === undefined
-    ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as HostedTestReportMap
-    : options.map.schema.use(HOSTED_TEST_REPORT_SCHEMA) as HostedTestReportMap;
+    ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap
+    : options.map;
   const captured: HostedTestReportCommit[] = [];
   const unsubscribe = map.feed([], (event) => {
     const commit = capture_commit(event.commit);
@@ -235,6 +236,14 @@ export function make_hosted_test_report(
   let disposed = false;
   let pendingCases: HostedTestCaseReport[] = [];
   let caseBatchId = 0;
+
+  function mutate(operation: (draft: HostedTestReportMap) => LiveMapCommit): void {
+    if (options.mutate === undefined) {
+      operation(map);
+      return;
+    }
+    void options.mutate(operation);
+  }
 
   function flush_pending_cases(suiteEnd?: Readonly<{ suite: string; ms: number }>): void {
     if (pendingCases.length === 0 && suiteEnd === undefined) return;
@@ -250,7 +259,7 @@ export function make_hosted_test_report(
     }
     const beforeRev = map.rev;
     try {
-      map.batch((tx) => {
+      mutate((draft) => draft.batch((tx) => {
         if (batch.length > 0) {
           caseBatchId += 1;
           tx.setMany(["caseBatches"], { [caseBatchId.toString().padStart(6, "0")]: batch });
@@ -260,7 +269,7 @@ export function make_hosted_test_report(
           tx.set(["summary", "skip"], state.summary.skip + skip);
         }
         if (suiteEnd !== undefined) tx.splice(["suites"], state.suites.length, 0, suiteEnd);
-      });
+      }));
       pendingCases = [];
     } catch (error) {
       if (map.rev !== beforeRev) pendingCases = [];
@@ -282,12 +291,12 @@ export function make_hosted_test_report(
     reduce(event) {
       if (event.t === "suite_begin") {
         if (map.capture().value.run.status !== "idle") return;
-        map.batch((tx) => {
+        mutate((draft) => draft.batch((tx) => {
           tx.set(["run", "status"], "running");
           tx.set(["run", "startedAt"], finite_time(now));
           tx.set(["run", "completedAt"], null);
           tx.replace(["error"], null);
-        });
+        }));
         return;
       }
 
@@ -298,7 +307,7 @@ export function make_hosted_test_report(
 
       if (event.t === "external_end") {
         flush_pending_cases();
-        map.setMany(["externalResults"], {
+        mutate((draft) => draft.setMany(["externalResults"], {
           [event.id]: {
             id: event.id,
             suite: event.suite,
@@ -316,13 +325,13 @@ export function make_hosted_test_report(
             timedOut: event.timedOut,
             spawnError: event.spawnError ?? null,
           },
-        });
+        }));
         return;
       }
 
       if (event.t === "external_state") {
         flush_pending_cases();
-        map.setMany(["externalResults"], {
+        mutate((draft) => draft.setMany(["externalResults"], {
           [event.id]: {
             id: event.id,
             suite: event.suite,
@@ -340,7 +349,7 @@ export function make_hosted_test_report(
             timedOut: false,
             spawnError: null,
           },
-        });
+        }));
         return;
       }
 
@@ -350,7 +359,7 @@ export function make_hosted_test_report(
     },
     complete(result, timing) {
       flush_pending_cases();
-      map.batch((tx) => {
+      mutate((draft) => draft.batch((tx) => {
         tx.set(["summary", "cases"], result.summary.cases);
         tx.set(["summary", "pass"], result.summary.pass);
         tx.set(["summary", "fail"], result.summary.fail);
@@ -358,15 +367,15 @@ export function make_hosted_test_report(
         tx.set(["run", "completedAt"], finite_time(now));
         tx.set(["run", "status"], result.ok ? "passed" : "failed");
         tx.replace(["run", "timing"], timing ?? { runnerMs: result.summary.msTotal, hostMs: result.summary.msTotal });
-      });
+      }));
     },
     failInfrastructure(error) {
       flush_pending_cases();
-      map.batch((tx) => {
+      mutate((draft) => draft.batch((tx) => {
         tx.set(["run", "completedAt"], finite_time(now));
         tx.set(["run", "status"], "error");
         tx.replace(["error"], infrastructure_error(error));
-      });
+      }));
     },
   };
 }

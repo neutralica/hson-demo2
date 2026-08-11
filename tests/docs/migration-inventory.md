@@ -141,7 +141,6 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/livehost-tests/pair-suite.ts` | suite definition | `tests/suites/livehost/pair-suite.ts` |
 | `src/tests/livehost-tests/protocol-suite.ts` | suite definition | `tests/suites/livehost/protocol-suite.ts` |
 | `src/tests/livehost-tests/real-websocket-test-runtime.ts` | suite definition | `tests/suites/livehost/real-websocket-test-runtime.ts` |
-| `src/tests/livehost-tests/resume-suite.ts` | suite definition | `tests/suites/livehost/resume-suite.ts` |
 | `src/tests/livehost-tests/run-hosted-all-real-websocket.node.mts` | runner | `tests/runners/livehost/run-hosted-all-real-websocket.node.mts` |
 | `src/tests/livehost-tests/run-hosted-app-boundary.node.mts` | runner | `tests/runners/livehost/run-hosted-app-boundary.node.mts` |
 | `src/tests/livehost-tests/run-hosted-canvas-collection.node.mts` | runner | `tests/runners/livehost/run-hosted-canvas-collection.node.mts` |

@@ -160,10 +160,10 @@ const livehostAdapter = make_hosted_test_panel_adapter(livehostRuntime, livehost
 const livehostResult = await livehostAdapter.start("livehost/all");
 expect_adapter(livehostResult.suite === "livehost/all" && livehostResult.summary.suites === 11, "second visible mode uses the same adapter and returns LiveHost collection identity");
 expect_adapter(livehostAdapter.capture()?.run.id === livehostResult.runId && livehostAdapter.capture()?.run.suite === "livehost/all", "second result and recovered report correlate suite identity");
-expect_adapter(livehostResult.reportRev === 14, "184-case LiveHost report reaches batched revision 14");
-expect_adapter(livehostSink.updates.flatMap((update) => update.newCases).length === 184, "second hosted mode progressively ingests 184 compact cases");
+expect_adapter(livehostResult.reportRev === 14, "174-case LiveHost report reaches batched revision 14");
+expect_adapter(livehostSink.updates.flatMap((update) => update.newCases).length === 174, "second hosted mode progressively ingests 174 compact cases");
 const livehostFinal = livehostSink.updates.at(-1)?.report.summary;
-expect_adapter(livehostFinal?.cases === 184 && livehostFinal.pass === 184 && livehostFinal.fail === 0, "second hosted mode renders the complete passing LiveHost summary");
+expect_adapter(livehostFinal?.cases === 174 && livehostFinal.pass === 174 && livehostFinal.fail === 0, "second hosted mode renders the complete passing LiveHost summary");
 livehostAdapter.dispose();
 livehostRuntime.dispose();
 

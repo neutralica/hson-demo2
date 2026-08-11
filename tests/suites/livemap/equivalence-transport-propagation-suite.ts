@@ -79,12 +79,12 @@ export function livemap_equivalence_transport_propagation_suite(): TestSuite {
         const map = hson.liveMap.fromJson({ value: 0 }); let observed: unknown; map.sub.path(["value"], (value) => { observed = value; }); map.set(["value"], -0);
         return { assertRows: [same_value_row("observed", observed, -0)] };
       }),
-      test("LiveHost commits expose exact payload transport", () => {
-        const host = hson.liveHost.create({ state: { value: 0 } }); let payload: unknown; host.stream.on_commit((commit) => { payload = commit.payload; }); host.map.set(["value"], -0);
+      test("LiveHost commits expose exact payload transport", async () => {
+        const host = hson.liveHost.create({ state: { value: 0 } }); let payload: unknown; host.stream.on_commit((commit) => { payload = commit.payload; }); await host.mutate((draft) => draft.set(["value"], -0));
         return { assertRows: [equal_row("payload type", typeof payload, "string"), same_value_row("state", host.map.snap(["value"]), -0)] };
       }),
       test("LiveHost recovery snapshot closes exact state", () => {
-        const host = hson.liveHost.create({ state: { value: { a: 1 } } }); const ordered = hson.liveMap.fromJson('{"value":{"10":10,"2":2,"1":1}}').capture(); host.map.restore(ordered); const plan = host.recovery.plan({ logicalMapId: host.stream.logicalMapId }); if (plan.outcome !== "snapshot") return { assertRows: [equal_row("outcome", plan.outcome, "snapshot")] }; const restored = hson.liveMap.fromHson(plan.body.hson); const capture = restored.capture(); plan.dispose();
+        const map = hson.liveMap.fromJson('{"value":{"10":10,"2":2,"1":1}}'); const host = hson.liveHost.create({ map }); const plan = host.recovery.plan({ logicalMapId: host.stream.logicalMapId }); if (plan.outcome !== "snapshot") return { assertRows: [equal_row("outcome", plan.outcome, "snapshot")] }; const restored = hson.liveMap.fromHson(plan.body.hson); const capture = restored.capture(); plan.dispose();
         return { assertRows: [equal_row("payload", "payload" in capture ? capture.payload : undefined, host.map.capture().payload)] };
       }),
       test("legacy capture stays readable and observably lossy", () => {

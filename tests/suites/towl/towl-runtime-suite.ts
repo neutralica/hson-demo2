@@ -336,6 +336,7 @@ export function towl_runtime_suite(): TestSuite {
           pair.second.emit_close();
           const detached = runtime.host.map.snap().player2.connected;
           clock.advance(50);
+          for (let index = 0; index < 16; index += 1) await Promise.resolve();
           return {
             detached,
             state: runtime.host.map.snap(),

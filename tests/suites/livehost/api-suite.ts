@@ -273,7 +273,7 @@ export function livehost_api_suite(): TestSuite {
           const created = registry.create("counter", { state: { count: 2 } });
           const connected = registry.connect("counter", socket);
 
-          socket.receive({ type: "hello", clientId: "client-a", lastSeq: 0 });
+          socket.receive({ type: "hello", clientId: "client-a" });
 
           const [hello] = socket.sent() as Array<Record<string, unknown>>;
 
@@ -300,7 +300,6 @@ export function livehost_api_suite(): TestSuite {
             type: "hello",
             clientId: "client-a",
             hostId: "counter",
-            lastSeq: 0,
           }));
 
           return {
@@ -426,21 +425,15 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost debug exposes resume log",
+        name: "hson livehost debug omits historical resume log",
         input: {},
         act: () => {
-          const resume = hson.liveHost.debug.resumeLog({ maxEntries: 1 });
-          resume.record_sync({ type: "sync", seq: 1, path: ["a"], value: 1 });
-          resume.record_sync({ type: "sync", seq: 2, path: ["b"], value: 2 });
-
           return {
-            entries: resume.debug_entries().length,
-            replaySeqs: resume.replay_after(0).map((message) => message.seq),
+            hasResumeLog: Object.hasOwn(hson.liveHost.debug, "resumeLog"),
           };
         },
         expected: {
-          entries: 1,
-          replaySeqs: [2],
+          hasResumeLog: false,
         },
       }),
       read_case({

@@ -90,10 +90,10 @@ const domCore = await registered.get("dom/core").run(undefined, { yieldEveryCase
 const canvasCore = await registered.get("canvas/core").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const hostedAll = await registered.get("hosted/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 expect_registry(replay.ok && replay.summary.suites === 1 && replay.summary.cases === 45, "registered replay runner passes 45 cases under Node");
-expect_registry(livehost.ok && livehost.summary.suites === 11 && livehost.summary.cases === 184, "registered LiveHost runner passes 184 cases under Node");
-expect_registry(nodeAll.ok && nodeAll.summary.suites === 43 && nodeAll.summary.cases === 1069, "registered aggregate runner passes every Node-safe case exactly once");
-expect_registry(domCore.ok && domCore.summary.suites === 78 && domCore.summary.cases === 957, "registered DOM runner passes the expanded canonical jsdom and geometry tranche");
+expect_registry(livehost.ok && livehost.summary.suites === 10 && livehost.summary.cases === 174, "registered LiveHost runner passes 174 cases under Node");
+expect_registry(nodeAll.ok && nodeAll.summary.suites === 58 && nodeAll.summary.cases === 1412, "registered aggregate runner passes every Node-safe case exactly once");
+expect_registry(domCore.ok && domCore.summary.suites === 78 && domCore.summary.cases === 963, "registered DOM runner passes the expanded canonical jsdom and geometry tranche");
 expect_registry(canvasCore.ok && canvasCore.summary.suites === 6 && canvasCore.summary.cases === 62, "registered canvas runner passes the deterministic command/state tranche");
-expect_registry(hostedAll.ok && hostedAll.summary.suites === 127 && hostedAll.summary.cases === 2088 && hostedAll.summary.pass === 2088, "registered complete runner passes every canonical hosted case exactly once");
+expect_registry(hostedAll.ok && hostedAll.summary.suites === 142 && hostedAll.summary.cases === 2437 && hostedAll.summary.pass === 2437, "registered complete runner passes every canonical hosted case exactly once");
 expect_registry(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "both registered runners are Node-safe");
 console.log("hosted suite registry: ok");

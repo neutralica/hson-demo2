@@ -28,7 +28,7 @@ export function make_towl_socket(): TowlMemorySocket {
     async receive(message: unknown): Promise<void> {
       const raw = JSON.stringify(message);
       for (const listener of [...messages]) listener(raw);
-      for (let index = 0; index < 8; index += 1) await Promise.resolve();
+      for (let index = 0; index < 16; index += 1) await Promise.resolve();
     },
     emit_close(): void { for (const listener of [...closes]) listener(); },
     sent: () => sent.map((message) => JSON.parse(message) as Record<string, unknown>),

@@ -89,6 +89,7 @@ equal(initial.value, {
   summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
   caseBatches: {},
   suites: [],
+  externalResults: {},
   error: null,
 }, "initial shape");
 expect_report(!has_undefined(initial.value), "initial state contains no undefined");

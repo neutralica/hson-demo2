@@ -86,7 +86,7 @@ const externalTarget = Object.freeze({
   id: "library::livehost.authority",
   launcherId: "livehost.authority",
   subject: "livehost",
-  displayName: "Exclusive LiveHost authority",
+  displayName: "LiveHost authority",
   runtime: "node",
   executableChecks: 19,
   collections: Object.freeze(["authority"]),
@@ -165,9 +165,9 @@ for (const registry of [nodeRegistry, workerRegistry]) {
       .filter((choice) => choice.key.startsWith("suite:library::"));
     expect_panel(
       librarySuites.length === 1
-        && librarySuites[0]?.label === "library · Exclusive LiveHost authority (19)"
+        && librarySuites[0]?.label === "library · LiveHost authority (21)"
         && hosted_test_panel_display_label(librarySuites[0].label)
-          === "library · exclusive livehost authority (19)",
+          === "library · livehost authority (21)",
       "external suite label is lowercased for display without mutating launcher metadata",
     );
     expect_panel(

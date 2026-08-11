@@ -41,7 +41,7 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "subscribe sends current path value",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { ui: { selected: "home" } } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
@@ -72,14 +72,14 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "sync all sends updated subscribed value",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { count: 0 } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
 
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
-          host.map.set(["count"], 1);
+          await host.mutate((draft) => draft.set(["count"], 1));
           sync.sync_all(1);
 
           const [, second] = sent as Array<Record<string, unknown>>;
@@ -103,7 +103,7 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "unsubscribe prevents later sync",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { count: 0 } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
@@ -111,7 +111,7 @@ export function livehost_sync_suite(): TestSuite {
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
           sync.unsubscribe("session-a", ["count"]);
-          host.map.set(["count"], 1);
+          await host.mutate((draft) => draft.set(["count"], 1));
           sync.sync_all(1);
 
           return {
@@ -136,7 +136,7 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "remove session prevents later sync",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { count: 0 } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
@@ -144,7 +144,7 @@ export function livehost_sync_suite(): TestSuite {
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
           sync.remove_session("session-a");
-          host.map.set(["count"], 1);
+          await host.mutate((draft) => draft.set(["count"], 1));
           sync.sync_all(1);
 
           return {
@@ -161,7 +161,7 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "subscribed path is copied before storage",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { ui: { selected: "home" }, other: "nope" } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
@@ -170,7 +170,7 @@ export function livehost_sync_suite(): TestSuite {
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", path, 0);
           path.splice(0, path.length, "other");
-          host.map.set(["ui", "selected"], "settings");
+          await host.mutate((draft) => draft.set(["ui", "selected"], "settings"));
           sync.sync_all(1);
 
           const [, second] = sent as Array<Record<string, unknown>>;
@@ -190,7 +190,7 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "sync all sends one message per subscribed path",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { user: { name: "Ada" }, count: 0 } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
@@ -198,8 +198,10 @@ export function livehost_sync_suite(): TestSuite {
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["user", "name"], 0);
           sync.subscribe("session-a", ["count"], 0);
-          host.map.set(["user", "name"], "Grace");
-          host.map.set(["count"], 1);
+          await host.mutate((draft) => draft.batch((tx) => {
+            tx.set(["user", "name"], "Grace");
+            tx.set(["count"], 1);
+          }));
           sync.sync_all(1);
 
           const [, , third, fourth] = sent as Array<Record<string, unknown>>;
@@ -239,7 +241,7 @@ export function livehost_sync_suite(): TestSuite {
         suite: SUITE,
         name: "resubscribe replaces existing path without duplicate syncs",
         input: {},
-        act: () => {
+        act: async () => {
           const host = create_livehost({ state: { count: 0 } });
           const sent: unknown[] = [];
           const sync = make_livehost_sync_manager(host.map);
@@ -247,7 +249,7 @@ export function livehost_sync_suite(): TestSuite {
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
           sync.subscribe("session-a", ["count"], 0);
-          host.map.set(["count"], 1);
+          await host.mutate((draft) => draft.set(["count"], 1));
           sync.sync_all(1);
 
           const [, , third, fourth] = sent as Array<Record<string, unknown> | undefined>;

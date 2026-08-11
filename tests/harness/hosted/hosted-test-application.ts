@@ -2,14 +2,17 @@
 import type {
   LiveHost,
   LiveHostActions,
+  LiveHostActionsForMap,
   LiveHostAuthorityAcquisition,
   LiveHostAuthorityEvictionResult,
   LiveHostAuthorityRegistry,
   LiveHostConnectionContext,
+  LiveHostForMap,
   LiveHostSchema,
   LiveHostSocketLike,
   LiveHostStore,
 } from "hson-live/types";
+import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TestExecutorDiscovery } from "../core/test-discovery";
 import { decode_test_executor_discovery_request } from "../core/test-discovery";
@@ -66,6 +69,8 @@ export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "./hos
 type HostedTestReportActions = Readonly<{
   "tests.inspect": HostedTestInspectRequest;
 }>;
+
+type HostedTestReportHost = LiveHostForMap<HostedTestReportMap, HostedTestReportActions>;
 
 export type HostedTestApplication = Readonly<{
   store: LiveHostStore;
@@ -154,11 +159,13 @@ function decode_inspect(value: unknown) {
 function report_options(
   configured: HostedTestReportOptions | undefined,
   runId: HostedTestRunId,
-  map: LiveHost<HostedTestReportState, HostedTestReportActions>["map"],
+  map: HostedTestReportHost["map"],
+  mutate: HostedTestReportHost["mutate"],
 ): HostedTestReportOptions {
   return {
     runId,
-    map: map.schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap,
+    map: map as unknown as HostedTestReportMap,
+    mutate: (operation) => mutate((draft) => operation(draft as unknown as HostedTestReportMap)),
     ...(configured?.caseBatchSize !== undefined ? { caseBatchSize: configured.caseBatchSize } : {}),
   };
 }
@@ -201,13 +208,13 @@ export function create_hosted_test_application(
     run: HostedTestSuiteRunner;
     testIds?: readonly string[];
   }>;
-  type ReportHost = LiveHost<HostedTestReportState, HostedTestReportActions>;
+  type ReportHost = HostedTestReportHost;
   type ReportBlueprint = Readonly<{ runId: HostedTestRunId; plan: RunPlan }>;
   const reportBlueprints = new Map<string, ReportBlueprint>();
 
   function create_report_host(reportHostId: string, blueprint: ReportBlueprint): ReportHost {
     const { runId, plan } = blueprint;
-    const reportActions: LiveHostActions<HostedTestReportActions, HostedTestReportState> = {
+    const reportActions: LiveHostActionsForMap<HostedTestReportActions, HostedTestReportMap> = {
       "tests.inspect": async (_reportContext, inspectRequest) => {
         if (inspectRequest.runId !== runId) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${inspectRequest.runId}" is not owned by this report host.`);
         if (retention.get(runId) === undefined) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${runId}" is no longer inspectable.`);
@@ -223,8 +230,11 @@ export function create_hosted_test_application(
     const reportSchema: LiveHostSchema<HostedTestReportState, HostedTestReportActions> = {
       actions: { "tests.inspect": { payload: decode_inspect } },
     };
-    return create_livehost<HostedTestReportState, HostedTestReportActions>({
-      state: make_initial_hosted_test_report(plan.target, runId) as HostedTestReportState,
+    const map = hson.liveMap.fromJson(
+      make_initial_hosted_test_report(plan.target, runId) as HostedTestReportState,
+    ).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
+    return create_livehost({
+      map,
       actions: reportActions,
       schema: reportSchema,
       logicalMapId: reportHostId,
@@ -267,7 +277,10 @@ export function create_hosted_test_application(
     let reportHost: ReportHost;
     if (reportRegistry === undefined) {
       reportHost = create_report_host(reportHostId, { runId, plan });
-      const stored = store.set(reportHostId, reportHost);
+      const stored = store.set(
+        reportHostId,
+        reportHost as unknown as LiveHost<HostedTestReportState, HostedTestReportActions>,
+      );
       if (!stored.ok) throw new Error(stored.error.message);
     } else {
       if (reportRegistry.has(reportHostId) || reportBlueprints.has(reportHostId)) {
@@ -285,7 +298,12 @@ export function create_hosted_test_application(
     try {
       reportHostIds.add(reportHostId);
       retention.retain(runId, plan.target);
-      const report = make_hosted_test_report(Date.now, undefined, plan.target, report_options(options.report, runId, reportHost.map));
+      const report = make_hosted_test_report(
+        Date.now,
+        undefined,
+        plan.target,
+        report_options(options.report, runId, reportHost.map, reportHost.mutate),
+      );
 
       const association: HostedTestRunAssociation = {
         clientId,
@@ -363,13 +381,13 @@ export function create_hosted_test_application(
       const requestId = message.requestId;
       const retainAssociation = (association: HostedTestRunAssociation): void => {
         if (context.map.capture().value.requests[clientId] === undefined) {
-          context.map.setMany(["requests"], { [clientId]: { [requestId]: association } });
+          void context.mutate((draft) => draft.setMany(["requests"], { [clientId]: { [requestId]: association } }));
         } else {
-          context.map.setMany(["requests", clientId], { [requestId]: association });
+          void context.mutate((draft) => draft.setMany(["requests", clientId], { [requestId]: association }));
         }
       };
       const replaceAssociation = (association: HostedTestRunAssociation): void => {
-        context.map.replace(["requests", clientId, requestId], association);
+        void context.mutate((draft) => draft.replace(["requests", clientId, requestId], association));
       };
       const result = await execute_run(
         { target: descriptor.id, run: descriptor.run },
@@ -390,13 +408,13 @@ export function create_hosted_test_application(
       const requestId = message.requestId;
       const retainAssociation = (association: HostedTestRunAssociation): void => {
         if (context.map.capture().value.requests[clientId] === undefined) {
-          context.map.setMany(["requests"], { [clientId]: { [requestId]: association } });
+          void context.mutate((draft) => draft.setMany(["requests"], { [clientId]: { [requestId]: association } }));
         } else {
-          context.map.setMany(["requests", clientId], { [requestId]: association });
+          void context.mutate((draft) => draft.setMany(["requests", clientId], { [requestId]: association }));
         }
       };
       const replaceAssociation = (association: HostedTestRunAssociation): void => {
-        context.map.replace(["requests", clientId, requestId], association);
+        void context.mutate((draft) => draft.replace(["requests", clientId, requestId], association));
       };
       const result = await execute_run(
         {

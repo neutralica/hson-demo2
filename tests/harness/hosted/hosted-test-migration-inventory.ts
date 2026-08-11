@@ -61,7 +61,6 @@ const NODE_HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.free
   hosted("livehost/sync", 9, "all_node_safe_hosted_test_suites"),
   hosted("livehost/client", 28, "all_node_safe_hosted_test_suites"),
   hosted("livehost/pair", 17, "all_node_safe_hosted_test_suites"),
-  hosted("livehost/resume", 10, "all_node_safe_hosted_test_suites"),
   hosted("livehost/store", 12, "all_node_safe_hosted_test_suites"),
   hosted("livehost/api", 17, "all_node_safe_hosted_test_suites"),
   hosted("unit/css", 25, "all_node_safe_hosted_test_suites"),

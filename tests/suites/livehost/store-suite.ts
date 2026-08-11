@@ -219,7 +219,7 @@ export function livehost_store_suite(): TestSuite {
           store.create("counter", { state: { count: 2 } });
           const result = store.connect("counter", socket);
 
-          socket.receive({ type: "hello", clientId: "client-a", lastSeq: 0 });
+          socket.receive({ type: "hello", clientId: "client-a" });
 
           const [hello] = socket.sent() as Array<Record<string, unknown>>;
 
@@ -251,13 +251,13 @@ export function livehost_store_suite(): TestSuite {
             actions: {
               increment: (ctx) => {
                 const count = ctx.map.at(["count"]).snap() as number;
-                ctx.map.at(["count"]).set(count + 1);
+                void ctx.mutate((draft) => draft.at(["count"]).set(count + 1));
               },
             },
           });
           const connected = store.connect("counter", socket);
 
-          socket.receive({ type: "hello", clientId: "client-a", lastSeq: 0 });
+          socket.receive({ type: "hello", clientId: "client-a" });
           socket.receive({ type: "action", id: "action-a", name: "increment" });
 
           const messages = socket.sent() as Array<Record<string, unknown>>;

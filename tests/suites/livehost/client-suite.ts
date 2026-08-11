@@ -125,14 +125,14 @@ export function livehost_client_suite(): TestSuite {
           return {
             type: message?.type,
             clientId: message?.clientId,
-            lastSeq: message?.lastSeq,
+            hasLastSeq: Object.hasOwn(message ?? {}, "lastSeq"),
             listenerCount: socket.listener_count(),
           };
         },
         expected: {
           type: "hello",
           clientId: "client-a",
-          lastSeq: 0,
+          hasLastSeq: false,
           listenerCount: 2,
         },
       }),
@@ -433,13 +433,13 @@ export function livehost_client_suite(): TestSuite {
         expected: {
           sentCount: 1,
           listenerCount: 2,
-          first: { type: "hello", clientId: "client-a", lastSeq: 0 },
+          first: { type: "hello", clientId: "client-a" },
           second: undefined,
         },
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "reconnect sends last known seq",
+        name: "reconnect sends fresh hello without historical cursor",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -464,7 +464,7 @@ export function livehost_client_suite(): TestSuite {
             sentCount: socket.sent().length,
             secondType: secondHello?.type,
             secondClientId: secondHello?.clientId,
-            secondLastSeq: secondHello?.lastSeq,
+            secondHasLastSeq: Object.hasOwn(secondHello ?? {}, "lastSeq"),
             listenerCount: socket.listener_count(),
           };
         },
@@ -473,7 +473,7 @@ export function livehost_client_suite(): TestSuite {
           sentCount: 2,
           secondType: "hello",
           secondClientId: "client-a",
-          secondLastSeq: 5,
+          secondHasLastSeq: false,
           listenerCount: 2,
         },
       }),

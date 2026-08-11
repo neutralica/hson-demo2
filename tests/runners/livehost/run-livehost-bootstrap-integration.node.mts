@@ -23,7 +23,6 @@ const authorities = new Map([
     state: { value: 1 },
     logicalMapId: "demo-bootstrap-map",
     incarnationId: "demo-bootstrap-incarnation",
-    authority: "shared",
   })],
 ]);
 const resolvedByHttp: object[] = [];
@@ -125,7 +124,7 @@ try {
 
   const authority = authorities.get(selector);
   assert.ok(authority);
-  authority.map.set(["value"], 2);
+  await authority.mutate((draft) => draft.set(["value"], 2));
 
   const websocket = new WebSocket(new URL(bootstrap.continuation.endpoint, host.url), {
     headers: {
@@ -144,7 +143,7 @@ try {
   const recovered = await mirror.connect_and_recover();
   assert.equal(recovered.strategy, "replay");
 
-  authority.map.set(["value"], 3);
+  await authority.mutate((draft) => draft.set(["value"], 3));
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.deepEqual(mirror.map.capture(), authority.map.capture());
   assert.equal(resolvedByHttp.length, 1);

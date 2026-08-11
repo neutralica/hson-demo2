@@ -211,7 +211,7 @@ export function livehost_core_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -243,7 +243,7 @@ export function livehost_core_suite(): TestSuite {
             actions: {
               mark_done: async (ctx) => {
                 await Promise.resolve();
-                ctx.map.set(["status"], "done");
+                await ctx.mutate((draft) => draft.set(["status"], "done"));
               },
             },
           });
@@ -431,7 +431,7 @@ export function livehost_core_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -480,7 +480,7 @@ export function livehost_core_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -536,7 +536,7 @@ export function livehost_core_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -586,7 +586,7 @@ export function livehost_core_suite(): TestSuite {
               rename_user: (ctx, payload) => {
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const name = (payload as { name?: unknown }).name;
-                if (typeof name === "string") ctx.map.set(["user", "name"], name);
+                if (typeof name === "string") void ctx.mutate((draft) => draft.set(["user", "name"], name));
               },
             },
           });
@@ -769,7 +769,7 @@ export function livehost_core_suite(): TestSuite {
                 calls += 1;
                 if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
                 const value = (payload as { value?: unknown }).value;
-                if (typeof value === "string") ctx.map.set(["value"], value);
+                if (typeof value === "string") void ctx.mutate((draft) => draft.set(["value"], value));
               },
             },
           });
