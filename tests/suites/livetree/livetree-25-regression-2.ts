@@ -10,10 +10,6 @@ import type { TestSuite } from "../../harness/core/test-contracts.js";
 
 type IdentitySnapshot = Readonly<Record<string, string>>;
 
-function freshPersistedQuidFixture(): string {
-  return crypto.randomUUID().replaceAll("-", "").slice(0, 9);
-}
-
 function identitySnapshot(tree: LiveTree, ids: readonly string[]): IdentitySnapshot {
   const snapshot: Record<string, string> = {};
 
@@ -176,8 +172,8 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const sectionQuid = freshPersistedQuidFixture();
-        const childQuid = freshPersistedQuidFixture();
+        const sectionQuid = "000000011";
+        const childQuid = "000000012";
         const imported = hsonLiveTree.fromTrustedHtml(`
           <section id="persisted" hson:quid="${sectionQuid}">
             <span id="persisted-child" hson:quid="${childQuid}">child</span>
@@ -262,7 +258,7 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const duplicateQuid = freshPersistedQuidFixture();
+        const duplicateQuid = "000000031";
         const first = hsonLiveTree.fromTrustedHtml(
           `<section id="owner" hson:quid="${duplicateQuid}"></section>`,
         );
@@ -424,8 +420,8 @@ export function livetree_regression_2(): TestSuite {
       html: `<main id="root"></main>`,
 
       act(tree) {
-        const rootQuid = freshPersistedQuidFixture();
-        const childQuid = freshPersistedQuidFixture();
+        const rootQuid = "000000001";
+        const childQuid = "000000002";
         const markup = `
           <section id="owner" hson:quid="${rootQuid}">
             <span id="owner-child" hson:quid="${childQuid}">child</span>
