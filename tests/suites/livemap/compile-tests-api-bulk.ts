@@ -153,8 +153,8 @@ type ApiTypedArrayItemLabelSnap = ReturnType<typeof API_TYPED_ARRAY_ITEM_LABEL_H
 
 
 type _ApiTypedArrayItemsSnap = TypeExpect<TypeExtends<ApiTypedArrayItemsSnap, readonly { id: string; count: number; label?: string; }[]>>;
-type _ApiTypedArrayItemSnap = TypeExpect<TypeExtends<ApiTypedArrayItemSnap, { id: string; count: number; label?: string; }>>;
-type _ApiTypedArrayItemIdSnap = TypeExpect<TypeExtends<ApiTypedArrayItemIdSnap, string>>;
+type _ApiTypedArrayItemSnap = TypeExpect<TypeExtends<ApiTypedArrayItemSnap, { id: string; count: number; label?: string; } | undefined>>;
+type _ApiTypedArrayItemIdSnap = TypeExpect<TypeExtends<ApiTypedArrayItemIdSnap, string | undefined>>;
 type _ApiTypedArrayItemLabelSnap = TypeExpect<TypeExtends<ApiTypedArrayItemLabelSnap, string | undefined>>;
 
 // --- Array read API inference ---
@@ -276,8 +276,8 @@ type ApiTypedArrayProxyItemObjectId = typeof API_TYPED_ARRAY_PROXY_ITEM_OBJECT_I
 type ApiTypedArrayProxyItemObjectLabel = typeof API_TYPED_ARRAY_PROXY_ITEM_OBJECT_LABEL;
 type _ApiTypedArrayProxyItemsSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemsSnap, readonly { id: string; count: number; label?: string; }[]>>;
 type _ApiTypedArrayProxyItemsArray = TypeExpect<TypeExtends<ApiTypedArrayProxyItemsArray, readonly { id: string; count: number; label?: string; }[]>>;
-type _ApiTypedArrayProxyItemSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemSnap, { id: string; count: number; label?: string; }>>;
-type _ApiTypedArrayProxyItemIdSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemIdSnap, string>>;
+type _ApiTypedArrayProxyItemSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemSnap, { id: string; count: number; label?: string; } | undefined>>;
+type _ApiTypedArrayProxyItemIdSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemIdSnap, string | undefined>>;
 type _ApiTypedArrayProxyItemLabelSnap = TypeExpect<TypeExtends<ApiTypedArrayProxyItemLabelSnap, string | undefined>>;
 type _ApiTypedArrayProxyItemObject = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObject, { id: string; count: number; label?: string; }>>;
 type _ApiTypedArrayProxyItemObjectId = TypeExpect<TypeExtends<ApiTypedArrayProxyItemObjectId, string>>;
@@ -304,7 +304,7 @@ API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "id"], "z");
 API_TYPED_ARRAY_MAP_SAMPLE.set(["items", 0, "count"], 3);
 API_TYPED_ARRAY_ITEMS_HANDLE.set([{ id: "a", count: 1 }, { id: "b", count: 2, label: "B" }]);
 API_TYPED_ARRAY_ITEM_HANDLE.set({ id: "z", count: 3 });
-API_TYPED_ARRAY_ITEM_HANDLE.update((value) => ({ ...value, count: value.count + 1 }));
+API_TYPED_ARRAY_ITEM_HANDLE.update((value) => ({ ...value, count: value!.count + 1 }));
 API_TYPED_ARRAY_PROXY.items[0]!.$_.set({ id: "z", count: 3 });
 API_TYPED_ARRAY_PROXY.items[0]!.id.$_.set("z");
 API_TYPED_ARRAY_PROXY.items[0]!.count.$_.set(3);
