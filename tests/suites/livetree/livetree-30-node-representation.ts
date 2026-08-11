@@ -244,7 +244,7 @@ function invariants_case(suite: string): LiveTreeCaseSpec {
           label: "legacy QUID metadata key",
           node: {
             $_tag: "div",
-            $_meta: { "data-_quid": "0000000000000001" },
+            $_meta: { "data-_quid": "000000001" },
           } as unknown as HsonNode,
         },
         {
@@ -332,13 +332,13 @@ function parser_paths_case(suite: string): LiveTreeCaseSpec {
     act() {
       const jsonNode = hson.fromJson({ plain: "x", items: [1, 2] }).toNode();
       const htmlNode = hson.fromTrustedHtml(
-        `<section hson:quid="0000000000000001" data-_quid="user-quid" data-_index="user-index">x</section>`,
+        `<section hson:quid="000000001" data-_quid="user-quid" data-_index="user-index">x</section>`,
       ).toNode();
       const arrayNode = hson.fromTrustedHtml(
         `<_hson_arr><_hson_ii hson:index="0"><_hson_obj/></_hson_ii></_hson_arr>`,
       ).toNode();
       const svgNode = hson.fromTrustedHtml(
-        `<svg xmlns="http://www.w3.org/2000/svg" xmlns:hson="urn:hson-live" hson:quid="0000000000000002"><g></g></svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" xmlns:hson="urn:hson-live" hson:quid="000000002"><g></g></svg>`,
       ).toNode();
       const nodes = [jsonNode, htmlNode, arrayNode, svgNode]
         .flatMap((node) => _collect_subtree_nodes(node, "pre"));
@@ -354,15 +354,15 @@ function parser_paths_case(suite: string): LiveTreeCaseSpec {
       } catch {
         unknownMetadataRejected = true;
       }
-      boundaries = section?.$_meta?.quid === "0000000000000001"
+      boundaries = section?.$_meta?.quid === "000000001"
         && section.$_attrs?.["data-_quid"] === "user-quid"
         && section.$_attrs?.["data-_index"] === "user-index"
         && indexedItem?.$_meta?.index === "0"
-        && svg?.$_meta?.quid === "0000000000000002"
+        && svg?.$_meta?.quid === "000000002"
         && serializedHtml.includes(`data-_index="user-index"`)
         && serializedHtml.includes(`data-_quid="user-quid"`)
-        && serializedHtml.includes(`hson:quid="0000000000000001"`)
-        && serializedSvg.includes(`hson:quid="0000000000000002"`)
+        && serializedHtml.includes(`hson:quid="000000001"`)
+        && serializedSvg.includes(`hson:quid="000000002"`)
         && unknownMetadataRejected;
     },
     assert(_tree, t) {

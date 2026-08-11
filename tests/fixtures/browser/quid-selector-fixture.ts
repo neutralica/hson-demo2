@@ -18,7 +18,7 @@ function rule_is_present(quid: string): boolean {
   const selector = hson_quid_selector(quid);
   const style = document.querySelector("#css-manager #_hson") as HTMLStyleElement | null;
   const sheet = style?.sheet as CSSStyleSheet | null;
-  return sheet === null
+  return sheet == null
     ? false
     : Array.from(sheet.cssRules).some((rule) => "selectorText" in rule && rule.selectorText === selector);
 }

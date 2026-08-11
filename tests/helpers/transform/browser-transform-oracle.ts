@@ -17,7 +17,7 @@ export function run_browser_transform_oracle_probe(): Readonly<{
     launcher: "browser.transform-oracle",
     caseId: "browser-strict-closure",
     ingress: "hson-source",
-    source: `<browser @0000000000000001 "ready"/>`,
+    source: `<browser @000000001 "ready"/>`,
     cycles: 3,
   });
   const rejection = assertCanonicalRejection({

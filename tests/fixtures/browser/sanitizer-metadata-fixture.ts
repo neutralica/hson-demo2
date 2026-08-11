@@ -47,7 +47,7 @@ export function run_sanitizer_metadata_fixture() {
   try {
     const result = {
       validQuidAndUnsafeHandler: compare(
-        `<main><span hson:quid="0000000000000001" data-_quid="application" onclick="run()">ready</span></main>`,
+        `<main><span hson:quid="000000001" data-_quid="application" onclick="run()">ready</span></main>`,
       ),
       malformedQuid: compare(`<main hson:quid="bad"/>`),
       unknownMetadata: compare(`<main hson:unknown="value"/>`),
@@ -59,16 +59,16 @@ export function run_sanitizer_metadata_fixture() {
       ),
       misplacedIndex: compare(`<main hson:index="0"/>`),
       duplicateQuid: compare(
-        `<main hson:quid="0000000000000001" hson:quid="0000000000000002"/>`,
+        `<main hson:quid="000000001" hson:quid="000000002"/>`,
       ),
       caseEquivalentDuplicateQuid: compare(
-        `<main HSON:QUID="0000000000000001" hson:quid="0000000000000002"/>`,
+        `<main HSON:QUID="000000001" hson:quid="000000002"/>`,
       ),
       duplicateIndex: compare(
         `<_hson_arr><_hson_ii hson:index="0" hson:index="1"/></_hson_arr>`,
       ),
       metadataPrivateName: compare(
-        `<main _hson_meta_attr_v2_71756964="0000000000000001"/>`,
+        `<main _hson_meta_attr_v2_71756964="000000001"/>`,
       ),
       ordinaryPrivateName: compare(
         `<main _hson_attr_transit_v1_613a62="value"/>`,

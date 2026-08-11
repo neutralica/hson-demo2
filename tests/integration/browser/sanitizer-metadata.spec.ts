@@ -42,7 +42,7 @@ test("production browser and Worker sanitizers share HSON metadata admission", a
   await expect(fixture).toHaveAttribute("data-fixture-state", "complete");
 
   const valid = expect_equal_success(results.validQuidAndUnsafeHandler);
-  expect(JSON.stringify(valid)).toContain('"quid":"0000000000000001"');
+  expect(JSON.stringify(valid)).toContain('"quid":"000000001"');
   expect(JSON.stringify(valid)).toContain('"data-_quid":"application"');
   expect(JSON.stringify(valid)).not.toContain("onclick");
 

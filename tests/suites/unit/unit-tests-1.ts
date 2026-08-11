@@ -261,7 +261,7 @@ export function unit_test_internals(): TestSuite {
       suite: SUITE,
       name: "selectorForQuid: basic mapping",
       run() {
-        const quid = "0123456789abcdfg";
+        const quid = "789abcdfg";
         const out = hson_quid_selector(quid);
 
         if (!out.includes(`"${quid}"`)) {
@@ -548,9 +548,9 @@ export function unit_test_internals_2(): TestSuite {
     // ----------------------------
 
     make_unit_case(SUITE, "selector_for_quid: basic mapping", () => {
-      const out = hson_quid_selector("0123456789abcdfg");
+      const out = hson_quid_selector("789abcdfg");
 
-      if (out !== `[hson\\:quid="0123456789abcdfg"]`) {
+      if (out !== `[hson\\:quid="789abcdfg"]`) {
         throw new Error(`expected canonical escaped QUID selector, got ${out}`);
       }
     }),
@@ -585,7 +585,7 @@ export function unit_test_css_manager(): TestSuite {
   const cases: readonly TestCase[] = [
     make_unit_case(SUITE, "setForQuid stores a value", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000001";
+      const quid = "000000001";
 
       cleanup_quid(m, quid);
 
@@ -602,7 +602,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "setForQuid overwrites existing value", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000002";
+      const quid = "000000002";
 
       cleanup_quid(m, quid);
 
@@ -620,7 +620,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "setManyForQuid merges multiple values", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000003";
+      const quid = "000000003";
 
       cleanup_quid(m, quid);
 
@@ -650,7 +650,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "unsetForQuid removes one property", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000004";
+      const quid = "000000004";
 
       cleanup_quid(m, quid);
 
@@ -679,7 +679,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "clearQuid removes all properties for a quid", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000005";
+      const quid = "000000005";
 
       cleanup_quid(m, quid);
 
@@ -701,7 +701,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "snapshot includes emitted rule for quid styles", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000006";
+      const quid = "000000006";
 
       cleanup_quid(m, quid);
 
@@ -728,7 +728,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "setting same prop twice does not duplicate storage", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000007";
+      const quid = "000000007";
 
       cleanup_quid(m, quid);
 
@@ -758,7 +758,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "selector rule stores pseudo rule under explicit rule key", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000008";
+      const quid = "000000008";
       const key = `unit:${quid}:before`;
 
       cleanup_quid(m, quid);
@@ -789,7 +789,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "selector rule drop removes only one pseudo selector", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000009";
+      const quid = "000000009";
       const beforeKey = `unit:${quid}:before`;
       const afterKey = `unit:${quid}:after`;
 
@@ -827,7 +827,7 @@ export function unit_test_css_manager(): TestSuite {
 
     make_unit_case(SUITE, "selector rule drops remove all pseudo selectors for one quid", () => {
       const m = CssManager.invoke();
-      const quid = "0000000000000010";
+      const quid = "000000010";
       const beforeKey = `unit:${quid}:before`;
       const afterKey = `unit:${quid}:after`;
 

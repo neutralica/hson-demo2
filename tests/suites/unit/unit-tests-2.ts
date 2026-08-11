@@ -80,8 +80,8 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "pseudo rules scoped to correct quid only", () => {
             const m = CssManager.invoke();
-            const q1 = "1000000000000001";
-            const q2 = "1000000000000002";
+            const q1 = "000000001";
+            const q2 = "000000002";
 
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
@@ -110,7 +110,7 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "no empty rule blocks emitted", () => {
             const m = CssManager.invoke();
-            const quid = "1000000000000003";
+            const quid = "000000003";
 
             cleanup_quid(m, quid);
 
@@ -130,8 +130,8 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "multiple quids do not interfere", () => {
             const m = CssManager.invoke();
-            const q1 = "1000000000000004";
-            const q2 = "1000000000000005";
+            const q1 = "000000004";
+            const q2 = "000000005";
 
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
@@ -151,7 +151,7 @@ export function unit_test_more_css(): TestSuite {
         }),
         make_unit_case(SUITE, "operation ordering produces correct final state", () => {
             const m = CssManager.invoke();
-            const quid = "1000000000000006";
+            const quid = "000000006";
 
             cleanup_quid(m, quid);
 
@@ -561,7 +561,7 @@ export function unit_css_pseudo_unification(): TestSuite {
 
             make_unit_case(SUITE, "selector rule drop is idempotent", () => {
                 const m = CssManager.invoke();
-                const quid = "1000000000000007";
+                const quid = "000000007";
                 const key = `unit:${quid}:before`;
 
                 cleanup_quid(m, quid);

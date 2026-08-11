@@ -45,8 +45,8 @@ test("canonical QUID selectors schedule, apply, update, isolate, and clean up in
 
   const htmlQuid = await htmlTarget.getAttribute("hson:quid");
   const svgQuid = await svgTarget.getAttribute("hson:quid");
-  expect(htmlQuid).toMatch(/^[0-9abcdefghjkmnpqrstvwxyz]{16}$/);
-  expect(svgQuid).toMatch(/^[0-9abcdefghjkmnpqrstvwxyz]{16}$/);
+  expect(htmlQuid).toMatch(/^[0-9abcdefghjkmnpqrstvwxyz]{9}$/);
+  expect(svgQuid).toMatch(/^[0-9abcdefghjkmnpqrstvwxyz]{9}$/);
   await expect(htmlTarget).toHaveCSS("opacity", "0.25");
   await expect(htmlSibling).toHaveCSS("opacity", "0.9");
   await expect(svgTarget).toHaveCSS("opacity", "0.4");
