@@ -2,7 +2,7 @@
 
 import type { LiveTree } from "hson-live/livetree";
 import type { CssMap, KeyframesInput, AnimSpec } from "hson-live/types";
-import type { PropertyRegistration } from "../../../../../hson-live/dist/types/at-property.types";
+import type { PropertyRegistration } from "hson-live/livetree";
 
 export type BudList = Record<string, BudSpec>;
 

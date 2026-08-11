@@ -1,6 +1,6 @@
 //css.consts.ts
 
-import type { CssMap } from "../../../../../hson-live/dist/types/css.types";
+import type { CssMap } from "hson-live/types";
 import { SYS_MONOfont, _fontSize } from "../../core/consts/ui-consts";
 import { _colors } from "../../core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "../../core/consts/oklch.consts";

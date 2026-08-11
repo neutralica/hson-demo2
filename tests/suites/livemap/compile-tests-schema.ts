@@ -59,7 +59,7 @@ type ExpectedSchemaTypeInferenceSample = {
     status: "draft" | "published" | null;
     tags: readonly string[];
     coords: readonly [number, number];
-    range: readonly [number, number | undefined];
+    range: readonly [number, number?];
     settings: Readonly<Record<string, string | number>>;
     patch: Partial<{
       displayName: string;

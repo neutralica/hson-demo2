@@ -1,4 +1,4 @@
-import type { PropertyRegistration } from "../../../../../hson-live/dist/types/at-property.types";
+import type { PropertyRegistration } from "hson-live/livetree";
 import { _colors } from "../../core/consts/colors.consts";
 
 export const CLOUD_TILE_W = 400;
