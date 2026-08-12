@@ -1,5 +1,4 @@
 import { hson } from "hson-live";
-import { LIVEMAP_SCHEMA, make_livemap_schema } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, own_value_row, same_value_row } from "./assert-helpers";
@@ -22,16 +21,18 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
         return { assertRows: [equal_row("direct", schema.validateRoot({ value: 2 }).ok, true), equal_row("attached", map.set(["value"], 2).changed, true)] };
       }),
       test("schema literals distinguish negative zero", () => {
-        const schema = make_livemap_schema(LIVEMAP_SCHEMA.literal(-0));
+        const schema = hson.liveMap.schema.define((s) => s.literal(-0));
         return { assertRows: [equal_row("negative", schema.validateRoot(-0).ok, true), equal_row("positive", schema.validateRoot(0).ok, false)] };
       }),
       test("exact schemas treat dangerous names as own keys", () => {
-        const shape = own_record([["__proto__", LIVEMAP_SCHEMA.number as unknown as JsonValue], ["constructor", LIVEMAP_SCHEMA.number as unknown as JsonValue], ["prototype", LIVEMAP_SCHEMA.number as unknown as JsonValue]]);
-        const schema = make_livemap_schema(LIVEMAP_SCHEMA.exact(shape as never)); const value = own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]);
+        const schema = hson.liveMap.schema.define((s) => {
+          const shape = own_record([["__proto__", s.number as unknown as JsonValue], ["constructor", s.number as unknown as JsonValue], ["prototype", s.number as unknown as JsonValue]]);
+          return s.exact(shape as never);
+        }); const value = own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]);
         return { assertRows: [equal_row("accepted", schema.validateRoot(value).ok, true)] };
       }),
       test("schema literals retain ordered object entries", () => {
-        const schema = make_livemap_schema(LIVEMAP_SCHEMA.literal({ b: 2, a: 1 }));
+        const schema = hson.liveMap.schema.define((s) => s.literal({ b: 2, a: 1 }));
         return { assertRows: [equal_row("same order", schema.validateRoot({ b: 2, a: 1 }).ok, true), equal_row("different order", schema.validateRoot({ a: 1, b: 2 }).ok, false)] };
       }),
       test("direct and attached schemas admit nested arrays and objects", () => {
@@ -47,7 +48,7 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
         return { assertRows: [equal_row("stored left", map.snap(["value", "left", "value"]), 1), equal_row("stored right", map.snap(["value", "right", "value"]), 1)] };
       }),
       test("schema admission accepts frozen objects and sealed dense arrays", () => {
-        const value = Object.freeze({ items: Object.seal([1, 2]) }); const schema = make_livemap_schema(LIVEMAP_SCHEMA.unknown);
+        const value = Object.freeze({ items: Object.seal([1, 2]) }); const schema = hson.liveMap.schema.define((s) => s.unknown);
         return { assertRows: [equal_row("accepted", schema.validateRoot(value).ok, true)] };
       }),
       test("optional means missing while present undefined remains invalid", () => {
@@ -55,7 +56,7 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
         return { assertRows: [equal_row("missing", schema.validateRoot({}).ok, true), equal_row("undefined", schema.validateRoot(present).ok, false)] };
       }),
       test("custom refinements receive fresh detached values", () => {
-        const seen: object[] = []; const rule = LIVEMAP_SCHEMA.refine(LIVEMAP_SCHEMA.unknown, "detached", (value) => { seen.push(value as object); (value as Record<string, JsonValue>).a = 9; return true; }); const schema = make_livemap_schema(rule);
+        const seen: object[] = []; const schema = hson.liveMap.schema.define((s) => s.refine(s.unknown, "detached", (value) => { seen.push(value as object); (value as Record<string, JsonValue>).a = 9; return true; }));
         schema.validateRoot({ a: 1 }); schema.validateRoot({ a: 1 });
         return { assertRows: [equal_row("fresh", Object.is(seen[0], seen[1]), false), equal_row("source retained", (seen[1] as Record<string, JsonValue>).a, 9)] };
       }),

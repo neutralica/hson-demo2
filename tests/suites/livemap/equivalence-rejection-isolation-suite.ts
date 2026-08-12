@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import { LIVEMAP_SCHEMA, link_livemap, make_livemap_schema } from "hson-live/livemap";
+import { link_livemap } from "hson-live/livemap";
 import type { JsonValue, LiveMap } from "hson-live/types";
 import type { TestAssertRow, TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row } from "./assert-helpers";
@@ -47,7 +47,7 @@ function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[
   return [
     equal_row("Transform rejected", rejects(() => hson.fromJson(witness as JsonValue)), true),
     equal_row("LiveMap construction rejected", rejects(() => hson.liveMap.fromJson(witness as JsonValue)), true),
-    equal_row("schema rejected", make_livemap_schema(LIVEMAP_SCHEMA.unknown).validateRoot(witness as JsonValue).ok, false),
+    equal_row("schema rejected", hson.liveMap.schema.define((s) => s.unknown).validateRoot(witness as JsonValue).ok, false),
     equal_row("mutation rejected", mutationRejected, true),
     equal_row("source capture", source.capture(), sourceBefore),
     equal_row("target capture", target.capture(), targetBefore),

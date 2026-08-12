@@ -57,9 +57,9 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap schema.make accepts token root",
+        name: "api liveMap schema.define accepts token root",
         input: {},
-        act: () => hson.liveMap.schema.make(hson.liveMap.schema.string.array).validateRoot(["a", "b"]),
+        act: () => hson.liveMap.schema.define((s) => s.string.array).validateRoot(["a", "b"]),
         expected: { ok: true, issues: [] },
       }),
       read_case({
@@ -320,18 +320,18 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap schema.make accepts object shape root",
+        name: "api liveMap schema.define accepts object shape root",
         input: {},
-        act: () => hson.liveMap.schema.make({
+        act: () => hson.liveMap.schema.define((s) => ({
           user: {
-            name: hson.liveMap.schema.string,
+            name: s.string,
           },
-        }).validateRoot({ user: { name: "Ada" } }),
+        })).validateRoot({ user: { name: "Ada" } }),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "api map withSchema remains schema.use alias",
+        name: "api map schema.use returns its map",
         input: {},
         act: () => {
           const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
@@ -340,7 +340,7 @@ export function livemap_suites_api(): TestSuite {
               name: s.string,
             },
           }));
-          const returned = map.withSchema(schema);
+          const returned = map.schema.use(schema);
 
           return {
             returned: (returned as unknown) === map,

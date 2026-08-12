@@ -1,6 +1,7 @@
 // replay-suite.ts
 
-import { define_livemap_schema, make_livemap_core } from "hson-live/livemap";
+import { hson } from "hson-live";
+import { make_livemap_core } from "hson-live/livemap";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "./handle-helpers";
 import { json_root_node } from "./json-root-node";
@@ -790,7 +791,7 @@ export function livemap_suite_replay(): TestSuite {
         name: "schema rejected replay is atomic and does not consume rev",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -809,7 +810,7 @@ export function livemap_suite_replay(): TestSuite {
               name: "Ada",
               age: 37,
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           const sourceCommit = source.batch((tx) => {
             tx.set(["user", "name"], "Grace");

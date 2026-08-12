@@ -1,4 +1,5 @@
-import { make_livemap_core, define_livemap_schema } from "hson-live/livemap";
+import { hson } from "hson-live";
+import { make_livemap_core } from "hson-live/livemap";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { json_root_node } from "./core-helpers";
 import { read_case } from "./handle-helpers";
@@ -231,13 +232,13 @@ export function livemap_suite_rev(): TestSuite {
         name: "schema rejected write does not consume rev",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             count: s.number,
           }));
 
           const map = make_livemap_core(json_root_node({
             count: 0,
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           const first = map.set(["count"], 1);
 
@@ -288,7 +289,7 @@ export function livemap_suite_rev(): TestSuite {
         name: "schema rejected batch does not consume rev",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -300,7 +301,7 @@ export function livemap_suite_rev(): TestSuite {
               name: "Ada",
               age: 37,
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           const first = map.set(["user", "age"], 38);
 
@@ -753,7 +754,7 @@ export function livemap_suite_rev(): TestSuite {
         name: "schema rejected apply does not consume rev",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -765,7 +766,7 @@ export function livemap_suite_rev(): TestSuite {
               name: "Ada",
               age: 37,
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           const first = map.set(["user", "age"], 38);
 
@@ -1270,7 +1271,7 @@ export function livemap_suite_rev(): TestSuite {
         name: "schema rejected replay is atomic and does not consume rev",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -1289,7 +1290,7 @@ export function livemap_suite_rev(): TestSuite {
               name: "Ada",
               age: 37,
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           const sourceCommit = source.batch((tx) => {
             tx.set(["user", "name"], "Grace");

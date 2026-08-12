@@ -1,4 +1,5 @@
-import { define_livemap_schema, LiveMapSchemaError, make_livemap_core } from "hson-live/livemap";
+import { hson } from "hson-live";
+import { LiveMapSchemaError, make_livemap_core } from "hson-live/livemap";
 import { read_case } from "./handle-helpers";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { json_root_node } from "./core-helpers";
@@ -40,7 +41,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports type mismatch",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -70,7 +71,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports missing required value",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -102,7 +103,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports unknown path",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -130,7 +131,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports unknown exact object key",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: s.exact({
               name: s.string,
             }),
@@ -163,7 +164,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports invalid literal",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             status: s.literal("ready"),
           }));
 
@@ -191,7 +192,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports invalid refinement",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             count: s.refine(
               s.number,
               "positive number",
@@ -223,7 +224,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema issue reports tuple index out of range",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             point: s.tuple(
               s.string,
               s.number,
@@ -258,7 +259,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema validation aggregates structured issues",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -313,7 +314,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema successful validation returns no issues",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -342,7 +343,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema rejected write throws structured schema error",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -352,7 +353,7 @@ export function livemap_error_handling(): TestSuite {
             user: {
               name: "Ada",
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           try {
             map.set(["user", "name"], 42 as unknown as string);
@@ -417,7 +418,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema rejected write leaves map unchanged",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -427,7 +428,7 @@ export function livemap_error_handling(): TestSuite {
             user: {
               name: "Ada",
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           const before = map.snap();
 
@@ -463,7 +464,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema rejected constructive set uses first issue headline path",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -475,7 +476,7 @@ export function livemap_error_handling(): TestSuite {
               name: "Ada",
               age: 37,
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           try {
             map.set(["user"], {
@@ -529,7 +530,7 @@ export function livemap_error_handling(): TestSuite {
         name: "invalid schema attachment throws structured schema error",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -542,7 +543,7 @@ export function livemap_error_handling(): TestSuite {
           }));
 
           try {
-            map.withSchema(schema);
+            map.schema.use(schema);
 
             return {
               threw: false,
@@ -582,7 +583,7 @@ export function livemap_error_handling(): TestSuite {
         name: "schema error retains immutable issue collection",
         input: {},
         act: () => {
-          const schema = define_livemap_schema((s) => ({
+          const schema = hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -592,7 +593,7 @@ export function livemap_error_handling(): TestSuite {
             user: {
               name: "Ada",
             },
-          })).withSchema(schema);
+          })).schema.use(schema);
 
           try {
             map.set(["user", "name"], 42 as unknown as string);

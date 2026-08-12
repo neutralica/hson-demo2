@@ -8,18 +8,21 @@
  * are still rejected by the type surface.
  */
 
-import { type InferLiveMapSchemaToken, type InferLiveMapSchema, type LiveMapSchemaValue, hsonLiveMap } from "hson-live/livemap";
+import { type InferLiveMapSchema, type LiveMapSchemaValue, hsonLiveMap } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { TypeExpect, TypeExtends } from "./api-suite";
 
-// --- Schema token inference ---
-// If this section fails, start in hson-live's schema token types/builders:
-// `api/livemap/schema.ts`, then confirm the public `hsonLiveMap.schema` export
-// in `hson.ts` is preserving token generics.
-type _ApiSchemaTokenString = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.string>, string>>;
-type _ApiSchemaTokenStringArray = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.string.array>, readonly string[]>>;
-type _ApiSchemaTokenOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.number.optional>, number | undefined>>;
-type _ApiSchemaTokenNullableBoolean = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof hsonLiveMap.schema.boolean.nullable>, boolean | null>>;
+// --- Defined schema inference ---
+// If this section fails, start in hson-live's unified schema builder types and
+// confirm `hsonLiveMap.schema.define` preserves the returned expression evidence.
+const API_STRING_SCHEMA = hsonLiveMap.schema.define((s) => s.string);
+const API_STRING_ARRAY_SCHEMA = hsonLiveMap.schema.define((s) => s.string.array);
+const API_OPTIONAL_NUMBER_SCHEMA = hsonLiveMap.schema.define((s) => s.number.optional);
+const API_NULLABLE_BOOLEAN_SCHEMA = hsonLiveMap.schema.define((s) => s.boolean.nullable);
+type _ApiSchemaString = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_STRING_SCHEMA>, string>>;
+type _ApiSchemaStringArray = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_STRING_ARRAY_SCHEMA>, readonly string[]>>;
+type _ApiSchemaOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_OPTIONAL_NUMBER_SCHEMA>, number | undefined>>;
+type _ApiSchemaNullableBoolean = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_NULLABLE_BOOLEAN_SCHEMA>, boolean | null>>;
 const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => ({
   user: {
     id: s.string,
@@ -69,7 +72,7 @@ type _ApiSchemaUserResult = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["
 // If this section fails, inspect the public factories and schema binding path:
 // `hson.ts` for `hsonLiveMap.fromJson(...)`, then `api/livemap/core.ts` and
 // `api/livemap/livemap.types.ts` for `LiveMap<TValue>`, `schema.use(...)`,
-// `withSchema(...)`, `snap()`, `at(...)`, and `LiveMapPathValue`.
+// `schema.use(...)`, `snap()`, `at(...)`, and `LiveMapPathValue`.
 const API_TYPED_MAP_SAMPLE = hsonLiveMap
   .fromJson({ user: { name: "Ada" } })
   .schema.use(hsonLiveMap.schema.define((s) => ({

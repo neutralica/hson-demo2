@@ -1,12 +1,17 @@
-import { type InferLiveMapSchemaToken, LIVEMAP_SCHEMA, define_livemap_schema, type InferLiveMapSchema, type LiveMapSchemaValue } from "hson-live/livemap";
+import { hson } from "hson-live";
+import type { InferLiveMapSchema, LiveMapSchemaValue } from "hson-live/livemap";
 
 type TypeExpect<TValue extends true> = TValue;
 type TypeExtends<TActual, TExpected> = TActual extends TExpected ? true : false;
-type _SchemaTokenInferenceString = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof LIVEMAP_SCHEMA.string>, string>>;
-type _SchemaTokenInferenceStringArray = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof LIVEMAP_SCHEMA.string.array>, readonly string[]>>;
-type _SchemaTokenInferenceNullableNumber = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof LIVEMAP_SCHEMA.number.nullable>, number | null>>;
-type _SchemaTokenInferenceOptionalBoolean = TypeExpect<TypeExtends<InferLiveMapSchemaToken<typeof LIVEMAP_SCHEMA.boolean.optional>, boolean | undefined>>;
-const SCHEMA_TYPE_INFERENCE_SAMPLE = define_livemap_schema((s) => ({
+const STRING_SCHEMA = hson.liveMap.schema.define((s) => s.string);
+const STRING_ARRAY_SCHEMA = hson.liveMap.schema.define((s) => s.string.array);
+const NULLABLE_NUMBER_SCHEMA = hson.liveMap.schema.define((s) => s.number.nullable);
+const OPTIONAL_BOOLEAN_SCHEMA = hson.liveMap.schema.define((s) => s.boolean.optional);
+type _SchemaStringInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof STRING_SCHEMA>, string>>;
+type _SchemaStringArrayInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof STRING_ARRAY_SCHEMA>, readonly string[]>>;
+type _SchemaNullableNumberInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof NULLABLE_NUMBER_SCHEMA>, number | null>>;
+type _SchemaOptionalBooleanInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof OPTIONAL_BOOLEAN_SCHEMA>, boolean | undefined>>;
+const SCHEMA_TYPE_INFERENCE_SAMPLE = hson.liveMap.schema.define((s) => ({
   user: {
     id: s.string,
     name: s.string,

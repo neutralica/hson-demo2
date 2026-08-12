@@ -1,6 +1,6 @@
 // proxy-suites.ts
 
-import { define_livemap_schema } from "hson-live/livemap";
+import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case, commitCase, throwCase } from "./handle-helpers";
@@ -570,7 +570,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema allows valid $_ set",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -590,7 +590,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema rejects invalid $_ set before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
             },
@@ -606,7 +606,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema rejects invalid array helper before mutation",
         input: { items: [0, 1] },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             items: s.array(s.number),
           })));
           const proxy = map.proxy() as any;
@@ -620,7 +620,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema rejects invalid object helper before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number,
@@ -637,7 +637,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema rejects delete required field before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number.optional,
@@ -654,7 +654,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema allows delete optional field",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number.optional,
@@ -675,7 +675,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema rejects object.deleteKey required field before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number.optional,
@@ -692,7 +692,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy schema allows object.deleteKey optional field",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: {
               name: s.string,
               age: s.number.optional,
@@ -713,7 +713,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy exact schema rejects unknown object helper before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: s.exact({
               name: s.string,
             }),
@@ -729,7 +729,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy exact schema rejects unknown object-valued set before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: s.exact({
               name: s.string,
             }),
@@ -745,7 +745,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy exact schema rejects unknown replace key before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: s.exact({
               name: s.string,
             }),
@@ -761,7 +761,7 @@ export function livemap_suites_proxy(): TestSuite {
         name: "proxy exact schema allows no-op delete of absent unknown object key",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.withSchema(define_livemap_schema((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => ({
             user: s.exact({
               name: s.string,
             }),
