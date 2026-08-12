@@ -40,12 +40,8 @@ function set_svg_text_style(text: SvgLiveTree): void {
   });
 }
 
-function string_ids(value: JsonValue | undefined): readonly string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function has_id(value: JsonValue | undefined, id: string): boolean {
-  return string_ids(value).includes(id);
+function has_id(value: readonly string[], id: string): boolean {
+  return value.includes(id);
 }
 
 function has_hover(value: JsonValue | undefined): boolean {
@@ -61,11 +57,11 @@ function is_isolated_id(
 
 function amoeba_path_css(
   button: AmoebaButtonLayout,
-  hoveredId: JsonValue | undefined,
-  activeIds: JsonValue | undefined,
+  hoveredId: string | null,
+  activeIds: readonly string[],
   isolatedIds: readonly string[],
 ): Readonly<Record<string, string>> {
-  const activeList = string_ids(activeIds);
+  const activeList = activeIds;
   const hovered = hoveredId === button.id;
   const active = activeList.includes(button.id);
   const anyBlockingActive = activeList.some((id) => {
@@ -203,8 +199,7 @@ function render_amoebi_body(
     });
 
   path.bind.cssPaths(
-    map,
-    [["hoveredId"], ["activeIds"]],
+    [map.at(["hoveredId"]), map.at(["activeIds"])],
     (values) => amoeba_path_css(
       button,
       values[0],
@@ -428,7 +423,7 @@ function render_amoebi_cell(svg: SvgLiveTree, map: LiveMap<AmoebiRenderState>, b
       vectorEffect: "non-scaling-stroke",
     });
 
-  cellPath.bind.cssPaths(map, [["hoveredId"], ["activeIds"]], (values) => {
+  cellPath.bind.cssPaths([map.at(["hoveredId"]), map.at(["activeIds"])], (values) => {
     const hovered = values[0] === button.id;
     const active = has_id(values[1], button.id);
     const hidden = !hovered && active;
@@ -698,5 +693,3 @@ function recede_amoebi_tile(parts: AmoebiTileParts): void {
     recede_amoebi_node(cell, hex_center(coord, HEX_SIZE), 35 + orderIndex * 10, 420);
   });
 }
-
-

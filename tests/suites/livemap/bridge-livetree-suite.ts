@@ -114,7 +114,7 @@ function make_livetree_text_initial_case(suite: string): TestCase {
       const map = make_bridge_map({ ui: { label: "Ready" } });
       const tree = make_livetree_text_target();
 
-      const binding = bind_livetree_text(map, ["ui", "label"], tree);
+      const binding = bind_livetree_text(map.at(["ui", "label"]), tree);
 
       const rows = [equal_row("initial LiveTree text", tree.text.get(), "Ready")];
       binding.dispose();
@@ -136,7 +136,7 @@ function make_livetree_text_update_case(suite: string): TestCase {
       const map = make_bridge_map({ ui: { label: "Ready" } });
       const tree = make_livetree_text_target();
 
-      const binding = bind_livetree_text(map, ["ui", "label"], tree);
+      const binding = bind_livetree_text(map.at(["ui", "label"]), tree);
       map.set(["ui", "label"], "Running");
 
       const rows = [equal_row("updated LiveTree text", tree.text.get(), "Running")];
@@ -159,7 +159,7 @@ function make_livetree_text_dispose_case(suite: string): TestCase {
       const map = make_bridge_map({ ui: { label: "Ready" } });
       const tree = make_livetree_text_target();
 
-      const binding = bind_livetree_text(map, ["ui", "label"], tree);
+      const binding = bind_livetree_text(map.at(["ui", "label"]), tree);
       binding.dispose();
       map.set(["ui", "label"], "Running");
 
@@ -182,7 +182,7 @@ function make_livetree_attr_initial_case(suite: string): TestCase {
       const map = make_bridge_map({ ui: { tone: "active" } });
       const tree = make_livetree_attr_target();
 
-      const binding = bind_livetree_attr(map, ["ui", "tone"], tree, "data-tone");
+      const binding = bind_livetree_attr(map.at(["ui", "tone"]), tree, "data-tone");
 
       const rows = [equal_row("initial LiveTree attr", tree.attrs.get("data-tone"), "active")];
       binding.dispose();
@@ -204,7 +204,7 @@ function make_livetree_attr_remove_case(suite: string): TestCase {
       const map = make_bridge_map({ ui: { enabled: true } });
       const tree = make_livetree_attr_target();
 
-      const binding = bind_livetree_attr(map, ["ui", "enabled"], tree, "data-enabled");
+      const binding = bind_livetree_attr(map.at(["ui", "enabled"]), tree, "data-enabled");
       const initial = tree.attrs.get("data-enabled");
       map.set(["ui", "enabled"], false);
 
@@ -231,7 +231,7 @@ function make_livetree_input_initial_case(suite: string): TestCase {
       const map = make_bridge_map({ form: { name: "Ada" } });
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "name"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "name"]));
 
       const rows = [equal_row("initial LiveTree input value", tree.form.getValue(), "Ada")];
       binding.dispose();
@@ -253,7 +253,7 @@ function make_livetree_input_writeback_case(suite: string): TestCase {
       const map = make_bridge_map({ form: { name: "Ada" } });
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "name"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "name"]));
       tree.form.setValue("Grace", { silent: true });
       emit_input(tree);
 
@@ -278,7 +278,7 @@ function make_livetree_input_external_update_case(suite: string): TestCase {
       const map = make_bridge_map({ form: { name: "Ada" } });
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "name"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "name"]));
       map.set(["form", "name"], "Grace");
 
       const rows = [equal_row("LiveTree input receives map value", tree.form.getValue(), "Grace")];
@@ -617,7 +617,7 @@ function make_livetree_attr_zero_case(suite: string): TestCase {
       const map = make_bridge_map({ ui: { count: 0 } });
       const tree = make_livetree_attr_target();
 
-      const binding = bind_livetree_attr(map, ["ui", "count"], tree, "data-count");
+      const binding = bind_livetree_attr(map.at(["ui", "count"]), tree, "data-count");
 
       const rows = [equal_row("zero LiveTree attr", tree.attrs.get("data-count"), "0")];
       binding.dispose();
@@ -639,7 +639,7 @@ function make_livetree_input_number_writeback_case(suite: string): TestCase {
       const map = make_bridge_map({ form: { count: 1 } });
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "count"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "count"]));
       tree.form.setValue("42", { silent: true });
       emit_input(tree);
 
@@ -663,7 +663,7 @@ function make_livetree_input_boolean_writeback_case(suite: string): TestCase {
       const map = make_bridge_map({ form: { enabled: false } });
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "enabled"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "enabled"]));
       tree.form.setValue("true", { silent: true });
       emit_input(tree);
 
@@ -692,7 +692,7 @@ function make_livetree_input_schema_reject_case(suite: string): TestCase {
       const map = hson.liveMap.fromJson({ form: { count: 1 } }).schema.use(schema) as unknown as BridgeMap;
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "count"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "count"]));
       tree.form.setValue("not-a-number", { silent: true });
 
       let message = "";
@@ -725,7 +725,7 @@ function make_livetree_input_dispose_writeback_case(suite: string): TestCase {
       const map = make_bridge_map({ form: { name: "Ada" } });
       const tree = make_livetree_input_target();
 
-      const binding = bind_livetree_input_value(tree, map, ["form", "name"]);
+      const binding = bind_livetree_input_value(tree, map.at(["form", "name"]));
       binding.dispose();
       tree.form.setValue("Grace", { silent: true });
       emit_input(tree);
@@ -750,8 +750,8 @@ function make_livetree_text_fanout_case(suite: string): TestCase {
       const first = make_livetree_text_target();
       const second = make_livetree_text_target();
 
-      const firstBinding = bind_livetree_text(map, ["ui", "label"], first);
-      const secondBinding = bind_livetree_text(map, ["ui", "label"], second);
+      const firstBinding = bind_livetree_text(map.at(["ui", "label"]), first);
+      const secondBinding = bind_livetree_text(map.at(["ui", "label"]), second);
       map.set(["ui", "label"], "Running");
 
       const rows = [
@@ -779,8 +779,8 @@ function make_livetree_input_to_text_loop_case(suite: string): TestCase {
       const input = make_livetree_input_target();
       const text = make_livetree_text_target();
 
-      const inputBinding = bind_livetree_input_value(input, map, ["form", "name"]);
-      const textBinding = bind_livetree_text(map, ["form", "name"], text);
+      const inputBinding = bind_livetree_input_value(input, map.at(["form", "name"]));
+      const textBinding = bind_livetree_text(map.at(["form", "name"]), text);
       input.form.setValue("Grace", { silent: true });
       emit_input(input);
 
@@ -809,8 +809,8 @@ function make_livetree_text_fanout_partial_dispose_case(suite: string): TestCase
       const first = make_livetree_text_target();
       const second = make_livetree_text_target();
 
-      const firstBinding = bind_livetree_text(map, ["ui", "label"], first);
-      const secondBinding = bind_livetree_text(map, ["ui", "label"], second);
+      const firstBinding = bind_livetree_text(map.at(["ui", "label"]), first);
+      const secondBinding = bind_livetree_text(map.at(["ui", "label"]), second);
       firstBinding.dispose();
       map.set(["ui", "label"], "Running");
 
@@ -838,8 +838,8 @@ function make_livetree_input_loop_repeated_writeback_case(suite: string): TestCa
       const input = make_livetree_input_target();
       const text = make_livetree_text_target();
 
-      const inputBinding = bind_livetree_input_value(input, map, ["form", "name"]);
-      const textBinding = bind_livetree_text(map, ["form", "name"], text);
+      const inputBinding = bind_livetree_input_value(input, map.at(["form", "name"]));
+      const textBinding = bind_livetree_text(map.at(["form", "name"]), text);
 
       input.form.setValue("Grace", { silent: true });
       emit_input(input);

@@ -29,6 +29,10 @@ export function livemap_bind_suite(): TestSuite {
             make_bind_path_case(SUITE),
             make_bind_paths_case(SUITE),
             make_bind_dispose_case(SUITE),
+            make_bind_mixed_map_filter_case(SUITE),
+            make_bind_array_coordinate_case(SUITE),
+            make_bind_listener_failure_case(SUITE),
+            make_bind_restore_limitation_case(SUITE),
         ] as const,
     };
 }
@@ -46,7 +50,7 @@ function make_bind_text_initial_case(suite: string): TestCase {
             const text = host.create.span();
             const map = hson.liveMap.fromJson({ label: "about" });
 
-            const dispose = text.bind.text(map, ["label"]);
+            const dispose = text.bind.text(map.at(["label"]));
 
             const rows = [
                 equal_row("text binding reads initial map value", text.text.get(), "about"),
@@ -71,7 +75,7 @@ function make_bind_text_update_case(suite: string): TestCase {
             const text = host.create.span();
             const map = hson.liveMap.fromJson({ label: "about" });
 
-            const dispose = text.bind.text(map, ["label"]);
+            const dispose = text.bind.text(map.at(["label"]));
             map.at(["label"]).set("parse");
 
             const rows = [
@@ -98,7 +102,7 @@ function make_bind_text_previous_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ label: "about" });
             const seen: string[] = [];
 
-            const dispose = text.bind.text(map, ["label"], (value, previous) => {
+            const dispose = text.bind.text(map.at(["label"]), (value, previous) => {
                 seen.push(`${String(previous ?? "none")}→${String(value ?? "none")}`);
                 return String(value ?? "");
             });
@@ -128,7 +132,7 @@ function make_bind_attr_boolean_case(suite: string): TestCase {
             const input = host.create.input();
             const map = hson.liveMap.fromJson({ disabled: true });
 
-            const dispose = input.bind.attr(map, ["disabled"], "disabled");
+            const dispose = input.bind.attr(map.at(["disabled"]), "disabled");
             const initial = input.attrs.has("disabled");
 
             map.at(["disabled"]).set(false);
@@ -156,7 +160,7 @@ function make_bind_attrs_mapper_case(suite: string): TestCase {
             const button = host.create.button();
             const map = hson.liveMap.fromJson({ selected: false });
 
-            const dispose = button.bind.attrs(map, ["selected"], (selected) => ({
+            const dispose = button.bind.attrs(map.at(["selected"]), (selected) => ({
                 "aria-pressed": selected ? "true" : "false",
                 "data-selected": selected ? "yes" : null,
             }));
@@ -191,7 +195,7 @@ function make_bind_css_mapper_case(suite: string): TestCase {
             const button = host.create.button();
             const map = hson.liveMap.fromJson({ hovered: false });
 
-            const dispose = button.bind.css(map, ["hovered"], (hovered) => ({
+            const dispose = button.bind.css(map.at(["hovered"]), (hovered) => ({
                 opacity: hovered ? 1 : 0.5,
                 transform: hovered ? "scale(1.02)" : null,
             }));
@@ -226,7 +230,7 @@ function make_bind_attrs_drop_on_update_case(suite: string): TestCase {
             const button = host.create.button();
             const map = hson.liveMap.fromJson({ selected: true });
 
-            const dispose = button.bind.attrs(map, ["selected"], (selected) => ({
+            const dispose = button.bind.attrs(map.at(["selected"]), (selected) => ({
                 "data-selected": selected ? "yes" : null,
             }));
 
@@ -257,7 +261,7 @@ function make_bind_css_drop_on_update_case(suite: string): TestCase {
             const button = host.create.button();
             const map = hson.liveMap.fromJson({ hovered: true });
 
-            const dispose = button.bind.css(map, ["hovered"], (hovered) => ({
+            const dispose = button.bind.css(map.at(["hovered"]), (hovered) => ({
                 transform: hovered ? "scale(1.02)" : null,
             }));
 
@@ -289,7 +293,7 @@ function make_bind_paths_previous_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
             const seen: string[] = [];
 
-            const dispose = button.bind.paths(map, [["hoveredId"], ["selectedId"]], (_tree, values, previous) => {
+            const dispose = button.bind.paths([map.at(["hoveredId"]), map.at(["selectedId"])], (_tree, values, previous) => {
                 const prev = previous ? `${String(previous[0] ?? "none")}/${String(previous[1] ?? "none")}` : "unset";
                 const next = `${String(values[0] ?? "none")}/${String(values[1] ?? "none")}`;
                 seen.push(`${prev}→${next}`);
@@ -321,7 +325,7 @@ function make_bind_text_missing_path_case(suite: string): TestCase {
             const text = host.create.span();
             const map = hson.liveMap.fromJson({ label: null });
 
-            const dispose = text.bind.text(map, ["label"]);
+            const dispose = text.bind.text(map.at(["label"]));
             const initial = text.text.get();
             map.at(["label"]).set("about");
 
@@ -349,7 +353,7 @@ function make_bind_attr_mapper_case(suite: string): TestCase {
             const item = host.create.li();
             const map = hson.liveMap.fromJson({ index: 2 });
 
-            const dispose = item.bind.attr(map, ["index"], "data-index", (index) => `item-${String(index ?? "none")}`);
+            const dispose = item.bind.attr(map.at(["index"]), "data-index", (index) => `item-${String(index ?? "none")}`);
             const initial = item.attrs.get("data-index");
             map.at(["index"]).set(7);
 
@@ -378,7 +382,7 @@ function make_bind_paths_style_bridge_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
             const id = "about";
 
-            const dispose = button.bind.paths(map, [["hoveredId"], ["selectedId"]], (tree, values) => {
+            const dispose = button.bind.paths([map.at(["hoveredId"]), map.at(["selectedId"])], (tree, values) => {
                 const hovered = values[0] === id;
                 const selected = values[1] === id;
                 tree.css.setMany({
@@ -423,7 +427,7 @@ function make_bind_paths_dispose_case(suite: string): TestCase {
             const text = host.create.span();
             const map = hson.liveMap.fromJson({ a: "one", b: "two" });
 
-            const dispose = text.bind.paths(map, [["a"], ["b"]], (tree, values) => {
+            const dispose = text.bind.paths([map.at(["a"]), map.at(["b"])], (tree, values) => {
                 tree.text.set(`${String(values[0] ?? "")}/${String(values[1] ?? "")}`);
             });
             const initial = text.text.get();
@@ -455,7 +459,7 @@ function make_bind_text_paths_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ first: "one", second: "two" });
             const seen: string[] = [];
 
-            const dispose = text.bind.textPaths(map, [["first"], ["second"]], (values, previous) => {
+            const dispose = text.bind.textPaths([map.at(["first"]), map.at(["second"])], (values, previous) => {
                 const prev = previous ? `${String(previous[0] ?? "")}/${String(previous[1] ?? "")}` : "unset";
                 const next = `${String(values[0] ?? "")}/${String(values[1] ?? "")}`;
                 seen.push(`${prev}→${next}`);
@@ -492,7 +496,7 @@ function make_bind_attrs_paths_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
             const id = "about";
 
-            const dispose = button.bind.attrsPaths(map, [["hoveredId"], ["selectedId"]], (values) => {
+            const dispose = button.bind.attrsPaths([map.at(["hoveredId"]), map.at(["selectedId"])], (values) => {
                 const hovered = values[0] === id;
                 const selected = values[1] === id;
                 return {
@@ -536,7 +540,7 @@ function make_bind_css_paths_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
             const id = "about";
 
-            const dispose = button.bind.cssPaths(map, [["hoveredId"], ["selectedId"]], (values) => {
+            const dispose = button.bind.cssPaths([map.at(["hoveredId"]), map.at(["selectedId"])], (values) => {
                 const hovered = values[0] === id;
                 const selected = values[1] === id;
                 return {
@@ -582,7 +586,7 @@ function make_bind_path_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ label: "about" });
             const seen: string[] = [];
 
-            const dispose = button.bind.path(map, ["label"], (tree, value, previous) => {
+            const dispose = button.bind.path(map.at(["label"]), (tree, value, previous) => {
                 seen.push(`${tree === button}:${String(previous ?? "none")}→${String(value ?? "none")}`);
             });
             map.at(["label"]).set("build");
@@ -612,7 +616,7 @@ function make_bind_paths_case(suite: string): TestCase {
             const map = hson.liveMap.fromJson({ hoveredId: null, selectedId: "about" });
             const seen: string[] = [];
 
-            const dispose = button.bind.paths(map, [["hoveredId"], ["selectedId"]], (_tree, values) => {
+            const dispose = button.bind.paths([map.at(["hoveredId"]), map.at(["selectedId"])], (_tree, values) => {
                 seen.push(`${String(values[0] ?? "none")}/${String(values[1] ?? "none")}`);
             });
 
@@ -644,7 +648,7 @@ function make_bind_dispose_case(suite: string): TestCase {
             const text = host.create.span();
             const map = hson.liveMap.fromJson({ label: "about" });
 
-            const dispose = text.bind.text(map, ["label"]);
+            const dispose = text.bind.text(map.at(["label"]));
             dispose();
             map.at(["label"]).set("parse");
 
@@ -653,6 +657,132 @@ function make_bind_dispose_case(suite: string): TestCase {
                     equal_row("disposed binding does not update text", text.text.get(), "about"),
                 ],
             };
+        },
+    };
+}
+
+function make_bind_mixed_map_filter_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.paths supports mixed-map locations and preserves value filtering",
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const text = host.create.span();
+            const profile = hson.liveMap.fromJson({ user: { name: "Ada", visits: 1 } });
+            const metrics = hson.liveMap.fromJson({ count: 2 });
+            const seen: string[] = [];
+
+            const dispose = text.bind.paths([
+                profile.at(["user", "name"]),
+                metrics.at(["count"]),
+            ], (tree, values) => {
+                const next = `${String(values[0])}/${String(values[1])}`;
+                seen.push(next);
+                tree.text.set(next);
+            });
+
+            profile.replace(["user"], { name: "Ada", visits: 2 });
+            const callsAfterUnchangedEndpoint = seen.length;
+            metrics.at(["count"]).set(3);
+
+            const rows = [
+                equal_row("mixed-map locations apply one initial value set", seen[0], "Ada/2"),
+                equal_row("overlapping parent replacement with unchanged endpoint stays filtered", callsAfterUnchangedEndpoint, 1),
+                equal_row("the second map independently drives the binding", text.text.get(), "Ada/3"),
+            ];
+            dispose();
+            return { assertRows: rows };
+        },
+    };
+}
+
+function make_bind_array_coordinate_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.path keeps passive array coordinate semantics",
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const text = host.create.span();
+            const map = hson.liveMap.fromJson({ items: ["a", "b", "c"] });
+            const seen: string[] = [];
+
+            const dispose = text.bind.path(map.at(["items", 1]), (tree, value) => {
+                const next = value === undefined ? "missing" : String(value);
+                seen.push(next);
+                tree.text.set(next);
+            });
+
+            map.splice(["items"], 0, 1);
+            map.splice(["items"], 1, 1);
+            map.splice(["items"], 1, 0, "restored");
+
+            const rows = [
+                equal_row("initial coordinate resolves its initial occupant", seen[0], "b"),
+                equal_row("reindex resolves the new occupant at the same coordinate", seen[1], "c"),
+                equal_row("deletion resolves the coordinate as missing", seen[2], "missing"),
+                equal_row("insertion resolves the coordinate again", seen[3], "restored"),
+            ];
+            dispose();
+            return { assertRows: rows };
+        },
+    };
+}
+
+function make_bind_listener_failure_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.path preserves listener failure propagation",
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const text = host.create.span();
+            const map = hson.liveMap.fromJson({ value: "ready" });
+            let failurePropagated = false;
+
+            const dispose = text.bind.path(map.at(["value"]), (tree, value) => {
+                if (value === "fail") throw new Error("binding listener failure");
+                tree.text.set(String(value));
+            });
+
+            try {
+                map.at(["value"]).set("fail");
+            } catch (error) {
+                failurePropagated = error instanceof Error && error.message === "binding listener failure";
+            }
+
+            const rows = [
+                equal_row("listener failure propagates through the source mutation", failurePropagated, true),
+                equal_row("source state remains committed before listener failure", map.at(["value"]).snap(), "fail"),
+                equal_row("failed destination application leaves its prior value", text.text.get(), "ready"),
+            ];
+            dispose();
+            return { assertRows: rows };
+        },
+    };
+}
+
+function make_bind_restore_limitation_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree binding intentionally does not converge on projected restore",
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const text = host.create.span();
+            const map = hson.liveMap.fromJson({ label: "initial" });
+            const restored = hson.liveMap.fromJson({ label: "restored" });
+
+            const dispose = text.bind.text(map.at(["label"]));
+            map.restore(restored.capture());
+            const afterRestore = text.text.get();
+            const restoredState = map.at(["label"]).snap();
+            map.at(["label"]).set("later commit");
+
+            const rows = [
+                equal_row("projected restore installs source state", restoredState, "restored"),
+                equal_row("projected restore emits no ordinary binding feed", afterRestore, "initial"),
+                equal_row("a later ordinary commit resumes binding convergence", text.text.get(), "later commit"),
+            ];
+            dispose();
+            return { assertRows: rows };
         },
     };
 }

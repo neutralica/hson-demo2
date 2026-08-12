@@ -22,7 +22,7 @@ function binding_lifecycle_case(suite: string): LiveTreeCaseSpec {
       const quid = branch.quid;
       let callbacks = 0;
 
-      branch.bind.path(map, ["label"], (owner, value) => {
+      branch.bind.path(map.at(["label"]), (owner, value) => {
         callbacks += 1;
         owner.text.set(String(value ?? ""));
       });
@@ -61,7 +61,7 @@ function manual_unsubscribe_case(suite: string): LiveTreeCaseSpec {
       const map = hson.liveMap.fromJson({ value: "one" });
       const quid = branch.quid;
       let callbacks = 0;
-      const off = branch.bind.path(map, ["value"], () => { callbacks += 1; });
+      const off = branch.bind.path(map.at(["value"]), () => { callbacks += 1; });
 
       off();
       off();
@@ -178,7 +178,7 @@ function repeated_lifecycle_case(suite: string): LiveTreeCaseSpec {
         const map = hson.liveMap.fromJson({ value: index });
         const quid = branch.quid;
         let callbacks = 0;
-        branch.bind.path(map, ["value"], () => { callbacks += 1; });
+        branch.bind.path(map.at(["value"]), () => { callbacks += 1; });
         branch.listen.onCustom("cycle", () => { callbacks += 100; });
 
         branch.detach();

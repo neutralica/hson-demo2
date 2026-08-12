@@ -111,7 +111,7 @@ function detach_contents_case(suite: string): LiveTreeCaseSpec {
       branch.listen.onClick(() => { clicks += 1; });
       branch.css.setMany({ color: "blue" });
       const map = hsonLiveMap.fromJson({ label: "initial" });
-      const off = branch.bind.text(map, ["label"]);
+      const off = branch.bind.text(map.at(["label"]));
 
       const detached = source.detachContents();
       detachedState = detached.length > 0
@@ -297,7 +297,7 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
         () => target.css.setMany({ color: "red" }),
         () => target.events.emit("x"),
         () => target.listen.onClick(() => undefined),
-        () => target.bind.text(hsonLiveMap.fromJson({ x: "y" }), ["x"]),
+        () => target.bind.text(hsonLiveMap.fromJson({ x: "y" }).at(["x"])),
         () => target.svg.inScope(),
         () => target.canvas.inScope(),
         () => target.dom.el(),
@@ -314,7 +314,7 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
         () => cachedText.set("cached"),
         () => cachedData.set("cached", "yes"),
         () => cachedListen.onClick(() => undefined),
-        () => cachedBind.text(hsonLiveMap.fromJson({ x: "y" }), ["x"]),
+        () => cachedBind.text(hsonLiveMap.fromJson({ x: "y" }).at(["x"])),
       ];
       for (const operation of operations) {
         try {

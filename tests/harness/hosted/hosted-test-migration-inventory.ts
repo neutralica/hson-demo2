@@ -82,7 +82,7 @@ const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = O
   dom("livemap/bridge-livetree-controls", 11, "all_livemap_suites", ["DOMParser", "HTMLElement", "events"]),
   dom("livemap/schema-controls", 8, "all_livemap_suites", ["DOMParser", "HTMLElement", "events"]),
   dom("livemap/schema-validation-controls", 3, "all_livemap_suites", ["DOMParser", "HTMLElement", "events"]),
-  dom("livemap/bind", 19, "all_livemap_suites", ["DOMParser", "HTMLElement"]),
+  dom("livemap/bind", 23, "all_livemap_suites", ["DOMParser", "HTMLElement"]),
   dom("livemap/document-foundation", 6, "all_livemap_suites", ["DOMParser", "DOMPurify"]),
   ...[
     ["livetree/find",2],["livetree/attrs-and-flags",2],["livetree/append-and-create",9],["livetree/mixed-regression",7],
