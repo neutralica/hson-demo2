@@ -17,7 +17,7 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
     suite: SUITE,
     cases: [
       test("direct and attached schemas admit the same finite number", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.number })); const map = hson.liveMap.fromJson({ value: 1 }); map.schema.use(schema);
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number })); const map = hson.liveMap.fromJson({ value: 1 }); map.schema.use(schema);
         return { assertRows: [equal_row("direct", schema.validateRoot({ value: 2 }).ok, true), equal_row("attached", map.set(["value"], 2).changed, true)] };
       }),
       test("schema literals distinguish negative zero", () => {
@@ -36,15 +36,15 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
         return { assertRows: [equal_row("same order", schema.validateRoot({ b: 2, a: 1 }).ok, true), equal_row("different order", schema.validateRoot({ a: 1, b: 2 }).ok, false)] };
       }),
       test("direct and attached schemas admit nested arrays and objects", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.unknown })); const value = { nested: [{ ok: true }, -0] }; const map = hson.liveMap.fromJson({ value: {} }); map.schema.use(schema);
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.unknown })); const value = { nested: [{ ok: true }, -0] }; const map = hson.liveMap.fromJson({ value: {} }); map.schema.use(schema);
         return { assertRows: [equal_row("direct", schema.validateRoot({ value }).ok, true), equal_row("attached", map.replace(["value"], value).changed, true)] };
       }),
       test("direct and attached schemas admit null-prototype records", () => {
-        const value = own_record([["field", 1]], null); const schema = hson.liveMap.schema.define((s) => ({ value: s.unknown })); const map = hson.liveMap.fromJson({ value: {} }); map.schema.use(schema);
+        const value = own_record([["field", 1]], null); const schema = hson.liveMap.schema.define((s) => s.object({ value: s.unknown })); const map = hson.liveMap.fromJson({ value: {} }); map.schema.use(schema);
         return { assertRows: [equal_row("direct", schema.validateRoot({ value }).ok, true), equal_row("attached", map.set(["value"], value).changed, true)] };
       }),
       test("schema admission structurally copies repeated references", () => {
-        const child = { value: 1 }; const value = { left: child, right: child }; const schema = hson.liveMap.schema.define((s) => ({ value: s.unknown })); const map = hson.liveMap.fromJson({ value: {} }); map.schema.use(schema); map.set(["value"], value); child.value = 9;
+        const child = { value: 1 }; const value = { left: child, right: child }; const schema = hson.liveMap.schema.define((s) => s.object({ value: s.unknown })); const map = hson.liveMap.fromJson({ value: {} }); map.schema.use(schema); map.set(["value"], value); child.value = 9;
         return { assertRows: [equal_row("stored left", map.snap(["value", "left", "value"]), 1), equal_row("stored right", map.snap(["value", "right", "value"]), 1)] };
       }),
       test("schema admission accepts frozen objects and sealed dense arrays", () => {
@@ -52,7 +52,7 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
         return { assertRows: [equal_row("accepted", schema.validateRoot(value).ok, true)] };
       }),
       test("optional means missing while present undefined remains invalid", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.number.optional })); const present = own_record([["value", undefined as unknown as JsonValue]]);
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number.optional })); const present = own_record([["value", undefined as unknown as JsonValue]]);
         return { assertRows: [equal_row("missing", schema.validateRoot({}).ok, true), equal_row("undefined", schema.validateRoot(present).ok, false)] };
       }),
       test("custom refinements receive fresh detached values", () => {

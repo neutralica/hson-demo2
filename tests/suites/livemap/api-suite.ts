@@ -18,11 +18,11 @@ export function livemap_suites_api(): TestSuite {
         name: "api liveMap schema.define validates matching json",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           }));
 
           return schema.validateRoot({ user: { name: "Ada", age: 37 } });
@@ -34,10 +34,10 @@ export function livemap_suites_api(): TestSuite {
         name: "api liveMap schema.define reports invalid json",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           return schema.validateRoot({ user: { name: 12 } });
@@ -59,7 +59,7 @@ export function livemap_suites_api(): TestSuite {
         suite: SUITE,
         name: "api liveMap schema.define accepts token root",
         input: {},
-        act: () => hson.liveMap.schema.define((s) => s.string.array).validateRoot(["a", "b"]),
+        act: () => hson.liveMap.schema.define((s) => s.array(s.string)).validateRoot(["a", "b"]),
         expected: { ok: true, issues: [] },
       }),
       read_case({
@@ -108,11 +108,11 @@ export function livemap_suites_api(): TestSuite {
         name: "api liveMap typed at reads nested object path",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           }));
 
           const map = hson.liveMap
@@ -134,12 +134,12 @@ export function livemap_suites_api(): TestSuite {
         name: "api liveMap typed at reads nested array path",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            items: s.array({
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            items: s.array(s.object({
               id: s.string,
               count: s.number,
               label: s.string.optional,
-            }),
+            })),
           }));
 
           const map = hson.liveMap
@@ -179,10 +179,10 @@ export function livemap_suites_api(): TestSuite {
         input: {},
         act: () => {
           const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           const returned = map.schema.use(schema);
           return {
@@ -200,10 +200,10 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use allows valid chained set",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           return map
@@ -221,10 +221,10 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use rejects invalid chained set before mutation",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           return hson.liveMap
@@ -239,10 +239,10 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use accepts fromJson object root",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           const map = hson.liveMap
@@ -264,10 +264,10 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use accepts fromJson string root",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           const map = hson.liveMap
@@ -289,10 +289,10 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use rejects invalid fromJson root",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           return hson.liveMap
@@ -307,9 +307,9 @@ export function livemap_suites_api(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.exact({
-            user: {
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           return hson.liveMap
@@ -322,10 +322,10 @@ export function livemap_suites_api(): TestSuite {
         suite: SUITE,
         name: "api liveMap schema.define accepts object shape root",
         input: {},
-        act: () => hson.liveMap.schema.define((s) => ({
-          user: {
+        act: () => hson.liveMap.schema.define((s) => s.object({
+          user: s.object({
             name: s.string,
-          },
+          }),
         })).validateRoot({ user: { name: "Ada" } }),
         expected: { ok: true, issues: [] },
       }),
@@ -335,10 +335,10 @@ export function livemap_suites_api(): TestSuite {
         input: {},
         act: () => {
           const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           const returned = map.schema.use(schema);
 

@@ -16,44 +16,44 @@ import type { TypeExpect, TypeExtends } from "./api-suite";
 // If this section fails, start in hson-live's unified schema builder types and
 // confirm `hsonLiveMap.schema.define` preserves the returned expression evidence.
 const API_STRING_SCHEMA = hsonLiveMap.schema.define((s) => s.string);
-const API_STRING_ARRAY_SCHEMA = hsonLiveMap.schema.define((s) => s.string.array);
+const API_STRING_ARRAY_SCHEMA = hsonLiveMap.schema.define((s) => s.array(s.string));
 const API_OPTIONAL_NUMBER_SCHEMA = hsonLiveMap.schema.define((s) => s.number.optional);
 const API_NULLABLE_BOOLEAN_SCHEMA = hsonLiveMap.schema.define((s) => s.boolean.nullable);
 type _ApiSchemaString = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_STRING_SCHEMA>, string>>;
 type _ApiSchemaStringArray = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_STRING_ARRAY_SCHEMA>, readonly string[]>>;
 type _ApiSchemaOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_OPTIONAL_NUMBER_SCHEMA>, number | undefined>>;
 type _ApiSchemaNullableBoolean = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_NULLABLE_BOOLEAN_SCHEMA>, boolean | null>>;
-const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => ({
-  user: {
+const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => s.exact({
+  user: s.exact({
     id: s.string,
     name: s.string,
     age: s.number.optional,
     role: s.pick("admin", "user"),
     tags: s.array(s.string),
     settings: s.record(s.pick(s.string, s.number)),
-    patch: s.partial({
+    patch: s.partial(s.exact({
       name: s.string,
       age: s.number,
-    }),
-    deepPatch: s.deepPartial({
-      profile: {
+    })),
+    deepPatch: s.deepPartial(s.exact({
+      profile: s.exact({
         displayName: s.string,
-        links: s.array({
+        links: s.array(s.exact({
           label: s.string,
           href: s.string,
-        }),
-      },
-    }),
+        })),
+      }),
+    })),
     status: s.literal("draft", "published", null),
     result: s.tagged("kind", {
-      success: {
+      success: s.exact({
         value: s.string,
-      },
-      failure: {
+      }),
+      failure: s.exact({
         code: s.number,
-      },
+      }),
     }),
-  },
+  }),
 }));
 type ApiSchemaTypeSample = InferLiveMapSchema<typeof API_SCHEMA_TYPE_SAMPLE>;
 type ApiSchemaTypeSampleValue = LiveMapSchemaValue<typeof API_SCHEMA_TYPE_SAMPLE>;
@@ -75,11 +75,11 @@ type _ApiSchemaUserResult = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["
 // `schema.use(...)`, `snap()`, `at(...)`, and `LiveMapPathValue`.
 const API_TYPED_MAP_SAMPLE = hsonLiveMap
   .fromJson({ user: { name: "Ada" } })
-  .schema.use(hsonLiveMap.schema.define((s) => ({
-    user: {
+  .schema.use(hsonLiveMap.schema.define((s) => s.exact({
+    user: s.exact({
       name: s.string,
       age: s.number.optional,
-    },
+    }),
   })));
 type ApiTypedMapRootSnap = ReturnType<typeof API_TYPED_MAP_SAMPLE.snap>;
 
@@ -137,12 +137,12 @@ const API_TYPED_ARRAY_MAP_SAMPLE = hsonLiveMap
       { id: "b", count: 2 },
     ],
   })
-  .schema.use(hsonLiveMap.schema.define((s) => ({
-    items: s.array({
+  .schema.use(hsonLiveMap.schema.define((s) => s.exact({
+    items: s.array(s.exact({
       id: s.string,
       count: s.number,
       label: s.string.optional,
-    }),
+    })),
   })));
 
 const API_TYPED_ARRAY_ITEMS_HANDLE = API_TYPED_ARRAY_MAP_SAMPLE.at(["items"]);

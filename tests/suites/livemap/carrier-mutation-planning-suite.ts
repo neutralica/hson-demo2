@@ -241,7 +241,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
       }),
       test("schema preview validates the completed carrier candidate atomically", () => {
         const map = hson.liveMap.fromJson({ value: 1, label: "ok" });
-        map.schema.use(hson.liveMap.schema.define((shape) => ({ value: shape.number, label: shape.string })));
+        map.schema.use(hson.liveMap.schema.define((shape) => shape.object({ value: shape.number, label: shape.string })));
         map.batch((tx) => { tx.set(["value"], -0); tx.set(["label"], "next"); });
         const before = JSON.stringify(map.root());
         let rejected = false;

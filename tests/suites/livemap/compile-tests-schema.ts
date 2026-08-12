@@ -4,54 +4,54 @@ import type { InferLiveMapSchema, LiveMapSchemaValue } from "hson-live/livemap";
 type TypeExpect<TValue extends true> = TValue;
 type TypeExtends<TActual, TExpected> = TActual extends TExpected ? true : false;
 const STRING_SCHEMA = hson.liveMap.schema.define((s) => s.string);
-const STRING_ARRAY_SCHEMA = hson.liveMap.schema.define((s) => s.string.array);
+const STRING_ARRAY_SCHEMA = hson.liveMap.schema.define((s) => s.array(s.string));
 const NULLABLE_NUMBER_SCHEMA = hson.liveMap.schema.define((s) => s.number.nullable);
 const OPTIONAL_BOOLEAN_SCHEMA = hson.liveMap.schema.define((s) => s.boolean.optional);
 type _SchemaStringInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof STRING_SCHEMA>, string>>;
 type _SchemaStringArrayInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof STRING_ARRAY_SCHEMA>, readonly string[]>>;
 type _SchemaNullableNumberInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof NULLABLE_NUMBER_SCHEMA>, number | null>>;
 type _SchemaOptionalBooleanInference = TypeExpect<TypeExtends<InferLiveMapSchema<typeof OPTIONAL_BOOLEAN_SCHEMA>, boolean | undefined>>;
-const SCHEMA_TYPE_INFERENCE_SAMPLE = hson.liveMap.schema.define((s) => ({
-  user: {
+const SCHEMA_TYPE_INFERENCE_SAMPLE = hson.liveMap.schema.define((s) => s.object({
+  user: s.object({
     id: s.string,
     name: s.string,
     age: s.number.optional,
     role: s.pick("admin", "user"),
     status: s.literal("draft", "published", null),
-    tags: s.string.array,
+    tags: s.array(s.string),
     coords: s.tuple(s.number, s.number),
     range: s.tuple(s.number, s.number.optional),
     settings: s.record(s.pick(s.string, s.number)),
-    patch: s.partial({
+    patch: s.partial(s.object({
       displayName: s.string,
       active: s.boolean,
-    }),
-    deepPatch: s.deepPartial({
-      profile: {
+    })),
+    deepPatch: s.deepPartial(s.object({
+      profile: s.object({
         displayName: s.string,
-        links: s.array({
+        links: s.array(s.object({
           label: s.string,
           href: s.string,
-        }),
-      },
-      flags: s.record({
-        enabled: s.boolean,
+        })),
       }),
-    }),
+      flags: s.record(s.object({
+        enabled: s.boolean,
+      })),
+    })),
     result: s.tagged("kind", {
-      success: { value: s.string },
-      failure: { error: s.string },
+      success: s.object({ value: s.string }),
+      failure: s.object({ error: s.string }),
     }),
     objectChoice: s.pick(
-      { ok: s.pick(true), value: s.string },
-      { ok: s.pick(false), error: s.string }
+      s.object({ ok: s.pick(true), value: s.string }),
+      s.object({ ok: s.pick(false), error: s.string })
     ),
     color: s.refine(
       s.string,
       "oklch string",
       (value) => typeof value === "string" && value.startsWith("oklch(")
     ),
-  },
+  }),
 }));
 type SchemaTypeInferenceSample = InferLiveMapSchema<typeof SCHEMA_TYPE_INFERENCE_SAMPLE>;
 type SchemaTypeInferenceSampleValueAlias = LiveMapSchemaValue<typeof SCHEMA_TYPE_INFERENCE_SAMPLE>;

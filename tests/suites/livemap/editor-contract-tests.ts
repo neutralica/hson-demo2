@@ -195,19 +195,19 @@ export function livemap_editor_contract(): TestSuite {
   };
 }
 
-const userSchema = hson.liveMap.schema.define((s) => ({
-  user: {
+const userSchema = hson.liveMap.schema.define((s) => s.object({
+  user: s.object({
     name: s.string,
     age: s.number.optional,
-  },
+  }),
 }));
-const exactUserSchema = hson.liveMap.schema.define((s) => ({
+const exactUserSchema = hson.liveMap.schema.define((s) => s.object({
   user: s.exact({
     name: s.string,
     age: s.number.optional,
   }),
 }));
-const itemsSchema = hson.liveMap.schema.define((s) => ({
+const itemsSchema = hson.liveMap.schema.define((s) => s.object({
   items: s.array(s.number),
 }));
 

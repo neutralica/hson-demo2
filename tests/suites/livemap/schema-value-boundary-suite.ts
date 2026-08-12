@@ -26,16 +26,16 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
     suite: SUITE,
     cases: [
       test("direct validation admits a plain object", () => {
-        const result = hson.liveMap.schema.define((s) => ({ value: s.number })).validateRoot({ value: 1 });
+        const result = hson.liveMap.schema.define((s) => s.object({ value: s.number })).validateRoot({ value: 1 });
         return { assertRows: [equal_row("accepted", result.ok, true)] };
       }),
       test("direct validation admits a null-prototype object", () => {
         const value = own_record([["value", "ok"]], null) as JsonValue;
-        const result = hson.liveMap.schema.define((s) => ({ value: s.string })).validateRoot(value);
+        const result = hson.liveMap.schema.define((s) => s.object({ value: s.string })).validateRoot(value);
         return { assertRows: [equal_row("accepted", result.ok, true)] };
       }),
       test("direct and attached validation accept the same finite number", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.number }));
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number }));
         const map = hson.liveMap.fromJson({ value: 1 });
         map.schema.use(schema);
         return { assertRows: [
@@ -44,7 +44,7 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
         ] };
       }),
       test("direct and attached validation reject NaN", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.number }));
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number }));
         const map = hson.liveMap.fromJson({ value: 1 });
         map.schema.use(schema);
         return { assertRows: [
@@ -67,11 +67,11 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
         ] };
       }),
       test("optional means missing is accepted", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.number.optional }));
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number.optional }));
         return { assertRows: [equal_row("missing accepted", schema.validateRoot({}).ok, true)] };
       }),
       test("present undefined is not missing", () => {
-        const schema = hson.liveMap.schema.define((s) => ({ value: s.number.optional }));
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number.optional }));
         const result = schema.validateRoot(own_record([["value", undefined]]) as JsonValue);
         return { assertRows: [
           equal_row("rejected", result.ok, false),
@@ -79,7 +79,7 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
         ] };
       }),
       test("required missing fields report missing", () => {
-        const result = hson.liveMap.schema.define((s) => ({ value: s.number })).validateRoot({});
+        const result = hson.liveMap.schema.define((s) => s.object({ value: s.number })).validateRoot({});
         return { assertRows: [equal_row("received", result.issues[0]?.received, "missing")] };
       }),
       test("sparse arrays reject before schema traversal", () => {
@@ -168,7 +168,7 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
         ] };
       }),
       test("attached refinement mutation cannot alter the candidate", () => {
-        const schema = hson.liveMap.schema.define((s) => ({
+        const schema = hson.liveMap.schema.define((s) => s.object({
           value: s.refine(s.unknown, "detached", (value) => {
             (value as Record<string, JsonValue>).field = 99;
             return true;
@@ -180,7 +180,7 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
       }),
       test("schema rejection is atomic", () => {
         const map = hson.liveMap.fromJson({ value: 1 });
-        map.schema.use(hson.liveMap.schema.define((s) => ({ value: s.number })));
+        map.schema.use(hson.liveMap.schema.define((s) => s.object({ value: s.number })));
         let feeds = 0; map.feed([], () => { feeds += 1; });
         const before = map.capture();
         const didReject = rejected(() => map.set(["value"], "bad"));

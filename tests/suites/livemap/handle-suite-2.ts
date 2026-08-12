@@ -731,10 +731,10 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema allows valid set",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           })));
 
           return map.at(["user", "name"]).set("Grace");
@@ -750,10 +750,10 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects invalid set before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           })));
 
           return map.at(["user", "name"]).set(12);
@@ -765,10 +765,10 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects invalid update before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           })));
 
           return map.at(["user", "name"]).update(() => 12);
@@ -780,11 +780,11 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects invalid setMany before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number,
-            },
+            }),
           })));
 
           return map.at(["user"]).setMany({ name: "Grace", age: "old" });
@@ -796,7 +796,7 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects invalid array mutation before mutation",
         input: { items: [0, 1] },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
             items: s.array(s.number),
           })));
 
@@ -809,11 +809,11 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects invalid object setKey before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number,
-            },
+            }),
           })));
 
           return map.at(["user"]).object.setKey("age", "old");
@@ -826,11 +826,11 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects delete required field before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           })));
 
           return map.at(["user", "name"]).delete();
@@ -842,11 +842,11 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema allows delete optional field",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           })));
 
           return map.at(["user", "age"]).delete();
@@ -862,11 +862,11 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema rejects object.deleteKey required field before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           })));
 
           return map.at(["user"]).object.deleteKey("name");
@@ -878,11 +878,11 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema allows object.deleteKey optional field",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           })));
 
           return map.at(["user"]).object.deleteKey("age");
@@ -898,10 +898,10 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle schema allows object.deleteKey unknown field",
         input: { user: { name: "Ada", role: "admin" } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
-            user: {
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           })));
 
           return map.at(["user"]).object.deleteKey("role");
@@ -917,7 +917,7 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle exact schema rejects unknown object.setKey before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
             user: s.exact({
               name: s.string,
             }),
@@ -932,7 +932,7 @@ export function livemap_suites_handle_2(): TestSuite {
         name: "handle exact schema allows no-op delete of absent unknown object key",
         input: { user: { name: "Ada" } },
         act: (map) => {
-          map.schema.use(hson.liveMap.schema.define((s) => ({
+          map.schema.use(hson.liveMap.schema.define((s) => s.object({
             user: s.exact({
               name: s.string,
             }),

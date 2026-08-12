@@ -328,7 +328,7 @@ function make_html_schema_case(spec: HtmlSchemaCaseSpec): TestCase {
       html: spec.html,
     },
     run: () => {
-      const schema = hson.liveMap.schema.define((s) => ({
+      const schema = hson.liveMap.schema.define((s) => s.object({
         button: s.string,
       }));
 

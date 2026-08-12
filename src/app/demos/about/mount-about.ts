@@ -10,7 +10,7 @@ type AboutControlState = Readonly<{
   activeKey: string;
 }>;
 
-const ABOUT_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => ({
+const ABOUT_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => scm.object({
   activeKey: scm.string,
 }));
 

@@ -30,7 +30,7 @@ type BuildControlState = {
     touched: boolean;
 };
 
-const BUILD_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => ({
+const BUILD_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => scm.object({
     inProgress: scm.boolean,
     activeTab: scm.pick("render", "html"),
     touched: scm.boolean,

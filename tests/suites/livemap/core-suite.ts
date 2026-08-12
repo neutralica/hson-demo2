@@ -197,10 +197,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           const returned: unknown = map.schema.use(schema);
 
@@ -327,10 +327,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -352,10 +352,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           let message = "";
 
@@ -387,10 +387,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: 12 } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           let message = "";
 
@@ -420,10 +420,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -445,10 +445,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           let message = "";
 
@@ -480,11 +480,11 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -510,11 +510,11 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number,
-            },
+            }),
           }));
           let message = "";
 
@@ -546,10 +546,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -573,11 +573,11 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           }));
           let message = "";
 
@@ -609,11 +609,11 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", age: 37 } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
               age: s.number.optional,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -638,10 +638,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -666,10 +666,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           let message = "";
 
@@ -975,10 +975,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
 
           map.schema.use(schema);
@@ -1003,10 +1003,10 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
-            user: {
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           let message = "";
 
@@ -1038,7 +1038,7 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
+          const schema = hson.liveMap.schema.define((s) => s.object({
             user: s.exact({
               name: s.string,
             }),
@@ -1070,7 +1070,7 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
-          const schema = hson.liveMap.schema.define((s) => ({
+          const schema = hson.liveMap.schema.define((s) => s.object({
             user: s.exact({
               name: s.string,
             }),
@@ -1101,9 +1101,9 @@ export function livemap_suites_core(): TestSuite {
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = hson.liveMap.schema.define((s) => s.exact({
-            user: {
+            user: s.object({
               name: s.string,
-            },
+            }),
           }));
           let message = "";
 
@@ -1225,7 +1225,7 @@ export function livemap_suites_core(): TestSuite {
           input: preview_value({ count: 0 }),
         },
         run: () => {
-          const schema = hson.liveMap.schema.define((s) => ({
+          const schema = hson.liveMap.schema.define((s) => s.object({
             count: s.number,
           }));
           const map = make_livemap_core(

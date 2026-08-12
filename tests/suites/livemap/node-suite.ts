@@ -134,8 +134,8 @@ export function livemap_suites_node(): TestSuite {
         suite: SUITE,
         name: "node attr mutation bypasses schema validation",
         run: () => {
-          const schema = hson.liveMap.schema.define(() => ({
-            button: {},
+          const schema = hson.liveMap.schema.define((s) => s.object({
+            button: s.object({}),
           }));
           const map = make_livemap_core(
             hson.fromTrustedHtml("<button>Press</button>").toNode(),

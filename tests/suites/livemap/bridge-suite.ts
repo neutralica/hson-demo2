@@ -316,10 +316,10 @@ function make_schema_reject_case(suite: string): TestCase {
       path: preview_value(["form", "count"]),
     },
     run: () => {
-      const schema = hson.liveMap.schema.define((s) => ({
-        form: {
+      const schema = hson.liveMap.schema.define((s) => s.object({
+        form: s.object({
           count: s.number,
-        },
+        }),
       }));
       const map = hson.liveMap.fromJson({ form: { count: 1 } }).schema.use(schema) as unknown as BridgeMap;
       const target = make_input_target();

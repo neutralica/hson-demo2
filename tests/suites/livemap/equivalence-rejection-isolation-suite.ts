@@ -35,7 +35,7 @@ function rejects(run: () => unknown): boolean {
 
 function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[] {
   const sourceMap = hson.liveMap.fromJson({ value: initial(route), guard: 1 })
-    .schema.use(hson.liveMap.schema.define((s) => ({ value: s.unknown, guard: s.number })));
+    .schema.use(hson.liveMap.schema.define((s) => s.object({ value: s.unknown, guard: s.number })));
   const host = hson.liveHost.create({ map: sourceMap });
   const source = host.map as unknown as LiveMap;
   const target = hson.liveMap.fromJson({ value: initial(route), guard: 1 });
