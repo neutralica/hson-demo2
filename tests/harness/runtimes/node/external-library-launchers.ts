@@ -120,7 +120,7 @@ const SUBJECTS: Readonly<Record<HsonLiveTestLauncher["subject"], TestSubject>> =
 });
 
 const TSX_PARITY_MANIFEST_FINGERPRINT =
-  "b277024d79b24704db920726d8b7db12e83a675f17205e4b72e9d42703727fb7";
+  "1af6635d84e315b51f0533ed4f2b57d09b993197de580caf3e1e8bc934cc4f34";
 
 function launcher_manifest_fingerprint(): string {
   return createHash("sha256").update(hson_live_test_launchers.map((launcher) => [
