@@ -32,7 +32,8 @@ export function livemap_bind_suite(): TestSuite {
             make_bind_mixed_map_filter_case(SUITE),
             make_bind_array_coordinate_case(SUITE),
             make_bind_listener_failure_case(SUITE),
-            make_bind_restore_limitation_case(SUITE),
+            make_bind_restore_convergence_case(SUITE),
+            make_bind_paths_restore_case(SUITE),
         ] as const,
     };
 }
@@ -760,26 +761,84 @@ function make_bind_listener_failure_case(suite: string): TestCase {
     };
 }
 
-function make_bind_restore_limitation_case(suite: string): TestCase {
+function make_bind_restore_convergence_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree binding intentionally does not converge on projected restore",
+        name: "LiveTree binding converges on changed, equal, and missing projected restore",
         run: () => {
             const host = hson.liveTree.create.div();
             const text = host.create.span();
             const map = hson.liveMap.fromJson({ label: "initial" });
             const restored = hson.liveMap.fromJson({ label: "restored" });
+            const seen: unknown[] = [];
 
-            const dispose = text.bind.text(map.at(["label"]));
+            const dispose = text.bind.path(map.at(["label"]), (tree, value) => {
+                seen.push(value);
+                tree.text.set(String(value ?? "missing"));
+            });
             map.restore(restored.capture());
-            const afterRestore = text.text.get();
-            const restoredState = map.at(["label"]).snap();
-            map.at(["label"]).set("later commit");
+            const afterChangedRestore = text.text.get();
+            map.restore(restored.capture());
+            const callsAfterEqualRestore = seen.length;
+
+            const missingHost = hson.liveTree.create.div();
+            const missingText = missingHost.create.span();
+            const missingMap = hson.liveMap.fromJson({ present: true });
+            let missingCalls = 0;
+            const disposeMissing = missingText.bind.path(missingMap.at(["missing"]), (tree, value) => {
+                missingCalls += 1;
+                tree.text.set(String(value ?? "missing"));
+            });
+            missingMap.restore(missingMap.capture());
+
+            const callsBeforeRejectedRestore = seen.length;
+            let rejected = false;
+            try {
+                map.restore({ rev: 2, format: "structural-json", value: { label: "rejected" } } as never);
+            } catch {
+                rejected = true;
+            }
 
             const rows = [
-                equal_row("projected restore installs source state", restoredState, "restored"),
-                equal_row("projected restore emits no ordinary binding feed", afterRestore, "initial"),
-                equal_row("a later ordinary commit resumes binding convergence", text.text.get(), "later commit"),
+                equal_row("changed restore reapplies the destination", afterChangedRestore, "restored"),
+                equal_row("equal restore reapplies the destination once", callsAfterEqualRestore, 3),
+                equal_row("missing-to-missing restore reapplies the destination once", missingCalls, 2),
+                equal_row("rejected restore reports failure", rejected, true),
+                equal_row("rejected restore does not reapply the destination", seen.length, callsBeforeRejectedRestore),
+            ];
+            dispose();
+            disposeMissing();
+            return { assertRows: rows };
+        },
+    };
+}
+
+function make_bind_paths_restore_case(suite: string): TestCase {
+    return {
+        suite,
+        name: "LiveTree bind.paths resnapshots a complete mixed-map tuple after restore",
+        run: () => {
+            const host = hson.liveTree.create.div();
+            const text = host.create.span();
+            const left = hson.liveMap.fromJson({ value: "left" });
+            const right = hson.liveMap.fromJson({ value: "right" });
+            const seen: string[] = [];
+            const dispose = text.bind.paths([
+                left.at(["value"]),
+                right.at(["value"]),
+            ], (tree, values) => {
+                const next = `${String(values[0])}/${String(values[1])}`;
+                seen.push(next);
+                tree.text.set(next);
+            });
+
+            left.restore(hson.liveMap.fromJson({ value: "restored" }).capture());
+            right.restore(right.capture());
+
+            const rows = [
+                equal_row("initial mixed-map tuple is synchronous", seen[0], "left/right"),
+                equal_row("changed restore resnapshots every source", seen[1], "restored/right"),
+                equal_row("equal restore still reapplies the complete tuple", seen[2], "restored/right"),
             ];
             dispose();
             return { assertRows: rows };
