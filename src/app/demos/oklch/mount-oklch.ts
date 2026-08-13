@@ -7,7 +7,7 @@ import { parse_oklch } from "../../core/helpers/color-helpers";
 import { mk_div_cls, mk_div_cls_txt } from "../../utils/makers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
 import { ROOT_CSS, PANEL_CSS, TITLE_CSS, ROW_CSS, RANGE_CSS, PREVIEW_PANEL_CSS, PREVIEW_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
-import type { OklchRig, OklchValues, OklchPickerModel, OklchInputRig, OklchChannel, OklchTarget, OklchDemoOpts } from "./oklch.types";
+import type { OklchRig, OklchValues, OklchPickerModel, OklchInputRig, OklchChannel, OklchTarget, OklchDemoOpts, OklchController } from "./oklch.types";
 import { hson } from "hson-live";
 
 
@@ -129,8 +129,10 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
   return Object.freeze({ root, preview, code, inputs, targetRows, resetBtn });
 }
 
-function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
+function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void {
   const stateMap = hson.liveMap.fromJson(makeInitialOklchLocalState(model));
+  const listeners: Array<Readonly<{ off(): void }>> = [];
+  let disposed = false;
   const storedActivePath = stateMap.at(["activePath"]).snap() as string | null;
   const storedActiveIndex = storedActivePath === null
     ? -1
@@ -258,12 +260,13 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
   };
 
   for (const item of rig.inputs) {
-    item.input.listen.onInput(() => {
+    listeners.push(item.input.listen.onInput(() => {
+      if (disposed) return;
       writeCurrentState(updateOklchState(readCurrentState(), item.channel, readInputValue(item.input)));
 
       persistActiveState();
       render();
-    });
+    }));
   }
 
   for (let i = 0; i < model.targets.length; i += 1) {
@@ -271,21 +274,24 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
     const row = rig.targetRows[i];
     if (!row || !target) continue;
 
-    row.listen.onClick(() => {
+    listeners.push(row.listen.onClick(() => {
+      if (disposed) return;
       activeTargetIndex = i;
       stateMap.at(["activePath"]).set(target.path);
       writeCurrentState(getTargetState(i, OKLCH_DEFAULT_STATE));
 
       render();
-    });
+    }));
   }
 
-  rig.code.listen.onClick(() => {
+  listeners.push(rig.code.listen.onClick(() => {
+    if (disposed) return;
     const write = navigator.clipboard?.writeText(oklchToCss(getCurrentState()));
     if (write) void write.catch(() => undefined);
-  });
+  }));
 
-  rig.resetBtn.listen.onClick(() => {
+  listeners.push(rig.resetBtn.listen.onClick(() => {
+    if (disposed) return;
     resetTokenValues();
 
     for (const target of model.targets) {
@@ -294,9 +300,17 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): void {
 
     writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
     render();
-  });
+  }));
 
   render();
+
+  return () => {
+    if (disposed) return;
+    disposed = true;
+    for (const listener of listeners.splice(0)) listener.off();
+    for (const target of model.targets) applyToTarget(target, target.initial);
+    gcss.var.remove(CURRENT_OKLCHname);
+  };
 }
 
 const clamp = (n: number, min: number, max: number): number => {
@@ -352,7 +366,7 @@ function seedTargetVars(targets: readonly OklchTarget[]): void {
   }
 }
 
-export function mount_oklch(stage: LiveTree, opts: OklchDemoOpts = {}): void {
+export function mount_oklch(stage: LiveTree, opts: OklchDemoOpts = {}): OklchController {
   const model = makeOklchModel(opts.targets);
   seedTargetVars(model.targets);
   const rig = oklchFactory(stage, model);
@@ -360,7 +374,18 @@ export function mount_oklch(stage: LiveTree, opts: OklchDemoOpts = {}): void {
   // CHANGED: oklch_init() now chooses the first target's actual current color
   // before first render, so mount should not write the fallback model state into
   // CURRENT_OKLCH here.
-  oklchInit(rig, model);
+  const stop = oklchInit(rig, model);
+  let disposed = false;
+
+  return Object.freeze({
+    root: rig.root,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      stop();
+      if (!rig.root.isDisposed) rig.root.remove();
+    },
+  });
 }
 
 

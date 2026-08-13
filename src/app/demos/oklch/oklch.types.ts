@@ -26,6 +26,11 @@ export type OklchDemoOpts = Readonly<{
   targets?: readonly OklchTarget[];
 }>;
 
+export type OklchController = Readonly<{
+  root: LiveTree;
+  dispose(): void;
+}>;
+
 export type OklchInputRig = Readonly<{
   channel: OklchChannel;
   input: LiveTree;

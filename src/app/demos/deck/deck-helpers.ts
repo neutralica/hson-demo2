@@ -46,8 +46,31 @@ function random_write_char(): string {
   return writeNoise[index] ?? "*";
 }
 export function clear_timers(state: DeckState): void {
-  state.timerIds.forEach((timerId) => window.clearInterval(timerId));
+  state.timerIds.forEach((timerId) => {
+    window.clearInterval(timerId);
+    window.clearTimeout(timerId);
+  });
   state.timerIds = [];
+  state.frameIds.forEach((frameId) => cancelAnimationFrame(frameId));
+  state.frameIds = [];
+}
+
+export function schedule_deck_timeout(state: DeckState, callback: () => void, delay: number): void {
+  if (state.disposed) return;
+  const timerId = window.setTimeout(() => {
+    state.timerIds = state.timerIds.filter((id) => id !== timerId);
+    if (!state.disposed) callback();
+  }, delay);
+  state.timerIds.push(timerId);
+}
+
+export function schedule_deck_frame(state: DeckState, callback: () => void): void {
+  if (state.disposed) return;
+  const frameId = requestAnimationFrame(() => {
+    state.frameIds = state.frameIds.filter((id) => id !== frameId);
+    if (!state.disposed) callback();
+  });
+  state.frameIds.push(frameId);
 }
 
 function write_text_value(state: DeckState, text: string, setText: TextSetter, onComplete?: () => void): void {
@@ -57,6 +80,7 @@ function write_text_value(state: DeckState, text: string, setText: TextSetter, o
   const started = performance.now();
 
   const timerId = window.setInterval(() => {
+    if (state.disposed) return;
     const elapsed = performance.now() - started;
     const progress = Math.min(1, elapsed / duration);
     const settledCount = Math.floor(chars.length * progress);

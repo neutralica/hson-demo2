@@ -7,9 +7,25 @@ import { mk_div_cls, mk_div_id } from "../../utils/makers";
 
 // ---- factory ----
 
-export function mount_point_panel(host: LiveTree): void {
+export type PointPanelController = Readonly<{
+  root: LiveTree;
+  dispose(): void;
+}>;
+
+export function mount_point_panel(host: LiveTree): PointPanelController {
   const mousePanel = point_factory(host);
-  point_init(mousePanel);
+  const stopTracking = point_init(mousePanel);
+  let disposed = false;
+
+  return Object.freeze({
+    root: mousePanel.root,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      stopTracking();
+      if (!mousePanel.root.isDisposed) mousePanel.root.remove();
+    },
+  });
 }
 
 function point_factory(host: LiveTree): PointPanelRig {

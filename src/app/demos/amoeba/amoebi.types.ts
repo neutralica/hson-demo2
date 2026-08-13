@@ -49,7 +49,6 @@ export type AmoebaButtonLayout = Readonly<{
   tone: string;
 }>;
 export type AmoebaState = {
-  selectedId: string;
   hoveredId: string | null;
   layout: AmoebaButtonLayout[];
 };
@@ -59,15 +58,19 @@ export type AmoebiMenuItem = AmoebaButtonInput;
 
 export type AmoebiMenuApi = Readonly<{
   root: LiveTree;
-  setActiveIds: (ids: readonly string[]) => void;
-  getActiveIds: () => readonly string[];
   setHoveredId: (id: string | null) => void;
+  dispose: () => void;
+}>;
+
+export type AmoebiSelectionSource = Readonly<{
+  snap(): readonly string[];
+  watch(listener: (ids: readonly string[]) => void): () => void;
 }>;
 
 export type AmoebiMenuOptions = Readonly<{
   items?: readonly AmoebiMenuItem[];
-  activeIds?: readonly string[];
-  onToggle?: (id: string, nextActiveIds: readonly string[]) => void;
+  selection?: AmoebiSelectionSource;
+  onToggle?: (id: string) => void;
   title?: string;
   showTitle?: boolean;
   ariaLabel?: string;
@@ -97,6 +100,5 @@ export type AmoebiPackedLayout = Readonly<{
   packingEnergy: number;
 }>;
 export type AmoebiRenderState = Omit<AmoebaState, "layout"> & Readonly<{
-  activeIds: readonly string[];
   layout: readonly AmoebiRenderButton[];
 }>;

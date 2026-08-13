@@ -102,7 +102,7 @@ test("TOWL performs no room, storage, runtime, or socket work before activation"
   expect(await readMetrics()).toEqual({ webSockets: 1, historyReplaces: 1, credentialReads: 1 });
 });
 
-test("widget membership lazily mounts and reuses retained widget instances", async ({ page }) => {
+test("widget membership lazily mounts and recreates disposable widget instances", async ({ page }) => {
   await reach_demo(page);
   await expect(page.locator("#motes-root")).toHaveCount(1);
   await expect(page.locator("#mouse-host, #oklch")).toHaveCount(0);
@@ -111,7 +111,7 @@ test("widget membership lazily mounts and reuses retained widget instances", asy
   await expect(page.locator("#mouse-host")).toBeVisible();
   await open_demo(page, "point");
   await expect(page.locator("#mouse-host")).not.toBeVisible();
-  await expect(page.locator("#mouse-host")).toHaveCount(1);
+  await expect(page.locator("#mouse-host")).toHaveCount(0);
   await open_demo(page, "point");
   await expect(page.locator("#mouse-host")).toBeVisible();
   await expect(page.locator("#mouse-host")).toHaveCount(1);
@@ -120,7 +120,7 @@ test("widget membership lazily mounts and reuses retained widget instances", asy
   await expect(page.locator("#oklch")).toBeVisible();
   await open_demo(page, "oklch");
   await expect(page.locator("#oklch")).not.toBeVisible();
-  await expect(page.locator("#oklch")).toHaveCount(1);
+  await expect(page.locator("#oklch")).toHaveCount(0);
 
   await open_demo(page, "bling");
   await expect(page.locator("#motes-root")).toHaveCount(0);

@@ -708,14 +708,19 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         immediate: true,
     }));
 
-    const dispose = (): void => {
-        disposed = true;
+    const deactivate = (): void => {
         activeResizeCleanup?.();
         clearResizeEdgeHighlight(activeResizeTarget);
         activeResizeTarget = undefined;
+    };
+
+    const dispose = (): void => {
+        if (disposed) return;
+        disposed = true;
+        deactivate();
         for (const stop of disposers.splice(0)) stop();
     };
 
-    const panel = { branch, reset, dispose };
+    const panel = { branch, reset, deactivate, dispose };
     return panel;
 }

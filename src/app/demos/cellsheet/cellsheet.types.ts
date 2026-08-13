@@ -74,5 +74,6 @@ export type CellsheetState = {
 export type CellsheetPanel = Readonly<{
     branch: LiveTree;
     reset: () => void;
+    deactivate: () => void;
     dispose: () => void;
 }>;

@@ -276,8 +276,8 @@ export function amoebi_view_height(state: AmoebiRenderState): number {
   return Math.max(HEX_SIZE * 12, Math.ceil(bottom + HEX_SIZE * 2.5));
 }
 
-export function make_initial_state(seed: number, buttons: readonly AmoebaButtonInput[], activeIds: readonly string[]): AmoebiRenderState {
-  return { selectedId: activeIds[0] ?? "", hoveredId: null, activeIds, layout: make_layout(buttons, seed) };
+export function make_initial_state(seed: number, buttons: readonly AmoebaButtonInput[]): AmoebiRenderState {
+  return { hoveredId: null, layout: make_layout(buttons, seed) };
 }
 
 export function make_seed(): number {

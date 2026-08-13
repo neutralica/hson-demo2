@@ -31,7 +31,7 @@ import {
   P_BLOCKcss,
 } from "./deck.css";
 import { SLIDES } from "./deck-slides";
-import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, slide_bodies, write_in_text, write_in_rendered_text } from "./deck-helpers";
+import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, schedule_deck_frame, schedule_deck_timeout, slide_bodies, write_in_text, write_in_rendered_text } from "./deck-helpers";
 import type { DeckSlideConfig, DeckState, DeckSlideBody, DeckSlideSection, DeckApi } from "./deck.types";
 import type { CssMap } from "hson-live/types";
 import { render_line_with_comment } from "../about/about-helpers";
@@ -388,7 +388,7 @@ function slide_has_stacked_headers(slide: DeckSlideConfig): boolean {
 
 function mount_slide_header(state: DeckState, host: LiveTree, text: string): void {
   const header = mk_div_cls_txt(host, "slide-header", text).css.setMany(deck_header_css());
-  window.setTimeout(() => header.css.setMany(deckHeaderVisibleCss), 30);
+  schedule_deck_timeout(state, () => header.css.setMany(deckHeaderVisibleCss), 30);
 }
 
 function mount_header_stack(state: DeckState, host: LiveTree, slide: DeckSlideConfig): void {
@@ -477,6 +477,8 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
     isOpen: false,
     index: 0,
     timerIds: [],
+    frameIds: [],
+    disposed: false,
   };
 
   const root = mk_div_id(host, "live-demo-deck").css.setMany(deckRootCss);
@@ -500,33 +502,35 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
   };
 
   const render_current = (): void => {
+    if (state.disposed) return;
     clear_timers(state);
     sync_counter();
     stage.css.setMany({ opacity: "0", transform: "translateY(-1rem)", filter: "blur(2px)" });
 
-    window.setTimeout(() => {
+    schedule_deck_timeout(state, () => {
       mount_slide(state, stage, slides[state.index]! ?? slides[0]);
-      requestAnimationFrame(() => {
+      schedule_deck_frame(state, () => {
         stage.css.setMany({ opacity: "1", transform: "translateY(0)", filter: "blur(0)" });
       });
     }, deckTransitionMs());
   };
 
   const open = (): void => {
-    if (state.isOpen) return;
+    if (state.disposed || state.isOpen) return;
     state.isOpen = true;
     root.css.setMany({ display: "block" });
     render_current();
   };
 
   const close = (): void => {
-    if (!state.isOpen) return;
+    if (state.disposed || !state.isOpen) return;
     state.isOpen = false;
     clear_timers(state);
     root.css.setMany({ display: "none" });
   }
 
   const goTo = (index: number): void => {
+    if (state.disposed) return;
     const nextIndex = clamp_index(index, slides);
     if (nextIndex === state.index && state.isOpen) return;
     state.index = nextIndex;
@@ -540,11 +544,12 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
     else open();
   };
 
-  prevButton.listen.stopProp().onClick(prev);
-  nextButton.listen.stopProp().onClick(next);
-  closeButton.listen.stopProp().onClick(close);
+  const prevListener = prevButton.listen.stopProp().onClick(prev);
+  const nextListener = nextButton.listen.stopProp().onClick(next);
+  const closeListener = closeButton.listen.stopProp().onClick(close);
 
-  root.listen.document.onKeyDown((ke) => {
+  const keyListener = root.listen.document.onKeyDown((ke) => {
+    if (state.disposed) return;
     if (ke.key === "~" || ke.key === "~") {
       ke.preventDefault();
       toggle();
@@ -571,5 +576,17 @@ export function mount_deck(host: LiveTree, slides: readonly DeckSlideConfig[] = 
     }
   });
 
-  return Object.freeze({ root, open, close, toggle, next, prev, goTo });
+  const dispose = (): void => {
+    if (state.disposed) return;
+    state.disposed = true;
+    state.isOpen = false;
+    clear_timers(state);
+    prevListener.off();
+    nextListener.off();
+    closeListener.off();
+    keyListener.off();
+    if (!root.isDisposed) root.remove();
+  };
+
+  return Object.freeze({ root, open, close, toggle, next, prev, goTo, dispose });
 }

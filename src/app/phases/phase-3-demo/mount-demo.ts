@@ -267,8 +267,11 @@ function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRe
       mount: () => mount($BUILD, (host) => { mount_build_panels(host); }),
     },
     [$BARBAR]: {
-      retention: "retain",
-      mount: () => mount($BARBAR, mount_bar_bar),
+      retention: "recreate",
+      mount: () => mount($BARBAR, (host) => {
+        const panel = mount_bar_bar(host);
+        return panel.dispose;
+      }),
     },
     [$TOWL]: {
       retention: "recreate",
@@ -278,11 +281,25 @@ function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRe
       }),
     },
     [$CELLS]: {
-      retention: "recreate",
-      mount: () => mount($CELLS, (host) => {
+      retention: "retain",
+      mount: () => {
+        const host = main_host(shell.uiRoot, $CELLS);
         const panel = create_cellsheet_panel(host);
-        return panel.dispose;
-      }),
+        let disposed = false;
+        return Object.freeze({
+          activate: () => _unhide(host),
+          deactivate: () => {
+            panel.deactivate();
+            _hide(host);
+          },
+          dispose: () => {
+            if (disposed) return;
+            disposed = true;
+            panel.dispose();
+            if (!host.isDisposed) host.remove();
+          },
+        });
+      },
     },
     [$FLEURS]: {
       retention: "recreate",
@@ -321,23 +338,23 @@ function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRe
 function make_widget_registrations(shell: DemoShell, pointSlot: LiveTree): Record<WidgetId, SurfaceRegistration> {
   const registrations = {
     [$POINT]: {
-      retention: "retain",
+      retention: "recreate",
       mount: () => {
         const host = mk_div_id(pointSlot, "mouse-host")
           .data.set("shell-widget-surface", $POINT)
           .css.setMany(POINT_HOSTcss);
-        mount_point_panel(host);
-        return host_controller(host);
+        const panel = mount_point_panel(host);
+        return host_controller(host, panel.dispose);
       },
     },
     [$OKLCH]: {
-      retention: "retain",
+      retention: "recreate",
       mount: () => {
         const host = mk_div_id(shell.uiRoot, "oklch")
           .data.set("shell-widget-surface", $OKLCH)
           .css.setMany(OKLCH_HOSTcss);
-        mount_oklch(host);
-        return host_controller(host);
+        const panel = mount_oklch(host);
+        return host_controller(host, panel.dispose);
       },
     },
     bling: {
@@ -393,7 +410,18 @@ export async function mount_demo(stage: LiveTree): Promise<DemoShellController> 
   });
 
   const amoebiMenu = make_amoebi(menuBox, {
-    activeIds: active_menu_ids(initialView, initialWidgets),
+    selection: {
+      snap: () => active_menu_ids(currentView.snap(), activeWidgets.snap()),
+      watch: (listener) => {
+        const notify = (): void => listener(active_menu_ids(currentView.snap(), activeWidgets.snap()));
+        const stopSelectionView = currentView.watch(notify);
+        const stopSelectionWidgets = activeWidgets.watch(notify);
+        return () => {
+          stopSelectionView();
+          stopSelectionWidgets();
+        };
+      },
+    },
     isolatedIds: WIDGET_IDS,
     items: amoebi_menu_items(),
     showTitle: false,
@@ -413,18 +441,13 @@ export async function mount_demo(stage: LiveTree): Promise<DemoShellController> 
     },
   });
 
-  const sync_menu = (): void => {
-    amoebiMenu.setActiveIds(active_menu_ids(currentView.snap(), activeWidgets.snap()));
-  };
   const reconcileMain = (next: DemoView): void => {
     lifecycle.reconcileMain(next);
     screen.attrs.set("data-shell-current-main", next ?? "");
-    sync_menu();
   };
   const reconcileWidgets = (next: readonly WidgetId[]): void => {
     lifecycle.reconcileWidgets(next);
     screen.attrs.set("data-shell-active-widgets", next.join(" "));
-    sync_menu();
   };
 
   const stopView = currentView.watch(reconcileMain);
@@ -475,9 +498,8 @@ export async function mount_demo(stage: LiveTree): Promise<DemoShellController> 
       lifecycle.dispose();
       fireworksAbort.abort();
       fireworks?.teardown();
-      deck.close();
-      if (!deck.root.isDisposed) deck.root.remove();
-      if (!amoebiMenu.root.isDisposed) amoebiMenu.root.remove();
+      deck.dispose();
+      amoebiMenu.dispose();
       if (!demoLayer.isDisposed) demoLayer.remove();
       if (activeDemoShell === controller) activeDemoShell = undefined;
     },

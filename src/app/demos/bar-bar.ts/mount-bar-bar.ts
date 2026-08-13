@@ -17,6 +17,10 @@ type State = {
   l: boolean; r: boolean; run: boolean; hold: boolean; win: boolean; lose: boolean; score: number; raf?: number;
 };
 
+export type BarBarController = Readonly<{
+  dispose(): void;
+}>;
+
 const ROOTcss: CssMap = {
   width: "100%", height: "100%", minHeight: "520px", display: "grid", placeItems: "center",
   background: C.shell, color: C.ink, fontFamily: "Verdana, Arial Black, sans-serif", outline: "none",
@@ -133,7 +137,7 @@ function draw(ctx: CanvasRenderingContext2D, s: State): void {
   if (s.win || s.lose) type(ctx, s.win ? "ОЧИЩЕНО. КЛИК СБРОС." : "ШАР УТЕРЯН. КЛИК СБРОС.", W / 2, 318, "center", 30, C.rot);
 }
 
-export function mount_bar_bar(host: LiveTree): void {
+export function mount_bar_bar(host: LiveTree): BarBarController {
   host.empty().css.setMany(ROOTcss).attrs.set("tabindex", "0");
   const canvas = host.create.canvas().css.setMany(CANVAScss);
   canvas.canvas.width.set(W); canvas.canvas.height.set(H);
@@ -141,7 +145,9 @@ export function mount_bar_bar(host: LiveTree): void {
   const ctx = canvas.canvas.must.ctx2d({ alpha: false }, "BAR-BAR canvas");
   const s = fresh();
 
-  host.listen.window.onKeyDown(ev => {
+  let disposed = false;
+  const keyDown = host.listen.window.onKeyDown(ev => {
+    if (disposed) return;
     const k = ev.key.toLowerCase();
     if (k === "arrowleft" || k === "a") s.l = true;
     if (k === "arrowright" || k === "d") s.r = true;
@@ -149,13 +155,15 @@ export function mount_bar_bar(host: LiveTree): void {
     else if (!s.run) reset(s);
   });
 
-  host.listen.window.onKeyUp(ev => {
+  const keyUp = host.listen.window.onKeyUp(ev => {
+    if (disposed) return;
     const k = ev.key.toLowerCase();
     if (k === "arrowleft" || k === "a") s.l = false;
     if (k === "arrowright" || k === "d") s.r = false;
   });
 
-  canvas.listen.preventDefault().onPointerMove(ev => {
+  const pointerMove = canvas.listen.preventDefault().onPointerMove(ev => {
+    if (disposed) return;
     const p = canvas.canvas.pointer(ev);
     if (p) {
       s.px = clamp(p.x - PW / 2, 0, W - PW);
@@ -163,13 +171,37 @@ export function mount_bar_bar(host: LiveTree): void {
     }
   });
 
-  canvas.listen.preventDefault().onClick(() => {
+  const click = canvas.listen.preventDefault().onClick(() => {
+    if (disposed) return;
     if (s.hold) launch(s);
     else if (!s.run) reset(s);
   });
 
-  const frame = (): void => { tick(s); draw(ctx, s); s.raf = requestAnimationFrame(frame); };
+  const frame = (): void => {
+    if (disposed) return;
+    tick(s);
+    draw(ctx, s);
+    if (!disposed) s.raf = requestAnimationFrame(frame);
+  };
   frame();
+
+  return Object.freeze({
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      if (s.raf !== undefined) {
+        cancelAnimationFrame(s.raf);
+        delete s.raf;
+      }
+      keyDown.off();
+      keyUp.off();
+      pointerMove.off();
+      click.off();
+      s.l = false;
+      s.r = false;
+      s.run = false;
+    },
+  });
 }
 
 export default mount_bar_bar;

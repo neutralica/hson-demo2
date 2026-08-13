@@ -27,7 +27,7 @@ const fmt_int = (n: number): string => String(Math.round(n));
 
 
 // ---- init (behavior) ----
-export function point_init(rig: PointPanelRig): void {
+export function point_init(rig: PointPanelRig): () => void {
     let raf = 0;
     let mounted = true;
 
@@ -48,7 +48,7 @@ export function point_init(rig: PointPanelRig): void {
 
     // radians -> degrees
     const rad_to_deg = (rad: number): number => (rad * 180) / Math.PI;
-    rig.root.listen.window.passive().onPointerMove(onMove);
+    const pointerMove = rig.root.listen.window.passive().onPointerMove(onMove);
     // window.addEventListener("pointermove", onMove, { passive: true });
 
     const MAX = rig.readout.rows.length;
@@ -115,10 +115,14 @@ export function point_init(rig: PointPanelRig): void {
 
     raf = requestAnimationFrame(tick);
 
-    (rig as any).dispose = (): void => {
+    const dispose = (): void => {
+        if (!mounted) return;
         mounted = false;
         cancelAnimationFrame(raf);
+        pointerMove.off();
     };
+
+    return dispose;
 }
 
 function find_visual_only_elements(

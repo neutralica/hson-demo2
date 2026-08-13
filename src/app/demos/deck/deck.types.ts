@@ -44,11 +44,14 @@ export type DeckApi = Readonly<{
   next: () => void;
   prev: () => void;
   goTo: (index: number) => void;
+  dispose: () => void;
 }>;
 export type DeckState = {
   isOpen: boolean;
   index: number;
   timerIds: number[];
+  frameIds: number[];
+  disposed: boolean;
 };
 
 export type MarkdownRenderOptions = Readonly<{
