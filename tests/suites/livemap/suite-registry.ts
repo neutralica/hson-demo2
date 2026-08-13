@@ -7,7 +7,6 @@ import { livemap_suite_editor } from "./editor-suite";
 import { livemap_suite_feed } from "./feed-suite";
 import { livemap_suites_handle } from "./handle-suite";
 import { livemap_suites_link } from "./link-suite";
-import { livemap_suites_node } from "./node-suite";
 import { livemap_suites_path } from "./path-suite";
 import { livemap_suites_guard } from "./guard-suite";
 import { livemap_suites_handle_2 } from "./handle-suite-2";
@@ -102,7 +101,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_path(),
     livemap_suites_link(),
     livemap_suites_handle(),
-    livemap_suites_node(),
     livemap_suites_guard(),
     livemap_suites_handle_2(),
     livemap_suites_proxy(),

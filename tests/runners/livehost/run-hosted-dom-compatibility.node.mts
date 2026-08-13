@@ -7,7 +7,7 @@ import { all_livemap_suites } from "../../suites/livemap/suite-registry";
 import { all_livetree_suites } from "../../suites/livetree/suite-registry";
 
 const DOM_LIVEMAP_IDS = new Set([
-  "livemap/node-internals", "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
+  "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
   "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind",
   "livemap/document-foundation",
 ]);

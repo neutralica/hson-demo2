@@ -48,40 +48,6 @@ export type CoreAtOriginalPathStabilityCaseSpec = Readonly<{
   expectedRoot: JsonValue;
 }>;
 
-export type CoreNodeTagCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedTag: string;
-}>;
-
-export type CoreNodeMissingCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  expectedMessage: string;
-}>;
-
-export type CoreNodePathCopyCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  mutateReturnedPathTo: (string | number)[];
-  expectedHandlePath: (string | number)[];
-}>;
-
-export type CoreNodeOriginalPathStabilityCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  input: JsonValue;
-  path: (string | number)[];
-  mutateOriginalPathTo: (string | number)[];
-  expectedTag: string;
-}>;
-
 export type CoreSetPathCopyCaseSpec = Readonly<{
   suite: string;
   name: string;

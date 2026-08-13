@@ -224,9 +224,6 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/livemap-tests/link-contract-suite.ts` | suite definition | `tests/suites/livemap/link-contract-suite.ts` |
 | `src/tests/livemap-tests/link-suite.ts` | suite definition | `tests/suites/livemap/link-suite.ts` |
 | `src/tests/livemap-tests/misc-suite.ts` | suite definition | `tests/suites/livemap/misc-suite.ts` |
-| `src/tests/livemap-tests/node-helpers.ts` | suite definition | `tests/suites/livemap/node-helpers.ts` |
-| `src/tests/livemap-tests/node-suite.ts` | suite definition | `tests/suites/livemap/node-suite.ts` |
-| `src/tests/livemap-tests/node-types.ts` | suite definition | `tests/suites/livemap/node-types.ts` |
 | `src/tests/livemap-tests/path-handle-suite.ts` | suite definition | `tests/suites/livemap/path-handle-suite.ts` |
 | `src/tests/livemap-tests/path-suite.ts` | suite definition | `tests/suites/livemap/path-suite.ts` |
 | `src/tests/livemap-tests/proxy-suite.ts` | suite definition | `tests/suites/livemap/proxy-suite.ts` |

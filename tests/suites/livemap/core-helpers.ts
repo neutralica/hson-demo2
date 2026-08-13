@@ -1,6 +1,6 @@
 import { make_livemap_core, type LiveMapFeedEvent } from "hson-live/livemap";
 import type { TestCase } from "../../harness/core/test-contracts";
-import type { CoreAtSnapCaseSpec, CoreAtSetCaseSpec, CoreAtFeedCaseSpec, CoreAtPathCopyCaseSpec, CoreAtOriginalPathStabilityCaseSpec, CoreNodeTagCaseSpec, CoreNodeMissingCaseSpec, CoreNodePathCopyCaseSpec, CoreNodeOriginalPathStabilityCaseSpec, CoreSetPathCopyCaseSpec, CoreSetManyCaseSpec, CoreSetManyFeedCaseSpec, CoreSetManyPathCopyCaseSpec, CoreDeleteCaseSpec, CoreDeleteFeedCaseSpec, CoreDeletePathCopyCaseSpec, CoreDeleteThrowCaseSpec } from "./core.types";
+import type { CoreAtSnapCaseSpec, CoreAtSetCaseSpec, CoreAtFeedCaseSpec, CoreAtPathCopyCaseSpec, CoreAtOriginalPathStabilityCaseSpec, CoreSetPathCopyCaseSpec, CoreSetManyCaseSpec, CoreSetManyFeedCaseSpec, CoreSetManyPathCopyCaseSpec, CoreDeleteCaseSpec, CoreDeleteFeedCaseSpec, CoreDeletePathCopyCaseSpec, CoreDeleteThrowCaseSpec } from "./core.types";
 import { preview_value, equal_row } from "./test-helpers";
 import { json_root_node } from "./json-root-node";
 import type { LiveMapFeedEventPreview, LiveMapFeedCaseSpec } from "./types";
@@ -122,114 +122,6 @@ export function make_core_at_original_path_stability_case(spec: CoreAtOriginalPa
       return {
         assertRows: [
           equal_row(`${spec.name}: root`, map.snap(), spec.expectedRoot),
-          equal_row(`${spec.name}: handle path`, handle.path(), spec.path),
-        ],
-      };
-    },
-  };
-}
-export function make_core_node_tag_case(spec: CoreNodeTagCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.debug.node(spec.path);
-      const node = handle.get();
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: path`, handle.path(), spec.path),
-          equal_row(`${spec.name}: get tag`, node?.$_tag, spec.expectedTag),
-          equal_row(`${spec.name}: must tag`, handle.must().$_tag, spec.expectedTag),
-          equal_row(`${spec.name}: tag`, handle.tag(), spec.expectedTag),
-          equal_row(`${spec.name}: attrs`, handle.attrs(), node === undefined ? undefined : (node.$_attrs ?? {})),
-          equal_row(`${spec.name}: meta`, handle.meta(), node?.$_meta),
-          equal_row(`${spec.name}: content`, handle.content(), node?.$_content),
-        ],
-      };
-    },
-  };
-}
-export function make_core_node_missing_case(spec: CoreNodeMissingCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.debug.node(spec.path);
-      let message = "";
-
-      try {
-        handle.must();
-      } catch (error) {
-        message = error instanceof Error ? error.message : String(error);
-      }
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: get`, handle.get(), undefined),
-          equal_row(`${spec.name}: tag`, handle.tag(), undefined),
-          equal_row(`${spec.name}: attrs`, handle.attrs(), undefined),
-          equal_row(`${spec.name}: meta`, handle.meta(), undefined),
-          equal_row(`${spec.name}: content`, handle.content(), undefined),
-          equal_row(`${spec.name}: must error`, message, spec.expectedMessage),
-        ],
-      };
-    },
-  };
-}
-export function make_core_node_path_copy_case(spec: CoreNodePathCopyCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      mutateReturnedPathTo: preview_value(spec.mutateReturnedPathTo),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const handle = map.debug.node(spec.path);
-      const returnedPath = handle.path() as (string | number)[];
-
-      returnedPath.splice(0, returnedPath.length, ...spec.mutateReturnedPathTo);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: returned path mutation`, handle.path(), spec.expectedHandlePath),
-        ],
-      };
-    },
-  };
-}
-export function make_core_node_original_path_stability_case(spec: CoreNodeOriginalPathStabilityCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      input: preview_value(spec.input),
-      path: preview_value(spec.path),
-      mutateOriginalPathTo: preview_value(spec.mutateOriginalPathTo),
-    },
-    run: () => {
-      const map = make_livemap_core(json_root_node(spec.input));
-      const originalPath = [...spec.path];
-      const handle = map.debug.node(originalPath);
-
-      originalPath.splice(0, originalPath.length, ...spec.mutateOriginalPathTo);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: tag`, handle.tag(), spec.expectedTag),
           equal_row(`${spec.name}: handle path`, handle.path(), spec.path),
         ],
       };

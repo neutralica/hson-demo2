@@ -36,8 +36,8 @@ expect_stage5b(
     && !worker.executor.capabilities.provides.includes("synthetic-dom"),
   "only Node advertises the installed synthetic-DOM capability",
 );
-expect_stage5b(domDescriptors.length === 992, "all 992 canonical non-Canvas synthetic-DOM cases are registered");
-expect_stage5b(new Set(domDescriptors.map((descriptor) => descriptor.suite)).size === 79, "all 79 canonical non-Canvas synthetic-DOM suites are registered");
+expect_stage5b(domDescriptors.length === 955, "all 955 canonical non-Canvas synthetic-DOM cases are registered");
+expect_stage5b(new Set(domDescriptors.map((descriptor) => descriptor.suite)).size === 78, "all 78 canonical non-Canvas synthetic-DOM suites are registered");
 expect_stage5b(
   domDescriptors.every((descriptor) => (
     descriptor.suite.startsWith("transform/") ? descriptor.subject === "transform"

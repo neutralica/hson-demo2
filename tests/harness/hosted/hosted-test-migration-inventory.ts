@@ -77,7 +77,6 @@ const NODE_HOSTED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.free
 export const HOST_READY_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([]);
 
 const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = Object.freeze([
-  dom("livemap/node-internals", 37, "all_livemap_suites", ["DOMParser"]),
   dom("livemap/bridge-livetree", 29, "all_livemap_suites", ["DOMParser"]),
   dom("livemap/bridge-livetree-controls", 11, "all_livemap_suites", ["DOMParser", "HTMLElement", "events"]),
   dom("livemap/schema-controls", 8, "all_livemap_suites", ["DOMParser", "HTMLElement", "events"]),

@@ -5,7 +5,7 @@ import { make_livemap_core } from "hson-live/livemap";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, make_core_set_case, make_core_snap_case, preview_value } from "./test-helpers";
 import type { LiveMapFeedEventPreview } from "./types";
-import { make_core_set_path_copy_case, make_core_set_many_case, make_core_set_many_feed_case, make_core_set_many_path_copy_case, json_root_node, preview_core_feed_event, make_core_delete_case, make_core_delete_feed_case, make_core_delete_path_copy_case, make_core_delete_throw_case, make_core_feed_case, make_core_feed_dispose_case, make_core_at_snap_case, make_core_at_set_case, make_core_at_feed_case, make_core_at_path_copy_case, make_core_at_original_path_stability_case, make_core_node_tag_case, make_core_node_missing_case, make_core_node_path_copy_case, make_core_node_original_path_stability_case } from "./core-helpers";
+import { make_core_set_path_copy_case, make_core_set_many_case, make_core_set_many_feed_case, make_core_set_many_path_copy_case, json_root_node, preview_core_feed_event, make_core_delete_case, make_core_delete_feed_case, make_core_delete_path_copy_case, make_core_delete_throw_case, make_core_feed_case, make_core_feed_dispose_case, make_core_at_snap_case, make_core_at_set_case, make_core_at_feed_case, make_core_at_path_copy_case, make_core_at_original_path_stability_case } from "./core-helpers";
 
 export function livemap_suites_core(): TestSuite {
   const SUITE = "livemap/core";
@@ -929,43 +929,6 @@ export function livemap_suites_core(): TestSuite {
         mutateOriginalPathTo: ["user", "role"],
         value: "Grace",
         expectedRoot: { user: { name: "Grace", role: "user" } },
-      }),
-      make_core_node_tag_case({
-        suite: SUITE,
-        name: "core node resolves object property tag",
-        input: { user: { name: "Ada" } },
-        path: ["user"],
-        expectedTag: "user",
-      }),
-      make_core_node_tag_case({
-        suite: SUITE,
-        name: "core node resolves nested property tag",
-        input: { user: { name: "Ada" } },
-        path: ["user", "name"],
-        expectedTag: "name",
-      }),
-      make_core_node_missing_case({
-        suite: SUITE,
-        name: "core node missing path returns undefined and must throws",
-        input: { user: { name: "Ada" } },
-        path: ["user", "role"],
-        expectedMessage: "LiveMap node path does not resolve: [\"user\", \"role\"]",
-      }),
-      make_core_node_path_copy_case({
-        suite: SUITE,
-        name: "core node path returns copy",
-        input: { user: { name: "Ada" } },
-        path: ["user", "name"],
-        mutateReturnedPathTo: ["user", "role"],
-        expectedHandlePath: ["user", "name"],
-      }),
-      make_core_node_original_path_stability_case({
-        suite: SUITE,
-        name: "core node path is stable after original path mutates",
-        input: { user: { name: "Ada", role: "user" } },
-        path: ["user", "name"],
-        mutateOriginalPathTo: ["user", "role"],
-        expectedTag: "name",
       }),
       {
         suite: SUITE,

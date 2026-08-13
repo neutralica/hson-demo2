@@ -117,8 +117,8 @@ expect_stage5a(
 const domPending = all_jsdom_hosted_test_suites();
 const canvasPending = all_jsdom_hosted_canvas_suites();
 expect_stage5a(
-  domPending.length === 78 && domPending.reduce((total, suite) => total + suite.cases.length, 0) === 968,
-  "pending synthetic-DOM inventory remains explicit",
+  domPending.length === 77 && domPending.reduce((total, suite) => total + suite.cases.length, 0) === 931,
+  "pending synthetic-DOM inventory remains explicit after public debug-node removal",
 );
 expect_stage5a(
   canvasPending.length === 6

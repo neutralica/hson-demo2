@@ -113,27 +113,6 @@ export function livemap_suite_html_proof(): TestSuite {
         expectedCommitChanged: true,
       }),
 
-      make_html_node_attr_case({
-        suite: SUITE,
-        name: "html node handle reads element attr outside projected snap",
-        html: `<button class="primary">Press</button>`,
-        path: ["button"],
-        attrName: "class",
-        expectedAttr: "primary",
-        expectedSnap: { button: "Press" },
-      }),
-
-      make_html_node_set_attr_case({
-        suite: SUITE,
-        name: "html node attr mutation does not change projected snap",
-        html: `<button class="primary">Press</button>`,
-        path: ["button"],
-        attrName: "class",
-        attrValue: "secondary",
-        expectedAttr: "secondary",
-        expectedSnap: { button: "Press" },
-      }),
-
       make_html_schema_case({
         suite: SUITE,
         name: "html projected snap accepts compatible schema",
@@ -169,27 +148,6 @@ type HtmlReplaceCaseSpec = Readonly<{
   value: JsonValue;
   expectedSnap: JsonValue;
   expectedCommitChanged: boolean;
-}>;
-
-type HtmlNodeAttrCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: readonly (string | number)[];
-  attrName: string;
-  expectedAttr: string | undefined;
-  expectedSnap: JsonValue;
-}>;
-
-type HtmlNodeSetAttrCaseSpec = Readonly<{
-  suite: string;
-  name: string;
-  html: string;
-  path: readonly (string | number)[];
-  attrName: string;
-  attrValue: string;
-  expectedAttr: string | undefined;
-  expectedSnap: JsonValue;
 }>;
 
 type HtmlSchemaCaseSpec = Readonly<{
@@ -264,55 +222,6 @@ function make_html_replace_case(spec: HtmlReplaceCaseSpec): TestCase {
       return {
         assertRows: [
           equal_row(`${spec.name}: changed`, commit.changed, spec.expectedCommitChanged),
-          equal_row(`${spec.name}: snap`, map.snap(), spec.expectedSnap),
-        ],
-      };
-    },
-  };
-}
-
-function make_html_node_attr_case(spec: HtmlNodeAttrCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      html: spec.html,
-      path: preview_value(spec.path),
-      attrName: spec.attrName,
-    },
-    run: () => {
-      const map = html_map(spec.html);
-      const node = map.debug.node(spec.path);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: attr`, node.attr(spec.attrName), spec.expectedAttr),
-          equal_row(`${spec.name}: snap`, map.snap(), spec.expectedSnap),
-        ],
-      };
-    },
-  };
-}
-
-function make_html_node_set_attr_case(spec: HtmlNodeSetAttrCaseSpec): TestCase {
-  return {
-    suite: spec.suite,
-    name: spec.name,
-    meta: {
-      html: spec.html,
-      path: preview_value(spec.path),
-      attrName: spec.attrName,
-      attrValue: spec.attrValue,
-    },
-    run: () => {
-      const map = html_map(spec.html);
-      const node = map.debug.node(spec.path);
-
-      node.setAttr(spec.attrName, spec.attrValue);
-
-      return {
-        assertRows: [
-          equal_row(`${spec.name}: attr`, node.attr(spec.attrName), spec.expectedAttr),
           equal_row(`${spec.name}: snap`, map.snap(), spec.expectedSnap),
         ],
       };

@@ -52,7 +52,6 @@ export function all_hosted_test_suites(): readonly TestSuite[] {
 
 const DEV_SUITES = new Set(["livemap/rev", "livetree/quid-level-2"]);
 const DOM_LIVEMAP_SUITES = new Set([
-  "livemap/node-internals",
   "livemap/bridge-livetree",
   "livemap/bridge-livetree-controls",
   "livemap/schema-controls",
