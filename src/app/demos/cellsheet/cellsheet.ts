@@ -1,27 +1,33 @@
 // cellsheet.ts
 
-import { hson  } from "hson-live";
-import type { CellViewModel, CellsheetDerivedCellState, CellsheetOperationState, CellsheetPanel } from "./cellsheet.types";
+import type { CellViewModel, CellsheetDimensionTuple, CellsheetPanel } from "./cellsheet.types";
 import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, CARDcss, LABELcss, METAcss, RESETcss, FOOTERcss, RESIZE_EDGE, SEL_EDGE, AUTH_TEXT, DER_TEXT, OPERATOR_COLOR, ERR_TEXT, RELAT_EDGE, BORDER, DER_BORDER, ERR_BORDER } from "./cellsheet.css";
-import { create_initial_cellsheet_state, ROWS, COLS, is_record, read_summary_from_snap, read_derived_cell_from_snap, render_cell_from_derived, read_selected_from_snap, cell_key } from "./cellsheet-helpers";
+import { ROWS, COLS, project_cell, project_cell_relation, cell_key } from "./cellsheet-helpers";
 import {
-    cellsheet_cell_ref_from_key,
+    cellsheet_cell_ref,
     derive_cellsheet_relations,
     evaluate_cellsheet,
+    type CellRelation,
+    type CellsheetCellRef,
+    type CellsheetEvaluatedCell,
     type CellsheetEvaluation,
-    type CellsheetRawGrid,
     type CellsheetRelationships,
 } from "./cellsheet-evaluator";
-import { make_microtask_scheduler, bind_paths } from "hson-live/livemap";
+import {
+    create_cellsheet_workbook_store,
+    create_empty_cellsheet_workbook,
+} from "./cellsheet.state";
 import type { LiveTree } from "hson-live/livetree";
 
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellViewModel[] = [];
-    const map = hson.liveMap.fromJson(create_initial_cellsheet_state());
-    const disposers: Array<() => void> = [];
+    const workbook = create_cellsheet_workbook_store();
+    const workbookCells = workbook.locations.cells;
+    const listenerDisposers: Array<() => void> = [];
     let activeResizeCleanup: (() => void) | undefined;
     let activeResizeTarget: HTMLElement | undefined;
     let disposed = false;
+    let selected: CellsheetCellRef | undefined;
 
     const DEFAULT_COL_WIDTH = 56;
     const DEFAULT_ROW_HEIGHT = 34;
@@ -31,6 +37,16 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const MAX_ROW_HEIGHT = 96;
     const RESIZE_EDGE_PX = 7;
     const RESIZE_EDGE_COLOR = RESIZE_EDGE;
+    const defaultColumnWidths = (): CellsheetDimensionTuple => [
+        DEFAULT_COL_WIDTH, DEFAULT_COL_WIDTH, DEFAULT_COL_WIDTH, DEFAULT_COL_WIDTH,
+        DEFAULT_COL_WIDTH, DEFAULT_COL_WIDTH, DEFAULT_COL_WIDTH, DEFAULT_COL_WIDTH,
+    ];
+    const defaultRowHeights = (): CellsheetDimensionTuple => [
+        DEFAULT_ROW_HEIGHT, DEFAULT_ROW_HEIGHT, DEFAULT_ROW_HEIGHT, DEFAULT_ROW_HEIGHT,
+        DEFAULT_ROW_HEIGHT, DEFAULT_ROW_HEIGHT, DEFAULT_ROW_HEIGHT, DEFAULT_ROW_HEIGHT,
+    ];
+    let colWidths = defaultColumnWidths();
+    let rowHeights = defaultRowHeights();
 
     type ResizeEdge = "left" | "right" | "top" | "bottom";
 
@@ -92,92 +108,35 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     });
     resetButton.text.set("reset grid");
 
-    const getCell = (row: number, col: number): CellViewModel | undefined => {
-        if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return undefined;
-        return cells[(row * COLS) + col];
-    };
-
-    const readRawFromSnap = (snap: unknown, key: string): string => {
-        if (!is_record(snap)) return "";
-
-        const cellRoot = snap.cells;
-        if (!is_record(cellRoot)) return "";
-
-        const entry = cellRoot[key];
-        if (!is_record(entry)) return "";
-
-        return typeof entry.raw === "string" ? entry.raw : "";
-    };
-
     const clampDimension = (value: number, min: number, max: number): number => {
         return Math.max(min, Math.min(max, Math.round(value)));
     };
 
-    const makeDimensionRecord = (count: number, value: number): Record<string, number> => {
-        const out: Record<string, number> = {};
-        for (let i = 0; i < count; i += 1) out[String(i)] = value;
-        return out;
-    };
-
-    const readDimensionRecordFromSnap = (
-        snap: unknown,
-        key: "colWidths" | "rowHeights",
-        count: number,
-        fallback: number,
-    ): number[] => {
-        const out: number[] = [];
-        const ui = is_record(snap) && is_record(snap.ui) ? snap.ui : undefined;
-        const record = ui && is_record(ui[key]) ? ui[key] : undefined;
-
-        for (let i = 0; i < count; i += 1) {
-            const value = record?.[String(i)];
-            out.push(typeof value === "number" && Number.isFinite(value) ? value : fallback);
-        }
-
-        return out;
-    };
-
-    const ensureDimensionState = (): void => {
-        const snap = map.snap();
-        if (!is_record(snap) || !is_record(snap.ui)) return;
-
-        const ui = snap.ui;
-        const nextUi: Record<string, unknown> = { ...ui };
-
-        if (!is_record(ui.colWidths)) nextUi.colWidths = makeDimensionRecord(COLS, DEFAULT_COL_WIDTH);
-        if (!is_record(ui.rowHeights)) nextUi.rowHeights = makeDimensionRecord(ROWS, DEFAULT_ROW_HEIGHT);
-
-        if (nextUi.colWidths !== ui.colWidths || nextUi.rowHeights !== ui.rowHeights) {
-            const uiHandle = map.at(["ui"]);
-            uiHandle.replace(nextUi as Parameters<typeof uiHandle.replace>[0]);
-        }
-    };
-
-    const renderGridDimensionsFromMap = (): void => {
-        const snap = map.snap();
-        const colWidths = readDimensionRecordFromSnap(snap, "colWidths", COLS, DEFAULT_COL_WIDTH);
-        const rowHeights = readDimensionRecordFromSnap(snap, "rowHeights", ROWS, DEFAULT_ROW_HEIGHT);
-
+    const projectGridDimensions = (): void => {
         grid.css.setMany({
             gridTemplateColumns: colWidths.map((width) => `${width}px`).join(" "),
             gridTemplateRows: rowHeights.map((height) => `${height}px`).join(" "),
         });
     };
 
-    const writeColumnWidthToMap = (col: number, width: number): void => {
-        map.set(["ui", "colWidths", String(col)], clampDimension(width, MIN_COL_WIDTH, MAX_COL_WIDTH));
+    const writeColumnWidth = (col: number, width: number): void => {
+        colWidths[col] = clampDimension(width, MIN_COL_WIDTH, MAX_COL_WIDTH);
+        projectGridDimensions();
     };
 
-    const writeRowHeightToMap = (row: number, height: number): void => {
-        map.set(["ui", "rowHeights", String(row)], clampDimension(height, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT));
+    const writeRowHeight = (row: number, height: number): void => {
+        rowHeights[row] = clampDimension(height, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT);
+        projectGridDimensions();
     };
 
-    const writeResolvedColumnWidthToMap = (col: number, width: number): void => {
-        map.set(["ui", "colWidths", String(col)], Math.round(width));
+    const writeResolvedColumnWidth = (col: number, width: number): void => {
+        colWidths[col] = Math.round(width);
+        projectGridDimensions();
     };
 
-    const writeResolvedRowHeightToMap = (row: number, height: number): void => {
-        map.set(["ui", "rowHeights", String(row)], Math.round(height));
+    const writeResolvedRowHeight = (row: number, height: number): void => {
+        rowHeights[row] = Math.round(height);
+        projectGridDimensions();
     };
 
     const startResize = (
@@ -200,9 +159,9 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         document.body.style.cursor = axis === "col" ? "col-resize" : "row-resize";
         document.body.style.userSelect = "none";
 
-        const writeMain = axis === "col" ? writeColumnWidthToMap : writeRowHeightToMap;
-        const writeResolvedMain = axis === "col" ? writeResolvedColumnWidthToMap : writeResolvedRowHeightToMap;
-        const writeResolvedNeighbor = axis === "col" ? writeResolvedColumnWidthToMap : writeResolvedRowHeightToMap;
+        const writeMain = axis === "col" ? writeColumnWidth : writeRowHeight;
+        const writeResolvedMain = axis === "col" ? writeResolvedColumnWidth : writeResolvedRowHeight;
+        const writeResolvedNeighbor = axis === "col" ? writeResolvedColumnWidth : writeResolvedRowHeight;
 
         const onMove = (event: PointerEvent): void => {
             const pointer = axis === "col" ? event.clientX : event.clientY;
@@ -282,25 +241,29 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         if (target) target.style.boxShadow = "";
     };
 
-    const renderCellColors = (cell: CellViewModel, derived: CellsheetDerivedCellState): void => {
+    const renderCellColors = (
+        cell: CellViewModel,
+        evaluated: CellsheetEvaluatedCell,
+        relation: CellRelation,
+    ): void => {
         const input = cell.input;
 
-        const hasRelation = derived.relation !== "none";
-        const textColor = derived.error
+        const hasRelation = relation !== "none";
+        const textColor = evaluated.error
             ? ERR_TEXT
-            : derived.kind === "result"
+            : evaluated.kind === "result"
                 ? DER_TEXT
-                : derived.kind === "operator"
+                : evaluated.kind === "operator"
                     ? OPERATOR_COLOR
                     : AUTH_TEXT;
-        const borderColor = derived.error
+        const borderColor = evaluated.error
             ? ERR_BORDER
-            : derived.kind === "result"
+            : evaluated.kind === "result"
                 ? DER_BORDER
                 : hasRelation
                     ? RELAT_EDGE
                     : BORDER;
-        const outlineColor = derived.relation === "selected"
+        const outlineColor = relation === "selected"
             ? SEL_EDGE
             : hasRelation
                 ? RELAT_EDGE
@@ -309,18 +272,14 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         input.css.setMany({
             color: textColor,
             borderColor,
-            borderStyle: derived.kind === "result" ? "dashed" : "solid",
+            borderStyle: evaluated.kind === "result" ? "dashed" : "solid",
             outlineColor,
-            boxShadow: derived.error ? `inset 0 0 0 1px ${ERR_TEXT}` : "none",
+            boxShadow: evaluated.error ? `inset 0 0 0 1px ${ERR_TEXT}` : "none",
         });
     };
 
-    const readGridDimensions = (): { colWidths: number[]; rowHeights: number[] } => {
-        const snap = map.snap();
-        return {
-            colWidths: readDimensionRecordFromSnap(snap, "colWidths", COLS, DEFAULT_COL_WIDTH),
-            rowHeights: readDimensionRecordFromSnap(snap, "rowHeights", ROWS, DEFAULT_ROW_HEIGHT),
-        };
+    const readGridDimensions = (): { colWidths: CellsheetDimensionTuple; rowHeights: CellsheetDimensionTuple } => {
+        return { colWidths, rowHeights };
     };
 
     const resizeTargetForCellEdge = (cell: CellViewModel, edge: ResizeEdge): ResizeTarget => {
@@ -394,68 +353,11 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         return true;
     };
 
-    const writeRawToMap = (key: string, raw: string): void => {
-        map.set(["cells", key, "raw"], raw);
-    };
+    let evaluation: CellsheetEvaluation = evaluate_cellsheet(workbookCells.snap());
 
-    const selectCell = (key: string): void => {
-        map.set(["ui", "selected"], key);
-    };
-
-    const rawGridFromLegacySnap = (snap: unknown): CellsheetRawGrid => {
-        const rows = Array.from({ length: ROWS }, (_, row) => (
-            Array.from({ length: COLS }, (_, col) => readRawFromSnap(snap, cell_key(row, col)))
-        ));
-        return rows as unknown as CellsheetRawGrid;
-    };
-
-    const writeDerivedToMap = (
-        evaluation: CellsheetEvaluation,
-        relationships: CellsheetRelationships,
-    ): void => {
-        const derivedCells: Record<string, CellsheetDerivedCellState> = {};
-        const derivedOperations: Record<string, CellsheetOperationState> = {};
-
-        for (const cell of cells) {
-            const evaluated = evaluation.cells[cell.row]?.[cell.col];
-            if (!evaluated) continue;
-            derivedCells[cell.key] = {
-                display: evaluated.display,
-                kind: evaluated.kind,
-                authored: evaluated.authored,
-                resultOf: evaluated.resultOf ?? null,
-                error: evaluated.error ?? null,
-                relation: relationships.relations[cell.row]?.[cell.col] ?? "none",
-            };
-        }
-        for (const operation of evaluation.operations) {
-            derivedOperations[operation.key] = {
-                op: operation.op,
-                direction: operation.direction,
-                left: operation.left.key,
-                right: operation.right.key,
-                operator: operation.operator.key,
-                target: operation.target.key,
-                result: operation.result ?? null,
-                error: operation.error ?? null,
-            };
-        }
-
-        map.batch((tx) => {
-            tx.set(["derived", "cells"], derivedCells);
-            tx.set(["derived", "operations"], derivedOperations);
-            tx.set(["derived", "summary"], {
-                authored: evaluation.summary.authored,
-                operators: evaluation.summary.operations,
-                results: evaluation.summary.results,
-                errors: evaluation.summary.errors,
-            });
-        });
-    };
-
-    const renderStatusFromMap = (snap: unknown): void => {
-        const summary = read_summary_from_snap(snap);
-        statusText.text.set(`${summary.authored} authored / ${summary.operators} operators / ${summary.results} results / ${summary.errors} errors`);
+    const renderStatus = (): void => {
+        const summary = evaluation.summary;
+        statusText.text.set(`${summary.authored} authored / ${summary.operations} operators / ${summary.results} results / ${summary.errors} errors`);
         statusText.css.setMany({ color: summary.errors > 0 ? ERR_TEXT : DER_TEXT });
     };
 
@@ -470,47 +372,46 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         });
     };
 
-    const renderFromMap = (relationships: CellsheetRelationships): void => {
-        const snap = map.snap();
+    const project = (): void => {
+        const relationships = derive_cellsheet_relations(evaluation, selected);
         for (const cell of cells) {
-            const derived = read_derived_cell_from_snap(snap, cell.key);
-            if (derived) {
-                render_cell_from_derived(cell, derived);
-                renderCellColors(cell, derived);
-            }
+            const evaluated = evaluation.cells[cell.row]?.[cell.col];
+            if (!evaluated) continue;
+            const relation = relationships.relations[cell.row]?.[cell.col] ?? "none";
+            project_cell(cell, evaluated, relation);
+            renderCellColors(cell, evaluated, relation);
         }
-        renderStatusFromMap(snap);
+        renderStatus();
         renderSelection(relationships);
     };
 
-    let latestEvaluation: CellsheetEvaluation | undefined;
-    let cellsDirty = true;
-
-    const reconcileEvaluationAndSelection = (): void => {
-        const snap = map.snap();
-        if (cellsDirty || !latestEvaluation) {
-            latestEvaluation = evaluate_cellsheet(rawGridFromLegacySnap(snap));
-            cellsDirty = false;
+    const projectSelectionOnly = (): void => {
+        const relationships = derive_cellsheet_relations(evaluation, selected);
+        for (const cell of cells) {
+            const evaluated = evaluation.cells[cell.row]?.[cell.col];
+            if (!evaluated) continue;
+            const relation = relationships.relations[cell.row]?.[cell.col] ?? "none";
+            project_cell_relation(cell, evaluated, relation);
+            renderCellColors(cell, evaluated, relation);
         }
-        const selected = cellsheet_cell_ref_from_key(read_selected_from_snap(snap) ?? "");
-        const relationships = derive_cellsheet_relations(latestEvaluation, selected);
-        writeDerivedToMap(latestEvaluation, relationships);
-        renderFromMap(relationships);
+        renderSelection(relationships);
     };
 
     const reset = (): void => {
-        map.batch((tx) => {
-            tx.set(["ui", "selected"], null);
-            tx.set(["ui", "colWidths"], makeDimensionRecord(COLS, DEFAULT_COL_WIDTH));
-            tx.set(["ui", "rowHeights"], makeDimensionRecord(ROWS, DEFAULT_ROW_HEIGHT));
-            for (const cell of cells) tx.set(["cells", cell.key, "raw"], "");
-        });
+        activeResizeCleanup?.();
+        selected = undefined;
+        colWidths = defaultColumnWidths();
+        rowHeights = defaultRowHeights();
+        projectGridDimensions();
+        const commit = workbookCells.replace(create_empty_cellsheet_workbook().cells);
+        if (!commit.changed) project();
     };
 
     for (let row = 0; row < ROWS; row += 1) {
         for (let col = 0; col < COLS; col += 1) {
             const key = cell_key(row, col);
             const input = grid.create.input();
+            const rawCell = workbookCells.at([row, col]);
             const cell: CellViewModel = {
                 row,
                 col,
@@ -531,16 +432,17 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                     alignSelf: "stretch",
                     justifySelf: "stretch",
                 });
-            input.listen.on("focus", () => {
-                selectCell(cell.key);
+            const focusListener = input.listen.on("focus", () => {
+                selected = cellsheet_cell_ref(cell.row, cell.col);
+                projectSelectionOnly();
             });
-            input.listen.on("input", () => {
-                writeRawToMap(cell.key, input.form.getValue() ?? "");
+            const inputListener = input.listen.on("input", () => {
+                rawCell.set(input.form.getValue() ?? "");
             });
-            input.listen.on("pointerdown", (event: PointerEvent) => {
+            const pointerDownListener = input.listen.on("pointerdown", (event: PointerEvent) => {
                 maybeStartCellResize(cell, event);
             });
-            input.listen.on("pointermove", (event: PointerEvent) => {
+            const pointerMoveListener = input.listen.on("pointermove", (event: PointerEvent) => {
                 const target = event.currentTarget;
                 if (!(target instanceof HTMLElement)) return;
                 if (activeResizeTarget) return;
@@ -549,7 +451,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                 target.style.cursor = cursorForResizeEdge(edge);
                 setResizeEdgeHighlight(target, edge);
             });
-            input.listen.on("pointerleave", (event: PointerEvent) => {
+            const pointerLeaveListener = input.listen.on("pointerleave", (event: PointerEvent) => {
                 const target = event.currentTarget;
                 if (!(target instanceof HTMLElement)) return;
                 if (activeResizeTarget === target) return;
@@ -557,59 +459,29 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                 target.style.cursor = "text";
                 clearResizeEdgeHighlight(target);
             });
+            listenerDisposers.push(
+                () => focusListener.off(),
+                () => inputListener.off(),
+                () => pointerDownListener.off(),
+                () => pointerMoveListener.off(),
+                () => pointerLeaveListener.off(),
+            );
 
             cells.push(cell);
         }
     }
 
-    resetButton.listen.onClick(reset);
+    const resetListener = resetButton.listen.onClick(reset);
+    listenerDisposers.push(() => resetListener.off());
 
-    const seed = (row: number, col: number, raw: string): void => {
-        const cell = getCell(row, col);
-        if (!cell) return;
-        writeRawToMap(cell.key, raw);
-    };
+    projectGridDimensions();
+    project();
 
-    ensureDimensionState();
-    renderGridDimensionsFromMap();
-
-    seed(0, 0, "1");
-    seed(0, 1, "+");
-    seed(0, 2, "2");
-    seed(2, 0, "egg");
-    seed(2, 1, "+");
-    seed(2, 2, "shell");
-    seed(4, 3, "8");
-    seed(5, 3, "/");
-    seed(6, 3, "2");
-
-    const subscribePath = (path: string[], listener: () => void): (() => void) => {
-        return map.sub.path(path, listener);
-    };
-
-    const scheduleReconcile = make_microtask_scheduler(() => {
-        if (!disposed) reconcileEvaluationAndSelection();
+    const stopCells = workbookCells.watch((nextCells) => {
+        if (disposed) return;
+        evaluation = evaluate_cellsheet(nextCells);
+        project();
     });
-    disposers.push(map.sub.path(["cells"], () => {
-        cellsDirty = true;
-        scheduleReconcile();
-    }));
-    disposers.push(map.sub.path(["ui", "selected"], scheduleReconcile));
-    scheduleReconcile();
-
-    disposers.push(bind_paths({
-        paths: [
-            ["ui", "colWidths"],
-            ["ui", "rowHeights"],
-        ],
-        subscribePath,
-        read: () => undefined,
-        render: () => {
-            renderGridDimensionsFromMap();
-        },
-        schedule: make_microtask_scheduler,
-        immediate: true,
-    }));
 
     const deactivate = (): void => {
         activeResizeCleanup?.();
@@ -620,8 +492,10 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const dispose = (): void => {
         if (disposed) return;
         disposed = true;
+        stopCells();
         deactivate();
-        for (const stop of disposers.splice(0)) stop();
+        for (const stop of listenerDisposers.splice(0)) stop();
+        if (!branch.isDisposed) branch.remove();
     };
 
     const panel = { branch, reset, deactivate, dispose };
