@@ -91,25 +91,42 @@ test("Cellsheet discovers vertical operations and both directions independently"
   await expect(panel).toContainText("6 authored / 2 operators / 2 results / 0 errors");
 });
 
-test("Cellsheet omits boundary, missing-operand, and nonnumeric arithmetic operations without errors", async ({ page }) => {
+test("Cellsheet keeps boundary and missing-operand expressions distinct from complete operations", async ({ page }) => {
   const panel = await open_cellsheet(page);
   await fill_cells(panel, {
     A1: "+",
-    B2: "egg",
     C2: "-",
-    D2: "shell",
-    B3: "egg",
-    C3: "*",
-    D3: "shell",
-    B4: "egg",
-    C4: "/",
-    D4: "shell",
+    D2: "3",
   });
 
-  await expect(panel).toContainText("10 authored / 0 operators / 0 results / 0 errors");
-  await expect(cell(panel, "E2")).toHaveValue("");
-  await expect(cell(panel, "E3")).toHaveValue("");
-  await expect(cell(panel, "E4")).toHaveValue("");
+  await expect(panel).toContainText("3 authored / 0 operators / 0 results / 0 errors");
+  await expect(cell(panel, "E2")).toHaveAttribute("data-cellsheet-cell", "blank");
+});
+
+test("Cellsheet visibly errors every text operand position for numeric-only operators", async ({ page }) => {
+  const panel = await open_cellsheet(page);
+  const cases = [
+    { left: "egg", op: "-", right: "3" },
+    { left: "3", op: "-", right: "egg" },
+    { left: "egg", op: "-", right: "shell" },
+    { left: "egg", op: "*", right: "3" },
+    { left: "3", op: "*", right: "egg" },
+    { left: "egg", op: "/", right: "3" },
+    { left: "3", op: "/", right: "egg" },
+  ] as const;
+
+  for (const current of cases) {
+    await panel.getByRole("button", { name: "reset grid" }).click();
+    await fill_cells(panel, { A1: current.left, B1: current.op, C1: current.right });
+    await expect(panel).toContainText("3 authored / 1 operators / 0 results / 2 errors");
+    await expect(cell(panel, "B1")).toHaveAttribute("data-cellsheet-cell", "error");
+    await expect(cell(panel, "D1")).toHaveAttribute("data-cellsheet-cell", "error");
+    await expect(cell(panel, "D1")).not.toHaveCSS("box-shadow", "none");
+  }
+
+  await cell(panel, "B1").focus();
+  await expect(panel).toContainText("A1 / C1 ! D1=requires numeric operands");
+  await expect(cell(panel, "D1")).toHaveAttribute("data-cellsheet-relation", "blocked");
 });
 
 test("Cellsheet division by zero errors only the operator and leaves the target blank", async ({ page }) => {

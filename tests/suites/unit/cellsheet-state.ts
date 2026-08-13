@@ -127,8 +127,25 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "schema rejects extra workbook keys",
-      run: () => rejects({ ...create_empty_cellsheet_workbook(), ui: {} }, "extra ui key was admitted"),
+      name: "schema rejects every removed ownership branch",
+      run: () => {
+        const workbook = create_empty_cellsheet_workbook();
+        const removedBranches: Readonly<Record<string, JsonValue>> = {
+          selection: "A1",
+          colWidths: [],
+          rowHeights: [],
+          operations: [],
+          errors: [],
+          results: [],
+          summary: {},
+          relationships: {},
+          ui: {},
+          view: {},
+        };
+        for (const [key, value] of Object.entries(removedBranches)) {
+          rejects({ ...workbook, [key]: value }, `extra ${key} branch was admitted`);
+        }
+      },
     },
     {
       suite: SUITE,
@@ -210,6 +227,21 @@ export function cellsheet_state_suite(): TestSuite {
         equal(store.map.rev - startRevision, 1, "canonical commits");
         equal(evaluations, 1, "evaluations");
         equal(store.locations.cells.snap().flat().every((raw) => raw === ""), true, "empty reset cells");
+      },
+    },
+    {
+      suite: SUITE,
+      name: "reset of an already empty workbook manufactures no commit or evaluation",
+      run: () => {
+        const store = create_cellsheet_workbook_store(create_empty_cellsheet_workbook());
+        let evaluations = 0;
+        const stop = store.locations.cells.watch(() => { evaluations += 1; });
+        const startRevision = store.map.rev;
+        const commit = store.locations.cells.replace(create_empty_cellsheet_workbook().cells);
+        stop();
+        equal(commit.changed, false, "empty reset change");
+        equal(store.map.rev - startRevision, 0, "empty reset commits");
+        equal(evaluations, 0, "empty reset evaluations");
       },
     },
     {

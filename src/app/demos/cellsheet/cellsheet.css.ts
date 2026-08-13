@@ -1,6 +1,6 @@
 import type { CssMap } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
-import { COLS } from "./cellsheet-helpers";
+import { COLS } from "./cellsheet-evaluator";
 
 // colors for text and borders etc
 const main = _colors.txt.code;

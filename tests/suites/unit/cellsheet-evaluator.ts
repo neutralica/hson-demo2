@@ -136,22 +136,65 @@ export function cellsheet_evaluator_suite(): TestSuite {
       suite: EVALUATOR_SUITE,
       name: "missing operands discover no operation or error",
       run: () => {
-        const result = evaluated({ B1: "+", C1: "2" });
+        const result = evaluated({ B1: "-", C1: "2" });
         equal(result.summary.operations, 0, "missing operand operations");
         equal(result.summary.errors, 0, "missing operand errors");
       },
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "nonnumeric subtraction multiplication and division are silently omitted",
+      name: "complete numeric-only operations reject every text operand position",
       run: () => {
-        const result = evaluated({
-          A1: "egg", B1: "-", C1: "shell",
-          A2: "egg", B2: "*", C2: "shell",
-          A3: "egg", B3: "/", C3: "shell",
-        });
-        equal(result.summary.operations, 0, "nonnumeric operations");
-        equal(result.summary.errors, 0, "nonnumeric errors");
+        const cases = [
+          { op: "-", left: "egg", right: "3" },
+          { op: "-", left: "3", right: "egg" },
+          { op: "-", left: "egg", right: "shell" },
+          { op: "*", left: "egg", right: "3" },
+          { op: "*", left: "3", right: "egg" },
+          { op: "/", left: "egg", right: "3" },
+          { op: "/", left: "3", right: "egg" },
+        ] as const;
+
+        for (const current of cases) {
+          const result = evaluated({ A1: current.left, B1: current.op, C1: current.right });
+          equal(operation(result, "B1:h").error, "requires numeric operands", `${current.left} ${current.op} ${current.right} operation error`);
+          equal(cell(result, "B1").error, "requires numeric operands", `${current.op} operator error`);
+          equal(cell(result, "D1").error, "requires numeric operands", `${current.op} target error`);
+          equal(cell(result, "D1").kind, "error", `${current.op} visible target kind`);
+          deep_equal(result.summary, { authored: 3, operations: 1, results: 0, errors: 2 }, `${current.op} error summary`);
+        }
+      },
+    },
+    {
+      suite: EVALUATOR_SUITE,
+      name: "numeric operand type error precedes division by zero and occupied-target errors",
+      run: () => {
+        const result = evaluated({ A1: "egg", B1: "/", C1: "0", D1: "9" });
+        equal(operation(result, "B1:h").error, "requires numeric operands", "intrinsic type error precedence");
+        equal(cell(result, "D1").value, 9, "occupied authored target value retained");
+        equal(cell(result, "D1").error, "requires numeric operands", "occupied target shows type error");
+        deep_equal(result.summary, { authored: 4, operations: 1, results: 0, errors: 2 }, "type/zero/occupied summary");
+      },
+    },
+    {
+      suite: EVALUATOR_SUITE,
+      name: "later numeric operand type error preserves the first row-major result while marking its target",
+      run: () => {
+        const result = evaluated({ D1: "3", D2: "+", D3: "4", A4: "egg", B4: "-", C4: "2" });
+        equal(cell(result, "D4").value, 7, "first result retained");
+        equal(cell(result, "D4").resultOf, "D2:v", "first writer retained");
+        equal(operation(result, "B4:h").error, "requires numeric operands", "later intrinsic error");
+        equal(cell(result, "D4").error, "requires numeric operands", "shared target visible error");
+        deep_equal(result.summary, { authored: 6, operations: 2, results: 1, errors: 2 }, "type/collision summary");
+      },
+    },
+    {
+      suite: EVALUATOR_SUITE,
+      name: "blank type-error target remains unavailable to downstream evaluation",
+      run: () => {
+        const result = evaluated({ A1: "egg", B1: "-", C1: "2", E1: "+", F1: "1" });
+        equal(result.summary.operations, 1, "only erroneous complete operation discovered");
+        equal(cell(result, "G1").kind, "blank", "downstream target remains blank");
       },
     },
     {
@@ -283,6 +326,7 @@ export function cellsheet_relations_suite(): TestSuite {
   const collision = evaluated({ D1: "3", D2: "+", D3: "4", A4: "1", B4: "+", C4: "2" });
   const success = evaluated({ A1: "1", B1: "+", C1: "2" });
   const division = evaluated({ A1: "8", B1: "/", C1: "0" });
+  const numericTypeError = evaluated({ A1: "egg", B1: "-", C1: "2" });
   const relation = (evaluation: CellsheetEvaluation, selectedKey: string, targetKey: string) => {
     const selected = cellsheet_cell_ref_from_key(selectedKey) ?? fail(`invalid selected key ${selectedKey}`);
     const target = cellsheet_cell_ref_from_key(targetKey) ?? fail(`invalid target key ${targetKey}`);
@@ -326,6 +370,11 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
+      name: "numeric operand type error marks its visible target as blocked",
+      run: () => equal(relation(numericTypeError, "B1", "D1"), "blocked", "type-error target relation"),
+    },
+    {
+      suite: RELATION_SUITE,
       name: "successful operation selection text preserves arrow formatting",
       run: () => {
         const selected = cellsheet_cell_ref_from_key("A1") ?? fail("missing A1");
@@ -340,6 +389,16 @@ export function cellsheet_relations_suite(): TestSuite {
         const result = derive_cellsheet_relations(division, selected);
         equal(result.selectionText, "B1\nA1 / C1 ! D1=division by zero", "error text");
         equal(result.selectionHasError, true, "error color evidence");
+      },
+    },
+    {
+      suite: RELATION_SUITE,
+      name: "numeric operand type error selection exposes useful error information",
+      run: () => {
+        const selected = cellsheet_cell_ref_from_key("D1") ?? fail("missing D1");
+        const result = derive_cellsheet_relations(numericTypeError, selected);
+        equal(result.selectionText, "D1\nA1 - C1 ! D1=requires numeric operands", "type error text");
+        equal(result.selectionHasError, true, "type error color evidence");
       },
     },
     {

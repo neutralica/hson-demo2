@@ -287,7 +287,10 @@ function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRe
         const panel = create_cellsheet_panel(host);
         let disposed = false;
         return Object.freeze({
-          activate: () => _unhide(host),
+          activate: () => {
+            panel.activate();
+            _unhide(host);
+          },
           deactivate: () => {
             panel.deactivate();
             _hide(host);

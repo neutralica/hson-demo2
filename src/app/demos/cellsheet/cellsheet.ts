@@ -1,9 +1,10 @@
 // cellsheet.ts
 
-import type { CellViewModel, CellsheetDimensionTuple, CellsheetPanel } from "./cellsheet.types";
 import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, CARDcss, LABELcss, METAcss, RESETcss, FOOTERcss, RESIZE_EDGE, SEL_EDGE, AUTH_TEXT, DER_TEXT, OPERATOR_COLOR, ERR_TEXT, RELAT_EDGE, BORDER, DER_BORDER, ERR_BORDER } from "./cellsheet.css";
-import { ROWS, COLS, project_cell, project_cell_relation, cell_key } from "./cellsheet-helpers";
 import {
+    ROWS,
+    COLS,
+    cell_key,
     cellsheet_cell_ref,
     derive_cellsheet_relations,
     evaluate_cellsheet,
@@ -19,14 +20,29 @@ import {
 } from "./cellsheet.state";
 import type { LiveTree } from "hson-live/livetree";
 
+type CellsheetDimensionTuple = [number, number, number, number, number, number, number, number];
+
+type CellViewModel = Readonly<{
+    row: number;
+    col: number;
+    input: LiveTree;
+}>;
+
+type CellsheetPanel = Readonly<{
+    branch: LiveTree;
+    reset: () => void;
+    activate: () => void;
+    deactivate: () => void;
+    dispose: () => void;
+}>;
+
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     const cells: CellViewModel[] = [];
     const workbook = create_cellsheet_workbook_store();
     const workbookCells = workbook.locations.cells;
     const listenerDisposers: Array<() => void> = [];
-    let activeResizeCleanup: (() => void) | undefined;
-    let activeResizeTarget: HTMLElement | undefined;
     let disposed = false;
+    let interactionEnabled = true;
     let selected: CellsheetCellRef | undefined;
 
     const DEFAULT_COL_WIDTH = 56;
@@ -59,9 +75,36 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         sign: 1 | -1;
     };
 
+    type ResizeGesture = Readonly<{
+        pointerId: number;
+        axis: ResizeAxis;
+        index: number;
+        neighborIndex: number | undefined;
+        sign: 1 | -1;
+        edge: ResizeEdge;
+        startPointer: number;
+        startPrimarySize: number;
+        startNeighborSize: number | undefined;
+        shift: boolean;
+        row: number;
+        col: number;
+        ownerInput: LiveTree;
+    }>;
+
+    type ResizeHover = Readonly<{
+        edge: ResizeEdge;
+        row: number;
+        col: number;
+        ownerInput: LiveTree;
+    }>;
+
+    let activeResize: ResizeGesture | undefined;
+    let resizeHover: ResizeHover | undefined;
+
     const branch = stage.create.div()
         .id.set("cellsheet-panel")
         .css.setMany(PANELcss);
+    const activeResizeSurface = branch.css.selector("&, & *");
 
     const header = branch.create.div().css.setMany(HEADERcss);
     header.create.div().text.set("cellsheet").css.setMany(TITLEcss);
@@ -119,92 +162,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         });
     };
 
-    const writeColumnWidth = (col: number, width: number): void => {
-        colWidths[col] = clampDimension(width, MIN_COL_WIDTH, MAX_COL_WIDTH);
-        projectGridDimensions();
-    };
-
-    const writeRowHeight = (row: number, height: number): void => {
-        rowHeights[row] = clampDimension(height, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT);
-        projectGridDimensions();
-    };
-
-    const writeResolvedColumnWidth = (col: number, width: number): void => {
-        colWidths[col] = Math.round(width);
-        projectGridDimensions();
-    };
-
-    const writeResolvedRowHeight = (row: number, height: number): void => {
-        rowHeights[row] = Math.round(height);
-        projectGridDimensions();
-    };
-
-    const startResize = (
-        edge: ResizeEdge,
-        target: ResizeTarget,
-        startPointer: number,
-        startSize: number,
-        neighborStartSize: number | undefined,
-        takeFromNeighbor: boolean,
-    ): void => {
-        activeResizeCleanup?.();
-
-        const { axis, index, neighborIndex, sign } = target;
-        const min = axis === "col" ? MIN_COL_WIDTH : MIN_ROW_HEIGHT;
-        const max = axis === "col" ? MAX_COL_WIDTH : MAX_ROW_HEIGHT;
-        const previousCursor = document.body.style.cursor;
-        const previousUserSelect = document.body.style.userSelect;
-        const resizeTarget = activeResizeTarget;
-        if (resizeTarget) setResizeEdgeHighlight(resizeTarget, edge, true);
-        document.body.style.cursor = axis === "col" ? "col-resize" : "row-resize";
-        document.body.style.userSelect = "none";
-
-        const writeMain = axis === "col" ? writeColumnWidth : writeRowHeight;
-        const writeResolvedMain = axis === "col" ? writeResolvedColumnWidth : writeResolvedRowHeight;
-        const writeResolvedNeighbor = axis === "col" ? writeResolvedColumnWidth : writeResolvedRowHeight;
-
-        const onMove = (event: PointerEvent): void => {
-            const pointer = axis === "col" ? event.clientX : event.clientY;
-            const delta = (pointer - startPointer) * sign;
-
-            if (takeFromNeighbor && neighborIndex !== undefined && neighborStartSize !== undefined) {
-                const pairTotal = startSize + neighborStartSize;
-                const minMainSize = min;
-                const maxMainSize = pairTotal - min;
-                const nextSize = clampDimension(startSize + delta, minMainSize, maxMainSize);
-                const nextNeighborSize = pairTotal - nextSize;
-
-                writeResolvedMain(index, nextSize);
-                writeResolvedNeighbor(neighborIndex, nextNeighborSize);
-                return;
-            }
-
-            const nextSize = clampDimension(startSize + delta, min, max);
-            writeMain(index, nextSize);
-        };
-
-        const onEnd = (): void => {
-            activeResizeCleanup?.();
-        };
-
-        activeResizeCleanup = () => {
-            document.removeEventListener("pointermove", onMove);
-            document.removeEventListener("pointerup", onEnd);
-            document.removeEventListener("pointercancel", onEnd);
-            document.body.style.cursor = previousCursor;
-            document.body.style.userSelect = previousUserSelect;
-            clearResizeEdgeHighlight(resizeTarget);
-            if (activeResizeTarget === resizeTarget) activeResizeTarget = undefined;
-            activeResizeCleanup = undefined;
-        };
-
-        document.addEventListener("pointermove", onMove);
-        document.addEventListener("pointerup", onEnd);
-        document.addEventListener("pointercancel", onEnd);
-    };
-
-    const resizeEdgeForEvent = (target: HTMLElement, event: PointerEvent): ResizeEdge | undefined => {
-        const rect = target.getBoundingClientRect();
+    const resizeEdgeForEvent = (input: LiveTree, event: PointerEvent): ResizeEdge | undefined => {
+        const rect = input.dom.must.rect("Cellsheet resize input geometry");
         const candidates: Array<{ edge: ResizeEdge; distance: number }> = [
             { edge: "left", distance: event.clientX - rect.left },
             { edge: "right", distance: rect.right - event.clientX },
@@ -233,12 +192,104 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         return `inset 0 -${size}px ${blur}px ${RESIZE_EDGE_COLOR}`;
     };
 
-    const setResizeEdgeHighlight = (target: HTMLElement, edge: ResizeEdge | undefined, active: boolean = false): void => {
-        target.style.boxShadow = edge ? shadowForResizeEdge(edge, active) : "";
+    const resizePresentationForCell = (
+        row: number,
+        col: number,
+        evaluated: CellsheetEvaluatedCell,
+    ): { cursor: string; boxShadow: string } => {
+        if (activeResize?.row === row && activeResize.col === col) {
+            return {
+                cursor: cursorForResizeEdge(activeResize.edge),
+                boxShadow: shadowForResizeEdge(activeResize.edge, true),
+            };
+        }
+        if (resizeHover?.row === row && resizeHover.col === col) {
+            return {
+                cursor: cursorForResizeEdge(resizeHover.edge),
+                boxShadow: shadowForResizeEdge(resizeHover.edge, false),
+            };
+        }
+        return {
+            cursor: "text",
+            boxShadow: evaluated.error ? `inset 0 0 0 1px ${ERR_TEXT}` : "none",
+        };
     };
 
-    const clearResizeEdgeHighlight = (target: HTMLElement | undefined): void => {
-        if (target) target.style.boxShadow = "";
+    const projectCellResizePresentation = (row: number, col: number, input: LiveTree): void => {
+        const evaluated = evaluation.cells[row]?.[col];
+        if (!evaluated) return;
+        input.css.setMany(resizePresentationForCell(row, col, evaluated));
+    };
+
+    const clearResizeHover = (ownerInput?: LiveTree): void => {
+        const previous = resizeHover;
+        if (!previous || (ownerInput !== undefined && previous.ownerInput !== ownerInput)) return;
+        resizeHover = undefined;
+        projectCellResizePresentation(previous.row, previous.col, previous.ownerInput);
+    };
+
+    const setResizeHover = (cell: CellViewModel, edge: ResizeEdge | undefined): void => {
+        if (activeResize !== undefined) return;
+        if (!edge) {
+            clearResizeHover(cell.input);
+            projectCellResizePresentation(cell.row, cell.col, cell.input);
+            return;
+        }
+
+        const previous = resizeHover;
+        resizeHover = { edge, row: cell.row, col: cell.col, ownerInput: cell.input };
+        if (previous && previous.ownerInput !== cell.input) {
+            projectCellResizePresentation(previous.row, previous.col, previous.ownerInput);
+        }
+        projectCellResizePresentation(cell.row, cell.col, cell.input);
+    };
+
+    const finishResize = (releaseCapture: boolean = true): void => {
+        const gesture = activeResize;
+        const hover = resizeHover;
+        activeResize = undefined;
+        resizeHover = undefined;
+        activeResizeSurface.remove("cursor");
+        activeResizeSurface.remove("userSelect");
+
+        if (gesture && releaseCapture) {
+            const pointerOwner = gesture.ownerInput.dom.htmlEl();
+            if (pointerOwner?.hasPointerCapture(gesture.pointerId)) {
+                pointerOwner.releasePointerCapture(gesture.pointerId);
+            }
+        }
+        if (hover && hover.ownerInput !== gesture?.ownerInput) {
+            projectCellResizePresentation(hover.row, hover.col, hover.ownerInput);
+        }
+        if (!gesture) return;
+        projectCellResizePresentation(gesture.row, gesture.col, gesture.ownerInput);
+    };
+
+    const updateResize = (event: PointerEvent, ownerInput: LiveTree): void => {
+        const gesture = activeResize;
+        if (
+            disposed
+            || !interactionEnabled
+            || !gesture
+            || gesture.ownerInput !== ownerInput
+            || gesture.pointerId !== event.pointerId
+        ) return;
+
+        const pointer = gesture.axis === "col" ? event.clientX : event.clientY;
+        const delta = (pointer - gesture.startPointer) * gesture.sign;
+        const sizes = gesture.axis === "col" ? colWidths : rowHeights;
+        const min = gesture.axis === "col" ? MIN_COL_WIDTH : MIN_ROW_HEIGHT;
+        const max = gesture.axis === "col" ? MAX_COL_WIDTH : MAX_ROW_HEIGHT;
+
+        if (gesture.shift && gesture.neighborIndex !== undefined && gesture.startNeighborSize !== undefined) {
+            const pairTotal = gesture.startPrimarySize + gesture.startNeighborSize;
+            const nextPrimary = clampDimension(gesture.startPrimarySize + delta, min, pairTotal - min);
+            sizes[gesture.index] = nextPrimary;
+            sizes[gesture.neighborIndex] = pairTotal - nextPrimary;
+        } else {
+            sizes[gesture.index] = clampDimension(gesture.startPrimarySize + delta, min, max);
+        }
+        projectGridDimensions();
     };
 
     const renderCellColors = (
@@ -268,18 +319,55 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             : hasRelation
                 ? RELAT_EDGE
                 : "transparent";
+        const resizePresentation = resizePresentationForCell(cell.row, cell.col, evaluated);
 
         input.css.setMany({
             color: textColor,
             borderColor,
             borderStyle: evaluated.kind === "result" ? "dashed" : "solid",
             outlineColor,
-            boxShadow: evaluated.error ? `inset 0 0 0 1px ${ERR_TEXT}` : "none",
+            ...resizePresentation,
         });
     };
 
-    const readGridDimensions = (): { colWidths: CellsheetDimensionTuple; rowHeights: CellsheetDimensionTuple } => {
-        return { colWidths, rowHeights };
+    const projectCellRelation = (
+        cell: CellViewModel,
+        evaluated: CellsheetEvaluatedCell,
+        relation: CellRelation,
+    ): void => {
+        const status = evaluated.kind;
+        cell.input.attrs.set("data-cellsheet-relation", relation);
+        cell.input.css.setMany({
+            ...CELLcss,
+            ...(status === "operator" ? { fontWeight: "700", opacity: "1" } : {}),
+            ...(status === "result" ? { opacity: "0.68", fontStyle: "italic" } : {}),
+            ...(status === "error" ? { opacity: "1", textDecoration: "underline" } : {}),
+            borderStyle: evaluated.resultOf ? "dashed" : "solid",
+            ...(relation === "selected" ? {
+                outline: "2px solid currentColor",
+                outlineOffset: "-2px",
+                opacity: "1",
+            } : {}),
+            ...(relation === "operand" ? { borderWidth: "2px", opacity: "1" } : {}),
+            ...(relation === "operator" ? { borderWidth: "2px", fontWeight: "700", opacity: "1" } : {}),
+            ...(relation === "target" ? { borderStyle: "dashed", borderWidth: "2px", opacity: "1" } : {}),
+            ...(relation === "blocked" ? {
+                borderStyle: "double",
+                borderWidth: "3px",
+                opacity: "1",
+                textDecoration: "underline",
+            } : {}),
+        });
+    };
+
+    const projectCell = (
+        cell: CellViewModel,
+        evaluated: CellsheetEvaluatedCell,
+        relation: CellRelation,
+    ): void => {
+        cell.input.form.setValue(evaluated.display, { silent: true });
+        cell.input.attrs.set("data-cellsheet-cell", evaluated.kind);
+        projectCellRelation(cell, evaluated, relation);
     };
 
     const resizeTargetForCellEdge = (cell: CellViewModel, edge: ResizeEdge): ResizeTarget => {
@@ -321,20 +409,17 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     };
 
     const maybeStartCellResize = (cell: CellViewModel, event: PointerEvent): boolean => {
-        const target = event.currentTarget;
-        if (!(target instanceof HTMLElement)) return false;
-
-        const edge = resizeEdgeForEvent(target, event);
+        if (disposed || !interactionEnabled) return false;
+        const input = cell.input;
+        const edge = resizeEdgeForEvent(input, event);
         if (!edge) return false;
 
         event.preventDefault();
         event.stopPropagation();
-        activeResizeTarget = target;
-        setResizeEdgeHighlight(target, edge, true);
+        finishResize();
 
-        const dimensions = readGridDimensions();
         const targetInfo = resizeTargetForCellEdge(cell, edge);
-        const sizes = targetInfo.axis === "col" ? dimensions.colWidths : dimensions.rowHeights;
+        const sizes = targetInfo.axis === "col" ? colWidths : rowHeights;
         const fallbackSize = targetInfo.axis === "col" ? DEFAULT_COL_WIDTH : DEFAULT_ROW_HEIGHT;
         const startSize = sizes[targetInfo.index] ?? fallbackSize;
         const neighborStartSize = event.shiftKey && targetInfo.neighborIndex !== undefined
@@ -342,14 +427,28 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             : undefined;
         const startPointer = targetInfo.axis === "col" ? event.clientX : event.clientY;
 
-        startResize(
+        activeResize = {
+            pointerId: event.pointerId,
+            axis: targetInfo.axis,
+            index: targetInfo.index,
+            neighborIndex: targetInfo.neighborIndex,
+            sign: targetInfo.sign,
             edge,
-            targetInfo,
             startPointer,
-            startSize,
-            neighborStartSize,
-            event.shiftKey,
-        );
+            startPrimarySize: startSize,
+            startNeighborSize: neighborStartSize,
+            shift: event.shiftKey,
+            row: cell.row,
+            col: cell.col,
+            ownerInput: input,
+        };
+        resizeHover = undefined;
+        const cursor = cursorForResizeEdge(edge);
+        activeResizeSurface.setMany({ cursor, userSelect: "none" });
+        projectCellResizePresentation(cell.row, cell.col, input);
+
+        const pointerOwner = input.dom.must.htmlEl("Cellsheet resize pointer owner");
+        pointerOwner.setPointerCapture(event.pointerId);
         return true;
     };
 
@@ -378,7 +477,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             const evaluated = evaluation.cells[cell.row]?.[cell.col];
             if (!evaluated) continue;
             const relation = relationships.relations[cell.row]?.[cell.col] ?? "none";
-            project_cell(cell, evaluated, relation);
+            projectCell(cell, evaluated, relation);
             renderCellColors(cell, evaluated, relation);
         }
         renderStatus();
@@ -391,14 +490,15 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             const evaluated = evaluation.cells[cell.row]?.[cell.col];
             if (!evaluated) continue;
             const relation = relationships.relations[cell.row]?.[cell.col] ?? "none";
-            project_cell_relation(cell, evaluated, relation);
+            projectCellRelation(cell, evaluated, relation);
             renderCellColors(cell, evaluated, relation);
         }
         renderSelection(relationships);
     };
 
     const reset = (): void => {
-        activeResizeCleanup?.();
+        finishResize();
+        clearResizeHover();
         selected = undefined;
         colWidths = defaultColumnWidths();
         rowHeights = defaultRowHeights();
@@ -415,7 +515,6 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             const cell: CellViewModel = {
                 row,
                 col,
-                key,
                 input,
             };
             input.attrs.set("aria-label", key);
@@ -443,27 +542,40 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                 maybeStartCellResize(cell, event);
             });
             const pointerMoveListener = input.listen.on("pointermove", (event: PointerEvent) => {
-                const target = event.currentTarget;
-                if (!(target instanceof HTMLElement)) return;
-                if (activeResizeTarget) return;
-
-                const edge = resizeEdgeForEvent(target, event);
-                target.style.cursor = cursorForResizeEdge(edge);
-                setResizeEdgeHighlight(target, edge);
+                if (disposed || !interactionEnabled) return;
+                if (activeResize) {
+                    updateResize(event, input);
+                    return;
+                }
+                setResizeHover(cell, resizeEdgeForEvent(input, event));
             });
-            const pointerLeaveListener = input.listen.on("pointerleave", (event: PointerEvent) => {
-                const target = event.currentTarget;
-                if (!(target instanceof HTMLElement)) return;
-                if (activeResizeTarget === target) return;
-
-                target.style.cursor = "text";
-                clearResizeEdgeHighlight(target);
+            const pointerUpListener = input.listen.on("pointerup", (event: PointerEvent) => {
+                if (activeResize?.ownerInput === input && activeResize.pointerId === event.pointerId) {
+                    finishResize();
+                }
+            });
+            const pointerCancelListener = input.listen.on("pointercancel", (event: PointerEvent) => {
+                if (activeResize?.ownerInput === input && activeResize.pointerId === event.pointerId) {
+                    finishResize();
+                }
+            });
+            const lostPointerCaptureListener = input.listen.on("lostpointercapture", (event: PointerEvent) => {
+                if (activeResize?.ownerInput === input && activeResize.pointerId === event.pointerId) {
+                    finishResize(false);
+                }
+            });
+            const pointerLeaveListener = input.listen.on("pointerleave", () => {
+                if (disposed || !interactionEnabled || activeResize) return;
+                clearResizeHover(input);
             });
             listenerDisposers.push(
                 () => focusListener.off(),
                 () => inputListener.off(),
                 () => pointerDownListener.off(),
                 () => pointerMoveListener.off(),
+                () => pointerUpListener.off(),
+                () => pointerCancelListener.off(),
+                () => lostPointerCaptureListener.off(),
                 () => pointerLeaveListener.off(),
             );
 
@@ -483,10 +595,15 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         project();
     });
 
+    const activate = (): void => {
+        if (disposed) return;
+        interactionEnabled = true;
+    };
+
     const deactivate = (): void => {
-        activeResizeCleanup?.();
-        clearResizeEdgeHighlight(activeResizeTarget);
-        activeResizeTarget = undefined;
+        interactionEnabled = false;
+        finishResize();
+        clearResizeHover();
     };
 
     const dispose = (): void => {
@@ -498,6 +615,6 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         if (!branch.isDisposed) branch.remove();
     };
 
-    const panel = { branch, reset, deactivate, dispose };
+    const panel = { branch, reset, activate, deactivate, dispose };
     return panel;
 }

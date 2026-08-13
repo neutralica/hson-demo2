@@ -233,11 +233,22 @@ test("Cellsheet deactivation cancels an active resize while retaining authored s
   await page.mouse.move(box.x + box.width - 1, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width + 20, box.y + box.height / 2);
-  await expect.poll(() => page.evaluate(() => document.body.style.cursor)).toBe("col-resize");
+  const pointerId = await input.evaluate((node) => {
+    for (let candidate = 1; candidate < 16; candidate += 1) {
+      if (node.hasPointerCapture(candidate)) return candidate;
+    }
+    return undefined;
+  });
+  expect(pointerId).toBeDefined();
+  await expect(input).toHaveCSS("cursor", "col-resize");
+  await expect(panel).toHaveCSS("user-select", "none");
 
-  await open_demo(page, "about");
+  await page.getByRole("button", { name: "about", exact: true }).dispatchEvent("click");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "about");
   await expect(panel).not.toBeVisible();
-  await expect.poll(() => page.evaluate(() => document.body.style.cursor)).not.toBe("col-resize");
+  expect(await input.evaluate((node, id) => node.hasPointerCapture(id), pointerId!)).toBe(false);
+  await expect(input).toHaveCSS("cursor", "text");
+  await expect(panel).not.toHaveCSS("user-select", "none");
   const grid = input.locator("..");
   const dimensions = await grid.evaluate((node) => (
     getComputedStyle(node).gridTemplateColumns
@@ -251,6 +262,14 @@ test("Cellsheet deactivation cancels an active resize while retaining authored s
   await expect(input).toHaveValue("retained");
   await expect(panel).toContainText("A1\nA1 + C1 → D1=retained2");
   await expect(grid).toHaveCSS("grid-template-columns", dimensions);
+
+  const reactivatedBox = await input.boundingBox();
+  if (!reactivatedBox) throw new Error("missing reactivated Cellsheet input bounds");
+  await page.mouse.move(reactivatedBox.x + reactivatedBox.width - 1, reactivatedBox.y + reactivatedBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(reactivatedBox.x + reactivatedBox.width + 10, reactivatedBox.y + reactivatedBox.height / 2);
+  await page.mouse.up();
+  await expect(grid).not.toHaveCSS("grid-template-columns", dimensions);
 });
 
 test("shell replacement cancels Deck and Amoeba scheduled work and leaves one Fireworks controller", async ({ page }) => {

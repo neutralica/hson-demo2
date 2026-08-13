@@ -2,12 +2,12 @@ export const ROWS = 8;
 export const COLS = 8;
 export const MAX_EVALUATION_PASSES = ROWS * COLS;
 
-export type Operator = "+" | "-" | "*" | "/";
-export type CellKind = "blank" | "text" | "number" | "operator" | "result" | "error";
-export type Direction = "horizontal" | "vertical";
+type Operator = "+" | "-" | "*" | "/";
+type CellKind = "blank" | "text" | "number" | "operator" | "result" | "error";
+type Direction = "horizontal" | "vertical";
 export type CellRelation = "none" | "selected" | "operand" | "operator" | "target" | "blocked";
 
-export type CellsheetRawRow = readonly [
+type CellsheetRawRow = readonly [
   string,
   string,
   string,
@@ -44,7 +44,7 @@ export type CellsheetEvaluatedCell = Readonly<{
   error: string | undefined;
 }>;
 
-export type CellsheetOperation = Readonly<{
+type CellsheetOperation = Readonly<{
   key: string;
   op: Operator;
   direction: Direction;
@@ -189,18 +189,20 @@ function compute_result(op: Operator, left: WorkingCell, right: WorkingCell): st
   return a / b;
 }
 
-function operands_can_apply(op: Operator, left: WorkingCell, right: WorkingCell): boolean {
-  if (left.value === undefined || right.value === undefined) return false;
-  if (op === "+") return true;
-  return typeof left.value === "number" && typeof right.value === "number";
+function operands_are_present(left: WorkingCell, right: WorkingCell): boolean {
+  return left.value !== undefined && right.value !== undefined;
 }
 
 function operation_error(
   op: Operator,
+  left: WorkingCell,
   right: WorkingCell,
   result: string | number | undefined,
 ): string | undefined {
   if (result !== undefined) return undefined;
+  if (op !== "+" && (typeof left.value !== "number" || typeof right.value !== "number")) {
+    return "requires numeric operands";
+  }
   if (op === "/" && right.value === 0) return "division by zero";
   return undefined;
 }
@@ -226,7 +228,7 @@ function find_operations(
   const left = get(operator.ref.row, operator.ref.col - 1);
   const right = get(operator.ref.row, operator.ref.col + 1);
   const horizontalTarget = get(operator.ref.row, operator.ref.col + 2);
-  if (left && right && horizontalTarget && operands_can_apply(op as Operator, left, right)) {
+  if (left && right && horizontalTarget && operands_are_present(left, right)) {
     const result = compute_result(op as Operator, left, right);
     out.push({
       key: `${operator.ref.key}:h`,
@@ -237,14 +239,14 @@ function find_operations(
       operator,
       target: horizontalTarget,
       result,
-      error: operation_error(op as Operator, right, result),
+      error: operation_error(op as Operator, left, right, result),
     });
   }
 
   const top = get(operator.ref.row - 1, operator.ref.col);
   const bottom = get(operator.ref.row + 1, operator.ref.col);
   const verticalTarget = get(operator.ref.row + 2, operator.ref.col);
-  if (top && bottom && verticalTarget && operands_can_apply(op as Operator, top, bottom)) {
+  if (top && bottom && verticalTarget && operands_are_present(top, bottom)) {
     const result = compute_result(op as Operator, top, bottom);
     out.push({
       key: `${operator.ref.key}:v`,
@@ -255,7 +257,7 @@ function find_operations(
       operator,
       target: verticalTarget,
       result,
-      error: operation_error(op as Operator, bottom, result),
+      error: operation_error(op as Operator, top, bottom, result),
     });
   }
 
@@ -316,6 +318,9 @@ export function evaluate_cellsheet(rawGrid: CellsheetRawGrid): CellsheetEvaluati
 
           if (operation.error) {
             operation.operator.error = operation.error;
+            if (operation.error === "requires numeric operands") {
+              operation.target.error = operation.error;
+            }
             continue;
           }
 

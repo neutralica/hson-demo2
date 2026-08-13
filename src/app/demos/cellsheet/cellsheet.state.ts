@@ -26,12 +26,11 @@ export const CELLSHEET_WORKBOOK_SCHEMA = hson.liveMap.schema.define((s) => s.obj
 }));
 
 export type CellsheetWorkbook = InferLiveMapSchema<typeof CELLSHEET_WORKBOOK_SCHEMA>;
-export type CellsheetWorkbookCells = CellsheetWorkbook["cells"];
-export type CellsheetWorkbookRow = CellsheetWorkbookCells[number];
+type CellsheetWorkbookRow = CellsheetWorkbook["cells"][number];
 type Mutable<TValue> = TValue extends object
   ? { -readonly [TKey in keyof TValue]: Mutable<TValue[TKey]> }
   : TValue;
-export type CellsheetWorkbookInput = Mutable<CellsheetWorkbook>;
+type CellsheetWorkbookInput = Mutable<CellsheetWorkbook>;
 
 function empty_row(): Mutable<CellsheetWorkbookRow> {
   return ["", "", "", "", "", "", "", ""];
