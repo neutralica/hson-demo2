@@ -1,13 +1,13 @@
 import { hson } from "hson-live";
-import type { JsonValue, HsonNode } from "hson-live/types";
-import type { DemoState, DemoStateRO, DemoStore, DemoView, DemoWidget, Listener } from "./state.types";
+import { WIDGET_IDS, type MainViewId, type WidgetId } from "./shell-ids";
+import { DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
+import type { DemoState, DemoStore, DemoView } from "./state.types";
 
 export function make_initial_demo_state(): DemoState {
   return {
     ui: {
       currentView: null,
-      activeWidgets: [],
-      aboutTocOpen: false,
+      activeWidgets: ["bling"],
     },
   };
 }
@@ -15,94 +15,58 @@ export function make_initial_demo_state(): DemoState {
 export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
 
-export const DEMO_LIVEMAP_SCHEMA = hson.liveMap.schema.define((scm) => {
-  return scm.object.exact({
-    ui: scm.object.exact({
-      currentView: scm.string.nullable,
-      activeWidgets: scm.array(scm.string),
-      aboutTocOpen: scm.boolean,
-    }),
-  });
-});
+export { DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
+
+export function canonicalize_widget_ids(widgets: readonly WidgetId[]): WidgetId[] {
+  return WIDGET_IDS.filter((widget) => widgets.includes(widget));
+}
 
 export function create_demo_store(
   initial: DemoState = INITIAL_DEMO_STATE,
 ): DemoStore {
   const demoState = hson.liveMap
-    .fromJson(cloneJson(initial))
+    .fromJson(JSON.stringify(initial))
     .schema.use(DEMO_LIVEMAP_SCHEMA);
-
-  function cloneJson<T extends JsonValue>(value: T): T {
-    return JSON.parse(JSON.stringify(value)) as T;
-  }
-
-  function snapshot(): DemoStateRO {
-    return cloneJson(demoState.snap() as DemoState);
-  }
-
-  function stateGet<T extends JsonValue>(
-    path: string | readonly (string | number)[],
-  ): T {
-    return demoState.at(typeof path === "string" ? [path] : path).snap() as T;
-  }
-
-  function stateSet(
-    path: string | readonly (string | number)[],
-    next: JsonValue,
-  ): void {
-    demoState.at(typeof path === "string" ? [path] : path).set(next as never);
-  }
-
-
-  // -------------------------
-  // public API
-  // -------------------------
-
-  function stateSnapshot(): DemoStateRO {
-    return snapshot();
-  }
+  const currentView = demoState.at(["ui", "currentView"]);
+  const activeWidgets = demoState.at(["ui", "activeWidgets"]);
+  const locations = { currentView, activeWidgets } as const;
 
   function getView(): DemoView {
-    return stateGet<DemoView>(["ui", "currentView"]);
+    return currentView.snap();
   }
 
-  function getWidgets(): DemoWidget[] {
-    return stateGet<DemoWidget[]>(["ui", "activeWidgets"]);
+  function getWidgets(): readonly WidgetId[] {
+    return activeWidgets.snap();
   }
 
-  function hasWidget(widget: DemoWidget): boolean {
+  function hasWidget(widget: WidgetId): boolean {
     return getWidgets().includes(widget);
   }
 
-  function getTocOpen(): boolean {
-    return stateGet<boolean>(["ui", "aboutTocOpen"]);
-  }
-
   function setView(next: DemoView): void {
-    stateSet(["ui", "currentView"], next);
+    currentView.set(next);
   }
 
-  function toggleView(next: Exclude<DemoView, null>): void {
-    const current = getView();
-    setView(current === next ? null : next);
+  function toggleView(next: MainViewId): void {
+    setView(getView() === next ? null : next);
   }
 
-  function startWidget(next: DemoWidget): void {
+  function startWidget(next: WidgetId): void {
     const widgets = getWidgets();
     if (widgets.includes(next)) return;
 
-    stateSet(["ui", "activeWidgets"], [...widgets, next]);
+    activeWidgets.set(canonicalize_widget_ids([...widgets, next]));
   }
 
-  function stopWidget(next: DemoWidget): void {
+  function stopWidget(next: WidgetId): void {
     const widgets = getWidgets();
-    const filtered = widgets.filter((w) => w !== next);
+    const filtered = canonicalize_widget_ids(widgets.filter((widget) => widget !== next));
 
     if (filtered.length === widgets.length) return;
-    stateSet(["ui", "activeWidgets"], filtered);
+    activeWidgets.set(filtered);
   }
 
-  function toggleWidget(widget: DemoWidget): void {
+  function toggleWidget(widget: WidgetId): void {
     if (hasWidget(widget)) {
       stopWidget(widget);
       return;
@@ -111,40 +75,20 @@ export function create_demo_store(
     startWidget(widget);
   }
 
-  // -------------------------
-  // subscriptions
-  // -------------------------
-
-  function subscribe(fn: (state: DemoStateRO) => void): () => void {
-    return demoState.sub((state) => fn(cloneJson(state as DemoState)));
-  }
-
-  function subscribeDiff(fn: Listener): () => void {
-    return demoState.sub.diff((next, prev) => {
-      fn(cloneJson(next as DemoState), cloneJson(prev as DemoState));
-    });
-  }
-
-  function subscribeSel<T>(
-    sel: (s: DemoStateRO) => T,
-    onChange: (next: T, prev: T, state: DemoStateRO) => void,
-  ): () => void {
+  function subscribeViewState(fn: () => void): () => void {
     return demoState.sub.sel(
-      (state) => sel(state as DemoStateRO),
-      (next, prev, state) => onChange(next, prev, cloneJson(state as DemoState)),
+      (state) => JSON.stringify([
+        state.ui.currentView,
+        state.ui.activeWidgets,
+      ]),
+      fn,
     );
   }
 
-  function stateNode(): HsonNode {
-    return demoState.root();
-  }
-
   return {
-    stateSnapshot: stateSnapshot,
+    locations,
     getView,
     getWidgets,
-    hasWidget,
-    getTocOpen,
 
     setView,
     toggleView,
@@ -152,21 +96,15 @@ export function create_demo_store(
     stopWidget,
     toggleWidget,
 
-    subscribe,
-    subDiff: subscribeDiff,
-    subSel: subscribeSel,
-
-    stateNode: stateNode,
+    subscribeViewState,
   };
 }
 
 const demoStore = create_demo_store();
 
-export const demo_get_state = demoStore.stateSnapshot;
+export const demo_shell_locations = demoStore.locations;
 export const get_view = demoStore.getView;
 export const get_widgets = demoStore.getWidgets;
-export const has_widget = demoStore.hasWidget;
-export const get_about_toc_open = demoStore.getTocOpen;
 
 export const set_view = demoStore.setView;
 export const toggle_view = demoStore.toggleView;
@@ -174,18 +112,4 @@ export const activate_widget = demoStore.startWidget;
 export const deactivate_widget = demoStore.stopWidget;
 export const toggle_widget = demoStore.toggleWidget;
 
-export const demo_subscribe = demoStore.subscribe;
-export const demo_subscribe_sel = demoStore.subSel;
-
-export function demo_subscribe_view_state(fn: () => void): () => void {
-  // CHANGED: one selector tracks the complete view-render state and emits once per update.
-  return demo_subscribe_sel(
-    (state) => JSON.stringify([
-      state.ui.currentView,
-      state.ui.activeWidgets,
-    ]),
-    fn,
-  );
-}
-
-export const demo_state_node = demoStore.stateNode;
+export const demo_subscribe_view_state = demoStore.subscribeViewState;

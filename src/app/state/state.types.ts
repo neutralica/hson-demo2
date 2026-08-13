@@ -1,58 +1,29 @@
-// state.types.ts
+import type { InferLiveMapSchema, LiveMapPathHandle } from "hson-live/livemap";
+import type { DEMO_LIVEMAP_SCHEMA } from "./shell.schema";
+import type { MainViewId, WidgetId } from "./shell-ids";
 
-import type { HsonNode } from "hson-live/types";
+export type { MainViewId, WidgetId } from "./shell-ids";
 
-export type DemoView = null |
-  "about" |
-  "test" |
-  "parse" |
-  "build" |
-  "bar-bar" |
-  "towl" |
-  "cells" | // added
-  "fleurs";
+export type DemoView = MainViewId | null;
+export type DemoWidget = WidgetId;
+export type DemoState = InferLiveMapSchema<typeof DEMO_LIVEMAP_SCHEMA>;
 
-export type DemoWidget =
-  "oklch" |
-  "point" |
-  "bling";
-
-export type DemoUiState = {
-  currentView: DemoView;
-  activeWidgets: DemoWidget[];
-  aboutTocOpen: boolean;
-
-};
-
-export type DemoState = {
-  ui: DemoUiState;
-};
-
-export type DemoStateRO = Readonly<DemoState>;
-
-export type Listener = (next: DemoStateRO, prev: DemoStateRO) => void;
+export type DemoShellLocations = Readonly<{
+  currentView: LiveMapPathHandle<DemoView>;
+  activeWidgets: LiveMapPathHandle<readonly WidgetId[]>;
+}>;
 
 export type DemoStore = {
-  stateSnapshot(): DemoStateRO;
+  locations: DemoShellLocations;
   getView(): DemoView;
-  getWidgets(): DemoWidget[];
-  hasWidget(widget: DemoWidget): boolean;
-  getTocOpen(): boolean;
+  getWidgets(): readonly WidgetId[];
 
   setView(next: DemoView): void;
-  toggleView(next: Exclude<DemoView, null>): void;
+  toggleView(next: MainViewId): void;
 
   startWidget(next: DemoWidget): void;
   stopWidget(next: DemoWidget): void;
   toggleWidget(widget: DemoWidget): void;
 
-  // set_about_toc_open(next: boolean): void;
-  subscribe(fn: (state: DemoStateRO) => void): () => void;
-  subDiff(fn: Listener): () => void;
-  subSel<T>(
-    sel: (s: DemoStateRO) => T,
-    onChange: (next: T, prev: T, state: DemoStateRO) => void
-  ): () => void;
-
-  stateNode(): HsonNode;
+  subscribeViewState(fn: () => void): () => void;
 };

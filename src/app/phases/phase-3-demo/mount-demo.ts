@@ -26,8 +26,10 @@ import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
 import { mount_test_panels } from "../../demos/tests/panel/mount-tp";
 import type { TestPanels } from "../../demos/tests/panel/tp.types";
 import { mount_towl_panel, type TowlPanel } from "../../demos/towl/mount-towl";
-import type { DemoView, DemoWidget } from "../../state/state.types";
-import { toggle_widget, get_view, toggle_view, activate_widget, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
+import type { DemoView, DemoWidget, MainViewId } from "../../state/state.types";
+import type { PublicMainViewId } from "../../state/shell-ids";
+import { WIDGET_IDS } from "../../state/shell-ids";
+import { toggle_widget, get_view, toggle_view, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
 import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $BLING, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS, $TOWL } from "./demo.consts";
@@ -41,9 +43,9 @@ import mount_color_sudoku from "../../demos/mount-color-sudoku";
 
 
 export type MenuKey = typeof MENU_OPTIONS[number];
-type DemoMenuView = Exclude<DemoView, null>;
+type DemoMenuView = PublicMainViewId;
 type MenuButtons = Record<MenuKey, LiveTree>;
-type ViewHosts = Partial<Record<DemoMenuView, LiveTree>>;
+type ViewHosts = Partial<Record<MainViewId, LiveTree>>;
 type WidgetHostGroup = readonly LiveTree[];
 type WidgetHosts = Partial<Record<DemoWidget, WidgetHostGroup>>;
 
@@ -114,13 +116,6 @@ function active_menu_ids(
     ...widgets,
   ];
 }
-const ISOLATED_WIDGET_IDS:
-  readonly DemoWidget[] = [
-    "oklch",
-    "point",
-    "bling",
-  ];
-
 function amoebi_menu_items(): readonly AmoebiMenuItem[] {
   return MENU_OPTIONS.map((key) => ({
     id: key,
@@ -288,7 +283,7 @@ function is_mobile_demo_width(stage: LiveTree): boolean {
   return rect.width <= MIN_DESKTOP_WIDTH;
 }
 
-function sync_demo_visibility(viewHosts: ViewHosts, widgetHosts: WidgetHosts, view: DemoView, widgets: DemoWidget[]): void {
+function sync_demo_visibility(viewHosts: ViewHosts, widgetHosts: WidgetHosts, view: DemoView, widgets: readonly DemoWidget[]): void {
   Object.values(viewHosts).forEach((host) => host && _hide(host));
   const activeHost = view ? viewHosts[view] : undefined;
   if (activeHost) _unhide(activeHost);
@@ -328,7 +323,6 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
   const content = mount_demo_content(hosts);
   mount_motes(motesLayer);
   mount_deck(stage);
-  activate_widget($BLING);
   sync_fleur_viewbox(fleurLayer, fleurField);
   const demoController: DemoStateController = {
     getView: get_view,
@@ -344,7 +338,7 @@ export async function mount_demo(stage: LiveTree): Promise<void> {
         get_view(),
         get_widgets() ?? [],
       ),
-      isolatedIds: ISOLATED_WIDGET_IDS,
+      isolatedIds: WIDGET_IDS,
       items: amoebi_menu_items(),
       showTitle: false,
       ariaLabel: "Demo navigation",

@@ -75,6 +75,12 @@ function annotate(suite: TestSuite): TestSuite {
       descriptor: metadata("livemap", DEV_SUITES.has(suite.suite) ? Object.freeze(["dev"] as const) : undefined),
     });
   }
+  if (suite.suite === "unit/livedemo-shell-state") {
+    return Object.freeze({
+      ...suite,
+      descriptor: metadata("livedemo", Object.freeze(["unit"] as const)),
+    });
+  }
   if (suite.suite.startsWith("unit/")) {
     return Object.freeze({ ...suite, descriptor: metadata("livetree", Object.freeze(["unit"] as const)) });
   }

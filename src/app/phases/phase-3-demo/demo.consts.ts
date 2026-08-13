@@ -1,6 +1,6 @@
 // demo.consts.ts
 
-import type { DemoWidget } from "../../state/state.types";
+import { PUBLIC_MAIN_VIEW_IDS, WIDGET_IDS } from "../../state/shell-ids";
 
 
 
@@ -8,18 +8,7 @@ export const MIN_DESKTOP_WIDTH =1100
 
 export const COPY_TEXTstr ="hson::LiveDemo  |  © 2026 terminal_gothic (Public Parity License 7.0)"
 
-export const $BUILD = "build";
-export const $PARSE = "parse";
-export const $TEST = "test";
-export const $FLEURS = "fleurs";
-export const $OKLCH = "oklch";
-export const $POINT = "point";
-export const $ABOUT = "about";
-export const $BLING = "bling";
-export const $BARBAR = "bar-bar";
-export const $TOWL = "towl";
-export const $CELLS = "cells";
-export const MENU_OPTIONS = [
+export const [
   $ABOUT,
   $TEST,
   $PARSE,
@@ -28,12 +17,13 @@ export const MENU_OPTIONS = [
   $TOWL,
   $CELLS,
   $FLEURS,
-  $POINT,
-  $OKLCH,
-  $BLING,
-  
+] = PUBLIC_MAIN_VIEW_IDS;
+export const [$POINT, $OKLCH, $BLING] = WIDGET_IDS;
+export const MENU_OPTIONS = [
+  ...PUBLIC_MAIN_VIEW_IDS,
+  ...WIDGET_IDS,
 ] as const;
-export const WIDGET_MENU_KEYS: readonly DemoWidget[] = [$POINT, $OKLCH, $BLING] as const;
+export const WIDGET_MENU_KEYS = WIDGET_IDS;
 
 export const $PARSING_PANELS_ROOT = "parsing-panels-root";
 
