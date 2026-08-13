@@ -31,7 +31,7 @@ import {
   P_BLOCKcss,
 } from "./deck.css";
 import { SLIDES } from "./deck-slides";
-import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, schedule_deck_frame, schedule_deck_timeout, slide_bodies, write_in_text, write_in_rendered_text } from "./deck-helpers";
+import { normalize_code_block_text, is_deck_list_line, body_grid_columns, body_markdown, clamp_index, clear_timers, deck_code_format_color, deck_code_watermark, deck_markdown_heading_css, is_formatted_data_lang, schedule_deck_frame, schedule_deck_timeout, slide_bodies, write_in_text } from "./deck-helpers";
 import type { DeckSlideConfig, DeckState, DeckSlideBody, DeckSlideSection, DeckApi } from "./deck.types";
 import type { CssMap } from "hson-live/types";
 import { render_line_with_comment } from "../about/about-helpers";
@@ -313,8 +313,9 @@ function mount_deck_code_block(
   for (const line of block.text.split("\n")) {
     const row = mk_div_cls(content, "text row").css.setMany(TXT_ROWcss);
 
-    render_line_with_comment(row, line, "code");
-    write_in_rendered_text(state, row);
+    render_line_with_comment(row, line, "code", (target, text) => {
+      write_in_text(state, target, text);
+    });
   }
 }
 

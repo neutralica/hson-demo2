@@ -1,6 +1,5 @@
 import { adjustOklch } from "../../core/helpers/color-helpers";
-import { make_rng } from "../../utils/rng";
-import type { Rng } from "../../../../tests/harness/core/test-contracts";
+import { make_flower_rng, type Rng } from "./fleurs-rng";
 import { pickStamenColor, fmtNum, jitter_oklch } from "./fleurs-cols";
 import { lerp } from "./fleurs-helpers";
 import type { FlowerSpec, FlowerPaletteSpec } from "./fleurs.types";
@@ -242,7 +241,6 @@ export function renderPinwheelRing(spec: FlowerSpec, ringIx: number): string {
     return out;
 }
 export function appendPetalRingMarkup(spec: FlowerSpec, ringIx: number): string {
-    console.log(spec.cultivar);
     switch (spec.cultivar) {
         case "rosette":
             return renderRosetteRing(spec, ringIx);
@@ -274,7 +272,7 @@ export function appendStamensMarkup(spec: FlowerSpec): string {
         return "";
     }
 
-    const rng = make_rng(spec.seed + 909);
+    const rng = make_flower_rng(spec.seed, 909);
     const step = 360 / spec.stamenCount;
     const dist = getStamenDistance(spec);
 
@@ -332,7 +330,7 @@ export function appendDaisySpotsMarkup(spec: FlowerSpec): string {
     return "";
 }
 export function makeRingRng(spec: FlowerSpec, ringIx: number): () => number {
-    return make_rng(spec.seed + ((ringIx + 1) * 101));
+    return make_flower_rng(spec.seed, (ringIx + 1) * 101);
 }
 
 export function makeOutline(_width: number, _rng: () => number): string {

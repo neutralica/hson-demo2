@@ -1,4 +1,4 @@
-import type { Rng } from "../../../../tests/harness/core/test-contracts";
+import type { Rng } from "./fleurs-rng";
 
 
 
@@ -30,4 +30,3 @@ export function pickOne<T>(arr: readonly T[], rng: Rng): T {
     }
     return v;
 }
-

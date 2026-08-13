@@ -132,8 +132,6 @@ export async function mount_firework(
       zIndex: "2",
     });
 
-  // BUG TODO ixnay on the om.elday()
-  const canvas = canvasLt.dom.el() as HTMLCanvasElement;
   const ctx0 = canvasLt.canvas.ctx2d();
 
   if (!ctx0) {
@@ -157,15 +155,12 @@ export async function mount_firework(
       background: "rgb(255 255 245)",
       opacity: "0",
     });
-  const flashEl = flashLt.dom.el() as HTMLDivElement;
   const EXTRA_FALL_PX = 520;
   const W = window.innerWidth;
   const H = window.innerHeight;
   const CULL_H = H + EXTRA_FALL_PX;
   const SKY_LIFT_PX = Math.min(260, Math.round(H * 0.24));
-  // ixnay i say
-  canvas.width = W;
-  canvas.height = H;
+  canvasLt.canvas.size.set(W, H);
   ctx.clearRect(0, 0, W, H);
   ctx.globalCompositeOperation = "lighter";
 
@@ -342,7 +337,7 @@ export async function mount_firework(
     // global trails (keeps things coherent when many fireworks overlap)
     // (per-firework trailFade could be added, but global is usually enough + faster)
     if (live.length === 0 && pops.length === 0 && smokes.length === 0 && flashes.length === 0) {
-      flashEl.style.opacity = "0";
+      flashLt.css.setMany({ opacity: "0" });
       return;
     }
     ctx.globalCompositeOperation = "destination-out";
@@ -383,7 +378,7 @@ export async function mount_firework(
 
     // CHANGED: DOM opacity is non-persistent, so the flash appears immediately
     // and follows the envelope exactly instead of accreting in the trail buffer.
-    flashEl.style.opacity = String(Math.min(0.065, flashAlpha));
+    flashLt.css.setMany({ opacity: String(Math.min(0.065, flashAlpha)) });
 
     for (let p = pops.length - 1; p >= 0; p -= 1) {
       const pop = pops[p]!;

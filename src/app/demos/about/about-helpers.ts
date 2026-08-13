@@ -25,6 +25,12 @@ import { _colors } from "../../core/consts/colors.consts";
  **/
 
 type InlineSeg = { kind: "text" | "code"; s: string };
+type RenderedTextSink = (target: LiveTree, text: string) => void;
+
+function set_rendered_text(target: LiveTree, text: string, sink?: RenderedTextSink): void {
+  target.text.set(text);
+  sink?.(target, text);
+}
 
 export function split_inline_backticks(src: string): InlineSeg[] {
   const out: InlineSeg[] = [];
@@ -49,7 +55,7 @@ export function split_inline_backticks(src: string): InlineSeg[] {
 // one renderer for fenced code lines AND inline code segments.
 // - Handles comments, parens, dot, equals, and double quotes.
 // - Preserves whitespace (assumes container/row has whiteSpace: "pre"; white-space is inherited).
-export function render_inline_code(row: LiveTree, code: string): void {
+export function render_inline_code(row: LiveTree, code: string, sink?: RenderedTextSink): void {
   // base “ink” so code isn’t dependent on outer containers.
   const BASEcss: CssMap = INLINE_CODEcss;
   const BRACEcss: CssMap = CODE_BRACEcss;
@@ -75,7 +81,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
 
   const flush = (css: CssMap) => {
     if (buf.length === 0) return;
-    row.create.span().css.setMany(css).text.set(buf);
+    const span = row.create.span().css.setMany(css);
+    set_rendered_text(span, buf, sink);
     buf = "";
   };
 
@@ -88,7 +95,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
 
   const emit = (css: CssMap, s: string) => {
     flush(currentTextCss());
-    row.create.span().css.setMany(css).text.set(s);
+    const span = row.create.span().css.setMany(css);
+    set_rendered_text(span, s, sink);
   };
 
   const startsWordAt = (word: string, ix: number): boolean => {
@@ -108,9 +116,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
     // ---- keyword highlighting: only outside quoted strings ----
     if (inQuote === null && startsWordAt("const", i)) {
       flush(currentTextCss());
-      row.create.span()
-        .css.setMany({color: _colors.code.const})
-        .text.set("const");
+      const span = row.create.span().css.setMany({color: _colors.code.const});
+      set_rendered_text(span, "const", sink);
 
       i += "const".length - 1;
       inType = false;
@@ -123,7 +130,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
         flush(currentTextCss());
 
         const rest = code.slice(i);
-        row.create.span().css.setMany(COMMENTcss).text.set(rest);
+        const span = row.create.span().css.setMany(COMMENTcss);
+        set_rendered_text(span, rest, sink);
         return;
       }
     }
@@ -133,7 +141,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
       flush(currentTextCss());
 
       // CHANGED: emit the actual quote char, not always `"`.
-      row.create.span().css.setMany(QUOTEcss).text.set(ch);
+      const span = row.create.span().css.setMany(QUOTEcss);
+      set_rendered_text(span, ch, sink);
 
       // CHANGED: only close the matching quote type.
       if (inQuote === ch) {
@@ -147,9 +156,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
 
     if (inQuote === null && (ch === "<" || ch === ">")) {
       flush(currentTextCss());
-      row.create.span()
-        .css.setMany(ANGLEcss)
-        .text.set(ch);
+      const span = row.create.span().css.setMany(ANGLEcss);
+      set_rendered_text(span, ch, sink);
       continue;
     };
 
@@ -159,17 +167,15 @@ export function render_inline_code(row: LiveTree, code: string): void {
       ((code[i - 1] ?? "") === "<" || (code[i + 1] ?? "") === ">")
     ) {
       flush(currentTextCss());
-      row.create.span()
-        .css.setMany(SLASHcss)
-        .text.set("/");
+      const span = row.create.span().css.setMany(SLASHcss);
+      set_rendered_text(span, "/", sink);
       continue;
     }
 
     if (inQuote === null && ch === "|") {
       flush(currentTextCss());
-      row.create.span()
-        .css.setMany(PIPEcss)
-        .text.set("|");
+      const span = row.create.span().css.setMany(PIPEcss);
+      set_rendered_text(span, "|", sink);
       // Keep type mode active. This lets `string | undefined`
       // keep the type coloring on both sides of the pipe.
       continue;
@@ -179,9 +185,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
     if (inQuote === null && ch === ":") {
       flush(currentTextCss());
 
-      row.create.span()
-        .css.setMany(COLONcss)
-        .text.set(":");
+      const span = row.create.span().css.setMany(COLONcss);
+      set_rendered_text(span, ":", sink);
 
       // CHANGED: after a colon, following text is styled as a type
       // until a delimiter such as comma, close paren, equals, etc.
@@ -191,9 +196,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
 
     if (inQuote === null && (ch === "{" || ch === "}")) {
       flush(currentTextCss());
-      row.create.span()
-        .css.setMany(BRACEcss)
-        .text.set(ch);
+      const span = row.create.span().css.setMany(BRACEcss);
+      set_rendered_text(span, ch, sink);
 
       inType = false;
       continue;
@@ -202,9 +206,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
     if (inQuote === null && ch === ",") {
       flush(currentTextCss());
 
-      row.create.span()
-        .css.setMany(COMMAcss)
-        .text.set(",");
+      const span = row.create.span().css.setMany(COMMAcss);
+      set_rendered_text(span, ",", sink);
 
       // CHANGED: after a comma, we're back to parameter-name mode.
       inType = false;
@@ -214,7 +217,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
     if (ch === "(") {
       flush(currentTextCss());
 
-      row.create.span().css.setMany(PARENcss).text.set("(");
+      const span = row.create.span().css.setMany(PARENcss);
+      set_rendered_text(span, "(", sink);
 
       depth += 1;
 
@@ -226,7 +230,8 @@ export function render_inline_code(row: LiveTree, code: string): void {
     if (ch === ")") {
       flush(currentTextCss());
 
-      row.create.span().css.setMany(PARENcss).text.set(")");
+      const span = row.create.span().css.setMany(PARENcss);
+      set_rendered_text(span, ")", sink);
 
       depth = Math.max(0, depth - 1);
 
@@ -375,11 +380,12 @@ export function render_line_with_comment(
   host: LiveTree,
   line: string,
   mode: "prose" | "code",
+  sink?: RenderedTextSink,
 ): void {
   const split = split_trailing_comment(line);
 
   if (!split) {
-    if (mode === "code") render_inline_code(host, line);
+    if (mode === "code") render_inline_code(host, line, sink);
     else render_inline(host, line);
     return;
   }
@@ -387,14 +393,14 @@ export function render_line_with_comment(
   const { body, comment } = split;
 
   if (body.length > 0) {
-    if (mode === "code") render_inline_code(host, body);
+    if (mode === "code") render_inline_code(host, body, sink);
     else render_inline(host, body);
   }
 
-  host.create.span()
+  const commentTarget = host.create.span()
     .classlist.add("md-comment")
-    .css.setMany(CODE_COMMENTScss)
-    .text.set(comment);
+    .css.setMany(CODE_COMMENTScss);
+  set_rendered_text(commentTarget, comment, sink);
 }
 
 export function extractUrl(line: string): string | null {
@@ -437,5 +443,4 @@ function render_prose_text(host: LiveTree, text: string): void {
     host.create.span().text.set(text.slice(lastIx));
   }
 }
-
 

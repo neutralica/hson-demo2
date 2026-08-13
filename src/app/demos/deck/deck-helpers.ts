@@ -101,25 +101,6 @@ function write_text_value(state: DeckState, text: string, setText: TextSetter, o
   state.timerIds.push(timerId);
 }
 
-export function write_in_rendered_text(state: DeckState, root: LiveTree): void {
-  const rootElement = root.dom.must.htmlEl();
-  const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
-  const entries: { node: Text; text: string; }[] = [];
-  let current = walker.nextNode();
-
-  while (current) {
-    const node = current as Text;
-    entries.push({ node, text: node.textContent ?? "" });
-    current = walker.nextNode();
-  }
-
-  entries.forEach(({ node, text }) => {
-    write_text_value(state, text, (value) => {
-      node.textContent = value;
-    });
-  });
-}
-
 export function write_in_text(state: DeckState, target: LiveTree, text: string, onComplete?: () => void): void {
   write_text_value(state, text, (value) => {
     target.text.set(value);

@@ -1,6 +1,5 @@
 import  { parse_oklch, format_oklch } from "../../core/helpers/color-helpers";
-import { make_rng } from "../../utils/rng";
-import type { Rng } from "../../../../tests/harness/core/test-contracts";
+import { make_flower_rng, type Rng } from "./fleurs-rng";
 import { clamp, lerp } from "./fleurs-helpers";
 import { randSigned } from "./fleurs-helpers";
 import { HUE_BANDS } from "./fleurs.consts";
@@ -56,21 +55,21 @@ function pickSecondaryBand(primaryBand: HueBand, rng: Rng): HueBand | null {
     return null;
 }
 export function pickFlowerPalette(seed: number): FlowerPaletteSpec {
-    const rng = make_rng(seed);
-    const primaryBand = pickWeightedBand(HUE_BANDS, make_rng(seed * Math.random()));
-    const secondaryBand = pickSecondaryBand(primaryBand, make_rng(seed * Math.random()));
+    const rng = make_flower_rng(seed, 1);
+    const primaryBand = pickWeightedBand(HUE_BANDS, make_flower_rng(seed, 2));
+    const secondaryBand = pickSecondaryBand(primaryBand, make_flower_rng(seed, 3));
 
-    const primaryHue = sampleHueBand(primaryBand.min, primaryBand.max, make_rng(seed * Math.random()));
+    const primaryHue = sampleHueBand(primaryBand.min, primaryBand.max, make_flower_rng(seed, 4));
 
     const secondaryHue = secondaryBand
-        ? sampleHueBand(secondaryBand.min, secondaryBand.max, make_rng(seed * Math.random()))
+        ? sampleHueBand(secondaryBand.min, secondaryBand.max, make_flower_rng(seed, 5))
         : null;
     const centerHue = normalizeHue(primaryHue + (rng() < 0.5
         ? lerp(115, 155, rng())
         : -lerp(115, 155, rng())));
 
     return {
-        primaryPetal: sampleFlowerColor(primaryHue, make_rng(seed * Math.random()), {
+        primaryPetal: sampleFlowerColor(primaryHue, make_flower_rng(seed, 6), {
             lMin: 0.38,
             lMax: 0.86,
             cMin: 0.10,

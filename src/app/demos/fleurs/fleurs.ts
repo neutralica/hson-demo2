@@ -1,17 +1,16 @@
 // fleurs.ts
 
 import type { SvgLiveTree } from "hson-live/types";
-import { make_rng } from "../../utils/rng";
+import { make_flower_rng, type Rng } from "./fleurs-rng";
 import { pickFlowerPalette, pick_center_color, fmtNum } from "./fleurs-cols";
 import { lerp, pickOne } from "./fleurs-helpers";
 import type { CultivarShape, FlowerCultivar, FlowerSpec } from "./fleurs.types";
 import { appendDaisySpotsMarkup, appendPetalRingMarkup, appendStamensMarkup } from "./render-fleurs";
-import type { Rng } from "../../../../tests/harness/core/test-contracts";
 import { DAISYshape, SUNBURSTshape, PINWHEELshape, SCISSORshape, WILDshape, DANDYshape, ROSETTEshape } from "./fleurs.consts";
 
 
-function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
-    const rng = make_rng(seed);
+export function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
+    const rng = make_flower_rng(seed);
 
     const cultivar = pick_cultivar(seed);
     const shape = sampleCultivarShape(cultivar, rng);
@@ -49,8 +48,8 @@ function makeFlowerSpec(seed: number, x: number, y: number): FlowerSpec {
     };
 }
 
-async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiveTree> {
-    const rng = make_rng(spec.seed);
+export async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiveTree> {
+    const rng = make_flower_rng(spec.seed);
     const daisySpots = appendDaisySpotsMarkup(spec);
 
     let petals = "";
@@ -95,6 +94,10 @@ async function renderFlower(host: SvgLiveTree, spec: FlowerSpec): Promise<SvgLiv
 
 export async function spawn_flower(layer: SvgLiveTree, x: number, y: number): Promise<SvgLiveTree> {
     const seed = Date.now() ^ ((x * 73856093) | 0) ^ ((y * 19349663) | 0);
+    return spawn_flower_seeded(layer, x, y, seed);
+}
+
+export async function spawn_flower_seeded(layer: SvgLiveTree, x: number, y: number, seed: number): Promise<SvgLiveTree> {
     const spec = makeFlowerSpec(seed, x, y);
     return renderFlower(layer, spec);
 }
@@ -144,7 +147,7 @@ function svg_to_data_url(svg: string): string {
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 export function pick_cultivar(seed: number): FlowerCultivar {
-    const rng = make_rng(seed);
+    const rng = make_flower_rng(seed);
 
     const cultivars: readonly FlowerCultivar[] = [
         "daisy",
