@@ -7,14 +7,16 @@ async function reach_demo_url(page: Page, url: string): Promise<void> {
   await page.goto(url);
   await expect(page.getByTestId("app-root")).toBeAttached();
   const stage = page.locator("#stage");
-  await expect(stage).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
-  await stage.click({ position: { x: 4, y: 4 } });
+  await expect(stage).toHaveAttribute("data-app-phase", /^(splash|demo-ready)$/, { timeout: 15_000 });
+  if (await stage.getAttribute("data-app-phase") === "splash") {
+    await stage.click({ position: { x: 4, y: 4 } });
+  }
   await expect(stage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
   await expect(page.getByRole("group", { name: "Demo navigation" })).toBeVisible();
 }
 
 async function open_towl(page: Page): Promise<void> {
-  await open_demo(page, "towl");
+  if (!await page.getByTestId("towl-root").isVisible()) await open_demo(page, "towl");
   await expect(page.getByTestId("towl-root")).toBeVisible();
   await expect(page.getByTestId("towl-status")).toHaveText("connection: connected · session attached");
 }
@@ -57,10 +59,7 @@ test("TOWL room URL shares one game, isolates another, and reattaches on refresh
     await expect(isolated.getByTestId("towl-phase")).toHaveText("phase: lobby");
 
     await first.reload();
-    const stage = first.locator("#stage");
-    await expect(stage).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
-    await stage.click({ position: { x: 4, y: 4 } });
-    await expect(stage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+    await expect(first.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
     await open_towl(first);
     await expect(first.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
 

@@ -43,7 +43,6 @@ import {
   $BARBAR,
   $POINT,
   $OKLCH,
-  MIN_DESKTOP_WIDTH,
   $FLEURS,
   $CELLS,
   $TOWL,
@@ -75,6 +74,10 @@ type DemoMenuView = PublicMainViewId;
 
 export type DemoShellController = SurfaceController & Readonly<{
   root: LiveTree;
+}>;
+
+export type DemoMountOptions = Readonly<{
+  directTowlEntry?: boolean;
 }>;
 
 type DemoShell = {
@@ -206,11 +209,6 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
   mk_div_id_txt(menuContainer, "livedemo-subhead", "liveDemo").css.setMany(HSON_SUBcss);
 }
 
-function is_mobile_demo_width(stage: LiveTree): boolean {
-  const rect = stage.dom.rect();
-  return rect !== undefined && rect.width <= MIN_DESKTOP_WIDTH;
-}
-
 function host_controller(host: LiveTree, cleanup: () => void = () => undefined): SurfaceController {
   let disposed = false;
   return Object.freeze({
@@ -233,7 +231,10 @@ function main_host(uiRoot: LiveTree, id: MainViewId): LiveTree {
     .data.set("shell-main-surface", id);
 }
 
-function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRegistration> {
+function make_main_registrations(
+  shell: DemoShell,
+  onTowlBack: () => void,
+): Record<MainViewId, SurfaceRegistration> {
   const mount = (
     id: MainViewId,
     factory: (host: LiveTree) => void | (() => void),
@@ -276,7 +277,7 @@ function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRe
     [$TOWL]: {
       retention: "recreate",
       mount: () => mount($TOWL, (host) => {
-        const panel = mount_towl_panel(host);
+        const panel = mount_towl_panel(host, { onBack: onTowlBack });
         return panel.dispose;
       }),
     },
@@ -383,7 +384,10 @@ function make_widget_registrations(shell: DemoShell, pointSlot: LiveTree): Recor
   return registrations;
 }
 
-export async function mount_demo(stage: LiveTree): Promise<DemoShellController> {
+export async function mount_demo(
+  stage: LiveTree,
+  options: DemoMountOptions = {},
+): Promise<DemoShellController> {
   activeDemoShell?.dispose();
   activeDemoShell = undefined;
   stage.empty();
@@ -391,6 +395,7 @@ export async function mount_demo(stage: LiveTree): Promise<DemoShellController> 
   seed_demo_theme_vars();
   const shell = create_demo_shell(stage);
   const { demoLayer, screen, fleurLayer, fleurField, menuContainer } = shell;
+  screen.attrs.set("data-shell-entry", options.directTowlEntry === true ? "direct-towl" : "standard");
   create_demo_wordmark(menuContainer);
 
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
@@ -403,7 +408,16 @@ export async function mount_demo(stage: LiveTree): Promise<DemoShellController> 
   const activeWidgets = demo_shell_locations.activeWidgets;
   const initialView = currentView.snap();
   const initialWidgets = activeWidgets.snap();
-  const mainRegistrations = make_main_registrations(shell);
+  const backFromTowl = (): void => {
+    const url = new URL(globalThis.location.href);
+    if (options.directTowlEntry === true && (url.pathname === "/towl" || url.pathname === "/towl/")) {
+      url.pathname = "/";
+      globalThis.history.pushState(globalThis.history.state, "", url.toString());
+      screen.attrs.set("data-shell-entry", "standard");
+    }
+    set_view(null);
+  };
+  const mainRegistrations = make_main_registrations(shell, backFromTowl);
   const widgetRegistrations = make_widget_registrations(shell, pointSlot);
   const lifecycle = create_shell_lifecycle_reconciler({
     mainIds: MAIN_VIEW_IDS,
@@ -510,7 +524,6 @@ export async function mount_demo(stage: LiveTree): Promise<DemoShellController> 
   activeDemoShell = controller;
 
   await after_paint();
-  if (is_mobile_demo_width(stage)) set_view($FLEURS);
   sync_fleur_viewbox(fleurLayer, fleurField);
   screen.css.setMany({ __after: { opacity: "0 !IMPORTANT" } });
   return controller;

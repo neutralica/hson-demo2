@@ -30,6 +30,13 @@ export const TOWL_CARD_CSS: CssMap = {
   background: _colors.backhi,
 };
 
+export const TOWL_HEADER_CSS: CssMap = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "1rem",
+};
+
 export const TOWL_TITLE_CSS: CssMap = {
   margin: "0",
   color: _colors.txt.main,
@@ -110,11 +117,14 @@ export const TOWL_ACTIONS_CSS: CssMap = {
 export const TOWL_BUTTON_CSS: CssMap = {
   ...FONT_FAM_MONO,
   minWidth: "7rem",
+  minHeight: "2.75rem",
   padding: "0.65rem 1rem",
   border: `1px solid ${_colors.bluelike}`,
   background: _colors.backlo,
   color: _colors.txt.main,
   cursor: "pointer",
+  touchAction: "manipulation",
+  userSelect: "none",
   _hover: {
     background: _colors.bluelike,
     color: _colors.backlo,
@@ -123,6 +133,23 @@ export const TOWL_BUTTON_CSS: CssMap = {
     opacity: "0.4",
     cursor: "not-allowed",
   },
+  _focusVisible: {
+    outline: `3px solid ${_colors.yellowlike}`,
+    outlineOffset: "3px",
+  },
+};
+
+export const TOWL_PRIMARY_BUTTON_CSS: CssMap = {
+  minHeight: "3.25rem",
+  borderWidth: "2px",
+  borderColor: _colors.pinklike,
+  color: _colors.pinklike,
+  fontWeight: _fontWeight.fat,
+};
+
+export const TOWL_BACK_BUTTON_CSS: CssMap = {
+  minWidth: "5.5rem",
+  flex: "0 0 auto",
 };
 
 export const TOWL_RESULT_CSS: CssMap = {
@@ -135,4 +162,16 @@ export const TOWL_ERROR_CSS: CssMap = {
   minHeight: "1.5em",
   color: _colors.red,
   whiteSpace: "pre-wrap",
+};
+
+export const TOWL_INVALID_CSS: CssMap = {
+  display: "grid",
+  gap: "1rem",
+  alignContent: "start",
+};
+
+export const TOWL_INVALID_ACTIONS_CSS: CssMap = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "0.75rem",
 };

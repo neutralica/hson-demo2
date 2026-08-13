@@ -46,6 +46,22 @@ browser defaults to `ws://127.0.0.1:8787`.
 
 ## Frontend production build
 
+The stable same-origin TOWL entry is `/towl`, with invitations shaped as
+`/towl?room=<room-id>`. Vite development and preview servers return the SPA
+entry document for direct navigation to that path. The checked-in
+`public/_redirects` file supplies the equivalent production fallback:
+
+```text
+/*      /index.html 200
+```
+
+The static host must publish that file or configure the equivalent internal
+rewrite for `/towl` (including direct refreshes) while preserving the query
+string. It must not redirect the invitation to `/` or discard `room`. No
+subdomain is required; keeping TOWL on the LiveDemo origin preserves room
+credentials in the same local-storage boundary and reuses the same assets and
+WebSocket configuration.
+
 Set the public WebSocket endpoint while building the Vite frontend:
 
 ```sh

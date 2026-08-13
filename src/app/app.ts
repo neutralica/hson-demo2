@@ -14,6 +14,8 @@ import { log_oklch_palette } from "./utils/swatch-logger";
 import { mount_demo, type DemoShellController } from "./phases/phase-3-demo/mount-demo";
 import { CssManager,  LiveTree } from "hson-live/livetree";
 import { create_splash_run, type SplashRun } from "./phases/phase-2-splash/splash-lifecycle";
+import { classify_towl_entry_url } from "./demos/towl/towl.room";
+import { set_view } from "./state/store";
 
 
 const gcss = CssManager.api();
@@ -24,6 +26,9 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
   log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
 
 export async function run_app(root: LiveTree): Promise<void> {
+  const entry = classify_towl_entry_url(new URL(globalThis.location.href));
+  if (entry.selectsTowl) set_view("towl");
+
   demoShell?.dispose();
   demoShell = undefined;
   root.empty();
@@ -37,6 +42,13 @@ export async function run_app(root: LiveTree): Promise<void> {
     .classlist.add("stage")
     .attrs.set("data-app-phase", "bootstrap")
     .css.setMany(STAGE_CSS);
+
+  if (entry.selectsTowl) {
+    stage.attrs.set("data-app-phase", "demo-loading");
+    demoShell = await mount_demo(stage, { directTowlEntry: entry.direct });
+    stage.attrs.set("data-app-phase", "demo-ready");
+    return;
+  }
 
   const { skip, cancel } = make_skip_promise(stage);
   let splashRun: SplashRun | undefined;

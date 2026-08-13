@@ -6,13 +6,19 @@ export {
   TOWL_ROOM_ID_MIN_LENGTH,
   TOWL_ROOM_ID_PATTERN,
   TOWL_ROOM_PARAM,
+  classify_towl_entry_url,
+  classify_towl_room_url,
+  create_towl_room_url,
   generate_towl_room_id,
+  is_direct_towl_path,
   normalize_towl_room_id,
   resolve_towl_room_url,
   towl_host_id_for_room,
   towl_room_credential_key,
   towl_room_id_from_host_id,
   type TowlRoomUrl,
+  type TowlRoomUrlState,
+  type TowlEntryUrlState,
 } from "./towl.room";
 export { TOWL_SCHEMA } from "./towl.schema";
 export { create_towl_runtime } from "./towl.runtime";

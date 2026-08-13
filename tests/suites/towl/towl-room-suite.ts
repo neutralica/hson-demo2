@@ -1,5 +1,8 @@
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
+  classify_towl_entry_url,
+  classify_towl_room_url,
+  create_towl_room_url,
   normalize_towl_room_id,
   resolve_towl_room_url,
   towl_host_id_for_room,
@@ -65,17 +68,34 @@ export function towl_room_suite(): TestSuite {
           () => "fixed-room",
         );
         const normalized = resolve_towl_room_url(new URL("https://example.test/demo?room=TEAM-42&mode=play#rules"));
-        const invalid = resolve_towl_room_url(
-          new URL("https://example.test/demo?room=not_valid&mode=play#rules"),
-          () => "fixed-room",
-        );
+        let invalidGeneratorCalls = 0;
+        const invalidUrl = new URL("https://example.test/demo?room=not_valid&mode=play#rules");
+        const invalid = classify_towl_room_url(invalidUrl);
+        let invalidResolution = "accepted";
+        try {
+          resolve_towl_room_url(invalidUrl, () => {
+            invalidGeneratorCalls += 1;
+            return "fixed-room";
+          });
+        } catch {
+          invalidResolution = "blocked";
+        }
+        const intentionalReplacement = create_towl_room_url(invalidUrl, () => "fixed-room");
+        const direct = classify_towl_entry_url(new URL("https://example.test/towl"));
+        const ordinaryDeepLink = classify_towl_entry_url(new URL("https://example.test/?room=TEAM-42"));
         return {
           generated: resolved.roomId,
           generatedUrl: resolved.url.toString(),
           changed: resolved.changed,
           normalized: normalized.roomId,
           normalizedUrl: normalized.url.toString(),
-          invalidReplacement: invalid.roomId,
+          invalidKind: invalid.kind,
+          invalidRequested: invalid.kind === "invalid" ? invalid.requested : undefined,
+          invalidResolution,
+          invalidGeneratorCalls,
+          intentionalReplacement: intentionalReplacement.url.toString(),
+          directSelectsTowl: direct.selectsTowl,
+          ordinaryDeepLinkSelectsTowl: ordinaryDeepLink.selectsTowl,
         };
       }, {
         generated: "fixed-room",
@@ -83,7 +103,13 @@ export function towl_room_suite(): TestSuite {
         changed: true,
         normalized: "team-42",
         normalizedUrl: "https://example.test/demo?room=team-42&mode=play#rules",
-        invalidReplacement: "fixed-room",
+        invalidKind: "invalid",
+        invalidRequested: "not_valid",
+        invalidResolution: "blocked",
+        invalidGeneratorCalls: 0,
+        intentionalReplacement: "https://example.test/demo?room=fixed-room&mode=play#rules",
+        directSelectsTowl: true,
+        ordinaryDeepLinkSelectsTowl: true,
       }),
       towl_case(SUITE, "same room resolution reuses one authoritative runtime", () => {
         const application = empty_application();

@@ -13,6 +13,17 @@ export type TowlRoomUrl = Readonly<{
   changed: boolean;
 }>;
 
+export type TowlRoomUrlState =
+  | Readonly<{ kind: "absent"; url: URL }>
+  | Readonly<{ kind: "valid"; roomId: string; url: URL; changed: boolean }>
+  | Readonly<{ kind: "invalid"; requested: string; url: URL }>;
+
+export type TowlEntryUrlState = Readonly<{
+  direct: boolean;
+  selectsTowl: boolean;
+  room: TowlRoomUrlState;
+}>;
+
 export function normalize_towl_room_id(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim().toLowerCase();
@@ -63,16 +74,56 @@ export function towl_room_credential_key(roomId: string): string {
   return `hson-livedemo.towl.${normalized}.livehost-credential`;
 }
 
-export function resolve_towl_room_url(
+export function is_direct_towl_path(pathname: string): boolean {
+  return pathname === "/towl" || pathname === "/towl/";
+}
+
+export function classify_towl_room_url(source: URL): TowlRoomUrlState {
+  const url = new URL(source.toString());
+  const requestedValues = url.searchParams.getAll(TOWL_ROOM_PARAM);
+  if (requestedValues.length === 0) return Object.freeze({ kind: "absent", url });
+
+  const requested = requestedValues[0] ?? "";
+  if (requestedValues.length !== 1) {
+    return Object.freeze({ kind: "invalid", requested: requestedValues.join(", "), url });
+  }
+  const normalized = normalize_towl_room_id(requested);
+  if (normalized === undefined) {
+    return Object.freeze({ kind: "invalid", requested, url });
+  }
+
+  const changed = requested !== normalized;
+  if (changed) url.searchParams.set(TOWL_ROOM_PARAM, normalized);
+  return Object.freeze({ kind: "valid", roomId: normalized, url, changed });
+}
+
+export function classify_towl_entry_url(source: URL): TowlEntryUrlState {
+  const room = classify_towl_room_url(source);
+  const direct = is_direct_towl_path(source.pathname);
+  return Object.freeze({ direct, selectsTowl: direct || room.kind !== "absent", room });
+}
+
+export function create_towl_room_url(
   source: URL,
   makeRoomId: () => string = generate_towl_room_id,
 ): TowlRoomUrl {
   const url = new URL(source.toString());
-  const requested = url.searchParams.get(TOWL_ROOM_PARAM);
-  const normalized = normalize_towl_room_id(requested);
-  const roomId = normalized ?? normalize_towl_room_id(makeRoomId());
+  const roomId = normalize_towl_room_id(makeRoomId());
   if (roomId === undefined) throw new Error("TOWL room generation returned an invalid room ID.");
-  const changed = requested !== roomId;
-  if (changed) url.searchParams.set(TOWL_ROOM_PARAM, roomId);
-  return Object.freeze({ roomId, url, changed });
+  url.searchParams.set(TOWL_ROOM_PARAM, roomId);
+  return Object.freeze({ roomId, url, changed: true });
+}
+
+export function resolve_towl_room_url(
+  source: URL,
+  makeRoomId: () => string = generate_towl_room_id,
+): TowlRoomUrl {
+  const state = classify_towl_room_url(source);
+  if (state.kind === "valid") {
+    return Object.freeze({ roomId: state.roomId, url: state.url, changed: state.changed });
+  }
+  if (state.kind === "invalid") {
+    throw new Error("Cannot resolve a malformed TOWL room invitation without an explicit replacement choice.");
+  }
+  return create_towl_room_url(source, makeRoomId);
 }
