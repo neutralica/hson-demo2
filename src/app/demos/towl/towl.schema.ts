@@ -1,13 +1,13 @@
 import { hson } from "hson-live";
 import { TOWL_WIN_POSITION } from "./towl.consts";
 
-const ropePosition = hson.liveMap.schema.define((s) => s.refine(
+const ropePosition = hson.liveMap.schema.define((s) => s.constrain(
   s.number,
   "integer TOWL rope position within the win boundaries",
   (value) => Number.isInteger(value) && Math.abs(value) <= TOWL_WIN_POSITION,
 ));
 
-const positiveInteger = hson.liveMap.schema.define((s) => s.refine(
+const positiveInteger = hson.liveMap.schema.define((s) => s.constrain(
   s.number,
   "positive integer",
   (value) => Number.isInteger(value) && value > 0,

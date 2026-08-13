@@ -189,11 +189,11 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports invalid refinement",
+        name: "schema issue reports invalid constraint",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            count: s.refine(
+            count: s.constrain(
               s.number,
               "positive number",
               (value) => value > 0,
@@ -210,7 +210,7 @@ export function livemap_error_handling(): TestSuite {
         expected: {
           ok: false,
           issue: {
-            code: "INVALID_REFINEMENT",
+            code: "INVALID_CONSTRAINT",
             path: ["count"],
             message: "LiveMap schema expected positive number at [\"count\"], received -1",
             expected: "positive number",

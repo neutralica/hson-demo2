@@ -1030,12 +1030,12 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema lazy validates recursive tree",
+        name: "schema recurse validates recursive tree",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
             let tree: Parameters<typeof s.array>[0] = s.unknown;
-            tree = s.lazy(() => s.object({
+            tree = s.recurse(() => s.object({
               label: s.string,
               children: s.array(tree).optional,
             }));
@@ -1057,12 +1057,12 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema lazy reports recursive child issue",
+        name: "schema recurse reports recursive child issue",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
             let tree: Parameters<typeof s.array>[0] = s.unknown;
-            tree = s.lazy(() => s.object({
+            tree = s.recurse(() => s.object({
               label: s.string,
               children: s.array(tree).optional,
             }));
@@ -1094,12 +1094,12 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema lazy validateValue descends through recursive path",
+        name: "schema recurse validateValue descends through recursive path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
             let tree: Parameters<typeof s.array>[0] = s.unknown;
-            tree = s.lazy(() => s.object({
+            tree = s.recurse(() => s.object({
               label: s.string,
               children: s.array(tree).optional,
             }));
@@ -1113,12 +1113,12 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match keeps lazy rule shallow",
+        name: "schema match keeps recurse rule shallow",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
             let tree: Parameters<typeof s.array>[0] = s.unknown;
-            tree = s.lazy(() => s.object({
+            tree = s.recurse(() => s.object({
               label: s.string,
               children: s.array(tree).optional,
             }));
@@ -1129,15 +1129,15 @@ export function livemap_suites_schema(): TestSuite {
           const rule = schema.match(["tree"]);
           return rule === undefined ? undefined : { kind: rule.kind, path: rule.path };
         },
-        expected: { kind: "lazy", path: ["tree"] },
+        expected: { kind: "recurse", path: ["tree"] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema refine validates accepted value",
+        name: "schema constrain validates accepted value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.refine(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
           }));
 
           return schema.validateRoot({ color: "oklch(70% 0.1 120)" });
@@ -1146,11 +1146,11 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema refine rejects failed predicate",
+        name: "schema constrain rejects failed predicate",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.refine(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
           }));
 
           return schema.validateRoot({ color: "red" });
@@ -1159,7 +1159,7 @@ export function livemap_suites_schema(): TestSuite {
           ok: false,
           issues: [
             {
-              code: "INVALID_REFINEMENT",
+              code: "INVALID_CONSTRAINT",
               path: ["color"],
               message: "LiveMap schema expected oklch string at [\"color\"], received \"red\"",
               expected: "oklch string",
@@ -1170,11 +1170,11 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema refine returns base validation first",
+        name: "schema constrain returns base validation first",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.refine(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
           }));
 
           return schema.validateRoot({ color: 12 });
@@ -1194,17 +1194,17 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns refine rule",
+        name: "schema match returns constrain rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.refine(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
           }));
           const rule = schema.match(["color"]);
 
           return rule === undefined ? undefined : { kind: rule.kind, path: rule.path };
         },
-        expected: { kind: "refine", path: ["color"] },
+        expected: { kind: "constrain", path: ["color"] },
       }),
       read_case({
         suite: SUITE,
