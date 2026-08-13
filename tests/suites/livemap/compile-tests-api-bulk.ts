@@ -23,22 +23,22 @@ type _ApiSchemaString = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_STR
 type _ApiSchemaStringArray = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_STRING_ARRAY_SCHEMA>, readonly string[]>>;
 type _ApiSchemaOptionalNumber = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_OPTIONAL_NUMBER_SCHEMA>, number | undefined>>;
 type _ApiSchemaNullableBoolean = TypeExpect<TypeExtends<InferLiveMapSchema<typeof API_NULLABLE_BOOLEAN_SCHEMA>, boolean | null>>;
-const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => s.exact({
-  user: s.exact({
+const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => s.object.exact({
+  user: s.object.exact({
     id: s.string,
     name: s.string,
     age: s.number.optional,
     role: s.pick("admin", "user"),
     tags: s.array(s.string),
     settings: s.record(s.pick(s.string, s.number)),
-    patch: s.partial(s.exact({
+    patch: s.partial(s.object.exact({
       name: s.string,
       age: s.number,
     })),
-    deepPatch: s.deepPartial(s.exact({
-      profile: s.exact({
+    deepPatch: s.deepPartial(s.object.exact({
+      profile: s.object.exact({
         displayName: s.string,
-        links: s.array(s.exact({
+        links: s.array(s.object.exact({
           label: s.string,
           href: s.string,
         })),
@@ -46,10 +46,10 @@ const API_SCHEMA_TYPE_SAMPLE = hsonLiveMap.schema.define((s) => s.exact({
     })),
     status: s.literal("draft", "published", null),
     result: s.tagged("kind", {
-      success: s.exact({
+      success: s.object.exact({
         value: s.string,
       }),
-      failure: s.exact({
+      failure: s.object.exact({
         code: s.number,
       }),
     }),
@@ -75,8 +75,8 @@ type _ApiSchemaUserResult = TypeExpect<TypeExtends<ApiSchemaTypeSample["user"]["
 // `schema.use(...)`, `snap()`, `at(...)`, and `LiveMapPathValue`.
 const API_TYPED_MAP_SAMPLE = hsonLiveMap
   .fromJson({ user: { name: "Ada" } })
-  .schema.use(hsonLiveMap.schema.define((s) => s.exact({
-    user: s.exact({
+  .schema.use(hsonLiveMap.schema.define((s) => s.object.exact({
+    user: s.object.exact({
       name: s.string,
       age: s.number.optional,
     }),
@@ -137,8 +137,8 @@ const API_TYPED_ARRAY_MAP_SAMPLE = hsonLiveMap
       { id: "b", count: 2 },
     ],
   })
-  .schema.use(hsonLiveMap.schema.define((s) => s.exact({
-    items: s.array(s.exact({
+  .schema.use(hsonLiveMap.schema.define((s) => s.object.exact({
+    items: s.array(s.object.exact({
       id: s.string,
       count: s.number,
       label: s.string.optional,

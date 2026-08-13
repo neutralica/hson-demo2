@@ -1002,7 +1002,7 @@ export function livemap_suites_core(): TestSuite {
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
           const schema = hson.liveMap.schema.define((s) => s.object({
-            user: s.exact({
+            user: s.object.exact({
               name: s.string,
             }),
           }));
@@ -1034,7 +1034,7 @@ export function livemap_suites_core(): TestSuite {
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada", role: "admin" } }));
           const schema = hson.liveMap.schema.define((s) => s.object({
-            user: s.exact({
+            user: s.object.exact({
               name: s.string,
             }),
           }));
@@ -1063,7 +1063,7 @@ export function livemap_suites_core(): TestSuite {
         },
         run: () => {
           const map = make_livemap_core(json_root_node({ user: { name: "Ada" } }));
-          const schema = hson.liveMap.schema.define((s) => s.exact({
+          const schema = hson.liveMap.schema.define((s) => s.object.exact({
             user: s.object({
               name: s.string,
             }),

@@ -11,13 +11,13 @@ const positiveInteger = hson.liveMap.schema.define((s) => s.number.constrain(
   (value) => Number.isInteger(value) && value > 0,
 ));
 
-const seat = hson.liveMap.schema.define((s) => s.exact({
+const seat = hson.liveMap.schema.define((s) => s.object.exact({
   sessionId: s.string.nullable,
   connected: s.boolean,
   ready: s.boolean,
 }));
 
-export const TOWL_SCHEMA = hson.liveMap.schema.define((s) => s.exact({
+export const TOWL_SCHEMA = hson.liveMap.schema.define((s) => s.object.exact({
   phase: s.pick("lobby", "ready", "playing", "finished"),
   player1: seat,
   player2: seat,

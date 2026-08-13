@@ -132,7 +132,7 @@ export function livemap_error_handling(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            user: s.exact({
+            user: s.object.exact({
               name: s.string,
             }),
           }));

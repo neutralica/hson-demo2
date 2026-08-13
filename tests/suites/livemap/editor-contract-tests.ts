@@ -202,7 +202,7 @@ const userSchema = hson.liveMap.schema.define((s) => s.object({
   }),
 }));
 const exactUserSchema = hson.liveMap.schema.define((s) => s.object({
-  user: s.exact({
+  user: s.object.exact({
     name: s.string,
     age: s.number.optional,
   }),

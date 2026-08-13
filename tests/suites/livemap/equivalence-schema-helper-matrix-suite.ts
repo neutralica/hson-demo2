@@ -27,7 +27,7 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
       test("exact schemas treat dangerous names as own keys", () => {
         const schema = hson.liveMap.schema.define((s) => {
           const shape = own_record([["__proto__", s.number as unknown as JsonValue], ["constructor", s.number as unknown as JsonValue], ["prototype", s.number as unknown as JsonValue]]);
-          return s.exact(shape as never);
+          return s.object.exact(shape as never);
         }); const value = own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]);
         return { assertRows: [equal_row("accepted", schema.validateRoot(value).ok, true)] };
       }),

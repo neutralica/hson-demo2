@@ -306,7 +306,7 @@ export function livemap_suites_api(): TestSuite {
         name: "api map schema.use rejects exact unknown root key",
         input: {},
         act: () => {
-          const schema = hson.liveMap.schema.define((s) => s.exact({
+          const schema = hson.liveMap.schema.define((s) => s.object.exact({
             user: s.object({
               name: s.string,
             }),

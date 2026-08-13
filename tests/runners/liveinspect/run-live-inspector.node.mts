@@ -190,7 +190,7 @@ try {
 
   runtime.reset_document();
   {
-    const schema = hson.liveMap.schema.define((s) => s.exact({ name: s.string, age: s.number.optional }));
+    const schema = hson.liveMap.schema.define((s) => s.object.exact({ name: s.string, age: s.number.optional }));
     const source = hson.liveMap.fromJson({ name: "Ada" }).schema.use(schema);
     const inspector = hson.inspect.create({ source, host: makeHost(), initialDepth: 1, showSchema: true });
     const selected = inspector.select(["name"]);

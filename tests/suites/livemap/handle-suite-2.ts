@@ -918,7 +918,7 @@ export function livemap_suites_handle_2(): TestSuite {
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
-            user: s.exact({
+            user: s.object.exact({
               name: s.string,
             }),
           })));
@@ -933,7 +933,7 @@ export function livemap_suites_handle_2(): TestSuite {
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
-            user: s.exact({
+            user: s.object.exact({
               name: s.string,
             }),
           })));

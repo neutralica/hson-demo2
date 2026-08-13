@@ -18,22 +18,22 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
     (value) => Number.isInteger(value) && value >= 0,
   );
   const finiteNumber = s.number.constrain("finite number", Number.isFinite);
-  return s.exact({
-    run: s.exact({
+  return s.object.exact({
+    run: s.object.exact({
       id: s.string.optional,
       suite: s.pick(...HOSTED_TEST_SUITE_IDS, HOSTED_TEST_SELECTED_RUN_TARGET),
       status: s.pick("idle", "running", "passed", "failed", "error"),
       startedAt: finiteNumber.nullable,
       completedAt: finiteNumber.nullable,
-      timing: s.exact({ runnerMs: finiteNumber, hostMs: finiteNumber }).nullable,
+      timing: s.object.exact({ runnerMs: finiteNumber, hostMs: finiteNumber }).nullable,
     }),
-    summary: s.exact({
+    summary: s.object.exact({
       cases: nonNegativeInteger,
       pass: nonNegativeInteger,
       fail: nonNegativeInteger,
       skip: nonNegativeInteger,
     }),
-    caseBatches: s.record(s.array(s.exact({
+    caseBatches: s.record(s.array(s.object.exact({
       key: s.string,
       suite: s.string,
       name: s.string,
@@ -41,8 +41,8 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       ms: finiteNumber,
       err: s.string.nullable,
     }))),
-    suites: s.array(s.exact({ suite: s.string, ms: finiteNumber })),
-    externalResults: s.record(s.exact({
+    suites: s.array(s.object.exact({ suite: s.string, ms: finiteNumber })),
+    externalResults: s.record(s.object.exact({
       id: s.string,
       suite: s.string,
       name: s.string,
@@ -59,7 +59,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       timedOut: s.boolean,
       spawnError: s.string.nullable,
     })),
-    error: s.exact({ message: s.string }).nullable,
+    error: s.object.exact({ message: s.string }).nullable,
   });
 });
 

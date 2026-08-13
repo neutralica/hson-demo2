@@ -427,8 +427,8 @@ function make_batch_schema_reject_case(spec: BatchRejectCaseSpec): TestCase {
     },
     run: () => {
       const schema = hsonLiveMap.schema.define((s) =>
-        s.exact({
-          user: s.exact({
+        s.object.exact({
+          user: s.object.exact({
             name: s.string,
             age: s.number,
           }),
@@ -530,8 +530,8 @@ function make_set_many_schema_reject_case(spec: SetManyRejectCaseSpec): TestCase
     },
     run: () => {
       const schema = hsonLiveMap.schema.define((s) =>
-        s.exact({
-          user: s.exact({
+        s.object.exact({
+          user: s.object.exact({
             name: s.string,
             age: s.number,
           }),

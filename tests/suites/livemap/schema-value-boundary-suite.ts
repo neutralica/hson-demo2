@@ -130,14 +130,14 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
         const value = own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]) as JsonValue;
         const schema = hson.liveMap.schema.define((s) => {
           const shape = own_record([["__proto__", s.number], ["constructor", s.number], ["prototype", s.number]]);
-          return s.exact(shape as never);
+          return s.object.exact(shape as never);
         });
         return { assertRows: [equal_row("accepted", schema.validateRoot(value).ok, true)] };
       }),
       test("inherited constructor cannot satisfy an exact shape", () => {
         const schema = hson.liveMap.schema.define((s) => {
           const shape = own_record([["constructor", s.number]]);
-          return s.exact(shape as never);
+          return s.object.exact(shape as never);
         });
         return { assertRows: [equal_row("rejected", schema.validateRoot({}).ok, false)] };
       }),

@@ -16,8 +16,8 @@ export const INITIAL_DEMO_STATE: DemoState = make_initial_demo_state();
 
 
 export const DEMO_LIVEMAP_SCHEMA = hson.liveMap.schema.define((scm) => {
-  return scm.exact({
-    ui: scm.exact({
+  return scm.object.exact({
+    ui: scm.object.exact({
       currentView: scm.string.nullable,
       activeWidgets: scm.array(scm.string),
       aboutTocOpen: scm.boolean,
