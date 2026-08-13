@@ -1,6 +1,6 @@
 import  { CssManager } from "hson-live/livetree";
 import { COLOR_VAR_SOURCES } from "../../core/consts/colors.consts";
-import { $PANEL_HIDDEN, _fontSize } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, _fontSize, _fontWeight } from "../../core/consts/ui-consts";
 import { MENU_OPTIONS, MIN_DESKTOP_WIDTH } from "./demo.consts";
 import { GLOB_HIDEcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, SCROLL_HOVER_COLcss, GLOB_SCROLL_THUMBcss, WEBKIT_SCROLL_TRKcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, DISP_SIZE_ALERTcss } from "./global.css";
 
@@ -102,19 +102,34 @@ function install_towl_focus_rules(): void {
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: "0.35rem 0.65rem",
   });
-  mobile.rule("mobile-towl-seats", "#towl-seats").set.gap("0.55rem");
+  mobile.rule("mobile-towl-seats", "#towl-seats").setMany({
+    gridTemplateColumns: "minmax(0, 1fr)",
+    gap: "0.7rem",
+  });
   mobile.rule("mobile-towl-seat", "#towl-seats > div").set.padding("0.65rem");
+  mobile.rule("mobile-towl-rope-value", '[data-testid="towl-rope"]').setMany({
+    fontSize: _fontSize.main,
+    lineHeight: "1.3",
+    fontWeight: _fontWeight.main,
+    textSizeAdjust: "100%",
+    WebkitTextSizeAdjust: "100%",
+  });
   mobile.rule("mobile-towl-actions", "#towl-actions").setMany({
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "0.55rem",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    gap: "0.7rem",
   });
   mobile.rule("mobile-towl-action-buttons", "#towl-actions > button").setMany({
     width: "100%",
     minWidth: "0",
     minHeight: "2.75rem",
   });
-  mobile.rule("mobile-towl-pull", "#towl-pull").set.gridColumn("1 / -1");
+  mobile.rule("mobile-towl-pull", "#towl-pull").setMany({
+    gridColumn: "auto",
+    minHeight: "3.75rem !important",
+    fontSize: "1.2rem",
+    fontWeight: _fontWeight.fat,
+  });
 
   const landscape = gcss.media({ maxHeight: 520, orientation: "landscape" });
   landscape.rule("landscape-towl-root", "#towl-root").setMany({
@@ -143,12 +158,23 @@ function install_towl_focus_rules(): void {
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     fontSize: "0.72rem",
   });
-  landscape.rule("landscape-towl-seats", "#towl-seats").set.gap("0.4rem");
+  landscape.rule("landscape-towl-seats", "#towl-seats").setMany({
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "0.4rem",
+  });
   landscape.rule("landscape-towl-seat", "#towl-seats > div").setMany({ padding: "0.45rem", fontSize: "0.72rem" });
-  landscape.rule("landscape-towl-actions", "#towl-actions").set.gap("0.4rem");
+  landscape.rule("landscape-towl-actions", "#towl-actions").setMany({
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "0.4rem",
+  });
   landscape.rule("landscape-towl-action-buttons", "#towl-actions > button").setMany({
     minHeight: "2.75rem",
     padding: "0.45rem 0.65rem",
+  });
+  landscape.rule("landscape-towl-pull", "#towl-pull").setMany({
+    gridColumn: "1 / -1",
+    minHeight: "3rem !important",
+    fontSize: "1.05rem",
   });
 }
 

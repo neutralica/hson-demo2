@@ -9,6 +9,19 @@ type TowlBootMetrics = Readonly<{
   credentialReads: number;
 }>;
 
+type TowlRopeTypography = Readonly<{
+  text: string;
+  fontSize: string;
+  lineHeight: string;
+  fontFamily: string;
+  fontWeight: string;
+  transform: string;
+  textSizeAdjust: string;
+  width: number;
+  height: number;
+  sameNode: boolean;
+}>;
+
 async function open_direct_towl(page: Page, url = "/towl"): Promise<void> {
   await page.goto(url);
   await expect(page.getByTestId("app-root")).toBeAttached();
@@ -57,7 +70,26 @@ async function read_towl_boot_metrics(page: Page): Promise<TowlBootMetrics> {
   ).__towlBootMetrics);
 }
 
-async function assert_phone_geometry(page: Page): Promise<void> {
+async function read_rope_typography(page: Page): Promise<TowlRopeTypography> {
+  return page.getByTestId("towl-rope").evaluate((element) => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    return {
+      text: element.textContent ?? "",
+      fontSize: style.fontSize,
+      lineHeight: style.lineHeight,
+      fontFamily: style.fontFamily,
+      fontWeight: style.fontWeight,
+      transform: style.transform,
+      textSizeAdjust: style.getPropertyValue("text-size-adjust"),
+      width: rect.width,
+      height: rect.height,
+      sameNode: (window as unknown as { __towlRopeNode?: Element }).__towlRopeNode === element,
+    };
+  });
+}
+
+async function assert_phone_geometry(page: Page, layout: "portrait" | "landscape" = "portrait"): Promise<void> {
   const geometry = await page.locator("#towl-root").evaluate((root) => {
     const required = (selector: string): HTMLElement => {
       const node = root.querySelector<HTMLElement>(selector);
@@ -67,6 +99,24 @@ async function assert_phone_geometry(page: Page): Promise<void> {
     const rect = (selector: string) => required(selector).getBoundingClientRect();
     const actionHeights = [...root.querySelectorAll<HTMLElement>("#towl-actions > button")]
       .map((button) => button.getBoundingClientRect().height);
+    const actionRects = [...root.querySelectorAll<HTMLElement>("#towl-actions > button")]
+      .map((button) => {
+        const bounds = button.getBoundingClientRect();
+        const style = getComputedStyle(button);
+        return {
+          top: bounds.top,
+          bottom: bounds.bottom,
+          width: bounds.width,
+          height: bounds.height,
+          fontSize: Number.parseFloat(style.fontSize),
+          fontWeight: Number.parseInt(style.fontWeight, 10),
+        };
+      });
+    const seatRects = [...root.querySelectorAll<HTMLElement>("#towl-seats > div")]
+      .map((seat) => {
+        const bounds = seat.getBoundingClientRect();
+        return { left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom, width: bounds.width };
+      });
     const productControlHeights = ["#towl-back", "#towl-share", "#towl-leave"]
       .map((selector) => rect(selector).height);
     const rootRect = root.getBoundingClientRect();
@@ -79,6 +129,8 @@ async function assert_phone_geometry(page: Page): Promise<void> {
       rootOverflow: root.scrollWidth - root.clientWidth,
       rootRect: { left: rootRect.left, right: rootRect.right, top: rootRect.top },
       actionHeights,
+      actionRects,
+      seatRects,
       productControlHeights,
       pullReachable: pullRect.top >= rootRect.top && pullRect.bottom <= root.scrollHeight + rootRect.top,
       roomReachable: roomRect.top >= rootRect.top && roomRect.bottom <= root.scrollHeight + rootRect.top,
@@ -97,6 +149,20 @@ async function assert_phone_geometry(page: Page): Promise<void> {
   expect(geometry.pullReachable).toBe(true);
   expect(geometry.roomReachable).toBe(true);
   expect(geometry.statusReachable).toBe(true);
+  if (layout === "portrait") {
+    expect(geometry.seatRects).toHaveLength(2);
+    expect(geometry.seatRects[1].top).toBeGreaterThanOrEqual(geometry.seatRects[0].bottom - 1);
+    expect(Math.abs(geometry.seatRects[0].width - geometry.seatRects[1].width)).toBeLessThanOrEqual(1);
+    for (let index = 1; index < geometry.actionRects.length; index += 1) {
+      expect(geometry.actionRects[index].top).toBeGreaterThanOrEqual(geometry.actionRects[index - 1].bottom - 1);
+      expect(Math.abs(geometry.actionRects[index].width - geometry.actionRects[0].width)).toBeLessThanOrEqual(1);
+    }
+    const pull = geometry.actionRects[2];
+    const secondary = geometry.actionRects.filter((_, index) => index !== 2);
+    expect(pull.height).toBeGreaterThan(Math.max(...secondary.map((action) => action.height)));
+    expect(pull.fontSize).toBeGreaterThan(Math.max(...secondary.map((action) => action.fontSize)));
+    expect(pull.fontWeight).toBeGreaterThan(Math.max(...secondary.map((action) => action.fontWeight)));
+  }
   await expect(page.locator("#menu-container")).toBeHidden();
   await expect(page.locator("#motes")).toBeHidden();
   await expect(page.locator("#graffiti-layer")).toBeHidden();
@@ -171,8 +237,37 @@ test("two fresh phones share, play, recover, resume, and explicitly Leave one TO
     await second.getByRole("button", { name: "ready", exact: true }).click();
     await expect(first.getByTestId("towl-phase")).toHaveText("phase: playing");
     await expect(second.getByTestId("towl-phase")).toHaveText("phase: playing");
+
+    await first.getByTestId("towl-rope").evaluate((element) => {
+      Object.defineProperty(window, "__towlRopeNode", { configurable: true, value: element });
+    });
+    const ropeTypography: TowlRopeTypography[] = [await read_rope_typography(first)];
     await first.getByRole("button", { name: "pull", exact: true }).click();
     await expect(second.getByTestId("towl-rope")).toContainText("rope: 1");
+    await expect(first.getByTestId("towl-rope")).toContainText("rope: 1");
+    ropeTypography.push(await read_rope_typography(first));
+    await first.getByRole("button", { name: "pull", exact: true }).click();
+    await expect(second.getByTestId("towl-rope")).toContainText("rope: 2");
+    await expect(first.getByTestId("towl-rope")).toContainText("rope: 2");
+    ropeTypography.push(await read_rope_typography(first));
+    for (const position of [1, 0, -1, -2]) {
+      await second.getByRole("button", { name: "pull", exact: true }).click();
+      await expect(first.getByTestId("towl-rope")).toContainText(`rope: ${position}`);
+      if (position < 0) ropeTypography.push(await read_rope_typography(first));
+    }
+    expect(ropeTypography.map(({ text }) => text)).toEqual([
+      "rope: 0  (center)",
+      "rope: 1  (player 1)",
+      "rope: 2  (player 1)",
+      "rope: -1  (player 2)",
+      "rope: -2  (player 2)",
+    ]);
+    const stableTypography = (({ text: _text, sameNode: _sameNode, ...metrics }) => metrics)(ropeTypography[0]);
+    for (const sample of ropeTypography) {
+      expect(sample.sameNode).toBe(true);
+      expect(sample.textSizeAdjust).toBe("100%");
+      expect((({ text: _text, sameNode: _sameNode, ...metrics }) => metrics)(sample)).toEqual(stableTypography);
+    }
 
     const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
     const credential = await second.evaluate((key) => localStorage.getItem(key), credentialKey);
@@ -293,8 +388,12 @@ test("portrait, landscape, and desktop-like resizing preserves one room, session
   const activeMetrics = await read_towl_boot_metrics(page);
   await assert_phone_geometry(page);
 
-  await page.setViewportSize({ width: 844, height: 390 });
+  await page.setViewportSize({ width: 340, height: 760 });
   await assert_phone_geometry(page);
+  expect(await read_towl_boot_metrics(page)).toEqual(activeMetrics);
+
+  await page.setViewportSize({ width: 844, height: 390 });
+  await assert_phone_geometry(page, "landscape");
   await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "towl");
   await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
   expect(new URL(page.url()).searchParams.get("room")).toBe(roomId);
@@ -334,6 +433,14 @@ test("desktop shell selection retains ordinary chrome and focus styles do not le
   await expect(page.getByRole("group", { name: "Demo navigation" })).toBeVisible();
   await expect(page.locator("#menu-container")).toBeVisible();
   await expect(page.locator("#ui-root")).toBeVisible();
+  expect(await page.locator("#towl-root").evaluate((root) => {
+    const seats = [...root.querySelectorAll<HTMLElement>("#towl-seats > div")]
+      .map((seat) => seat.getBoundingClientRect());
+    return {
+      seatsSideBySide: seats.length === 2 && seats[0].right <= seats[1].left,
+      actionsDisplay: getComputedStyle(root.querySelector("#towl-actions") as Element).display,
+    };
+  })).toEqual({ seatsSideBySide: true, actionsDisplay: "flex" });
 
   await open_demo(page, "about");
   await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "about");
