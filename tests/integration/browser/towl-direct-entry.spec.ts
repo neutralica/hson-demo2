@@ -144,7 +144,10 @@ async function assert_phone_geometry(page: Page, layout: "portrait" | "landscape
   expect(geometry.rootRect.right).toBeLessThanOrEqual(geometry.viewport.width + 1);
   expect(geometry.rootRect.top).toBeGreaterThanOrEqual(-1);
   expect(geometry.actionHeights.length).toBe(4);
-  expect(Math.min(...geometry.actionHeights)).toBeGreaterThanOrEqual(44);
+  expect(Math.min(...geometry.actionHeights)).toBeGreaterThanOrEqual(layout === "portrait" ? 48 : 44);
+  expect(geometry.actionRects[2].height).toBeGreaterThanOrEqual(
+    Math.max(...geometry.actionRects.filter((_, index) => index !== 2).map((action) => action.height)),
+  );
   expect(Math.min(...geometry.productControlHeights)).toBeGreaterThanOrEqual(44);
   expect(geometry.pullReachable).toBe(true);
   expect(geometry.roomReachable).toBe(true);

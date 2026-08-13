@@ -122,7 +122,7 @@ function install_towl_focus_rules(): void {
   mobile.rule("mobile-towl-action-buttons", "#towl-actions > button").setMany({
     width: "100%",
     minWidth: "0",
-    minHeight: "2.75rem",
+    minHeight: "3rem",
   });
   mobile.rule("mobile-towl-pull", "#towl-pull").setMany({
     gridColumn: "auto",
@@ -167,14 +167,15 @@ function install_towl_focus_rules(): void {
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: "0.4rem",
   });
-  landscape.rule("landscape-towl-action-buttons", "#towl-actions > button").setMany({
+  landscape.rule("landscape-towl-action-buttons", "#towl-actions > button:not(#towl-pull)").setMany({
     minHeight: "2.75rem",
     padding: "0.45rem 0.65rem",
   });
-  landscape.rule("landscape-towl-pull", "#towl-pull").setMany({
+  landscape.rule("landscape-towl-pull", "#towl-actions > #towl-pull").setMany({
     gridColumn: "1 / -1",
     minHeight: "3rem !important",
-    fontSize: "1.05rem",
+    padding: "0.45rem 0.65rem",
+    fontSize: "1.2rem",
   });
 }
 
