@@ -75,7 +75,7 @@ function annotate(suite: TestSuite): TestSuite {
       descriptor: metadata("livemap", DEV_SUITES.has(suite.suite) ? Object.freeze(["dev"] as const) : undefined),
     });
   }
-  if (suite.suite === "unit/livedemo-shell-state") {
+  if (suite.suite.startsWith("unit/livedemo-shell-")) {
     return Object.freeze({
       ...suite,
       descriptor: metadata("livedemo", Object.freeze(["unit"] as const)),

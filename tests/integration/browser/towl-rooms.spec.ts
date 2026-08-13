@@ -30,12 +30,13 @@ test("TOWL room URL shares one game, isolates another, and reattaches on refresh
   const isolated = await isolatedContext.newPage();
   try {
     await reach_demo_url(first, "/?mode=play#towl");
+    expect(new URL(first.url()).searchParams.get("room")).toBeNull();
+    await open_towl(first);
     const firstUrl = new URL(first.url());
     const roomId = firstUrl.searchParams.get("room");
     expect(roomId).toMatch(/^[a-z0-9][a-z0-9-]{5,23}$/);
     expect(firstUrl.searchParams.get("mode")).toBe("play");
     expect(firstUrl.hash).toBe("#towl");
-    await open_towl(first);
     await first.getByRole("button", { name: "copy invite link" }).click();
     await expect(first.getByTestId("towl-invite-status")).toHaveText("copied");
     const inviteUrl = await first.evaluate(() => navigator.clipboard.readText());

@@ -11,18 +11,21 @@ import { PHASE_LINGER } from "./core/consts/config.consts";
 import { _colors } from "./core/consts/colors.consts";
 import { OKLCH_NEUTRALS, OKLCH_VIBRANT } from "./core/consts/oklch.consts";
 import { log_oklch_palette } from "./utils/swatch-logger";
-import { mount_demo } from "./phases/phase-3-demo/mount-demo";
+import { mount_demo, type DemoShellController } from "./phases/phase-3-demo/mount-demo";
 import { CssManager,  LiveTree } from "hson-live/livetree";
 import { create_splash_run, type SplashRun } from "./phases/phase-2-splash/splash-lifecycle";
 
 
 const gcss = CssManager.api();
+let demoShell: DemoShellController | undefined;
 
 const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
   log_oklch_palette(OKLCH_VIBRANT, "vibrant");
   log_oklch_palette(OKLCH_NEUTRALS, "neutrals");
 
 export async function run_app(root: LiveTree): Promise<void> {
+  demoShell?.dispose();
+  demoShell = undefined;
   root.empty();
 
   const app = mk_div_id(root, "app")
@@ -75,7 +78,8 @@ export async function run_app(root: LiveTree): Promise<void> {
     // --- phase 3: feature demo ---
     {
       stage.attrs.set("data-app-phase", "demo-loading");
-      await run_phase(stage, mount_demo, _shortpause);
+      demoShell = await mount_demo(stage);
+      await _shortpause();
       stage.attrs.set("data-app-phase", "demo-ready");
     }
 

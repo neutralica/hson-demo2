@@ -24,6 +24,4 @@ export type DemoStore = {
   startWidget(next: DemoWidget): void;
   stopWidget(next: DemoWidget): void;
   toggleWidget(widget: DemoWidget): void;
-
-  subscribeViewState(fn: () => void): () => void;
 };

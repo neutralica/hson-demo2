@@ -7,6 +7,12 @@ import {
   hosted_test_panel_primary_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 
+type TowlLazyMetrics = Readonly<{
+  webSockets: number;
+  historyReplaces: number;
+  credentialReads: number;
+}>;
+
 test("splash completes naturally without retaining work or disposed nodes", async ({ page }) => {
   test.setTimeout(55_000);
   const assertNoErrors = monitor_application_errors(page);
@@ -23,7 +29,14 @@ test("application boot reaches one clean usable demo without auto-running hosted
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
 
-  await expect(page.getByTestId("hosted-test-panel")).toHaveAttribute("data-hosted-execution-count", "0");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-active-widgets", "bling");
+  await expect(page.locator('[data-shell-main-surface]')).toHaveCount(0);
+  await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
+  await expect(page.getByTestId("parse-root")).toHaveCount(0);
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  await expect(page.locator("#motes-root")).toHaveCount(1);
+  await expect(page.locator("#mouse-host, #oklch")).toHaveCount(0);
   await open_demo(page, "parse");
   await expect(page.getByTestId("parse-root")).toBeVisible();
   await open_demo(page, "about");
@@ -36,10 +49,100 @@ test("application boot reaches one clean usable demo without auto-running hosted
   await stage.click({ position: { x: 4, y: 4 } });
   await expect(stage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
   await expect(page.getByRole("group", { name: "Demo navigation" })).toBeVisible();
-  await expect(page.getByTestId("hosted-test-panel")).toHaveAttribute("data-hosted-execution-count", "0");
+  await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
+  await expect(page.getByTestId("parse-root")).toHaveCount(0);
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
   await expect(page.locator("#sky, #logo-box")).toHaveCount(0);
   await expect(page.locator("#deck-cover")).not.toBeVisible();
   assertNoErrors();
+});
+
+test("TOWL performs no room, storage, runtime, or socket work before activation", async ({ page }) => {
+  await page.addInitScript(() => {
+    const metrics = { webSockets: 0, historyReplaces: 0, credentialReads: 0 };
+    Object.defineProperty(window, "__towlLazyMetrics", { value: metrics });
+
+    const NativeWebSocket = window.WebSocket;
+    class CountingWebSocket extends NativeWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
+        if (livehost?.startsWith("towl:") === true) metrics.webSockets += 1;
+        if (protocols === undefined) super(url);
+        else super(url, protocols);
+      }
+    }
+    Object.defineProperty(window, "WebSocket", { value: CountingWebSocket });
+
+    const replaceState = history.replaceState;
+    history.replaceState = function replacement(data: unknown, unused: string, url?: string | URL | null): void {
+      metrics.historyReplaces += 1;
+      replaceState.call(history, data, unused, url);
+    };
+
+    const getItem = Storage.prototype.getItem;
+    Storage.prototype.getItem = function countedGetItem(key: string): string | null {
+      if (key.startsWith("hson-livedemo.towl.")) metrics.credentialReads += 1;
+      return getItem.call(this, key);
+    };
+  });
+
+  await reach_demo(page);
+  const readMetrics = (): Promise<TowlLazyMetrics> => page.evaluate(() => (
+    window as unknown as { __towlLazyMetrics: TowlLazyMetrics }
+  ).__towlLazyMetrics);
+
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.get("room")).toBeNull();
+  expect(await readMetrics()).toEqual({ webSockets: 0, historyReplaces: 0, credentialReads: 0 });
+
+  await open_demo(page, "towl");
+  await expect(page.getByTestId("towl-root")).toBeVisible();
+  await expect(page.getByTestId("towl-status")).toHaveText("connection: connected · session attached");
+  expect(new URL(page.url()).searchParams.get("room")).toMatch(/^[a-z0-9][a-z0-9-]{5,23}$/);
+  expect(await readMetrics()).toEqual({ webSockets: 1, historyReplaces: 1, credentialReads: 1 });
+});
+
+test("widget membership lazily mounts and reuses retained widget instances", async ({ page }) => {
+  await reach_demo(page);
+  await expect(page.locator("#motes-root")).toHaveCount(1);
+  await expect(page.locator("#mouse-host, #oklch")).toHaveCount(0);
+
+  await open_demo(page, "point");
+  await expect(page.locator("#mouse-host")).toBeVisible();
+  await open_demo(page, "point");
+  await expect(page.locator("#mouse-host")).not.toBeVisible();
+  await expect(page.locator("#mouse-host")).toHaveCount(1);
+  await open_demo(page, "point");
+  await expect(page.locator("#mouse-host")).toBeVisible();
+  await expect(page.locator("#mouse-host")).toHaveCount(1);
+
+  await open_demo(page, "oklch");
+  await expect(page.locator("#oklch")).toBeVisible();
+  await open_demo(page, "oklch");
+  await expect(page.locator("#oklch")).not.toBeVisible();
+  await expect(page.locator("#oklch")).toHaveCount(1);
+
+  await open_demo(page, "bling");
+  await expect(page.locator("#motes-root")).toHaveCount(0);
+  await open_demo(page, "bling");
+  await expect(page.locator("#motes-root")).toHaveCount(1);
+});
+
+test("keyboard Color Sudoku activation stays inside the canonical shell lifecycle", async ({ page }) => {
+  await reach_demo(page);
+  await expect(page.locator("#color-sudoku-root")).toHaveCount(0);
+
+  await page.keyboard.press("0");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "color-sudoku");
+  await expect(page.locator("#color-sudoku-root")).toBeVisible();
+  await expect(page.locator("#demo-layer")).toHaveCount(1);
+  await expect(page.getByRole("group", { name: "Demo navigation" })).toBeVisible();
+
+  await open_demo(page, "about");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "about");
+  await expect(page.locator("#color-sudoku-root")).toHaveCount(0);
+  await expect(page.locator("#about-panel")).toBeVisible();
+  await expect(page.locator("#demo-layer")).toHaveCount(1);
 });
 
 test("hosted panel discovers curated categories and runs one canonical category", async ({ page }) => {
@@ -59,14 +162,21 @@ test("hosted panel discovers curated categories and runs one canonical category"
   };
   await reach_demo(page);
 
+  await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
+  await open_demo(page, "test");
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
   await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
   await expect(page.getByTestId("hosted-test-executor")).toContainText(
     `${expectedRegistry.catalog.tests.length} canonical cases`,
   );
+  await panel.evaluate((element) => element.setAttribute("data-retention-probe", "same-instance"));
+  await open_demo(page, "about");
+  await expect(panel).not.toBeVisible();
+  await expect(panel).toHaveCount(1);
   await open_demo(page, "test");
-
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute("data-retention-probe", "same-instance");
   const selector = page.locator("#test-select");
   const targetedSuite = page.locator("#test-targeted-suite");
   const targetedCase = page.locator("#test-targeted-case");

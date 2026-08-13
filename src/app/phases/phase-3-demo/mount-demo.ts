@@ -1,11 +1,9 @@
-// mount-demo.ts
-
 import { LiveTree } from "hson-live/livetree";
 import type { SvgLiveTree } from "hson-live/types";
 import { _colors } from "../../core/consts/colors.consts";
 import { LETTER_LOWS, HSONlower } from "../../core/consts/config.consts";
 import { OKLCH_NEUTRALS } from "../../core/consts/oklch.consts";
-import { $PANEL_HIDDEN, $MENU_SHADOW } from "../../core/consts/ui-consts";
+import { $PANEL_HIDDEN, $MENU_SHADOW, HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
 import { set_alpha } from "../../core/helpers/color-helpers";
 import { ABOUT_DOCS } from "../../demos/about/about.consts";
 import { mount_about_panels } from "../../demos/about/mount-about";
@@ -19,44 +17,64 @@ import { FLOWER_LAYERcss, FLOWER_FIELDcss } from "../../demos/fleurs/fleurs.css"
 import { MOTES_LAYERcss } from "../../demos/motes/motes.css";
 import { mount_motes } from "../../demos/motes/mount-motes";
 import { mount_oklch } from "../../demos/oklch/mount-oklch";
-import { mount_parsing_panels, type MountedParsingPanels } from "../../demos/parse/pp-factory";
+import { mount_parsing_panels } from "../../demos/parse/pp-factory";
 import { mount_point_panel } from "../../demos/pointer/point-factory";
-import { mount_json_render_demo } from "../../demos/render/render-json";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
 import { mount_test_panels } from "../../demos/tests/panel/mount-tp";
-import type { TestPanels } from "../../demos/tests/panel/tp.types";
-import { mount_towl_panel, type TowlPanel } from "../../demos/towl/mount-towl";
-import type { DemoView, DemoWidget, MainViewId } from "../../state/state.types";
+import { mount_towl_panel } from "../../demos/towl/mount-towl";
+import mount_color_sudoku from "../../demos/mount-color-sudoku";
+import { make_amoebi } from "../../demos/amoeba/make-amoebi";
+import type { AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
+import type { DemoView, DemoWidget, MainViewId, WidgetId } from "../../state/state.types";
 import type { PublicMainViewId } from "../../state/shell-ids";
-import { WIDGET_IDS } from "../../state/shell-ids";
-import { toggle_widget, get_view, toggle_view, get_widgets, demo_subscribe_view_state, set_view, deactivate_widget } from "../../state/store";
+import { MAIN_VIEW_IDS, PUBLIC_MAIN_VIEW_IDS, WIDGET_IDS } from "../../state/shell-ids";
+import { demo_shell_locations, set_view, toggle_view, deactivate_widget, toggle_widget } from "../../state/store";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
 import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
-import { MENU_OPTIONS, WIDGET_MENU_KEYS, COPY_TEXTstr, shade_class, $PARSE, $TEST, $BUILD, $ABOUT, $BARBAR, $POINT, $OKLCH, $BLING, MIN_DESKTOP_WIDTH, $FLEURS, $CELLS, $TOWL } from "./demo.consts";
-import { HSON_LIVE_GRAFFITIstr } from "../../core/consts/ui-consts";
-import { DEMOcss, DEMO_SCREENcss, FX_LAYERcss, HSON_GRAFFITIcss, UI_ROOTcss, MENU_CONTAINERcss, COPYRITEcss, DEMO_HEADLINEcss, HSON_WORDcss, HSON_SUBcss, MAIN_MENUcss, OKLCH_HOSTcss, MENU_BOXcss } from "./demo.css";
+import {
+  MENU_OPTIONS,
+  WIDGET_MENU_KEYS,
+  COPY_TEXTstr,
+  shade_class,
+  $PARSE,
+  $TEST,
+  $BUILD,
+  $ABOUT,
+  $BARBAR,
+  $POINT,
+  $OKLCH,
+  MIN_DESKTOP_WIDTH,
+  $FLEURS,
+  $CELLS,
+  $TOWL,
+} from "./demo.consts";
+import {
+  DEMOcss,
+  DEMO_SCREENcss,
+  FX_LAYERcss,
+  HSON_GRAFFITIcss,
+  UI_ROOTcss,
+  MENU_CONTAINERcss,
+  COPYRITEcss,
+  DEMO_HEADLINEcss,
+  HSON_WORDcss,
+  HSON_SUBcss,
+  OKLCH_HOSTcss,
+  MENU_BOXcss,
+} from "./demo.css";
 import { seed_demo_theme_vars, set_global_css } from "./set-global-css";
-import { mount_firework } from "../../widgets/wasm-fireworks/wasm-fireworks";
-import { make_amoebi } from "../../demos/amoeba/make-amoebi";
-import { type AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
-import mount_color_sudoku from "../../demos/mount-color-sudoku";
-
+import { mount_firework, type FireworkController } from "../../widgets/wasm-fireworks/wasm-fireworks";
+import {
+  create_shell_lifecycle_reconciler,
+  type SurfaceController,
+  type SurfaceRegistration,
+} from "./shell-lifecycle";
 
 export type MenuKey = typeof MENU_OPTIONS[number];
 type DemoMenuView = PublicMainViewId;
-type MenuButtons = Record<MenuKey, LiveTree>;
-type ViewHosts = Partial<Record<MainViewId, LiveTree>>;
-type WidgetHostGroup = readonly LiveTree[];
-type WidgetHosts = Partial<Record<DemoWidget, WidgetHostGroup>>;
 
-
-type DemoStateController = Readonly<{
-  // The schema-bound store LiveMap is the single interaction state authority.
-  getView: () => DemoView;
-  setView: (view: DemoMenuView) => void;
-  toggleView: (view: DemoMenuView) => void;
-  toggleWidget: (widget: DemoWidget) => void;
-  deactivateWidget: (widget: DemoWidget) => void;
+export type DemoShellController = SurfaceController & Readonly<{
+  root: LiveTree;
 }>;
 
 type DemoShell = {
@@ -70,30 +88,10 @@ type DemoShell = {
   motesLayer: LiveTree;
 };
 
-type DemoHosts = {
-  pointHost: LiveTree;
-  parseHost: LiveTree;
-  testHost: LiveTree;
-  buildHost: LiveTree;
-  aboutHost: LiveTree;
-  barbarHost: LiveTree;
-  cellsHost: LiveTree;
-  towlHost: LiveTree;
-  oklchHost: LiveTree;
-  viewHosts: ViewHosts;
-  widgetHosts: WidgetHosts;
-};
+let activeDemoShell: DemoShellController | undefined;
 
-type DemoContent = {
-  parse: MountedParsingPanels;
-  test: TestPanels;
-  towl: TowlPanel;
-};
-
-let stopDemoMount: (() => void) | undefined;
-
-const _hide = (lt: LiveTree): void => { lt.classlist.add($PANEL_HIDDEN); };
-const _unhide = (lt: LiveTree): void => { lt.classlist.remove($PANEL_HIDDEN); };
+const _hide = (tree: LiveTree): void => { tree.classlist.add($PANEL_HIDDEN); };
+const _unhide = (tree: LiveTree): void => { tree.classlist.remove($PANEL_HIDDEN); };
 
 function is_widget_menu_key(key: MenuKey): key is DemoWidget {
   return (WIDGET_MENU_KEYS as readonly string[]).includes(key);
@@ -107,15 +105,13 @@ function menu_key_from_id(id: string): MenuKey | undefined {
   return (MENU_OPTIONS as readonly string[]).includes(id) ? id as MenuKey : undefined;
 }
 
-function active_menu_ids(
-  view: DemoView,
-  widgets: readonly DemoWidget[],
-): readonly string[] {
-  return [
-    ...(view ? [view] : []),
-    ...widgets,
-  ];
+function active_menu_ids(view: DemoView, widgets: readonly WidgetId[]): readonly string[] {
+  const publicView = view !== null && (PUBLIC_MAIN_VIEW_IDS as readonly string[]).includes(view)
+    ? [view]
+    : [];
+  return [...publicView, ...widgets];
 }
+
 function amoebi_menu_items(): readonly AmoebiMenuItem[] {
   return MENU_OPTIONS.map((key) => ({
     id: key,
@@ -126,9 +122,7 @@ function amoebi_menu_items(): readonly AmoebiMenuItem[] {
 
 function after_paint(): Promise<void> {
   return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => resolve());
-    });
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
 }
 
@@ -136,13 +130,12 @@ function sync_fleur_viewbox(fleurLayer: LiveTree, fleurField: SvgLiveTree): void
   const rect = fleurLayer.dom.rect();
   if (!rect) return;
 
-  const w = Math.max(1, rect.width);
-  const h = Math.max(1, rect.height);
-
+  const width = Math.max(1, rect.width);
+  const height = Math.max(1, rect.height);
   fleurField.attrs.setMany({
-    width: fmtNum(w, 0),
-    height: fmtNum(h, 0),
-    viewBox: `0 0 ${w} ${h}`,
+    width: fmtNum(width, 0),
+    height: fmtNum(height, 0),
+    viewBox: `0 0 ${width} ${height}`,
     preserveAspectRatio: "xMidYMid meet",
   });
 }
@@ -157,12 +150,15 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 
   const graffitiLayer = mk_div_id(screen, "graffiti-layer")
     .text.set(HSON_LIVE_GRAFFITIstr)
+    .classlist.add($PANEL_HIDDEN)
     .css.setMany(HSON_GRAFFITIcss);
 
   const fleurLayer = mk_div_id(screen, "fleurs-layer")
+    .classlist.add($PANEL_HIDDEN)
     .css.setMany(FLOWER_LAYERcss);
 
   const uiRoot = mk_div_id(screen, "ui-root")
+    .attrs.set("data-testid", "demo-main-outlet")
     .css.setMany(UI_ROOTcss);
 
   const menuContainer = mk_div_id(screen, "menu-container")
@@ -170,6 +166,7 @@ function create_demo_shell(stage: LiveTree): DemoShell {
 
   const motesLayer = mk_div_id(screen, "motes")
     .classlist.add("demo motes")
+    .classlist.add($PANEL_HIDDEN)
     .css.setMany(MOTES_LAYERcss);
 
   screen.create.footer()
@@ -188,235 +185,308 @@ function create_demo_shell(stage: LiveTree): DemoShell {
     .css.setMany(FLOWER_FIELDcss);
 
   sync_fleur_viewbox(fleurLayer, fleurField);
-
-  return { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graffitiLayer };
+  return { demoLayer, screen, fleurLayer, fleurField, uiRoot, graffitiLayer, menuContainer, motesLayer };
 }
 
 function create_demo_wordmark(menuContainer: LiveTree): void {
-  const headline = mk_div_id(menuContainer, "hson-headline")
-    .css.setMany(DEMO_HEADLINEcss);
-
-  LETTER_LOWS.forEach((k) => {
-    mk_span_id(headline, `${k}-letter`)
-      .text.set(HSONlower[k])
-      .classlist.add(shade_class(k))
+  const headline = mk_div_id(menuContainer, "hson-headline").css.setMany(DEMO_HEADLINEcss);
+  LETTER_LOWS.forEach((key) => {
+    mk_span_id(headline, `${key}-letter`)
+      .text.set(HSONlower[key])
+      .classlist.add(shade_class(key))
       .classlist.add("demo-wordmark")
       .css.setMany({
         ...HSON_WORDcss,
-        textShadow: $MENU_SHADOW + set_alpha(_colors.hson[k], 0.1)
+        textShadow: $MENU_SHADOW + set_alpha(_colors.hson[key], 0.1)
           + ", 0 0 18px " + set_alpha(OKLCH_NEUTRALS.pearlIvory, 0.1),
       })
-      .css.selector(`.${shade_class(k)}`).setMany({
-        color: _colors.hson[k],
-      });
+      .css.selector(`.${shade_class(key)}`).setMany({ color: _colors.hson[key] });
   });
 
-  mk_div_id_txt(menuContainer, "livedemo-subhead", `liveDemo`)
-    .css.setMany(HSON_SUBcss);
-}
-
-
-function create_demo_hosts(uiRoot: LiveTree, menuContainer: LiveTree, motesLayer: LiveTree, graf: LiveTree): DemoHosts {
-  const pointSlot = mk_div_id(menuContainer, "mouse-slot").css.setMany(POINT_SLOTcss);
-  const pointHost = mk_div_id_cls(pointSlot, "mouse-host", $PANEL_HIDDEN).css.setMany(POINT_HOSTcss);
-  const parseHost = mount_panel_simple(uiRoot, $PARSE);
-  const testHost = mount_panel_simple(uiRoot, $TEST);
-  const buildHost = mount_panel_simple(uiRoot, $BUILD);
-  const aboutHost = mount_panel_simple(uiRoot, $ABOUT);
-  const barbarHost = mount_panel_simple(uiRoot, $BARBAR);
-  const cellsHost = mount_panel_simple(uiRoot, $CELLS);
-  const towlHost = mount_panel_simple(uiRoot, $TOWL);
-  const oklchHost = mk_div_id_cls(uiRoot, "oklch", $PANEL_HIDDEN).css.setMany({
-    ...OKLCH_HOSTcss,
-
-  });
-
-  const viewHosts: ViewHosts = {
-    [$PARSE]: parseHost,
-    [$TEST]: testHost,
-    [$BUILD]: buildHost,
-    [$ABOUT]: aboutHost,
-    [$BARBAR]: barbarHost,
-    [$CELLS]: cellsHost,
-    [$TOWL]: towlHost,
-  };
-
-  const widgetHosts: WidgetHosts = {
-    [$POINT]: [pointHost],
-    [$OKLCH]: [oklchHost],
-    [$BLING]: [motesLayer, graf],
-  };
-
-  return {
-    pointHost,
-    parseHost,
-    testHost,
-    buildHost,
-    aboutHost,
-    barbarHost,
-    cellsHost,
-    towlHost,
-    oklchHost,
-    viewHosts,
-    widgetHosts,
-  };
-}
-
-
-function mount_demo_content(hosts: DemoHosts): DemoContent {
-  mount_about_panels(hosts.aboutHost, ABOUT_DOCS);
-  const test = mount_test_panels(hosts.testHost);
-  const towl = mount_towl_panel(hosts.towlHost);
-  const parse = mount_parsing_panels(hosts.parseHost);
-  mount_build_panels(hosts.buildHost);
-  mount_bar_bar(hosts.barbarHost);
-  create_cellsheet_panel(hosts.cellsHost);
-  mount_point_panel(hosts.pointHost);
-  mount_oklch(hosts.oklchHost);
-
-  return { parse, test, towl };
+  mk_div_id_txt(menuContainer, "livedemo-subhead", "liveDemo").css.setMany(HSON_SUBcss);
 }
 
 function is_mobile_demo_width(stage: LiveTree): boolean {
   const rect = stage.dom.rect();
-  if (!rect) return false;
-  return rect.width <= MIN_DESKTOP_WIDTH;
+  return rect !== undefined && rect.width <= MIN_DESKTOP_WIDTH;
 }
 
-function sync_demo_visibility(viewHosts: ViewHosts, widgetHosts: WidgetHosts, view: DemoView, widgets: readonly DemoWidget[]): void {
-  Object.values(viewHosts).forEach((host) => host && _hide(host));
-  const activeHost = view ? viewHosts[view] : undefined;
-  if (activeHost) _unhide(activeHost);
-
-  WIDGET_MENU_KEYS.forEach((key) => {
-    const hosts = widgetHosts[key];
-    if (!hosts) return;
-    hosts.forEach((host) => {
-      if (widgets.includes(key)) _unhide(host);
-      else _hide(host);
-    });
+function host_controller(host: LiveTree, cleanup: () => void = () => undefined): SurfaceController {
+  let disposed = false;
+  return Object.freeze({
+    activate: () => _unhide(host),
+    deactivate: () => _hide(host),
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      try {
+        cleanup();
+      } finally {
+        if (!host.isDisposed) host.remove();
+      }
+    },
   });
 }
 
+function main_host(uiRoot: LiveTree, id: MainViewId): LiveTree {
+  return mount_panel_simple(uiRoot, id)
+    .data.set("shell-main-surface", id);
+}
 
-export async function mount_demo(stage: LiveTree): Promise<void> {
-  // CHANGED: release remount-persistent bindings before rebuilding the demo tree.
-  stopDemoMount?.();
-  stopDemoMount = undefined;
+function make_main_registrations(shell: DemoShell): Record<MainViewId, SurfaceRegistration> {
+  const mount = (
+    id: MainViewId,
+    factory: (host: LiveTree) => void | (() => void),
+  ): SurfaceController => {
+    const host = main_host(shell.uiRoot, id);
+    const cleanup = factory(host) ?? (() => undefined);
+    return host_controller(host, cleanup);
+  };
 
+  const registrations = {
+    [$ABOUT]: {
+      retention: "recreate",
+      mount: () => mount($ABOUT, (host) => { mount_about_panels(host, ABOUT_DOCS); }),
+    },
+    [$TEST]: {
+      retention: "retain",
+      mount: () => mount($TEST, (host) => {
+        const panels = mount_test_panels(host);
+        return panels.dispose;
+      }),
+    },
+    [$PARSE]: {
+      retention: "recreate",
+      mount: () => mount($PARSE, (host) => {
+        const panels = mount_parsing_panels(host);
+        return panels.dispose;
+      }),
+    },
+    [$BUILD]: {
+      retention: "recreate",
+      mount: () => mount($BUILD, (host) => { mount_build_panels(host); }),
+    },
+    [$BARBAR]: {
+      retention: "retain",
+      mount: () => mount($BARBAR, mount_bar_bar),
+    },
+    [$TOWL]: {
+      retention: "recreate",
+      mount: () => mount($TOWL, (host) => {
+        const panel = mount_towl_panel(host);
+        return panel.dispose;
+      }),
+    },
+    [$CELLS]: {
+      retention: "recreate",
+      mount: () => mount($CELLS, (host) => {
+        const panel = create_cellsheet_panel(host);
+        return panel.dispose;
+      }),
+    },
+    [$FLEURS]: {
+      retention: "recreate",
+      mount: () => {
+        let disposed = false;
+        _unhide(shell.fleurLayer);
+        sync_fleur_viewbox(shell.fleurLayer, shell.fleurField);
+        return Object.freeze({
+          activate: () => {
+            _unhide(shell.fleurLayer);
+            sync_fleur_viewbox(shell.fleurLayer, shell.fleurField);
+          },
+          deactivate: () => _hide(shell.fleurLayer),
+          dispose: () => {
+            if (disposed) return;
+            disposed = true;
+            shell.fleurField.empty();
+            _hide(shell.fleurLayer);
+          },
+        });
+      },
+    },
+    "color-sudoku": {
+      retention: "recreate",
+      mount: () => mount("color-sudoku", (host) => {
+        host.css.setMany({ overflow: "auto" });
+        const rig = mount_color_sudoku(host);
+        return rig.dispose;
+      }),
+    },
+  } satisfies Record<MainViewId, SurfaceRegistration>;
+
+  return registrations;
+}
+
+function make_widget_registrations(shell: DemoShell, pointSlot: LiveTree): Record<WidgetId, SurfaceRegistration> {
+  const registrations = {
+    [$POINT]: {
+      retention: "retain",
+      mount: () => {
+        const host = mk_div_id(pointSlot, "mouse-host")
+          .data.set("shell-widget-surface", $POINT)
+          .css.setMany(POINT_HOSTcss);
+        mount_point_panel(host);
+        return host_controller(host);
+      },
+    },
+    [$OKLCH]: {
+      retention: "retain",
+      mount: () => {
+        const host = mk_div_id(shell.uiRoot, "oklch")
+          .data.set("shell-widget-surface", $OKLCH)
+          .css.setMany(OKLCH_HOSTcss);
+        mount_oklch(host);
+        return host_controller(host);
+      },
+    },
+    bling: {
+      retention: "recreate",
+      mount: () => {
+        let disposed = false;
+        _unhide(shell.motesLayer);
+        _unhide(shell.graffitiLayer);
+        const rig = mount_motes(shell.motesLayer);
+        return Object.freeze({
+          dispose: () => {
+            if (disposed) return;
+            disposed = true;
+            rig.dispose();
+            _hide(shell.motesLayer);
+            _hide(shell.graffitiLayer);
+          },
+        });
+      },
+    },
+  } satisfies Record<WidgetId, SurfaceRegistration>;
+
+  return registrations;
+}
+
+export async function mount_demo(stage: LiveTree): Promise<DemoShellController> {
+  activeDemoShell?.dispose();
+  activeDemoShell = undefined;
   stage.empty();
 
   seed_demo_theme_vars();
-
   const shell = create_demo_shell(stage);
-  const { demoLayer, screen, fleurLayer, fleurField, uiRoot, menuContainer, motesLayer, graffitiLayer } = shell;
-
+  const { demoLayer, screen, fleurLayer, fleurField, menuContainer } = shell;
   create_demo_wordmark(menuContainer);
 
   const menuBox = mk_div_id(menuContainer, "menu-box").css.setMany(MENU_BOXcss);
-
+  const pointSlot = mk_div_id(menuContainer, "mouse-slot")
+    .attrs.set("data-testid", "demo-widget-outlet")
+    .css.setMany(POINT_SLOTcss);
   set_global_css();
 
-  const hosts = create_demo_hosts(uiRoot, menuContainer, motesLayer, graffitiLayer);
-  const { viewHosts, widgetHosts } = hosts;
-
-  const content = mount_demo_content(hosts);
-  mount_motes(motesLayer);
-  mount_deck(stage);
-  sync_fleur_viewbox(fleurLayer, fleurField);
-  const demoController: DemoStateController = {
-    getView: get_view,
-    setView: set_view,
-    toggleView: toggle_view,
-    toggleWidget: toggle_widget,
-    deactivateWidget: deactivate_widget,
-  };
-  const amoebiMenu = make_amoebi(
-    menuBox,
-    {
-      activeIds: active_menu_ids(
-        get_view(),
-        get_widgets() ?? [],
-      ),
-      isolatedIds: WIDGET_IDS,
-      items: amoebi_menu_items(),
-      showTitle: false,
-      ariaLabel: "Demo navigation",
-      onToggle: (id) => {
-        const key = menu_key_from_id(id);
-        if (!key) return;
-
-        if (is_widget_menu_key(key)) {
-          demoController.toggleWidget(key);
-          return;
-        }
-
-        if (!is_demo_menu_key(key)) return;
-        if (key === $FLEURS && demoController.getView() === $FLEURS) fleurField.empty();
-        demoController.toggleView(key);
-      },
-    });
-  const applyView = (): void => {
-    const view = get_view();
-    const widgets = get_widgets() ?? [];
-
-    sync_demo_visibility(viewHosts, widgetHosts, view, widgets);
-    amoebiMenu.setActiveIds(
-      active_menu_ids(
-        view,
-        widgets,
-      ),
-    );
-  };
-
-  // CHANGED: render directly from the store's schema-bound LiveMap.
-  const stopStoreBindings = demo_subscribe_view_state(applyView);
-  stopDemoMount = stopStoreBindings;
-  applyView();
-
-  await after_paint();
-  if (is_mobile_demo_width(stage)) demoController.setView($FLEURS);
-  sync_fleur_viewbox(fleurLayer, fleurField);
-
-  screen.css.setMany({
-    __after: {
-      opacity: "0 !IMPORTANT"
-    }
+  const currentView = demo_shell_locations.currentView;
+  const activeWidgets = demo_shell_locations.activeWidgets;
+  const initialView = currentView.snap();
+  const initialWidgets = activeWidgets.snap();
+  const mainRegistrations = make_main_registrations(shell);
+  const widgetRegistrations = make_widget_registrations(shell, pointSlot);
+  const lifecycle = create_shell_lifecycle_reconciler({
+    mainIds: MAIN_VIEW_IDS,
+    widgetIds: WIDGET_IDS,
+    main: mainRegistrations,
+    widgets: widgetRegistrations,
   });
 
+  const amoebiMenu = make_amoebi(menuBox, {
+    activeIds: active_menu_ids(initialView, initialWidgets),
+    isolatedIds: WIDGET_IDS,
+    items: amoebi_menu_items(),
+    showTitle: false,
+    ariaLabel: "Demo navigation",
+    onToggle: (id) => {
+      const key = menu_key_from_id(id);
+      if (key === undefined) return;
 
-  // CHANGED: use an explicit document listener so remount teardown can remove it.
-  const onDocumentKeyDown = (ke: KeyboardEvent): void => {
-    if (ke.key === "0") {mount_color_sudoku(stage);};
-    
-    if (ke.key !== "Escape") return;
-    demoController.deactivateWidget($OKLCH);
-    demoController.deactivateWidget($POINT);
+      if (is_widget_menu_key(key)) {
+        toggle_widget(key);
+        return;
+      }
+
+      if (!is_demo_menu_key(key)) return;
+      if (key === $FLEURS && currentView.snap() === $FLEURS) fleurField.empty();
+      toggle_view(key);
+    },
+  });
+
+  const sync_menu = (): void => {
+    amoebiMenu.setActiveIds(active_menu_ids(currentView.snap(), activeWidgets.snap()));
+  };
+  const reconcileMain = (next: DemoView): void => {
+    lifecycle.reconcileMain(next);
+    screen.attrs.set("data-shell-current-main", next ?? "");
+    sync_menu();
+  };
+  const reconcileWidgets = (next: readonly WidgetId[]): void => {
+    lifecycle.reconcileWidgets(next);
+    screen.attrs.set("data-shell-active-widgets", next.join(" "));
+    sync_menu();
   };
 
-  document.addEventListener("keydown", onDocumentKeyDown);
+  const stopView = currentView.watch(reconcileMain);
+  const stopWidgets = activeWidgets.watch(reconcileWidgets);
+  reconcileMain(initialView);
+  reconcileWidgets(initialWidgets);
 
-  stopDemoMount = () => {
-    stopStoreBindings();
-    content.parse.dispose();
-    content.test.dispose();
-    content.towl.dispose();
-    document.removeEventListener("keydown", onDocumentKeyDown);
-  };
+  const keyListener = screen.listen.document.onKeyDown((event) => {
+    if (event.key === "0") {
+      set_view("color-sudoku");
+      return;
+    }
+    if (event.key !== "Escape") return;
+    deactivate_widget($OKLCH);
+    deactivate_widget($POINT);
+  });
 
-  screen.listen.onClick((ev: MouseEvent) => {
-    if (demoController.getView() !== $FLEURS) return;
-
+  const fleurClickListener = screen.listen.onClick((event: MouseEvent) => {
+    if (currentView.snap() !== $FLEURS) return;
     const rect = fleurLayer.dom.rect();
     if (!rect) return;
-
-    const x = ev.clientX - rect.left;
-    const y = ev.clientY - rect.top;
-
-    void spawn_flower(fleurField, x, y);
+    void spawn_flower(fleurField, event.clientX - rect.left, event.clientY - rect.top);
   });
 
-  
-  mount_firework(screen);
-  return;
+  const deck = mount_deck(stage);
+  const fireworksAbort = new AbortController();
+  let fireworks: FireworkController | undefined;
+  let disposed = false;
+  void mount_firework(screen, fireworksAbort.signal).then(
+    (controller) => {
+      if (disposed) controller.teardown();
+      else fireworks = controller;
+    },
+    (error: unknown) => {
+      if (!fireworksAbort.signal.aborted) console.error(error);
+    },
+  );
+
+  const controller: DemoShellController = Object.freeze({
+    root: demoLayer,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      stopView();
+      stopWidgets();
+      keyListener.off();
+      fleurClickListener.off();
+      lifecycle.dispose();
+      fireworksAbort.abort();
+      fireworks?.teardown();
+      deck.close();
+      if (!deck.root.isDisposed) deck.root.remove();
+      if (!amoebiMenu.root.isDisposed) amoebiMenu.root.remove();
+      if (!demoLayer.isDisposed) demoLayer.remove();
+      if (activeDemoShell === controller) activeDemoShell = undefined;
+    },
+  });
+  activeDemoShell = controller;
+
+  await after_paint();
+  if (is_mobile_demo_width(stage)) set_view($FLEURS);
+  sync_fleur_viewbox(fleurLayer, fleurField);
+  screen.css.setMany({ __after: { opacity: "0 !IMPORTANT" } });
+  return controller;
 }

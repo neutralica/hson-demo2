@@ -75,16 +75,6 @@ export function create_demo_store(
     startWidget(widget);
   }
 
-  function subscribeViewState(fn: () => void): () => void {
-    return demoState.sub.sel(
-      (state) => JSON.stringify([
-        state.ui.currentView,
-        state.ui.activeWidgets,
-      ]),
-      fn,
-    );
-  }
-
   return {
     locations,
     getView,
@@ -95,21 +85,14 @@ export function create_demo_store(
     startWidget,
     stopWidget,
     toggleWidget,
-
-    subscribeViewState,
   };
 }
 
 const demoStore = create_demo_store();
 
 export const demo_shell_locations = demoStore.locations;
-export const get_view = demoStore.getView;
-export const get_widgets = demoStore.getWidgets;
 
 export const set_view = demoStore.setView;
 export const toggle_view = demoStore.toggleView;
-export const activate_widget = demoStore.startWidget;
 export const deactivate_widget = demoStore.stopWidget;
 export const toggle_widget = demoStore.toggleWidget;
-
-export const demo_subscribe_view_state = demoStore.subscribeViewState;
