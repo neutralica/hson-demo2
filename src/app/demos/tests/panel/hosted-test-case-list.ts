@@ -2,6 +2,7 @@ import type { LiveTree } from "hson-live/livetree";
 import type { HostedTestCaseReport, HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
 import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import { _fontSize } from "../../../core/consts/ui-consts";
 
 export type HostedTestCaseActions = Readonly<{
   view(caseKey: string): Promise<void>;
@@ -66,7 +67,7 @@ type SuiteProjection = {
 
 const PANEL_STYLES = Object.freeze({
   root: {
-    width: "100%", height: "100%", overflow: "auto", fontFamily: "DM Mono, monospace", fontSize: "11px",
+    width: "100%", height: "100%", overflow: "auto", fontFamily: "DM Mono, monospace", fontSize: _fontSize.wee,
   },
   suiteGroup: { borderBottom: "1px solid rgba(125,216,207,.18)" },
   suiteRow: {

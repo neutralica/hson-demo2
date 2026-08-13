@@ -218,7 +218,7 @@ export const TEST_LOGGERcss: CssMap = {
   minWidth: "0",           // CHANGED
   maxWidth: "100%",        // CHANGED
 
-  fontSize: _fontSize.smol,
+  fontSize: _fontSize.wee,
   color: OKLCH_FLEURS.blazeOrange,
 } as const;
 
@@ -232,7 +232,8 @@ export const TP_LOG_ROWcss = (line: string): CssMap => {
     maxWidth: "100%",         // CHANGED
 
     fontFamily: SYS_MONOfont,
-    fontSize: _fontSize.smol,
+    lineHeight: "1.5rem",
+    fontSize: _fontSize.wee,
     textAlign: "end",
     color: get_line_color(line),
   };
