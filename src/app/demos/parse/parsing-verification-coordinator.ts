@@ -6,7 +6,7 @@ import {
   type CircuitVerificationProgress,
   type CircuitVerificationRequest,
   type CircuitVerificationResult,
-} from "../../../../tests/harness/hosted/circuit-verification-contract";
+} from "../../../shared/circuit-verification-contract";
 
 export const PARSING_VERIFICATION_DEBOUNCE_MS = 300;
 

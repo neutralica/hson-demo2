@@ -1,22 +1,9 @@
-import { hson } from "hson-live";
 import { LiveTree } from "hson-live/livetree";
 import { ABOUT_ROOT_ID } from "../../core/consts/ui-consts";
 import { find_doc } from "./about-helpers";
 import { ABOUT_ROOTcss, ABOUT_BODY_ROWcss, ABOUT_TOCcss, ABOUT_DOCcss, DOC_CONTAINER, TOC_BTNcss, TOC_BTN_ACTIVEcss, TOC_BTN_IDLEcss } from "./about.css";
 import type { AboutDocKey, AboutPanel, AboutInitTargets, AboutInitDeps, AboutDocs } from "./about.types";
 import { render_md_doc } from "./markdown-parser";
-
-type AboutControlState = Readonly<{
-  activeKey: string;
-}>;
-
-const ABOUT_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => scm.object({
-  activeKey: scm.string,
-}));
-
-function makeInitialAboutControlState(activeKey: AboutDocKey): AboutControlState {
-  return { activeKey };
-}
 
 export function about_factory(host: LiveTree): AboutPanel {
   const old = host.find.byId(ABOUT_ROOT_ID);
@@ -48,14 +35,7 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   const { docs } = deps;
   const requestedKey: AboutDocKey = (deps.initialDocKey ?? docs[0]?.key ?? "readme") as AboutDocKey;
   const initialKey: AboutDocKey = (find_doc(docs, requestedKey)?.key ?? docs[0]?.key ?? "readme") as AboutDocKey;
-  const aboutState = hson.liveMap
-    .fromJson(makeInitialAboutControlState(initialKey))
-    .schema.use(ABOUT_CONTROL_SCHEMA);
-
-  const getActiveKey = (): AboutDocKey => aboutState.at(["activeKey"]).snap() as AboutDocKey;
-  const setActiveKey = (next: AboutDocKey): void => {
-    aboutState.at(["activeKey"]).set(next);
-  };
+  let activeKey = initialKey;
 
   const tocButtons: Array<{ key: AboutDocKey; btn: LiveTree; }> = [];
 
@@ -65,6 +45,7 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     const btn = t.toc.create.div()
       .classlist.add("about-doc-btn")
       .data.set("doc-key", d.key)
+      .data.set("active", "false")
       .css.setMany(TOC_BTNcss);
 
     btn.text.set(d.title);
@@ -74,9 +55,8 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
   }
 
   const syncTocButtons = (): void => {
-    const activeKey = getActiveKey();
-
     for (const x of tocButtons) {
+      x.btn.data.set("active", x.key === activeKey ? "true" : "false");
       x.btn.css.setMany(x.key === activeKey ? TOC_BTN_ACTIVEcss : TOC_BTN_IDLEcss);
     }
   };
@@ -85,13 +65,13 @@ export function about_init(t: AboutInitTargets, deps: AboutInitDeps): void {
     const docSpec = find_doc(docs, key);
     if (!docSpec) return;
 
-    setActiveKey(key);
+    activeKey = key;
     render_md_doc(t.doc, docSpec.body);
     syncTocButtons();
   };
 
 
-  setActive(getActiveKey());
+  setActive(activeKey);
 }
 
 export function mount_about_panels(host: LiveTree, docs: AboutDocs): AboutPanel {

@@ -24,26 +24,6 @@ import { mk_div_id, mk_div_cls, mk_section_cls, mk_span_cls } from "../../utils/
 type StatusKind = "idle" | "typing" | "valid" | "invalid";
 type BuildTabKey = "render" | "html";
 
-type BuildControlState = {
-    inProgress: boolean;
-    activeTab: BuildTabKey;
-    touched: boolean;
-};
-
-const BUILD_CONTROL_SCHEMA = hson.liveMap.schema.define((scm) => scm.object({
-    inProgress: scm.boolean,
-    activeTab: scm.pick("render", "html"),
-    touched: scm.boolean,
-}));
-
-function makeInitialBuildControlState(): BuildControlState {
-    return {
-        inProgress: false,
-        activeTab: "render",
-        touched: false,
-    };
-}
-
 export function mount_build_panels(host: LiveTree): BuildDemo {
     const bp = bp_factory(host);
 
@@ -52,37 +32,9 @@ export function mount_build_panels(host: LiveTree): BuildDemo {
 }
 
 function initBuild(bp: BuildDemo): void {
-    const buildState = hson.liveMap
-        .fromJson(makeInitialBuildControlState())
-        .schema.use(BUILD_CONTROL_SCHEMA);
-
-    function getBuildState(): BuildControlState {
-        return buildState.snap() as BuildControlState;
-    }
-
-    function getInProgress(): boolean {
-        return getBuildState().inProgress;
-    }
-
-    function setInProgress(next: boolean): void {
-        buildState.at(["inProgress"]).set(next);
-    }
-
-    function getActiveTab(): BuildTabKey {
-        return getBuildState().activeTab;
-    }
-
-    function setActiveTab(next: BuildTabKey): void {
-        buildState.at(["activeTab"]).set(next);
-    }
-
-    function getTouched(): boolean {
-        return getBuildState().touched;
-    }
-
-    function setTouched(next: boolean): void {
-        buildState.at(["touched"]).set(next);
-    }
+    let inProgress = false;
+    let activeTab: BuildTabKey = "render";
+    let touched = false;
 
     const getSrc = (): string => bp.input.textarea.form.getValue() ?? "";
     const setSrc = (v: string): void => void bp.input.textarea.form.setValue(v, { silent: true });
@@ -111,21 +63,21 @@ function initBuild(bp: BuildDemo): void {
     };
 
     const syncTabs = (): void => {
-        const showRender = getActiveTab() === "render";
+        const showRender = activeTab === "render";
         bp.output.previewHost.css.setMany({ display: showRender ? "block" : "none" });
         bp.output.htmlBox.css.setMany({ display: showRender ? "none" : "block" });
 
-        bp.tabs.view.data.set("tab", getActiveTab());
+        bp.tabs.view.data.set("tab", activeTab);
         bp.tabs.view.data.set("active", "true");
-        bp.tabs.view.text.set(getActiveTab());
-        bp.tabs.view.attrs.set("aria-label", getActiveTab() === "render" ? "show html output" : "show render preview");
+        bp.tabs.view.text.set(activeTab);
+        bp.tabs.view.attrs.set("aria-label", activeTab === "render" ? "show html output" : "show render preview");
     };
 
     const render = (raw: string): void => {
         const t = raw.trim();
         const empty = t.length === 0;
 
-        if (!getTouched()) {
+        if (!touched) {
             setStatus("idle");
         } else if (empty) {
             setStatus("invalid");
@@ -154,23 +106,23 @@ function initBuild(bp: BuildDemo): void {
     };
 
     bp.tabs.view.listen.onClick(() => {
-        setActiveTab(getActiveTab() === "render" ? "html" : "render");
+        activeTab = activeTab === "render" ? "html" : "render";
         syncTabs();
     });
 
     bp.input.textarea.listen.onInput(() => {
-        if (getInProgress()) return;
-        setInProgress(true);
+        if (inProgress) return;
+        inProgress = true;
         try {
-            setTouched(true);
+            touched = true;
             render(getSrc());
         } finally {
-            setInProgress(false);
+            inProgress = false;
         }
     });
 
     bp.input.clearBtn.listen.onClick(() => {
-        setTouched(false);
+        touched = false;
         setSrc("");
         bp.output.previewHost.empty();
         bp.output.htmlBox.text.set("");
@@ -182,7 +134,7 @@ function initBuild(bp: BuildDemo): void {
         if (!clip) return;
 
         const txt =
-            getActiveTab() === "html"
+            activeTab === "html"
                 ? (bp.output.htmlBox.text.get() ?? "")
                 : getSrc();
 

@@ -302,3 +302,4 @@ export function decode_circuit_verification_progress(value: unknown): CircuitDec
     }),
   };
 }
+

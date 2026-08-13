@@ -15,7 +15,7 @@ import {
   type CircuitVerificationProgress,
   type CircuitVerificationRequest,
   type CircuitVerificationResult,
-} from "../../../../tests/harness/hosted/circuit-verification-contract";
+} from "../../../shared/circuit-verification-contract";
 import type { ParsingVerificationTransport } from "./parsing-verification-coordinator";
 
 export const PARSING_VERIFICATION_CONFIGURATION_ERROR =

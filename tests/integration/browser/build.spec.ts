@@ -34,10 +34,14 @@ test("Build preview and HTML output recover across edits and navigation", async 
   await page.getByRole("button", { name: "show render preview" }).click();
   await expect(preview).toBeVisible();
   await expect(preview.locator("#browser-build")).toHaveText("recovered build");
+  await root.evaluate((node) => node.setAttribute("data-instance", "old"));
 
   await open_demo(page, "about");
   await open_demo(page, "build");
   await expect(page.getByTestId("build-root")).toHaveCount(1);
+  await expect(root).not.toHaveAttribute("data-instance", "old");
+  await expect(page.getByRole("button", { name: "show html output" })).toHaveText("render");
+  await expect(source).not.toHaveValue(VALID_HSON.replace("built in browser", "recovered build"));
   await source.fill(VALID_HSON);
   await expect(preview.locator("#browser-build")).toHaveCount(1);
   assertNoErrors();

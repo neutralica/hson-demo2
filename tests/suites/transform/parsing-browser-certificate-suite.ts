@@ -3,7 +3,7 @@ import { verify_universal_circuit } from "hson-live/diagnostics/universal-circui
 import { assert_canonical_oracle_graph_equal } from "hson-live/diagnostics/transform-test-oracle";
 import type { HsonNode } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
-import type { CircuitVerificationEntry, CircuitVerificationResult } from "../../harness/hosted/circuit-verification-contract";
+import type { CircuitVerificationEntry, CircuitVerificationResult } from "../../../src/shared/circuit-verification-contract";
 import {
   certify_browser_circuit_boundary,
   admit_detached_browser_html,

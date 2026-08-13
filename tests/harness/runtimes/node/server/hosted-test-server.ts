@@ -13,7 +13,7 @@ import {
 } from "./node-hosted-tests-application";
 import { create_node_towl_application } from "./node-towl-application";
 import { create_node_circuit_verification_application } from "./node-circuit-verification-application";
-import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../hosted/circuit-verification-contract";
+import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;

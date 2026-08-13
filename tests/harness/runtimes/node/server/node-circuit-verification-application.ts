@@ -6,7 +6,7 @@ import {
 } from "hson-live/livehost/node";
 import {
   CIRCUIT_VERIFICATION_HOST_ID,
-} from "../../../hosted/circuit-verification-contract";
+} from "../../../../../src/shared/circuit-verification-contract";
 import { create_circuit_verification_livehost } from "../../../hosted/circuit-verification-livehost";
 import {
   create_circuit_verification_service,

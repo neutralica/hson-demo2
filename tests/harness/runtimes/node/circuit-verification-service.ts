@@ -10,7 +10,7 @@ import {
   type CircuitVerificationRequest,
   type CircuitVerificationResult,
   type CircuitVerificationSubmitter,
-} from "../../hosted/circuit-verification-contract";
+} from "../../../../src/shared/circuit-verification-contract";
 
 const PROTOCOL_VERSION = 1;
 const TOTAL_STAGES = 7;

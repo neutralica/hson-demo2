@@ -8,7 +8,7 @@ import { mk_div_cls, mk_div_cls_txt } from "../../utils/makers";
 import { OKLCH_COLOR_TARGETS } from "./link-colors";
 import { ROOT_CSS, PANEL_CSS, TITLE_CSS, ROW_CSS, RANGE_CSS, PREVIEW_PANEL_CSS, PREVIEW_CSS, RESET_CSS, TARGET_ROW_CSS, TARGET_ROW_ACTIVE_CSS } from "./oklch.css";
 import type { OklchRig, OklchValues, OklchPickerModel, OklchInputRig, OklchChannel, OklchTarget, OklchDemoOpts, OklchController } from "./oklch.types";
-import { hson } from "hson-live";
+import { create_oklch_store, token_value, type OklchCanonicalState } from "./oklch.state";
 
 
 const gcss = CssManager.api();
@@ -16,36 +16,6 @@ const gcss = CssManager.api();
 type OklchRigWithReset = OklchRig & Readonly<{
   resetBtn: LiveTree;
 }>;
-
-type OklchToken = Readonly<{
-  path: string;
-  initial: string;
-  value: string;
-}>;
-
-type OklchLocalState = Readonly<{
-  current: OklchValues;
-  activePath: string | null;
-  tokens: Record<string, OklchToken>;
-}>;
-
-function makeInitialOklchLocalState(model: OklchPickerModel): OklchLocalState {
-  const tokens: Record<string, OklchToken> = {};
-
-  for (const target of model.targets) {
-    tokens[target.path] = Object.freeze({
-      path: target.path,
-      initial: target.initial,
-      value: target.initial,
-    });
-  }
-
-  return Object.freeze({
-    current: model.state,
-    activePath: model.targets[0]?.path ?? null,
-    tokens,
-  });
-}
 
 const normalizeLightness = (l: number): number => {
   // CHANGED: parse_oklch() may return CSS number lightness as 0–1.
@@ -130,53 +100,42 @@ function oklchFactory(stage: LiveTree, model: OklchPickerModel): OklchRigWithRes
 }
 
 function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void {
-  const stateMap = hson.liveMap.fromJson(makeInitialOklchLocalState(model));
+  const firstTarget = model.targets[0];
+  if (!firstTarget) throw new Error("OKLCH requires at least one configured target.");
+  const initial: OklchCanonicalState = {
+    activePath: firstTarget.path,
+    tokens: model.targets.map((target) => ({
+      path: target.path,
+      value: stateOrDefault(target.initial, OKLCH_DEFAULT_STATE),
+    })),
+  };
+  const store = create_oklch_store(initial, model.targets.map((target) => target.path));
+  const { activePath, tokens } = store.locations;
   const listeners: Array<Readonly<{ off(): void }>> = [];
+  const watchers: Array<() => void> = [];
   let disposed = false;
-  const storedActivePath = stateMap.at(["activePath"]).snap() as string | null;
-  const storedActiveIndex = storedActivePath === null
-    ? -1
-    : model.targets.findIndex((target) => target.path === storedActivePath);
-  let activeTargetIndex = storedActiveIndex >= 0 ? storedActiveIndex : 0;
 
-  const readCurrentState = (): OklchValues => stateMap.at(["current"]).snap() as OklchValues;
-  const writeCurrentState = (next: OklchValues): void => {
-    stateMap.at(["current"]).set(next);
-  };
+  const activeTargetIndex = (): number => model.targets.findIndex(
+    (target) => target.path === activePath.snap(),
+  );
 
-  const getToken = (path: string): OklchToken | undefined => {
-    return stateMap.at(["tokens", path]).snap() as OklchToken | undefined;
-  };
+  const getTokenValue = (path: string): OklchValues | undefined => token_value(tokens.snap(), path);
 
-  const getTokenValue = (path: string): string | undefined => getToken(path)?.value;
-
-  const setTokenValue = (path: string, value: string): void => {
-    const token = getToken(path);
-    if (!token) return;
-
-    stateMap.at(["tokens", path]).set({
-      ...token,
-      value,
-    });
+  const setTokenValue = (path: string, value: OklchValues): void => {
+    tokens.set(tokens.snap().map((token) => token.path === path ? { ...token, value } : token));
   };
 
   const isTokenChanged = (path: string): boolean => {
-    const token = getToken(path);
-    return !!token && token.value !== token.initial;
+    const target = model.targets.find((candidate) => candidate.path === path);
+    const value = getTokenValue(path);
+    return !!target && !!value && oklchToCss(value) !== oklchToCss(stateOrDefault(target.initial, OKLCH_DEFAULT_STATE));
   };
 
   const resetTokenValues = (): void => {
-    const tokens = stateMap.at(["tokens"]).snap() as Record<string, OklchToken>;
-    const nextTokens: Record<string, OklchToken> = {};
-
-    for (const token of Object.values(tokens)) {
-      nextTokens[token.path] = {
-        ...token,
-        value: token.initial,
-      };
-    }
-
-    stateMap.at(["tokens"]).set(nextTokens);
+    tokens.set(model.targets.map((target) => ({
+      path: target.path,
+      value: stateOrDefault(target.initial, OKLCH_DEFAULT_STATE),
+    })));
   };
 
   const getTargetState = (index: number, fallback: OklchValues): OklchValues => {
@@ -184,15 +143,10 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
     if (!target) return fallback;
 
     const targetDefault = stateOrDefault(target.initial, fallback);
-    return stateOrDefault(getTokenValue(target.path), targetDefault);
+    return getTokenValue(target.path) ?? targetDefault;
   };
 
-  const getCurrentState = (): OklchValues => readCurrentState();
-
-  writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
-
-  const activeTarget = model.targets[activeTargetIndex];
-  if (activeTarget) stateMap.at(["activePath"]).set(activeTarget.path);
+  const getCurrentState = (): OklchValues => getTargetState(activeTargetIndex(), OKLCH_DEFAULT_STATE);
 
   const syncInputsToState = (): void => {
     const state = getCurrentState();
@@ -205,14 +159,11 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
     }
   };
 
-  const persistActiveState = (): void => {
-    const target = model.targets[activeTargetIndex];
-    if (!target) return;
-    const state = readCurrentState();
-
-    const value = oklchToCss(state);
-    setTokenValue(target.path, value);
-    applyToTarget(target, value);
+  const projectTokens = (): void => {
+    for (const target of model.targets) {
+      const value = getTokenValue(target.path);
+      if (value) applyToTarget(target, oklchToCss(value));
+    }
   };
 
   const render = (): void => {
@@ -232,14 +183,14 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
       // CHANGED: each row renders from its own store token. Never use the
       // currently selected state as a row fallback, or target rows visually
       // collapse into the active color while moving through the list.
-      const targetState = i === activeTargetIndex
+      const targetState = i === activeTargetIndex()
         ? state
         : getTargetState(i, OKLCH_DEFAULT_STATE);
       const targetColor = oklchToCss(targetState);
       const changed = isTokenChanged(target.path);
       row.text.set(`${target.label.padEnd(labelWidth, " ")}${targetColor}`);
       row.attrs.set("title", targetColor);
-      row.css.setMany(i === activeTargetIndex ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
+      row.css.setMany(i === activeTargetIndex() ? TARGET_ROW_ACTIVE_CSS : TARGET_ROW_CSS);
       row.css.setMany(changed
         ? {
           textDecorationLine: "underline",
@@ -252,7 +203,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
         whiteSpace: "pre",
         fontVariantNumeric: "tabular-nums",
         fontFeatureSettings: '"tnum"',
-        color: i === activeTargetIndex ? _colors.txt.menu : _colors.txt.main,
+        color: i === activeTargetIndex() ? _colors.txt.menu : _colors.txt.main,
         boxShadow: `inset 0.45rem 0 0 ${targetColor}`,
         paddingLeft: "0.85rem",
       });
@@ -262,10 +213,9 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
   for (const item of rig.inputs) {
     listeners.push(item.input.listen.onInput(() => {
       if (disposed) return;
-      writeCurrentState(updateOklchState(readCurrentState(), item.channel, readInputValue(item.input)));
-
-      persistActiveState();
-      render();
+      const target = model.targets[activeTargetIndex()];
+      if (!target) return;
+      setTokenValue(target.path, updateOklchState(getCurrentState(), item.channel, readInputValue(item.input)));
     }));
   }
 
@@ -276,11 +226,7 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
 
     listeners.push(row.listen.onClick(() => {
       if (disposed) return;
-      activeTargetIndex = i;
-      stateMap.at(["activePath"]).set(target.path);
-      writeCurrentState(getTargetState(i, OKLCH_DEFAULT_STATE));
-
-      render();
+      activePath.set(target.path);
     }));
   }
 
@@ -293,21 +239,21 @@ function oklchInit(rig: OklchRigWithReset, model: OklchPickerModel): () => void 
   listeners.push(rig.resetBtn.listen.onClick(() => {
     if (disposed) return;
     resetTokenValues();
-
-    for (const target of model.targets) {
-      applyToTarget(target, getTokenValue(target.path) ?? target.initial);
-    }
-
-    writeCurrentState(getTargetState(activeTargetIndex, OKLCH_DEFAULT_STATE));
-    render();
   }));
 
+  watchers.push(activePath.watch(render));
+  watchers.push(tokens.watch(() => {
+    projectTokens();
+    render();
+  }));
+  projectTokens();
   render();
 
   return () => {
     if (disposed) return;
     disposed = true;
     for (const listener of listeners.splice(0)) listener.off();
+    for (const stop of watchers.splice(0)) stop();
     for (const target of model.targets) applyToTarget(target, target.initial);
     gcss.var.remove(CURRENT_OKLCHname);
   };

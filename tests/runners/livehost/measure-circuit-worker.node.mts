@@ -2,7 +2,7 @@ import { Worker } from "node:worker_threads";
 import WebSocket from "ws";
 import { create_browser_livehost_socket, create_livehost_client, type BrowserWebSocketConstructor } from "hson-live/livehost";
 import { start_node_application_host } from "hson-live/livehost/node";
-import type { CircuitVerificationActions, CircuitVerificationResult } from "../../harness/hosted/circuit-verification-contract";
+import type { CircuitVerificationActions, CircuitVerificationResult } from "../../../src/shared/circuit-verification-contract";
 import { create_circuit_verification_service } from "../../harness/runtimes/node/circuit-verification-service";
 import { create_node_circuit_verification_application } from "../../harness/runtimes/node/server/node-circuit-verification-application";
 

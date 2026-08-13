@@ -17,7 +17,7 @@ import {
   type CircuitVerificationRequest,
   type CircuitVerificationResult,
   type CircuitVerificationSubmitter,
-} from "../../harness/hosted/circuit-verification-contract";
+} from "../../../src/shared/circuit-verification-contract";
 import { create_circuit_verification_livehost } from "../../harness/hosted/circuit-verification-livehost";
 import {
   CircuitVerificationServiceError,

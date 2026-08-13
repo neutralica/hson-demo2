@@ -4,7 +4,7 @@ import {
   CIRCUIT_VERIFICATION_MAX_SOURCE_LENGTH,
   type CircuitVerificationRequest,
   type CircuitVerificationResult,
-} from "../../harness/hosted/circuit-verification-contract";
+} from "../../../src/shared/circuit-verification-contract";
 import {
   CircuitVerificationServiceError,
   circuit_source_for_entry,

@@ -134,7 +134,8 @@ test("Bar-Bar and Pointer cancel owned loops and ambient listeners before recrea
 test("OKLCH reverts instance-owned CSS projection and recreates cleanly", async ({ page }) => {
   await reach_demo(page);
   const target = OKLCH_COLOR_TARGETS[0];
-  if (!target) throw new Error("expected at least one OKLCH target");
+  const secondTarget = OKLCH_COLOR_TARGETS[1];
+  if (!target || !secondTarget) throw new Error("expected at least two OKLCH targets");
 
   await open_demo(page, "oklch");
   const lightness = page.locator(".oklch-row-l input");
@@ -149,13 +150,29 @@ test("OKLCH reverts instance-owned CSS projection and recreates cleanly", async 
     ), target.varName))
     .toContain("42%");
 
+  await page.locator(".oklch-demo-target-row").nth(1).click();
+  await lightness.evaluate((input) => {
+    const range = input as HTMLInputElement;
+    range.value = "55";
+    range.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect.poll(() => page.evaluate((varName) => (
+      getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
+    ), secondTarget.varName))
+    .toContain("55%");
+  await page.locator(".oklch-demo-target-row").first().click();
+  await expect(lightness).toHaveValue("42");
+  await page.locator(".oklch-demo-target-row").nth(1).click();
+  await expect(lightness).toHaveValue("55");
+
   await open_demo(page, "oklch");
   await expect(page.locator("#oklch")).toHaveCount(0);
-  await expect.poll(() => page.evaluate(({ varName, currentName }) => ({
+  await expect.poll(() => page.evaluate(({ varName, secondVarName, currentName }) => ({
       target: getComputedStyle(document.documentElement).getPropertyValue(varName).trim(),
+      secondTarget: getComputedStyle(document.documentElement).getPropertyValue(secondVarName).trim(),
       current: getComputedStyle(document.documentElement).getPropertyValue(`--${currentName}`).trim(),
-    }), { varName: target.varName, currentName: "oklch-demo-current" }))
-    .toEqual({ target: target.initial, current: "" });
+    }), { varName: target.varName, secondVarName: secondTarget.varName, currentName: "oklch-demo-current" }))
+    .toEqual({ target: target.initial, secondTarget: secondTarget.initial, current: "" });
 
   await open_demo(page, "oklch");
   await expect(page.locator("#oklch")).toHaveCount(1);

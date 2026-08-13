@@ -5,7 +5,7 @@ import {
   type CircuitVerificationProgress,
   type CircuitVerificationRequest,
   type CircuitVerificationResult,
-} from "../../harness/hosted/circuit-verification-contract";
+} from "../../../src/shared/circuit-verification-contract";
 import {
   create_parsing_verification_coordinator,
   PARSING_VERIFICATION_DEBOUNCE_MS,
