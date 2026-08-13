@@ -395,9 +395,13 @@ export function node_application_host_suite(): TestSuite {
           );
           try {
             await transport.ready;
-            const client = create_towl_client({ socket: transport.socket });
+            const client = create_towl_client({
+              socket: transport.socket,
+              logicalMapId: "towl:route-room",
+            });
             client.connect();
             await client.createSession();
+            await client.recover();
             const joined = await client.join();
             const deadline = Date.now() + 500;
             while (client.state.player1?.sessionId !== client.livehost.session.sessionId && Date.now() < deadline) {

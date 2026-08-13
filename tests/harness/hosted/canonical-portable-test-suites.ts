@@ -31,6 +31,7 @@ import { livemap_error_handling } from "../../suites/livemap/error-handling-suit
 import { livemap_suite_rev } from "../../suites/livemap/rev-suite";
 import { livemap_suite_replay } from "../../suites/livemap/replay-suite";
 import { all_unit_tests } from "../../suites/unit/suite-registry";
+import { all_towl_suites } from "../../suites/towl/suite-registry";
 import {
   livemap_projected_ingress_rejection_suite,
   livemap_projected_ingress_suite,
@@ -75,7 +76,7 @@ function annotate(suite: TestSuite): TestSuite {
       descriptor: metadata("livemap", DEV_SUITES.has(suite.suite) ? Object.freeze(["dev"] as const) : undefined),
     });
   }
-  if (suite.suite.startsWith("unit/livedemo-shell-")) {
+  if (suite.suite.startsWith("unit/livedemo-shell-") || suite.suite.startsWith("unit/towl-")) {
     return Object.freeze({
       ...suite,
       descriptor: metadata("livedemo", Object.freeze(["unit"] as const)),
@@ -136,6 +137,7 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     transform_quoted_name_rejection_suite(),
     parsing_verification_coordinator_suite(),
     ...all_livehost_suites(),
+    ...all_towl_suites(),
     ...all_unit_tests(),
   ];
   return Object.freeze(suites.map(annotate));

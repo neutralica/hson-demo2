@@ -68,17 +68,3 @@ export type TowlRuntime = Readonly<{
   host: LiveHost<TowlState, TowlActions>;
   dispose: () => void;
 }>;
-
-
-export type TowlErrorCode =
-  | "TOWL_SESSION_REQUIRED"
-  | "TOWL_RESUMABLE_SESSION_REQUIRED"
-  | "TOWL_ALREADY_JOINED"
-  | "TOWL_ROOM_FULL"
-  | "TOWL_NOT_JOINED"
-  | "TOWL_INVALID_PHASE"
-  | "TOWL_BOTH_PLAYERS_REQUIRED"
-  | "TOWL_GAME_NOT_ACTIVE"
-  | "TOWL_GAME_ALREADY_FINISHED"
-  | "TOWL_ONLY_WINNER_CAN_RESET"
-  | "TOWL_RESET_NOT_AVAILABLE";

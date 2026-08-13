@@ -70,3 +70,50 @@ test("TOWL room URL shares one game, isolates another, and reattaches on refresh
     await isolatedContext.close();
   }
 });
+
+test("TOWL replaces a lost browser transport and restores the same session seat", async ({ page }) => {
+  await page.addInitScript(() => {
+    const NativeWebSocket = window.WebSocket;
+    let latestTowlSocket: WebSocket | undefined;
+    let towlSocketCount = 0;
+    class ObservableWebSocket extends NativeWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        if (protocols === undefined) super(url);
+        else super(url, protocols);
+        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
+        if (livehost?.startsWith("towl:") === true) {
+          latestTowlSocket = this;
+          towlSocketCount += 1;
+        }
+      }
+    }
+    Object.defineProperty(window, "WebSocket", { value: ObservableWebSocket });
+    Object.defineProperties(window, {
+      __closeTowlSocket: { value: () => latestTowlSocket?.close() },
+      __towlSocketCount: { get: () => towlSocketCount },
+    });
+  });
+
+  await reach_demo_url(page, "/?mode=play#towl");
+  await open_towl(page);
+  await page.getByRole("button", { name: "join", exact: true }).click();
+  await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
+  const roomId = new URL(page.url()).searchParams.get("room");
+  expect(roomId).not.toBeNull();
+  const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
+  const originalCredential = await page.evaluate((key) => localStorage.getItem(key), credentialKey);
+  expect(originalCredential).not.toBeNull();
+
+  await page.evaluate(() => (
+    window as unknown as { __closeTowlSocket(): void }
+  ).__closeTowlSocket());
+  await expect(page.getByTestId("towl-status")).toHaveText(
+    "connection: connected · session attached",
+    { timeout: 15_000 },
+  );
+  await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
+  expect(await page.evaluate((key) => localStorage.getItem(key), credentialKey)).toBe(originalCredential);
+  expect(await page.evaluate(() => (
+    window as unknown as { __towlSocketCount: number }
+  ).__towlSocketCount)).toBe(2);
+});

@@ -1,40 +1,54 @@
-// towl.client.ts
+import { hson } from "hson-live";
+import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
+import type {
+  JsonValue,
+  LiveHostClient,
+  LiveHostClientActionPromise,
+  LiveHostClientActionRequest,
+  LiveHostClientActionResult,
+  LiveHostClientOptions,
+  LiveHostClientRecoveryCursor,
+  LiveHostClientRecoveryResult,
+  LiveHostClientSessionResult,
+  LiveHostDisposer,
+  LiveHostSessionCredential,
+  LiveMap,
+  LiveMapPathHandle,
+} from "hson-live/types";
+import { TOWL_SCHEMA } from "./towl.schema";
+import { create_towl_state } from "./towl.transitions";
+import type {
+  TowlActions,
+  TowlJoinResult,
+  TowlLeaveResult,
+  TowlPullResult,
+  TowlReadyResult,
+  TowlResetResult,
+  TowlSeatId,
+  TowlState,
+} from "./towl.types";
 
-import { create_livehost_client } from "hson-live/livehost";
-import type { LiveHostClientOptions, LiveHostSessionCredential, LiveHostClient, LiveHostDisposer, LiveHostClientSessionResult, LiveHostClientActionResult, JsonValue } from "hson-live/types";
-import type { TowlState, TowlActions } from "./towl.types";
+export type TowlSeat = TowlSeatId;
+export type TowlUncertainAction = LiveHostClientActionRequest<TowlActions>;
 
-
-export type TowlSeat = "player1" | "player2";
-
-export type TowlJoinResult = Readonly<{
-  seat: TowlSeat;
-}>;
-
-export type TowlReadyResult = Readonly<{
-  seat: TowlSeat;
-  ready: boolean;
-}>;
-
-export type TowlPullResult = Readonly<{
-  seat: TowlSeat;
-  position: number;
-  winner: TowlSeat | null;
-}>;
-
-export type TowlResetResult = Readonly<{
-  round: number;
-}>;
+export function create_towl_client_mirror(): LiveMap<TowlState> {
+  return hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
+}
 
 export type TowlClientOptions = Omit<
   LiveHostClientOptions<TowlState>,
-  "session"
+  "map" | "recovery" | "session"
 > & Readonly<{
+  logicalMapId: string;
   credential?: LiveHostSessionCredential;
+  mirror?: LiveMap<TowlState>;
+  recoveryCursor?: LiveHostClientRecoveryCursor;
+  onUncertainAction?: (request: TowlUncertainAction) => void;
 }>;
 
 export type TowlClient = Readonly<{
   livehost: LiveHostClient<TowlState, TowlActions>;
+  root: LiveMapPathHandle<TowlState>;
 
   get state(): TowlState;
   get seat(): TowlSeat | undefined;
@@ -46,9 +60,11 @@ export type TowlClient = Readonly<{
   reattachSession(
     credential?: LiveHostSessionCredential,
   ): Promise<LiveHostClientSessionResult>;
+  recover(): Promise<LiveHostClientRecoveryResult>;
   goodbyeSession(): Promise<void>;
 
   join(): Promise<TowlJoinResult>;
+  leave(): Promise<TowlLeaveResult>;
   setReady(ready: boolean): Promise<TowlReadyResult>;
   pull(): Promise<TowlPullResult>;
   reset(): Promise<TowlResetResult>;
@@ -103,6 +119,10 @@ export function create_towl_client(
 ): TowlClient {
   const {
     credential,
+    logicalMapId,
+    mirror = create_towl_client_mirror(),
+    recoveryCursor,
+    onUncertainAction,
     ...clientOptions
   } = options;
 
@@ -111,12 +131,18 @@ export function create_towl_client(
     TowlActions
   >({
     ...clientOptions,
+    map: mirror,
+    recovery: {
+      logicalMapId,
+      ...(recoveryCursor === undefined ? {} : { cursor: recoveryCursor }),
+    },
     session: credential === undefined
       ? {}
       : {
         credential,
       },
   });
+  const root = livehost.map.at([]);
 
   function connect(): LiveHostDisposer {
     return livehost.connect();
@@ -127,70 +153,70 @@ export function create_towl_client(
   }
 
   async function createSession(): Promise<LiveHostClientSessionResult> {
-    const result = await livehost.session.create();
-    livehost.subscribe([]);
-    return result;
+    return livehost.session.create();
   }
 
 
   async function reattachSession(
     credential = livehost.session.credential,
   ): Promise<LiveHostClientSessionResult> {
-    const result = await livehost.session.reattach(credential);
-    livehost.subscribe([]);
-    return result;
+    return livehost.session.reattach(credential);
+  }
+
+  async function recover(): Promise<LiveHostClientRecoveryResult> {
+    return livehost.recovery.recover();
   }
 
   async function goodbyeSession(): Promise<void> {
     return livehost.session.goodbye();
   }
 
-  async function join(): Promise<TowlJoinResult> {
-    const response = await livehost.action("join");
+  async function submit<TResult extends JsonValue>(
+    pending: LiveHostClientActionPromise<TowlActions>,
+  ): Promise<TResult> {
+    try {
+      return unwrap_action_result<TResult>(await pending);
+    } catch (error) {
+      if (error instanceof LiveHostDisconnectedError) onUncertainAction?.(pending.request);
+      throw error;
+    }
+  }
 
-    return unwrap_action_result<TowlJoinResult>(
-      response,
-    );
+  async function join(): Promise<TowlJoinResult> {
+    return submit<TowlJoinResult>(livehost.action("join"));
+  }
+
+  async function leave(): Promise<TowlLeaveResult> {
+    return submit<TowlLeaveResult>(livehost.action("leave"));
   }
 
   async function setReady(
     ready: boolean,
   ): Promise<TowlReadyResult> {
-    const response = await livehost.action("set_ready", {
+    return submit<TowlReadyResult>(livehost.action("set_ready", {
       ready,
-    });
-
-    return unwrap_action_result<TowlReadyResult>(
-      response,
-    );
+    }));
   }
 
   async function pull(): Promise<TowlPullResult> {
-    const response = await livehost.action("pull");
-
-    return unwrap_action_result<TowlPullResult>(
-      response,
-    );
+    return submit<TowlPullResult>(livehost.action("pull"));
   }
 
   async function reset(): Promise<TowlResetResult> {
-    const response = await livehost.action("reset_round");
-
-    return unwrap_action_result<TowlResetResult>(
-      response,
-    );
+    return submit<TowlResetResult>(livehost.action("reset_round"));
   }
 
   return Object.freeze({
     livehost,
+    root,
 
     get state(): TowlState {
-      return livehost.map.snap();
+      return root.snap();
     },
 
     get seat(): TowlSeat | undefined {
       return seat_for_state(
-        livehost.map.snap(),
+        root.snap(),
         livehost.session.sessionId,
       );
     },
@@ -200,9 +226,11 @@ export function create_towl_client(
 
     createSession,
     reattachSession,
+    recover,
     goodbyeSession,
 
     join,
+    leave,
     setReady,
     pull,
     reset,

@@ -151,11 +151,13 @@ async function create_connected_client(
   const client = create_towl_client({
     socket: socket.client,
     clientId,
+    logicalMapId: towl_host_id_for_room("client-room"),
   });
 
   client.connect();
   await settle_client();
   await client.createSession();
+  await client.recover();
   await settle_client();
 
   return Object.freeze({

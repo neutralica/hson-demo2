@@ -21,7 +21,7 @@ const VACANT_SEAT: TowlSeatState = Object.freeze({
 function reject<TResult>(code: TowlActionErrorCode, message: string): TowlTransitionResult<TResult> {
   return Object.freeze({
     ok: false,
-    error: Object.freeze({  ok: false, code, message }),
+    error: Object.freeze({ code, message }),
   });
 }
 
@@ -57,10 +57,6 @@ export function create_towl_state(): TowlState {
 
 export function seat_for_session(state: TowlState, sessionId: string): TowlSeatId | undefined {
   return TOWL_SEATS.find((seat) => state[seat].sessionId === sessionId);
-}
-
-export function other_towl_seat(seat: TowlSeatId): TowlSeatId {
-  return seat === "player1" ? "player2" : "player1";
 }
 
 export function occupied_seat_count(state: TowlState): number {

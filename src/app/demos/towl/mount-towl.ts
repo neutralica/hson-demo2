@@ -1,16 +1,17 @@
-import {  type LiveTree } from "hson-live/livetree";
+import type { LiveTree } from "hson-live/livetree";
 import type { LiveHostSessionCredential } from "hson-live/types";
 import {
-  create_browser_livehost_socket as make_hosted_test_browser_websocket,
-  type BrowserLiveHostSocket as HostedTestBrowserSocket,
+  create_browser_livehost_socket,
 } from "hson-live/livehost";
 import {
   TOWL_WIN_POSITION,
-  create_towl_client,
+  create_towl_connection_controller,
   resolve_towl_room_url,
   towl_host_id_for_room,
   towl_room_credential_key,
   type TowlClient,
+  type TowlConnectionController,
+  type TowlConnectionState,
   type TowlSeat,
   type TowlState,
 } from "./index";
@@ -107,6 +108,13 @@ function seat_text(state: TowlState, seat: TowlSeat, localSeat: TowlSeat | undef
   return `${label}${local}\njoined · ${player.connected ? "connected" : "disconnected"}\n${player.ready ? "ready" : "not ready"}`;
 }
 
+function seat_for_session(state: TowlState, sessionId: string | undefined): TowlSeat | undefined {
+  if (sessionId === undefined) return undefined;
+  if (state.player1.sessionId === sessionId) return "player1";
+  if (state.player2.sessionId === sessionId) return "player2";
+  return undefined;
+}
+
 function create_view(host: LiveTree, roomId: string): TowlView & Readonly<{ root: LiveTree }> {
   host.empty();
   const root = host.create.section().attrs.setMany({ "data-demo-towl": "true", "data-testid": "towl-root" }).css.setMany(TOWL_ROOT_CSS);
@@ -153,25 +161,41 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
   const { roomId } = roomAddress;
   const inviteUrl = roomAddress.url.toString();
   const view = create_view(host, roomId);
-  let transport: HostedTestBrowserSocket | undefined;
-  let client: TowlClient | undefined;
-  let state: TowlState | undefined;
+  let connection: TowlConnectionController | undefined;
   let pending: TowlActionName | undefined;
   let copyPending = false;
-  let connectionStatus = "starting";
   let disposed = false;
-  let stopMap: (() => void) | undefined;
-  let stopClose: (() => void) | undefined;
 
-  function render(): void {
+  function disable_game_actions(): void {
+    for (const button of [view.join, view.ready, view.pull, view.reset]) {
+      set_disabled(button, true);
+    }
+  }
+
+  function render_connection(next: TowlConnectionState): void {
     if (disposed) return;
-    const seat = state === undefined ? undefined : client?.seat;
-    view.status.text.set(`connection: ${connectionStatus}`);
+    const label = next.status === "creating-session"
+      ? next.sessionReplaced ? "creating replacement session" : "creating session"
+      : next.status === "reattaching-session"
+        ? "reattaching session"
+        : next.status === "connected"
+          ? "connected · session attached"
+          : next.status === "reconnecting"
+            ? `reconnecting · attempt ${next.attempt}`
+            : next.status;
+    view.status.text.set(`connection: ${label}`);
+    if (next.status !== "connected") disable_game_actions();
+    if (next.error !== undefined) view.error.text.set(error_message(next.error));
+  }
+
+  function render_state(state: TowlState): void {
+    if (disposed) return;
+    const client = connection?.client;
+    const seat = seat_for_session(state, client?.livehost.session.sessionId);
     view.localSeat.text.set(`local seat: ${seat ?? "unseated"}`);
 
-    if (state === undefined) {
-      for (const button of [view.join, view.ready, view.pull, view.reset]) set_disabled(button, true);
-      return;
+    if (client === undefined) {
+      disable_game_actions();
     }
 
     view.phase.text.set(`phase: ${state.phase}`);
@@ -184,18 +208,18 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
 
     const attached = client?.livehost.session.status === "attached";
     const occupied = state.player1.sessionId !== null && state.player2.sessionId !== null;
-    set_disabled(view.join, !attached || seat !== undefined || (state.player1.sessionId !== null && state.player2.sessionId !== null) || pending === "join");
-    set_disabled(view.ready, !attached || seat === undefined || state.phase !== "ready" || pending === "ready");
-    set_disabled(view.pull, !attached || seat === undefined || state.phase !== "playing" || !occupied || pending === "pull");
-    set_disabled(view.reset, !attached || seat === undefined || state.phase !== "finished" || state.winner !== seat || pending === "reset");
+    set_disabled(view.join, !attached || seat !== undefined || occupied);
+    set_disabled(view.ready, !attached || seat === undefined || state.phase !== "ready");
+    set_disabled(view.pull, !attached || seat === undefined || state.phase !== "playing" || !occupied);
+    set_disabled(view.reset, !attached || seat === undefined || state.phase !== "finished" || state.winner !== seat);
     view.ready.text.set(seat !== undefined && state[seat].ready ? "not ready" : "ready");
   }
 
   async function run_action(name: TowlActionName, action: (active: TowlClient) => Promise<unknown>): Promise<void> {
+    const client = connection?.client;
     if (disposed || pending === name || client === undefined) return;
     pending = name;
     view.error.text.set("");
-    render();
     try {
       await action(client);
     } catch (error) {
@@ -203,7 +227,6 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
     } finally {
       if (!disposed && pending === name) {
         pending = undefined;
-        render();
       }
     }
   }
@@ -239,62 +262,15 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
     });
   });
 
-  async function initialize(): Promise<void> {
-    try {
-      connectionStatus = "connecting";
-      render();
-      const nextTransport = make_hosted_test_browser_websocket(configured_url(roomId));
-      transport = nextTransport;
-      await nextTransport.ready;
-      if (disposed) return;
-
-      const credential = remembered_credential(roomId);
-      const nextClient = create_towl_client({
-        socket: nextTransport.socket,
-        ...(credential !== undefined ? { credential } : {}),
-      });
-      client = nextClient;
-      nextClient.connect();
-      stopMap = nextClient.livehost.map.sub((next) => {
-        state = next;
-        render();
-      });
-      stopClose = nextTransport.socket.onClose(() => {
-        if (!disposed) {
-          connectionStatus = "disconnected";
-          render();
-        }
-      }) ?? undefined;
-
-      connectionStatus = credential === undefined ? "creating session" : "reattaching session";
-      render();
-      if (credential !== undefined) {
-        try {
-          await nextClient.reattachSession(credential);
-        } catch {
-          remember_credential(roomId, undefined);
-          if (disposed) return;
-          connectionStatus = "creating replacement session";
-          render();
-          await nextClient.createSession();
-        }
-      } else {
-        await nextClient.createSession();
-      }
-      if (disposed) return;
-      remember_credential(roomId, nextClient.livehost.session.credential);
-      connectionStatus = "connected · session attached";
-      render();
-    } catch (error) {
-      if (!disposed) {
-        connectionStatus = "failed";
-        view.error.text.set(error_message(error));
-        render();
-      }
-    }
-  }
-
-  void initialize();
+  disable_game_actions();
+  connection = create_towl_connection_controller({
+    logicalMapId: towl_host_id_for_room(roomId),
+    openTransport: () => create_browser_livehost_socket(configured_url(roomId)),
+    readCredential: () => remembered_credential(roomId),
+    writeCredential: (credential) => remember_credential(roomId, credential),
+    onState: render_state,
+    onConnection: render_connection,
+  });
 
   return Object.freeze({
     root: view.root,
@@ -306,15 +282,8 @@ export function mount_towl_panel(host: LiveTree): TowlPanel {
       pullListener.off();
       resetListener.off();
       copyInviteListener.off();
-      stopMap?.();
-      stopClose?.();
-      if (client !== undefined) {
-        if (client.livehost.session.status === "attached") client.livehost.unsubscribe([]);
-        client.disconnect();
-        client.livehost.session.dispose();
-        client.livehost.recovery.dispose();
-      }
-      transport?.dispose();
+      connection?.dispose();
+      connection = undefined;
       if (!view.root.isDisposed) view.root.remove();
     },
   });

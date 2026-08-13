@@ -22,7 +22,6 @@ export {
   join_towl_session,
   leave_towl_session,
   occupied_seat_count,
-  other_towl_seat,
   pull_towl_rope,
   reflect_towl_session_attached,
   reflect_towl_session_detached,
@@ -50,7 +49,20 @@ export type {
 } from "./towl.types";
 export {
   create_towl_client,
+  create_towl_client_mirror,
   type TowlClient,
   type TowlClientOptions,
   type TowlSeat,
+  type TowlUncertainAction,
 } from "./towl.client";
+export {
+  TOWL_RECONNECT_DELAYS_MS,
+  classify_towl_connection_error,
+  create_towl_connection_controller,
+  type TowlConnectionController,
+  type TowlConnectionErrorKind,
+  type TowlConnectionOptions,
+  type TowlConnectionState,
+  type TowlConnectionStatus,
+  type TowlConnectionTransport,
+} from "./towl.connection";
