@@ -1,15 +1,22 @@
 // cellsheet.ts
 
 import { hson  } from "hson-live";
-import type { CellsheetDerivedCellState, Operator, CellModel, OperationModel, CellsheetOperationState, CellsheetPanel } from "./cellsheet.types";
+import type { CellViewModel, CellsheetDerivedCellState, CellsheetOperationState, CellsheetPanel } from "./cellsheet.types";
 import { CELLcss, PANELcss, HEADERcss, TITLEcss, SUBTITLEcss, BODYcss, GRIDcss, CARDcss, LABELcss, METAcss, RESETcss, FOOTERcss, RESIZE_EDGE, SEL_EDGE, AUTH_TEXT, DER_TEXT, OPERATOR_COLOR, ERR_TEXT, RELAT_EDGE, BORDER, DER_BORDER, ERR_BORDER } from "./cellsheet.css";
-import { create_initial_cellsheet_state, ROWS, COLS, is_record, apply_authored_raw, derived_cell_from_model, operation_state_from_model, summary_state_from_models, read_summary_from_snap, read_derived_cell_from_snap, read_operations_from_snap, operation_touches_cell, format_operation_state, render_cell_from_derived, is_operator, compute_result, operation_error, mark_related_cell, read_selected_from_snap, reset_derived_state, MAX_EVALUATION_PASSES, remember_operation_once, result_target_error, model_value_changed, value_text, cell_key } from "./cellsheet-helpers";
-import { derive_from_paths, make_microtask_scheduler, bind_paths } from "hson-live/livemap";
+import { create_initial_cellsheet_state, ROWS, COLS, is_record, read_summary_from_snap, read_derived_cell_from_snap, render_cell_from_derived, read_selected_from_snap, cell_key } from "./cellsheet-helpers";
+import {
+    cellsheet_cell_ref_from_key,
+    derive_cellsheet_relations,
+    evaluate_cellsheet,
+    type CellsheetEvaluation,
+    type CellsheetRawGrid,
+    type CellsheetRelationships,
+} from "./cellsheet-evaluator";
+import { make_microtask_scheduler, bind_paths } from "hson-live/livemap";
 import type { LiveTree } from "hson-live/livetree";
 
 export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
-    const cells: CellModel[] = [];
-    const operations: OperationModel[] = [];
+    const cells: CellViewModel[] = [];
     const map = hson.liveMap.fromJson(create_initial_cellsheet_state());
     const disposers: Array<() => void> = [];
     let activeResizeCleanup: (() => void) | undefined;
@@ -85,13 +92,9 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     });
     resetButton.text.set("reset grid");
 
-    const getCell = (row: number, col: number): CellModel | undefined => {
+    const getCell = (row: number, col: number): CellViewModel | undefined => {
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return undefined;
         return cells[(row * COLS) + col];
-    };
-
-    const getCellByKey = (key: string): CellModel | undefined => {
-        return cells.find((cell) => cell.key === key);
     };
 
     const readRawFromSnap = (snap: unknown, key: string): string => {
@@ -279,9 +282,8 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         if (target) target.style.boxShadow = "";
     };
 
-    const renderCellColors = (cell: CellModel, derived: CellsheetDerivedCellState): void => {
+    const renderCellColors = (cell: CellViewModel, derived: CellsheetDerivedCellState): void => {
         const input = cell.input;
-        if (!input) return;
 
         const hasRelation = derived.relation !== "none";
         const textColor = derived.error
@@ -321,7 +323,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         };
     };
 
-    const resizeTargetForCellEdge = (cell: CellModel, edge: ResizeEdge): ResizeTarget => {
+    const resizeTargetForCellEdge = (cell: CellViewModel, edge: ResizeEdge): ResizeTarget => {
         if (edge === "left") {
             const index = cell.col > 0 ? cell.col - 1 : cell.col;
             return {
@@ -359,7 +361,7 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         };
     };
 
-    const maybeStartCellResize = (cell: CellModel, event: PointerEvent): boolean => {
+    const maybeStartCellResize = (cell: CellViewModel, event: PointerEvent): boolean => {
         const target = event.currentTarget;
         if (!(target instanceof HTMLElement)) return false;
 
@@ -400,23 +402,54 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         map.set(["ui", "selected"], key);
     };
 
-    const syncAuthoredFromSnap = (snap: unknown): void => {
-        for (const cell of cells) apply_authored_raw(cell, readRawFromSnap(snap, cell.key));
+    const rawGridFromLegacySnap = (snap: unknown): CellsheetRawGrid => {
+        const rows = Array.from({ length: ROWS }, (_, row) => (
+            Array.from({ length: COLS }, (_, col) => readRawFromSnap(snap, cell_key(row, col)))
+        ));
+        return rows as unknown as CellsheetRawGrid;
     };
 
-    const writeDerivedToMap = (): void => {
+    const writeDerivedToMap = (
+        evaluation: CellsheetEvaluation,
+        relationships: CellsheetRelationships,
+    ): void => {
         const derivedCells: Record<string, CellsheetDerivedCellState> = {};
         const derivedOperations: Record<string, CellsheetOperationState> = {};
 
-        for (const cell of cells) derivedCells[cell.key] = derived_cell_from_model(cell);
-        for (const operation of operations) derivedOperations[operation.key] = operation_state_from_model(operation);
-
-        const summary = summary_state_from_models(cells, operations);
+        for (const cell of cells) {
+            const evaluated = evaluation.cells[cell.row]?.[cell.col];
+            if (!evaluated) continue;
+            derivedCells[cell.key] = {
+                display: evaluated.display,
+                kind: evaluated.kind,
+                authored: evaluated.authored,
+                resultOf: evaluated.resultOf ?? null,
+                error: evaluated.error ?? null,
+                relation: relationships.relations[cell.row]?.[cell.col] ?? "none",
+            };
+        }
+        for (const operation of evaluation.operations) {
+            derivedOperations[operation.key] = {
+                op: operation.op,
+                direction: operation.direction,
+                left: operation.left.key,
+                right: operation.right.key,
+                operator: operation.operator.key,
+                target: operation.target.key,
+                result: operation.result ?? null,
+                error: operation.error ?? null,
+            };
+        }
 
         map.batch((tx) => {
             tx.set(["derived", "cells"], derivedCells);
             tx.set(["derived", "operations"], derivedOperations);
-            tx.set(["derived", "summary"], summary);
+            tx.set(["derived", "summary"], {
+                authored: evaluation.summary.authored,
+                operators: evaluation.summary.operations,
+                results: evaluation.summary.results,
+                errors: evaluation.summary.errors,
+            });
         });
     };
 
@@ -426,31 +459,18 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         statusText.css.setMany({ color: summary.errors > 0 ? ERR_TEXT : DER_TEXT });
     };
 
-    const renderSelectionFromMap = (snap: unknown): void => {
-        const selectedKey = read_selected_from_snap(snap);
-        if (!selectedKey) {
-            selectionText.text.set("Select a cell to inspect its derived operation links.");
-            selectionText.css.setMany({ color: AUTH_TEXT });
-            return;
-        }
-
-        const operationsFromMap = read_operations_from_snap(snap);
-        const touchedOperations = Object.values(operationsFromMap)
-            .filter((operation) => operation_touches_cell(operation, selectedKey));
-
-        if (touchedOperations.length === 0) {
-            selectionText.text.set(`${selectedKey}: no derived operation links.`);
-            selectionText.css.setMany({ color: AUTH_TEXT });
-            return;
-        }
-
-        selectionText.text.set(`${selectedKey}\n${touchedOperations.map(format_operation_state).join("\n")}`);
+    const renderSelection = (relationships: CellsheetRelationships): void => {
+        selectionText.text.set(relationships.selectionText);
         selectionText.css.setMany({
-            color: touchedOperations.some((operation) => operation.error) ? ERR_TEXT : DER_TEXT,
+            color: relationships.selectionHasError
+                ? ERR_TEXT
+                : relationships.touchedOperations.length > 0
+                    ? DER_TEXT
+                    : AUTH_TEXT,
         });
     };
 
-    const renderFromMap = (): void => {
+    const renderFromMap = (relationships: CellsheetRelationships): void => {
         const snap = map.snap();
         for (const cell of cells) {
             const derived = read_derived_cell_from_snap(snap, cell.key);
@@ -460,126 +480,22 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
             }
         }
         renderStatusFromMap(snap);
-        renderSelectionFromMap(snap);
+        renderSelection(relationships);
     };
 
-    const operandsCanApplyOperator = (op: Operator, left: CellModel, right: CellModel): boolean => {
-        if (left.value === undefined || right.value === undefined) return false;
-        if (op === "+") return true;
-        return typeof left.value === "number" && typeof right.value === "number";
-    };
+    let latestEvaluation: CellsheetEvaluation | undefined;
+    let cellsDirty = true;
 
-    const findOperations = (operator: CellModel): OperationModel[] => {
-        const op = operator.value;
-        if (!is_operator(String(op))) return [];
-
-        const out: OperationModel[] = [];
-
-        const left = getCell(operator.row, operator.col - 1);
-        const right = getCell(operator.row, operator.col + 1);
-        const horizontalTarget = getCell(operator.row, operator.col + 2);
-        if (left && right && horizontalTarget && operandsCanApplyOperator(op as Operator, left, right)) {
-            const result = compute_result(op as Operator, left, right);
-            out.push({
-                key: `${operator.key}:h`,
-                op: op as Operator,
-                direction: "horizontal",
-                left,
-                right,
-                operator,
-                target: horizontalTarget,
-                result,
-                error: operation_error(op as Operator, left, right, result),
-            });
-        }
-
-        const top = getCell(operator.row - 1, operator.col);
-        const bottom = getCell(operator.row + 1, operator.col);
-        const verticalTarget = getCell(operator.row + 2, operator.col);
-        if (top && bottom && verticalTarget && operandsCanApplyOperator(op as Operator, top, bottom)) {
-            const result = compute_result(op as Operator, top, bottom);
-            out.push({
-                key: `${operator.key}:v`,
-                op: op as Operator,
-                direction: "vertical",
-                left: top,
-                right: bottom,
-                operator,
-                target: verticalTarget,
-                result,
-                error: operation_error(op as Operator, top, bottom, result),
-            });
-        }
-
-        return out;
-    };
-
-    const applySelectionRelations = (selectedKey: string | undefined): void => {
-        if (!selectedKey) return;
-
-        const selectedCell = getCellByKey(selectedKey);
-        if (selectedCell) selectedCell.relation = "selected";
-
-        for (const operation of operations) {
-            const touchesOperation = operation.left.key === selectedKey
-                || operation.right.key === selectedKey
-                || operation.operator.key === selectedKey
-                || operation.target.key === selectedKey;
-
-            if (!touchesOperation) continue;
-
-            mark_related_cell(operation.left, "operand");
-            mark_related_cell(operation.right, "operand");
-            mark_related_cell(operation.operator, "operator");
-            mark_related_cell(operation.target, operation.target.error ? "blocked" : "target");
-        }
-    };
-
-    const evaluate = (): void => {
+    const reconcileEvaluationAndSelection = (): void => {
         const snap = map.snap();
-        const selectedKey = read_selected_from_snap(snap);
-        operations.length = 0;
-        syncAuthoredFromSnap(snap);
-        reset_derived_state(cells);
-
-        const seenOperations = new Set<string>();
-
-        for (let pass = 0; pass < MAX_EVALUATION_PASSES; pass += 1) {
-            let changed = false;
-
-            for (const operator of cells) {
-                if (operator.kind !== "operator") continue;
-
-                for (const operation of findOperations(operator)) {
-                    remember_operation_once(operations, seenOperations, operation);
-
-                    if (operation.error) {
-                        operation.operator.error = operation.error;
-                        continue;
-                    }
-
-                    const targetError = result_target_error(operation);
-                    if (targetError) {
-                        operation.error = targetError;
-                        operation.operator.error = targetError;
-                        operation.target.error = targetError;
-                        continue;
-                    }
-
-                    if (model_value_changed(operation.target, operation)) changed = true;
-                    operation.target.kind = "result";
-                    operation.target.value = operation.result;
-                    operation.target.display = value_text(operation.result);
-                    operation.target.resultOf = operation.key;
-                }
-            }
-
-            if (!changed) break;
+        if (cellsDirty || !latestEvaluation) {
+            latestEvaluation = evaluate_cellsheet(rawGridFromLegacySnap(snap));
+            cellsDirty = false;
         }
-
-        applySelectionRelations(selectedKey);
-        writeDerivedToMap();
-        renderFromMap();
+        const selected = cellsheet_cell_ref_from_key(read_selected_from_snap(snap) ?? "");
+        const relationships = derive_cellsheet_relations(latestEvaluation, selected);
+        writeDerivedToMap(latestEvaluation, relationships);
+        renderFromMap(relationships);
     };
 
     const reset = (): void => {
@@ -594,22 +510,13 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
     for (let row = 0; row < ROWS; row += 1) {
         for (let col = 0; col < COLS; col += 1) {
             const key = cell_key(row, col);
-            const cell: CellModel = {
+            const input = grid.create.input();
+            const cell: CellViewModel = {
                 row,
                 col,
                 key,
-                raw: "",
-                display: "",
-                value: undefined,
-                kind: "blank",
-                authored: false,
-                resultOf: undefined,
-                error: undefined,
-                relation: "none",
-                input: undefined,
+                input,
             };
-
-            const input = grid.create.input();
             input.attrs.set("aria-label", key);
             input.attrs.set("data-cellsheet-key", key);
             input.css.setMany(CELLcss)
@@ -651,7 +558,6 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
                 clearResizeEdgeHighlight(target);
             });
 
-            cell.input = input;
             cells.push(cell);
         }
     }
@@ -681,18 +587,15 @@ export function create_cellsheet_panel(stage: LiveTree): CellsheetPanel {
         return map.sub.path(path, listener);
     };
 
-    disposers.push(derive_from_paths({
-        paths: [
-            ["cells"],
-            ["ui", "selected"],
-        ],
-        subscribePath,
-        derive: () => {
-            if (!disposed) evaluate();
-        },
-        schedule: make_microtask_scheduler,
-        immediate: true,
+    const scheduleReconcile = make_microtask_scheduler(() => {
+        if (!disposed) reconcileEvaluationAndSelection();
+    });
+    disposers.push(map.sub.path(["cells"], () => {
+        cellsDirty = true;
+        scheduleReconcile();
     }));
+    disposers.push(map.sub.path(["ui", "selected"], scheduleReconcile));
+    scheduleReconcile();
 
     disposers.push(bind_paths({
         paths: [

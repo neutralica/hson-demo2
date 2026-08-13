@@ -224,6 +224,8 @@ test("Cellsheet deactivation cancels an active resize while retaining authored s
   await open_demo(page, "cells");
   const panel = page.locator("#cellsheet-panel");
   const input = panel.locator('input[data-cellsheet-key="A1"]');
+  await input.fill("retained");
+  await expect(input).toHaveValue("retained");
   await panel.evaluate((node) => node.setAttribute("data-instance", "retained"));
   const box = await input.boundingBox();
   if (!box) throw new Error("missing Cellsheet input bounds");
@@ -246,6 +248,8 @@ test("Cellsheet deactivation cancels an active resize while retaining authored s
   await open_demo(page, "cells");
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute("data-instance", "retained");
+  await expect(input).toHaveValue("retained");
+  await expect(panel).toContainText("A1\nA1 + C1 → D1=retained2");
   await expect(grid).toHaveCSS("grid-template-columns", dimensions);
 });
 

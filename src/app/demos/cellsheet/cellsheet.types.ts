@@ -1,34 +1,13 @@
 import type { LiveTree } from "hson-live/livetree";
+import type { CellKind, CellRelation, Direction, Operator } from "./cellsheet-evaluator";
 
-export type Operator = "+" | "-" | "*" | "/";
-export type CellKind = "blank" | "text" | "number" | "operator" | "result" | "error";
-export type Direction = "horizontal" | "vertical";
-export type CellRelation = "none" | "selected" | "operand" | "operator" | "target" | "blocked";
-type CellValue = string | number | Operator | undefined;
-export type CellModel = {
+export type { CellKind, CellRelation, Direction, Operator } from "./cellsheet-evaluator";
+
+export type CellViewModel = {
     row: number;
     col: number;
     key: string;
-    raw: string;
-    display: string;
-    value: CellValue;
-    kind: CellKind;
-    authored: boolean;
-    resultOf: string | undefined;
-    error: string | undefined;
-    relation: CellRelation;
-    input: LiveTree | undefined;
-};
-export type OperationModel = {
-    key: string;
-    op: Operator;
-    direction: Direction;
-    left: CellModel;
-    right: CellModel;
-    operator: CellModel;
-    target: CellModel;
-    result: string | number | undefined;
-    error: string | undefined;
+    input: LiveTree;
 };
 export type CellsheetCellState = {
     raw: string;
