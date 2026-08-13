@@ -193,8 +193,7 @@ export function livemap_error_handling(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            count: s.constrain(
-              s.number,
+            count: s.number.constrain(
               "positive number",
               (value) => value > 0,
             ),

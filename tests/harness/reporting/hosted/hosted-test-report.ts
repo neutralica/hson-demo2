@@ -13,12 +13,11 @@ import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "../../ho
 import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 
 export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
-  const nonNegativeInteger = s.constrain(
-    s.number,
+  const nonNegativeInteger = s.number.constrain(
     "non-negative integer",
     (value) => Number.isInteger(value) && value >= 0,
   );
-  const finiteNumber = s.constrain(s.number, "finite number", Number.isFinite);
+  const finiteNumber = s.number.constrain("finite number", Number.isFinite);
   return s.exact({
     run: s.exact({
       id: s.string.optional,

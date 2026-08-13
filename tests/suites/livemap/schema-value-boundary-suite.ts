@@ -158,7 +158,7 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
       test("constraints receive detached values", () => {
         const seen: unknown[] = [];
         const before: unknown[] = [];
-        const schema = hson.liveMap.schema.define((s) => s.constrain(s.object({ value: s.number }), "detached", (value) => {
+        const schema = hson.liveMap.schema.define((s) => s.object({ value: s.number }).constrain("detached", (value) => {
           seen.push(value); before.push((value as { value: number }).value); (value as { value: number }).value = 99; return true;
         }));
         schema.validateRoot({ value: 1 }); schema.validateRoot({ value: 1 });
@@ -169,7 +169,7 @@ export function livemap_schema_value_boundary_suite(): TestSuite {
       }),
       test("attached constraint mutation cannot alter the candidate", () => {
         const schema = hson.liveMap.schema.define((s) => s.object({
-          value: s.constrain(s.unknown, "detached", (value) => {
+          value: s.unknown.constrain("detached", (value) => {
             (value as Record<string, JsonValue>).field = 99;
             return true;
           }),

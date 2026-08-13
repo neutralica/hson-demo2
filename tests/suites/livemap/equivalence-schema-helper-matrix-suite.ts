@@ -56,7 +56,7 @@ export function livemap_equivalence_schema_helper_matrix_suite(): TestSuite {
         return { assertRows: [equal_row("missing", schema.validateRoot({}).ok, true), equal_row("undefined", schema.validateRoot(present).ok, false)] };
       }),
       test("custom constraints receive fresh detached values", () => {
-        const seen: object[] = []; const schema = hson.liveMap.schema.define((s) => s.constrain(s.unknown, "detached", (value) => { seen.push(value as object); (value as Record<string, JsonValue>).a = 9; return true; }));
+        const seen: object[] = []; const schema = hson.liveMap.schema.define((s) => s.unknown.constrain("detached", (value) => { seen.push(value as object); (value as Record<string, JsonValue>).a = 9; return true; }));
         schema.validateRoot({ a: 1 }); schema.validateRoot({ a: 1 });
         return { assertRows: [equal_row("fresh", Object.is(seen[0], seen[1]), false), equal_row("source retained", (seen[1] as Record<string, JsonValue>).a, 9)] };
       }),

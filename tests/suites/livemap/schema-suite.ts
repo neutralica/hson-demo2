@@ -1137,7 +1137,7 @@ export function livemap_suites_schema(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.string.constrain("oklch string", (value) => value.startsWith("oklch(")),
           }));
 
           return schema.validateRoot({ color: "oklch(70% 0.1 120)" });
@@ -1150,7 +1150,7 @@ export function livemap_suites_schema(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.string.constrain("oklch string", (value) => value.startsWith("oklch(")),
           }));
 
           return schema.validateRoot({ color: "red" });
@@ -1174,7 +1174,7 @@ export function livemap_suites_schema(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.string.constrain("oklch string", (value) => value.startsWith("oklch(")),
           }));
 
           return schema.validateRoot({ color: 12 });
@@ -1198,7 +1198,7 @@ export function livemap_suites_schema(): TestSuite {
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
-            color: s.constrain(s.string, "oklch string", (value) => typeof value === "string" && value.startsWith("oklch(")),
+            color: s.string.constrain("oklch string", (value) => value.startsWith("oklch(")),
           }));
           const rule = schema.match(["color"]);
 

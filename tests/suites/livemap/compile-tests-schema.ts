@@ -46,8 +46,7 @@ const SCHEMA_TYPE_INFERENCE_SAMPLE = hson.liveMap.schema.define((s) => s.object(
       s.object({ ok: s.pick(true), value: s.string }),
       s.object({ ok: s.pick(false), error: s.string })
     ),
-    color: s.constrain(
-      s.string,
+    color: s.string.constrain(
       "oklch string",
       (value) => typeof value === "string" && value.startsWith("oklch(")
     ),
