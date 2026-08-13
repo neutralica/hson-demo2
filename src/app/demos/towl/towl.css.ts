@@ -61,7 +61,7 @@ export const TOWL_ROOM_CSS: CssMap = {
   fontSize: _fontSize.smol,
 };
 
-export const TOWL_INVITE_STATUS_CSS: CssMap = {
+export const TOWL_SHARE_STATUS_CSS: CssMap = {
   minWidth: "5rem",
   color: _colors.greenlike,
 };
@@ -150,6 +150,17 @@ export const TOWL_PRIMARY_BUTTON_CSS: CssMap = {
 export const TOWL_BACK_BUTTON_CSS: CssMap = {
   minWidth: "5.5rem",
   flex: "0 0 auto",
+};
+
+export const TOWL_DANGER_BUTTON_CSS: CssMap = {
+  borderColor: _colors.red,
+  color: _colors.red,
+};
+
+export const TOWL_RECONNECT_BUTTON_CSS: CssMap = {
+  display: "none",
+  justifySelf: "start",
+  minWidth: "7rem",
 };
 
 export const TOWL_RESULT_CSS: CssMap = {

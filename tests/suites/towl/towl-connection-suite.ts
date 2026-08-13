@@ -190,6 +190,7 @@ async function make_connection(
     credential?: LiveHostSessionCredential;
     retryDelaysMs?: readonly number[];
     schedule?: (delayMs: number, callback: () => void) => LiveHostDisposer;
+    leaveRequestTimeoutMs?: number;
   }> = {},
 ): Promise<ConnectionFixture> {
   const credentials: CredentialStore = { value: options.credential, writes: [] };
@@ -207,6 +208,7 @@ async function make_connection(
     onConnection: (state) => connectionStates.push(state),
     ...(options.retryDelaysMs === undefined ? {} : { retryDelaysMs: options.retryDelaysMs }),
     ...(options.schedule === undefined ? {} : { schedule: options.schedule }),
+    ...(options.leaveRequestTimeoutMs === undefined ? {} : { leaveRequestTimeoutMs: options.leaveRequestTimeoutMs }),
   });
   await controller.ready();
   await settle();
@@ -434,6 +436,167 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
+        "terminal Leave sends one departure, ends the session, clears credential, and is idempotent",
+        () => with_runtime(async (runtime) => {
+          const fixture = await make_connection(logicalMapId, () => connected_transport(runtime));
+          try {
+            await fixture.controller.client?.join();
+            await settle();
+            const before = runtime.host.map.rev;
+            const first = fixture.controller.leaveRoom();
+            const second = fixture.controller.leaveRoom();
+            const [outcome] = await Promise.all([first, second]);
+            fixture.controller.dispose();
+            await settle();
+            return {
+              samePromise: first === second,
+              outcome,
+              credential: fixture.credentials.value ?? null,
+              finalWriteCleared: fixture.credentials.writes.at(-1) === undefined,
+              state: runtime.host.map.snap(),
+              revDelta: runtime.host.map.rev - before,
+              status: fixture.controller.state.status,
+              terminalLeave: fixture.controller.debug().terminalLeave,
+              active: fixture.controller.debug().hasActiveClient,
+            };
+          } finally {
+            fixture.controller.dispose();
+          }
+        }),
+        {
+          samePromise: true,
+          outcome: {
+            leaveAttempted: true,
+            leaveDelivered: true,
+            goodbyeAttempted: true,
+            goodbyeDelivered: true,
+            remoteDepartureConfirmed: true,
+          },
+          credential: null,
+          finalWriteCleared: true,
+          state: {
+            phase: "lobby",
+            player1: { sessionId: null, connected: false, ready: false },
+            player2: { sessionId: null, connected: false, ready: false },
+            position: 0,
+            winner: null,
+            round: 1,
+          },
+          revDelta: 1,
+          status: "disposed",
+          terminalLeave: true,
+          active: false,
+        },
+      ),
+
+      towl_case(
+        SUITE,
+        "Leave during reconnect cancels retries and exits locally without claiming remote release",
+        () => with_runtime(async (runtime) => {
+          const scheduler = make_scheduler();
+          const firstPair = make_socket_pair();
+          let attempts = 0;
+          const fixture = await make_connection(logicalMapId, () => {
+            attempts += 1;
+            return connected_transport(runtime, firstPair);
+          }, { retryDelaysMs: [5], schedule: scheduler.schedule });
+          try {
+            await fixture.controller.client?.join();
+            await settle();
+            firstPair.close();
+            const statusBeforeLeave = fixture.controller.state.status;
+            const outcome = await fixture.controller.leaveRoom();
+            const lateDelay = scheduler.runNext();
+            await settle();
+            return {
+              statusBeforeLeave,
+              outcome,
+              attempts,
+              lateDelay: lateDelay ?? null,
+              credential: fixture.credentials.value ?? null,
+              state: runtime.host.map.snap(),
+              status: fixture.controller.state.status,
+              retryPending: fixture.controller.debug().retryPending,
+              active: fixture.controller.debug().hasActiveClient,
+            };
+          } finally {
+            fixture.controller.dispose();
+          }
+        }),
+        {
+          statusBeforeLeave: "reconnecting",
+          outcome: {
+            leaveAttempted: false,
+            leaveDelivered: false,
+            goodbyeAttempted: false,
+            goodbyeDelivered: false,
+            remoteDepartureConfirmed: false,
+          },
+          attempts: 1,
+          lateDelay: null,
+          credential: null,
+          state: {
+            phase: "lobby",
+            player1: { sessionId: "towl-connection-session-1", connected: false, ready: false },
+            player2: { sessionId: null, connected: false, ready: false },
+            position: 0,
+            winner: null,
+            round: 1,
+          },
+          status: "disposed",
+          retryPending: false,
+          active: false,
+        },
+      ),
+
+      towl_case(
+        SUITE,
+        "manual Reconnect reuses one recovery pipeline without overlapping attempts",
+        () => with_runtime(async (runtime) => {
+          const firstPair = make_socket_pair();
+          let attempts = 0;
+          const fixture = await make_connection(logicalMapId, () => {
+            attempts += 1;
+            if (attempts === 1) return connected_transport(runtime, firstPair);
+            if (attempts === 2) return failed_transport();
+            return connected_transport(runtime);
+          }, { retryDelaysMs: [0] });
+          try {
+            await fixture.controller.client?.join();
+            const credential = fixture.credentials.value;
+            firstPair.close();
+            await settle();
+            const failedStatus = fixture.controller.state.status;
+            await Promise.all([fixture.controller.reconnect(), fixture.controller.reconnect()]);
+            await settle();
+            return {
+              failedStatus,
+              status: fixture.controller.state.status,
+              sessionRestored: fixture.controller.state.sessionRestored,
+              attempts,
+              credentialRetained: fixture.credentials.value === credential,
+              seat: fixture.controller.client?.seat,
+              active: fixture.controller.debug().hasActiveClient,
+              opening: fixture.controller.debug().hasOpeningClient,
+            };
+          } finally {
+            fixture.controller.dispose();
+          }
+        }),
+        {
+          failedStatus: "failed",
+          status: "connected",
+          sessionRestored: true,
+          attempts: 3,
+          credentialRetained: true,
+          seat: "player1",
+          active: true,
+          opening: false,
+        },
+      ),
+
+      towl_case(
+        SUITE,
         "definitive stale credential creates a truthful unseated replacement session",
         () => with_runtime(async (runtime) => {
           const fixture = await make_connection(
@@ -445,6 +608,7 @@ export function towl_connection_suite(): TestSuite {
             return {
               status: fixture.controller.state.status,
               sessionReplaced: fixture.controller.state.sessionReplaced,
+              sessionRestored: fixture.controller.state.sessionRestored,
               clearedFirst: fixture.credentials.writes[0] === undefined,
               replacementStored: fixture.credentials.value !== undefined
                 && fixture.credentials.value !== "stale-room-credential",
@@ -457,6 +621,7 @@ export function towl_connection_suite(): TestSuite {
         {
           status: "connected",
           sessionReplaced: true,
+          sessionRestored: false,
           clearedFirst: true,
           replacementStored: true,
           seat: null,

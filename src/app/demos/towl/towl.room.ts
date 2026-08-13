@@ -100,7 +100,7 @@ export function classify_towl_room_url(source: URL): TowlRoomUrlState {
 export function classify_towl_entry_url(source: URL): TowlEntryUrlState {
   const room = classify_towl_room_url(source);
   const direct = is_direct_towl_path(source.pathname);
-  return Object.freeze({ direct, selectsTowl: direct || room.kind !== "absent", room });
+  return Object.freeze({ direct, selectsTowl: direct || room.kind === "valid", room });
 }
 
 export function create_towl_room_url(
@@ -112,6 +112,22 @@ export function create_towl_room_url(
   if (roomId === undefined) throw new Error("TOWL room generation returned an invalid room ID.");
   url.searchParams.set(TOWL_ROOM_PARAM, roomId);
   return Object.freeze({ roomId, url, changed: true });
+}
+
+export function canonical_towl_invite_url(source: URL, roomId: string): URL {
+  const normalized = normalize_towl_room_id(roomId);
+  if (normalized === undefined) throw new Error("Cannot create an invitation for an invalid TOWL room ID.");
+  const url = new URL(source.origin);
+  url.pathname = "/towl";
+  url.searchParams.set(TOWL_ROOM_PARAM, normalized);
+  return url;
+}
+
+export function towl_departure_url(source: URL): URL {
+  const url = new URL(source.toString());
+  url.searchParams.delete(TOWL_ROOM_PARAM);
+  if (is_direct_towl_path(url.pathname)) url.pathname = "/";
+  return url;
 }
 
 export function resolve_towl_room_url(

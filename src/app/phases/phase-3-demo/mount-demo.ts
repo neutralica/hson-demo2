@@ -22,6 +22,7 @@ import { mount_point_panel } from "../../demos/pointer/point-factory";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
 import { mount_test_panels } from "../../demos/tests/panel/mount-tp";
 import { mount_towl_panel } from "../../demos/towl/mount-towl";
+import { towl_departure_url } from "../../demos/towl/towl.room";
 import mount_color_sudoku from "../../demos/mount-color-sudoku";
 import { make_amoebi } from "../../demos/amoeba/make-amoebi";
 import type { AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
@@ -234,6 +235,7 @@ function main_host(uiRoot: LiveTree, id: MainViewId): LiveTree {
 function make_main_registrations(
   shell: DemoShell,
   onTowlBack: () => void,
+  onTowlLeave: () => void,
 ): Record<MainViewId, SurfaceRegistration> {
   const mount = (
     id: MainViewId,
@@ -277,7 +279,7 @@ function make_main_registrations(
     [$TOWL]: {
       retention: "recreate",
       mount: () => mount($TOWL, (host) => {
-        const panel = mount_towl_panel(host, { onBack: onTowlBack });
+        const panel = mount_towl_panel(host, { onBack: onTowlBack, onLeave: onTowlLeave });
         return panel.dispose;
       }),
     },
@@ -417,7 +419,13 @@ export async function mount_demo(
     }
     set_view(null);
   };
-  const mainRegistrations = make_main_registrations(shell, backFromTowl);
+  const leaveTowl = (): void => {
+    const url = towl_departure_url(new URL(globalThis.location.href));
+    globalThis.history.replaceState(globalThis.history.state, "", url.toString());
+    screen.attrs.set("data-shell-entry", "standard");
+    set_view(null);
+  };
+  const mainRegistrations = make_main_registrations(shell, backFromTowl, leaveTowl);
   const widgetRegistrations = make_widget_registrations(shell, pointSlot);
   const lifecycle = create_shell_lifecycle_reconciler({
     mainIds: MAIN_VIEW_IDS,

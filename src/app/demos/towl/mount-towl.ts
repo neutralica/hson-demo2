@@ -5,6 +5,7 @@ import {
 } from "hson-live/livehost";
 import {
   TOWL_WIN_POSITION,
+  canonical_towl_invite_url,
   classify_towl_room_url,
   create_towl_room_url,
   create_towl_connection_controller,
@@ -21,6 +22,7 @@ import {
   TOWL_BACK_BUTTON_CSS,
   TOWL_BUTTON_CSS,
   TOWL_CARD_CSS,
+  TOWL_DANGER_BUTTON_CSS,
   TOWL_ERROR_CSS,
   TOWL_HEADER_CSS,
   TOWL_INVALID_ACTIONS_CSS,
@@ -28,7 +30,7 @@ import {
   TOWL_MARKER_CSS,
   TOWL_META_CSS,
   TOWL_PRIMARY_BUTTON_CSS,
-  TOWL_INVITE_STATUS_CSS,
+  TOWL_RECONNECT_BUTTON_CSS,
   TOWL_RESULT_CSS,
   TOWL_ROOM_CSS,
   TOWL_ROOT_CSS,
@@ -38,12 +40,14 @@ import {
   TOWL_SEATS_CSS,
   TOWL_TITLE_CSS,
   TOWL_TRACK_CSS,
+  TOWL_SHARE_STATUS_CSS,
 } from "./towl.css";
 
 type TowlActionName = "join" | "ready" | "pull" | "reset";
 
 export type TowlPanelOptions = Readonly<{
   onBack(): void;
+  onLeave(): void;
 }>;
 
 export type TowlPanel = Readonly<{
@@ -54,8 +58,10 @@ export type TowlPanel = Readonly<{
 type TowlView = Readonly<{
   back: LiveTree;
   room: LiveTree;
-  copyInvite: LiveTree;
-  inviteStatus: LiveTree;
+  share: LiveTree;
+  shareStatus: LiveTree;
+  leave: LiveTree;
+  reconnect: LiveTree;
   status: LiveTree;
   localSeat: LiveTree;
   phase: LiveTree;
@@ -101,6 +107,49 @@ function error_message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function diagnostic_error_code(error: unknown): string | undefined {
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+  while (typeof current === "object" && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if ("code" in current && typeof current.code === "string") return current.code;
+    current = "cause" in current ? current.cause : undefined;
+  }
+  return undefined;
+}
+
+function share_was_cancelled(error: unknown): boolean {
+  return typeof error === "object"
+    && error !== null
+    && "name" in error
+    && error.name === "AbortError";
+}
+
+async function share_towl_room(inviteUrl: string): Promise<string> {
+  const navigator = globalThis.navigator;
+  if (navigator?.share !== undefined) {
+    try {
+      await navigator.share({
+        title: "TOWL",
+        text: "Join my TOWL room.",
+        url: inviteUrl,
+      });
+      return "shared";
+    } catch (error) {
+      if (share_was_cancelled(error)) return "";
+    }
+  }
+
+  const writeText = navigator?.clipboard?.writeText;
+  if (writeText === undefined) return "sharing unavailable";
+  try {
+    await writeText.call(navigator.clipboard, inviteUrl);
+    return "link copied";
+  } catch {
+    return "unable to copy link";
+  }
+}
+
 function set_disabled(button: LiveTree, disabled: boolean): void {
   if (disabled) {
     button.flags.set("disabled");
@@ -131,15 +180,17 @@ function create_view(root: LiveTree, roomId: string): TowlView {
   const card = root.create.div().id.set("towl-card").css.setMany(TOWL_CARD_CSS);
   const header = card.create.header().id.set("towl-header").css.setMany(TOWL_HEADER_CSS);
   header.create.h1().id.set("towl-title").text.set("tug of war live").css.setMany(TOWL_TITLE_CSS);
-  const back = header.create.button().attrs.set("type", "button").text.set("back").css.setMany({ ...TOWL_BUTTON_CSS, ...TOWL_BACK_BUTTON_CSS });
+  const back = header.create.button().id.set("towl-back").attrs.set("type", "button").text.set("back").css.setMany({ ...TOWL_BUTTON_CSS, ...TOWL_BACK_BUTTON_CSS });
 
   const roomRow = card.create.div().id.set("towl-room-row").css.setMany(TOWL_ROOM_CSS);
   const room = roomRow.create.span().attrs.set("data-testid", "towl-room").text.set(`room ${roomId}`);
-  const copyInvite = roomRow.create.button().attrs.set("type", "button").text.set("copy invite link").css.setMany(TOWL_BUTTON_CSS);
-  const inviteStatus = roomRow.create.span().attrs.setMany({ "aria-live": "polite", "data-testid": "towl-invite-status" }).css.setMany(TOWL_INVITE_STATUS_CSS);
+  const share = roomRow.create.button().id.set("towl-share").attrs.set("type", "button").text.set("share room").css.setMany(TOWL_BUTTON_CSS);
+  const leave = roomRow.create.button().id.set("towl-leave").attrs.set("type", "button").text.set("leave room").css.setMany({ ...TOWL_BUTTON_CSS, ...TOWL_DANGER_BUTTON_CSS });
+  const shareStatus = roomRow.create.span().attrs.setMany({ "aria-live": "polite", "data-testid": "towl-share-status" }).css.setMany(TOWL_SHARE_STATUS_CSS);
 
   const meta = card.create.div().id.set("towl-meta").css.setMany(TOWL_META_CSS);
   const status = meta.create.div().attrs.set("data-testid", "towl-status").text.set("connection: connecting");
+  const reconnect = meta.create.button().id.set("towl-reconnect").attrs.set("type", "button").text.set("reconnect").css.setMany({ ...TOWL_BUTTON_CSS, ...TOWL_RECONNECT_BUTTON_CSS });
   const localSeat = meta.create.div().attrs.set("data-testid", "towl-local-seat").text.set("local seat: unseated");
   const phase = meta.create.div().attrs.set("data-testid", "towl-phase").text.set("phase: —");
   const round = meta.create.div().text.set("round: —");
@@ -162,7 +213,7 @@ function create_view(root: LiveTree, roomId: string): TowlView {
   const reset = button("towl-reset", "reset round");
   const error = card.create.div().attrs.set("role", "alert").css.setMany(TOWL_ERROR_CSS);
 
-  return { back, room, copyInvite, inviteStatus, status, localSeat, phase, round, player1, player2, ropeValue, ropeMarker, result, error, join, ready, pull, reset };
+  return { back, room, share, shareStatus, leave, reconnect, status, localSeat, phase, round, player1, player2, ropeValue, ropeMarker, result, error, join, ready, pull, reset };
 }
 
 export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): TowlPanel {
@@ -180,11 +231,13 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
       globalThis.history.replaceState(globalThis.history.state, "", roomAddress.url.toString());
     }
     const { roomId } = roomAddress;
-    const inviteUrl = roomAddress.url.toString();
+    const inviteUrl = canonical_towl_invite_url(roomAddress.url, roomId).toString();
     const view = create_view(root, roomId);
     let connection: TowlConnectionController | undefined;
     let pending: TowlActionName | undefined;
-    let copyPending = false;
+    let sharePending = false;
+    let leavePending = false;
+    let manualReconnectPending = false;
     let contentDisposed = false;
 
     function disable_game_actions(): void {
@@ -194,26 +247,46 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
     }
 
     function render_connection(next: TowlConnectionState): void {
-      if (disposed || contentDisposed) return;
+      if (disposed || contentDisposed || leavePending) return;
       const label = next.status === "creating-session"
         ? next.sessionReplaced ? "creating replacement session" : "creating session"
         : next.status === "reattaching-session"
           ? "reattaching session"
           : next.status === "connected"
-            ? "connected · session attached"
+            ? next.sessionReplaced
+              ? "connected · replacement session · join again"
+              : next.sessionRestored
+                ? "connected · session restored"
+                : "connected · session attached"
             : next.status === "reconnecting"
               ? `reconnecting · attempt ${next.attempt}`
-              : next.status;
+              : next.status === "failed"
+                ? next.failureKind === "retry-exhausted"
+                  ? "disconnected · retries exhausted"
+                  : "connection failed"
+                : next.status;
       view.status.text.set(`connection: ${label}`);
+      const reconnectAvailable = next.status === "failed";
+      view.reconnect.css.set.display(reconnectAvailable ? "inline-flex" : "none");
+      set_disabled(view.reconnect, !reconnectAvailable || manualReconnectPending);
       if (next.status !== "connected") disable_game_actions();
-      if (next.error !== undefined) view.error.text.set(error_message(next.error));
+      if (next.status === "failed") {
+        view.error.text.set("Unable to connect to this room.");
+        const code = diagnostic_error_code(next.error);
+        if (code === undefined) root.attrs.drop("data-towl-error-code");
+        else root.attrs.set("data-towl-error-code", code);
+      } else if (next.status !== "disposed") {
+        view.error.text.set("");
+        root.attrs.drop("data-towl-error-code");
+      }
     }
 
     function render_state(state: TowlState): void {
       if (disposed || contentDisposed) return;
       const client = connection?.client;
       const seat = seat_for_session(state, client?.livehost.session.sessionId);
-      view.localSeat.text.set(`local seat: ${seat ?? "unseated"}`);
+      const occupied = state.player1.sessionId !== null && state.player2.sessionId !== null;
+      view.localSeat.text.set(`local seat: ${seat ?? (occupied ? "unseated · room full" : "unseated")}`);
       if (client === undefined) disable_game_actions();
 
       view.phase.text.set(`phase: ${state.phase}`);
@@ -225,7 +298,6 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
       view.result.text.set(state.winner === null ? "" : `${state.winner === "player1" ? "player 1" : "player 2"} wins round ${state.round}`);
 
       const attached = client?.livehost.session.status === "attached";
-      const occupied = state.player1.sessionId !== null && state.player2.sessionId !== null;
       set_disabled(view.join, !attached || seat !== undefined || occupied);
       set_disabled(view.ready, !attached || seat === undefined || state.phase !== "ready");
       set_disabled(view.pull, !attached || seat === undefined || state.phase !== "playing" || !occupied);
@@ -255,27 +327,44 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
     }));
     const pullListener = view.pull.listen.onClick(() => void run_action("pull", (active) => active.pull()));
     const resetListener = view.reset.listen.onClick(() => void run_action("reset", (active) => active.reset()));
-    const copyInviteListener = view.copyInvite.listen.onClick(() => {
-      if (disposed || contentDisposed || copyPending) return;
-      copyPending = true;
-      set_disabled(view.copyInvite, true);
-      view.inviteStatus.text.set("");
-      const writeText = globalThis.navigator?.clipboard?.writeText;
-      const copied = writeText === undefined
-        ? Promise.reject(new Error("Clipboard access is unavailable."))
-        : writeText.call(globalThis.navigator.clipboard, inviteUrl);
-      void copied.then(
-        () => {
-          if (!disposed && !contentDisposed) view.inviteStatus.text.set("copied");
-        },
-        (error: unknown) => {
-          if (!disposed && !contentDisposed) view.inviteStatus.text.set(error_message(error));
-        },
-      ).finally(() => {
+    const shareListener = view.share.listen.onClick(() => {
+      if (disposed || contentDisposed || sharePending || leavePending) return;
+      sharePending = true;
+      set_disabled(view.share, true);
+      view.shareStatus.text.set("");
+      void share_towl_room(inviteUrl).then((status) => {
+        if (!disposed && !contentDisposed) view.shareStatus.text.set(status);
+      }).finally(() => {
         if (!disposed && !contentDisposed) {
-          copyPending = false;
-          set_disabled(view.copyInvite, false);
+          sharePending = false;
+          set_disabled(view.share, false);
         }
+      });
+    });
+    const reconnectListener = view.reconnect.listen.onClick(() => {
+      if (disposed || contentDisposed || leavePending || manualReconnectPending || connection?.state.status !== "failed") return;
+      manualReconnectPending = true;
+      set_disabled(view.reconnect, true);
+      view.error.text.set("");
+      void connection.reconnect().catch(() => undefined).finally(() => {
+        if (!disposed && !contentDisposed) {
+          manualReconnectPending = false;
+          if (connection !== undefined) render_connection(connection.state);
+        }
+      });
+    });
+    const leaveListener = view.leave.listen.onClick(() => {
+      if (disposed || contentDisposed || leavePending || connection === undefined) return;
+      leavePending = true;
+      disable_game_actions();
+      set_disabled(view.back, true);
+      set_disabled(view.share, true);
+      set_disabled(view.leave, true);
+      set_disabled(view.reconnect, true);
+      view.status.text.set("connection: leaving room");
+      view.error.text.set("");
+      void connection.leaveRoom().finally(() => {
+        if (!disposed && !contentDisposed) options.onLeave();
       });
     });
 
@@ -297,7 +386,9 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
       readyListener.off();
       pullListener.off();
       resetListener.off();
-      copyInviteListener.off();
+      shareListener.off();
+      reconnectListener.off();
+      leaveListener.off();
       connection?.dispose();
       connection = undefined;
     };

@@ -42,7 +42,17 @@ export type TowlConnectionState = Readonly<{
   status: TowlConnectionStatus;
   attempt: number;
   sessionReplaced: boolean;
+  sessionRestored: boolean;
+  failureKind?: "retry-exhausted" | "terminal";
   error?: Error;
+}>;
+
+export type TowlLeaveOutcome = Readonly<{
+  leaveAttempted: boolean;
+  leaveDelivered: boolean;
+  goodbyeAttempted: boolean;
+  goodbyeDelivered: boolean;
+  remoteDepartureConfirmed: boolean;
 }>;
 
 export type TowlConnectionErrorKind = "credential-rejected" | "transport" | "terminal";
@@ -61,6 +71,7 @@ export type TowlConnectionController = Readonly<{
   readonly uncertainAction: TowlUncertainAction | undefined;
   ready(): Promise<void>;
   reconnect(): Promise<void>;
+  leaveRoom(): Promise<TowlLeaveOutcome>;
   dispose(): void;
   debug(): Readonly<{
     transportAttempts: number;
@@ -68,6 +79,7 @@ export type TowlConnectionController = Readonly<{
     hasActiveClient: boolean;
     hasOpeningClient: boolean;
     retryPending: boolean;
+    terminalLeave: boolean;
   }>;
 }>;
 
@@ -82,6 +94,7 @@ export type TowlConnectionOptions = Readonly<{
   schedule?: (delayMs: number, callback: () => void) => LiveHostDisposer;
   mirror?: LiveMap<TowlState>;
   clientId?: string;
+  leaveRequestTimeoutMs?: number;
 }>;
 
 class TowlConnectionCancelled extends Error {
@@ -106,6 +119,23 @@ class TowlConnectionAttemptError extends Error {
 function default_schedule(delayMs: number, callback: () => void): LiveHostDisposer {
   const timer = setTimeout(callback, delayMs);
   return () => clearTimeout(timer);
+}
+
+function bounded_request<T>(request: Promise<T>, timeoutMs: number): Promise<T> {
+  if (timeoutMs === 0) return Promise.reject(new Error("TOWL departure request timed out."));
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("TOWL departure request timed out.")), timeoutMs);
+    request.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }
 
 export function classify_towl_connection_error(error: unknown): TowlConnectionErrorKind {
@@ -136,6 +166,10 @@ export function create_towl_connection_controller(
     throw new Error("TOWL reconnect delays must be finite non-negative numbers.");
   }
   const schedule = options.schedule ?? default_schedule;
+  const leaveRequestTimeoutMs = options.leaveRequestTimeoutMs ?? 2_000;
+  if (!Number.isFinite(leaveRequestTimeoutMs) || leaveRequestTimeoutMs < 0) {
+    throw new Error("TOWL leave request timeout must be a finite non-negative number.");
+  }
   const mirror = options.mirror ?? create_towl_client_mirror();
   const root = mirror.at([]);
 
@@ -143,6 +177,7 @@ export function create_towl_connection_controller(
     status: "connecting",
     attempt: 0,
     sessionReplaced: false,
+    sessionRestored: false,
   });
   let disposed = false;
   let generation = 0;
@@ -161,18 +196,24 @@ export function create_towl_connection_controller(
   let transportAttempts = 0;
   let rootWatchInstallCount = 0;
   let uncertainAction: TowlUncertainAction | undefined;
+  let terminalLeave = false;
+  let leavePromise: Promise<TowlLeaveOutcome> | undefined;
 
   const publish = (
     status: TowlConnectionStatus,
     attempt = connectionState.attempt,
     sessionReplaced = connectionState.sessionReplaced,
     error?: Error,
+    failureKind?: TowlConnectionState["failureKind"],
+    sessionRestored = connectionState.sessionRestored,
   ): void => {
     if (disposed && status !== "disposed") return;
     connectionState = Object.freeze({
       status,
       attempt,
       sessionReplaced,
+      sessionRestored,
+      ...(failureKind === undefined ? {} : { failureKind }),
       ...(error === undefined ? {} : { error }),
     });
     options.onConnection(connectionState);
@@ -241,6 +282,7 @@ export function create_towl_connection_controller(
     let installed = false;
     let stage: "transport" | "session" | "recovery" = "transport";
     let sessionReplaced = false;
+    let sessionRestored = false;
     try {
       transportAttempts += 1;
       nextTransport = options.openTransport();
@@ -285,6 +327,7 @@ export function create_towl_connection_controller(
         publish("reattaching-session", reconnectAttempt, false);
         try {
           await nextClient.reattachSession(currentCredential);
+          sessionRestored = true;
         } catch (error) {
           assert_current(attemptGeneration);
           if (classify_towl_connection_error(error) !== "credential-rejected") throw error;
@@ -320,7 +363,7 @@ export function create_towl_connection_controller(
       dispose_client(priorClient);
       priorTransport?.dispose();
       const observationAlreadyInstalled = stopRootWatch !== undefined;
-      publish("connected", reconnectAttempt, sessionReplaced);
+      publish("connected", reconnectAttempt, sessionReplaced, undefined, undefined, sessionRestored);
       if (observationAlreadyInstalled) options.onState(root.snap());
       else install_root_watch();
     } catch (error) {
@@ -337,7 +380,7 @@ export function create_towl_connection_controller(
   }
 
   async function ensure_reconnected(): Promise<void> {
-    if (disposed) throw new TowlConnectionCancelled();
+    if (disposed || terminalLeave) throw new TowlConnectionCancelled();
     if (connectionState.status !== "reconnecting" && connectionState.status !== "failed") return;
     if (reconnecting !== undefined) return reconnecting;
     const attemptGeneration = ++generation;
@@ -356,12 +399,12 @@ export function create_towl_connection_controller(
           if (!(error instanceof TowlConnectionAttemptError)) throw error;
           lastError = error;
           if (!error.retryable) {
-            publish("failed", attempt, false, error);
+            publish("failed", attempt, false, error, "terminal");
             return;
           }
         }
       }
-      publish("failed", retryDelays.length, false, lastError);
+      publish("failed", retryDelays.length, false, lastError, "retry-exhausted");
     })().catch((error: unknown) => {
       if (!(error instanceof TowlConnectionCancelled)) throw error;
     }).finally(() => {
@@ -374,43 +417,96 @@ export function create_towl_connection_controller(
   const readiness = open(initialGeneration, 0).catch((error: unknown) => {
     if (error instanceof TowlConnectionCancelled) return;
     const normalized = error instanceof Error ? error : new Error(String(error));
-    publish("failed", 0, false, normalized);
+    const failureKind = error instanceof TowlConnectionAttemptError && error.retryable
+      ? "retry-exhausted"
+      : "terminal";
+    publish("failed", 0, false, normalized, failureKind);
   });
+
+  const cancel_reconnect_work = (): void => {
+    generation += 1;
+    cancelRetryDelay?.();
+    cancelRetryDelay = undefined;
+    stopActiveClose?.();
+    stopActiveClose = undefined;
+    dispose_client(openingClient);
+    openingClient = undefined;
+    openingTransport?.dispose();
+    openingTransport = undefined;
+  };
+
+  const dispose_all = (): void => {
+    if (disposed) return;
+    disposed = true;
+    cancel_reconnect_work();
+    stopRootWatch?.();
+    stopRootWatch = undefined;
+    dispose_client(activeClient);
+    activeClient = undefined;
+    activeTransport?.dispose();
+    activeTransport = undefined;
+    publish("disposed", connectionState.attempt, connectionState.sessionReplaced);
+  };
+
+  const leave_room = (): Promise<TowlLeaveOutcome> => {
+    if (leavePromise !== undefined) return leavePromise;
+    terminalLeave = true;
+    const connectedClient = connectionState.status === "connected" ? activeClient : undefined;
+    cancel_reconnect_work();
+
+    leavePromise = (async (): Promise<TowlLeaveOutcome> => {
+      const leaveAttempted = connectedClient?.seat !== undefined;
+      let leaveDelivered = false;
+      const goodbyeAttempted = connectedClient?.livehost.session.status === "attached";
+      let goodbyeDelivered = false;
+
+      if (leaveAttempted) {
+        try {
+          await bounded_request(connectedClient!.leave(), leaveRequestTimeoutMs);
+          leaveDelivered = true;
+        } catch {
+          // Local terminal departure still completes; authority expiry remains truthful fallback.
+        }
+      }
+      if (goodbyeAttempted) {
+        try {
+          await bounded_request(connectedClient!.goodbyeSession(), leaveRequestTimeoutMs);
+          goodbyeDelivered = true;
+        } catch {
+          // A disconnected/fenced session can only disappear through existing grace/expiry.
+        }
+      }
+
+      store_credential(undefined);
+      dispose_all();
+      return Object.freeze({
+        leaveAttempted,
+        leaveDelivered,
+        goodbyeAttempted,
+        goodbyeDelivered,
+        remoteDepartureConfirmed: leaveDelivered || goodbyeDelivered,
+      });
+    })();
+    return leavePromise;
+  };
 
   return Object.freeze({
     mirror,
     root,
     get state() { return connectionState; },
-    get client() { return connectionState.status === "connected" ? activeClient : undefined; },
+    get client() { return connectionState.status === "connected" && !terminalLeave ? activeClient : undefined; },
     get uncertainAction() { return uncertainAction; },
     ready: () => readiness,
     reconnect: ensure_reconnected,
-    dispose(): void {
-      if (disposed) return;
-      disposed = true;
-      generation += 1;
-      cancelRetryDelay?.();
-      cancelRetryDelay = undefined;
-      stopRootWatch?.();
-      stopRootWatch = undefined;
-      stopActiveClose?.();
-      stopActiveClose = undefined;
-      dispose_client(openingClient);
-      openingClient = undefined;
-      openingTransport?.dispose();
-      openingTransport = undefined;
-      dispose_client(activeClient);
-      activeClient = undefined;
-      activeTransport?.dispose();
-      activeTransport = undefined;
-      publish("disposed", connectionState.attempt, connectionState.sessionReplaced);
-    },
+    leaveRoom: leave_room,
+    dispose: dispose_all,
     debug: () => Object.freeze({
       transportAttempts,
       rootWatchInstallCount,
       hasActiveClient: activeClient !== undefined,
       hasOpeningClient: openingClient !== undefined,
       retryPending: cancelRetryDelay !== undefined || reconnecting !== undefined,
+      terminalLeave,
     }),
   });
 }

@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
-import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
 import {
   hosted_test_panel_display_label,
   hosted_test_panel_primary_choices,
@@ -102,6 +100,48 @@ test("TOWL performs no room, storage, runtime, or socket work before activation"
   expect(await readMetrics()).toEqual({ webSockets: 1, historyReplaces: 1, credentialReads: 1 });
 });
 
+test("an invalid ordinary room query keeps the fresh shell neutral and TOWL inert", async ({ page }) => {
+  await page.addInitScript(() => {
+    const metrics = { webSockets: 0, historyReplaces: 0, credentialReads: 0 };
+    Object.defineProperty(window, "__towlLazyMetrics", { value: metrics });
+
+    const NativeWebSocket = window.WebSocket;
+    class CountingWebSocket extends NativeWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
+        if (livehost?.startsWith("towl:") === true) metrics.webSockets += 1;
+        if (protocols === undefined) super(url);
+        else super(url, protocols);
+      }
+    }
+    Object.defineProperty(window, "WebSocket", { value: CountingWebSocket });
+
+    const replaceState = history.replaceState;
+    history.replaceState = function replacement(data: unknown, unused: string, url?: string | URL | null): void {
+      metrics.historyReplaces += 1;
+      replaceState.call(history, data, unused, url);
+    };
+
+    const getItem = Storage.prototype.getItem;
+    Storage.prototype.getItem = function countedGetItem(key: string): string | null {
+      if (key.startsWith("hson-livedemo.towl.")) metrics.credentialReads += 1;
+      return getItem.call(this, key);
+    };
+  });
+
+  await page.goto("/?room=not_valid");
+  const stage = page.locator("#stage");
+  await expect(stage).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
+  await stage.click({ position: { x: 4, y: 4 } });
+  await expect(stage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.get("room")).toBe("not_valid");
+  expect(await page.evaluate(() => (
+    window as unknown as { __towlLazyMetrics: TowlLazyMetrics }
+  ).__towlLazyMetrics)).toEqual({ webSockets: 0, historyReplaces: 0, credentialReads: 0 });
+});
+
 test("widget membership lazily mounts and recreates disposable widget instances", async ({ page }) => {
   await reach_demo(page);
   await expect(page.locator("#motes-root")).toHaveCount(1);
@@ -146,6 +186,10 @@ test("keyboard Color Sudoku activation stays inside the canonical shell lifecycl
 });
 
 test("hosted panel discovers curated categories and runs one canonical category", async ({ page }) => {
+  const [{ make_local_node_livehost_executor_registry }, { resolve_external_library_launchers }] = await Promise.all([
+    import("../../harness/runtimes/node/livehost-node-executor"),
+    import("../../harness/runtimes/node/external-library-launchers"),
+  ]);
   const assertNoErrors = monitor_application_errors(page);
   const expectedRegistry = make_local_node_livehost_executor_registry();
   const expectedAvailability = await resolve_external_library_launchers();

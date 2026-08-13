@@ -26,6 +26,7 @@
     "preview": "vite preview",
     "test:towl": "tsx tests/runners/towl/run-towl-suites.node.mts",
     "test:towl-room": "tsx tests/runners/towl/run-towl-room-suite.node.mts",
+    "diagnose:towl-deployed": "tsx tests/runners/towl/diagnose-deployed-towl.node.mts",
     "test:browser": "playwright test",
     "test:browser:headed": "playwright test --headed",
     "test:browser:debug": "PWDEBUG=1 playwright test",

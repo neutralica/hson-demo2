@@ -2,10 +2,12 @@ import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   classify_towl_entry_url,
   classify_towl_room_url,
+  canonical_towl_invite_url,
   create_towl_room_url,
   normalize_towl_room_id,
   resolve_towl_room_url,
   towl_host_id_for_room,
+  towl_departure_url,
   towl_room_credential_key,
   towl_room_id_from_host_id,
   type TowlState,
@@ -82,7 +84,15 @@ export function towl_room_suite(): TestSuite {
         }
         const intentionalReplacement = create_towl_room_url(invalidUrl, () => "fixed-room");
         const direct = classify_towl_entry_url(new URL("https://example.test/towl"));
+        const directInvalid = classify_towl_entry_url(new URL("https://example.test/towl?room=not_valid"));
         const ordinaryDeepLink = classify_towl_entry_url(new URL("https://example.test/?room=TEAM-42"));
+        const ordinaryInvalid = classify_towl_entry_url(new URL("https://example.test/?room=not_valid"));
+        const canonicalInvite = canonical_towl_invite_url(
+          new URL("https://example.test/demo?room=team-42&mode=play#rules"),
+          "TEAM-42",
+        );
+        const directDeparture = towl_departure_url(new URL("https://example.test/towl?room=team-42&mode=play#rules"));
+        const ordinaryDeparture = towl_departure_url(new URL("https://example.test/demo?room=team-42&mode=play#rules"));
         return {
           generated: resolved.roomId,
           generatedUrl: resolved.url.toString(),
@@ -95,7 +105,12 @@ export function towl_room_suite(): TestSuite {
           invalidGeneratorCalls,
           intentionalReplacement: intentionalReplacement.url.toString(),
           directSelectsTowl: direct.selectsTowl,
+          directInvalidSelectsTowl: directInvalid.selectsTowl,
           ordinaryDeepLinkSelectsTowl: ordinaryDeepLink.selectsTowl,
+          ordinaryInvalidSelectsTowl: ordinaryInvalid.selectsTowl,
+          canonicalInvite: canonicalInvite.toString(),
+          directDeparture: directDeparture.toString(),
+          ordinaryDeparture: ordinaryDeparture.toString(),
         };
       }, {
         generated: "fixed-room",
@@ -109,7 +124,12 @@ export function towl_room_suite(): TestSuite {
         invalidGeneratorCalls: 0,
         intentionalReplacement: "https://example.test/demo?room=fixed-room&mode=play#rules",
         directSelectsTowl: true,
+        directInvalidSelectsTowl: true,
         ordinaryDeepLinkSelectsTowl: true,
+        ordinaryInvalidSelectsTowl: false,
+        canonicalInvite: "https://example.test/towl?room=team-42",
+        directDeparture: "https://example.test/?mode=play#rules",
+        ordinaryDeparture: "https://example.test/demo?mode=play#rules",
       }),
       towl_case(SUITE, "same room resolution reuses one authoritative runtime", () => {
         const application = empty_application();

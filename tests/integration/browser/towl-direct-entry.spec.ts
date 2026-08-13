@@ -16,7 +16,7 @@ async function open_direct_towl(page: Page, url = "/towl"): Promise<void> {
   await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "towl");
   await expect(page.getByTestId("towl-root")).toBeVisible();
   await expect(page.getByTestId("towl-status")).toHaveText(
-    "connection: connected · session attached",
+    /^connection: connected · session (attached|restored)$/,
     { timeout: 15_000 },
   );
 }
@@ -67,6 +67,8 @@ async function assert_phone_geometry(page: Page): Promise<void> {
     const rect = (selector: string) => required(selector).getBoundingClientRect();
     const actionHeights = [...root.querySelectorAll<HTMLElement>("#towl-actions > button")]
       .map((button) => button.getBoundingClientRect().height);
+    const productControlHeights = ["#towl-back", "#towl-share", "#towl-leave"]
+      .map((selector) => rect(selector).height);
     const rootRect = root.getBoundingClientRect();
     const pullRect = rect("#towl-pull");
     const roomRect = rect("#towl-room-row");
@@ -77,6 +79,7 @@ async function assert_phone_geometry(page: Page): Promise<void> {
       rootOverflow: root.scrollWidth - root.clientWidth,
       rootRect: { left: rootRect.left, right: rootRect.right, top: rootRect.top },
       actionHeights,
+      productControlHeights,
       pullReachable: pullRect.top >= rootRect.top && pullRect.bottom <= root.scrollHeight + rootRect.top,
       roomReachable: roomRect.top >= rootRect.top && roomRect.bottom <= root.scrollHeight + rootRect.top,
       statusReachable: statusRect.top >= rootRect.top && statusRect.bottom <= root.scrollHeight + rootRect.top,
@@ -90,6 +93,7 @@ async function assert_phone_geometry(page: Page): Promise<void> {
   expect(geometry.rootRect.top).toBeGreaterThanOrEqual(-1);
   expect(geometry.actionHeights.length).toBe(4);
   expect(Math.min(...geometry.actionHeights)).toBeGreaterThanOrEqual(44);
+  expect(Math.min(...geometry.productControlHeights)).toBeGreaterThanOrEqual(44);
   expect(geometry.pullReachable).toBe(true);
   expect(geometry.roomReachable).toBe(true);
   expect(geometry.statusReachable).toBe(true);
@@ -99,9 +103,45 @@ async function assert_phone_geometry(page: Page): Promise<void> {
   await expect(page.locator("#live-demo-deck")).toBeHidden();
 }
 
-test("two fresh phone contexts enter one direct TOWL room and synchronize an authoritative pull", async ({ browser }) => {
+test("two fresh phones share, play, recover, resume, and explicitly Leave one TOWL room", async ({ browser }) => {
   const firstContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const secondContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await firstContext.addInitScript(() => {
+    Object.defineProperty(window, "__towlSharedUrl", { writable: true, value: undefined });
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: async (payload: ShareData) => {
+        (window as unknown as { __towlSharedUrl?: string }).__towlSharedUrl = payload.url;
+      },
+    });
+  });
+  await secondContext.addInitScript(() => {
+    const NativeWebSocket = window.WebSocket;
+    let latestTowlSocket: WebSocket | undefined;
+    let failNextTowlConnections = 0;
+    class RecoverableWebSocket extends NativeWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        if (protocols === undefined) super(url);
+        else super(url, protocols);
+        if (new URL(String(url), window.location.href).searchParams.get("livehost")?.startsWith("towl:") === true) {
+          latestTowlSocket = this;
+          if (failNextTowlConnections > 0) {
+            failNextTowlConnections -= 1;
+            this.addEventListener("open", () => this.close(), { once: true });
+          }
+        }
+      }
+    }
+    Object.defineProperty(window, "WebSocket", { value: RecoverableWebSocket });
+    Object.defineProperties(window, {
+      __interruptTowl: {
+        value: () => {
+          failNextTowlConnections = 2;
+          latestTowlSocket?.close();
+        },
+      },
+    });
+  });
   const first = await firstContext.newPage();
   const second = await secondContext.newPage();
   try {
@@ -112,6 +152,11 @@ test("two fresh phone contexts enter one direct TOWL room and synchronize an aut
     const roomId = invite.searchParams.get("room");
     expect(roomId).toMatch(/^[a-z0-9][a-z0-9-]{5,23}$/);
     await expect(first.getByTestId("towl-room")).toHaveText(`room ${roomId}`);
+    await first.getByRole("button", { name: "share room", exact: true }).click();
+    await expect(first.getByTestId("towl-share-status")).toHaveText("shared");
+    expect(await first.evaluate(() => (
+      window as unknown as { __towlSharedUrl?: string }
+    ).__towlSharedUrl)).toBe(invite.toString());
     await first.getByRole("button", { name: "join", exact: true }).click();
     await expect(first.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
 
@@ -128,6 +173,42 @@ test("two fresh phone contexts enter one direct TOWL room and synchronize an aut
     await expect(second.getByTestId("towl-phase")).toHaveText("phase: playing");
     await first.getByRole("button", { name: "pull", exact: true }).click();
     await expect(second.getByTestId("towl-rope")).toContainText("rope: 1");
+
+    const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
+    const credential = await second.evaluate((key) => localStorage.getItem(key), credentialKey);
+    expect(credential).not.toBeNull();
+    await second.evaluate(() => (
+      window as unknown as { __interruptTowl(): void }
+    ).__interruptTowl());
+    await expect(second.getByTestId("towl-status")).toContainText("reconnecting", { timeout: 10_000 });
+    await expect(second.getByRole("button", { name: "pull", exact: true })).toBeDisabled();
+    await expect(second.getByRole("button", { name: "back", exact: true })).toBeEnabled();
+    await expect(second.getByRole("button", { name: "leave room", exact: true })).toBeEnabled();
+    await expect(second.getByTestId("towl-status")).toHaveText(
+      "connection: connected · session restored",
+      { timeout: 15_000 },
+    );
+    await expect(second.getByTestId("towl-local-seat")).toHaveText("local seat: player2");
+
+    await second.getByRole("button", { name: "back", exact: true }).click();
+    await expect(second.getByTestId("towl-root")).toHaveCount(0);
+    expect(new URL(second.url()).searchParams.get("room")).toBe(roomId);
+    expect(await second.evaluate((key) => localStorage.getItem(key), credentialKey)).toBe(credential);
+    await open_direct_towl(second, invite.toString());
+    await expect(second.getByTestId("towl-local-seat")).toHaveText("local seat: player2");
+
+    await second.getByRole("button", { name: "leave room", exact: true }).click();
+    await expect(second.getByTestId("towl-root")).toHaveCount(0, { timeout: 10_000 });
+    await expect(first.getByTestId("towl-player2")).toContainText("vacant");
+    expect(new URL(second.url()).searchParams.get("room")).toBeNull();
+    expect(await second.evaluate((key) => localStorage.getItem(key), credentialKey)).toBeNull();
+
+    await second.reload();
+    const secondStage = second.locator("#stage");
+    await expect(secondStage).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
+    await secondStage.click({ position: { x: 4, y: 4 } });
+    await expect(secondStage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+    await expect(second.getByTestId("towl-root")).toHaveCount(0);
   } finally {
     await firstContext.close();
     await secondContext.close();
@@ -154,6 +235,47 @@ test("invalid direct invite is inert until Create new room is chosen", async ({ 
   );
   expect(new URL(page.url()).searchParams.get("room")).toMatch(/^[a-z0-9][a-z0-9-]{5,23}$/);
   expect(await read_towl_boot_metrics(page)).toEqual({ webSockets: 1, historyReplaces: 1, credentialReads: 1 });
+});
+
+test("manual Reconnect uses the existing room after an exhausted opening transport", async ({ page }) => {
+  await page.addInitScript(() => {
+    const NativeWebSocket = window.WebSocket;
+    let failFirstTowlConnection = true;
+    let towlConnections = 0;
+    class InitiallyUnavailableWebSocket extends NativeWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        if (protocols === undefined) super(url);
+        else super(url, protocols);
+        if (new URL(String(url), window.location.href).searchParams.get("livehost")?.startsWith("towl:") === true) {
+          towlConnections += 1;
+          if (failFirstTowlConnection) {
+            failFirstTowlConnection = false;
+            this.addEventListener("open", () => this.close(), { once: true });
+          }
+        }
+      }
+    }
+    Object.defineProperty(window, "WebSocket", { value: InitiallyUnavailableWebSocket });
+    Object.defineProperty(window, "__towlConnections", { get: () => towlConnections });
+  });
+
+  await page.goto("/towl?room=manual-reconnect");
+  await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+  await expect(page.getByTestId("towl-status")).toHaveText("connection: disconnected · retries exhausted");
+  await expect(page.getByRole("button", { name: "reconnect", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "join", exact: true })).toBeDisabled();
+  const roomId = new URL(page.url()).searchParams.get("room");
+
+  await page.getByRole("button", { name: "reconnect", exact: true }).dblclick();
+  await expect(page.getByTestId("towl-status")).toHaveText(
+    "connection: connected · session attached",
+    { timeout: 15_000 },
+  );
+  expect(new URL(page.url()).searchParams.get("room")).toBe(roomId);
+  expect(await page.evaluate(() => (
+    window as unknown as { __towlConnections: number }
+  ).__towlConnections)).toBe(2);
+  await expect(page.getByRole("button", { name: "join", exact: true })).toBeEnabled();
 });
 
 test("portrait, landscape, and desktop-like resizing preserves one room, session, and socket", async ({ page }) => {
@@ -195,7 +317,7 @@ test("portrait, landscape, and desktop-like resizing preserves one room, session
   await page.reload();
   await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
   await expect(page.getByTestId("towl-status")).toHaveText(
-    "connection: connected · session attached",
+    "connection: connected · session restored",
     { timeout: 15_000 },
   );
   await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");

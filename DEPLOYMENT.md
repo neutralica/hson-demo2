@@ -21,6 +21,26 @@ explicitly non-hibernating and currently exposes only the Worker-compatible
 suite subset documented there; the conventional Node service remains the
 complete hosted-test deployment.
 
+### TOWL client/authority compatibility gate
+
+The static browser bundle and WebSocket authority must be rebuilt from the same
+compatible `hson-live` source. Projected-state recovery snapshots are HSON
+protocol data; deploying a newer strict parser beside an older Worker serializer
+can let the socket and session attach succeed but fail the first recovery
+snapshot before TOWL state is installed.
+
+After deploying the Worker and before promoting the matching static bundle, run:
+
+```sh
+TOWL_DEPLOYED_WS_URL=wss://<worker-host>/socket npm run diagnose:towl-deployed
+```
+
+The probe creates a fresh ephemeral TOWL room, creates a session, consumes the
+revision-zero recovery snapshot with the current client, and exits nonzero on
+any compatibility failure. A release is healthy only when it prints
+`"compatible": true`. Redeploying only the static bundle is insufficient when
+this gate reports a Worker-emitted snapshot parse failure.
+
 Cloudflare in front of the current site is not evidence that the static origin
 can execute a persistent Node process. Do not point the browser at a Worker,
 function, or static host unless that product explicitly supports this stateful,
