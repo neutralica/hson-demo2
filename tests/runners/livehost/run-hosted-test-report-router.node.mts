@@ -66,7 +66,7 @@ function fixture(runId: string, passed = true) {
   };
   report.complete({ ok: passed, summary });
   const commits = report.commits().map((commit) => encode_hosted_test_report_commit(runId, "livemap/replay", commit));
-  const result: HostedTestRunResult = { runId, suite: "livemap/replay", ok: passed, summary, timing: { runnerMs: 1, hostMs: 1 } };
+  const result: HostedTestRunResult = { runId, attemptId: `${runId}:attempt:1`, suite: "livemap/replay", ok: passed, summary, timing: { runnerMs: 1, hostMs: 1 } };
   report.dispose();
   return { initial, commits, result } as const;
 }

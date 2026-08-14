@@ -23,6 +23,9 @@ import {
 import type { TestExecutorDiscovery } from "../../../../../tests/harness/core/test-discovery";
 import {
   HOSTED_TEST_COORDINATOR_HOST_ID,
+  hosted_test_recovery_association,
+  hosted_test_run_association,
+  type HostedTestAttemptId,
   type HostedTestCoordinatorState,
   type HostedTestRunAssociation,
 } from "../../../../../tests/harness/hosted/hosted-test-application.types";
@@ -78,7 +81,7 @@ export type HostedTestPanelRuntime = Readonly<{
   discover(): Promise<TestExecutorDiscovery>;
   start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun>;
   start_selected(testIds: readonly string[]): Promise<HostedTestRemoteRun>;
-  recover_run(runId: string): Promise<HostedTestRemoteRun>;
+  recover_run(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestRemoteRun>;
   dispose(): void;
 }>;
 
@@ -162,11 +165,9 @@ function association_from(
   client: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>,
   requestId: string,
 ): HostedTestRunAssociation | undefined {
-  return client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
-}
-
-function all_associations(state: HostedTestCoordinatorState): readonly HostedTestRunAssociation[] {
-  return Object.values(state.requests).flatMap((requests) => Object.values(requests));
+  const state = client.recovery.map.capture().value;
+  const request = state.requests[client.clientId]?.[requestId];
+  return request === undefined ? undefined : hosted_test_run_association(state, request);
 }
 
 function result_summary_from_report(report: HostedTestReportState): HostedTestRunResult["summary"] {
@@ -184,10 +185,30 @@ function result_summary_from_report(report: HostedTestReportState): HostedTestRu
   });
 }
 
-function selected_ids_from_report(report: HostedTestReportState): readonly string[] {
-  return Object.freeze(Object.keys(report.caseBatches).sort().flatMap((batchKey) => (
-    report.caseBatches[batchKey]?.map((testCase) => testCase.key) ?? []
-  )));
+function report_matches_accepted_plan(
+  report: HostedTestReportState,
+  association: HostedTestRunAssociation,
+): boolean {
+  const accepted = association.acceptedPlan;
+  const projected = report.plan;
+  if (accepted === null || projected === null) return accepted === null && projected === null;
+  return projected.protocolVersion === accepted.protocolVersion
+    && projected.catalogVersion === accepted.catalogVersion
+    && projected.executorId === accepted.executorId
+    && projected.selectionIds.length === accepted.selectionIds.length
+    && projected.selectionIds.every((id, index) => id === accepted.selectionIds[index])
+    && report.suiteRuns.length === accepted.suites.length
+    && report.suiteRuns.every((suite, suiteIndex) => {
+      const planned = accepted.suites[suiteIndex];
+      return planned !== undefined
+        && suite.id === planned.id
+        && suite.title === planned.title
+        && suite.subject === planned.subject
+        && suite.order === planned.order
+        && suite.executionShape === planned.executionShape
+        && suite.cases.length === planned.cases.length
+        && suite.cases.every((testCase, caseIndex) => testCase.id === planned.cases[caseIndex]?.id);
+    });
 }
 
 export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeOptions = {}): HostedTestPanelRuntime {
@@ -526,11 +547,15 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       if (report.run.id !== association.runId || report.run.suite !== association.suite) {
         throw new Error("Recovered hosted report identity does not match the explicitly requested run.");
       }
+      if (!report_matches_accepted_plan(report, association)) {
+        throw new Error("Recovered hosted report does not match the coordinator's accepted RunPlan.");
+      }
       if (report.run.timing === null) throw new Error("Recovered hosted report completed without timing.");
       const reportRev = reportClient.recovery.lastAppliedRev;
       if (reportRev === undefined) throw new Error("Recovered hosted report completed without a revision cursor.");
       const common = {
         runId: association.runId,
+        attemptId: association.attemptId,
         reportHostId: association.reportHostId,
         reportRev,
         ok: report.run.status === "passed",
@@ -538,7 +563,11 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         timing: report.run.timing,
       };
       return target === HOSTED_TEST_SELECTED_RUN_TARGET
-        ? Object.freeze({ ...common, suite: HOSTED_TEST_SELECTED_RUN_TARGET, testIds: selected_ids_from_report(report) })
+        ? Object.freeze({
+            ...common,
+            suite: HOSTED_TEST_SELECTED_RUN_TARGET,
+            testIds: association.acceptedPlan?.selectionIds ?? Object.freeze([]),
+          })
         : Object.freeze({ ...common, suite: target });
     };
     const terminalResult = requestedActionResult === undefined
@@ -652,15 +681,18 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     return attach_run(association, actionResult);
   }
 
-  async function recover_run(runId: string): Promise<HostedTestRemoteRun> {
+  async function recover_run(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestRemoteRun> {
     await readiness;
     if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     if (!runId) throw new Error("Hosted-test recovery requires an explicit non-empty run ID.");
-    const matches = all_associations(coordinatorClient.recovery.map.capture().value)
-      .filter((association) => association.runId === runId);
-    if (matches.length !== 1) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
-    return attach_run(matches[0]!);
+    const association = hosted_test_recovery_association(
+      coordinatorClient.recovery.map.capture().value,
+      runId,
+      attemptId,
+    );
+    if (association === undefined) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
+    return attach_run(association);
   }
 
   return Object.freeze({

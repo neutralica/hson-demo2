@@ -63,6 +63,10 @@ export function decode_selected_hosted_test_run_response(
     typeof result !== "object"
     || result === null
     || (result as { suite?: unknown }).suite !== "canonical/selected"
+    || typeof (result as { runId?: unknown }).runId !== "string"
+    || !(result as { runId: string }).runId
+    || typeof (result as { attemptId?: unknown }).attemptId !== "string"
+    || !(result as { attemptId: string }).attemptId
     || !Array.isArray((result as { testIds?: unknown }).testIds)
   ) {
     throw new Error("Selected hosted test action returned an invalid result.");
@@ -96,7 +100,19 @@ export function decode_hosted_test_run_response(
   if ((response as { type?: unknown }).type !== "ack") {
     throw new Error(`Hosted test action returned an invalid response for ${suite}.`);
   }
-  return (response as { result: HostedTestRunResult }).result;
+  const result = (response as { result?: unknown }).result;
+  if (
+    typeof result !== "object"
+    || result === null
+    || (result as { suite?: unknown }).suite !== suite
+    || typeof (result as { runId?: unknown }).runId !== "string"
+    || !(result as { runId: string }).runId
+    || typeof (result as { attemptId?: unknown }).attemptId !== "string"
+    || !(result as { attemptId: string }).attemptId
+  ) {
+    throw new Error(`Hosted test action returned an invalid result for ${suite}.`);
+  }
+  return result as HostedTestRunResult;
 }
 
 export async function inspect_hosted_test_action(

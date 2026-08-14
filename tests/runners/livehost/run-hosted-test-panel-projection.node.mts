@@ -463,6 +463,7 @@ try {
     mixedReport,
     Object.freeze({
       runId: "projection-run",
+      attemptId: "projection-run:attempt:1",
       suite: "canonical/selected",
       testIds: Object.freeze(["canonical-id", passing.id]),
       ok: true,

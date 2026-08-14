@@ -4,6 +4,7 @@ import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wir
 import type { TestExecutorDiscoveryRequest } from "../core/test-discovery";
 import type { RunSelectedTestsRequest } from "../core/test-selected-run";
 import type { HostedTestRunTarget } from "./hosted-test-suite";
+import type { HostedTestAttemptId } from "./hosted-test-application.types";
 
 export type HostedTestRunRequest = Readonly<{
   suite: HostedTestSuiteId;
@@ -11,6 +12,7 @@ export type HostedTestRunRequest = Readonly<{
 
 export type HostedTestRunResult = Readonly<{
   runId: HostedTestRunId;
+  attemptId: HostedTestAttemptId;
   reportHostId?: string;
   reportRev?: number;
   suite: HostedTestSuiteId;
@@ -24,6 +26,7 @@ export type HostedTestRunResult = Readonly<{
 
 export type HostedTestSelectedRunResult = Readonly<{
   runId: HostedTestRunId;
+  attemptId: HostedTestAttemptId;
   reportHostId?: string;
   reportRev?: number;
   suite: "canonical/selected";

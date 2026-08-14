@@ -9,6 +9,7 @@ import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuite
 import type { TestRunMode } from "../../../../../tests/harness/core/test-contracts";
 import { hosted_test_action_error_message } from "../../../../../tests/harness/hosted/hosted-test-action-error";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-panel-runtime";
+import type { HostedTestAttemptId } from "../../../../../tests/harness/hosted/hosted-test-application.types";
 
 export type HostedTestPanelReportUpdate = Readonly<{
   report: HostedTestReport;
@@ -34,7 +35,7 @@ export type HostedTestPanelAdapter = Readonly<{
   readonly router: HostedTestReportRouter | undefined;
   start(suite: HostedTestSuiteId): Promise<HostedTestPanelRunResult>;
   start_selected(testIds: readonly string[]): Promise<HostedTestPanelRunResult>;
-  recover(runId: string): Promise<HostedTestPanelRunResult>;
+  recover(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestPanelRunResult>;
   inspect(caseKey: string): Promise<HostedTestCaseDiagnostic>;
   capture(): HostedTestReport | undefined;
   dispose(): void;
@@ -347,7 +348,8 @@ function make_generic_hosted_test_panel_adapter(
       const report = currentReport ?? run.client.recovery.map.capture().value;
       const cursor = run.client.recovery.lastAppliedRev ?? -1;
       const expectedOk = report.run.status === "passed";
-      if (result.runId !== report.run.id || result.reportHostId !== run.association.reportHostId
+      if (result.runId !== report.run.id || result.attemptId !== run.association.attemptId
+        || result.reportHostId !== run.association.reportHostId
         || result.suite !== report.run.suite || result.reportRev === undefined || cursor < result.reportRev
         || result.ok !== expectedOk || result.summary.cases !== report.summary.cases
         || result.summary.pass !== report.summary.pass || result.summary.fail !== report.summary.fail
@@ -381,8 +383,8 @@ function make_generic_hosted_test_panel_adapter(
     async start_selected(testIds: readonly string[]) {
       return present(() => runtime.start_selected(testIds), "canonical/selected");
     },
-    async recover(runId: string) {
-      return present(() => runtime.recover_run(runId));
+    async recover(runId: string, attemptId?: HostedTestAttemptId) {
+      return present(() => runtime.recover_run(runId, attemptId));
     },
     async inspect(caseKey: string) {
       const result = lastResult;

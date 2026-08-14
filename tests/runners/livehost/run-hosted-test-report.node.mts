@@ -235,7 +235,7 @@ const response = await create_hosted_test_livehost(undefined, (run) => {
 });
 expect_report(response.type === "ack", "real hosted replay action resolves with ack");
 expect_report(response.type === "ack" && typeof response.result === "object" && response.result !== null, "action result stays an object");
-expect_report(response.type === "ack" && Object.keys(response.result as object).sort().join(",") === "ok,runId,suite,summary,timing", "action result includes authoritative host timing");
+expect_report(response.type === "ack" && Object.keys(response.result as object).sort().join(",") === "attemptId,ok,runId,suite,summary,timing", "action result includes attempt identity and authoritative host timing");
 expect_report(realRun !== undefined, "host exposes the per-action report run through the inspection seam");
 expect_report(realRun.map.snap(["run", "status"]) === "passed", "real replay report is terminal passed");
 expect_report(realRun.map.snap(["summary", "cases"]) === 45, "real replay report contains 45 completed cases");

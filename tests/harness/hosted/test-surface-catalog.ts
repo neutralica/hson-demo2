@@ -110,6 +110,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:hosted-multi-suite-concurrent-node": "tests/runners/livehost/run-hosted-multi-suite-concurrent.node.mts",
   "test:hosted-app-boundary-node": "tests/runners/livehost/run-hosted-app-boundary.node.mts",
   "test:hosted-run-identity-node": "tests/runners/livehost/run-hosted-run-identity.node.mts",
+  "test:phase3a-coordinator-node": "tests/runners/livehost/run-hosted-phase-3a-coordinator.node.mts",
   "test:hosted-retry-classification-node": "tests/runners/livehost/run-hosted-retry-classification.node.mts",
   "test:livetree-lifecycle-foundations-node": "tests/runners/livehost/run-livetree-lifecycle-foundations.node.mts",
   "test:livetree-lifecycle-public-node": "tests/runners/livehost/run-livetree-lifecycle-public.node.mts",

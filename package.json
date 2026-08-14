@@ -61,6 +61,7 @@
     "test:hosted-progress-starvation-node": "node --import=tsx tests/runners/livehost/run-hosted-progress-starvation.node.mts",
     "test:hosted-report-authority-scaling-node": "node --expose-gc --import=tsx tests/runners/livehost/run-hosted-report-authority-scaling.node.mts",
     "test:hosted-production-panel-timeline-node": "node --expose-gc --import=tsx tests/runners/livehost/run-hosted-production-panel-timeline.node.mts",
+    "test:phase3a-coordinator-node": "node --import=tsx tests/runners/livehost/run-hosted-phase-3a-coordinator.node.mts",
     "test:node-application-host": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/node-application-host",
     "test:circuit-worker-service": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-service",
     "test:circuit-livehost-integration": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-action",

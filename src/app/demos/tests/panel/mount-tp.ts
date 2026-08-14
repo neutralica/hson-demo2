@@ -38,15 +38,28 @@ import type { HostedTestPanelRuntime } from "./hosted-test-panel-runtime";
 
 const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
 
-function remembered_hosted_test_run(): string | undefined {
-    try { return globalThis.sessionStorage?.getItem(HOSTED_TEST_RECOVERY_RUN_KEY) ?? undefined; }
+type RememberedHostedTestRun = Readonly<{ runId: string; attemptId?: string }>;
+
+function remembered_hosted_test_run(): RememberedHostedTestRun | undefined {
+    try {
+        const stored = globalThis.sessionStorage?.getItem(HOSTED_TEST_RECOVERY_RUN_KEY) ?? undefined;
+        if (stored === undefined) return undefined;
+        try {
+            const parsed = JSON.parse(stored) as { runId?: unknown; attemptId?: unknown };
+            if (typeof parsed.runId !== "string" || !parsed.runId) return undefined;
+            if (parsed.attemptId !== undefined && (typeof parsed.attemptId !== "string" || !parsed.attemptId)) return undefined;
+            return Object.freeze({ runId: parsed.runId, ...(parsed.attemptId === undefined ? {} : { attemptId: parsed.attemptId }) });
+        } catch {
+            return Object.freeze({ runId: stored });
+        }
+    }
     catch { return undefined; }
 }
 
-function remember_hosted_test_run(runId?: string): void {
+function remember_hosted_test_run(identity?: RememberedHostedTestRun): void {
     try {
-        if (runId === undefined) globalThis.sessionStorage?.removeItem(HOSTED_TEST_RECOVERY_RUN_KEY);
-        else globalThis.sessionStorage?.setItem(HOSTED_TEST_RECOVERY_RUN_KEY, runId);
+        if (identity === undefined) globalThis.sessionStorage?.removeItem(HOSTED_TEST_RECOVERY_RUN_KEY);
+        else globalThis.sessionStorage?.setItem(HOSTED_TEST_RECOVERY_RUN_KEY, JSON.stringify(identity));
     } catch { /* Storage may be unavailable in privacy-restricted contexts. */ }
 }
 
@@ -506,10 +519,10 @@ export function tp_factory(options: Readonly<{
             runBtn.flags.set("disabled");
             appendLogLine(`host discovery failed: ${error instanceof Error ? error.message : String(error)}`);
         }
-        const runId = remembered_hosted_test_run();
-        if (runId === undefined) return;
+        const remembered = remembered_hosted_test_run();
+        if (remembered === undefined) return;
         try {
-            lastResult = await hostedAdapter!.recover(runId);
+            lastResult = await hostedAdapter!.recover(remembered.runId, remembered.attemptId);
         } catch {
             remember_hosted_test_run();
         }
@@ -655,7 +668,7 @@ export function tp_factory(options: Readonly<{
                         runnerMs: lastResult.timing.runnerMs,
                     });
                 } else throw new Error("Canonical hosted-test discovery has not completed.");
-                remember_hosted_test_run(lastResult.runId);
+                remember_hosted_test_run({ runId: lastResult.runId, attemptId: lastResult.attemptId });
                 branch.attrs.set("data-hosted-panel-state", "completed");
             } catch (error) {
                 branch.attrs.set("data-hosted-panel-state", "run-rejected");

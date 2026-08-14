@@ -212,6 +212,7 @@ export function create_hosted_test_livehost(
       if (reportTiming === null) throw new Error("Hosted test report completed without timing.");
       const hostedResult: HostedTestRunResult = {
         runId,
+        attemptId: `${runId}:attempt:1`,
         suite: descriptor.id,
         ok: result.ok,
         summary: normalize_summary(result.summary),
@@ -260,6 +261,7 @@ export function create_hosted_test_livehost(
       if (reportTiming === null) throw new Error("Hosted test report completed without timing.");
       const hostedResult: HostedTestSelectedRunResult = {
         runId,
+        attemptId: `${runId}:attempt:1`,
         suite: HOSTED_TEST_SELECTED_RUN_TARGET,
         testIds: request.testIds,
         ok: result.ok,

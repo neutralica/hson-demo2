@@ -67,6 +67,12 @@ try {
   const first = await firstAdapter.start("livemap/replay");
   const second = await firstAdapter.start("livemap/replay");
   expect_identity(first.runId !== second.runId, "two consecutive runs of one suite receive different run IDs");
+  expect_identity(
+    first.attemptId !== second.attemptId
+      && first.attemptId === `${first.runId}:attempt:1`
+      && second.attemptId === `${second.runId}:attempt:1`,
+    "fresh runs receive distinct first-attempt identities",
+  );
   expect_identity(executions === 2, "two user starts execute the suite twice");
   expect_identity(first.ok && second.ok, "the initial fixture version passes both fresh executions");
 
@@ -85,6 +91,11 @@ try {
   const associations = secondBrowserRuntime.client.recovery.map.capture().value.requests;
   expect_identity(associations["browser-one"]?.["shared-request"]?.runId === first.runId, "the first client retains its request association");
   expect_identity(associations["browser-two"]?.["shared-request"]?.runId === sameRequestIdRun.runId, "the second client retains an independent request association");
+  expect_identity(
+    associations["browser-one"]?.["shared-request"]?.attemptId === first.attemptId
+      && associations["browser-two"]?.["shared-request"]?.attemptId === sameRequestIdRun.attemptId,
+    "request indexes retain attempt identity without treating a shared request ID as an attempt",
+  );
 
   firstAdapter.dispose();
   firstRuntime.dispose();
@@ -103,7 +114,12 @@ try {
   expect_identity(refreshedRuntime.client.clientId !== "browser-one", "a browser refresh receives a new LiveHost client identity");
 
   const recovered = await refreshedAdapter.recover(sameRequestIdRun.runId);
-  expect_identity(recovered.runId === sameRequestIdRun.runId && recovered.ok, "an explicitly known prior run ID recovers its completed report");
+  expect_identity(
+    recovered.runId === sameRequestIdRun.runId
+      && recovered.attemptId === sameRequestIdRun.attemptId
+      && recovered.ok,
+    "an explicitly known prior run ID recovers its completed attempt and report",
+  );
   expect_identity(Number(executions) === 3, "report recovery performs no suite execution");
   expect_identity(refreshedAdapter.capture()?.run.id === sameRequestIdRun.runId, "the recovered report remains correlated to the explicit run ID");
 
@@ -113,6 +129,7 @@ try {
   const freshReport = refreshedAdapter.capture();
   const freshCases = refreshedSink.updates.flatMap((update) => update.newCases);
   expect_identity(fresh.runId !== recovered.runId, "Run after refresh creates a new run instead of returning the recovered report");
+  expect_identity(fresh.attemptId !== recovered.attemptId, "Run after refresh creates a new execution attempt identity");
   expect_identity(Number(executions) === 4, "Run after refresh executes the suite again");
   expect_identity(!fresh.ok && freshReport?.run.status === "failed", "changed failing fixture code controls the fresh outcome");
   expect_identity(freshCases.some((testCase) => testCase.name === "fixture-v2" && testCase.status === "fail"), "the next report contains the changed fixture version");

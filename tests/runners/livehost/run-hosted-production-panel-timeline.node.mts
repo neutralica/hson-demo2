@@ -170,6 +170,7 @@ try {
   let recoveredReportBytes = 0;
   let recoveredEvidenceBytes = 0;
   let recoveredExternalOutputBytes = 0;
+  let recoveredOpaqueChecks = 0;
   if (!startupOnly) {
     const completedRunId = firstByStage.get("run_finished")?.detail?.runId;
     assert.equal(typeof completedRunId, "string", "completed timeline exposes the authoritative run ID");
@@ -188,6 +189,9 @@ try {
       (total, result) => total + Buffer.byteLength(result.stdout) + Buffer.byteLength(result.stderr),
       0,
     );
+    recoveredOpaqueChecks = recoveredReport.suiteRuns
+      .filter((suite) => suite.executionShape === "opaque-aggregate")
+      .reduce((total, suite) => total + suite.counts.passed, 0);
     if (recoveredReport.run.status !== "passed") {
       originalConsole.error(JSON.stringify({
         status: recoveredReport.run.status,
@@ -209,6 +213,8 @@ try {
     assert.equal(recoveredReport.summary.cases, 2_645, "recovered production report retains every canonical case");
     assert.equal(recoveredReport.summary.pass, 2_645, "recovered production report retains every canonical pass");
     assert.equal(recoveredReport.summary.fail, 0, "recovered production report has no canonical failures");
+    assert.equal(recoveredOpaqueChecks, 2_933, "recovered production report retains every opaque check pass");
+    assert.ok(recoveredResult.attemptId, "recovered production result retains execution-attempt identity");
     recovery = Object.freeze({
       runId: recoveredResult.runId,
       reportRev: recoveredResult.reportRev,
@@ -219,6 +225,8 @@ try {
       reportBytes: recoveredReportBytes,
       evidenceBytes: recoveredEvidenceBytes,
       externalOutputBytes: recoveredExternalOutputBytes,
+      opaqueChecks: recoveredOpaqueChecks,
+      attemptId: recoveredResult.attemptId,
     });
     recovered.dispose();
     await wait_for_async(

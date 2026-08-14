@@ -18,7 +18,12 @@ import {
   type HostedTestSuiteRegistry,
 } from "../../harness/hosted/hosted-test-suite";
 import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application";
-import type { HostedTestCoordinatorState, HostedTestRunAssociation } from "../../harness/hosted/hosted-test-application.types";
+import {
+  hosted_test_recovery_association,
+  hosted_test_run_association,
+  type HostedTestCoordinatorState,
+  type HostedTestRunAssociation,
+} from "../../harness/hosted/hosted-test-application.types";
 import type { TestExecutorRegistry } from "../../harness/core/test-executor";
 import { run_fresh_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
 import { make_test_executor_discovery, type TestExecutorDiscovery } from "../../harness/core/test-discovery";
@@ -95,8 +100,9 @@ export function make_in_memory_hosted_test_runtime(
       .map((testCase) => ({ suite: testCase.suite, caseId: testCase.caseId, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
     const common = {
       runId: association.runId,
+      attemptId: association.attemptId,
       reportHostId: association.reportHostId,
-      reportRev: reportClient.recovery.lastAppliedRev ?? association.reportRev,
+      reportRev: reportClient.recovery.lastAppliedRev ?? 0,
       ok: recovered.run.status === "passed",
       summary: {
         suites: recovered.suites.length,
@@ -114,9 +120,7 @@ export function make_in_memory_hosted_test_runtime(
         ? {
           ...common,
           suite: HOSTED_TEST_SELECTED_RUN_TARGET,
-          testIds: Object.keys(recovered.caseBatches).sort().flatMap((key) => (
-            recovered.caseBatches[key]?.map((testCase) => testCase.key) ?? []
-          )),
+          testIds: association.acceptedPlan?.selectionIds ?? [],
         }
         : { ...common, suite: association.suite },
     );
@@ -157,13 +161,17 @@ export function make_in_memory_hosted_test_runtime(
       const action = client.action("tests.run", { suite });
       const requestId = action.request.requestId;
       const association = await new Promise<HostedTestRunAssociation>((resolve, reject) => {
-        const existing = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
-        if (existing) { resolve(existing); return; }
+        const initial = client.recovery.map.capture().value;
+        const existing = initial.requests[client.clientId]?.[requestId];
+        const joined = existing === undefined ? undefined : hosted_test_run_association(initial, existing);
+        if (joined) { resolve(joined); return; }
         const stop = client.recovery.on_change(() => {
-          const found = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
-          if (!found) return;
+          const state = client.recovery.map.capture().value;
+          const found = state.requests[client.clientId]?.[requestId];
+          const association = found === undefined ? undefined : hosted_test_run_association(state, found);
+          if (!association) return;
           stop();
-          resolve(found);
+          resolve(association);
         });
         void action.then((response) => {
           if (response.type !== "error") return;
@@ -181,13 +189,17 @@ export function make_in_memory_hosted_test_runtime(
       const requestId = action.request.requestId;
       const result = action.then(decode_selected_hosted_test_run_response);
       const association = await new Promise<HostedTestRunAssociation>((resolve, reject) => {
-        const existing = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
-        if (existing) { resolve(existing); return; }
+        const initial = client.recovery.map.capture().value;
+        const existing = initial.requests[client.clientId]?.[requestId];
+        const joined = existing === undefined ? undefined : hosted_test_run_association(initial, existing);
+        if (joined) { resolve(joined); return; }
         const stop = client.recovery.on_change(() => {
-          const found = client.recovery.map.capture().value.requests[client.clientId]?.[requestId];
-          if (!found) return;
+          const state = client.recovery.map.capture().value;
+          const found = state.requests[client.clientId]?.[requestId];
+          const association = found === undefined ? undefined : hosted_test_run_association(state, found);
+          if (!association) return;
           stop();
-          resolve(found);
+          resolve(association);
         });
         void result.catch((error) => {
           stop();
@@ -196,13 +208,11 @@ export function make_in_memory_hosted_test_runtime(
       });
       return attach_run(association, result);
     },
-    async recover_run(runId: string) {
+    async recover_run(runId: string, attemptId?: string) {
       await readiness;
-      const matches = Object.values(client.recovery.map.capture().value.requests)
-        .flatMap((requests) => Object.values(requests))
-        .filter((association) => association.runId === runId);
-      if (matches.length !== 1) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
-      return attach_run(matches[0]!);
+      const association = hosted_test_recovery_association(client.recovery.map.capture().value, runId, attemptId);
+      if (association === undefined) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
+      return attach_run(association);
     },
     dispose() {
       if (disposed) return;
