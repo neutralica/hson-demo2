@@ -5,8 +5,8 @@ import { equal_row } from "./assert-helpers";
 
 const SUITE = "livemap/exact-transport-rejection";
 
-function test(name: string, run: TestCase["run"]): TestCase {
-  return { suite: SUITE, name, run };
+function test(caseId: string, name: string, run: TestCase["run"]): TestCase {
+  return { suite: SUITE, caseId, name, run };
 }
 
 function own_data(entries: readonly (readonly [string, JsonValue])[]): Record<string, JsonValue> {
@@ -36,7 +36,7 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      test("legacy restore uses JavaScript-observable integer-key order", () => {
+      test("legacy-restore-uses-javascript-observable-integer-key-order", "legacy restore uses JavaScript-observable integer-key order", () => {
         const target = hson.liveMap.fromJson({ old: true });
         target.restore({ rev: 4, value: own_data([["10", 10], ["2", 2], ["1", 1]]) });
         const expected = hson.liveMap.fromJson('{"1":1,"2":2,"10":10}');
@@ -45,7 +45,7 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
           equal_row("revision", target.rev, 4),
         ] };
       }),
-      test("legacy materialization cannot recover overwritten duplicate history", () => {
+      test("legacy-materialization-cannot-recover-overwritten-duplicate-history", "legacy materialization cannot recover overwritten duplicate history", () => {
         const target = hson.liveMap.fromJson({ old: true });
         target.restore({ rev: 1, value: JSON.parse('{"a":1,"a":2}') as JsonValue });
         return { assertRows: [
@@ -53,7 +53,7 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
           equal_row("last value remains", target.snap(["a"]), 2),
         ] };
       }),
-      test("legacy replay is distinct and remains readable", () => {
+      test("legacy-replay-is-distinct-and-remains-readable", "legacy replay is distinct and remains readable", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const commit = target.replay({ prevRev: 0, ops: [{ kind: "set", path: ["value"], prev: 0, next: 1 }] });
         return { assertRows: [
@@ -61,7 +61,7 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
           equal_row("exact output added", commit.format, "structural-json"),
         ] };
       }),
-      test("restore rejects an unsupported exact format", () => {
+      test("restore-rejects-an-unsupported-exact-format", "restore rejects an unsupported exact format", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.restore({ rev: 0, format: "other", formatVersion: 1, payload: "{}" } as never));
         return { assertRows: [
@@ -71,12 +71,12 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
           equal_row("revision unchanged", target.rev, 0),
         ] };
       }),
-      test("restore rejects an unsupported exact version", () => {
+      test("restore-rejects-an-unsupported-exact-version", "restore rejects an unsupported exact version", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.restore({ rev: 0, format: "structural-json", formatVersion: 2, payload: "{}" } as never));
         return { assertRows: [equal_row("reason", result.reason, "formatVersion is not supported")] };
       }),
-      test("apply rejects a non-string exact payload", () => {
+      test("apply-rejects-a-non-string-exact-payload", "apply rejects a non-string exact payload", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.apply({ prevRev: 0, format: "structural-json", formatVersion: 1, payload: 1 } as never));
         return { assertRows: [
@@ -84,12 +84,12 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
           equal_row("reason", result.reason, "payload is not a string"),
         ] };
       }),
-      test("restore rejects malformed structural JSON", () => {
+      test("restore-rejects-malformed-structural-json", "restore rejects malformed structural JSON", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.restore({ rev: 0, format: "structural-json", formatVersion: 1, payload: "{" }));
         return { assertRows: [equal_row("reason", result.reason, "payload is not valid structural JSON")] };
       }),
-      test("partial exact replay never falls back to legacy ops", () => {
+      test("partial-exact-replay-never-falls-back-to-legacy-ops", "partial exact replay never falls back to legacy ops", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.replay({ prevRev: 0, format: "structural-json", ops: [] } as never));
         return { assertRows: [
@@ -97,12 +97,12 @@ export function livemap_exact_transport_rejection_suite(): TestSuite {
           equal_row("reason", result.reason, "formatVersion is not supported"),
         ] };
       }),
-      test("replay rejects a non-array structural payload root", () => {
+      test("replay-rejects-a-non-array-structural-payload-root", "replay rejects a non-array structural payload root", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.replay({ prevRev: 0, format: "structural-json", formatVersion: 1, payload: "{}" }));
         return { assertRows: [equal_row("reason", result.reason, "payload root is not an operation array")] };
       }),
-      test("replay rejects malformed exact operation structure with an index", () => {
+      test("replay-rejects-malformed-exact-operation-structure-with-an-index", "replay rejects malformed exact operation structure with an index", () => {
         const target = hson.liveMap.fromJson({ value: 0 });
         const result = failure(() => target.replay({
           prevRev: 0,

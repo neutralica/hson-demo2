@@ -13,16 +13,16 @@ export const JSDOM_HOSTED_CANVAS_SUITE_IDS = Object.freeze([
 ] as const);
 
 export const JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS = Object.freeze([
-  "livetree/canvas-clear::canvas.clear clears full backing bitmap",
-  "livetree/canvas-clear::canvas.clear rectangle clears only requested region",
-  "livetree/canvas-plot::canvas.plot runs callback with native 2d context when mounted",
-  "livetree/canvas-plot::canvas.must.plot runs callback with native 2d context when mounted",
+  "livetree/canvas-clear::canvas.clear-clears-full-backing-bitmap",
+  "livetree/canvas-clear::canvas.clear-rectangle-clears-only-requested-region",
+  "livetree/canvas-plot::canvas.plot-runs-callback-with-native-2d-context-when-mounted",
+  "livetree/canvas-plot::canvas.must.plot-runs-callback-with-native-2d-context-when-mounted",
 ] as const);
 
 export const JSDOM_HOSTED_CANVAS_DUPLICATE_CASE_KEYS = Object.freeze([
-  "livetree/canvas-display::canvas.display.match.watch manual off is idempotent",
-  "livetree/canvas-display::canvas.display.match.watch auto-cleans on parent removeChildren",
-  "livetree/canvas-pointer::canvas.display.match.watch updates backing size after display resize",
+  "livetree/canvas-display::canvas.display.match.watch-manual-off-is-idempotent",
+  "livetree/canvas-display::canvas.display.match.watch-auto-cleans-on-parent-removechildren",
+  "livetree/canvas-pointer::canvas.display.match.watch-updates-backing-size-after-display-resize",
 ] as const);
 
 export function all_jsdom_hosted_canvas_suites(): readonly TestSuite[] {
@@ -35,7 +35,7 @@ export function all_jsdom_hosted_canvas_suites(): readonly TestSuite[] {
     if (suite === undefined) throw new Error(`Missing hosted canvas suite: ${id}`);
     const seen = new Set<string>();
     const cases = suite.cases.filter((testCase) => {
-      const key = `${testCase.suite}::${testCase.name}`;
+      const key = `${testCase.suite}::${testCase.caseId}`;
       if (seen.has(key)) {
         duplicateCaseKeys.push(key);
         return false;
@@ -55,7 +55,7 @@ export function all_jsdom_hosted_canvas_suites(): readonly TestSuite[] {
   if (deferredCaseKeys.join("\n") !== JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.join("\n")) {
     throw new Error("Unexpected deferred case selection in hosted canvas collection.");
   }
-  const caseKeys = selected.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+  const caseKeys = selected.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`));
   if (new Set(caseKeys).size !== caseKeys.length) throw new Error("Duplicate case identity in hosted canvas collection.");
   return Object.freeze(selected);
 }

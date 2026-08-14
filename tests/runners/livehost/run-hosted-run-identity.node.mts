@@ -29,6 +29,7 @@ const registry = make_hosted_test_suite_registry([{
       suite: "hosted/run-identity",
       cases: [{
         suite: "hosted/run-identity",
+        caseId: `fixture-v${observedVersion}`,
         name: `fixture-v${observedVersion}`,
         run() {
           if (!observedPass) throw new Error(`fixture-v${observedVersion} failed`);

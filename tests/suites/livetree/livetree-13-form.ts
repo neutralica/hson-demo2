@@ -9,7 +9,7 @@ export function livetree_new_form_api(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "setValue writes input value attr and getValue reads it",
+            caseId: "setvalue-writes-input-value-attr-and-getvalue-reads-it", name: "setValue writes input value attr and getValue reads it",
             html: `<div id="root"><input id="field" /></div>`,
             fixture: "form/value",
             sub: "input-set-get",
@@ -27,7 +27,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "setValue returns tree for chaining",
+            caseId: "setvalue-returns-tree-for-chaining", name: "setValue returns tree for chaining",
             html: `<div id="root"><input id="field" /></div>`,
             fixture: "form/value",
             sub: "input-chain",
@@ -46,7 +46,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "getValue reads existing input value attr",
+            caseId: "getvalue-reads-existing-input-value-attr", name: "getValue reads existing input value attr",
             html: `<div id="root"><input id="field" value="preset" /></div>`,
             fixture: "form/value",
             sub: "input-existing",
@@ -63,7 +63,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "textarea setValue roundtrips through form api",
+            caseId: "textarea-setvalue-roundtrips-through-form-api", name: "textarea setValue roundtrips through form api",
             html: `<div id="root"><textarea id="field"></textarea></div>`,
             fixture: "form/value",
             sub: "textarea-set-get",
@@ -81,7 +81,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "setChecked true writes checked state",
+            caseId: "setchecked-true-writes-checked-state", name: "setChecked true writes checked state",
             html: `<div id="root"><input id="check" type="checkbox" /></div>`,
             fixture: "form/checked",
             sub: "checkbox-true",
@@ -99,7 +99,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "setChecked false updates checked state",
+            caseId: "setchecked-false-updates-checked-state", name: "setChecked false updates checked state",
             html: `<div id="root"><input id="check" type="checkbox" checked /></div>`,
             fixture: "form/checked",
             sub: "checkbox-false",
@@ -117,7 +117,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "setChecked returns tree for chaining",
+            caseId: "setchecked-returns-tree-for-chaining", name: "setChecked returns tree for chaining",
             html: `<div id="root"><input id="check" type="checkbox" /></div>`,
             fixture: "form/checked",
             sub: "checkbox-chain",
@@ -136,7 +136,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "getSelected reads selected single select value from mounted DOM",
+            caseId: "getselected-reads-selected-single-select-value-from-mounted-dom", name: "getSelected reads selected single select value from mounted DOM",
             html: `
     <div id="root">
       <select id="choice">
@@ -160,7 +160,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "setSelected writes single select value",
+            caseId: "setselected-writes-single-select-value", name: "setSelected writes single select value",
             html: `
     <div id="root">
       <select id="choice">
@@ -190,7 +190,7 @@ export function livetree_new_form_api(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "setSelected writes multiple select values",
+            caseId: "setselected-writes-multiple-select-values", name: "setSelected writes multiple select values",
             html: `
         <div id="root">
           <select id="choice" multiple>

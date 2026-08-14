@@ -29,7 +29,7 @@ export function live_demo_shell_state_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: SUITE,
-      name: "initial shell state keeps desktop view null and Bling active",
+      caseId: "initial-shell-state-keeps-desktop-view-null-and-bling-active", name: "initial shell state keeps desktop view null and Bling active",
       run: () => {
         const store = create_demo_store();
         if (store.getView() !== null) throw new Error("expected initial currentView to be null");
@@ -38,32 +38,32 @@ export function live_demo_shell_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "schema accepts canonical widget membership and registration order",
+      caseId: "schema-accepts-canonical-widget-membership-and-registration-order", name: "schema accepts canonical widget membership and registration order",
       run: () => assert_validation(state(["point", "bling"]), true),
     },
     {
       suite: SUITE,
-      name: "schema rejects duplicate widget membership",
+      caseId: "schema-rejects-duplicate-widget-membership", name: "schema rejects duplicate widget membership",
       run: () => assert_validation(state(["point", "point"]), false),
     },
     {
       suite: SUITE,
-      name: "schema rejects noncanonical widget order",
+      caseId: "schema-rejects-noncanonical-widget-order", name: "schema rejects noncanonical widget order",
       run: () => assert_validation(state(["bling", "point"]), false),
     },
     {
       suite: SUITE,
-      name: "base schema rejects unknown widget IDs",
+      caseId: "base-schema-rejects-unknown-widget-ids", name: "base schema rejects unknown widget IDs",
       run: () => assert_validation({ ui: { currentView: null, activeWidgets: ["unknown-widget"] } }, false),
     },
     {
       suite: SUITE,
-      name: "schema accepts the experimental color-sudoku identity",
+      caseId: "schema-accepts-the-experimental-color-sudoku-identity", name: "schema accepts the experimental color-sudoku identity",
       run: () => assert_validation(state([], "color-sudoku"), true),
     },
     {
       suite: SUITE,
-      name: "schema rejects unknown, widget, and misspelled main-view IDs",
+      caseId: "schema-rejects-unknown-widget-and-misspelled-main-view-ids", name: "schema rejects unknown, widget, and misspelled main-view IDs",
       run: () => {
         assert_validation({ ui: { currentView: "unknown-view", activeWidgets: [] } }, false);
         assert_validation({ ui: { currentView: "bling", activeWidgets: [] } }, false);
@@ -72,12 +72,12 @@ export function live_demo_shell_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "exact shell schema rejects removed aboutTocOpen state",
+      caseId: "exact-shell-schema-rejects-removed-abouttocopen-state", name: "exact shell schema rejects removed aboutTocOpen state",
       run: () => assert_validation({ ui: { currentView: null, activeWidgets: [], aboutTocOpen: false } }, false),
     },
     {
       suite: SUITE,
-      name: "canonicalizer deduplicates and restores registration order",
+      caseId: "canonicalizer-deduplicates-and-restores-registration-order", name: "canonicalizer deduplicates and restores registration order",
       run: () => assert_widgets(
         canonicalize_widget_ids(["bling", "point", "point", "oklch"]),
         ["point", "oklch", "bling"],
@@ -85,7 +85,7 @@ export function live_demo_shell_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "typed widget location retains the schema as final invariant guard",
+      caseId: "typed-widget-location-retains-the-schema-as-final-invariant-guard", name: "typed widget location retains the schema as final invariant guard",
       run: () => {
         const store = create_demo_store(state(["point", "bling"]));
         let rejected = false;
@@ -100,7 +100,7 @@ export function live_demo_shell_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "widget intents always commit canonical membership",
+      caseId: "widget-intents-always-commit-canonical-membership", name: "widget intents always commit canonical membership",
       run: () => {
         const store = create_demo_store(state());
         store.startWidget("bling");
@@ -117,7 +117,7 @@ export function live_demo_shell_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "main-view intents preserve null toggle semantics",
+      caseId: "main-view-intents-preserve-null-toggle-semantics", name: "main-view intents preserve null toggle semantics",
       run: () => {
         const store = create_demo_store(state());
         store.toggleView("about");

@@ -91,7 +91,7 @@ const registry = make_hosted_test_suite_registry([{
   run(onEvent = () => undefined, options = {}) {
     return run_test_suites([{
       suite: "hosted/deployment",
-      cases: [{ suite: "hosted/deployment", name: "routing fixture", run() {} }],
+      cases: [{ suite: "hosted/deployment", caseId: "routing-fixture", name: "routing fixture", run() {} }],
     }], onEvent, options);
   },
 }]);

@@ -25,7 +25,7 @@ function fresh_shape_case(suite: string): LiveTreeCaseSpec {
   let canonical = false;
   return {
     suite,
-    name: "fresh nodes omit empty optional containers",
+    caseId: "fresh-nodes-omit-empty-optional-containers", name: "fresh nodes omit empty optional containers",
     html: `<main></main>`,
     act() {
       const fresh = _CREATE_NODE({ $_tag: "div" });
@@ -43,7 +43,7 @@ function attrs_case(suite: string): LiveTreeCaseSpec {
   let lazy = false;
   return {
     suite,
-    name: "attribute writes materialize and final deletion compacts storage",
+    caseId: "attribute-writes-materialize-and-final-deletion-compacts-storage", name: "attribute writes materialize and final deletion compacts storage",
     html: `<main></main>`,
     act() {
       const node = _CREATE_NODE({ $_tag: "div" });
@@ -65,7 +65,7 @@ function style_compaction_case(suite: string): LiveTreeCaseSpec {
   let compact = false;
   return {
     suite,
-    name: "final inline style deletion removes the attribute container",
+    caseId: "final-inline-style-deletion-removes-the-attribute-container", name: "final inline style deletion removes the attribute container",
     html: `<main></main>`,
     act() {
       const node = _CREATE_NODE({ $_tag: "div" });
@@ -86,7 +86,7 @@ function persisted_quid_case(suite: string): LiveTreeCaseSpec {
   let exact = false;
   return {
     suite,
-    name: "persisted QUID metadata materializes and scrubs completely",
+    caseId: "persisted-quid-metadata-materializes-and-scrubs-completely", name: "persisted QUID metadata materializes and scrubs completely",
     html: `<main></main>`,
     act() {
       const node = _CREATE_NODE({ $_tag: "div" });
@@ -107,7 +107,7 @@ function nonpersisted_quid_case(suite: string): LiveTreeCaseSpec {
   let exact = false;
   return {
     suite,
-    name: "non-persisted QUID identity never creates metadata",
+    caseId: "non-persisted-quid-identity-never-creates-metadata", name: "non-persisted QUID identity never creates metadata",
     html: `<main></main>`,
     act() {
       const node = _CREATE_NODE({ $_tag: "div" });
@@ -125,7 +125,7 @@ function terminal_disposal_case(suite: string): LiveTreeCaseSpec {
   let terminal = false;
   return {
     suite,
-    name: "terminal disposal removes final identity metadata",
+    caseId: "terminal-disposal-removes-final-identity-metadata", name: "terminal disposal removes final identity metadata",
     html: `<main></main>`,
     act() {
       const child = _CREATE_NODE({ $_tag: "span" });
@@ -148,7 +148,7 @@ function serialization_case(suite: string): LiveTreeCaseSpec {
   let stable = false;
   return {
     suite,
-    name: "serializers and round trips omit absent containers",
+    caseId: "serializers-and-round-trips-omit-absent-containers", name: "serializers and round trips omit absent containers",
     html: `<main></main>`,
     act() {
       const input = { alpha: "x", nested: { value: 2 } };
@@ -177,7 +177,7 @@ function invariants_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "invariants accept canonical absence and reject malformed optional containers",
+    caseId: "invariants-accept-canonical-absence-and-reject-malformed-optional-containers", name: "invariants accept canonical absence and reject malformed optional containers",
     html: `<main></main>`,
     act() {
       const acceptedNodes = [
@@ -302,7 +302,7 @@ function clone_case(suite: string): LiveTreeCaseSpec {
   let metaCanonical = false;
   return {
     suite,
-    name: "branch cloning preserves only populated optional containers",
+    caseId: "branch-cloning-preserves-only-populated-optional-containers", name: "branch cloning preserves only populated optional containers",
     html: `<main></main>`,
     act() {
       const sourceNode = _CREATE_NODE({ $_tag: "div" });
@@ -326,7 +326,7 @@ function parser_paths_case(suite: string): LiveTreeCaseSpec {
   let boundaries = false;
   return {
     suite,
-    name: "JSON HTML and SVG parser paths produce canonical storage",
+    caseId: "json-html-and-svg-parser-paths-produce-canonical-storage", name: "JSON HTML and SVG parser paths produce canonical storage",
     dom: true,
     html: `<main></main>`,
     act() {

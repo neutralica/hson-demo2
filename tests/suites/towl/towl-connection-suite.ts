@@ -262,7 +262,7 @@ export function towl_connection_suite(): TestSuite {
     cases: [
       towl_case(
         SUITE,
-        "structured errors distinguish credential transport and terminal failures",
+        "structured-errors-distinguish-credential-transport-and-terminal-failures", "structured errors distinguish credential transport and terminal failures",
         () => ({
           credential: classify_towl_connection_error(new LiveHostClientSessionError(
             "LIVEHOST_SESSION_CREDENTIAL_UNKNOWN",
@@ -296,7 +296,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "schema-bound mirror renders through one root snap and one root watch",
+        "schema-bound-mirror-renders-through-one-root-snap-and-one-root-watch", "schema-bound mirror renders through one root snap and one root watch",
         () => with_runtime(async (runtime) => {
           const fixture = await make_connection(logicalMapId, () => connected_transport(runtime));
           try {
@@ -332,7 +332,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "replacement client reuses identity credential mirror and seat without replaying pull",
+        "replacement-client-reuses-identity-credential-mirror-and-seat-without-replaying-pull", "replacement client reuses identity credential mirror and seat without replaying pull",
         () => with_runtime(async (runtime) => {
           const firstPairs: SocketPair[] = [];
           const secondPairs: SocketPair[] = [];
@@ -406,7 +406,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "transport failure retains the valid room credential",
+        "transport-failure-retains-the-valid-room-credential", "transport failure retains the valid room credential",
         () => with_runtime(async (runtime) => {
           const firstPair = make_socket_pair();
           let attempts = 0;
@@ -436,7 +436,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "terminal Leave sends one departure, ends the session, clears credential, and is idempotent",
+        "terminal-leave-sends-one-departure-ends-the-session-clears-credential-and-is-idempotent", "terminal Leave sends one departure, ends the session, clears credential, and is idempotent",
         () => with_runtime(async (runtime) => {
           const fixture = await make_connection(logicalMapId, () => connected_transport(runtime));
           try {
@@ -491,7 +491,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "Leave during reconnect cancels retries and exits locally without claiming remote release",
+        "leave-during-reconnect-cancels-retries-and-exits-locally-without-claiming-remote-release", "Leave during reconnect cancels retries and exits locally without claiming remote release",
         () => with_runtime(async (runtime) => {
           const scheduler = make_scheduler();
           const firstPair = make_socket_pair();
@@ -551,7 +551,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "manual Reconnect reuses one recovery pipeline without overlapping attempts",
+        "manual-reconnect-reuses-one-recovery-pipeline-without-overlapping-attempts", "manual Reconnect reuses one recovery pipeline without overlapping attempts",
         () => with_runtime(async (runtime) => {
           const firstPair = make_socket_pair();
           let attempts = 0;
@@ -597,7 +597,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "definitive stale credential creates a truthful unseated replacement session",
+        "definitive-stale-credential-creates-a-truthful-unseated-replacement-session", "definitive stale credential creates a truthful unseated replacement session",
         () => with_runtime(async (runtime) => {
           const fixture = await make_connection(
             logicalMapId,
@@ -630,7 +630,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "bounded retry advances deterministically and success cancels future work",
+        "bounded-retry-advances-deterministically-and-success-cancels-future-work", "bounded retry advances deterministically and success cancels future work",
         () => with_runtime(async (runtime) => {
           const scheduler = make_scheduler();
           const firstPair = make_socket_pair();
@@ -669,7 +669,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "retry exhaustion becomes terminal without invisible timers",
+        "retry-exhaustion-becomes-terminal-without-invisible-timers", "retry exhaustion becomes terminal without invisible timers",
         () => with_runtime(async (runtime) => {
           const scheduler = make_scheduler();
           const firstPair = make_socket_pair();
@@ -699,7 +699,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "disposal cancels pending retry and makes a late socket opening inert",
+        "disposal-cancels-pending-retry-and-makes-a-late-socket-opening-inert", "disposal cancels pending retry and makes a late socket opening inert",
         () => with_runtime(async (runtime) => {
           const scheduler = make_scheduler();
           const firstPair = make_socket_pair();
@@ -750,7 +750,7 @@ export function towl_connection_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "disposal during recovery makes held completion callbacks inert",
+        "disposal-during-recovery-makes-held-completion-callbacks-inert", "disposal during recovery makes held completion callbacks inert",
         () => with_runtime(async (runtime) => {
           const pairs: SocketPair[] = [];
           const fixture = await make_connection(logicalMapId, () => {

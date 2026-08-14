@@ -5,8 +5,8 @@ import { equal_row, ordered_keys_row, own_value_row, same_value_row } from "./as
 
 const SUITE = "livemap/projected-equality";
 
-function test(name: string, run: TestCase["run"]): TestCase {
-  return { suite: SUITE, name, run };
+function test(caseId: string, name: string, run: TestCase["run"]): TestCase {
+  return { suite: SUITE, caseId, name, run };
 }
 
 function own_record(entries: readonly (readonly [string, JsonValue])[]): Record<string, JsonValue> {
@@ -30,7 +30,7 @@ export function livemap_projected_equality_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      test("mutation from positive zero to negative zero publishes", () => {
+      test("mutation-from-positive-zero-to-negative-zero-publishes", "mutation from positive zero to negative zero publishes", () => {
         const map = number_map(0);
         const commit = map.at(["value"]).set(-0);
         return { assertRows: [
@@ -39,7 +39,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           same_value_row("stored value is negative zero", map.snap(["value"]), -0),
         ] };
       }),
-      test("mutation from negative zero to negative zero is a no-op", () => {
+      test("mutation-from-negative-zero-to-negative-zero-is-a-no-op", "mutation from negative zero to negative zero is a no-op", () => {
         const map = number_map(-0);
         const commit = map.at(["value"]).set(-0);
         return { assertRows: [
@@ -48,7 +48,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           same_value_row("stored value remains negative zero", map.snap(["value"]), -0),
         ] };
       }),
-      test("ordinary object order-only replacement publishes", () => {
+      test("ordinary-object-order-only-replacement-publishes", "ordinary object order-only replacement publishes", () => {
         const map = hson.liveMap.fromJson('{"value":{"a":1,"b":2}}');
         const commit = map.replace(["value"], { b: 2, a: 1 });
         const value = map.snap(["value"]) as object;
@@ -57,27 +57,27 @@ export function livemap_projected_equality_suite(): TestSuite {
           ordered_keys_row("replacement order retained", value, ["b", "a"]),
         ] };
       }),
-      test("identical ordinary object order is a no-op", () => {
+      test("identical-ordinary-object-order-is-a-no-op", "identical ordinary object order is a no-op", () => {
         const map = hson.liveMap.fromJson('{"value":{"a":1,"b":2}}');
         const commit = map.replace(["value"], { a: 1, b: 2 });
         return { assertRows: [equal_row("same order suppressed", commit.changed, false)] };
       }),
-      test("canonical integer-like order is compared before public enumeration", () => {
+      test("canonical-integer-like-order-is-compared-before-public-enumeration", "canonical integer-like order is compared before public enumeration", () => {
         const map = hson.liveMap.fromJson('{"value":{"10":"ten","2":"two","1":"one"}}');
         const commit = map.replace(["value"], { "1": "one", "2": "two", "10": "ten" });
         return { assertRows: [equal_row("integer order transition changed", commit.changed, true)] };
       }),
-      test("nested object order-only replacement publishes", () => {
+      test("nested-object-order-only-replacement-publishes", "nested object order-only replacement publishes", () => {
         const map = hson.liveMap.fromJson({ value: { nested: { a: 1, b: 2 } } });
         const commit = map.replace(["value"], { nested: { b: 2, a: 1 } });
         return { assertRows: [equal_row("nested order transition changed", commit.changed, true)] };
       }),
-      test("reordered arrays remain unequal", () => {
+      test("reordered-arrays-remain-unequal", "reordered arrays remain unequal", () => {
         const map = hson.liveMap.fromJson({ value: [1, 2] });
         const commit = map.replace(["value"], [2, 1]);
         return { assertRows: [equal_row("array order transition changed", commit.changed, true)] };
       }),
-      test("array item positive and negative zero remain unequal", () => {
+      test("array-item-positive-and-negative-zero-remain-unequal", "array item positive and negative zero remain unequal", () => {
         const map = hson.liveMap.fromJson({ value: [0] });
         const commit = map.replace(["value"], [-0]);
         const value = map.snap(["value"]) as number[];
@@ -86,7 +86,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           same_value_row("array stores negative zero", value[0], -0),
         ] };
       }),
-      test("dangerous-key value change publishes safely", () => {
+      test("dangerous-key-value-change-publishes-safely", "dangerous-key value change publishes safely", () => {
         const map = hson.liveMap.fromJson('{"value":{"__proto__":1}}');
         const commit = map.replace(["value"], own_record([["__proto__", 2]]));
         const value = map.snap(["value"]) as object;
@@ -96,12 +96,12 @@ export function livemap_projected_equality_suite(): TestSuite {
           equal_row("prototype remains ordinary", Object.getPrototypeOf(value) === Object.prototype, true),
         ] };
       }),
-      test("identical dangerous-key entries are a no-op", () => {
+      test("identical-dangerous-key-entries-are-a-no-op", "identical dangerous-key entries are a no-op", () => {
         const map = hson.liveMap.fromJson('{"value":{"__proto__":1,"constructor":2,"prototype":3}}');
         const commit = map.replace(["value"], own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]));
         return { assertRows: [equal_row("dangerous entries suppressed", commit.changed, false)] };
       }),
-      test("present empty object differs from absence", () => {
+      test("present-empty-object-differs-from-absence", "present empty object differs from absence", () => {
         const map = hson.liveMap.fromJson({});
         const commit = map.setMany([], { value: {} });
         return { assertRows: [
@@ -109,42 +109,42 @@ export function livemap_projected_equality_suite(): TestSuite {
           equal_row("empty object is present", Object.hasOwn(map.snap() as object, "value"), true),
         ] };
       }),
-      test("empty object and empty array remain unequal", () => {
+      test("empty-object-and-empty-array-remain-unequal", "empty object and empty array remain unequal", () => {
         const map = hson.liveMap.fromJson({ value: {} });
         const commit = map.replace(["value"], []);
         return { assertRows: [equal_row("empty domain transition changed", commit.changed, true)] };
       }),
-      test("identical isolated surrogate strings are a no-op", () => {
+      test("identical-isolated-surrogate-strings-are-a-no-op", "identical isolated surrogate strings are a no-op", () => {
         const map = hson.liveMap.fromJson({ value: "\ud800" });
         const commit = map.replace(["value"], "\ud800");
         return { assertRows: [equal_row("same code unit suppressed", commit.changed, false)] };
       }),
-      test("different isolated surrogate strings publish", () => {
+      test("different-isolated-surrogate-strings-publish", "different isolated surrogate strings publish", () => {
         const map = hson.liveMap.fromJson({ value: "\ud800" });
         const commit = map.replace(["value"], "\ud801");
         return { assertRows: [equal_row("different code unit changed", commit.changed, true)] };
       }),
-      test("array includes rejects reordered object entries", () => {
+      test("array-includes-rejects-reordered-object-entries", "array includes rejects reordered object entries", () => {
         const map = hson.liveMap.fromJson({ items: [{ a: 1, b: 2 }] });
         return { assertRows: [equal_row("reordered object absent", map.at(["items"]).array.includes({ b: 2, a: 1 }), false)] };
       }),
-      test("array includes accepts identical object entry order", () => {
+      test("array-includes-accepts-identical-object-entry-order", "array includes accepts identical object entry order", () => {
         const map = hson.liveMap.fromJson({ items: [{ a: 1, b: 2 }] });
         return { assertRows: [equal_row("same ordered object present", map.at(["items"]).array.includes({ a: 1, b: 2 }), true)] };
       }),
-      test("array includes distinguishes positive and negative zero", () => {
+      test("array-includes-distinguishes-positive-and-negative-zero", "array includes distinguishes positive and negative zero", () => {
         const map = hson.liveMap.fromJson({ items: [0] });
         return { assertRows: [equal_row("negative zero absent", map.at(["items"]).array.includes(-0), false)] };
       }),
-      test("array indexOf rejects reordered object entries", () => {
+      test("array-indexof-rejects-reordered-object-entries", "array indexOf rejects reordered object entries", () => {
         const map = hson.liveMap.fromJson({ items: [{ a: 1, b: 2 }] });
         return { assertRows: [equal_row("reordered object index", map.at(["items"]).array.indexOf({ b: 2, a: 1 }), -1)] };
       }),
-      test("array indexOf accepts identical object entry order", () => {
+      test("array-indexof-accepts-identical-object-entry-order", "array indexOf accepts identical object entry order", () => {
         const map = hson.liveMap.fromJson({ items: [{ a: 1, b: 2 }] });
         return { assertRows: [equal_row("same ordered object index", map.at(["items"]).array.indexOf({ a: 1, b: 2 }), 0)] };
       }),
-      test("array unique retains both positive and negative zero", () => {
+      test("array-unique-retains-both-positive-and-negative-zero", "array unique retains both positive and negative zero", () => {
         const map = hson.liveMap.fromJson({ items: [0, -0, 0] });
         map.at(["items"]).array.unique();
         const items = map.snap(["items"]) as number[];
@@ -154,7 +154,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           same_value_row("second remains negative zero", items[1], -0),
         ] };
       }),
-      test("array removeValue removes only the SameValue match", () => {
+      test("array-removevalue-removes-only-the-samevalue-match", "array removeValue removes only the SameValue match", () => {
         const map = hson.liveMap.fromJson({ items: [0, -0] });
         map.at(["items"]).array.removeValue(-0);
         const items = map.snap(["items"]) as number[];
@@ -163,7 +163,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           same_value_row("positive zero remains", items[0], 0),
         ] };
       }),
-      test("replay conflicts on differently ordered declared previous value", () => {
+      test("replay-conflicts-on-differently-ordered-declared-previous-value", "replay conflicts on differently ordered declared previous value", () => {
         const source = hson.liveMap.fromJson('{"user":{"a":1,"b":2}}');
         const commit = source.replace(["user"], { a: 3, b: 4 });
         const target = hson.liveMap.fromJson('{"user":{"b":2,"a":1}}');
@@ -175,7 +175,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           equal_row("target revision stays unchanged", target.rev, 0),
         ] };
       }),
-      test("replay accepts the same ordered declared previous value", () => {
+      test("replay-accepts-the-same-ordered-declared-previous-value", "replay accepts the same ordered declared previous value", () => {
         const source = hson.liveMap.fromJson('{"user":{"a":1,"b":2}}');
         const commit = source.replace(["user"], { a: 3, b: 4 });
         const target = hson.liveMap.fromJson('{"user":{"a":1,"b":2}}');
@@ -185,7 +185,7 @@ export function livemap_projected_equality_suite(): TestSuite {
           equal_row("target revision advanced", target.rev, 1),
         ] };
       }),
-      test("store ordered equality publishes order and zero changes only", () => {
+      test("store-ordered-equality-publishes-order-and-zero-changes-only", "store ordered equality publishes order and zero changes only", () => {
         const map = hson.liveMap.fromJson({ value: { a: 1, b: 2 }, number: 0 });
         let diffs = 0;
         let numberEvents = 0;

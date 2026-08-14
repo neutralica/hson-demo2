@@ -196,7 +196,7 @@ export function towl_client_suite(): TestSuite {
     cases: [
       towl_case(
         SUITE,
-        "client creates a resumable session and reflects lobby state",
+        "client-creates-a-resumable-session-and-reflects-lobby-state", "client creates a resumable session and reflects lobby state",
         async () => with_runtime(async (runtime) => {
           const connection = await create_connected_client(
             runtime,
@@ -246,7 +246,7 @@ export function towl_client_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "join assigns the local client its authoritative seat",
+        "join-assigns-the-local-client-its-authoritative-seat", "join assigns the local client its authoritative seat",
         async () => with_runtime(async (runtime) => {
           const connection = await create_connected_client(
             runtime,
@@ -292,7 +292,7 @@ export function towl_client_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "two clients join opposite seats and reflect the same state",
+        "two-clients-join-opposite-seats-and-reflect-the-same-state", "two clients join opposite seats and reflect the same state",
         async () => with_runtime(async (runtime) => {
           const first = await create_connected_client(
             runtime,
@@ -380,7 +380,7 @@ export function towl_client_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "both clients becoming ready starts the round",
+        "both-clients-becoming-ready-starts-the-round", "both clients becoming ready starts the round",
         async () => with_runtime(async (runtime) => {
           const first = await create_connected_client(
             runtime,
@@ -465,7 +465,7 @@ export function towl_client_suite(): TestSuite {
 
       towl_case(
         SUITE,
-        "pull exposes the domain result and updates both mirrors",
+        "pull-exposes-the-domain-result-and-updates-both-mirrors", "pull exposes the domain result and updates both mirrors",
         async () => with_runtime(async (runtime) => {
           const first = await create_connected_client(
             runtime,

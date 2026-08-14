@@ -70,12 +70,12 @@ export function towl_runtime_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      towl_case(SUITE, "direct dispatch cannot claim player authority", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "direct-dispatch-cannot-claim-player-authority", "direct dispatch cannot claim player authority", async () => with_runtime(async (runtime) => {
         const before = runtime.host.map.rev;
         const response = await runtime.host.dispatch_action({ type: "action", id: "direct-join", name: "join" });
         return { type: response.type, code: response.type === "error" ? response.error.code : undefined, rev: runtime.host.map.rev - before };
       }), { type: "error", code: "TOWL_SESSION_REQUIRED", rev: 0 }),
-      towl_case(SUITE, "lazy non-resumable session cannot occupy a seat", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "lazy-non-resumable-session-cannot-occupy-a-seat", "lazy non-resumable session cannot occupy a seat", async () => with_runtime(async (runtime) => {
         const socket = make_towl_socket();
         runtime.host.connect(socket);
         await socket.receive({ type: "hello" });
@@ -92,7 +92,7 @@ export function towl_runtime_suite(): TestSuite {
           round: 1,
         },
       }),
-      towl_case(SUITE, "resumable sessions claim seats by server identity", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "resumable-sessions-claim-seats-by-server-identity", "resumable sessions claim seats by server identity", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         return {
           sessions: [runtime.host.map.snap().player1.sessionId, runtime.host.map.snap().player2.sessionId],
@@ -104,7 +104,7 @@ export function towl_runtime_suite(): TestSuite {
         expected: ["towl-session-1", "towl-session-2"],
         phase: "ready",
       }),
-      towl_case(SUITE, "clientId cannot select or spoof seat authority", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "clientid-cannot-select-or-spoof-seat-authority", "clientId cannot select or spoof seat authority", async () => with_runtime(async (runtime) => {
         const first = make_towl_socket();
         const second = make_towl_socket();
         await create_towl_session(runtime, first, "spoof-create-a");
@@ -135,7 +135,7 @@ export function towl_runtime_suite(): TestSuite {
         results: [{ seat: "player1" }, { seat: "player2" }],
         sessions: ["towl-session-1", "towl-session-2"],
       }),
-      towl_case(SUITE, "third session is rejected without a commit", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "third-session-is-rejected-without-a-commit", "third session is rejected without a commit", async () => with_runtime(async (runtime) => {
         await join_towl_pair(runtime);
         const third = make_towl_socket();
         await create_towl_session(runtime, third, "third-create");
@@ -143,7 +143,7 @@ export function towl_runtime_suite(): TestSuite {
         const response = await send_towl_action(third, "join");
         return { code: error_code(response), revDelta: runtime.host.map.rev - before };
       }), { code: "TOWL_ROOM_FULL", revDelta: 0 }),
-      towl_case(SUITE, "ready actions start play in one commit each", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "ready-actions-start-play-in-one-commit-each", "ready actions start play in one commit each", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         const commits: unknown[] = [];
         const stop = runtime.host.stream.on_commit((commit) => commits.push(commit));
@@ -171,14 +171,14 @@ export function towl_runtime_suite(): TestSuite {
         revDelta: 2,
         commits: 2,
       }),
-      towl_case(SUITE, "same-value ready is a successful no-op commit", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "same-value-ready-is-a-successful-no-op-commit", "same-value ready is a successful no-op commit", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         await send_towl_action(pair.first, "set_ready", { ready: true });
         const before = runtime.host.map.rev;
         const response = await send_towl_action(pair.first, "set_ready", { ready: true });
         return { type: response.type, result: result_value(response), revDelta: runtime.host.map.rev - before };
       }), { type: "ack", result: { seat: "player1", ready: true }, revDelta: 0 }),
-      towl_case(SUITE, "malformed action payload is rejected before game code", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "malformed-action-payload-is-rejected-before-game-code", "malformed action payload is rejected before game code", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         const before = runtime.host.map.rev;
         await pair.first.receive({
@@ -190,7 +190,7 @@ export function towl_runtime_suite(): TestSuite {
         const response = pair.first.sent().find((message) => message.id === "invalid-ready");
         return { code: response === undefined ? undefined : error_code(response), revDelta: runtime.host.map.rev - before };
       }), { code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD", revDelta: 0 }),
-      towl_case(SUITE, "pull actions move exactly once and dedupe retries", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "pull-actions-move-exactly-once-and-dedupe-retries", "pull actions move exactly once and dedupe retries", async () => with_runtime(async (runtime) => {
         const pair = await start_towl_round(runtime);
         const before = runtime.host.map.rev;
         const first = await send_towl_action(pair.first, "pull", undefined, { clientId: "puller", requestId: "pull-once" });
@@ -207,7 +207,7 @@ export function towl_runtime_suite(): TestSuite {
         position: 1,
         revDelta: 1,
       }),
-      towl_case(SUITE, "winning pull publishes one coherent final commit", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "winning-pull-publishes-one-coherent-final-commit", "winning pull publishes one coherent final commit", async () => with_runtime(async (runtime) => {
         const pair = await start_towl_round(runtime);
         for (let index = 1; index < TOWL_WIN_POSITION; index += 1) await send_towl_action(pair.first, "pull");
         const snapshots: unknown[] = [];
@@ -237,7 +237,7 @@ export function towl_runtime_suite(): TestSuite {
         revDelta: 1,
         rejected: "TOWL_INVALID_PHASE",
       }),
-      towl_case(SUITE, "winner reset is deduped and preserves both seats", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "winner-reset-is-deduped-and-preserves-both-seats", "winner reset is deduped and preserves both seats", async () => with_runtime(async (runtime) => {
         const pair = await start_towl_round(runtime);
         for (let index = 0; index < TOWL_WIN_POSITION; index += 1) await send_towl_action(pair.first, "pull");
         const before = runtime.host.map.rev;
@@ -260,7 +260,7 @@ export function towl_runtime_suite(): TestSuite {
         },
         revDelta: 1,
       }),
-      towl_case(SUITE, "voluntary leave atomically cancels play", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "voluntary-leave-atomically-cancels-play", "voluntary leave atomically cancels play", async () => with_runtime(async (runtime) => {
         const pair = await start_towl_round(runtime);
         await send_towl_action(pair.first, "pull");
         const before = runtime.host.map.rev;
@@ -285,7 +285,7 @@ export function towl_runtime_suite(): TestSuite {
         revDelta: 1,
         departedPull: "TOWL_NOT_JOINED",
       }),
-      towl_case(SUITE, "disconnect preserves seat and reattach restores presence", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "disconnect-preserves-seat-and-reattach-restores-presence", "disconnect preserves seat and reattach restores presence", async () => with_runtime(async (runtime) => {
         const first = make_towl_socket();
         const created = await create_towl_session(runtime, first, "reconnect-create");
         await send_towl_action(first, "join");
@@ -305,7 +305,7 @@ export function towl_runtime_suite(): TestSuite {
         attached: { sessionId: "towl-session-1", connected: true },
         oldListeners: 0,
       }),
-      towl_case(SUITE, "active reattachment fences old socket without vacating seat", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "active-reattachment-fences-old-socket-without-vacating-seat", "active reattachment fences old socket without vacating seat", async () => with_runtime(async (runtime) => {
         const first = make_towl_socket();
         const created = await create_towl_session(runtime, first, "fence-create");
         await send_towl_action(first, "join");
@@ -322,7 +322,7 @@ export function towl_runtime_suite(): TestSuite {
           revDelta: runtime.host.map.rev - before,
         };
       }), { staleResponse: undefined, newResult: { seat: "player1" }, revDelta: 1 }),
-      towl_case(SUITE, "session expiry clears its seat and cancels play", async () => {
+      towl_case(SUITE, "session-expiry-clears-its-seat-and-cancels-play", "session expiry clears its seat and cancels play", async () => {
         const clock = make_clock();
         let nextSession = 0;
         const runtime = create_towl_runtime({
@@ -359,7 +359,7 @@ export function towl_runtime_suite(): TestSuite {
         revDelta: 2,
         pending: 0,
       }),
-      towl_case(SUITE, "session goodbye terminally clears its seat", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "session-goodbye-terminally-clears-its-seat", "session goodbye terminally clears its seat", async () => with_runtime(async (runtime) => {
         const pair = await join_towl_pair(runtime);
         const before = runtime.host.map.rev;
         await pair.first.receive({ type: "session-goodbye", id: "goodbye" });
@@ -375,7 +375,7 @@ export function towl_runtime_suite(): TestSuite {
         },
         revDelta: 1,
       }),
-      towl_case(SUITE, "runtime disposal is idempotent and removes listeners", async () => {
+      towl_case(SUITE, "runtime-disposal-is-idempotent-and-removes-listeners", "runtime disposal is idempotent and removes listeners", async () => {
         const runtime = create_towl_runtime({ sessionId: () => "dispose-session" });
         const socket = make_towl_socket();
         await create_towl_session(runtime, socket, "dispose-create");
@@ -385,7 +385,7 @@ export function towl_runtime_suite(): TestSuite {
         await socket.receive({ type: "action", id: "after-dispose", name: "join" });
         return { listeners: socket.listener_count(), revDelta: runtime.host.map.rev - before };
       }, { listeners: 0, revDelta: 0 }),
-      towl_case(SUITE, "canonical history reproduces the accepted transition sequence", async () => with_runtime(async (runtime) => {
+      towl_case(SUITE, "canonical-history-reproduces-the-accepted-transition-sequence", "canonical history reproduces the accepted transition sequence", async () => with_runtime(async (runtime) => {
         const pair = await start_towl_round(runtime);
         await send_towl_action(pair.first, "pull");
         await send_towl_action(pair.second, "pull");

@@ -19,7 +19,7 @@ import { json_root_node } from "./core-helpers";
 function make_feed_dispose_case(spec: FeedEmitCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       feedPath: preview_value(spec.feedPath),
       commit: preview_value(spec.commit),
@@ -52,35 +52,35 @@ export function livemap_suite_feed(): TestSuite {
     cases: [
       make_path_overlap_case({
         suite: SUITE,
-        name: "path overlap exact path",
+        caseId: "path-overlap-exact-path", name: "path overlap exact path",
         a: ["user", "name"],
         b: ["user", "name"],
         expected: true,
       }),
       make_path_overlap_case({
         suite: SUITE,
-        name: "path overlap parent hears child",
+        caseId: "path-overlap-parent-hears-child", name: "path overlap parent hears child",
         a: ["user"],
         b: ["user", "name"],
         expected: true,
       }),
       make_path_overlap_case({
         suite: SUITE,
-        name: "path overlap child hears parent",
+        caseId: "path-overlap-child-hears-parent", name: "path overlap child hears parent",
         a: ["user", "name"],
         b: ["user"],
         expected: true,
       }),
       make_path_overlap_case({
         suite: SUITE,
-        name: "path overlap sibling paths do not match",
+        caseId: "path-overlap-sibling-paths-do-not-match", name: "path overlap sibling paths do not match",
         a: ["user", "name"],
         b: ["user", "role"],
         expected: false,
       }),
       make_feed_emit_case({
         suite: SUITE,
-        name: "feed parent receives child op with parent snapshot",
+        caseId: "feed-parent-receives-child-op-with-parent-snapshot", name: "feed parent receives child op with parent snapshot",
         feedPath: ["user"],
         commit: set_commit(["user", "name"], "Ada", "Grace"),
         snapValue: { name: "Grace" },
@@ -96,7 +96,7 @@ export function livemap_suite_feed(): TestSuite {
       }),
       make_feed_emit_case({
         suite: SUITE,
-        name: "feed sibling ignores unrelated op",
+        caseId: "feed-sibling-ignores-unrelated-op", name: "feed sibling ignores unrelated op",
         feedPath: ["user", "role"],
         commit: set_commit(["user", "name"], "Ada", "Grace"),
         snapValue: "admin",
@@ -104,7 +104,7 @@ export function livemap_suite_feed(): TestSuite {
       }),
       make_feed_emit_case({
         suite: SUITE,
-        name: "feed ignores unchanged commit",
+        caseId: "feed-ignores-unchanged-commit", name: "feed ignores unchanged commit",
         feedPath: ["user", "name"],
         commit: {
           changed: false,
@@ -117,7 +117,7 @@ export function livemap_suite_feed(): TestSuite {
       }),
       make_feed_dispose_case({
         suite: SUITE,
-        name: "feed disposer stops later events",
+        caseId: "feed-disposer-stops-later-events", name: "feed disposer stops later events",
         feedPath: ["user", "name"],
         commit: set_commit(["user", "name"], "Ada", "Grace"),
         snapValue: "Grace",
@@ -125,7 +125,7 @@ export function livemap_suite_feed(): TestSuite {
       }),
       make_feed_emit_case({
         suite: SUITE,
-        name: "feed exact path receives matching op",
+        caseId: "feed-exact-path-receives-matching-op", name: "feed exact path receives matching op",
         feedPath: ["user", "name"],
         commit: set_commit(["user", "name"], "Ada", "Grace"),
         snapValue: "Grace",
@@ -142,7 +142,7 @@ export function livemap_suite_feed(): TestSuite {
 
       {
         suite: SUITE,
-        name: "feed event retains commit revs",
+        caseId: "feed-event-retains-commit-revs", name: "feed event retains commit revs",
         meta: {
           input: preview_value({ count: 0 }),
         },
@@ -188,7 +188,7 @@ export function livemap_suite_feed(): TestSuite {
         },
       }, {
         suite: SUITE,
-        name: "feed emits once with all overlapping batch ops",
+        caseId: "feed-emits-once-with-all-overlapping-batch-ops", name: "feed emits once with all overlapping batch ops",
         meta: {
           input: preview_value({
             user: {
@@ -270,7 +270,7 @@ export function livemap_suite_feed(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "feed preserves semantic splice op",
+        caseId: "feed-preserves-semantic-splice-op", name: "feed preserves semantic splice op",
         meta: {
           input: preview_value({
             items: ["a", "b"],
@@ -347,7 +347,7 @@ export function livemap_suite_feed(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core feed receives changed commit rev",
+        caseId: "core-feed-receives-changed-commit-rev", name: "core feed receives changed commit rev",
         meta: {
           input: preview_value({ count: 0 }),
         },
@@ -402,7 +402,7 @@ export function livemap_suite_feed(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core feed ignores unchanged writes",
+        caseId: "core-feed-ignores-unchanged-writes", name: "core feed ignores unchanged writes",
         meta: {
           input: preview_value({ count: 0 }),
         },
@@ -447,7 +447,7 @@ export function livemap_suite_feed(): TestSuite {
       },
 {
   suite: SUITE,
-  name: "successful replay emits one revisioned feed event",
+  caseId: "successful-replay-emits-one-revisioned-feed-event", name: "successful replay emits one revisioned feed event",
   meta: {
     input: preview_value({
       user: {
@@ -527,7 +527,7 @@ export function livemap_suite_feed(): TestSuite {
 
 {
   suite: SUITE,
-  name: "rejected replay emits no feed event",
+  caseId: "rejected-replay-emits-no-feed-event", name: "rejected replay emits no feed event",
   meta: {
     input: preview_value({
       count: 5,
@@ -591,7 +591,7 @@ export function livemap_suite_feed(): TestSuite {
       },
 {
   suite: SUITE,
-  name: "second op replay conflict emits no partial feed event",
+  caseId: "second-op-replay-conflict-emits-no-partial-feed-event", name: "second op replay conflict emits no partial feed event",
   meta: {
     input: preview_value({
       user: {
@@ -671,7 +671,7 @@ export function livemap_suite_feed(): TestSuite {
 
       {
         suite: SUITE,
-        name: "malformed second replay op emits no partial feed event",
+        caseId: "malformed-second-replay-op-emits-no-partial-feed-event", name: "malformed second replay op emits no partial feed event",
         meta: {
           input: preview_value({ count: 0 }),
         },

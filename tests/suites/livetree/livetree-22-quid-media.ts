@@ -20,7 +20,7 @@ export function livetree_quid_media(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "media handle sets, reads, and snapshots a QUID-scoped base rule",
+      caseId: "media-handle-sets-reads-and-snapshots-a-quid-scoped-base-rule", name: "media handle sets, reads, and snapshots a QUID-scoped base rule",
       dom: true,
       fixture: "dom/contains",
       sub: "media/base-rule",
@@ -65,7 +65,7 @@ export function livetree_quid_media(): TestSuite {
 
     {
       suite: SUITE,
-      name: "media selector handle writes child selectors without colliding with base media rule",
+      caseId: "media-selector-handle-writes-child-selectors-without-colliding-with-base-media-rule", name: "media selector handle writes child selectors without colliding with base media rule",
       dom: true,
       fixture: "dom/contains",
       sub: "media/selector-rule",
@@ -109,7 +109,7 @@ export function livetree_quid_media(): TestSuite {
 
     {
       suite: SUITE,
-      name: "supports and layer handles mirror local media behavior",
+      caseId: "supports-and-layer-handles-mirror-local-media-behavior", name: "supports and layer handles mirror local media behavior",
       dom: true,
       fixture: "dom/contains",
       sub: "supports-layer/base-rules",
@@ -153,7 +153,7 @@ export function livetree_quid_media(): TestSuite {
 
     {
       suite: SUITE,
-      name: "nested media/supports/layer scopes stay independent from shallower scopes",
+      caseId: "nested-media-supports-layer-scopes-stay-independent-from-shallower-scopes", name: "nested media/supports/layer scopes stay independent from shallower scopes",
       dom: true,
       fixture: "dom/contains",
       sub: "nested-scopes/independence",
@@ -205,7 +205,7 @@ export function livetree_quid_media(): TestSuite {
 
     {
       suite: SUITE,
-      name: "scoped clear removes only matching at-rule scope and leaves base CSS intact",
+      caseId: "scoped-clear-removes-only-matching-at-rule-scope-and-leaves-base-css-intact", name: "scoped clear removes only matching at-rule scope and leaves base CSS intact",
       dom: true,
       fixture: "dom/contains",
       sub: "clear/scope-isolation",
@@ -253,7 +253,7 @@ export function livetree_quid_media(): TestSuite {
 
     {
       suite: SUITE,
-      name: "same selector can coexist across base, media, supports, and layer scopes",
+      caseId: "same-selector-can-coexist-across-base-media-supports-and-layer-scopes", name: "same selector can coexist across base, media, supports, and layer scopes",
       dom: true,
       fixture: "dom/contains",
       sub: "selector-key/scope-collision-guard",
@@ -311,7 +311,7 @@ export function livetree_construction_parity(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "construction: liveTree.fromTrustedHtml returns mutable detached branch",
+      caseId: "construction-livetree.fromtrustedhtml-returns-mutable-detached-branch", name: "construction: liveTree.fromTrustedHtml returns mutable detached branch",
       fixture: "construction/fromTrustedHtml",
       sub: "mutable-detached-branch",
       dom: true,
@@ -351,7 +351,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.fromUntrustedHtml returns mutable sanitized branch",
+      caseId: "construction-livetree.fromuntrustedhtml-returns-mutable-sanitized-branch", name: "construction: liveTree.fromUntrustedHtml returns mutable sanitized branch",
       fixture: "construction/fromUntrustedHtml",
       sub: "mutable-detached-branch",
       dom: true,
@@ -392,7 +392,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.fromJson accepts structured JSON output",
+      caseId: "construction-livetree.fromjson-accepts-structured-json-output", name: "construction: liveTree.fromJson accepts structured JSON output",
       fixture: "construction/fromJson",
       sub: "structured-json-value",
       dom: true,
@@ -434,7 +434,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.fromJson accepts JSON string input",
+      caseId: "construction-livetree.fromjson-accepts-json-string-input", name: "construction: liveTree.fromJson accepts JSON string input",
       fixture: "construction/fromJson",
       sub: "json-string",
       dom: true,
@@ -473,7 +473,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.fromHson accepts HSON-only child syntax",
+      caseId: "construction-livetree.fromhson-accepts-hson-only-child-syntax", name: "construction: liveTree.fromHson accepts HSON-only child syntax",
       fixture: "construction/fromHson",
       sub: "hson-syntax",
       dom: true,
@@ -515,7 +515,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.fromNode wraps an existing HSON node as mutable branch",
+      caseId: "construction-livetree.fromnode-wraps-an-existing-hson-node-as-mutable-branch", name: "construction: liveTree.fromNode wraps an existing HSON node as mutable branch",
       fixture: "construction/fromNode",
       sub: "hson-node",
       dom: true,
@@ -556,7 +556,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.queryDom graft returns selected mounted root",
+      caseId: "construction-livetree.querydom-graft-returns-selected-mounted-root", name: "construction: liveTree.queryDom graft returns selected mounted root",
       fixture: "construction/queryDom",
       sub: "selected-root",
       dom: true,
@@ -592,7 +592,7 @@ export function livetree_construction_parity(): TestSuite {
 
     {
       suite: SUITE,
-      name: "construction: liveTree.create detached HTML and SVG branches append cleanly",
+      caseId: "construction-livetree.create-detached-html-and-svg-branches-append-cleanly", name: "construction: liveTree.create detached HTML and SVG branches append cleanly",
       fixture: "construction/create",
       sub: "detached-html-svg",
       dom: true,
@@ -657,7 +657,7 @@ export function livetree_find_query_surface(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "find surface: byClass hit, miss, and must semantics",
+      caseId: "find-surface-byclass-hit-miss-and-must-semantics", name: "find surface: byClass hit, miss, and must semantics",
       fixture: "find-query/byClass",
       sub: "singular-class",
       html: `
@@ -698,7 +698,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byClass current exact-class behavior is explicit",
+      caseId: "find-surface-byclass-current-exact-class-behavior-is-explicit", name: "find surface: byClass current exact-class behavior is explicit",
       fixture: "find-query/byClass",
       sub: "exact-class-contract",
       html: `
@@ -727,7 +727,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byData hit, prefixed-key hit, miss, and must semantics",
+      caseId: "find-surface-bydata-hit-prefixed-key-hit-miss-and-must-semantics", name: "find surface: byData hit, prefixed-key hit, miss, and must semantics",
       fixture: "find-query/byData",
       sub: "singular-data",
       html: `
@@ -769,7 +769,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byTag hit, miss, and must semantics",
+      caseId: "find-surface-bytag-hit-miss-and-must-semantics", name: "find surface: byTag hit, miss, and must semantics",
       fixture: "find-query/byTag",
       sub: "singular-tag",
       html: `
@@ -810,7 +810,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: object query supports tag, attrs, and string text",
+      caseId: "find-surface-object-query-supports-tag-attrs-and-string-text", name: "find surface: object query supports tag, attrs, and string text",
       fixture: "find-query/object",
       sub: "tag-attrs-text",
       html: `
@@ -842,7 +842,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: object query supports RegExp text",
+      caseId: "find-surface-object-query-supports-regexp-text", name: "find surface: object query supports RegExp text",
       fixture: "find-query/object",
       sub: "regexp-text",
       html: `
@@ -882,7 +882,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: subtree-scoped find does not escape to siblings",
+      caseId: "find-surface-subtree-scoped-find-does-not-escape-to-siblings", name: "find surface: subtree-scoped find does not escape to siblings",
       fixture: "find-query/scope",
       sub: "subtree-scope",
       html: `
@@ -920,7 +920,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: byClass preserves order and returns empty selector on miss",
+      caseId: "findall-surface-byclass-preserves-order-and-returns-empty-selector-on-miss", name: "findAll surface: byClass preserves order and returns empty selector on miss",
       fixture: "find-query/findAll-byClass",
       sub: "order-empty",
       html: `
@@ -960,7 +960,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: byData preserves order and supports must semantics",
+      caseId: "findall-surface-bydata-preserves-order-and-supports-must-semantics", name: "findAll surface: byData preserves order and supports must semantics",
       fixture: "find-query/findAll-byData",
       sub: "order-must",
       html: `
@@ -1006,7 +1006,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: byTag preserves order and supports must semantics",
+      caseId: "findall-surface-bytag-preserves-order-and-supports-must-semantics", name: "findAll surface: byTag preserves order and supports must semantics",
       fixture: "find-query/findAll-byTag",
       sub: "order-must",
       html: `
@@ -1053,7 +1053,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: id and byIds support one-or-many id selection",
+      caseId: "findall-surface-id-and-byids-support-one-or-many-id-selection", name: "findAll surface: id and byIds support one-or-many id selection",
       fixture: "find-query/findAll-ids",
       sub: "multi-id",
       html: `
@@ -1094,7 +1094,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: array query has OR semantics and preserves query order",
+      caseId: "findall-surface-array-query-has-or-semantics-and-preserves-query-order", name: "findAll surface: array query has OR semantics and preserves query order",
       fixture: "find-query/findAll-array-query",
       sub: "or-semantics",
       html: `
@@ -1130,7 +1130,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: object query supports text and multiple matching constraints",
+      caseId: "findall-surface-object-query-supports-text-and-multiple-matching-constraints", name: "findAll surface: object query supports text and multiple matching constraints",
       fixture: "find-query/findAll-object",
       sub: "text-attrs",
       html: `
@@ -1175,7 +1175,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: must callable throws when array query has no matches",
+      caseId: "findall-surface-must-callable-throws-when-array-query-has-no-matches", name: "findAll surface: must callable throws when array query has no matches",
       fixture: "find-query/findAll-must",
       sub: "array-query-miss",
       html: `
@@ -1218,7 +1218,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byData rejects empty data keys clearly",
+      caseId: "find-surface-bydata-rejects-empty-data-keys-clearly", name: "find surface: byData rejects empty data keys clearly",
       fixture: "find-query/byData",
       sub: "empty-key",
       html: `
@@ -1268,7 +1268,7 @@ export function livetree_find_query_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byClass rejects empty class names clearly",
+      caseId: "find-surface-byclass-rejects-empty-class-names-clearly", name: "find surface: byClass rejects empty class names clearly",
       fixture: "find-query/byClass",
       sub: "empty-class",
       html: `

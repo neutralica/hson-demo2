@@ -18,6 +18,7 @@ const unsupported = new Set<HostedTestSuiteId>([
   "canvas/core",
   "category/livetree",
   "category/livemap",
+  "category/reflect",
   "category/dev",
 ]);
 

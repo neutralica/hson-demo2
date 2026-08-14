@@ -19,7 +19,7 @@ import { decode_test_executor_discovery_request } from "../core/test-discovery";
 import type { RunOptions, RunResult, TestEvent, TestFailure, TestSummary } from "../core/test-contracts";
 import type { TestExecutorRegistry } from "../core/test-executor";
 import { decode_run_selected_tests_request } from "../core/test-selected-run";
-import { test_catalog_version } from "../core/test-catalog";
+import { make_test_run_plan, type TestRunPlan } from "../core/test-run-plan";
 import { run_selected_test_ids } from "../core/run-selected-test-suites";
 import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
 import type {
@@ -121,7 +121,13 @@ function finite(value: number, field: string): number {
 }
 
 function normalize_failure(failure: TestFailure): TestFailure {
-  return { suite: failure.suite, name: failure.name, err: failure.err, ms: finite(failure.ms, "failure.ms") };
+  return {
+    suite: failure.suite,
+    ...(failure.caseId === undefined ? {} : { caseId: failure.caseId }),
+    name: failure.name,
+    err: failure.err,
+    ms: finite(failure.ms, "failure.ms"),
+  };
 }
 
 function normalize_summary(summary: TestSummary): TestSummary {
@@ -161,11 +167,13 @@ function report_options(
   runId: HostedTestRunId,
   map: HostedTestReportHost["map"],
   mutate: HostedTestReportHost["mutate"],
+  runPlan?: TestRunPlan,
 ): HostedTestReportOptions {
   return {
     runId,
     map: map as unknown as HostedTestReportMap,
     mutate: (operation) => mutate((draft) => operation(draft as unknown as HostedTestReportMap)),
+    ...(runPlan === undefined ? {} : { runPlan }),
     ...(configured?.caseBatchSize !== undefined ? { caseBatchSize: configured.caseBatchSize } : {}),
   };
 }
@@ -182,7 +190,6 @@ export function create_hosted_test_application(
     const discoveryIds = options.discovery.catalog.tests.map((descriptor) => descriptor.id).sort();
     if (
       options.discovery.executor.id !== options.executorRegistry.executor.id
-      || options.discovery.catalogVersion !== test_catalog_version(options.executorRegistry.catalog)
       || registryIds.length !== discoveryIds.length
       || registryIds.some((id, index) => id !== discoveryIds[index])
     ) {
@@ -203,17 +210,17 @@ export function create_hosted_test_application(
   const makeRunId = options.makeRunId ?? make_hosted_test_run_id;
   const reportHostIds = new Set<string>();
 
-  type RunPlan = Readonly<{
+  type ExecutionPlan = Readonly<{
     target: HostedTestRunTarget;
     run: HostedTestSuiteRunner;
     testIds?: readonly string[];
   }>;
   type ReportHost = HostedTestReportHost;
-  type ReportBlueprint = Readonly<{ runId: HostedTestRunId; plan: RunPlan }>;
+  type ReportBlueprint = Readonly<{ runId: HostedTestRunId; plan: ExecutionPlan; reportPlan?: TestRunPlan }>;
   const reportBlueprints = new Map<string, ReportBlueprint>();
 
   function create_report_host(reportHostId: string, blueprint: ReportBlueprint): ReportHost {
-    const { runId, plan } = blueprint;
+    const { runId, plan, reportPlan } = blueprint;
     const reportActions: LiveHostActionsForMap<HostedTestReportActions, HostedTestReportMap> = {
       "tests.inspect": async (_reportContext, inspectRequest) => {
         if (inspectRequest.runId !== runId) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${inspectRequest.runId}" is not owned by this report host.`);
@@ -231,7 +238,7 @@ export function create_hosted_test_application(
       actions: { "tests.inspect": { payload: decode_inspect } },
     };
     const map = hson.liveMap.fromJson(
-      make_initial_hosted_test_report(plan.target, runId) as HostedTestReportState,
+      make_initial_hosted_test_report(plan.target, runId, reportPlan) as HostedTestReportState,
     ).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
     return create_livehost({
       map,
@@ -264,7 +271,7 @@ export function create_hosted_test_application(
       });
 
   async function execute_run(
-    plan: RunPlan,
+    plan: ExecutionPlan,
     clientId: HostedTestRunAssociation["clientId"],
     requestId: HostedTestRunAssociation["requestId"],
     retainAssociation: (association: HostedTestRunAssociation) => void,
@@ -273,10 +280,20 @@ export function create_hosted_test_application(
     const runId = makeRunId() as HostedTestRunId;
     if (!runId) throw new Error("Hosted test run ID must be non-empty.");
     const reportHostId = `hosted-report:${runId}`;
+    const reportPlan = plan.testIds === undefined || options.discovery === undefined
+      ? undefined
+      : make_test_run_plan({
+          runId,
+          protocolVersion: options.discovery.protocolVersion,
+          catalogVersion: options.discovery.catalogVersion,
+          executorId: options.discovery.executor.id,
+          catalog: options.discovery.catalog,
+          selectedIds: plan.testIds,
+        });
     let reportAcquisition: LiveHostAuthorityAcquisition<ReportHost> | undefined;
     let reportHost: ReportHost;
     if (reportRegistry === undefined) {
-      reportHost = create_report_host(reportHostId, { runId, plan });
+      reportHost = create_report_host(reportHostId, { runId, plan, ...(reportPlan === undefined ? {} : { reportPlan }) });
       const stored = store.set(
         reportHostId,
         reportHost as unknown as LiveHost<HostedTestReportState, HostedTestReportActions>,
@@ -286,7 +303,7 @@ export function create_hosted_test_application(
       if (reportRegistry.has(reportHostId) || reportBlueprints.has(reportHostId)) {
         throw new Error(`LIVEHOST_STORE_DUPLICATE_ID: Hosted report authority already exists: ${reportHostId}`);
       }
-      reportBlueprints.set(reportHostId, { runId, plan });
+      reportBlueprints.set(reportHostId, { runId, plan, ...(reportPlan === undefined ? {} : { reportPlan }) });
       const acquired = await reportRegistry.acquire(reportHostId);
       if (!acquired.ok) {
         reportBlueprints.delete(reportHostId);
@@ -302,7 +319,7 @@ export function create_hosted_test_application(
         Date.now,
         undefined,
         plan.target,
-        report_options(options.report, runId, reportHost.map, reportHost.mutate),
+        report_options(options.report, runId, reportHost.map, reportHost.mutate, reportPlan),
       );
 
       const association: HostedTestRunAssociation = {
@@ -324,6 +341,7 @@ export function create_hosted_test_application(
           runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
           hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
         });
+        await report.settle();
       } catch (error) {
         report.failInfrastructure(error);
         replaceAssociation({ ...association, status: "error", reportRev: reportHost.stream.headRev });

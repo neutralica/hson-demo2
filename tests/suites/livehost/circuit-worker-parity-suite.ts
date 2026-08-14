@@ -7,12 +7,14 @@ import { create_circuit_verification_service } from "../../harness/runtimes/node
 const SUITE = "livehost/circuit-worker-parity";
 
 function parity_case(
+  caseId: string,
   name: string,
   entry: "hson" | "json" | "html",
   source: string,
 ): TestCase {
   return Object.freeze({
     suite: SUITE,
+    caseId,
     name,
     async run() {
       const direct = verify_universal_circuit({ entry, source });
@@ -54,16 +56,16 @@ export function circuit_worker_parity_suite(): TestSuite {
     suite: SUITE,
     descriptor: Object.freeze({ subject: "transform", requirements: Object.freeze(["javascript", "node", "worker"] as const) }),
     cases: Object.freeze([
-      parity_case("explicit HSON agrees with direct universal execution", "hson", "<\n  phase 2\n  worker true\n>"),
-      parity_case("explicit JSON agrees with direct universal execution", "json", '{"phase":2,"worker":true}'),
-      parity_case("explicit HTML agrees with direct universal execution", "html", '<main data-phase="2">worker</main>'),
-      parity_case("object ordering evidence agrees", "json", '{"z":1,"a":2,"m":3}'),
-      parity_case("negative zero evidence agrees", "json", "-0"),
-      parity_case("dangerous-key evidence agrees", "json", '{"__proto__":"safe","constructor":"value","prototype":"kept"}'),
-      parity_case("Unicode evidence agrees", "json", '{"text":"𝄞 café 日本語"}'),
-      parity_case("isolated-surrogate evidence agrees", "json", '"\\ud800"'),
-      parity_case("malformed-input evidence agrees", "json", "{"),
-      parity_case("quoted HSON names agree", "hson", quoted),
+      parity_case("explicit-hson", "explicit HSON agrees with direct universal execution", "hson", "<\n  phase 2\n  worker true\n>"),
+      parity_case("explicit-json", "explicit JSON agrees with direct universal execution", "json", '{"phase":2,"worker":true}'),
+      parity_case("explicit-html", "explicit HTML agrees with direct universal execution", "html", '<main data-phase="2">worker</main>'),
+      parity_case("object-ordering", "object ordering evidence agrees", "json", '{"z":1,"a":2,"m":3}'),
+      parity_case("negative-zero", "negative zero evidence agrees", "json", "-0"),
+      parity_case("dangerous-keys", "dangerous-key evidence agrees", "json", '{"__proto__":"safe","constructor":"value","prototype":"kept"}'),
+      parity_case("unicode", "Unicode evidence agrees", "json", '{"text":"𝄞 café 日本語"}'),
+      parity_case("isolated-surrogate", "isolated-surrogate evidence agrees", "json", '"\\ud800"'),
+      parity_case("malformed-input", "malformed-input evidence agrees", "json", "{"),
+      parity_case("quoted-hson-names", "quoted HSON names agree", "hson", quoted),
     ]),
   });
 }

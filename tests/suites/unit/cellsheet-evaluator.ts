@@ -50,7 +50,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: EVALUATOR_SUITE,
-      name: "zero-padded numeric text keeps authored display and parses numerically",
+      caseId: "zero-padded-numeric-text-keeps-authored-display-and-parses-numerically", name: "zero-padded numeric text keeps authored display and parses numerically",
       run: () => {
         const result = evaluated({ A1: "001.50" });
         equal(cell(result, "A1").display, "001.50", "display spelling");
@@ -60,7 +60,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "numeric interpretation trims without changing authored display",
+      caseId: "numeric-interpretation-trims-without-changing-authored-display", name: "numeric interpretation trims without changing authored display",
       run: () => {
         const result = evaluated({ A1: " 001.50 " });
         equal(cell(result, "A1").display, " 001.50 ", "trimmed numeric display");
@@ -69,7 +69,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "finite exponent forms are numbers while Infinity-like input is text",
+      caseId: "finite-exponent-forms-are-numbers-while-infinity-like-input-is-text", name: "finite exponent forms are numbers while Infinity-like input is text",
       run: () => {
         const result = evaluated({ A1: "1e2", A2: "Infinity", A3: "NaN" });
         equal(cell(result, "A1").value, 100, "exponent value");
@@ -79,7 +79,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "trimmed operator input is authored while whitespace-only input is blank",
+      caseId: "trimmed-operator-input-is-authored-while-whitespace-only-input-is-blank", name: "trimmed operator input is authored while whitespace-only input is blank",
       run: () => {
         const result = evaluated({ A1: " + ", A2: "   " });
         equal(cell(result, "A1").kind, "operator", "trimmed operator kind");
@@ -90,27 +90,27 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "horizontal addition produces a numeric result",
+      caseId: "horizontal-addition-produces-a-numeric-result", name: "horizontal addition produces a numeric result",
       run: () => equal(cell(evaluated({ A1: "8", B1: "+", C1: "2" }), "D1").value, 10, "addition"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "horizontal subtraction produces a numeric result",
+      caseId: "horizontal-subtraction-produces-a-numeric-result", name: "horizontal subtraction produces a numeric result",
       run: () => equal(cell(evaluated({ A1: "8", B1: "-", C1: "2" }), "D1").value, 6, "subtraction"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "horizontal multiplication produces a numeric result",
+      caseId: "horizontal-multiplication-produces-a-numeric-result", name: "horizontal multiplication produces a numeric result",
       run: () => equal(cell(evaluated({ A1: "8", B1: "*", C1: "2" }), "D1").value, 16, "multiplication"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "horizontal division produces a numeric result",
+      caseId: "horizontal-division-produces-a-numeric-result", name: "horizontal division produces a numeric result",
       run: () => equal(cell(evaluated({ A1: "8", B1: "/", C1: "2" }), "D1").value, 4, "division"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "vertical arithmetic uses top and bottom operands",
+      caseId: "vertical-arithmetic-uses-top-and-bottom-operands", name: "vertical arithmetic uses top and bottom operands",
       run: () => {
         const result = evaluated({ B1: "8", B2: "-", B3: "2" });
         equal(cell(result, "B4").value, 6, "vertical result");
@@ -119,7 +119,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "one operator independently discovers horizontal and vertical operations",
+      caseId: "one-operator-independently-discovers-horizontal-and-vertical-operations", name: "one operator independently discovers horizontal and vertical operations",
       run: () => {
         const result = evaluated({ A1: "3", B1: "4", A2: "5", B2: "+", C2: "6", B3: "2" });
         equal(cell(result, "D2").value, 11, "horizontal branch");
@@ -129,12 +129,12 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "operator at a boundary discovers no operation",
+      caseId: "operator-at-a-boundary-discovers-no-operation", name: "operator at a boundary discovers no operation",
       run: () => equal(evaluated({ A1: "+", B1: "1" }).summary.operations, 0, "boundary operation count"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "missing operands discover no operation or error",
+      caseId: "missing-operands-discover-no-operation-or-error", name: "missing operands discover no operation or error",
       run: () => {
         const result = evaluated({ B1: "-", C1: "2" });
         equal(result.summary.operations, 0, "missing operand operations");
@@ -143,7 +143,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "complete numeric-only operations reject every text operand position",
+      caseId: "complete-numeric-only-operations-reject-every-text-operand-position", name: "complete numeric-only operations reject every text operand position",
       run: () => {
         const cases = [
           { op: "-", left: "egg", right: "3" },
@@ -167,7 +167,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "numeric operand type error precedes division by zero and occupied-target errors",
+      caseId: "numeric-operand-type-error-precedes-division-by-zero-and-occupied-target-errors", name: "numeric operand type error precedes division by zero and occupied-target errors",
       run: () => {
         const result = evaluated({ A1: "egg", B1: "/", C1: "0", D1: "9" });
         equal(operation(result, "B1:h").error, "requires numeric operands", "intrinsic type error precedence");
@@ -178,7 +178,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "later numeric operand type error preserves the first row-major result while marking its target",
+      caseId: "later-numeric-operand-type-error-preserves-the-first-row-major-result-while-marking-its-target", name: "later numeric operand type error preserves the first row-major result while marking its target",
       run: () => {
         const result = evaluated({ D1: "3", D2: "+", D3: "4", A4: "egg", B4: "-", C4: "2" });
         equal(cell(result, "D4").value, 7, "first result retained");
@@ -190,7 +190,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "blank type-error target remains unavailable to downstream evaluation",
+      caseId: "blank-type-error-target-remains-unavailable-to-downstream-evaluation", name: "blank type-error target remains unavailable to downstream evaluation",
       run: () => {
         const result = evaluated({ A1: "egg", B1: "-", C1: "2", E1: "+", F1: "1" });
         equal(result.summary.operations, 1, "only erroneous complete operation discovered");
@@ -199,22 +199,22 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "number plus text concatenates semantic spellings",
+      caseId: "number-plus-text-concatenates-semantic-spellings", name: "number plus text concatenates semantic spellings",
       run: () => equal(cell(evaluated({ A1: "2", B1: "+", C1: "shell" }), "D1").value, "2shell", "number plus text"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "text plus number concatenates semantic spellings",
+      caseId: "text-plus-number-concatenates-semantic-spellings", name: "text plus number concatenates semantic spellings",
       run: () => equal(cell(evaluated({ A1: "egg", B1: "+", C1: "2" }), "D1").value, "egg2", "text plus number"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "text plus text concatenates",
+      caseId: "text-plus-text-concatenates", name: "text plus text concatenates",
       run: () => equal(cell(evaluated({ A1: "egg", B1: "+", C1: "shell" }), "D1").value, "eggshell", "text plus text"),
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "division by zero errors the operator and leaves the target blank",
+      caseId: "division-by-zero-errors-the-operator-and-leaves-the-target-blank", name: "division by zero errors the operator and leaves the target blank",
       run: () => {
         const result = evaluated({ A1: "8", B1: "/", C1: "0" });
         equal(operation(result, "B1:h").error, "division by zero", "operation error");
@@ -225,7 +225,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "occupied target remains usable authored content and errors both cells",
+      caseId: "occupied-target-remains-usable-authored-content-and-errors-both-cells", name: "occupied target remains usable authored content and errors both cells",
       run: () => {
         const result = evaluated({ A1: "1", B1: "+", C1: "2", D1: "9" });
         equal(cell(result, "D1").value, 9, "occupied value");
@@ -235,7 +235,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "collision preserves first row-major writer and errors the later writer and target",
+      caseId: "collision-preserves-first-row-major-writer-and-errors-the-later-writer-and-target", name: "collision preserves first row-major writer and errors the later writer and target",
       run: () => {
         const result = evaluated({ D1: "3", D2: "+", D3: "4", A4: "1", B4: "+", C4: "2" });
         equal(cell(result, "D4").value, 7, "first collision value");
@@ -246,7 +246,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "errored authored value still participates downstream",
+      caseId: "errored-authored-value-still-participates-downstream", name: "errored authored value still participates downstream",
       run: () => {
         const result = evaluated({ A1: "1", B1: "+", C1: "2", D1: "9", E1: "+", F1: "1" });
         equal(cell(result, "D1").kind, "error", "upstream visible kind");
@@ -256,7 +256,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "fixpoint resolves a producer scanned after its consumer",
+      caseId: "fixpoint-resolves-a-producer-scanned-after-its-consumer", name: "fixpoint resolves a producer scanned after its consumer",
       run: () => {
         const result = evaluated({ D1: "4", D2: "+", A3: "1", B3: "+", C3: "2" });
         equal(cell(result, "D3").value, 3, "late producer value");
@@ -265,7 +265,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "fixpoint resolves a longer cross-direction dependency chain",
+      caseId: "fixpoint-resolves-a-longer-cross-direction-dependency-chain", name: "fixpoint resolves a longer cross-direction dependency chain",
       run: () => {
         const result = evaluated({
           D3: "4", D4: "+",
@@ -281,7 +281,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "summary counts discovered operations rather than operator-token cells",
+      caseId: "summary-counts-discovered-operations-rather-than-operator-token-cells", name: "summary counts discovered operations rather than operator-token cells",
       run: () => {
         const result = evaluated({ A1: "3", B1: "4", A2: "5", B2: "+", C2: "6", B3: "2", H8: "+" });
         equal(result.summary.operations, 2, "discovered operation count");
@@ -290,7 +290,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "evaluation does not mutate input and repeats deterministically",
+      caseId: "evaluation-does-not-mutate-input-and-repeats-deterministically", name: "evaluation does not mutate input and repeats deterministically",
       run: () => {
         const input = raw_grid({ A1: "1", B1: "+", C1: "2" });
         const before = JSON.stringify(input);
@@ -302,7 +302,7 @@ export function cellsheet_evaluator_suite(): TestSuite {
     },
     {
       suite: EVALUATOR_SUITE,
-      name: "evaluation calls and detached copies cannot leak state",
+      caseId: "evaluation-calls-and-detached-copies-cannot-leak-state", name: "evaluation calls and detached copies cannot leak state",
       run: () => {
         const first = evaluated({ A1: "1", B1: "+", C1: "2" });
         const detachedCopy = JSON.parse(JSON.stringify(first)) as { operations: unknown[]; cells: Array<Array<{ display: string }>> };
@@ -336,7 +336,7 @@ export function cellsheet_relations_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: RELATION_SUITE,
-      name: "no selection produces the default selection prompt",
+      caseId: "no-selection-produces-the-default-selection-prompt", name: "no selection produces the default selection prompt",
       run: () => {
         const result = derive_cellsheet_relations(success, undefined);
         equal(result.selectionText, "Select a cell to inspect its derived operation links.", "default prompt");
@@ -345,12 +345,12 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
-      name: "selected cell retains selected relation over operation roles",
+      caseId: "selected-cell-retains-selected-relation-over-operation-roles", name: "selected cell retains selected relation over operation roles",
       run: () => equal(relation(success, "B1", "B1"), "selected", "selected relation"),
     },
     {
       suite: RELATION_SUITE,
-      name: "successful selection marks operands operator and target",
+      caseId: "successful-selection-marks-operands-operator-and-target", name: "successful selection marks operands operator and target",
       run: () => {
         equal(relation(success, "B1", "A1"), "operand", "left operand relation");
         equal(relation(success, "B1", "C1"), "operand", "right operand relation");
@@ -360,22 +360,22 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
-      name: "errored collision target is blocked",
+      caseId: "errored-collision-target-is-blocked", name: "errored collision target is blocked",
       run: () => equal(relation(collision, "B4", "D4"), "blocked", "blocked collision target"),
     },
     {
       suite: RELATION_SUITE,
-      name: "division-by-zero target remains target rather than blocked",
+      caseId: "division-by-zero-target-remains-target-rather-than-blocked", name: "division-by-zero target remains target rather than blocked",
       run: () => equal(relation(division, "B1", "D1"), "target", "division target relation"),
     },
     {
       suite: RELATION_SUITE,
-      name: "numeric operand type error marks its visible target as blocked",
+      caseId: "numeric-operand-type-error-marks-its-visible-target-as-blocked", name: "numeric operand type error marks its visible target as blocked",
       run: () => equal(relation(numericTypeError, "B1", "D1"), "blocked", "type-error target relation"),
     },
     {
       suite: RELATION_SUITE,
-      name: "successful operation selection text preserves arrow formatting",
+      caseId: "successful-operation-selection-text-preserves-arrow-formatting", name: "successful operation selection text preserves arrow formatting",
       run: () => {
         const selected = cellsheet_cell_ref_from_key("A1") ?? fail("missing A1");
         equal(derive_cellsheet_relations(success, selected).selectionText, "A1\nA1 + C1 → D1=3", "success text");
@@ -383,7 +383,7 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
-      name: "erroneous operation selection text preserves error formatting",
+      caseId: "erroneous-operation-selection-text-preserves-error-formatting", name: "erroneous operation selection text preserves error formatting",
       run: () => {
         const selected = cellsheet_cell_ref_from_key("B1") ?? fail("missing B1");
         const result = derive_cellsheet_relations(division, selected);
@@ -393,7 +393,7 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
-      name: "numeric operand type error selection exposes useful error information",
+      caseId: "numeric-operand-type-error-selection-exposes-useful-error-information", name: "numeric operand type error selection exposes useful error information",
       run: () => {
         const selected = cellsheet_cell_ref_from_key("D1") ?? fail("missing D1");
         const result = derive_cellsheet_relations(numericTypeError, selected);
@@ -403,7 +403,7 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
-      name: "cell without operations receives no-link selection text",
+      caseId: "cell-without-operations-receives-no-link-selection-text", name: "cell without operations receives no-link selection text",
       run: () => {
         const selected = cellsheet_cell_ref_from_key("H8") ?? fail("missing H8");
         equal(derive_cellsheet_relations(success, selected).selectionText, "H8: no derived operation links.", "no-link text");
@@ -411,7 +411,7 @@ export function cellsheet_relations_suite(): TestSuite {
     },
     {
       suite: RELATION_SUITE,
-      name: "shared target selection reports all touching operations in scan order",
+      caseId: "shared-target-selection-reports-all-touching-operations-in-scan-order", name: "shared target selection reports all touching operations in scan order",
       run: () => {
         const selected = cellsheet_cell_ref_from_key("D4") ?? fail("missing D4");
         const result = derive_cellsheet_relations(collision, selected);

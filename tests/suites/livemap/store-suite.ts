@@ -75,7 +75,7 @@ export function livemap_suites_store(): TestSuite {
         cases: [
             {
                 suite: SUITE,
-                name: "sub receives projected root changes",
+                caseId: "sub-receives-projected-root-changes", name: "sub receives projected root changes",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: CountState[] = [];
@@ -99,7 +99,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "subscribeDiff receives next and previous snapshots",
+                caseId: "subscribediff-receives-next-and-previous-snapshots", name: "subscribeDiff receives next and previous snapshots",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: { prev: CountState; next: CountState }[] = [];
@@ -128,7 +128,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "subscribeDiff skips unchanged ordered projected state",
+                caseId: "subscribediff-skips-unchanged-ordered-projected-state", name: "subscribeDiff skips unchanged ordered projected state",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -172,7 +172,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "subscribeSel emits only when selected value changes",
+                caseId: "subscribesel-emits-only-when-selected-value-changes", name: "subscribeSel emits only when selected value changes",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -209,7 +209,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.sel supports custom equality",
+                caseId: "sub.sel-supports-custom-equality", name: "sub.sel supports custom equality",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -247,7 +247,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "subscribePath emits when path value changes",
+                caseId: "subscribepath-emits-when-path-value-changes", name: "subscribePath emits when path value changes",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -281,7 +281,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path emits when parent replace changes path value",
+                caseId: "sub.path-emits-when-parent-replace-changes-path-value", name: "sub.path emits when parent replace changes path value",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -311,7 +311,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path supports custom equality",
+                caseId: "sub.path-supports-custom-equality", name: "sub.path supports custom equality",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -346,7 +346,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path parent emits when child value changes",
+                caseId: "sub.path-parent-emits-when-child-value-changes", name: "sub.path parent emits when child value changes",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -379,7 +379,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path child ignores sibling updates",
+                caseId: "sub.path-child-ignores-sibling-updates", name: "sub.path child ignores sibling updates",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -406,7 +406,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.sel listener receives cloned selected values",
+                caseId: "sub.sel-listener-receives-cloned-selected-values", name: "sub.sel listener receives cloned selected values",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -441,7 +441,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.diff listener receives cloned snapshots",
+                caseId: "sub.diff-listener-receives-cloned-snapshots", name: "sub.diff listener receives cloned snapshots",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -474,7 +474,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub listeners run in registration order",
+                caseId: "sub-listeners-run-in-registration-order", name: "sub listeners run in registration order",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: string[] = [];
@@ -503,7 +503,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "stopping one sub listener leaves later listeners active",
+                caseId: "stopping-one-sub-listener-leaves-later-listeners-active", name: "stopping one sub listener leaves later listeners active",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: string[] = [];
@@ -528,7 +528,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path stop prevents later path events",
+                caseId: "sub.path-stop-prevents-later-path-events", name: "sub.path stop prevents later path events",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -559,7 +559,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path supports root path",
+                caseId: "sub.path-supports-root-path", name: "sub.path supports root path",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: { next: CountState; prev: CountState }[] = [];
@@ -587,7 +587,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path custom equality receives previous selected value",
+                caseId: "sub.path-custom-equality-receives-previous-selected-value", name: "sub.path custom equality receives previous selected value",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -623,7 +623,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.sel custom equality receives previous selected value",
+                caseId: "sub.sel-custom-equality-receives-previous-selected-value", name: "sub.sel custom equality receives previous selected value",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -663,7 +663,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub root snapshots are cloned",
+                caseId: "sub-root-snapshots-are-cloned", name: "sub root snapshots are cloned",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -696,7 +696,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path snapshots are cloned",
+                caseId: "sub.path-snapshots-are-cloned", name: "sub.path snapshots are cloned",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -728,7 +728,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path listener can write unrelated derived branch",
+                caseId: "sub.path-listener-can-write-unrelated-derived-branch", name: "sub.path listener can write unrelated derived branch",
                 run: () => {
                     const map = as_cell_map({
                         cells: {
@@ -778,7 +778,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path listener ignores its own unrelated branch write",
+                caseId: "sub.path-listener-ignores-its-own-unrelated-branch-write", name: "sub.path listener ignores its own unrelated branch write",
                 run: () => {
                     const map = as_cell_map({
                         cells: {
@@ -817,7 +817,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path subscriber mutation does not poison later previous value",
+                caseId: "sub.path-subscriber-mutation-does-not-poison-later-previous-value", name: "sub.path subscriber mutation does not poison later previous value",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -850,7 +850,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.sel subscriber mutation does not poison later previous value",
+                caseId: "sub.sel-subscriber-mutation-does-not-poison-later-previous-value", name: "sub.sel subscriber mutation does not poison later previous value",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -886,7 +886,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path sibling subscribers receive isolated snapshots",
+                caseId: "sub.path-sibling-subscribers-receive-isolated-snapshots", name: "sub.path sibling subscribers receive isolated snapshots",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -916,7 +916,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub root sibling subscribers receive isolated snapshots",
+                caseId: "sub-root-sibling-subscribers-receive-isolated-snapshots", name: "sub root sibling subscribers receive isolated snapshots",
                 run: () => {
                     const map = as_ui_map({
                         ui: {
@@ -956,7 +956,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub listener can stop itself during emit",
+                caseId: "sub-listener-can-stop-itself-during-emit", name: "sub listener can stop itself during emit",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: number[] = [];
@@ -979,7 +979,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub listener stopped during emit is inactive on later emits",
+                caseId: "sub-listener-stopped-during-emit-is-inactive-on-later-emits", name: "sub listener stopped during emit is inactive on later emits",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: string[] = [];
@@ -1007,7 +1007,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub listener added during emit starts on later emits",
+                caseId: "sub-listener-added-during-emit-starts-on-later-emits", name: "sub listener added during emit starts on later emits",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: string[] = [];
@@ -1038,7 +1038,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path emits when missing leaf is created",
+                caseId: "sub.path-emits-when-missing-leaf-is-created", name: "sub.path emits when missing leaf is created",
                 run: () => {
                     const map = as_optional_ui_map({
                         ui: {
@@ -1067,7 +1067,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path parent emits when missing child is created",
+                caseId: "sub.path-parent-emits-when-missing-child-is-created", name: "sub.path parent emits when missing child is created",
                 run: () => {
                     const map = as_optional_ui_map({
                         ui: {
@@ -1099,7 +1099,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub root ignores no-op same-value write",
+                caseId: "sub-root-ignores-no-op-same-value-write", name: "sub root ignores no-op same-value write",
                 run: () => {
                     const map = as_count_map({ count: 0 });
                     const events: CountState[] = [];
@@ -1121,7 +1121,7 @@ export function livemap_suites_store(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "sub.path emits when parent replace removes selected value",
+                caseId: "sub.path-emits-when-parent-replace-removes-selected-value", name: "sub.path emits when parent replace removes selected value",
                 run: () => {
                     const map = as_optional_ui_map({
                         ui: {

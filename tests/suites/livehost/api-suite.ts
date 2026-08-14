@@ -70,7 +70,7 @@ export function livehost_api_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "hson livehost create exposes host",
+        caseId: "hson-livehost-create-exposes-host", name: "hson livehost create exposes host",
         input: {},
         act: () => {
           const host = hson.liveHost.create({ state: { count: 1 } });
@@ -87,7 +87,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost client exposes mirror",
+        caseId: "hson-livehost-client-exposes-mirror", name: "hson livehost client exposes mirror",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -115,7 +115,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost client receives sync",
+        caseId: "hson-livehost-client-receives-sync", name: "hson livehost client receives sync",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -147,7 +147,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost client sends subscribe and unsubscribe",
+        caseId: "hson-livehost-client-sends-subscribe-and-unsubscribe", name: "hson livehost client sends subscribe and unsubscribe",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -173,7 +173,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost client sends action payload",
+        caseId: "hson-livehost-client-sends-action-payload", name: "hson livehost client sends action payload",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -203,7 +203,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost registry creates host",
+        caseId: "hson-livehost-registry-creates-host", name: "hson livehost registry creates host",
         input: {},
         act: () => {
           const registry = hson.liveHost.registry();
@@ -223,7 +223,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost registry rejects duplicate id",
+        caseId: "hson-livehost-registry-rejects-duplicate-id", name: "hson livehost registry rejects duplicate id",
         input: {},
         act: () => {
           const registry = hson.liveHost.registry();
@@ -246,7 +246,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost registry rejects unknown connect",
+        caseId: "hson-livehost-registry-rejects-unknown-connect", name: "hson livehost registry rejects unknown connect",
         input: {},
         act: () => {
           const registry = hson.liveHost.registry();
@@ -265,7 +265,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost registry connects socket",
+        caseId: "hson-livehost-registry-connects-socket", name: "hson livehost registry connects socket",
         input: {},
         act: () => {
           const registry = hson.liveHost.registry();
@@ -293,7 +293,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost protocol decodes hello host id",
+        caseId: "hson-livehost-protocol-decodes-hello-host-id", name: "hson livehost protocol decodes hello host id",
         input: {},
         act: () => {
           const decoded = hson.liveHost.protocol.decode(JSON.stringify({
@@ -316,7 +316,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost protocol decodes action",
+        caseId: "hson-livehost-protocol-decodes-action", name: "hson livehost protocol decodes action",
         input: {},
         act: () => {
           const decoded = hson.liveHost.protocol.decode(JSON.stringify({
@@ -344,7 +344,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost protocol encodes sync",
+        caseId: "hson-livehost-protocol-encodes-sync", name: "hson livehost protocol encodes sync",
         input: {},
         act: () => {
           const encoded = hson.liveHost.protocol.encode({
@@ -371,7 +371,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost protocol encodes error",
+        caseId: "hson-livehost-protocol-encodes-error", name: "hson livehost protocol encodes error",
         input: {},
         act: () => {
           const encoded = hson.liveHost.protocol.encode({
@@ -410,7 +410,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost protocol rejects invalid json",
+        caseId: "hson-livehost-protocol-rejects-invalid-json", name: "hson livehost protocol rejects invalid json",
         input: {},
         act: () => {
           const decoded = hson.liveHost.protocol.decode("{");
@@ -425,7 +425,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost debug omits historical resume log",
+        caseId: "hson-livehost-debug-omits-historical-resume-log", name: "hson livehost debug omits historical resume log",
         input: {},
         act: () => {
           return {
@@ -438,7 +438,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost debug exposes sync manager",
+        caseId: "hson-livehost-debug-exposes-sync-manager", name: "hson livehost debug exposes sync manager",
         input: {},
         act: () => {
           const host = hson.liveHost.create({ state: { count: 5 } });
@@ -468,7 +468,7 @@ export function livehost_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "hson livehost debug sync manager rejects duplicate session",
+        caseId: "hson-livehost-debug-sync-manager-rejects-duplicate-session", name: "hson livehost debug sync manager rejects duplicate session",
         input: {},
         act: () => {
           const host = hson.liveHost.create({ state: { count: 5 } });

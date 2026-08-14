@@ -41,7 +41,7 @@ export function livemap_bind_suite(): TestSuite {
 function make_bind_text_initial_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.text syncs initial path value",
+        caseId: "livetree-bind.text-syncs-initial-path-value", name: "LiveTree bind.text syncs initial path value",
         meta: {
             input: preview_value({ label: "about" }),
             path: preview_value(["label"]),
@@ -66,7 +66,7 @@ function make_bind_text_initial_case(suite: string): TestCase {
 function make_bind_text_update_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.text updates when path changes",
+        caseId: "livetree-bind.text-updates-when-path-changes", name: "LiveTree bind.text updates when path changes",
         meta: {
             input: preview_value({ label: "about" }),
             next: preview_value({ label: "parse" }),
@@ -92,7 +92,7 @@ function make_bind_text_update_case(suite: string): TestCase {
 function make_bind_text_previous_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.text mapper receives previous value",
+        caseId: "livetree-bind.text-mapper-receives-previous-value", name: "LiveTree bind.text mapper receives previous value",
         meta: {
             input: preview_value({ label: "about" }),
             next: preview_value({ label: "parse" }),
@@ -123,7 +123,7 @@ function make_bind_text_previous_case(suite: string): TestCase {
 function make_bind_attr_boolean_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.attr sets and drops boolean-style attrs",
+        caseId: "livetree-bind.attr-sets-and-drops-boolean-style-attrs", name: "LiveTree bind.attr sets and drops boolean-style attrs",
         meta: {
             input: preview_value({ disabled: true }),
             next: preview_value({ disabled: false }),
@@ -151,7 +151,7 @@ function make_bind_attr_boolean_case(suite: string): TestCase {
 function make_bind_attrs_mapper_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.attrs maps one path to many attrs",
+        caseId: "livetree-bind.attrs-maps-one-path-to-many-attrs", name: "LiveTree bind.attrs maps one path to many attrs",
         meta: {
             input: preview_value({ selected: false }),
             next: preview_value({ selected: true }),
@@ -186,7 +186,7 @@ function make_bind_attrs_mapper_case(suite: string): TestCase {
 function make_bind_css_mapper_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.css maps path value to style props",
+        caseId: "livetree-bind.css-maps-path-value-to-style-props", name: "LiveTree bind.css maps path value to style props",
         meta: {
             input: preview_value({ hovered: false }),
             next: preview_value({ hovered: true }),
@@ -221,7 +221,7 @@ function make_bind_css_mapper_case(suite: string): TestCase {
 function make_bind_attrs_drop_on_update_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.attrs drops mapped attrs on later update",
+        caseId: "livetree-bind.attrs-drops-mapped-attrs-on-later-update", name: "LiveTree bind.attrs drops mapped attrs on later update",
         meta: {
             input: preview_value({ selected: true }),
             next: preview_value({ selected: false }),
@@ -252,7 +252,7 @@ function make_bind_attrs_drop_on_update_case(suite: string): TestCase {
 function make_bind_css_drop_on_update_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.css removes mapped css props on later update",
+        caseId: "livetree-bind.css-removes-mapped-css-props-on-later-update", name: "LiveTree bind.css removes mapped css props on later update",
         meta: {
             input: preview_value({ hovered: true }),
             next: preview_value({ hovered: false }),
@@ -283,7 +283,7 @@ function make_bind_css_drop_on_update_case(suite: string): TestCase {
 function make_bind_paths_previous_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.paths receives previous values",
+        caseId: "livetree-bind.paths-receives-previous-values", name: "LiveTree bind.paths receives previous values",
         meta: {
             input: preview_value({ hoveredId: null, selectedId: "about" }),
             paths: preview_value([["hoveredId"], ["selectedId"]]),
@@ -316,7 +316,7 @@ function make_bind_paths_previous_case(suite: string): TestCase {
 function make_bind_text_missing_path_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.text maps null path to empty text",
+        caseId: "livetree-bind.text-maps-null-path-to-empty-text", name: "LiveTree bind.text maps null path to empty text",
         meta: {
             input: preview_value({ label: null }),
             path: preview_value(["label"]),
@@ -344,7 +344,7 @@ function make_bind_text_missing_path_case(suite: string): TestCase {
 function make_bind_attr_mapper_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.attr maps value through formatter",
+        caseId: "livetree-bind.attr-maps-value-through-formatter", name: "LiveTree bind.attr maps value through formatter",
         meta: {
             input: preview_value({ index: 2 }),
             next: preview_value({ index: 7 }),
@@ -372,7 +372,7 @@ function make_bind_attr_mapper_case(suite: string): TestCase {
 function make_bind_paths_style_bridge_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.paths can bridge multiple map paths to css",
+        caseId: "livetree-bind.paths-can-bridge-multiple-map-paths-to-css", name: "LiveTree bind.paths can bridge multiple map paths to css",
         meta: {
             input: preview_value({ hoveredId: null, selectedId: "about" }),
             paths: preview_value([["hoveredId"], ["selectedId"]]),
@@ -418,7 +418,7 @@ function make_bind_paths_style_bridge_case(suite: string): TestCase {
 function make_bind_paths_dispose_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.paths disposer stops all path updates",
+        caseId: "livetree-bind.paths-disposer-stops-all-path-updates", name: "LiveTree bind.paths disposer stops all path updates",
         meta: {
             input: preview_value({ a: "one", b: "two" }),
             paths: preview_value([["a"], ["b"]]),
@@ -449,7 +449,7 @@ function make_bind_paths_dispose_case(suite: string): TestCase {
 function make_bind_text_paths_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.textPaths maps multiple paths to text",
+        caseId: "livetree-bind.textpaths-maps-multiple-paths-to-text", name: "LiveTree bind.textPaths maps multiple paths to text",
         meta: {
             input: preview_value({ first: "one", second: "two" }),
             paths: preview_value([["first"], ["second"]]),
@@ -486,7 +486,7 @@ function make_bind_text_paths_case(suite: string): TestCase {
 function make_bind_attrs_paths_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.attrsPaths maps multiple paths to attrs",
+        caseId: "livetree-bind.attrspaths-maps-multiple-paths-to-attrs", name: "LiveTree bind.attrsPaths maps multiple paths to attrs",
         meta: {
             input: preview_value({ hoveredId: null, selectedId: "about" }),
             paths: preview_value([["hoveredId"], ["selectedId"]]),
@@ -530,7 +530,7 @@ function make_bind_attrs_paths_case(suite: string): TestCase {
 function make_bind_css_paths_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.cssPaths maps multiple paths to css",
+        caseId: "livetree-bind.csspaths-maps-multiple-paths-to-css", name: "LiveTree bind.cssPaths maps multiple paths to css",
         meta: {
             input: preview_value({ hoveredId: null, selectedId: "about" }),
             paths: preview_value([["hoveredId"], ["selectedId"]]),
@@ -576,7 +576,7 @@ function make_bind_css_paths_case(suite: string): TestCase {
 function make_bind_path_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.path exposes node value and previous value",
+        caseId: "livetree-bind.path-exposes-node-value-and-previous-value", name: "LiveTree bind.path exposes node value and previous value",
         meta: {
             input: preview_value({ label: "about" }),
             next: preview_value({ label: "build" }),
@@ -606,7 +606,7 @@ function make_bind_path_case(suite: string): TestCase {
 function make_bind_paths_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.paths observes multiple paths",
+        caseId: "livetree-bind.paths-observes-multiple-paths", name: "LiveTree bind.paths observes multiple paths",
         meta: {
             input: preview_value({ hoveredId: null, selectedId: "about" }),
             paths: preview_value([["hoveredId"], ["selectedId"]]),
@@ -639,7 +639,7 @@ function make_bind_paths_case(suite: string): TestCase {
 function make_bind_dispose_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree binding disposer stops later updates",
+        caseId: "livetree-binding-disposer-stops-later-updates", name: "LiveTree binding disposer stops later updates",
         meta: {
             input: preview_value({ label: "about" }),
             next: preview_value({ label: "parse" }),
@@ -665,7 +665,7 @@ function make_bind_dispose_case(suite: string): TestCase {
 function make_bind_mixed_map_filter_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.paths supports mixed-map locations and preserves value filtering",
+        caseId: "livetree-bind.paths-supports-mixed-map-locations-and-preserves-value-filtering", name: "LiveTree bind.paths supports mixed-map locations and preserves value filtering",
         run: () => {
             const host = hson.liveTree.create.div();
             const text = host.create.span();
@@ -700,7 +700,7 @@ function make_bind_mixed_map_filter_case(suite: string): TestCase {
 function make_bind_array_coordinate_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.path keeps passive array coordinate semantics",
+        caseId: "livetree-bind.path-keeps-passive-array-coordinate-semantics", name: "LiveTree bind.path keeps passive array coordinate semantics",
         run: () => {
             const host = hson.liveTree.create.div();
             const text = host.create.span();
@@ -732,7 +732,7 @@ function make_bind_array_coordinate_case(suite: string): TestCase {
 function make_bind_listener_failure_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.path preserves listener failure propagation",
+        caseId: "livetree-bind.path-preserves-listener-failure-propagation", name: "LiveTree bind.path preserves listener failure propagation",
         run: () => {
             const host = hson.liveTree.create.div();
             const text = host.create.span();
@@ -764,7 +764,7 @@ function make_bind_listener_failure_case(suite: string): TestCase {
 function make_bind_restore_convergence_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree binding converges on changed, equal, and missing projected restore",
+        caseId: "livetree-binding-converges-on-changed-equal-and-missing-projected-restore", name: "LiveTree binding converges on changed, equal, and missing projected restore",
         run: () => {
             const host = hson.liveTree.create.div();
             const text = host.create.span();
@@ -816,7 +816,7 @@ function make_bind_restore_convergence_case(suite: string): TestCase {
 function make_bind_paths_restore_case(suite: string): TestCase {
     return {
         suite,
-        name: "LiveTree bind.paths resnapshots a complete mixed-map tuple after restore",
+        caseId: "livetree-bind.paths-resnapshots-a-complete-mixed-map-tuple-after-restore", name: "LiveTree bind.paths resnapshots a complete mixed-map tuple after restore",
         run: () => {
             const host = hson.liveTree.create.div();
             const text = host.create.span();

@@ -13,42 +13,42 @@ export function livemap_suite_editor(): TestSuite {
     cases: [
       make_snap_case({
         suite: SUITE,
-        name: "snap root object",
+        caseId: "snap-root-object", name: "snap root object",
         input: { user: { name: "Ada" } },
         path: [],
         expectedOutput: { user: { name: "Ada" } },
       }),
       make_snap_case({
         suite: SUITE,
-        name: "snap nested object property",
+        caseId: "snap-nested-object-property", name: "snap nested object property",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         expectedOutput: "Ada",
       }),
       make_snap_case({
         suite: SUITE,
-        name: "snap missing property",
+        caseId: "snap-missing-property", name: "snap missing property",
         input: { user: { name: "Ada" } },
         path: ["user", "missing"],
         expectedOutput: undefined,
       }),
       make_snap_case({
         suite: SUITE,
-        name: "snap first array item property",
+        caseId: "snap-first-array-item-property", name: "snap first array item property",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0, "name"],
         expectedOutput: "Ada",
       }),
       make_snap_case({
         suite: SUITE,
-        name: "snap second array item property",
+        caseId: "snap-second-array-item-property", name: "snap second array item property",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 1, "name"],
         expectedOutput: "Grace",
       }),
       make_set_case({
         suite: SUITE,
-        name: "set existing object property",
+        caseId: "set-existing-object-property", name: "set existing object property",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         value: "Grace",
@@ -59,7 +59,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_set_case({
         suite: SUITE,
-        name: "set missing object property",
+        caseId: "set-missing-object-property", name: "set missing object property",
         input: { user: { name: "Ada" } },
         path: ["user", "role"],
         value: "admin",
@@ -70,7 +70,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_set_case({
         suite: SUITE,
-        name: "set existing object property unchanged",
+        caseId: "set-existing-object-property-unchanged", name: "set existing object property unchanged",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         value: "Ada",
@@ -81,7 +81,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_set_case({
         suite: SUITE,
-        name: "set existing array item",
+        caseId: "set-existing-array-item", name: "set existing array item",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0],
         value: { name: "Margaret" },
@@ -92,7 +92,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_set_case({
         suite: SUITE,
-        name: "set existing array item property",
+        caseId: "set-existing-array-item-property", name: "set existing array item property",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 1, "name"],
         value: "Margaret",
@@ -103,7 +103,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_set_case({
         suite: SUITE,
-        name: "set existing array item unchanged",
+        caseId: "set-existing-array-item-unchanged", name: "set existing array item unchanged",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0],
         value: { name: "Ada" },
@@ -114,7 +114,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_delete_case({
         suite: SUITE,
-        name: "delete existing object property",
+        caseId: "delete-existing-object-property", name: "delete existing object property",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user", "name"],
         expectedChanged: true,
@@ -124,7 +124,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_delete_throw_case({
         suite: SUITE,
-        name: "delete missing object property throws",
+        caseId: "delete-missing-object-property-throws", name: "delete missing object property throws",
         input: { user: { name: "Ada" } },
         path: ["user", "role"],
         expectedMessage: "LiveMap delete path does not resolve: [\"user\", \"role\"]",
@@ -132,7 +132,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_delete_throw_case({
         suite: SUITE,
-        name: "delete root throws",
+        caseId: "delete-root-throws", name: "delete root throws",
         input: { user: { name: "Ada" } },
         path: [],
         expectedMessage: "LiveMap editor cannot delete the root node yet.",
@@ -140,7 +140,7 @@ export function livemap_suite_editor(): TestSuite {
       }),
       make_delete_throw_case({
         suite: SUITE,
-        name: "delete array index throws",
+        caseId: "delete-array-index-throws", name: "delete array index throws",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0],
         expectedMessage: "LiveMap editor cannot delete array indexes yet: [\"users\", 0]",
@@ -153,7 +153,7 @@ export function livemap_suite_editor(): TestSuite {
 
 type DeleteCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   expectedChanged: boolean;
@@ -164,7 +164,7 @@ type DeleteCaseSpec = Readonly<{
 
 type DeleteThrowCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   expectedMessage: string;
@@ -174,7 +174,7 @@ type DeleteThrowCaseSpec = Readonly<{
 function make_delete_case(spec: DeleteCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -202,7 +202,7 @@ function make_delete_case(spec: DeleteCaseSpec): TestCase {
 function make_delete_throw_case(spec: DeleteThrowCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),

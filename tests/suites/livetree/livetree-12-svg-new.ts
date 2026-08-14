@@ -4,12 +4,12 @@ import type { LiveTreeCaseSpec } from "../livemap/livemap-tests.types";
 import { make_livetree_suite } from "./make-livetree-suite";
 
 export function livetree_svg_lvl2(): TestSuite {
-    const SUITE = "livetree/new-svg/";
+    const SUITE = "livetree/new-svg";
     const cases: readonly LiveTreeCaseSpec[] =
         [
             {
                 suite: SUITE,
-                name: "svg.viewBox set overload writes string",
+                caseId: "svg.viewbox-set-overload-writes-string", name: "svg.viewBox set overload writes string",
                 html: `<main><svg id="s"></svg></main>`,
                 fixture: "svg/api",
                 sub: "viewbox-string",
@@ -32,7 +32,7 @@ export function livetree_svg_lvl2(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg.viewBox set overload writes numbers",
+                caseId: "svg.viewbox-set-overload-writes-numbers", name: "svg.viewBox set overload writes numbers",
                 html: `<main><svg id="s"></svg></main>`,
                 fixture: "svg/api",
                 sub: "viewbox-numbers",
@@ -53,7 +53,7 @@ export function livetree_svg_lvl2(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg.preserveAspectRatio none helper writes attr",
+                caseId: "svg.preserveaspectratio-none-helper-writes-attr", name: "svg.preserveAspectRatio none helper writes attr",
                 html: `<main><svg id="s"></svg></main>`,
                 fixture: "svg/api",
                 sub: "preserve-none",
@@ -76,7 +76,7 @@ export function livetree_svg_lvl2(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg.path d fill stroke helpers write attrs",
+                caseId: "svg.path-d-fill-stroke-helpers-write-attrs", name: "svg.path d fill stroke helpers write attrs",
                 html: `<main><svg id="s"><path id="p"></path></svg></main>`,
                 fixture: "svg/api",
                 dom: true,
@@ -119,7 +119,7 @@ export function livetree_svg_lvl2(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg api exists on html nodes but reports out of scope",
+                caseId: "svg-api-exists-on-html-nodes-but-reports-out-of-scope", name: "svg api exists on html nodes but reports out of scope",
                 html: `<main><div id="box"></div><svg id="s"></svg></main>`,
                 fixture: "svg/api",
                 sub: "scope",
@@ -142,7 +142,7 @@ export function livetree_svg_lvl2(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg bbox returns mounted geometry",
+                caseId: "svg-bbox-returns-mounted-geometry", name: "svg bbox returns mounted geometry",
                 html: `<main><svg id="s" viewBox="0 0 100 100"><rect id="r" x="10" y="20" width="30" height="40"></rect></svg></main>`,
                 fixture: "svg/api",
                 dom: true,

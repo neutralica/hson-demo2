@@ -29,11 +29,11 @@ export const TRANSFORM_SYNTHETIC_DOM_CLASSIFICATION: Readonly<Record<string, Tra
   "transform/legacy/json": "test/assertion dependency",
   "transform/hson": "test/assertion dependency",
   "transform/json/level-2": "test/assertion dependency",
-  "transform/hson/_INVALID": "test/assertion dependency",
+  "transform/hson/invalid": "test/assertion dependency",
   "transform/legacy/html": "implementation and test/assertion dependency",
   "transform/html/new": "implementation and test/assertion dependency",
   "transform/misc-extra": "implementation and test/assertion dependency",
-  "transform/_INVALID": "implementation and test/assertion dependency",
+  "transform/invalid": "implementation and test/assertion dependency",
   "transform/parsing-browser-certificate": "implementation and test/assertion dependency",
 });
 

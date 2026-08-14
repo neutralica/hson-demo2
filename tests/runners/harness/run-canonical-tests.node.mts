@@ -31,7 +31,7 @@ const descriptors = registry.catalog;
 const events: TestEvent[] = [];
 const result = await run_node_selected_test_ids(registry, selected.map((descriptor) => descriptor.id), (event) => {
   events.push(event);
-  const normalized = normalize_test_event(event, (suite, name) => find_test_descriptor(descriptors, `${suite}::${name}`));
+  const normalized = normalize_test_event(event, (suite, caseId) => find_test_descriptor(descriptors, `${suite}::${caseId}`));
   if (normalized.type === "test-finished" && normalized.status === "fail") {
     console.error(`FAIL ${normalized.test.id}\n${normalized.error ?? "failed assertion"}`);
   }

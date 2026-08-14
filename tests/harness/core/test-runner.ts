@@ -119,7 +119,7 @@ function effective_timeout(
 ): number {
   return validated_timeout(
     testCase?.timeoutMs ?? suite.timeoutMs ?? options.caseTimeoutMs ?? DEFAULT_TEST_CASE_TIMEOUT_MS,
-    testCase === undefined ? `Suite "${suite.suite}" timeout` : `Test "${suite.suite}::${testCase.name}" timeout`,
+    testCase === undefined ? `Suite "${suite.suite}" timeout` : `Test "${suite.suite}::${testCase.caseId}" timeout`,
   );
 }
 
@@ -134,7 +134,7 @@ function validate_run_configuration(suites: readonly TestSuite[], options: RunOp
         throw new Error(`[TEST_RUNNER_CASE_IDENTITY_INVALID] Case "${testCase.name}" belongs to "${testCase.suite}", not "${suite.suite}".`);
       }
       if (testCase.timeoutMs !== undefined) {
-        validated_timeout(testCase.timeoutMs, `Test "${suite.suite}::${testCase.name}" timeout`);
+        validated_timeout(testCase.timeoutMs, `Test "${suite.suite}::${testCase.caseId}" timeout`);
       }
     }
   }
@@ -236,11 +236,12 @@ export async function run_test_suites(
       } catch (error) {
         for (const tc of selectedCases) {
           const c0 = now();
-          const begin = { t: "case_begin", suite: tc.suite, name: tc.name } as const;
+          const begin = { t: "case_begin", suite: tc.suite, caseId: tc.caseId, name: tc.name } as const;
           emit(rec, onEvent, tc.meta ? { ...begin, meta: tc.meta } : begin);
           emit(rec, onEvent, {
             t: "case_end",
             suite: tc.suite,
+            caseId: tc.caseId,
             name: tc.name,
             status: "fail",
             ms: now() - c0,
@@ -257,7 +258,7 @@ export async function run_test_suites(
     for (const tc of selectedCases) {
 
       const c0 = now();
-      const evBase = { t: "case_begin", suite: tc.suite, name: tc.name } as const;
+      const evBase = { t: "case_begin", suite: tc.suite, caseId: tc.caseId, name: tc.name } as const;
       emit(rec, onEvent, tc.meta ? { ...evBase, meta: tc.meta } : evBase);
 
       const expected = readExpected(tc);
@@ -271,7 +272,7 @@ export async function run_test_suites(
             tc.run,
             effective_timeout(suite, tc, opts),
             "case",
-            `${tc.suite}::${tc.name}`,
+            `${tc.suite}::${tc.caseId}`,
             opts.signal,
           );
         } catch (error) {
@@ -284,7 +285,7 @@ export async function run_test_suites(
               tc.cleanup,
               effective_timeout(suite, tc, opts),
               "cleanup",
-              `${tc.suite}::${tc.name}`,
+              `${tc.suite}::${tc.caseId}`,
             );
           } catch (error) {
             cleanupError = error;
@@ -313,6 +314,7 @@ export async function run_test_suites(
           const endBase = {
             t: "case_end",
             suite: tc.suite,
+            caseId: tc.caseId,
             name: tc.name,
             status: failedAsExpected ? "pass" : "fail",
             ms: now() - c0,
@@ -353,6 +355,7 @@ export async function run_test_suites(
           const endBase = {
             t: "case_end",
             suite: tc.suite,
+            caseId: tc.caseId,
             name: tc.name,
             status: "fail",
             ms: now() - c0,
@@ -383,6 +386,7 @@ export async function run_test_suites(
         const endBase = {
           t: "case_end",
           suite: tc.suite,
+          caseId: tc.caseId,
           name: tc.name,
           status: "pass",
           ms: now() - c0,
@@ -413,6 +417,7 @@ export async function run_test_suites(
           const endBase = {
             t: "case_end",
             suite: tc.suite,
+            caseId: tc.caseId,
             name: tc.name,
             status: "pass",
             ms: now() - c0,
@@ -436,6 +441,7 @@ export async function run_test_suites(
         const endBase = {
           t: "case_end",
           suite: tc.suite,
+          caseId: tc.caseId,
           name: tc.name,
           status: "fail",
           ms: now() - c0,

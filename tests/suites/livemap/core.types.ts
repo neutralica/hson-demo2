@@ -4,7 +4,7 @@ import type { LiveMapFeedEventPreview } from "./types";
 
 export type CoreAtSnapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   expected: JsonValue | undefined;
@@ -12,7 +12,7 @@ export type CoreAtSnapCaseSpec = Readonly<{
 
 export type CoreAtSetCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   value: JsonValue;
@@ -22,7 +22,7 @@ export type CoreAtSetCaseSpec = Readonly<{
 
 export type CoreAtFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   value: JsonValue;
@@ -31,7 +31,7 @@ export type CoreAtFeedCaseSpec = Readonly<{
 
 export type CoreAtPathCopyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   mutateReturnedPathTo: (string | number)[];
@@ -40,7 +40,7 @@ export type CoreAtPathCopyCaseSpec = Readonly<{
 
 export type CoreAtOriginalPathStabilityCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   mutateOriginalPathTo: (string | number)[];
@@ -50,7 +50,7 @@ export type CoreAtOriginalPathStabilityCaseSpec = Readonly<{
 
 export type CoreSetPathCopyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   mutateOriginalPathTo: (string | number)[];
@@ -61,7 +61,7 @@ export type CoreSetPathCopyCaseSpec = Readonly<{
 
 export type CoreSetManyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   values: Readonly<Record<string, JsonValue>>;
@@ -77,7 +77,7 @@ export type CoreSetManyCaseSpec = Readonly<{
 
 export type CoreSetManyFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   feedPath: (string | number)[];
   setPath: (string | number)[];
@@ -87,7 +87,7 @@ export type CoreSetManyFeedCaseSpec = Readonly<{
 
 export type CoreSetManyPathCopyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   mutateOriginalPathTo: (string | number)[];
@@ -98,7 +98,7 @@ export type CoreSetManyPathCopyCaseSpec = Readonly<{
 
 export type CoreDeleteCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   expectedChanged: boolean;
@@ -113,7 +113,7 @@ export type CoreDeleteCaseSpec = Readonly<{
 
 export type CoreDeleteFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   feedPath: (string | number)[];
   deletePath: (string | number)[];
@@ -122,7 +122,7 @@ export type CoreDeleteFeedCaseSpec = Readonly<{
 
 export type CoreDeletePathCopyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   mutateOriginalPathTo: (string | number)[];
@@ -132,7 +132,7 @@ export type CoreDeletePathCopyCaseSpec = Readonly<{
 
 export type CoreDeleteThrowCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: (string | number)[];
   expectedMessage: string;

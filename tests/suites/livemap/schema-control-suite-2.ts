@@ -116,7 +116,7 @@ function make_number_schema(min: number, max: number): LiveMapSchemaControlSpec 
 function make_schema_number_max_rejects_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema number validation rejects values above max",
+    caseId: "schema-number-validation-rejects-values-above-max", name: "Schema number validation rejects values above max",
     meta: {
       input: preview_value({ count: 5 }),
       schema: preview_value(make_number_schema(0, 10)),
@@ -146,7 +146,7 @@ function make_schema_number_max_rejects_writeback_case(suite: string): TestCase 
 function make_schema_number_min_rejects_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema number validation rejects values below min",
+    caseId: "schema-number-validation-rejects-values-below-min", name: "Schema number validation rejects values below min",
     meta: {
       input: preview_value({ count: 5 }),
       schema: preview_value(make_number_schema(0, 10)),
@@ -176,7 +176,7 @@ function make_schema_number_min_rejects_writeback_case(suite: string): TestCase 
 function make_schema_number_valid_after_invalid_clears_error_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema number validation clears error after valid input",
+    caseId: "schema-number-validation-clears-error-after-valid-input", name: "Schema number validation clears error after valid input",
     meta: {
       input: preview_value({ count: 5 }),
       schema: preview_value(make_number_schema(0, 10)),

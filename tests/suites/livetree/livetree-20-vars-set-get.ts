@@ -16,7 +16,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "css var facade: name and key normalize accepted spellings",
+            caseId: "css-var-facade-name-and-key-normalize-accepted-spellings", name: "css var facade: name and key normalize accepted spellings",
             dom: true,
             fixture: "css-var-facade",
             sub: "css-name-key-normalization",
@@ -52,7 +52,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "style var facade: name and key normalize accepted spellings",
+            caseId: "style-var-facade-name-and-key-normalize-accepted-spellings", name: "style var facade: name and key normalize accepted spellings",
             dom: true,
             fixture: "css-var-facade",
             sub: "style-name-key-normalization",
@@ -89,7 +89,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css var facade: set and value roundtrip through QUID-scoped stylesheet",
+            caseId: "css-var-facade-set-and-value-roundtrip-through-quid-scoped-stylesheet", name: "css var facade: set and value roundtrip through QUID-scoped stylesheet",
             dom: true,
             fixture: "css-var-facade",
             sub: "css-set-value-roundtrip",
@@ -127,7 +127,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "style var facade: set and value roundtrip through inline style",
+            caseId: "style-var-facade-set-and-value-roundtrip-through-inline-style", name: "style var facade: set and value roundtrip through inline style",
             dom: true,
             fixture: "css-var-facade",
             sub: "style-set-value-roundtrip",
@@ -171,7 +171,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css and style var facades keep separate storage scopes",
+            caseId: "css-and-style-var-facades-keep-separate-storage-scopes", name: "css and style var facades keep separate storage scopes",
             dom: true,
             fixture: "css-var-facade",
             sub: "css-style-scope-separation",
@@ -207,7 +207,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css selector var facade: set and value roundtrip through selector handle",
+            caseId: "css-selector-var-facade-set-and-value-roundtrip-through-selector-handle", name: "css selector var facade: set and value roundtrip through selector handle",
             dom: true,
             fixture: "css-var-facade",
             sub: "selector-var-roundtrip",
@@ -249,7 +249,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css var facade: nullish writes remove QUID-scoped custom properties",
+            caseId: "css-var-facade-nullish-writes-remove-quid-scoped-custom-properties", name: "css var facade: nullish writes remove QUID-scoped custom properties",
             dom: true,
             fixture: "css-var-facade",
             sub: "css-nullish-var-removal",
@@ -284,7 +284,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "style var facade: nullish writes remove inline custom properties",
+            caseId: "style-var-facade-nullish-writes-remove-inline-custom-properties", name: "style var facade: nullish writes remove inline custom properties",
             dom: true,
             fixture: "css-var-facade",
             sub: "style-nullish-var-removal",
@@ -322,7 +322,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "var facades reject invalid custom-property names consistently",
+            caseId: "var-facades-reject-invalid-custom-property-names-consistently", name: "var facades reject invalid custom-property names consistently",
             dom: true,
             fixture: "css-var-facade",
             sub: "invalid-var-names-throw",
@@ -362,7 +362,7 @@ export function livetree_css_var_facade_surfaces(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "style var facade: inline custom properties are suitable for runtime animation state",
+            caseId: "style-var-facade-inline-custom-properties-are-suitable-for-runtime-animation-state", name: "style var facade: inline custom properties are suitable for runtime animation state",
             dom: true,
             fixture: "css-var-facade",
             sub: "style-runtime-var-update",
@@ -416,7 +416,7 @@ export function livetree_get_many_surface(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "style getMany reads inline declarations while getMany reads CSS all property",
+            caseId: "style-getmany-reads-inline-declarations-while-getmany-reads-css-all-property", name: "style getMany reads inline declarations while getMany reads CSS all property",
             dom: true,
             fixture: "get-many-surface",
             sub: "style-getmany-and-all-property",
@@ -464,7 +464,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css getMany reads QUID declarations while getMany reads CSS all property",
+            caseId: "css-getmany-reads-quid-declarations-while-getmany-reads-css-all-property", name: "css getMany reads QUID declarations while getMany reads CSS all property",
             dom: true,
             fixture: "get-many-surface",
             sub: "css-getmany-and-all-property",
@@ -512,7 +512,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "selector getMany reads selector declarations while getMany reads CSS all property",
+            caseId: "selector-getmany-reads-selector-declarations-while-getmany-reads-css-all-property", name: "selector getMany reads selector declarations while getMany reads CSS all property",
             dom: true,
             fixture: "get-many-surface",
             sub: "selector-getmany-and-all-property",
@@ -561,7 +561,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "style getMany returns a setMany-compatible map",
+            caseId: "style-getmany-returns-a-setmany-compatible-map", name: "style getMany returns a setMany-compatible map",
             dom: true,
             fixture: "get-many-surface",
             sub: "style-getmany-setmany-roundtrip",
@@ -608,7 +608,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css getMany returns a setMany-compatible map",
+            caseId: "css-getmany-returns-a-setmany-compatible-map", name: "css getMany returns a setMany-compatible map",
             dom: true,
             fixture: "get-many-surface",
             sub: "css-getmany-setmany-roundtrip",
@@ -655,7 +655,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "selector getMany returns a setMany-compatible map",
+            caseId: "selector-getmany-returns-a-setmany-compatible-map", name: "selector getMany returns a setMany-compatible map",
             dom: true,
             fixture: "get-many-surface",
             sub: "selector-getmany-setmany-roundtrip",
@@ -702,7 +702,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "getMany reflects removals and clear operations",
+            caseId: "getmany-reflects-removals-and-clear-operations", name: "getMany reflects removals and clear operations",
             dom: true,
             fixture: "get-many-surface",
             sub: "getmany-removal-clear",
@@ -761,7 +761,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "getMany keeps inline style and QUID css scopes separate",
+            caseId: "getmany-keeps-inline-style-and-quid-css-scopes-separate", name: "getMany keeps inline style and QUID css scopes separate",
             dom: true,
             fixture: "get-many-surface",
             sub: "getmany-scope-separation",
@@ -804,7 +804,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "get.vars reads selected inline custom properties with canonical keys",
+            caseId: "get.vars-reads-selected-inline-custom-properties-with-canonical-keys", name: "get.vars reads selected inline custom properties with canonical keys",
             dom: true,
             fixture: "get-many-surface",
             sub: "style-get-vars-selected-canonical",
@@ -851,7 +851,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "get.vars reads selected QUID-scoped custom properties with canonical keys",
+            caseId: "get.vars-reads-selected-quid-scoped-custom-properties-with-canonical-keys", name: "get.vars reads selected QUID-scoped custom properties with canonical keys",
             dom: true,
             fixture: "get-many-surface",
             sub: "css-get-vars-selected-canonical",
@@ -898,7 +898,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "get.vars reads selected selector custom properties with canonical keys",
+            caseId: "get.vars-reads-selected-selector-custom-properties-with-canonical-keys", name: "get.vars reads selected selector custom properties with canonical keys",
             dom: true,
             fixture: "get-many-surface",
             sub: "selector-get-vars-selected-canonical",
@@ -946,7 +946,7 @@ export function livetree_get_many_surface(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "get.vars keeps inline style and QUID css custom-property scopes separate",
+            caseId: "get.vars-keeps-inline-style-and-quid-css-custom-property-scopes-separate", name: "get.vars keeps inline style and QUID css custom-property scopes separate",
             dom: true,
             fixture: "get-many-surface",
             sub: "get-vars-scope-separation",

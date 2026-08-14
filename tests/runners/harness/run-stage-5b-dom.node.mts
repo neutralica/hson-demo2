@@ -29,7 +29,7 @@ const node = make_local_node_livehost_executor_registry();
 const worker = make_cloudflare_livehost_executor_registry();
 const canvasSuiteIds = new Set<string>(CANVAS_DETERMINISTIC_SUITE_IDS);
 const domDescriptors = node.catalog.tests.filter((descriptor) => (
-  descriptor.requirements.includes("synthetic-dom") && !canvasSuiteIds.has(descriptor.suite)
+  descriptor.requirements.includes("synthetic-dom") && !canvasSuiteIds.has(descriptor.suiteId)
 ));
 expect_stage5b(
   node.executor.capabilities.provides.includes("synthetic-dom")
@@ -37,12 +37,12 @@ expect_stage5b(
   "only Node advertises the installed synthetic-DOM capability",
 );
 expect_stage5b(domDescriptors.length === 955, "all 955 canonical non-Canvas synthetic-DOM cases are registered");
-expect_stage5b(new Set(domDescriptors.map((descriptor) => descriptor.suite)).size === 78, "all 78 canonical non-Canvas synthetic-DOM suites are registered");
+expect_stage5b(new Set(domDescriptors.map((descriptor) => descriptor.suiteId)).size === 78, "all 78 canonical non-Canvas synthetic-DOM suites are registered");
 expect_stage5b(
   domDescriptors.every((descriptor) => (
-    descriptor.suite.startsWith("transform/") ? descriptor.subject === "transform"
-      : descriptor.suite.startsWith("livemap/") ? descriptor.subject === "livemap"
-        : descriptor.suite.startsWith("livetree/") || descriptor.suite.startsWith("livetree-")
+    descriptor.suiteId.startsWith("transform/") ? descriptor.subject === "transform"
+      : descriptor.suiteId.startsWith("livemap/") ? descriptor.subject === "livemap"
+        : descriptor.suiteId.startsWith("livetree/") || descriptor.suiteId.startsWith("livetree-")
           ? descriptor.subject === "livetree"
           : false
   ))
@@ -52,7 +52,7 @@ expect_stage5b(
   "DOM suite metadata derives Transform, LiveMap, and LiveTree domains from canonical suite identity",
 );
 expect_stage5b(
-  domDescriptors.every((descriptor) => node.get(descriptor.id)?.testCase.name === descriptor.name),
+  domDescriptors.every((descriptor) => node.get(descriptor.id)?.testCase.name === descriptor.title),
   "DOM descriptors retain their original executable TestCase objects",
 );
 expect_stage5b(
@@ -128,7 +128,7 @@ expect_stage5b(
 );
 
 const transformSuiteIds = domDescriptors
-  .filter((descriptor) => descriptor.suite === transform.suite)
+  .filter((descriptor) => descriptor.suiteId === transform.suiteId)
   .map((descriptor) => descriptor.id);
 const completeSuite = await selected(transformSuiteIds);
 expect_stage5b(
@@ -151,7 +151,7 @@ expect_stage5b(ordinary !== undefined, "representative ordinary descriptor exist
 const mixedIds = [ordinary.id, transform.id];
 const mixed = await selected(mixedIds);
 const mixedCanonicalOrder = selected_test_suites(node, mixedIds)
-  .flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+  .flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`));
 expect_stage5b(
   mixed.result.ok
     && hosted_test_report_cases(mixed.report).map((testCase) => testCase.key).join("|")
@@ -171,7 +171,7 @@ expect_stage5b(
 );
 expect_stage5b(
   primary.every((choice) => choice.selection.kind !== "suite" && choice.selection.kind !== "test")
-    && hosted_test_panel_suite_choices(node.catalog.tests).some((choice) => choice.key === `suite:${transform.suite}`),
+    && hosted_test_panel_suite_choices(node.catalog.tests).some((choice) => choice.key === `suite:${transform.suiteId}`),
   "primary taxonomy remains curated while advanced suites include Transform",
 );
 const categoryExecutionCounts: Record<string, number> = {};
@@ -213,7 +213,7 @@ let maximumDomRuns = 0;
 const isolationSuite = "proof/synthetic-dom";
 const domProbe: TestCase = Object.freeze({
   suite: isolationSuite,
-  name: "DOM globals exist and each run begins empty",
+  caseId: "dom-globals-exist-and-each-run-begins-empty", name: "DOM globals exist and each run begins empty",
   run: async () => {
     expect_stage5b(typeof window === "object" && typeof window.document === "object", "DOM globals exist during DOM execution");
     expect_stage5b(window.document.body.childNodes.length === 0, "document state does not leak between runs");
@@ -226,13 +226,13 @@ const domProbe: TestCase = Object.freeze({
 });
 const failingProbe: TestCase = Object.freeze({
   suite: isolationSuite,
-  name: "intentional failure preserves stack",
+  caseId: "intentional-failure-preserves-stack", name: "intentional failure preserves stack",
   run: () => { throw new Error("synthetic DOM diagnostic sentinel"); },
 });
 const ordinarySuite = "proof/ordinary-node";
 const ordinaryProbe: TestCase = Object.freeze({
   suite: ordinarySuite,
-  name: "ordinary execution observes no DOM globals",
+  caseId: "ordinary-execution-observes-no-dom-globals", name: "ordinary execution observes no DOM globals",
   run: () => expect_stage5b(typeof document === "undefined" && typeof window === "undefined", "ordinary Node execution remains isolated"),
 });
 const fixtureSuites: readonly TestSuite[] = Object.freeze([

@@ -38,7 +38,7 @@ export function livemap_error_handling(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "schema issue reports type mismatch",
+        caseId: "schema-issue-reports-type-mismatch", name: "schema issue reports type mismatch",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -68,7 +68,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports missing required value",
+        caseId: "schema-issue-reports-missing-required-value", name: "schema issue reports missing required value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -100,7 +100,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports unknown path",
+        caseId: "schema-issue-reports-unknown-path", name: "schema issue reports unknown path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -128,7 +128,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports unknown exact object key",
+        caseId: "schema-issue-reports-unknown-exact-object-key", name: "schema issue reports unknown exact object key",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -161,7 +161,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports invalid literal",
+        caseId: "schema-issue-reports-invalid-literal", name: "schema issue reports invalid literal",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -189,7 +189,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports invalid constraint",
+        caseId: "schema-issue-reports-invalid-constraint", name: "schema issue reports invalid constraint",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -220,7 +220,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema issue reports tuple index out of range",
+        caseId: "schema-issue-reports-tuple-index-out-of-range", name: "schema issue reports tuple index out of range",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -255,7 +255,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema validation aggregates structured issues",
+        caseId: "schema-validation-aggregates-structured-issues", name: "schema validation aggregates structured issues",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -310,7 +310,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema successful validation returns no issues",
+        caseId: "schema-successful-validation-returns-no-issues", name: "schema successful validation returns no issues",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -339,7 +339,7 @@ export function livemap_error_handling(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema rejected write throws structured schema error",
+        caseId: "schema-rejected-write-throws-structured-schema-error", name: "schema rejected write throws structured schema error",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -414,7 +414,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected write leaves map unchanged",
+        caseId: "schema-rejected-write-leaves-map-unchanged", name: "schema rejected write leaves map unchanged",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -460,7 +460,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected constructive set uses first issue headline path",
+        caseId: "schema-rejected-constructive-set-uses-first-issue-headline-path", name: "schema rejected constructive set uses first issue headline path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -526,7 +526,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "invalid schema attachment throws structured schema error",
+        caseId: "invalid-schema-attachment-throws-structured-schema-error", name: "invalid schema attachment throws structured schema error",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -579,7 +579,7 @@ export function livemap_error_handling(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema error retains immutable issue collection",
+        caseId: "schema-error-retains-immutable-issue-collection", name: "schema error retains immutable issue collection",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({

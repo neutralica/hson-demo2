@@ -8,7 +8,7 @@ export function livetree_text_content_surface(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "text surface: set replaces text leaves while preserving element children",
+      caseId: "text-surface-set-replaces-text-leaves-while-preserving-element-children", name: "text surface: set replaces text leaves while preserving element children",
       fixture: "text-content/text",
       sub: "set-preserves-elements",
       dom: true,
@@ -45,7 +45,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text surface: overwrite replaces all content with one text leaf",
+      caseId: "text-surface-overwrite-replaces-all-content-with-one-text-leaf", name: "text surface: overwrite replaces all content with one text leaf",
       fixture: "text-content/text",
       sub: "overwrite-clears-elements",
       dom: true,
@@ -82,7 +82,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text surface: add appends text after existing text and element children",
+      caseId: "text-surface-add-appends-text-after-existing-text-and-element-children", name: "text surface: add appends text after existing text and element children",
       fixture: "text-content/text",
       sub: "add-appends",
       dom: true,
@@ -117,7 +117,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text surface: insert can place text before an existing text leaf",
+      caseId: "text-surface-insert-can-place-text-before-an-existing-text-leaf", name: "text surface: insert can place text before an existing text leaf",
       fixture: "text-content/text",
       sub: "insert-before-text",
       dom: true,
@@ -150,7 +150,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text surface: insert with mixed content keeps element children addressable",
+      caseId: "text-surface-insert-with-mixed-content-keeps-element-children-addressable", name: "text surface: insert with mixed content keeps element children addressable",
       fixture: "text-content/text",
       sub: "insert-mixed-content",
       dom: true,
@@ -187,7 +187,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text surface: primitive values stringify through text APIs",
+      caseId: "text-surface-primitive-values-stringify-through-text-apis", name: "text surface: primitive values stringify through text APIs",
       fixture: "text-content/text",
       sub: "primitive-values",
       dom: true,
@@ -229,7 +229,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text surface: detached text mutations survive later append",
+      caseId: "text-surface-detached-text-mutations-survive-later-append", name: "text surface: detached text mutations survive later append",
       fixture: "text-content/text",
       sub: "detached-then-append",
       dom: true,
@@ -268,7 +268,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content surface: count, first, at, and all expose element children only",
+      caseId: "content-surface-count-first-at-and-all-expose-element-children-only", name: "content surface: count, first, at, and all expose element children only",
       fixture: "text-content/content",
       sub: "element-children-only",
       dom: true,
@@ -313,7 +313,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content surface: all returns a defensive readonly-style snapshot",
+      caseId: "content-surface-all-returns-a-defensive-readonly-style-snapshot", name: "content surface: all returns a defensive readonly-style snapshot",
       fixture: "text-content/content",
       sub: "all-snapshot",
       dom: true,
@@ -349,7 +349,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content surface: mustOnly returns sole element child",
+      caseId: "content-surface-mustonly-returns-sole-element-child", name: "content surface: mustOnly returns sole element child",
       fixture: "text-content/content",
       sub: "must-only-hit",
       dom: true,
@@ -383,7 +383,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content surface: mustOnly throws for zero element children",
+      caseId: "content-surface-mustonly-throws-for-zero-element-children", name: "content surface: mustOnly throws for zero element children",
       fixture: "text-content/content",
       sub: "must-only-zero",
       dom: true,
@@ -421,7 +421,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content surface: mustOnly throws for multiple element children",
+      caseId: "content-surface-mustonly-throws-for-multiple-element-children", name: "content surface: mustOnly throws for multiple element children",
       fixture: "text-content/content",
       sub: "must-only-multiple",
       dom: true,
@@ -460,7 +460,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content surface: handles children created after reads",
+      caseId: "content-surface-handles-children-created-after-reads", name: "content surface: handles children created after reads",
       fixture: "text-content/content",
       sub: "fresh-after-create",
       dom: true,
@@ -502,7 +502,7 @@ export function livetree_text_content_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "text and content surface: removeChildren leaves text APIs usable",
+      caseId: "text-and-content-surface-removechildren-leaves-text-apis-usable", name: "text and content surface: removeChildren leaves text APIs usable",
       fixture: "text-content/interactions",
       sub: "remove-children-then-text",
       dom: true,
@@ -557,7 +557,7 @@ export function livetree_listener_builder_corners(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "listener builder: onCustom receives custom event",
+      caseId: "listener-builder-oncustom-receives-custom-event", name: "listener builder: onCustom receives custom event",
       fixture: "listener-builder/custom",
       sub: "on-custom",
       dom: true,
@@ -603,7 +603,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: onCustomDetail receives typed CustomEvent detail",
+      caseId: "listener-builder-oncustomdetail-receives-typed-customevent-detail", name: "listener builder: onCustomDetail receives typed CustomEvent detail",
       fixture: "listener-builder/custom",
       sub: "on-custom-detail",
       dom: true,
@@ -659,7 +659,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: once works with custom events",
+      caseId: "listener-builder-once-works-with-custom-events", name: "listener builder: once works with custom events",
       fixture: "listener-builder/options",
       sub: "once-custom",
       dom: true,
@@ -700,7 +700,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: toDocument alias targets document",
+      caseId: "listener-builder-todocument-alias-targets-document", name: "listener builder: toDocument alias targets document",
       fixture: "listener-builder/ambient",
       sub: "to-document",
       dom: true,
@@ -745,7 +745,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: toWindow alias targets window",
+      caseId: "listener-builder-towindow-alias-targets-window", name: "listener builder: toWindow alias targets window",
       fixture: "listener-builder/ambient",
       sub: "to-window",
       dom: true,
@@ -790,7 +790,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: ambient listeners auto-clean when owner is removed",
+      caseId: "listener-builder-ambient-listeners-auto-clean-when-owner-is-removed", name: "listener builder: ambient listeners auto-clean when owner is removed",
       fixture: "listener-builder/ambient",
       sub: "owner-removal-cleanup",
       dom: true,
@@ -840,7 +840,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: strict ignore on detached target returns inactive subscription",
+      caseId: "listener-builder-strict-ignore-on-detached-target-returns-inactive-subscription", name: "listener builder: strict ignore on detached target returns inactive subscription",
       fixture: "listener-builder/strict",
       sub: "ignore-detached",
       dom: true,
@@ -889,7 +889,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: strict throw on detached target throws",
+      caseId: "listener-builder-strict-throw-on-detached-target-throws", name: "listener builder: strict throw on detached target throws",
       fixture: "listener-builder/strict",
       sub: "throw-detached",
       dom: true,
@@ -925,7 +925,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: preventDefault marks cancelable event before handler",
+      caseId: "listener-builder-preventdefault-marks-cancelable-event-before-handler", name: "listener builder: preventDefault marks cancelable event before handler",
       fixture: "listener-builder/modifiers",
       sub: "prevent-default",
       dom: true,
@@ -975,7 +975,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: passive prevents preventDefault modifier from canceling event",
+      caseId: "listener-builder-passive-prevents-preventdefault-modifier-from-canceling-event", name: "listener builder: passive prevents preventDefault modifier from canceling event",
       fixture: "listener-builder/modifiers",
       sub: "passive-prevent-default",
       dom: true,
@@ -1025,7 +1025,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: stopAll prevents same-target later listeners and ancestors",
+      caseId: "listener-builder-stopall-prevents-same-target-later-listeners-and-ancestors", name: "listener builder: stopAll prevents same-target later listeners and ancestors",
       fixture: "listener-builder/modifiers",
       sub: "stop-all",
       dom: true,
@@ -1083,7 +1083,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: clearStops resets stop and prevent modifiers before registration",
+      caseId: "listener-builder-clearstops-resets-stop-and-prevent-modifiers-before-registration", name: "listener builder: clearStops resets stop and prevent modifiers before registration",
       fixture: "listener-builder/modifiers",
       sub: "clear-stops",
       dom: true,
@@ -1136,7 +1136,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: capture listener runs before child bubble listener",
+      caseId: "listener-builder-capture-listener-runs-before-child-bubble-listener", name: "listener builder: capture listener runs before child bubble listener",
       fixture: "listener-builder/options",
       sub: "capture-order",
       dom: true,
@@ -1185,7 +1185,7 @@ export function livetree_listener_builder_corners(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listener builder: element getter resets ambient target back to element",
+      caseId: "listener-builder-element-getter-resets-ambient-target-back-to-element", name: "listener builder: element getter resets ambient target back to element",
       fixture: "listener-builder/target-reset",
       sub: "element-after-document",
       dom: true,

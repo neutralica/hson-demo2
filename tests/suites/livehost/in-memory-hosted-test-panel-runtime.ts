@@ -92,7 +92,7 @@ export function make_in_memory_hosted_test_runtime(
     const recovered = reportClient.recovery.map.capture().value;
     const failures = Object.values(recovered.caseBatches).flat()
       .filter((testCase) => testCase.status === "fail")
-      .map((testCase) => ({ suite: testCase.suite, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
+      .map((testCase) => ({ suite: testCase.suite, caseId: testCase.caseId, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
     const common = {
       runId: association.runId,
       reportHostId: association.reportHostId,

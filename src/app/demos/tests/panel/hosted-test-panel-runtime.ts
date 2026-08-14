@@ -165,7 +165,7 @@ function all_associations(state: HostedTestCoordinatorState): readonly HostedTes
 function result_summary_from_report(report: HostedTestReportState): HostedTestRunResult["summary"] {
   const failures = Object.values(report.caseBatches).flat()
     .filter((testCase) => testCase.status === "fail")
-    .map((testCase) => ({ suite: testCase.suite, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
+    .map((testCase) => ({ suite: testCase.suite, caseId: testCase.caseId, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
   return Object.freeze({
     suites: report.suites.length,
     cases: report.summary.cases,

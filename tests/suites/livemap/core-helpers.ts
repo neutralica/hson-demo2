@@ -8,7 +8,7 @@ import type { LiveMapFeedEventPreview, LiveMapFeedCaseSpec } from "./types";
 export function make_core_at_snap_case(spec: CoreAtSnapCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -29,7 +29,7 @@ export function make_core_at_snap_case(spec: CoreAtSnapCaseSpec): TestCase {
 export function make_core_at_set_case(spec: CoreAtSetCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -52,7 +52,7 @@ export function make_core_at_set_case(spec: CoreAtSetCaseSpec): TestCase {
 export function make_core_at_feed_case(spec: CoreAtFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -80,7 +80,7 @@ export function make_core_at_feed_case(spec: CoreAtFeedCaseSpec): TestCase {
 export function make_core_at_path_copy_case(spec: CoreAtPathCopyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -104,7 +104,7 @@ export function make_core_at_path_copy_case(spec: CoreAtPathCopyCaseSpec): TestC
 export function make_core_at_original_path_stability_case(spec: CoreAtOriginalPathStabilityCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -131,7 +131,7 @@ export function make_core_at_original_path_stability_case(spec: CoreAtOriginalPa
 export function make_core_set_path_copy_case(spec: CoreSetPathCopyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -157,7 +157,7 @@ export function make_core_set_path_copy_case(spec: CoreSetPathCopyCaseSpec): Tes
 export function make_core_set_many_case(spec: CoreSetManyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -180,7 +180,7 @@ export function make_core_set_many_case(spec: CoreSetManyCaseSpec): TestCase {
 export function make_core_set_many_feed_case(spec: CoreSetManyFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       feedPath: preview_value(spec.feedPath),
@@ -208,7 +208,7 @@ export function make_core_set_many_feed_case(spec: CoreSetManyFeedCaseSpec): Tes
 export function make_core_set_many_path_copy_case(spec: CoreSetManyPathCopyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -234,7 +234,7 @@ export function make_core_set_many_path_copy_case(spec: CoreSetManyPathCopyCaseS
 export function make_core_delete_case(spec: CoreDeleteCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -256,7 +256,7 @@ export function make_core_delete_case(spec: CoreDeleteCaseSpec): TestCase {
 export function make_core_delete_feed_case(spec: CoreDeleteFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       feedPath: preview_value(spec.feedPath),
@@ -283,7 +283,7 @@ export function make_core_delete_feed_case(spec: CoreDeleteFeedCaseSpec): TestCa
 export function make_core_delete_path_copy_case(spec: CoreDeletePathCopyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -308,7 +308,7 @@ export function make_core_delete_path_copy_case(spec: CoreDeletePathCopyCaseSpec
 export function make_core_delete_throw_case(spec: CoreDeleteThrowCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -335,7 +335,7 @@ export function make_core_delete_throw_case(spec: CoreDeleteThrowCaseSpec): Test
 export function make_core_feed_case(spec: LiveMapFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       feedPath: preview_value(spec.feedPath),
@@ -364,7 +364,7 @@ export function make_core_feed_case(spec: LiveMapFeedCaseSpec): TestCase {
 export function make_core_feed_dispose_case(spec: LiveMapFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       feedPath: preview_value(spec.feedPath),

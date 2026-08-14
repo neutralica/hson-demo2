@@ -85,14 +85,14 @@ const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = O
   dom("livemap/document-foundation", 6, "all_livemap_suites", ["DOMParser", "DOMPurify"]),
   ...[
     ["livetree/find",2],["livetree/attrs-and-flags",2],["livetree/append-and-create",9],["livetree/mixed-regression",7],
-    ["livetree/extra cases",6],["livetree/coverage-css-and-content",5],["livetree/regressions/graft",3],["livetree/regressions/css",6],
+    ["livetree/extra-cases",6],["livetree/coverage-css-and-content",5],["livetree/regressions/graft",3],["livetree/regressions/css",6],
     ["livetree/legacy-attrs-flags",2],["livetree/legacy-empty-append",2],["livetree/legacy-dataset",2],["livetree/identity-stability",4],
     ["livetree/legacy-css-value-selection",3],["livetree/final-legacy-css-empty",1],["livetree/more-dataset",7],["livetree/more-css",3],
     ["livetree/more-find",3],["livetree/scheduling-and-events",6],["livetree/css-manager-lifecycle",6],["livetree/node-lifecycle",6],
     ["livetree/listeners-teardown",7],["livetree/root-multi-isolation",6],["livetree/document-question",9],["livetree/error-handling",9],
     ["livetree/roundtrip-projection",7],["livetree/sync-perf",8],["livetree/completionist",4],["livetree/svg/basic",24],
     ["livetree/svg/intermediate",38],["livetree/svg/gnarly",5],["livetree/css-pseudo",4],["livetree/document",12],
-    ["livetree/recent-api",10],["livetree/create-size",10],["livetree/listener-cleanup",6],["livetree/new-svg/",6],
+    ["livetree/recent-api",10],["livetree/create-size",10],["livetree/listener-cleanup",6],["livetree/new-svg",6],
     ["livetree/form",10],["livetree/canvas",10],["livetree/canvas-stress",12],["livetree/canvas-display",18],
     ["livetree/canvas-clear",5],["livetree/canvas-plot",9],["livetree/canvas-pointer",15],["livetree/document-ownership",7],
     ["livetree/css-surface-accessors",9],["livetree/css-refinements",12],["livetree/new-css-vars-get-sel",5],["livetree/more-find-findall",7],
@@ -109,8 +109,8 @@ const DECLARED_DOM_REQUIRED_SUITES: readonly HostedMigrationInventoryEntry[] = O
   dom("transform/misc-extra", 9, "all_test_suites(transform)", ["DOMParser"]),
   dom("transform/hson", 19, "all_test_suites(transform)", ["DOMParser"]),
   dom("transform/json/level-2", 42, "all_test_suites(transform)", ["DOMParser"]),
-  dom("transform/_INVALID", 10, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
-  dom("transform/hson/_INVALID", 31, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
+  dom("transform/invalid", 10, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
+  dom("transform/hson/invalid", 31, "all_test_suites(transform)", ["DOMParser"], "Expected-failure cases currently pass under Node for the wrong reason: missing DOMParser"),
   dom("generated/json/seed_<run-seed>", 200, "all_test_suites(fuzz-json)", ["DOMParser"]),
 ]);
 

@@ -30,20 +30,20 @@ function expect_closeout(condition: unknown, message: string): asserts condition
 const node = make_local_node_livehost_executor_registry();
 const worker = make_cloudflare_livehost_executor_registry();
 const canvasSuiteIds = new Set<string>(CANVAS_DETERMINISTIC_SUITE_IDS);
-const canvasDescriptors = node.catalog.tests.filter((descriptor) => canvasSuiteIds.has(descriptor.suite));
+const canvasDescriptors = node.catalog.tests.filter((descriptor) => canvasSuiteIds.has(descriptor.suiteId));
 const canvasSource = HOSTED_CANVAS_MIGRATION_CASES.filter((entry) => !entry.duplicateDeclaration);
 const migratedSource = canvasSource.filter((entry) => entry.status.startsWith("MIGRATED_"));
 const rasterSource = canvasSource.filter((entry) => entry.status === "DEFERRED_PIXEL_OUTPUT");
 
 expect_closeout(
   canvasDescriptors.length === 62
-    && new Set(canvasDescriptors.map((descriptor) => descriptor.suite)).size === 6
+    && new Set(canvasDescriptors.map((descriptor) => descriptor.suiteId)).size === 6
     && migratedSource.length === 62,
   "all 62 truthful deterministic canvas cases from six original suite factories are registered",
 );
 expect_closeout(
   rasterSource.length === 4
-    && rasterSource.map((entry) => `${entry.suite}::${entry.name}`).join("|")
+    && rasterSource.map((entry) => `${entry.suite}::${entry.caseId}`).join("|")
       === CANVAS_BROWSER_RASTER_CASE_IDS.join("|"),
   "all genuine raster-readback cases remain explicitly outside canonical discovery",
 );
@@ -51,7 +51,7 @@ expect_closeout(
   canvasDescriptors.every((descriptor) => (
     descriptor.subject === "livetree"
     && descriptor.requirements.join("|") === "javascript|node|synthetic-dom"
-    && node.get(descriptor.id)?.testCase.name === descriptor.name
+    && node.get(descriptor.id)?.testCase.name === descriptor.title
     && worker.get(descriptor.id) === undefined
   )),
   "canvas descriptors preserve LiveTree identity, original TestCases, and Node-only availability",
@@ -67,7 +67,7 @@ const isolationSuiteId = "proof/canvas-isolation";
 const isolationCases: readonly TestCase[] = Object.freeze([
   Object.freeze({
     suite: isolationSuiteId,
-    name: "canvas recorder accepts state and commands",
+    caseId: "canvas-recorder-accepts-state-and-commands", name: "canvas recorder accepts state and commands",
     run() {
       const canvas = document.createElement("canvas");
       document.body.append(canvas);
@@ -80,7 +80,7 @@ const isolationCases: readonly TestCase[] = Object.freeze([
   }),
   Object.freeze({
     suite: isolationSuiteId,
-    name: "canvas state is reset at the next case boundary",
+    caseId: "canvas-state-is-reset-at-the-next-case-boundary", name: "canvas state is reset at the next case boundary",
     run() {
       const canvas = document.querySelector("canvas");
       expect_closeout(canvas instanceof HTMLCanvasElement, "the fixture canvas remains available within its suite");
@@ -189,14 +189,14 @@ expect_closeout(entireCanvasIds.length === 10 && exactCanvasIds.length === 1, "e
 
 const ordinary = node.catalog.tests.find((descriptor) => !descriptor.requirements.includes("synthetic-dom"));
 const dom = node.catalog.tests.find((descriptor) => (
-  descriptor.requirements.includes("synthetic-dom") && !canvasSuiteIds.has(descriptor.suite)
+  descriptor.requirements.includes("synthetic-dom") && !canvasSuiteIds.has(descriptor.suiteId)
 ));
 const canvas = canvasDescriptors[0];
 expect_closeout(ordinary !== undefined && dom !== undefined && canvas !== undefined, "all three internal execution classes are represented");
 const targetedSelections = [
-  node.catalog.tests.filter((descriptor) => descriptor.suite === ordinary.suite).map((descriptor) => descriptor.id),
+  node.catalog.tests.filter((descriptor) => descriptor.suiteId === ordinary.suiteId).map((descriptor) => descriptor.id),
   [ordinary.id],
-  node.catalog.tests.filter((descriptor) => descriptor.suite === dom.suite).map((descriptor) => descriptor.id),
+  node.catalog.tests.filter((descriptor) => descriptor.suiteId === dom.suiteId).map((descriptor) => descriptor.id),
   [dom.id],
   entireCanvasIds,
   exactCanvasIds,
@@ -217,7 +217,7 @@ expect_closeout(
 application.dispose();
 console.log(JSON.stringify({
   canvas: {
-    suites: new Set(canvasDescriptors.map((descriptor) => descriptor.suite)).size,
+    suites: new Set(canvasDescriptors.map((descriptor) => descriptor.suiteId)).size,
     deterministicCases: canvasDescriptors.length,
     rasterDeferredCases: rasterSource.length,
     classification: Object.fromEntries(

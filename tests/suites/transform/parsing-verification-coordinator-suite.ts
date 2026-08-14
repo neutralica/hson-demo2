@@ -124,75 +124,75 @@ export function parsing_verification_coordinator_suite(): TestSuite {
     suite: SUITE,
     descriptor: Object.freeze({ subject: "transform", requirements: Object.freeze(["javascript"] as const) }),
     cases: Object.freeze([
-      Object.freeze({ suite: SUITE, name: "begins in explicit idle state", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "begins-in-explicit-idle-state", name: "begins in explicit idle state", run: () => {
         const f = fixture(); expect(f.coordinator.snapshot().status === "idle", "initial state must be idle"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "each authored edit increments the local revision", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "each-authored-edit-increments-the-local-revision", name: "each authored edit increments the local revision", run: () => {
         const f = fixture(); expect(f.coordinator.edit("hson", "one") === 1 && f.coordinator.edit("hson", "two") === 2, "revisions must increase monotonically"); f.coordinator.dispose();
       } }),
-      ...(["hson", "json", "html"] as const).map((entry) => Object.freeze({ suite: SUITE, name: `dispatch preserves explicit ${entry} origin`, run: async () => {
+      ...(["hson", "json", "html"] as const).map((entry) => Object.freeze({ suite: SUITE, caseId: `dispatch-preserves-${entry}-origin`, name: `dispatch preserves explicit ${entry} origin`, run: async () => {
         const f = fixture(); f.coordinator.edit(entry, "source"); f.clock.runNext(); await settle(); expect(f.submissions[0]?.entry === entry, "request entry must equal authored origin"); f.coordinator.dispose();
       } })),
-      Object.freeze({ suite: SUITE, name: "successful immediate admission becomes parsed before debounce", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "successful-immediate-admission-becomes-parsed-before-debounce", name: "successful immediate admission becomes parsed before debounce", run: () => {
         const f = fixture(); f.coordinator.edit("json", "{}"); expect(f.coordinator.snapshot().status === "parsed" && f.submissions.length === 0, "local parse must be immediate and remote work delayed"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "immediate parse failure is terminal without dispatch", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "immediate-parse-failure-is-terminal-without-dispatch", name: "immediate parse failure is terminal without dispatch", run: () => {
         const f = fixture(); f.coordinator.edit("hson", "bad"); expect(f.coordinator.snapshot().status === "invalid" && f.clock.count() === 0 && f.submissions.length === 0, "invalid source must not reach worker"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "rapid edits collapse to one latest debounce", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "rapid-edits-collapse-to-one-latest-debounce", name: "rapid edits collapse to one latest debounce", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.coordinator.edit("hson", "two"); f.coordinator.edit("hson", "three"); expect(f.clock.count() === 1, "only latest timer may remain"); f.clock.runNext(); await settle(); expect(f.submissions.length === 1 && f.submissions[0]?.source === "three", "only latest source may dispatch"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "default debounce is exactly 300 milliseconds", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "default-debounce-is-exactly-300-milliseconds", name: "default debounce is exactly 300 milliseconds", run: () => {
         const f = fixture(); f.coordinator.edit("json", "{}"); expect(f.clock.delays()[0] === PARSING_VERIFICATION_DEBOUNCE_MS && PARSING_VERIFICATION_DEBOUNCE_MS === 300, "one reported constant must own debounce"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "flush bypasses a pending debounce", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "flush-bypasses-a-pending-debounce", name: "flush bypasses a pending debounce", run: async () => {
         const f = fixture(); f.coordinator.edit("html", "<p>x</p>"); f.coordinator.flush(); await settle(); expect(f.clock.count() === 0 && f.submissions.length === 1, "flush must launch pending work"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "flush cannot duplicate active work", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "flush-cannot-duplicate-active-work", name: "flush cannot duplicate active work", run: async () => {
         const f = fixture(); f.coordinator.edit("html", "<p>x</p>"); f.coordinator.flush(); f.coordinator.flush(); await settle(); expect(f.submissions.length === 1, "repeated blur flush must not duplicate action"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "dispatch transitions to queued before transport", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "dispatch-transitions-to-queued-before-transport", name: "dispatch transitions to queued before transport", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "x"); f.clock.runNext(); await settle(); expect(f.coordinator.snapshot().status === "queued", "dispatch must expose queued"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "current bounded progress transitions to verifying", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "current-bounded-progress-transitions-to-verifying", name: "current bounded progress transitions to verifying", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "x"); f.clock.runNext(); await settle(); f.progressListeners[0]?.({ panelId: "panel-coordinator", inputRevision: 1, stage: "cw-lap-complete", completed: 2, total: 7, direction: "cw", lap: 2 }); expect(f.coordinator.snapshot().status === "verifying", "current progress must be visible"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "stale progress is ignored", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "stale-progress-is-ignored", name: "stale progress is ignored", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.clock.runNext(); await settle(); f.coordinator.edit("hson", "two"); f.progressListeners[0]?.({ panelId: "panel-coordinator", inputRevision: 1, stage: "started", completed: 0, total: 7 }); expect(f.coordinator.snapshot().status === "parsed" && f.coordinator.revision() === 2, "old progress cannot replace newer parsed state"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "wrong-panel progress is ignored", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "wrong-panel-progress-is-ignored", name: "wrong-panel progress is ignored", run: async () => {
         const f = fixture(); f.coordinator.edit("json", "one"); f.clock.runNext(); await settle(); f.progressListeners[0]?.({ panelId: "another", inputRevision: 1, stage: "started", completed: 0, total: 7 }); expect(f.coordinator.snapshot().status === "queued", "foreign progress must not update state"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "stale completion cannot certify a newer edit", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "stale-completion-cannot-certify-a-newer-edit", name: "stale completion cannot certify a newer edit", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.clock.runNext(); await settle(); f.coordinator.edit("hson", "two"); f.completions[0]?.resolve(result_for(f.submissions[0]!)); await settle(); expect(f.coordinator.snapshot().status === "parsed" && f.coordinator.revision() === 2, "old result must be silent"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "current superseded result is not displayed as failure", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "current-superseded-result-is-not-displayed-as-failure", name: "current superseded result is not displayed as failure", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.clock.runNext(); await settle(); f.completions[0]?.resolve(result_for(f.submissions[0]!, "superseded")); await settle(); expect(f.coordinator.snapshot().status === "parsed", "supersession must remain non-error state"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "universal semantic failure is distinct", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "universal-semantic-failure-is-distinct", name: "universal semantic failure is distinct", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.clock.runNext(); await settle(); f.completions[0]?.resolve(result_for(f.submissions[0]!, "failed")); await settle(); const state = f.coordinator.snapshot(); expect(state.status === "failed" && state.failure.category === "universal", "worker semantic failure needs universal category"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "transport rejection becomes unavailable", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "transport-rejection-becomes-unavailable", name: "transport rejection becomes unavailable", run: async () => {
         const f = fixture(); f.coordinator.edit("json", "{}"); f.clock.runNext(); await settle(); f.completions[0]?.reject(Object.assign(new Error("private"), { code: "CIRCUIT_WORKER_UNAVAILABLE" })); await settle(); const state = f.coordinator.snapshot(); expect(state.status === "unavailable" && state.failure.code === "CIRCUIT_WORKER_UNAVAILABLE", "service outage must not become parse failure"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "oversized locally parsed source is not dispatched", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "oversized-locally-parsed-source-is-not-dispatched", name: "oversized locally parsed source is not dispatched", run: () => {
         const f = fixture(); f.coordinator.edit("hson", "x".repeat(CIRCUIT_VERIFICATION_MAX_SOURCE_LENGTH + 1)); expect(f.coordinator.snapshot().status === "unavailable" && f.clock.count() === 0, "hard source limit must preserve preview without remote action"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "successful worker result enters browser check then verified", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "successful-worker-result-enters-browser-check-then-verified", name: "successful worker result enters browser check then verified", run: async () => {
         const certificateGate = deferred<ParsingBrowserCertificateResult>();
         const f = fixture({ certify: () => certificateGate.promise }); f.coordinator.edit("html", "<p>x</p>"); f.clock.runNext(); await settle(); f.completions[0]?.resolve(result_for(f.submissions[0]!)); await settle(); expect(f.coordinator.snapshot().status === "browser-check", "worker success is only provisional"); certificateGate.resolve(certificate_for("html", 1)); await settle(); expect(f.coordinator.snapshot().status === "verified", "browser certificate owns final success"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "stale browser check cannot publish certificate", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "stale-browser-check-cannot-publish-certificate", name: "stale browser check cannot publish certificate", run: async () => {
         const certificateGate = deferred<ParsingBrowserCertificateResult>();
         const f = fixture({ certify: () => certificateGate.promise }); f.coordinator.edit("html", "one"); f.clock.runNext(); await settle(); f.completions[0]?.resolve(result_for(f.submissions[0]!)); await settle(); f.coordinator.edit("html", "two"); certificateGate.resolve(certificate_for("html", 1)); await settle(); expect(f.coordinator.snapshot().status === "parsed" && f.coordinator.revision() === 2, "old browser result must be ignored"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "browser disagreement has a distinct failure category", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "browser-disagreement-has-a-distinct-failure-category", name: "browser disagreement has a distinct failure category", run: async () => {
         const f = fixture({ certify: () => ({ ok: false, failure: { category: "browser-boundary", code: "BROWSER_CERTIFICATE_FINAL_HTML_DIFFERENCE", message: "Different." } }) }); f.coordinator.edit("html", "one"); f.clock.runNext(); await settle(); f.completions[0]?.resolve(result_for(f.submissions[0]!)); await settle(); const state = f.coordinator.snapshot(); expect(state.status === "failed" && state.failure.category === "browser-boundary", "browser boundary failure must remain distinct"); f.coordinator.dispose();
       } }),
-      Object.freeze({ suite: SUITE, name: "disposal clears debounce and owns transport cleanup", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "disposal-clears-debounce-and-owns-transport-cleanup", name: "disposal clears debounce and owns transport cleanup", run: () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.coordinator.dispose(); expect(f.clock.count() === 0 && f.disposed(), "dispose must clear timer and release transport");
       } }),
-      Object.freeze({ suite: SUITE, name: "post-disposal completion cannot update detached state", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "post-disposal-completion-cannot-update-detached-state", name: "post-disposal completion cannot update detached state", run: async () => {
         const f = fixture(); f.coordinator.edit("hson", "one"); f.clock.runNext(); await settle(); const before = f.coordinator.snapshot(); f.coordinator.dispose(); f.completions[0]?.resolve(result_for(f.submissions[0]!)); await settle(); expect(f.coordinator.snapshot() === before, "disposed coordinator must retain its last detached snapshot");
       } }),
     ]),

@@ -72,7 +72,7 @@ export function make_core_set_case(spec: CoreSetCaseSpec): TestCase {
 function make_snap_like_case(spec: SnapLikeSpec, run_snap: SnapLikeRunner): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path ?? []),
@@ -93,7 +93,7 @@ function make_snap_like_case(spec: SnapLikeSpec, run_snap: SnapLikeRunner): Test
 function make_set_like_case(spec: SetLikeSpec, run_set: SetLikeRunner): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -118,7 +118,7 @@ function make_set_like_case(spec: SetLikeSpec, run_set: SetLikeRunner): TestCase
 function make_core_set_like_case(spec: CoreSetSpec, run_set: CoreSetRunner): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),

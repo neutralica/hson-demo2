@@ -18,6 +18,7 @@ import {
   decode_run_selected_tests_request,
   selected_test_suites,
 } from "../../harness/core/test-selected-run";
+import { compare_test_descriptors } from "../../harness/core/test-order";
 
 function expect_stage4(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 4A selected execution: ${message}`);
@@ -65,7 +66,7 @@ for (const malformed of [
   {},
   { testIds: [] },
   { testIds: [""] },
-  { testIds: ["missing-separator"] },
+  { testIds: ["Missing separator"] },
   { testIds: ["suite::case", "suite::case"] },
   { testIds: ["suite::case"], extra: true },
 ] as const) {
@@ -82,7 +83,7 @@ let catalogSizeRejected = false;
 try {
   selected_test_suites(nodeRegistry, [
     ...nodeRegistry.catalog.tests.map((descriptor) => descriptor.id),
-    "unknown/suite::one beyond catalog",
+    "unknown/suite::one-beyond-catalog",
   ]);
 } catch (error) {
   catalogSizeRejected = error instanceof Error
@@ -133,30 +134,30 @@ expect_stage4(
 );
 compatibilityHost.dispose();
 
-const sameSuiteDescriptors = nodeRegistry.catalog.tests.filter((descriptor) => descriptor.suite === first.suite).slice(0, 3);
+const sameSuiteDescriptors = nodeRegistry.catalog.tests.filter((descriptor) => descriptor.suiteId === first.suiteId).slice(0, 3);
 expect_stage4(sameSuiteDescriptors.length === 3, "proof catalog contains three cases in one suite");
 const sameSuite = await run_selected(sameSuiteDescriptors.map((descriptor) => descriptor.id).reverse());
-const expectedSameSuiteOrder = sameSuiteDescriptors.map((descriptor) => descriptor.id).sort();
+const expectedSameSuiteOrder = [...sameSuiteDescriptors].sort(compare_test_descriptors).map((descriptor) => descriptor.id);
 expect_stage4(sameSuite.result.summary.cases === 3 && sameSuite.result.summary.suites === 1, "several exact tests in one suite execute once");
 expect_stage4(
   hosted_test_report_cases(sameSuite.report).map((testCase) => testCase.key).join("|")
     === expectedSameSuiteOrder.join("|"),
-  "execution order follows canonical ID order rather than request order",
+  "execution order follows canonical descriptor order rather than request order",
 );
 
-const secondSuiteDescriptor = nodeRegistry.catalog.tests.find((descriptor) => descriptor.suite !== first.suite);
+const secondSuiteDescriptor = nodeRegistry.catalog.tests.find((descriptor) => descriptor.suiteId !== first.suiteId);
 expect_stage4(secondSuiteDescriptor !== undefined, "proof catalog contains another suite");
 const crossSuiteDescriptors = [first, secondSuiteDescriptor];
 const crossSuite = await run_selected(crossSuiteDescriptors.map((descriptor) => descriptor.id).reverse());
-const expectedCrossSuiteOrder = crossSuiteDescriptors.map((descriptor) => descriptor.id).sort();
+const expectedCrossSuiteOrder = [...crossSuiteDescriptors].sort(compare_test_descriptors).map((descriptor) => descriptor.id);
 expect_stage4(crossSuite.result.summary.cases === 2 && crossSuite.result.summary.suites === 2, "cross-suite exact execution preserves original suite grouping");
 expect_stage4(
   hosted_test_report_cases(crossSuite.report).map((testCase) => testCase.key).join("|")
     === expectedCrossSuiteOrder.join("|"),
-  "cross-suite execution is stable in canonical ID order",
+  "cross-suite execution is stable in canonical descriptor order",
 );
 
-const nodeOnly = nodeRegistry.catalog.tests.find((descriptor) => descriptor.suite === "livehost/hosted-replay-action-in-memory");
+const nodeOnly = nodeRegistry.catalog.tests.find((descriptor) => descriptor.suiteId === "livehost/hosted-replay-action-in-memory");
 expect_stage4(nodeOnly !== undefined, "Node registry exposes the migrated Node-only replay-action case");
 const nodeOnlyRun = await run_selected([nodeOnly.id]);
 expect_stage4(nodeOnlyRun.result.ok && nodeOnlyRun.result.summary.cases === 1, "Node-only replay-action test executes canonically");
@@ -179,7 +180,7 @@ const unknownResponse = await application.coordinator.dispatch_action({
   clientId: "stage-4a",
   requestId: "selected-unknown-request",
   name: "tests.runSelected",
-  payload: { testIds: ["unknown/suite::unknown case"] },
+  payload: { testIds: ["unknown/suite::unknown-case"] },
 });
 expect_stage4(
   unknownResponse.type === "error"
@@ -224,7 +225,7 @@ application.dispose();
 let executionCount = 0;
 const diagnosticCase: TestCase = Object.freeze({
   suite: "proof/diagnostics",
-  name: "failure detail",
+  caseId: "failure-detail", name: "failure detail",
   run() {
     executionCount += 1;
     throw new Error("selected diagnostic sentinel");
@@ -232,7 +233,7 @@ const diagnosticCase: TestCase = Object.freeze({
 });
 const expectedCase: TestCase = Object.freeze({
   suite: "proof/diagnostics",
-  name: "expected failure",
+  caseId: "expected-failure", name: "expected failure",
   expected: "fail",
   expectedError: Object.freeze({ includes: "expected sentinel" }),
   run() {
@@ -264,8 +265,8 @@ const reversedProofSuites = selected_test_suites(
   [...reversedProofRegistry.catalog.tests].reverse().map((descriptor) => descriptor.id),
 );
 expect_stage4(
-  proofSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`)).join("|")
-    === reversedProofSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`)).join("|"),
+  proofSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`)).join("|")
+    === reversedProofSuites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`)).join("|"),
   "the same ID set has stable order regardless of request and registry construction order",
 );
 const proofEvents: JsonValue[] = [];

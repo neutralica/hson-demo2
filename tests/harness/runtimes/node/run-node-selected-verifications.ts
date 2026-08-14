@@ -1,5 +1,6 @@
 import type { RunOptions, RunResult, TestEvent, TestFailure } from "../../core/test-contracts";
 import type { TestExecutorRegistry } from "../../core/test-executor";
+import { is_test_case_id } from "../../core/test-identity";
 import {
   external_library_launcher_termination_generation,
   run_external_library_launcher,
@@ -345,8 +346,8 @@ export async function run_node_selected_verifications(
   configuration: NodeSelectedVerificationConfiguration = {},
 ): Promise<RunResult> {
   const overallStartedAt = performance.now();
-  const canonicalIds = selectedIds.filter((id) => !id.startsWith("library::"));
-  const externalIds = selectedIds.filter((id) => id.startsWith("library::"));
+  const canonicalIds = selectedIds.filter(is_test_case_id);
+  const externalIds = selectedIds.filter((id) => !is_test_case_id(id));
   const externalTargets = externalIds.map((id) => {
     const selected = availability.targets.find((target) => target.id === id);
     if (selected === undefined) throw new Error(`External library launcher is unavailable: ${id}`);

@@ -14,7 +14,7 @@ export function listeners_teardown(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "events: removed click listener no longer fires",
+      caseId: "events-removed-click-listener-no-longer-fires", name: "events: removed click listener no longer fires",
       dom: true,
       fixture: "events/remove",
       sub: "direct-click-off",
@@ -41,7 +41,7 @@ export function listeners_teardown(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "events: refind same node does not duplicate click listener",
+      caseId: "events-refind-same-node-does-not-duplicate-click-listener", name: "events: refind same node does not duplicate click listener",
       dom: true,
       fixture: "events/refind",
       sub: "no-dup-on-refind",
@@ -67,7 +67,7 @@ export function listeners_teardown(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "events: attaching same callback twice registers two listeners",
+      caseId: "events-attaching-same-callback-twice-registers-two-listeners", name: "events: attaching same callback twice registers two listeners",
       dom: true,
       fixture: "events/identity",
       sub: "two-distinct-listeners",
@@ -93,7 +93,7 @@ export function listeners_teardown(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "events: attaching same callback twice follows listener identity contract",
+      caseId: "events-attaching-same-callback-twice-follows-listener-identity-contract", name: "events: attaching same callback twice follows listener identity contract",
       dom: true,
       fixture: "events/identity",
       sub: "same-callback-twice",
@@ -123,7 +123,7 @@ export function listeners_teardown(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "events: listener attached via one handle fires via refound handle DOM",
+      caseId: "events-listener-attached-via-one-handle-fires-via-refound-handle-dom", name: "events: listener attached via one handle fires via refound handle DOM",
       dom: true,
       fixture: "events/refind",
       sub: "listener-survives-refind",
@@ -149,7 +149,7 @@ export function listeners_teardown(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "events: parent and child direct listeners both fire under bubbling",
+      caseId: "events-parent-and-child-direct-listeners-both-fire-under-bubbling", name: "events: parent and child direct listeners both fire under bubbling",
       dom: true,
       fixture: "events/bubble",
       sub: "parent-child-direct",
@@ -185,7 +185,7 @@ export function listeners_teardown(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "events: stopPropagation prevents parent direct listener",
+      caseId: "events-stoppropagation-prevents-parent-direct-listener", name: "events: stopPropagation prevents parent direct listener",
       dom: true,
       fixture: "events/bubble",
       sub: "stop-prop",
@@ -234,7 +234,7 @@ export function root_multi_isolation(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "multi-root: two trees do not see each other's DOM nodes",
+      caseId: "multi-root-two-trees-do-not-see-each-others-dom-nodes", name: "multi-root: two trees do not see each other's DOM nodes",
       dom: true,
       fixture: "multi-root/basic",
       sub: "dom-isolation",
@@ -269,7 +269,7 @@ export function root_multi_isolation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-root: QUIDs are unique across trees",
+      caseId: "multi-root-quids-are-unique-across-trees", name: "multi-root: QUIDs are unique across trees",
       dom: true,
       fixture: "multi-root/identity",
       sub: "quid-uniqueness",
@@ -305,7 +305,7 @@ export function root_multi_isolation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-root: CSS applied in one tree does not affect another tree",
+      caseId: "multi-root-css-applied-in-one-tree-does-not-affect-another-tree", name: "multi-root: CSS applied in one tree does not affect another tree",
       dom: true,
       fixture: "multi-root/css",
       sub: "css-isolation",
@@ -348,7 +348,7 @@ export function root_multi_isolation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-root: same selector in different roots does not cross-select",
+      caseId: "multi-root-same-selector-in-different-roots-does-not-cross-select", name: "multi-root: same selector in different roots does not cross-select",
       dom: true,
       fixture: "multi-root/selectors",
       sub: "selector-scope",
@@ -378,7 +378,7 @@ export function root_multi_isolation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-root: removing one root does not clear CSS of another root",
+      caseId: "multi-root-removing-one-root-does-not-clear-css-of-another-root", name: "multi-root: removing one root does not clear CSS of another root",
       dom: true,
       fixture: "multi-root/css",
       sub: "remove-one-root",
@@ -419,7 +419,7 @@ export function root_multi_isolation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-root: listeners in one tree do not fire for another tree",
+      caseId: "multi-root-listeners-in-one-tree-do-not-fire-for-another-tree", name: "multi-root: listeners in one tree do not fire for another tree",
       dom: true,
       fixture: "multi-root/events",
       sub: "listener-isolation",
@@ -464,7 +464,7 @@ export function document_question(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "multi-instance: two LiveTree instances can coexist in one document",
+      caseId: "multi-instance-two-livetree-instances-can-coexist-in-one-document", name: "multi-instance: two LiveTree instances can coexist in one document",
       dom: true,
       fixture: "instance/basic",
       sub: "construct-two",
@@ -497,7 +497,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: find is scoped to instance root, not whole document",
+      caseId: "multi-instance-find-is-scoped-to-instance-root-not-whole-document", name: "multi-instance: find is scoped to instance root, not whole document",
       dom: true,
       fixture: "instance/find",
       sub: "find-local",
@@ -536,7 +536,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: find is scoped to instance root, not whole document",
+      caseId: "multi-instance-find-is-scoped-to-instance-root-not-whole-document", name: "multi-instance: find is scoped to instance root, not whole document",
       dom: true,
       fixture: "instance/find",
       sub: "find-local",
@@ -575,7 +575,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: QUIDs are unique across independent instances",
+      caseId: "multi-instance-quids-are-unique-across-independent-instances", name: "multi-instance: QUIDs are unique across independent instances",
       dom: true,
       fixture: "instance/identity",
       sub: "quid-global-unique",
@@ -613,7 +613,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: CSS in one instance does not affect sibling instance",
+      caseId: "multi-instance-css-in-one-instance-does-not-affect-sibling-instance", name: "multi-instance: CSS in one instance does not affect sibling instance",
       dom: true,
       fixture: "instance/css",
       sub: "css-isolation",
@@ -662,7 +662,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: removing one instance does not clear sibling instance CSS",
+      caseId: "multi-instance-removing-one-instance-does-not-clear-sibling-instance-css", name: "multi-instance: removing one instance does not clear sibling instance CSS",
       dom: true,
       fixture: "instance/css",
       sub: "teardown-isolated",
@@ -705,7 +705,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: listeners in one instance do not fire for sibling instance",
+      caseId: "multi-instance-listeners-in-one-instance-do-not-fire-for-sibling-instance", name: "multi-instance: listeners in one instance do not fire for sibling instance",
       dom: true,
       fixture: "instance/events",
       sub: "listener-isolation",
@@ -743,7 +743,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: same selector text in both instances stays instance-local",
+      caseId: "multi-instance-same-selector-text-in-both-instances-stays-instance-local", name: "multi-instance: same selector text in both instances stays instance-local",
       dom: true,
       fixture: "instance/selectors",
       sub: "same-class-both-instances",
@@ -783,7 +783,7 @@ export function document_question(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "multi-instance: shared document and shared stylesheet still preserve instance isolation",
+      caseId: "multi-instance-shared-document-and-shared-stylesheet-still-preserve-instance-isolation", name: "multi-instance: shared document and shared stylesheet still preserve instance isolation",
       dom: true,
       fixture: "instance/css",
       sub: "shared-document-shared-style-safe",
@@ -845,7 +845,7 @@ export function error_handling(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "invalid input: find.byId with empty string fails softly",
+      caseId: "invalid-input-find.byid-with-empty-string-fails-softly", name: "invalid input: find.byId with empty string fails softly",
       dom: true,
       fixture: "invalid/find",
       sub: "byId-empty",
@@ -873,7 +873,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid input: must.byId with empty string throws",
+      caseId: "invalid-input-must.byid-with-empty-string-throws", name: "invalid input: must.byId with empty string throws",
       dom: true,
       fixture: "invalid/find",
       sub: "must-byId-empty",
@@ -898,7 +898,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid input: findAll.byClass with empty string fails softly",
+      caseId: "invalid-input-findall.byclass-with-empty-string-fails-softly", name: "invalid input: findAll.byClass with empty string fails softly",
       dom: true,
       fixture: "invalid/find",
       sub: "byClass-empty",
@@ -927,7 +927,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid tree op: removing same node twice is safe",
+      caseId: "invalid-tree-op-removing-same-node-twice-is-safe", name: "invalid tree op: removing same node twice is safe",
       dom: true,
       fixture: "invalid/tree",
       sub: "remove-twice",
@@ -957,7 +957,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid tree op: stale removed handle setText behavior is explicit",
+      caseId: "invalid-tree-op-stale-removed-handle-settext-behavior-is-explicit", name: "invalid tree op: stale removed handle setText behavior is explicit",
       dom: true,
       fixture: "invalid/tree",
       sub: "stale-handle-setText",
@@ -985,7 +985,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid tree op: cannot append node into itself",
+      caseId: "invalid-tree-op-cannot-append-node-into-itself", name: "invalid tree op: cannot append node into itself",
       dom: true,
       fixture: "invalid/tree",
       sub: "append-into-self",
@@ -1011,7 +1011,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid input: data.setMany rejects empty key",
+      caseId: "invalid-input-data.setmany-rejects-empty-key", name: "invalid input: data.setMany rejects empty key",
       dom: true,
       fixture: "invalid/api",
       sub: "dataset-empty-key",
@@ -1038,7 +1038,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid input: css.setMany rejects non-object runtime input",
+      caseId: "invalid-input-css.setmany-rejects-non-object-runtime-input", name: "invalid input: css.setMany rejects non-object runtime input",
       dom: true,
       fixture: "invalid/api",
       sub: "css-setMany-non-object",
@@ -1064,7 +1064,7 @@ export function error_handling(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "invalid input: attrs.setMany rejects invalid attr name",
+      caseId: "invalid-input-attrs.setmany-rejects-invalid-attr-name", name: "invalid input: attrs.setMany rejects invalid attr name",
       dom: true,
       fixture: "invalid/api",
       sub: "attrs-invalid-name",

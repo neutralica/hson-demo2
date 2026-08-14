@@ -67,7 +67,7 @@ export function hosted_replay_action_in_memory_suite(): TestSuite {
     }),
     cases: Object.freeze([Object.freeze({
       suite,
-      name: "hosted replay action preserves request, result, and failure semantics",
+      caseId: "hosted-replay-action-preserves-request-result-and-failure-semantics", name: "hosted replay action preserves request, result, and failure semantics",
       run: async () => {
 expect_hosted(typeof document === "undefined", "document must be unavailable");
 expect_hosted(typeof window === "undefined", "window must be unavailable");
@@ -145,7 +145,7 @@ const failedRun = await create_hosted_test_livehost(async () => ({
     fail: 1,
     skip: 0,
     msTotal: 1,
-    failures: [{ suite: "livemap/replay", name: "fails", err: "expected", ms: 1 }],
+    failures: [{ suite: "livemap/replay", caseId: "fails", name: "fails", err: "expected", ms: 1 }],
   },
 })).dispatch_action({
   type: "action",

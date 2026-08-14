@@ -14,7 +14,7 @@ export function livemap_suite_rev(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "first changed commit advances rev from zero",
+        caseId: "first-changed-commit-advances-rev-from-zero", name: "first changed commit advances rev from zero",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -44,7 +44,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "successive changed commits advance monotonically",
+        caseId: "successive-changed-commits-advance-monotonically", name: "successive changed commits advance monotonically",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -92,7 +92,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "unchanged commit retains current rev",
+        caseId: "unchanged-commit-retains-current-rev", name: "unchanged commit retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -144,7 +144,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "multi operation batch advances rev once",
+        caseId: "multi-operation-batch-advances-rev-once", name: "multi operation batch advances rev once",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -183,7 +183,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "unchanged batch retains current rev",
+        caseId: "unchanged-batch-retains-current-rev", name: "unchanged batch retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -229,7 +229,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected write does not consume rev",
+        caseId: "schema-rejected-write-does-not-consume-rev", name: "schema rejected write does not consume rev",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -286,7 +286,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected batch does not consume rev",
+        caseId: "schema-rejected-batch-does-not-consume-rev", name: "schema rejected batch does not consume rev",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -355,7 +355,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "semantic splice advances rev once",
+        caseId: "semantic-splice-advances-rev-once", name: "semantic splice advances rev once",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -393,7 +393,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "changed batch after prior commit advances from current rev",
+        caseId: "changed-batch-after-prior-commit-advances-from-current-rev", name: "changed batch after prior commit advances from current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -429,7 +429,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "capture returns initial rev and value",
+        caseId: "capture-returns-initial-rev-and-value", name: "capture returns initial rev and value",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -457,7 +457,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "capture reflects current committed rev",
+        caseId: "capture-reflects-current-committed-rev", name: "capture reflects current committed rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -486,7 +486,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "capture remains stable after later writes",
+        caseId: "capture-remains-stable-after-later-writes", name: "capture remains stable after later writes",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -539,7 +539,7 @@ export function livemap_suite_rev(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "apply replaces root from current rev",
+        caseId: "apply-replaces-root-from-current-rev", name: "apply replaces root from current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -585,7 +585,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "apply accepts a current capture rev",
+        caseId: "apply-accepts-a-current-capture-rev", name: "apply accepts a current capture rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -630,7 +630,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "apply rejects stale rev without changing state",
+        caseId: "apply-rejects-stale-rev-without-changing-state", name: "apply rejects stale rev without changing state",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -706,7 +706,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "unchanged apply retains current rev",
+        caseId: "unchanged-apply-retains-current-rev", name: "unchanged apply retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -751,7 +751,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected apply does not consume rev",
+        caseId: "schema-rejected-apply-does-not-consume-rev", name: "schema rejected apply does not consume rev",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -844,7 +844,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "apply rejects invalid expected rev before mutation",
+        caseId: "apply-rejects-invalid-expected-rev-before-mutation", name: "apply rejects invalid expected rev before mutation",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -886,7 +886,7 @@ export function livemap_suite_rev(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "replay applies a changed commit to a matching map",
+        caseId: "replay-applies-a-changed-commit-to-a-matching-map", name: "replay applies a changed commit to a matching map",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -950,7 +950,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay applies a multi operation commit atomically",
+        caseId: "replay-applies-a-multi-operation-commit-atomically", name: "replay applies a multi operation commit atomically",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1003,7 +1003,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay preserves semantic splice operations",
+        caseId: "replay-preserves-semantic-splice-operations", name: "replay preserves semantic splice operations",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1068,7 +1068,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "empty replay retains current rev",
+        caseId: "empty-replay-retains-current-rev", name: "empty replay retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -1104,7 +1104,7 @@ export function livemap_suite_rev(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "replay rejects stale rev without changing state",
+        caseId: "replay-rejects-stale-rev-without-changing-state", name: "replay rejects stale rev without changing state",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1179,7 +1179,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay rejects conflicting prev without consuming rev",
+        caseId: "replay-rejects-conflicting-prev-without-consuming-rev", name: "replay rejects conflicting prev without consuming rev",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1268,7 +1268,7 @@ export function livemap_suite_rev(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected replay is atomic and does not consume rev",
+        caseId: "schema-rejected-replay-is-atomic-and-does-not-consume-rev", name: "schema rejected replay is atomic and does not consume rev",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({

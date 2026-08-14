@@ -76,7 +76,7 @@ export function livehost_store_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "create stores host by id",
+        caseId: "create-stores-host-by-id", name: "create stores host by id",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -98,7 +98,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "create rejects duplicate id",
+        caseId: "create-rejects-duplicate-id", name: "create rejects duplicate id",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -121,7 +121,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "set stores existing host by id",
+        caseId: "set-stores-existing-host-by-id", name: "set stores existing host by id",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -144,7 +144,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "set rejects duplicate id",
+        caseId: "set-rejects-duplicate-id", name: "set rejects duplicate id",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -167,7 +167,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "delete removes host",
+        caseId: "delete-removes-host", name: "delete removes host",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -188,7 +188,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "connect rejects unknown id",
+        caseId: "connect-rejects-unknown-id", name: "connect rejects unknown id",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -211,7 +211,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "connect routes socket to stored host",
+        caseId: "connect-routes-socket-to-stored-host", name: "connect routes socket to stored host",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -241,7 +241,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "connect routes action to stored host",
+        caseId: "connect-routes-action-to-stored-host", name: "connect routes action to stored host",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -278,7 +278,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "list returns registered entries",
+        caseId: "list-returns-registered-entries", name: "list returns registered entries",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -301,7 +301,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "delete unknown id returns false",
+        caseId: "delete-unknown-id-returns-false", name: "delete unknown id returns false",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -318,7 +318,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "connect disposer detaches socket listeners",
+        caseId: "connect-disposer-detaches-socket-listeners", name: "connect disposer detaches socket listeners",
         input: {},
         act: () => {
           const store = create_livehost_store();
@@ -343,7 +343,7 @@ export function livehost_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "list entries are frozen snapshots",
+        caseId: "list-entries-are-frozen-snapshots", name: "list entries are frozen snapshots",
         input: {},
         act: () => {
           const store = create_livehost_store();

@@ -26,7 +26,7 @@ try {
     const sourceSuite = byId.get(entry.suite);
     const testCase = sourceSuite?.cases.find((candidate) => candidate.name === entry.name);
     if (sourceSuite === undefined || testCase === undefined) {
-      throw new Error(`Missing classified layout case: ${entry.suite}::${entry.name}`);
+      throw new Error(`Missing classified layout case: ${entry.suite}::${entry.caseId}`);
     }
     const isolated: TestSuite = Object.freeze({ suite: sourceSuite.suite, cases: Object.freeze([testCase]) });
     const result = await with_hosted_dom_runtime(() => run_test_suites([isolated], () => undefined, {
@@ -34,10 +34,10 @@ try {
       yieldBetweenSuites: false,
     }));
     const shouldPass = entry.status !== "DEFERRED_REAL_LAYOUT";
-    expect_layout(result.ok === shouldPass, `${entry.suite}::${entry.name} disagrees with ${entry.status}`);
+    expect_layout(result.ok === shouldPass, `${entry.suite}::${entry.caseId} disagrees with ${entry.status}`);
     counts.set(entry.status, (counts.get(entry.status) ?? 0) + 1);
     if (!shouldPass) deferred.push(Object.freeze({
-      key: `${entry.suite}::${entry.name}`,
+      key: `${entry.suite}::${entry.caseId}`,
       error: result.summary.failures[0]?.err.split("\nError:")[0] ?? "missing failure",
     }));
   }

@@ -36,7 +36,7 @@ const SHIM_SUITES = new Set([
   "livetree/coverage-css-and-content",
   "livetree/document",
   "livetree/create-size",
-  "livetree/new-svg/",
+  "livetree/new-svg",
   "livetree/graph-dom-markup-surface",
   "livetree/construction-parity",
 ]);
@@ -50,7 +50,7 @@ export type HostedDomLayoutCaseStatus =
 
 export type HostedDomLayoutCaseEntry = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   status: HostedDomLayoutCaseStatus;
   requirement: string;
 }>;
@@ -69,7 +69,7 @@ export type HostedCanvasMigrationStatus =
 
 export type HostedCanvasMigrationEntry = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   sourceIndex: number;
   duplicateDeclaration: boolean;
   status: HostedCanvasMigrationStatus;
@@ -82,18 +82,18 @@ const CANVAS_SUITE_IDS = new Set([
 ]);
 const CANVAS_DEFERRED_PIXEL_KEYS = new Set<string>(JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS);
 const CANVAS_COMMAND_RECORDER_KEYS = new Set([
-  "livetree/canvas::canvas ctx2d returns 2d context when mounted",
-  "livetree/canvas-stress::canvas must.ctx2d returns context when mounted",
-  "livetree/canvas-stress::canvas ctx2d accepts context settings",
-  "livetree/canvas-clear::canvas.clear returns tree for chaining",
-  "livetree/canvas-plot::canvas.plot returns tree for chaining",
-  "livetree/canvas-plot::canvas.must.plot returns tree for chaining",
-  "livetree/canvas-plot::canvas.plot accepts context settings",
+  "livetree/canvas::canvas-ctx2d-returns-2d-context-when-mounted",
+  "livetree/canvas-stress::canvas-must.ctx2d-returns-context-when-mounted",
+  "livetree/canvas-stress::canvas-ctx2d-accepts-context-settings",
+  "livetree/canvas-clear::canvas.clear-returns-tree-for-chaining",
+  "livetree/canvas-plot::canvas.plot-returns-tree-for-chaining",
+  "livetree/canvas-plot::canvas.must.plot-returns-tree-for-chaining",
+  "livetree/canvas-plot::canvas.plot-accepts-context-settings",
 ]);
 const CANVAS_STATE_RECORDER_KEYS = new Set([
-  "livetree/canvas-display::canvas.display.match sets bitmap attrs from display size",
-  "livetree/canvas-display::canvas.display.match returns tree for chaining",
-  "livetree/canvas-display::canvas.display.match.watch removed node does not keep matching after detach",
+  "livetree/canvas-display::canvas.display.match-sets-bitmap-attrs-from-display-size",
+  "livetree/canvas-display::canvas.display.match-returns-tree-for-chaining",
+  "livetree/canvas-display::canvas.display.match.watch-removed-node-does-not-keep-matching-after-detach",
 ]);
 const canvasSuites = all_livetree_suites().filter((suite) => CANVAS_SUITE_IDS.has(suite.suite));
 
@@ -101,31 +101,31 @@ export const HOSTED_CANVAS_MIGRATION_CASES: readonly HostedCanvasMigrationEntry[
   canvasSuites.flatMap((suite) => {
     const seen = new Set<string>();
     return suite.cases.map((testCase, sourceIndex) => {
-      const key = `${suite.suite}::${testCase.name}`;
+      const key = `${suite.suite}::${testCase.caseId}`;
       const duplicateDeclaration = seen.has(key);
       seen.add(key);
       if (CANVAS_DEFERRED_PIXEL_KEYS.has(key)) return Object.freeze({
-        suite: suite.suite, name: testCase.name, sourceIndex, duplicateDeclaration,
+        suite: suite.suite, caseId: testCase.caseId, name: testCase.name, sourceIndex, duplicateDeclaration,
         status: "DEFERRED_PIXEL_OUTPUT" as const,
         requirement: "getImageData raster readback",
       });
       if (suite.suite === "livetree/canvas-pointer") return Object.freeze({
-        suite: suite.suite, name: testCase.name, sourceIndex, duplicateDeclaration,
+        suite: suite.suite, caseId: testCase.caseId, name: testCase.name, sourceIndex, duplicateDeclaration,
         status: "MIGRATED_POINTER_INJECTION" as const,
         requirement: "explicit hosted rectangle and deterministic ResizeObserver notification where applicable",
       });
       if (CANVAS_STATE_RECORDER_KEYS.has(key)) return Object.freeze({
-        suite: suite.suite, name: testCase.name, sourceIndex, duplicateDeclaration,
+        suite: suite.suite, caseId: testCase.caseId, name: testCase.name, sourceIndex, duplicateDeclaration,
         status: "MIGRATED_STATE_RECORDER" as const,
         requirement: "deterministic backing-size reset and 2D transform state",
       });
       if (CANVAS_COMMAND_RECORDER_KEYS.has(key)) return Object.freeze({
-        suite: suite.suite, name: testCase.name, sourceIndex, duplicateDeclaration,
+        suite: suite.suite, caseId: testCase.caseId, name: testCase.name, sourceIndex, duplicateDeclaration,
         status: "MIGRATED_COMMAND_RECORDER" as const,
         requirement: "stable 2D context and deterministic command dispatch without rasterization",
       });
       return Object.freeze({
-        suite: suite.suite, name: testCase.name, sourceIndex, duplicateDeclaration,
+        suite: suite.suite, caseId: testCase.caseId, name: testCase.name, sourceIndex, duplicateDeclaration,
         status: "MIGRATED_ELEMENT_ONLY" as const,
         requirement: "canvas element, attributes, lifecycle, or explicit display rectangle only",
       });
@@ -135,18 +135,18 @@ export const HOSTED_CANVAS_MIGRATION_CASES: readonly HostedCanvasMigrationEntry[
 
 const LAYOUT_SUITE_IDS = Object.freeze([
   "livetree/coverage-css-and-content", "livetree/css-pseudo", "livetree/document",
-  "livetree/create-size", "livetree/new-svg/", "livetree-18/treeselector-surface",
+  "livetree/create-size", "livetree/new-svg", "livetree-18/treeselector-surface",
   "livetree/graph-dom-markup-surface",
 ] as const);
 const RECT_INJECTION_CASES = new Set([
-  "livetree/coverage-css-and-content::CssManager: emitted QUID CSS coexists with registered hosted geometry",
-  "livetree/document::dom.doc: point queries resolve mounted target tree",
-  "livetree/document::dom.doc: elementsFromPoint returns a stack",
-  "livetree/create-size::dom.clientSize: mounted html element returns size",
+  "livetree/coverage-css-and-content::cssmanager-emitted-quid-css-coexists-with-registered-hosted-geometry",
+  "livetree/document::dom.doc-point-queries-resolve-mounted-target-tree",
+  "livetree/document::dom.doc-elementsfrompoint-returns-a-stack",
+  "livetree/create-size::dom.clientsize-mounted-html-element-returns-size",
 ]);
 const SVG_INJECTION_CASES = new Set([
-  "livetree/new-svg/::svg bbox returns mounted geometry",
-  "livetree/graph-dom-markup-surface::svg bbox is mounted renderer-backed",
+  "livetree/new-svg::svg-bbox-returns-mounted-geometry",
+  "livetree/graph-dom-markup-surface::svg-bbox-is-mounted-renderer-backed",
 ]);
 const DEFERRED_LAYOUT_CASES = new Set<string>(JSDOM_HOSTED_DEFERRED_CASE_KEYS);
 
@@ -156,28 +156,28 @@ export const HOSTED_DOM_LAYOUT_CASES: readonly HostedDomLayoutCaseEntry[] = Obje
     const suite = layoutSuitesById.get(suiteId);
     if (suite === undefined) throw new Error(`Missing layout inventory suite: ${suiteId}`);
     return suite.cases.map((testCase) => {
-      const key = `${suiteId}::${testCase.name}`;
+      const key = `${suiteId}::${testCase.caseId}`;
       if (DEFERRED_LAYOUT_CASES.has(key)) return Object.freeze({
         suite: suiteId,
-        name: testCase.name,
+        caseId: testCase.caseId, name: testCase.name,
         status: "DEFERRED_REAL_LAYOUT" as const,
         requirement: "rendered pseudo-element computed-style content",
       });
       if (RECT_INJECTION_CASES.has(key)) return Object.freeze({
         suite: suiteId,
-        name: testCase.name,
+        caseId: testCase.caseId, name: testCase.name,
         status: "MIGRATED_RECT_INJECTION" as const,
         requirement: "explicit registered rectangle, client size, or deterministic point hit",
       });
       if (SVG_INJECTION_CASES.has(key)) return Object.freeze({
         suite: suiteId,
-        name: testCase.name,
+        caseId: testCase.caseId, name: testCase.name,
         status: "MIGRATED_SVG_INJECTION" as const,
         requirement: "explicit registered SVG bounding box",
       });
       return Object.freeze({
         suite: suiteId,
-        name: testCase.name,
+        caseId: testCase.caseId, name: testCase.name,
         status: "MIGRATED_NATIVE" as const,
         requirement: "jsdom DOM/CSS state without rendered layout",
       });

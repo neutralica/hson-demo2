@@ -9,7 +9,7 @@ export function livetree_dom_helper_surface(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "dom surface: matches returns true, false, and detached false",
+      caseId: "dom-surface-matches-returns-true-false-and-detached-false", name: "dom surface: matches returns true, false, and detached false",
       fixture: "dom-helper/matches",
       sub: "mounted-detached",
       dom: true,
@@ -45,7 +45,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: closest resolves ancestor LiveTree and miss returns undefined",
+      caseId: "dom-surface-closest-resolves-ancestor-livetree-and-miss-returns-undefined", name: "dom surface: closest resolves ancestor LiveTree and miss returns undefined",
       fixture: "dom-helper/closest",
       sub: "soft-and-must",
       dom: true,
@@ -93,7 +93,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: parent resolves immediate LiveTree parent and must throws at detached root",
+      caseId: "dom-surface-parent-resolves-immediate-livetree-parent-and-must-throws-at-detached-root", name: "dom surface: parent resolves immediate LiveTree parent and must throws at detached root",
       fixture: "dom-helper/parent",
       sub: "soft-and-must",
       dom: true,
@@ -139,7 +139,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: html and must.htmlEl distinguish HTML from SVG",
+      caseId: "dom-surface-html-and-must.htmlel-distinguish-html-from-svg", name: "dom surface: html and must.htmlEl distinguish HTML from SVG",
       fixture: "dom-helper/html",
       sub: "html-vs-svg",
       dom: true,
@@ -200,7 +200,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: computed and computedProp read mounted styles",
+      caseId: "dom-surface-computed-and-computedprop-read-mounted-styles", name: "dom surface: computed and computedProp read mounted styles",
       fixture: "dom-helper/computed",
       sub: "inline-style",
       dom: true,
@@ -254,7 +254,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: computedProp must throws only when computed style is unavailable",
+      caseId: "dom-surface-computedprop-must-throws-only-when-computed-style-is-unavailable", name: "dom surface: computedProp must throws only when computed style is unavailable",
       fixture: "dom-helper/computed",
       sub: "must-computed-prop",
       dom: true,
@@ -297,7 +297,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: contains supports tree, node, and target helpers",
+      caseId: "dom-surface-contains-supports-tree-node-and-target-helpers", name: "dom surface: contains supports tree, node, and target helpers",
       fixture: "dom-helper/contains",
       sub: "tree-node-target",
       dom: true,
@@ -345,7 +345,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: rect and clientRects soft and must behavior",
+      caseId: "dom-surface-rect-and-clientrects-soft-and-must-behavior", name: "dom surface: rect and clientRects soft and must behavior",
       fixture: "dom-helper/rects",
       sub: "mounted-detached",
       dom: true,
@@ -411,7 +411,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: clientSize and scrollSize soft and must behavior",
+      caseId: "dom-surface-clientsize-and-scrollsize-soft-and-must-behavior", name: "dom surface: clientSize and scrollSize soft and must behavior",
       fixture: "dom-helper/sizes",
       sub: "mounted-detached",
       dom: true,
@@ -481,7 +481,7 @@ export function livetree_dom_helper_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom surface: isConnected reflects mounted and detached state",
+      caseId: "dom-surface-isconnected-reflects-mounted-and-detached-state", name: "dom surface: isConnected reflects mounted and detached state",
       fixture: "dom-helper/isConnected",
       sub: "mounted-detached-removed",
       dom: true,
@@ -528,7 +528,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "content.markup serializes mounted and detached branches",
+      caseId: "content.markup-serializes-mounted-and-detached-branches", name: "content.markup serializes mounted and detached branches",
       fixture: "markup/content-markup",
       sub: "mounted-detached",
       dom: true,
@@ -572,7 +572,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content.markup preserves graph attrs on detached clone",
+      caseId: "content.markup-preserves-graph-attrs-on-detached-clone", name: "content.markup preserves graph attrs on detached clone",
       fixture: "markup/content-markup",
       sub: "detached-attrs",
       dom: true,
@@ -608,7 +608,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom innerHTML and outerHTML are mounted DOM-backed getters",
+      caseId: "dom-innerhtml-and-outerhtml-are-mounted-dom-backed-getters", name: "dom innerHTML and outerHTML are mounted DOM-backed getters",
       fixture: "markup/dom-html-getters",
       sub: "mounted",
       dom: true,
@@ -648,7 +648,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom innerHTML and outerHTML are undefined on detached clone",
+      caseId: "dom-innerhtml-and-outerhtml-are-undefined-on-detached-clone", name: "dom innerHTML and outerHTML are undefined on detached clone",
       fixture: "markup/dom-html-getters",
       sub: "detached",
       dom: true,
@@ -706,7 +706,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg bbox is mounted renderer-backed",
+      caseId: "svg-bbox-is-mounted-renderer-backed", name: "svg bbox is mounted renderer-backed",
       fixture: "markup/svg-bbox",
       sub: "mounted-detached",
       hostedGeometry: [{ id: "flower", rect: { x: 10, y: 20, width: 20, height: 20 } }],
@@ -760,7 +760,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg cloneBranch preserves SVG create surface",
+      caseId: "svg-clonebranch-preserves-svg-create-surface", name: "svg cloneBranch preserves SVG create surface",
       fixture: "markup/svg-clone-typing",
       sub: "svg-create-after-clone",
       dom: true,
@@ -808,7 +808,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "content.markup reflects graph mutation before mount",
+      caseId: "content.markup-reflects-graph-mutation-before-mount", name: "content.markup reflects graph mutation before mount",
       fixture: "markup/detached-graph-mutation",
       sub: "clone-mutate-serialize",
       dom: true,
@@ -853,7 +853,7 @@ export function livetree_graph_dom_markup_surface(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "content.deep returns effective descendants only",
+      caseId: "content.deep-returns-effective-descendants-only", name: "content.deep returns effective descendants only",
       fixture: "content/deep-effective-descendants",
       sub: "descendants-no-self-no-leaves",
       dom: true,

@@ -6,7 +6,7 @@ import type { LiveMapFeedEventPreview } from "./types";
 
 export type FeedEmitCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   feedPath: LivePath;
   commit: LiveMapCommit;
   snapValue: JsonValue | undefined;
@@ -25,7 +25,7 @@ export function preview_feed_event(event: LiveMapFeedEvent): LiveMapFeedEventPre
 
 type PathOverlapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   a: LivePath;
   b: LivePath;
   expected: boolean;
@@ -34,7 +34,7 @@ type PathOverlapCaseSpec = Readonly<{
 export function make_path_overlap_case(spec: PathOverlapCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: { a: preview_value(spec.a), b: preview_value(spec.b) },
     run: () => ({
       assertRows: [equal_row(spec.name, paths_overlap(spec.a, spec.b), spec.expected)],
@@ -45,7 +45,7 @@ export function make_path_overlap_case(spec: PathOverlapCaseSpec): TestCase {
 export function make_feed_emit_case(spec: FeedEmitCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: { feedPath: preview_value(spec.feedPath), commit: preview_value(spec.commit) },
     run: () => {
       const hub = make_livemap_feed_hub();

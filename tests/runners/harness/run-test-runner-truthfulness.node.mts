@@ -32,7 +32,8 @@ function suite(
   return Object.freeze({
     suite: id,
     descriptor: Object.freeze({
-      subject: "dev",
+      subject: "transform",
+      collections: Object.freeze(["dev"] as const),
       requirements: Object.freeze(["javascript"] as const),
     }),
     ...options,
@@ -71,7 +72,7 @@ async function check_async(name: string, body: () => Promise<void>): Promise<voi
 
 await check_async("synchronous pass produces one terminal result", async () => {
   const observed = await run([suite("runner/sync-pass", [
-    Object.freeze({ suite: "runner/sync-pass", name: "pass", run() {} }),
+    Object.freeze({ suite: "runner/sync-pass", caseId: "pass", name: "pass", run() {} }),
   ])]);
   assert.equal(observed.result.ok, true);
   assert.equal(terminal(observed.events).length, 1);
@@ -80,7 +81,7 @@ await check_async("synchronous pass produces one terminal result", async () => {
 await check_async("synchronous throw is a bounded failure", async () => {
   const hostile = "x".repeat(TEST_FAILURE_DETAIL_LIMIT * 2);
   const observed = await run([suite("runner/sync-throw", [
-    Object.freeze({ suite: "runner/sync-throw", name: "throw", run() { throw new Error(hostile); } }),
+    Object.freeze({ suite: "runner/sync-throw", caseId: "throw", name: "throw", run() { throw new Error(hostile); } }),
   ])]);
   assert.equal(observed.result.ok, false);
   assert.match(observed.result.summary.failures[0]?.err ?? "", /TEST_FAILURE_DETAIL_TRUNCATED/);
@@ -92,7 +93,7 @@ await check_async("resolved promise is awaited", async () => {
   const observed = await run([suite("runner/resolve", [
     Object.freeze({
       suite: "runner/resolve",
-      name: "resolve",
+      caseId: "resolve", name: "resolve",
       async run() { await Promise.resolve(); settled = true; },
     }),
   ])]);
@@ -104,7 +105,7 @@ await check_async("rejected promise is reported", async () => {
   const observed = await run([suite("runner/reject", [
     Object.freeze({
       suite: "runner/reject",
-      name: "reject",
+      caseId: "reject", name: "reject",
       run: () => Promise.reject(new Error("returned rejection")),
     }),
   ])]);
@@ -116,7 +117,7 @@ await check_async("never-settling promise times out", async () => {
   const observed = await run([suite("runner/timeout", [
     Object.freeze({
       suite: "runner/timeout",
-      name: "never",
+      caseId: "never", name: "never",
       timeoutMs: 20,
       run: () => new Promise<void>(() => undefined),
     }),
@@ -131,7 +132,7 @@ await check_async("late resolve cannot replace the timeout terminal", async () =
   const result = await run_test_suites([suite("runner/late-resolve", [
     Object.freeze({
       suite: "runner/late-resolve",
-      name: "late",
+      caseId: "late", name: "late",
       timeoutMs: 20,
       run: () => new Promise<void>((resolve) => { resolveLate = resolve; }),
     }),
@@ -153,7 +154,7 @@ await check_async("late rejection is handled and cannot duplicate completion", a
     const result = await run_test_suites([suite("runner/late-reject", [
       Object.freeze({
         suite: "runner/late-reject",
-        name: "late",
+        caseId: "late", name: "late",
         timeoutMs: 20,
         run: () => new Promise<void>((_resolve, reject) => { rejectLate = reject; }),
       }),
@@ -173,13 +174,13 @@ await check_async("a case following timeout still executes", async () => {
   const observed = await run([suite("runner/timeout-followed", [
     Object.freeze({
       suite: "runner/timeout-followed",
-      name: "timeout",
+      caseId: "timeout", name: "timeout",
       timeoutMs: 20,
       run: () => new Promise<void>(() => undefined),
     }),
     Object.freeze({
       suite: "runner/timeout-followed",
-      name: "followed",
+      caseId: "followed", name: "followed",
       run() { followed = true; },
     }),
   ])]);
@@ -190,8 +191,8 @@ await check_async("a case following timeout still executes", async () => {
 await check_async("suite setup failure explicitly fails every selected case", async () => {
   let caseRuns = 0;
   const observed = await run([suite("runner/setup", [
-    Object.freeze({ suite: "runner/setup", name: "one", run() { caseRuns += 1; } }),
-    Object.freeze({ suite: "runner/setup", name: "two", run() { caseRuns += 1; } }),
+    Object.freeze({ suite: "runner/setup", caseId: "one", name: "one", run() { caseRuns += 1; } }),
+    Object.freeze({ suite: "runner/setup", caseId: "two", name: "two", run() { caseRuns += 1; } }),
   ], { setup() { throw new Error("setup broke"); } })]);
   assert.equal(caseRuns, 0);
   assert.deepEqual(terminal(observed.events).map((event) => event.status), ["fail", "fail"]);
@@ -202,13 +203,13 @@ await check_async("cleanup failure replaces a would-be pass", async () => {
   const observed = await run([suite("runner/cleanup-fail", [
     Object.freeze({
       suite: "runner/cleanup-fail",
-      name: "cleanup",
+      caseId: "cleanup", name: "cleanup",
       run() {},
       cleanup() { throw new Error("cleanup broke"); },
     }),
     Object.freeze({
       suite: "runner/cleanup-fail",
-      name: "expected failure still exposes cleanup",
+      caseId: "expected-failure-still-exposes-cleanup", name: "expected failure still exposes cleanup",
       expected: "fail",
       run() { throw new Error("expected body failure"); },
       cleanup() { throw new Error("cleanup also broke"); },
@@ -224,7 +225,7 @@ await check_async("cleanup runs after timeout", async () => {
   const observed = await run([suite("runner/cleanup-timeout", [
     Object.freeze({
       suite: "runner/cleanup-timeout",
-      name: "cleanup",
+      caseId: "cleanup", name: "cleanup",
       timeoutMs: 20,
       run: () => new Promise<void>(() => undefined),
       cleanup() { cleaned = true; },
@@ -239,7 +240,7 @@ await check_async("invalid timeout values reject before execution", async () => 
     let ran = false;
     await assert.rejects(
       run_test_suites([suite("runner/invalid-timeout", [
-        Object.freeze({ suite: "runner/invalid-timeout", name: String(timeoutMs), timeoutMs, run() { ran = true; } }),
+        Object.freeze({ suite: "runner/invalid-timeout", caseId: "invalid-timeout", name: String(timeoutMs), timeoutMs, run() { ran = true; } }),
       ])], () => undefined),
       /TEST_RUNNER_INVALID_TIMEOUT/,
     );
@@ -247,7 +248,7 @@ await check_async("invalid timeout values reject before execution", async () => 
   }
   await assert.rejects(
     run_test_suites([suite("runner/invalid-run-timeout", [
-      Object.freeze({ suite: "runner/invalid-run-timeout", name: "case", run() {} }),
+      Object.freeze({ suite: "runner/invalid-run-timeout", caseId: "case", name: "case", run() {} }),
     ])], () => undefined, { caseTimeoutMs: Number.POSITIVE_INFINITY }),
     /TEST_RUNNER_INVALID_TIMEOUT/,
   );
@@ -257,19 +258,19 @@ await check_async("invalid timeout values reject before execution", async () => 
 await check_async("exact selection retains original identity and suite setup", async () => {
   let setupRuns = 0;
   const original = suite("runner/selection", [
-    Object.freeze({ suite: "runner/selection", name: "a", run() {} }),
-    Object.freeze({ suite: "runner/selection", name: "b", run() {} }),
+    Object.freeze({ suite: "runner/selection", caseId: "a", name: "a", run() {} }),
+    Object.freeze({ suite: "runner/selection", caseId: "b", name: "b", run() {} }),
   ], { setup() { setupRuns += 1; } });
   const registry = make_test_executor_registry(executor, [original]);
   const selected = selected_test_suites(registry, ["runner/selection::b"]);
   const observed = await run(selected);
-  assert.deepEqual(terminal(observed.events).map((event) => `${event.suite}::${event.name}`), ["runner/selection::b"]);
+  assert.deepEqual(terminal(observed.events).map((event) => `${event.suite}::${event.caseId}`), ["runner/selection::b"]);
   assert.equal(setupRuns, 1);
 });
 
 check("unknown selection fails explicitly", () => {
   const registry = make_test_executor_registry(executor, [suite("runner/unknown", [
-    Object.freeze({ suite: "runner/unknown", name: "known", run() {} }),
+    Object.freeze({ suite: "runner/unknown", caseId: "known", name: "known", run() {} }),
   ])]);
   assert.throws(
     () => selected_test_suites(registry, ["runner/unknown::missing"]),
@@ -280,7 +281,7 @@ check("unknown selection fails explicitly", () => {
 check("duplicate direct selection rejects before execution", () => {
   let executions = 0;
   const registry = make_test_executor_registry(executor, [suite("runner/duplicate", [
-    Object.freeze({ suite: "runner/duplicate", name: "only", run() { executions += 1; } }),
+    Object.freeze({ suite: "runner/duplicate", caseId: "only", name: "only", run() { executions += 1; } }),
   ])]);
   assert.throws(
     () => selected_test_suites(registry, ["runner/duplicate::only", "runner/duplicate::only"]),
@@ -291,8 +292,8 @@ check("duplicate direct selection rejects before execution", () => {
 
 await check_async("streamed and terminal counts reconcile", async () => {
   const observed = await run([suite("runner/reconcile", [
-    Object.freeze({ suite: "runner/reconcile", name: "pass", run() {} }),
-    Object.freeze({ suite: "runner/reconcile", name: "fail", run() { throw new Error("no"); } }),
+    Object.freeze({ suite: "runner/reconcile", caseId: "pass", name: "pass", run() {} }),
+    Object.freeze({ suite: "runner/reconcile", caseId: "fail", name: "fail", run() { throw new Error("no"); } }),
   ])]);
   const ends = terminal(observed.events);
   assert.equal(ends.length, observed.result.summary.cases);
@@ -306,7 +307,7 @@ await check_async("abort during active work settles after cleanup without false 
   const running = run([suite("runner/abort", [
     Object.freeze({
       suite: "runner/abort",
-      name: "active",
+      caseId: "active", name: "active",
       run: () => new Promise<void>(() => undefined),
       cleanup() { cleaned = true; },
     }),
@@ -325,7 +326,7 @@ await check_async("synthetic DOM globals restore after a failed case", async () 
     const observed = await run([suite("runner/dom-cleanup", [
       Object.freeze({
         suite: "runner/dom-cleanup",
-        name: "fails",
+        caseId: "fails", name: "fails",
         run() {
           assert.ok(globalThis.document);
           globalThis.document.body.innerHTML = "<main>temporary</main>";
@@ -341,15 +342,15 @@ await check_async("synthetic DOM globals restore after a failed case", async () 
 
 check("recorder rejects duplicate or incomplete terminal accounting", () => {
   const recorder = new TestRecorder();
-  recorder.ingest({ t: "case_begin", suite: "runner/recorder", name: "case" });
+  recorder.ingest({ t: "case_begin", suite: "runner/recorder", caseId: "case", name: "case" });
   assert.throws(
-    () => recorder.ingest({ t: "case_begin", suite: "runner/recorder", name: "case" }),
+    () => recorder.ingest({ t: "case_begin", suite: "runner/recorder", caseId: "case", name: "case" }),
     /TEST_RECORDER_DUPLICATE_CASE_BEGIN/,
   );
   assert.throws(() => recorder.summary(), /TEST_RECORDER_INCOMPLETE_CASES/);
-  recorder.ingest({ t: "case_end", suite: "runner/recorder", name: "case", status: "pass", ms: 1 });
+  recorder.ingest({ t: "case_end", suite: "runner/recorder", caseId: "case", name: "case", status: "pass", ms: 1 });
   assert.throws(
-    () => recorder.ingest({ t: "case_end", suite: "runner/recorder", name: "case", status: "pass", ms: 1 }),
+    () => recorder.ingest({ t: "case_end", suite: "runner/recorder", caseId: "case", name: "case", status: "pass", ms: 1 }),
     /TEST_RECORDER_CASE_END_WITHOUT_BEGIN/,
   );
 });
@@ -360,7 +361,7 @@ await check_async("report-stream failure rejects after case cleanup rather than 
     run_test_suites([suite("runner/report-stream", [
       Object.freeze({
         suite: "runner/report-stream",
-        name: "case",
+        caseId: "case", name: "case",
         run() {},
         cleanup() { cleaned = true; },
       }),

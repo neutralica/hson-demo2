@@ -12,7 +12,7 @@ function binding_lifecycle_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "LiveMap binding ownership preserves detach and terminates remove",
+    caseId: "livemap-binding-ownership-preserves-detach-and-terminates-remove", name: "LiveMap binding ownership preserves detach and terminates remove",
     dom: true,
     html: `<main><section id="source"><span id="bound"></span></section><section id="target"></section></main>`,
     act(tree) {
@@ -53,7 +53,7 @@ function manual_unsubscribe_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "manual LiveMap unsubscribe unregisters lifecycle ownership idempotently",
+    caseId: "manual-livemap-unsubscribe-unregisters-lifecycle-ownership-idempotently", name: "manual LiveMap unsubscribe unregisters lifecycle ownership idempotently",
     dom: true,
     html: `<main><span id="bound"></span></main>`,
     act(tree) {
@@ -87,7 +87,7 @@ function listener_bookkeeping_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "element and ambient listener cleanup keeps ListenerSub state honest",
+    caseId: "element-and-ambient-listener-cleanup-keeps-listenersub-state-honest", name: "element and ambient listener cleanup keeps ListenerSub state honest",
     dom: true,
     html: `<main><button id="owner">go</button></main>`,
     act(tree) {
@@ -130,7 +130,7 @@ function tree_events_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "TreeEvents subscriptions survive detach and terminate on remove",
+    caseId: "treeevents-subscriptions-survive-detach-and-terminate-on-remove", name: "TreeEvents subscriptions survive detach and terminate on remove",
     dom: true,
     html: `<main><section id="source"><span id="owner"></span></section><section id="target"></section></main>`,
     act(tree) {
@@ -166,7 +166,7 @@ function repeated_lifecycle_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "repeated bind detach reattach remove cycles retain no callbacks",
+    caseId: "repeated-bind-detach-reattach-remove-cycles-retain-no-callbacks", name: "repeated bind detach reattach remove cycles retain no callbacks",
     dom: true,
     html: `<main><section id="owner"></section></main>`,
     act(tree) {

@@ -8,8 +8,9 @@ import {
   hson_live_test_launchers,
   type HsonLiveTestLauncher,
 } from "hson-live/test-launchers";
-import type { TestSubject } from "../../core/test-contracts";
+import type { TestCapability, TestCollection, TestSubject } from "../../core/test-contracts";
 import type { ExternalLibraryLauncherTarget } from "../../core/external-launcher-contract";
+import { validate_test_suite_id } from "../../core/test-identity";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS = 120_000;
 export const EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS = 1_000;
@@ -119,6 +120,11 @@ const SUBJECTS: Readonly<Record<HsonLiveTestLauncher["subject"], TestSubject>> =
   Core: "integration",
 });
 
+const SEMANTIC_SUBJECT_OVERRIDES: Readonly<Record<string, TestSubject>> = Object.freeze({
+  "core.hson-number": "transform",
+  "core.canonical-hson-equality": "transform",
+});
+
 const TSX_PARITY_MANIFEST_FINGERPRINT =
   "f3ed6b6a64676c54b8b0f39a8829d5b2040ebdfe9c5d4b1d8f65aa492693b164";
 
@@ -145,19 +151,67 @@ function tsx_invocation(
   });
 }
 
-export function external_library_target_id(launcherId: string): string {
-  return `library::${launcherId}`;
+export const PHASE1_EXTERNAL_SUITE_COLLISION_RESOLUTIONS = Object.freeze([
+  Object.freeze({ launcherId: "livemap.path-handle", suiteId: "livemap/path-handle/conformance" }),
+  Object.freeze({ launcherId: "livemap.carrier-mutation-planning", suiteId: "livemap/carrier-mutation-planning/conformance" }),
+  Object.freeze({ launcherId: "livemap.exact-transport", suiteId: "livemap/exact-transport/conformance" }),
+  Object.freeze({ launcherId: "livemap.exact-transport-rejection", suiteId: "livemap/exact-transport-rejection/conformance" }),
+  Object.freeze({ launcherId: "livemap.exact-propagation", suiteId: "livemap/exact-propagation/conformance" }),
+  Object.freeze({ launcherId: "livemap.schema-value-boundary", suiteId: "livemap/schema-value-boundary/conformance" }),
+]);
+
+const SEMANTIC_SUITE_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
+  "core.hson-number": "transform/hson-number",
+  "core.canonical-hson-equality": "transform/canonical-hson-equality",
+  "core.public-boundaries": "integration/public-boundaries",
+  ...Object.fromEntries(PHASE1_EXTERNAL_SUITE_COLLISION_RESOLUTIONS.map((entry) => [entry.launcherId, entry.suiteId])),
+});
+
+export const PHASE1_DUPLICATE_PROPOSITION_CANDIDATES = Object.freeze([
+  Object.freeze({ hsonDemo2SuiteId: "transform/hson/quoted-name-acceptance", sourceRef: "hson-live:transform.hson-quoted-name-acceptance" }),
+  Object.freeze({ hsonDemo2SuiteId: "transform/hson/quoted-name-rejection", sourceRef: "hson-live:transform.hson-quoted-name-rejection" }),
+]);
+
+function semantic_suite_id(launcher: HsonLiveTestLauncher): string {
+  const explicit = SEMANTIC_SUITE_OVERRIDES[launcher.id];
+  if (explicit !== undefined) return validate_test_suite_id(explicit);
+  const subject = SUBJECTS[launcher.subject];
+  const pieces = launcher.id.split(".");
+  const leaf = pieces[0] === subject || pieces[0] === "core" || pieces[0] === "diagnostics"
+    ? pieces.slice(1)
+    : pieces;
+  return validate_test_suite_id([subject, ...leaf].join("/"));
 }
 
-function target(launcher: HsonLiveTestLauncher): ExternalLibraryLauncherTarget {
+function semantic_subject(launcher: HsonLiveTestLauncher): TestSubject {
+  return SEMANTIC_SUBJECT_OVERRIDES[launcher.id] ?? SUBJECTS[launcher.subject];
+}
+
+export function external_library_target_id(launcherId: string): string {
+  const launcher = hson_live_test_launchers.find((candidate) => candidate.id === launcherId);
+  if (launcher === undefined) throw new Error(`Unknown hson-live launcher ID: ${launcherId}`);
+  return semantic_suite_id(launcher);
+}
+
+function launcher_requirements(runtime: HsonLiveTestLauncher["runtime"]): readonly TestCapability[] {
+  if (runtime === "node") return Object.freeze(["javascript", "node"]);
+  if (runtime === "node-synthetic-dom") return Object.freeze(["javascript", "node", "synthetic-dom"]);
+  return Object.freeze(["javascript", "node", "websocket"]);
+}
+
+function target(launcher: HsonLiveTestLauncher, order: number): ExternalLibraryLauncherTarget {
   return Object.freeze({
     id: external_library_target_id(launcher.id),
     launcherId: launcher.id,
-    subject: SUBJECTS[launcher.subject],
+    sourceRef: `hson-live:${launcher.id}`,
+    subject: semantic_subject(launcher),
     displayName: launcher.displayName,
     runtime: launcher.runtime,
     executableChecks: launcher.executableChecks,
-    collections: Object.freeze([...launcher.collections]),
+    collections: Object.freeze(launcher.id === "core.public-boundaries" ? ["dev"] as const : []),
+    tags: Object.freeze([...launcher.collections]),
+    requirements: launcher_requirements(launcher.runtime),
+    order,
   });
 }
 
@@ -249,11 +303,11 @@ export async function resolve_external_library_launchers(
   const unavailable: { launcherId: string; reason: string }[] = [];
   const invocations: Record<string, ExternalLibraryLauncherInvocation> = {};
   const tsxParityVerified = launcher_manifest_fingerprint() === TSX_PARITY_MANIFEST_FINGERPRINT;
-  for (const launcher of hson_live_test_launchers) {
+  for (const [order, launcher] of hson_live_test_launchers.entries()) {
     const moduleExists = await exists(join(repositoryRoot, launcher.repositoryModule));
     const scriptExists = typeof scripts[launcher.packageScript] === "string";
     if (moduleExists && scriptExists) {
-      const selectedTarget = target(launcher);
+      const selectedTarget = target(launcher, order);
       targets.push(selectedTarget);
       const packageCommand = scripts[launcher.packageScript] as string;
       const verifiedInvocation = classify_external_library_launcher_invocation(

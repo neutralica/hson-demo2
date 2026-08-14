@@ -46,7 +46,7 @@ export function livetree_regression_2(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "identity: explicit clone remints every eligible node",
+      caseId: "identity-explicit-clone-remints-every-eligible-node", name: "identity: explicit clone remints every eligible node",
       fixture: "identity/element-rehydrate",
       sub: "recursive-remint",
       dom: true,
@@ -81,7 +81,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: active Element ownership conflict leaves source untouched",
+      caseId: "identity-active-element-ownership-conflict-leaves-source-untouched", name: "identity: active Element ownership conflict leaves source untouched",
       fixture: "identity/element-rehydrate",
       sub: "source-untouched",
       dom: true,
@@ -134,7 +134,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: repeated explicit clones produce independent branches",
+      caseId: "identity-repeated-explicit-clones-produce-independent-branches", name: "identity: repeated explicit clones produce independent branches",
       fixture: "identity/element-rehydrate",
       sub: "repeated-independent",
       dom: true,
@@ -169,7 +169,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: explicit HTML strings preserve unique persisted quids",
+      caseId: "identity-explicit-html-strings-preserve-unique-persisted-quids", name: "identity: explicit HTML strings preserve unique persisted quids",
       fixture: "identity/string-import",
       sub: "preserve-persisted",
       dom: true,
@@ -211,7 +211,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: duplicate persisted quid within one string is rejected",
+      caseId: "identity-duplicate-persisted-quid-within-one-string-is-rejected", name: "identity: duplicate persisted quid within one string is rejected",
       fixture: "identity/string-import",
       sub: "reject-intra-branch-duplicate",
       dom: true,
@@ -255,7 +255,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: duplicate persisted quid across live branches is rejected",
+      caseId: "identity-duplicate-persisted-quid-across-live-branches-is-rejected", name: "identity: duplicate persisted quid across live branches is rejected",
       fixture: "identity/string-import",
       sub: "reject-inter-branch-duplicate",
       dom: true,
@@ -294,7 +294,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: explicit subtree clone preserves shape and remints descendants",
+      caseId: "identity-explicit-subtree-clone-preserves-shape-and-remints-descendants", name: "identity: explicit subtree clone preserves shape and remints descendants",
       fixture: "identity/subtree-rehydrate",
       sub: "subtree-boundary",
       dom: true,
@@ -337,7 +337,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: explicit clone does not resurrect a removed sibling",
+      caseId: "identity-explicit-clone-does-not-resurrect-a-removed-sibling", name: "identity: explicit clone does not resurrect a removed sibling",
       fixture: "identity/element-rehydrate",
       sub: "no-resurrection",
       dom: true,
@@ -370,7 +370,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: explicit clone remints identity and preserves ordinary metadata",
+      caseId: "identity-explicit-clone-remints-identity-and-preserves-ordinary-metadata", name: "identity: explicit clone remints identity and preserves ordinary metadata",
       fixture: "identity/element-rehydrate",
       sub: "preserve-non-quid-attrs",
       dom: true,
@@ -417,7 +417,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: detach preserves persisted quid ownership",
+      caseId: "identity-detach-preserves-persisted-quid-ownership", name: "identity: detach preserves persisted quid ownership",
       fixture: "identity/string-import",
       sub: "retain-on-remove",
       dom: true,
@@ -471,7 +471,7 @@ export function livetree_regression_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "identity: root and descendant cannot share one persisted quid",
+      caseId: "identity-root-and-descendant-cannot-share-one-persisted-quid", name: "identity: root and descendant cannot share one persisted quid",
       fixture: "identity/string-import",
       sub: "reject-root-descendant-duplicate",
       dom: true,
@@ -518,7 +518,7 @@ export function livetree_quid_level_2(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "serialization: DOM outerHTML includes resolved root quid by default",
+      caseId: "serialization-dom-outerhtml-includes-resolved-root-quid-by-default", name: "serialization: DOM outerHTML includes resolved root quid by default",
       fixture: "identity/serialization",
       sub: "root-quid-default",
       dom: true,
@@ -547,7 +547,7 @@ export function livetree_quid_level_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "serialization: DOM outerHTML includes resolved descendant quids by default",
+      caseId: "serialization-dom-outerhtml-includes-resolved-descendant-quids-by-default", name: "serialization: DOM outerHTML includes resolved descendant quids by default",
       fixture: "identity/serialization",
       sub: "descendant-quid-default",
       dom: true,
@@ -579,7 +579,7 @@ export function livetree_quid_level_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "serialization: DOM outerHTML preserves ordinary data attrs alongside quids",
+      caseId: "serialization-dom-outerhtml-preserves-ordinary-data-attrs-alongside-quids", name: "serialization: DOM outerHTML preserves ordinary data attrs alongside quids",
       fixture: "identity/serialization",
       sub: "preserve-data-attrs",
       dom: true,
@@ -610,7 +610,7 @@ export function livetree_quid_level_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "serialization: reading DOM outerHTML does not remint source quids",
+      caseId: "serialization-reading-dom-outerhtml-does-not-remint-source-quids", name: "serialization: reading DOM outerHTML does not remint source quids",
       fixture: "identity/serialization",
       sub: "read-only-serialization",
       dom: true,
@@ -644,7 +644,7 @@ export function livetree_quid_level_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "serialization: mounted subtree serializes materialized child quids",
+      caseId: "serialization-mounted-subtree-serializes-materialized-child-quids", name: "serialization: mounted subtree serializes materialized child quids",
       fixture: "identity/serialization",
       sub: "mounted-subtree-materializes-children",
       dom: true,
@@ -680,7 +680,7 @@ export function livetree_quid_level_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "serialization: mounted siblings serialize with quids alongside resolved descendant",
+      caseId: "serialization-mounted-siblings-serialize-with-quids-alongside-resolved-descendant", name: "serialization: mounted siblings serialize with quids alongside resolved descendant",
       fixture: "identity/serialization",
       sub: "mounted-siblings-serialize-with-quids",
       dom: true,
@@ -720,7 +720,7 @@ export function livetree_quid_level_2(): TestSuite {
 
     {
       suite: SUITE,
-      name: "serialization: reading outerHTML is stable for materialized subtree quids",
+      caseId: "serialization-reading-outerhtml-is-stable-for-materialized-subtree-quids", name: "serialization: reading outerHTML is stable for materialized subtree quids",
       fixture: "identity/serialization",
       sub: "outerhtml-stable-materialized-subtree",
       dom: true,

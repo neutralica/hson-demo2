@@ -48,7 +48,7 @@ source.reduce({ t: "suite_begin", suite: "livemap/replay" });
 const startCommit = source.commits()[0];
 expect_mirror(startCommit !== undefined, "source start commit exists");
 const start = encode_hosted_test_report_commit("mirror-run", "livemap/replay", startCommit);
-source.reduce({ t: "case_end", suite: "livemap/replay", name: "mirror case", status: "pass", ms: 1 });
+source.reduce({ t: "case_end", suite: "livemap/replay", caseId: "mirror-case", name: "mirror case", status: "pass", ms: 1 });
 const caseCommit = source.commits()[1];
 expect_mirror(caseCommit !== undefined, "source case commit exists");
 const completedCase = encode_hosted_test_report_commit("mirror-run", "livemap/replay", caseCommit);

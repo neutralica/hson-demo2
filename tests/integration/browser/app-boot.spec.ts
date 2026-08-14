@@ -263,7 +263,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
 
   await selector.selectOption("subject:livehost");
   await expect(targetedSuite).toBeEnabled();
-  await targetedSuite.selectOption("suite:library::livehost.authority");
+  await targetedSuite.selectOption("suite:livehost/authority");
   await expect(targetedCase).toBeDisabled();
   await expect(targetedCase.locator("option")).toHaveText(["all cases (21)"]);
 
@@ -288,15 +288,15 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(page.locator("#test-case-pane [data-hosted-suite]")).toHaveCount(1);
 
   await selector.selectOption("subject:livehost");
-  await targetedSuite.selectOption("suite:library::livehost.authority");
+  await targetedSuite.selectOption("suite:livehost/authority");
   await page.locator("#test-run").click();
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "2");
   await expect(page.locator("#test-logger")).toContainText(
-    "pass library::livehost.authority — 21 cases",
+    "pass livehost/authority — 21 cases",
     { timeout: 15_000 },
   );
   await expect(page.locator("#test-logger")).not.toContainText("ok 1 -");
-  const externalRow = page.locator('[data-hosted-suite="library::livehost.authority"]');
+  const externalRow = page.locator('[data-hosted-suite="livehost/authority"]');
   await externalRow.click();
   await expect(page.locator(".hosted-external-output")).toContainText("ok 1 -");
   await expect(page.locator("#test-chips .test-chip-value")).toHaveText(["21", "21", "0", /\d/]);

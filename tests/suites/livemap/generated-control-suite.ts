@@ -123,7 +123,7 @@ function make_bridge_map(value: JsonValue): BridgeMap {
 function make_schema_control_label_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated controls render label and description metadata",
+    caseId: "schema-generated-controls-render-label-and-description-metadata", name: "Schema generated controls render label and description metadata",
     meta: {
       input: preview_value({ title: "Ready" }),
       schema: preview_value({ title: { label: "Title", description: "Displayed heading" } }),
@@ -158,7 +158,7 @@ function make_schema_control_label_case(suite: string): TestCase {
 function make_schema_control_number_attrs_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated number controls render numeric constraint attrs",
+    caseId: "schema-generated-number-controls-render-numeric-constraint-attrs", name: "Schema generated number controls render numeric constraint attrs",
     meta: {
       input: preview_value({ count: 1 }),
       schema: preview_value({ count: { kind: "number", min: 0, max: 10, step: 1 } }),
@@ -197,7 +197,7 @@ function make_schema_control_number_attrs_case(suite: string): TestCase {
 function make_schema_control_enum_select_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated enum controls render select and write back",
+    caseId: "schema-generated-enum-controls-render-select-and-write-back", name: "Schema generated enum controls render select and write back",
     meta: {
       input: preview_value({ mode: "draft" }),
       schema: preview_value({ mode: { kind: "enum", choices: ["draft", "published"] } }),
@@ -235,7 +235,7 @@ function make_schema_control_enum_select_case(suite: string): TestCase {
 function make_schema_control_boolean_checkbox_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated boolean controls preserve checkbox writeback",
+    caseId: "schema-generated-boolean-controls-preserve-checkbox-writeback", name: "Schema generated boolean controls preserve checkbox writeback",
     meta: {
       input: preview_value({ enabled: true }),
       schema: preview_value({ enabled: { kind: "boolean", label: "Enabled" } }),
@@ -274,7 +274,7 @@ function make_schema_control_boolean_checkbox_case(suite: string): TestCase {
 function make_schema_control_nested_dotted_schema_path_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated controls use dotted schema paths for nested values",
+    caseId: "schema-generated-controls-use-dotted-schema-paths-for-nested-values", name: "Schema generated controls use dotted schema paths for nested values",
     meta: {
       input: preview_value({ ui: { count: 1 } }),
       schema: preview_value({ "ui.count": { kind: "number", label: "Count", min: 0, max: 10 } }),
@@ -313,7 +313,7 @@ function make_schema_control_nested_dotted_schema_path_case(suite: string): Test
 function make_schema_control_missing_schema_fallback_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated controls fall back when schema node is missing",
+    caseId: "schema-generated-controls-fall-back-when-schema-node-is-missing", name: "Schema generated controls fall back when schema node is missing",
     meta: {
       input: preview_value({ ui: { label: "Ready", count: 1 } }),
       schema: preview_value({ count: { kind: "number", min: 0 } }),
@@ -353,7 +353,7 @@ function make_schema_control_missing_schema_fallback_case(suite: string): TestCa
 function make_schema_control_binding_count_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated controls return one binding per primitive leaf",
+    caseId: "schema-generated-controls-return-one-binding-per-primitive-leaf", name: "Schema generated controls return one binding per primitive leaf",
     meta: {
       input: preview_value({ ui: { label: "Ready", count: 1, enabled: true } }),
       schema: preview_value({
@@ -389,7 +389,7 @@ function make_schema_control_binding_count_case(suite: string): TestCase {
 function make_schema_control_rerender_uses_latest_schema_case(suite: string): TestCase {
   return {
     suite,
-    name: "Schema generated controls rerender uses latest schema metadata",
+    caseId: "schema-generated-controls-rerender-uses-latest-schema-metadata", name: "Schema generated controls rerender uses latest schema metadata",
     meta: {
       input: preview_value({ count: 1 }),
       schema: preview_value({ count: { kind: "number", label: "First", min: 0 } }),

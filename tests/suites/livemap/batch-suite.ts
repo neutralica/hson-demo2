@@ -14,7 +14,7 @@ export function livemap_suite_batch(): TestSuite {
     cases: [
       make_set_many_pipeline_case({
         suite: SUITE,
-        name: "write-op pipeline setMany writes child ops in one commit",
+        caseId: "write-op-pipeline-setmany-writes-child-ops-in-one-commit", name: "write-op pipeline setMany writes child ops in one commit",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
@@ -27,7 +27,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_pipeline_case({
         suite: SUITE,
-        name: "write-op pipeline setMany omits unchanged writes",
+        caseId: "write-op-pipeline-setmany-omits-unchanged-writes", name: "write-op pipeline setMany omits unchanged writes",
         input: { user: { name: "Ada", role: "user", active: true } },
         path: ["user"],
         values: { name: "Ada", role: "admin", active: true },
@@ -39,7 +39,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_feed_case({
         suite: SUITE,
-        name: "write-op pipeline setMany feed emits once with child ops",
+        caseId: "write-op-pipeline-setmany-feed-emits-once-with-child-ops", name: "write-op pipeline setMany feed emits once with child ops",
         input: { user: { name: "Ada", role: "user" }, other: { n: 1 } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
@@ -56,7 +56,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_feed_case({
         suite: SUITE,
-        name: "write-op pipeline setMany path feed receives only overlapping ops",
+        caseId: "write-op-pipeline-setmany-path-feed-receives-only-overlapping-ops", name: "write-op pipeline setMany path feed receives only overlapping ops",
         input: { user: { name: "Ada", role: "user" }, other: { n: 1 } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
@@ -72,7 +72,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_feed_case({
         suite: SUITE,
-        name: "write-op pipeline setMany sibling feed ignores non-overlapping ops",
+        caseId: "write-op-pipeline-setmany-sibling-feed-ignores-non-overlapping-ops", name: "write-op pipeline setMany sibling feed ignores non-overlapping ops",
         input: { user: { name: "Ada", role: "user" }, other: { n: 1 } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
@@ -84,7 +84,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_sub_path_case({
         suite: SUITE,
-        name: "write-op pipeline setMany sub.path observes final value once",
+        caseId: "write-op-pipeline-setmany-sub.path-observes-final-value-once", name: "write-op pipeline setMany sub.path observes final value once",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
@@ -95,7 +95,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_batch_pipeline_case({
         suite: SUITE,
-        name: "batch collects set write and delete into one commit",
+        caseId: "batch-collects-set-write-and-delete-into-one-commit", name: "batch collects set write and delete into one commit",
         input: { user: { name: "Ada", role: "user", old: true } },
         expectedChanged: true,
         expectedOps: [
@@ -107,7 +107,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_batch_feed_case({
         suite: SUITE,
-        name: "batch feed emits once with all matching ops",
+        caseId: "batch-feed-emits-once-with-all-matching-ops", name: "batch feed emits once with all matching ops",
         input: { user: { name: "Ada", role: "user" }, other: { n: 1 } },
         feedPath: ["user"],
         expectedCalls: 1,
@@ -121,28 +121,28 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_batch_schema_reject_case({
         suite: SUITE,
-        name: "batch schema rejects before any mutation",
+        caseId: "batch-schema-rejects-before-any-mutation", name: "batch schema rejects before any mutation",
         input: { user: { name: "Ada", age: 37 } },
         expectedMessage: "LiveMap schema rejected value at [\"user\",\"age\"]:\n- LiveMap schema expected number at [\"user\",\"age\"], received string",
         expectedRoot: { user: { name: "Ada", age: 37 } },
       }),
       make_batch_editor_reject_case({
         suite: SUITE,
-        name: "batch editor rejection preserves earlier writes",
+        caseId: "batch-editor-rejection-preserves-earlier-writes", name: "batch editor rejection preserves earlier writes",
         input: { users: [{ name: "Ada" }, { name: "Grace" }], meta: { touched: false } },
         expectedMessage: "LiveMap set path does not resolve: [\"users\", \"first\"]",
         expectedRoot: { users: [{ name: "Ada" }, { name: "Grace" }], meta: { touched: false } },
       }),
       make_batch_closed_tx_case({
         suite: SUITE,
-        name: "batch transaction handle cannot write after callback",
+        caseId: "batch-transaction-handle-cannot-write-after-callback", name: "batch transaction handle cannot write after callback",
         input: { user: { name: "Ada" } },
         expectedMessage: "LiveMap batch transaction is already closed",
         expectedRoot: { user: { name: "Grace" } },
       }),
       make_set_many_schema_reject_case({
         suite: SUITE,
-        name: "write-op pipeline setMany schema rejects before any mutation",
+        caseId: "write-op-pipeline-setmany-schema-rejects-before-any-mutation", name: "write-op pipeline setMany schema rejects before any mutation",
         input: { user: { name: "Ada", age: 37 } },
         path: ["user"],
         values: { name: "Grace", age: "old" },
@@ -151,7 +151,7 @@ export function livemap_suite_batch(): TestSuite {
       }),
       make_set_many_editor_reject_case({
         suite: SUITE,
-        name: "write-op pipeline setMany rejects non-object path before editor",
+        caseId: "write-op-pipeline-setmany-rejects-non-object-path-before-editor", name: "write-op pipeline setMany rejects non-object path before editor",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users"],
         values: { first: { name: "Margaret" } },
@@ -182,7 +182,7 @@ type OpPreview = SetOpPreview | DeleteOpPreview;
 
 type SetManyPipelineCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: readonly (string | number)[];
   values: Readonly<Record<string, JsonValue>>;
@@ -193,7 +193,7 @@ type SetManyPipelineCaseSpec = Readonly<{
 
 type SetManyFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: readonly (string | number)[];
   values: Readonly<Record<string, JsonValue>>;
@@ -212,7 +212,7 @@ type SubPathCall = Readonly<{
 
 type SetManySubPathCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: readonly (string | number)[];
   values: Readonly<Record<string, JsonValue>>;
@@ -222,7 +222,7 @@ type SetManySubPathCaseSpec = Readonly<{
 
 type BatchPipelineCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   expectedChanged: boolean;
   expectedOps: readonly OpPreview[];
@@ -231,7 +231,7 @@ type BatchPipelineCaseSpec = Readonly<{
 
 type BatchFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   feedPath: readonly (string | number)[];
   expectedCalls: number;
@@ -242,7 +242,7 @@ type BatchFeedCaseSpec = Readonly<{
 
 type BatchRejectCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   expectedMessage: string;
   expectedRoot: JsonValue;
@@ -250,7 +250,7 @@ type BatchRejectCaseSpec = Readonly<{
 
 type BatchClosedTxCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   expectedMessage: string;
   expectedRoot: JsonValue;
@@ -258,7 +258,7 @@ type BatchClosedTxCaseSpec = Readonly<{
 
 type SetManyRejectCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: readonly (string | number)[];
   values: Readonly<Record<string, JsonValue>>;
@@ -270,7 +270,7 @@ type SetManyRejectCaseSpec = Readonly<{
 function make_set_many_pipeline_case(spec: SetManyPipelineCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -294,7 +294,7 @@ function make_set_many_pipeline_case(spec: SetManyPipelineCaseSpec): TestCase {
 function make_set_many_feed_case(spec: SetManyFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -330,7 +330,7 @@ function make_set_many_feed_case(spec: SetManyFeedCaseSpec): TestCase {
 function make_set_many_sub_path_case(spec: SetManySubPathCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -359,7 +359,7 @@ function make_set_many_sub_path_case(spec: SetManySubPathCaseSpec): TestCase {
 function make_batch_pipeline_case(spec: BatchPipelineCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -385,7 +385,7 @@ function make_batch_pipeline_case(spec: BatchPipelineCaseSpec): TestCase {
 function make_batch_feed_case(spec: BatchFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       feedPath: preview_value(spec.feedPath),
@@ -421,7 +421,7 @@ function make_batch_feed_case(spec: BatchFeedCaseSpec): TestCase {
 function make_batch_schema_reject_case(spec: BatchRejectCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -459,7 +459,7 @@ function make_batch_schema_reject_case(spec: BatchRejectCaseSpec): TestCase {
 function make_batch_editor_reject_case(spec: BatchRejectCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -489,7 +489,7 @@ function make_batch_editor_reject_case(spec: BatchRejectCaseSpec): TestCase {
 function make_batch_closed_tx_case(spec: BatchClosedTxCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -522,7 +522,7 @@ function make_batch_closed_tx_case(spec: BatchClosedTxCaseSpec): TestCase {
 function make_set_many_schema_reject_case(spec: SetManyRejectCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -560,7 +560,7 @@ function make_set_many_schema_reject_case(spec: SetManyRejectCaseSpec): TestCase
 function make_set_many_editor_reject_case(spec: SetManyRejectCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),

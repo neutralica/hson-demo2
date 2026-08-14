@@ -11,7 +11,7 @@ export function livetree_tree_selector_surface(): TestSuite {
     [
       {
         suite: SUITE,
-        name: "TreeSelector surface: length, first, last, at, and array preserve order",
+        caseId: "treeselector-surface-length-first-last-at-and-array-preserve-order", name: "TreeSelector surface: length, first, last, at, and array preserve order",
         dom: true,
         fixture: "treeselector-surface",
         sub: "basic-indexing-and-order",
@@ -68,7 +68,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: empty selector has stable empty semantics",
+        caseId: "treeselector-surface-empty-selector-has-stable-empty-semantics", name: "TreeSelector surface: empty selector has stable empty semantics",
         dom: true,
         fixture: "treeselector-surface",
         sub: "empty-selector-semantics",
@@ -109,7 +109,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: map and each preserve traversal order",
+        caseId: "treeselector-surface-map-and-each-preserve-traversal-order", name: "TreeSelector surface: map and each preserve traversal order",
         dom: true,
         fixture: "treeselector-surface",
         sub: "map-and-each-order",
@@ -161,7 +161,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: filter returns a new TreeSelector preserving order",
+        caseId: "treeselector-surface-filter-returns-a-new-treeselector-preserving-order", name: "TreeSelector surface: filter returns a new TreeSelector preserving order",
         dom: true,
         fixture: "treeselector-surface",
         sub: "filter-selector",
@@ -211,7 +211,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: array snapshot is defensive",
+        caseId: "treeselector-surface-array-snapshot-is-defensive", name: "TreeSelector surface: array snapshot is defensive",
         dom: true,
         fixture: "treeselector-surface",
         sub: "array-snapshot-defensive",
@@ -247,7 +247,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: css broadcast writes to all selected nodes",
+        caseId: "treeselector-surface-css-broadcast-writes-to-all-selected-nodes", name: "TreeSelector surface: css broadcast writes to all selected nodes",
         dom: true,
         fixture: "treeselector-surface",
         sub: "css-broadcast",
@@ -293,7 +293,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: data broadcast writes dataset values to all selected nodes",
+        caseId: "treeselector-surface-data-broadcast-writes-dataset-values-to-all-selected-nodes", name: "TreeSelector surface: data broadcast writes dataset values to all selected nodes",
         dom: true,
         fixture: "treeselector-surface",
         sub: "data-broadcast",
@@ -326,7 +326,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: removeAt removes one selected node",
+        caseId: "treeselector-surface-removeat-removes-one-selected-node", name: "TreeSelector surface: removeAt removes one selected node",
         dom: true,
         fixture: "treeselector-surface",
         sub: "remove-at",
@@ -369,7 +369,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: removeAt out of range is safe",
+        caseId: "treeselector-surface-removeat-out-of-range-is-safe", name: "TreeSelector surface: removeAt out of range is safe",
         dom: true,
         fixture: "treeselector-surface",
         sub: "remove-at-out-of-range",
@@ -406,7 +406,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: removeAll removes every selected node",
+        caseId: "treeselector-surface-removeall-removes-every-selected-node", name: "TreeSelector surface: removeAll removes every selected node",
         dom: true,
         fixture: "treeselector-surface",
         sub: "remove-all",
@@ -445,7 +445,7 @@ export function livetree_tree_selector_surface(): TestSuite {
 
       {
         suite: SUITE,
-        name: "TreeSelector surface: empty selector broadcast operations are safe",
+        caseId: "treeselector-surface-empty-selector-broadcast-operations-are-safe", name: "TreeSelector surface: empty selector broadcast operations are safe",
         dom: true,
         fixture: "treeselector-surface",
         sub: "empty-selector-broadcast-safe",
@@ -488,7 +488,7 @@ export function livetree_tree_selector_surface(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "css pseudos: attr() content generates exact composed-selector CSS",
+        caseId: "css-pseudos-attr-content-generates-exact-composed-selector-css", name: "css pseudos: attr() content generates exact composed-selector CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-attr-content-browser-readback",
@@ -543,7 +543,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "pseudo shorthand write is readable through selector handle",
+      caseId: "pseudo-shorthand-write-is-readable-through-selector-handle", name: "pseudo shorthand write is readable through selector handle",
       dom: true,
       fixture: "css/pseudos",
       sub: "shorthand-before-selector-read",
@@ -585,7 +585,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
     {
       suite: SUITE,
-      name: "selector pseudo write round-trips through selector getter",
+      caseId: "selector-pseudo-write-round-trips-through-selector-getter", name: "selector pseudo write round-trips through selector getter",
       dom: true,
       fixture: "css/pseudos",
       sub: "selector-before-roundtrip",
@@ -628,7 +628,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
     {
       suite: SUITE,
-      name: "pseudo shorthand and selector writes merge into one rule",
+      caseId: "pseudo-shorthand-and-selector-writes-merge-into-one-rule", name: "pseudo shorthand and selector writes merge into one rule",
       dom: true,
       fixture: "css/pseudos",
       sub: "shorthand-selector-merge",
@@ -677,7 +677,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
     {
       suite: SUITE,
-      name: "pseudo shorthand supports pseudo-class suffixes through selector getter",
+      caseId: "pseudo-shorthand-supports-pseudo-class-suffixes-through-selector-getter", name: "pseudo shorthand supports pseudo-class suffixes through selector getter",
       dom: true,
       fixture: "css/pseudos",
       sub: "shorthand-hover-selector-read",
@@ -718,7 +718,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
     {
       suite: SUITE,
-      name: "selector clear removes pseudo selector rule only",
+      caseId: "selector-clear-removes-pseudo-selector-rule-only", name: "selector clear removes pseudo selector rule only",
       dom: true,
       fixture: "css/pseudos",
       sub: "selector-clear-pseudo-only",
@@ -763,7 +763,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
     {
       suite: SUITE,
-      name: "base css clear should clear owned pseudo selector rules",
+      caseId: "base-css-clear-should-clear-owned-pseudo-selector-rules", name: "base css clear should clear owned pseudo selector rules",
       dom: true,
       fixture: "css/pseudos",
       sub: "base-clear-clears-owned-pseudos",
@@ -821,7 +821,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
 
     {
       suite: SUITE,
-      name: "pseudo shorthand auto-content is selector-readable",
+      caseId: "pseudo-shorthand-auto-content-is-selector-readable", name: "pseudo shorthand auto-content is selector-readable",
       dom: true,
       fixture: "css/pseudos",
       sub: "auto-content-selector-readable",
@@ -858,7 +858,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "base css clear should clear owned explicit pseudo selector rules",
+      caseId: "base-css-clear-should-clear-owned-explicit-pseudo-selector-rules", name: "base css clear should clear owned explicit pseudo selector rules",
       dom: true,
       fixture: "css/pseudos",
       sub: "base-clear-clears-owned-explicit-pseudo-selector",
@@ -914,7 +914,7 @@ export function livetree_css_pseudo_selector_unification(): TestSuite {
     },
     {
   suite: SUITE,
-  name: "base css clear should clear owned nested selector rules",
+  caseId: "base-css-clear-should-clear-owned-nested-selector-rules", name: "base css clear should clear owned nested selector rules",
   dom: true,
   fixture: "css/pseudos",
   sub: "base-clear-clears-owned-nested-selector",

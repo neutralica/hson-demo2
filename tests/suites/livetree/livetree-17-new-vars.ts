@@ -14,7 +14,7 @@ export function livetree_css_surfaces_new(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "css surface: fluent setter/getter roundtrip for known camelCase property",
+            caseId: "css-surface-fluent-setter-getter-roundtrip-for-known-camelcase-property", name: "css surface: fluent setter/getter roundtrip for known camelCase property",
             dom: true,
             fixture: "css-surface",
             sub: "known-camel-roundtrip",
@@ -50,7 +50,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: standard property setters and getters normalize camel/kebab access",
+            caseId: "css-surface-standard-property-setters-and-getters-normalize-camel-kebab-access", name: "css surface: standard property setters and getters normalize camel/kebab access",
             dom: true,
             fixture: "css-surface",
             sub: "standard-property-normalization",
@@ -97,7 +97,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: css var setter accepts canonical, single-hyphen, and bare names",
+            caseId: "css-surface-css-var-setter-accepts-canonical-single-hyphen-and-bare-names", name: "css surface: css var setter accepts canonical, single-hyphen, and bare names",
             dom: true,
             fixture: "css-surface",
             sub: "var-setter-name-normalization",
@@ -137,7 +137,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: bracket css var setter/getter uses canonical custom-property names",
+            caseId: "css-surface-bracket-css-var-setter-getter-uses-canonical-custom-property-names", name: "css surface: bracket css var setter/getter uses canonical custom-property names",
             dom: true,
             fixture: "css-surface",
             sub: "var-bracket-roundtrip",
@@ -170,7 +170,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: custom-property names preserve internal hyphens",
+            caseId: "css-surface-custom-property-names-preserve-internal-hyphens", name: "css surface: custom-property names preserve internal hyphens",
             dom: true,
             fixture: "css-surface",
             sub: "var-internal-hyphens-preserved",
@@ -203,7 +203,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: setMany supports normal properties and custom properties",
+            caseId: "css-surface-setmany-supports-normal-properties-and-custom-properties", name: "css surface: setMany supports normal properties and custom properties",
             dom: true,
             fixture: "css-surface",
             sub: "setmany-normal-and-vars",
@@ -242,7 +242,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: nullish writes remove declarations",
+            caseId: "css-surface-nullish-writes-remove-declarations", name: "css surface: nullish writes remove declarations",
             dom: true,
             fixture: "css-surface",
             sub: "nullish-removal",
@@ -284,7 +284,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: invalid empty custom-property names are no-ops",
+            caseId: "css-surface-invalid-empty-custom-property-names-are-no-ops", name: "css surface: invalid empty custom-property names are no-ops",
             dom: true,
             fixture: "css-surface",
             sub: "empty-var-noop",
@@ -330,7 +330,7 @@ export function livetree_css_surfaces_new(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css surface: custom vars can be consumed by normal CSS declarations",
+            caseId: "css-surface-custom-vars-can-be-consumed-by-normal-css-declarations", name: "css surface: custom vars can be consumed by normal CSS declarations",
             dom: true,
             fixture: "css-surface",
             sub: "var-consumption",
@@ -404,7 +404,7 @@ export function livetree_sync_perf(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "syncNow: no-op sync leaves stylesheet unchanged",
+            caseId: "syncnow-no-op-sync-leaves-stylesheet-unchanged", name: "syncNow: no-op sync leaves stylesheet unchanged",
             dom: true,
             fixture: "performance-sensitive",
             sub: "sync-noop-stable",
@@ -446,7 +446,7 @@ export function livetree_sync_perf(): TestSuite {
 
         {
             suite: SUITE,
-            name: "css: repeated identical write does not duplicate selector/rule",
+            caseId: "css-repeated-identical-write-does-not-duplicate-selector-rule", name: "css: repeated identical write does not duplicate selector/rule",
             dom: true,
             fixture: "performance-sensitive",
             sub: "no-duplicate-rules",
@@ -499,7 +499,7 @@ export function livetree_sync_perf(): TestSuite {
 
         {
             suite: SUITE,
-            name: "css: repeated mutations settle on final rule state",
+            caseId: "css-repeated-mutations-settle-on-final-rule-state", name: "css: repeated mutations settle on final rule state",
             dom: true,
             fixture: "performance-sensitive",
             sub: "batched-final-state-only",
@@ -544,7 +544,7 @@ export function livetree_sync_perf(): TestSuite {
         // bonus fixture; this belongs with the same family and catches append-only leaks.
         {
             suite: SUITE,
-            name: "css: removed node does not leave stale rule behind after sync",
+            caseId: "css-removed-node-does-not-leave-stale-rule-behind-after-sync", name: "css: removed node does not leave stale rule behind after sync",
             dom: true,
             fixture: "performance-sensitive",
             sub: "removed-node-rule-gone",
@@ -590,7 +590,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css: pseudo rule replacement settles to final value without duplication",
+            caseId: "css-pseudo-rule-replacement-settles-to-final-value-without-duplication", name: "css: pseudo rule replacement settles to final value without duplication",
             dom: true,
             fixture: "performance-sensitive",
             sub: "pseudo-final-state",
@@ -628,7 +628,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css: clearQuid removes stored and emitted state",
+            caseId: "css-clearquid-removes-stored-and-emitted-state", name: "css: clearQuid removes stored and emitted state",
             dom: true,
             fixture: "performance-sensitive",
             sub: "clear-quid",
@@ -665,7 +665,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css: remove then recreate does not leak stale rule",
+            caseId: "css-remove-then-recreate-does-not-leak-stale-rule", name: "css: remove then recreate does not leak stale rule",
             dom: true,
             fixture: "performance-sensitive",
             sub: "remove-recreate-no-stale",
@@ -706,7 +706,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "serialization: mounted rehydrated branch gains DOM handle",
+            caseId: "serialization-mounted-rehydrated-branch-gains-dom-handle", name: "serialization: mounted rehydrated branch gains DOM handle",
             dom: true,
             fixture: "serialization/partial",
             sub: "mounted-branch-has-dom",
@@ -755,7 +755,7 @@ export function livetree_completionist(): TestSuite {
         [
             {
                 suite: SUITE,
-                name: "interaction: css state does not leak across remove and reappend",
+                caseId: "interaction-css-state-does-not-leak-across-remove-and-reappend", name: "interaction: css state does not leak across remove and reappend",
                 dom: true,
                 fixture: "interaction",
                 sub: "css-remove-reappend",
@@ -807,7 +807,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "interaction: listener works after grafted rehydrate without duplicate firing",
+                caseId: "interaction-listener-works-after-grafted-rehydrate-without-duplicate-firing", name: "interaction: listener works after grafted rehydrate without duplicate firing",
                 dom: true,
                 fixture: "interaction",
                 sub: "listeners-graft",
@@ -852,7 +852,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "interaction: dataset survives refind on cloned branch and stays independent",
+                caseId: "interaction-dataset-survives-refind-on-cloned-branch-and-stays-independent", name: "interaction: dataset survives refind on cloned branch and stays independent",
                 dom: true,
                 fixture: "interaction",
                 sub: "dataset-refind-clone",
@@ -896,7 +896,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: partial rehydrate of nested subtree ignores external sibling mutation",
+                caseId: "serialization-partial-rehydrate-of-nested-subtree-ignores-external-sibling-mutation", name: "serialization: partial rehydrate of nested subtree ignores external sibling mutation",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "nested-partial-hydrate",

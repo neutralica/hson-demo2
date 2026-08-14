@@ -59,7 +59,7 @@ export function suite_schedules_events(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "CssManager batching: multiple writes collapse to final state",
+            caseId: "cssmanager-batching-multiple-writes-collapse-to-final-state", name: "CssManager batching: multiple writes collapse to final state",
             dom: true,
             fixture: "css/scheduling",
             sub: "coalesce-same-node",
@@ -83,7 +83,7 @@ export function suite_schedules_events(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager batching: successive writes merge properties",
+            caseId: "cssmanager-batching-successive-writes-merge-properties", name: "CssManager batching: successive writes merge properties",
             dom: true,
             fixture: "css/scheduling",
             sub: "merge-props",
@@ -109,7 +109,7 @@ export function suite_schedules_events(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager batching: multiple nodes flush together",
+            caseId: "cssmanager-batching-multiple-nodes-flush-together", name: "CssManager batching: multiple nodes flush together",
             dom: true,
             fixture: "css/scheduling",
             sub: "multi-node",
@@ -139,7 +139,7 @@ export function suite_schedules_events(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager scheduling: managed write remains absent from CSSOM before flush",
+            caseId: "cssmanager-scheduling-managed-write-remains-absent-from-cssom-before-flush", name: "CssManager scheduling: managed write remains absent from CSSOM before flush",
             dom: true,
             fixture: "css/scheduling",
             sub: "stale-before-flush",
@@ -161,7 +161,7 @@ export function suite_schedules_events(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager scheduling: flush boundary emits the exact managed rule",
+            caseId: "cssmanager-scheduling-flush-boundary-emits-the-exact-managed-rule", name: "CssManager scheduling: flush boundary emits the exact managed rule",
             dom: true,
             fixture: "css/scheduling",
             sub: "emitted-after-flush",
@@ -187,7 +187,7 @@ export function suite_schedules_events(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager scheduling: interleaved writes resolve to final state",
+            caseId: "cssmanager-scheduling-interleaved-writes-resolve-to-final-state", name: "CssManager scheduling: interleaved writes resolve to final state",
             dom: true,
             fixture: "css/scheduling",
             sub: "interleaved",
@@ -226,7 +226,7 @@ export function css_manager_lifecycle(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "CssManager lifecycle: updating a prop overwrites prior value",
+            caseId: "cssmanager-lifecycle-updating-a-prop-overwrites-prior-value", name: "CssManager lifecycle: updating a prop overwrites prior value",
             dom: true,
             fixture: "css/lifecycle",
             sub: "overwrite-prop",
@@ -260,7 +260,7 @@ export function css_manager_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager lifecycle: clear() removes all declarations for node",
+            caseId: "cssmanager-lifecycle-clear-removes-all-declarations-for-node", name: "CssManager lifecycle: clear() removes all declarations for node",
             dom: true,
             fixture: "css/lifecycle",
             sub: "clear-rule",
@@ -295,7 +295,7 @@ export function css_manager_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager lifecycle: setting same value twice does not duplicate declaration",
+            caseId: "cssmanager-lifecycle-setting-same-value-twice-does-not-duplicate-declaration", name: "CssManager lifecycle: setting same value twice does not duplicate declaration",
             dom: true,
             fixture: "css/lifecycle",
             sub: "dedupe-same-value",
@@ -326,7 +326,7 @@ export function css_manager_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager lifecycle: clearing one node does not affect sibling rule",
+            caseId: "cssmanager-lifecycle-clearing-one-node-does-not-affect-sibling-rule", name: "CssManager lifecycle: clearing one node does not affect sibling rule",
             dom: true,
             fixture: "css/lifecycle",
             sub: "clear-isolated",
@@ -368,7 +368,7 @@ export function css_manager_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager lifecycle: setting same value twice does not duplicate declaration",
+            caseId: "cssmanager-lifecycle-setting-same-value-twice-does-not-duplicate-declaration", name: "CssManager lifecycle: setting same value twice does not duplicate declaration",
             dom: true,
             fixture: "css/lifecycle",
             sub: "dedupe-same-value",
@@ -400,7 +400,7 @@ export function css_manager_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "CssManager lifecycle: remove(prop) preserves sibling declarations",
+            caseId: "cssmanager-lifecycle-remove-prop-preserves-sibling-declarations", name: "CssManager lifecycle: remove(prop) preserves sibling declarations",
             dom: true,
             fixture: "css/lifecycle",
             sub: "remove-one-prop",
@@ -453,7 +453,7 @@ export function node_lifecycle(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "node lifecycle: removing node drops its QUID CSS rule",
+            caseId: "node-lifecycle-removing-node-drops-its-quid-css-rule", name: "node lifecycle: removing node drops its QUID CSS rule",
             dom: true,
             fixture: "lifecycle/node",
             sub: "remove-cleans-css",
@@ -494,7 +494,7 @@ export function node_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "node lifecycle: removing one styled node preserves sibling CSS",
+            caseId: "node-lifecycle-removing-one-styled-node-preserves-sibling-css", name: "node lifecycle: removing one styled node preserves sibling CSS",
             dom: true,
             fixture: "lifecycle/node",
             sub: "remove-one-preserve-sibling-css",
@@ -544,7 +544,7 @@ export function node_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "node lifecycle: removing node detaches click listener",
+            caseId: "node-lifecycle-removing-node-detaches-click-listener", name: "node lifecycle: removing node detaches click listener",
             dom: true,
             fixture: "lifecycle/node",
             sub: "remove-cleans-listener",
@@ -575,7 +575,7 @@ export function node_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "node lifecycle: recreated same-id node does not inherit old listener",
+            caseId: "node-lifecycle-recreated-same-id-node-does-not-inherit-old-listener", name: "node lifecycle: recreated same-id node does not inherit old listener",
             dom: true,
             fixture: "lifecycle/node",
             sub: "recreate-same-id-no-old-listener",
@@ -615,7 +615,7 @@ export function node_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "node lifecycle: recreated same-id node does not inherit old CSS",
+            caseId: "node-lifecycle-recreated-same-id-node-does-not-inherit-old-css", name: "node lifecycle: recreated same-id node does not inherit old CSS",
             dom: true,
             fixture: "lifecycle/node",
             sub: "recreate-same-id-no-old-css",
@@ -662,7 +662,7 @@ export function node_lifecycle(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "node lifecycle: removing parent clears descendant CSS rules",
+            caseId: "node-lifecycle-removing-parent-clears-descendant-css-rules", name: "node lifecycle: removing parent clears descendant CSS rules",
             dom: true,
             fixture: "lifecycle/node",
             sub: "remove-parent-cleans-descendant-css",

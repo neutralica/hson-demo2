@@ -28,7 +28,7 @@ export function roundtrip_projection_stability(): TestSuite {
         [
             {
                 suite: SUITE,
-                name: "serialization: terminal reimport preserves basic structure with fresh identity",
+                caseId: "serialization-terminal-reimport-preserves-basic-structure-with-fresh-identity", name: "serialization: terminal reimport preserves basic structure with fresh identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "basic-shape",
@@ -73,7 +73,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: terminal reimport preserves DOM mutations with fresh identity",
+                caseId: "serialization-terminal-reimport-preserves-dom-mutations-with-fresh-identity", name: "serialization: terminal reimport preserves DOM mutations with fresh identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "hydrate-mutate-rehydrate",
@@ -120,7 +120,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: IR-only node text remains readable without DOM lookup",
+                caseId: "serialization-ir-only-node-text-remains-readable-without-dom-lookup", name: "serialization: IR-only node text remains readable without DOM lookup",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "ir-only-text",
@@ -148,7 +148,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: terminal reimport preserves shape with fresh identity",
+                caseId: "serialization-terminal-reimport-preserves-shape-with-fresh-identity", name: "serialization: terminal reimport preserves shape with fresh identity",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "shape-not-quid",
@@ -190,7 +190,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: explicit subtree clone is unaffected by sibling mutation",
+                caseId: "serialization-explicit-subtree-clone-is-unaffected-by-sibling-mutation", name: "serialization: explicit subtree clone is unaffected by sibling mutation",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "sibling-independence",
@@ -229,7 +229,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: terminal reimport does not resurrect removed sibling",
+                caseId: "serialization-terminal-reimport-does-not-resurrect-removed-sibling", name: "serialization: terminal reimport does not resurrect removed sibling",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "no-resurrection",
@@ -266,7 +266,7 @@ export function roundtrip_projection_stability(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: outerHTML shape remains stable after terminal reimport",
+                caseId: "serialization-outerhtml-shape-remains-stable-after-terminal-reimport", name: "serialization: outerHTML shape remains stable after terminal reimport",
                 dom: true,
                 fixture: "serialization/roundtrip",
                 sub: "html-shape-stable",
@@ -351,7 +351,7 @@ export function livetree_sync_perf(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "syncNow: no-op sync leaves stylesheet unchanged",
+            caseId: "syncnow-no-op-sync-leaves-stylesheet-unchanged", name: "syncNow: no-op sync leaves stylesheet unchanged",
             dom: true,
             fixture: "performance-sensitive",
             sub: "sync-noop-stable",
@@ -393,7 +393,7 @@ export function livetree_sync_perf(): TestSuite {
 
         {
             suite: SUITE,
-            name: "css: repeated identical write does not duplicate selector/rule",
+            caseId: "css-repeated-identical-write-does-not-duplicate-selector-rule", name: "css: repeated identical write does not duplicate selector/rule",
             dom: true,
             fixture: "performance-sensitive",
             sub: "no-duplicate-rules",
@@ -446,7 +446,7 @@ export function livetree_sync_perf(): TestSuite {
 
         {
             suite: SUITE,
-            name: "css: repeated mutations settle on final rule state",
+            caseId: "css-repeated-mutations-settle-on-final-rule-state", name: "css: repeated mutations settle on final rule state",
             dom: true,
             fixture: "performance-sensitive",
             sub: "batched-final-state-only",
@@ -491,7 +491,7 @@ export function livetree_sync_perf(): TestSuite {
         // bonus fixture; this belongs with the same family and catches append-only leaks.
         {
             suite: SUITE,
-            name: "css: removed node does not leave stale rule behind after sync",
+            caseId: "css-removed-node-does-not-leave-stale-rule-behind-after-sync", name: "css: removed node does not leave stale rule behind after sync",
             dom: true,
             fixture: "performance-sensitive",
             sub: "removed-node-rule-gone",
@@ -537,7 +537,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css: pseudo rule replacement settles to final value without duplication",
+            caseId: "css-pseudo-rule-replacement-settles-to-final-value-without-duplication", name: "css: pseudo rule replacement settles to final value without duplication",
             dom: true,
             fixture: "performance-sensitive",
             sub: "pseudo-final-state",
@@ -575,7 +575,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css: clearQuid removes stored and emitted state",
+            caseId: "css-clearquid-removes-stored-and-emitted-state", name: "css: clearQuid removes stored and emitted state",
             dom: true,
             fixture: "performance-sensitive",
             sub: "clear-quid",
@@ -612,7 +612,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "css: remove then recreate does not leak stale rule",
+            caseId: "css-remove-then-recreate-does-not-leak-stale-rule", name: "css: remove then recreate does not leak stale rule",
             dom: true,
             fixture: "performance-sensitive",
             sub: "remove-recreate-no-stale",
@@ -653,7 +653,7 @@ export function livetree_sync_perf(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "serialization: mounted reimported branch gains DOM handle",
+            caseId: "serialization-mounted-reimported-branch-gains-dom-handle", name: "serialization: mounted reimported branch gains DOM handle",
             dom: true,
             fixture: "serialization/partial",
             sub: "mounted-branch-has-dom",
@@ -702,7 +702,7 @@ export function livetree_completionist(): TestSuite {
         [
             {
                 suite: SUITE,
-                name: "interaction: css state does not leak across remove and reappend",
+                caseId: "interaction-css-state-does-not-leak-across-remove-and-reappend", name: "interaction: css state does not leak across remove and reappend",
                 dom: true,
                 fixture: "interaction",
                 sub: "css-remove-reappend",
@@ -754,7 +754,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "interaction: listener works after grafted explicit clone without duplicate firing",
+                caseId: "interaction-listener-works-after-grafted-explicit-clone-without-duplicate-firing", name: "interaction: listener works after grafted explicit clone without duplicate firing",
                 dom: true,
                 fixture: "interaction",
                 sub: "listeners-graft",
@@ -803,7 +803,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "interaction: dataset survives refind on explicit clone and stays independent",
+                caseId: "interaction-dataset-survives-refind-on-explicit-clone-and-stays-independent", name: "interaction: dataset survives refind on explicit clone and stays independent",
                 dom: true,
                 fixture: "interaction",
                 sub: "dataset-refind-clone",
@@ -849,7 +849,7 @@ export function livetree_completionist(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "serialization: explicit nested subtree clone ignores external sibling mutation",
+                caseId: "serialization-explicit-nested-subtree-clone-ignores-external-sibling-mutation", name: "serialization: explicit nested subtree clone ignores external sibling mutation",
                 dom: true,
                 fixture: "serialization/partial",
                 sub: "nested-partial-hydrate",

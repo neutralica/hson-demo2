@@ -38,9 +38,9 @@ try {
       yieldBetweenSuites: false,
     }));
     const shouldPass = entry.status.startsWith("MIGRATED_");
-    expect_collection(result.ok === shouldPass, `${entry.suite}::${entry.name} disagrees with ${entry.status}`);
+    expect_collection(result.ok === shouldPass, `${entry.suite}::${entry.caseId} disagrees with ${entry.status}`);
     if (!shouldPass) {
-      expect_collection(result.summary.failures[0]?.err.includes("HOSTED_CANVAS_UNSUPPORTED") || result.summary.failures[0]?.err.includes("does not support getImageData"), `${entry.suite}::${entry.name} has an unstable deferred failure`);
+      expect_collection(result.summary.failures[0]?.err.includes("HOSTED_CANVAS_UNSUPPORTED") || result.summary.failures[0]?.err.includes("does not support getImageData"), `${entry.suite}::${entry.caseId} has an unstable deferred failure`);
     }
     counts.set(entry.status, (counts.get(entry.status) ?? 0) + 1);
   }

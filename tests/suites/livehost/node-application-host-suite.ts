@@ -115,7 +115,7 @@ export function node_application_host_suite(): TestSuite {
     cases: Object.freeze([
       Object.freeze({
         suite,
-        name: "registered applications receive only their HTTP and WebSocket routes",
+        caseId: "registered-applications-receive-only-their-http-and-websocket-routes", name: "registered applications receive only their HTTP and WebSocket routes",
         run: async () => {
           const alpha = mock_application("alpha", [{ kind: "exact", value: "alpha" }], "/alpha");
           const beta = mock_application("beta", [{ kind: "prefix", value: "beta:" }], "/beta");
@@ -145,7 +145,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "health reports operational registration without authority state",
+        caseId: "health-reports-operational-registration-without-authority-state", name: "health reports operational registration without authority state",
         run: async () => {
           const alpha = mock_application("alpha", [{ kind: "exact", value: "secret-authority" }]);
           const host = await start_node_application_host({ port: 0, applications: [alpha.registration] });
@@ -167,7 +167,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "duplicate names, HTTP routes, and authority namespaces reject atomically",
+        caseId: "duplicate-names-http-routes-and-authority-namespaces-reject-atomically", name: "duplicate names, HTTP routes, and authority namespaces reject atomically",
         run: async () => {
           const firstName = mock_application("same", [{ kind: "exact", value: "one" }]);
           const secondName = mock_application("same", [{ kind: "exact", value: "two" }]);
@@ -199,7 +199,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "missing, malformed, and unmatched authority IDs touch no application",
+        caseId: "missing-malformed-and-unmatched-authority-ids-touch-no-application", name: "missing, malformed, and unmatched authority IDs touch no application",
         run: async () => {
           const hosted = mock_application("hosted", [{ kind: "exact", value: "hosted-tests" }]);
           const towl = mock_application("towl", [{
@@ -225,7 +225,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "shutdown is bounded and idempotent with one disposal per application",
+        caseId: "shutdown-is-bounded-and-idempotent-with-one-disposal-per-application", name: "shutdown is bounded and idempotent with one disposal per application",
         run: async () => {
           const application = mock_application("shutdown", [{ kind: "exact", value: "shutdown" }]);
           const host = await start_node_application_host({
@@ -244,7 +244,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "structured operational events remain separate from application state",
+        caseId: "structured-operational-events-remain-separate-from-application-state", name: "structured operational events remain separate from application state",
         run: async () => {
           const events: string[] = [];
           const application = mock_application("logged", [{ kind: "exact", value: "logged" }], "/logged");
@@ -274,7 +274,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "shutdown timeout returns a clear failure for an undrained application",
+        caseId: "shutdown-timeout-returns-a-clear-failure-for-an-undrained-application", name: "shutdown timeout returns a clear failure for an undrained application",
         run: async () => {
           let disposals = 0;
           const blocked: NodeHostedApplication = Object.freeze({
@@ -300,7 +300,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "disposing one registered application leaves its peer operational",
+        caseId: "disposing-one-registered-application-leaves-its-peer-operational", name: "disposing one registered application leaves its peer operational",
         run: async () => {
           const first = mock_application("first", [{ kind: "exact", value: "first" }]);
           const second = mock_application("second", [{ kind: "exact", value: "second" }]);
@@ -324,7 +324,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "hosted tests and TOWL use separate stores behind one Node transport",
+        caseId: "hosted-tests-and-towl-use-separate-stores-behind-one-node-transport", name: "hosted tests and TOWL use separate stores behind one Node transport",
         run: async () => {
           const hosted = await create_node_hosted_tests_application({
             registry: make_hosted_test_suite_registry([]),
@@ -355,7 +355,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "TOWL rooms and their disposal remain authority-local",
+        caseId: "towl-rooms-and-their-disposal-remain-authority-local", name: "TOWL rooms and their disposal remain authority-local",
         run: async () => {
           const application = create_towl_authority_application();
           const firstId = "towl:room-one";
@@ -385,7 +385,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "TOWL browser protocol remains operational through its Node authority route",
+        caseId: "towl-browser-protocol-remains-operational-through-its-node-authority-route", name: "TOWL browser protocol remains operational through its Node authority route",
         run: async () => {
           const towl = create_node_towl_application();
           const host = await start_node_application_host({ port: 0, applications: [towl.registration] });
@@ -424,7 +424,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "equal report IDs and executor cancellation remain application-local",
+        caseId: "equal-report-ids-and-executor-cancellation-remain-application-local", name: "equal report IDs and executor cancellation remain application-local",
         run: async () => {
           const registry = make_hosted_test_suite_registry([{
             id: "livemap/replay",
@@ -484,7 +484,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "authority-only startup creates no DOM or rendering globals",
+        caseId: "authority-only-startup-creates-no-dom-or-rendering-globals", name: "authority-only startup creates no DOM or rendering globals",
         run: async () => {
           expect_node_host(
             typeof document === "undefined"
@@ -509,7 +509,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "bounded TOWL rooms honor resumable grace then recreate a fresh incarnation",
+        caseId: "bounded-towl-rooms-honor-resumable-grace-then-recreate-a-fresh-incarnation", name: "bounded TOWL rooms honor resumable grace then recreate a fresh incarnation",
         run: async () => {
           let now = 1_000;
           let expireSession: (() => void) | undefined;
@@ -570,7 +570,7 @@ export function node_application_host_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
-        name: "hosted report execution, subscribers, retention, and capacity are lifecycle-owned",
+        caseId: "hosted-report-execution-subscribers-retention-and-capacity-are-lifecycle-owned", name: "hosted report execution, subscribers, retention, and capacity are lifecycle-owned",
         run: async () => {
           let now = 1_000;
           let releaseRun!: () => void;

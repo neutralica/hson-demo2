@@ -8,7 +8,7 @@ function fresh_shape_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "fresh LiveTree retains only construction identity state",
+    caseId: "fresh-livetree-retains-only-construction-identity-state", name: "fresh LiveTree retains only construction identity state",
     html: `<main><span id="child"></span></main>`,
     act(tree) {
       const values = Object.values(Object.getOwnPropertyDescriptors(tree))
@@ -32,7 +32,7 @@ function lazy_find_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "find and findAll allocate independently and cache stable surfaces",
+    caseId: "find-and-findall-allocate-independently-and-cache-stable-surfaces", name: "find and findAll allocate independently and cache stable surfaces",
     html: `<main><span id="one" class="hit"></span><span id="two" class="hit"></span></main>`,
     act(tree) {
       const before = Object.keys(tree);
@@ -62,7 +62,7 @@ function prototype_methods_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "append and empty are prototype-backed without changing chaining",
+    caseId: "append-and-empty-are-prototype-backed-without-changing-chaining", name: "append and empty are prototype-backed without changing chaining",
     html: `<main></main>`,
     act(tree) {
       const branch = hsonLiveTree.create.span();
@@ -88,7 +88,7 @@ function css_laziness_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "CSS getter variable and animation surfaces instantiate on demand",
+    caseId: "css-getter-variable-and-animation-surfaces-instantiate-on-demand", name: "CSS getter variable and animation surfaces instantiate on demand",
     html: `<main></main>`,
     act(tree) {
       const css = tree.css;
@@ -122,7 +122,7 @@ function listen_decision_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "listen remains collectible per access pending prototype backing",
+    caseId: "listen-remains-collectible-per-access-pending-prototype-backing", name: "listen remains collectible per access pending prototype backing",
     html: `<main></main>`,
     act(tree) {
       eagerPerAccess = tree.listen !== tree.listen

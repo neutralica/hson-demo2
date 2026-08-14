@@ -8,7 +8,7 @@ import type { LiveMapFeedEventPreview } from "./types";
 export function commitCase(spec: CommitCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -29,7 +29,7 @@ export function commitCase(spec: CommitCaseSpec): TestCase {
 export function feedCase(spec: FeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -62,7 +62,7 @@ export function feedCase(spec: FeedCaseSpec): TestCase {
 export function linkCase(spec: LinkCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       sourcePath: preview_value(spec.sourcePath),
@@ -87,7 +87,7 @@ export function linkCase(spec: LinkCaseSpec): TestCase {
 export function throwCase(spec: ThrowCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -112,7 +112,7 @@ export function throwCase(spec: ThrowCaseSpec): TestCase {
 export function read_case(spec: ReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -131,7 +131,7 @@ export function read_case(spec: ReadCaseSpec): TestCase {
 export function snapCase(spec: HandleSnapCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -152,7 +152,7 @@ export function snapCase(spec: HandleSnapCaseSpec): TestCase {
 export function setCase(spec: HandleSetCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -175,7 +175,7 @@ export function setCase(spec: HandleSetCaseSpec): TestCase {
 export function setManyCase(spec: HandleSetManyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -199,7 +199,7 @@ export function setManyCase(spec: HandleSetManyCaseSpec): TestCase {
 export function setManyFeedCase(spec: HandleSetManyFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -233,7 +233,7 @@ export function setManyFeedCase(spec: HandleSetManyFeedCaseSpec): TestCase {
 export function deleteCase(spec: HandleDeleteCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -256,7 +256,7 @@ export function deleteCase(spec: HandleDeleteCaseSpec): TestCase {
 export function deleteFeedCase(spec: HandleDeleteFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -289,7 +289,7 @@ export function deleteFeedCase(spec: HandleDeleteFeedCaseSpec): TestCase {
 export function updateCase(spec: HandleUpdateCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -311,7 +311,7 @@ export function updateCase(spec: HandleUpdateCaseSpec): TestCase {
 export function updateFeedCase(spec: HandleUpdateFeedCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -344,7 +344,7 @@ export function updateFeedCase(spec: HandleUpdateFeedCaseSpec): TestCase {
 export function pathCopyCase(spec: HandlePathCopyCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),
@@ -368,7 +368,7 @@ export function pathCopyCase(spec: HandlePathCopyCaseSpec): TestCase {
 export function originalPathCase(spec: HandleOriginalPathStabilityCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
       path: preview_value(spec.path),

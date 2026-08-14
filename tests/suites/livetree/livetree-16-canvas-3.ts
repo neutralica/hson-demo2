@@ -12,7 +12,7 @@ export function livetree_canvas_pointer(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "canvas.pointer maps pointer event to canvas-local coordinates",
+      caseId: "canvas.pointer-maps-pointer-event-to-canvas-local-coordinates", name: "canvas.pointer maps pointer event to canvas-local coordinates",
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-local-coords",
@@ -67,7 +67,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.pointer accepts MouseEvent coordinates",
+      caseId: "canvas.pointer-accepts-mouseevent-coordinates", name: "canvas.pointer accepts MouseEvent coordinates",
       dom: true,
       fixture: "canvas/pointer",
       sub: "mouseevent-local-coords",
@@ -118,7 +118,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.pointer returns undefined before mount",
+      caseId: "canvas.pointer-returns-undefined-before-mount", name: "canvas.pointer returns undefined before mount",
       fixture: "canvas/pointer",
       sub: "pointer-unmounted",
 
@@ -154,7 +154,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.pointer returns undefined on non-canvas node",
+      caseId: "canvas.pointer-returns-undefined-on-non-canvas-node", name: "canvas.pointer returns undefined on non-canvas node",
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-non-canvas",
@@ -199,7 +199,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.pointer maps pointer event to canvas-local coordinates",
+      caseId: "canvas.must.pointer-maps-pointer-event-to-canvas-local-coordinates", name: "canvas.must.pointer maps pointer event to canvas-local coordinates",
       dom: true,
       fixture: "canvas/pointer",
       sub: "must-pointer-local-coords",
@@ -252,7 +252,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.pointer throws before mount",
+      caseId: "canvas.must.pointer-throws-before-mount", name: "canvas.must.pointer throws before mount",
       fixture: "canvas/pointer",
       sub: "must-pointer-unmounted-throws",
 
@@ -296,7 +296,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.pointer throws on non-canvas node",
+      caseId: "canvas.must.pointer-throws-on-non-canvas-node", name: "canvas.must.pointer throws on non-canvas node",
       dom: true,
       fixture: "canvas/pointer",
       sub: "must-pointer-non-canvas-throws",
@@ -343,7 +343,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.pointer remains in CSS-pixel coordinates after display.match",
+      caseId: "canvas.pointer-remains-in-css-pixel-coordinates-after-display.match", name: "canvas.pointer remains in CSS-pixel coordinates after display.match",
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-after-display-match",
@@ -402,7 +402,7 @@ export function livetree_canvas_pointer(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "canvas.display.match.watch runs initial match immediately",
+      caseId: "canvas.display.match.watch-runs-initial-match-immediately", name: "canvas.display.match.watch runs initial match immediately",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-initial",
@@ -453,7 +453,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match.watch updates backing size after display resize",
+      caseId: "canvas.display.match.watch-updates-backing-size-after-display-resize", name: "canvas.display.match.watch updates backing size after display resize",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-resize",
@@ -517,7 +517,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match.watch updates backing size after display resize",
+      caseId: "canvas.display.match.watch-updates-backing-size-after-display-resize", name: "canvas.display.match.watch updates backing size after display resize",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-resize",
@@ -581,7 +581,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match.watch off stops further resize matching",
+      caseId: "canvas.display.match.watch-off-stops-further-resize-matching", name: "canvas.display.match.watch off stops further resize matching",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-off",
@@ -644,7 +644,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match.watch is harmless before mount",
+      caseId: "canvas.display.match.watch-is-harmless-before-mount", name: "canvas.display.match.watch is harmless before mount",
       fixture: "canvas/pointer",
       sub: "match-watch-unmounted",
 
@@ -681,7 +681,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match.watch is harmless on non-canvas node",
+      caseId: "canvas.display.match.watch-is-harmless-on-non-canvas-node", name: "canvas.display.match.watch is harmless on non-canvas node",
       dom: true,
       fixture: "canvas/pointer",
       sub: "match-watch-non-canvas",
@@ -727,7 +727,7 @@ export function livetree_canvas_pointer(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.pointer remains display-local after match.watch resize",
+      caseId: "canvas.pointer-remains-display-local-after-match.watch-resize", name: "canvas.pointer remains display-local after match.watch resize",
       dom: true,
       fixture: "canvas/pointer",
       sub: "pointer-after-watch-resize",
@@ -816,7 +816,7 @@ export function livetree_document_ownership(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "dom.doc returns mounted element ownerDocument",
+      caseId: "dom.doc-returns-mounted-element-ownerdocument", name: "dom.doc returns mounted element ownerDocument",
       dom: true,
       fixture: "document/ownership",
       sub: "dom-doc-owner-document",
@@ -853,7 +853,7 @@ export function livetree_document_ownership(): TestSuite {
 
     {
       suite: SUITE,
-      name: "created child uses same ownerDocument as mounted parent",
+      caseId: "created-child-uses-same-ownerdocument-as-mounted-parent", name: "created child uses same ownerDocument as mounted parent",
       dom: true,
       fixture: "document/ownership",
       sub: "created-child-owner-document",
@@ -893,7 +893,7 @@ export function livetree_document_ownership(): TestSuite {
 
     {
       suite: SUITE,
-      name: "nested created descendants keep mounted ownerDocument",
+      caseId: "nested-created-descendants-keep-mounted-ownerdocument", name: "nested created descendants keep mounted ownerDocument",
       dom: true,
       fixture: "document/ownership",
       sub: "nested-created-owner-document",
@@ -940,7 +940,7 @@ export function livetree_document_ownership(): TestSuite {
 
     {
       suite: SUITE,
-      name: "detached tree has no resolved DOM document before mount",
+      caseId: "detached-tree-has-no-resolved-dom-document-before-mount", name: "detached tree has no resolved DOM document before mount",
       fixture: "document/ownership",
       sub: "detached-no-doc-before-mount",
 
@@ -970,7 +970,7 @@ export function livetree_document_ownership(): TestSuite {
 
     {
       suite: SUITE,
-      name: "removed node drops DOM element and document access",
+      caseId: "removed-node-drops-dom-element-and-document-access", name: "removed node drops DOM element and document access",
       dom: true,
       fixture: "document/ownership",
       sub: "removed-node-no-doc",
@@ -1021,7 +1021,7 @@ export function livetree_document_ownership(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "queryBody grafts document.body as mounted root",
+      caseId: "querybody-grafts-document.body-as-mounted-root", name: "queryBody grafts document.body as mounted root",
       // This case owns document.body itself. Mounting the harness sandbox first
       // would graft the same body descendants twice and test the harness rather
       // than queryBody's document ownership.
@@ -1056,7 +1056,7 @@ export function livetree_document_ownership(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "DOM lookup stays scoped to mounted ownerDocument after creation",
+      caseId: "dom-lookup-stays-scoped-to-mounted-ownerdocument-after-creation", name: "DOM lookup stays scoped to mounted ownerDocument after creation",
       dom: true,
       fixture: "document/ownership",
       sub: "lookup-owner-document-after-create",

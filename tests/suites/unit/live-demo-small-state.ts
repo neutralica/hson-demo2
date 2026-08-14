@@ -30,12 +30,12 @@ export function live_demo_small_state_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: SUITE,
-      name: "OKLCH exact schema accepts one complete configured token set",
+      caseId: "oklch-exact-schema-accepts-one-complete-configured-token-set", name: "OKLCH exact schema accepts one complete configured token set",
       run: () => expect_valid(initial(), true),
     },
     {
       suite: SUITE,
-      name: "OKLCH exact schema rejects unknown and missing canonical fields",
+      caseId: "oklch-exact-schema-rejects-unknown-and-missing-canonical-fields", name: "OKLCH exact schema rejects unknown and missing canonical fields",
       run: () => {
         expect_valid({ ...initial(), current: { l: 1, c: 0, h: 0, a: 1 } }, false);
         expect_valid({ tokens: initial().tokens }, false);
@@ -43,7 +43,7 @@ export function live_demo_small_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "OKLCH schema enforces channel ranges and configured token vocabulary",
+      caseId: "oklch-schema-enforces-channel-ranges-and-configured-token-vocabulary", name: "OKLCH schema enforces channel ranges and configured token vocabulary",
       run: () => {
         const badLightness = initial();
         expect_valid({
@@ -59,7 +59,7 @@ export function live_demo_small_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "OKLCH typed locations own active path and token values",
+      caseId: "oklch-typed-locations-own-active-path-and-token-values", name: "OKLCH typed locations own active path and token values",
       run: () => {
         const store = create_oklch_store(initial(), PATHS);
         let activeNotifications = 0;
@@ -85,7 +85,7 @@ export function live_demo_small_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "OKLCH attached schema rejects invalid direct location writes",
+      caseId: "oklch-attached-schema-rejects-invalid-direct-location-writes", name: "OKLCH attached schema rejects invalid direct location writes",
       run: () => {
         const store = create_oklch_store(initial(), PATHS);
         let rejected = false;

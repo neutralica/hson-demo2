@@ -11,7 +11,7 @@ export function livetree_canvas_display(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "canvas.size get reads width and height attrs",
+      caseId: "canvas.size-get-reads-width-and-height-attrs", name: "canvas.size get reads width and height attrs",
       fixture: "canvas/size",
       sub: "size-get",
 
@@ -39,7 +39,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.size set writes width and height attrs",
+      caseId: "canvas.size-set-writes-width-and-height-attrs", name: "canvas.size set writes width and height attrs",
       fixture: "canvas/size",
       sub: "size-set",
 
@@ -73,7 +73,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.size set returns tree for chaining",
+      caseId: "canvas.size-set-returns-tree-for-chaining", name: "canvas.size set returns tree for chaining",
       fixture: "canvas/size",
       sub: "size-chain",
 
@@ -107,7 +107,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.size clear removes width and height attrs",
+      caseId: "canvas.size-clear-removes-width-and-height-attrs", name: "canvas.size clear removes width and height attrs",
       fixture: "canvas/size",
       sub: "size-clear",
 
@@ -141,7 +141,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.size returns undefined before mount",
+      caseId: "canvas.display.size-returns-undefined-before-mount", name: "canvas.display.size returns undefined before mount",
       fixture: "canvas/display",
       sub: "display-size-unmounted",
 
@@ -168,7 +168,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.size reads mounted layout size",
+      caseId: "canvas.display.size-reads-mounted-layout-size", name: "canvas.display.size reads mounted layout size",
       dom: true,
       fixture: "canvas/display",
       sub: "display-size-mounted",
@@ -209,7 +209,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match sets bitmap attrs from display size",
+      caseId: "canvas.display.match-sets-bitmap-attrs-from-display-size", name: "canvas.display.match sets bitmap attrs from display size",
       dom: true,
       fixture: "canvas/display",
       sub: "display-match",
@@ -260,7 +260,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match returns tree for chaining",
+      caseId: "canvas.display.match-returns-tree-for-chaining", name: "canvas.display.match returns tree for chaining",
       dom: true,
       fixture: "canvas/display",
       sub: "display-match-chain",
@@ -304,7 +304,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match is harmless before mount",
+      caseId: "canvas.display.match-is-harmless-before-mount", name: "canvas.display.match is harmless before mount",
       fixture: "canvas/display",
       sub: "display-match-unmounted",
 
@@ -338,7 +338,7 @@ export function livetree_canvas_display(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.display.match.watch stops after removeSelf",
+      caseId: "canvas.display.match.watch-stops-after-removeself", name: "canvas.display.match.watch stops after removeSelf",
       dom: true,
       html: `
     <main id="root">
@@ -379,7 +379,7 @@ export function livetree_canvas_display(): TestSuite {
     },
     {
   suite: SUITE,
-  name: "canvas.display.match.watch registers owner disposable",
+  caseId: "canvas.display.match.watch-registers-owner-disposable", name: "canvas.display.match.watch registers owner disposable",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-registers-owner-disposable",
@@ -424,7 +424,7 @@ export function livetree_canvas_display(): TestSuite {
     },
     {
   suite: SUITE,
-  name: "canvas.display.match.watch manual off is idempotent",
+  caseId: "canvas.display.match.watch-manual-off-is-idempotent", name: "canvas.display.match.watch manual off is idempotent",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-off-idempotent",
@@ -465,7 +465,7 @@ export function livetree_canvas_display(): TestSuite {
     },
     {
   suite: SUITE,
-  name: "canvas.display.match.watch manual off is idempotent",
+  caseId: "canvas.display.match.watch-manual-off-is-idempotent", name: "canvas.display.match.watch manual off is idempotent",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-off-idempotent",
@@ -506,7 +506,7 @@ export function livetree_canvas_display(): TestSuite {
     },
     {
   suite: SUITE,
-  name: "canvas.display.match.watch auto-cleans on parent removeChildren",
+  caseId: "canvas.display.match.watch-auto-cleans-on-parent-removechildren", name: "canvas.display.match.watch auto-cleans on parent removeChildren",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-cleans-remove-children",
@@ -556,7 +556,7 @@ export function livetree_canvas_display(): TestSuite {
 },
 {
   suite: SUITE,
-  name: "canvas.display.match.watch auto-cleans on parent removeChildren",
+  caseId: "canvas.display.match.watch-auto-cleans-on-parent-removechildren", name: "canvas.display.match.watch auto-cleans on parent removeChildren",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-cleans-remove-children",
@@ -606,7 +606,7 @@ export function livetree_canvas_display(): TestSuite {
 },
 {
   suite: SUITE,
-  name: "canvas.display.match.watch auto-cleans deep child canvas on ancestor removeSelf",
+  caseId: "canvas.display.match.watch-auto-cleans-deep-child-canvas-on-ancestor-removeself", name: "canvas.display.match.watch auto-cleans deep child canvas on ancestor removeSelf",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-cleans-ancestor-remove-self",
@@ -658,7 +658,7 @@ export function livetree_canvas_display(): TestSuite {
     },
 {
   suite: SUITE,
-  name: "canvas.display.match.watch multiple watchers clean independently",
+  caseId: "canvas.display.match.watch-multiple-watchers-clean-independently", name: "canvas.display.match.watch multiple watchers clean independently",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-multiple-clean-independent",
@@ -712,7 +712,7 @@ export function livetree_canvas_display(): TestSuite {
 },
 {
   suite: SUITE,
-  name: "canvas.display.match.watch removed node does not keep matching after detach",
+  caseId: "canvas.display.match.watch-removed-node-does-not-keep-matching-after-detach", name: "canvas.display.match.watch removed node does not keep matching after detach",
   dom: true,
   fixture: "canvas/lifecycle",
   sub: "watch-no-match-after-detach",
@@ -798,7 +798,7 @@ export function livetree_canvas_clear(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "canvas.clear clears full backing bitmap",
+      caseId: "canvas.clear-clears-full-backing-bitmap", name: "canvas.clear clears full backing bitmap",
       dom: true,
       fixture: "canvas/clear",
       sub: "full-clear",
@@ -843,7 +843,7 @@ export function livetree_canvas_clear(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.clear rectangle clears only requested region",
+      caseId: "canvas.clear-rectangle-clears-only-requested-region", name: "canvas.clear rectangle clears only requested region",
       dom: true,
       fixture: "canvas/clear",
       sub: "rect-clear",
@@ -899,7 +899,7 @@ export function livetree_canvas_clear(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.clear returns tree for chaining",
+      caseId: "canvas.clear-returns-tree-for-chaining", name: "canvas.clear returns tree for chaining",
       dom: true,
       fixture: "canvas/clear",
       sub: "clear-chain",
@@ -933,7 +933,7 @@ export function livetree_canvas_clear(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.clear is harmless before mount",
+      caseId: "canvas.clear-is-harmless-before-mount", name: "canvas.clear is harmless before mount",
       fixture: "canvas/clear",
       sub: "clear-unmounted",
 
@@ -966,7 +966,7 @@ export function livetree_canvas_clear(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.clear is harmless on non-canvas node",
+      caseId: "canvas.clear-is-harmless-on-non-canvas-node", name: "canvas.clear is harmless on non-canvas node",
       dom: true,
       fixture: "canvas/clear",
       sub: "clear-non-canvas",
@@ -1010,7 +1010,7 @@ export function livetree_canvas_plot(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "canvas.plot runs callback with native 2d context when mounted",
+      caseId: "canvas.plot-runs-callback-with-native-2d-context-when-mounted", name: "canvas.plot runs callback with native 2d context when mounted",
       dom: true,
       fixture: "canvas/plot",
       sub: "plot-mounted",
@@ -1060,7 +1060,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.plot returns tree for chaining",
+      caseId: "canvas.plot-returns-tree-for-chaining", name: "canvas.plot returns tree for chaining",
       dom: true,
       fixture: "canvas/plot",
       sub: "plot-chain",
@@ -1097,7 +1097,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.plot is harmless before mount",
+      caseId: "canvas.plot-is-harmless-before-mount", name: "canvas.plot is harmless before mount",
       fixture: "canvas/plot",
       sub: "plot-unmounted",
 
@@ -1136,7 +1136,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.plot is harmless on non-canvas node",
+      caseId: "canvas.plot-is-harmless-on-non-canvas-node", name: "canvas.plot is harmless on non-canvas node",
       dom: true,
       fixture: "canvas/plot",
       sub: "plot-non-canvas",
@@ -1178,7 +1178,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.plot runs callback with native 2d context when mounted",
+      caseId: "canvas.must.plot-runs-callback-with-native-2d-context-when-mounted", name: "canvas.must.plot runs callback with native 2d context when mounted",
       dom: true,
       fixture: "canvas/plot",
       sub: "must-plot-mounted",
@@ -1228,7 +1228,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.plot returns tree for chaining",
+      caseId: "canvas.must.plot-returns-tree-for-chaining", name: "canvas.must.plot returns tree for chaining",
       dom: true,
       fixture: "canvas/plot",
       sub: "must-plot-chain",
@@ -1265,7 +1265,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.plot throws before mount",
+      caseId: "canvas.must.plot-throws-before-mount", name: "canvas.must.plot throws before mount",
       fixture: "canvas/plot",
       sub: "must-plot-unmounted-throws",
 
@@ -1313,7 +1313,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.must.plot throws on non-canvas node",
+      caseId: "canvas.must.plot-throws-on-non-canvas-node", name: "canvas.must.plot throws on non-canvas node",
       dom: true,
       fixture: "canvas/plot",
       sub: "must-plot-non-canvas-throws",
@@ -1364,7 +1364,7 @@ export function livetree_canvas_plot(): TestSuite {
 
     {
       suite: SUITE,
-      name: "canvas.plot accepts context settings",
+      caseId: "canvas.plot-accepts-context-settings", name: "canvas.plot accepts context settings",
       dom: true,
       fixture: "canvas/plot",
       sub: "plot-settings",

@@ -18,7 +18,7 @@ export function livehost_protocol_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "decode accepts hello message",
+        caseId: "decode-accepts-hello-message", name: "decode accepts hello message",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -40,7 +40,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode ignores invalid optional hello fields",
+        caseId: "decode-ignores-invalid-optional-hello-fields", name: "decode ignores invalid optional hello fields",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -62,7 +62,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects historical hello lastSeq cursor",
+        caseId: "decode-rejects-historical-hello-lastseq-cursor", name: "decode rejects historical hello lastSeq cursor",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -83,7 +83,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts hello hostId",
+        caseId: "decode-accepts-hello-hostid", name: "decode accepts hello hostId",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -108,7 +108,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode ignores invalid hello hostId",
+        caseId: "decode-ignores-invalid-hello-hostid", name: "decode ignores invalid hello hostId",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -133,7 +133,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects fractional historical hello cursor",
+        caseId: "decode-rejects-fractional-historical-hello-cursor", name: "decode rejects fractional historical hello cursor",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -154,7 +154,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts action message",
+        caseId: "decode-accepts-action-message", name: "decode accepts action message",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -182,7 +182,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts subscribe message",
+        caseId: "decode-accepts-subscribe-message", name: "decode accepts subscribe message",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -204,7 +204,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts unsubscribe message",
+        caseId: "decode-accepts-unsubscribe-message", name: "decode accepts unsubscribe message",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -226,7 +226,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts numeric path parts",
+        caseId: "decode-accepts-numeric-path-parts", name: "decode accepts numeric path parts",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -248,7 +248,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts primitive action payload",
+        caseId: "decode-accepts-primitive-action-payload", name: "decode accepts primitive action payload",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -272,7 +272,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts null action payload",
+        caseId: "decode-accepts-null-action-payload", name: "decode accepts null action payload",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -296,7 +296,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode accepts nested json action payload",
+        caseId: "decode-accepts-nested-json-action-payload", name: "decode accepts nested json action payload",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -320,7 +320,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode normalizes sparse action payload arrays",
+        caseId: "decode-normalizes-sparse-action-payload-arrays", name: "decode normalizes sparse action payload arrays",
         input: {},
         act: () => {
           const sparse: unknown[] = [];
@@ -346,7 +346,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects action payload with non-json function value",
+        caseId: "decode-rejects-action-payload-with-non-json-function-value", name: "decode rejects action payload with non-json function value",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -368,7 +368,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode action omits absent payload field",
+        caseId: "decode-action-omits-absent-payload-field", name: "decode action omits absent payload field",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -391,7 +391,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects invalid json",
+        caseId: "decode-rejects-invalid-json", name: "decode rejects invalid json",
         input: {},
         act: () => {
           const decoded = decode_livehost_message("{ nope");
@@ -408,7 +408,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects non-object json",
+        caseId: "decode-rejects-non-object-json", name: "decode rejects non-object json",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify("hello"));
@@ -425,7 +425,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects unknown message type",
+        caseId: "decode-rejects-unknown-message-type", name: "decode rejects unknown message type",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({ type: "mystery" }));
@@ -442,7 +442,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects action without id",
+        caseId: "decode-rejects-action-without-id", name: "decode rejects action without id",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -462,7 +462,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects action without name",
+        caseId: "decode-rejects-action-without-name", name: "decode rejects action without name",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -482,7 +482,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects subscribe without path",
+        caseId: "decode-rejects-subscribe-without-path", name: "decode rejects subscribe without path",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -501,7 +501,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects subscribe with invalid path parts",
+        caseId: "decode-rejects-subscribe-with-invalid-path-parts", name: "decode rejects subscribe with invalid path parts",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -521,7 +521,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects unsubscribe without path",
+        caseId: "decode-rejects-unsubscribe-without-path", name: "decode rejects unsubscribe without path",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -540,7 +540,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects top-level arrays",
+        caseId: "decode-rejects-top-level-arrays", name: "decode rejects top-level arrays",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify(["hello"]));
@@ -557,7 +557,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "decode rejects unsubscribe with invalid path parts",
+        caseId: "decode-rejects-unsubscribe-with-invalid-path-parts", name: "decode rejects unsubscribe with invalid path parts",
         input: {},
         act: () => {
           const decoded = decode_livehost_message(JSON.stringify({
@@ -577,7 +577,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "encode serializes error messages as json",
+        caseId: "encode-serializes-error-messages-as-json", name: "encode serializes error messages as json",
         input: {},
         act: () => {
           const encoded = encode_livehost_message({
@@ -616,7 +616,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "encode serializes server messages as json",
+        caseId: "encode-serializes-server-messages-as-json", name: "encode serializes server messages as json",
         input: {},
         act: () => {
           const encoded = encode_livehost_message({
@@ -643,7 +643,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "encode serializes sync messages as json",
+        caseId: "encode-serializes-sync-messages-as-json", name: "encode serializes sync messages as json",
         input: {},
         act: () => {
           const encoded = encode_livehost_message({
@@ -670,7 +670,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "encode serializes action result payload",
+        caseId: "encode-serializes-action-result-payload", name: "encode serializes action result payload",
         input: {},
         act: () => JSON.parse(encode_livehost_message({
           type: "ack",
@@ -689,7 +689,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "server event protocol round-trips nested JSON payload",
+        caseId: "server-event-protocol-round-trips-nested-json-payload", name: "server event protocol round-trips nested JSON payload",
         input: {},
         act: () => {
           const encoded = encode_livehost_message({
@@ -708,7 +708,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "server event decoder rejects malformed generic envelopes",
+        caseId: "server-event-decoder-rejects-malformed-generic-envelopes", name: "server event decoder rejects malformed generic envelopes",
         input: {},
         act: () => [
           { payload: {} },
@@ -722,7 +722,7 @@ export function livehost_protocol_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "server event encoder rejects non-JSON application payloads",
+        caseId: "server-event-encoder-rejects-non-json-application-payloads", name: "server event encoder rejects non-JSON application payloads",
         input: {},
         act: () => {
           const invalid: unknown[] = [

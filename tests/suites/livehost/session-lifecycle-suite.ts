@@ -87,12 +87,14 @@ function credential(socket: MemorySocket): string {
 }
 
 function lifecycle_case(
+  caseId: string,
   name: string,
   act: () => unknown | Promise<unknown>,
   expected: unknown,
 ): TestCase {
   return {
     suite: "livehost/session-lifecycle",
+    caseId,
     name,
     meta: { input: preview_value({}) },
     run: async () => ({
@@ -106,7 +108,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      lifecycle_case("lazy session emits attached detached expired in order", async () => {
+      lifecycle_case("lazy-session-emits-attached-detached-expired-in-order", "lazy session emits attached detached expired in order", async () => {
         const host = create_livehost({ state: {}, sessionId: () => "lazy-a" });
         const events: string[] = [];
         host.sessions.on_change((event) => events.push(label(event)));
@@ -117,7 +119,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         return { events, state: host.sessions.debug().sessions[0]?.state };
       }, { events: ["attached:created:1", "detached", "expired"], state: "expired" }),
 
-      lifecycle_case("explicit resumable creation emits attached created", async () => {
+      lifecycle_case("explicit-resumable-creation-emits-attached-created", "explicit resumable creation emits attached created", async () => {
         const host = create_livehost({ state: {}, sessionId: () => "resume-a" });
         const events: string[] = [];
         host.sessions.on_change((event) => events.push(label(event)));
@@ -128,7 +130,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         return { events, resumable: session?.resumable, state: session?.state };
       }, { events: ["attached:created:1"], resumable: true, state: "attached" }),
 
-      lifecycle_case("resumable close emits detached with matching timestamps", async () => {
+      lifecycle_case("resumable-close-emits-detached-with-matching-timestamps", "resumable close emits detached with matching timestamps", async () => {
         const clock = make_clock();
         const host = create_livehost({
           state: {},
@@ -163,7 +165,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         pending: 1,
       }),
 
-      lifecycle_case("active reattachment fences old epoch before attaching new epoch", async () => {
+      lifecycle_case("active-reattachment-fences-old-epoch-before-attaching-new-epoch", "active reattachment fences old epoch before attaching new epoch", async () => {
         let next = 0;
         const host = create_livehost({ state: {}, sessionId: () => `fence-${++next}` });
         const events: string[] = [];
@@ -186,7 +188,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         epoch: 2,
       }),
 
-      lifecycle_case("reattach during grace cancels expiry and preserves session identity", async () => {
+      lifecycle_case("reattach-during-grace-cancels-expiry-and-preserves-session-identity", "reattach during grace cancels expiry and preserves session identity", async () => {
         const clock = make_clock();
         const origins: unknown[] = [];
         const host = create_livehost({
@@ -222,7 +224,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         state: "attached",
       }),
 
-      lifecycle_case("grace expiry emits detached then expired and disposes resources", async () => {
+      lifecycle_case("grace-expiry-emits-detached-then-expired-and-disposes-resources", "grace expiry emits detached then expired and disposes resources", async () => {
         const clock = make_clock();
         const host = create_livehost({
           state: { value: 1 },
@@ -252,7 +254,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         pending: 0,
       }),
 
-      lifecycle_case("goodbye revokes once and prevents later expiry", async () => {
+      lifecycle_case("goodbye-revokes-once-and-prevents-later-expiry", "goodbye revokes once and prevents later expiry", async () => {
         const clock = make_clock();
         const host = create_livehost({
           state: {}, sessionId: () => "goodbye-a",
@@ -271,7 +273,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         events: ["attached:created:1", "revoked:goodbye"], pending: 0, state: "revoked",
       }),
 
-      lifecycle_case("rejected attachment attempts emit no lifecycle success", async () => {
+      lifecycle_case("rejected-attachment-attempts-emit-no-lifecycle-success", "rejected attachment attempts emit no lifecycle success", async () => {
         const clock = make_clock();
         let next = 0;
         const host = create_livehost({
@@ -309,7 +311,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         rejected: 3,
       }),
 
-      lifecycle_case("listener disposal exceptions and debug snapshots are isolated", async () => {
+      lifecycle_case("listener-disposal-exceptions-and-debug-snapshots-are-isolated", "listener disposal exceptions and debug snapshots are isolated", async () => {
         const host = create_livehost({ state: {}, sessionId: () => "listener-a" });
         const delivered: string[] = [];
         const agreements: boolean[] = [];
@@ -330,7 +332,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         return { delivered, agreements, finalState: host.sessions.debug().sessions[0]?.state };
       }, { delivered: ["attached:created:1"], agreements: [true], finalState: "expired" }),
 
-      lifecycle_case("fenced socket cannot act while replacement acts with incremented epoch", async () => {
+      lifecycle_case("fenced-socket-cannot-act-while-replacement-acts-with-incremented-epoch", "fenced socket cannot act while replacement acts with incremented epoch", async () => {
         let calls = 0;
         const origins: unknown[] = [];
         const host = create_livehost({
@@ -352,7 +354,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
         staleAck: false,
       }),
 
-      lifecycle_case("session manager disposal revokes live sessions and leaves observation inert", async () => {
+      lifecycle_case("session-manager-disposal-revokes-live-sessions-and-leaves-observation-inert", "session manager disposal revokes live sessions and leaves observation inert", async () => {
         const clock = make_clock();
         let next = 0;
         const host = create_livehost({

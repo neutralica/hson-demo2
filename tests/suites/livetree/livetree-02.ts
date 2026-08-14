@@ -24,7 +24,7 @@ function suite_attrs_flags_refresh(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "attr + flag set/clear sync model and DOM",
+      caseId: "attr-flag-set-clear-sync-model-and-dom", name: "attr + flag set/clear sync model and DOM",
       fixture: "attrs-flags",
       sub: "set-clear",
       dom: true,
@@ -66,7 +66,7 @@ function suite_attrs_flags_refresh(): TestSuite {
 
     {
       suite: SUITE,
-      name: "attr + flag set persist to model and DOM",
+      caseId: "attr-flag-set-persist-to-model-and-dom", name: "attr + flag set persist to model and DOM",
       fixture: "attrs-flags",
       sub: "set-persist",
       dom: true,
@@ -110,7 +110,7 @@ function suite_empty_append(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "empty clears node and DOM, append restores both",
+      caseId: "empty-clears-node-and-dom-append-restores-both", name: "empty clears node and DOM, append restores both",
       fixture: "content/append",
       sub: "empty-append",
       dom: true,
@@ -158,7 +158,7 @@ function suite_empty_append(): TestSuite {
 
     {
       suite: SUITE,
-      name: "empty removes all direct content from node and DOM",
+      caseId: "empty-removes-all-direct-content-from-node-and-dom", name: "empty removes all direct content from node and DOM",
       fixture: "content/append",
       sub: "empty-only",
       dom: true,
@@ -200,7 +200,7 @@ function suite_dataset(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "data.set/get mirrors data-* attrs in model and DOM",
+      caseId: "data.set-get-mirrors-data-attrs-in-model-and-dom", name: "data.set/get mirrors data-* attrs in model and DOM",
       fixture: "dataset",
       sub: "set-overwrite-remove",
       dom: true,
@@ -247,7 +247,7 @@ function suite_dataset(): TestSuite {
 
     {
       suite: SUITE,
-      name: "data.setMany applies multiple data-* attrs and remove works",
+      caseId: "data.setmany-applies-multiple-data-attrs-and-remove-works", name: "data.setMany applies multiple data-* attrs and remove works",
       fixture: "dataset",
       sub: "setMany-remove",
       dom: true,
@@ -303,7 +303,7 @@ export function suite_identity_stability(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "dom.el is stable across repeated lookups on same handle",
+      caseId: "dom.el-is-stable-across-repeated-lookups-on-same-handle", name: "dom.el is stable across repeated lookups on same handle",
       fixture: "identity/dom.el",
       sub: "same-handle-stable",
       dom: true,
@@ -336,7 +336,7 @@ export function suite_identity_stability(): TestSuite {
 
     {
       suite: SUITE,
-      name: "re-finding the same node yields the same DOM element",
+      caseId: "re-finding-the-same-node-yields-the-same-dom-element", name: "re-finding the same node yields the same DOM element",
       fixture: "identity/find",
       sub: "refind-same-dom",
       dom: true,
@@ -373,7 +373,7 @@ export function suite_identity_stability(): TestSuite {
 
     {
       suite: SUITE,
-      name: "append preserves child DOM identity across subsequent finds",
+      caseId: "append-preserves-child-dom-identity-across-subsequent-finds", name: "append preserves child DOM identity across subsequent finds",
       fixture: "identity/append",
       sub: "child-roundtrip",
       dom: true,
@@ -412,7 +412,7 @@ export function suite_identity_stability(): TestSuite {
 
     {
       suite: SUITE,
-      name: "queryDOM.graft is idempotent on the same host element",
+      caseId: "querydom.graft-is-idempotent-on-the-same-host-element", name: "queryDOM.graft is idempotent on the same host element",
       fixture: "identity/graft",
       sub: "same-host-idempotent",
       html: `<div id="root"></div>`,
@@ -510,7 +510,7 @@ function suite_dataset_more(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "data.setMany: multi-set, overwrite, preserve, and removal stay in sync",
+      caseId: "data.setmany-multi-set-overwrite-preserve-and-removal-stay-in-sync", name: "data.setMany: multi-set, overwrite, preserve, and removal stay in sync",
       fixture: "dataset/setMany",
       sub: "mixed-types-removals",
       dom: true,
@@ -556,7 +556,7 @@ function suite_dataset_more(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dataset: camelCase keys serialize to kebab-case data-* attrs",
+      caseId: "dataset-camelcase-keys-serialize-to-kebab-case-data-attrs", name: "dataset: camelCase keys serialize to kebab-case data-* attrs",
       dom: true,
       fixture: "dataset/normalize",
       sub: "camel-to-kebab",
@@ -589,7 +589,7 @@ function suite_dataset_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dataset: null/undefined remove, false stringifies, empty string persists",
+      caseId: "dataset-null-undefined-remove-false-stringifies-empty-string-persists", name: "dataset: null/undefined remove, false stringifies, empty string persists",
       dom: true,
       fixture: "dataset/semantics",
       sub: "nullish-bool-empty",
@@ -632,7 +632,7 @@ function suite_dataset_more(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dataset: multi-selection setMany applies to all matched nodes",
+      caseId: "dataset-multi-selection-setmany-applies-to-all-matched-nodes", name: "dataset: multi-selection setMany applies to all matched nodes",
       dom: true,
       fixture: "dataset/multi",
       sub: "setMany-all",
@@ -675,7 +675,7 @@ function suite_dataset_more(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dataset: multi-selection remove clears targeted key and preserves siblings",
+      caseId: "dataset-multi-selection-remove-clears-targeted-key-and-preserves-siblings", name: "dataset: multi-selection remove clears targeted key and preserves siblings",
       dom: true,
       fixture: "dataset/multi",
       sub: "remove-preserve-siblings",
@@ -719,7 +719,7 @@ function suite_dataset_more(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dataset: existing DOM data-* attrs survive graft and targeted mutation",
+      caseId: "dataset-existing-dom-data-attrs-survive-graft-and-targeted-mutation", name: "dataset: existing DOM data-* attrs survive graft and targeted mutation",
       dom: true,
       fixture: "dataset/dom-origin",
       sub: "read-mutate-existing",
@@ -760,7 +760,7 @@ function suite_dataset_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dataset: values persist across refind",
+      caseId: "dataset-values-persist-across-refind", name: "dataset: values persist across refind",
       dom: true,
       fixture: "dataset/refind",
       sub: "persist-across-refind",
@@ -820,7 +820,7 @@ function suite_css_more(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "css.setProp generates a QUID-scoped CSS rule",
+      caseId: "css.setprop-generates-a-quid-scoped-css-rule", name: "css.setProp generates a QUID-scoped CSS rule",
       fixture: "css/setProp",
       sub: "single-quid-rule",
       dom: true,
@@ -864,7 +864,7 @@ function suite_css_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "multi-selection css.setProp applies a scoped rule to each selected QUID",
+      caseId: "multi-selection-css.setprop-applies-a-scoped-rule-to-each-selected-quid", name: "multi-selection css.setProp applies a scoped rule to each selected QUID",
       fixture: "css/multi",
       sub: "apply-all-selected",
       dom: true,
@@ -911,7 +911,7 @@ function suite_css_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "css.setProp supports object CssValue { value, unit }",
+      caseId: "css.setprop-supports-object-cssvalue-value-unit", name: "css.setProp supports object CssValue { value, unit }",
       fixture: "css/object-value",
       sub: "value-unit",
       dom: true,
@@ -961,7 +961,7 @@ function suite_find_more(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "find / findAll preserve hit-miss semantics and result order",
+      caseId: "find-findall-preserve-hit-miss-semantics-and-result-order", name: "find / findAll preserve hit-miss semantics and result order",
       fixture: "find/semantics",
       sub: "hits-misses-order",
       html: `
@@ -1006,7 +1006,7 @@ function suite_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "must throws on miss while findAll stays empty-but-defined",
+      caseId: "must-throws-on-miss-while-findall-stays-empty-but-defined", name: "must throws on miss while findAll stays empty-but-defined",
       fixture: "find/semantics",
       sub: "must-vs-findAll",
       html: `
@@ -1054,7 +1054,7 @@ function suite_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "tree.node is live while plain JSON snapshot is not",
+      caseId: "tree.node-is-live-while-plain-json-snapshot-is-not", name: "tree.node is live while plain JSON snapshot is not",
       fixture: "node/live",
       sub: "live-vs-snapshot",
       html: `
@@ -1140,7 +1140,7 @@ function suite_css_value_and_selection(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "css.setProp supports object CssValue { value, unit } end-to-end",
+      caseId: "css.setprop-supports-object-cssvalue-value-unit-end-to-end", name: "css.setProp supports object CssValue { value, unit } end-to-end",
       fixture: "css/object-value",
       sub: "value-unit",
       dom: true,
@@ -1183,7 +1183,7 @@ function suite_css_value_and_selection(): TestSuite {
 
     {
       suite: SUITE,
-      name: "multi-selection css.setProp applies a scoped rule to each selected QUID",
+      caseId: "multi-selection-css.setprop-applies-a-scoped-rule-to-each-selected-quid", name: "multi-selection css.setProp applies a scoped rule to each selected QUID",
       fixture: "css/multi",
       sub: "apply-all-selected",
       dom: true,
@@ -1234,7 +1234,7 @@ function suite_css_value_and_selection(): TestSuite {
 
     {
       suite: SUITE,
-      name: "multi-selection emits separate rule blocks per QUID",
+      caseId: "multi-selection-emits-separate-rule-blocks-per-quid", name: "multi-selection emits separate rule blocks per QUID",
       fixture: "css/multi",
       sub: "separate-blocks",
       dom: true,
@@ -1310,7 +1310,7 @@ function suite_css_empty(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "css operations on empty selection are a no-op",
+      caseId: "css-operations-on-empty-selection-are-a-no-op", name: "css operations on empty selection are a no-op",
       fixture: "css/empty-selection",
       sub: "noop",
       dom: true,

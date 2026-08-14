@@ -11,31 +11,30 @@ export type TestCapability =
   | "filesystem"
   | "websocket";
 
-/** Stable presentation and serialization order for selectable library subjects. */
-export const CANONICAL_TEST_SUBJECT_ORDER = Object.freeze([
-  "transform",
-  "livemap",
-  "reflect",
-  "livetree",
-  "livehost",
-] as const);
+/** Stable presentation and serialization order for selectable semantic subjects. */
+export { CANONICAL_TEST_SUBJECT_ORDER } from "./test-order";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "./test-order";
 
 /** Complete protocol vocabulary: selectable subjects first, auxiliary subjects last. */
 export const TEST_SUBJECT_IDENTIFIERS = Object.freeze([
   ...CANONICAL_TEST_SUBJECT_ORDER,
   "integration",
   "livedemo",
-  "dev",
 ] as const);
 
 export type TestSubject = typeof TEST_SUBJECT_IDENTIFIERS[number];
 
 export type TestCollection = "unit" | "dev";
+export type TestProvenance = "hson-demo2" | "hson-live";
+export type TestExecutionShape = "cases" | "opaque-aggregate";
 
 export type TestDescriptorMetadata = Readonly<{
   subject: TestSubject;
   requirements: readonly TestCapability[];
   collections?: readonly TestCollection[];
+  title?: string;
+  provenance?: TestProvenance;
+  order?: number;
 }>;
 
 export type TestDescriptorMetadataOverride = Readonly<{
@@ -46,11 +45,29 @@ export type TestDescriptorMetadataOverride = Readonly<{
 
 export type TestDescriptor = Readonly<{
   id: string;
-  suite: string;
-  name: string;
+  suiteId: string;
+  caseId: string;
+  title: string;
   subject: TestSubject;
   requirements: readonly TestCapability[];
   collections: readonly TestCollection[];
+  provenance: TestProvenance;
+  suiteOrdinal: number;
+  caseOrdinal: number;
+  sourceRef?: string;
+}>;
+
+export type TestSuiteDescriptor = Readonly<{
+  id: string;
+  title: string;
+  subject: TestSubject;
+  collections: readonly TestCollection[];
+  provenance: TestProvenance;
+  order: number;
+  requirements: readonly TestCapability[];
+  executionShape: TestExecutionShape;
+  sourceRef?: string;
+  declaredChecks?: number;
 }>;
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
@@ -66,10 +83,11 @@ export type TestExpectedError = Readonly<{
 export type TestEvent =
   | { t: "suite_begin"; suite: string; totalPlanned?: number }
   | { t: "suite_end"; suite: string; ms: number }
-  | { t: "case_begin"; suite: string; name: string; meta?: Record<string, string> }
+  | { t: "case_begin"; suite: string; caseId: string; name: string; meta?: Record<string, string> }
   | {
     t: "case_end";
     suite: string;
+    caseId: string;
     name: string;
     status: TestStatus;
     ms: number;
@@ -110,6 +128,7 @@ export type TestEvent =
 
 export type TestFailure = Readonly<{
   suite: string;
+  caseId?: string;
   name: string;
   err: string;
   ms: number;
@@ -128,6 +147,7 @@ export type TestSummary = Readonly<{
 
 export type TestCase = Readonly<{
   suite: string;
+  caseId: string;
   name: string;
   descriptor?: TestDescriptorMetadataOverride;
   meta?: Record<string, string>;
@@ -194,12 +214,12 @@ export type RunResult = Readonly<{
 }>;
 
 export type UiLevel = "quiet" | "normal";
-export type CaseKey = `${string}::${string}`; // suite::name
+export type CaseKey = `${string}::${string}`; // suiteId::caseId
 
 export type CaseLog = Readonly<{
   key: CaseKey;
   suite: string;
-  name: string;
+  caseId: string; name: string;
   status?: TestStatus;
   ms?: number;
   err?: string;
@@ -252,7 +272,7 @@ export type StepLog = Readonly<{
 export type CaseReport = Readonly<{
   key: CaseKey;
   suite: string;
-  name: string;
+  caseId: string; name: string;
   status: "pass" | "fail" | "skip";
   ms?: number;
 

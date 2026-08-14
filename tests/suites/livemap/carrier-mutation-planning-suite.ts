@@ -5,8 +5,8 @@ import { equal_row, ordered_keys_row, own_value_row, same_value_row } from "./as
 
 const SUITE = "livemap/carrier-mutation-planning";
 
-function test(name: string, run: TestCase["run"]): TestCase {
-  return { suite: SUITE, name, run };
+function test(caseId: string, name: string, run: TestCase["run"]): TestCase {
+  return { suite: SUITE, caseId, name, run };
 }
 
 function own_record(entries: readonly (readonly [string, JsonValue])[]): Record<string, JsonValue> {
@@ -74,42 +74,42 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      test("set retains an existing ordinary property position", () => {
+      test("set-retains-an-existing-ordinary-property-position", "set retains an existing ordinary property position", () => {
         const map = hson.liveMap.fromJson('{"a":1,"b":2,"c":3}');
         map.set(["b"], 20);
         return { assertRows: [equal_row("graph order retained", graph_keys(map), ["a", "b", "c"])] };
       }),
-      test("setMany appends a missing property", () => {
+      test("setmany-appends-a-missing-property", "setMany appends a missing property", () => {
         const map = hson.liveMap.fromJson({ a: 1 });
         map.setMany([], { b: 2 });
         return { assertRows: [equal_row("missing key appended", graph_keys(map), ["a", "b"])] };
       }),
-      test("setMany retains existing positions and appends admitted order", () => {
+      test("setmany-retains-existing-positions-and-appends-admitted-order", "setMany retains existing positions and appends admitted order", () => {
         const map = hson.liveMap.fromJson('{"a":1,"b":2}');
         map.setMany([], own_record([["b", 20], ["d", 4], ["c", 3]]));
         return { assertRows: [equal_row("merge order retained", graph_keys(map), ["a", "b", "d", "c"])] };
       }),
-      test("constructive object set retains and appends positions", () => {
+      test("constructive-object-set-retains-and-appends-positions", "constructive object set retains and appends positions", () => {
         const map = hson.liveMap.fromJson({ target: { a: 1, b: 2 } });
         map.set(["target"], own_record([["b", 20], ["d", 4], ["c", 3]]));
         return { assertRows: [equal_row("target graph order retained", graph_keys(map, ["target"]), ["a", "b", "d", "c"])] };
       }),
-      test("whole replacement adopts complete admitted order", () => {
+      test("whole-replacement-adopts-complete-admitted-order", "whole replacement adopts complete admitted order", () => {
         const map = hson.liveMap.fromJson({ old: true });
         map.replace(own_record([["z", 1], ["a", 2], ["m", 3]]));
         return { assertRows: [equal_row("replacement graph order", graph_keys(map), ["z", "a", "m"])] };
       }),
-      test("nested replacement adopts complete nested order", () => {
+      test("nested-replacement-adopts-complete-nested-order", "nested replacement adopts complete nested order", () => {
         const map = hson.liveMap.fromJson({ target: { old: true } });
         map.replace(["target"], own_record([["z", 1], ["a", 2], ["m", 3]]));
         return { assertRows: [equal_row("nested graph order", graph_keys(map, ["target"]), ["z", "a", "m"])] };
       }),
-      test("integer-like positions survive an existing-key set", () => {
+      test("integer-like-positions-survive-an-existing-key-set", "integer-like positions survive an existing-key set", () => {
         const map = hson.liveMap.fromJson('{"10":"ten","2":"two","1":"one"}');
         map.set(["2"], "TWO");
         return { assertRows: [equal_row("integer graph order retained", graph_keys(map), ["10", "2", "1"])] };
       }),
-      test("new integer-like key appends internally while public enumeration stays truthful", () => {
+      test("new-integer-like-key-appends-internally-while-public-enumeration-stays-truthful", "new integer-like key appends internally while public enumeration stays truthful", () => {
         const map = hson.liveMap.fromJson('{"10":10,"2":2,"1":1}');
         map.setMany([], own_record([["3", 3]]));
         return { assertRows: [
@@ -117,7 +117,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           ordered_keys_row("public JavaScript keys enumerate normally", map.snap() as object, ["1", "2", "3", "10"]),
         ] };
       }),
-      test("constructive set preserves all dangerous names as own data", () => {
+      test("constructive-set-preserves-all-dangerous-names-as-own-data", "constructive set preserves all dangerous names as own data", () => {
         const map = hson.liveMap.fromJson({ target: { kept: true } });
         map.set(["target"], own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]));
         const value = map.snap(["target"]) as object;
@@ -127,7 +127,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("prototype remains ordinary", Object.getPrototypeOf(value) === Object.prototype, true),
         ] };
       }),
-      test("setMany preserves all dangerous names as own data", () => {
+      test("setmany-preserves-all-dangerous-names-as-own-data", "setMany preserves all dangerous names as own data", () => {
         const map = hson.liveMap.fromJson({ target: {} });
         map.setMany(["target"], own_record([["__proto__", 1], ["constructor", 2], ["prototype", 3]]));
         const value = map.snap(["target"]) as object;
@@ -136,7 +136,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           own_value_row("prototype remains data", value, "prototype", 3),
         ] };
       }),
-      test("replacement preserves all dangerous names as own data", () => {
+      test("replacement-preserves-all-dangerous-names-as-own-data", "replacement preserves all dangerous names as own data", () => {
         const map = hson.liveMap.fromJson({ target: {} });
         map.replace(["target"], own_record([["__proto__", "data"], ["constructor", false], ["prototype", null]]));
         const value = map.snap(["target"]) as object;
@@ -145,7 +145,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("replacement prototype ordinary", Object.getPrototypeOf(value) === Object.prototype, true),
         ] };
       }),
-      test("nested objects and arrays close through shared graph construction", () => {
+      test("nested-objects-and-arrays-close-through-shared-graph-construction", "nested objects and arrays close through shared graph construction", () => {
         const map = hson.liveMap.fromJson({ target: null });
         map.replace(["target"], own_record([["z", [own_record([["b", 2], ["a", 1]])]], ["a", -0]]));
         const value = map.snap(["target"]) as Record<string, JsonValue>;
@@ -154,12 +154,12 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           same_value_row("nested negative zero", value.a, -0),
         ] };
       }),
-      test("path update preserves positions and appends its new key", () => {
+      test("path-update-preserves-positions-and-appends-its-new-key", "path update preserves positions and appends its new key", () => {
         const map = hson.liveMap.fromJson({ target: { a: 1, b: 2 } });
         map.at(["target"]).update((value) => ({ ...(value as Record<string, JsonValue>), b: 20, c: 3 }));
         return { assertRows: [equal_row("update graph order", graph_keys(map, ["target"]), ["a", "b", "c"])] };
       }),
-      test("positive zero to negative zero publishes exact graph value", () => {
+      test("positive-zero-to-negative-zero-publishes-exact-graph-value", "positive zero to negative zero publishes exact graph value", () => {
         const map = hson.liveMap.fromJson({ value: 0 });
         const commit = map.set(["value"], -0);
         return { assertRows: [
@@ -167,7 +167,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           same_value_row("graph stores negative zero", graph_number(map, "value"), -0),
         ] };
       }),
-      test("negative zero to negative zero remains a no-op", () => {
+      test("negative-zero-to-negative-zero-remains-a-no-op", "negative zero to negative zero remains a no-op", () => {
         const map = hson.liveMap.fromJson({ value: -0 });
         const commit = map.set(["value"], -0);
         return { assertRows: [
@@ -175,7 +175,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("revision retained", map.rev, 0),
         ] };
       }),
-      test("array splice preserves dense order and negative zero", () => {
+      test("array-splice-preserves-dense-order-and-negative-zero", "array splice preserves dense order and negative zero", () => {
         const map = hson.liveMap.fromJson({ items: [0, 1, 2] });
         const commit = map.splice(["items"], 1, 1, -0, 4);
         const items = map.snap(["items"]) as number[];
@@ -185,7 +185,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           same_value_row("inserted negative zero", items[1], -0),
         ] };
       }),
-      test("batch planning observes earlier ordered writes", () => {
+      test("batch-planning-observes-earlier-ordered-writes", "batch planning observes earlier ordered writes", () => {
         const map = hson.liveMap.fromJson('{"10":10,"2":2,"target":{"a":1}}');
         map.batch((tx) => {
           tx.setMany([], own_record([["1", 1], ["3", 3]]));
@@ -197,7 +197,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           same_value_row("later batch write sees new key", map.snap(["3"]), -0),
         ] };
       }),
-      test("batch commit order matches planned operation order", () => {
+      test("batch-commit-order-matches-planned-operation-order", "batch commit order matches planned operation order", () => {
         const map = hson.liveMap.fromJson({ a: 1, items: [1, 2] });
         const commit = map.batch((tx) => {
           tx.setMany([], own_record([["b", 2], ["c", 3]]));
@@ -208,7 +208,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("graph keys", graph_keys(map), ["a", "items", "b", "c"]),
         ] };
       }),
-      test("failed admission leaves graph revision feed and commit state unchanged", () => {
+      test("failed-admission-leaves-graph-revision-feed-and-commit-state-unchanged", "failed admission leaves graph revision feed and commit state unchanged", () => {
         const map = hson.liveMap.fromJson({ value: 1 });
         const before = JSON.stringify(map.root());
         let feeds = 0;
@@ -223,7 +223,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("graph unchanged", JSON.stringify(map.root()), before),
         ] };
       }),
-      test("failed late batch operation is atomic", () => {
+      test("failed-late-batch-operation-is-atomic", "failed late batch operation is atomic", () => {
         const map = hson.liveMap.fromJson({ a: 1, b: 2 });
         const before = JSON.stringify(map.root());
         let rejected = false;
@@ -239,7 +239,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("authority revision unchanged", map.rev, 0),
         ] };
       }),
-      test("schema preview validates the completed carrier candidate atomically", () => {
+      test("schema-preview-validates-the-completed-carrier-candidate-atomically", "schema preview validates the completed carrier candidate atomically", () => {
         const map = hson.liveMap.fromJson({ value: 1, label: "ok" });
         map.schema.use(hson.liveMap.schema.define((shape) => shape.object({ value: shape.number, label: shape.string })));
         map.batch((tx) => { tx.set(["value"], -0); tx.set(["label"], "next"); });
@@ -252,7 +252,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("rejected graph unchanged", JSON.stringify(map.root()), before),
         ] };
       }),
-      test("caller mutation after admission cannot change graph or commit", () => {
+      test("caller-mutation-after-admission-cannot-change-graph-or-commit", "caller mutation after admission cannot change graph or commit", () => {
         const input = own_record([["nested", own_record([["value", 1]])], ["items", [1, 2]]]);
         const map = hson.liveMap.fromJson({ target: {} });
         const commit = map.replace(["target"], input);
@@ -263,7 +263,7 @@ export function livemap_carrier_mutation_planning_suite(): TestSuite {
           equal_row("commit detached from caller", (commit.ops[0]?.next as Record<string, JsonValue>).items, [1, 2]),
         ] };
       }),
-      test("commit payload mutation cannot affect canonical state", () => {
+      test("commit-payload-mutation-cannot-affect-canonical-state", "commit payload mutation cannot affect canonical state", () => {
         const map = hson.liveMap.fromJson({ target: {} });
         const commit = map.replace(["target"], { nested: { value: 1 } });
         const next = commit.ops[0]?.next as Record<string, JsonValue>;

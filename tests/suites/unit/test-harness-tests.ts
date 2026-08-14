@@ -9,11 +9,11 @@ function expect_true(label: string, condition: unknown): void {
   if (!condition) throw new Error(label);
 }
 
-function find_case_end(events: readonly TestEvent[], suite: string, name: string): CaseEndEvent | undefined {
+function find_case_end(events: readonly TestEvent[], suite: string, caseId: string): CaseEndEvent | undefined {
   return events.find((event): event is CaseEndEvent => (
     event.t === "case_end" &&
     event.suite === suite &&
-    event.name === name
+    event.caseId === caseId
   ));
 }
 
@@ -25,7 +25,7 @@ export function unit_test_harness(): TestSuite {
     cases: [
       {
         suite,
-        name: "failed assertion row fails case and run",
+        caseId: "failed-assertion-row-fails-case-and-run", name: "failed assertion row fails case and run",
         run: async () => {
           const nestedSuite = "unit/test-harness/nested";
           const nestedCase = "returns failed assertion row";
@@ -39,6 +39,7 @@ export function unit_test_harness(): TestSuite {
                 cases: [
                   {
                     suite: nestedSuite,
+                    caseId: "returns-failed-assertion-row",
                     name: nestedCase,
                     run: () => ({
                       assertRows: [
@@ -60,7 +61,7 @@ export function unit_test_harness(): TestSuite {
             },
           );
 
-          const caseEnd = find_case_end(events, nestedSuite, nestedCase);
+          const caseEnd = find_case_end(events, nestedSuite, "returns-failed-assertion-row");
           expect_true("expected case_end event", caseEnd !== undefined);
           expect_true("expected failed case_end status", caseEnd?.status === "fail");
           expect_true("expected RunResult.ok false", result.ok === false);
@@ -79,19 +80,20 @@ export function unit_test_harness(): TestSuite {
       },
       {
         suite,
-        name: "recorder and logger downgrade pass with failed assertion row",
+        caseId: "recorder-and-logger-downgrade-pass-with-failed-assertion-row", name: "recorder and logger downgrade pass with failed assertion row",
         run: () => {
           const nestedSuite = "unit/test-harness/defensive";
           const nestedCase = "impossible pass event";
-          const key = `${nestedSuite}::${nestedCase}` as CaseKey;
+          const key = `${nestedSuite}::impossible-pass-event` as CaseKey;
           const recorder = new TestRecorder();
           const log = create_test_log();
           const events: TestEvent[] = [
             { t: "suite_begin", suite: nestedSuite, totalPlanned: 1 },
-            { t: "case_begin", suite: nestedSuite, name: nestedCase },
+            { t: "case_begin", suite: nestedSuite, caseId: "impossible-pass-event", name: nestedCase },
             {
               t: "case_end",
               suite: nestedSuite,
+              caseId: "impossible-pass-event",
               name: nestedCase,
               status: "pass",
               ms: 1,

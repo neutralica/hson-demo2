@@ -6,7 +6,7 @@ import { equal_row, preview_value } from "../livemap/test-helpers";
 
 type LiveHostSocketReadCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: unknown;
   act: () => unknown | Promise<unknown>;
   expected: unknown;
@@ -30,7 +30,7 @@ type MemorySocket = Readonly<{
 function livehost_socket_read_case(spec: LiveHostSocketReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -104,7 +104,7 @@ export function livehost_socket_suite(): TestSuite {
     cases: [
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect hello sends snapshot",
+        caseId: "connect-hello-sends-snapshot", name: "connect hello sends snapshot",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -133,7 +133,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect invalid json sends error",
+        caseId: "connect-invalid-json-sends-error", name: "connect invalid json sends error",
         input: {},
         act: async () => {
           const host = create_livehost({ state: {} });
@@ -157,7 +157,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect action sends ack and mutates map",
+        caseId: "connect-action-sends-ack-and-mutates-map", name: "connect action sends ack and mutates map",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -201,7 +201,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect unknown action sends error",
+        caseId: "connect-unknown-action-sends-error", name: "connect unknown action sends error",
         input: {},
         act: async () => {
           const host = create_livehost({ state: {} });
@@ -237,7 +237,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect subscribe sends current value sync",
+        caseId: "connect-subscribe-sends-current-value-sync", name: "connect subscribe sends current value sync",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { ui: { selected: "home" } } });
@@ -263,7 +263,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect unsubscribe sends no message on success",
+        caseId: "connect-unsubscribe-sends-no-message-on-success", name: "connect unsubscribe sends no message on success",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { ui: { selected: "home" } } });
@@ -285,7 +285,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect hello after action reports updated seq and snapshot",
+        caseId: "connect-hello-after-action-reports-updated-seq-and-snapshot", name: "connect hello after action reports updated seq and snapshot",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -327,7 +327,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect two actions return increasing ack seqs",
+        caseId: "connect-two-actions-return-increasing-ack-seqs", name: "connect two actions return increasing ack seqs",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -370,7 +370,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect malformed action does not increment seq",
+        caseId: "connect-malformed-action-does-not-increment-seq", name: "connect malformed action does not increment seq",
         input: {},
         act: async () => {
           const host = create_livehost({ state: {} });
@@ -396,7 +396,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect action applies schema validator before ack",
+        caseId: "connect-action-applies-schema-validator-before-ack", name: "connect action applies schema validator before ack",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -452,7 +452,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect action rejects schema-invalid payload",
+        caseId: "connect-action-rejects-schema-invalid-payload", name: "connect action rejects schema-invalid payload",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -512,7 +512,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect action applies schema decoder before handler",
+        caseId: "connect-action-applies-schema-decoder-before-handler", name: "connect action applies schema decoder before handler",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -566,7 +566,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect subscribed path syncs after action ack",
+        caseId: "connect-subscribed-path-syncs-after-action-ack", name: "connect subscribed path syncs after action ack",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -617,7 +617,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect unsubscribe prevents later action sync",
+        caseId: "connect-unsubscribe-prevents-later-action-sync", name: "connect unsubscribe prevents later action sync",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -659,7 +659,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect multiple sessions receive subscribed action sync",
+        caseId: "connect-multiple-sessions-receive-subscribed-action-sync", name: "connect multiple sessions receive subscribed action sync",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -713,7 +713,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "lazy socket action receives trusted non-resumable session origin",
+        caseId: "lazy-socket-action-receives-trusted-non-resumable-session-origin", name: "lazy socket action receives trusted non-resumable session origin",
         input: {},
         act: async () => {
           let origin: unknown;
@@ -742,7 +742,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "explicit socket session action receives trusted resumable origin",
+        caseId: "explicit-socket-session-action-receives-trusted-resumable-origin", name: "explicit socket session action receives trusted resumable origin",
         input: {},
         act: async () => {
           let origin: unknown;
@@ -772,7 +772,7 @@ export function livehost_socket_suite(): TestSuite {
       }),
       livehost_socket_read_case({
         suite: SUITE,
-        name: "connect disposer detaches socket listeners",
+        caseId: "connect-disposer-detaches-socket-listeners", name: "connect disposer detaches socket listeners",
         input: {},
         act: async () => {
           const host = create_livehost({ state: {} });

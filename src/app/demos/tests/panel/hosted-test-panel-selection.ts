@@ -6,8 +6,9 @@ import type {
   TestCollection,
   TestDescriptor,
 } from "../../../../../tests/harness/core/test-contracts";
-import { compare_test_visitor_order, select_test_descriptors } from "../../../../../tests/harness/core/test-selection";
-import type { ExternalLibraryLauncherTarget } from "../../../../../tests/harness/core/external-launcher-contract";
+import { select_test_descriptors } from "../../../../../tests/harness/core/test-selection";
+import { compare_test_descriptors, compare_test_suites, test_presentation_rank } from "../../../../../tests/harness/core/test-order";
+import { external_launcher_suite_descriptor, type ExternalLibraryLauncherTarget } from "../../../../../tests/harness/core/external-launcher-contract";
 
 export type HostedTestPanelSelection =
   | Readonly<{ kind: "all" }>
@@ -63,9 +64,7 @@ function canonical_for_selection(
   return select_test_descriptors(descriptors, { test: selection.testId });
 }
 
-export type ExternalLibraryPanelCategory =
-  | typeof CANONICAL_TEST_SUBJECT_ORDER[number]
-  | "dev";
+export type ExternalLibraryPanelCategory = TestSubject;
 
 export type ExternalLibraryPanelProjectionRule = Readonly<{
   launcherId: string;
@@ -74,63 +73,23 @@ export type ExternalLibraryPanelProjectionRule = Readonly<{
   rationale: string;
 }>;
 
-/**
- * Explicit cross-subject views. These affect panel selection only; complete
- * external and inclusive totals continue to count each launcher target once.
- */
+/** Pre-epoch placeholder: Phase 1 has no cross-subject projection aliases. */
 export const EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES:
-readonly ExternalLibraryPanelProjectionRule[] = Object.freeze([
-  Object.freeze({
-    launcherId: "core.hson-number",
-    primarySubject: "integration",
-    projectedCategory: "transform",
-    rationale: "Universal HSON number admission is a Transform-facing semantic boundary.",
-  }),
-  Object.freeze({
-    launcherId: "core.canonical-hson-equality",
-    primarySubject: "integration",
-    projectedCategory: "transform",
-    rationale: "Canonical equality verifies graph equivalence used by Transform results.",
-  }),
-  Object.freeze({
-    launcherId: "core.public-boundaries",
-    primarySubject: "integration",
-    projectedCategory: "dev",
-    rationale: "Public package-boundary checks belong to the developer-facing collection view.",
-  }),
-]);
+readonly ExternalLibraryPanelProjectionRule[] = Object.freeze([]);
 
 export function hosted_test_panel_external_category(
   target: ExternalLibraryLauncherTarget,
 ): ExternalLibraryPanelCategory {
-  const rule = EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.find(
-    (candidate) => candidate.launcherId === target.launcherId,
-  );
-  if (rule !== undefined) {
-    if (rule.primarySubject !== target.subject) {
-      throw new Error(
-        `External panel projection subject mismatch for ${target.launcherId}: `
-        + `rule declares ${rule.primarySubject}, target declares ${target.subject}`,
-      );
-    }
-    return rule.projectedCategory;
-  }
-  if (CANONICAL_TEST_SUBJECT_ORDER.includes(
-    target.subject as typeof CANONICAL_TEST_SUBJECT_ORDER[number],
-  )) {
-    return target.subject as typeof CANONICAL_TEST_SUBJECT_ORDER[number];
-  }
-  throw new Error(`External library target has no panel category projection: ${target.launcherId}`);
+  return target.subject;
 }
 
 function external_matches(
   target: ExternalLibraryLauncherTarget,
   selection: HostedTestPanelSelection,
 ): boolean {
-  const category = hosted_test_panel_external_category(target);
   return selection.kind === "all"
-    || (selection.kind === "subject" && category === selection.subject)
-    || (selection.kind === "collection" && category === selection.collection)
+    || (selection.kind === "subject" && target.subject === selection.subject)
+    || (selection.kind === "collection" && target.collections.includes(selection.collection))
     || (selection.kind === "suite" && target.id === selection.suite)
     || (selection.kind === "test" && target.id === selection.testId);
 }
@@ -152,10 +111,24 @@ export function hosted_test_panel_selected_ids(
 ): readonly string[] {
   const selected = canonical_for_selection(descriptors, selection);
   const external = externalTargets.filter((target) => external_matches(target, selection));
-  return Object.freeze([...new Set([
-    ...selected.map((descriptor) => descriptor.id),
-    ...external.map((entry) => entry.id),
-  ])].sort(compare_test_visitor_order));
+  const ordered = [
+    ...selected.map((descriptor) => Object.freeze({
+      id: descriptor.id,
+      rank: test_presentation_rank(descriptor.subject, descriptor.collections),
+      suiteOrder: descriptor.suiteOrdinal,
+      caseOrder: descriptor.caseOrdinal,
+    })),
+    ...external.map((entry) => Object.freeze({
+      id: entry.id,
+      rank: test_presentation_rank(entry.subject, entry.collections),
+      suiteOrder: entry.order,
+      caseOrder: -1,
+    })),
+  ].sort((left, right) => left.rank - right.rank
+    || left.suiteOrder - right.suiteOrder
+    || left.caseOrder - right.caseOrder
+    || compare(left.id, right.id));
+  return Object.freeze([...new Set(ordered.map((entry) => entry.id))]);
 }
 
 export function hosted_test_panel_primary_choices(
@@ -185,8 +158,11 @@ export function hosted_test_panel_suite_choices(
   const scopedExternalTargets = primarySelection === undefined
     ? externalTargets
     : externalTargets.filter((target) => external_matches(target, primarySelection));
-  const suites = [...new Set(scopedDescriptors.map((descriptor) => descriptor.suite))]
-    .sort(compare_test_visitor_order);
+  const suites = [...new Set(scopedDescriptors.map((descriptor) => descriptor.suiteId))]
+    .sort((left, right) => compare_test_descriptors(
+      scopedDescriptors.find((descriptor) => descriptor.suiteId === left)!,
+      scopedDescriptors.find((descriptor) => descriptor.suiteId === right)!,
+    ));
   const canonical = suites.map((suite) => {
     const selection = Object.freeze({ kind: "suite" as const, suite });
     const count = hosted_test_panel_selection_case_count(descriptors, selection);
@@ -199,15 +175,23 @@ export function hosted_test_panel_suite_choices(
   });
   const external = scopedExternalTargets.map((target) => Object.freeze({
     key: `suite:${target.id}`,
-    label: `library · ${target.displayName} (${target.executableChecks})`,
+    label: `${target.displayName} (${target.executableChecks})`,
     selection: Object.freeze({ kind: "suite" as const, suite: target.id }),
     count: target.executableChecks,
   }));
-  return Object.freeze([...canonical, ...external].sort((left, right) =>
-    compare_test_visitor_order(
-      left.selection.kind === "suite" ? left.selection.suite : left.key,
-      right.selection.kind === "suite" ? right.selection.suite : right.key,
-    )));
+  const suiteDescriptors = new Map([
+    ...scopedDescriptors.map((descriptor) => [descriptor.suiteId, {
+      id: descriptor.suiteId,
+      subject: descriptor.subject,
+      collections: descriptor.collections,
+      order: descriptor.suiteOrdinal,
+    }] as const),
+    ...scopedExternalTargets.map((target) => [target.id, external_launcher_suite_descriptor(target)] as const),
+  ]);
+  return Object.freeze([...canonical, ...external].sort((left, right) => compare_test_suites(
+    suiteDescriptors.get(left.selection.kind === "suite" ? left.selection.suite : left.key)!,
+    suiteDescriptors.get(right.selection.kind === "suite" ? right.selection.suite : right.key)!,
+  )));
 }
 
 export function hosted_test_panel_test_choices(
@@ -219,11 +203,11 @@ export function hosted_test_panel_test_choices(
   if (external !== undefined) return Object.freeze([]);
   return Object.freeze(
     descriptors
-      .filter((descriptor) => descriptor.suite === suite)
-      .sort((left, right) => compare(left.id, right.id))
+      .filter((descriptor) => descriptor.suiteId === suite)
+      .sort(compare_test_descriptors)
       .map((descriptor) => Object.freeze({
         key: `test:${descriptor.id}`,
-        label: descriptor.name,
+        label: descriptor.title,
         selection: Object.freeze({ kind: "test" as const, testId: descriptor.id }),
         count: 1,
       })),

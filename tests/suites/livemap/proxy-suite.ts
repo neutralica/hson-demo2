@@ -25,14 +25,14 @@ export function livemap_suites_proxy(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "proxy root $_ returns root handle path",
+        caseId: "proxy-root-_-returns-root-handle-path", name: "proxy root $_ returns root handle path",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy().$_.path(),
         expected: [],
       }),
       read_case({
         suite: SUITE,
-        name: "proxy string property builds path",
+        caseId: "proxy-string-property-builds-path", name: "proxy string property builds path",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -42,7 +42,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy numeric property builds array index path",
+        caseId: "proxy-numeric-property-builds-array-index-path", name: "proxy numeric property builds array index path",
         input: { items: [{ name: "Ada" }] },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -52,7 +52,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy path-scoped root builds from starting path",
+        caseId: "proxy-path-scoped-root-builds-from-starting-path", name: "proxy path-scoped root builds from starting path",
         input: { user: { profile: { name: "Ada" } } },
         act: (map) => {
           const proxy = map.proxy(["user"]) as any;
@@ -62,7 +62,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ snap reads current value",
+        caseId: "proxy-_-snap-reads-current-value", name: "proxy $_ snap reads current value",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -72,7 +72,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy $_ set writes current path",
+        caseId: "proxy-_-set-writes-current-path", name: "proxy $_ set writes current path",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -86,7 +86,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy contract object-valued set preserves unspecified siblings",
+        caseId: "proxy-contract-object-valued-set-preserves-unspecified-siblings", name: "proxy contract object-valued set preserves unspecified siblings",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -100,7 +100,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy contract set missing direct property throws",
+        caseId: "proxy-contract-set-missing-direct-property-throws", name: "proxy contract set missing direct property throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -110,7 +110,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy contract replace removes unspecified siblings",
+        caseId: "proxy-contract-replace-removes-unspecified-siblings", name: "proxy contract replace removes unspecified siblings",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -124,7 +124,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy $_ delete deletes current path",
+        caseId: "proxy-_-delete-deletes-current-path", name: "proxy $_ delete deletes current path",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -138,7 +138,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy direct assignment throws",
+        caseId: "proxy-direct-assignment-throws", name: "proxy direct assignment throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -148,7 +148,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy direct delete throws",
+        caseId: "proxy-direct-delete-throws", name: "proxy direct delete throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -158,35 +158,35 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy has $_ escape key",
+        caseId: "proxy-has-_-escape-key", name: "proxy has $_ escape key",
         input: { user: { name: "Ada" } },
         act: (map) => "$_" in map.proxy(),
         expected: true,
       }),
       read_case({
         suite: SUITE,
-        name: "proxy does not report data keys through in operator",
+        caseId: "proxy-does-not-report-data-keys-through-in-operator", name: "proxy does not report data keys through in operator",
         input: { user: { name: "Ada" } },
         act: (map) => "user" in map.proxy(),
         expected: false,
       }),
       read_case({
         suite: SUITE,
-        name: "proxy own keys reports only escape key",
+        caseId: "proxy-own-keys-reports-only-escape-key", name: "proxy own keys reports only escape key",
         input: { user: { name: "Ada" } },
         act: (map) => Reflect.ownKeys(map.proxy()),
         expected: ["$_"],
       }),
       read_case({
         suite: SUITE,
-        name: "proxy Object.keys hides escape key",
+        caseId: "proxy-object.keys-hides-escape-key", name: "proxy Object.keys hides escape key",
         input: { user: { name: "Ada" } },
         act: (map) => Object.keys(map.proxy()),
         expected: [],
       }),
       read_case({
         suite: SUITE,
-        name: "proxy numeric string property builds array index path",
+        caseId: "proxy-numeric-string-property-builds-array-index-path", name: "proxy numeric string property builds array index path",
         input: { items: [{ name: "Ada" }] },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -196,7 +196,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy leading-zero numeric string remains object key",
+        caseId: "proxy-leading-zero-numeric-string-remains-object-key", name: "proxy leading-zero numeric string remains object key",
         input: { items: { "01": { name: "Ada" } } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -206,7 +206,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy negative numeric string remains object key",
+        caseId: "proxy-negative-numeric-string-remains-object-key", name: "proxy negative numeric string remains object key",
         input: { items: { "-1": { name: "Ada" } } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -216,7 +216,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy decimal numeric string remains object key",
+        caseId: "proxy-decimal-numeric-string-remains-object-key", name: "proxy decimal numeric string remains object key",
         input: { items: { "1.5": { name: "Ada" } } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -226,7 +226,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy symbol access returns undefined",
+        caseId: "proxy-symbol-access-returns-undefined", name: "proxy symbol access returns undefined",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -236,7 +236,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ descriptor is non-enumerable",
+        caseId: "proxy-_-descriptor-is-non-enumerable", name: "proxy $_ descriptor is non-enumerable",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const descriptor = Object.getOwnPropertyDescriptor(map.proxy(), "$_");
@@ -246,7 +246,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ descriptor is configurable",
+        caseId: "proxy-_-descriptor-is-configurable", name: "proxy $_ descriptor is configurable",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const descriptor = Object.getOwnPropertyDescriptor(map.proxy(), "$_");
@@ -256,21 +256,21 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy unknown descriptor is undefined",
+        caseId: "proxy-unknown-descriptor-is-undefined", name: "proxy unknown descriptor is undefined",
         input: { user: { name: "Ada" } },
         act: (map) => Object.getOwnPropertyDescriptor(map.proxy(), "user"),
         expected: undefined,
       }),
       read_case({
         suite: SUITE,
-        name: "proxy scoped $_ returns scoped handle path",
+        caseId: "proxy-scoped-_-returns-scoped-handle-path", name: "proxy scoped $_ returns scoped handle path",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy(["user", "name"]).$_.path(),
         expected: ["user", "name"],
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ exposes array handle namespace",
+        caseId: "proxy-_-exposes-array-handle-namespace", name: "proxy $_ exposes array handle namespace",
         input: { items: ["a", "b", "c"] },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -280,7 +280,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ exposes object handle namespace",
+        caseId: "proxy-_-exposes-object-handle-namespace", name: "proxy $_ exposes object handle namespace",
         input: { user: { name: "Ada", role: "user" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -290,7 +290,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy $_ array helper mutates current array path",
+        caseId: "proxy-_-array-helper-mutates-current-array-path", name: "proxy $_ array helper mutates current array path",
         input: { items: ["a", "b"] },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -304,7 +304,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy $_ object helper mutates current object path",
+        caseId: "proxy-_-object-helper-mutates-current-object-path", name: "proxy $_ object helper mutates current object path",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -318,7 +318,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy contract setMany creates missing object key",
+        caseId: "proxy-contract-setmany-creates-missing-object-key", name: "proxy contract setMany creates missing object key",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -332,7 +332,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy then access returns undefined",
+        caseId: "proxy-then-access-returns-undefined", name: "proxy then access returns undefined",
         input: { then: "data" },
         act: (map) => {
           const proxy = map.proxy()  as any;
@@ -342,7 +342,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy toJSON access returns undefined",
+        caseId: "proxy-tojson-access-returns-undefined", name: "proxy toJSON access returns undefined",
         input: { toJSON: "data" },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -352,7 +352,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy constructor access returns undefined",
+        caseId: "proxy-constructor-access-returns-undefined", name: "proxy constructor access returns undefined",
         input: { constructor: "data" },
         act: (map) => {
           const proxy = map.proxy();
@@ -362,7 +362,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy reserved key can still be reached through $_ handle",
+        caseId: "proxy-reserved-key-can-still-be-reached-through-_-handle", name: "proxy reserved key can still be reached through $_ handle",
         input: { then: "data" },
         act: (map) => {
           const p = map.proxy();
@@ -372,7 +372,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy Object.defineProperty throws",
+        caseId: "proxy-object.defineproperty-throws", name: "proxy Object.defineProperty throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -382,7 +382,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy Object.setPrototypeOf throws",
+        caseId: "proxy-object.setprototypeof-throws", name: "proxy Object.setPrototypeOf throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -392,7 +392,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy Object.preventExtensions throws",
+        caseId: "proxy-object.preventextensions-throws", name: "proxy Object.preventExtensions throws",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -402,14 +402,14 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy has null prototype",
+        caseId: "proxy-has-null-prototype", name: "proxy has null prototype",
         input: { user: { name: "Ada" } },
         act: (map) => Object.getPrototypeOf(map.proxy()),
         expected: null,
       }),
       read_case({
         suite: SUITE,
-        name: "proxy hasOwnProperty access returns undefined",
+        caseId: "proxy-hasownproperty-access-returns-undefined", name: "proxy hasOwnProperty access returns undefined",
         input: { hasOwnProperty: "data" },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -419,7 +419,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy direct __proto__ reservation hides an actual own data property",
+        caseId: "proxy-direct-__proto__-reservation-hides-an-actual-own-data-property", name: "proxy direct __proto__ reservation hides an actual own data property",
         input: own_proto_data_input(),
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -429,21 +429,21 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ escape reaches an actual own __proto__ data property",
+        caseId: "proxy-_-escape-reaches-an-actual-own-__proto__-data-property", name: "proxy $_ escape reaches an actual own __proto__ data property",
         input: own_proto_data_input(),
         act: (map) => map.proxy().$_.object.getKey("__proto__"),
         expected: "data",
       }),
       read_case({
         suite: SUITE,
-        name: "proxy prototype-like key can still be reached through $_ handle",
+        caseId: "proxy-prototype-like-key-can-still-be-reached-through-_-handle", name: "proxy prototype-like key can still be reached through $_ handle",
         input: { hasOwnProperty: "data" },
         act: (map) => map.proxy().$_.object.getKey("hasOwnProperty"),
         expected: "data",
       }),
       read_case({
         suite: SUITE,
-        name: "proxy max safe integer numeric string builds numeric path",
+        caseId: "proxy-max-safe-integer-numeric-string-builds-numeric-path", name: "proxy max safe integer numeric string builds numeric path",
         input: {},
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -453,7 +453,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy unsafe integer numeric string remains object key",
+        caseId: "proxy-unsafe-integer-numeric-string-remains-object-key", name: "proxy unsafe integer numeric string remains object key",
         input: {},
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -463,28 +463,28 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy JSON.stringify returns empty object",
+        caseId: "proxy-json.stringify-returns-empty-object", name: "proxy JSON.stringify returns empty object",
         input: { user: { name: "Ada" } },
         act: (map) => JSON.stringify(map.proxy()),
         expected: "{}",
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy String conversion throws",
+        caseId: "proxy-string-conversion-throws", name: "proxy String conversion throws",
         input: { user: { name: "Ada" } },
         act: (map) => String(map.proxy()),
         expectedMessage: "Cannot convert object to primitive value",
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy concatenation throws",
+        caseId: "proxy-concatenation-throws", name: "proxy concatenation throws",
         input: { user: { name: "Ada" } },
         act: (map) => `${map.proxy()}`,
         expectedMessage: "Cannot convert object to primitive value",
       }),
       read_case({
         suite: SUITE,
-        name: "proxy Promise.resolve treats proxy as non-thenable",
+        caseId: "proxy-promise.resolve-treats-proxy-as-non-thenable", name: "proxy Promise.resolve treats proxy as non-thenable",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -494,28 +494,28 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "core proxy accepts explicit empty path",
+        caseId: "core-proxy-accepts-explicit-empty-path", name: "core proxy accepts explicit empty path",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy([]).$_.path(),
         expected: [],
       }),
       throwCase({
         suite: SUITE,
-        name: "core proxy rejects non-array path",
+        caseId: "core-proxy-rejects-non-array-path", name: "core proxy rejects non-array path",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy("user" as never).$_.path(),
         expectedMessage: "LiveMap path is not an array",
       }),
       throwCase({
         suite: SUITE,
-        name: "core proxy rejects invalid path part",
+        caseId: "core-proxy-rejects-invalid-path-part", name: "core proxy rejects invalid path part",
         input: { user: { name: "Ada" } },
         act: (map) => map.proxy([{}] as never).$_.path(),
         expectedMessage: "LiveMap path part is not valid at index 0",
       }),
       read_case({
         suite: SUITE,
-        name: "proxy child access returns stable proxy identity",
+        caseId: "proxy-child-access-returns-stable-proxy-identity", name: "proxy child access returns stable proxy identity",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -525,7 +525,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy nested child access returns stable proxy identity",
+        caseId: "proxy-nested-child-access-returns-stable-proxy-identity", name: "proxy nested child access returns stable proxy identity",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -535,7 +535,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy numeric child access returns stable proxy identity",
+        caseId: "proxy-numeric-child-access-returns-stable-proxy-identity", name: "proxy numeric child access returns stable proxy identity",
         input: { items: [{ name: "Ada" }] },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -545,7 +545,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy $_ returns stable handle identity",
+        caseId: "proxy-_-returns-stable-handle-identity", name: "proxy $_ returns stable handle identity",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -555,7 +555,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy cached $_ handle still reflects current value",
+        caseId: "proxy-cached-_-handle-still-reflects-current-value", name: "proxy cached $_ handle still reflects current value",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const proxy = map.proxy() as any;
@@ -567,7 +567,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy schema allows valid $_ set",
+        caseId: "proxy-schema-allows-valid-_-set", name: "proxy schema allows valid $_ set",
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -587,7 +587,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy schema rejects invalid $_ set before mutation",
+        caseId: "proxy-schema-rejects-invalid-_-set-before-mutation", name: "proxy schema rejects invalid $_ set before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -603,7 +603,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy schema rejects invalid array helper before mutation",
+        caseId: "proxy-schema-rejects-invalid-array-helper-before-mutation", name: "proxy schema rejects invalid array helper before mutation",
         input: { items: [0, 1] },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -617,7 +617,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy schema rejects invalid object helper before mutation",
+        caseId: "proxy-schema-rejects-invalid-object-helper-before-mutation", name: "proxy schema rejects invalid object helper before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -634,7 +634,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy schema rejects delete required field before mutation",
+        caseId: "proxy-schema-rejects-delete-required-field-before-mutation", name: "proxy schema rejects delete required field before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -651,7 +651,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy schema allows delete optional field",
+        caseId: "proxy-schema-allows-delete-optional-field", name: "proxy schema allows delete optional field",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -672,7 +672,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy schema rejects object.deleteKey required field before mutation",
+        caseId: "proxy-schema-rejects-object.deletekey-required-field-before-mutation", name: "proxy schema rejects object.deleteKey required field before mutation",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -689,7 +689,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy schema allows object.deleteKey optional field",
+        caseId: "proxy-schema-allows-object.deletekey-optional-field", name: "proxy schema allows object.deleteKey optional field",
         input: { user: { name: "Ada", age: 37 } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -710,7 +710,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy exact schema rejects unknown object helper before mutation",
+        caseId: "proxy-exact-schema-rejects-unknown-object-helper-before-mutation", name: "proxy exact schema rejects unknown object helper before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -726,7 +726,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy exact schema rejects unknown object-valued set before mutation",
+        caseId: "proxy-exact-schema-rejects-unknown-object-valued-set-before-mutation", name: "proxy exact schema rejects unknown object-valued set before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -742,7 +742,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "proxy exact schema rejects unknown replace key before mutation",
+        caseId: "proxy-exact-schema-rejects-unknown-replace-key-before-mutation", name: "proxy exact schema rejects unknown replace key before mutation",
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({
@@ -758,7 +758,7 @@ export function livemap_suites_proxy(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "proxy exact schema allows no-op delete of absent unknown object key",
+        caseId: "proxy-exact-schema-allows-no-op-delete-of-absent-unknown-object-key", name: "proxy exact schema allows no-op delete of absent unknown object key",
         input: { user: { name: "Ada" } },
         act: (map) => {
           map.schema.use(hson.liveMap.schema.define((s) => s.object({

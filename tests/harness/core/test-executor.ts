@@ -49,7 +49,7 @@ export function make_test_executor_registry(
   const suiteById = new Map(suites.map((suite) => [suite.suite, suite]));
   for (const suite of suites) {
     for (const testCase of suite.cases) {
-      const id = `${suite.suite}::${testCase.name}`;
+      const id = `${suite.suite}::${testCase.caseId}`;
       if (cases.has(id)) throw new Error(`Duplicate executable registration ID: ${id}`);
       cases.set(id, testCase);
     }
@@ -57,7 +57,7 @@ export function make_test_executor_registry(
   const registrations: readonly ExecutableTestRegistration[] = Object.freeze(catalog.tests.map((descriptor) => {
     const testCase = cases.get(descriptor.id);
     if (testCase === undefined) throw new Error(`Missing executable registration for ${descriptor.id}`);
-    const suite = suiteById.get(descriptor.suite);
+    const suite = suiteById.get(descriptor.suiteId);
     if (suite === undefined) throw new Error(`Missing executable suite for ${descriptor.id}`);
     return Object.freeze({
       descriptor,
@@ -71,8 +71,9 @@ export function make_test_executor_registry(
 
 function same_descriptor(left: TestDescriptor, right: TestDescriptor): boolean {
   return left.id === right.id
-    && left.suite === right.suite
-    && left.name === right.name
+    && left.suiteId === right.suiteId
+    && left.caseId === right.caseId
+    && left.title === right.title
     && left.subject === right.subject
     && left.requirements.length === right.requirements.length
     && left.requirements.every((requirement, index) => requirement === right.requirements[index])
@@ -113,19 +114,20 @@ export function make_test_executor_registry_from_registrations(
     if (!same_descriptor(descriptor, registration.descriptor)) {
       throw new Error(`Executable registration ${id} does not match its catalog descriptor.`);
     }
-    if (registration.testCase.suite !== descriptor.suite || registration.testCase.name !== descriptor.name) {
+    if (registration.testCase.suite !== descriptor.suiteId || registration.testCase.caseId !== descriptor.caseId
+      || registration.testCase.name !== descriptor.title) {
       throw new Error(`Executable registration ${id} does not match its TestCase identity.`);
     }
     if (!executor_supports(executor, descriptor)) {
       throw new Error(`Executor ${executor.id} lacks capabilities required by ${id}.`);
     }
-    const existingSuite = suiteExecution.get(descriptor.suite);
+    const existingSuite = suiteExecution.get(descriptor.suiteId);
     if (existingSuite !== undefined
       && (existingSuite.setup !== registration.suiteSetup
         || existingSuite.timeoutMs !== registration.suiteTimeoutMs)) {
-      throw new Error(`Executable registrations for suite ${descriptor.suite} disagree on suite execution configuration.`);
+      throw new Error(`Executable registrations for suite ${descriptor.suiteId} disagree on suite execution configuration.`);
     }
-    suiteExecution.set(descriptor.suite, Object.freeze({
+    suiteExecution.set(descriptor.suiteId, Object.freeze({
       ...(registration.suiteSetup === undefined ? {} : { setup: registration.suiteSetup }),
       ...(registration.suiteTimeoutMs === undefined ? {} : { timeoutMs: registration.suiteTimeoutMs }),
     }));

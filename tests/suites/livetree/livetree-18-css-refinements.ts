@@ -12,7 +12,7 @@ export function livetree_css_refinements(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "css surface: public api exposes global vars, keyframes, and atProperty",
+      caseId: "css-surface-public-api-exposes-global-vars-keyframes-and-atproperty", name: "css surface: public api exposes global vars, keyframes, and atProperty",
       dom: true,
       fixture: "css-surface",
       sub: "css-api-exposes-global-managers",
@@ -47,7 +47,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: owned keyframes are released with owner quid",
+      caseId: "css-surface-owned-keyframes-are-released-with-owner-quid", name: "css surface: owned keyframes are released with owner quid",
       dom: true,
       fixture: "css-surface",
       sub: "owned-keyframes-release-by-quid",
@@ -104,7 +104,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: durable api keyframes survive owner release",
+      caseId: "css-surface-durable-api-keyframes-survive-owner-release", name: "css surface: durable api keyframes survive owner release",
       dom: true,
       fixture: "css-surface",
       sub: "durable-keyframes-survive-quid-release",
@@ -161,7 +161,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: durable keyframes set clears prior owned lifecycle",
+      caseId: "css-surface-durable-keyframes-set-clears-prior-owned-lifecycle", name: "css surface: durable keyframes set clears prior owned lifecycle",
       dom: true,
       fixture: "css-surface",
       sub: "durable-set-clears-owned-keyframes-lifecycle",
@@ -227,7 +227,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: setMany nested selector key with ampersand writes selector rule",
+      caseId: "css-surface-setmany-nested-selector-key-with-ampersand-writes-selector-rule", name: "css surface: setMany nested selector key with ampersand writes selector rule",
       dom: true,
       fixture: "css-selectors",
       sub: "setmany-nested-selector-ampersand",
@@ -267,7 +267,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: selector method works without ampersand using appended pattern",
+      caseId: "css-surface-selector-method-works-without-ampersand-using-appended-pattern", name: "css surface: selector method works without ampersand using appended pattern",
       dom: true,
       fixture: "css-selectors",
       sub: "selector-method-no-ampersand",
@@ -301,7 +301,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: setMany nested selector key without ampersand is ignored",
+      caseId: "css-surface-setmany-nested-selector-key-without-ampersand-is-ignored", name: "css surface: setMany nested selector key without ampersand is ignored",
       dom: true,
       fixture: "css-selectors",
       sub: "setmany-nested-selector-no-ampersand-ignored",
@@ -334,7 +334,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: setMany nested pseudo-element selector writes vendor range thumb rule",
+      caseId: "css-surface-setmany-nested-pseudo-element-selector-writes-vendor-range-thumb-rule", name: "css surface: setMany nested pseudo-element selector writes vendor range thumb rule",
       dom: true,
       fixture: "css-selectors",
       sub: "setmany-webkit-slider-thumb-selector",
@@ -384,7 +384,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: getMany returns setMany-compatible base declarations",
+      caseId: "css-surface-getmany-returns-setmany-compatible-base-declarations", name: "css surface: getMany returns setMany-compatible base declarations",
       dom: true,
       fixture: "css-selectors",
       sub: "get-all-base-declarations",
@@ -431,7 +431,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: selector getMany returns setMany-compatible declarations",
+      caseId: "css-surface-selector-getmany-returns-setmany-compatible-declarations", name: "css surface: selector getMany returns setMany-compatible declarations",
       dom: true,
       fixture: "css-selectors",
       sub: "get-all-selector-declarations",
@@ -489,7 +489,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: getMany returns independent single-node snapshots",
+      caseId: "css-surface-getmany-returns-independent-single-node-snapshots", name: "css surface: getMany returns independent single-node snapshots",
       dom: true,
       fixture: "css-selectors",
       sub: "getmany-independent-single-node-snapshots",
@@ -551,7 +551,7 @@ export function livetree_css_refinements(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: selector getter sees values written after getter creation",
+      caseId: "css-surface-selector-getter-sees-values-written-after-getter-creation", name: "css surface: selector getter sees values written after getter creation",
       dom: true,
       fixture: "css-selectors",
       sub: "selector-getter-live-read",
@@ -610,7 +610,7 @@ export function livetree_css_new_getters(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: `css surface: get.property("all") reads actual CSS all property`,
+      caseId: "css-surface-get.property-all-reads-actual-css-all-property", name: `css surface: get.property("all") reads actual CSS all property`,
       dom: true,
       fixture: "css-selectors",
       sub: "get-property-css-all",
@@ -644,7 +644,7 @@ export function livetree_css_new_getters(): TestSuite {
 
     {
       suite: SUITE,
-      name: "css surface: selector getMany preserves custom properties",
+      caseId: "css-surface-selector-getmany-preserves-custom-properties", name: "css surface: selector getMany preserves custom properties",
       dom: true,
       fixture: "css-selectors",
       sub: "selector-get-all-custom-properties",
@@ -688,7 +688,7 @@ export function livetree_css_new_getters(): TestSuite {
 
     {
       suite: SUITE,
-      name: "css surface: setMany object key without ampersand is ignored without throwing",
+      caseId: "css-surface-setmany-object-key-without-ampersand-is-ignored-without-throwing", name: "css surface: setMany object key without ampersand is ignored without throwing",
       dom: true,
       fixture: "css-selectors",
       sub: "setmany-dot-selector-without-ampersand-ignored",
@@ -721,7 +721,7 @@ export function livetree_css_new_getters(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: selector clear empties point and getMany reads",
+      caseId: "css-surface-selector-clear-empties-point-and-getmany-reads", name: "css surface: selector clear empties point and getMany reads",
       dom: true,
       fixture: "css-selectors",
       sub: "selector-clear-empties-getters",
@@ -758,7 +758,7 @@ export function livetree_css_new_getters(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css surface: getMany returns a defensive snapshot",
+      caseId: "css-surface-getmany-returns-a-defensive-snapshot", name: "css surface: getMany returns a defensive snapshot",
       dom: true,
       fixture: "css-selectors",
       sub: "get-all-defensive-snapshot",
@@ -813,7 +813,7 @@ export function livetree_find_more(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "find surface: byId hit, miss, and must semantics",
+      caseId: "find-surface-byid-hit-miss-and-must-semantics", name: "find surface: byId hit, miss, and must semantics",
       dom: true,
       fixture: "find-matrix",
       sub: "find-by-id-semantics",
@@ -855,7 +855,7 @@ export function livetree_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byAttrs hit, miss, and must semantics",
+      caseId: "find-surface-byattrs-hit-miss-and-must-semantics", name: "find surface: byAttrs hit, miss, and must semantics",
       dom: true,
       fixture: "find-matrix",
       sub: "find-by-attrs-semantics",
@@ -899,7 +899,7 @@ export function livetree_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find surface: byFlags hit, miss, and must semantics",
+      caseId: "find-surface-byflags-hit-miss-and-must-semantics", name: "find surface: byFlags hit, miss, and must semantics",
       dom: true,
       fixture: "find-matrix",
       sub: "find-by-flags-semantics",
@@ -939,7 +939,7 @@ export function livetree_find_more(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "findAll surface: byId returns TreeSelector and empty selector on miss",
+      caseId: "findall-surface-byid-returns-treeselector-and-empty-selector-on-miss", name: "findAll surface: byId returns TreeSelector and empty selector on miss",
       dom: true,
       fixture: "find-matrix",
       sub: "findall-by-id-semantics",
@@ -981,7 +981,7 @@ export function livetree_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: byAttribute preserves order and returns empty TreeSelector on miss",
+      caseId: "findall-surface-byattribute-preserves-order-and-returns-empty-treeselector-on-miss", name: "findAll surface: byAttribute preserves order and returns empty TreeSelector on miss",
       dom: true,
       fixture: "find-matrix",
       sub: "findall-by-attribute-semantics",
@@ -1033,7 +1033,7 @@ export function livetree_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: byFlag preserves order and returns empty TreeSelector on miss",
+      caseId: "findall-surface-byflag-preserves-order-and-returns-empty-treeselector-on-miss", name: "findAll surface: byFlag preserves order and returns empty TreeSelector on miss",
       dom: true,
       fixture: "find-matrix",
       sub: "findall-by-flag-semantics",
@@ -1078,7 +1078,7 @@ export function livetree_find_more(): TestSuite {
 
     {
       suite: SUITE,
-      name: "findAll surface: TreeSelector items are independent LiveTree handles",
+      caseId: "findall-surface-treeselector-items-are-independent-livetree-handles", name: "findAll surface: TreeSelector items are independent LiveTree handles",
       dom: true,
       fixture: "find-matrix",
       sub: "findall-selector-items-are-livetrees",

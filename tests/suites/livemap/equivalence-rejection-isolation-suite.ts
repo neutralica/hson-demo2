@@ -5,7 +5,7 @@ import type { TestAssertRow, TestCase, TestSuite } from "../../harness/core/test
 import { equal_row } from "./assert-helpers";
 
 const SUITE = "livemap/equivalence-rejection-isolation";
-const test = (name: string, run: TestCase["run"]): TestCase => ({ suite: SUITE, name, run });
+const test = (caseId: string, name: string, run: TestCase["run"]): TestCase => ({ suite: SUITE, caseId, name, run });
 type Route = "set" | "setMany" | "replace" | "update" | "batch" | "object" | "array";
 const routes: readonly Route[] = ["set", "setMany", "replace", "update", "batch", "object", "array"];
 
@@ -59,47 +59,47 @@ function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[
   ];
 }
 
-function rejected_case(name: string, route: Route, witness: () => unknown): TestCase {
-  return test(name, () => ({ assertRows: rejection_rows(witness(), route) }));
+function rejected_case(caseId: string, name: string, route: Route, witness: () => unknown): TestCase {
+  return test(caseId, name, () => ({ assertRows: rejection_rows(witness(), route) }));
 }
 
 export function livemap_equivalence_rejection_isolation_suite(): TestSuite {
   let route = 0;
-  const rejected = (name: string, witness: () => unknown): TestCase => rejected_case(name, routes[route++ % routes.length]!, witness);
+  const rejected = (caseId: string, name: string, witness: () => unknown): TestCase => rejected_case(caseId, name, routes[route++ % routes.length]!, witness);
   return {
     suite: SUITE,
     cases: [
-      rejected("undefined rejects without publication", () => undefined),
-      rejected("NaN rejects without publication", () => Number.NaN),
-      test("both infinities reject without publication", () => ({ assertRows: [...rejection_rows(Infinity, routes[route++ % routes.length]!), ...rejection_rows(-Infinity, routes[route++ % routes.length]!)] })),
-      rejected("bigint rejects without publication", () => 1n),
-      rejected("symbol rejects without publication", () => Symbol("value")),
-      rejected("function rejects without execution or publication", () => function unsupported() { return 1; }),
-      rejected("boxed primitive rejects without publication", () => new Number(1)),
-      rejected("custom prototype rejects without publication", () => Object.create({ inherited: true })),
-      rejected("class instance rejects without publication", () => new (class Value { field = 1; })()),
-      rejected("Date rejects without publication", () => new Date(0)),
-      rejected("Map rejects without publication", () => new Map([["a", 1]])),
-      rejected("Set rejects without publication", () => new Set([1])),
-      rejected("Promise rejects without publication", () => Promise.resolve(1)),
-      test("ordinary accessors reject without getter execution", () => {
+      rejected("undefined-rejects-without-publication", "undefined rejects without publication", () => undefined),
+      rejected("nan-rejects-without-publication", "NaN rejects without publication", () => Number.NaN),
+      test("both-infinities-reject-without-publication", "both infinities reject without publication", () => ({ assertRows: [...rejection_rows(Infinity, routes[route++ % routes.length]!), ...rejection_rows(-Infinity, routes[route++ % routes.length]!)] })),
+      rejected("bigint-rejects-without-publication", "bigint rejects without publication", () => 1n),
+      rejected("symbol-rejects-without-publication", "symbol rejects without publication", () => Symbol("value")),
+      rejected("function-rejects-without-execution-or-publication", "function rejects without execution or publication", () => function unsupported() { return 1; }),
+      rejected("boxed-primitive-rejects-without-publication", "boxed primitive rejects without publication", () => new Number(1)),
+      rejected("custom-prototype-rejects-without-publication", "custom prototype rejects without publication", () => Object.create({ inherited: true })),
+      rejected("class-instance-rejects-without-publication", "class instance rejects without publication", () => new (class Value { field = 1; })()),
+      rejected("date-rejects-without-publication", "Date rejects without publication", () => new Date(0)),
+      rejected("map-rejects-without-publication", "Map rejects without publication", () => new Map([["a", 1]])),
+      rejected("set-rejects-without-publication", "Set rejects without publication", () => new Set([1])),
+      rejected("promise-rejects-without-publication", "Promise rejects without publication", () => Promise.resolve(1)),
+      test("ordinary-accessors-reject-without-getter-execution", "ordinary accessors reject without getter execution", () => {
         let calls = 0; const value = {}; Object.defineProperty(value, "field", { enumerable: true, get: () => { calls += 1; return 1; } });
         return { assertRows: [...rejection_rows(value, routes[route++ % routes.length]!), equal_row("getter calls", calls, 0)] };
       }),
-      rejected("nonenumerable properties reject without publication", () => own_property("hidden", 1, false)),
-      rejected("symbol-keyed properties reject without publication", () => own_property(Symbol("hidden"), 1)),
-      rejected("sparse arrays reject without publication", () => { const value = new Array(2); value[1] = 1; return value; }),
-      rejected("explicit array undefined rejects without publication", () => [1, undefined]),
-      rejected("extra named array properties reject without publication", () => { const value = [1]; Object.defineProperty(value, "named", { value: 2, enumerable: true }); return value; }),
-      rejected("array accessors reject without publication", () => { const value = [1]; Object.defineProperty(value, "0", { enumerable: true, get: () => 1 }); return value; }),
-      rejected("array subclasses reject without publication", () => new (class Values extends Array<number> {})(1, 2)),
-      rejected("cycles reject deterministically without publication", () => { const value: Record<string, unknown> = {}; value.self = value; return value; }),
-      test("malformed exact envelopes never downgrade to legacy", () => {
+      rejected("nonenumerable-properties-reject-without-publication", "nonenumerable properties reject without publication", () => own_property("hidden", 1, false)),
+      rejected("symbol-keyed-properties-reject-without-publication", "symbol-keyed properties reject without publication", () => own_property(Symbol("hidden"), 1)),
+      rejected("sparse-arrays-reject-without-publication", "sparse arrays reject without publication", () => { const value = new Array(2); value[1] = 1; return value; }),
+      rejected("explicit-array-undefined-rejects-without-publication", "explicit array undefined rejects without publication", () => [1, undefined]),
+      rejected("extra-named-array-properties-reject-without-publication", "extra named array properties reject without publication", () => { const value = [1]; Object.defineProperty(value, "named", { value: 2, enumerable: true }); return value; }),
+      rejected("array-accessors-reject-without-publication", "array accessors reject without publication", () => { const value = [1]; Object.defineProperty(value, "0", { enumerable: true, get: () => 1 }); return value; }),
+      rejected("array-subclasses-reject-without-publication", "array subclasses reject without publication", () => new (class Values extends Array<number> {})(1, 2)),
+      rejected("cycles-reject-deterministically-without-publication", "cycles reject deterministically without publication", () => { const value: Record<string, unknown> = {}; value.self = value; return value; }),
+      test("malformed-exact-envelopes-never-downgrade-to-legacy", "malformed exact envelopes never downgrade to legacy", () => {
         const map = hson.liveMap.fromJson({ value: 1 }); const before = map.capture(); let commits = 0; let feeds = 0; map.commits.observe(() => { commits += 1; }); map.feed([], () => { feeds += 1; });
         const didReject = rejects(() => map.restore({ rev: 2, format: "structural-json", value: { value: 9 } } as never));
         return { assertRows: [equal_row("rejected", didReject, true), equal_row("capture", map.capture(), before), equal_row("commits", commits, 0), equal_row("feeds", feeds, 0)] };
       }),
-      test("malformed structural JSON rejects restore apply and replay atomically", () => {
+      test("malformed-structural-json-rejects-restore-apply-and-replay-atomically", "malformed structural JSON rejects restore apply and replay atomically", () => {
         const restore = hson.liveMap.fromJson({ value: 1 }); const apply = hson.liveMap.fromJson({ value: 1 }); const replay = hson.liveMap.fromJson({ value: 1 }); const before = restore.capture();
         const envelope = { format: "structural-json", formatVersion: 1, payload: "{" } as const;
         return { assertRows: [

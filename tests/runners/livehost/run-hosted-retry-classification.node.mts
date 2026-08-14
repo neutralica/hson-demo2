@@ -27,7 +27,7 @@ const registry = make_hosted_test_suite_registry(["livemap/replay", "livehost/al
     executions += 1;
     return run_test_suites([{
       suite: id,
-      cases: [{ suite: id, name: "classification fixture", run() {} }],
+      cases: [{ suite: id, caseId: "classification-fixture", name: "classification fixture", run() {} }],
     }], onEvent, options);
   },
 })));

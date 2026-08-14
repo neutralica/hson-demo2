@@ -64,7 +64,7 @@ type HostedTestCaseInspectionMatch = Readonly<{
 
 function runtime_for_registration(registration: ExecutableTestRegistration): HostedTestRuntimeKind {
   const established = all_hosted_executable_suites().find((entry) => entry.suite.cases.some(
-    (testCase) => `${testCase.suite}::${testCase.name}` === registration.descriptor.id,
+    (testCase) => `${testCase.suite}::${testCase.caseId}` === registration.descriptor.id,
   ));
   if (established !== undefined) return established.runtime;
   return registration.descriptor.requirements.includes("synthetic-dom") ? "dom" : "node";
@@ -72,7 +72,7 @@ function runtime_for_registration(registration: ExecutableTestRegistration): Hos
 
 function match_registration(registration: ExecutableTestRegistration): HostedTestCaseInspectionMatch {
   const suite: TestSuite = Object.freeze({
-    suite: registration.descriptor.suite,
+    suite: registration.descriptor.suiteId,
     cases: Object.freeze([registration.testCase]),
     ...(registration.suiteSetup === undefined ? {} : { setup: registration.suiteSetup }),
     ...(registration.suiteTimeoutMs === undefined ? {} : { timeoutMs: registration.suiteTimeoutMs }),
@@ -100,6 +100,7 @@ function normalize_loop_report(
     suite: suiteId,
     caseKey,
     caseSuite,
+    caseId: caseKey.slice(caseKey.indexOf("::") + 2),
     name,
     status: report.ok ? "pass" : "fail",
     ms,
@@ -153,7 +154,7 @@ async function inspect_match(
     suite: request.suite,
     caseKey: request.caseKey,
     caseSuite: event.suite,
-    name: event.name,
+    caseId: event.caseId, name: event.name,
     status: event.status,
     ms: event.ms,
     error: event.err ?? null,
@@ -182,7 +183,7 @@ export async function inspect_hosted_test_case(
   request: HostedTestCaseInspectionRequest,
 ): Promise<HostedTestCaseDiagnostic> {
   const matches = all_hosted_executable_suites().flatMap((entry) => entry.suite.cases
-    .filter((testCase) => `${testCase.suite}::${testCase.name}` === request.caseKey)
+    .filter((testCase) => `${testCase.suite}::${testCase.caseId}` === request.caseKey)
     .map((testCase) => Object.freeze({ runtime: entry.runtime, suite: entry.suite, testCase })));
   if (matches.length === 0) throw new Error(`HOSTED_TEST_UNKNOWN_CASE: Unknown hosted test case "${request.caseKey}".`);
   if (matches.length !== 1) throw new Error(`HOSTED_TEST_AMBIGUOUS_CASE: Ambiguous hosted test case "${request.caseKey}".`);

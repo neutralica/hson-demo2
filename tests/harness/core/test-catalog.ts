@@ -2,10 +2,13 @@ import type {
   TestCase,
   TestDescriptor,
   TestDescriptorMetadata,
+  TestSuiteDescriptor,
   TestSuite,
 } from "./test-contracts";
+import { format_test_case_id, validate_test_case_id, validate_test_suite_id } from "./test-identity";
 
 export type TestCatalog = Readonly<{
+  suites: readonly TestSuiteDescriptor[];
   tests: readonly TestDescriptor[];
 }>;
 
@@ -21,11 +24,16 @@ function freeze_metadata(metadata: TestDescriptorMetadata): Readonly<{
   });
 }
 
-export function test_id(suite: string, name: string): string {
-  return `${suite}::${name}`;
+export function test_id(suite: string, caseId: string): string {
+  return format_test_case_id(suite, caseId);
 }
 
-export function resolve_test_descriptor(suite: TestSuite, testCase: TestCase): TestDescriptor {
+export function resolve_test_descriptor(
+  suite: TestSuite,
+  testCase: TestCase,
+  suiteOrdinal = 0,
+  caseOrdinal = 0,
+): TestDescriptor {
   const defaults = suite.descriptor;
   if (defaults === undefined) {
     throw new Error(`Test suite ${suite.suite} has no canonical descriptor metadata.`);
@@ -33,24 +41,33 @@ export function resolve_test_descriptor(suite: TestSuite, testCase: TestCase): T
   if (testCase.suite !== suite.suite) {
     throw new Error(`Test case suite mismatch: ${testCase.suite} is registered under ${suite.suite}.`);
   }
+  validate_test_suite_id(suite.suite);
+  validate_test_case_id(testCase.caseId);
   const metadata = freeze_metadata({
     subject: testCase.descriptor?.subject ?? defaults.subject,
     requirements: testCase.descriptor?.requirements ?? defaults.requirements,
     collections: testCase.descriptor?.collections ?? defaults.collections ?? Object.freeze([]),
   });
   return Object.freeze({
-    id: test_id(suite.suite, testCase.name),
-    suite: suite.suite,
-    name: testCase.name,
+    id: test_id(suite.suite, testCase.caseId),
+    suiteId: suite.suite,
+    caseId: testCase.caseId,
+    title: testCase.name,
     ...metadata,
+    provenance: defaults.provenance ?? "hson-demo2",
+    suiteOrdinal,
+    caseOrdinal,
   });
 }
 
-export function make_test_catalog(descriptors: readonly TestDescriptor[]): TestCatalog {
+export function make_test_catalog(
+  descriptors: readonly TestDescriptor[],
+  suiteDescriptors?: readonly TestSuiteDescriptor[],
+): TestCatalog {
   const byId = new Map<string, TestDescriptor>();
   for (const descriptor of descriptors) {
-    if (descriptor.id !== test_id(descriptor.suite, descriptor.name)) {
-      throw new Error(`Canonical test ID does not match suite and name: ${descriptor.id}`);
+    if (descriptor.id !== test_id(descriptor.suiteId, descriptor.caseId)) {
+      throw new Error(`Canonical test ID does not match suiteId and caseId: ${descriptor.id}`);
     }
     if (new Set(descriptor.requirements).size !== descriptor.requirements.length) {
       throw new Error(`Duplicate capability requirement on ${descriptor.id}.`);
@@ -67,7 +84,49 @@ export function make_test_catalog(descriptors: readonly TestDescriptor[]): TestC
     byId.set(frozen.id, frozen);
   }
   const tests = Object.freeze([...byId.values()]);
-  return Object.freeze({ tests });
+  const suites = suiteDescriptors ?? derive_suite_descriptors(tests);
+  const suiteById = new Map<string, TestSuiteDescriptor>();
+  for (const descriptor of suites) {
+    validate_test_suite_id(descriptor.id);
+    if (suiteById.has(descriptor.id)) throw new Error(`Duplicate canonical suite ID: ${descriptor.id}`);
+    if (!Number.isSafeInteger(descriptor.order) || descriptor.order < 0) {
+      throw new Error(`Invalid canonical suite order for ${descriptor.id}.`);
+    }
+    if (descriptor.executionShape === "opaque-aggregate"
+      && (!Number.isSafeInteger(descriptor.declaredChecks) || (descriptor.declaredChecks ?? 0) < 1)) {
+      throw new Error(`Opaque suite ${descriptor.id} requires a positive declaredChecks count.`);
+    }
+    suiteById.set(descriptor.id, Object.freeze({
+      ...descriptor,
+      requirements: Object.freeze([...descriptor.requirements]),
+      collections: Object.freeze([...descriptor.collections]),
+    }));
+  }
+  for (const descriptor of tests) {
+    const suite = suiteById.get(descriptor.suiteId);
+    if (suite === undefined || suite.executionShape !== "cases") {
+      throw new Error(`Canonical case ${descriptor.id} has no case-based suite descriptor.`);
+    }
+  }
+  return Object.freeze({ suites: Object.freeze([...suiteById.values()]), tests });
+}
+
+function derive_suite_descriptors(tests: readonly TestDescriptor[]): readonly TestSuiteDescriptor[] {
+  const suites = new Map<string, TestSuiteDescriptor>();
+  for (const test of tests) {
+    const descriptor: TestSuiteDescriptor = Object.freeze({
+      id: test.suiteId,
+      title: test.suiteId,
+      subject: test.subject,
+      collections: test.collections,
+      provenance: test.provenance,
+      order: test.suiteOrdinal,
+      requirements: test.requirements,
+      executionShape: "cases",
+    });
+    suites.set(test.suiteId, suites.get(test.suiteId) ?? descriptor);
+  }
+  return Object.freeze([...suites.values()]);
 }
 
 export function find_test_descriptor(catalog: TestCatalog, id: string): TestDescriptor | undefined {
@@ -77,18 +136,40 @@ export function find_test_descriptor(catalog: TestCatalog, id: string): TestDesc
 function canonical_descriptor(descriptor: TestDescriptor): string {
   return JSON.stringify({
     id: descriptor.id,
-    suite: descriptor.suite,
-    name: descriptor.name,
+    suiteId: descriptor.suiteId,
+    caseId: descriptor.caseId,
+    title: descriptor.title,
     subject: descriptor.subject,
     requirements: [...descriptor.requirements].sort(),
     collections: [...descriptor.collections].sort(),
+    provenance: descriptor.provenance,
+    suiteOrdinal: descriptor.suiteOrdinal,
+    caseOrdinal: descriptor.caseOrdinal,
+  });
+}
+
+function canonical_suite_descriptor(descriptor: TestSuiteDescriptor): string {
+  return JSON.stringify({
+    id: descriptor.id,
+    title: descriptor.title,
+    subject: descriptor.subject,
+    collections: [...descriptor.collections].sort(),
+    provenance: descriptor.provenance,
+    order: descriptor.order,
+    requirements: [...descriptor.requirements].sort(),
+    executionShape: descriptor.executionShape,
+    sourceRef: descriptor.sourceRef ?? null,
+    declaredChecks: descriptor.declaredChecks ?? null,
   });
 }
 
 /** FNV-1a 32-bit over sorted canonical descriptor records. */
 export function test_catalog_version(catalog: TestCatalog): string {
-  const validated = make_test_catalog(catalog.tests);
-  const canonical = validated.tests.map(canonical_descriptor).sort().join("\n");
+  const validated = make_test_catalog(catalog.tests, catalog.suites);
+  const canonical = [
+    ...validated.suites.map((descriptor) => `suite:${canonical_suite_descriptor(descriptor)}`),
+    ...validated.tests.map((descriptor) => `case:${canonical_descriptor(descriptor)}`),
+  ].sort().join("\n");
   let hash = 0x811c9dc5;
   for (let index = 0; index < canonical.length; index += 1) {
     hash ^= canonical.charCodeAt(index);
@@ -98,7 +179,24 @@ export function test_catalog_version(catalog: TestCatalog): string {
 }
 
 export function catalog_from_test_suites(suites: readonly TestSuite[]): TestCatalog {
-  return make_test_catalog(suites.flatMap((suite) => suite.cases.map((testCase) => (
-    resolve_test_descriptor(suite, testCase)
-  ))));
+  const suiteDescriptors = suites.map((suite, suiteOrdinal): TestSuiteDescriptor => {
+    const metadata = suite.descriptor;
+    if (metadata === undefined) throw new Error(`Test suite ${suite.suite} has no canonical descriptor metadata.`);
+    return Object.freeze({
+      id: suite.suite,
+      title: metadata.title ?? suite.suite,
+      subject: metadata.subject,
+      collections: Object.freeze([...(metadata.collections ?? [])]),
+      provenance: metadata.provenance ?? "hson-demo2",
+      order: metadata.order ?? suiteOrdinal,
+      requirements: Object.freeze([...metadata.requirements]),
+      executionShape: "cases",
+    });
+  });
+  return make_test_catalog(
+    suites.flatMap((suite, suiteOrdinal) => suite.cases.map((testCase, caseOrdinal) => (
+      resolve_test_descriptor(suite, testCase, suite.descriptor?.order ?? suiteOrdinal, caseOrdinal)
+    ))),
+    suiteDescriptors,
+  );
 }

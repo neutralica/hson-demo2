@@ -15,7 +15,7 @@ export function livemap_suites_api(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "api liveMap schema.define validates matching json",
+        caseId: "api-livemap-schema.define-validates-matching-json", name: "api liveMap schema.define validates matching json",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -31,7 +31,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap schema.define reports invalid json",
+        caseId: "api-livemap-schema.define-reports-invalid-json", name: "api liveMap schema.define reports invalid json",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -57,28 +57,28 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap schema.define accepts token root",
+        caseId: "api-livemap-schema.define-accepts-token-root", name: "api liveMap schema.define accepts token root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.array(s.string)).validateRoot(["a", "b"]),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap fromJson string creates projected map",
+        caseId: "api-livemap-fromjson-string-creates-projected-map", name: "api liveMap fromJson string creates projected map",
         input: {},
         act: () => hson.liveMap.fromJson('{"user":{"name":"Ada"}}').snap(),
         expected: { user: { name: "Ada" } },
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap fromJson value creates projected map",
+        caseId: "api-livemap-fromjson-value-creates-projected-map", name: "api liveMap fromJson value creates projected map",
         input: {},
         act: () => hson.liveMap.fromJson({ user: { name: "Ada" } }).snap(),
         expected: { user: { name: "Ada" } },
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap fromHson creates projected map",
+        caseId: "api-livemap-fromhson-creates-projected-map", name: "api liveMap fromHson creates projected map",
         input: {},
         act: () => {
           const map = hson.liveMap.fromHson('<user <name "Ada">>');
@@ -91,7 +91,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap fromNode creates projected map",
+        caseId: "api-livemap-fromnode-creates-projected-map", name: "api liveMap fromNode creates projected map",
         input: {},
         act: () => {
           const node = hson.fromJson({ user: { name: "Ada" } }).toNode();
@@ -105,7 +105,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap typed at reads nested object path",
+        caseId: "api-livemap-typed-at-reads-nested-object-path", name: "api liveMap typed at reads nested object path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -131,7 +131,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap typed at reads nested array path",
+        caseId: "api-livemap-typed-at-reads-nested-array-path", name: "api liveMap typed at reads nested array path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -161,7 +161,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api map schema namespace reads undefined before use",
+        caseId: "api-map-schema-namespace-reads-undefined-before-use", name: "api map schema namespace reads undefined before use",
         input: {},
         act: () => {
           const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
@@ -175,7 +175,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api map schema.use returns map and stores schema",
+        caseId: "api-map-schema.use-returns-map-and-stores-schema", name: "api map schema.use returns map and stores schema",
         input: {},
         act: () => {
           const map = hson.liveMap.fromJson({ user: { name: "Ada" } });
@@ -197,7 +197,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       commitCase({
         suite: SUITE,
-        name: "api map schema.use allows valid chained set",
+        caseId: "api-map-schema.use-allows-valid-chained-set", name: "api map schema.use allows valid chained set",
         input: { user: { name: "Ada" } },
         act: (map) => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -218,7 +218,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "api map schema.use rejects invalid chained set before mutation",
+        caseId: "api-map-schema.use-rejects-invalid-chained-set-before-mutation", name: "api map schema.use rejects invalid chained set before mutation",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -236,7 +236,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api map schema.use accepts fromJson object root",
+        caseId: "api-map-schema.use-accepts-fromjson-object-root", name: "api map schema.use accepts fromJson object root",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -261,7 +261,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api map schema.use accepts fromJson string root",
+        caseId: "api-map-schema.use-accepts-fromjson-string-root", name: "api map schema.use accepts fromJson string root",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -286,7 +286,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "api map schema.use rejects invalid fromJson root",
+        caseId: "api-map-schema.use-rejects-invalid-fromjson-root", name: "api map schema.use rejects invalid fromJson root",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -303,7 +303,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       throwCase({
         suite: SUITE,
-        name: "api map schema.use rejects exact unknown root key",
+        caseId: "api-map-schema.use-rejects-exact-unknown-root-key", name: "api map schema.use rejects exact unknown root key",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object.exact({
@@ -320,7 +320,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api liveMap schema.define accepts object shape root",
+        caseId: "api-livemap-schema.define-accepts-object-shape-root", name: "api liveMap schema.define accepts object shape root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.object({
           user: s.object({
@@ -331,7 +331,7 @@ export function livemap_suites_api(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "api map schema.use returns its map",
+        caseId: "api-map-schema.use-returns-its-map", name: "api map schema.use returns its map",
         input: {},
         act: () => {
           const map = hson.liveMap.fromJson({ user: { name: "Ada" } });

@@ -5,14 +5,14 @@ import type { LiveMapFeedEventPreview } from "./types";
 
 export type HandleSnapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   expected: JsonValue | undefined;
 }>;
 export type HandleSetCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   value: JsonValue;
@@ -21,7 +21,7 @@ export type HandleSetCaseSpec = Readonly<{
 }>;
 export type HandleSetManyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   values: Readonly<Record<string, JsonValue>>;
@@ -36,7 +36,7 @@ export type HandleSetManyCaseSpec = Readonly<{
 }>;
 export type HandleUpdateCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   update: (value: JsonValue | undefined) => JsonValue;
@@ -45,7 +45,7 @@ export type HandleUpdateCaseSpec = Readonly<{
 }>;
 export type HandleUpdateFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   update: (value: JsonValue | undefined) => JsonValue;
@@ -59,7 +59,7 @@ type HandleObjectSetOp = Readonly<{
 }>;
 export type HandleSetManyFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   values: Readonly<Record<string, JsonValue>>;
@@ -67,7 +67,7 @@ export type HandleSetManyFeedCaseSpec = Readonly<{
 }>;
 export type HandleDeleteCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   expectedChanged: boolean;
@@ -81,14 +81,14 @@ export type HandleDeleteCaseSpec = Readonly<{
 }>;
 export type HandleDeleteFeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   expectedEvents: readonly LiveMapFeedEventPreview[];
 }>;
 export type HandlePathCopyCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   mutateReturnedPathTo: LivePath;
@@ -96,7 +96,7 @@ export type HandlePathCopyCaseSpec = Readonly<{
 }>;
 export type HandleOriginalPathStabilityCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   mutateOriginalPathTo: LivePath;
@@ -106,7 +106,7 @@ export type HandleOriginalPathStabilityCaseSpec = Readonly<{
 // Generic case types and helpers for commit/throw/feed/link
 export type CommitCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   act: (map: TestLiveMap) => Readonly<{ changed: boolean; ops: readonly unknown[]; }>;
   expectedChanged: boolean;
@@ -115,7 +115,7 @@ export type CommitCaseSpec = Readonly<{
 }>;
 export type FeedCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   act: (handle: TestHandle) => unknown;
@@ -123,7 +123,7 @@ export type FeedCaseSpec = Readonly<{
 }>;
 export type LinkCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   sourcePath: LivePath;
   targetPath: LivePath;
@@ -132,14 +132,14 @@ export type LinkCaseSpec = Readonly<{
 }>;
 export type ThrowCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   act: (map: TestLiveMap) => unknown;
   expectedMessage: string;
 }>;
 export type ReadCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   act: (map: TestLiveMap) => unknown;
   expected: unknown;

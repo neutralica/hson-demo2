@@ -273,7 +273,7 @@ expect_cloudflare(
     && hosted_test_report_cases(workerWhole.report).length === workerExecutorRegistry.catalog.tests.length,
   "the entire discovered Worker catalog is canonically executable",
 );
-const nodeOnlyId = "livehost/hosted-replay-action-in-memory::hosted replay action preserves request, result, and failure semantics";
+const nodeOnlyId = "livehost/hosted-replay-action-in-memory::hosted-replay-action-preserves-request-result-and-failure-semantics";
 const nodeOnlyWorkerResponse = await workerApplication.coordinator.dispatch_action({
   type: "action",
   id: "worker-selected-node-only",
@@ -288,7 +288,7 @@ expect_cloudflare(
     && nodeOnlyWorkerResponse.error.message.includes("cloudflare-livehost"),
   "the Worker rejects a Node-only stable ID before execution",
 );
-const transformOnlyId = "transform/json/basic-test::test.unknownFail";
+const transformOnlyId = "transform/json/basic-test::test.unknownfail";
 const transformWorkerResponse = await workerApplication.coordinator.dispatch_action({
   type: "action",
   id: "worker-selected-transform-only",
@@ -302,7 +302,7 @@ expect_cloudflare(
     && transformWorkerResponse.error.message.includes("HOSTED_TEST_UNAVAILABLE_ON_EXECUTOR"),
   "the Worker rejects a synthetic-DOM Transform ID before report construction",
 );
-const canvasOnlyId = "livetree/canvas::canvas.inScope false on non-canvas node";
+const canvasOnlyId = "livetree/canvas::canvas.inscope-false-on-non-canvas-node";
 const canvasWorkerResponse = await workerApplication.coordinator.dispatch_action({
   type: "action",
   id: "worker-selected-canvas-only",

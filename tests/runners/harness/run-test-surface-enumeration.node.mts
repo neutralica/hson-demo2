@@ -39,12 +39,11 @@ expect_surface(
     === [
       "all:hosted/all",
       ...CANONICAL_TEST_SUBJECT_ORDER
-        .filter((subject) => subject !== "reflect")
         .map((subject) => `${subject}:category/${subject}`),
       "unit:category/unit",
       "dev:category/dev",
     ].join("|"),
-  "hosted selector must retain exactly the seven lowercase runnable choices",
+  "hosted selector must retain the eight centrally ordered lowercase runnable choices",
 );
 
 const liveDeclared = new Set(TEST_SURFACE_CATALOG.filter((entry) => entry.repository === "hson-live").map((entry) => entry.runner.slice("npm run ".length)));

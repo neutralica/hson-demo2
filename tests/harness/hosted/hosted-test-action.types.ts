@@ -63,7 +63,7 @@ export type HostedTestCaseDiagnostic = Readonly<{
   suite: HostedTestRunTarget;
   caseKey: string;
   caseSuite: string;
-  name: string;
+  caseId: string; name: string;
   status: "pass" | "fail" | "skip";
   ms: number;
   error: string | null;

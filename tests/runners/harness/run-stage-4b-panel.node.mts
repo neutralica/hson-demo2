@@ -41,18 +41,18 @@ expect_panel(
 let executions = 0;
 const alphaCase: TestCase = Object.freeze({
   suite: "alpha/suite",
-  name: "first",
+  caseId: "first", name: "first",
   run: () => { executions += 1; },
 });
 const betaCase: TestCase = Object.freeze({
   suite: "beta/suite",
-  name: "second",
+  caseId: "second", name: "second",
   run: () => { executions += 1; },
 });
 const betaOtherCase: TestCase = Object.freeze({
   suite: "beta/suite",
-  name: "third",
-  descriptor: Object.freeze({ subject: "dev" }),
+  caseId: "third", name: "third",
+  descriptor: Object.freeze({ collections: Object.freeze(["dev"] as const) }),
   run: () => { executions += 1; },
 });
 const fixtureSuites: readonly TestSuite[] = Object.freeze([
@@ -83,13 +83,17 @@ function executor(kind: "node" | "cloudflare-worker"): TestExecutorDescriptor {
 const nodeRegistry = make_test_executor_registry(executor("node"), fixtureSuites);
 const workerRegistry = make_test_executor_registry(executor("cloudflare-worker"), fixtureSuites);
 const externalTarget = Object.freeze({
-  id: "library::livehost.authority",
+  id: "livehost/authority",
   launcherId: "livehost.authority",
+  sourceRef: "hson-live:livehost.authority",
   subject: "livehost",
   displayName: "LiveHost authority",
   runtime: "node",
   executableChecks: 19,
-  collections: Object.freeze(["authority"]),
+  collections: Object.freeze([]),
+  tags: Object.freeze(["authority"]),
+  requirements: Object.freeze(["javascript", "node"] as const),
+  order: 0,
 }) satisfies ExternalLibraryLauncherTarget;
 for (const registry of [nodeRegistry, workerRegistry]) {
   const targets = registry.executor.kind === "node" ? Object.freeze([externalTarget]) : Object.freeze([]);
@@ -102,7 +106,7 @@ for (const registry of [nodeRegistry, workerRegistry]) {
     `${registry.executor.kind} projection begins with the quiet all label`,
   );
   expect_panel(
-    choices.map((choice) => choice.key).join("|") === "all|subject:livehost",
+    choices.map((choice) => choice.key).join("|") === "all|subject:livehost|collection:dev",
     `${registry.executor.kind} primary projection is curated`,
   );
   expect_panel(
@@ -115,21 +119,21 @@ for (const registry of [nodeRegistry, workerRegistry]) {
     hosted_test_panel_suite_choices(registry.catalog.tests, targets, livehostPrimary.selection)
       .map((choice) => choice.key).join("|")
       === (registry.executor.kind === "node"
-        ? "suite:library::livehost.authority|suite:beta/suite"
+        ? "suite:beta/suite|suite:livehost/authority"
         : "suite:beta/suite"),
     `${registry.executor.kind} suite choices are filtered to the active primary category`,
   );
   const betaChoices = hosted_test_panel_test_choices(registry.catalog.tests, "beta/suite");
   expect_panel(
     betaChoices.map((choice) => choice.key).join("|")
-      === "test:beta/suite::second|test:beta/suite::third"
+      === "test:beta/suite::third|test:beta/suite::second"
       && betaChoices.every((choice) => choice.selection.kind === "test" && choice.count === 1),
     `${registry.executor.kind} targeted cases contain only the selected suite in deterministic order`,
   );
   expect_panel(
     betaChoices.every((choice) => hosted_test_panel_display_label(choice.label) === choice.label.toLowerCase())
       && betaChoices[0]?.selection.kind === "test"
-      && betaChoices[0].selection.testId === "beta/suite::second",
+      && betaChoices[0].selection.testId === "beta/suite::third",
     `${registry.executor.kind} lowercase display projection does not mutate canonical IDs`,
   );
   expect_panel(
@@ -146,11 +150,11 @@ for (const registry of [nodeRegistry, workerRegistry]) {
     `${registry.executor.kind} all selection is duplicate-free`,
   );
   expect_panel(
-    all.filter((id) => id.startsWith("library::")).length === (registry.executor.kind === "node" ? 1 : 0),
+    all.filter((id) => id === externalTarget.id).length === (registry.executor.kind === "node" ? 1 : 0),
     `${registry.executor.kind} all includes each available external target exactly once`,
   );
-  expect_panel(subject.join() === "beta/suite::second", `${registry.executor.kind} subject projection is exact`);
-  expect_panel(suite.join("|") === "beta/suite::second|beta/suite::third", `${registry.executor.kind} suite projection is exact`);
+  expect_panel(subject.join() === "beta/suite::third,beta/suite::second", `${registry.executor.kind} subject projection is exact`);
+  expect_panel(suite.join("|") === "beta/suite::third|beta/suite::second", `${registry.executor.kind} suite projection is exact`);
   expect_panel(exact.join() === "alpha/suite::first", `${registry.executor.kind} exact-test projection preserves the stable ID`);
   expect_panel(
     hosted_test_panel_selected_ids(registry.catalog.tests, { kind: "suite", suite: "missing" }).length === 0,
@@ -162,12 +166,12 @@ for (const registry of [nodeRegistry, workerRegistry]) {
       "library verification is absent from the primary selector",
     );
     const librarySuites = hosted_test_panel_suite_choices(registry.catalog.tests, targets, livehostPrimary.selection)
-      .filter((choice) => choice.key.startsWith("suite:library::"));
+      .filter((choice) => choice.key === `suite:${externalTarget.id}`);
     expect_panel(
       librarySuites.length === 1
-        && librarySuites[0]?.label === "library · LiveHost authority (21)"
+        && librarySuites[0]?.label === "LiveHost authority (19)"
         && hosted_test_panel_display_label(librarySuites[0].label)
-          === "library · livehost authority (21)",
+          === "livehost authority (19)",
       "external suite label is lowercased for display without mutating launcher metadata",
     );
     expect_panel(

@@ -80,7 +80,7 @@ function as_json(value: unknown): JsonValue {
 export function create_test_log(): TestLog {
   const logState = hson.liveMap.fromJson(make_initial_test_log_state() as unknown as JsonValue);
 
-  const key = (suite: string, name: string): CaseKey => `${suite}::${name}`;
+  const key = (suite: string, caseId: string): CaseKey => `${suite}::${caseId}`;
 
   const read = <T>(path: readonly (string | number)[]): T | undefined => {
     return logState.at(path).snap() as unknown as T | undefined;
@@ -166,7 +166,7 @@ export function create_test_log(): TestLog {
 
     if (e.t === "case_begin") {
       const summary = getSummaryState();
-      const k = key(e.suite, e.name);
+      const k = key(e.suite, e.caseId);
       const meta = e.meta;
       const suiteKeys = read<CaseKey[]>(["caseKeysBySuite", e.suite]) ?? [];
       const suiteState = getSuite(e.suite);
@@ -178,7 +178,7 @@ export function create_test_log(): TestLog {
         caseKeys: [...suiteState.caseKeys, k],
       });
 
-      const base = { key: k, suite: e.suite, name: e.name } as const;
+      const base = { key: k, suite: e.suite, caseId: e.caseId, name: e.name } as const;
       set(mutations, ["casesByKey", k], meta ? { ...base, meta } : base);
       set(mutations, ["lastLine"], `run: ${e.name}`);
       commit(mutations);
@@ -188,7 +188,7 @@ export function create_test_log(): TestLog {
     if (e.t === "case_end") {
       const end = normalize_case_end_event(e);
       const summary = getSummaryState();
-      const k = key(end.suite, end.name);
+      const k = key(end.suite, end.caseId);
       const prev = read<CaseLog>(["casesByKey", k]);
       const suiteState = getSuite(end.suite);
 
@@ -213,7 +213,7 @@ export function create_test_log(): TestLog {
       const baseEnd = {
         key: k,
         suite: end.suite,
-        name: end.name,
+        caseId: end.caseId, name: end.name,
         status: end.status,
         ms: end.ms,
       } as const;
@@ -231,7 +231,7 @@ export function create_test_log(): TestLog {
         const meta = nextMeta;
         const base = {
           suite: end.suite,
-          name: end.name,
+          caseId: end.caseId, name: end.name,
           err: end.err ?? "Unknown error",
           ms: end.ms,
         } as const;

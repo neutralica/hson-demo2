@@ -20,7 +20,7 @@ type MemorySocket = Readonly<{
 
 type LiveHostClientReadCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: unknown;
   act: () => unknown | Promise<unknown>;
   expected: unknown;
@@ -86,7 +86,7 @@ function make_memory_socket(): MemorySocket {
 function livehost_client_read_case(spec: LiveHostClientReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -110,7 +110,7 @@ export function livehost_client_suite(): TestSuite {
     cases: [
       livehost_client_read_case({
         suite: SUITE,
-        name: "connect sends hello message",
+        caseId: "connect-sends-hello-message", name: "connect sends hello message",
         input: {},
         act: () => {
           const socket = make_memory_socket();
@@ -138,7 +138,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "hello replaces client map snapshot",
+        caseId: "hello-replaces-client-map-snapshot", name: "hello replaces client map snapshot",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -166,7 +166,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "sync updates client map path",
+        caseId: "sync-updates-client-map-path", name: "sync updates client map path",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -200,7 +200,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "sync at empty path replaces client map",
+        caseId: "sync-at-empty-path-replaces-client-map", name: "sync at empty path replaces client map",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -234,7 +234,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "subscribe sends path message",
+        caseId: "subscribe-sends-path-message", name: "subscribe sends path message",
         input: {},
         act: () => {
           const socket = make_memory_socket();
@@ -255,7 +255,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "unsubscribe sends path message",
+        caseId: "unsubscribe-sends-path-message", name: "unsubscribe sends path message",
         input: {},
         act: () => {
           const socket = make_memory_socket();
@@ -276,7 +276,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action sends message and resolves ack",
+        caseId: "action-sends-message-and-resolves-ack", name: "action sends message and resolves ack",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -321,7 +321,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action resolves matching error",
+        caseId: "action-resolves-matching-error", name: "action resolves matching error",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -362,7 +362,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action ignores unrelated ack until matching result arrives",
+        caseId: "action-ignores-unrelated-ack-until-matching-result-arrives", name: "action ignores unrelated ack until matching result arrives",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -411,7 +411,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "connect is idempotent while already connected",
+        caseId: "connect-is-idempotent-while-already-connected", name: "connect is idempotent while already connected",
         input: {},
         act: () => {
           const socket = make_memory_socket();
@@ -439,7 +439,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "reconnect sends fresh hello without historical cursor",
+        caseId: "reconnect-sends-fresh-hello-without-historical-cursor", name: "reconnect sends fresh hello without historical cursor",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -479,7 +479,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "server close detaches listeners",
+        caseId: "server-close-detaches-listeners", name: "server close detaches listeners",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -512,7 +512,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "invalid server message is ignored",
+        caseId: "invalid-server-message-is-ignored", name: "invalid server message is ignored",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -538,7 +538,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action without payload omits payload field",
+        caseId: "action-without-payload-omits-payload-field", name: "action without payload omits payload field",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -579,7 +579,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "disconnect detaches socket listeners",
+        caseId: "disconnect-detaches-socket-listeners", name: "disconnect detaches socket listeners",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -612,7 +612,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action resolves ack result payload",
+        caseId: "action-resolves-ack-result-payload", name: "action resolves ack result payload",
         input: {},
         act: async () => {
           type Actions = Readonly<{ read: undefined }>;
@@ -634,7 +634,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "disconnect rejects pending action with stable error",
+        caseId: "disconnect-rejects-pending-action-with-stable-error", name: "disconnect rejects pending action with stable error",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -663,7 +663,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "socket close rejects every pending action once",
+        caseId: "socket-close-rejects-every-pending-action-once", name: "socket close rejects every pending action once",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: { index: number } }>;
@@ -700,7 +700,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "disconnect leaves completed action settled and ignores late results",
+        caseId: "disconnect-leaves-completed-action-settled-and-ignores-late-results", name: "disconnect leaves completed action settled and ignores late results",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -741,7 +741,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "reconnect starts with no stale pending actions",
+        caseId: "reconnect-starts-with-no-stale-pending-actions", name: "reconnect starts with no stale pending actions",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -778,7 +778,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "disconnect then socket close is idempotent",
+        caseId: "disconnect-then-socket-close-is-idempotent", name: "disconnect then socket close is idempotent",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -799,7 +799,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action before connect rejects without allocating or sending",
+        caseId: "action-before-connect-rejects-without-allocating-or-sending", name: "action before connect rejects without allocating or sending",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -827,7 +827,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action after explicit disconnect rejects without allocating or sending",
+        caseId: "action-after-explicit-disconnect-rejects-without-allocating-or-sending", name: "action after explicit disconnect rejects without allocating or sending",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -851,7 +851,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "action after socket close rejects without allocating or sending",
+        caseId: "action-after-socket-close-rejects-without-allocating-or-sending", name: "action after socket close rejects without allocating or sending",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -875,7 +875,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "duplicate logical request IDs retain independent delivery attempts",
+        caseId: "duplicate-logical-request-ids-retain-independent-delivery-attempts", name: "duplicate logical request IDs retain independent delivery attempts",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -904,7 +904,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "event listeners receive once and dispose idempotently",
+        caseId: "event-listeners-receive-once-and-dispose-idempotently", name: "event listeners receive once and dispose idempotently",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
@@ -924,7 +924,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "events do not settle pending actions",
+        caseId: "events-do-not-settle-pending-actions", name: "events do not settle pending actions",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
@@ -946,7 +946,7 @@ export function livehost_client_suite(): TestSuite {
       }),
       livehost_client_read_case({
         suite: SUITE,
-        name: "event listeners persist across reconnect without detached delivery",
+        caseId: "event-listeners-persist-across-reconnect-without-detached-delivery", name: "event listeners persist across reconnect without detached delivery",
         input: {},
         act: async () => {
           const socket = make_memory_socket();

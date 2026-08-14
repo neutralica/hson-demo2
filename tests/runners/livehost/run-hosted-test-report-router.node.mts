@@ -50,7 +50,7 @@ function fixture(runId: string, passed = true) {
   report.reduce({
     t: "case_end",
     suite: "livemap/replay",
-    name: "synthetic",
+    caseId: "synthetic", name: "synthetic",
     status: passed ? "pass" : "fail",
     ms: 1,
     ...(passed ? {} : { err: "expected" }),
@@ -62,7 +62,7 @@ function fixture(runId: string, passed = true) {
     fail: passed ? 0 : 1,
     skip: 0,
     msTotal: 1,
-    failures: passed ? [] : [{ suite: "livemap/replay", name: "synthetic", err: "expected", ms: 1 }],
+    failures: passed ? [] : [{ suite: "livemap/replay", caseId: "synthetic", name: "synthetic", err: "expected", ms: 1 }],
   };
   report.complete({ ok: passed, summary });
   const commits = report.commits().map((commit) => encode_hosted_test_report_commit(runId, "livemap/replay", commit));

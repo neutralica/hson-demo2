@@ -38,12 +38,14 @@ export function make_towl_socket(): TowlMemorySocket {
 
 export function towl_case(
   suite: string,
+  caseId: string,
   name: string,
   act: () => unknown | Promise<unknown>,
   expected: unknown,
 ): TestCase {
   return {
     suite,
+    caseId,
     name,
     meta: { input: preview_value({}) },
     run: async () => {

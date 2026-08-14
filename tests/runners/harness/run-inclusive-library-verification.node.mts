@@ -98,7 +98,7 @@ assert.equal(
   result.ok,
   true,
   [
-    ...failedCanonicalEvents.map((event) => `${event.suite}::${event.name}: ${event.err ?? "failed"}`),
+    ...failedCanonicalEvents.map((event) => `${event.suite}::${event.caseId}: ${event.err ?? "failed"}`),
     ...failedExternalEvents.map((event) => `${event.id}: ${event.stderr}`),
   ].join("\n"),
 );

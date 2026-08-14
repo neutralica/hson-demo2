@@ -63,14 +63,14 @@ function replay_commits(
 const passEvent: TestEvent = {
   t: "case_end",
   suite: "livemap/replay",
-  name: "round trips a commit",
+  caseId: "round-trips-a-commit", name: "round trips a commit",
   status: "pass",
   ms: 2.5,
 };
 const failEvent: TestEvent = {
   t: "case_end",
   suite: "livemap/replay",
-  name: "rejects a stale revision",
+  caseId: "rejects-a-stale-revision", name: "rejects a stale revision",
   status: "fail",
   ms: Number.POSITIVE_INFINITY,
   err: "expected revision 2",
@@ -87,6 +87,8 @@ expect_report(initial.rev === 0, "JSON object construction has the expected init
 equal(initial.value, {
   run: { suite: "livemap/replay", status: "idle", startedAt: null, completedAt: null, timing: null },
   summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
+  plan: null,
+  suiteRuns: [],
   caseBatches: {},
   suites: [],
   externalResults: {},
@@ -107,7 +109,7 @@ expect_report(startCommit.prevRev === 0 && startCommit.rev === 1, "start capture
 expect_report(find_op(startCommit, ["run", "status"])?.next === "running", "start commit records running status");
 expect_report(find_op(startCommit, ["run", "startedAt"])?.next === 100, "start commit records start time");
 
-report.reduce({ t: "case_begin", suite: "livemap/replay", name: "round trips a commit" });
+report.reduce({ t: "case_begin", suite: "livemap/replay", caseId: "round-trips-a-commit", name: "round trips a commit" });
 expect_report(report.map.rev === 1, "ignored case_begin consumes no revision");
 report.reduce(passEvent);
 expect_report(Number(report.map.rev) === 2, "completed case consumes one revision");
@@ -159,7 +161,7 @@ detached.reduce({ t: "suite_begin", suite: "livemap/replay" });
 const mutableEvent: Extract<TestEvent, { t: "case_end" }> = {
   t: "case_end",
   suite: "livemap/replay",
-  name: "original name",
+  caseId: "original-name", name: "original name",
   status: "fail",
   ms: 1,
   err: "original error",
@@ -186,7 +188,7 @@ failed.complete({
     fail: 1,
     skip: 0,
     msTotal: 1,
-    failures: [{ suite: "livemap/replay", name: "rejects a stale revision", err: "expected revision 2", ms: 1 }],
+    failures: [{ suite: "livemap/replay", caseId: "rejects-a-stale-revision", name: "rejects a stale revision", err: "expected revision 2", ms: 1 }],
   },
 });
 expect_report(failed.map.snap(["run", "status"]) === "failed", "normal assertion failure is terminal failed");

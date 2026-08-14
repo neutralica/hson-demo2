@@ -13,7 +13,7 @@ export function unit_test_more_css(): TestSuite {
     const SUITE = "unit/css/more";
 
     const cases: readonly TestCase[] = [
-        make_unit_case(SUITE, "normalize_css_value escapes quotes correctly", () => {
+        make_unit_case(SUITE, "normalize_css_value-escapes-quotes-correctly", "normalize_css_value escapes quotes correctly", () => {
             const out = normalize_css_value("content", `He said "hi"`);
 
             if (out !== `"He said \\"hi\\""`) {
@@ -21,7 +21,7 @@ export function unit_test_more_css(): TestSuite {
             }
         }),
 
-        make_unit_case(SUITE, "normalize_css_value escapes backslashes correctly", () => {
+        make_unit_case(SUITE, "normalize_css_value-escapes-backslashes-correctly", "normalize_css_value escapes backslashes correctly", () => {
             const out = normalize_css_value("content", `C:\\path`);
 
             if (out !== `"C:\\\\path"`) {
@@ -29,14 +29,14 @@ export function unit_test_more_css(): TestSuite {
             }
         }),
 
-        make_unit_case(SUITE, "normalize_css_value does not double-escape quoted input", () => {
+        make_unit_case(SUITE, "normalize_css_value-does-not-double-escape-quoted-input", "normalize_css_value does not double-escape quoted input", () => {
             const out = normalize_css_value("content", `"X"`);
 
             if (out !== `"X"`) {
                 throw new Error(`expected preserved quotes, got ${out}`);
             }
         }),
-        make_unit_case(SUITE, "key → prop → key roundtrip stability", () => {
+        make_unit_case(SUITE, "key-prop-key-roundtrip-stability", "key → prop → key roundtrip stability", () => {
             const k = "border-left-width";
             const canon = normalize_css_key(k);
             const prop = canon_to_css_prop(canon);
@@ -46,7 +46,7 @@ export function unit_test_more_css(): TestSuite {
             }
         }),
 
-        make_unit_case(SUITE, "cssFloat survives full roundtrip", () => {
+        make_unit_case(SUITE, "cssfloat-survives-full-roundtrip", "cssFloat survives full roundtrip", () => {
             const canon = normalize_css_key("css-float");
             const prop = canon_to_css_prop(canon);
 
@@ -54,7 +54,7 @@ export function unit_test_more_css(): TestSuite {
                 throw new Error(`cssFloat alias broken: canon=${canon}, prop=${prop}`);
             }
         }),
-        make_unit_case(SUITE, "normalize_decls dropped values never render", () => {
+        make_unit_case(SUITE, "normalize_decls-dropped-values-never-render", "normalize_decls dropped values never render", () => {
             const out = render_rule(".x", normalize_decls({
                 color: "",
                 backgroundColor: "blue",
@@ -69,7 +69,7 @@ export function unit_test_more_css(): TestSuite {
             }
         }),
 
-        make_unit_case(SUITE, "custom properties survive normalize + render", () => {
+        make_unit_case(SUITE, "custom-properties-survive-normalize-render", "custom properties survive normalize + render", () => {
             const out = render_rule(".x", normalize_decls({
                 "--gap": "10px",
             } as any));
@@ -78,7 +78,7 @@ export function unit_test_more_css(): TestSuite {
                 throw new Error(`custom property lost: ${out}`);
             }
         }),
-        make_unit_case(SUITE, "pseudo rules scoped to correct quid only", () => {
+        make_unit_case(SUITE, "pseudo-rules-scoped-to-correct-quid-only", "pseudo rules scoped to correct quid only", () => {
             const m = CssManager.invoke();
             const q1 = "000000001";
             const q2 = "000000002";
@@ -108,7 +108,7 @@ export function unit_test_more_css(): TestSuite {
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
         }),
-        make_unit_case(SUITE, "no empty rule blocks emitted", () => {
+        make_unit_case(SUITE, "no-empty-rule-blocks-emitted", "no empty rule blocks emitted", () => {
             const m = CssManager.invoke();
             const quid = "000000003";
 
@@ -128,7 +128,7 @@ export function unit_test_more_css(): TestSuite {
 
             cleanup_quid(m, quid);
         }),
-        make_unit_case(SUITE, "multiple quids do not interfere", () => {
+        make_unit_case(SUITE, "multiple-quids-do-not-interfere", "multiple quids do not interfere", () => {
             const m = CssManager.invoke();
             const q1 = "000000004";
             const q2 = "000000005";
@@ -149,7 +149,7 @@ export function unit_test_more_css(): TestSuite {
             cleanup_quid(m, q1);
             cleanup_quid(m, q2);
         }),
-        make_unit_case(SUITE, "operation ordering produces correct final state", () => {
+        make_unit_case(SUITE, "operation-ordering-produces-correct-final-state", "operation ordering produces correct final state", () => {
             const m = CssManager.invoke();
             const quid = "000000006";
 
@@ -200,7 +200,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_style_string: parses simple declarations",
+            caseId: "parse_style_string-parses-simple-declarations", name: "parse_style_string: parses simple declarations",
             run() {
                 const out = _parse_style_string("color: red; background-color: blue;");
 
@@ -216,7 +216,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_style_string: preserves custom properties",
+            caseId: "parse_style_string-preserves-custom-properties", name: "parse_style_string: preserves custom properties",
             run() {
                 const out = _parse_style_string("--panel-glow: 12px; color: white;");
 
@@ -232,7 +232,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_style_string: handles quoted semicolons safely",
+            caseId: "parse_style_string-handles-quoted-semicolons-safely", name: "parse_style_string: handles quoted semicolons safely",
             run() {
                 const out = _parse_style_string(`content: "a; b"; color: red;`);
 
@@ -250,7 +250,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_style_string: handles url() safely",
+            caseId: "parse_style_string-handles-url-safely", name: "parse_style_string: handles url() safely",
             run() {
                 const out = _parse_style_string(`background-image: url("x;y.png"); color: red;`);
 
@@ -266,7 +266,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_style_string: last duplicate key wins",
+            caseId: "parse_style_string-last-duplicate-key-wins", name: "parse_style_string: last duplicate key wins",
             run() {
                 const out = _parse_style_string(`color: red; color: lime;`);
 
@@ -278,7 +278,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_style_string: ignores trailing semicolon cleanly",
+            caseId: "parse_style_string-ignores-trailing-semicolon-cleanly", name: "parse_style_string: ignores trailing semicolon cleanly",
             run() {
                 const out = _parse_style_string(`color: red;;;`);
 
@@ -298,7 +298,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "serialize_style: kebab-cases normal properties",
+            caseId: "serialize_style-kebab-cases-normal-properties", name: "serialize_style: kebab-cases normal properties",
             run() {
                 const out = _serialize_style({
                     backgroundColor: "red",
@@ -317,7 +317,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "serialize_style: preserves custom properties",
+            caseId: "serialize_style-preserves-custom-properties", name: "serialize_style: preserves custom properties",
             run() {
                 const out = _serialize_style({
                     "--panel-glow": "12px",
@@ -336,7 +336,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "serialize_style: normalizes cssFloat to float",
+            caseId: "serialize_style-normalizes-cssfloat-to-float", name: "serialize_style: normalizes cssFloat to float",
             run() {
                 const out = _serialize_style({
                     cssFloat: "left",
@@ -350,7 +350,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "serialize_style: drops nullish and empty values",
+            caseId: "serialize_style-drops-nullish-and-empty-values", name: "serialize_style: drops nullish and empty values",
             run() {
                 const out = _serialize_style({
                     color: "red",
@@ -374,7 +374,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "serialize_style: returns deterministic ordering",
+            caseId: "serialize_style-returns-deterministic-ordering", name: "serialize_style: returns deterministic ordering",
             run() {
                 const a = _serialize_style({
                     zIndex: "2",
@@ -400,7 +400,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_selector: parses tag + id + classes",
+            caseId: "parse_selector-parses-tag-id-classes", name: "parse_selector: parses tag + id + classes",
             run() {
                 const out = _parse_selector(`div#app.card.large`);
 
@@ -422,7 +422,7 @@ export function unit_test_parser_helpers(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "parse_selector: parses explicit attr equality",
+            caseId: "parse_selector-parses-explicit-attr-equality", name: "parse_selector: parses explicit attr equality",
             run() {
                 const out = _parse_selector(`div[data-x="1"][title="hello"]`);
 
@@ -437,7 +437,7 @@ export function unit_test_parser_helpers(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "parse_selector: single-quoted attr behavior is explicit",
+            caseId: "parse_selector-single-quoted-attr-behavior-is-explicit", name: "parse_selector: single-quoted attr behavior is explicit",
             run() {
                 const out = _parse_selector(`div[title='hello']`);
 
@@ -456,7 +456,7 @@ export function unit_test_parser_helpers(): TestSuite {
 
         {
             suite: SUITE,
-            name: "parse_selector: trims surrounding whitespace",
+            caseId: "parse_selector-trims-surrounding-whitespace", name: "parse_selector: trims surrounding whitespace",
             run() {
                 const out = _parse_selector(`   div#app.card   `);
 
@@ -486,7 +486,7 @@ export function unit_css_pseudo_unification(): TestSuite {
         suite: SUITE,
         cases: [
 
-            make_unit_case(SUITE, "global css var key returns declaration-ready var reference", () => {
+            make_unit_case(SUITE, "global-css-var-key-returns-declaration-ready-var-reference", "global css var key returns declaration-ready var reference", () => {
                 const css = CssManager.api();
                 const name = "__unit_var_key_test";
 
@@ -524,7 +524,7 @@ export function unit_css_pseudo_unification(): TestSuite {
 
                 css.var.remove(name);
             }),
-            make_unit_case(SUITE, "global css var key rejects invalid custom property names", () => {
+            make_unit_case(SUITE, "global-css-var-key-rejects-invalid-custom-property-names", "global css var key rejects invalid custom property names", () => {
                 const css = CssManager.api();
 
                 let threw = false;
@@ -539,7 +539,7 @@ export function unit_css_pseudo_unification(): TestSuite {
                     throw new Error(`expected css.var.key("") to throw`);
                 }
             }),
-            make_unit_case(SUITE, "global css var value remove clears stored declaration", () => {
+            make_unit_case(SUITE, "global-css-var-value-remove-clears-stored-declaration", "global css var value remove clears stored declaration", () => {
                 const css = CssManager.api();
                 const name = "__unit_var_remove_test";
 
@@ -559,7 +559,7 @@ export function unit_css_pseudo_unification(): TestSuite {
 
 
 
-            make_unit_case(SUITE, "selector rule drop is idempotent", () => {
+            make_unit_case(SUITE, "selector-rule-drop-is-idempotent", "selector rule drop is idempotent", () => {
                 const m = CssManager.invoke();
                 const quid = "000000007";
                 const key = `unit:${quid}:before`;
@@ -583,7 +583,7 @@ export function unit_css_pseudo_unification(): TestSuite {
 
                 cleanup_quid(m, quid);
             }),
-            make_unit_case(SUITE, "selector rule dropByPrefix removes owned keys only", () => {
+            make_unit_case(SUITE, "selector-rule-dropbyprefix-removes-owned-keys-only", "selector rule dropByPrefix removes owned keys only", () => {
                 const gcss = CssManager.api();
                 const prefix = "unit:drop-prefix:";
                 const ownedOne = `${prefix}one`;
@@ -645,7 +645,7 @@ export function unit_media(): TestSuite {
     const SUITE = "unit/media";
 
     const cases: readonly TestCase[] = [
-        make_unit_case(SUITE, "CssManager.api().media: scoped facade stores rule body", () => {
+        make_unit_case(SUITE, "cssmanager.api-.media-scoped-facade-stores-rule-body", "CssManager.api().media: scoped facade stores rule body", () => {
             const key = "unit:media:base-rule";
             const selector = ".unit-media-target";
 
@@ -679,7 +679,7 @@ export function unit_media(): TestSuite {
             gcss.drop(key);
         }),
 
-        make_unit_case(SUITE, "CssManager.api().supports: scoped facade stores rule body", () => {
+        make_unit_case(SUITE, "cssmanager.api-.supports-scoped-facade-stores-rule-body", "CssManager.api().supports: scoped facade stores rule body", () => {
             const key = "unit:supports:base-rule";
             const selector = ".unit-supports-target";
 
@@ -712,7 +712,7 @@ export function unit_media(): TestSuite {
             gcss.drop(key);
         }),
 
-        make_unit_case(SUITE, "CssManager.api().layer: scoped facade stores rule body", () => {
+        make_unit_case(SUITE, "cssmanager.api-.layer-scoped-facade-stores-rule-body", "CssManager.api().layer: scoped facade stores rule body", () => {
             const key = "unit:layer:base-rule";
             const selector = ".unit-layer-target";
 
@@ -745,7 +745,7 @@ export function unit_media(): TestSuite {
             gcss.drop(key);
         }),
 
-        make_unit_case(SUITE, "CssManager scoped facades: same selector can coexist across distinct keys", () => {
+        make_unit_case(SUITE, "cssmanager-scoped-facades-same-selector-can-coexist-across-distinct-keys", "CssManager scoped facades: same selector can coexist across distinct keys", () => {
             const baseKey = "unit:scoped-coexist:base";
             const mediaKey = "unit:scoped-coexist:media";
             const supportsKey = "unit:scoped-coexist:supports";
@@ -789,7 +789,7 @@ export function unit_media(): TestSuite {
             gcss.drop(layerKey);
         }),
 
-        make_unit_case(SUITE, "CssManager scoped facades: nested media/supports/layer preserve rule body", () => {
+        make_unit_case(SUITE, "cssmanager-scoped-facades-nested-media-supports-layer-preserve-rule-body", "CssManager scoped facades: nested media/supports/layer preserve rule body", () => {
             const key = "unit:nested-scopes:rule";
             const selector = ".unit-nested-scope";
 
@@ -819,7 +819,7 @@ export function unit_media(): TestSuite {
             gcss.drop(key);
         }),
 
-        make_unit_case(SUITE, "CssManager scoped facades: dropping scoped rule removes stored CSS", () => {
+        make_unit_case(SUITE, "cssmanager-scoped-facades-dropping-scoped-rule-removes-stored-css", "CssManager scoped facades: dropping scoped rule removes stored CSS", () => {
             const key = "unit:scoped-drop:media";
             const selector = ".unit-scoped-drop";
 

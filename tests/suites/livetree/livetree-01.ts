@@ -25,7 +25,7 @@ export function suite_find(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "find.byId hit/miss + must throws",
+      caseId: "find.byid-hit-miss-must-throws", name: "find.byId hit/miss + must throws",
       html: `<div id="root"><button id="btn">click</button></div>`,
 
       // inputLabel -> fixture/sub (these feed meta + metaPatch)
@@ -64,7 +64,7 @@ export function suite_find(): TestSuite {
     {
       suite: SUITE,
 
-      name: `findAll(".item") count + must throws when empty`,
+      caseId: "findall-.item-count-must-throws-when-empty", name: `findAll(".item") count + must throws when empty`,
       html: `
       <section id="root">
       <button class="item" data-index="1">one</button>
@@ -111,7 +111,7 @@ export function suite_attrs_and_flags(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "setAttrs string / boolean / remove mirrors LiveTree attrs",
+      caseId: "setattrs-string-boolean-remove-mirrors-livetree-attrs", name: "setAttrs string / boolean / remove mirrors LiveTree attrs",
       html: `<div id="root"><button id="btn"></button></div>`,
       fixture: "attrs/set-remove",
       sub: "string-boolean-null",
@@ -148,7 +148,7 @@ export function suite_attrs_and_flags(): TestSuite {
 
     {
       suite: SUITE,
-      name: "setFlags/removeFlags boolean-present attrs",
+      caseId: "setflags-removeflags-boolean-present-attrs", name: "setFlags/removeFlags boolean-present attrs",
       html: `<div id="root"><input id="i"/></div>`,
       fixture: "flags/set-remove",
       sub: "present-absent",
@@ -180,7 +180,7 @@ export function suite_append_and_create(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "create.at(index) inserts among element-children under _hson_elem (preserves order)",
+      caseId: "create.at-index-inserts-among-element-children-under-_hson_elem-preserves-order", name: "create.at(index) inserts among element-children under _hson_elem (preserves order)",
       fixture: "append/create",
       sub: "order",
       html: `<section id="root"><p class="orig">one</p></section>`,
@@ -229,7 +229,7 @@ export function suite_append_and_create(): TestSuite {
 
     {
       suite: SUITE,
-      name: "removeChildren returns direct element-child count removed; empty clears",
+      caseId: "removechildren-returns-direct-element-child-count-removed-empty-clears", name: "removeChildren returns direct element-child count removed; empty clears",
       fixture: "remove/empty",
       sub: "counts",
       html: `<div id="root"><div id="a"></div><div id="b"></div></div>`,
@@ -254,7 +254,7 @@ export function suite_append_and_create(): TestSuite {
 
     {
       suite: SUITE,
-      name: "create.p appends distinct element-children under _hson_elem",
+      caseId: "create.p-appends-distinct-element-children-under-_hson_elem", name: "create.p appends distinct element-children under _hson_elem",
       fixture: "create.p",
       sub: "append",
       html: `<section id="root"><p class="orig">one</p></section>`,
@@ -280,7 +280,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "removeChildren: removes only direct node-children; leaves primitives under _hson_elem; returns count",
+      caseId: "removechildren-removes-only-direct-node-children-leaves-primitives-under-_hson_elem-returns-count", name: "removeChildren: removes only direct node-children; leaves primitives under _hson_elem; returns count",
       html: `<div id="root"></div>`,
       fixture: "remove/children",
       sub: "ignore-primitives-count",
@@ -337,7 +337,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: html markup insertion rejects empty string",
+      caseId: "create-html-markup-insertion-rejects-empty-string", name: "create: html markup insertion rejects empty string",
       fixture: "create/markup-guards",
       sub: "html-empty-string",
       html: `<main id="root"></main>`,
@@ -362,7 +362,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: html markup insertion rejects whitespace string",
+      caseId: "create-html-markup-insertion-rejects-whitespace-string", name: "create: html markup insertion rejects whitespace string",
       fixture: "create/markup-guards",
       sub: "html-whitespace-string",
       html: `<main id="root"></main>`,
@@ -389,7 +389,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: html markup insertion rejects multiple roots",
+      caseId: "create-html-markup-insertion-rejects-multiple-roots", name: "create: html markup insertion rejects multiple roots",
       fixture: "create/markup-guards",
       sub: "html-multiple-roots",
       html: `<main id="root"></main>`,
@@ -414,7 +414,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: html markup insertion rejects mismatched root tag",
+      caseId: "create-html-markup-insertion-rejects-mismatched-root-tag", name: "create: html markup insertion rejects mismatched root tag",
       fixture: "create/markup-guards",
       sub: "html-mismatched-root",
       html: `<main id="root"></main>`,
@@ -439,7 +439,7 @@ export function suite_append_and_create(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: html markup insertion rejects malformed markup",
+      caseId: "create-html-markup-insertion-rejects-malformed-markup", name: "create: html markup insertion rejects malformed markup",
       fixture: "create/markup-guards",
       sub: "html-malformed",
       html: `<main id="root"></main>`,
@@ -478,7 +478,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "removeSelf + reappend + refind keeps DOM/IR in sync",
+      caseId: "removeself-reappend-refind-keeps-dom-ir-in-sync", name: "removeSelf + reappend + refind keeps DOM/IR in sync",
       html: `<div id="root"></div>`,
       fixture: "remove/reappend",
       sub: "dom-ir-sync",
@@ -535,7 +535,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "setText + getText stay in sync",
+      caseId: "settext-gettext-stay-in-sync", name: "setText + getText stay in sync",
       html: `<div id="root"><p id="msg"></p></div>`,
       fixture: "text/set-get",
       sub: "sync",
@@ -575,7 +575,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "TreeSelector: style + dataset remain after refind",
+      caseId: "treeselector-style-dataset-remain-after-refind", name: "TreeSelector: style + dataset remain after refind",
       html: `
       <ul id="root">
         <li class="item">one</li>
@@ -622,7 +622,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "TreeSelector listen: click handlers fire for all items",
+      caseId: "treeselector-listen-click-handlers-fire-for-all-items", name: "TreeSelector listen: click handlers fire for all items",
       html: `
       <section id="root">
         <button class="item" data-index="1">one</button>
@@ -674,7 +674,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "LiveTree.create.div: appends child and returns handle",
+      caseId: "livetree.create.div-appends-child-and-returns-handle", name: "LiveTree.create.div: appends child and returns handle",
       html: `
       <section id="part">
         <p>one</p>
@@ -730,7 +730,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "css.setMany: writes quid-scoped rule to #_hson stylesheet",
+      caseId: "css.setmany-writes-quid-scoped-rule-to-_hson-stylesheet", name: "css.setMany: writes quid-scoped rule to #_hson stylesheet",
       html: `
     <main>
       <div id="box">x</div>
@@ -787,7 +787,7 @@ export function mixedRegression() {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "CssManager batching: rule appears after a tick",
+      caseId: "cssmanager-batching-rule-appears-after-a-tick", name: "CssManager batching: rule appears after a tick",
       html: `
       <main>
         <div id="box">x</div>
@@ -840,14 +840,14 @@ export function mixedRegression() {
 }
 
 export function extraCases(): readonly TestSuite[] {
-  const SUITE = 'livetree/extra cases';
+  const SUITE = 'livetree/extra-cases';
   const cases: readonly LiveTreeCaseSpec[] = [
     // ------------------------------------------------------------
     // remove + reappend + refind (ID collision sanity)
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "remove + reappend same-id node: refind returns new node only",
+      caseId: "remove-reappend-same-id-node-refind-returns-new-node-only", name: "remove + reappend same-id node: refind returns new node only",
       html: `<div id="root"></div>`,
       fixture: "remove/reappend",
       sub: "same-id-refind",
@@ -898,7 +898,7 @@ export function extraCases(): readonly TestSuite[] {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "TreeSelector mutations persist across refind",
+      caseId: "treeselector-mutations-persist-across-refind", name: "TreeSelector mutations persist across refind",
       html: `
       <ul id="root">
         <li class="item">one</li>
@@ -944,7 +944,7 @@ export function extraCases(): readonly TestSuite[] {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "TreeSelector.listen off() detaches handlers",
+      caseId: "treeselector.listen-off-detaches-handlers", name: "TreeSelector.listen off() detaches handlers",
       html: `
       <section id="root">
         <button class="item">a</button>
@@ -996,7 +996,7 @@ export function extraCases(): readonly TestSuite[] {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "create.div on detached branch creates IR node without DOM",
+      caseId: "create.div-on-detached-branch-creates-ir-node-without-dom", name: "create.div on detached branch creates IR node without DOM",
       html: `<div id="root"></div>`,
       fixture: "create/div",
       sub: "detached",
@@ -1033,7 +1033,7 @@ export function extraCases(): readonly TestSuite[] {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "css.setMany overwrite replaces previous property value",
+      caseId: "css.setmany-overwrite-replaces-previous-property-value", name: "css.setMany overwrite replaces previous property value",
       html: `<main><div id="box"></div></main>`,
       fixture: "css/overwrite",
       sub: "prop",
@@ -1087,7 +1087,7 @@ export function extraCases(): readonly TestSuite[] {
     // ------------------------------------------------------------
     {
       suite: SUITE,
-      name: "css manager writes separate rules per node",
+      caseId: "css-manager-writes-separate-rules-per-node", name: "css manager writes separate rules per node",
       html: `
       <main>
         <div id="a"></div>
@@ -1146,7 +1146,7 @@ export function suite_css_and_content(): TestSuite {
     // CssManager batching: rule appears after a tick
     {
       suite: SUITE,
-      name: "CssManager batching: rule appears after a tick",
+      caseId: "cssmanager-batching-rule-appears-after-a-tick", name: "CssManager batching: rule appears after a tick",
       dom: true,
       fixture: "css/batching",
       sub: "after-tick",
@@ -1196,7 +1196,7 @@ export function suite_css_and_content(): TestSuite {
     // Chromium owns selector application and computed-style behavior.
     {
       suite: SUITE,
-      name: "CssManager: CSSOM and managed state contain QUID rule after flush",
+      caseId: "cssmanager-cssom-and-managed-state-contain-quid-rule-after-flush", name: "CssManager: CSSOM and managed state contain QUID rule after flush",
       dom: true,
       fixture: "css/computed-style",
       sub: "after-flush",
@@ -1244,7 +1244,7 @@ export function suite_css_and_content(): TestSuite {
     // from browser layout; CSS application remains browser-owned.
     {
       suite: SUITE,
-      name: "CssManager: emitted QUID CSS coexists with registered hosted geometry",
+      caseId: "cssmanager-emitted-quid-css-coexists-with-registered-hosted-geometry", name: "CssManager: emitted QUID CSS coexists with registered hosted geometry",
       fixture: "css/rect",
       dom: true,
       sub: "non-zero",
@@ -1314,7 +1314,7 @@ export function suite_css_and_content(): TestSuite {
     // ContentManager / node content: set_node_content updates leaf + DOM textContent
     {
       suite: SUITE,
-      name: "set_node_content updates node leaf + DOM textContent",
+      caseId: "set_node_content-updates-node-leaf-dom-textcontent", name: "set_node_content updates node leaf + DOM textContent",
       dom: true,
       fixture: "content/set_node_content",
       sub: "dom-and-node",
@@ -1358,7 +1358,7 @@ export function suite_css_and_content(): TestSuite {
     // We construct a minimal HsonNode tree with _hson_str leaves.
     {
       suite: SUITE,
-      name: "get_node_text falls back to HSON when no DOM exists",
+      caseId: "get_node_text-falls-back-to-hson-when-no-dom-exists", name: "get_node_text falls back to HSON when no DOM exists",
       dom: true,
       fixture: "content/get_node_text",
       sub: "no-dom-fallback",
@@ -1418,7 +1418,7 @@ function suite_graft_regressions(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "liveTree.queryDom.graft returns the queried element itself as root",
+      caseId: "livetree.querydom.graft-returns-the-queried-element-itself-as-root", name: "liveTree.queryDom.graft returns the queried element itself as root",
       fixture: "graft/liveTree.queryDom",
       sub: "queried-element-is-root",
       html: `<div id="root"></div>`,
@@ -1486,7 +1486,7 @@ function suite_graft_regressions(): TestSuite {
 
     {
       suite: SUITE,
-      name: "liveTree.queryDom.graft succeeds on an empty queried element",
+      caseId: "livetree.querydom.graft-succeeds-on-an-empty-queried-element", name: "liveTree.queryDom.graft succeeds on an empty queried element",
       fixture: "graft/liveTree.queryDom",
       sub: "empty-element-valid",
       html: `<div id="root"></div>`,
@@ -1552,7 +1552,7 @@ function suite_graft_regressions(): TestSuite {
 
     {
       suite: SUITE,
-      name: "liveTree.queryDom.graft is idempotent for an already-grafted element",
+      caseId: "livetree.querydom.graft-is-idempotent-for-an-already-grafted-element", name: "liveTree.queryDom.graft is idempotent for an already-grafted element",
       fixture: "graft/liveTree.queryDom",
       sub: "double-graft-returns-same-node",
       html: `<div id="root"></div>`,
@@ -1646,7 +1646,7 @@ function suite_css_regressions(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "invalid CSS decl is skipped without poisoning valid sibling decls",
+      caseId: "invalid-css-decl-is-skipped-without-poisoning-valid-sibling-decls", name: "invalid CSS decl is skipped without poisoning valid sibling decls",
       dom: true,
       fixture: "css/validator",
       sub: "invalid-does-not-poison",
@@ -1696,7 +1696,7 @@ function suite_css_regressions(): TestSuite {
 
     {
       suite: SUITE,
-      name: "valid camelCase CSS props still serialize after supports-validation",
+      caseId: "valid-camelcase-css-props-still-serialize-after-supports-validation", name: "valid camelCase CSS props still serialize after supports-validation",
       fixture: "css/validator",
       sub: "camelcase-valid-props-allowed",
       html: `<main><div id="box">x</div></main>`,
@@ -1732,7 +1732,7 @@ function suite_css_regressions(): TestSuite {
 
     {
       suite: SUITE,
-      name: "known-invalid CSS values are rejected while valid siblings remain",
+      caseId: "known-invalid-css-values-are-rejected-while-valid-siblings-remain", name: "known-invalid CSS values are rejected while valid siblings remain",
       fixture: "css/validator",
       sub: "reject-invalid-values-only",
       html: `<main><div id="box">x</div></main>`,
@@ -1768,7 +1768,7 @@ function suite_css_regressions(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css.setMany readback returns latest property value",
+      caseId: "css.setmany-readback-returns-latest-property-value", name: "css.setMany readback returns latest property value",
       html: `<main><div id="box"></div></main>`,
       fixture: "css/setmany",
       sub: "readback",
@@ -1794,7 +1794,7 @@ function suite_css_regressions(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css.setMany projects single property to stylesheet",
+      caseId: "css.setmany-projects-single-property-to-stylesheet", name: "css.setMany projects single property to stylesheet",
       html: `<main><div id="box"></div></main>`,
       fixture: "css/setmany",
       sub: "project-single",
@@ -1824,7 +1824,7 @@ function suite_css_regressions(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "css.setMany writes multiple properties",
+      caseId: "css.setmany-writes-multiple-properties", name: "css.setMany writes multiple properties",
       html: `<main><div id="box"></div></main>`,
       fixture: "css/setmany",
       sub: "multi-prop",

@@ -86,7 +86,7 @@ successConnection();
 const [failedClientSocket, failedHostSocket] = make_socket_pair();
 const failedHost = create_hosted_test_livehost(async (onEvent) => {
   onEvent?.({ t: "suite_begin", suite: "livemap/replay" });
-  onEvent?.({ t: "case_end", suite: "livemap/replay", name: "failed assertion", status: "fail", ms: 1, err: "expected" });
+  onEvent?.({ t: "case_end", suite: "livemap/replay", caseId: "failed-assertion", name: "failed assertion", status: "fail", ms: 1, err: "expected" });
   return {
     ok: false,
     summary: {
@@ -96,7 +96,7 @@ const failedHost = create_hosted_test_livehost(async (onEvent) => {
       fail: 1,
       skip: 0,
       msTotal: 1,
-      failures: [{ suite: "livemap/replay", name: "failed assertion", err: "expected", ms: 1 }],
+      failures: [{ suite: "livemap/replay", caseId: "failed-assertion", name: "failed assertion", err: "expected", ms: 1 }],
     },
   };
 }, undefined, () => "router-failed-run");

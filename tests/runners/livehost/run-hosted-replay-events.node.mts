@@ -157,7 +157,7 @@ expect_events(authoritative.commits().length === envelopesA.length, "local captu
 const [failedClientSocket, failedHostSocket] = make_socket_pair();
 const failedHost = create_hosted_test_livehost(async (onEvent) => {
   onEvent?.({ t: "suite_begin", suite: "livemap/replay" });
-  onEvent?.({ t: "case_end", suite: "livemap/replay", name: "synthetic failure", status: "fail", ms: 1, err: "expected" });
+  onEvent?.({ t: "case_end", suite: "livemap/replay", caseId: "synthetic-failure", name: "synthetic failure", status: "fail", ms: 1, err: "expected" });
   onEvent?.({ t: "suite_end", suite: "livemap/replay", ms: 1 });
   return {
     ok: false,
@@ -168,7 +168,7 @@ const failedHost = create_hosted_test_livehost(async (onEvent) => {
       fail: 1,
       skip: 0,
       msTotal: 1,
-      failures: [{ suite: "livemap/replay", name: "synthetic failure", err: "expected", ms: 1 }],
+      failures: [{ suite: "livemap/replay", caseId: "synthetic-failure", name: "synthetic failure", err: "expected", ms: 1 }],
     },
   };
 }, undefined, () => "hosted-failed-run");

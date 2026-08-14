@@ -67,13 +67,13 @@ const registeredDevIds = node.catalog.tests
   .map((descriptor) => descriptor.id);
 expect_stage5a(
   unitIds.length === registeredUnitIds.length
-    && unitIds.every((id) => liveTreeIds.includes(id)),
-  "Unit exactly projects its registry membership and overlaps LiveTree without duplicate IDs",
+    && unitIds.every((id) => allIds.includes(id)),
+  "Unit exactly projects collection membership without replacing semantic subjects",
 );
 expect_stage5a(
   devIds.length === registeredDevIds.length
-    && devIds.every((id) => liveMapIds.includes(id) || liveTreeIds.includes(id)),
-  "Dev exactly projects its registry membership and overlaps LiveMap and LiveTree without duplicate IDs",
+    && devIds.every((id) => allIds.includes(id)),
+  "Dev exactly projects collection membership without replacing semantic subjects",
 );
 expect_stage5a(new Set(unitIds).size === unitIds.length && new Set(devIds).size === devIds.length, "collection projections are duplicate-free");
 
@@ -123,13 +123,13 @@ expect_stage5a(
 expect_stage5a(
   canvasPending.length === 6
     && canvasPending.reduce((total, suite) => total + suite.cases.length, 0) === 62
-    && canvasPending.every((suite) => suite.cases.every((testCase) => node.get(`${suite.suite}::${testCase.name}`) !== undefined)),
+    && canvasPending.every((suite) => suite.cases.every((testCase) => node.get(`${suite.suite}::${testCase.caseId}`) !== undefined)),
   "deterministic canvas inventory remains explicit and canonically registered",
 );
 
 console.log(JSON.stringify({
   node: { tests: node.catalog.tests.length, suites: selectedSuites.length, passed: result.summary.pass },
-  worker: { tests: worker.catalog.tests.length, suites: new Set(worker.catalog.tests.map((test) => test.suite)).size },
+  worker: { tests: worker.catalog.tests.length, suites: new Set(worker.catalog.tests.map((test) => test.suiteId)).size },
   taxonomy: Object.fromEntries(primary.map((choice) => [choice.key, choice.count])),
   executionContexts: {
     syntheticDom: { suites: domPending.length, cases: domPending.reduce((total, suite) => total + suite.cases.length, 0) },

@@ -9,6 +9,7 @@ import { equal_row } from "./assert-helpers";
 
 
 type InvalidReplayCaseSpec = Readonly<{
+  caseId: string;
   name: string;
   input: unknown;
   expectedReason: string;
@@ -21,7 +22,7 @@ function invalid_replay_case(
 ): TestCase {
   return {
     suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     run: () => {
       const initialRoot = {
         count: 0,
@@ -96,165 +97,194 @@ export function livemap_suite_replay(): TestSuite {
     cases: [
       ...[
         {
+          caseId: "replay-rejects-null-envelope",
           name: "replay rejects null envelope",
           input: null,
           expectedReason: "envelope is not an object",
         },
         {
+          caseId: "replay-rejects-primitive-envelope",
           name: "replay rejects primitive envelope",
           input: "invalid",
           expectedReason: "envelope is not an object",
         },
         {
+          caseId: "replay-rejects-array-envelope",
           name: "replay rejects array envelope",
           input: [],
           expectedReason: "envelope is not an object",
         },
         {
+          caseId: "replay-rejects-missing-prevrev",
           name: "replay rejects missing prevRev",
           input: { ops: [] },
           expectedReason: "prevRev is not a non-negative integer",
         },
         {
+          caseId: "replay-rejects-negative-prevrev",
           name: "replay rejects negative prevRev",
           input: { prevRev: -1, ops: [] },
           expectedReason: "prevRev is not a non-negative integer",
         },
         {
+          caseId: "replay-rejects-fractional-prevrev",
           name: "replay rejects fractional prevRev",
           input: { prevRev: 0.5, ops: [] },
           expectedReason: "prevRev is not a non-negative integer",
         },
         {
+          caseId: "replay-rejects-non-finite-prevrev",
           name: "replay rejects non-finite prevRev",
           input: { prevRev: Number.POSITIVE_INFINITY, ops: [] },
           expectedReason: "prevRev is not a non-negative integer",
         },
         {
+          caseId: "replay-rejects-missing-ops",
           name: "replay rejects missing ops",
           input: { prevRev: 0 },
           expectedReason: "ops is not an array",
         },
         {
+          caseId: "replay-rejects-non-array-ops",
           name: "replay rejects non-array ops",
           input: { prevRev: 0, ops: {} },
           expectedReason: "ops is not an array",
         },
         {
+          caseId: "replay-rejects-non-object-operation",
           name: "replay rejects non-object operation",
           input: { prevRev: 0, ops: [null] },
           expectedReason: "operation is not an object",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-unsupported-operation-kind",
           name: "replay rejects unsupported operation kind",
           input: { prevRev: 0, ops: [{ kind: "future" }] },
           expectedReason: "kind is not supported",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-missing-operation-path",
           name: "replay rejects missing operation path",
           input: { prevRev: 0, ops: [{ kind: "set", prev: 0, next: 1 }] },
           expectedReason: "path is not valid",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-array-operation-path",
           name: "replay rejects non-array operation path",
           input: { prevRev: 0, ops: [{ kind: "set", path: "count", prev: 0, next: 1 }] },
           expectedReason: "path is not valid",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-invalid-operation-path-segment",
           name: "replay rejects invalid operation path segment",
           input: { prevRev: 0, ops: [{ kind: "set", path: [true], prev: 0, next: 1 }] },
           expectedReason: "path is not valid",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-missing-operation-prev",
           name: "replay rejects missing operation prev",
           input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], next: 1 }] },
           expectedReason: "prev is missing",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-missing-set-next",
           name: "replay rejects missing set next",
           input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: 0 }] },
           expectedReason: "next is missing",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-json-prev",
           name: "replay rejects non-JSON prev",
           input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: Number.NaN, next: 1 }] },
           expectedReason: "prev is not JSON",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-json-set-next",
           name: "replay rejects non-JSON set next",
           input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: 0, next: undefined }] },
           expectedReason: "next is not JSON",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-missing-replace-next",
           name: "replay rejects missing replace next",
           input: { prevRev: 0, ops: [{ kind: "replace", path: [], prev: { count: 0 } }] },
           expectedReason: "next is missing",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-json-replace-next",
           name: "replay rejects non-JSON replace next",
           input: { prevRev: 0, ops: [{ kind: "replace", path: [], prev: { count: 0 }, next: Number.NaN }] },
           expectedReason: "next is not JSON",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-delete-with-defined-next",
           name: "replay rejects delete with defined next",
           input: { prevRev: 0, ops: [{ kind: "delete", path: ["count"], prev: 0, next: null }] },
           expectedReason: "delete next must be undefined",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-negative-splice-start",
           name: "replay rejects negative splice start",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: -1, removed: [], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
           expectedReason: "splice start is not a non-negative integer",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-fractional-splice-start",
           name: "replay rejects fractional splice start",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0.5, removed: [], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
           expectedReason: "splice start is not a non-negative integer",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-array-splice-removed",
           name: "replay rejects non-array splice removed",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: "a", inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
           expectedReason: "splice removed is not an array",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-array-splice-inserted",
           name: "replay rejects non-array splice inserted",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: "a", prev: ["a", "b"], next: ["a", "b"] }] },
           expectedReason: "splice inserted is not an array",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-json-splice-removed-item",
           name: "replay rejects non-JSON splice removed item",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [Number.NaN], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
           expectedReason: "removed is not JSON",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-json-splice-inserted-item",
           name: "replay rejects non-JSON splice inserted item",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [Number.NaN], prev: ["a", "b"], next: ["a", "b"] }] },
           expectedReason: "inserted is not JSON",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-array-splice-prev",
           name: "replay rejects non-array splice prev",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [], prev: "invalid", next: ["a", "b"] }] },
           expectedReason: "prev is not an array",
           expectedOpIndex: 0,
         },
         {
+          caseId: "replay-rejects-non-array-splice-next",
           name: "replay rejects non-array splice next",
           input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [], prev: ["a", "b"], next: "invalid" }] },
           expectedReason: "next is not an array",
@@ -264,7 +294,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "malformed second replay op prevents all replay work",
+        caseId: "malformed-second-replay-op-prevents-all-replay-work", name: "malformed second replay op prevents all replay work",
         input: {},
         act: () => {
           const target = make_livemap_core(json_root_node({ count: 0 }));
@@ -312,7 +342,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "invalid replay takes precedence over stale revision",
+        caseId: "invalid-replay-takes-precedence-over-stale-revision", name: "invalid replay takes precedence over stale revision",
         input: {},
         act: () => {
           const target = make_livemap_core(json_root_node({ count: 0 }));
@@ -358,7 +388,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "invalid replay takes precedence over state conflict",
+        caseId: "invalid-replay-takes-precedence-over-state-conflict", name: "invalid replay takes precedence over state conflict",
         input: {},
         act: () => {
           const target = make_livemap_core(json_root_node({ count: 5 }));
@@ -406,7 +436,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay applies a changed commit to a matching map",
+        caseId: "replay-applies-a-changed-commit-to-a-matching-map", name: "replay applies a changed commit to a matching map",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -470,7 +500,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay applies a multi operation commit atomically",
+        caseId: "replay-applies-a-multi-operation-commit-atomically", name: "replay applies a multi operation commit atomically",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -523,7 +553,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay preserves semantic splice operations",
+        caseId: "replay-preserves-semantic-splice-operations", name: "replay preserves semantic splice operations",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -588,7 +618,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "empty replay retains current rev",
+        caseId: "empty-replay-retains-current-rev", name: "empty replay retains current rev",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -624,7 +654,7 @@ export function livemap_suite_replay(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "replay rejects stale rev without changing state",
+        caseId: "replay-rejects-stale-rev-without-changing-state", name: "replay rejects stale rev without changing state",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -699,7 +729,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay rejects conflicting prev without consuming rev",
+        caseId: "replay-rejects-conflicting-prev-without-consuming-rev", name: "replay rejects conflicting prev without consuming rev",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -788,7 +818,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema rejected replay is atomic and does not consume rev",
+        caseId: "schema-rejected-replay-is-atomic-and-does-not-consume-rev", name: "schema rejected replay is atomic and does not consume rev",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -867,7 +897,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "conflict in second replay op is fully atomic",
+        caseId: "conflict-in-second-replay-op-is-fully-atomic", name: "conflict in second replay op is fully atomic",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -957,7 +987,7 @@ export function livemap_suite_replay(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "replay rejects a declared next value that does not match",
+        caseId: "replay-rejects-a-declared-next-value-that-does-not-match", name: "replay rejects a declared next value that does not match",
         input: {},
         act: () => {
           const target = make_livemap_core(json_root_node({
@@ -1043,7 +1073,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay structural equality conflicts on object key order",
+        caseId: "replay-structural-equality-conflicts-on-object-key-order", name: "replay structural equality conflicts on object key order",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1090,7 +1120,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay defensively copies incoming splice data",
+        caseId: "replay-defensively-copies-incoming-splice-data", name: "replay defensively copies incoming splice data",
         input: {},
         act: () => {
           const target = make_livemap_core(json_root_node({
@@ -1157,7 +1187,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay preserves delete operation semantics",
+        caseId: "replay-preserves-delete-operation-semantics", name: "replay preserves delete operation semantics",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({
@@ -1218,7 +1248,7 @@ export function livemap_suite_replay(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "replay preserves root replace operation semantics",
+        caseId: "replay-preserves-root-replace-operation-semantics", name: "replay preserves root replace operation semantics",
         input: {},
         act: () => {
           const source = make_livemap_core(json_root_node({

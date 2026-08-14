@@ -11,7 +11,7 @@ export function livetree_svg_ingermediate(): TestSuite {
         [
             {
                 suite: SUITE,
-                name: "create: prepend() inserts empty html tag at front",
+                caseId: "create-prepend-inserts-empty-html-tag-at-front", name: "create: prepend() inserts empty html tag at front",
                 fixture: "create/placement",
                 sub: "prepend-empty-html",
                 html: `<main id="root"><div id="a"></div><div id="b"></div></main>`,
@@ -38,7 +38,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "create: at(index) inserts empty html tag at index",
+                caseId: "create-at-index-inserts-empty-html-tag-at-index", name: "create: at(index) inserts empty html tag at index",
                 fixture: "create/placement",
                 sub: "at-empty-html",
                 html: `<main id="root"><div id="a"></div><div id="b"></div></main>`,
@@ -66,7 +66,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "create: prepend() applies to html markup insertion",
+                caseId: "create-prepend-applies-to-html-markup-insertion", name: "create: prepend() applies to html markup insertion",
                 fixture: "create/placement",
                 sub: "prepend-markup-html",
                 html: `<main id="root"><div id="tail"></div></main>`,
@@ -93,7 +93,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "create: at(index) applies to html markup insertion",
+                caseId: "create-at-index-applies-to-html-markup-insertion", name: "create: at(index) applies to html markup insertion",
                 fixture: "create/placement",
                 sub: "at-markup-html",
                 html: `<main id="root"><div id="a"></div><div id="b"></div></main>`,
@@ -121,7 +121,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "create: html markup insertion rejects mismatched root tag",
+                caseId: "create-html-markup-insertion-rejects-mismatched-root-tag", name: "create: html markup insertion rejects mismatched root tag",
                 fixture: "create/markup-guards",
                 sub: "html-mismatch-root",
                 html: `<main id="root"></main>`,
@@ -146,7 +146,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "create: html markup insertion rejects multiple roots",
+                caseId: "create-html-markup-insertion-rejects-multiple-roots", name: "create: html markup insertion rejects multiple roots",
                 fixture: "create/markup-guards",
                 sub: "html-multiple-roots",
                 html: `<main id="root"></main>`,
@@ -171,7 +171,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "create: html markup insertion rejects malformed markup",
+                caseId: "create-html-markup-insertion-rejects-malformed-markup", name: "create: html markup insertion rejects malformed markup",
                 fixture: "create/markup-guards",
                 sub: "html-malformed",
                 html: `<main id="root"></main>`,
@@ -196,7 +196,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg: prepend() applies to g(string)",
+                caseId: "svg-prepend-applies-to-g-string", name: "svg: prepend() applies to g(string)",
                 fixture: "svg/create-placement",
                 sub: "prepend-g-string",
                 html: `<main id="root"></main>`,
@@ -224,7 +224,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg: at(index) applies to g(string)",
+                caseId: "svg-at-index-applies-to-g-string", name: "svg: at(index) applies to g(string)",
                 fixture: "svg/create-placement",
                 sub: "at-g-string",
                 html: `<main id="root"></main>`,
@@ -254,7 +254,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg: g(string) rejects multiple roots",
+                caseId: "svg-g-string-rejects-multiple-roots", name: "svg: g(string) rejects multiple roots",
                 fixture: "svg/create-placement",
                 sub: "g-multiple-roots",
                 html: `<main id="root"></main>`,
@@ -279,7 +279,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg: g(string) rejects malformed markup",
+                caseId: "svg-g-string-rejects-malformed-markup", name: "svg: g(string) rejects malformed markup",
                 fixture: "svg/create-placement",
                 sub: "g-malformed",
                 html: `<main id="root"></main>`,
@@ -305,7 +305,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
             {
                 suite: SUITE,
-                name: "svg: g(string) rejects empty string",
+                caseId: "svg-g-string-rejects-empty-string", name: "svg: g(string) rejects empty string",
                 fixture: "svg/create-placement",
                 sub: "g-empty-string",
                 html: `<main id="root"></main>`,
@@ -330,7 +330,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "svg: g(string) rejects whitespace string",
+                caseId: "svg-g-string-rejects-whitespace-string", name: "svg: g(string) rejects whitespace string",
                 fixture: "svg/create-placement",
                 sub: "g-whitespace-string",
                 html: `<main id="root"></main>`,
@@ -358,7 +358,7 @@ export function livetree_svg_ingermediate(): TestSuite {
     
             {
                 suite: SUITE,
-                name: "svg: g(string) rejects mismatched root tag",
+                caseId: "svg-g-string-rejects-mismatched-root-tag", name: "svg: g(string) rejects mismatched root tag",
                 fixture: "svg/create-placement",
                 sub: "g-mismatched-root",
                 html: `<main id="root"></main>`,
@@ -384,7 +384,7 @@ export function livetree_svg_ingermediate(): TestSuite {
 
             {
                 suite: SUITE,
-                name: "svg: svg(string) rejects whitespace string",
+                caseId: "svg-svg-string-rejects-whitespace-string", name: "svg: svg(string) rejects whitespace string",
                 fixture: "svg/create-placement",
                 sub: "svg-whitespace-string",
                 html: `<main id="root"></main>`,
@@ -410,7 +410,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "append: html append preserves html scope for chaining",
+                caseId: "append-html-append-preserves-html-scope-for-chaining", name: "append: html append preserves html scope for chaining",
                 fixture: "append/scope",
                 sub: "html-preserves-html",
                 html: `<main id="root"></main>`,
@@ -440,7 +440,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "append: svg append preserves svg scope for chaining",
+                caseId: "append-svg-append-preserves-svg-scope-for-chaining", name: "append: svg append preserves svg scope for chaining",
                 fixture: "append/scope",
                 sub: "svg-preserves-svg",
                 html: `<main id="root"></main>`,
@@ -470,7 +470,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "append: html target accepts svg root subtree",
+                caseId: "append-html-target-accepts-svg-root-subtree", name: "append: html target accepts svg root subtree",
                 fixture: "append/scope",
                 sub: "html-accepts-svg-root",
                 html: `<main id="root"></main>`,
@@ -498,7 +498,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "append: html target rejects bare svg child subtree",
+                caseId: "append-html-target-rejects-bare-svg-child-subtree", name: "append: html target rejects bare svg child subtree",
                 fixture: "append/scope",
                 sub: "html-rejects-bare-svg-child",
                 html: `<main id="root"></main>`,
@@ -525,7 +525,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "append: svg target rejects html subtree",
+                caseId: "append-svg-target-rejects-html-subtree", name: "append: svg target rejects html subtree",
                 fixture: "append/scope",
                 sub: "svg-rejects-html",
                 html: `<main id="root"></main>`,
@@ -552,7 +552,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "append: index insertion still works",
+                caseId: "append-index-insertion-still-works", name: "append: index insertion still works",
                 fixture: "append/scope",
                 sub: "append-index",
                 html: `<main id="root"><div id="a"></div><div id="b"></div></main>`,
@@ -582,7 +582,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "attr: svg attr.set preserves svg scope for chaining",
+                caseId: "attr-svg-attr.set-preserves-svg-scope-for-chaining", name: "attr: svg attr.set preserves svg scope for chaining",
                 fixture: "attr/scope",
                 sub: "svg-set-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -610,7 +610,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "attr: svg attr.setMany preserves svg scope for chaining",
+                caseId: "attr-svg-attr.setmany-preserves-svg-scope-for-chaining", name: "attr: svg attr.setMany preserves svg scope for chaining",
                 fixture: "attr/scope",
                 sub: "svg-setMany-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -641,7 +641,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "flag: svg flag.set preserves svg scope for chaining",
+                caseId: "flag-svg-flag.set-preserves-svg-scope-for-chaining", name: "flag: svg flag.set preserves svg scope for chaining",
                 fixture: "attr/scope",
                 sub: "svg-flag-set-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -666,7 +666,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "flag: svg flag.clear preserves svg scope for chaining",
+                caseId: "flag-svg-flag.clear-preserves-svg-scope-for-chaining", name: "flag: svg flag.clear preserves svg scope for chaining",
                 fixture: "attr/scope",
                 sub: "svg-flag-clear-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -692,7 +692,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "attr: html attr.setMany preserves html scope for chaining",
+                caseId: "attr-html-attr.setmany-preserves-html-scope-for-chaining", name: "attr: html attr.setMany preserves html scope for chaining",
                 fixture: "attr/scope",
                 sub: "html-setMany-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -723,7 +723,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "attr: svg read path matches svg canonicalization",
+                caseId: "attr-svg-read-path-matches-svg-canonicalization", name: "attr: svg read path matches svg canonicalization",
                 fixture: "attr/scope",
                 sub: "svg-read-canonicalization",
                 html: `<main id="root"></main>`,
@@ -751,7 +751,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "attr: svg drop preserves svg scope for chaining",
+                caseId: "attr-svg-drop-preserves-svg-scope-for-chaining", name: "attr: svg drop preserves svg scope for chaining",
                 fixture: "attr/scope",
                 sub: "svg-drop-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -777,7 +777,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: html set preserves html scope for chaining",
+                caseId: "data-html-set-preserves-html-scope-for-chaining", name: "data: html set preserves html scope for chaining",
                 fixture: "data/scope",
                 sub: "html-set-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -803,7 +803,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: svg set preserves svg scope for chaining",
+                caseId: "data-svg-set-preserves-svg-scope-for-chaining", name: "data: svg set preserves svg scope for chaining",
                 fixture: "data/scope",
                 sub: "svg-set-preserves-scope",
                 html: `<main id="root"></main>`,
@@ -829,7 +829,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: setMany preserves owner scope and writes kebab-case keys",
+                caseId: "data-setmany-preserves-owner-scope-and-writes-kebab-case-keys", name: "data: setMany preserves owner scope and writes kebab-case keys",
                 fixture: "data/scope",
                 sub: "setMany-kebab-and-scope",
                 html: `<main id="root"></main>`,
@@ -860,7 +860,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: get uses same normalization as set",
+                caseId: "data-get-uses-same-normalization-as-set", name: "data: get uses same normalization as set",
                 fixture: "data/scope",
                 sub: "get-normalizes-like-set",
                 html: `<main id="root"></main>`,
@@ -883,7 +883,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: set null removes data attribute and preserves scope",
+                caseId: "data-set-null-removes-data-attribute-and-preserves-scope", name: "data: set null removes data attribute and preserves scope",
                 fixture: "data/scope",
                 sub: "set-null-removes",
                 html: `<main id="root"></main>`,
@@ -909,7 +909,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: setMany null removes selected keys only",
+                caseId: "data-setmany-null-removes-selected-keys-only", name: "data: setMany null removes selected keys only",
                 fixture: "data/scope",
                 sub: "setMany-null-removes-selected",
                 html: `<main id="root"></main>`,
@@ -940,7 +940,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: get returns undefined when missing",
+                caseId: "data-get-returns-undefined-when-missing", name: "data: get returns undefined when missing",
                 fixture: "data/scope",
                 sub: "get-missing-undefined",
                 html: `<main id="root"></main>`,
@@ -960,7 +960,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: rejects empty dataset key",
+                caseId: "data-rejects-empty-dataset-key", name: "data: rejects empty dataset key",
                 fixture: "data/scope",
                 sub: "rejects-empty-key",
                 html: `<main id="root"></main>`,
@@ -985,7 +985,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: rejects whitespace-only dataset key",
+                caseId: "data-rejects-whitespace-only-dataset-key", name: "data: rejects whitespace-only dataset key",
                 fixture: "data/scope",
                 sub: "rejects-whitespace-key",
                 html: `<main id="root"></main>`,
@@ -1010,7 +1010,7 @@ export function livetree_svg_ingermediate(): TestSuite {
             },
             {
                 suite: SUITE,
-                name: "data: set stringifies booleans and numbers",
+                caseId: "data-set-stringifies-booleans-and-numbers", name: "data: set stringifies booleans and numbers",
                 fixture: "data/scope",
                 sub: "stringifies-primitives",
                 html: `<main id="root"></main>`,

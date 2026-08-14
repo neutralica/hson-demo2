@@ -105,7 +105,7 @@ function make_livetree_input_target(): LiveTreeInputTarget {
 function make_livetree_text_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree text binding initializes text from map path",
+    caseId: "livetree-text-binding-initializes-text-from-map-path", name: "LiveTree text binding initializes text from map path",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -127,7 +127,7 @@ function make_livetree_text_initial_case(suite: string): TestCase {
 function make_livetree_text_update_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree text binding updates text after map path change",
+    caseId: "livetree-text-binding-updates-text-after-map-path-change", name: "LiveTree text binding updates text after map path change",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -150,7 +150,7 @@ function make_livetree_text_update_case(suite: string): TestCase {
 function make_livetree_text_dispose_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree text binding disposer stops later text updates",
+    caseId: "livetree-text-binding-disposer-stops-later-text-updates", name: "LiveTree text binding disposer stops later text updates",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -173,7 +173,7 @@ function make_livetree_text_dispose_case(suite: string): TestCase {
 function make_livetree_attr_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree attr binding initializes attr from map path",
+    caseId: "livetree-attr-binding-initializes-attr-from-map-path", name: "LiveTree attr binding initializes attr from map path",
     meta: {
       input: preview_value({ ui: { tone: "active" } }),
       path: preview_value(["ui", "tone"]),
@@ -195,7 +195,7 @@ function make_livetree_attr_initial_case(suite: string): TestCase {
 function make_livetree_attr_remove_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree attr binding removes attr for false value",
+    caseId: "livetree-attr-binding-removes-attr-for-false-value", name: "LiveTree attr binding removes attr for false value",
     meta: {
       input: preview_value({ ui: { enabled: true } }),
       path: preview_value(["ui", "enabled"]),
@@ -222,7 +222,7 @@ function make_livetree_attr_remove_case(suite: string): TestCase {
 function make_livetree_input_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding initializes form value from map path",
+    caseId: "livetree-input-binding-initializes-form-value-from-map-path", name: "LiveTree input binding initializes form value from map path",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -244,7 +244,7 @@ function make_livetree_input_initial_case(suite: string): TestCase {
 function make_livetree_input_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding writes input value back to map path",
+    caseId: "livetree-input-binding-writes-input-value-back-to-map-path", name: "LiveTree input binding writes input value back to map path",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -269,7 +269,7 @@ function make_livetree_input_writeback_case(suite: string): TestCase {
 function make_livetree_input_external_update_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding receives external map path update",
+    caseId: "livetree-input-binding-receives-external-map-path-update", name: "LiveTree input binding receives external map path update",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -292,7 +292,7 @@ function make_livetree_input_external_update_case(suite: string): TestCase {
 function make_livetree_snap_root_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap render writes root snapshot text",
+    caseId: "livetree-snap-render-writes-root-snapshot-text", name: "LiveTree snap render writes root snapshot text",
     meta: {
       input: preview_value({ ui: { label: "Ready", enabled: true } }),
     },
@@ -318,7 +318,7 @@ function make_livetree_snap_root_case(suite: string): TestCase {
 function make_livetree_snap_path_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap render writes path snapshot text",
+    caseId: "livetree-snap-render-writes-path-snapshot-text", name: "LiveTree snap render writes path snapshot text",
     meta: {
       input: preview_value({ ui: { label: "Ready", enabled: true } }),
       path: preview_value(["ui", "label"]),
@@ -339,7 +339,7 @@ function make_livetree_snap_path_case(suite: string): TestCase {
 function make_livetree_snap_static_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap render is static until called again",
+    caseId: "livetree-snap-render-is-static-until-called-again", name: "LiveTree snap render is static until called again",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -362,7 +362,7 @@ function make_livetree_snap_static_case(suite: string): TestCase {
 function make_livetree_snap_rerender_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap render updates when called again",
+    caseId: "livetree-snap-render-updates-when-called-again", name: "LiveTree snap render updates when called again",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -385,7 +385,7 @@ function make_livetree_snap_rerender_case(suite: string): TestCase {
 function make_livetree_snap_view_primitive_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view renders primitive kind and text",
+    caseId: "livetree-snap-view-renders-primitive-kind-and-text", name: "LiveTree snap view renders primitive kind and text",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -410,7 +410,7 @@ function make_livetree_snap_view_primitive_case(suite: string): TestCase {
 function make_livetree_snap_view_object_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view renders object key/value rows",
+    caseId: "livetree-snap-view-renders-object-key-value-rows", name: "LiveTree snap view renders object key/value rows",
     meta: {
       input: preview_value({ ui: { label: "Ready", enabled: true } }),
       path: preview_value(["ui"]),
@@ -438,7 +438,7 @@ function make_livetree_snap_view_object_case(suite: string): TestCase {
 function make_livetree_snap_view_array_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view renders array index/value rows",
+    caseId: "livetree-snap-view-renders-array-index-value-rows", name: "LiveTree snap view renders array index/value rows",
     meta: {
       input: preview_value({ items: ["one", "two"] }),
       path: preview_value(["items"]),
@@ -466,7 +466,7 @@ function make_livetree_snap_view_array_case(suite: string): TestCase {
 function make_livetree_snap_view_rerender_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view rerender clears previous static structure",
+    caseId: "livetree-snap-view-rerender-clears-previous-static-structure", name: "LiveTree snap view rerender clears previous static structure",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui"]),
@@ -493,7 +493,7 @@ function make_livetree_snap_view_rerender_case(suite: string): TestCase {
 function make_livetree_snap_view_nested_object_paths_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view preserves nested object paths",
+    caseId: "livetree-snap-view-preserves-nested-object-paths", name: "LiveTree snap view preserves nested object paths",
     meta: {
       input: preview_value({ ui: { panel: { label: "Ready" } } }),
       path: preview_value(["ui"]),
@@ -520,7 +520,7 @@ function make_livetree_snap_view_nested_object_paths_case(suite: string): TestCa
 function make_livetree_snap_view_nested_array_paths_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view preserves nested array paths",
+    caseId: "livetree-snap-view-preserves-nested-array-paths", name: "LiveTree snap view preserves nested array paths",
     meta: {
       input: preview_value({ ui: { items: [{ label: "One" }, { label: "Two" }] } }),
       path: preview_value(["ui"]),
@@ -547,7 +547,7 @@ function make_livetree_snap_view_nested_array_paths_case(suite: string): TestCas
 function make_livetree_snap_view_null_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view renders null as null kind with empty text",
+    caseId: "livetree-snap-view-renders-null-as-null-kind-with-empty-text", name: "LiveTree snap view renders null as null kind with empty text",
     meta: {
       input: preview_value({ ui: { value: null } }),
       path: preview_value(["ui", "value"]),
@@ -572,7 +572,7 @@ function make_livetree_snap_view_null_case(suite: string): TestCase {
 function make_livetree_snap_view_empty_containers_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree snap view renders empty object and array kinds without child rows",
+    caseId: "livetree-snap-view-renders-empty-object-and-array-kinds-without-child-rows", name: "LiveTree snap view renders empty object and array kinds without child rows",
     meta: {
       input: preview_value({ emptyObject: {}, emptyArray: [] }),
     },
@@ -608,7 +608,7 @@ function make_livetree_snap_view_empty_containers_case(suite: string): TestCase 
 function make_livetree_attr_zero_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree attr binding preserves numeric zero as attr value",
+    caseId: "livetree-attr-binding-preserves-numeric-zero-as-attr-value", name: "LiveTree attr binding preserves numeric zero as attr value",
     meta: {
       input: preview_value({ ui: { count: 0 } }),
       path: preview_value(["ui", "count"]),
@@ -630,7 +630,7 @@ function make_livetree_attr_zero_case(suite: string): TestCase {
 function make_livetree_input_number_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding coerces numeric string back to number",
+    caseId: "livetree-input-binding-coerces-numeric-string-back-to-number", name: "LiveTree input binding coerces numeric string back to number",
     meta: {
       input: preview_value({ form: { count: 1 } }),
       path: preview_value(["form", "count"]),
@@ -654,7 +654,7 @@ function make_livetree_input_number_writeback_case(suite: string): TestCase {
 function make_livetree_input_boolean_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding coerces true string back to boolean",
+    caseId: "livetree-input-binding-coerces-true-string-back-to-boolean", name: "LiveTree input binding coerces true string back to boolean",
     meta: {
       input: preview_value({ form: { enabled: false } }),
       path: preview_value(["form", "enabled"]),
@@ -678,7 +678,7 @@ function make_livetree_input_boolean_writeback_case(suite: string): TestCase {
 function make_livetree_input_schema_reject_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding schema rejection leaves map value stable",
+    caseId: "livetree-input-binding-schema-rejection-leaves-map-value-stable", name: "LiveTree input binding schema rejection leaves map value stable",
     meta: {
       input: preview_value({ form: { count: 1 } }),
       path: preview_value(["form", "count"]),
@@ -716,7 +716,7 @@ function make_livetree_input_schema_reject_case(suite: string): TestCase {
 function make_livetree_input_dispose_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input binding disposer stops later input writeback",
+    caseId: "livetree-input-binding-disposer-stops-later-input-writeback", name: "LiveTree input binding disposer stops later input writeback",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -740,7 +740,7 @@ function make_livetree_input_dispose_writeback_case(suite: string): TestCase {
 function make_livetree_text_fanout_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree bridge fans one map path out to two text targets",
+    caseId: "livetree-bridge-fans-one-map-path-out-to-two-text-targets", name: "LiveTree bridge fans one map path out to two text targets",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -769,7 +769,7 @@ function make_livetree_text_fanout_case(suite: string): TestCase {
 function make_livetree_input_to_text_loop_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input writeback updates subscribed text target",
+    caseId: "livetree-input-writeback-updates-subscribed-text-target", name: "LiveTree input writeback updates subscribed text target",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -799,7 +799,7 @@ function make_livetree_input_to_text_loop_case(suite: string): TestCase {
 function make_livetree_text_fanout_partial_dispose_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree fanout disposing one text binding leaves the other active",
+    caseId: "livetree-fanout-disposing-one-text-binding-leaves-the-other-active", name: "LiveTree fanout disposing one text binding leaves the other active",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -828,7 +828,7 @@ function make_livetree_text_fanout_partial_dispose_case(suite: string): TestCase
 function make_livetree_input_loop_repeated_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree input loop handles repeated writeback without echo drift",
+    caseId: "livetree-input-loop-handles-repeated-writeback-without-echo-drift", name: "LiveTree input loop handles repeated writeback without echo drift",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),

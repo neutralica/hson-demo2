@@ -13,7 +13,7 @@ import { all_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-
 import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites";
 
 export type HostedTestRuntimeKind = "node" | "dom" | "canvas";
-export type HostedTestCategory = "livetree" | "livemap" | "livehost" | "transform" | "unit" | "dev";
+export type HostedTestCategory = "transform" | "livetree" | "livemap" | "livehost" | "reflect" | "unit" | "dev";
 
 export type HostedExecutableSuite = Readonly<{
   runtime: HostedTestRuntimeKind;
@@ -38,7 +38,7 @@ function assert_unique(suites: readonly TestSuite[]): void {
   if (new Set(suiteIds).size !== suiteIds.length) {
     throw new Error("Duplicate suite identity in hosted/all.");
   }
-  const caseKeys = suites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+  const caseKeys = suites.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`));
   if (new Set(caseKeys).size !== caseKeys.length) {
     throw new Error("Duplicate case identity in hosted/all.");
   }
@@ -60,10 +60,12 @@ const DOM_LIVEMAP_SUITES = new Set([
 ]);
 
 function category_for(runtime: HostedTestRuntimeKind, suite: TestSuite): HostedTestCategory {
-  if (DEV_SUITES.has(suite.suite)) return "dev";
-  if (suite.suite.startsWith("livehost/")) return "livehost";
-  if (suite.suite.startsWith("unit/")) return "unit";
-  if (suite.suite.startsWith("transform/")) return "transform";
+  if (suite.descriptor?.collections?.includes("dev") || DEV_SUITES.has(suite.suite)) return "dev";
+  if (suite.descriptor?.collections?.includes("unit")) return "unit";
+  const subject = suite.descriptor?.subject;
+  if (subject === "transform" || subject === "livetree" || subject === "livemap"
+    || subject === "livehost" || subject === "reflect") return subject;
+  // Transitional legacy-route fallback; exact discovery and RunPlan selection use descriptor metadata directly.
   if (runtime === "node" || DOM_LIVEMAP_SUITES.has(suite.suite)) return "livemap";
   return "livetree";
 }

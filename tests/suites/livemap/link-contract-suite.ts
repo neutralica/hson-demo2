@@ -27,7 +27,8 @@ export function livemap_link_contract_suites(): TestSuite {
     suite: SUITE,
     cases: [
       make_contract_link_case({
-        name: "contract link_livemap propagates child set through parent link",
+        caseId: "contract-link_livemap-propagates-child-set-through-parent-link",
+            name: "contract link_livemap propagates child set through parent link",
         sourceInput: { draft: { name: "Ada", role: "user" } },
         targetInput: { user: { name: "Ada", role: "user" } },
         from: ["draft"],
@@ -37,7 +38,8 @@ export function livemap_link_contract_suites(): TestSuite {
         expectedTarget: { user: { name: "Grace", role: "user" } },
       }),
       make_contract_link_case({
-        name: "contract link_livemap propagates endpoint replace as endpoint replace",
+        caseId: "contract-link_livemap-propagates-endpoint-replace-as-endpoint-replace",
+            name: "contract link_livemap propagates endpoint replace as endpoint replace",
         sourceInput: { draft: { name: "Ada", role: "user" } },
         targetInput: { user: { name: "Ada", role: "user" } },
         from: ["draft"],
@@ -47,7 +49,8 @@ export function livemap_link_contract_suites(): TestSuite {
         expectedTarget: { user: { name: "Grace" } },
       }),
       make_contract_link_case({
-        name: "contract link_livemap propagates exact delete as target delete",
+        caseId: "contract-link_livemap-propagates-exact-delete-as-target-delete",
+            name: "contract link_livemap propagates exact delete as target delete",
         sourceInput: { draft: { name: "Ada", role: "user" } },
         targetInput: { user: { name: "Ada", role: "user" } },
         from: ["draft", "name"],
@@ -57,7 +60,8 @@ export function livemap_link_contract_suites(): TestSuite {
         expectedTarget: { user: { role: "user" } },
       }),
       make_contract_link_case({
-        name: "contract link_livemap child delete under parent writes updated parent",
+        caseId: "contract-link_livemap-child-delete-under-parent-writes-updated-parent",
+            name: "contract link_livemap child delete under parent writes updated parent",
         sourceInput: { draft: { name: "Ada", role: "user" } },
         targetInput: { user: { name: "Ada", role: "user" } },
         from: ["draft"],
@@ -67,7 +71,8 @@ export function livemap_link_contract_suites(): TestSuite {
         expectedTarget: { user: { role: "user" } },
       }),
       make_contract_handle_link_case({
-        name: "contract handle linkTo propagates child set through parent handle",
+        caseId: "contract-handle-linkto-propagates-child-set-through-parent-handle",
+            name: "contract handle linkTo propagates child set through parent handle",
         sourceInput: { draft: { name: "Ada", role: "user" } },
         targetInput: { user: { name: "Ada", role: "user" } },
         sourcePath: ["draft"],
@@ -77,7 +82,8 @@ export function livemap_link_contract_suites(): TestSuite {
         expectedTarget: { user: { name: "Grace", role: "user" } },
       }),
       make_contract_handle_link_case({
-        name: "contract handle linkTo propagates source replace as target replace",
+        caseId: "contract-handle-linkto-propagates-source-replace-as-target-replace",
+            name: "contract handle linkTo propagates source replace as target replace",
         sourceInput: { draft: { name: "Ada", role: "user" } },
         targetInput: { user: { name: "Ada", role: "user" } },
         sourcePath: ["draft"],
@@ -87,7 +93,8 @@ export function livemap_link_contract_suites(): TestSuite {
         expectedTarget: { user: { name: "Grace" } },
       }),
       make_contract_handle_link_case({
-        name: "contract handle linkTo creates missing target child under object parent",
+        caseId: "contract-handle-linkto-creates-missing-target-child-under-object-parent",
+            name: "contract handle linkTo creates missing target child under object parent",
         sourceInput: { draft: { name: "Ada" } },
         targetInput: { user: {} },
         sourcePath: ["draft", "name"],
@@ -98,7 +105,7 @@ export function livemap_link_contract_suites(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "contract handle linkTo missing target parent still throws",
+        caseId: "contract-handle-linkto-missing-target-parent-still-throws", name: "contract handle linkTo missing target parent still throws",
         meta: {
           sourceInput: preview_value({ draft: { name: "Ada" } }),
           targetInput: preview_value({}),
@@ -130,6 +137,7 @@ export function livemap_link_contract_suites(): TestSuite {
 }
 
 type ContractLinkCaseSpec = Readonly<{
+  caseId: string;
   name: string;
   sourceInput: JsonValue;
   targetInput: JsonValue;
@@ -141,6 +149,7 @@ type ContractLinkCaseSpec = Readonly<{
 }>;
 
 type ContractHandleLinkCaseSpec = Readonly<{
+  caseId: string;
   name: string;
   sourceInput: JsonValue;
   targetInput: JsonValue;
@@ -154,7 +163,7 @@ type ContractHandleLinkCaseSpec = Readonly<{
 function make_contract_link_case(spec: ContractLinkCaseSpec): TestCase {
   return {
     suite: SUITE,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       sourceInput: preview_value(spec.sourceInput),
       targetInput: preview_value(spec.targetInput),
@@ -181,7 +190,7 @@ function make_contract_link_case(spec: ContractLinkCaseSpec): TestCase {
 function make_contract_handle_link_case(spec: ContractHandleLinkCaseSpec): TestCase {
   return {
     suite: SUITE,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       sourceInput: preview_value(spec.sourceInput),
       targetInput: preview_value(spec.targetInput),

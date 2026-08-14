@@ -12,8 +12,8 @@ const passingResult = (cases: number, pass = cases, fail = 0, skip = 0): RunResu
   summary: { suites: 1, cases, pass, fail, skip, msTotal: cases, failures: [] },
 });
 const begin: TestEvent = { t: "suite_begin", suite: "batch/test", totalPlanned: 4 };
-const end = (name: string, status: "pass" | "fail" | "skip" = "pass"): TestEvent => ({
-  t: "case_end", suite: "batch/test", name, status, ms: 1, ...(status === "fail" ? { err: "expected" } : {}),
+const end = (caseId: string, status: "pass" | "fail" | "skip" = "pass"): TestEvent => ({
+  t: "case_end", suite: "batch/test", caseId, name: caseId, status, ms: 1, ...(status === "fail" ? { err: "expected" } : {}),
 });
 const suiteEnd: TestEvent = { t: "suite_end", suite: "batch/test", ms: 4 };
 

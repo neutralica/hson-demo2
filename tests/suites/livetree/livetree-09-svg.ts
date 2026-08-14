@@ -21,7 +21,7 @@ export function livetree_svg_basic(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "create: svg() creates empty svg root",
+      caseId: "create-svg-creates-empty-svg-root", name: "create: svg() creates empty svg root",
       dom: true,
       fixture: "create/svg",
       sub: "empty-root",
@@ -46,7 +46,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg children use svg tag creation",
+      caseId: "create-svg-children-use-svg-tag-creation", name: "create: svg children use svg tag creation",
       dom: true,
       fixture: "create/svg",
       sub: "child-tags",
@@ -73,7 +73,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg(string) parses and mounts svg",
+      caseId: "create-svg-string-parses-and-mounts-svg", name: "create: svg(string) parses and mounts svg",
       dom: true,
       fixture: "create/svg",
       sub: "parse-basic",
@@ -107,7 +107,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg(string) respects prepend()",
+      caseId: "create-svg-string-respects-prepend", name: "create: svg(string) respects prepend()",
       dom: true,
       fixture: "create/svg",
       sub: "prepend",
@@ -133,7 +133,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg(string) returns svg root handle",
+      caseId: "create-svg-string-returns-svg-root-handle", name: "create: svg(string) returns svg root handle",
       dom: true,
       fixture: "create/svg",
       sub: "return-root",
@@ -159,7 +159,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg(string) rejects non-svg root",
+      caseId: "create-svg-string-rejects-non-svg-root", name: "create: svg(string) rejects non-svg root",
       dom: false,
       fixture: "create/svg",
       sub: "invalid-root",
@@ -183,7 +183,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "create: svg(string) survives terminal reimport with fresh identity",
+      caseId: "create-svg-string-survives-terminal-reimport-with-fresh-identity", name: "create: svg(string) survives terminal reimport with fresh identity",
       dom: true,
       fixture: "create/svg",
       sub: "roundtrip",
@@ -219,7 +219,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: nested scope propagates",
+      caseId: "svg-nested-scope-propagates", name: "svg: nested scope propagates",
       fixture: "svg/create-extended",
       sub: "nested-scope",
       dom: true,
@@ -258,7 +258,7 @@ export function livetree_svg_basic(): TestSuite {
     // 2. string root propagation
     // ─────────────────────────────────────────────
     {
-      name: "svg: string root scope propagates",
+      caseId: "svg-string-root-scope-propagates", name: "svg: string root scope propagates",
       suite: SUITE,
       fixture: "svg/create-extended",
       sub: "string-root-scope",
@@ -289,7 +289,7 @@ export function livetree_svg_basic(): TestSuite {
     // ─────────────────────────────────────────────
     {
       suite: SUITE,
-      name: "svg: selector create homogeneous",
+      caseId: "svg-selector-create-homogeneous", name: "svg: selector create homogeneous",
       fixture: "svg/create-extended",
       sub: "selector-homogeneous",
       html: `<main id="root"></main>`,
@@ -318,7 +318,7 @@ export function livetree_svg_basic(): TestSuite {
     // ─────────────────────────────────────────────
     {
       suite: SUITE,
-      name: "svg: g(string) creates subtree",
+      caseId: "svg-g-string-creates-subtree", name: "svg: g(string) creates subtree",
       fixture: "svg/create-extended",
       sub: "g-string",
       html: `<main id="root"></main>`,
@@ -353,7 +353,7 @@ export function livetree_svg_basic(): TestSuite {
     // ─────────────────────────────────────────────
     {
       suite: SUITE,
-      name: "svg: g(string) rejects mismatched root",
+      caseId: "svg-g-string-rejects-mismatched-root", name: "svg: g(string) rejects mismatched root",
       fixture: "svg/create-extended",
       sub: "g-mismatch",
       html: `<main id="root"></main>`,
@@ -380,7 +380,7 @@ export function livetree_svg_basic(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg: id/class/style/attr chaining preserves svg scope",
+      caseId: "svg-id-class-style-attr-chaining-preserves-svg-scope", name: "svg: id/class/style/attr chaining preserves svg scope",
       fixture: "svg/create-extended",
       sub: "svg-scope-through-helpers",
       html: `<main id="root"></main>`,
@@ -420,7 +420,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: child chaining preserves svg scope",
+      caseId: "svg-child-chaining-preserves-svg-scope", name: "svg: child chaining preserves svg scope",
       fixture: "svg/create-extended",
       sub: "child-scope-through-helpers",
       html: `<main id="root"></main>`,
@@ -453,7 +453,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: defs(string) creates subtree",
+      caseId: "svg-defs-string-creates-subtree", name: "svg: defs(string) creates subtree",
       fixture: "svg/create-extended",
       sub: "defs-string",
       html: `<main id="root"></main>`,
@@ -487,7 +487,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: defs(string) rejects mismatched root",
+      caseId: "svg-defs-string-rejects-mismatched-root", name: "svg: defs(string) rejects mismatched root",
       fixture: "svg/create-extended",
       sub: "defs-mismatch",
       html: `<main id="root"></main>`,
@@ -513,7 +513,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: circle(string) creates self-root leaf",
+      caseId: "svg-circle-string-creates-self-root-leaf", name: "svg: circle(string) creates self-root leaf",
       fixture: "svg/create-extended",
       sub: "circle-string-leaf",
       html: `<main id="root"></main>`,
@@ -550,7 +550,7 @@ export function livetree_svg_basic(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg: g(string) survives terminal reimport with fresh identity",
+      caseId: "svg-g-string-survives-terminal-reimport-with-fresh-identity", name: "svg: g(string) survives terminal reimport with fresh identity",
       fixture: "svg/create-extended",
       sub: "g-string-roundtrip",
       preview: () => "<terminal-svg-restoration>",
@@ -592,7 +592,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: g(string) mismatch error message is specific",
+      caseId: "svg-g-string-mismatch-error-message-is-specific", name: "svg: g(string) mismatch error message is specific",
       fixture: "svg/create-extended",
       sub: "g-mismatch-message",
       html: `<main id="root"></main>`,
@@ -618,7 +618,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: non-svg root error message is specific",
+      caseId: "svg-non-svg-root-error-message-is-specific", name: "svg: non-svg root error message is specific",
       fixture: "svg/create-extended",
       sub: "svg-root-message",
       html: `<main id="root"></main>`,
@@ -642,7 +642,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: selector create on nested g nodes preserves count and parentage",
+      caseId: "svg-selector-create-on-nested-g-nodes-preserves-count-and-parentage", name: "svg: selector create on nested g nodes preserves count and parentage",
       fixture: "svg/create-extended",
       sub: "selector-parentage",
       html: `<main id="root"></main>`,
@@ -683,7 +683,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: preserves common svg attrs",
+      caseId: "svg-preserves-common-svg-attrs", name: "svg: preserves common svg attrs",
       fixture: "svg/create-extended",
       sub: "svg-attrs-common",
       html: `<main id="root"></main>`,
@@ -719,7 +719,7 @@ export function livetree_svg_basic(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg: g(string) respects prepend",
+      caseId: "svg-g-string-respects-prepend", name: "svg: g(string) respects prepend",
       fixture: "svg/create-extended",
       sub: "g-string-prepend",
       html: `<main id="root"></main>`,
@@ -761,7 +761,7 @@ export function livetree_svg_basic(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg: g(string) respects at(index)",
+      caseId: "svg-g-string-respects-at-index", name: "svg: g(string) respects at(index)",
       fixture: "svg/create-extended",
       sub: "g-string-at-index",
       html: `<main id="root"></main>`,

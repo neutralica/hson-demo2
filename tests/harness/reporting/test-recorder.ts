@@ -20,7 +20,7 @@ export class TestRecorder {
         if (e.t === "suite_end") this.msTotal += e.ms;
 
         if (e.t === "case_begin") {
-            const key = this.key(e.suite, e.name);
+            const key = this.key(e.suite, e.caseId);
             if (this.activeCases.has(key) || this.completedCases.has(key)) {
                 throw new Error(`[TEST_RECORDER_DUPLICATE_CASE_BEGIN] ${key}`);
             }
@@ -32,7 +32,7 @@ export class TestRecorder {
 
         if (e.t === "case_end") {
             const end = normalize_case_end_event(e);
-            const k = this.key(e.suite, e.name);
+            const k = this.key(e.suite, e.caseId);
             if (!this.activeCases.delete(k)) {
                 throw new Error(`[TEST_RECORDER_CASE_END_WITHOUT_BEGIN] ${k}`);
             }
@@ -61,7 +61,7 @@ export class TestRecorder {
                 const meta = this.metaByCase.get(k);
                 const base = {
                     suite: end.suite,
-                    name: end.name,
+                    caseId: end.caseId, name: end.name,
                     err: end.err ?? "Unknown error",
                     ms: end.ms,
                 } as const;
@@ -87,11 +87,11 @@ export class TestRecorder {
     }
 
     // small accessor for report rendering
-    public getAsserts(suite: string, name: string): readonly TestAssertRow[] {
-        return Object.freeze([...(this.assertsByCase.get(this.key(suite, name)) ?? [])]);
+    public getAsserts(suite: string, caseId: string): readonly TestAssertRow[] {
+        return Object.freeze([...(this.assertsByCase.get(this.key(suite, caseId)) ?? [])]);
     }
 
-    private key(suite: string, name: string): string {
-        return `${suite}::${name}`;
+    private key(suite: string, caseId: string): string {
+        return `${suite}::${caseId}`;
     }
 }

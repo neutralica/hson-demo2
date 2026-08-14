@@ -133,7 +133,7 @@ function make_bridge_map(value: JsonValue): BridgeMap {
 function make_controls_snap_string_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated string control writes back to LiveMap",
+    caseId: "livetree-generated-string-control-writes-back-to-livemap", name: "LiveTree generated string control writes back to LiveMap",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -162,7 +162,7 @@ function make_controls_snap_string_writeback_case(suite: string): TestCase {
 function make_controls_snap_number_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated number control preserves numeric writeback",
+    caseId: "livetree-generated-number-control-preserves-numeric-writeback", name: "LiveTree generated number control preserves numeric writeback",
     meta: {
       input: preview_value({ count: 1 }),
       path: preview_value(["count"]),
@@ -190,7 +190,7 @@ function make_controls_snap_number_writeback_case(suite: string): TestCase {
 function make_controls_snap_nested_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated nested control writes to correct path",
+    caseId: "livetree-generated-nested-control-writes-to-correct-path", name: "LiveTree generated nested control writes to correct path",
     meta: {
       input: preview_value({ ui: { panel: { label: "Ready" } } }),
       path: preview_value(["ui"]),
@@ -217,7 +217,7 @@ function make_controls_snap_nested_writeback_case(suite: string): TestCase {
 function make_controls_snap_dispose_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated control dispose prevents later writeback",
+    caseId: "livetree-generated-control-dispose-prevents-later-writeback", name: "LiveTree generated control dispose prevents later writeback",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -244,7 +244,7 @@ function make_controls_snap_dispose_case(suite: string): TestCase {
 function make_controls_snap_markup_attrs_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated controls expose structural attrs",
+    caseId: "livetree-generated-controls-expose-structural-attrs", name: "LiveTree generated controls expose structural attrs",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui"]),
@@ -274,7 +274,7 @@ function make_controls_snap_markup_attrs_case(suite: string): TestCase {
 function make_controls_snap_binding_count_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated controls return one binding per primitive leaf",
+    caseId: "livetree-generated-controls-return-one-binding-per-primitive-leaf", name: "LiveTree generated controls return one binding per primitive leaf",
     meta: {
       input: preview_value({ ui: { label: "Ready", count: 1, nested: { enabled: true } } }),
       path: preview_value(["ui"]),
@@ -301,7 +301,7 @@ function make_controls_snap_binding_count_case(suite: string): TestCase {
 function make_controls_snap_boolean_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated boolean control writes back to LiveMap",
+    caseId: "livetree-generated-boolean-control-writes-back-to-livemap", name: "LiveTree generated boolean control writes back to LiveMap",
     meta: {
       input: preview_value({ enabled: true }),
       path: preview_value(["enabled"]),
@@ -334,7 +334,7 @@ function make_controls_snap_boolean_writeback_case(suite: string): TestCase {
 function make_controls_snap_rerender_replaces_inputs_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated controls rerender replaces generated inputs",
+    caseId: "livetree-generated-controls-rerender-replaces-generated-inputs", name: "LiveTree generated controls rerender replaces generated inputs",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui"]),
@@ -368,7 +368,7 @@ function make_controls_snap_rerender_replaces_inputs_case(suite: string): TestCa
 function make_controls_snap_rerender_after_dispose_ignores_old_input_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated controls rerender disposed old input does not write back",
+    caseId: "livetree-generated-controls-rerender-disposed-old-input-does-not-write-back", name: "LiveTree generated controls rerender disposed old input does not write back",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui"]),
@@ -403,7 +403,7 @@ function make_controls_snap_rerender_after_dispose_ignores_old_input_case(suite:
 function make_controls_snap_dotted_keys_preserve_internal_path_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated controls preserve internal paths for dotted keys",
+    caseId: "livetree-generated-controls-preserve-internal-paths-for-dotted-keys", name: "LiveTree generated controls preserve internal paths for dotted keys",
     meta: {
       input: preview_value({ "ui.panel": { "label.text": "Ready" } }),
       path: preview_value(["ui.panel"]),
@@ -433,7 +433,7 @@ function make_controls_snap_dotted_keys_preserve_internal_path_case(suite: strin
 function make_controls_snap_number_nonfinite_falls_back_to_text_case(suite: string): TestCase {
   return {
     suite,
-    name: "LiveTree generated number control falls back to text on non-finite input",
+    caseId: "livetree-generated-number-control-falls-back-to-text-on-non-finite-input", name: "LiveTree generated number control falls back to text on non-finite input",
     meta: {
       input: preview_value({ count: 1 }),
       invalid: preview_value("abc"),

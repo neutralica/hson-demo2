@@ -6,7 +6,7 @@ import { equal_row, preview_value } from "../livemap/test-helpers";
 
 type LiveHostReadCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: unknown;
   act: () => unknown | Promise<unknown>;
   expected: unknown;
@@ -23,7 +23,7 @@ function livehost_response_seq(response: unknown): number | undefined {
 function livehost_read_case(spec: LiveHostReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -47,7 +47,7 @@ export function livehost_core_suite(): TestSuite {
     cases: [
       livehost_read_case({
         suite: SUITE,
-        name: "create initializes map from state",
+        caseId: "create-initializes-map-from-state", name: "create initializes map from state",
         input: {},
         act: () => {
           const host = create_livehost({
@@ -68,7 +68,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "create starts seq at zero",
+        caseId: "create-starts-seq-at-zero", name: "create starts seq at zero",
         input: {},
         act: () => {
           const host = create_livehost({ state: { ok: true } });
@@ -78,7 +78,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "create defaults to empty object state",
+        caseId: "create-defaults-to-empty-object-state", name: "create defaults to empty object state",
         input: {},
         act: () => {
           const host = create_livehost();
@@ -88,7 +88,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "action context sees current seq before ack increment",
+        caseId: "action-context-sees-current-seq-before-ack-increment", name: "action context sees current seq before ack increment",
         input: {},
         act: async () => {
           const seenSeqs: number[] = [];
@@ -120,7 +120,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "direct dispatch receives immutable direct action origin",
+        caseId: "direct-dispatch-receives-immutable-direct-action-origin", name: "direct dispatch receives immutable direct action origin",
         input: {},
         act: async () => {
           let origin: unknown;
@@ -147,7 +147,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "direct dispatch clientId cannot manufacture session authority",
+        caseId: "direct-dispatch-clientid-cannot-manufacture-session-authority", name: "direct dispatch clientId cannot manufacture session authority",
         input: {},
         act: async () => {
           let origin: unknown;
@@ -167,7 +167,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch action calls registered handler",
+        caseId: "dispatch-action-calls-registered-handler", name: "dispatch action calls registered handler",
         input: {},
         act: async () => {
           let called = false;
@@ -202,7 +202,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch action lets handler mutate map",
+        caseId: "dispatch-action-lets-handler-mutate-map", name: "dispatch action lets handler mutate map",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -235,7 +235,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch action awaits async handler before ack",
+        caseId: "dispatch-action-awaits-async-handler-before-ack", name: "dispatch action awaits async handler before ack",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -270,7 +270,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch action returns ack and increments seq",
+        caseId: "dispatch-action-returns-ack-and-increments-seq", name: "dispatch action returns ack and increments seq",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -297,7 +297,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch unknown action returns error without incrementing seq",
+        caseId: "dispatch-unknown-action-returns-error-without-incrementing-seq", name: "dispatch unknown action returns error without incrementing seq",
         input: {},
         act: async () => {
           const host = create_livehost({ state: {} });
@@ -329,7 +329,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch thrown action returns error without incrementing seq",
+        caseId: "dispatch-thrown-action-returns-error-without-incrementing-seq", name: "dispatch thrown action returns error without incrementing seq",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -369,7 +369,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch rejected async action returns error without incrementing seq",
+        caseId: "dispatch-rejected-async-action-returns-error-without-incrementing-seq", name: "dispatch rejected async action returns error without incrementing seq",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -410,7 +410,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "schema payload validator accepts valid payload",
+        caseId: "schema-payload-validator-accepts-valid-payload", name: "schema payload validator accepts valid payload",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -459,7 +459,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "schema payload validator rejects invalid payload without incrementing seq",
+        caseId: "schema-payload-validator-rejects-invalid-payload-without-incrementing-seq", name: "schema payload validator rejects invalid payload without incrementing seq",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -514,7 +514,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "schema payload decoder passes decoded value to handler",
+        caseId: "schema-payload-decoder-passes-decoded-value-to-handler", name: "schema payload decoder passes decoded value to handler",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -564,7 +564,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "schema payload decoder reports custom issues",
+        caseId: "schema-payload-decoder-reports-custom-issues", name: "schema payload decoder reports custom issues",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -620,7 +620,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "create exposes schema reference",
+        caseId: "create-exposes-schema-reference", name: "create exposes schema reference",
         input: {},
         act: () => {
           const schema = {
@@ -648,7 +648,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "create applies state schema validator before map creation",
+        caseId: "create-applies-state-schema-validator-before-map-creation", name: "create applies state schema validator before map creation",
         input: {},
         act: () => {
           let validatorCalled = false;
@@ -677,7 +677,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "create applies state schema decoder before map creation",
+        caseId: "create-applies-state-schema-decoder-before-map-creation", name: "create applies state schema decoder before map creation",
         input: {},
         act: () => {
           const host = create_livehost({
@@ -710,7 +710,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch action returns json-safe handler result",
+        caseId: "dispatch-action-returns-json-safe-handler-result", name: "dispatch action returns json-safe handler result",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -726,7 +726,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "dispatch action rejects non-finite handler result",
+        caseId: "dispatch-action-rejects-non-finite-handler-result", name: "dispatch action rejects non-finite handler result",
         input: {},
         act: async () => {
           const host = create_livehost({
@@ -746,7 +746,7 @@ export function livehost_core_suite(): TestSuite {
       }),
       livehost_read_case({
         suite: SUITE,
-        name: "schema payload rejection does not invoke handler",
+        caseId: "schema-payload-rejection-does-not-invoke-handler", name: "schema payload rejection does not invoke handler",
         input: {},
         act: async () => {
           let calls = 0;

@@ -19,7 +19,7 @@ export function livetree_css_pseudo(): TestSuite {
     [
       {
         suite: SUITE,
-        name: "css pseudos: before plain text generates exact quoted CSS",
+        caseId: "css-pseudos-before-plain-text-generates-exact-quoted-css", name: "css pseudos: before plain text generates exact quoted CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-auto-quotes",
@@ -58,7 +58,7 @@ export function livetree_css_pseudo(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "css pseudos: before omission generates exact empty content CSS",
+        caseId: "css-pseudos-before-omission-generates-exact-empty-content-css", name: "css pseudos: before omission generates exact empty content CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-empty-fallback",
@@ -96,7 +96,7 @@ export function livetree_css_pseudo(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "css pseudos: raw attr() content is preserved",
+        caseId: "css-pseudos-raw-attr-content-is-preserved", name: "css pseudos: raw attr() content is preserved",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-attr-content",
@@ -133,7 +133,7 @@ export function livetree_css_pseudo(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "css pseudos: manual and auto quoted content generate exact CSS",
+        caseId: "css-pseudos-manual-and-auto-quoted-content-generate-exact-css", name: "css pseudos: manual and auto quoted content generate exact CSS",
         dom: true,
         fixture: "css/pseudos",
         sub: "before-manual-vs-auto",
@@ -192,7 +192,7 @@ export function livetree_recent_api(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "find.byQuid: resolves descendant by internal quid",
+      caseId: "find.byquid-resolves-descendant-by-internal-quid", name: "find.byQuid: resolves descendant by internal quid",
       dom: true,
       fixture: "find/quid",
       sub: "descendant-soft",
@@ -226,7 +226,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find.must.byQuid: resolves descendant by internal quid",
+      caseId: "find.must.byquid-resolves-descendant-by-internal-quid", name: "find.must.byQuid: resolves descendant by internal quid",
       dom: true,
       fixture: "find/quid",
       sub: "descendant-must",
@@ -258,7 +258,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "find.byQuid: does not resolve quid outside current tree",
+      caseId: "find.byquid-does-not-resolve-quid-outside-current-tree", name: "find.byQuid: does not resolve quid outside current tree",
       dom: true,
       fixture: "find/quid",
       sub: "out-of-tree-soft",
@@ -294,7 +294,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.doc: detached tree exposes no soft document handle",
+      caseId: "dom.doc-detached-tree-exposes-no-soft-document-handle", name: "dom.doc: detached tree exposes no soft document handle",
       dom: true,
       fixture: "dom/doc",
       sub: "detached-soft-none",
@@ -320,7 +320,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.must.doc: detached tree throws",
+      caseId: "dom.must.doc-detached-tree-throws", name: "dom.must.doc: detached tree throws",
       dom: true,
       fixture: "dom/doc",
       sub: "detached-must-throws",
@@ -352,7 +352,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.must.treeFromEl: resolves mounted descendant element",
+      caseId: "dom.must.treefromel-resolves-mounted-descendant-element", name: "dom.must.treeFromEl: resolves mounted descendant element",
       dom: true,
       fixture: "dom/treeFromEl",
       sub: "mounted-descendant",
@@ -383,7 +383,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.treeFromEl soft path returns undefined for foreign element",
+      caseId: "dom.treefromel-soft-path-returns-undefined-for-foreign-element", name: "dom.treeFromEl soft path returns undefined for foreign element",
       dom: true,
       fixture: "dom/treeFromEl",
       sub: "foreign-soft-none",
@@ -413,7 +413,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.must.treeFromEl throws for foreign element",
+      caseId: "dom.must.treefromel-throws-for-foreign-element", name: "dom.must.treeFromEl throws for foreign element",
       dom: true,
       fixture: "dom/treeFromEl",
       sub: "foreign-must-throws",
@@ -446,7 +446,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listen.document.once: fires once on document target",
+      caseId: "listen.document.once-fires-once-on-document-target", name: "listen.document.once: fires once on document target",
       dom: true,
       fixture: "listen/document",
       sub: "document-once",
@@ -488,7 +488,7 @@ export function livetree_recent_api(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listen.window.off: detaches window listener",
+      caseId: "listen.window.off-detaches-window-listener", name: "listen.window.off: detaches window listener",
       dom: true,
       fixture: "listen/window",
       sub: "window-off-detaches",
@@ -532,7 +532,7 @@ export function livetree_create_size(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "dom.clientSize: mounted html element returns size",
+      caseId: "dom.clientsize-mounted-html-element-returns-size", name: "dom.clientSize: mounted html element returns size",
       dom: true,
       fixture: "dom/clientSize",
       sub: "mounted-soft",
@@ -565,7 +565,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.clientSize: detached tree returns undefined",
+      caseId: "dom.clientsize-detached-tree-returns-undefined", name: "dom.clientSize: detached tree returns undefined",
       dom: true,
       fixture: "dom/clientSize",
       sub: "detached-soft-none",
@@ -593,7 +593,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.must.clientSize: detached tree throws",
+      caseId: "dom.must.clientsize-detached-tree-throws", name: "dom.must.clientSize: detached tree throws",
       dom: true,
       fixture: "dom/clientSize",
       sub: "detached-must-throws",
@@ -625,7 +625,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "detached create: div returns html namespace",
+      caseId: "detached-create-div-returns-html-namespace", name: "detached create: div returns html namespace",
       dom: true,
       fixture: "create/detached",
       sub: "html-div-namespace",
@@ -659,7 +659,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "detached create: svg returns svg namespace",
+      caseId: "detached-create-svg-returns-svg-namespace", name: "detached create: svg returns svg namespace",
       dom: true,
       fixture: "create/detached",
       sub: "svg-root-namespace",
@@ -692,7 +692,7 @@ export function livetree_create_size(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "detached create: path returns svg namespace",
+      caseId: "detached-create-path-returns-svg-namespace", name: "detached create: path returns svg namespace",
       dom: true,
       fixture: "create/detached",
       sub: "svg-path-namespace",
@@ -726,7 +726,7 @@ export function livetree_create_size(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "detached create: path accepts d attribute",
+      caseId: "detached-create-path-accepts-d-attribute", name: "detached create: path accepts d attribute",
       dom: true,
       fixture: "create/detached",
       sub: "svg-path-d-attr",
@@ -761,7 +761,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "detached create: at() still works for html tags",
+      caseId: "detached-create-at-still-works-for-html-tags", name: "detached create: at() still works for html tags",
       dom: true,
       fixture: "create/detached",
       sub: "html-at-index",
@@ -794,7 +794,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg tree create: path is available in svg scope",
+      caseId: "svg-tree-create-path-is-available-in-svg-scope", name: "svg tree create: path is available in svg scope",
       dom: true,
       fixture: "create/svg",
       sub: "svg-scope-path",
@@ -825,7 +825,7 @@ export function livetree_create_size(): TestSuite {
 
     {
       suite: SUITE,
-      name: "svg tree create: rect is available in svg scope",
+      caseId: "svg-tree-create-rect-is-available-in-svg-scope", name: "svg tree create: rect is available in svg scope",
       dom: true,
       fixture: "create/svg",
       sub: "svg-scope-rect",

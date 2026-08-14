@@ -365,7 +365,8 @@ export function tp_factory(): TestPanel {
                 }));
             }
             for (const timing of update.newSuiteTimings) {
-                if (timing.suite.startsWith("library::")) continue;
+                if (update.report.suiteRuns.find((suite) => suite.id === timing.suite)?.executionShape === "opaque-aggregate"
+                    || update.report.externalResults[timing.suite] !== undefined) continue;
                 if (completedCanonicalSuites.has(timing.suite)) continue;
                 completedCanonicalSuites.add(timing.suite);
                 const counts = canonicalSuiteCases.get(timing.suite) ?? { total: 0, fail: 0 };
@@ -619,10 +620,9 @@ export function tp_factory(): TestPanel {
                         : hosted_test_panel_selected_ids(activeDiscovery.catalog.tests, choice.selection, activeDiscovery.externalTargets);
                     if (testIds.length === 0) throw new Error("The active discovered selection contains no tests.");
                     plannedCanonicalSuites = new Set(testIds
-                        .filter((id) => !id.startsWith("library::"))
-                        .map((id) => activeDiscovery.catalog.tests.find((test) => test.id === id)?.suite)
+                        .map((id) => activeDiscovery.catalog.tests.find((test) => test.id === id)?.suiteId)
                         .filter((suite): suite is string => suite !== undefined)).size;
-                    plannedExternalSuites = testIds.filter((id) => id.startsWith("library::")).length;
+                    plannedExternalSuites = testIds.filter((id) => activeDiscovery.catalog.tests.every((test) => test.id !== id)).length;
                     lastResult = await hostedAdapter!.start_selected(testIds);
                 } else throw new Error("Canonical hosted-test discovery has not completed.");
                 remember_hosted_test_run(lastResult.runId);

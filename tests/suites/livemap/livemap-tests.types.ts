@@ -13,7 +13,7 @@ export type LiveMapCaseContext = Readonly<{
 
 export type LiveMapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
 
   // "input" is your fixture JSON for inspector
   input: JsonValue;
@@ -33,14 +33,14 @@ export type LiveMapCaseSpec = Readonly<{
 }>;
 export type CoreSnapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path?: LivePath;
   expected: JsonValue | undefined;
 }>;
 export type CoreSetCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   value: JsonValue;
@@ -51,7 +51,7 @@ export type CoreSetCaseSpec = Readonly<{
 }>;
 export type SnapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   expected: JsonValue | undefined;
@@ -59,7 +59,7 @@ export type SnapCaseSpec = Readonly<{
 
 export type SetCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   value: JsonValue;
@@ -80,7 +80,7 @@ export type LiveTreeFx = {
 
 export type LiveTreeCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
 
   // "input" is your fixture HTML for inspector
   html: string;
@@ -101,14 +101,14 @@ export type LiveTreeCaseSpec = Readonly<{
 }>;
 export type SnapLikeSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path?: LivePath;
   expected: JsonValue | undefined;
 }>;
 export type SetLikeSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: JsonValue;
   path: LivePath;
   value: JsonValue;

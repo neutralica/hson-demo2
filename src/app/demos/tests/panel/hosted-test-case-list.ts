@@ -1,5 +1,5 @@
 import type { LiveTree } from "hson-live/livetree";
-import type { HostedTestCaseReport, HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
 import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
 import { _fontSize } from "../../../core/consts/ui-consts";
@@ -48,9 +48,26 @@ export type HostedTestCaseList = Readonly<{
   dispose(): void;
 }>;
 
+type ProjectedCase = {
+  key: string;
+  suite: string;
+  caseId: string;
+  name: string;
+  status: "queued" | "running" | "pass" | "fail" | "skip";
+  ms: number | null;
+  err: string | null;
+  row?: LiveTree | undefined;
+  statusView?: LiveTree | undefined;
+  nameView?: LiveTree | undefined;
+  durationView?: LiveTree | undefined;
+};
+
 type SuiteProjection = {
   suite: string;
-  cases: HostedTestCaseReport[];
+  cases: ProjectedCase[];
+  status: "queued" | "running" | "pass" | "fail";
+  executionShape: "cases" | "opaque-aggregate";
+  declaredChecks: number | null;
   pass: number;
   fail: number;
   skip: number;
@@ -151,7 +168,7 @@ export function make_hosted_test_case_list(
   let generation = 0;
   let cancelFrame: (() => void) | undefined;
   const suites = new Map<string, SuiteProjection>();
-  const caseKeys = new Set<string>();
+  const caseRecords = new Map<string, ProjectedCase>();
   const dirtySuites = new Set<string>();
 
   const css = root.css;
@@ -182,7 +199,7 @@ export function make_hosted_test_case_list(
   css.selector("& .hosted-case-error").setMany(PANEL_STYLES.error);
   css.selector("& .hosted-external-output").setMany(PANEL_STYLES.externalOutput);
 
-  function ensure_suite(suite: string): SuiteProjection {
+  function ensure_suite(suite: string, title = suite): SuiteProjection {
     const existing = suites.get(suite);
     if (existing !== undefined) return existing;
     const group = root.create.div().classlist.set("hosted-suite-group");
@@ -193,7 +210,7 @@ export function make_hosted_test_case_list(
       "aria-expanded": "false",
     });
     const disclosure = row.create.span().classlist.set("hosted-suite-disclosure").text.set("▸");
-    row.create.span().classlist.set("hosted-suite-name").text.set(suite);
+    row.create.span().classlist.set("hosted-suite-name").text.set(title);
     const summary = row.create.span().classlist.set("hosted-suite-summary").text.set("0 cases");
     const duration = row.create.span().classlist.set("hosted-suite-duration").text.set("running");
     liveTreesConstructed += 6;
@@ -201,6 +218,9 @@ export function make_hosted_test_case_list(
     const created: SuiteProjection = {
       suite,
       cases: [],
+      status: "queued",
+      executionShape: "cases",
+      declaredChecks: null,
       pass: 0,
       fail: 0,
       skip: 0,
@@ -219,13 +239,13 @@ export function make_hosted_test_case_list(
   }
 
   function render_suite(state: SuiteProjection): void {
-    state.summary.text.set(state.external === undefined
+    state.summary.text.set(state.executionShape === "cases"
       ? `${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
-      : `${state.external.executableChecks} cases · ${state.external.status}`);
+      : `${state.declaredChecks ?? state.external?.executableChecks ?? 0} checks · ${state.status}`);
     state.duration.text.set(state.ms === undefined
-      ? state.external?.status ?? "running"
+      ? state.status
       : format_hosted_test_duration(state.ms));
-    if (state.fail > 0 || state.external?.status === "fail") state.row.classlist.add("is-failed");
+    if (state.fail > 0 || state.status === "fail") state.row.classlist.add("is-failed");
     else state.row.classlist.remove("is-failed");
   }
 
@@ -251,13 +271,23 @@ export function make_hosted_test_case_list(
     render_dirty_suites();
   }
 
-  function append_case(state: SuiteProjection, testCase: HostedTestCaseReport): void {
+  function update_case_view(testCase: ProjectedCase): void {
+    const statusView = testCase.statusView;
+    if (statusView !== undefined) {
+      for (const status of ["queued", "running", "pass", "fail", "skip"] as const) statusView.classlist.remove(`is-${status}`);
+      statusView.classlist.add(`is-${testCase.status}`).text.set(testCase.status.toUpperCase());
+    }
+    testCase.nameView?.attrs.set("title", testCase.err ?? testCase.key).text.set(testCase.name);
+    testCase.durationView?.text.set(testCase.ms === null ? testCase.status : format_hosted_test_duration(testCase.ms));
+  }
+
+  function append_case(state: SuiteProjection, testCase: ProjectedCase): void {
     const caseHost = state.caseHost;
     if (caseHost === undefined) return;
     const row = caseHost.create.div().classlist.set("hosted-case-row").attrs.set("data-case-key", testCase.key);
-    row.create.span().classlist.set(`hosted-case-status is-${testCase.status}`).text.set(testCase.status.toUpperCase());
-    row.create.span().classlist.set("hosted-case-name").attrs.set("title", testCase.err ?? testCase.key).text.set(testCase.name);
-    row.create.span().classlist.set("hosted-case-duration").text.set(format_hosted_test_duration(testCase.ms));
+    const statusView = row.create.span().classlist.set(`hosted-case-status is-${testCase.status}`).text.set(testCase.status.toUpperCase());
+    const nameView = row.create.span().classlist.set("hosted-case-name").attrs.set("title", testCase.err ?? testCase.key).text.set(testCase.name);
+    const durationView = row.create.span().classlist.set("hosted-case-duration").text.set(testCase.ms === null ? testCase.status : format_hosted_test_duration(testCase.ms));
     const controls = row.create.span().classlist.set("hosted-case-actions");
     controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
       type: "button", "data-hosted-action": "view", "data-case-key": testCase.key, "aria-label": `View report for ${testCase.name}`,
@@ -268,6 +298,10 @@ export function make_hosted_test_case_list(
     liveTreesConstructed += 7;
     caseRowsCreated += 1;
     visibleCaseRows += 1;
+    testCase.row = row;
+    testCase.statusView = statusView;
+    testCase.nameView = nameView;
+    testCase.durationView = durationView;
   }
 
   function render_external_output(state: SuiteProjection): void {
@@ -301,12 +335,18 @@ export function make_hosted_test_case_list(
     if (!expanded) {
       state.caseHost?.remove();
       state.caseHost = undefined;
+      for (const testCase of state.cases) {
+        testCase.row = undefined;
+        testCase.statusView = undefined;
+        testCase.nameView = undefined;
+        testCase.durationView = undefined;
+      }
       visibleCaseRows -= state.cases.length;
       return;
     }
     state.caseHost = state.group.create.div().classlist.set("hosted-case-block");
     liveTreesConstructed += 1;
-    if (state.external !== undefined) {
+    if (state.executionShape === "opaque-aggregate") {
       render_external_output(state);
       return;
     }
@@ -357,28 +397,69 @@ export function make_hosted_test_case_list(
   return Object.freeze({
     ingest(update: HostedTestPanelReportUpdate) {
       if (disposed) return;
+      for (const suiteRun of update.report.suiteRuns) {
+        const state = ensure_suite(suiteRun.id, suiteRun.title);
+        state.status = suiteRun.status;
+        state.executionShape = suiteRun.executionShape;
+        state.declaredChecks = suiteRun.declaredChecks;
+        state.ms = suiteRun.ms ?? undefined;
+        for (const plannedCase of suiteRun.cases) {
+          let projected = caseRecords.get(plannedCase.id);
+          if (projected === undefined) {
+            projected = {
+              key: plannedCase.id,
+              suite: suiteRun.id,
+              caseId: plannedCase.caseId,
+              name: plannedCase.title,
+              status: plannedCase.status,
+              ms: plannedCase.ms,
+              err: plannedCase.err,
+            };
+            caseRecords.set(projected.key, projected);
+            state.cases.push(projected);
+            if (state.expanded) append_case(state, projected);
+          } else {
+            projected.status = plannedCase.status;
+            projected.ms = plannedCase.ms;
+            projected.err = plannedCase.err;
+            update_case_view(projected);
+          }
+        }
+        state.pass = state.cases.filter((item) => item.status === "pass").length;
+        state.fail = state.cases.filter((item) => item.status === "fail").length;
+        state.skip = state.cases.filter((item) => item.status === "skip").length;
+        dirtySuites.add(state.suite);
+      }
+      // Phase 1 bridge for legacy, unplanned report routes. Exact selected runs
+      // project seeded suiteRuns above; Phase 2 removes these completion views.
       for (const external of Object.values(update.report.externalResults)) {
         const state = ensure_suite(external.suite);
         state.external = external;
+        state.executionShape = "opaque-aggregate";
+        state.declaredChecks = external.executableChecks;
+        state.status = external.status;
         state.ms = external.status === "pass" || external.status === "fail" ? external.ms : undefined;
         dirtySuites.add(state.suite);
         if (state.expanded) render_external_output(state);
         else if (external.status === "fail") set_expanded(state.suite, true);
       }
       for (const testCase of update.newCases) {
-        if (caseKeys.has(testCase.key)) continue;
-        caseKeys.add(testCase.key);
+        if (caseRecords.has(testCase.key)) continue;
         const state = ensure_suite(testCase.suite);
-        state.cases.push(testCase);
+        const projected: ProjectedCase = { ...testCase };
+        caseRecords.set(projected.key, projected);
+        state.cases.push(projected);
         if (testCase.status === "pass") state.pass += 1;
         else if (testCase.status === "fail") state.fail += 1;
         else state.skip += 1;
+        state.status = state.fail > 0 ? "fail" : "running";
         dirtySuites.add(state.suite);
-        if (state.expanded) append_case(state, testCase);
+        if (state.expanded) append_case(state, projected);
       }
       for (const timing of update.newSuiteTimings) {
         const state = ensure_suite(timing.suite);
         state.ms = timing.ms;
+        if (state.executionShape === "cases") state.status = state.fail > 0 ? "fail" : "pass";
         dirtySuites.add(state.suite);
       }
       schedule_render();
@@ -396,17 +477,16 @@ export function make_hosted_test_case_list(
       const statusesBySuite: Record<string, string> = {};
       for (const [suite, state] of suites) caseKeysBySuite[suite] = Object.freeze(state.cases.map((testCase) => testCase.key));
       for (const [suite, state] of suites) {
-        statusesBySuite[suite] = state.external?.status
-          ?? (state.ms === undefined ? "running" : state.fail > 0 ? "fail" : "pass");
-        summariesBySuite[suite] = state.external === undefined
+        statusesBySuite[suite] = state.status;
+        summariesBySuite[suite] = state.executionShape === "cases"
           ? `${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
-          : `${state.external.executableChecks} cases · ${state.external.status}`;
+          : `${state.declaredChecks ?? 0} checks · ${state.status}`;
       }
       const expandedSuites = Object.freeze([...suites.values()].filter((state) => state.expanded).map((state) => state.suite));
       return Object.freeze({
         suites: suites.size,
-        cases: caseKeys.size,
-        launchers: [...suites.values()].filter((state) => state.external !== undefined).length,
+        cases: caseRecords.size,
+        launchers: [...suites.values()].filter((state) => state.executionShape === "opaque-aggregate").length,
         summariesBySuite: Object.freeze(summariesBySuite),
         statusesBySuite: Object.freeze(statusesBySuite),
         expandedSuites,
@@ -418,7 +498,7 @@ export function make_hosted_test_case_list(
           listenerRegistrations: disposed ? 0 : 1,
           liveTreesConstructed,
           cssSurfaceAccesses: 1,
-          modelCaseRecords: caseKeys.size,
+          modelCaseRecords: caseRecords.size,
           syntheticEvents: 0,
           fullCaseFlattens: 0,
           renderPasses,
@@ -435,7 +515,7 @@ export function make_hosted_test_case_list(
       actionListener.off();
       for (const state of suites.values()) state.caseHost = undefined;
       suites.clear();
-      caseKeys.clear();
+      caseRecords.clear();
       dirtySuites.clear();
       visibleCaseRows = 0;
       root.remove();

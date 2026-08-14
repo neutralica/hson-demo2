@@ -19,9 +19,10 @@ export function make_transform_test_suite(
 
   for (const [group, bundle] of Object.entries(fixtures)) {
     for (const [sub, atom] of Object.entries(bundle)) {
+      const caseId = `${group}.${sub}`.toLowerCase();
       const name = `${group}.${sub}`;
       const entry = entryFmt;
-      const k = `${suite}::${name}` as const;
+      const k = `${suite}::${caseId}` as const;
 
       if (captureMap) {
         captureMap.set(k, async () => {
@@ -44,6 +45,7 @@ export function make_transform_test_suite(
 
       cases.push(_freeze({
         suite,
+        caseId,
         name,
         meta: {
           fixture: group,

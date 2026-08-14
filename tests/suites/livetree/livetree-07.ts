@@ -10,7 +10,7 @@ export function livetree_more_listeners(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "listen.document: listener is removed when owning tree is removed",
+            caseId: "listen.document-listener-is-removed-when-owning-tree-is-removed", name: "listen.document: listener is removed when owning tree is removed",
             dom: true,
             fixture: "listen/cleanup",
             sub: "document-owner-remove",
@@ -62,7 +62,7 @@ export function livetree_more_listeners(): TestSuite {
 
         {
             suite: SUITE,
-            name: "listen.window: listener is removed when owning tree is removed",
+            caseId: "listen.window-listener-is-removed-when-owning-tree-is-removed", name: "listen.window: listener is removed when owning tree is removed",
             dom: true,
             fixture: "listen/cleanup",
             sub: "window-owner-remove",
@@ -113,7 +113,7 @@ export function livetree_more_listeners(): TestSuite {
 
         {
             suite: SUITE,
-            name: "listen.element: listener is removed when owning tree is removed",
+            caseId: "listen.element-listener-is-removed-when-owning-tree-is-removed", name: "listen.element: listener is removed when owning tree is removed",
             dom: true,
             fixture: "listen/cleanup",
             sub: "element-owner-remove",
@@ -156,7 +156,7 @@ export function livetree_more_listeners(): TestSuite {
 
         {
             suite: SUITE,
-            name: "listen.document.once: fires once and does not linger after remove",
+            caseId: "listen.document.once-fires-once-and-does-not-linger-after-remove", name: "listen.document.once: fires once and does not linger after remove",
             dom: true,
             fixture: "listen/cleanup",
             sub: "document-once-remove",
@@ -202,7 +202,7 @@ export function livetree_more_listeners(): TestSuite {
 
         {
             suite: SUITE,
-            name: "listen target switching: document, window, and element stay distinct",
+            caseId: "listen-target-switching-document-window-and-element-stay-distinct", name: "listen target switching: document, window, and element stay distinct",
             dom: true,
             fixture: "listen/targets",
             sub: "document-window-element-distinct",
@@ -262,7 +262,7 @@ export function livetree_more_listeners(): TestSuite {
 
         {
             suite: SUITE,
-            name: "listen.element getter resets target away from document/window",
+            caseId: "listen.element-getter-resets-target-away-from-document-window", name: "listen.element getter resets target away from document/window",
             dom: true,
             fixture: "listen/targets",
             sub: "element-resets-target",

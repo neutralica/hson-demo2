@@ -8,7 +8,7 @@ import { with_hosted_dom_runtime } from "./hosted-dom-mutex";
 export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
   "livemap/bridge-livetree", "livemap/bridge-livetree-controls",
   "livemap/schema-controls", "livemap/schema-validation-controls", "livemap/bind", "livemap/document-foundation",
-  "livetree/find", "livetree/attrs-and-flags", "livetree/mixed-regression", "livetree/extra cases",
+  "livetree/find", "livetree/attrs-and-flags", "livetree/mixed-regression", "livetree/extra-cases",
   "livetree/regressions/graft", "livetree/legacy-attrs-flags", "livetree/legacy-empty-append",
   "livetree/legacy-dataset", "livetree/identity-stability", "livetree/legacy-css-value-selection",
   "livetree/final-legacy-css-empty", "livetree/more-dataset", "livetree/more-css", "livetree/more-find",
@@ -24,17 +24,17 @@ export const JSDOM_HOSTED_TEST_SUITE_IDS = Object.freeze([
   "livetree/text-content-surface", "livetree/listener-builder-corners", "livetree/dom-helper-surface",
   "livetree/regression-2", "livetree/quid-level-2", "livetree/lifecycle-public", "livetree/lifecycle-ownership", "livetree/allocation", "livetree/node-representation",
   "livetree/coverage-css-and-content", "livetree/css-pseudo", "livetree/document", "livetree/create-size",
-  "livetree/new-svg/", "livetree-18/treeselector-surface", "livetree/graph-dom-markup-surface",
+  "livetree/new-svg", "livetree-18/treeselector-surface", "livetree/graph-dom-markup-surface",
   "livetree/append-and-create", "livetree/regressions/css", "livetree/scheduling-and-events",
   "livetree/svg/intermediate", "livetree/document-ownership", "livetree/construction-parity",
   "transform/json/basic-test", "transform/legacy/json", "transform/misc-extra", "transform/hson",
-  "transform/json/level-2", "transform/_INVALID", "transform/hson/_INVALID",
+  "transform/json/level-2", "transform/invalid", "transform/hson/invalid",
   "transform/legacy/html", "transform/html/new",
 ] as const);
 
 export const JSDOM_HOSTED_DUPLICATE_CASE_KEYS = Object.freeze([
-  "livetree/css-manager-lifecycle::CssManager lifecycle: setting same value twice does not duplicate declaration",
-  "livetree/document-question::multi-instance: find is scoped to instance root, not whole document",
+  "livetree/css-manager-lifecycle::cssmanager-lifecycle-setting-same-value-twice-does-not-duplicate-declaration",
+  "livetree/document-question::multi-instance-find-is-scoped-to-instance-root-not-whole-document",
 ] as const);
 
 export const JSDOM_HOSTED_DEFERRED_CASE_KEYS = Object.freeze([] as const);
@@ -56,7 +56,7 @@ export function all_jsdom_hosted_test_suites(): readonly TestSuite[] {
     if (suite === undefined) throw new Error(`Missing jsdom-hosted suite: ${id}`);
     const seen = new Set<string>();
     const cases = suite.cases.filter((testCase) => {
-      const key = `${testCase.suite}::${testCase.name}`;
+      const key = `${testCase.suite}::${testCase.caseId}`;
       if (deferred.has(key)) {
         deferredCaseKeys.push(key);
         return false;
@@ -78,7 +78,7 @@ export function all_jsdom_hosted_test_suites(): readonly TestSuite[] {
   if (candidates.filter((suite) => JSDOM_HOSTED_TEST_SUITE_ID_SET.has(suite.suite)).length !== selected.length) {
     throw new Error("Ambiguous suite identity in jsdom-hosted collection.");
   }
-  const caseKeys = selected.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+  const caseKeys = selected.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`));
   if (new Set(caseKeys).size !== caseKeys.length) throw new Error("Duplicate case identity in jsdom-hosted collection.");
   if (duplicateCaseKeys.join("\n") !== JSDOM_HOSTED_DUPLICATE_CASE_KEYS.join("\n")) {
     throw new Error("Unexpected duplicate declaration in jsdom-hosted collection.");

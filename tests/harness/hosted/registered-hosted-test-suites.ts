@@ -12,6 +12,7 @@ import { run_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-
 import { run_jsdom_hosted_canvas_suites } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 import { with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
 import { run_hosted_all_test_suites, run_hosted_test_category, type HostedTestCategory } from "./hosted-all-test-suites";
+import { CANONICAL_TEST_COLLECTION_ORDER, CANONICAL_TEST_SUBJECT_ORDER } from "../core/test-order";
 
 const category_descriptor = (category: HostedTestCategory, label: string): HostedTestSuiteDescriptor => Object.freeze({
   id: `category/${category}` as HostedTestSuiteDescriptor["id"],
@@ -70,12 +71,8 @@ export const REGISTERED_HOSTED_TEST_SUITES: readonly HostedTestSuiteDescriptor[]
     label: "Canvas core",
     run: run_jsdom_hosted_canvas_suites,
   }),
-  category_descriptor("livetree", "LiveTree"),
-  category_descriptor("livemap", "LiveMap"),
-  category_descriptor("livehost", "LiveHost"),
-  category_descriptor("transform", "Transform"),
-  category_descriptor("unit", "Unit"),
-  category_descriptor("dev", "Dev"),
+  ...CANONICAL_TEST_SUBJECT_ORDER.map((subject) => category_descriptor(subject, subject)),
+  ...CANONICAL_TEST_COLLECTION_ORDER.map((collection) => category_descriptor(collection, collection)),
 ]);
 
 export function make_registered_hosted_test_suite_registry(): HostedTestSuiteRegistry {

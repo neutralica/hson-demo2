@@ -64,7 +64,7 @@ export type LiveMapExpectedError = Readonly<{
 
 export type LiveMapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
 
   input: JsonValue;
 

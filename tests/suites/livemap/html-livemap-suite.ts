@@ -16,21 +16,21 @@ export function livemap_suite_html_proof(): TestSuite {
     cases: [
       make_html_snap_case({
         suite: SUITE,
-        name: "html simple text element snap shape",
+        caseId: "html-simple-text-element-snap-shape", name: "html simple text element snap shape",
         html: "<button>Press</button>",
         expected: { button: "Press" },
       }),
 
       make_html_snap_case({
         suite: SUITE,
-        name: "html element attrs are excluded from projected snap",
+        caseId: "html-element-attrs-are-excluded-from-projected-snap", name: "html element attrs are excluded from projected snap",
         html: `<button class="primary" disabled>Press</button>`,
         expected: { button: "Press" },
       }),
 
       make_html_snap_case({
         suite: SUITE,
-        name: "html sibling elements project as object keys",
+        caseId: "html-sibling-elements-project-as-object-keys", name: "html sibling elements project as object keys",
         html: `<section><h1>Hello</h1><p>World</p></section>`,
         expected: {
           section: {
@@ -42,7 +42,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_snap_case({
         suite: SUITE,
-        name: "html repeated sibling tags project as array-like repeated value",
+        caseId: "html-repeated-sibling-tags-project-as-array-like-repeated-value", name: "html repeated sibling tags project as array-like repeated value",
         html: `<ul><li>One</li><li>Two</li></ul>`,
         expected: {
           ul: {
@@ -53,7 +53,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_snap_case({
         suite: SUITE,
-        name: "html nested text element projects nested value",
+        caseId: "html-nested-text-element-projects-nested-value", name: "html nested text element projects nested value",
         html: `<article><header><h1>Title</h1></header></article>`,
         expected: {
           article: {
@@ -66,7 +66,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_set_case({
         suite: SUITE,
-        name: "html projected leaf set updates text projection",
+        caseId: "html-projected-leaf-set-updates-text-projection", name: "html projected leaf set updates text projection",
         html: "<button>Press</button>",
         path: ["button"],
         value: "Save",
@@ -76,7 +76,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_replace_case({
         suite: SUITE,
-        name: "html projected leaf replace updates text projection",
+        caseId: "html-projected-leaf-replace-updates-text-projection", name: "html projected leaf replace updates text projection",
         html: "<button>Press</button>",
         path: ["button"],
         value: "Save",
@@ -86,7 +86,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_set_case({
         suite: SUITE,
-        name: "html projected nested leaf set updates nested text projection",
+        caseId: "html-projected-nested-leaf-set-updates-nested-text-projection", name: "html projected nested leaf set updates nested text projection",
         html: `<section><h1>Hello</h1><p>World</p></section>`,
         path: ["section", "h1"],
         value: "Changed",
@@ -101,7 +101,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_replace_case({
         suite: SUITE,
-        name: "html projected object replace removes sibling projection",
+        caseId: "html-projected-object-replace-removes-sibling-projection", name: "html projected object replace removes sibling projection",
         html: `<section><h1>Hello</h1><p>World</p></section>`,
         path: ["section"],
         value: { h1: "Changed" },
@@ -115,7 +115,7 @@ export function livemap_suite_html_proof(): TestSuite {
 
       make_html_schema_case({
         suite: SUITE,
-        name: "html projected snap accepts compatible schema",
+        caseId: "html-projected-snap-accepts-compatible-schema", name: "html projected snap accepts compatible schema",
         html: "<button>Press</button>",
         expectedSnap: { button: "Press" },
       }),
@@ -125,14 +125,14 @@ export function livemap_suite_html_proof(): TestSuite {
 
 type HtmlSnapCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   html: string;
   expected: JsonValue;
 }>;
 
 type HtmlSetCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   html: string;
   path: readonly (string | number)[];
   value: JsonValue;
@@ -142,7 +142,7 @@ type HtmlSetCaseSpec = Readonly<{
 
 type HtmlReplaceCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   html: string;
   path: readonly (string | number)[];
   value: JsonValue;
@@ -152,7 +152,7 @@ type HtmlReplaceCaseSpec = Readonly<{
 
 type HtmlSchemaCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   html: string;
   expectedSnap: JsonValue;
 }>;
@@ -166,7 +166,7 @@ function html_map(html: string): LiveMap<JsonValue> {
 function make_html_snap_case(spec: HtmlSnapCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       html: spec.html,
       expected: preview_value(spec.expected),
@@ -186,7 +186,7 @@ function make_html_snap_case(spec: HtmlSnapCaseSpec): TestCase {
 function make_html_set_case(spec: HtmlSetCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       html: spec.html,
       path: preview_value(spec.path),
@@ -209,7 +209,7 @@ function make_html_set_case(spec: HtmlSetCaseSpec): TestCase {
 function make_html_replace_case(spec: HtmlReplaceCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       html: spec.html,
       path: preview_value(spec.path),
@@ -232,7 +232,7 @@ function make_html_replace_case(spec: HtmlReplaceCaseSpec): TestCase {
 function make_html_schema_case(spec: HtmlSchemaCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       html: spec.html,
     },

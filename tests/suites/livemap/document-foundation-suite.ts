@@ -25,7 +25,7 @@ export function livemap_document_foundation_suite(): TestSuite {
     cases: [
       {
         suite: SUITE,
-        name: "flat trusted HTML constructor classifies one element",
+        caseId: "flat-trusted-html-constructor-classifies-one-element", name: "flat trusted HTML constructor classifies one element",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("<button>Save</button>");
           const button = map.mode === "element" ? map.element.node() : undefined;
@@ -43,7 +43,7 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "flat trusted HTML constructor classifies repeated elements as fragment",
+        caseId: "flat-trusted-html-constructor-classifies-repeated-elements-as-fragment", name: "flat trusted HTML constructor classifies repeated elements as fragment",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("<div>One</div><div>Two</div>");
           const content = map.mode === "fragment" ? map.document.content() : [];
@@ -59,7 +59,7 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "trusted and untrusted constructors retain their parser boundary",
+        caseId: "trusted-and-untrusted-constructors-retain-their-parser-boundary", name: "trusted and untrusted constructors retain their parser boundary",
         run: () => {
           const source = `<button data-safe="yes" onclick="alert(1)">Save</button>`;
           const trusted = hson.liveMap.fromTrustedHtml(source);
@@ -80,7 +80,7 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "mixed top-level HTML remains an ordered detached fragment",
+        caseId: "mixed-top-level-html-remains-an-ordered-detached-fragment", name: "mixed top-level HTML remains an ordered detached fragment",
         run: () => {
           const map = hson.liveMap.fromTrustedHtml("before <em>middle</em> after");
           const before = map.root();
@@ -98,7 +98,7 @@ export function livemap_document_foundation_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "trusted empty and text-only HTML classify as fragments",
+        caseId: "trusted-empty-and-text-only-html-classify-as-fragments", name: "trusted empty and text-only HTML classify as fragments",
         run: () => {
           const empty = hson.liveMap.fromTrustedHtml("");
           const text = hson.liveMap.fromTrustedHtml("text only");

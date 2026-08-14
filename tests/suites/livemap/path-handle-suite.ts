@@ -12,7 +12,7 @@ export function livemap_path_handle_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "same map and canonical path return the interned handle",
+        caseId: "same-map-and-canonical-path-return-the-interned-handle", name: "same map and canonical path return the interned handle",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
@@ -31,7 +31,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "distinct canonical paths return distinct handles",
+        caseId: "distinct-canonical-paths-return-distinct-handles", name: "distinct canonical paths return distinct handles",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({
@@ -45,7 +45,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "distinct maps never share handles for the same path",
+        caseId: "distinct-maps-never-share-handles-for-the-same-path", name: "distinct maps never share handles for the same path",
         input: {},
         act: () => {
           const first = hsonLiveMap.fromJson({ user: { name: "Ada" } });
@@ -57,7 +57,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "canonical path normalization preserves copies and path-part distinctions",
+        caseId: "canonical-path-normalization-preserves-copies-and-path-part-distinctions", name: "canonical path normalization preserves copies and path-part distinctions",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({
@@ -85,7 +85,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "cached handles remain positional through map mutation",
+        caseId: "cached-handles-remain-positional-through-map-mutation", name: "cached handles remain positional through map mutation",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
@@ -104,7 +104,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "proxy exit returns the owning map cached handle",
+        caseId: "proxy-exit-returns-the-owning-map-cached-handle", name: "proxy exit returns the owning map cached handle",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({ user: { name: "Ada" } });
@@ -122,7 +122,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "path-handle operations work without a public identifier",
+        caseId: "path-handle-operations-work-without-a-public-identifier", name: "path-handle operations work without a public identifier",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({ count: 1 });
@@ -144,7 +144,7 @@ export function livemap_path_handle_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "path-handle creation does not mint canonical HsonNode QUID metadata",
+        caseId: "path-handle-creation-does-not-mint-canonical-hsonnode-quid-metadata", name: "path-handle creation does not mint canonical HsonNode QUID metadata",
         input: {},
         act: () => {
           const map = hsonLiveMap.fromJson({ nested: { value: 1 } });

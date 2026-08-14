@@ -32,7 +32,7 @@ function traversal_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "lifecycle traversal includes VSN nodes and ignores primitives deterministically",
+    caseId: "lifecycle-traversal-includes-vsn-nodes-and-ignores-primitives-deterministically", name: "lifecycle traversal includes VSN nodes and ignores primitives deterministically",
     html: `<main></main>`,
     act() {
       const section = _CREATE_NODE({ $_tag: "section", $_content: ["leaf"] });
@@ -63,7 +63,7 @@ function recursive_quid_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "recursive QUID destruction scrubs unmounted root descendants and VSN identity",
+    caseId: "recursive-quid-destruction-scrubs-unmounted-root-descendants-and-vsn-identity", name: "recursive QUID destruction scrubs unmounted root descendants and VSN identity",
     html: `<main></main>`,
     act() {
       const leaf = _CREATE_NODE({ $_tag: "span", $_content: ["x"] });
@@ -98,7 +98,7 @@ function mapped_quid_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "recursive QUID destruction scrubs mapped DOM attributes without detaching",
+    caseId: "recursive-quid-destruction-scrubs-mapped-dom-attributes-without-detaching", name: "recursive QUID destruction scrubs mapped DOM attributes without detaching",
     dom: true,
     html: `<main><section id="target"><span id="child">x</span></section></main>`,
     act(tree) {
@@ -138,7 +138,7 @@ function weak_and_duplicate_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "recursive QUID destruction handles WeakMap-only and malformed duplicate identity",
+    caseId: "recursive-quid-destruction-handles-weakmap-only-and-malformed-duplicate-identity", name: "recursive QUID destruction handles WeakMap-only and malformed duplicate identity",
     html: `<main></main>`,
     act() {
       const weakOnly = _CREATE_NODE({ $_tag: "aside" });
@@ -187,7 +187,7 @@ function unmounted_terminal_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "terminal disposal marks every unmounted node and every alias",
+    caseId: "terminal-disposal-marks-every-unmounted-node-and-every-alias", name: "terminal disposal marks every unmounted node and every alias",
     html: `<main></main>`,
     act() {
       const branch = hsonLiveTree.fromTrustedHtml(
@@ -237,7 +237,7 @@ function runtime_terminal_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "terminal disposal composes runtime cleanup identity destruction and reentrant drain",
+    caseId: "terminal-disposal-composes-runtime-cleanup-identity-destruction-and-reentrant-drain", name: "terminal disposal composes runtime cleanup identity destruction and reentrant drain",
     dom: true,
     html: `<main><section id="target"><button id="button">go</button></section></main>`,
     act(tree) {
@@ -302,7 +302,7 @@ function bounded_reentrant_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "terminal disposable drain bounds pathological re-registration",
+    caseId: "terminal-disposable-drain-bounds-pathological-re-registration", name: "terminal disposable drain bounds pathological re-registration",
     html: `<main></main>`,
     act() {
       const branch = hsonLiveTree.fromTrustedHtml(`<section></section>`);
@@ -333,7 +333,7 @@ function detach_state_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "runtime detach preserves active state and identity",
+    caseId: "runtime-detach-preserves-active-state-and-identity", name: "runtime detach preserves active state and identity",
     html: `<main></main>`,
     act() {
       const branch = hsonLiveTree.fromTrustedHtml(`<section><span>x</span></section>`);
@@ -360,7 +360,7 @@ function disposed_error_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "disposed guard throws the stable LiveTreeDisposedError",
+    caseId: "disposed-guard-throws-the-stable-livetreedisposederror", name: "disposed guard throws the stable LiveTreeDisposedError",
     html: `<main></main>`,
     act() {
       const branch = hsonLiveTree.fromTrustedHtml(`<section></section>`);
@@ -403,7 +403,7 @@ function empty_regression_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "Patch 2 makes empty descendant identity terminal",
+    caseId: "patch-2-makes-empty-descendant-identity-terminal", name: "Patch 2 makes empty descendant identity terminal",
     dom: true,
     html: `<main><section id="root"><span id="child">x</span></section></main>`,
     act(tree) {
@@ -432,7 +432,7 @@ function remove_self_regression_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "Patch 2 removeSelf is a terminal remove alias",
+    caseId: "patch-2-removeself-is-a-terminal-remove-alias", name: "Patch 2 removeSelf is a terminal remove alias",
     dom: true,
     html: `<main><section id="target"><span id="child">x</span></section></main>`,
     act(tree) {
@@ -473,7 +473,7 @@ function remove_children_regression_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "Patch 1 preserves filtered removeChildren behavior",
+    caseId: "patch-1-preserves-filtered-removechildren-behavior", name: "Patch 1 preserves filtered removeChildren behavior",
     dom: true,
     html: `<main id="root">before<section id="one">one</section><section id="two">two</section>after</main>`,
     act(tree) {

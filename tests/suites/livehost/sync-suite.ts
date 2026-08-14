@@ -6,7 +6,7 @@ import { equal_row, preview_value } from "../livemap/test-helpers";
 
 type LiveHostSyncReadCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: unknown;
   act: () => unknown | Promise<unknown>;
   expected: unknown;
@@ -15,7 +15,7 @@ type LiveHostSyncReadCaseSpec = Readonly<{
 function livehost_sync_read_case(spec: LiveHostSyncReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -39,7 +39,7 @@ export function livehost_sync_suite(): TestSuite {
     cases: [
       livehost_sync_read_case({
         suite: SUITE,
-        name: "subscribe sends current path value",
+        caseId: "subscribe-sends-current-path-value", name: "subscribe sends current path value",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { ui: { selected: "home" } } });
@@ -70,7 +70,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "sync all sends updated subscribed value",
+        caseId: "sync-all-sends-updated-subscribed-value", name: "sync all sends updated subscribed value",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { count: 0 } });
@@ -101,7 +101,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "unsubscribe prevents later sync",
+        caseId: "unsubscribe-prevents-later-sync", name: "unsubscribe prevents later sync",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { count: 0 } });
@@ -134,7 +134,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "remove session prevents later sync",
+        caseId: "remove-session-prevents-later-sync", name: "remove session prevents later sync",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { count: 0 } });
@@ -159,7 +159,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "subscribed path is copied before storage",
+        caseId: "subscribed-path-is-copied-before-storage", name: "subscribed path is copied before storage",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { ui: { selected: "home" }, other: "nope" } });
@@ -188,7 +188,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "sync all sends one message per subscribed path",
+        caseId: "sync-all-sends-one-message-per-subscribed-path", name: "sync all sends one message per subscribed path",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { user: { name: "Ada" }, count: 0 } });
@@ -239,7 +239,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "resubscribe replaces existing path without duplicate syncs",
+        caseId: "resubscribe-replaces-existing-path-without-duplicate-syncs", name: "resubscribe replaces existing path without duplicate syncs",
         input: {},
         act: async () => {
           const host = create_livehost({ state: { count: 0 } });
@@ -273,7 +273,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "duplicate session is rejected",
+        caseId: "duplicate-session-is-rejected", name: "duplicate session is rejected",
         input: {},
         act: () => {
           const host = create_livehost({ state: {} });
@@ -298,7 +298,7 @@ export function livehost_sync_suite(): TestSuite {
       }),
       livehost_sync_read_case({
         suite: SUITE,
-        name: "unknown session subscribe is rejected",
+        caseId: "unknown-session-subscribe-is-rejected", name: "unknown session subscribe is rejected",
         input: {},
         act: () => {
           const host = create_livehost({ state: {} });

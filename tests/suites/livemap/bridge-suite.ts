@@ -73,7 +73,7 @@ export function livemap_suites_bridge(): TestSuite {
 function make_text_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding initializes target from map path",
+    caseId: "text-binding-initializes-target-from-map-path", name: "text binding initializes target from map path",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -95,7 +95,7 @@ function make_text_initial_case(suite: string): TestCase {
 function make_text_update_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding updates target after map path change",
+    caseId: "text-binding-updates-target-after-map-path-change", name: "text binding updates target after map path change",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -118,7 +118,7 @@ function make_text_update_case(suite: string): TestCase {
 function make_text_dispose_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding disposer stops later updates",
+    caseId: "text-binding-disposer-stops-later-updates", name: "text binding disposer stops later updates",
     meta: {
       input: preview_value({ ui: { label: "Ready" } }),
       path: preview_value(["ui", "label"]),
@@ -141,7 +141,7 @@ function make_text_dispose_case(suite: string): TestCase {
 function make_attr_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "attr binding initializes target from map path",
+    caseId: "attr-binding-initializes-target-from-map-path", name: "attr binding initializes target from map path",
     meta: {
       input: preview_value({ ui: { tone: "active" } }),
       path: preview_value(["ui", "tone"]),
@@ -163,7 +163,7 @@ function make_attr_initial_case(suite: string): TestCase {
 function make_attr_update_case(suite: string): TestCase {
   return {
     suite,
-    name: "attr binding updates target after map path change",
+    caseId: "attr-binding-updates-target-after-map-path-change", name: "attr binding updates target after map path change",
     meta: {
       input: preview_value({ ui: { tone: "active" } }),
       path: preview_value(["ui", "tone"]),
@@ -186,7 +186,7 @@ function make_attr_update_case(suite: string): TestCase {
 function make_attr_remove_case(suite: string): TestCase {
   return {
     suite,
-    name: "attr binding removes target attr for false null or undefined",
+    caseId: "attr-binding-removes-target-attr-for-false-null-or-undefined", name: "attr binding removes target attr for false null or undefined",
     meta: {
       input: preview_value({ ui: { enabled: true } }),
       path: preview_value(["ui", "enabled"]),
@@ -213,7 +213,7 @@ function make_attr_remove_case(suite: string): TestCase {
 function make_input_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding initializes input from map path",
+    caseId: "input-binding-initializes-input-from-map-path", name: "input binding initializes input from map path",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -235,7 +235,7 @@ function make_input_initial_case(suite: string): TestCase {
 function make_input_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding writes input event value back to map path",
+    caseId: "input-binding-writes-input-event-value-back-to-map-path", name: "input binding writes input event value back to map path",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -259,7 +259,7 @@ function make_input_writeback_case(suite: string): TestCase {
 function make_input_external_update_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding receives external map path update",
+    caseId: "input-binding-receives-external-map-path-update", name: "input binding receives external map path update",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -282,7 +282,7 @@ function make_input_external_update_case(suite: string): TestCase {
 function make_input_dispose_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding disposer stops map-to-input and input-to-map updates",
+    caseId: "input-binding-disposer-stops-map-to-input-and-input-to-map-updates", name: "input binding disposer stops map-to-input and input-to-map updates",
     meta: {
       input: preview_value({ form: { name: "Ada" } }),
       path: preview_value(["form", "name"]),
@@ -310,7 +310,7 @@ function make_input_dispose_case(suite: string): TestCase {
 function make_schema_reject_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding schema rejection leaves map value stable",
+    caseId: "input-binding-schema-rejection-leaves-map-value-stable", name: "input binding schema rejection leaves map value stable",
     meta: {
       input: preview_value({ form: { count: 1 } }),
       path: preview_value(["form", "count"]),
@@ -348,7 +348,7 @@ function make_schema_reject_case(suite: string): TestCase {
 function make_batch_single_update_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding receives one final value from batch path update",
+    caseId: "text-binding-receives-one-final-value-from-batch-path-update", name: "text binding receives one final value from batch path update",
     meta: {
       input: preview_value({ ui: { label: "Ready", tone: "idle" } }),
       path: preview_value(["ui", "label"]),
@@ -374,7 +374,7 @@ function make_batch_single_update_case(suite: string): TestCase {
 function make_text_object_value_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding renders object value as JSON text",
+    caseId: "text-binding-renders-object-value-as-json-text", name: "text binding renders object value as JSON text",
     meta: {
       input: preview_value({ ui: { state: { label: "Ready", count: 2 } } }),
       path: preview_value(["ui", "state"]),
@@ -398,7 +398,7 @@ function make_text_object_value_case(suite: string): TestCase {
 function make_text_array_value_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding renders array value as JSON text",
+    caseId: "text-binding-renders-array-value-as-json-text", name: "text binding renders array value as JSON text",
     meta: {
       input: preview_value({ ui: { items: ["a", "b", "c"] } }),
       path: preview_value(["ui", "items"]),
@@ -422,7 +422,7 @@ function make_text_array_value_case(suite: string): TestCase {
 function make_attr_zero_case(suite: string): TestCase {
   return {
     suite,
-    name: "attr binding preserves numeric zero as attr value",
+    caseId: "attr-binding-preserves-numeric-zero-as-attr-value", name: "attr binding preserves numeric zero as attr value",
     meta: {
       input: preview_value({ ui: { count: 0 } }),
       path: preview_value(["ui", "count"]),
@@ -444,7 +444,7 @@ function make_attr_zero_case(suite: string): TestCase {
 function make_attr_null_initial_case(suite: string): TestCase {
   return {
     suite,
-    name: "attr binding starts removed for null value",
+    caseId: "attr-binding-starts-removed-for-null-value", name: "attr binding starts removed for null value",
     meta: {
       input: preview_value({ ui: { label: null } }),
       path: preview_value(["ui", "label"]),
@@ -466,7 +466,7 @@ function make_attr_null_initial_case(suite: string): TestCase {
 function make_input_number_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding coerces numeric string back to number when current value is number",
+    caseId: "input-binding-coerces-numeric-string-back-to-number-when-current-value-is-number", name: "input binding coerces numeric string back to number when current value is number",
     meta: {
       input: preview_value({ form: { count: 1 } }),
       path: preview_value(["form", "count"]),
@@ -490,7 +490,7 @@ function make_input_number_writeback_case(suite: string): TestCase {
 function make_input_boolean_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding coerces true string back to boolean when current value is boolean",
+    caseId: "input-binding-coerces-true-string-back-to-boolean-when-current-value-is-boolean", name: "input binding coerces true string back to boolean when current value is boolean",
     meta: {
       input: preview_value({ form: { enabled: false } }),
       path: preview_value(["form", "enabled"]),
@@ -514,7 +514,7 @@ function make_input_boolean_writeback_case(suite: string): TestCase {
 function make_input_invalid_number_writeback_case(suite: string): TestCase {
   return {
     suite,
-    name: "input binding sends invalid numeric text as string for schema to reject or accept",
+    caseId: "input-binding-sends-invalid-numeric-text-as-string-for-schema-to-reject-or-accept", name: "input binding sends invalid numeric text as string for schema to reject or accept",
     meta: {
       input: preview_value({ form: { count: 1 } }),
       path: preview_value(["form", "count"]),
@@ -538,7 +538,7 @@ function make_input_invalid_number_writeback_case(suite: string): TestCase {
 function make_batch_unrelated_path_case(suite: string): TestCase {
   return {
     suite,
-    name: "text binding ignores batch update when bound path value is unchanged",
+    caseId: "text-binding-ignores-batch-update-when-bound-path-value-is-unchanged", name: "text binding ignores batch update when bound path value is unchanged",
     meta: {
       input: preview_value({ ui: { label: "Ready", tone: "idle" } }),
       path: preview_value(["ui", "label"]),

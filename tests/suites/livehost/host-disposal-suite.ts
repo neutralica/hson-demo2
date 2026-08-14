@@ -39,9 +39,10 @@ function make_socket(): DisposalSocket {
   });
 }
 
-function disposal_case(name: string, act: () => unknown | Promise<unknown>, expected: unknown): TestCase {
+function disposal_case(caseId: string, name: string, act: () => unknown | Promise<unknown>, expected: unknown): TestCase {
   return {
     suite: "livehost/host-disposal",
+    caseId,
     name,
     meta: { input: preview_value({}) },
     run: async () => ({ assertRows: [equal_row(`${name}: value`, await act(), expected)] }),
@@ -53,7 +54,7 @@ export function livehost_host_disposal_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      disposal_case("host disposal is idempotent inert and does not own physical sockets", async () => {
+      disposal_case("host-disposal-is-idempotent-inert-and-does-not-own-physical-sockets", "host disposal is idempotent inert and does not own physical sockets", async () => {
         let calls = 0;
         const host = create_livehost({
           state: { preserved: true },
@@ -105,7 +106,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         state: "revoked",
       }),
 
-      disposal_case("host disposal revokes disconnected sessions and cancels expiry", async () => {
+      disposal_case("host-disposal-revokes-disconnected-sessions-and-cancels-expiry", "host disposal revokes disconnected sessions and cancels expiry", async () => {
         let now = 0;
         let scheduled: (() => void) | undefined;
         let canceled = 0;
@@ -139,7 +140,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         state: "revoked",
       }),
 
-      disposal_case("host disposal releases action dedupe retention resources", async () => {
+      disposal_case("host-disposal-releases-action-dedupe-retention-resources", "host disposal releases action dedupe retention resources", async () => {
         const scheduled = new Set<() => void>();
         let canceled = 0;
         const host = create_livehost({
@@ -184,7 +185,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         canceled: 1,
       }),
 
-      disposal_case("active recovery channel stops publishing after disposal", async () => {
+      disposal_case("active-recovery-channel-stops-publishing-after-disposal", "active recovery channel stops publishing after disposal", async () => {
         const host = create_livehost({ state: { count: 0 }, sessionId: () => "recovery-dispose" });
         const socket = make_socket();
         host.connect(socket);
@@ -224,7 +225,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         mutationCode: "LIVEHOST_AUTHORITY_CLOSED",
       }),
 
-      disposal_case("pending async action keeps origin but cannot regain connection authority", async () => {
+      disposal_case("pending-async-action-keeps-origin-but-cannot-regain-connection-authority", "pending async action keeps origin but cannot regain connection authority", async () => {
         let release: (() => void) | undefined;
         const gate = new Promise<void>((resolve) => { release = resolve; });
         let origin: unknown;
@@ -255,7 +256,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         listeners: 0,
       }),
 
-      disposal_case("store deletion remains non-disposing and explicit teardown is safe", async () => {
+      disposal_case("store-deletion-remains-non-disposing-and-explicit-teardown-is-safe", "store deletion remains non-disposing and explicit teardown is safe", async () => {
         const store = create_livehost_store();
         const created = store.create("room-a", {
           state: { count: 0 },

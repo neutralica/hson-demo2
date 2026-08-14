@@ -1,13 +1,14 @@
 import type { LiveMap, LiveMapCommit } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../../core/test-contracts";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "error";
 
 export type HostedTestCaseReport = Readonly<{
   key: string;
   suite: string;
-  name: string;
+  caseId: string; name: string;
   status: "pass" | "fail" | "skip";
   ms: number;
   err: string | null;
@@ -15,6 +16,31 @@ export type HostedTestCaseReport = Readonly<{
 
 export type HostedTestInfrastructureError = Readonly<{
   message: string;
+}>;
+
+export type HostedTestPlannedCaseReport = Readonly<{
+  id: string;
+  caseId: string;
+  title: string;
+  order: number;
+  status: "queued" | "running" | "pass" | "fail" | "skip";
+  ms: number | null;
+  err: string | null;
+}>;
+
+export type HostedTestSuiteRunReport = Readonly<{
+  id: string;
+  title: string;
+  subject: TestSubject;
+  collections: readonly TestCollection[];
+  provenance: TestProvenance;
+  order: number;
+  executionShape: TestExecutionShape;
+  sourceRef: string | null;
+  declaredChecks: number | null;
+  status: "queued" | "running" | "pass" | "fail";
+  ms: number | null;
+  cases: readonly HostedTestPlannedCaseReport[];
 }>;
 
 export type HostedTestReport = Readonly<{
@@ -32,6 +58,13 @@ export type HostedTestReport = Readonly<{
     fail: number;
     skip: number;
   }>;
+  plan: Readonly<{
+    protocolVersion: number;
+    catalogVersion: string;
+    executorId: string;
+    selectionIds: readonly string[];
+  }> | null;
+  suiteRuns: readonly HostedTestSuiteRunReport[];
   caseBatches: Readonly<Record<string, readonly HostedTestCaseReport[]>>;
   suites: readonly Readonly<{ suite: string; ms: number }>[];
   externalResults: Readonly<Record<string, Readonly<{

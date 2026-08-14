@@ -1,7 +1,8 @@
 import { hson } from "hson-live";
 import type { LiveMapAnyOp, LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
-import type { RunResult, TestEvent } from "../../core/test-contracts";
+import { TEST_SUBJECT_IDENTIFIERS, type RunResult, type TestEvent } from "../../core/test-contracts";
+import type { TestRunPlan } from "../../core/test-run-plan";
 import type {
   HostedTestCaseReport,
   HostedTestInfrastructureError,
@@ -33,9 +34,38 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       fail: nonNegativeInteger,
       skip: nonNegativeInteger,
     }),
+    plan: s.object.exact({
+      protocolVersion: nonNegativeInteger,
+      catalogVersion: s.string,
+      executorId: s.string,
+      selectionIds: s.array(s.string),
+    }).nullable,
+    suiteRuns: s.array(s.object.exact({
+      id: s.string,
+      title: s.string,
+      subject: s.pick(...TEST_SUBJECT_IDENTIFIERS),
+      collections: s.array(s.pick("unit", "dev")),
+      provenance: s.pick("hson-demo2", "hson-live"),
+      order: nonNegativeInteger,
+      executionShape: s.pick("cases", "opaque-aggregate"),
+      sourceRef: s.string.nullable,
+      declaredChecks: nonNegativeInteger.nullable,
+      status: s.pick("queued", "running", "pass", "fail"),
+      ms: finiteNumber.nullable,
+      cases: s.array(s.object.exact({
+        id: s.string,
+        caseId: s.string,
+        title: s.string,
+        order: nonNegativeInteger,
+        status: s.pick("queued", "running", "pass", "fail", "skip"),
+        ms: finiteNumber.nullable,
+        err: s.string.nullable,
+      })),
+    })),
     caseBatches: s.record(s.array(s.object.exact({
       key: s.string,
       suite: s.string,
+      caseId: s.string,
       name: s.string,
       status: s.pick("pass", "fail", "skip"),
       ms: finiteNumber,
@@ -66,6 +96,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
 export function make_initial_hosted_test_report(
   suite: HostedTestRunTarget,
   runId?: string,
+  runPlan?: TestRunPlan,
 ): HostedTestReport {
   return {
     run: {
@@ -77,6 +108,34 @@ export function make_initial_hosted_test_report(
       timing: null,
     },
     summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
+    plan: runPlan === undefined ? null : {
+      protocolVersion: runPlan.protocolVersion,
+      catalogVersion: runPlan.catalogVersion,
+      executorId: runPlan.executorId,
+      selectionIds: [...runPlan.selectionIds],
+    },
+    suiteRuns: runPlan === undefined ? [] : runPlan.suites.map((plannedSuite) => ({
+      id: plannedSuite.id,
+      title: plannedSuite.title,
+      subject: plannedSuite.subject,
+      collections: [...plannedSuite.collections],
+      provenance: plannedSuite.provenance,
+      order: plannedSuite.order,
+      executionShape: plannedSuite.executionShape,
+      sourceRef: plannedSuite.sourceRef ?? null,
+      declaredChecks: plannedSuite.declaredChecks ?? null,
+      status: "queued",
+      ms: null,
+      cases: plannedSuite.cases.map((testCase) => ({
+        id: testCase.id,
+        caseId: testCase.caseId,
+        title: testCase.title,
+        order: testCase.order,
+        status: "queued",
+        ms: null,
+        err: null,
+      })),
+    })),
     caseBatches: {},
     suites: [],
     externalResults: {},
@@ -99,9 +158,9 @@ function infrastructure_error(error: unknown): HostedTestInfrastructureError {
 
 function case_report(event: Extract<TestEvent, { t: "case_end" }>): HostedTestCaseReport {
   return {
-    key: `${event.suite}::${event.name}`,
+    key: `${event.suite}::${event.caseId}`,
     suite: event.suite,
-    name: event.name,
+    caseId: event.caseId, name: event.name,
     status: event.status,
     ms: finite_or_zero(event.ms),
     err: event.err ?? null,
@@ -200,6 +259,7 @@ export type HostedTestReportController = Readonly<{
   dispose: () => void;
   reduce: (event: TestEvent) => void;
   complete: (result: RunResult, timing?: Readonly<{ runnerMs: number; hostMs: number }>) => void;
+  settle: () => Promise<void>;
   failInfrastructure: (error: unknown) => void;
 }>;
 
@@ -208,6 +268,7 @@ export const DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE = 32;
 export type HostedTestReportOptions = Readonly<{
   caseBatchSize?: number;
   runId?: string;
+  runPlan?: TestRunPlan;
   map?: HostedTestReportMap;
   mutate?: (mutation: (draft: HostedTestReportMap) => LiveMapCommit) => Promise<LiveMapCommit<LiveMapAnyOp>>;
 }>;
@@ -222,7 +283,7 @@ export function make_hosted_test_report(
   if (!Number.isInteger(caseBatchSize) || caseBatchSize <= 0) {
     throw new Error("Hosted test report caseBatchSize must be a positive integer.");
   }
-  const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(suite, options.runId))) as JsonValue;
+  const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(suite, options.runId, options.runPlan))) as JsonValue;
   const map = options.map === undefined
     ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap
     : options.map;
@@ -233,15 +294,46 @@ export function make_hosted_test_report(
     onCommit?.(commit);
   });
   let disposed = false;
+  const pendingMutations = new Set<Promise<unknown>>();
   let pendingCases: HostedTestCaseReport[] = [];
   let caseBatchId = 0;
+  const suiteRunIndex = new Map((options.runPlan?.suites ?? []).map((plannedSuite, index) => [plannedSuite.id, index]));
+  const caseRunIndex = new Map((options.runPlan?.suites ?? []).flatMap((plannedSuite, suiteIndex) => (
+    plannedSuite.cases.map((testCase, caseIndex) => [testCase.id, { suiteIndex, caseIndex }] as const)
+  )));
 
   function mutate(operation: (draft: HostedTestReportMap) => LiveMapCommit): void {
     if (options.mutate === undefined) {
       operation(map);
       return;
     }
-    void options.mutate(operation);
+    const pending = options.mutate(operation);
+    pendingMutations.add(pending);
+    void pending.finally(() => pendingMutations.delete(pending));
+  }
+
+  function update_suite_run(suiteId: string, status: "running" | "pass" | "fail", ms?: number): void {
+    const index = suiteRunIndex.get(suiteId);
+    if (index === undefined) return;
+    mutate((draft) => draft.batch((tx) => {
+      tx.set(["suiteRuns", index, "status"], status);
+      if (ms !== undefined) tx.replace(["suiteRuns", index, "ms"], finite_or_zero(ms));
+    }));
+  }
+
+  function update_case_run(event: Extract<TestEvent, { t: "case_begin" | "case_end" }>): void {
+    const location = caseRunIndex.get(`${event.suite}::${event.caseId}`);
+    if (location === undefined) return;
+    mutate((draft) => draft.batch((tx) => {
+      tx.set(
+        ["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "status"],
+        event.t === "case_begin" ? "running" : event.status,
+      );
+      if (event.t === "case_end") {
+        tx.replace(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "ms"], finite_or_zero(event.ms));
+        tx.replace(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "err"], event.err ?? null);
+      }
+    }));
   }
 
   function flush_pending_cases(suiteEnd?: Readonly<{ suite: string; ms: number }>): void {
@@ -281,6 +373,9 @@ export function make_hosted_test_report(
     commits() {
       return Object.freeze([...captured]);
     },
+    async settle() {
+      while (pendingMutations.size > 0) await Promise.all([...pendingMutations]);
+    },
     dispose() {
       if (disposed) return;
       flush_pending_cases();
@@ -289,6 +384,7 @@ export function make_hosted_test_report(
     },
     reduce(event) {
       if (event.t === "suite_begin") {
+        update_suite_run(event.suite, "running");
         if (map.capture().value.run.status !== "idle") return;
         mutate((draft) => draft.batch((tx) => {
           tx.set(["run", "status"], "running");
@@ -300,11 +396,17 @@ export function make_hosted_test_report(
       }
 
       if (event.t === "suite_end") {
+        const suiteIndex = suiteRunIndex.get(event.suite);
+        const suiteRun = suiteIndex === undefined ? undefined : map.capture().value.suiteRuns[suiteIndex];
+        if (suiteRun?.executionShape === "cases") {
+          update_suite_run(event.suite, suiteRun.cases.some((testCase) => testCase.status === "fail") ? "fail" : "pass", event.ms);
+        }
         flush_pending_cases({ suite: event.suite, ms: finite_or_zero(event.ms) });
         return;
       }
 
       if (event.t === "external_end") {
+        update_suite_run(event.suite, event.status, event.ms);
         flush_pending_cases();
         mutate((draft) => draft.setMany(["externalResults"], {
           [event.id]: {
@@ -329,6 +431,7 @@ export function make_hosted_test_report(
       }
 
       if (event.t === "external_state") {
+        if (event.status === "running") update_suite_run(event.suite, "running");
         flush_pending_cases();
         mutate((draft) => draft.setMany(["externalResults"], {
           [event.id]: {
@@ -352,7 +455,12 @@ export function make_hosted_test_report(
         return;
       }
 
+      if (event.t === "case_begin") {
+        update_case_run(event);
+        return;
+      }
       if (event.t !== "case_end") return;
+      update_case_run(event);
       pendingCases.push(case_report(event));
       if (pendingCases.length >= caseBatchSize) flush_pending_cases();
     },

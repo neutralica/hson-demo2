@@ -94,6 +94,7 @@ function finite(value: number, field: string): number {
 function normalize_failure(failure: TestFailure): TestFailure {
   return {
     suite: failure.suite,
+    ...(failure.caseId === undefined ? {} : { caseId: failure.caseId }),
     name: failure.name,
     err: failure.err,
     ms: finite(failure.ms, "failure.ms"),

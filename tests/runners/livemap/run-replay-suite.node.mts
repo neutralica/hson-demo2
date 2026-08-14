@@ -8,7 +8,7 @@ function expect_node_replay(condition: unknown, message: string): asserts condit
 }
 
 function event_key(event: Extract<ReplayEvent, { t: "case_begin" | "case_end" }>): string {
-  return `${event.suite}::${event.name}`;
+  return `${event.suite}::${event.caseId}`;
 }
 
 async function test_node_replay_runner(): Promise<void> {

@@ -16,14 +16,14 @@ export function livemap_suites_schema(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "schema validates a string root",
+        caseId: "schema-validates-a-string-root", name: "schema validates a string root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.string).validateRoot("Ada"),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema rejects wrong primitive type",
+        caseId: "schema-rejects-wrong-primitive-type", name: "schema rejects wrong primitive type",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.string).validateRoot(12),
         expected: {
@@ -41,7 +41,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema validates object literal shape",
+        caseId: "schema-validates-object-literal-shape", name: "schema validates object literal shape",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -57,7 +57,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema reports missing required object key",
+        caseId: "schema-reports-missing-required-object-key", name: "schema reports missing required object key",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -83,7 +83,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema optional object key can be absent",
+        caseId: "schema-optional-object-key-can-be-absent", name: "schema optional object key can be absent",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -99,7 +99,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema nullable accepts null",
+        caseId: "schema-nullable-accepts-null", name: "schema nullable accepts null",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -114,7 +114,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick validates literal union",
+        caseId: "schema-pick-validates-literal-union", name: "schema pick validates literal union",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -129,7 +129,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick rejects unlisted literal",
+        caseId: "schema-pick-rejects-unlisted-literal", name: "schema pick rejects unlisted literal",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -155,7 +155,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema array builder validates array of objects",
+        caseId: "schema-array-builder-validates-array-of-objects", name: "schema array builder validates array of objects",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -171,7 +171,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema array reports indexed child issue",
+        caseId: "schema-array-reports-indexed-child-issue", name: "schema array reports indexed child issue",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -197,7 +197,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema token array shorthand validates primitive array",
+        caseId: "schema-token-array-shorthand-validates-primitive-array", name: "schema token array shorthand validates primitive array",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -210,7 +210,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema record validates each string key value",
+        caseId: "schema-record-validates-each-string-key-value", name: "schema record validates each string key value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -223,7 +223,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema record reports key path issue",
+        caseId: "schema-record-reports-key-path-issue", name: "schema record reports key path issue",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -247,7 +247,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema non-exact object allows extra keys",
+        caseId: "schema-non-exact-object-allows-extra-keys", name: "schema non-exact object allows extra keys",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -262,7 +262,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema exact object rejects extra keys",
+        caseId: "schema-exact-object-rejects-extra-keys", name: "schema exact object rejects extra keys",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -286,7 +286,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema validateValue validates nested path",
+        caseId: "schema-validatevalue-validates-nested-path", name: "schema validateValue validates nested path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -301,7 +301,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema validateValue reports missing rule",
+        caseId: "schema-validatevalue-reports-missing-rule", name: "schema validateValue reports missing rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -325,7 +325,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns deepest object property rule",
+        caseId: "schema-match-returns-deepest-object-property-rule", name: "schema match returns deepest object property rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -341,7 +341,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema array rule matches only numeric path parts",
+        caseId: "schema-array-rule-matches-only-numeric-path-parts", name: "schema array rule matches only numeric path parts",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -378,7 +378,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema record rule matches only string path parts",
+        caseId: "schema-record-rule-matches-only-string-path-parts", name: "schema record rule matches only string path parts",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -413,21 +413,21 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema unknown accepts any JSON value",
+        caseId: "schema-unknown-accepts-any-json-value", name: "schema unknown accepts any JSON value",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.unknown).validateRoot({ any: ["json", 1, true, null] }),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema null validates null root",
+        caseId: "schema-null-validates-null-root", name: "schema null validates null root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.null).validateRoot(null),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema null rejects non-null root",
+        caseId: "schema-null-rejects-non-null-root", name: "schema null rejects non-null root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.null).validateRoot("nope"),
         expected: {
@@ -445,7 +445,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema nullable rejects wrong non-null type",
+        caseId: "schema-nullable-rejects-wrong-non-null-type", name: "schema nullable rejects wrong non-null type",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.string.nullable).validateRoot(12),
         expected: {
@@ -463,21 +463,21 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema literal validates number literal",
+        caseId: "schema-literal-validates-number-literal", name: "schema literal validates number literal",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.literal(1, 2, 3)).validateRoot(2),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema literal validates boolean literal",
+        caseId: "schema-literal-validates-boolean-literal", name: "schema literal validates boolean literal",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.literal(true)).validateRoot(true),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema readonly metadata is absent from matched rule",
+        caseId: "schema-readonly-metadata-is-absent-from-matched-rule", name: "schema readonly metadata is absent from matched rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -493,7 +493,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema optional flag appears in matched rule",
+        caseId: "schema-optional-flag-appears-in-matched-rule", name: "schema optional flag appears in matched rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -509,7 +509,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema nullable flag appears in matched rule",
+        caseId: "schema-nullable-flag-appears-in-matched-rule", name: "schema nullable flag appears in matched rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -525,7 +525,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema array rejects non-array value",
+        caseId: "schema-array-rejects-non-array-value", name: "schema array rejects non-array value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -549,7 +549,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema object rejects array value",
+        caseId: "schema-object-rejects-array-value", name: "schema object rejects array value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -575,7 +575,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema record rejects array value",
+        caseId: "schema-record-rejects-array-value", name: "schema record rejects array value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -599,7 +599,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple validates fixed items",
+        caseId: "schema-tuple-validates-fixed-items", name: "schema tuple validates fixed items",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -612,7 +612,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple reports indexed item issue",
+        caseId: "schema-tuple-reports-indexed-item-issue", name: "schema tuple reports indexed item issue",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -636,7 +636,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple reports missing required item",
+        caseId: "schema-tuple-reports-missing-required-item", name: "schema tuple reports missing required item",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -660,7 +660,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple allows missing optional item",
+        caseId: "schema-tuple-allows-missing-optional-item", name: "schema tuple allows missing optional item",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -673,7 +673,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple rejects extra item",
+        caseId: "schema-tuple-rejects-extra-item", name: "schema tuple rejects extra item",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -695,7 +695,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple rejects non-array value",
+        caseId: "schema-tuple-rejects-non-array-value", name: "schema tuple rejects non-array value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -719,7 +719,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns tuple index rule",
+        caseId: "schema-match-returns-tuple-index-rule", name: "schema match returns tuple index rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -733,7 +733,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns pick rule for schema choices",
+        caseId: "schema-match-returns-pick-rule-for-schema-choices", name: "schema match returns pick rule for schema choices",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -747,7 +747,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick validates first schema choice",
+        caseId: "schema-pick-validates-first-schema-choice", name: "schema pick validates first schema choice",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -760,7 +760,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick validates later schema choice",
+        caseId: "schema-pick-validates-later-schema-choice", name: "schema pick validates later schema choice",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -773,7 +773,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick rejects non-matching schema choice",
+        caseId: "schema-pick-rejects-non-matching-schema-choice", name: "schema pick rejects non-matching schema choice",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -797,7 +797,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick validates mixed literal and schema choices",
+        caseId: "schema-pick-validates-mixed-literal-and-schema-choices", name: "schema pick validates mixed literal and schema choices",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -810,7 +810,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema pick validates object schema choice",
+        caseId: "schema-pick-validates-object-schema-choice", name: "schema pick validates object schema choice",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -826,7 +826,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns pick rule",
+        caseId: "schema-match-returns-pick-rule", name: "schema match returns pick rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -840,7 +840,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema partial allows missing listed keys",
+        caseId: "schema-partial-allows-missing-listed-keys", name: "schema partial allows missing listed keys",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -856,7 +856,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema partial validates present listed key",
+        caseId: "schema-partial-validates-present-listed-key", name: "schema partial validates present listed key",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -872,7 +872,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema partial rejects wrong present key type",
+        caseId: "schema-partial-rejects-wrong-present-key-type", name: "schema partial rejects wrong present key type",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -899,7 +899,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema partial makes nested object property optional",
+        caseId: "schema-partial-makes-nested-object-property-optional", name: "schema partial makes nested object property optional",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -916,7 +916,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema partial keeps nested object fields required when object is present",
+        caseId: "schema-partial-keeps-nested-object-fields-required-when-object-is-present", name: "schema partial keeps nested object fields required when object is present",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -944,7 +944,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tagged validates matching variant",
+        caseId: "schema-tagged-validates-matching-variant", name: "schema tagged validates matching variant",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -960,7 +960,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tagged validates later matching variant",
+        caseId: "schema-tagged-validates-later-matching-variant", name: "schema tagged validates later matching variant",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -976,7 +976,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tagged rejects unknown discriminator value",
+        caseId: "schema-tagged-rejects-unknown-discriminator-value", name: "schema tagged rejects unknown discriminator value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1003,7 +1003,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tagged rejects missing variant payload",
+        caseId: "schema-tagged-rejects-missing-variant-payload", name: "schema tagged rejects missing variant payload",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1030,7 +1030,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema recurse validates recursive tree",
+        caseId: "schema-recurse-validates-recursive-tree", name: "schema recurse validates recursive tree",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
@@ -1057,7 +1057,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema recurse reports recursive child issue",
+        caseId: "schema-recurse-reports-recursive-child-issue", name: "schema recurse reports recursive child issue",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
@@ -1094,7 +1094,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema recurse validateValue descends through recursive path",
+        caseId: "schema-recurse-validatevalue-descends-through-recursive-path", name: "schema recurse validateValue descends through recursive path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
@@ -1113,7 +1113,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match keeps recurse rule shallow",
+        caseId: "schema-match-keeps-recurse-rule-shallow", name: "schema match keeps recurse rule shallow",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => {
@@ -1133,7 +1133,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema constrain validates accepted value",
+        caseId: "schema-constrain-validates-accepted-value", name: "schema constrain validates accepted value",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1146,7 +1146,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema constrain rejects failed predicate",
+        caseId: "schema-constrain-rejects-failed-predicate", name: "schema constrain rejects failed predicate",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1170,7 +1170,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema constrain returns base validation first",
+        caseId: "schema-constrain-returns-base-validation-first", name: "schema constrain returns base validation first",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1194,7 +1194,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema match returns constrain rule",
+        caseId: "schema-match-returns-constrain-rule", name: "schema match returns constrain rule",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1208,7 +1208,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema deepPartial allows missing nested object field",
+        caseId: "schema-deeppartial-allows-missing-nested-object-field", name: "schema deepPartial allows missing nested object field",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1225,7 +1225,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema deepPartial validates present nested object field",
+        caseId: "schema-deeppartial-validates-present-nested-object-field", name: "schema deepPartial validates present nested object field",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1242,7 +1242,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema deepPartial rejects wrong present nested field type",
+        caseId: "schema-deeppartial-rejects-wrong-present-nested-field-type", name: "schema deepPartial rejects wrong present nested field type",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1270,7 +1270,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema deepPartial makes array item object fields optional",
+        caseId: "schema-deeppartial-makes-array-item-object-fields-optional", name: "schema deepPartial makes array item object fields optional",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1288,7 +1288,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema deepPartial makes record value object fields optional",
+        caseId: "schema-deeppartial-makes-record-value-object-fields-optional", name: "schema deepPartial makes record value object fields optional",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1306,7 +1306,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema define returns reusable schema instance",
+        caseId: "schema-define-returns-reusable-schema-instance", name: "schema define returns reusable schema instance",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1338,14 +1338,14 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema define accepts token root",
+        caseId: "schema-define-accepts-token-root", name: "schema define accepts token root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.array(s.string)).validateRoot(["a", "b"]),
         expected: { ok: true, issues: [] },
       }),
       read_case({
         suite: SUITE,
-        name: "schema define accepts object shape root",
+        caseId: "schema-define-accepts-object-shape-root", name: "schema define accepts object shape root",
         input: {},
         act: () => hson.liveMap.schema.define((s) => s.object({
           user: s.object({
@@ -1356,7 +1356,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "core schema.use accepts direct nested json root",
+        caseId: "core-schema.use-accepts-direct-nested-json-root", name: "core schema.use accepts direct nested json root",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -1386,7 +1386,7 @@ export function livemap_suites_schema(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "handle setMany and write preserve siblings",
+        caseId: "handle-setmany-and-write-preserve-siblings", name: "handle setMany and write preserve siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
         },
@@ -1416,7 +1416,7 @@ export function livemap_suites_schema(): TestSuite {
       },
       read_case({
         suite: SUITE,
-        name: "schema preserves literal star object key",
+        caseId: "schema-preserves-literal-star-object-key", name: "schema preserves literal star object key",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1472,7 +1472,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema rules expose wildcard lookup coverage",
+        caseId: "schema-rules-expose-wildcard-lookup-coverage", name: "schema rules expose wildcard lookup coverage",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1506,7 +1506,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema rules keep public wildcard paths",
+        caseId: "schema-rules-keep-public-wildcard-paths", name: "schema rules keep public wildcard paths",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1539,7 +1539,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema literal star and record wildcard remain distinct",
+        caseId: "schema-literal-star-and-record-wildcard-remain-distinct", name: "schema literal star and record wildcard remain distinct",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1587,7 +1587,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema tuple literal index does not behave like array wildcard",
+        caseId: "schema-tuple-literal-index-does-not-behave-like-array-wildcard", name: "schema tuple literal index does not behave like array wildcard",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1611,7 +1611,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema resolve returns root rule without parent context",
+        caseId: "schema-resolve-returns-root-rule-without-parent-context", name: "schema resolve returns root rule without parent context",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1641,7 +1641,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema resolve returns nested object parent context",
+        caseId: "schema-resolve-returns-nested-object-parent-context", name: "schema resolve returns nested object parent context",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1671,7 +1671,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema resolve returns array item parent context",
+        caseId: "schema-resolve-returns-array-item-parent-context", name: "schema resolve returns array item parent context",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1705,7 +1705,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema resolve returns record key parent context",
+        caseId: "schema-resolve-returns-record-key-parent-context", name: "schema resolve returns record key parent context",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1735,7 +1735,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema resolve returns undefined for unmatched path",
+        caseId: "schema-resolve-returns-undefined-for-unmatched-path", name: "schema resolve returns undefined for unmatched path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1760,7 +1760,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema has reports matched and unmatched paths",
+        caseId: "schema-has-reports-matched-and-unmatched-paths", name: "schema has reports matched and unmatched paths",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1794,7 +1794,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema must resolve returns nested resolution",
+        caseId: "schema-must-resolve-returns-nested-resolution", name: "schema must resolve returns nested resolution",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1824,7 +1824,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema must resolve returns root without parent context",
+        caseId: "schema-must-resolve-returns-root-without-parent-context", name: "schema must resolve returns root without parent context",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1854,7 +1854,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema must resolve throws for unmatched path",
+        caseId: "schema-must-resolve-throws-for-unmatched-path", name: "schema must resolve throws for unmatched path",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1885,7 +1885,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema must resolve preserves concrete and public wildcard paths",
+        caseId: "schema-must-resolve-preserves-concrete-and-public-wildcard-paths", name: "schema must resolve preserves concrete and public wildcard paths",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1922,7 +1922,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "core schema inspection reports no attached schema",
+        caseId: "core-schema-inspection-reports-no-attached-schema", name: "core schema inspection reports no attached schema",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -1948,7 +1948,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "core schema inspection delegates to attached schema",
+        caseId: "core-schema-inspection-delegates-to-attached-schema", name: "core schema inspection delegates to attached schema",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -1994,7 +1994,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "core schema inspection preserves concrete and public wildcard paths",
+        caseId: "core-schema-inspection-preserves-concrete-and-public-wildcard-paths", name: "core schema inspection preserves concrete and public wildcard paths",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2042,7 +2042,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "core schema must resolve throws without attached schema",
+        caseId: "core-schema-must-resolve-throws-without-attached-schema", name: "core schema must resolve throws without attached schema",
         input: {},
         act: () => {
           const map = make_livemap_core(json_root_node({
@@ -2073,7 +2073,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "core schema must resolve delegates unmatched path error",
+        caseId: "core-schema-must-resolve-delegates-unmatched-path-error", name: "core schema must resolve delegates unmatched path error",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2110,7 +2110,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "core schema has rejects invalid wildcard segment kinds",
+        caseId: "core-schema-has-rejects-invalid-wildcard-segment-kinds", name: "core schema has rejects invalid wildcard segment kinds",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2141,7 +2141,7 @@ export function livemap_suites_schema(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "schema validation issue reports type mismatch code",
+        caseId: "schema-validation-issue-reports-type-mismatch-code", name: "schema validation issue reports type mismatch code",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2172,7 +2172,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema validation issue reports missing required code",
+        caseId: "schema-validation-issue-reports-missing-required-code", name: "schema validation issue reports missing required code",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2206,7 +2206,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema validation issue reports unknown path code",
+        caseId: "schema-validation-issue-reports-unknown-path-code", name: "schema validation issue reports unknown path code",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2237,7 +2237,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema validation issue reports invalid literal code",
+        caseId: "schema-validation-issue-reports-invalid-literal-code", name: "schema validation issue reports invalid literal code",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2266,7 +2266,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema validation issue reports tuple index out of range code",
+        caseId: "schema-validation-issue-reports-tuple-index-out-of-range-code", name: "schema validation issue reports tuple index out of range code",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({
@@ -2300,7 +2300,7 @@ export function livemap_suites_schema(): TestSuite {
 
       read_case({
         suite: SUITE,
-        name: "schema validation merges structured issue codes",
+        caseId: "schema-validation-merges-structured-issue-codes", name: "schema validation merges structured issue codes",
         input: {},
         act: () => {
           const schema = hson.liveMap.schema.define((s) => s.object({

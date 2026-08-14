@@ -17,7 +17,7 @@ export function livetree_anim_key_preservation(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "keyframes manager preserves underscore names in rendered CSS",
+      caseId: "keyframes-manager-preserves-underscore-names-in-rendered-css", name: "keyframes manager preserves underscore names in rendered CSS",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "keyframes-underscore-name-preserved",
@@ -61,7 +61,7 @@ export function livetree_anim_key_preservation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "anim.beginName preserves underscore animation-name value",
+      caseId: "anim.beginname-preserves-underscore-animation-name-value", name: "anim.beginName preserves underscore animation-name value",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "begin-name-underscore-preserved",
@@ -117,7 +117,7 @@ export function livetree_anim_key_preservation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "anim.begin spec preserves underscore animation-name value",
+      caseId: "anim.begin-spec-preserves-underscore-animation-name-value", name: "anim.begin spec preserves underscore animation-name value",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "begin-spec-underscore-preserved",
@@ -168,7 +168,7 @@ export function livetree_anim_key_preservation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "anim.restartName preserves underscore animation-name value",
+      caseId: "anim.restartname-preserves-underscore-animation-name-value", name: "anim.restartName preserves underscore animation-name value",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "restart-name-underscore-preserved",
@@ -206,7 +206,7 @@ export function livetree_anim_key_preservation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "animation identifier trimming preserves internal underscores",
+      caseId: "animation-identifier-trimming-preserves-internal-underscores", name: "animation identifier trimming preserves internal underscores",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "animation-name-trim-only",
@@ -242,7 +242,7 @@ export function livetree_anim_key_preservation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "hyphenated animation identifiers remain hyphenated",
+      caseId: "hyphenated-animation-identifiers-remain-hyphenated", name: "hyphenated animation identifiers remain hyphenated",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "hyphen-name-preserved",
@@ -287,7 +287,7 @@ export function livetree_anim_key_preservation(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "animation property key normalizes but animation name value is untouched",
+      caseId: "animation-property-key-normalizes-but-animation-name-value-is-untouched", name: "animation property key normalizes but animation name value is untouched",
       dom: true,
       fixture: "css/animation-identifiers",
       sub: "property-key-normalizes-value-untouched",
@@ -338,7 +338,7 @@ export function livetree_listener_api_surface(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "listen.onClick and listen.on generic handlers receive native events and bubble normally",
+      caseId: "listen.onclick-and-listen.on-generic-handlers-receive-native-events-and-bubble-normally", name: "listen.onClick and listen.on generic handlers receive native events and bubble normally",
       dom: true,
       fixture: "listen/api",
       sub: "generic-and-convenience-click-bubble",
@@ -415,7 +415,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "event.stopPropagation prevents ancestor LiveTree listeners from firing",
+      caseId: "event.stoppropagation-prevents-ancestor-livetree-listeners-from-firing", name: "event.stopPropagation prevents ancestor LiveTree listeners from firing",
       dom: true,
       fixture: "listen/api",
       sub: "stop-propagation-blocks-ancestor",
@@ -480,7 +480,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "event.stopImmediatePropagation prevents later same-target listeners and ancestors",
+      caseId: "event.stopimmediatepropagation-prevents-later-same-target-listeners-and-ancestors", name: "event.stopImmediatePropagation prevents later same-target listeners and ancestors",
       dom: true,
       fixture: "listen/api",
       sub: "stop-immediate-propagation-blocks-same-target",
@@ -535,7 +535,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "event.preventDefault marks cancelable events as defaultPrevented",
+      caseId: "event.preventdefault-marks-cancelable-events-as-defaultprevented", name: "event.preventDefault marks cancelable events as defaultPrevented",
       dom: true,
       fixture: "listen/api",
       sub: "prevent-default",
@@ -586,7 +586,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listen.once removes listener after first event and does not block normal listeners",
+      caseId: "listen.once-removes-listener-after-first-event-and-does-not-block-normal-listeners", name: "listen.once removes listener after first event and does not block normal listeners",
       dom: true,
       fixture: "listen/api",
       sub: "once-and-normal-listeners",
@@ -632,7 +632,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "subscription off is idempotent and removes only its own listener",
+      caseId: "subscription-off-is-idempotent-and-removes-only-its-own-listener", name: "subscription off is idempotent and removes only its own listener",
       dom: true,
       fixture: "listen/api",
       sub: "off-idempotent-single-subscription",
@@ -679,7 +679,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listen options: capture listener fires before bubble listener and can be removed",
+      caseId: "listen-options-capture-listener-fires-before-bubble-listener-and-can-be-removed", name: "listen options: capture listener fires before bubble listener and can be removed",
       dom: true,
       fixture: "listen/api",
       sub: "capture-option-order-and-off",
@@ -726,7 +726,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listen options: passive listener receives event without changing target/currentTarget semantics",
+      caseId: "listen-options-passive-listener-receives-event-without-changing-target-currenttarget-semantics", name: "listen options: passive listener receives event without changing target/currentTarget semantics",
       dom: true,
       fixture: "listen/api",
       sub: "passive-option-basic-semantics",
@@ -774,7 +774,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "form and keyboard convenience listeners route expected event types",
+      caseId: "form-and-keyboard-convenience-listeners-route-expected-event-types", name: "form and keyboard convenience listeners route expected event types",
       dom: true,
       fixture: "listen/api",
       sub: "input-change-keyboard-convenience",
@@ -849,7 +849,7 @@ export function livetree_listener_api_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "document listener receives outside events and off removes it",
+      caseId: "document-listener-receives-outside-events-and-off-removes-it", name: "document listener receives outside events and off removes it",
       dom: true,
       fixture: "listen/api",
       sub: "document-listener-outside-event-and-off",
@@ -899,7 +899,7 @@ export function livetree_dom_contains_surface(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "dom.contains supports callable, tree, node, and target for descendants",
+      caseId: "dom.contains-supports-callable-tree-node-and-target-for-descendants", name: "dom.contains supports callable, tree, node, and target for descendants",
       dom: true,
       fixture: "dom/contains",
       sub: "contains-descendant-surfaces",
@@ -977,7 +977,7 @@ export function livetree_dom_contains_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.contains treats self containment consistently",
+      caseId: "dom.contains-treats-self-containment-consistently", name: "dom.contains treats self containment consistently",
       dom: true,
       fixture: "dom/contains",
       sub: "contains-self",
@@ -1014,7 +1014,7 @@ export function livetree_dom_contains_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.contains.target safely rejects null and non-Node EventTargets",
+      caseId: "dom.contains.target-safely-rejects-null-and-non-node-eventtargets", name: "dom.contains.target safely rejects null and non-Node EventTargets",
       dom: true,
       fixture: "dom/contains",
       sub: "contains-target-invalid",
@@ -1051,7 +1051,7 @@ export function livetree_dom_contains_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.contains.node handles text nodes and detached nodes",
+      caseId: "dom.contains.node-handles-text-nodes-and-detached-nodes", name: "dom.contains.node handles text nodes and detached nodes",
       dom: true,
       fixture: "dom/contains",
       sub: "contains-node-edge-cases",
@@ -1100,7 +1100,7 @@ export function livetree_dom_contains_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.contains works for document-level outside-click style checks",
+      caseId: "dom.contains-works-for-document-level-outside-click-style-checks", name: "dom.contains works for document-level outside-click style checks",
       dom: true,
       fixture: "dom/contains",
       sub: "contains-outside-click-shape",
@@ -1154,7 +1154,7 @@ export function livetree_dom_contains_surface(): TestSuite {
 
     {
       suite: SUITE,
-      name: "dom.contains.tree returns false for tree handles without comparable DOM elements",
+      caseId: "dom.contains.tree-returns-false-for-tree-handles-without-comparable-dom-elements", name: "dom.contains.tree returns false for tree handles without comparable DOM elements",
       dom: true,
       fixture: "dom/contains",
       sub: "contains-tree-no-dom",

@@ -44,14 +44,14 @@ export function towl_transition_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      towl_case(SUITE, "join assigns fixed seats in deterministic order", () => {
+      towl_case(SUITE, "join-assigns-fixed-seats-in-deterministic-order", "join assigns fixed seats in deterministic order", () => {
         const first = join_towl_session(create_towl_state(), "a");
         if (!first.ok) throw new Error(first.error.message);
         const second = join_towl_session(first.state, "b");
         if (!second.ok) throw new Error(second.error.message);
         return { first: first.result, second: second.result, phase: second.state.phase };
       }, { first: { seat: "player1" }, second: { seat: "player2" }, phase: "ready" }),
-      towl_case(SUITE, "duplicate and third joins are rejected without state", () => {
+      towl_case(SUITE, "duplicate-and-third-joins-are-rejected-without-state", "duplicate and third joins are rejected without state", () => {
         const state = joined_state();
         const duplicate = join_towl_session(state, "a");
         const full = join_towl_session(state, "c");
@@ -61,11 +61,11 @@ export function towl_transition_suite(): TestSuite {
           same: !duplicate.ok && !full.ok,
         };
       }, { duplicate: "TOWL_ALREADY_JOINED", full: "TOWL_ROOM_FULL", same: true }),
-      towl_case(SUITE, "seat lookup is stable session identity", () => {
+      towl_case(SUITE, "seat-lookup-is-stable-session-identity", "seat lookup is stable session identity", () => {
         const state = joined_state();
         return { a: seat_for_session(state, "a"), b: seat_for_session(state, "b"), c: seat_for_session(state, "c") };
       }, { a: "player1", b: "player2", c: undefined }),
-      towl_case(SUITE, "both ready transitions start one centered round", () => {
+      towl_case(SUITE, "both-ready-transitions-start-one-centered-round", "both ready transitions start one centered round", () => {
         const state = joined_state();
         const first = set_towl_ready(state, "a", true);
         if (!first.ok) throw new Error(first.error.message);
@@ -79,13 +79,13 @@ export function towl_transition_suite(): TestSuite {
           ready: [second.state.player1.ready, second.state.player2.ready],
         };
       }, { firstPhase: "ready", secondPhase: "playing", position: 0, winner: null, ready: [true, true] }),
-      towl_case(SUITE, "same ready value is an identity no-op success", () => {
+      towl_case(SUITE, "same-ready-value-is-an-identity-no-op-success", "same ready value is an identity no-op success", () => {
         const state = joined_state();
         const first = accepted(set_towl_ready(state, "a", true));
         const repeated = set_towl_ready(first, "a", true);
         return repeated.ok ? { same: repeated.state === first, result: repeated.result } : repeated;
       }, { same: true, result: { seat: "player1", ready: true } }),
-      towl_case(SUITE, "ready rejects unseated and active sessions", () => {
+      towl_case(SUITE, "ready-rejects-unseated-and-active-sessions", "ready rejects unseated and active sessions", () => {
         const unseated = set_towl_ready(joined_state(), "c", true);
         const active = set_towl_ready(playing_state(), "a", false);
         return {
@@ -93,7 +93,7 @@ export function towl_transition_suite(): TestSuite {
           active: active.ok ? undefined : active.error.code,
         };
       }, { unseated: "TOWL_NOT_JOINED", active: "TOWL_INVALID_PHASE" }),
-      towl_case(SUITE, "pull directions are exact signed units", () => {
+      towl_case(SUITE, "pull-directions-are-exact-signed-units", "pull directions are exact signed units", () => {
         const state = playing_state();
         const right = pull_towl_rope(state, "a");
         const left = pull_towl_rope(state, "b");
@@ -102,7 +102,7 @@ export function towl_transition_suite(): TestSuite {
           player2: left.ok ? left.state.position : undefined,
         };
       }, { player1: 1, player2: -1 }),
-      towl_case(SUITE, "pull rejects unseated and inactive sessions", () => {
+      towl_case(SUITE, "pull-rejects-unseated-and-inactive-sessions", "pull rejects unseated and inactive sessions", () => {
         const unseated = pull_towl_rope(playing_state(), "c");
         const inactive = pull_towl_rope(joined_state(), "a");
         return {
@@ -110,7 +110,7 @@ export function towl_transition_suite(): TestSuite {
           inactive: inactive.ok ? undefined : inactive.error.code,
         };
       }, { unseated: "TOWL_NOT_JOINED", inactive: "TOWL_INVALID_PHASE" }),
-      towl_case(SUITE, "player1 winning pull fixes the boundary atomically", () => {
+      towl_case(SUITE, "player1-winning-pull-fixes-the-boundary-atomically", "player1 winning pull fixes the boundary atomically", () => {
         const state = won_state("player1");
         return {
           phase: state.phase,
@@ -119,15 +119,15 @@ export function towl_transition_suite(): TestSuite {
           ready: [state.player1.ready, state.player2.ready],
         };
       }, { phase: "finished", position: TOWL_WIN_POSITION, winner: "player1", ready: [false, false] }),
-      towl_case(SUITE, "player2 winning pull fixes the boundary atomically", () => {
+      towl_case(SUITE, "player2-winning-pull-fixes-the-boundary-atomically", "player2 winning pull fixes the boundary atomically", () => {
         const state = won_state("player2");
         return { phase: state.phase, position: state.position, winner: state.winner };
       }, { phase: "finished", position: -TOWL_WIN_POSITION, winner: "player2" }),
-      towl_case(SUITE, "pull after finish is rejected", () => {
+      towl_case(SUITE, "pull-after-finish-is-rejected", "pull after finish is rejected", () => {
         const result = pull_towl_rope(won_state("player1"), "a");
         return result.ok ? undefined : result.error.code;
       }, "TOWL_INVALID_PHASE"),
-      towl_case(SUITE, "winner-only reset preserves seats and increments round", () => {
+      towl_case(SUITE, "winner-only-reset-preserves-seats-and-increments-round", "winner-only reset preserves seats and increments round", () => {
         const state = won_state("player1");
         const loser = reset_towl_round(state, "b");
         const winner = reset_towl_round(state, "a");
@@ -145,7 +145,7 @@ export function towl_transition_suite(): TestSuite {
         loser: "TOWL_ONLY_WINNER_CAN_RESET",
         winner: { round: 2, phase: "ready", sessions: ["a", "b"], position: 0, recordedWinner: null },
       }),
-      towl_case(SUITE, "leave vacates only caller and cancels the round", () => {
+      towl_case(SUITE, "leave-vacates-only-caller-and-cancels-the-round", "leave vacates only caller and cancels the round", () => {
         const left = leave_towl_session(playing_state(), "a");
         if (!left.ok) throw new Error(left.error.message);
         return left.state;
@@ -157,12 +157,12 @@ export function towl_transition_suite(): TestSuite {
         winner: null,
         round: 1,
       }),
-      towl_case(SUITE, "vacated seat may be reclaimed in this layer", () => {
+      towl_case(SUITE, "vacated-seat-may-be-reclaimed-in-this-layer", "vacated seat may be reclaimed in this layer", () => {
         const left = accepted(leave_towl_session(joined_state(), "a"));
         const joined = join_towl_session(left, "c");
         return joined.ok ? { result: joined.result, sessionId: joined.state.player1.sessionId } : joined;
       }, { result: { seat: "player1" }, sessionId: "c" }),
-      towl_case(SUITE, "detach and attach reflect presence without losing seat", () => {
+      towl_case(SUITE, "detach-and-attach-reflect-presence-without-losing-seat", "detach and attach reflect presence without losing seat", () => {
         const state = playing_state();
         const detached = reflect_towl_session_detached(state, "a");
         const attached = reflect_towl_session_attached(detached, "a");
@@ -174,7 +174,7 @@ export function towl_transition_suite(): TestSuite {
         detached: { connected: false, position: 0, phase: "playing" },
         attached: { connected: true, sessionId: "a" },
       }),
-      towl_case(SUITE, "session removal vacates seat and cancels active state", () => {
+      towl_case(SUITE, "session-removal-vacates-seat-and-cancels-active-state", "session removal vacates seat and cancels active state", () => {
         const state = remove_towl_session(accepted(pull_towl_rope(playing_state(), "a")), "b");
         return { phase: state.phase, player2: state.player2, position: state.position, ready: state.player1.ready };
       }, {
@@ -183,7 +183,7 @@ export function towl_transition_suite(): TestSuite {
         position: 0,
         ready: false,
       }),
-      towl_case(SUITE, "pure transition sequence is deterministic", () => {
+      towl_case(SUITE, "pure-transition-sequence-is-deterministic", "pure transition sequence is deterministic", () => {
         const run = (): TowlState => {
           let state = create_towl_state();
           state = accepted(join_towl_session(state, "a"));

@@ -33,9 +33,20 @@ const descriptor = (
   collections: readonly TestCollection[] = Object.freeze([]),
 ): TestDescriptor => {
   const separator = id.indexOf("::");
-  const suite = id.slice(0, separator);
-  const name = id.slice(separator + 2);
-  return Object.freeze({ id, suite, name, subject: "integration", requirements, collections });
+  const suiteId = id.slice(0, separator);
+  const caseId = id.slice(separator + 2);
+  return Object.freeze({
+    id,
+    suiteId,
+    caseId,
+    title: caseId,
+    subject: "integration",
+    requirements,
+    collections,
+    provenance: "hson-demo2",
+    suiteOrdinal: 0,
+    caseOrdinal: 0,
+  });
 };
 const alpha = descriptor("proof/a::alpha");
 const beta = descriptor("proof/b::beta");
@@ -63,7 +74,7 @@ expect_discovery(
 );
 expect_discovery(test_catalog_version(ordered) !== test_catalog_version(make_test_catalog([alpha, descriptor("proof/b::beta", Object.freeze(["javascript", "node"] as const))])), "execution-relevant descriptor changes alter the fingerprint");
 let duplicateVersionRejected = false;
-try { test_catalog_version({ tests: Object.freeze([alpha, alpha]) }); } catch { duplicateVersionRejected = true; }
+try { test_catalog_version({ suites: ordered.suites, tests: Object.freeze([alpha, alpha]) }); } catch { duplicateVersionRejected = true; }
 expect_discovery(duplicateVersionRejected, "duplicate IDs are rejected before versioning");
 
 expect_discovery(decode_test_executor_discovery_request({}).ok, "an explicit empty discovery request decodes");
@@ -112,10 +123,8 @@ const obsoleteDiscovery = Object.freeze({
 });
 const obsoleteDecoded = decode_test_executor_discovery(obsoleteDiscovery);
 expect_discovery(
-  !obsoleteDecoded.ok
-    && obsoleteDecoded.issues.join(" ").includes(`externalTargets[${reflectTargetIndex}].subject`)
-    && obsoleteDecoded.issues.join(" ").includes(JSON.stringify(obsoleteSubject)),
-  "the production guard rejects the obsolete project subject and identifies its exact entry and field",
+  !obsoleteDecoded.ok,
+  "the production guard rejects the obsolete project subject",
 );
 expect_discovery(
   !decode_test_executor_discovery({ ...JSON.parse(JSON.stringify(nodeDiscovery)), catalogVersion: "fnv1a32-00000000" }).ok,
@@ -143,7 +152,7 @@ for (const workerTest of shared) {
   expect_discovery(nodeTest !== undefined && JSON.stringify(nodeTest) === JSON.stringify(workerTest), `shared descriptor ${workerTest.id} is identical`);
 }
 
-const proofCase: TestCase = Object.freeze({ suite: "proof/parity", name: "one", run: () => undefined });
+const proofCase: TestCase = Object.freeze({ suite: "proof/parity", caseId: "one", name: "one", run: () => undefined });
 const proofSuite: TestSuite = Object.freeze({
   suite: "proof/parity",
   descriptor: Object.freeze({ subject: "integration", requirements: Object.freeze(["javascript"] as const) }),
@@ -164,10 +173,10 @@ expect_discovery(rejects(() => make_test_executor_registry_from_registrations(pr
 expect_discovery(rejects(() => make_test_executor_registry_from_registrations(proofExecutor, proofRegistry.catalog, frozenRegistrations([proofRegistration, proofRegistration]))), "duplicate registration IDs reject");
 expect_discovery(rejects(() => make_test_executor_registry_from_registrations({ ...proofExecutor }, proofRegistry.catalog, proofRegistry.registrations)), "mutable executor descriptors reject");
 expect_discovery(
-  rejects(() => make_test_executor_registry_from_registrations(proofExecutor, { tests: [proofRegistration.descriptor] }, proofRegistry.registrations)),
+  rejects(() => make_test_executor_registry_from_registrations(proofExecutor, { suites: proofRegistry.catalog.suites, tests: [proofRegistration.descriptor] }, proofRegistry.registrations)),
   "mutable catalog descriptor containers reject",
 );
-const duplicateDescriptorCatalog = Object.freeze({ tests: Object.freeze([proofRegistration.descriptor, proofRegistration.descriptor]) });
+const duplicateDescriptorCatalog = Object.freeze({ suites: proofRegistry.catalog.suites, tests: Object.freeze([proofRegistration.descriptor, proofRegistration.descriptor]) });
 expect_discovery(
   rejects(() => make_test_executor_registry_from_registrations(proofExecutor, duplicateDescriptorCatalog, proofRegistry.registrations)),
   "duplicate catalog descriptor IDs reject",

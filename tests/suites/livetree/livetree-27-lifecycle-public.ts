@@ -32,7 +32,7 @@ function empty_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "empty terminally destroys contents and preserves its caller",
+    caseId: "empty-terminally-destroys-contents-and-preserves-its-caller", name: "empty terminally destroys contents and preserves its caller",
     dom: true,
     html: `<main><section id="owner" data-keep="yes"><button id="child"><span id="leaf">x</span></button></section></main>`,
     act(tree) {
@@ -98,7 +98,7 @@ function detach_contents_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "detachContents retains ordered reusable content and physical runtime state",
+    caseId: "detachcontents-retains-ordered-reusable-content-and-physical-runtime-state", name: "detachContents retains ordered reusable content and physical runtime state",
     dom: true,
     html: `<main><section id="source"><button id="branch">initial</button></section><aside id="target"></aside></main>`,
     act(tree) {
@@ -160,7 +160,7 @@ function detach_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "detach preserves the same branch for explicit reattachment",
+    caseId: "detach-preserves-the-same-branch-for-explicit-reattachment", name: "detach preserves the same branch for explicit reattachment",
     dom: true,
     html: `<main><section id="left"><button id="branch">old</button></section><section id="right"></section><section id="other"></section></main>`,
     act(tree) {
@@ -235,7 +235,7 @@ function remove_and_guards_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "remove terminally disposes all aliases and guards the public surface",
+    caseId: "remove-terminally-disposes-all-aliases-and-guards-the-public-surface", name: "remove terminally disposes all aliases and guards the public surface",
     dom: true,
     html: `<main><section id="target"><button id="child">x</button></section><aside id="host"></aside></main>`,
     act(tree) {
@@ -341,7 +341,7 @@ function roots_and_legacy_case(suite: string): LiveTreeCaseSpec {
 
   return {
     suite,
-    name: "owned roots are removable browser roots are protected and legacy APIs are explicit",
+    caseId: "owned-roots-are-removable-browser-roots-are-protected-and-legacy-apis-are-explicit", name: "owned roots are removable browser roots are protected and legacy APIs are explicit",
     dom: true,
     html: `<main><section id="legacy">before<span id="legacy-child">x</span>after</section><aside id="legacy-remove"></aside></main>`,
     act(tree) {

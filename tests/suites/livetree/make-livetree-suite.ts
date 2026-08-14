@@ -19,7 +19,7 @@ export function make_livetree_suite(
 
   const built: TestCase[] = cases.map((spec) => ({
     suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
 
     meta: {
       fixture: spec.fixture ?? spec.name,
@@ -73,7 +73,7 @@ export function make_livetree_suite(
         await spec.assert(tree, t);
         bag.throwIfAny({
           suite,
-          name: spec.name,
+          caseId: spec.caseId, name: spec.name,
           input: spec.html,
           preview: (spec.preview ?? default_preview)(tree),
           fixture: spec.fixture ?? spec.name,
@@ -273,7 +273,7 @@ class FailureBag {
 
   throwIfAny(meta: {
     suite: string;
-    name: string;
+    caseId: string; name: string;
     input: string;
     preview: string;
     fixture: string;

@@ -38,7 +38,7 @@ export function livemap_misc_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        name: "make_microtask_scheduler does not run synchronously",
+        caseId: "make_microtask_scheduler-does-not-run-synchronously", name: "make_microtask_scheduler does not run synchronously",
         input: {},
         act: () => {
           let calls = 0;
@@ -53,7 +53,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "make_microtask_scheduler queues only one microtask before flush",
+        caseId: "make_microtask_scheduler-queues-only-one-microtask-before-flush", name: "make_microtask_scheduler queues only one microtask before flush",
         input: {},
         act: () => withCapturedMicrotasks(() => {
           const schedule = make_microtask_scheduler(() => undefined);
@@ -68,7 +68,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "make_microtask_scheduler coalesces queued calls",
+        caseId: "make_microtask_scheduler-coalesces-queued-calls", name: "make_microtask_scheduler coalesces queued calls",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -87,7 +87,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "make_microtask_scheduler allows later queued run",
+        caseId: "make_microtask_scheduler-allows-later-queued-run", name: "make_microtask_scheduler allows later queued run",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -106,7 +106,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "make_microtask_scheduler allows reentrant later run",
+        caseId: "make_microtask_scheduler-allows-reentrant-later-run", name: "make_microtask_scheduler allows reentrant later run",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -125,7 +125,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "make_microtask_scheduler coalesces reentrant queued calls",
+        caseId: "make_microtask_scheduler-coalesces-reentrant-queued-calls", name: "make_microtask_scheduler coalesces reentrant queued calls",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -148,7 +148,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "stop_all handles empty disposer list",
+        caseId: "stop_all-handles-empty-disposer-list", name: "stop_all handles empty disposer list",
         input: {},
         act: () => {
           const stop = stop_all([]);
@@ -160,7 +160,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "stop_all runs disposers in insertion order",
+        caseId: "stop_all-runs-disposers-in-insertion-order", name: "stop_all runs disposers in insertion order",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -177,7 +177,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "stop_all is idempotent",
+        caseId: "stop_all-is-idempotent", name: "stop_all is idempotent",
         input: {},
         act: () => {
           let calls = 0;
@@ -196,7 +196,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "stop_all ignores recursive stop calls",
+        caseId: "stop_all-ignores-recursive-stop-calls", name: "stop_all ignores recursive stop calls",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -219,7 +219,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "stop_all accepts iterable disposer source",
+        caseId: "stop_all-accepts-iterable-disposer-source", name: "stop_all accepts iterable disposer source",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -238,7 +238,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths handles empty path list",
+        caseId: "subscribe_paths-handles-empty-path-list", name: "subscribe_paths handles empty path list",
         input: {},
         act: () => {
           let subscriptions = 0;
@@ -258,7 +258,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths subscribes each path",
+        caseId: "subscribe_paths-subscribes-each-path", name: "subscribe_paths subscribes each path",
         input: {},
         act: () => {
           const subscribed: string[][] = [];
@@ -277,7 +277,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths subscribes paths in insertion order",
+        caseId: "subscribe_paths-subscribes-paths-in-insertion-order", name: "subscribe_paths subscribes paths in insertion order",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -296,7 +296,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths returns combined disposer",
+        caseId: "subscribe_paths-returns-combined-disposer", name: "subscribe_paths returns combined disposer",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -323,7 +323,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths listeners share callback",
+        caseId: "subscribe_paths-listeners-share-callback", name: "subscribe_paths listeners share callback",
         input: {},
         act: () => {
           let calls = 0;
@@ -344,7 +344,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths combined disposer detaches listeners",
+        caseId: "subscribe_paths-combined-disposer-detaches-listeners", name: "subscribe_paths combined disposer detaches listeners",
         input: {},
         act: () => {
           let calls = 0;
@@ -373,7 +373,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths composes with microtask scheduler",
+        caseId: "subscribe_paths-composes-with-microtask-scheduler", name: "subscribe_paths composes with microtask scheduler",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -399,7 +399,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "subscribe_paths combined disposer is idempotent",
+        caseId: "subscribe_paths-combined-disposer-is-idempotent", name: "subscribe_paths combined disposer is idempotent",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -423,7 +423,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path renders immediately by default",
+        caseId: "bind_path-renders-immediately-by-default", name: "bind_path renders immediately by default",
         input: {},
         act: () => {
           let value = "a";
@@ -443,7 +443,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path can skip immediate render",
+        caseId: "bind_path-can-skip-immediate-render", name: "bind_path can skip immediate render",
         input: {},
         act: () => {
           const renders: string[] = [];
@@ -462,7 +462,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path renders latest read value on subscription event",
+        caseId: "bind_path-renders-latest-read-value-on-subscription-event", name: "bind_path renders latest read value on subscription event",
         input: {},
         act: () => {
           let value = "a";
@@ -489,7 +489,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path returns subscription disposer",
+        caseId: "bind_path-returns-subscription-disposer", name: "bind_path returns subscription disposer",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -507,7 +507,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path composes with microtask scheduler",
+        caseId: "bind_path-composes-with-microtask-scheduler", name: "bind_path composes with microtask scheduler",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let value = "a";
@@ -538,7 +538,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path immediate render bypasses scheduler",
+        caseId: "bind_path-immediate-render-bypasses-scheduler", name: "bind_path immediate render bypasses scheduler",
         input: {},
         act: () => withCapturedMicrotasks(() => {
           const renders: string[] = [];
@@ -557,7 +557,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path scheduled listener does not render before flush",
+        caseId: "bind_path-scheduled-listener-does-not-render-before-flush", name: "bind_path scheduled listener does not render before flush",
         input: {},
         act: () => withCapturedMicrotasks(() => {
           let listener: (() => void) | undefined;
@@ -582,7 +582,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_path disposer detaches subscribed listener",
+        caseId: "bind_path-disposer-detaches-subscribed-listener", name: "bind_path disposer detaches subscribed listener",
         input: {},
         act: () => {
           let value = "a";
@@ -611,7 +611,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths renders immediately by default",
+        caseId: "bind_paths-renders-immediately-by-default", name: "bind_paths renders immediately by default",
         input: {},
         act: () => {
           let value = "a";
@@ -631,7 +631,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths can skip immediate render",
+        caseId: "bind_paths-can-skip-immediate-render", name: "bind_paths can skip immediate render",
         input: {},
         act: () => {
           const renders: string[] = [];
@@ -650,7 +650,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths subscribes all paths",
+        caseId: "bind_paths-subscribes-all-paths", name: "bind_paths subscribes all paths",
         input: {},
         act: () => {
           const subscribed: string[] = [];
@@ -672,7 +672,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths renders latest read value on subscribed event",
+        caseId: "bind_paths-renders-latest-read-value-on-subscribed-event", name: "bind_paths renders latest read value on subscribed event",
         input: {},
         act: () => {
           let value = "a";
@@ -701,7 +701,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths composes with microtask scheduler",
+        caseId: "bind_paths-composes-with-microtask-scheduler", name: "bind_paths composes with microtask scheduler",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let value = "a";
@@ -732,7 +732,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths scheduled listener does not render before flush",
+        caseId: "bind_paths-scheduled-listener-does-not-render-before-flush", name: "bind_paths scheduled listener does not render before flush",
         input: {},
         act: () => withCapturedMicrotasks(() => {
           const listeners: Array<() => void> = [];
@@ -758,7 +758,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths immediate render bypasses scheduler",
+        caseId: "bind_paths-immediate-render-bypasses-scheduler", name: "bind_paths immediate render bypasses scheduler",
         input: {},
         act: () => withCapturedMicrotasks(() => {
           const renders: string[] = [];
@@ -777,7 +777,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths returns combined disposer",
+        caseId: "bind_paths-returns-combined-disposer", name: "bind_paths returns combined disposer",
         input: {},
         act: () => {
           const events: string[] = [];
@@ -805,7 +805,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "bind_paths handles empty path list",
+        caseId: "bind_paths-handles-empty-path-list", name: "bind_paths handles empty path list",
         input: {},
         act: () => {
           let subscriptions = 0;
@@ -828,7 +828,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths does not run immediately by default",
+        caseId: "derive_from_paths-does-not-run-immediately-by-default", name: "derive_from_paths does not run immediately by default",
         input: {},
         act: () => {
           let calls = 0;
@@ -845,7 +845,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths can run immediately",
+        caseId: "derive_from_paths-can-run-immediately", name: "derive_from_paths can run immediately",
         input: {},
         act: () => {
           let calls = 0;
@@ -863,7 +863,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths subscribes input paths",
+        caseId: "derive_from_paths-subscribes-input-paths", name: "derive_from_paths subscribes input paths",
         input: {},
         act: () => {
           const subscribed: string[] = [];
@@ -883,7 +883,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths runs derive on subscribed event",
+        caseId: "derive_from_paths-runs-derive-on-subscribed-event", name: "derive_from_paths runs derive on subscribed event",
         input: {},
         act: () => {
           let calls = 0;
@@ -907,7 +907,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths composes with microtask scheduler",
+        caseId: "derive_from_paths-composes-with-microtask-scheduler", name: "derive_from_paths composes with microtask scheduler",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -933,7 +933,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths immediate run uses scheduler when supplied",
+        caseId: "derive_from_paths-immediate-run-uses-scheduler-when-supplied", name: "derive_from_paths immediate run uses scheduler when supplied",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -955,7 +955,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths scheduled immediate coalesces with event",
+        caseId: "derive_from_paths-scheduled-immediate-coalesces-with-event", name: "derive_from_paths scheduled immediate coalesces with event",
         input: {},
         act: () => withCapturedMicrotasks((flush) => {
           let calls = 0;
@@ -981,7 +981,7 @@ export function livemap_misc_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        name: "derive_from_paths returns combined disposer",
+        caseId: "derive_from_paths-returns-combined-disposer", name: "derive_from_paths returns combined disposer",
         input: {},
         act: () => {
           const events: string[] = [];

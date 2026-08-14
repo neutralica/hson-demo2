@@ -11,7 +11,7 @@ export function livetree_new_dom_doc(): TestSuite {
   const cases: readonly LiveTreeCaseSpec[] = [
     {
       suite: SUITE,
-      name: "dom.doc: soft document handle is available on mounted tree",
+      caseId: "dom.doc-soft-document-handle-is-available-on-mounted-tree", name: "dom.doc: soft document handle is available on mounted tree",
       dom: true,
       fixture: "dom/doc",
       sub: "doc-soft-available",
@@ -46,7 +46,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dom.doc: point queries resolve mounted target tree",
+      caseId: "dom.doc-point-queries-resolve-mounted-target-tree", name: "dom.doc: point queries resolve mounted target tree",
       dom: true,
       fixture: "dom/doc",
       sub: "doc-point-query-resolves-tree",
@@ -99,7 +99,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dom.must.doc: mounted tree exposes hard document handle",
+      caseId: "dom.must.doc-mounted-tree-exposes-hard-document-handle", name: "dom.must.doc: mounted tree exposes hard document handle",
       dom: true,
       fixture: "dom/doc",
       sub: "doc-must-available",
@@ -129,7 +129,7 @@ export function livetree_new_dom_doc(): TestSuite {
 
     {
       suite: SUITE,
-      name: "listen.document: keydown attaches to document target",
+      caseId: "listen.document-keydown-attaches-to-document-target", name: "listen.document: keydown attaches to document target",
       dom: true,
       fixture: "listen/document",
       sub: "document-keydown",
@@ -174,7 +174,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "listen.window: keydown attaches to window target",
+      caseId: "listen.window-keydown-attaches-to-window-target", name: "listen.window: keydown attaches to window target",
       dom: true,
       fixture: "listen/window",
       sub: "window-keydown",
@@ -220,7 +220,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "listen.document: off detaches listener",
+      caseId: "listen.document-off-detaches-listener", name: "listen.document: off detaches listener",
       dom: true,
       fixture: "listen/document",
       sub: "document-off-detaches",
@@ -264,7 +264,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "find.byQuid: resolves mounted target by internal quid",
+      caseId: "find.byquid-resolves-mounted-target-by-internal-quid", name: "find.byQuid: resolves mounted target by internal quid",
       dom: true,
       fixture: "find/quid",
       sub: "find-by-quid",
@@ -296,7 +296,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "find.must.byQuid: resolves mounted target by internal quid",
+      caseId: "find.must.byquid-resolves-mounted-target-by-internal-quid", name: "find.must.byQuid: resolves mounted target by internal quid",
       dom: true,
       fixture: "find/quid",
       sub: "find-must-by-quid",
@@ -325,7 +325,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dom.must.treeFromEl: resolves exact element back to tree handle",
+      caseId: "dom.must.treefromel-resolves-exact-element-back-to-tree-handle", name: "dom.must.treeFromEl: resolves exact element back to tree handle",
       dom: true,
       fixture: "dom/treeFromEl",
       sub: "tree-from-el",
@@ -353,7 +353,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "dom.doc: elementsFromPoint returns a stack",
+      caseId: "dom.doc-elementsfrompoint-returns-a-stack", name: "dom.doc: elementsFromPoint returns a stack",
       dom: true,
       fixture: "dom/doc",
       sub: "doc-elements-from-point",
@@ -395,7 +395,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg create: path is created in SVG namespace",
+      caseId: "svg-create-path-is-created-in-svg-namespace", name: "svg create: path is created in SVG namespace",
       dom: true,
       fixture: "svg/create",
       sub: "path-namespace",
@@ -423,7 +423,7 @@ export function livetree_new_dom_doc(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "svg create: path accepts d attribute",
+      caseId: "svg-create-path-accepts-d-attribute", name: "svg create: path accepts d attribute",
       dom: true,
       fixture: "svg/create",
       sub: "path-d-attr",

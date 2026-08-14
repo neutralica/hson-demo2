@@ -36,10 +36,12 @@ export const cleanup_quid = (m: CssManager, quid: string): void => {
 
 export function make_unit_case(
     suite: string,
+    caseId: string,
     name: string,
     run: () => void | Promise<void>): TestCase {
     return {
         suite,
+        caseId,
         name,
         run,
     };

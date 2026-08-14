@@ -19,7 +19,7 @@ type PairSocket = Readonly<{
 
 type LiveHostPairReadCaseSpec = Readonly<{
   suite: string;
-  name: string;
+  caseId: string; name: string;
   input: unknown;
   act: () => unknown | Promise<unknown>;
   expected: unknown;
@@ -120,7 +120,7 @@ async function settle_pair(): Promise<void> {
 function livehost_pair_read_case(spec: LiveHostPairReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
-    name: spec.name,
+    caseId: spec.caseId, name: spec.name,
     meta: {
       input: preview_value(spec.input),
     },
@@ -144,7 +144,7 @@ export function livehost_pair_suite(): TestSuite {
     cases: [
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client socket close detaches host listener",
+        caseId: "client-socket-close-detaches-host-listener", name: "client socket close detaches host listener",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
@@ -189,7 +189,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client hello receives host snapshot",
+        caseId: "client-hello-receives-host-snapshot", name: "client hello receives host snapshot",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
@@ -226,7 +226,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client subscribe receives immediate host sync",
+        caseId: "client-subscribe-receives-immediate-host-sync", name: "client subscribe receives immediate host sync",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
@@ -261,7 +261,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client action resolves ack and receives sync update",
+        caseId: "client-action-resolves-ack-and-receives-sync-update", name: "client action resolves ack and receives sync update",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -325,7 +325,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client action resolves host error",
+        caseId: "client-action-resolves-host-error", name: "client action resolves host error",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -363,7 +363,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client unsubscribe stops later sync update",
+        caseId: "client-unsubscribe-stops-later-sync-update", name: "client unsubscribe stops later sync update",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -417,7 +417,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "fresh client receives current snapshot without historical sync",
+        caseId: "fresh-client-receives-current-snapshot-without-historical-sync", name: "fresh client receives current snapshot without historical sync",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -486,7 +486,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "client reconnect receives current hello without resume cursor",
+        caseId: "client-reconnect-receives-current-hello-without-resume-cursor", name: "client reconnect receives current hello without resume cursor",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -560,7 +560,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "current hello snapshot is not followed by historical sync",
+        caseId: "current-hello-snapshot-is-not-followed-by-historical-sync", name: "current hello snapshot is not followed by historical sync",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -622,7 +622,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "host connection emits one generic event to one client",
+        caseId: "host-connection-emits-one-generic-event-to-one-client", name: "host connection emits one generic event to one client",
         input: {},
         act: async () => {
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
@@ -650,7 +650,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "action context emits ordered events only to invoking client before ack",
+        caseId: "action-context-emits-ordered-events-only-to-invoking-client-before-ack", name: "action context emits ordered events only to invoking client before ack",
         input: {},
         act: async () => {
           type Actions = Readonly<{ emit: undefined }>;
@@ -698,7 +698,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "action context emitter returns false after originating connection closes",
+        caseId: "action-context-emitter-returns-false-after-originating-connection-closes", name: "action context emitter returns false after originating connection closes",
         input: {},
         act: async () => {
           type Actions = Readonly<{ delayed: undefined }>;
@@ -746,7 +746,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
         suite: SUITE,
-        name: "concurrent generic actions keep event markers connection scoped",
+        caseId: "concurrent-generic-actions-keep-event-markers-connection-scoped", name: "concurrent generic actions keep event markers connection scoped",
         input: {},
         act: async () => {
           type Actions = Readonly<{ marked: { marker: string } }>;
@@ -807,7 +807,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
   suite: SUITE,
-  name: "client supplied id cannot manufacture session authority",
+  caseId: "client-supplied-id-cannot-manufacture-session-authority", name: "client supplied id cannot manufacture session authority",
   input: {},
 
   act: async () => {
@@ -862,7 +862,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
   suite: SUITE,
-  name: "clients sharing a claimed id retain distinct session authority",
+  caseId: "clients-sharing-a-claimed-id-retain-distinct-session-authority", name: "clients sharing a claimed id retain distinct session authority",
   input: {},
 
   act: async () => {
@@ -944,7 +944,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
   suite: SUITE,
-  name: "client invalid payload is rejected before handler and mutation",
+  caseId: "client-invalid-payload-is-rejected-before-handler-and-mutation", name: "client invalid payload is rejected before handler and mutation",
   input: {},
 
   act: async () => {
@@ -1027,7 +1027,7 @@ export function livehost_pair_suite(): TestSuite {
       }),
       livehost_pair_read_case({
   suite: SUITE,
-  name: "repeated session action id returns cached outcome without rerunning handler",
+  caseId: "repeated-session-action-id-returns-cached-outcome-without-rerunning-handler", name: "repeated session action id returns cached outcome without rerunning handler",
   input: {},
 
   act: async () => {

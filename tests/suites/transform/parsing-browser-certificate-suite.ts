@@ -88,16 +88,16 @@ export function parsing_browser_certificate_suite(): TestSuite {
     suite: SUITE,
     descriptor: Object.freeze({ subject: "transform", requirements: Object.freeze(["javascript", "node", "synthetic-dom"] as const) }),
     cases: Object.freeze([
-      Object.freeze({ suite: SUITE, name: "HSON origin earns a browser certificate", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "hson-origin-earns-a-browser-certificate", name: "HSON origin earns a browser certificate", run: () => {
         const result = certify("hson", '<main id="hson-origin" "hello"/>'); expect(result.ok, "HSON must pass both boundaries");
       } }),
-      Object.freeze({ suite: SUITE, name: "JSON origin earns a browser certificate", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "json-origin-earns-a-browser-certificate", name: "JSON origin earns a browser certificate", run: () => {
         const result = certify("json", '{"phase":3,"items":[1,true,"x"]}'); expect(result.ok, "JSON must pass both boundaries");
       } }),
-      Object.freeze({ suite: SUITE, name: "HTML origin earns a DOMParser certificate", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "html-origin-earns-a-domparser-certificate", name: "HTML origin earns a DOMParser certificate", run: () => {
         const result = certify("html", '<main data-phase="3"><span>hello</span></main>'); expect(result.ok, "ordinary HTML must agree across actual parsers");
       } }),
-      Object.freeze({ suite: SUITE, name: "worker final HTML is admitted through browser facade", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "worker-final-html-is-admitted-through-browser-facade", name: "worker final HTML is admitted through browser facade", run: () => {
         let admissions = 0;
         const result = certify("json", '{"ok":true}', {
           admitFinalHtml(source) {
@@ -108,7 +108,7 @@ export function parsing_browser_certificate_suite(): TestSuite {
         });
         expect(result.ok && admissions === 1, "certificate must perform exactly one final browser HTML admission");
       } }),
-      Object.freeze({ suite: SUITE, name: "browser root carrier is detached only through the public Transform boundary", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "browser-root-carrier-is-detached-only-through-the-public-transform-boundary", name: "browser root carrier is detached only through the public Transform boundary", run: () => {
         const worker = worker_result("html", '<main data-boundary="root"><b>detached</b></main>');
         expect(worker.finalHtml !== undefined, "verified worker must return final HTML");
         const rootBearing = hson.fromTrustedHtml(worker.finalHtml).toNode();
@@ -132,85 +132,85 @@ export function parsing_browser_certificate_suite(): TestSuite {
         });
         expect(result.ok && comparedTags.length === 2, "both strict certificate comparisons must use detached semantic graphs");
       } }),
-      Object.freeze({ suite: SUITE, name: "certificate retains authoritative worker operation counts", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "certificate-retains-authoritative-worker-operation-counts", name: "certificate retains authoritative worker operation counts", run: () => {
         const result = certify("hson", '<p "counts"/>');
         expect(result.ok && JSON.stringify(result.certificate.operationCounts) === JSON.stringify({ serializations: 24, parses: 25, comparisons: 25, laps: 6, directions: 2 }), "counts must remain exact");
       } }),
-      Object.freeze({ suite: SUITE, name: "certificate records both strict comparison claims", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "certificate-records-both-strict-comparison-claims", name: "certificate records both strict comparison claims", run: () => {
         const result = certify("json", '{"strict":true}'); expect(result.ok && result.certificate.browserFinalMatchesBaseline && result.certificate.browserOriginMatchesBaseline, "both comparisons must be explicit");
       } }),
-      Object.freeze({ suite: SUITE, name: "stable object member order certifies", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "stable-object-member-order-certifies", name: "stable object member order certifies", run: () => {
         const result = certify("json", '{"first":1,"second":2,"third":3}'); expect(result.ok, "stable member order must pass");
       } }),
-      Object.freeze({ suite: SUITE, name: "object member reordering fails strict browser comparison", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "object-member-reordering-fails-strict-browser-comparison", name: "object member reordering fails strict browser comparison", run: () => {
         const baseline = hson.fromJson('{"first":1,"second":2}').toNode();
         const reordered = hson.fromJson('{"second":2,"first":1}').toNode();
         const result = verified_fixture(baseline, reordered);
         expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_FINAL_HTML_DIFFERENCE", "order must not use projected equality");
       } }),
-      Object.freeze({ suite: SUITE, name: "zero and negative zero remain distinct", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "zero-and-negative-zero-remain-distinct", name: "zero and negative zero remain distinct", run: () => {
         const negative = hson.fromJson("-0").toNode(); const positive = hson.fromJson("0").toNode();
         const result = verified_fixture(negative, positive);
         expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_FINAL_HTML_DIFFERENCE", "strict comparison must detect -0");
       } }),
-      Object.freeze({ suite: SUITE, name: "dangerous keys certify without prototype projection", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "dangerous-keys-certify-without-prototype-projection", name: "dangerous keys certify without prototype projection", run: () => {
         const result = certify("json", '{"__proto__":"safe","constructor":"value"}'); expect(result.ok, "dangerous own members must survive");
       } }),
-      Object.freeze({ suite: SUITE, name: "Unicode certifies across universal and browser boundaries", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "unicode-certifies-across-universal-and-browser-boundaries", name: "Unicode certifies across universal and browser boundaries", run: () => {
         const result = certify("json", '{"text":"𝄞 café 日本語"}'); expect(result.ok, "Unicode must remain canonical");
       } }),
-      Object.freeze({ suite: SUITE, name: "isolated surrogate changes are strict disagreements", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "isolated-surrogate-changes-are-strict-disagreements", name: "isolated surrogate changes are strict disagreements", run: () => {
         const isolated = hson.fromJson('{"text":"\\ud800"}').toNode();
         const replacement = hson.fromJson('{"text":"�"}').toNode();
         const result = verified_fixture(isolated, replacement);
         expect(!result.ok && !result.stale, "isolated surrogate replacement must fail");
       } }),
-      Object.freeze({ suite: SUITE, name: "quoted HSON member names certify", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "quoted-hson-member-names-certify", name: "quoted HSON member names certify", run: () => {
         const result = certify("hson", "<'a b' 1 'quoted:name' 2>"); expect(result.ok, "quoted member syntax must retain identity");
       } }),
-      Object.freeze({ suite: SUITE, name: "array position changes are strict disagreements", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "array-position-changes-are-strict-disagreements", name: "array position changes are strict disagreements", run: () => {
         const baseline = hson.fromJson('[1,2,3]').toNode(); const reordered = hson.fromJson('[1,3,2]').toNode();
         const result = verified_fixture(baseline, reordered); expect(!result.ok && !result.stale, "array position must be strict");
       } }),
-      Object.freeze({ suite: SUITE, name: "browser-final disagreement has stable code", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "browser-final-disagreement-has-stable-code", name: "browser-final disagreement has stable code", run: () => {
         const baseline = hson.fromJson('{"same":true}').toNode(); const changed = hson.fromJson('{"same":false}').toNode();
         const result = verified_fixture(baseline, changed); expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_FINAL_HTML_DIFFERENCE", "final mismatch code must be stable");
       } }),
-      Object.freeze({ suite: SUITE, name: "browser-origin disagreement has distinct stable code", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "browser-origin-disagreement-has-distinct-stable-code", name: "browser-origin disagreement has distinct stable code", run: () => {
         const baseline = hson.fromJson('{"worker":true}').toNode(); const origin = hson.fromJson('{"worker":false}').toNode();
         const result = verified_fixture(baseline, baseline, origin); expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_ORIGIN_DIFFERENCE", "origin mismatch must be distinct");
       } }),
-      Object.freeze({ suite: SUITE, name: "DOMParser admission failure is bounded", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "domparser-admission-failure-is-bounded", name: "DOMParser admission failure is bounded", run: () => {
         const baseline = hson.fromJson('{"ok":true}').toNode();
         const result = verified_fixture(baseline, baseline, baseline, { admitFinalHtml: () => { throw new Error("raw DOM failure"); } });
         expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_HTML_ADMISSION_FAILED" && !result.failure.message.includes("raw"), "DOM failure must be normalized");
       } }),
-      Object.freeze({ suite: SUITE, name: "worker baseline admission failure is bounded", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "worker-baseline-admission-failure-is-bounded", name: "worker baseline admission failure is bounded", run: () => {
         const baseline = hson.fromJson('{"ok":true}').toNode();
         const result = verified_fixture(baseline, baseline, baseline, { admitBaselineHson: () => { throw new Error("raw baseline failure"); } });
         expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_BASELINE_PARSE_FAILED", "baseline failure must be normalized");
       } }),
-      Object.freeze({ suite: SUITE, name: "missing worker material cannot certify", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "missing-worker-material-cannot-certify", name: "missing worker material cannot certify", run: () => {
         const worker = worker_result("json", '{"ok":true}');
         const result = certify_browser_circuit_boundary({ entry: "json", inputRevision: 1, immediateAdmission: browser_admit("json", '{"ok":true}'), workerResult: { ...worker, finalHtml: undefined } as never, isCurrent: () => true });
         expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_WORKER_EVIDENCE_INCOMPLETE", "missing evidence must fail closed");
       } }),
-      Object.freeze({ suite: SUITE, name: "nonverified worker result cannot certify", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "nonverified-worker-result-cannot-certify", name: "nonverified worker result cannot certify", run: () => {
         const worker = { ...worker_result("json", '{"ok":true}'), status: "failed" as const, failure: { stage: "parse", message: "failed" } };
         const result = certify_browser_circuit_boundary({ entry: "json", inputRevision: 1, immediateAdmission: browser_admit("json", '{"ok":true}'), workerResult: worker, isCurrent: () => true });
         expect(!result.ok && !result.stale && result.failure.code === "BROWSER_CERTIFICATE_WORKER_EVIDENCE_INCOMPLETE", "worker success is prerequisite");
       } }),
-      Object.freeze({ suite: SUITE, name: "stale revision before admission is silent", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "stale-revision-before-admission-is-silent", name: "stale revision before admission is silent", run: () => {
         const worker = worker_result("json", '{"ok":true}');
         const result = certify_browser_circuit_boundary({ entry: "json", inputRevision: 1, immediateAdmission: browser_admit("json", '{"ok":true}'), workerResult: worker, isCurrent: () => false });
         expect(!result.ok && result.stale === true, "stale check must not become failure");
       } }),
-      Object.freeze({ suite: SUITE, name: "revision is fenced during browser admission", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "revision-is-fenced-during-browser-admission", name: "revision is fenced during browser admission", run: () => {
         const worker = worker_result("json", '{"ok":true}'); let checks = 0;
         const result = certify_browser_circuit_boundary({ entry: "json", inputRevision: 1, immediateAdmission: browser_admit("json", '{"ok":true}'), workerResult: worker, isCurrent: () => { checks += 1; return checks < 3; } });
         expect(!result.ok && result.stale === true, "edit during browser check must suppress completion");
       } }),
-      Object.freeze({ suite: SUITE, name: "HTML origin participates in the second strict comparison", run: () => {
+      Object.freeze({ suite: SUITE, caseId: "html-origin-participates-in-the-second-strict-comparison", name: "HTML origin participates in the second strict comparison", run: () => {
         const operations: string[] = [];
         const result = certify("html", '<article><b>origin</b></article>', {
           compare(expected, actual, operation) {

@@ -70,7 +70,8 @@ for (const launcher of hson_live_test_launchers) {
   assert.ok(target, `exported launcher resolves: ${launcher.id}`);
   assert.equal(target.executableChecks, launcher.executableChecks);
   assert.equal(target.runtime, launcher.runtime);
-  assert.deepEqual(target.collections, launcher.collections);
+  assert.deepEqual(target.tags, launcher.collections);
+  assert.equal(target.collections.every((collection) => collection === "unit" || collection === "dev"), true);
 }
 for (const requiredId of [
   "core.hson-node-quid",
@@ -106,7 +107,7 @@ for (const target of availability.targets) {
 assert.equal(
   [...categoryTargets.values()].reduce((total, targets) => total + targets.length, 0),
   hson_live_test_launchers.length,
-  "panel categories account for every exported launcher exactly once",
+  "semantic subject buckets account for every exported launcher exactly once",
 );
 assert.equal(
   categoryTargets.get("transform")?.some((target) => target.launcherId === "core.hson-number"),
@@ -121,20 +122,20 @@ assert.equal(
   true,
 );
 assert.equal(
-  categoryTargets.get("dev")?.some((target) => target.launcherId === "core.public-boundaries"),
+  categoryTargets.get("integration")?.some((target) => target.launcherId === "core.public-boundaries"),
   true,
 );
 assert.equal(
-  availability.targets.find((target) => target.launcherId === "core.public-boundaries")?.subject,
-  "integration",
-  "demo category projection does not mutate manifest-derived metadata",
+  availability.targets.find((target) => target.launcherId === "core.public-boundaries")?.collections.includes("dev"),
+  true,
+  "Dev membership remains collection metadata independent of semantic subject",
 );
 
 const nodeRegistry = make_local_node_livehost_executor_registry();
 const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, availability.targets);
 assert.deepEqual(
   CANONICAL_TEST_SUBJECT_ORDER,
-  ["transform", "livemap", "reflect", "livetree", "livehost"],
+  ["transform", "livetree", "livemap", "livehost", "reflect"],
   "the canonical selectable-subject order has one explicit contract owner",
 );
 assert.equal(
@@ -196,7 +197,7 @@ assert.equal(
     0,
   ),
   manifestCheckCount,
-  "subject projections do not inflate the complete external total",
+  "semantic subject buckets do not inflate the complete external total",
 );
 assert.equal(
   new Set(EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.map((rule) => rule.launcherId)).size,
@@ -219,7 +220,7 @@ const transformCanonicalCount = nodeRegistry.catalog.tests.filter(
   (descriptor) => descriptor.subject === "transform",
 ).length;
 const transformExternalTargets = availability.targets.filter(
-  (target) => hosted_test_panel_external_category(target) === "transform",
+  (target) => target.subject === "transform",
 );
 const transformExternalCount = transformExternalTargets.reduce(
   (total, target) => total + target.executableChecks,
@@ -232,7 +233,7 @@ assert.equal(
     availability.targets,
   ),
   transformCanonicalCount + transformExternalCount,
-  "Transform total derives from canonical cases plus its intentional external projection",
+  "Transform total derives from canonical cases plus semantic external subjects",
 );
 const jsonIngressTarget = availability.targets.find(
   (target) => target.launcherId === "transform.json-ingress",

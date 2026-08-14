@@ -8,7 +8,7 @@ export function livetree_gnarly_svg(): TestSuite {
     [
       {
         suite: SUITE,
-        name: "svg: direct child creation preserves parentage and avoids wrapper leak",
+        caseId: "svg-direct-child-creation-preserves-parentage-and-avoids-wrapper-leak", name: "svg: direct child creation preserves parentage and avoids wrapper leak",
         fixture: "svg/materialization",
         sub: "direct-parentage",
         html: `<main id="root"></main>`,
@@ -60,7 +60,7 @@ export function livetree_gnarly_svg(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "svg: direct sibling creation under g preserves order and parentage",
+        caseId: "svg-direct-sibling-creation-under-g-preserves-order-and-parentage", name: "svg: direct sibling creation under g preserves order and parentage",
         fixture: "svg/materialization",
         sub: "direct-siblings",
         html: `<main id="root"></main>`,
@@ -116,7 +116,7 @@ export function livetree_gnarly_svg(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "svg: g(string) creates subtree without wrapper leak",
+        caseId: "svg-g-string-creates-subtree-without-wrapper-leak", name: "svg: g(string) creates subtree without wrapper leak",
         fixture: "svg/materialization",
         sub: "string-root-parentage",
         html: `<main id="root"></main>`,
@@ -167,7 +167,7 @@ export function livetree_gnarly_svg(): TestSuite {
 
       {
         suite: SUITE,
-        name: "svg: nested g(string) subtree preserves parent chain",
+        caseId: "svg-nested-g-string-subtree-preserves-parent-chain", name: "svg: nested g(string) subtree preserves parent chain",
         fixture: "svg/materialization",
         sub: "string-nested-parentage",
         html: `<main id="root"></main>`,
@@ -211,7 +211,7 @@ export function livetree_gnarly_svg(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "svg: at(index) inserts real g nodes, not svg wrappers",
+        caseId: "svg-at-index-inserts-real-g-nodes-not-svg-wrappers", name: "svg: at(index) inserts real g nodes, not svg wrappers",
         fixture: "svg/materialization",
         sub: "placement-no-wrapper-leak",
         html: `<main id="root"></main>`,

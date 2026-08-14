@@ -103,7 +103,7 @@ function fixture(runId: string, status: "passed" | "failed" | "error") {
     report.reduce({
       t: "case_end",
       suite: "livemap/replay",
-      name: "synthetic",
+      caseId: "synthetic", name: "synthetic",
       status: passed ? "pass" : "fail",
       ms: 1,
       ...(passed ? {} : { err: "expected" }),
@@ -115,7 +115,7 @@ function fixture(runId: string, status: "passed" | "failed" | "error") {
       fail: passed ? 0 : 1,
       skip: 0,
       msTotal: 1,
-      failures: passed ? [] : [{ suite: "livemap/replay", name: "synthetic", err: "expected", ms: 1 }],
+      failures: passed ? [] : [{ suite: "livemap/replay", caseId: "synthetic", name: "synthetic", err: "expected", ms: 1 }],
     };
     report.complete({ ok: passed, summary });
     result = { runId, suite: "livemap/replay", ok: passed, summary, timing: { runnerMs: 1, hostMs: 1 } };

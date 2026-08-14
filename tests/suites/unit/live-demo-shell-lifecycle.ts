@@ -70,7 +70,7 @@ export function live_demo_shell_lifecycle_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: SUITE,
-      name: "construction and null reconciliation mount no ordinary main surface",
+      caseId: "construction-and-null-reconciliation-mount-no-ordinary-main-surface", name: "construction and null reconciliation mount no ordinary main surface",
       run: () => {
         const { main, reconciler } = harness();
         reconciler.reconcileMain(null);
@@ -79,7 +79,7 @@ export function live_demo_shell_lifecycle_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "initial widget reconciliation mounts only selected Bling",
+      caseId: "initial-widget-reconciliation-mounts-only-selected-bling", name: "initial widget reconciliation mounts only selected Bling",
       run: () => {
         const { widgets, reconciler } = harness();
         reconciler.reconcileWidgets(["bling"]);
@@ -90,7 +90,7 @@ export function live_demo_shell_lifecycle_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "recreate main surfaces switch, clear, and ignore same selection exactly once",
+      caseId: "recreate-main-surfaces-switch-clear-and-ignore-same-selection-exactly-once", name: "recreate main surfaces switch, clear, and ignore same selection exactly once",
       run: () => {
         const { main, reconciler } = harness();
         reconciler.reconcileMain("about");
@@ -107,7 +107,7 @@ export function live_demo_shell_lifecycle_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "retained main surface deactivates and reactivates without reconstruction",
+      caseId: "retained-main-surface-deactivates-and-reactivates-without-reconstruction", name: "retained main surface deactivates and reactivates without reconstruction",
       run: () => {
         const { main, reconciler } = harness({
           mainRetention: (id) => id === "test" ? "retain" : "recreate",
@@ -128,7 +128,7 @@ export function live_demo_shell_lifecycle_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "widget membership reconciles by identity without duplicates",
+      caseId: "widget-membership-reconciles-by-identity-without-duplicates", name: "widget membership reconciles by identity without duplicates",
       run: () => {
         const { widgets, reconciler } = harness({
           widgetRetention: (id) => id === "point" ? "retain" : "recreate",
@@ -150,7 +150,7 @@ export function live_demo_shell_lifecycle_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "same-value restore-style reconciliation converges without duplicate instances",
+      caseId: "same-value-restore-style-reconciliation-converges-without-duplicate-instances", name: "same-value restore-style reconciliation converges without duplicate instances",
       run: () => {
         const { main, widgets, reconciler } = harness();
         reconciler.reconcileMain("towl");

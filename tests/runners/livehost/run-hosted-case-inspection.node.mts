@@ -46,7 +46,7 @@ const sink: HostedTestPanelSink = {
 const adapter = make_hosted_test_panel_adapter(runtime, sink);
 const result = await adapter.start("category/unit");
 expect_inspect(result.summary.cases === 101, "focused Unit descriptor executes remotely");
-const ordinary = await adapter.inspect("unit/test-harness::failed assertion row fails case and run");
+const ordinary = await adapter.inspect("unit/test-harness::failed-assertion-row-fails-case-and-run");
 expect_inspect(ordinary.type === "ordinary" && ordinary.caseKey.includes("unit/test-harness"), "ordinary inspection reruns one selected case");
 expect_inspect(serialize_hosted_case_diagnostic(ordinary).includes(ordinary.name), "ordinary view/copy serializer contains the selected case");
 
@@ -65,7 +65,7 @@ const transform = await adapter.inspect(transformCase.key);
 expect_inspect(transform.type === "transform" && transform.artifacts.length > 0, "transform inspection lazily returns full textual artifacts");
 
 const portableCaseKey = ordinary.caseKey;
-const circuitCaseKey = "livehost/circuit-worker-service::starts exactly one persistent worker";
+const circuitCaseKey = "livehost/circuit-worker-service::starts-exactly-one-persistent-worker";
 const selected = await adapter.start_selected([portableCaseKey, circuitCaseKey]);
 const selectedReport = adapter.capture();
 expect_inspect(selected.summary.cases === 2 && selected.summary.pass === 2, "portable and Node-owned circuit cases execute in one selected run");

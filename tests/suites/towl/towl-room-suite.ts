@@ -24,18 +24,18 @@ export function towl_room_suite(): TestSuite {
   return {
     suite: SUITE,
     cases: [
-      towl_case(SUITE, "valid room IDs normalize consistently", () => ({
+      towl_case(SUITE, "valid-room-ids-normalize-consistently", "valid room IDs normalize consistently", () => ({
         simple: normalize_towl_room_id("abc123"),
         normalized: normalize_towl_room_id("  Team-42  "),
       }), { simple: "abc123", normalized: "team-42" }),
-      towl_case(SUITE, "invalid room IDs are rejected", () => ({
+      towl_case(SUITE, "invalid-room-ids-are-rejected", "invalid room IDs are rejected", () => ({
         short: normalize_towl_room_id("abc"),
         symbols: normalize_towl_room_id("room_name"),
         leading: normalize_towl_room_id("-room12"),
         trailing: normalize_towl_room_id("room12-"),
         long: normalize_towl_room_id("a".repeat(25)),
       }), { short: undefined, symbols: undefined, leading: undefined, trailing: undefined, long: undefined }),
-      towl_case(SUITE, "room host IDs are deterministic, distinct, and reversible", () => {
+      towl_case(SUITE, "room-host-ids-are-deterministic-distinct-and-reversible", "room host IDs are deterministic, distinct, and reversible", () => {
         const first = towl_host_id_for_room("room-a1");
         const same = towl_host_id_for_room("ROOM-A1");
         const second = towl_host_id_for_room("room-b2");
@@ -55,7 +55,7 @@ export function towl_room_suite(): TestSuite {
         parsed: "room-a1",
         malformed: undefined,
       }),
-      towl_case(SUITE, "credential storage keys are scoped by room", () => ({
+      towl_case(SUITE, "credential-storage-keys-are-scoped-by-room", "credential storage keys are scoped by room", () => ({
         first: towl_room_credential_key("room-a1"),
         second: towl_room_credential_key("room-b2"),
         distinct: towl_room_credential_key("room-a1") !== towl_room_credential_key("room-b2"),
@@ -64,7 +64,7 @@ export function towl_room_suite(): TestSuite {
         second: "hson-livedemo.towl.room-b2.livehost-credential",
         distinct: true,
       }),
-      towl_case(SUITE, "room URL resolution preserves unrelated address state", () => {
+      towl_case(SUITE, "room-url-resolution-preserves-unrelated-address-state", "room URL resolution preserves unrelated address state", () => {
         const resolved = resolve_towl_room_url(
           new URL("https://example.test/demo?mode=play#rules"),
           () => "fixed-room",
@@ -131,7 +131,7 @@ export function towl_room_suite(): TestSuite {
         directDeparture: "https://example.test/?mode=play#rules",
         ordinaryDeparture: "https://example.test/demo?mode=play#rules",
       }),
-      towl_case(SUITE, "same room resolution reuses one authoritative runtime", () => {
+      towl_case(SUITE, "same-room-resolution-reuses-one-authoritative-runtime", "same room resolution reuses one authoritative runtime", () => {
         const application = empty_application();
         const hostId = towl_host_id_for_room("shared-room");
         try {
@@ -147,7 +147,7 @@ export function towl_room_suite(): TestSuite {
           application.dispose();
         }
       }, { connected: true, reused: true, rooms: 1 }),
-      towl_case(SUITE, "different rooms keep authoritative state isolated", async () => {
+      towl_case(SUITE, "different-rooms-keep-authoritative-state-isolated", "different rooms keep authoritative state isolated", async () => {
         const application = empty_application();
         const firstHostId = towl_host_id_for_room("room-one");
         const secondHostId = towl_host_id_for_room("room-two");
@@ -170,7 +170,7 @@ export function towl_room_suite(): TestSuite {
           application.dispose();
         }
       }, { separateHosts: true, firstJoined: true, secondVacant: true }),
-      towl_case(SUITE, "two clients in one room share the same game", async () => {
+      towl_case(SUITE, "two-clients-in-one-room-share-the-same-game", "two clients in one room share the same game", async () => {
         const application = empty_application();
         const hostId = towl_host_id_for_room("pair-room");
         const first = make_towl_socket();

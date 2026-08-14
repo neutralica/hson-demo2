@@ -12,10 +12,10 @@ function expect_stage_2(condition: unknown, message: string): asserts condition 
   if (!condition) throw new Error(`Stage 2 contracts: ${message}`);
 }
 
-const baseCase: TestCase = Object.freeze({ suite: "proof/suite", name: "base", run: () => undefined });
+const baseCase: TestCase = Object.freeze({ suite: "proof/suite", caseId: "base", name: "base", run: () => undefined });
 const overrideCase: TestCase = Object.freeze({
   suite: "proof/suite",
-  name: "override",
+  caseId: "override", name: "override",
   descriptor: Object.freeze({ requirements: Object.freeze(["javascript", "node"] as const) }),
   run: () => undefined,
 });
@@ -65,11 +65,15 @@ const filters: readonly TestDescriptor[] = Object.freeze([
   override,
   Object.freeze({
     id: "other/suite::third",
-    suite: "other/suite",
-    name: "third",
+    suiteId: "other/suite",
+    caseId: "third", name: "third",
+    title: "third",
     subject: "livehost",
     requirements: Object.freeze(["javascript"] as const),
     collections: Object.freeze([]),
+    provenance: "hson-demo2",
+    suiteOrdinal: 1,
+    caseOrdinal: 0,
   }),
 ]);
 expect_stage_2(select_test_descriptors(filters, { subject: "livehost" }).map((test) => test.id).join() === "other/suite::third", "subject filtering is exact");
@@ -78,8 +82,8 @@ expect_stage_2(select_test_descriptors(filters, { test: override.id }).map((test
 
 const diagnosticEvent: TestEvent = {
   t: "case_end",
-  suite: base.suite,
-  name: base.name,
+  suite: base.suiteId,
+  caseId: base.caseId, name: base.title,
   status: "fail",
   ms: 12,
   err: "message\nstack",

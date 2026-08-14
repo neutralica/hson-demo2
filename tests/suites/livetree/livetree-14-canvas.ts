@@ -9,7 +9,7 @@ export function livetree_canvas(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "canvas.inScope false on non-canvas node",
+            caseId: "canvas.inscope-false-on-non-canvas-node", name: "canvas.inScope false on non-canvas node",
             fixture: "canvas/scope",
             sub: "div-false",
 
@@ -36,7 +36,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas.inScope true on canvas node",
+            caseId: "canvas.inscope-true-on-canvas-node", name: "canvas.inScope true on canvas node",
             fixture: "canvas/scope",
             sub: "canvas-true",
 
@@ -63,7 +63,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "create.canvas returns canvas-scoped tree",
+            caseId: "create.canvas-returns-canvas-scoped-tree", name: "create.canvas returns canvas-scoped tree",
             fixture: "canvas/create",
             sub: "create-canvas-scope",
 
@@ -90,7 +90,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas width set/get/clear uses width attr",
+            caseId: "canvas-width-set-get-clear-uses-width-attr", name: "canvas width set/get/clear uses width attr",
             fixture: "canvas/attrs",
             sub: "width-set-get-clear",
 
@@ -136,7 +136,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas height set/get/clear uses height attr",
+            caseId: "canvas-height-set-get-clear-uses-height-attr", name: "canvas height set/get/clear uses height attr",
             fixture: "canvas/attrs",
             sub: "height-set-get-clear",
 
@@ -182,7 +182,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas el returns mounted HTMLCanvasElement",
+            caseId: "canvas-el-returns-mounted-htmlcanvaselement", name: "canvas el returns mounted HTMLCanvasElement",
             dom: true,
             fixture: "canvas/dom",
             sub: "el-mounted",
@@ -216,7 +216,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas el returns undefined on non-canvas node",
+            caseId: "canvas-el-returns-undefined-on-non-canvas-node", name: "canvas el returns undefined on non-canvas node",
             dom: true,
             fixture: "canvas/dom",
             sub: "el-non-canvas",
@@ -246,7 +246,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas ctx2d returns 2d context when mounted",
+            caseId: "canvas-ctx2d-returns-2d-context-when-mounted", name: "canvas ctx2d returns 2d context when mounted",
             dom: true,
             fixture: "canvas/context",
             sub: "ctx2d-mounted",
@@ -278,7 +278,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas must.el returns mounted canvas",
+            caseId: "canvas-must.el-returns-mounted-canvas", name: "canvas must.el returns mounted canvas",
             dom: true,
             fixture: "canvas/must",
             sub: "must-el-mounted",
@@ -310,7 +310,7 @@ export function livetree_canvas(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas must.el throws on non-canvas node",
+            caseId: "canvas-must.el-throws-on-non-canvas-node", name: "canvas must.el throws on non-canvas node",
             dom: true,
             fixture: "canvas/must",
             sub: "must-el-throws",
@@ -360,7 +360,7 @@ export function livetree_canvas_stress(): TestSuite {
     const cases: readonly LiveTreeCaseSpec[] = [
         {
             suite: SUITE,
-            name: "create.canvas supports source string content",
+            caseId: "create.canvas-supports-source-string-content", name: "create.canvas supports source string content",
             fixture: "canvas/create",
             sub: "canvas-source-string",
 
@@ -393,7 +393,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "create.canvas participates in prepend insertion",
+            caseId: "create.canvas-participates-in-prepend-insertion", name: "create.canvas participates in prepend insertion",
             fixture: "canvas/create",
             sub: "canvas-prepend",
 
@@ -425,7 +425,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "create.canvas participates in indexed insertion",
+            caseId: "create.canvas-participates-in-indexed-insertion", name: "create.canvas participates in indexed insertion",
             fixture: "canvas/create",
             sub: "canvas-at-index",
 
@@ -460,7 +460,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas width and height setters are chainable",
+            caseId: "canvas-width-and-height-setters-are-chainable", name: "canvas width and height setters are chainable",
             fixture: "canvas/attrs",
             sub: "width-height-chain",
 
@@ -497,7 +497,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas width get parses existing numeric string attr",
+            caseId: "canvas-width-get-parses-existing-numeric-string-attr", name: "canvas width get parses existing numeric string attr",
             fixture: "canvas/attrs",
             sub: "width-existing-string",
 
@@ -526,7 +526,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas height get returns undefined for nonnumeric attr",
+            caseId: "canvas-height-get-returns-undefined-for-nonnumeric-attr", name: "canvas height get returns undefined for nonnumeric attr",
             fixture: "canvas/attrs",
             sub: "height-nonnumeric",
 
@@ -555,7 +555,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas el returns undefined before DOM mount",
+            caseId: "canvas-el-returns-undefined-before-dom-mount", name: "canvas el returns undefined before DOM mount",
             fixture: "canvas/dom",
             sub: "el-before-dom",
 
@@ -584,7 +584,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas must.ctx2d returns context when mounted",
+            caseId: "canvas-must.ctx2d-returns-context-when-mounted", name: "canvas must.ctx2d returns context when mounted",
             dom: true,
             fixture: "canvas/must",
             sub: "must-ctx2d-mounted",
@@ -616,7 +616,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas must.ctx2d throws on non-canvas node",
+            caseId: "canvas-must.ctx2d-throws-on-non-canvas-node", name: "canvas must.ctx2d throws on non-canvas node",
             dom: true,
             fixture: "canvas/must",
             sub: "must-ctx2d-throws",
@@ -658,7 +658,7 @@ export function livetree_canvas_stress(): TestSuite {
 
         {
             suite: SUITE,
-            name: "canvas ctx2d accepts context settings",
+            caseId: "canvas-ctx2d-accepts-context-settings", name: "canvas ctx2d accepts context settings",
             dom: true,
             fixture: "canvas/context",
             sub: "ctx2d-settings",
@@ -692,7 +692,7 @@ export function livetree_canvas_stress(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "created canvas supports ordinary LiveTree APIs",
+            caseId: "created-canvas-supports-ordinary-livetree-apis", name: "created canvas supports ordinary LiveTree APIs",
             fixture: "canvas/create",
             sub: "canvas-is-still-livetree",
             html: `
@@ -724,7 +724,7 @@ export function livetree_canvas_stress(): TestSuite {
         },
         {
             suite: SUITE,
-            name: "create.canvas source preserves canvas root content",
+            caseId: "create.canvas-source-preserves-canvas-root-content", name: "create.canvas source preserves canvas root content",
             fixture: "canvas/create",
             sub: "canvas-source-valid",
 

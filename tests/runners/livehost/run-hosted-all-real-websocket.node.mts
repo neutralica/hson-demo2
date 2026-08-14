@@ -34,7 +34,7 @@ let projectionTimings: Array<Readonly<{ suite: string; ms: number }>> = [];
 let projectionReport: HostedTestReport | undefined;
 try {
   const canonical = all_hosted_test_suites();
-  const canonicalKeys = canonical.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.name}`));
+  const canonicalKeys = canonical.flatMap((suite) => suite.cases.map((testCase) => `${testCase.suite}::${testCase.caseId}`));
   expect_all(canonical.length === 142 && canonicalKeys.length === 2437, "canonical list contains 142 suites / 2437 cases");
   expect_all(new Set(canonicalKeys).size === canonicalKeys.length, "canonical list has no duplicate suite::name identity");
   expect_all(DEFERRED_BROWSER_FIDELITY_CASES.every((entry) => !new Set(canonicalKeys).has(entry.id)), "the four canvas browser-fidelity cases remain excluded");
@@ -92,7 +92,7 @@ try {
   expect_all(result.summary.suites === 142 && result.summary.cases === 2437 && result.summary.pass === 2437 && result.summary.fail === 0, "complete remote result passes every canonical case");
   expect_all(mirror !== undefined && mirror.run.id === result.runId && mirror.run.suite === result.suite, "result and generic recovered mirror correlate");
   const panelCases = updates.flatMap((update) => update.newCases);
-  expect_all(panelCases.length === 2437 && new Set(panelCases.map((testCase) => `${testCase.suite}::${testCase.name}`)).size === 2437, "panel receives every compact case exactly once");
+  expect_all(panelCases.length === 2437 && new Set(panelCases.map((testCase) => testCase.key)).size === 2437, "panel receives every compact case exactly once");
   expect_all(updates.at(-1)?.report.summary.cases === 2437 && updates.at(-1)?.report.summary.pass === 2437, "panel completes from generic recovered state");
   expect_all(updates.every((update, index, values) => index === 0 || update.report.summary.cases >= (values[index - 1]?.report.summary.cases ?? 0)), "panel totals are monotonic");
   expect_all(initialEvents === 0 && commitEvents === 0, "primary runtime emits no hosted-specific report protocol events");

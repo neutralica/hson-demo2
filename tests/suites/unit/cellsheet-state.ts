@@ -69,7 +69,7 @@ export function cellsheet_state_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: SUITE,
-      name: "seeded workbook is the exact 8 by 8 raw-string shape",
+      caseId: "seeded-workbook-is-the-exact-8-by-8-raw-string-shape", name: "seeded workbook is the exact 8 by 8 raw-string shape",
       run: () => {
         const workbook = create_seeded_cellsheet_workbook();
         equal(CELLSHEET_WORKBOOK_SCHEMA.validateRoot(workbook).ok, true, "schema admission");
@@ -88,7 +88,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "empty and seeded factories return fresh detached rows",
+      caseId: "empty-and-seeded-factories-return-fresh-detached-rows", name: "empty and seeded factories return fresh detached rows",
       run: () => {
         const first = create_empty_cellsheet_workbook();
         const second = create_empty_cellsheet_workbook();
@@ -101,17 +101,17 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "schema rejects fewer than eight rows",
+      caseId: "schema-rejects-fewer-than-eight-rows", name: "schema rejects fewer than eight rows",
       run: () => rejects({ cells: create_empty_cellsheet_workbook().cells.slice(0, 7) }, "seven rows were admitted"),
     },
     {
       suite: SUITE,
-      name: "schema rejects more than eight rows",
+      caseId: "schema-rejects-more-than-eight-rows", name: "schema rejects more than eight rows",
       run: () => rejects({ cells: [...create_empty_cellsheet_workbook().cells, ["", "", "", "", "", "", "", ""]] }, "nine rows were admitted"),
     },
     {
       suite: SUITE,
-      name: "schema rejects rows with the wrong cell count",
+      caseId: "schema-rejects-rows-with-the-wrong-cell-count", name: "schema rejects rows with the wrong cell count",
       run: () => {
         const workbook = create_empty_cellsheet_workbook();
         rejects({ cells: [workbook.cells[0].slice(0, 7), ...workbook.cells.slice(1)] }, "seven cells were admitted");
@@ -119,7 +119,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "schema rejects non-string raw cells",
+      caseId: "schema-rejects-non-string-raw-cells", name: "schema rejects non-string raw cells",
       run: () => {
         const workbook = create_empty_cellsheet_workbook();
         rejects({ cells: [[12, ...workbook.cells[0].slice(1)], ...workbook.cells.slice(1)] }, "numeric raw cell was admitted");
@@ -127,7 +127,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "schema rejects every removed ownership branch",
+      caseId: "schema-rejects-every-removed-ownership-branch", name: "schema rejects every removed ownership branch",
       run: () => {
         const workbook = create_empty_cellsheet_workbook();
         const removedBranches: Readonly<Record<string, JsonValue>> = {
@@ -149,7 +149,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "schema-bound map owns only the cells matrix",
+      caseId: "schema-bound-map-owns-only-the-cells-matrix", name: "schema-bound map owns only the cells matrix",
       run: () => {
         const store = create_cellsheet_workbook_store();
         deep_equal(Object.keys(store.map.snap()), ["cells"], "map keys");
@@ -162,7 +162,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "one authored edit is one commit, watch evaluation, and no writeback",
+      caseId: "one-authored-edit-is-one-commit-watch-evaluation-and-no-writeback", name: "one authored edit is one commit, watch evaluation, and no writeback",
       run: () => {
         const store = create_cellsheet_workbook_store();
         let evaluations = 0;
@@ -181,7 +181,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "local selection derives relationships with zero commits or evaluations",
+      caseId: "local-selection-derives-relationships-with-zero-commits-or-evaluations", name: "local selection derives relationships with zero commits or evaluations",
       run: () => {
         const store = create_cellsheet_workbook_store();
         const evaluation = evaluate_cellsheet(store.locations.cells.snap());
@@ -198,7 +198,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "local dimension updates produce zero canonical commits or evaluations",
+      caseId: "local-dimension-updates-produce-zero-canonical-commits-or-evaluations", name: "local dimension updates produce zero canonical commits or evaluations",
       run: () => {
         const store = create_cellsheet_workbook_store();
         const startRevision = store.map.rev;
@@ -212,7 +212,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "reset replaces the workbook in one commit and one evaluation",
+      caseId: "reset-replaces-the-workbook-in-one-commit-and-one-evaluation", name: "reset replaces the workbook in one commit and one evaluation",
       run: () => {
         const store = create_cellsheet_workbook_store();
         let evaluations = 0;
@@ -231,7 +231,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "reset of an already empty workbook manufactures no commit or evaluation",
+      caseId: "reset-of-an-already-empty-workbook-manufactures-no-commit-or-evaluation", name: "reset of an already empty workbook manufactures no commit or evaluation",
       run: () => {
         const store = create_cellsheet_workbook_store(create_empty_cellsheet_workbook());
         let evaluations = 0;
@@ -246,7 +246,7 @@ export function cellsheet_state_suite(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "stopped workbook watch receives no post-disposal evaluation",
+      caseId: "stopped-workbook-watch-receives-no-post-disposal-evaluation", name: "stopped workbook watch receives no post-disposal evaluation",
       run: () => {
         const store = create_cellsheet_workbook_store();
         let evaluations = 0;

@@ -26,7 +26,7 @@ export function livemap_editor_contract(): TestSuite {
     cases: [
       {
         suite: SUITE,
-        name: "contract set requires addressed path to resolve",
+        caseId: "contract-set-requires-addressed-path-to-resolve", name: "contract set requires addressed path to resolve",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user", "role"]),
@@ -45,7 +45,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract object set preserves unspecified siblings",
+        caseId: "contract-object-set-preserves-unspecified-siblings", name: "contract object set preserves unspecified siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", role: "user" } }),
           path: preview_value(["user"]),
@@ -67,7 +67,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract setMany creates missing children under resolved object",
+        caseId: "contract-setmany-creates-missing-children-under-resolved-object", name: "contract setMany creates missing children under resolved object",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),
@@ -89,7 +89,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract replace removes unspecified siblings",
+        caseId: "contract-replace-removes-unspecified-siblings", name: "contract replace removes unspecified siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", role: "user" } }),
           path: preview_value(["user"]),
@@ -111,7 +111,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract root replace replaces root exactly",
+        caseId: "contract-root-replace-replaces-root-exactly", name: "contract root replace replaces root exactly",
         meta: {
           input: preview_value({ user: { name: "Ada" }, meta: { draft: true } }),
         },
@@ -132,7 +132,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract delete requires addressed path to resolve",
+        caseId: "contract-delete-requires-addressed-path-to-resolve", name: "contract delete requires addressed path to resolve",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user", "role"]),
@@ -151,7 +151,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract object deleteKey missing key no-ops",
+        caseId: "contract-object-deletekey-missing-key-no-ops", name: "contract object deleteKey missing key no-ops",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),
@@ -171,7 +171,7 @@ export function livemap_editor_contract(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "contract handle linkTo can create missing target object property",
+        caseId: "contract-handle-linkto-can-create-missing-target-object-property", name: "contract handle linkTo can create missing target object property",
         meta: {
           source: preview_value({ draft: { name: "Ada" } }),
           target: preview_value({ user: {} }),
@@ -218,7 +218,7 @@ export function livemap_schema_contract_suite(): TestSuite {
     cases: [
       {
         suite: SUITE,
-        name: "schema contract set validates bad leaf before mutation",
+        caseId: "schema-contract-set-validates-bad-leaf-before-mutation", name: "schema contract set validates bad leaf before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
           path: preview_value(["user", "name"]),
@@ -241,7 +241,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract setMany reports bad changed field",
+        caseId: "schema-contract-setmany-reports-bad-changed-field", name: "schema contract setMany reports bad changed field",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
           path: preview_value(["user"]),
@@ -264,7 +264,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract replace validates endpoint exactly",
+        caseId: "schema-contract-replace-validates-endpoint-exactly", name: "schema contract replace validates endpoint exactly",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
           path: preview_value(["user"]),
@@ -287,7 +287,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract delete required field fails before mutation",
+        caseId: "schema-contract-delete-required-field-fails-before-mutation", name: "schema contract delete required field fails before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
           path: preview_value(["user", "name"]),
@@ -310,7 +310,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract delete optional field succeeds",
+        caseId: "schema-contract-delete-optional-field-succeeds", name: "schema contract delete optional field succeeds",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
           path: preview_value(["user", "age"]),
@@ -332,7 +332,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract exact rejects unknown setMany key",
+        caseId: "schema-contract-exact-rejects-unknown-setmany-key", name: "schema contract exact rejects unknown setMany key",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),
@@ -355,7 +355,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract exact allows no-op deleteKey for absent unknown key",
+        caseId: "schema-contract-exact-allows-no-op-deletekey-for-absent-unknown-key", name: "schema contract exact allows no-op deleteKey for absent unknown key",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),
@@ -375,7 +375,7 @@ export function livemap_schema_contract_suite(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "schema contract array helper reports bad appended item",
+        caseId: "schema-contract-array-helper-reports-bad-appended-item", name: "schema contract array helper reports bad appended item",
         meta: {
           input: preview_value({ items: [0, 1] }),
           path: preview_value(["items"]),
@@ -408,7 +408,7 @@ export function livemap_object_exact(): TestSuite {
     cases: [
       {
         suite: SUITE,
-        name: "object exact rejects unknown object.setKey before mutation",
+        caseId: "object-exact-rejects-unknown-object.setkey-before-mutation", name: "object exact rejects unknown object.setKey before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),
@@ -431,7 +431,7 @@ export function livemap_object_exact(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "object exact rejects unknown object-valued set before mutation",
+        caseId: "object-exact-rejects-unknown-object-valued-set-before-mutation", name: "object exact rejects unknown object-valued set before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),
@@ -454,7 +454,7 @@ export function livemap_object_exact(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "object exact rejects unknown replace key before mutation",
+        caseId: "object-exact-rejects-unknown-replace-key-before-mutation", name: "object exact rejects unknown replace key before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user"]),

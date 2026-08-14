@@ -15,20 +15,20 @@ export function livemap_suites_core(): TestSuite {
     cases: [
       make_core_snap_case({
         suite: SUITE,
-        name: "core snap root object",
+        caseId: "core-snap-root-object", name: "core snap root object",
         input: { user: { name: "Ada" } },
         expectedOutput: { user: { name: "Ada" } },
       }),
       make_core_snap_case({
         suite: SUITE,
-        name: "core snap nested object property",
+        caseId: "core-snap-nested-object-property", name: "core snap nested object property",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         expectedOutput: "Ada",
       }),
       make_core_set_case({
         suite: SUITE,
-        name: "core set existing object property",
+        caseId: "core-set-existing-object-property", name: "core set existing object property",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         value: "Grace",
@@ -40,7 +40,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "core set missing object property throws",
+        caseId: "core-set-missing-object-property-throws", name: "core set missing object property throws",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user", "role"]),
@@ -66,7 +66,7 @@ export function livemap_suites_core(): TestSuite {
       },
       make_core_set_case({
         suite: SUITE,
-        name: "core set existing object property unchanged",
+        caseId: "core-set-existing-object-property-unchanged", name: "core set existing object property unchanged",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         value: "Ada",
@@ -76,7 +76,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_case({
         suite: SUITE,
-        name: "core set existing array item",
+        caseId: "core-set-existing-array-item", name: "core set existing array item",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0],
         value: { name: "Margaret" },
@@ -88,7 +88,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_case({
         suite: SUITE,
-        name: "core set existing array item property",
+        caseId: "core-set-existing-array-item-property", name: "core set existing array item property",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 1, "name"],
         value: "Margaret",
@@ -100,7 +100,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_path_copy_case({
         suite: SUITE,
-        name: "core set commit path is stable after original path mutates",
+        caseId: "core-set-commit-path-is-stable-after-original-path-mutates", name: "core set commit path is stable after original path mutates",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user", "name"],
         mutateOriginalPathTo: ["user", "role"],
@@ -110,7 +110,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_case({
         suite: SUITE,
-        name: "core setMany writes multiple properties as child ops",
+        caseId: "core-setmany-writes-multiple-properties-as-child-ops", name: "core setMany writes multiple properties as child ops",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Grace", role: "admin" },
@@ -123,7 +123,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_case({
         suite: SUITE,
-        name: "core setMany omits unchanged writes from commit",
+        caseId: "core-setmany-omits-unchanged-writes-from-commit", name: "core setMany omits unchanged writes from commit",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Ada", role: "admin" },
@@ -135,7 +135,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_case({
         suite: SUITE,
-        name: "core setMany unchanged batch produces empty ops",
+        caseId: "core-setmany-unchanged-batch-produces-empty-ops", name: "core setMany unchanged batch produces empty ops",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         values: { name: "Ada", role: "user" },
@@ -145,7 +145,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_feed_case({
         suite: SUITE,
-        name: "core setMany feed emits one event with first matching child op",
+        caseId: "core-setmany-feed-emits-one-event-with-first-matching-child-op", name: "core setMany feed emits one event with first matching child op",
         input: { user: { name: "Ada", role: "user" } },
         feedPath: ["user"],
         setPath: ["user"],
@@ -162,7 +162,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_set_many_path_copy_case({
         suite: SUITE,
-        name: "core setMany commit paths are stable after original path mutates",
+        caseId: "core-setmany-commit-paths-are-stable-after-original-path-mutates", name: "core setMany commit paths are stable after original path mutates",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user"],
         mutateOriginalPathTo: ["profile"],
@@ -175,7 +175,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "core schema returns undefined before attachment",
+        caseId: "core-schema-returns-undefined-before-attachment", name: "core schema returns undefined before attachment",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -191,7 +191,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema.use returns core and stores schema",
+        caseId: "core-schema.use-returns-core-and-stores-schema", name: "core schema.use returns core and stores schema",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -214,7 +214,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core replace root object",
+        caseId: "core-replace-root-object", name: "core replace root object",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -240,7 +240,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core replace unchanged root produces empty ops",
+        caseId: "core-replace-unchanged-root-produces-empty-ops", name: "core replace unchanged root produces empty ops",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -259,7 +259,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core replace notifies root feed once",
+        caseId: "core-replace-notifies-root-feed-once", name: "core replace notifies root feed once",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -290,7 +290,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core replace notifies child feed with final child value",
+        caseId: "core-replace-notifies-child-feed-with-final-child-value", name: "core replace notifies child feed with final child value",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -321,7 +321,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema allows valid replace",
+        caseId: "core-schema-allows-valid-replace", name: "core schema allows valid replace",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -346,7 +346,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects invalid replace before mutation",
+        caseId: "core-schema-rejects-invalid-replace-before-mutation", name: "core schema rejects invalid replace before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -381,7 +381,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema.use rejects invalid current root",
+        caseId: "core-schema.use-rejects-invalid-current-root", name: "core schema.use rejects invalid current root",
         meta: {
           input: preview_value({ user: { name: 12 } }),
         },
@@ -414,7 +414,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema allows valid set",
+        caseId: "core-schema-allows-valid-set", name: "core schema allows valid set",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -439,7 +439,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects invalid set before mutation",
+        caseId: "core-schema-rejects-invalid-set-before-mutation", name: "core schema rejects invalid set before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -474,7 +474,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema allows valid setMany",
+        caseId: "core-schema-allows-valid-setmany", name: "core schema allows valid setMany",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
@@ -504,7 +504,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects invalid setMany before mutation",
+        caseId: "core-schema-rejects-invalid-setmany-before-mutation", name: "core schema rejects invalid setMany before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
@@ -540,7 +540,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema permits set on unknown schema path",
+        caseId: "core-schema-permits-set-on-unknown-schema-path", name: "core schema permits set on unknown schema path",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -567,7 +567,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects delete required field before mutation",
+        caseId: "core-schema-rejects-delete-required-field-before-mutation", name: "core schema rejects delete required field before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
@@ -603,7 +603,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema allows delete optional field",
+        caseId: "core-schema-allows-delete-optional-field", name: "core schema allows delete optional field",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37 } }),
         },
@@ -632,7 +632,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema allows delete unknown field regression coverage",
+        caseId: "core-schema-allows-delete-unknown-field-regression-coverage", name: "core schema allows delete unknown field regression coverage",
         meta: {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
@@ -660,7 +660,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects delete required parent regression coverage",
+        caseId: "core-schema-rejects-delete-required-parent-regression-coverage", name: "core schema rejects delete required parent regression coverage",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -695,7 +695,7 @@ export function livemap_suites_core(): TestSuite {
       },
       make_core_delete_case({
         suite: SUITE,
-        name: "core delete existing object property",
+        caseId: "core-delete-existing-object-property", name: "core delete existing object property",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user", "name"],
         expectedChanged: true,
@@ -706,7 +706,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "core delete missing object property throws",
+        caseId: "core-delete-missing-object-property-throws", name: "core delete missing object property throws",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
           path: preview_value(["user", "role"]),
@@ -731,7 +731,7 @@ export function livemap_suites_core(): TestSuite {
       },
       make_core_delete_feed_case({
         suite: SUITE,
-        name: "core delete feed exact path hears delete",
+        caseId: "core-delete-feed-exact-path-hears-delete", name: "core delete feed exact path hears delete",
         input: { user: { name: "Ada", role: "user" } },
         feedPath: ["user", "name"],
         deletePath: ["user", "name"],
@@ -747,7 +747,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_delete_feed_case({
         suite: SUITE,
-        name: "core delete feed parent hears child delete",
+        caseId: "core-delete-feed-parent-hears-child-delete", name: "core delete feed parent hears child delete",
         input: { user: { name: "Ada", role: "user" } },
         feedPath: ["user"],
         deletePath: ["user", "name"],
@@ -763,7 +763,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_delete_path_copy_case({
         suite: SUITE,
-        name: "core delete commit path is stable after original path mutates",
+        caseId: "core-delete-commit-path-is-stable-after-original-path-mutates", name: "core delete commit path is stable after original path mutates",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user", "name"],
         mutateOriginalPathTo: ["user", "role"],
@@ -772,7 +772,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_delete_throw_case({
         suite: SUITE,
-        name: "core delete root throws",
+        caseId: "core-delete-root-throws", name: "core delete root throws",
         input: { user: { name: "Ada" } },
         path: [],
         expectedMessage: "LiveMap editor cannot delete the root node yet.",
@@ -780,7 +780,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_delete_throw_case({
         suite: SUITE,
-        name: "core delete array index throws",
+        caseId: "core-delete-array-index-throws", name: "core delete array index throws",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         path: ["users", 0],
         expectedMessage: "LiveMap editor cannot delete array indexes yet: [\"users\", 0]",
@@ -788,7 +788,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
-        name: "core feed exact path hears set",
+        caseId: "core-feed-exact-path-hears-set", name: "core feed exact path hears set",
         input: { user: { name: "Ada" } },
         feedPath: ["user", "name"],
         setPath: ["user", "name"],
@@ -805,7 +805,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
-        name: "core feed parent hears child set",
+        caseId: "core-feed-parent-hears-child-set", name: "core feed parent hears child set",
         input: { user: { name: "Ada" } },
         feedPath: ["user"],
         setPath: ["user", "name"],
@@ -822,7 +822,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
-        name: "core feed array parent hears indexed set",
+        caseId: "core-feed-array-parent-hears-indexed-set", name: "core feed array parent hears indexed set",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         feedPath: ["users"],
         setPath: ["users", 0],
@@ -839,7 +839,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
-        name: "core feed array index hears nested child set",
+        caseId: "core-feed-array-index-hears-nested-child-set", name: "core feed array index hears nested child set",
         input: { users: [{ name: "Ada" }, { name: "Grace" }] },
         feedPath: ["users", 1],
         setPath: ["users", 1, "name"],
@@ -856,7 +856,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
-        name: "core feed sibling ignores set",
+        caseId: "core-feed-sibling-ignores-set", name: "core feed sibling ignores set",
         input: { user: { name: "Ada", role: "user" } },
         feedPath: ["user", "role"],
         setPath: ["user", "name"],
@@ -865,7 +865,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_case({
         suite: SUITE,
-        name: "core feed ignores unchanged set",
+        caseId: "core-feed-ignores-unchanged-set", name: "core feed ignores unchanged set",
         input: { user: { name: "Ada" } },
         feedPath: ["user", "name"],
         setPath: ["user", "name"],
@@ -874,7 +874,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_feed_dispose_case({
         suite: SUITE,
-        name: "core feed disposer stops later events",
+        caseId: "core-feed-disposer-stops-later-events", name: "core feed disposer stops later events",
         input: { user: { name: "Ada" } },
         feedPath: ["user", "name"],
         setPath: ["user", "name"],
@@ -883,14 +883,14 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_at_snap_case({
         suite: SUITE,
-        name: "core at snap reads scoped path",
+        caseId: "core-at-snap-reads-scoped-path", name: "core at snap reads scoped path",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         expected: "Ada",
       }),
       make_core_at_set_case({
         suite: SUITE,
-        name: "core at set writes scoped path",
+        caseId: "core-at-set-writes-scoped-path", name: "core at set writes scoped path",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         value: "Grace",
@@ -899,7 +899,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_at_feed_case({
         suite: SUITE,
-        name: "core at feed hears scoped path",
+        caseId: "core-at-feed-hears-scoped-path", name: "core at feed hears scoped path",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         value: "Grace",
@@ -915,7 +915,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_at_path_copy_case({
         suite: SUITE,
-        name: "core at path returns copy",
+        caseId: "core-at-path-returns-copy", name: "core at path returns copy",
         input: { user: { name: "Ada" } },
         path: ["user", "name"],
         mutateReturnedPathTo: ["user", "role"],
@@ -923,7 +923,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       make_core_at_original_path_stability_case({
         suite: SUITE,
-        name: "core at path is stable after original path mutates",
+        caseId: "core-at-path-is-stable-after-original-path-mutates", name: "core at path is stable after original path mutates",
         input: { user: { name: "Ada", role: "user" } },
         path: ["user", "name"],
         mutateOriginalPathTo: ["user", "role"],
@@ -932,7 +932,7 @@ export function livemap_suites_core(): TestSuite {
       }),
       {
         suite: SUITE,
-        name: "core schema allows delete unknown field",
+        caseId: "core-schema-allows-delete-unknown-field", name: "core schema allows delete unknown field",
         meta: {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
@@ -960,7 +960,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core schema rejects delete required parent before mutation",
+        caseId: "core-schema-rejects-delete-required-parent-before-mutation", name: "core schema rejects delete required parent before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -995,7 +995,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core exact schema rejects unknown nested set before mutation",
+        caseId: "core-exact-schema-rejects-unknown-nested-set-before-mutation", name: "core exact schema rejects unknown nested set before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -1027,7 +1027,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core exact schema rejects attach with unknown nested field",
+        caseId: "core-exact-schema-rejects-attach-with-unknown-nested-field", name: "core exact schema rejects attach with unknown nested field",
         meta: {
           input: preview_value({ user: { name: "Ada", role: "admin" } }),
         },
@@ -1057,7 +1057,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core exact schema rejects unknown root set before mutation",
+        caseId: "core-exact-schema-rejects-unknown-root-set-before-mutation", name: "core exact schema rejects unknown root set before mutation",
         meta: {
           input: preview_value({ user: { name: "Ada" } }),
         },
@@ -1089,7 +1089,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core setMany preserves unspecified siblings",
+        caseId: "core-setmany-preserves-unspecified-siblings", name: "core setMany preserves unspecified siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
         },
@@ -1112,7 +1112,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core write preserves unspecified siblings",
+        caseId: "core-write-preserves-unspecified-siblings", name: "core write preserves unspecified siblings",
         meta: {
           input: preview_value({ user: { name: "Ada", age: 37, role: "admin" } }),
         },
@@ -1135,7 +1135,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core rev starts at zero",
+        caseId: "core-rev-starts-at-zero", name: "core rev starts at zero",
         meta: {
           input: preview_value({ count: 0 }),
         },
@@ -1151,7 +1151,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core rev advances with changed commits",
+        caseId: "core-rev-advances-with-changed-commits", name: "core rev advances with changed commits",
         meta: {
           input: preview_value({ count: 0 }),
         },
@@ -1183,7 +1183,7 @@ export function livemap_suites_core(): TestSuite {
       },
       {
         suite: SUITE,
-        name: "core rev ignores unchanged and rejected writes",
+        caseId: "core-rev-ignores-unchanged-and-rejected-writes", name: "core rev ignores unchanged and rejected writes",
         meta: {
           input: preview_value({ count: 0 }),
         },

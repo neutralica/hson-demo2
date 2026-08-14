@@ -14,7 +14,7 @@ const registry = make_hosted_test_suite_registry([{
   label: "available fixture",
   run(onEvent = () => undefined, options = {}) {
     executions += 1;
-    return run_test_suites([{ suite: "stale/available", cases: [{ suite: "stale/available", name: "available", run() {} }] }], onEvent, options);
+    return run_test_suites([{ suite: "stale/available", cases: [{ suite: "stale/available", caseId: "available", name: "available", run() {} }] }], onEvent, options);
   },
 }]);
 

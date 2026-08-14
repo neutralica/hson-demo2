@@ -17,7 +17,7 @@ export type NormalizedTestRunEvent =
 
 export function normalize_test_event(
   event: TestEvent,
-  descriptorFor: (suite: string, name: string) => TestDescriptor | undefined,
+  descriptorFor: (suite: string, caseId: string) => TestDescriptor | undefined,
 ): NormalizedTestRunEvent {
   if (event.t === "suite_begin") {
     return Object.freeze({ type: "suite-started", suite: event.suite, ...(event.totalPlanned === undefined ? {} : { totalPlanned: event.totalPlanned }) });
@@ -28,8 +28,8 @@ export function normalize_test_event(
   if (event.t === "external_end" || event.t === "external_state") {
     throw new Error(`External launcher events are not canonical TestCase events: ${event.id}`);
   }
-  const descriptor = descriptorFor(event.suite, event.name);
-  if (descriptor === undefined) throw new Error(`No canonical descriptor for ${event.suite}::${event.name}`);
+  const descriptor = descriptorFor(event.suite, event.caseId);
+  if (descriptor === undefined) throw new Error(`No canonical descriptor for ${event.suite}::${event.caseId}`);
   if (event.t === "case_begin") {
     return Object.freeze({ type: "test-started", test: descriptor, ...(event.meta === undefined ? {} : { meta: event.meta }) });
   }

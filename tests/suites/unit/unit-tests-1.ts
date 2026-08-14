@@ -13,84 +13,84 @@ export function unit_test_css(): TestSuite {
     suite,
     cases: [
       // --- normalize_css_value: content ---
-      make_unit_case(suite, "normalize_css_value: content wraps plain text", () => {
+      make_unit_case(suite, "normalize_css_value-content-wraps-plain-text", "normalize_css_value: content wraps plain text", () => {
         const out = normalize_css_value("content", "X");
         if (out !== `"X"`) {
           throw new Error(`expected "X", got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves double-quoted string", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-double-quoted-string", "normalize_css_value: content preserves double-quoted string", () => {
         const out = normalize_css_value("content", `"X"`);
         if (out !== `"X"`) {
           throw new Error(`expected "X", got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves single-quoted string", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-single-quoted-string", "normalize_css_value: content preserves single-quoted string", () => {
         const out = normalize_css_value("content", `'X'`);
         if (out !== `'X'`) {
           throw new Error(`expected 'X', got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves attr()", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-attr", "normalize_css_value: content preserves attr()", () => {
         const out = normalize_css_value("content", "attr(data-label)");
         if (out !== "attr(data-label)") {
           throw new Error(`expected attr(data-label), got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves counter()", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-counter", "normalize_css_value: content preserves counter()", () => {
         const out = normalize_css_value("content", "counter(item)");
         if (out !== "counter(item)") {
           throw new Error(`expected counter(item), got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves counters()", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-counters", "normalize_css_value: content preserves counters()", () => {
         const out = normalize_css_value("content", `counters(item, ".")`);
         if (out !== `counters(item, ".")`) {
           throw new Error(`expected counters(item, "."), got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves url()", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-url", "normalize_css_value: content preserves url()", () => {
         const out = normalize_css_value("content", "url(icon.svg)");
         if (out !== "url(icon.svg)") {
           throw new Error(`expected url(icon.svg), got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves keyword none", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-keyword-none", "normalize_css_value: content preserves keyword none", () => {
         const out = normalize_css_value("content", "none");
         if (out !== "none") {
           throw new Error(`expected none, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content preserves keyword normal", () => {
+      make_unit_case(suite, "normalize_css_value-content-preserves-keyword-normal", "normalize_css_value: content preserves keyword normal", () => {
         const out = normalize_css_value("content", "normal");
         if (out !== "normal") {
           throw new Error(`expected normal, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content escapes embedded double quotes", () => {
+      make_unit_case(suite, "normalize_css_value-content-escapes-embedded-double-quotes", "normalize_css_value: content escapes embedded double quotes", () => {
         const out = normalize_css_value("content", `say "hi"`);
         if (out !== `"say \\"hi\\""`) {
           throw new Error(`expected "say \\"hi\\"", got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: content escapes backslashes", () => {
+      make_unit_case(suite, "normalize_css_value-content-escapes-backslashes", "normalize_css_value: content escapes backslashes", () => {
         const out = normalize_css_value("content", String.raw`C:\temp\file`);
         if (out !== String.raw`"C:\\temp\\file"`) {
           throw new Error(`expected "C:\\\\temp\\\\file", got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_value: non-content prop passes through unchanged", () => {
+      make_unit_case(suite, "normalize_css_value-non-content-prop-passes-through-unchanged", "normalize_css_value: non-content prop passes through unchanged", () => {
         const out = normalize_css_value("color", "rgb(255, 0, 255)");
         if (out !== "rgb(255, 0, 255)") {
           throw new Error(`expected rgb(255, 0, 255), got ${out}`);
@@ -98,21 +98,21 @@ export function unit_test_css(): TestSuite {
       }),
 
       // --- canon_to_css_prop ---
-      make_unit_case(suite, "canon_to_css_prop: camelCase becomes kebab-case", () => {
+      make_unit_case(suite, "canon_to_css_prop-camelcase-becomes-kebab-case", "canon_to_css_prop: camelCase becomes kebab-case", () => {
         const out = canon_to_css_prop("backgroundColor");
         if (out !== "background-color") {
           throw new Error(`expected background-color, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "canon_to_css_prop: cssFloat becomes float", () => {
+      make_unit_case(suite, "canon_to_css_prop-cssfloat-becomes-float", "canon_to_css_prop: cssFloat becomes float", () => {
         const out = canon_to_css_prop("cssFloat");
         if (out !== "float") {
           throw new Error(`expected float, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "canon_to_css_prop: custom property passes through", () => {
+      make_unit_case(suite, "canon_to_css_prop-custom-property-passes-through", "canon_to_css_prop: custom property passes through", () => {
         const out = canon_to_css_prop("--my-token");
         if (out !== "--my-token") {
           throw new Error(`expected --my-token, got ${out}`);
@@ -120,42 +120,42 @@ export function unit_test_css(): TestSuite {
       }),
 
       // --- normalize_css_key ---
-      make_unit_case(suite, "normalize_css_key: trims whitespace", () => {
+      make_unit_case(suite, "normalize_css_key-trims-whitespace", "normalize_css_key: trims whitespace", () => {
         const out = normalize_css_key("  background-color  ");
         if (out !== "backgroundColor") {
           throw new Error(`expected backgroundColor, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_key: custom property passes through", () => {
+      make_unit_case(suite, "normalize_css_key-custom-property-passes-through", "normalize_css_key: custom property passes through", () => {
         const out = normalize_css_key(" --my-token ");
         if (out !== "--my-token") {
           throw new Error(`expected --my-token, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_key: css-float alias becomes cssFloat", () => {
+      make_unit_case(suite, "normalize_css_key-css-float-alias-becomes-cssfloat", "normalize_css_key: css-float alias becomes cssFloat", () => {
         const out = normalize_css_key("css-float");
         if (out !== "cssFloat") {
           throw new Error(`expected cssFloat, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_key: kebab becomes camel", () => {
+      make_unit_case(suite, "normalize_css_key-kebab-becomes-camel", "normalize_css_key: kebab becomes camel", () => {
         const out = normalize_css_key("border-top-left-radius");
         if (out !== "borderTopLeftRadius") {
           throw new Error(`expected borderTopLeftRadius, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_key: already-camel key stays unchanged", () => {
+      make_unit_case(suite, "normalize_css_key-already-camel-key-stays-unchanged", "normalize_css_key: already-camel key stays unchanged", () => {
         const out = normalize_css_key("backgroundColor");
         if (out !== "backgroundColor") {
           throw new Error(`expected backgroundColor, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "normalize_css_key: empty string returns empty string", () => {
+      make_unit_case(suite, "normalize_css_key-empty-string-returns-empty-string", "normalize_css_key: empty string returns empty string", () => {
         const out = normalize_css_key("   ");
         if (out !== "") {
           throw new Error(`expected empty string, got ${out}`);
@@ -163,28 +163,28 @@ export function unit_test_css(): TestSuite {
       }),
 
       // --- pseudo_to_suffix ---
-      make_unit_case(suite, "pseudo_to_suffix: __before maps to ::before", () => {
+      make_unit_case(suite, "pseudo_to_suffix-__before-maps-to-before", "pseudo_to_suffix: __before maps to ::before", () => {
         const out = pseudo_to_suffix("__before");
         if (out !== "::before") {
           throw new Error(`expected ::before, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "pseudo_to_suffix: __after maps to ::after", () => {
+      make_unit_case(suite, "pseudo_to_suffix-__after-maps-to-after", "pseudo_to_suffix: __after maps to ::after", () => {
         const out = pseudo_to_suffix("__after");
         if (out !== "::after") {
           throw new Error(`expected ::after, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "pseudo_to_suffix: _hover maps to :hover", () => {
+      make_unit_case(suite, "pseudo_to_suffix-_hover-maps-to-hover", "pseudo_to_suffix: _hover maps to :hover", () => {
         const out = pseudo_to_suffix("_hover");
         if (out !== ":hover") {
           throw new Error(`expected :hover, got ${out}`);
         }
       }),
 
-      make_unit_case(suite, "pseudo_to_suffix: _focusVisible maps to :focus-visible", () => {
+      make_unit_case(suite, "pseudo_to_suffix-_focusvisible-maps-to-focus-visible", "pseudo_to_suffix: _focusVisible maps to :focus-visible", () => {
         const out = pseudo_to_suffix("_focusVisible");
         if (out !== ":focus-visible") {
           throw new Error(`expected :focus-visible, got ${out}`);
@@ -205,7 +205,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalizeDecls: trims keys and values",
+      caseId: "normalizedecls-trims-keys-and-values", name: "normalizeDecls: trims keys and values",
       run() {
         const out = normalize_decls({
           " color ": " red ",
@@ -219,7 +219,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalizeDecls: drops empty values",
+      caseId: "normalizedecls-drops-empty-values", name: "normalizeDecls: drops empty values",
       run() {
         const out = normalize_decls({
           a: "",
@@ -239,7 +239,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalizeDecls: drops empty keys",
+      caseId: "normalizedecls-drops-empty-keys", name: "normalizeDecls: drops empty keys",
       run() {
         const out = normalize_decls({
           "": "x",
@@ -259,7 +259,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "selectorForQuid: basic mapping",
+      caseId: "selectorforquid-basic-mapping", name: "selectorForQuid: basic mapping",
       run() {
         const quid = "789abcdfg";
         const out = hson_quid_selector(quid);
@@ -280,7 +280,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "render_rule: emits sorted properties",
+      caseId: "render_rule-emits-sorted-properties", name: "render_rule: emits sorted properties",
       run() {
         const out = render_rule(".x", {
           zIndex: "1",
@@ -296,7 +296,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "render_rule: applies content normalization",
+      caseId: "render_rule-applies-content-normalization", name: "render_rule: applies content normalization",
       run() {
         const out = render_rule(".x", {
           content: "X",
@@ -310,7 +310,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "render_rule: respects already-quoted content",
+      caseId: "render_rule-respects-already-quoted-content", name: "render_rule: respects already-quoted content",
       run() {
         const out = render_rule(".x", {
           content: `"X"`,
@@ -324,7 +324,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "render_rule: preserves non-content values",
+      caseId: "render_rule-preserves-non-content-values", name: "render_rule: preserves non-content values",
       run() {
         const out = render_rule(".x", {
           color: "rgb(255, 0, 255)",
@@ -338,7 +338,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "render_rule: handles custom properties",
+      caseId: "render_rule-handles-custom-properties", name: "render_rule: handles custom properties",
       run() {
         const out = render_rule(".x", {
           "--token": "10px",
@@ -352,7 +352,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "render_rule: empty decls returns empty string",
+      caseId: "render_rule-empty-decls-returns-empty-string", name: "render_rule: empty decls returns empty string",
       run() {
         const out = render_rule(".x", {});
 
@@ -368,7 +368,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "pseudo_to_suffix: before/after stable",
+      caseId: "pseudo_to_suffix-before-after-stable", name: "pseudo_to_suffix: before/after stable",
       run() {
         if (pseudo_to_suffix("__before") !== "::before") {
           throw new Error("before mapping broken");
@@ -381,7 +381,7 @@ export function unit_test_internals(): TestSuite {
     },
     {
       suite: SUITE,
-      name: "normalize_css_key: vendor prefix -webkit- converts correctly",
+      caseId: "normalize_css_key-vendor-prefix-webkit-converts-correctly", name: "normalize_css_key: vendor prefix -webkit- converts correctly",
       run() {
         const out = normalize_css_key("-webkit-transform");
         if (out !== "WebkitTransform") {
@@ -392,7 +392,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalize_css_key: vendor prefix -moz- converts correctly",
+      caseId: "normalize_css_key-vendor-prefix-moz-converts-correctly", name: "normalize_css_key: vendor prefix -moz- converts correctly",
       run() {
         const out = normalize_css_key("-moz-user-select");
         if (out !== "MozUserSelect") {
@@ -403,7 +403,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalize_css_key: alias is case-insensitive",
+      caseId: "normalize_css_key-alias-is-case-insensitive", name: "normalize_css_key: alias is case-insensitive",
       run() {
         const out = normalize_css_key("CSS-FLOAT");
         if (out !== "cssFloat") {
@@ -414,7 +414,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalize_css_key: preserves already camelCase",
+      caseId: "normalize_css_key-preserves-already-camelcase", name: "normalize_css_key: preserves already camelCase",
       run() {
         const out = normalize_css_key("zIndex");
         if (out !== "zIndex") {
@@ -425,7 +425,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalize_css_key: trims and converts mixed input",
+      caseId: "normalize_css_key-trims-and-converts-mixed-input", name: "normalize_css_key: trims and converts mixed input",
       run() {
         const out = normalize_css_key("  border-left-width ");
         if (out !== "borderLeftWidth") {
@@ -436,7 +436,7 @@ export function unit_test_internals(): TestSuite {
 
     {
       suite: SUITE,
-      name: "normalize_css_key: handles multiple dashes cleanly",
+      caseId: "normalize_css_key-handles-multiple-dashes-cleanly", name: "normalize_css_key: handles multiple dashes cleanly",
       run() {
         const out = normalize_css_key("font---size");
         if (out !== "fontSize") {
@@ -459,7 +459,7 @@ export function unit_test_internals_2(): TestSuite {
     // normalize_decls
     // ----------------------------
 
-    make_unit_case(SUITE, "normalize_decls: trims keys and values", () => {
+    make_unit_case(SUITE, "normalize_decls-trims-keys-and-values", "normalize_decls: trims keys and values", () => {
       const out = normalize_decls({
         " color ": " red ",
         " fontSize ": " 1rem ",
@@ -474,7 +474,7 @@ export function unit_test_internals_2(): TestSuite {
       }
     }),
 
-    make_unit_case(SUITE, "normalize_decls: drops empty string values", () => {
+    make_unit_case(SUITE, "normalize_decls-drops-empty-string-values", "normalize_decls: drops empty string values", () => {
       const out = normalize_decls({
         color: "",
         background: "   ",
@@ -494,7 +494,7 @@ export function unit_test_internals_2(): TestSuite {
       }
     }),
 
-    make_unit_case(SUITE, "normalize_decls: drops empty keys", () => {
+    make_unit_case(SUITE, "normalize_decls-drops-empty-keys", "normalize_decls: drops empty keys", () => {
       const out = normalize_decls({
         "": "x",
         "   ": "y",
@@ -507,7 +507,7 @@ export function unit_test_internals_2(): TestSuite {
       }
     }),
 
-    make_unit_case(SUITE, "normalize_decls: preserves custom properties", () => {
+    make_unit_case(SUITE, "normalize_decls-preserves-custom-properties", "normalize_decls: preserves custom properties", () => {
       const out = normalize_decls({
         " --token ": " 10px ",
       } as any);
@@ -517,7 +517,7 @@ export function unit_test_internals_2(): TestSuite {
       }
     }),
 
-    make_unit_case(SUITE, "normalize_decls: coerces non-string values via String()", () => {
+    make_unit_case(SUITE, "normalize_decls-coerces-non-string-values-via-string", "normalize_decls: coerces non-string values via String()", () => {
       const out = normalize_decls({
         zIndex: 10 as any,
         opacity: 0.75 as any,
@@ -532,7 +532,7 @@ export function unit_test_internals_2(): TestSuite {
       }
     }),
 
-    make_unit_case(SUITE, "normalize_decls: returns empty object when all entries are dropped", () => {
+    make_unit_case(SUITE, "normalize_decls-returns-empty-object-when-all-entries-are-dropped", "normalize_decls: returns empty object when all entries are dropped", () => {
       const out = normalize_decls({
         "": "",
         "   ": "   ",
@@ -547,7 +547,7 @@ export function unit_test_internals_2(): TestSuite {
     // selector_for_quid
     // ----------------------------
 
-    make_unit_case(SUITE, "selector_for_quid: basic mapping", () => {
+    make_unit_case(SUITE, "selector_for_quid-basic-mapping", "selector_for_quid: basic mapping", () => {
       const out = hson_quid_selector("789abcdfg");
 
       if (out !== `[hson\\:quid="789abcdfg"]`) {
@@ -555,19 +555,19 @@ export function unit_test_internals_2(): TestSuite {
       }
     }),
 
-    make_unit_case(SUITE, "selector_for_quid: rejects hyphenated non-QUID", () => {
+    make_unit_case(SUITE, "selector_for_quid-rejects-hyphenated-non-quid", "selector_for_quid: rejects hyphenated non-QUID", () => {
       let rejected = false;
       try { hson_quid_selector("abc-123-def"); } catch { rejected = true; }
       if (!rejected) throw new Error("expected hyphenated non-QUID rejection");
     }),
 
-    make_unit_case(SUITE, "selector_for_quid: rejects underscore non-QUID", () => {
+    make_unit_case(SUITE, "selector_for_quid-rejects-underscore-non-quid", "selector_for_quid: rejects underscore non-QUID", () => {
       let rejected = false;
       try { hson_quid_selector("abc_123"); } catch { rejected = true; }
       if (!rejected) throw new Error("expected underscore non-QUID rejection");
     }),
 
-    make_unit_case(SUITE, "selector_for_quid: rejects mixed-case non-QUID", () => {
+    make_unit_case(SUITE, "selector_for_quid-rejects-mixed-case-non-quid", "selector_for_quid: rejects mixed-case non-QUID", () => {
       let rejected = false;
       try { hson_quid_selector("AbC123xYz"); } catch { rejected = true; }
       if (!rejected) throw new Error("expected mixed-case non-QUID rejection");
@@ -583,7 +583,7 @@ export function unit_test_css_manager(): TestSuite {
 
 
   const cases: readonly TestCase[] = [
-    make_unit_case(SUITE, "setForQuid stores a value", () => {
+    make_unit_case(SUITE, "setforquid-stores-a-value", "setForQuid stores a value", () => {
       const m = CssManager.invoke();
       const quid = "000000001";
 
@@ -600,7 +600,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "setForQuid overwrites existing value", () => {
+    make_unit_case(SUITE, "setforquid-overwrites-existing-value", "setForQuid overwrites existing value", () => {
       const m = CssManager.invoke();
       const quid = "000000002";
 
@@ -618,7 +618,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "setManyForQuid merges multiple values", () => {
+    make_unit_case(SUITE, "setmanyforquid-merges-multiple-values", "setManyForQuid merges multiple values", () => {
       const m = CssManager.invoke();
       const quid = "000000003";
 
@@ -648,7 +648,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "unsetForQuid removes one property", () => {
+    make_unit_case(SUITE, "unsetforquid-removes-one-property", "unsetForQuid removes one property", () => {
       const m = CssManager.invoke();
       const quid = "000000004";
 
@@ -677,7 +677,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "clearQuid removes all properties for a quid", () => {
+    make_unit_case(SUITE, "clearquid-removes-all-properties-for-a-quid", "clearQuid removes all properties for a quid", () => {
       const m = CssManager.invoke();
       const quid = "000000005";
 
@@ -699,7 +699,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "snapshot includes emitted rule for quid styles", () => {
+    make_unit_case(SUITE, "snapshot-includes-emitted-rule-for-quid-styles", "snapshot includes emitted rule for quid styles", () => {
       const m = CssManager.invoke();
       const quid = "000000006";
 
@@ -726,7 +726,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "setting same prop twice does not duplicate storage", () => {
+    make_unit_case(SUITE, "setting-same-prop-twice-does-not-duplicate-storage", "setting same prop twice does not duplicate storage", () => {
       const m = CssManager.invoke();
       const quid = "000000007";
 
@@ -756,7 +756,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "selector rule stores pseudo rule under explicit rule key", () => {
+    make_unit_case(SUITE, "selector-rule-stores-pseudo-rule-under-explicit-rule-key", "selector rule stores pseudo rule under explicit rule key", () => {
       const m = CssManager.invoke();
       const quid = "000000008";
       const key = `unit:${quid}:before`;
@@ -787,7 +787,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "selector rule drop removes only one pseudo selector", () => {
+    make_unit_case(SUITE, "selector-rule-drop-removes-only-one-pseudo-selector", "selector rule drop removes only one pseudo selector", () => {
       const m = CssManager.invoke();
       const quid = "000000009";
       const beforeKey = `unit:${quid}:before`;
@@ -825,7 +825,7 @@ export function unit_test_css_manager(): TestSuite {
       cleanup_quid(m, quid);
     }),
 
-    make_unit_case(SUITE, "selector rule drops remove all pseudo selectors for one quid", () => {
+    make_unit_case(SUITE, "selector-rule-drops-remove-all-pseudo-selectors-for-one-quid", "selector rule drops remove all pseudo selectors for one quid", () => {
       const m = CssManager.invoke();
       const quid = "000000010";
       const beforeKey = `unit:${quid}:before`;

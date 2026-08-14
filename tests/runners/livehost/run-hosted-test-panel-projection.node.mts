@@ -29,8 +29,8 @@ async function wait_for_projection(condition: () => boolean, message: string): P
   expect_projection(condition(), message);
 }
 
-function test_case(suite: string, name: string, status: HostedTestCaseReport["status"] = "pass"): HostedTestCaseReport {
-  return Object.freeze({ key: `${suite}::${name}`, suite, name, status, ms: 1, err: status === "fail" ? "expected" : null });
+function test_case(suite: string, name: string, status: HostedTestCaseReport["status"] = "pass", caseId = name): HostedTestCaseReport {
+  return Object.freeze({ key: `${suite}::${caseId}`, suite, caseId, name, status, ms: 1, err: status === "fail" ? "expected" : null });
 }
 
 function external_result(
@@ -42,7 +42,7 @@ function external_result(
   return Object.freeze({
     id,
     suite: id,
-    name: id.slice("library::".length),
+    name: id.split("/").at(-1) ?? id,
     subject: "livehost",
     runtime: "node",
     executableChecks,
@@ -75,6 +75,8 @@ function report(
       timing: terminal ? Object.freeze({ runnerMs: 1, hostMs: 2 }) : null,
     }),
     summary: Object.freeze({ cases, pass, fail, skip: 0 }),
+    plan: null,
+    suiteRuns: Object.freeze([]),
     caseBatches,
     suites: Object.freeze([]),
     externalResults,
@@ -185,8 +187,8 @@ try {
   expect_projection(replacement.snapshot().cases === 1 && replacement.snapshot().metrics.visibleCaseRows === 0, "a rerun owns a fresh collapsed projection");
   replacement.dispose();
 
-  const portableCaseKey = "unit/test-harness::failed assertion row fails case and run";
-  const circuitCaseKey = "livehost/circuit-worker-service::starts exactly one persistent worker";
+  const portableCaseKey = "unit/test-harness::failed-assertion-row-fails-case-and-run";
+  const circuitCaseKey = "livehost/circuit-worker-service::starts-exactly-one-persistent-worker";
   const inspectionRegistry = make_local_node_livehost_executor_registry();
   const inspect = make_hosted_test_case_inspector(inspectionRegistry);
   expect_projection(
@@ -195,8 +197,8 @@ try {
     "portable and Node-owned circuit cases share canonical executor lookup IDs",
   );
   const inspectionCases = Object.freeze([
-    test_case("unit/test-harness", "failed assertion row fails case and run"),
-    test_case("livehost/circuit-worker-service", "starts exactly one persistent worker"),
+    test_case("unit/test-harness", "failed assertion row fails case and run", "pass", "failed-assertion-row-fails-case-and-run"),
+    test_case("livehost/circuit-worker-service", "starts exactly one persistent worker", "pass", "starts-exactly-one-persistent-worker"),
   ]);
   const inspectionReport = report(2, 2, 0, true, Object.freeze({}), Object.freeze({
     "000001": inspectionCases,
@@ -288,8 +290,8 @@ try {
     "both remounted view and copy paths settle",
   );
   for (const caseKey of [portableCaseKey, circuitCaseKey]) {
-    const [suite, name] = caseKey.split("::");
-    const heading = `${suite} :: ${name}`;
+    const testCase = inspectionCases.find((candidate) => candidate.key === caseKey);
+    const heading = `${testCase?.suite} :: ${testCase?.name}`;
     expect_projection(
       viewedKeys.includes(caseKey)
         && copiedKeys.includes(caseKey)
@@ -302,8 +304,8 @@ try {
   remountedInspectionProjection.dispose();
 
   const externalProjection = make_hosted_test_case_list(host, { async view() {}, async copy() {} }, scheduler);
-  const passing = external_result("library::livehost.persistence", 16, "pass", 1010);
-  const failing = external_result("library::livehost.protocol-document", 8, "fail", 946);
+  const passing = external_result("livehost/persistence", 16, "pass", 1010);
+  const failing = external_result("livehost/protocol-document", 8, "fail", 946);
   const queuedPassing = external_result(passing.id, 16, "queued");
   const queuedFailing = external_result(failing.id, 8, "queued");
   externalProjection.ingest(update(report(0, 0, 0, false, Object.freeze({
@@ -353,8 +355,8 @@ try {
   ], true));
   const externalSnapshot = externalProjection.snapshot();
   expect_projection(externalSnapshot.cases === 0 && externalSnapshot.launchers === 2, "external launchers do not enter canonical case totals");
-  expect_projection(externalSnapshot.summariesBySuite[passing.id] === "16 cases · pass", "passing external suite displays its manifest case count");
-  expect_projection(externalSnapshot.summariesBySuite[failing.id] === "8 cases · fail", "failing external suite displays its case count and process-authoritative status");
+  expect_projection(externalSnapshot.summariesBySuite[passing.id] === "16 checks · pass", "passing opaque suite displays its aggregate manifest check count");
+  expect_projection(externalSnapshot.summariesBySuite[failing.id] === "8 checks · fail", "failing opaque suite displays its check count and process-authoritative status");
   externalProjection.set_expanded(passing.id, true);
   expect_projection(
     runtime.document.querySelector(`[data-hosted-suite="${passing.id}"]`) === externalRowsBefore[0]
@@ -418,9 +420,9 @@ try {
     "the complete successful mixed run displays 2,605 total and passed cases",
   );
   expect_projection(
-    externalSnapshot.summariesBySuite[passing.id]?.startsWith("16 cases · pass") === true
-      && passing.id.startsWith("library::"),
-    "external suite rows retain their library source identity",
+    externalSnapshot.summariesBySuite[passing.id]?.startsWith("16 checks · pass") === true
+      && passing.id === "livehost/persistence",
+    "external suite rows retain semantic identity while process evidence remains separate",
   );
 
   const failedMixedReport = report(
@@ -483,7 +485,7 @@ try {
   );
 
   const allLaunchers = Object.freeze(Object.fromEntries(Array.from({ length: 28 }, (_, index) => {
-    const id = `library::launcher-${index}`;
+    const id = `transform/launcher-${index}`;
     return [id, external_result(id, index === 27 ? 502 - 27 : 1, "pass")];
   })));
   const allSummary = hosted_test_projection_summary(report(28, 28, 0, true, allLaunchers));

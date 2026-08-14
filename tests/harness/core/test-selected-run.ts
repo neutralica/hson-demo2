@@ -1,5 +1,6 @@
 import type { TestSuite } from "./test-contracts";
-import { compare_test_visitor_order } from "./test-selection";
+import { compare_test_descriptors } from "./test-order";
+import { is_test_case_id, is_test_suite_id } from "./test-identity";
 import type { TestExecutorRegistry } from "./test-executor";
 
 /**
@@ -53,16 +54,7 @@ function is_record(value: unknown): value is Readonly<Record<string, unknown>> {
 }
 
 export function is_canonical_test_id(value: unknown): value is string {
-  if (typeof value !== "string") return false;
-  const separator = value.indexOf("::");
-  if (separator <= 0 || separator >= value.length - 2) return false;
-  const suite = value.slice(0, separator);
-  const name = value.slice(separator + 2);
-  return suite.trim() === suite
-    && name.trim() === name
-    && !suite.includes("::")
-    && !/[\u0000-\u001f\u007f]/.test(suite)
-    && !/[\u0000-\u001f\u007f]/.test(name);
+  return is_test_case_id(value) || is_test_suite_id(value);
 }
 
 export function decode_run_selected_tests_request(value: unknown): RunSelectedTestsDecodeResult {
@@ -79,7 +71,7 @@ export function decode_run_selected_tests_request(value: unknown): RunSelectedTe
     if (!is_canonical_test_id(testId)) {
       return Object.freeze({
         ok: false,
-        issues: Object.freeze([`tests.runSelected testIds[${index}] must be a canonical suite::case ID.`]),
+        issues: Object.freeze([`tests.runSelected testIds[${index}] must be a canonical case or opaque-suite ID.`]),
       });
     }
     if (seen.has(testId)) {
@@ -126,7 +118,7 @@ export function selected_test_suites(
   const casesBySuite = new Map<string, TestSuite["cases"][number][]>();
   const descriptors = registry.catalog.tests
     .filter((descriptor) => requested.has(descriptor.id))
-    .sort((left, right) => compare_test_visitor_order(left.id, right.id));
+    .sort(compare_test_descriptors);
 
   for (const descriptor of descriptors) {
     if (!requested.has(descriptor.id)) continue;
@@ -136,15 +128,16 @@ export function selected_test_suites(
       || registration.descriptor.subject !== descriptor.subject
       || registration.descriptor.requirements.join("\u0000") !== descriptor.requirements.join("\u0000")
       || registration.descriptor.collections.join("\u0000") !== descriptor.collections.join("\u0000")
-      || registration.testCase.suite !== descriptor.suite
-      || registration.testCase.name !== descriptor.name) {
+      || registration.testCase.suite !== descriptor.suiteId
+      || registration.testCase.caseId !== descriptor.caseId
+      || registration.testCase.name !== descriptor.title) {
       throw new Error(`Executor ${registry.executor.id} registration identity changed for ${descriptor.id}.`);
     }
-    let cases = casesBySuite.get(descriptor.suite);
+    let cases = casesBySuite.get(descriptor.suiteId);
     if (cases === undefined) {
       cases = [];
-      casesBySuite.set(descriptor.suite, cases);
-      suiteOrder.push(descriptor.suite);
+      casesBySuite.set(descriptor.suiteId, cases);
+      suiteOrder.push(descriptor.suiteId);
     }
     cases.push(registration.testCase);
     found.add(descriptor.id);
@@ -158,7 +151,7 @@ export function selected_test_suites(
     suite,
     descriptor: (() => {
       const first = casesBySuite.get(suite)?.[0];
-      const registration = first === undefined ? undefined : registry.get(`${suite}::${first.name}`);
+      const registration = first === undefined ? undefined : registry.get(`${suite}::${first.caseId}`);
       if (registration === undefined) throw new Error(`Executor ${registry.executor.id} lost suite metadata for ${suite}.`);
       return Object.freeze({
         subject: registration.descriptor.subject,
@@ -168,7 +161,7 @@ export function selected_test_suites(
     })(),
     ...(() => {
       const first = casesBySuite.get(suite)?.[0];
-      const registration = first === undefined ? undefined : registry.get(`${suite}::${first.name}`);
+      const registration = first === undefined ? undefined : registry.get(`${suite}::${first.caseId}`);
       if (registration === undefined) throw new Error(`Executor ${registry.executor.id} lost suite execution configuration for ${suite}.`);
       return {
         ...(registration.suiteSetup === undefined ? {} : { setup: registration.suiteSetup }),
