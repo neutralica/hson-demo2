@@ -23,8 +23,8 @@ export const PHASE1_TEST_COMPATIBILITY_BRIDGES: readonly TestConvergenceCompatib
   }),
   Object.freeze({
     id: "legacy-report-projections",
-    adapter: "caseBatches, suites, and externalResults remain beside normalized seeded suiteRuns",
-    deletionGate: "Phase 2 Inspector/Logger/report consumers project normalized SuiteRun/CaseRun state exclusively",
+    adapter: "the normalized lifecycle reducer derives caseBatches, suites, and externalResults as temporary compatibility projections from SuiteRun/CaseRun authority",
+    deletionGate: "Phase 2B Inspector/Logger/report consumers project normalized SuiteRun/CaseRun counts and evidence exclusively",
   }),
   Object.freeze({
     id: "legacy-suite-routes",

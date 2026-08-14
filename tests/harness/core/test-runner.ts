@@ -200,8 +200,6 @@ export async function run_test_suites(
 ): Promise<RunResult> {
   validate_run_configuration(suites, opts);
   const rec = new TestRecorder();
-  const clearLog = (onEvent as unknown as { clear?: () => void }).clear;
-  clearLog?.();
   const t0 = now();
 
 

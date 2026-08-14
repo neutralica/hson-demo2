@@ -2,6 +2,7 @@ import type { LiveMap, LiveMapCommit } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
 import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../../core/test-contracts";
+import type { TestErrorKind, TestLifecycleCounts, TestLifecycleStatus } from "../../core/test-lifecycle";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "error";
 
@@ -15,7 +16,26 @@ export type HostedTestCaseReport = Readonly<{
 }>;
 
 export type HostedTestInfrastructureError = Readonly<{
+  kind: TestErrorKind;
+  executorId: string;
   message: string;
+  stack: string | null;
+  expected: string | null;
+  actual: string | null;
+}>;
+
+export type HostedTestEvidence = Readonly<{
+  id: string;
+  sequence: number;
+  timestamp: number;
+  executorId: string;
+  kind: "stdout" | "stderr" | "runtime_warning" | "raw_process_output" | "protocol_control" | "artifact";
+  name: string;
+  content: string;
+  truncated: boolean;
+  knownBytes: number | null;
+  reference: string | null;
+  mediaType: string | null;
 }>;
 
 export type HostedTestPlannedCaseReport = Readonly<{
@@ -23,9 +43,18 @@ export type HostedTestPlannedCaseReport = Readonly<{
   caseId: string;
   title: string;
   order: number;
-  status: "queued" | "running" | "pass" | "fail" | "skip";
+  status: TestLifecycleStatus;
+  queuedAt: number;
+  startedAt: number | null;
+  completedAt: number | null;
+  durationMs: number | null;
   ms: number | null;
   err: string | null;
+  errors: readonly HostedTestInfrastructureError[];
+  evidenceRefs: readonly string[];
+  executorId: string | null;
+  lastSequence: number;
+  lastEventSignature: string;
 }>;
 
 export type HostedTestSuiteRunReport = Readonly<{
@@ -38,8 +67,21 @@ export type HostedTestSuiteRunReport = Readonly<{
   executionShape: TestExecutionShape;
   sourceRef: string | null;
   declaredChecks: number | null;
-  status: "queued" | "running" | "pass" | "fail";
+  status: TestLifecycleStatus;
+  queuedAt: number;
+  startedAt: number | null;
+  completedAt: number | null;
+  durationMs: number | null;
   ms: number | null;
+  counts: TestLifecycleCounts;
+  errors: readonly HostedTestInfrastructureError[];
+  evidence: readonly HostedTestEvidence[];
+  evidenceRefs: readonly string[];
+  caseOrder: readonly string[];
+  runtime: string | null;
+  executorIds: readonly string[];
+  lastSequence: number;
+  lastEventSignature: string;
   cases: readonly HostedTestPlannedCaseReport[];
 }>;
 
@@ -51,6 +93,8 @@ export type HostedTestReport = Readonly<{
     startedAt: number | null;
     completedAt: number | null;
     timing: Readonly<{ runnerMs: number; hostMs: number }> | null;
+    lastSequence: number;
+    lastEventSignature: string;
   }>;
   summary: Readonly<{
     cases: number;

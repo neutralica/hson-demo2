@@ -323,7 +323,6 @@ export function tp_factory(): TestPanel {
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;
             chips.clear();
-            clearLogLines();
             replace_case_list();
             latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             latestProjectionSummary = undefined;

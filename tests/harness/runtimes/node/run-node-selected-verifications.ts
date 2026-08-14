@@ -288,7 +288,12 @@ function failed_external_result(
   return Object.freeze({
     target,
     stdout: "",
+    ordinaryStdout: "",
     stderr: "",
+    stdoutBytes: 0,
+    stderrBytes: 0,
+    stdoutTruncated: false,
+    stderrTruncated: false,
     exitCode: null,
     signal: null,
     durationMs: 0,
@@ -329,11 +334,18 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     status: result.ok ? "pass" : "fail",
     ms: result.durationMs,
     stdout: result.stdout,
+    ordinaryStdout: result.ordinaryStdout,
     stderr: result.stderr,
+    stdoutBytes: result.stdoutBytes,
+    stderrBytes: result.stderrBytes,
+    stdoutTruncated: result.stdoutTruncated,
+    stderrTruncated: result.stderrTruncated,
     exitCode: result.exitCode,
     signal: result.signal,
     timedOut: result.timedOut,
     ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
+    ...(result.completion === undefined ? {} : { completion: result.completion }),
+    ...(result.completionError === undefined ? {} : { completionError: result.completionError }),
   });
 }
 

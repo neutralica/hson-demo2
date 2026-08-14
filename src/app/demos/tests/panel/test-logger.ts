@@ -259,8 +259,6 @@ export function create_test_log(): TestLog {
     }
   };
 
-  (onEvent as typeof onEvent & { clear?: () => void }).clear = clear;
-
   const getSummary = (): TestSummary => {
     const summary = getSummaryState();
     const failures = read<TestFailure[]>(["failures"]) ?? [];

@@ -146,7 +146,7 @@ const visibleAdapter = make_hosted_test_panel_adapter(runtime, visibleSink.sink)
 const visibleResult = await visibleAdapter.start("livemap/replay");
 expect_adapter(localReplayInvocations === 0, "hosted adapter never invokes the browser-local replay runner");
 expect_adapter(visibleResult.ok && visibleAdapter.capture()?.run.id === visibleResult.runId, "real action result correlates with the generic recovered report");
-expect_adapter(visibleResult.reportRev === 4 && visibleAdapter.capture()?.run.status === "passed", "real visible route completes at authoritative report revision 4");
+expect_adapter(typeof visibleResult.reportRev === "number" && visibleResult.reportRev >= 93 && visibleAdapter.capture()?.run.status === "passed", "real visible route completes with incremental normalized lifecycle revisions");
 expect_adapter(visibleSink.updates.flatMap((update) => update.newCases).length === 45, "45 compact case records are ingested exactly once");
 const visibleFinal = visibleSink.updates.at(-1)?.report.summary;
 expect_adapter(visibleFinal?.cases === 45 && visibleFinal.pass === 45 && visibleFinal.fail === 0, "visible final summary is 45 passing cases");
@@ -158,9 +158,9 @@ const livehostRuntime = make_in_memory_hosted_test_runtime(make_registered_hoste
 const livehostSink = make_sink();
 const livehostAdapter = make_hosted_test_panel_adapter(livehostRuntime, livehostSink.sink);
 const livehostResult = await livehostAdapter.start("livehost/all");
-expect_adapter(livehostResult.suite === "livehost/all" && livehostResult.summary.suites === 11, "second visible mode uses the same adapter and returns LiveHost collection identity");
+expect_adapter(livehostResult.suite === "livehost/all" && livehostResult.summary.suites === 11, `second visible mode uses the same adapter and returns LiveHost collection identity (observed ${livehostResult.summary.suites})`);
 expect_adapter(livehostAdapter.capture()?.run.id === livehostResult.runId && livehostAdapter.capture()?.run.suite === "livehost/all", "second result and recovered report correlate suite identity");
-expect_adapter(livehostResult.reportRev === 14, "174-case LiveHost report reaches batched revision 14");
+expect_adapter(typeof livehostResult.reportRev === "number" && livehostResult.reportRev >= 360, "174-case LiveHost report streams normalized suite/case lifecycle revisions");
 expect_adapter(livehostSink.updates.flatMap((update) => update.newCases).length === 174, "second hosted mode progressively ingests 174 compact cases");
 const livehostFinal = livehostSink.updates.at(-1)?.report.summary;
 expect_adapter(livehostFinal?.cases === 174 && livehostFinal.pass === 174 && livehostFinal.fail === 0, "second hosted mode renders the complete passing LiveHost summary");

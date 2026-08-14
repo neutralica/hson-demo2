@@ -73,6 +73,8 @@ function report(
       startedAt: cases === 0 ? null : 1,
       completedAt: terminal ? 2 : null,
       timing: terminal ? Object.freeze({ runnerMs: 1, hostMs: 2 }) : null,
+      lastSequence: 0,
+      lastEventSignature: "",
     }),
     summary: Object.freeze({ cases, pass, fail, skip: 0 }),
     plan: null,
@@ -388,9 +390,9 @@ try {
   const externalFooter = hosted_test_projection_footer(externalSummary, 1956);
   expect_projection(
     externalFooter.map((entry) => entry.label).join("|")
-      === "cases|passed|failed|elapsed"
-      && externalFooter.slice(0, 3).map((entry) => entry.value).join("|") === "24|16|1 suite",
-    "external-only footer uses stable ordinary case terminology without fabricated failed cases",
+      === "cases|case pass|checks|check pass|failed|elapsed"
+      && externalFooter.slice(0, 5).map((entry) => entry.value).join("|") === "0|0|24|16|1 suite",
+    "external-only footer keeps opaque checks distinct from canonical cases",
   );
 
   const mixedReport = report(
@@ -405,19 +407,18 @@ try {
   const mixedFooter = hosted_test_projection_footer(mixedSummary, 10);
   expect_projection(
     mixedFooter.map((entry) => entry.label).join("|")
-      === "cases|passed|failed|elapsed"
-      && mixedFooter.slice(0, 3).map((entry) => entry.value).join("|") === "17|17|0"
-      && !mixedFooter.some((entry) => entry.label === "canonical cases" || entry.label === "library cases"),
-    "an all-green mixed summary presents one ordinary case total",
+      === "cases|case pass|checks|check pass|failed|elapsed"
+      && mixedFooter.slice(0, 5).map((entry) => entry.value).join("|") === "1|1|16|16|0",
+    "an all-green mixed summary preserves separate case and check universes",
   );
   const allGreenFooter = hosted_test_projection_footer(Object.freeze({
     canonical: Object.freeze({ total: 2103, pass: 2103, fail: 0, skip: 0 }),
     launchers: Object.freeze({ total: 28, pass: 28, fail: 0, declaredChecks: 502, passedChecks: 502 }),
   }), 10);
   expect_projection(
-    allGreenFooter.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`).join("|")
-      === "cases:2605|passed:2605|failed:0",
-    "the complete successful mixed run displays 2,605 total and passed cases",
+    allGreenFooter.slice(0, 5).map((entry) => `${entry.label}:${entry.value}`).join("|")
+      === "cases:2103|case pass:2103|checks:502|check pass:502|failed:0",
+    "the complete successful mixed run does not fabricate a grand case/check equivalence",
   );
   expect_projection(
     externalSnapshot.summariesBySuite[passing.id]?.startsWith("16 checks · pass") === true
@@ -438,9 +439,9 @@ try {
     10,
   );
   expect_projection(
-    failedMixedFooter.map((entry) => entry.label).join("|") === "cases|passed|failed|elapsed"
+    failedMixedFooter.map((entry) => entry.label).join("|") === "cases|case pass|checks|check pass|failed|elapsed"
       && failedMixedFooter.find((entry) => entry.label === "failed")?.value === "1 suite"
-      && failedMixedFooter.find((entry) => entry.label === "passed")?.value === 1
+      && failedMixedFooter.find((entry) => entry.label === "case pass")?.value === 1
       && failedMixedFooter.find((entry) => entry.label === "failed")?.value !== failing.executableChecks,
     "a failed external suite is identified without fabricating failed internal cases",
   );

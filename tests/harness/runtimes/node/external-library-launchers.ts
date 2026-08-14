@@ -41,8 +41,15 @@ export type ExternalLibraryLauncherAvailability = Readonly<{
 
 export type ExternalLibraryLauncherResult = Readonly<{
   target: ExternalLibraryLauncherTarget;
+  /** Untouched, bounded process stdout, including protocol control frames. */
   stdout: string;
+  /** Bounded human stdout with completion control frames removed. */
+  ordinaryStdout: string;
   stderr: string;
+  stdoutBytes: number;
+  stderrBytes: number;
+  stdoutTruncated: boolean;
+  stderrTruncated: boolean;
   exitCode: number | null;
   signal: NodeJS.Signals | null;
   durationMs: number;
@@ -382,12 +389,16 @@ class BoundedOutputCapture {
     const marker = `\n${EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER} ${omitted} bytes omitted\n`;
     return `${this.#head.toString("utf8")}${marker}${this.#tail.toString("utf8")}`;
   }
+
+  get totalBytes(): number { return this.#totalBytes; }
+  get truncated(): boolean { return this.#truncated; }
 }
 
 type CompletionScan = Readonly<{
   records: readonly unknown[];
   malformedRecords: number;
   trailingOutput: boolean;
+  ordinaryStdout: string;
 }>;
 
 class CompletionScanner {
@@ -398,6 +409,7 @@ class CompletionScanner {
   #malformedRecords = 0;
   #sawCompletionLine = false;
   #trailingOutput = false;
+  readonly #ordinaryOutput = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES);
 
   add(chunk: Buffer): void {
     this.#consume(this.#decoder.write(chunk));
@@ -411,6 +423,7 @@ class CompletionScanner {
       records: Object.freeze([...this.#records]),
       malformedRecords: this.#malformedRecords,
       trailingOutput: this.#trailingOutput,
+      ordinaryStdout: this.#ordinaryOutput.text(),
     });
   }
 
@@ -458,6 +471,7 @@ class CompletionScanner {
       }
       return;
     }
+    this.#ordinaryOutput.add(Buffer.from(`${rawLine}\n`, "utf8"));
     if (this.#sawCompletionLine && line.trim().length > 0) this.#trailingOutput = true;
   }
 }
@@ -521,18 +535,7 @@ export function reconcile_external_launcher_completion(
       error: `External launcher executed ${completion.executed} checks, manifest declares ${target.executableChecks}.`,
     });
   }
-  if (completion.failed !== 0 || completion.passed !== target.executableChecks) {
-    return Object.freeze({
-      completion,
-      error: `External launcher completion reported ${completion.passed} passed and ${completion.failed} failed checks.`,
-    });
-  }
   return Object.freeze({ completion });
-}
-
-function append_protocol_error(stderr: string, error: string | undefined): string {
-  if (error === undefined) return stderr;
-  return `${stderr}${stderr.length === 0 || stderr.endsWith("\n") ? "" : "\n"}[external launcher protocol] ${error}\n`;
 }
 
 function terminate_process_tree(child: ChildProcess, signal: NodeJS.Signals): void {
@@ -648,17 +651,20 @@ async function run_external_library_launcher_with_state(
       clearTimeout(timer);
       if (forceTimer !== undefined) clearTimeout(forceTimer);
       options.signal?.removeEventListener("abort", abort);
-      const completionResult = reconcile_external_launcher_completion(
-        completionScanner.finish(),
-        selectedTarget,
-      );
+      const completionScan = completionScanner.finish();
+      const completionResult = reconcile_external_launcher_completion(completionScan, selectedTarget);
       const stdout = stdoutCapture.text();
-      const stderr = append_protocol_error(stderrCapture.text(), completionResult.error);
+      const stderr = stderrCapture.text();
       const durationMs = performance.now() - startedAt;
       resolve(Object.freeze({
         target: selectedTarget,
         stdout,
+        ordinaryStdout: completionScan.ordinaryStdout,
         stderr,
+        stdoutBytes: stdoutCapture.totalBytes,
+        stderrBytes: stderrCapture.totalBytes,
+        stdoutTruncated: stdoutCapture.truncated,
+        stderrTruncated: stderrCapture.truncated,
         exitCode,
         signal,
         durationMs,
@@ -673,7 +679,8 @@ async function run_external_library_launcher_with_state(
           && spawnError === undefined
           && !timedOut
           && !terminationRequested
-          && completionResult.error === undefined,
+          && completionResult.error === undefined
+          && completionResult.completion?.failed === 0,
       }));
     });
   });

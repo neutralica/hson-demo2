@@ -222,10 +222,13 @@ certify("planAndReport", Object.keys(initialInspector.statusesBySuite).join("|")
 certify("planAndReport", Object.values(initialInspector.statusesBySuite).every((status) => status === "queued"), "Inspector queued state comes from the report snapshot");
 certify("planAndReport", initialInspector.cases === 7 && initialInspector.launchers === 2, "Inspector distinguishes seven planned cases from two opaque launchers");
 
-function finish_case(testCase: TestDescriptor): void {
+function finish_case(testCase: TestDescriptor, status: "pass" | "fail" = "pass"): void {
   report.reduce({ t: "suite_begin", suite: testCase.suiteId, totalPlanned: 1 });
   report.reduce({ t: "case_begin", suite: testCase.suiteId, caseId: testCase.caseId, name: testCase.title });
-  report.reduce({ t: "case_end", suite: testCase.suiteId, caseId: testCase.caseId, name: testCase.title, status: "pass", ms: 1 });
+  report.reduce({
+    t: "case_end", suite: testCase.suiteId, caseId: testCase.caseId, name: testCase.title, status, ms: 1,
+    ...(status === "fail" ? { err: "controlled mixed-run assertion failure" } : {}),
+  });
   report.reduce({ t: "suite_end", suite: testCase.suiteId, ms: 1 });
 }
 
@@ -236,7 +239,12 @@ function external_event(suite: TestSuiteDescriptor, status: "running" | "pass"):
   };
   return status === "running"
     ? { t: "external_state", ...shared, status }
-    : { t: "external_end", ...shared, status, ms: 1, stdout: "ok", stderr: "", exitCode: 0, signal: null, timedOut: false };
+    : {
+      t: "external_end", ...shared, status, ms: 1,
+      stdout: `opaque output\n<HSON_LIVE_TEST_COMPLETION>{}\n`, ordinaryStdout: "opaque output\n", stderr: "",
+      exitCode: 0, signal: null, timedOut: false,
+      completion: { version: 1, launcherId: suite.sourceRef ?? suite.id, executed: suite.declaredChecks!, passed: suite.declaredChecks!, failed: 0 },
+    };
 }
 
 report.reduce(external_event(transformOpaque, "running"));
@@ -244,21 +252,29 @@ report.reduce(external_event(livemapOpaque, "running"));
 await Promise.all([
   new Promise<void>((resolve) => setTimeout(() => { finish_case(shuffledCases[0]!); resolve(); }, 1)),
   new Promise<void>((resolve) => setTimeout(() => { report.reduce(external_event(livemapOpaque, "pass")); resolve(); }, 2)),
-  new Promise<void>((resolve) => setTimeout(() => { finish_case(shuffledCases[3]!); resolve(); }, 3)),
+  new Promise<void>((resolve) => setTimeout(() => { finish_case(shuffledCases[3]!, "fail"); resolve(); }, 3)),
   new Promise<void>((resolve) => setTimeout(() => { report.reduce(external_event(transformOpaque, "pass")); resolve(); }, 4)),
   new Promise<void>((resolve) => setTimeout(() => { for (const testCase of [shuffledCases[2]!, shuffledCases[4]!, shuffledCases[5]!, shuffledCases[6]!, shuffledCases[1]!]) finish_case(testCase); resolve(); }, 8)),
 ]);
-const result: RunResult = { ok: true, summary: { suites: 9, cases: 7, pass: 7, fail: 0, skip: 0, msTotal: 9, failures: [] } };
+const result: RunResult = {
+  ok: false,
+  summary: {
+    suites: 9, cases: 7, pass: 6, fail: 1, skip: 0, msTotal: 9,
+    failures: [{ suite: reflectSuite.id, caseId: "proof", name: "reflect proof", err: "controlled mixed-run assertion failure", ms: 1 }],
+  },
+};
 report.complete(result, { runnerMs: 9, hostMs: 10 });
 const finalReport = report.map.capture().value;
 certify("planAndReport", finalReport.suiteRuns.map((suite) => suite.id).join("|") === expectedSuiteOrder, "hostile completion timing never moves report records");
-certify("planAndReport", finalReport.suiteRuns.every((suite) => suite.status === "pass"), "all records transition in their seeded positions");
-certify("planAndReport", finalReport.suiteRuns.flatMap((suite) => suite.cases).every((testCase) => testCase.status === "pass"), "case records transition in place");
+certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.status === "fail").map((suite) => suite.id).join() === reflectSuite.id, "one controlled failure transitions in its seeded position");
+certify("planAndReport", finalReport.suiteRuns.flatMap((suite) => suite.cases).filter((testCase) => testCase.status === "fail").length === 1, "case records transition in place with one controlled failure");
+certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.counts.passed === 7 && suite.cases.length === 0), "opaque suites retain check counts without fabricated cases");
+certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.evidence.some((item) => item.kind === "stdout")), "opaque output attaches as evidence rather than a result model");
 inspector.ingest({ report: finalReport, newCases: hosted_test_report_cases(finalReport), newSuiteTimings: finalReport.suites, terminal: true });
 inspector.flush();
 const finalInspector = inspector.snapshot();
 certify("planAndReport", Object.keys(finalInspector.statusesBySuite).join("|") === expectedSuiteOrder, "Inspector final order equals its initial queued order");
-certify("planAndReport", Object.values(finalInspector.statusesBySuite).every((status) => status === "pass"), "Inspector projects terminal transitions from report authority");
+certify("planAndReport", Object.values(finalInspector.statusesBySuite).filter((status) => status === "fail").length === 1, "Inspector projects terminal transitions from report authority");
 inspector.dispose();
 dom.dispose();
 report.dispose();

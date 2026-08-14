@@ -124,6 +124,19 @@ export type TestEvent =
     signal: string | null;
     timedOut: boolean;
     spawnError?: string;
+    completion?: Readonly<{
+      version: 1;
+      launcherId: string;
+      executed: number;
+      passed: number;
+      failed: number;
+    }>;
+    completionError?: string;
+    ordinaryStdout?: string;
+    stdoutBytes?: number;
+    stderrBytes?: number;
+    stdoutTruncated?: boolean;
+    stderrTruncated?: boolean;
   };
 
 export type TestFailure = Readonly<{

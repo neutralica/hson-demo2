@@ -98,7 +98,8 @@ for (const name of compatibilityFiles) {
   expect_boundary(!source.includes("app/hosted-test"), `${name} must be owned directly by canonical harness reporting`);
 }
 
-expect_boundary(HOSTED_SUITES.length === 126 && HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 2084, "inventory pins 42 Node-safe, 78 jsdom-hosted, and 6 canvas-hosted suites with 2084 canonical cases");
+const observedHostedCases = HOSTED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0);
+expect_boundary(HOSTED_SUITES.length === 126 && observedHostedCases === 2084, `inventory pins 42 Node-safe, 78 jsdom-hosted, and 6 canvas-hosted suites with 2084 canonical cases (observed ${HOSTED_SUITES.length} suites / ${observedHostedCases} cases)`);
 expect_boundary(HOSTED_SUITES.every((entry) => (entry.hostedBy === "node/all" || entry.hostedBy === "dom/core" || entry.hostedBy === "canvas/core") && !entry.nextBulk), "every hosted entry names its aggregate descriptor");
 expect_boundary(DOM_REQUIRED_SUITES.length === 2 && DOM_REQUIRED_SUITES.reduce((total, entry) => total + (entry.cases ?? 0), 0) === 4, "inventory retains exactly four canvas browser-fidelity cases");
 expect_boundary(UNKNOWN_OR_MIXED_SUITES.length === 0, "no former local mode remains unexplained");

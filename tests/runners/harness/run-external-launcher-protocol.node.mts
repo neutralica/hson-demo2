@@ -60,6 +60,9 @@ assert.deepEqual(valid.result.completion, {
   passed: target.executableChecks,
   failed: 0,
 });
+assert.match(valid.result.stdout, /<HSON_LIVE_TEST_COMPLETION>/, "raw stdout retains the completion control frame");
+assert.doesNotMatch(valid.result.ordinaryStdout, /<HSON_LIVE_TEST_COMPLETION>/, "ordinary stdout excludes the completion control frame");
+assert.ok(valid.result.stdoutBytes >= Buffer.byteLength(valid.result.stdout, "utf8"));
 
 for (const [scenario, pattern] of [
   ["missing", /no completion record/],
@@ -69,13 +72,18 @@ for (const [scenario, pattern] of [
   ["wrong-id", /expected "transform\.hson-tokenizer"/],
   ["malformed", /malformed completion data/],
   ["duplicate", /more than one completion record/],
-  ["failed", new RegExp(`reported ${target.executableChecks - 1} passed and 1 failed`)],
 ] as const) {
   const observed = await run(scenario);
   assert.equal(observed.result.ok, false, `${scenario} completion fails`);
   assert.match(observed.result.completionError ?? "", pattern, `${scenario} has a classified protocol error`);
   assert.equal(observed.activeChildren, 0, `${scenario} leaves no active child`);
 }
+
+const failed = await run("failed");
+assert.equal(failed.result.ok, false, "a truthful failed-check aggregate fails semantically");
+assert.equal(failed.result.completionError, undefined, "failed assertions are not protocol failures");
+assert.equal(failed.result.completion?.failed, 1);
+assert.equal(failed.result.completion?.passed, target.executableChecks - 1);
 
 const nonzero = await run("nonzero");
 assert.equal(nonzero.result.ok, false, "nonzero exit fails despite a valid completion");

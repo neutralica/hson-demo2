@@ -3,6 +3,7 @@ import type { HostedTestReport } from "../../../../../tests/harness/reporting/ho
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
 import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
 import { _fontSize } from "../../../core/consts/ui-consts";
+import type { TestLifecycleCounts, TestLifecycleStatus } from "../../../../../tests/harness/core/test-lifecycle";
 
 export type HostedTestCaseActions = Readonly<{
   view(caseKey: string): Promise<void>;
@@ -53,7 +54,7 @@ type ProjectedCase = {
   suite: string;
   caseId: string;
   name: string;
-  status: "queued" | "running" | "pass" | "fail" | "skip";
+  status: TestLifecycleStatus;
   ms: number | null;
   err: string | null;
   row?: LiveTree | undefined;
@@ -65,9 +66,10 @@ type ProjectedCase = {
 type SuiteProjection = {
   suite: string;
   cases: ProjectedCase[];
-  status: "queued" | "running" | "pass" | "fail";
+  status: TestLifecycleStatus;
   executionShape: "cases" | "opaque-aggregate";
   declaredChecks: number | null;
+  counts: TestLifecycleCounts | null;
   pass: number;
   fail: number;
   skip: number;
@@ -221,6 +223,7 @@ export function make_hosted_test_case_list(
       status: "queued",
       executionShape: "cases",
       declaredChecks: null,
+      counts: null,
       pass: 0,
       fail: 0,
       skip: 0,
@@ -238,10 +241,16 @@ export function make_hosted_test_case_list(
     return created;
   }
 
-  function render_suite(state: SuiteProjection): void {
-    state.summary.text.set(state.executionShape === "cases"
+  function suite_summary(state: SuiteProjection): string {
+    return state.executionShape === "cases"
       ? `${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
-      : `${state.declaredChecks ?? state.external?.executableChecks ?? 0} checks · ${state.status}`);
+      : state.counts !== null && state.counts.executed > 0
+        ? `${state.counts.executed}/${state.counts.declared} checks · ${state.counts.passed} pass · ${state.counts.failed} fail`
+        : `${state.declaredChecks ?? state.external?.executableChecks ?? 0} checks · ${state.status}`;
+  }
+
+  function render_suite(state: SuiteProjection): void {
+    state.summary.text.set(suite_summary(state));
     state.duration.text.set(state.ms === undefined
       ? state.status
       : format_hosted_test_duration(state.ms));
@@ -274,7 +283,7 @@ export function make_hosted_test_case_list(
   function update_case_view(testCase: ProjectedCase): void {
     const statusView = testCase.statusView;
     if (statusView !== undefined) {
-      for (const status of ["queued", "running", "pass", "fail", "skip"] as const) statusView.classlist.remove(`is-${status}`);
+      for (const status of ["queued", "running", "pass", "fail", "skip", "unsupported", "cancelled"] as const) statusView.classlist.remove(`is-${status}`);
       statusView.classlist.add(`is-${testCase.status}`).text.set(testCase.status.toUpperCase());
     }
     testCase.nameView?.attrs.set("title", testCase.err ?? testCase.key).text.set(testCase.name);
@@ -402,6 +411,7 @@ export function make_hosted_test_case_list(
         state.status = suiteRun.status;
         state.executionShape = suiteRun.executionShape;
         state.declaredChecks = suiteRun.declaredChecks;
+        state.counts = suiteRun.counts;
         state.ms = suiteRun.ms ?? undefined;
         for (const plannedCase of suiteRun.cases) {
           let projected = caseRecords.get(plannedCase.id);
@@ -478,9 +488,7 @@ export function make_hosted_test_case_list(
       for (const [suite, state] of suites) caseKeysBySuite[suite] = Object.freeze(state.cases.map((testCase) => testCase.key));
       for (const [suite, state] of suites) {
         statusesBySuite[suite] = state.status;
-        summariesBySuite[suite] = state.executionShape === "cases"
-          ? `${state.cases.length} · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
-          : `${state.declaredChecks ?? 0} checks · ${state.status}`;
+        summariesBySuite[suite] = suite_summary(state);
       }
       const expandedSuites = Object.freeze([...suites.values()].filter((state) => state.expanded).map((state) => state.suite));
       return Object.freeze({

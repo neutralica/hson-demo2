@@ -107,6 +107,7 @@
     "test:stage5b-dom-node": "node --import=tsx tests/runners/harness/run-stage-5b-dom.node.mts",
     "test:stage5c-closeout-node": "node --import=tsx tests/runners/harness/run-stage-5c-closeout.node.mts",
     "test:phase1-convergence-node": "node --import=tsx tests/runners/harness/run-phase-1-convergence.node.mts",
+    "test:phase2a-lifecycle-node": "node --import=tsx tests/runners/harness/run-phase-2a-lifecycle.node.mts",
     "test:external-library-node": "node --import=tsx tests/runners/harness/run-external-library-launchers.node.mts",
     "test:external-library-all-node": "node --import=tsx tests/runners/harness/run-external-library-launchers.node.mts --all",
     "test:external-launcher-protocol-node": "node --import=tsx tests/runners/harness/run-external-launcher-protocol.node.mts",

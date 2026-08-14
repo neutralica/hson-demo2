@@ -230,7 +230,7 @@ async function run_worker_selected(testIds: readonly string[]): Promise<Readonly
     name: "tests.runSelected",
     payload: { testIds: [...testIds] },
   });
-  expect_cloudflare(response.type === "ack", `Worker selected action ${selectedActionNumber} is acknowledged`);
+  expect_cloudflare(response.type === "ack", `Worker selected action ${selectedActionNumber} is acknowledged (${JSON.stringify(response)})`);
   const result = response.result as unknown as HostedTestSelectedRunResult;
   expect_cloudflare(typeof result.reportHostId === "string", "Worker selected action exposes its streamed report host");
   const reportHost = workerApplication.store.get(result.reportHostId);
@@ -251,15 +251,15 @@ expect_cloudflare(
   "one exact advertised Worker test executes through canonical selection",
 );
 const workerSameSuite = workerExecutorRegistry.catalog.tests
-  .filter((descriptor) => descriptor.suite === workerFirst.suite)
+  .filter((descriptor) => descriptor.suiteId === workerFirst.suiteId)
   .slice(0, 3);
 const workerSeveral = await run_worker_selected(workerSameSuite.map((descriptor) => descriptor.id).reverse());
 expect_cloudflare(
   hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.key).join("|")
-    === workerSameSuite.map((descriptor) => descriptor.id).sort().join("|"),
-  "several Worker tests execute once in canonical ID order",
+    === workerSameSuite.map((descriptor) => descriptor.id).join("|"),
+  `several Worker tests execute once in frozen descriptor order (observed ${hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.key).join("|")})`,
 );
-const workerSecondSuite = workerExecutorRegistry.catalog.tests.find((descriptor) => descriptor.suite !== workerFirst.suite);
+const workerSecondSuite = workerExecutorRegistry.catalog.tests.find((descriptor) => descriptor.suiteId !== workerFirst.suiteId);
 expect_cloudflare(workerSecondSuite !== undefined, "Worker catalog includes multiple original suites");
 const workerCross = await run_worker_selected([workerSecondSuite.id, workerFirst.id]);
 expect_cloudflare(

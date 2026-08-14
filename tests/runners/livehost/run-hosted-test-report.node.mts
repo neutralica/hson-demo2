@@ -85,7 +85,10 @@ const report = make_hosted_test_report(() => times.shift() ?? 300, undefined, "l
 const initial = report.map.capture();
 expect_report(initial.rev === 0, "JSON object construction has the expected initial revision");
 equal(initial.value, {
-  run: { suite: "livemap/replay", status: "idle", startedAt: null, completedAt: null, timing: null },
+  run: {
+    suite: "livemap/replay", status: "idle", startedAt: null, completedAt: null, timing: null,
+    lastSequence: 0, lastEventSignature: "",
+  },
   summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
   plan: null,
   suiteRuns: [],
@@ -102,39 +105,39 @@ report.map.feed([], (event) => feedEvents.push(event));
 report.reduce({ t: "suite_begin", suite: "livemap/replay", totalPlanned: 2 });
 expect_report(report.map.rev === 1, "start consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "running", "start sets running");
-expect_report(feedEvents.at(-1)?.commit.ops.length === 2, "start commit contains only changed semantic writes");
+expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 4, "start commit includes lifecycle chronology and run state");
 expect_report(report.commits().length === 1, "capture begins before start mutation");
 const startCommit = must_commit(report.commits()[0], "start commit must exist");
 expect_report(startCommit.prevRev === 0 && startCommit.rev === 1, "start capture begins at initial revision");
 expect_report(find_op(startCommit, ["run", "status"])?.next === "running", "start commit records running status");
-expect_report(find_op(startCommit, ["run", "startedAt"])?.next === 100, "start commit records start time");
+expect_report(find_op(startCommit, ["run", "startedAt"])?.next === 200, "start commit records start time after queued seeding");
 
 report.reduce({ t: "case_begin", suite: "livemap/replay", caseId: "round-trips-a-commit", name: "round trips a commit" });
-expect_report(report.map.rev === 1, "ignored case_begin consumes no revision");
+expect_report(Number(report.map.rev) === 2, "case_begin records normalized chronology even for a legacy unplanned route");
 report.reduce(passEvent);
-expect_report(Number(report.map.rev) === 2, "completed case consumes one revision");
-expect_report(feedEvents.at(-1)?.commit.ops.length === 3, "case list and counters share one commit");
+expect_report(Number(report.map.rev) === 3, "completed case consumes one revision");
+expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 3, "case list, counters, and chronology share one commit");
 expect_report(report.map.snap(["summary", "pass"]) === 1, "pass counter increments");
 expect_report(hosted_test_report_cases(report.map.capture().value).length === 1, "case is appended");
 
 const unchanged = report.map.set(["summary", "pass"], 1);
-expect_report(!unchanged.changed && Number(report.map.rev) === 2, "unchanged write consumes no revision or feed event");
-expect_report(feedEvents.length === 2, "feed emits once per changed semantic batch");
-expect_report(report.commits().length === 2, "internal capture ignores unchanged write");
-const caseCommit = must_commit(report.commits()[1], "case commit must exist");
+expect_report(!unchanged.changed && Number(report.map.rev) === 3, "unchanged write consumes no revision or feed event");
+expect_report(feedEvents.length === 3, "feed emits once per changed semantic batch");
+expect_report(report.commits().length === 3, "internal capture ignores unchanged write");
+const caseCommit = must_commit(report.commits()[2], "case commit must exist");
 expect_report(caseCommit.ops.some((op) => op.kind === "set" && op.path[0] === "caseBatches"), "case commit includes one compact batch record");
 expect_report(find_op(caseCommit, ["summary", "cases"])?.next === 1, "case commit increments completed cases");
 expect_report(find_op(caseCommit, ["summary", "pass"])?.next === 1, "case commit increments exactly the pass counter");
 
 report.complete(passingResult);
-expect_report(Number(report.map.rev) === 3, "terminal update consumes one revision");
+expect_report(Number(report.map.rev) === 4, "terminal update consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "passed", "passing result is terminal passed");
-expect_report(report.map.snap(["run", "completedAt"]) === 200, "terminal time is finite");
-expect_report(feedEvents.at(-1)?.commit.ops.length === 3, "terminal commit contains completion, status, and timing");
-expect_report(report.commits().length === 3, "normal terminal commit is captured");
-const terminalCommit = must_commit(report.commits()[2], "terminal commit must exist");
+expect_report(report.map.snap(["run", "completedAt"]) === 300, "terminal time is finite");
+expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 5, "terminal commit contains chronology, completion, status, and timing");
+expect_report(report.commits().length === 4, "normal terminal commit is captured");
+const terminalCommit = must_commit(report.commits()[3], "terminal commit must exist");
 expect_report(find_op(terminalCommit, ["run", "status"])?.next === "passed", "terminal commit records passed status");
-expect_report(find_op(terminalCommit, ["run", "completedAt"])?.next === 200, "terminal commit records completion time");
+expect_report(find_op(terminalCommit, ["run", "completedAt"])?.next === 300, "terminal commit records completion time");
 expect_contiguous(report.commits(), initial.rev);
 equal(replay_commits(initial.value, report.commits()), report.map.capture().value, "captured commits reconstruct final report");
 
@@ -201,9 +204,11 @@ const errored = make_hosted_test_report(() => 10);
 errored.reduce({ t: "suite_begin", suite: "livemap/replay" });
 errored.failInfrastructure(new Error("runner exploded"));
 expect_report(errored.map.snap(["run", "status"]) === "error", "infrastructure exception is terminal error");
-equal(errored.map.snap(["error"]), { message: "runner exploded" }, "infrastructure error is normalized");
-expect_report(errored.commits().length === 2, "infrastructure terminal commit follows earlier start commit");
-expect_report(find_op(must_commit(errored.commits()[1], "error commit must exist"), ["run", "status"])?.next === "error", "infrastructure terminal commit records error status");
+const infrastructureError = errored.map.snap(["error"]) as HostedTestReport["error"];
+expect_report(infrastructureError?.kind === "infrastructure" && infrastructureError.executorId === "legacy" && infrastructureError.message === "runner exploded", "infrastructure error retains classification and executor context");
+expect_report(typeof infrastructureError.stack === "string" && infrastructureError.stack.includes("runner exploded"), "infrastructure error retains an available stack");
+expect_report(errored.commits().length === 3, "infrastructure evidence and terminal lifecycle follow the earlier start commit");
+expect_report(find_op(must_commit(errored.commits()[2], "error commit must exist"), ["run", "status"])?.next === "error", "infrastructure terminal commit records error status");
 
 function reduce_sequence(): HostedTestReport {
   const target = make_hosted_test_report(() => 1);
@@ -235,13 +240,15 @@ expect_report(
     && realRun.map.snap(["summary", "cases"]) === (response.result as unknown as HostedTestRunResult).summary.cases,
   "report summary agrees with action result",
 );
-expect_report(realRun.map.rev === 4, "real run revision is start + two case batches + terminal");
+expect_report(realRun.map.rev >= 93, "real run streams keyed lifecycle transitions instead of only completion batches");
 const realCommits = realRun.commits();
-expect_report(realCommits.length === 4, "real run captures start + two case batches + terminal");
+expect_report(realCommits.length === realRun.map.rev, "real run captures every incremental lifecycle revision");
 expect_report(realCommits[0]?.prevRev === 0 && realCommits[0].rev === 1, "real capture starts at revisions 0 to 1");
-expect_report(realCommits.at(-1)?.prevRev === 3 && realCommits.at(-1)?.rev === 4, "real capture ends at revisions 3 to 4");
+expect_report(realCommits.at(-1)?.rev === realRun.map.rev, "real capture ends at the authoritative head revision");
 expect_contiguous(realCommits, 0);
-for (const commit of realCommits.slice(1, -1)) {
+const realBatchCommits = realCommits.filter((commit) => commit.ops.some((op) => op.kind === "set" && op.path[0] === "caseBatches"));
+expect_report(realBatchCommits.length === 2, "legacy case batches remain a bounded projection of normalized case state");
+for (const commit of realBatchCommits) {
   expect_report(commit.ops.filter((op) => op.kind === "set" && op.path[0] === "caseBatches").length === 1, `case revision ${commit.rev} has one compact batch append`);
   expect_report(find_op(commit, ["summary", "cases"]) !== undefined, `case revision ${commit.rev} increments cases`);
   const statusCounters = ["pass", "fail", "skip"].filter((status) => find_op(commit, ["summary", status]) !== undefined);
@@ -268,8 +275,10 @@ const thrownResponse = await create_hosted_test_livehost(async (onEvent) => {
 });
 expect_report(thrownResponse.type === "error", "hosted infrastructure exception preserves action-error semantics");
 expect_report(thrownRun?.map.snap(["run", "status"]) === "error", "hosted infrastructure exception leaves a terminal error report");
-equal(thrownRun?.map.snap(["error"]), { message: "hosted runner exploded" }, "hosted infrastructure error is durable");
-expect_report(thrownRun?.commits().length === 2, "hosted infrastructure path captures start and terminal error");
+const hostedInfrastructureError = thrownRun?.map.snap(["error"]) as HostedTestReport["error"] | undefined;
+expect_report(hostedInfrastructureError?.kind === "infrastructure" && hostedInfrastructureError.executorId === "legacy" && hostedInfrastructureError.message === "hosted runner exploded", "hosted infrastructure error is durable with execution context");
+expect_report(typeof hostedInfrastructureError.stack === "string" && hostedInfrastructureError.stack.includes("hosted runner exploded"), "hosted infrastructure error retains the runner stack");
+expect_report(thrownRun?.commits().length === 3, "hosted infrastructure path captures start, classified error evidence, and terminal state");
 const thrownCount = thrownRun?.commits().length;
 thrownRun?.map.set(["run", "status"], "running");
 expect_report(thrownRun?.commits().length === thrownCount, "hosted infrastructure path disposes capture before rejecting action");

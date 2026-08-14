@@ -38,7 +38,7 @@ export function hosted_external_launcher_log_projection(
   launcher: ExternalLauncherReport,
 ): Readonly<{ line: string; failureDiagnostics: readonly string[] }> {
   const prefix = launcher.status === "running" ? "run " : launcher.status.padEnd(4);
-  const line = `${prefix} ${launcher.id} — ${launcher.executableChecks} cases${launcher.status === "pass" || launcher.status === "fail"
+  const line = `${prefix} ${launcher.id} — ${launcher.executableChecks} checks${launcher.status === "pass" || launcher.status === "fail"
     ? ` — ${format_hosted_test_duration(launcher.ms)}`
     : ""}`;
   if (launcher.status !== "fail") {
@@ -123,7 +123,7 @@ export async function serialize_hosted_run_report(
       ? [`canonical cases: ${summary.canonical.pass} passed · ${summary.canonical.fail} failed · ${summary.canonical.skip} skipped`]
       : []),
     ...(summary.launchers.total > 0
-      ? [`library suites: ${summary.launchers.pass}/${summary.launchers.total} passed · ${summary.launchers.fail} failed · ${summary.launchers.declaredChecks} cases`]
+      ? [`library suites: ${summary.launchers.pass}/${summary.launchers.total} passed · ${summary.launchers.fail} failed · ${summary.launchers.declaredChecks} checks`]
       : []),
     "",
     ...cases.map((testCase) => `${testCase.status.toUpperCase().padEnd(4)} ${format_hosted_test_duration(testCase.ms).padStart(9)} ${testCase.suite} :: ${testCase.name}${testCase.err ? ` — ${testCase.err}` : ""}`),
@@ -131,7 +131,7 @@ export async function serialize_hosted_run_report(
   for (const launcher of external) {
     lines.push(
       "",
-      `${launcher.id} — ${launcher.executableChecks} cases · ${launcher.status} — ${format_hosted_test_duration(launcher.ms)}`,
+      `${launcher.id} — ${launcher.executableChecks} checks · ${launcher.status} — ${format_hosted_test_duration(launcher.ms)}`,
       `launcher: ${launcher.id}`,
       `runtime: ${launcher.runtime}`,
       `exit: ${launcher.exitCode ?? "none"}${launcher.signal ? ` signal ${launcher.signal}` : ""}${launcher.timedOut ? " timeout" : ""}`,

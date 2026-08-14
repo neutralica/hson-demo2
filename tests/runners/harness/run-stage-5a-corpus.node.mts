@@ -111,7 +111,7 @@ expect_stage5a(
   result.ok
     && result.summary.cases === node.catalog.tests.length
     && result.summary.suites === selectedSuites.length,
-  "expanded all-discovered Node execution passes with original suite grouping",
+  `expanded all-discovered Node execution passes with original suite grouping (observed ${JSON.stringify({ ok: result.ok, cases: result.summary.cases, suites: result.summary.suites, failed: result.summary.fail, failures: result.summary.failures.map((failure) => `${failure.suite}::${failure.caseId ?? failure.name}`) })})`,
 );
 
 const domPending = all_jsdom_hosted_test_suites();
