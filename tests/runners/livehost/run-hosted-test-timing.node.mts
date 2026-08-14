@@ -1,4 +1,4 @@
-import { format_hosted_test_duration } from "../../harness/reporting/hosted/hosted-test-timing";
+import { format_hosted_test_duration } from "../../../src/shared/hosted-tests/hosted-test-timing";
 
 const expected = new Map<number, string>([
   [0, "0.0 ms"],

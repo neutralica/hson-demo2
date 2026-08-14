@@ -24,10 +24,7 @@ import {
   create_node_capacity_livehost_socket,
   type NodeCapacityLiveHostSocket,
 } from "./node-capacity-livehost-socket";
-import {
-  observe_hosted_test_timeline,
-  type HostedTestTimelineObserver,
-} from "../../../hosted/hosted-test-timeline";
+import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";

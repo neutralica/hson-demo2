@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
+import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/external-launcher-contract";
 import {
   create_external_library_launcher_service,
   EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS,

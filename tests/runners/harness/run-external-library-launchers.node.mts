@@ -28,10 +28,7 @@ import {
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
-import {
-  CANONICAL_TEST_SUBJECT_ORDER,
-  TEST_SUBJECT_IDENTIFIERS,
-} from "../../harness/core/test-contracts";
+import { CANONICAL_TEST_SUBJECT_ORDER, TEST_SUBJECT_IDENTIFIERS } from "../../../src/shared/testing/test-contracts";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 

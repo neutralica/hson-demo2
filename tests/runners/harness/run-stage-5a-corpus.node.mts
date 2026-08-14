@@ -10,7 +10,7 @@ import {
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 import { all_jsdom_hosted_test_suites } from "../../harness/runtimes/dom/jsdom-hosted-test-suites";
 import { all_jsdom_hosted_canvas_suites } from "../../harness/runtimes/dom/canvas/jsdom-hosted-canvas-suites";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "../../harness/core/test-contracts";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
 
 function expect_stage5a(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 5A corpus: ${message}`);

@@ -10,7 +10,7 @@ import {
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
 } from "../../harness/runtimes/node/external-library-launchers";
-import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
+import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/external-launcher-contract";
 
 const fixturePath = fileURLToPath(new URL("../../fixtures/protocol/external-launcher-protocol-fixture.mjs", import.meta.url));
 const discovered = await resolve_external_library_launchers();

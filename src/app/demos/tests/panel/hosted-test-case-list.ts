@@ -1,9 +1,9 @@
 import type { LiveTree } from "hson-live/livetree";
-import type { HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "./hosted-test-panel-adapter";
-import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
 import { _fontSize } from "../../../core/consts/ui-consts";
-import type { TestLifecycleCounts, TestLifecycleStatus } from "../../../../../tests/harness/core/test-lifecycle";
+import type { TestLifecycleCounts, TestLifecycleStatus } from "../../../../shared/testing/test-lifecycle-contract";
 import {
   classify_hosted_test_stderr,
   hosted_test_presentation_group_label,
@@ -17,10 +17,14 @@ export type HostedTestCaseActions = Readonly<{
   copy(caseKey: string): Promise<void>;
 }>;
 
+export type HostedTestCaseAction = keyof HostedTestCaseActions;
+
 export type HostedTestPanelProjectionMetrics = Readonly<{
   suiteRowsCreated: number;
   caseRowsCreated: number;
   visibleCaseRows: number;
+  liveCaseTrees: number;
+  actionHandleEntries: number;
   listenerRegistrations: number;
   liveTreesConstructed: number;
   cssSurfaceAccesses: number;
@@ -56,6 +60,7 @@ export type HostedTestCaseList = Readonly<{
   set_expanded(suite: string, expanded: boolean): void;
   show_error(message: string): void;
   flush(): void;
+  action_handle(caseKey: string, action: HostedTestCaseAction): LiveTree | undefined;
   snapshot(): HostedTestPanelProjectionSnapshot;
   dispose(): void;
 }>;
@@ -200,6 +205,7 @@ export function make_hosted_test_case_list(
   let suiteRowsCreated = 0;
   let caseRowsCreated = 0;
   let visibleCaseRows = 0;
+  let liveCaseTrees = 0;
   let renderPasses = 0;
   let disposed = false;
   let generation = 0;
@@ -207,7 +213,21 @@ export function make_hosted_test_case_list(
   const suites = new Map<string, SuiteProjection>();
   const subjectGroups = new Map<HostedTestPresentationGroup, SubjectProjection>();
   const caseRecords = new Map<string, ProjectedCase>();
+  const actionHandles = new Map<string, LiveTree>();
   const dirtySuites = new Set<string>();
+
+  const action_handle_key = (caseKey: string, action: HostedTestCaseAction): string => `${caseKey}\u0000${action}`;
+
+  function retain_action_handle(caseKey: string, action: HostedTestCaseAction, handle: LiveTree): void {
+    const key = action_handle_key(caseKey, action);
+    if (actionHandles.has(key)) throw new Error(`Duplicate hosted case action handle: ${caseKey} (${action}).`);
+    actionHandles.set(key, handle);
+  }
+
+  function release_case_action_handles(caseKey: string): void {
+    actionHandles.delete(action_handle_key(caseKey, "view"));
+    actionHandles.delete(action_handle_key(caseKey, "copy"));
+  }
 
   const css = root.css;
   css.setMany(PANEL_STYLES.root);
@@ -379,15 +399,18 @@ export function make_hosted_test_case_list(
     nameBlock.create.span().classlist.set("hosted-case-identity").text.set(testCase.key);
     const durationView = row.create.span().classlist.set("hosted-case-duration").text.set(testCase.ms === null ? testCase.status : format_hosted_test_duration(testCase.ms));
     const controls = row.create.span().classlist.set("hosted-case-actions");
-    controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
+    const viewControl = controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
       type: "button", "data-hosted-action": "view", "data-case-key": testCase.key, "aria-label": `View report for ${testCase.name}`,
     }).text.set("view");
-    controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
+    const copyControl = controls.create.button().classlist.set("hosted-case-action").attrs.setMany({
       type: "button", "data-hosted-action": "copy", "data-case-key": testCase.key, "aria-label": `Copy report for ${testCase.name}`,
     }).text.set("copy");
+    retain_action_handle(testCase.key, "view", viewControl);
+    retain_action_handle(testCase.key, "copy", copyControl);
     liveTreesConstructed += 9;
     caseRowsCreated += 1;
     visibleCaseRows += 1;
+    liveCaseTrees += 9;
     testCase.row = row;
     testCase.statusView = statusView;
     testCase.nameView = nameView;
@@ -475,12 +498,14 @@ export function make_hosted_test_case_list(
       state.caseRowsHost = undefined;
       state.detailsSignature = "";
       for (const testCase of state.cases) {
+        release_case_action_handles(testCase.key);
         testCase.row = undefined;
         testCase.statusView = undefined;
         testCase.nameView = undefined;
         testCase.durationView = undefined;
       }
       visibleCaseRows -= state.cases.length;
+      liveCaseTrees -= state.cases.length * 9;
       return;
     }
     state.caseHost = state.group.create.div().classlist.set("hosted-case-block");
@@ -495,22 +520,21 @@ export function make_hosted_test_case_list(
     for (const testCase of state.cases) append_case(state, testCase);
   }
 
-  async function run_case_action(element: Element, action: "view" | "copy", caseKey: string): Promise<void> {
+  async function run_case_action(button: LiveTree, action: HostedTestCaseAction, caseKey: string): Promise<void> {
     const actionGeneration = generation;
-    const quid = element.getAttribute("hson:quid");
-    const button = quid === null ? undefined : root.find.byQuid(quid);
-    button?.flags.set("disabled");
-    button?.attrs.set("aria-busy", "true");
-    button?.text.set("…");
+    const controlKey = action_handle_key(caseKey, action);
+    button.flags.set("disabled");
+    button.attrs.set("aria-busy", "true");
+    button.text.set("…");
     try {
       await actions[action](caseKey);
     } catch (error) {
       if (!disposed && generation === actionGeneration) show_error(error instanceof Error ? error.message : String(error));
     } finally {
-      if (!disposed && generation === actionGeneration) {
-        button?.flags.clear("disabled");
-        button?.attrs.drop("aria-busy");
-        button?.text.set(action);
+      if (!disposed && generation === actionGeneration && actionHandles.get(controlKey) === button) {
+        button.flags.clear("disabled");
+        button.attrs.drop("aria-busy");
+        button.text.set(action);
       }
     }
   }
@@ -527,7 +551,9 @@ export function make_hosted_test_case_list(
     }
     if (action !== "view" && action !== "copy") return;
     const caseKey = target.getAttribute("data-case-key");
-    if (caseKey !== null) void run_case_action(target, action, caseKey);
+    if (caseKey === null) return;
+    const button = actionHandles.get(action_handle_key(caseKey, action));
+    if (button !== undefined) void run_case_action(button, action, caseKey);
   });
 
   function show_error(message: string): void {
@@ -621,6 +647,9 @@ export function make_hosted_test_case_list(
     set_expanded,
     show_error,
     flush,
+    action_handle(caseKey, action) {
+      return actionHandles.get(action_handle_key(caseKey, action));
+    },
     snapshot() {
       const caseKeysBySuite: Record<string, readonly string[]> = {};
       const summariesBySuite: Record<string, string> = {};
@@ -651,6 +680,8 @@ export function make_hosted_test_case_list(
           suiteRowsCreated,
           caseRowsCreated,
           visibleCaseRows,
+          liveCaseTrees,
+          actionHandleEntries: actionHandles.size,
           listenerRegistrations: disposed ? 0 : 1,
           liveTreesConstructed,
           cssSurfaceAccesses: 1,
@@ -673,8 +704,10 @@ export function make_hosted_test_case_list(
       suites.clear();
       subjectGroups.clear();
       caseRecords.clear();
+      actionHandles.clear();
       dirtySuites.clear();
       visibleCaseRows = 0;
+      liveCaseTrees = 0;
       root.remove();
     },
   });

@@ -1,9 +1,5 @@
-import type {
-  TestCollection,
-  TestDescriptorMetadata,
-  TestSubject,
-  TestSuite,
-} from "../core/test-contracts";
+import type { TestCollection, TestDescriptorMetadata, TestSubject } from "../../../src/shared/testing/test-contracts";
+import type { TestSuite } from "../core/test-contracts";
 import { all_livehost_suites } from "../../suites/livehost/suite-registry";
 import { livemap_suites_core } from "../../suites/livemap/core-suite";
 import { livemap_suite_editor } from "../../suites/livemap/editor-suite";

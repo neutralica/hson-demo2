@@ -1,7 +1,7 @@
 import type { LoopReport } from "hson-live/diagnostics";
-import type { HostedTestCaseDiagnostic } from "./hosted-test-action.types";
-import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
-import type { HostedTestRunTarget } from "./hosted-test-suite";
+import type { HostedTestCaseDiagnostic } from "../../../src/shared/hosted-tests/hosted-test-action.types";
+import type { HostedTestRunId } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
+import type { HostedTestRunTarget } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import type { CaseKey, TestAssertRow, TestEvent, TestSuite } from "../core/test-contracts";
 import type { ExecutableTestRegistration, TestExecutorRegistry } from "../core/test-executor";
 import { all_hosted_executable_suites, type HostedTestRuntimeKind } from "./hosted-all-test-suites";

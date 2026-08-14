@@ -1,6 +1,7 @@
-import type { RunOptions, RunResult, TestEvent, TestFailure } from "../../core/test-contracts";
+import type { RunOptions, RunResult, TestEvent } from "../../core/test-contracts";
+import type { TestFailure } from "../../../../src/shared/testing/test-contracts";
 import type { TestExecutorRegistry } from "../../core/test-executor";
-import { is_test_case_id } from "../../core/test-identity";
+import { is_test_case_id } from "../../../../src/shared/testing/test-identity";
 import {
   external_library_launcher_termination_generation,
   run_external_library_launcher,
@@ -8,7 +9,7 @@ import {
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
 } from "./external-library-launchers";
-import type { ExternalLibraryLauncherTarget } from "../../core/external-launcher-contract";
+import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
 import { run_fresh_node_selected_test_ids } from "./run-node-selected-test-suites";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY = 2;

@@ -1,9 +1,9 @@
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
-import type { HostedTestCancelResult, HostedTestPanelRunResult } from "../../harness/hosted/hosted-test-action.types";
+import type { HostedTestCancelResult, HostedTestPanelRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
-import { hosted_test_recovery_association } from "../../harness/hosted/hosted-test-application.types";
-import type { HostedTestReport } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { hosted_test_recovery_association } from "../../../src/shared/hosted-tests/hosted-test-application.types";
+import type { HostedTestReport } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_hosted_test_panel_adapter } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
 import { make_in_memory_hosted_test_runtime } from "./in-memory-hosted-test-panel-runtime";
 

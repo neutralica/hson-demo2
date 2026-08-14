@@ -1,6 +1,6 @@
 import type { TestCase, TestEvent, TestSuite } from "../../harness/core/test-contracts";
-import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
-import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestSelectedRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import {
   hosted_test_panel_primary_choices,
@@ -8,7 +8,8 @@ import {
   hosted_test_panel_suite_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { make_test_executor_registry } from "../../harness/core/test-executor";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";

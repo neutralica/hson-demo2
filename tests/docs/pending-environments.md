@@ -4,6 +4,14 @@ The canonical Node LiveHost contains the fixed deterministic corpus supported by
 ordinary Node, synthetic DOM, and the hosted deterministic canvas recorder.
 The following surfaces require a materially different execution boundary.
 
+## Phase 4A source-layering certificate
+
+- **Command:** `npm run test:phase4a-layering-node`
+- **Required environment:** repository checkout with Node filesystem access and the TypeScript parser.
+- **Why it is not a hosted case:** the current hosted Node executor intentionally advertises runtime execution capabilities, not repository-filesystem or build-source inspection. The Worker executor cannot truthfully inspect a checkout.
+- **Smallest future adapter:** a bounded source-certificate launcher exposed as an opaque hosted suite after the hosted executor gains an explicit filesystem/build-certificate boundary.
+- **Current location:** `tests/runners/harness/run-phase-4a-layering.node.mts`.
+
 ## Real browser and Playwright
 
 - **Sources:** `tests/integration/browser`, application boot/panel fixtures, rendered

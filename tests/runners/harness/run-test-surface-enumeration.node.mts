@@ -1,7 +1,7 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../harness/hosted/hosted-test-suite";
+import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import {
   DECLARED_DEMO_TEST_SCRIPTS,
   HSON_LIVE_NON_LAUNCHER_TEST_SCRIPT_REASONS,
@@ -9,7 +9,7 @@ import {
   TEST_SURFACE_CATEGORIES,
 } from "../../harness/hosted/test-surface-catalog";
 import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "../../harness/core/test-contracts";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
 import {
   HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
   hson_live_non_launcher_test_scripts,

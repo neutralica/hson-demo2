@@ -2,11 +2,11 @@
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import { HOSTED_TEST_REPORT_SCHEMA } from "./hosted-test-report";
-import type { HostedTestReport } from "./hosted-test-report.types";
+import type { HostedTestReport } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
 import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
-import type { HostedTestRunId } from "./hosted-test-report-wire.types";
-import { is_hosted_test_run_target } from "../../hosted/hosted-test-suite";
-import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import type { HostedTestRunId } from "../../../../src/shared/hosted-tests/hosted-test-report-wire.types";
+import { is_hosted_test_run_target } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
+import type { HostedTestRunTarget } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export const HOSTED_TEST_REPORT_INITIAL_EVENT = "hosted-test-report-initial";
 

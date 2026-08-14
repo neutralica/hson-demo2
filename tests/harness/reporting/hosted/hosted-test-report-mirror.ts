@@ -2,7 +2,7 @@
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import { HOSTED_TEST_REPORT_SCHEMA } from "./hosted-test-report";
-import type { HostedTestReport } from "./hosted-test-report.types";
+import type { HostedTestReport } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
 import type { HostedTestReportInitialEnvelope } from "./hosted-test-report-initial.types";
 import type {
   HostedTestReportMirror,
@@ -11,7 +11,7 @@ import type {
   HostedTestReportMirrorStatus,
 } from "./hosted-test-report-mirror.types";
 import { decode_hosted_test_report_commit } from "./hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "./hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 
 export class HostedTestReportMirrorError extends Error {
   readonly code = "HOSTED_TEST_REPORT_MIRROR_FAILED";

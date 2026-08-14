@@ -12,7 +12,7 @@ import { run_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-
 import { run_jsdom_hosted_canvas_suites } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 import { with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
 import { run_hosted_all_test_suites, run_hosted_test_category, type HostedTestCategory } from "./hosted-all-test-suites";
-import { CANONICAL_TEST_COLLECTION_ORDER, CANONICAL_TEST_SUBJECT_ORDER } from "../core/test-order";
+import { CANONICAL_TEST_COLLECTION_ORDER, CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
 
 const category_descriptor = (category: HostedTestCategory, label: string): HostedTestSuiteDescriptor => Object.freeze({
   id: `category/${category}` as HostedTestSuiteDescriptor["id"],

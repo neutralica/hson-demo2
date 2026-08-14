@@ -8,7 +8,7 @@ import {
   HOSTED_TEST_REPORT_COMMIT_EVENT,
   HostedTestReportCommitDecodeError,
 } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 import { hsonLiveMap } from "hson-live/livemap";
 
 type Listener = (message: string) => void;

@@ -12,7 +12,7 @@ import {
 } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 import { make_hosted_test_run_retention } from "../../harness/hosted/hosted-test-action";
-import { hosted_test_report_cases } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 

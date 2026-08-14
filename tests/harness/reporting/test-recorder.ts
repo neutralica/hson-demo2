@@ -1,4 +1,5 @@
-import type { TestAssertRow, TestEvent, TestFailure, TestSummary } from "../core/test-contracts";
+import type { TestAssertRow, TestEvent } from "../core/test-contracts";
+import type { TestFailure, TestSummary } from "../../../src/shared/testing/test-contracts";
 import { normalize_case_end_event } from "./assert-row-status";
 
 

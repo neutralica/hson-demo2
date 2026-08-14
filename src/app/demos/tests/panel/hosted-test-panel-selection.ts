@@ -1,14 +1,8 @@
-import {
-  CANONICAL_TEST_SUBJECT_ORDER,
-  type TestSubject,
-} from "../../../../../tests/harness/core/test-contracts";
-import type {
-  TestCollection,
-  TestDescriptor,
-} from "../../../../../tests/harness/core/test-contracts";
-import { select_test_descriptors } from "../../../../../tests/harness/core/test-selection";
-import { compare_test_descriptors, compare_test_suites, test_presentation_rank } from "../../../../../tests/harness/core/test-order";
-import { external_launcher_suite_descriptor, type ExternalLibraryLauncherTarget } from "../../../../../tests/harness/core/external-launcher-contract";
+import { CANONICAL_TEST_SUBJECT_ORDER, type TestSubject } from "../../../../shared/testing/test-contracts";
+import type { TestCollection, TestDescriptor } from "../../../../shared/testing/test-contracts";
+import { select_test_descriptors } from "../../../../shared/testing/test-selection";
+import { compare_test_descriptors, compare_test_suites, test_presentation_rank } from "../../../../shared/testing/test-order";
+import { external_launcher_suite_descriptor, type ExternalLibraryLauncherTarget } from "../../../../shared/testing/external-launcher-contract";
 
 export type HostedTestPanelSelection =
   | Readonly<{ kind: "all" }>

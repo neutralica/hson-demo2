@@ -7,10 +7,11 @@ import {
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
-import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
-import { decode_selected_hosted_test_run_response } from "../../harness/hosted/hosted-test-client-action";
+import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/external-launcher-contract";
+import { decode_selected_hosted_test_run_response } from "../../../src/shared/hosted-tests/hosted-test-client-action";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { make_test_executor_registry } from "../../harness/core/test-executor";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 import { make_in_memory_hosted_test_runtime } from "../../suites/livehost/in-memory-hosted-test-panel-runtime";
 import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 

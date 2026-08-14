@@ -5,8 +5,8 @@ import {
   hosted_test_panel_suite_choices,
   hosted_test_panel_test_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
-import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
-import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
+import type { HostedTestSelectedRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import {
   CANVAS_BROWSER_RASTER_CASE_IDS,
@@ -21,7 +21,8 @@ import {
 } from "../../harness/runtimes/node/run-node-selected-test-suites";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { make_test_executor_registry } from "../../harness/core/test-executor";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 
 function expect_closeout(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Stage 5C closeout: ${message}`);

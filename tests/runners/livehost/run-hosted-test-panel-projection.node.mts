@@ -1,5 +1,5 @@
 import { hson } from "hson-live";
-import type { HostedTestCaseReport, HostedTestReport } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestCaseReport, HostedTestReport } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import type { HostedTestPanelReportUpdate } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
 import { make_hosted_test_case_list, type HostedTestCaseList, type HostedTestFrameScheduler } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
@@ -132,7 +132,10 @@ try {
     async copy(caseKey) { copied.push(caseKey); },
   }, scheduler);
 
-  const alphaCases = [test_case("suite/alpha", "first"), test_case("suite/alpha", "second")];
+  const alphaCases = [
+    test_case("suite/alpha", "same title", "pass", "first"),
+    test_case("suite/alpha", "same title", "pass", "second"),
+  ];
   const betaCases = [test_case("suite/beta", "third")];
   projection.ingest(update(report(2, 2, 0), alphaCases));
   projection.ingest(update(report(3, 3, 0), betaCases));
@@ -148,6 +151,8 @@ try {
   expect_projection(collapsed.expandedSuites.length === 0 && collapsed.metrics.visibleCaseRows === 0, "all suites are collapsed by default");
   expect_projection(runtime.document.querySelectorAll(".hosted-case-row").length === 0, "collapsed completion creates zero case-row DOM nodes");
   expect_projection(collapsed.metrics.suiteRowsCreated === 2 && collapsed.metrics.caseRowsCreated === 0, "completion creates only suite summary rows");
+  expect_projection(collapsed.metrics.actionHandleEntries === 0 && collapsed.metrics.liveCaseTrees === 0, "collapsed suites retain no unmaterialized action handles or case LiveTrees");
+  expect_projection(projection.action_handle(alphaCases[0]!.key, "view") === undefined, "collapsed canonical case identity has no presentation handle");
   expect_projection(
     collapsed.metrics.listenerRegistrations === 1 && projectionClickRegistrations === 1,
     `the entire projection owns one delegated click listener (metric ${collapsed.metrics.listenerRegistrations}, observed ${projectionClickRegistrations})`,
@@ -158,35 +163,51 @@ try {
   projection.set_expanded("suite/alpha", true);
   const expanded = projection.snapshot();
   expect_projection(expanded.metrics.visibleCaseRows === 2 && expanded.metrics.caseRowsCreated === 2, "expanding one suite creates exactly that suite's cases");
+  expect_projection(expanded.metrics.actionHandleEntries === 4 && expanded.metrics.liveCaseTrees === 18, "expanded suite owns exactly two retained controls per materialized case row");
   const expandedNames = Array.from(runtime.document.querySelectorAll(".hosted-case-title"), (element) => element.textContent);
-  expect_projection(expandedNames.join(",") === "first,second", "expanded cases retain canonical order");
+  expect_projection(expandedNames.join(",") === "same title,same title", "similarly titled cases retain canonical order without becoming action identity");
   expect_projection(projectionClickRegistrations === 1, "expansion registers no per-case click listeners");
 
   const viewButton = runtime.document.querySelector<HTMLElement>('[data-hosted-action="view"]');
   const copyButton = runtime.document.querySelector<HTMLElement>('[data-hosted-action="copy"]');
+  const firstViewHandle = projection.action_handle(alphaCases[0]!.key, "view");
+  const secondViewHandle = projection.action_handle(alphaCases[1]!.key, "view");
   expect_projection(viewButton !== null && copyButton !== null, "expanded rows expose direct view and copy controls");
+  expect_projection(firstViewHandle?.dom.el() === viewButton, "delegated action identity resolves to the exact retained current LiveTree control");
+  expect_projection(firstViewHandle !== secondViewHandle, "canonical case IDs distinguish controls for identically titled cases");
   viewButton.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+  expect_projection(viewButton.hasAttribute("disabled") && viewButton.getAttribute("aria-busy") === "true", "in-flight retained action control sets semantic disabled and busy flags together");
   copyButton.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+  runtime.document.querySelector<HTMLElement>(`[data-case-key="${alphaCases[1]!.key}"][data-hosted-action="view"]`)
+    ?.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
   await Promise.resolve();
   await Promise.resolve();
-  expect_projection(viewed.join(",") === alphaCases[0]?.key && copied.join(",") === alphaCases[0]?.key, "one delegated listener routes both case actions");
+  expect_projection(viewed.join(",") === `${alphaCases[0]!.key},${alphaCases[1]!.key}` && copied.join(",") === alphaCases[0]!.key, "one delegated listener routes exact canonical case/action pairs");
+  expect_projection(!viewButton.hasAttribute("disabled") && !viewButton.hasAttribute("aria-busy"), "settled action symmetrically clears semantic disabled and busy flags");
 
   projection.set_expanded("suite/alpha", false);
   const recollapsed = projection.snapshot();
   expect_projection(recollapsed.metrics.visibleCaseRows === 0 && recollapsed.expandedSuites.length === 0, "collapse clears visible row references");
+  expect_projection(recollapsed.metrics.actionHandleEntries === 0 && recollapsed.metrics.liveCaseTrees === 0, "collapse releases all retained case-action handles and case LiveTrees");
+  expect_projection(projection.action_handle(alphaCases[0]!.key, "view") === undefined, "collapsed presentation no longer resolves its disposed action control");
   expect_projection(runtime.document.querySelectorAll(".hosted-case-row").length === 0, "collapse removes the case projection from the DOM");
 
   projection.set_expanded("suite/alpha", true);
   const reexpandedNames = Array.from(runtime.document.querySelectorAll(".hosted-case-title"), (element) => element.textContent);
-  expect_projection(reexpandedNames.join(",") === "first,second" && projectionClickRegistrations === 1, "re-expansion preserves order without adding listeners");
+  const reexpandedViewHandle = projection.action_handle(alphaCases[0]!.key, "view");
+  expect_projection(reexpandedNames.join(",") === "same title,same title" && projectionClickRegistrations === 1, "re-expansion preserves order without adding listeners");
+  expect_projection(reexpandedViewHandle !== undefined && reexpandedViewHandle !== firstViewHandle, "re-expansion installs a current handle instead of resurrecting stale exact runtime identity");
 
   projection.dispose();
-  expect_projection(projection.snapshot().metrics.listenerRegistrations === 0, "disposal removes the delegated listener");
+  expect_projection(projection.snapshot().metrics.listenerRegistrations === 0 && projection.snapshot().metrics.actionHandleEntries === 0, "disposal removes the delegated listener and all handle ownership");
   expect_projection(runtime.document.querySelector(".hosted-case-list") === null, "disposal removes the complete result projection");
 
   const replacement = make_hosted_test_case_list(host, { async view() {}, async copy() {} }, scheduler);
-  replacement.ingest(update(report(1, 1, 0, true), [test_case("suite/new", "fresh")], [{ suite: "suite/new", ms: 1 }], true));
+  replacement.ingest(update(report(1, 1, 0, true), [alphaCases[0]!], [{ suite: "suite/alpha", ms: 1 }], true));
   expect_projection(replacement.snapshot().cases === 1 && replacement.snapshot().metrics.visibleCaseRows === 0, "a rerun owns a fresh collapsed projection");
+  replacement.set_expanded("suite/alpha", true);
+  const replacementViewHandle = replacement.action_handle(alphaCases[0]!.key, "view");
+  expect_projection(replacementViewHandle !== undefined && replacementViewHandle !== reexpandedViewHandle, "projection recovery/rebuild replaces exact runtime handles for the same semantic case ID");
   replacement.dispose();
 
   const portableCaseKey = "unit/test-harness::failed-assertion-row-fails-case-and-run";

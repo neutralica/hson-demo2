@@ -1,22 +1,8 @@
-import type { TestCapability, TestCase, TestDescriptor, TestSuite } from "./test-contracts";
-import { catalog_from_test_suites, type TestCatalog } from "./test-catalog";
-
-export type TestExecutorCapabilities = Readonly<{
-  provides: readonly TestCapability[];
-}>;
-
-export type TestExecutorKind = "node" | "cloudflare-worker" | "browser";
-export type TestExecutorLocation = "hosted" | "local";
-
-export type TestExecutorDescriptor = Readonly<{
-  id: string;
-  kind: TestExecutorKind;
-  label: string;
-  location: TestExecutorLocation;
-  capabilities: TestExecutorCapabilities;
-  supportsStreaming: boolean;
-  supportsCancellation: boolean;
-}>;
+import type { TestCapability, TestDescriptor } from "../../../src/shared/testing/test-contracts";
+import type { TestCase, TestSuite } from "./test-contracts";
+import { catalog_from_test_suites } from "./test-catalog";
+import type { TestCatalog } from "../../../src/shared/testing/test-catalog-contract";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 
 export type ExecutableTestRegistration = Readonly<{
   descriptor: TestDescriptor;

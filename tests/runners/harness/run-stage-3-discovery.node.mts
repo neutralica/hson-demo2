@@ -1,24 +1,18 @@
-import type { TestCapability, TestCase, TestCollection, TestDescriptor, TestSuite } from "../../harness/core/test-contracts";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "../../harness/core/test-contracts";
-import { decode_hosted_test_discovery_response } from "../../harness/hosted/hosted-test-client-action";
+import type { TestCapability, TestCollection, TestDescriptor } from "../../../src/shared/testing/test-contracts";
+import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
+import { CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
+import { decode_hosted_test_discovery_response } from "../../../src/shared/hosted-tests/hosted-test-client-action";
 import { hosted_test_panel_primary_choices } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
 import { run_livehost_all_suite } from "../../harness/hosted/registered-hosted-test-suites";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
-import { make_test_catalog, test_catalog_version } from "../../harness/core/test-catalog";
-import {
-  decode_test_executor_discovery,
-  decode_test_executor_discovery_request,
-  make_test_executor_discovery,
-  TEST_EXECUTOR_PROTOCOL_VERSION,
-} from "../../harness/core/test-discovery";
-import {
-  make_test_executor_registry,
-  make_test_executor_registry_from_registrations,
-  type ExecutableTestRegistration,
-  type TestExecutorDescriptor,
-} from "../../harness/core/test-executor";
+import { make_test_catalog } from "../../harness/core/test-catalog";
+import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
+import { decode_test_executor_discovery, decode_test_executor_discovery_request, TEST_EXECUTOR_PROTOCOL_VERSION } from "../../../src/shared/testing/test-discovery-contract";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { make_test_executor_registry, make_test_executor_registry_from_registrations, type ExecutableTestRegistration } from "../../harness/core/test-executor";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
 import { run_fresh_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";

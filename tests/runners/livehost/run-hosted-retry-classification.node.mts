@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
-import { HostedTestActionRejectedError } from "../../harness/hosted/hosted-test-action-error";
+import { HostedTestActionRejectedError } from "../../../src/shared/hosted-tests/hosted-test-action-error";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { make_hosted_test_panel_adapter } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";

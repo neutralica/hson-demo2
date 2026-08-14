@@ -7,19 +7,16 @@ import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/pa
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
-import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
+import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/external-launcher-contract";
 import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
 import {
   create_hosted_test_application,
   HOSTED_TEST_COORDINATOR_HOST_ID,
 } from "../../harness/hosted/hosted-test-application";
-import {
-  hosted_test_recovery_association,
-  hosted_test_run_association,
-} from "../../harness/hosted/hosted-test-application.types";
-import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
+import { hosted_test_recovery_association, hosted_test_run_association } from "../../../src/shared/hosted-tests/hosted-test-application.types";
+import type { HostedTestSelectedRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
-import type { HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 function expect_phase3a(condition: unknown, message: string): asserts condition {

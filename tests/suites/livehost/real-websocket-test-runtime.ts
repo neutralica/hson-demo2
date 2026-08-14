@@ -8,7 +8,7 @@ import {
   make_remote_hosted_test_runtime,
   type HostedTestPanelRuntime,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
-import type { HostedTestSuiteId } from "../../harness/hosted/hosted-test-suite";
+import type { HostedTestSuiteId } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export const TEST_WEBSOCKET_CONSTRUCTOR = WebSocket as unknown as BrowserWebSocketConstructor;
 

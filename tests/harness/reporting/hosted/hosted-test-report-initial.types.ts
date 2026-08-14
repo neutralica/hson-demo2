@@ -1,6 +1,6 @@
-import type { HostedTestReport } from "./hosted-test-report.types";
-import type { HostedTestRunId } from "./hosted-test-report-wire.types";
-import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import type { HostedTestReport } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
+import type { HostedTestRunId } from "../../../../src/shared/hosted-tests/hosted-test-report-wire.types";
+import type { HostedTestRunTarget } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export type HostedTestReportInitialEnvelope = Readonly<{
   type: "hosted-test-report-initial";

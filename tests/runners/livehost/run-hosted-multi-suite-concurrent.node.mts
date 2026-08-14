@@ -7,11 +7,8 @@ import {
 } from "../../harness/hosted/hosted-test-action";
 import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
 import { make_hosted_test_report_router } from "../../harness/reporting/hosted/hosted-test-report-router";
-import {
-  is_hosted_test_suite_id,
-  make_hosted_test_suite_registry,
-  type HostedTestSuiteId,
-} from "../../harness/hosted/hosted-test-suite";
+import { is_hosted_test_suite_id, type HostedTestSuiteId } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
+import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 
 type Listener = (message: string) => void;

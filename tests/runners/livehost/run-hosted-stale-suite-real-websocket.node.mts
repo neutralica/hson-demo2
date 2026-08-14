@@ -1,4 +1,4 @@
-import { HostedTestUnknownSuiteError } from "../../harness/hosted/hosted-test-action-error";
+import { HostedTestUnknownSuiteError } from "../../../src/shared/hosted-tests/hosted-test-action-error";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { run_test_suites } from "../../harness/core/test-runner";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";

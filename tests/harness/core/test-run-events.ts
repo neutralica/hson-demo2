@@ -1,4 +1,5 @@
-import type { TestAssertRow, TestDescriptor, TestEvent } from "./test-contracts";
+import type { TestAssertRow, TestEvent } from "./test-contracts";
+import type { TestDescriptor } from "../../../src/shared/testing/test-contracts";
 
 export type NormalizedTestRunEvent =
   | Readonly<{ type: "suite-started"; suite: string; totalPlanned?: number }>

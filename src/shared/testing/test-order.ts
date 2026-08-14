@@ -1,14 +1,11 @@
-import type { TestCollection, TestDescriptor, TestSuiteDescriptor, TestSubject } from "./test-contracts";
-
-export const CANONICAL_TEST_SUBJECT_ORDER = Object.freeze([
-  "transform",
-  "livetree",
-  "livemap",
-  "livehost",
-  "reflect",
-] as const);
-
-export const CANONICAL_TEST_COLLECTION_ORDER = Object.freeze(["unit", "dev"] as const);
+import {
+  CANONICAL_TEST_COLLECTION_ORDER,
+  CANONICAL_TEST_SUBJECT_ORDER,
+  type TestCollection,
+  type TestDescriptor,
+  type TestSuiteDescriptor,
+  type TestSubject,
+} from "./test-contracts";
 
 type OrderedDescriptor = Pick<TestSuiteDescriptor, "id" | "subject" | "collections" | "order">;
 

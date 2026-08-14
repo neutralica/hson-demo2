@@ -7,7 +7,8 @@ import {
   TEST_FAILURE_DETAIL_LIMIT,
   run_test_suites,
 } from "../../harness/core/test-runner";
-import { make_test_executor_registry, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { make_test_executor_registry } from "../../harness/core/test-executor";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 import {
   selected_test_suites,
   SelectedTestDuplicateIdError,

@@ -7,7 +7,7 @@ import {
   make_remote_hosted_test_runtime,
   resolve_hosted_test_websocket_url,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
-import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application.types";
+import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { run_test_suites } from "../../harness/core/test-runner";
 import { start_hosted_test_server, type HostedTestServer } from "../../harness/runtimes/node/server/hosted-test-server";

@@ -1,7 +1,7 @@
 import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import { encode_hosted_test_report_commit } from "../../harness/reporting/hosted/hosted-test-report-wire";
 import type { RunResult, TestEvent } from "../../harness/core/test-contracts";
-import { hosted_test_report_cases } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 
 function expect_batch(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted report batching: ${message}`);

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { hson } from "hson-live";
-import type { TestRunPlan } from "../../harness/core/test-run-plan";
+import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 import type { HostedTestPanelReportUpdate } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
 import { make_hosted_test_case_list } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
 import {
@@ -10,12 +10,7 @@ import {
   make_hosted_test_chronology,
 } from "../../../src/app/demos/tests/panel/hosted-test-presentation";
 import { make_initial_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
-import type {
-  HostedTestEvidence,
-  HostedTestInfrastructureError,
-  HostedTestReport,
-  HostedTestSuiteRunReport,
-} from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestEvidence, HostedTestInfrastructureError, HostedTestReport, HostedTestSuiteRunReport } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 
 let checks = 0;
@@ -203,7 +198,14 @@ try {
   certify(largeSnapshot.suites === 30 && largeSnapshot.cases === 2_103 && largeSnapshot.launchers === 29, "representative mixed projection retains 30 suites, 2,103 canonical cases, and 29 opaque suites");
   certify(largeReport.suiteRuns.filter((entry) => entry.executionShape === "opaque-aggregate").reduce((total, entry) => total + entry.counts.declared, 0) === 502, "representative opaque count universe contains 502 checks");
   certify(largeSnapshot.metrics.caseRowsCreated === 0 && largeSnapshot.metrics.visibleCaseRows === 0 && largeRuntime.document.querySelectorAll(".hosted-case-row").length === 0, "2,103 queued canonical cases remain lazy while collapsed");
+  certify(largeSnapshot.metrics.actionHandleEntries === 0 && largeSnapshot.metrics.liveCaseTrees === 0, "collapsed large projection owns no hidden case-action handles or case LiveTrees");
   certify(largeSnapshot.metrics.suiteRowsCreated === 30 && largeSnapshot.metrics.listenerRegistrations === 1 && largeSnapshot.metrics.liveTreesConstructed === 244, "large Inspector materializes only stable suite/group rows with one delegated listener");
+  largeInspector.set_expanded("transform/large", true);
+  const largeExpanded = largeInspector.snapshot();
+  certify(largeExpanded.metrics.visibleCaseRows === 2_103 && largeExpanded.metrics.actionHandleEntries === 4_206 && largeExpanded.metrics.listenerRegistrations === 1, "expanding one large suite materializes only that suite's rows and two controls per canonical case");
+  largeInspector.set_expanded("transform/large", false);
+  const largeRecollapsed = largeInspector.snapshot();
+  certify(largeRecollapsed.metrics.visibleCaseRows === 0 && largeRecollapsed.metrics.actionHandleEntries === 0 && largeRecollapsed.metrics.liveCaseTrees === 0, "collapsing the large suite releases all case presentation ownership");
   const largeChronology = make_hosted_test_chronology();
   largeChronology.begin();
   certify(largeChronology.ingest(largeReport).length === 30 && largeRuntime.document.querySelectorAll(".hosted-suite-details").length === 0, "large Logger append is suite-bounded and evidence panels remain unmaterialized");

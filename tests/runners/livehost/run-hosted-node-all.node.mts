@@ -8,7 +8,7 @@ import type { HostedTestReportInitialEnvelope } from "../../harness/reporting/ho
 import { make_hosted_test_report_mirror } from "../../harness/reporting/hosted/hosted-test-report-mirror";
 import { make_hosted_test_report_router } from "../../harness/reporting/hosted/hosted-test-report-router";
 import { decode_hosted_test_report_commit_envelope, HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 
 type Listener = (message: string) => void;

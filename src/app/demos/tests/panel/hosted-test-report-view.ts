@@ -1,7 +1,7 @@
-import type { HostedTestCaseDiagnostic, HostedTestPanelRunResult } from "../../../../../tests/harness/hosted/hosted-test-action.types";
-import type { HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
-import { hosted_test_report_cases } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
-import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import type { HostedTestCaseDiagnostic, HostedTestPanelRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
+import type { HostedTestReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
 import { hosted_test_projection_summary } from "./hosted-test-report-summary";
 import { classify_hosted_test_stderr, hosted_test_suite_presentation } from "./hosted-test-presentation";
 

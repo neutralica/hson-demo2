@@ -1,10 +1,6 @@
 import type { RunOptions, TestEvent, TestSuite } from "../../core/test-contracts";
-import {
-  HOSTED_TEST_SUITE_IDS,
-  make_hosted_test_suite_registry,
-  type HostedTestSuiteDescriptor,
-  type HostedTestSuiteId,
-} from "../../hosted/hosted-test-suite";
+import { HOSTED_TEST_SUITE_IDS, type HostedTestSuiteId } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
+import { make_hosted_test_suite_registry, type HostedTestSuiteDescriptor } from "../../hosted/hosted-test-suite";
 import { all_deterministic_transform_test_suites } from "../../hosted/deterministic-transform-test-suites";
 import { run_test_suites } from "../../core/test-runner";
 import { all_livehost_suites } from "../../../suites/livehost/suite-registry";

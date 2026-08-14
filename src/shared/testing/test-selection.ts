@@ -1,5 +1,4 @@
 import type { TestCollection, TestDescriptor, TestSubject } from "./test-contracts";
-export { compare_test_descriptors } from "./test-order";
 
 export type TestSelection = Readonly<{
   subject?: TestSubject;

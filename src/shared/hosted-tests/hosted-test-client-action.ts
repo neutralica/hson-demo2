@@ -7,11 +7,11 @@ import type {
   HostedTestRunResult,
   HostedTestSelectedRunResult,
 } from "./hosted-test-action.types";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestSuiteId } from "./hosted-test-suite-contract";
 import { decode_hosted_test_action_error } from "./hosted-test-action-error";
-import type { TestExecutorDiscovery, TestExecutorDiscoveryRequest } from "../core/test-discovery";
-import { decode_test_executor_discovery } from "../core/test-discovery";
-import type { RunSelectedTestsRequest } from "../core/test-selected-run";
+import type { TestExecutorDiscovery, TestExecutorDiscoveryRequest } from "../testing/test-discovery-contract";
+import { decode_test_executor_discovery } from "../testing/test-discovery-contract";
+import type { RunSelectedTestsRequest } from "../testing/test-run-contract";
 
 export async function discover_hosted_test_executor(
   client: Readonly<{ action: (name: "tests.discover", payload: TestExecutorDiscoveryRequest) => Promise<unknown> }>,

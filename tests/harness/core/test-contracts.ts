@@ -1,74 +1,13 @@
 // tests.types.ts
 
 import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
-
-export type TestCapability =
-  | "javascript"
-  | "node"
-  | "synthetic-dom"
-  | "browser-dom"
-  | "worker"
-  | "filesystem"
-  | "websocket";
-
-/** Stable presentation and serialization order for selectable semantic subjects. */
-export { CANONICAL_TEST_SUBJECT_ORDER } from "./test-order";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "./test-order";
-
-/** Complete protocol vocabulary: selectable subjects first, auxiliary subjects last. */
-export const TEST_SUBJECT_IDENTIFIERS = Object.freeze([
-  ...CANONICAL_TEST_SUBJECT_ORDER,
-  "integration",
-  "livedemo",
-] as const);
-
-export type TestSubject = typeof TEST_SUBJECT_IDENTIFIERS[number];
-
-export type TestCollection = "unit" | "dev";
-export type TestProvenance = "hson-demo2" | "hson-live";
-export type TestExecutionShape = "cases" | "opaque-aggregate";
-
-export type TestDescriptorMetadata = Readonly<{
-  subject: TestSubject;
-  requirements: readonly TestCapability[];
-  collections?: readonly TestCollection[];
-  title?: string;
-  provenance?: TestProvenance;
-  order?: number;
-}>;
-
-export type TestDescriptorMetadataOverride = Readonly<{
-  subject?: TestSubject;
-  requirements?: readonly TestCapability[];
-  collections?: readonly TestCollection[];
-}>;
-
-export type TestDescriptor = Readonly<{
-  id: string;
-  suiteId: string;
-  caseId: string;
-  title: string;
-  subject: TestSubject;
-  requirements: readonly TestCapability[];
-  collections: readonly TestCollection[];
-  provenance: TestProvenance;
-  suiteOrdinal: number;
-  caseOrdinal: number;
-  sourceRef?: string;
-}>;
-
-export type TestSuiteDescriptor = Readonly<{
-  id: string;
-  title: string;
-  subject: TestSubject;
-  collections: readonly TestCollection[];
-  provenance: TestProvenance;
-  order: number;
-  requirements: readonly TestCapability[];
-  executionShape: TestExecutionShape;
-  sourceRef?: string;
-  declaredChecks?: number;
-}>;
+import type {
+  CaseMeta,
+  TestDescriptorMetadata,
+  TestDescriptorMetadataOverride,
+  TestSummary,
+  TestSubject,
+} from "../../../src/shared/testing/test-contracts";
 
 export type Named<T> = Readonly<{ name: string; value: T; }>;
 
@@ -147,25 +86,6 @@ export type TestEvent =
     stderrTruncated?: boolean;
   };
 
-export type TestFailure = Readonly<{
-  suite: string;
-  caseId?: string;
-  name: string;
-  err: string;
-  ms: number;
-  meta?: CaseMeta;
-}>;
-
-export type TestSummary = Readonly<{
-  suites: number;
-  cases: number;
-  pass: number;
-  fail: number;
-  skip: number;
-  msTotal: number;
-  failures: readonly TestFailure[];
-}>;
-
 export type TestCase = Readonly<{
   suite: string;
   caseId: string;
@@ -193,31 +113,6 @@ export type TestSuite = Readonly<{
 }>;
 
 
-export type TestRunMode =
-  | "hosted-all"
-  | "livetree"
-  | "livemap"
-  | "livehost"
-  | "transform"
-  | "unit"
-  | "dev"
-  | "livemap-replay"
-  | "livehost-all"
-  | "node-all"
-  | "dom-core"
-  | "canvas-core";
-
-export type CaseMeta = Readonly<{
-  fixture?: string;
-  sub?: string;
-  preview?: string;      // (snipped)
-  input?: string;
-  reportId?: Artifact;  // lookup key
-  category?: string;
-  assertRows?: string;
-}>;
-
-
 export type RunOptions = Readonly<{
   bail?: boolean; // stop on first failure
   filterSuite?: string; // exact match
@@ -237,7 +132,6 @@ export type RunResult = Readonly<{
   cancelled?: true;
 }>;
 
-export type UiLevel = "quiet" | "normal";
 export type CaseKey = `${string}::${string}`; // suiteId::caseId
 
 export type CaseLog = Readonly<{

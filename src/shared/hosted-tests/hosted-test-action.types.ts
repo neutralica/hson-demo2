@@ -1,9 +1,8 @@
-import type { TestSummary } from "../core/test-contracts";
-import type { HostedTestSuiteId } from "./hosted-test-suite";
-import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
-import type { TestExecutorDiscoveryRequest } from "../core/test-discovery";
-import type { RunSelectedTestsRequest } from "../core/test-selected-run";
-import type { HostedTestRunTarget } from "./hosted-test-suite";
+import type { TestSummary } from "../testing/test-contracts";
+import type { HostedTestRunTarget, HostedTestSuiteId } from "./hosted-test-suite-contract";
+import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+import type { TestExecutorDiscoveryRequest } from "../testing/test-discovery-contract";
+import type { RunSelectedTestsRequest } from "../testing/test-run-contract";
 import type { HostedTestAttemptId } from "./hosted-test-application.types";
 
 export type HostedTestRunRequest = Readonly<{

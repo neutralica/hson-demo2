@@ -2,11 +2,11 @@ import type { LiveHostSocketLike } from "hson-live/types";
 import { hson } from "hson-live";
 import type { TestCase, TestEvent, TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
-import type { TestRunPlan } from "../../harness/core/test-run-plan";
+import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 import { run_test_suites } from "../../harness/core/test-runner";
 import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application";
-import type { HostedTestCancelResult, HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
-import { hosted_test_recovery_association } from "../../harness/hosted/hosted-test-application.types";
+import type { HostedTestCancelResult, HostedTestSelectedRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
+import { hosted_test_recovery_association } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import { make_hosted_test_execution_control } from "../../harness/hosted/hosted-test-execution-control";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import {
@@ -14,7 +14,7 @@ import {
   make_hosted_test_report,
   make_initial_hosted_test_report,
 } from "../../harness/reporting/hosted/hosted-test-report";
-import type { HostedTestReport, HostedTestReportMap, HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestReport, HostedTestReportMap, HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 
 function expect(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Phase 3B cancellation: ${message}`);

@@ -1,8 +1,8 @@
 import type { LiveMap, LiveMapCommit } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
-import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
-import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../../core/test-contracts";
-import type { TestErrorKind, TestLifecycleCounts, TestLifecycleStatus } from "../../core/test-lifecycle";
+import type { HostedTestRunTarget } from "./hosted-test-suite-contract";
+import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../testing/test-contracts";
+import type { TestErrorKind, TestLifecycleCounts, TestLifecycleStatus } from "../testing/test-lifecycle-contract";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "cancelled" | "error";
 

@@ -1,14 +1,8 @@
-import type {
-  RunOptions,
-  RunResult,
-  TestEvent,
-  TestFailure,
-  TestSuite,
-  TestSummary,
-} from "../../core/test-contracts";
+import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../core/test-contracts";
+import type { TestFailure, TestSummary } from "../../../../src/shared/testing/test-contracts";
 import type { TestExecutorRegistry } from "../../core/test-executor";
 import { make_local_node_livehost_executor_registry } from "./livehost-node-executor";
-import { test_catalog_version } from "../../core/test-catalog";
+import { test_catalog_version } from "../../../../src/shared/testing/test-catalog-contract";
 import { selected_test_suites } from "../../core/test-selected-run";
 import { run_test_suites } from "../../core/test-runner";
 import { with_hosted_dom_runtime, with_hosted_node_globals } from "../dom/hosted-dom-mutex";

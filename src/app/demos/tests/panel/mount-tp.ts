@@ -2,7 +2,7 @@ import { hson } from "hson-live";
 import { LiveTree } from "hson-live/livetree";
 import  { mk_div_id, mk_div_id_txt } from "../../../utils/makers";
 import { create_test_chips } from "./test-helpers";
-import type { TestSummary, UiLevel } from "../../../../../tests/harness/core/test-contracts";
+import type { TestSummary, UiLevel } from "../../../../shared/testing/test-contracts";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, TP_ROOTcss } from "./tp.css";
 import type { TestPanel, TestPanels } from "./tp.types";
 import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
@@ -20,8 +20,8 @@ import {
     hosted_test_projection_summary,
     type HostedTestProjectionSummary,
 } from "./hosted-test-report-summary";
-import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
-import type { TestExecutorDiscovery } from "../../../../../tests/harness/core/test-discovery";
+import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
+import type { TestExecutorDiscovery } from "../../../../shared/testing/test-discovery-contract";
 import {
     hosted_test_panel_selected_ids,
     hosted_test_panel_display_label,
@@ -30,10 +30,7 @@ import {
     hosted_test_panel_test_choices,
     type HostedTestPanelSelectionChoice,
 } from "./hosted-test-panel-selection";
-import {
-    observe_hosted_test_timeline,
-    type HostedTestTimelineObserver,
-} from "../../../../../tests/harness/hosted/hosted-test-timeline";
+import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../shared/hosted-tests/hosted-test-timeline";
 import type { HostedTestPanelRuntime } from "./hosted-test-panel-runtime";
 
 const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
@@ -693,9 +690,7 @@ export function tp_factory(options: Readonly<{
                 branch.attrs.set("data-hosted-panel-state", lastResult.cancelled ? "cancelled" : "completed");
             } catch (error) {
                 branch.attrs.set("data-hosted-panel-state", "run-rejected");
-                if (hostedAdapter.router === undefined) {
-                    appendLogLine(`run rejected: ${error instanceof Error ? error.message : String(error)}`);
-                }
+                appendLogLine(`run rejected: ${error instanceof Error ? error.message : String(error)}`);
             } finally {
                 cancelBtn.flags.set("disabled");
                 suiteSel.flags.clear("disabled");

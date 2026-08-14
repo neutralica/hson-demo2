@@ -1,8 +1,8 @@
 import type { JsonValue, LiveHostActionRequestId, LiveHostId } from "hson-live/types";
 import type { LiveMap } from "hson-live/livemap";
-import type { HostedTestRunTarget } from "./hosted-test-suite";
-import type { HostedTestRunId } from "../reporting/hosted/hosted-test-report-wire.types";
-import type { TestRunPlan } from "../core/test-run-plan";
+import type { HostedTestRunTarget } from "./hosted-test-suite-contract";
+import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+import type { TestRunPlan } from "../testing/test-run-contract";
 
 export const HOSTED_TEST_COORDINATOR_HOST_ID = "hosted-tests";
 

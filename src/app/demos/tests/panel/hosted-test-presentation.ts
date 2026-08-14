@@ -1,12 +1,7 @@
-import type {
-  HostedTestEvidence,
-  HostedTestInfrastructureError,
-  HostedTestReport,
-  HostedTestSuiteRunReport,
-} from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
-import type { TestCollection, TestSubject } from "../../../../../tests/harness/core/test-contracts";
-import type { TestLifecycleStatus } from "../../../../../tests/harness/core/test-lifecycle";
-import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import type { HostedTestEvidence, HostedTestInfrastructureError, HostedTestReport, HostedTestSuiteRunReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import type { TestCollection, TestSubject } from "../../../../shared/testing/test-contracts";
+import type { TestLifecycleStatus } from "../../../../shared/testing/test-lifecycle-contract";
+import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
 
 export const HOSTED_TEST_PRESENTATION_GROUP_ORDER = Object.freeze([
   "transform", "livetree", "livemap", "livehost", "reflect", "unit", "dev",

@@ -6,7 +6,7 @@ import {
 } from "../../harness/hosted/hosted-test-action";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
-import type { HostedTestRunId } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestRunId } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 import { run_livehost_all_suite, run_node_all_suite } from "../../harness/hosted/registered-hosted-test-suites";
 import { run_jsdom_hosted_test_suites } from "../../harness/runtimes/dom/jsdom-hosted-test-suites";
 import { run_jsdom_hosted_canvas_suites } from "../../harness/runtimes/dom/canvas/jsdom-hosted-canvas-suites";

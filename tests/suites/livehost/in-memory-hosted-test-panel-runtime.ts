@@ -1,33 +1,17 @@
 import { create_livehost_client } from "hson-live/livehost";
 import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
-import type {
-  HostedTestActions,
-  HostedTestAnyRunResult,
-} from "../../harness/hosted/hosted-test-action.types";
-import {
-  decode_hosted_test_discovery_response,
-  decode_hosted_test_cancel_response,
-  decode_hosted_test_run_response,
-  decode_selected_hosted_test_run_response,
-  inspect_hosted_test_action,
-} from "../../harness/hosted/hosted-test-client-action";
-import type { HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
-import {
-  HOSTED_TEST_SELECTED_RUN_TARGET,
-  type HostedTestSuiteId,
-  type HostedTestSuiteRegistry,
-} from "../../harness/hosted/hosted-test-suite";
+import type { HostedTestActions, HostedTestAnyRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
+import { decode_hosted_test_discovery_response, decode_hosted_test_cancel_response, decode_hosted_test_run_response, decode_selected_hosted_test_run_response, inspect_hosted_test_action } from "../../../src/shared/hosted-tests/hosted-test-client-action";
+import type { HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
+import { HOSTED_TEST_SELECTED_RUN_TARGET, type HostedTestSuiteId } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
+import type { HostedTestSuiteRegistry } from "../../harness/hosted/hosted-test-suite";
 import { create_hosted_test_application, HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application";
-import {
-  hosted_test_recovery_association,
-  hosted_test_run_association,
-  type HostedTestCoordinatorState,
-  type HostedTestRunAssociation,
-} from "../../harness/hosted/hosted-test-application.types";
+import { hosted_test_recovery_association, hosted_test_run_association, type HostedTestCoordinatorState, type HostedTestRunAssociation } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import type { TestExecutorRegistry } from "../../harness/core/test-executor";
 import { run_fresh_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
-import { make_test_executor_discovery, type TestExecutorDiscovery } from "../../harness/core/test-discovery";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import type { TestExecutorDiscovery } from "../../../src/shared/testing/test-discovery-contract";
 
 type MessageListener = (message: string) => void;
 type ReportActions = Readonly<{ "tests.inspect": Readonly<{ runId: string; caseKey: string }> }>;

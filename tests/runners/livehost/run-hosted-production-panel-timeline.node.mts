@@ -6,7 +6,7 @@ import { hson } from "hson-live";
 import type { BrowserWebSocketConstructor } from "hson-live/livehost";
 import { tp_factory } from "../../../src/app/demos/tests/panel/mount-tp";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
-import type { HostedTestTimelineEvent } from "../../harness/hosted/hosted-test-timeline";
+import type { HostedTestTimelineEvent } from "../../../src/shared/hosted-tests/hosted-test-timeline";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 
 async function wait_for(predicate: () => boolean, description: string, deadlineMs: number): Promise<void> {

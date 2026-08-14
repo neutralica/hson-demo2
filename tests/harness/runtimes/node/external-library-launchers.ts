@@ -8,9 +8,9 @@ import {
   hson_live_test_launchers,
   type HsonLiveTestLauncher,
 } from "hson-live/test-launchers";
-import type { TestCapability, TestCollection, TestSubject } from "../../core/test-contracts";
-import type { ExternalLibraryLauncherTarget } from "../../core/external-launcher-contract";
-import { validate_test_suite_id } from "../../core/test-identity";
+import type { TestCapability, TestCollection, TestSubject } from "../../../../src/shared/testing/test-contracts";
+import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
+import { validate_test_suite_id } from "../../../../src/shared/testing/test-identity";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS = 120_000;
 export const EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS = 1_000;

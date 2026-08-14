@@ -1,28 +1,14 @@
 import { hson } from "hson-live";
-import type {
-  RunResult,
-  TestCapability,
-  TestCollection,
-  TestDescriptor,
-  TestEvent,
-  TestSubject,
-  TestSuiteDescriptor,
-} from "../../harness/core/test-contracts";
-import { make_test_catalog, test_catalog_version } from "../../harness/core/test-catalog";
-import {
-  format_test_case_id,
-  parse_test_case_id,
-  validate_test_case_id,
-  validate_test_suite_id,
-} from "../../harness/core/test-identity";
+import type { RunResult, TestEvent } from "../../harness/core/test-contracts";
+import type { TestCapability, TestCollection, TestDescriptor, TestSubject, TestSuiteDescriptor } from "../../../src/shared/testing/test-contracts";
+import { make_test_catalog } from "../../harness/core/test-catalog";
+import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
+import { format_test_case_id, parse_test_case_id, validate_test_case_id, validate_test_suite_id } from "../../../src/shared/testing/test-identity";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { PHASE1_TEST_COMPATIBILITY_BRIDGES } from "../../harness/core/test-convergence-compatibility";
-import {
-  CANONICAL_TEST_COLLECTION_ORDER,
-  CANONICAL_TEST_SUBJECT_ORDER,
-  test_presentation_rank,
-} from "../../harness/core/test-order";
-import type { ExternalLibraryLauncherTarget } from "../../harness/core/external-launcher-contract";
+import { CANONICAL_TEST_COLLECTION_ORDER, CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
+import { test_presentation_rank } from "../../../src/shared/testing/test-order";
+import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/external-launcher-contract";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
@@ -32,7 +18,7 @@ import {
 } from "../../harness/runtimes/node/external-library-launchers";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
-import { hosted_test_report_cases } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import {
   hosted_test_panel_primary_choices,
   hosted_test_panel_selected_ids,

@@ -1,9 +1,5 @@
-import type {
-  TestCollection,
-  TestDescriptorMetadata,
-  TestSubject,
-  TestSuite,
-} from "../core/test-contracts";
+import type { TestCollection, TestDescriptorMetadata, TestSubject } from "../../../src/shared/testing/test-contracts";
+import type { TestSuite } from "../core/test-contracts";
 import { all_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-suites";
 import {
   all_jsdom_hosted_canvas_suites,

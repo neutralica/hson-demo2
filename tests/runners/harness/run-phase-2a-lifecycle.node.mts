@@ -1,13 +1,10 @@
 import assert from "node:assert/strict";
-import type { TestCatalog } from "../../harness/core/test-catalog";
-import { make_test_catalog, test_catalog_version } from "../../harness/core/test-catalog";
-import type { TestDescriptor, TestEvent, TestSuiteDescriptor } from "../../harness/core/test-contracts";
-import {
-  TEST_ERROR_KINDS,
-  TEST_LIFECYCLE_STATUSES,
-  type TestLifecycleCounts,
-  type TestLifecycleEvent,
-} from "../../harness/core/test-lifecycle";
+import type { TestCatalog } from "../../../src/shared/testing/test-catalog-contract";
+import { make_test_catalog } from "../../harness/core/test-catalog";
+import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
+import type { TestDescriptor, TestSuiteDescriptor } from "../../../src/shared/testing/test-contracts";
+import type { TestEvent } from "../../harness/core/test-contracts";
+import { TEST_ERROR_KINDS, TEST_LIFECYCLE_STATUSES, type TestLifecycleCounts, type TestLifecycleEvent } from "../../../src/shared/testing/test-lifecycle-contract";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { run_test_suites } from "../../harness/core/test-runner";
 import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";

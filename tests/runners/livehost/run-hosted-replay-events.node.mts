@@ -18,7 +18,7 @@ import {
   HOSTED_TEST_REPORT_COMMIT_EVENT,
   validate_hosted_test_report_commit_sequence,
 } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 
 type Listener = (message: string) => void;
 

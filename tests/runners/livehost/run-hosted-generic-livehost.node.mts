@@ -5,7 +5,7 @@ import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/pa
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
-import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../harness/hosted/hosted-test-application.types";
+import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import { inspect_hosted_test_case } from "../../harness/hosted/hosted-test-case-inspection";
 
 function expect_generic(condition: unknown, message: string): asserts condition {

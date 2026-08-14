@@ -14,7 +14,7 @@ import {
   encode_hosted_test_report_commit,
   HOSTED_TEST_REPORT_COMMIT_EVENT,
 } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 
 function expect_router(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted report router: ${message}`);

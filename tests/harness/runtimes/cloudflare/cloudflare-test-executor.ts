@@ -1,4 +1,5 @@
-import type { TestExecutorDescriptor, TestExecutorRegistry } from "../../core/test-executor";
+import type { TestExecutorDescriptor } from "../../../../src/shared/testing/test-executor-contract";
+import type { TestExecutorRegistry } from "../../core/test-executor";
 import { make_test_executor_registry } from "../../core/test-executor";
 import { all_canonical_portable_test_suites } from "../../hosted/canonical-portable-test-suites";
 

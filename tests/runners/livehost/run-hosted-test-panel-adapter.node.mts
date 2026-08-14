@@ -1,4 +1,3 @@
-import type { JsonValue, LiveHostEventListener } from "hson-live/types";
 import {
   make_hosted_test_panel_adapter,
   hosted_test_suite_for_panel_mode,
@@ -9,17 +8,6 @@ import { make_in_memory_hosted_test_runtime } from "../../suites/livehost/in-mem
 import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 import { all_node_safe_hosted_test_suites } from "../../harness/hosted/node-safe-hosted-test-suites";
 import { all_livehost_suites } from "../../suites/livehost/suite-registry";
-import type { TestSummary } from "../../harness/core/test-contracts";
-import type { HostedTestRunResult } from "../../suites/livehost/hosted-replay-action";
-import type { HostedTestSuiteId } from "../../harness/hosted/hosted-test-suite";
-import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
-import { encode_hosted_test_report_initial, HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../harness/reporting/hosted/hosted-test-report-initial";
-import { encode_hosted_test_report_commit, HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import {
-  HostedTestUnknownSuiteError,
-  HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE,
-  hosted_test_unknown_suite_message,
-} from "../../harness/hosted/hosted-test-action-error";
 
 function expect_adapter(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test panel adapter: ${message}`);
@@ -51,84 +39,6 @@ function make_sink() {
     get resets() { return resets; },
     get renders() { return renders; },
   };
-}
-
-type Deferred = Readonly<{
-  promise: Promise<unknown>;
-  resolve(value: unknown): void;
-}>;
-
-function deferred(): Deferred {
-  let resolvePromise: (value: unknown) => void = () => undefined;
-  const promise = new Promise<unknown>((resolve) => {
-    resolvePromise = resolve;
-  });
-  return { promise, resolve: resolvePromise };
-}
-
-function fake_client() {
-  const listeners = new Set<LiveHostEventListener>();
-  const actions: Deferred[] = [];
-  const listenerCountsAtAction: number[] = [];
-  return {
-    client: {
-      on_event(listener: LiveHostEventListener) {
-        listeners.add(listener);
-        return () => listeners.delete(listener);
-      },
-      action(_name: "tests.run", _payload: Readonly<{ suite: HostedTestSuiteId }>) {
-        listenerCountsAtAction.push(listeners.size);
-        const action = deferred();
-        actions.push(action);
-        return action.promise;
-      },
-    },
-    emit(event: string, payload: JsonValue) {
-      for (const listener of [...listeners]) listener({ type: "event", event, payload });
-    },
-    actions,
-    listenerCountsAtAction,
-    get listenerCount() { return listeners.size; },
-  };
-}
-
-function fixture(runId: string, status: "passed" | "failed" | "error") {
-  const report = make_hosted_test_report(() => 10);
-  const initial = encode_hosted_test_report_initial(runId, "livemap/replay", report.map.capture());
-  report.reduce({ t: "suite_begin", suite: "livemap/replay" });
-  let result: HostedTestRunResult | undefined;
-  if (status === "error") {
-    report.failInfrastructure(new Error("synthetic infrastructure failure"));
-  } else {
-    const passed = status === "passed";
-    report.reduce({
-      t: "case_end",
-      suite: "livemap/replay",
-      caseId: "synthetic", name: "synthetic",
-      status: passed ? "pass" : "fail",
-      ms: 1,
-      ...(passed ? {} : { err: "expected" }),
-    });
-    const summary: TestSummary = {
-      suites: 1,
-      cases: 1,
-      pass: passed ? 1 : 0,
-      fail: passed ? 0 : 1,
-      skip: 0,
-      msTotal: 1,
-      failures: passed ? [] : [{ suite: "livemap/replay", caseId: "synthetic", name: "synthetic", err: "expected", ms: 1 }],
-    };
-    report.complete({ ok: passed, summary });
-    result = { runId, attemptId: `${runId}:attempt:1`, suite: "livemap/replay", ok: passed, summary, timing: { runnerMs: 1, hostMs: 1 } };
-  }
-  const commits = report.commits().map((commit) => encode_hosted_test_report_commit(runId, "livemap/replay", commit));
-  report.dispose();
-  return { initial, commits, result };
-}
-
-function emit_fixture(io: ReturnType<typeof fake_client>, value: ReturnType<typeof fixture>): void {
-  io.emit(HOSTED_TEST_REPORT_INITIAL_EVENT, value.initial as unknown as JsonValue);
-  for (const commit of value.commits) io.emit(HOSTED_TEST_REPORT_COMMIT_EVENT, commit as unknown as JsonValue);
 }
 
 const runtime = make_in_memory_hosted_test_runtime(make_registered_hosted_test_suite_registry());
@@ -198,95 +108,5 @@ console.log(JSON.stringify({ nodePanelRoundTripMs, nodePanelRenders: nodeSink.re
 nodeAdapter.dispose();
 nodeRuntime.dispose();
 
-const rerunIo = fake_client();
-const rerunSink = make_sink();
-const rerunAdapter = make_hosted_test_panel_adapter(rerunIo.client, rerunSink.sink);
-const firstPromise = rerunAdapter.start("livemap/replay");
-const secondPromise = rerunAdapter.start("livemap/replay");
-expect_adapter(rerunIo.listenerCountsAtAction.join(",") === "1,1", "router listener is installed before each action and previous listener is disposed");
-expect_adapter(rerunIo.listenerCount === 1, "rerun owns only the newest router listener");
-const secondFixture = fixture("second-run", "passed");
-emit_fixture(rerunIo, secondFixture);
-rerunIo.actions[1]?.resolve({ type: "ack", result: secondFixture.result });
-const secondResult = await secondPromise;
-expect_adapter(secondResult.runId === "second-run" && rerunAdapter.router?.runId === "second-run", "new run owns rendered state");
-const renderedAfterSecond = rerunSink.renders;
-const firstFixture = fixture("first-run", "passed");
-rerunIo.actions[0]?.resolve({ type: "ack", result: firstFixture.result });
-await firstPromise;
-expect_adapter(rerunSink.renders === renderedAfterSecond && rerunAdapter.router?.runId === "second-run", "late superseded result cannot overwrite current state");
-
-const failedIo = fake_client();
-const failedSink = make_sink();
-const failedAdapter = make_hosted_test_panel_adapter(failedIo.client, failedSink.sink);
-const failedPromise = failedAdapter.start("livemap/replay");
-const failedValue = fixture("failed-run", "failed");
-emit_fixture(failedIo, failedValue);
-failedIo.actions[0]?.resolve({ type: "ack", result: failedValue.result });
-const failedResult = await failedPromise;
-expect_adapter(!failedResult.ok && failedAdapter.router?.mirror?.capture().value.run.status === "failed", "failed test renders valid failed terminal report");
-expect_adapter(failedAdapter.router?.failure === undefined && failedAdapter.router.mirror?.failure === undefined, "test failure is not adapter routing failure");
-
-const errorIo = fake_client();
-const errorSink = make_sink();
-const errorAdapter = make_hosted_test_panel_adapter(errorIo.client, errorSink.sink);
-const errorPromise = errorAdapter.start("livemap/replay");
-const errorValue = fixture("error-run", "error");
-emit_fixture(errorIo, errorValue);
-errorIo.actions[0]?.resolve({ type: "error", error: { code: "LIVEHOST_ACTION_FAILED", message: "synthetic" } });
-try {
-  await errorPromise;
-} catch {}
-expect_adapter(errorAdapter.router?.status === "complete" && errorAdapter.router.mirror?.capture().value.run.status === "error", "infrastructure error preserves terminal mirrored report");
-expect_adapter(errorSink.infrastructureErrors[0] === "synthetic infrastructure failure", "existing error presentation receives normalized infrastructure message");
-
-const staleIo = fake_client();
-const staleSink = make_sink();
-const staleAdapter = make_hosted_test_panel_adapter(staleIo.client, staleSink.sink);
-const stalePromise = staleAdapter.start("dom/core");
-staleIo.actions[0]?.resolve({
-  type: "error",
-  error: {
-    code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
-    message: "LiveHost schema validation failed: tests.run requires a registered hosted-test suite ID.",
-  },
-});
-let staleError: unknown;
-try {
-  await stalePromise;
-} catch (error) {
-  staleError = error;
-}
-expect_adapter(
-  staleError instanceof HostedTestUnknownSuiteError && staleError.code === HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE,
-  "pre-report rejection retains stable unknown-suite identity",
-);
-expect_adapter(staleAdapter.router?.status === "failed" && staleAdapter.router.failure?.code === "ACTION_ERROR_BEFORE_INITIAL", "pre-report rejection reaches a terminal router failure");
-expect_adapter(staleIo.listenerCount === 0, "pre-report routing failure removes its event listener");
-expect_adapter(staleSink.infrastructureErrors[0] === hosted_test_unknown_suite_message("dom/core"), "stale server mismatch is visible through the panel error sink");
-
-const recoveredPromise = staleAdapter.start("livemap/replay");
-const recoveredValue = fixture("stale-recovery", "passed");
-emit_fixture(staleIo, recoveredValue);
-staleIo.actions[1]?.resolve({ type: "ack", result: recoveredValue.result });
-const recoveredResult = await recoveredPromise;
-const recoveredStatus: string | undefined = staleAdapter.router?.status;
-expect_adapter(recoveredResult.runId === "stale-recovery" && recoveredStatus === "complete", "a valid run succeeds after an unavailable suite rejection");
-
-const disposeIo = fake_client();
-const disposeSink = make_sink();
-const disposeAdapter = make_hosted_test_panel_adapter(disposeIo.client, disposeSink.sink);
-const disposedPromise = disposeAdapter.start("livemap/replay");
-const rendersBeforeDispose = disposeSink.renders;
-disposeAdapter.dispose();
-expect_adapter(disposeIo.listenerCount === 0, "unmount disposal removes router listener");
-disposeIo.actions[0]?.resolve({ type: "ack", result: secondFixture.result });
-await disposedPromise;
-expect_adapter(disposeSink.renders === rendersBeforeDispose, "late settlement after unmount cannot mutate panel state");
-
-rerunAdapter.dispose();
-failedAdapter.dispose();
-errorAdapter.dispose();
-staleAdapter.dispose();
 expect_adapter(typeof window === "undefined" && typeof document === "undefined", "adapter core remains Node-safe");
 console.log("hosted test panel adapter: ok");

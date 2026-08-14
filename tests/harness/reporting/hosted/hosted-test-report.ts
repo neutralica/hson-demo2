@@ -1,28 +1,14 @@
 import { hson } from "hson-live";
 import type { LiveMapAnyOp, LiveMapBatchTx, LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
-import { TEST_SUBJECT_IDENTIFIERS, type RunResult, type TestEvent } from "../../core/test-contracts";
-import {
-  make_test_lifecycle_adapter,
-  TEST_ERROR_KINDS,
-  TEST_LIFECYCLE_STATUSES,
-  type TestLifecycleCounts,
-  type TestLifecycleError,
-  type TestLifecycleEvent,
-  type TestLifecycleStatus,
-  type TestLifecycleTerminalStatus,
-} from "../../core/test-lifecycle";
-import type { TestRunPlan } from "../../core/test-run-plan";
-import type {
-  HostedTestCaseReport,
-  HostedTestInfrastructureError,
-  HostedTestPlannedCaseReport,
-  HostedTestReport,
-  HostedTestReportCommit,
-  HostedTestReportMap,
-} from "./hosted-test-report.types";
-import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "../../hosted/hosted-test-suite";
-import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import { TEST_SUBJECT_IDENTIFIERS } from "../../../../src/shared/testing/test-contracts";
+import type { RunResult, TestEvent } from "../../core/test-contracts";
+import { make_test_lifecycle_adapter } from "../../core/test-lifecycle";
+import { TEST_ERROR_KINDS, TEST_LIFECYCLE_STATUSES, type TestLifecycleCounts, type TestLifecycleError, type TestLifecycleEvent, type TestLifecycleStatus, type TestLifecycleTerminalStatus } from "../../../../src/shared/testing/test-lifecycle-contract";
+import type { TestRunPlan } from "../../../../src/shared/testing/test-run-contract";
+import type { HostedTestCaseReport, HostedTestInfrastructureError, HostedTestPlannedCaseReport, HostedTestReport, HostedTestReportCommit, HostedTestReportMap } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
+import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
+import type { HostedTestRunTarget } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   const nonNegativeInteger = s.number.constrain(

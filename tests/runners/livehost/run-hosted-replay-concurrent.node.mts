@@ -8,7 +8,7 @@ import {
 } from "../../suites/livehost/hosted-replay-action";
 import type { HostedTestReportController } from "../../harness/reporting/hosted/hosted-test-report";
 import { make_hosted_test_report_router } from "../../harness/reporting/hosted/hosted-test-report-router";
-import type { HostedTestRunId } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestRunId } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 import { run_livemap_replay_suite } from "../livemap/run-replay-suite";
 
 type Listener = (message: string) => void;

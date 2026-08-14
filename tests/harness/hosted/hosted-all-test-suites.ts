@@ -1,11 +1,5 @@
-import type {
-  RunOptions,
-  RunResult,
-  TestEvent,
-  TestFailure,
-  TestSuite,
-  TestSummary,
-} from "../core/test-contracts";
+import type { RunOptions, RunResult, TestEvent, TestSuite } from "../core/test-contracts";
+import type { TestFailure, TestSummary } from "../../../src/shared/testing/test-contracts";
 import { run_test_suites } from "../core/test-runner";
 import { all_jsdom_hosted_canvas_suites } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 import { with_hosted_dom_runtime, with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";

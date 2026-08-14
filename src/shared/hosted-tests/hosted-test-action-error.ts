@@ -1,4 +1,4 @@
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestSuiteId } from "./hosted-test-suite-contract";
 
 export const HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE = "HOSTED_TEST_UNKNOWN_SUITE" as const;
 const UNKNOWN_SUITE_PROTOCOL_PREFIX = `[${HOSTED_TEST_UNKNOWN_SUITE_ERROR_CODE}] `;

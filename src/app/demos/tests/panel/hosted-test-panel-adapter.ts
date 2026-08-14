@@ -1,15 +1,11 @@
-import type { LiveHostEventListener, LiveMapAnyOp, LiveMapCommitObservation } from "hson-live/types";
-import type { HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../../../../tests/harness/hosted/hosted-test-action.types";
-import { inspect_hosted_test_action, run_hosted_test_action } from "../../../../../tests/harness/hosted/hosted-test-client-action";
-import type { HostedTestCaseReport, HostedTestReport, HostedTestSuiteRunReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
-import type { HostedTestReportMirror } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-mirror.types";
-import { make_hosted_test_report_router } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-router";
-import type { HostedTestReportRouter } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-router.types";
-import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuiteId } from "../../../../../tests/harness/hosted/hosted-test-suite";
-import type { TestRunMode } from "../../../../../tests/harness/core/test-contracts";
-import { hosted_test_action_error_message } from "../../../../../tests/harness/hosted/hosted-test-action-error";
+import type { LiveMapAnyOp, LiveMapCommitObservation } from "hson-live/types";
+import type { HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestPanelRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
+import type { HostedTestCaseReport, HostedTestReport, HostedTestSuiteRunReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuiteId } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
+import type { TestRunMode } from "../../../../shared/testing/test-contracts";
+import { hosted_test_action_error_message } from "../../../../shared/hosted-tests/hosted-test-action-error";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-panel-runtime";
-import type { HostedTestAttemptId } from "../../../../../tests/harness/hosted/hosted-test-application.types";
+import type { HostedTestAttemptId } from "../../../../shared/hosted-tests/hosted-test-application.types";
 
 export type HostedTestPanelReportUpdate = Readonly<{
   report: HostedTestReport;
@@ -26,13 +22,7 @@ export type HostedTestPanelSink = Readonly<{
   renderTiming?(timing: HostedTestPanelRunResult["timing"]): void;
 }>;
 
-export type HostedTestPanelClient = Readonly<{
-  on_event(listener: LiveHostEventListener): () => void;
-  action(name: "tests.run", payload: HostedTestRunRequest): Promise<unknown>;
-}>;
-
 export type HostedTestPanelAdapter = Readonly<{
-  readonly router: HostedTestReportRouter | undefined;
   start(suite: HostedTestSuiteId): Promise<HostedTestPanelRunResult>;
   start_selected(testIds: readonly string[]): Promise<HostedTestPanelRunResult>;
   recover(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestPanelRunResult>;
@@ -92,12 +82,6 @@ function apply_report_commit(report: HostedTestReport, observation: LiveMapCommi
   return root as unknown as HostedTestReport;
 }
 
-type OwnedRun = {
-  generation: number;
-  router: HostedTestReportRouter;
-  stopMirror?: () => void;
-};
-
 export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestSuiteId {
   if (mode === "hosted-all") return "hosted/all";
   if (mode === "livemap-replay") return "livemap/replay";
@@ -108,144 +92,7 @@ export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestS
   return `category/${mode}`;
 }
 
-function make_report_observer(sink: HostedTestPanelSink): (mirror: HostedTestReportMirror) => () => void {
-  let consumedCaseBatches = 0;
-  let consumedSuiteTimings = 0;
-  let infrastructureErrorShown = false;
-
-  return (mirror) => mirror.subscribe((capture) => {
-    const report = capture.value;
-    const terminal = report.run.status === "passed" || report.run.status === "failed"
-      || report.run.status === "cancelled" || report.run.status === "error";
-    const newCases: HostedTestCaseReport[] = [];
-    while (true) {
-      const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
-      const batch = report.caseBatches[batchKey];
-      if (batch === undefined) break;
-      consumedCaseBatches += 1;
-      newCases.push(...batch);
-    }
-    const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
-    consumedSuiteTimings = report.suites.length;
-    sink.ingest(Object.freeze({
-      report,
-      newCases: Object.freeze(newCases),
-      newSuiteTimings: Object.freeze([...newSuiteTimings]),
-      terminal,
-    }));
-    if (report.run.status === "error" && report.error !== null && !infrastructureErrorShown) {
-      infrastructureErrorShown = true;
-      sink.showInfrastructureError(report.error.message);
-    }
-  });
-}
-
 export function make_hosted_test_panel_adapter(
-  client: HostedTestPanelClient | HostedTestPanelRuntime,
-  sink: HostedTestPanelSink,
-): HostedTestPanelAdapter {
-  if ("start_run" in client) return make_generic_hosted_test_panel_adapter(client, sink);
-  let generation = 0;
-  let current: OwnedRun | undefined;
-  let lastResult: HostedTestPanelRunResult | undefined;
-  const inspectionRequests = new Map<string, Promise<HostedTestCaseDiagnostic>>();
-
-  function dispose_current(): void {
-    const owned = current;
-    current = undefined;
-    if (owned === undefined) return;
-    owned.stopMirror?.();
-    owned.router.dispose();
-  }
-
-  return Object.freeze({
-    get router() {
-      return current?.router;
-    },
-    async start(suite: HostedTestSuiteId) {
-      const roundTripStartedAt = performance.now();
-      generation += 1;
-      const runGeneration = generation;
-      dispose_current();
-      lastResult = undefined;
-      inspectionRequests.clear();
-      sink.reset(suite, { recovered: false });
-
-      let owned: OwnedRun;
-      const observe = make_report_observer(sink);
-      const router = make_hosted_test_report_router(client, {
-        onMirror(mirror) {
-          if (current !== owned || generation !== runGeneration) return;
-          owned.stopMirror = observe(mirror);
-        },
-      });
-      owned = { generation: runGeneration, router };
-      current = owned;
-
-      try {
-        const result = await run_hosted_test_action(client, suite);
-        if (current !== owned || generation !== runGeneration) {
-          return Object.freeze({ ...result, timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }) });
-        }
-        await router.wait_for_terminal();
-        router.accept_result(result);
-        const panelResult: HostedTestPanelRunResult = Object.freeze({
-          ...result,
-          timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }),
-        });
-        lastResult = panelResult;
-        sink.renderTiming?.(panelResult.timing);
-        return panelResult;
-      } catch (error) {
-        if (current !== owned || generation !== runGeneration) throw error;
-        try {
-          router.accept_action_error(error);
-        } catch {
-          // A rejection before initial state has no authoritative report to
-          // render. Surface the action failure directly and leave the router's
-          // first normalized failure available for inspection.
-          if (router.mirror === undefined) {
-            sink.showInfrastructureError(hosted_test_action_error_message(error, suite));
-          }
-        }
-        throw error;
-      }
-    },
-    async start_selected() {
-      throw new Error("Canonical selected execution requires the generic hosted-test runtime.");
-    },
-    async recover() {
-      throw new Error("Explicit report recovery requires the generic hosted-test runtime.");
-    },
-    async cancel() {
-      throw new Error("Authoritative cancellation requires the generic hosted-test runtime.");
-    },
-    async inspect(caseKey: string) {
-      const result = lastResult;
-      if (result === undefined) throw new Error("Hosted case inspection is available after the run settles.");
-      const existing = inspectionRequests.get(caseKey);
-      if (existing !== undefined) return existing;
-      const pending = inspect_hosted_test_action(
-        client as unknown as Readonly<{ action: (name: "tests.inspect", payload: HostedTestInspectRequest) => Promise<unknown> }>,
-        { runId: result.runId, caseKey },
-      );
-      inspectionRequests.set(caseKey, pending);
-      try { return await pending; }
-      catch (error) { inspectionRequests.delete(caseKey); throw error; }
-    },
-    capture() {
-      return current?.router.mirror?.capture().value;
-    },
-    dispose() {
-      generation += 1;
-      lastResult = undefined;
-      inspectionRequests.clear();
-      dispose_current();
-    },
-  });
-}
-
-function make_generic_hosted_test_panel_adapter(
   runtime: HostedTestPanelRuntime,
   sink: HostedTestPanelSink,
 ): HostedTestPanelAdapter {
@@ -394,7 +241,6 @@ function make_generic_hosted_test_panel_adapter(
   }
 
   return Object.freeze({
-    get router() { return undefined; },
     async start(suite: HostedTestSuiteId) {
       return present(() => runtime.start_run(suite), suite);
     },

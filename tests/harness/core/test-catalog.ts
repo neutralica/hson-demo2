@@ -1,16 +1,7 @@
-import type {
-  TestCase,
-  TestDescriptor,
-  TestDescriptorMetadata,
-  TestSuiteDescriptor,
-  TestSuite,
-} from "./test-contracts";
-import { format_test_case_id, validate_test_case_id, validate_test_suite_id } from "./test-identity";
-
-export type TestCatalog = Readonly<{
-  suites: readonly TestSuiteDescriptor[];
-  tests: readonly TestDescriptor[];
-}>;
+import type { TestCase, TestSuite } from "./test-contracts";
+import type { TestDescriptor, TestDescriptorMetadata, TestSuiteDescriptor } from "../../../src/shared/testing/test-contracts";
+import type { TestCatalog } from "../../../src/shared/testing/test-catalog-contract";
+import { format_test_case_id, validate_test_case_id, validate_test_suite_id } from "../../../src/shared/testing/test-identity";
 
 function freeze_metadata(metadata: TestDescriptorMetadata): Readonly<{
   subject: TestDescriptor["subject"];
@@ -131,51 +122,6 @@ function derive_suite_descriptors(tests: readonly TestDescriptor[]): readonly Te
 
 export function find_test_descriptor(catalog: TestCatalog, id: string): TestDescriptor | undefined {
   return catalog.tests.find((descriptor) => descriptor.id === id);
-}
-
-function canonical_descriptor(descriptor: TestDescriptor): string {
-  return JSON.stringify({
-    id: descriptor.id,
-    suiteId: descriptor.suiteId,
-    caseId: descriptor.caseId,
-    title: descriptor.title,
-    subject: descriptor.subject,
-    requirements: [...descriptor.requirements].sort(),
-    collections: [...descriptor.collections].sort(),
-    provenance: descriptor.provenance,
-    suiteOrdinal: descriptor.suiteOrdinal,
-    caseOrdinal: descriptor.caseOrdinal,
-  });
-}
-
-function canonical_suite_descriptor(descriptor: TestSuiteDescriptor): string {
-  return JSON.stringify({
-    id: descriptor.id,
-    title: descriptor.title,
-    subject: descriptor.subject,
-    collections: [...descriptor.collections].sort(),
-    provenance: descriptor.provenance,
-    order: descriptor.order,
-    requirements: [...descriptor.requirements].sort(),
-    executionShape: descriptor.executionShape,
-    sourceRef: descriptor.sourceRef ?? null,
-    declaredChecks: descriptor.declaredChecks ?? null,
-  });
-}
-
-/** FNV-1a 32-bit over sorted canonical descriptor records. */
-export function test_catalog_version(catalog: TestCatalog): string {
-  const validated = make_test_catalog(catalog.tests, catalog.suites);
-  const canonical = [
-    ...validated.suites.map((descriptor) => `suite:${canonical_suite_descriptor(descriptor)}`),
-    ...validated.tests.map((descriptor) => `case:${canonical_descriptor(descriptor)}`),
-  ].sort().join("\n");
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < canonical.length; index += 1) {
-    hash ^= canonical.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return `fnv1a32-${hash.toString(16).padStart(8, "0")}`;
 }
 
 export function catalog_from_test_suites(suites: readonly TestSuite[]): TestCatalog {

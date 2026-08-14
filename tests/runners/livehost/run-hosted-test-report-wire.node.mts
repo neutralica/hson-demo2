@@ -9,7 +9,7 @@ import {
   HostedTestReportCommitDecodeError,
   validate_hosted_test_report_commit_sequence,
 } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 
 function expect_wire(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test report wire: ${message}`);

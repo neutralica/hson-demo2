@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { hson } from "hson-live";
 import { create_livehost } from "hson-live/livehost";
-import type { TestRunPlan } from "../../harness/core/test-run-plan";
+import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 import {
   HOSTED_TEST_REPORT_SCHEMA,
   make_hosted_test_report,
   make_initial_hosted_test_report,
 } from "../../harness/reporting/hosted/hosted-test-report";
-import type { HostedTestReportMap } from "../../harness/reporting/hosted/hosted-test-report.types";
-import { HOSTED_TEST_SELECTED_RUN_TARGET } from "../../harness/hosted/hosted-test-suite";
+import type { HostedTestReportMap } from "../../../src/shared/hosted-tests/hosted-test-report.types";
+import { HOSTED_TEST_SELECTED_RUN_TARGET } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 const sizeArgument = process.argv.find((argument) => argument.startsWith("--size="));
 const size = Number(sizeArgument?.slice("--size=".length) ?? 100);

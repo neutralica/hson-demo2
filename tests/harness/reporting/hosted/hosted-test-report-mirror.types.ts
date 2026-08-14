@@ -1,6 +1,6 @@
-import type { HostedTestReportMap } from "./hosted-test-report.types";
-import type { HostedTestReportCommitEnvelope, HostedTestRunId } from "./hosted-test-report-wire.types";
-import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import type { HostedTestReportMap } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
+import type { HostedTestReportCommitEnvelope, HostedTestRunId } from "../../../../src/shared/hosted-tests/hosted-test-report-wire.types";
+import type { HostedTestRunTarget } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export type HostedTestReportMirrorStatus = "active" | "failed" | "disposed";
 

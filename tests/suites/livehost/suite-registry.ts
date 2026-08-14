@@ -1,6 +1,7 @@
 // all-livehost-suites.ts
 
-import type { TestDescriptorMetadata, TestSuite } from "../../harness/core/test-contracts";
+import type { TestDescriptorMetadata } from "../../../src/shared/testing/test-contracts";
+import type { TestSuite } from "../../harness/core/test-contracts";
 import { livehost_api_suite } from "./api-suite";
 import { livehost_client_suite } from "./client-suite";
 import { livehost_core_suite } from "./core-suite";

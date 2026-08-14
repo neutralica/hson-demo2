@@ -1,7 +1,7 @@
 import type { LiveHostSocketLike } from "hson-live/types";
 import { make_hosted_test_durable_object_runtime } from "../../harness/runtimes/cloudflare/hosted-test-durable-object-runtime";
 import { make_cloudflare_hosted_test_suite_registry } from "../../harness/runtimes/cloudflare/cloudflare-hosted-test-suites";
-import { HOSTED_TEST_SUITE_IDS } from "../../harness/hosted/hosted-test-suite";
+import { HOSTED_TEST_SUITE_IDS } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import {
   HOSTED_TEST_DURABLE_OBJECT_NAME,
   route_hosted_test_worker_request,
@@ -10,13 +10,11 @@ import { create_hosted_test_application } from "../../harness/hosted/hosted-test
 import { compose_worker_authority_application } from "../../harness/hosted/livehost-authority-composition";
 import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
-import {
-  decode_test_executor_discovery,
-  make_test_executor_discovery,
-} from "../../harness/core/test-discovery";
-import { test_catalog_version } from "../../harness/core/test-catalog";
-import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
-import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
+import { decode_test_executor_discovery } from "../../../src/shared/testing/test-discovery-contract";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
+import type { HostedTestSelectedRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
+import { hosted_test_report_cases, type HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_towl_socket } from "../../suites/towl/towl-test-helpers";
 import { all_livehost_suites } from "../../suites/livehost/suite-registry";
 

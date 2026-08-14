@@ -4,7 +4,7 @@ import { hson } from "hson-live";
 import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
 import { make_hosted_test_case_list } from "../../../src/app/demos/tests/panel/hosted-test-case-list";
 import { make_hosted_test_panel_adapter, type HostedTestPanelReportUpdate, type HostedTestPanelSink } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
-import type { HostedTestCaseReport, HostedTestReport } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestCaseReport, HostedTestReport } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import { HOSTED_TEST_REPORT_INITIAL_EVENT } from "../../harness/reporting/hosted/hosted-test-report-initial";
 import { HOSTED_TEST_REPORT_COMMIT_EVENT } from "../../harness/reporting/hosted/hosted-test-report-wire";

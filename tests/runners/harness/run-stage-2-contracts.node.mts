@@ -1,10 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { TestCase, TestDescriptor, TestEvent, TestSuite } from "../../harness/core/test-contracts";
+import type { TestCase, TestEvent, TestSuite } from "../../harness/core/test-contracts";
+import type { TestDescriptor } from "../../../src/shared/testing/test-contracts";
 import { make_test_catalog, resolve_test_descriptor } from "../../harness/core/test-catalog";
-import { executor_supports, select_executor, type TestExecutorDescriptor } from "../../harness/core/test-executor";
+import { executor_supports, select_executor } from "../../harness/core/test-executor";
+import type { TestExecutorDescriptor } from "../../../src/shared/testing/test-executor-contract";
 import { normalize_test_event } from "../../harness/core/test-run-events";
-import { select_test_descriptors } from "../../harness/core/test-selection";
+import { select_test_descriptors } from "../../../src/shared/testing/test-selection";
 import { all_livehost_suites } from "../../suites/livehost/suite-registry";
 import { hosted_replay_action_in_memory_suite } from "../../suites/livehost/hosted-replay-action-in-memory-suite";
 

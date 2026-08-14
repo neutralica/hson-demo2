@@ -1,7 +1,7 @@
 import type { LiveTree } from "hson-live/livetree";
 import type { ChipDisplay } from "./test-helpers";
-import type { UiLevel } from "../../../../../tests/harness/core/test-contracts";
-import type { HostedTestSuiteId } from "../../../../../tests/harness/hosted/hosted-test-suite";
+import type { UiLevel } from "../../../../shared/testing/test-contracts";
+import type { HostedTestSuiteId } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
 
 
 export type TestPanels = Readonly<{

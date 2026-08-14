@@ -1,5 +1,5 @@
 import type { JsonValue, LivePath } from "hson-live/types";
-import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import type { HostedTestRunTarget } from "./hosted-test-suite-contract";
 
 export type HostedTestRunId = string;
 

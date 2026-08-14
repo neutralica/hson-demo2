@@ -15,7 +15,7 @@ import {
 import { create_node_towl_application } from "./node-towl-application";
 import { create_node_circuit_verification_application } from "./node-circuit-verification-application";
 import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
-import type { HostedTestTimelineObserver } from "../../../hosted/hosted-test-timeline";
+import type { HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;

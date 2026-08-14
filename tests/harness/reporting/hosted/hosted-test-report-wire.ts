@@ -1,16 +1,8 @@
 /** @deprecated Patch 6 compatibility codec. Generic canonical commits are the production wire format. */
 import type { LiveMapCommit, LiveMapOp } from "hson-live/livemap";
 import type { JsonValue, LivePath } from "hson-live/types";
-import type {
-  HostedTestReportCommitEnvelope,
-  HostedTestReportCommitSequenceExpected,
-  HostedTestReportWireOp,
-  HostedTestRunId,
-  HostedTestWireJsonValue,
-  HostedTestWireUndefined,
-  HostedTestWireValue,
-} from "./hosted-test-report-wire.types";
-import { is_hosted_test_run_target, type HostedTestRunTarget } from "../../hosted/hosted-test-suite";
+import type { HostedTestReportCommitEnvelope, HostedTestReportCommitSequenceExpected, HostedTestReportWireOp, HostedTestRunId, HostedTestWireJsonValue, HostedTestWireUndefined, HostedTestWireValue } from "../../../../src/shared/hosted-tests/hosted-test-report-wire.types";
+import { is_hosted_test_run_target, type HostedTestRunTarget } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export const HOSTED_TEST_REPORT_COMMIT_EVENT = "hosted-test-report-commit";
 

@@ -1,7 +1,7 @@
 import type { LiveHostClient } from "hson-live/livehost";
-import type { HostedTestRunResult } from "../../hosted/hosted-test-action.types";
+import type { HostedTestRunResult } from "../../../../src/shared/hosted-tests/hosted-test-action.types";
 import type { HostedTestReportMirror } from "./hosted-test-report-mirror.types";
-import type { HostedTestRunId } from "./hosted-test-report-wire.types";
+import type { HostedTestRunId } from "../../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 
 export type HostedTestReportRouterStatus = "waiting" | "active" | "complete" | "failed" | "disposed";
 

@@ -1,4 +1,4 @@
-import type { HostedTestSuiteId } from "./hosted-test-suite";
+import type { HostedTestSuiteId } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import { all_jsdom_hosted_test_suites, JSDOM_HOSTED_TEST_SUITE_IDS } from "../runtimes/dom/jsdom-hosted-test-suites";
 import { all_jsdom_hosted_canvas_suites, JSDOM_HOSTED_CANVAS_SUITE_IDS } from "../runtimes/dom/canvas/jsdom-hosted-canvas-suites";
 

@@ -1,4 +1,4 @@
-import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "./hosted-test-suite";
+import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import {
   HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
   hson_live_non_launcher_test_scripts,
@@ -142,6 +142,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:phase1-convergence-node": "tests/runners/harness/run-phase-1-convergence.node.mts",
   "test:phase2a-lifecycle-node": "tests/runners/harness/run-phase-2a-lifecycle.node.mts",
   "test:phase2b-presentation-node": "tests/runners/harness/run-phase-2b-presentation.node.mts",
+  "test:phase4a-layering-node": "tests/runners/harness/run-phase-4a-layering.node.mts",
   "test:external-library-node": "tests/runners/harness/run-external-library-launchers.node.mts",
   "test:external-library-all-node": "tests/runners/harness/run-external-library-launchers.node.mts",
   "test:external-launcher-protocol-node": "tests/runners/harness/run-external-launcher-protocol.node.mts",
@@ -167,6 +168,7 @@ const AGGREGATE_COMMANDS = new Set([
   "test:phase1-convergence-node",
   "test:phase2a-lifecycle-node",
   "test:phase2b-presentation-node",
+  "test:phase4a-layering-node",
   "test:phase3b-cancellation-node",
   "test:phase3b-process-cancellation-node",
   "test:phase3b-panel-cancellation-node",

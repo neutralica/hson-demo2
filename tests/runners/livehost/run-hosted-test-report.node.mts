@@ -8,8 +8,8 @@ import {
   make_hosted_test_report,
   type HostedTestReportController,
 } from "../../harness/reporting/hosted/hosted-test-report";
-import type { HostedTestReport, HostedTestReportCommit } from "../../harness/reporting/hosted/hosted-test-report.types";
-import { hosted_test_report_cases } from "../../harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestReport, HostedTestReportCommit } from "../../../src/shared/hosted-tests/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 
 function expect_report(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test report: ${message}`);

@@ -1,6 +1,6 @@
-import type { HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
-import { hosted_test_report_cases } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
-import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import type { HostedTestReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import { hosted_test_report_cases } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
 import type { TestSummaryEntry } from "./test-helpers";
 
 export type HostedTestProjectionSummary = Readonly<{

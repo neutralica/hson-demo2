@@ -1,5 +1,5 @@
 /** @deprecated Patch 6 compatibility for event-protocol fixtures only. Production uses LiveHost recovery. */
-import type { HostedTestRunResult } from "../../hosted/hosted-test-action.types";
+import type { HostedTestRunResult } from "../../../../src/shared/hosted-tests/hosted-test-action.types";
 import {
   decode_hosted_test_report_initial,
   HOSTED_TEST_REPORT_INITIAL_EVENT,

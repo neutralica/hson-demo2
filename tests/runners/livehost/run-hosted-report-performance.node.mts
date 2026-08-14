@@ -4,7 +4,7 @@ import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-t
 import { encode_hosted_test_report_initial } from "../../harness/reporting/hosted/hosted-test-report-initial";
 import { make_hosted_test_report_mirror } from "../../harness/reporting/hosted/hosted-test-report-mirror";
 import { decode_hosted_test_report_commit_envelope, encode_hosted_test_report_commit } from "../../harness/reporting/hosted/hosted-test-report-wire";
-import type { HostedTestReportCommitEnvelope } from "../../harness/reporting/hosted/hosted-test-report-wire.types";
+import type { HostedTestReportCommitEnvelope } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
 
 type Sample = Readonly<{

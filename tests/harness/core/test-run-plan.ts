@@ -1,44 +1,9 @@
-import type {
-  TestCatalog,
-} from "./test-catalog";
-import type {
-  TestCollection,
-  TestExecutionShape,
-  TestProvenance,
-  TestSubject,
-} from "./test-contracts";
-import { is_test_case_id, is_test_suite_id } from "./test-identity";
-import { compare_test_descriptors, compare_test_suites } from "./test-order";
+import type { TestCatalog } from "../../../src/shared/testing/test-catalog-contract";
+import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../../../src/shared/testing/test-contracts";
+import { is_test_case_id, is_test_suite_id } from "../../../src/shared/testing/test-identity";
+import { compare_test_descriptors, compare_test_suites } from "../../../src/shared/testing/test-order";
 import { SelectedTestResolutionError } from "./test-selected-run";
-
-export type PlannedTestCase = Readonly<{
-  id: string;
-  caseId: string;
-  title: string;
-  order: number;
-}>;
-
-export type PlannedTestSuite = Readonly<{
-  id: string;
-  title: string;
-  subject: TestSubject;
-  collections: readonly TestCollection[];
-  provenance: TestProvenance;
-  order: number;
-  executionShape: TestExecutionShape;
-  sourceRef?: string;
-  declaredChecks?: number;
-  cases: readonly PlannedTestCase[];
-}>;
-
-export type TestRunPlan = Readonly<{
-  runId: string;
-  protocolVersion: number;
-  catalogVersion: string;
-  executorId: string;
-  selectionIds: readonly string[];
-  suites: readonly PlannedTestSuite[];
-}>;
+import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 
 export type MakeTestRunPlanOptions = Readonly<{
   runId: string;
