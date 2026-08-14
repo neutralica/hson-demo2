@@ -8,12 +8,14 @@ export type HostedTestProjectionSummary = Readonly<{
     total: number;
     pass: number;
     fail: number;
+    cancelled: number;
   }>;
   canonical: Readonly<{
     total: number;
     pass: number;
     fail: number;
     skip: number;
+    cancelled: number;
   }>;
   launchers: Readonly<{
     total: number;
@@ -22,6 +24,8 @@ export type HostedTestProjectionSummary = Readonly<{
     declaredChecks: number;
     passedChecks: number;
     failedChecks: number | null;
+    cancelled: number;
+    cancelledChecks: number;
   }>;
 }>;
 
@@ -48,6 +52,7 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
           ...legacyCases.filter((entry) => entry.status === "fail").map((entry) => entry.suite),
           ...legacyLaunchers.filter((entry) => entry.status === "fail").map((entry) => entry.suite),
         ]).size,
+      cancelled: normalizedSuites.filter((entry) => entry.status === "cancelled").length,
     }),
     canonical: Object.freeze({
       total: normalized
@@ -56,6 +61,9 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
       pass: normalized ? report.summary.pass : legacyCases.filter((entry) => entry.status === "pass").length,
       fail: normalized ? report.summary.fail : legacyCases.filter((entry) => entry.status === "fail").length,
       skip: normalized ? report.summary.skip : legacyCases.filter((entry) => entry.status === "skip").length,
+      cancelled: normalized
+        ? normalizedCaseSuites.reduce((total, entry) => total + entry.counts.cancelled, 0)
+        : 0,
     }),
     launchers: Object.freeze({
       total: normalizedLaunchers.length || legacyLaunchers.length,
@@ -74,6 +82,8 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
       failedChecks: normalizedLaunchers.length > 0
         ? normalizedLaunchers.reduce((total, entry) => total + entry.counts.failed, 0)
         : legacyLaunchers.some((entry) => entry.status === "fail") ? null : 0,
+      cancelled: normalizedLaunchers.filter((entry) => entry.status === "cancelled").length,
+      cancelledChecks: normalizedLaunchers.reduce((total, entry) => total + entry.counts.cancelled, 0),
     }),
   });
 }
@@ -90,9 +100,15 @@ export function hosted_test_projection_footer(
       Object.freeze({ key: "cases", label: "cases", value: summary.canonical.total }),
       Object.freeze({ key: "case-pass", label: "case pass", value: summary.canonical.pass }),
       Object.freeze({ key: "case-fail", label: "case fail", value: summary.canonical.fail }),
+      ...(summary.canonical.cancelled > 0
+        ? [Object.freeze({ key: "case-cancel", label: "case cancel", value: summary.canonical.cancelled })]
+        : []),
       Object.freeze({ key: "checks", label: "checks", value: summary.launchers.declaredChecks }),
       Object.freeze({ key: "check-pass", label: "check pass", value: summary.launchers.passedChecks }),
       Object.freeze({ key: "check-fail", label: "check fail", value: summary.launchers.failedChecks ?? "unknown" }),
+      ...(summary.launchers.cancelledChecks > 0
+        ? [Object.freeze({ key: "check-cancel", label: "check cancel", value: summary.launchers.cancelledChecks })]
+        : []),
       elapsed,
     ]);
   }
@@ -102,6 +118,9 @@ export function hosted_test_projection_footer(
     Object.freeze({ key: "cases", label: "cases", value: summary.canonical.total }),
     Object.freeze({ key: "case-pass", label: "passed", value: summary.canonical.pass }),
     Object.freeze({ key: "case-fail", label: "failed", value: summary.canonical.fail }),
+    ...(summary.canonical.cancelled > 0
+      ? [Object.freeze({ key: "case-cancel", label: "cancelled", value: summary.canonical.cancelled })]
+      : []),
     elapsed,
   ]);
 }

@@ -16,7 +16,7 @@ import {
 } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 import { make_hosted_test_case_inspector } from "../../harness/hosted/hosted-test-case-inspection";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
-import { create_test_chips } from "../../../src/app/demos/tests/panel/test-helpers";
+import { create_test_chips, TEST_SUMMARY_ENTRY_ORDER } from "../../../src/app/demos/tests/panel/test-helpers";
 import { TEST_CHIP_ROWcss, TEST_CHIP_VALUEcss } from "../../../src/app/demos/tests/panel/tp.css";
 
 function expect_projection(condition: unknown, message: string): asserts condition {
@@ -413,14 +413,24 @@ try {
     "an all-green mixed summary preserves separate case and check universes",
   );
   const allGreenFooter = hosted_test_projection_footer(Object.freeze({
-    suites: Object.freeze({ total: 30, pass: 30, fail: 0 }),
-    canonical: Object.freeze({ total: 2103, pass: 2103, fail: 0, skip: 0 }),
-    launchers: Object.freeze({ total: 28, pass: 28, fail: 0, declaredChecks: 502, passedChecks: 502, failedChecks: 0 }),
+    suites: Object.freeze({ total: 30, pass: 30, fail: 0, cancelled: 0 }),
+    canonical: Object.freeze({ total: 2103, pass: 2103, fail: 0, skip: 0, cancelled: 0 }),
+    launchers: Object.freeze({ total: 28, pass: 28, fail: 0, declaredChecks: 502, passedChecks: 502, failedChecks: 0, cancelled: 0, cancelledChecks: 0 }),
   }), 10);
   expect_projection(
     allGreenFooter.slice(0, 8).map((entry) => `${entry.label}:${entry.value}`).join("|")
       === "suites:30|suite fail:0|cases:2103|case pass:2103|case fail:0|checks:502|check pass:502|check fail:0",
     "the complete successful mixed run does not fabricate a grand case/check equivalence",
+  );
+  const cancelledFooter = hosted_test_projection_footer(Object.freeze({
+    suites: Object.freeze({ total: 2, pass: 0, fail: 0, cancelled: 2 }),
+    canonical: Object.freeze({ total: 4, pass: 1, fail: 0, skip: 0, cancelled: 3 }),
+    launchers: Object.freeze({ total: 1, pass: 0, fail: 0, declaredChecks: 16, passedChecks: 0, failedChecks: 0, cancelled: 1, cancelledChecks: 16 }),
+  }), 10);
+  expect_projection(
+    cancelledFooter.map((entry) => `${entry.key}:${entry.value}`).join("|")
+      === "suites:2|suite-fail:0|cases:4|case-pass:1|case-fail:0|case-cancel:3|checks:16|check-pass:0|check-fail:0|check-cancel:16|elapsed:10.0 ms",
+    "cancellation appears as distinct case and opaque-check fields without changing ordinary wording",
   );
   expect_projection(
     externalSnapshot.summariesBySuite[passing.id]?.startsWith("16 checks · pass") === true
@@ -520,7 +530,7 @@ try {
   expect_projection(
     Array.from(runtime.document.querySelectorAll("#test-chips .test-chip"))
       .every((node, index) => node === chipNodes[index])
-      && chipNodes.length === 9
+      && chipNodes.length === TEST_SUMMARY_ENTRY_ORDER.length
       && chipDisplay.metrics().layoutBuilds === 1,
     "summary DOM identity remains stable across legacy, mixed, and canonical report updates",
   );
@@ -531,7 +541,7 @@ try {
   );
   expect_projection(
     chipNodes.every((node) => runtime.window.getComputedStyle(node as Element).display !== "none"),
-    "all nine keyed mixed-summary entries are visible after repeated report updates",
+    "all eleven keyed summary slots remain materialized across repeated report updates",
   );
   expect_projection(
     TEST_CHIP_ROWcss.gridTemplateColumns === "repeat(4, minmax(9ch, 1fr))"

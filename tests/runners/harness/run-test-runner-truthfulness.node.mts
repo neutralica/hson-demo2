@@ -301,7 +301,7 @@ await check_async("streamed and terminal counts reconcile", async () => {
   assert.equal(ends.filter((event) => event.status === "fail").length, observed.result.summary.fail);
 });
 
-await check_async("abort during active work settles after cleanup without false green", async () => {
+await check_async("abort during active work settles after cleanup as cancellation", async () => {
   const abort = new AbortController();
   let cleaned = false;
   const running = run([suite("runner/abort", [
@@ -316,7 +316,9 @@ await check_async("abort during active work settles after cleanup without false 
   const observed = await running;
   assert.equal(cleaned, true);
   assert.equal(observed.result.ok, false);
-  assert.match(observed.result.summary.failures[0]?.err ?? "", /TEST_CASE_CANCELLED/);
+  assert.equal(observed.result.cancelled, true);
+  assert.equal(observed.result.summary.failures.length, 0);
+  assert.equal(observed.events.some((event) => event.t === "case_cancelled" && event.caseId === "active"), true);
 });
 
 await check_async("synthetic DOM globals restore after a failed case", async () => {

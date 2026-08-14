@@ -11,6 +11,7 @@ import { livehost_socket_suite } from "./socket-suite";
 import { livehost_session_lifecycle_suite } from "./session-lifecycle-suite";
 import { livehost_store_suite } from "./store-suite";
 import { livehost_sync_suite } from "./sync-suite";
+import { all_phase3b_cancellation_suites } from "./phase3b-cancellation-suite";
 
 export function all_livehost_suites(): readonly TestSuite[] {
   const metadata: TestDescriptorMetadata = Object.freeze({
@@ -28,6 +29,7 @@ export function all_livehost_suites(): readonly TestSuite[] {
     livehost_pair_suite(),
     livehost_store_suite(),
     livehost_api_suite(),    
+    ...all_phase3b_cancellation_suites(),
 
     
   ].map((suite) => Object.freeze({ ...suite, descriptor: metadata }));

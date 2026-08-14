@@ -58,6 +58,8 @@ export type ExternalLibraryLauncherResult = Readonly<{
   completion?: ExternalLibraryLauncherCompletion;
   completionError?: string;
   forceKilled?: boolean;
+  cancelled?: boolean;
+  completionAcceptedBeforeCancellation?: boolean;
   invocationKind: ExternalLibraryLauncherInvocationKind;
   ok: boolean;
 }>;
@@ -88,6 +90,8 @@ export type ExternalLibraryLauncherRunOptions = Readonly<{
   forceTsx?: boolean;
   forcePlainNode?: boolean;
   forceVerifiedDirect?: boolean;
+  /** Deterministic process-boundary certificate hook; receives raw chunks. */
+  observeStdoutChunk?: (text: string) => void;
 }>;
 
 export type ExternalLibraryLauncherService = Readonly<{
@@ -427,6 +431,15 @@ class CompletionScanner {
     });
   }
 
+  snapshot(): CompletionScan {
+    return Object.freeze({
+      records: Object.freeze([...this.#records]),
+      malformedRecords: this.#malformedRecords,
+      trailingOutput: this.#trailingOutput,
+      ordinaryStdout: this.#ordinaryOutput.text(),
+    });
+  }
+
   #consume(text: string): void {
     let remaining = text;
     while (remaining.length > 0) {
@@ -574,6 +587,8 @@ async function run_external_library_launcher_with_state(
     let settled = false;
     let terminationRequested = false;
     let forceKilled = false;
+    let cancelled = false;
+    let completionAcceptedBeforeCancellation: ExternalLibraryLauncherCompletion | undefined;
     let forceTimer: ReturnType<typeof setTimeout> | undefined;
     const configuredInvocation = availability.invocations?.[targetId];
     let resolvedInvocation: ExternalLibraryLauncherInvocation;
@@ -634,15 +649,24 @@ async function run_external_library_launcher_with_state(
     child.stdout?.on("data", (chunk: Buffer) => {
       stdoutCapture.add(chunk);
       completionScanner.add(chunk);
+      options.observeStdoutChunk?.(chunk.toString("utf8"));
     });
     child.stderr?.on("data", (chunk: Buffer) => { stderrCapture.add(chunk); });
     const timer = setTimeout(() => {
       timedOut = true;
       requestTermination();
     }, timeoutMs);
-    const abort = (): void => requestTermination();
+    const abort = (): void => {
+      const observed = reconcile_external_launcher_completion(completionScanner.snapshot(), selectedTarget);
+      if (observed.error === undefined && observed.completion !== undefined) {
+        completionAcceptedBeforeCancellation = observed.completion;
+      } else {
+        cancelled = true;
+      }
+      requestTermination();
+    };
     options.signal?.addEventListener("abort", abort, { once: true });
-    if (options.signal?.aborted) requestTermination();
+    if (options.signal?.aborted) abort();
     child.once("error", (error) => { spawnError = error.message; });
     child.once("close", (exitCode, signal) => {
       if (settled) return;
@@ -652,7 +676,9 @@ async function run_external_library_launcher_with_state(
       if (forceTimer !== undefined) clearTimeout(forceTimer);
       options.signal?.removeEventListener("abort", abort);
       const completionScan = completionScanner.finish();
-      const completionResult = reconcile_external_launcher_completion(completionScan, selectedTarget);
+      const completionResult: Readonly<{ completion?: ExternalLibraryLauncherCompletion; error?: string }> = completionAcceptedBeforeCancellation === undefined
+        ? reconcile_external_launcher_completion(completionScan, selectedTarget)
+        : Object.freeze({ completion: completionAcceptedBeforeCancellation });
       const stdout = stdoutCapture.text();
       const stderr = stderrCapture.text();
       const durationMs = performance.now() - startedAt;
@@ -673,8 +699,12 @@ async function run_external_library_launcher_with_state(
         ...(completionResult.completion === undefined ? {} : { completion: completionResult.completion }),
         ...(completionResult.error === undefined ? {} : { completionError: completionResult.error }),
         ...(forceKilled ? { forceKilled: true } : {}),
+        ...(cancelled ? { cancelled: true } : {}),
+        ...(completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
         invocationKind: invocation.kind,
-        ok: exitCode === 0
+        ok: completionAcceptedBeforeCancellation !== undefined
+          ? completionAcceptedBeforeCancellation.failed === 0
+          : exitCode === 0
           && signal === null
           && spawnError === undefined
           && !timedOut

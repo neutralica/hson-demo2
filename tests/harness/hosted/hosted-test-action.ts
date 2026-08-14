@@ -142,6 +142,18 @@ function decode_hosted_test_inspect_request(value: unknown) {
   return { ok: true, value: { runId: record.runId as HostedTestRunId, caseKey: record.caseKey } satisfies HostedTestInspectRequest } as const;
 }
 
+function decode_hosted_test_cancel_request(value: unknown) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { ok: false, issues: ["tests.cancel requires runId and attemptId strings."] } as const;
+  }
+  const record = value as { runId?: unknown; attemptId?: unknown };
+  if (Object.keys(record).length !== 2 || typeof record.runId !== "string" || !record.runId
+    || typeof record.attemptId !== "string" || !record.attemptId) {
+    return { ok: false, issues: ["tests.cancel requires non-empty runId and attemptId strings."] } as const;
+  }
+  return { ok: true, value: { runId: record.runId, attemptId: record.attemptId } } as const;
+}
+
 export function create_hosted_test_livehost(
   registry: HostedTestSuiteRegistry,
   inspectReport?: (report: HostedTestReportController, runId: HostedTestRunId) => void,
@@ -270,6 +282,9 @@ export function create_hosted_test_livehost(
       };
       return JSON.parse(JSON.stringify(hostedResult)) as JsonValue;
     },
+    "tests.cancel": async () => {
+      throw new Error("HOSTED_TEST_CANCELLATION_UNAVAILABLE: Compatibility event hosts do not own executor lifetime.");
+    },
     "tests.inspect": async (_context, request) => {
       const suite = retention.get(request.runId);
       if (suite === undefined) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${request.runId}" is no longer inspectable.`);
@@ -283,6 +298,7 @@ export function create_hosted_test_livehost(
       "tests.discover": { payload: decode_test_executor_discovery_request },
       "tests.run": { payload: decode_hosted_test_request },
       "tests.runSelected": { payload: decode_run_selected_tests_request },
+      "tests.cancel": { payload: decode_hosted_test_cancel_request },
       "tests.inspect": { payload: decode_hosted_test_inspect_request },
     },
   };

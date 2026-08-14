@@ -1,5 +1,5 @@
 import type { LiveHostEventListener, LiveMapAnyOp, LiveMapCommitObservation } from "hson-live/types";
-import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../../../../tests/harness/hosted/hosted-test-action.types";
+import type { HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../../../../tests/harness/hosted/hosted-test-action.types";
 import { inspect_hosted_test_action, run_hosted_test_action } from "../../../../../tests/harness/hosted/hosted-test-client-action";
 import type { HostedTestCaseReport, HostedTestReport, HostedTestSuiteRunReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import type { HostedTestReportMirror } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-mirror.types";
@@ -20,7 +20,7 @@ export type HostedTestPanelReportUpdate = Readonly<{
 }>;
 
 export type HostedTestPanelSink = Readonly<{
-  reset(target: HostedTestRunTarget, context?: Readonly<{ recovered: boolean }>): void;
+  reset(target: HostedTestRunTarget, context?: Readonly<{ recovered: boolean; controlStatus?: HostedTestRemoteRun["association"]["controlStatus"] }>): void;
   ingest(update: HostedTestPanelReportUpdate): void;
   showInfrastructureError(message: string): void;
   renderTiming?(timing: HostedTestPanelRunResult["timing"]): void;
@@ -36,6 +36,7 @@ export type HostedTestPanelAdapter = Readonly<{
   start(suite: HostedTestSuiteId): Promise<HostedTestPanelRunResult>;
   start_selected(testIds: readonly string[]): Promise<HostedTestPanelRunResult>;
   recover(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestPanelRunResult>;
+  cancel(): Promise<HostedTestCancelResult>;
   inspect(caseKey: string): Promise<HostedTestCaseDiagnostic>;
   capture(): HostedTestReport | undefined;
   dispose(): void;
@@ -114,7 +115,8 @@ function make_report_observer(sink: HostedTestPanelSink): (mirror: HostedTestRep
 
   return (mirror) => mirror.subscribe((capture) => {
     const report = capture.value;
-    const terminal = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
+    const terminal = report.run.status === "passed" || report.run.status === "failed"
+      || report.run.status === "cancelled" || report.run.status === "error";
     const newCases: HostedTestCaseReport[] = [];
     while (true) {
       const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
@@ -215,6 +217,9 @@ export function make_hosted_test_panel_adapter(
     async recover() {
       throw new Error("Explicit report recovery requires the generic hosted-test runtime.");
     },
+    async cancel() {
+      throw new Error("Authoritative cancellation requires the generic hosted-test runtime.");
+    },
     async inspect(caseKey: string) {
       const result = lastResult;
       if (result === undefined) throw new Error("Hosted case inspection is available after the run settles.");
@@ -273,7 +278,10 @@ function make_generic_hosted_test_panel_adapter(
 
     const run = await open();
     const target = run.association.suite;
-    if (requestedTarget === undefined) sink.reset(target, { recovered: true });
+    if (requestedTarget === undefined) sink.reset(target, {
+      recovered: true,
+      controlStatus: run.association.controlStatus,
+    });
     if (generation !== runGeneration) {
       run.dispose();
       throw new Error("Hosted test run was superseded before report recovery.");
@@ -297,7 +305,8 @@ function make_generic_hosted_test_panel_adapter(
       if (report.run.id !== run.association.runId || report.run.suite !== target) {
         throw new Error("Recovered hosted report identity does not match the requested run.");
       }
-      const terminalState = report.run.status === "passed" || report.run.status === "failed" || report.run.status === "error";
+      const terminalState = report.run.status === "passed" || report.run.status === "failed"
+        || report.run.status === "cancelled" || report.run.status === "error";
       const newCases: HostedTestCaseReport[] = [];
       while (true) {
         const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
@@ -348,13 +357,22 @@ function make_generic_hosted_test_panel_adapter(
       const report = currentReport ?? run.client.recovery.map.capture().value;
       const cursor = run.client.recovery.lastAppliedRev ?? -1;
       const expectedOk = report.run.status === "passed";
-      if (result.runId !== report.run.id || result.attemptId !== run.association.attemptId
-        || result.reportHostId !== run.association.reportHostId
-        || result.suite !== report.run.suite || result.reportRev === undefined || cursor < result.reportRev
-        || result.ok !== expectedOk || result.summary.cases !== report.summary.cases
-        || result.summary.pass !== report.summary.pass || result.summary.fail !== report.summary.fail
-        || result.summary.skip !== report.summary.skip) {
-        throw new Error("Hosted action result does not agree with the recovered authoritative report.");
+      const expectedCancelled = report.run.status === "cancelled";
+      const mismatches = [
+        result.runId !== report.run.id ? "runId" : undefined,
+        result.attemptId !== run.association.attemptId ? "attemptId" : undefined,
+        result.reportHostId !== run.association.reportHostId ? "reportHostId" : undefined,
+        result.suite !== report.run.suite ? "suite" : undefined,
+        result.reportRev === undefined || cursor < result.reportRev ? "reportRev" : undefined,
+        result.ok !== expectedOk ? "ok" : undefined,
+        (result.cancelled === true) !== expectedCancelled ? "cancelled" : undefined,
+        result.summary.cases !== report.summary.cases ? "summary.cases" : undefined,
+        result.summary.pass !== report.summary.pass ? "summary.pass" : undefined,
+        result.summary.fail !== report.summary.fail ? "summary.fail" : undefined,
+        result.summary.skip !== report.summary.skip ? "summary.skip" : undefined,
+      ].filter((value): value is string => value !== undefined);
+      if (mismatches.length > 0) {
+        throw new Error(`Hosted action result does not agree with the recovered authoritative report: ${mismatches.join(", ")}.`);
       }
       const panelResult: HostedTestPanelRunResult = Object.freeze({
         ...result,
@@ -385,6 +403,10 @@ function make_generic_hosted_test_panel_adapter(
     },
     async recover(runId: string, attemptId?: HostedTestAttemptId) {
       return present(() => runtime.recover_run(runId, attemptId));
+    },
+    async cancel() {
+      if (current === undefined) throw new Error("No active hosted test attempt is available to cancel.");
+      return current.cancel();
     },
     async inspect(caseKey: string) {
       const result = lastResult;

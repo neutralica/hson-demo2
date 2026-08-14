@@ -52,7 +52,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
     run: s.object.exact({
       id: s.string.optional,
       suite: s.pick(...HOSTED_TEST_SUITE_IDS, HOSTED_TEST_SELECTED_RUN_TARGET),
-      status: s.pick("idle", "running", "passed", "failed", "error"),
+      status: s.pick("idle", "running", "passed", "failed", "cancelled", "error"),
       startedAt: finiteNumber.nullable,
       completedAt: finiteNumber.nullable,
       timing: s.object.exact({ runnerMs: finiteNumber, hostMs: finiteNumber }).nullable,
@@ -145,7 +145,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       runtime: s.string,
       executableChecks: nonNegativeInteger,
       collections: s.array(s.string),
-      status: s.pick("queued", "running", "pass", "fail"),
+      status: s.pick("queued", "running", "pass", "fail", "cancelled"),
       ms: finiteNumber,
       stdout: s.string,
       stderr: s.string,
@@ -371,6 +371,7 @@ export type HostedTestReportController = Readonly<{
   reduce: (event: TestEvent) => void;
   reduceLifecycle: (event: TestLifecycleEvent) => void;
   complete: (result: RunResult, timing?: Readonly<{ runnerMs: number; hostMs: number }>) => void;
+  cancel: (result: RunResult, timing?: Readonly<{ runnerMs: number; hostMs: number }>) => void;
   settle: () => Promise<void>;
   failInfrastructure: (error: unknown) => void;
 }>;
@@ -678,7 +679,7 @@ export function make_hosted_test_report(
   function record_case_terminal(suiteId: string, status: TestLifecycleTerminalStatus): void {
     const counts = suiteCounts.get(suiteId);
     if (counts === undefined) return;
-    counts.executed += 1;
+    if (status !== "cancelled") counts.executed += 1;
     if (status === "pass") counts.passed += 1;
     else if (status === "fail") counts.failed += 1;
     else if (status === "skip") counts.skipped += 1;
@@ -691,8 +692,8 @@ export function make_hosted_test_report(
     if (!values.every((value) => Number.isSafeInteger(value) && value >= 0)) {
       throw new Error(`TEST_LIFECYCLE_COUNTS_INVALID: ${suiteId} counts must be non-negative safe integers.`);
     }
-    const reconciled = counts.passed + counts.failed + counts.skipped + counts.unsupported + counts.cancelled;
-    if (counts.executed !== reconciled || counts.executed > counts.total || counts.total > counts.declared) {
+    const executed = counts.passed + counts.failed + counts.skipped + counts.unsupported;
+    if (counts.executed !== executed || counts.executed + counts.cancelled > counts.total || counts.total > counts.declared) {
       throw new Error(`TEST_LIFECYCLE_COUNTS_CONTRADICTION: ${suiteId} counts do not reconcile.`);
     }
   }
@@ -1065,7 +1066,9 @@ export function make_hosted_test_report(
           tx.setMany(["externalResults"], { [event.opaque.id]: {
             id: event.opaque.id, suite: event.suiteId, name: event.opaque.name, subject: event.opaque.subject,
             runtime: event.opaque.runtime, executableChecks: event.opaque.executableChecks,
-            collections: [...event.opaque.collections], status: event.status === "pass" ? "pass" : "fail",
+            collections: [...event.opaque.collections], status: event.status === "cancelled"
+              ? "cancelled"
+              : event.status === "pass" ? "pass" : "fail",
             ms: finite_or_zero(event.durationMs), stdout: event.opaque.stdout ?? "", stderr: event.opaque.stderr ?? "",
             exitCode: event.opaque.exitCode ?? null, signal: event.opaque.signal ?? null,
             timedOut: event.opaque.timedOut ?? false, spawnError: event.opaque.spawnError ?? null,
@@ -1077,12 +1080,16 @@ export function make_hosted_test_report(
 
     if (event.t === "run_finished") {
       flush_case_lifecycle();
-      runStatus = event.status === "pass" ? "passed" : event.status === "fail" ? "failed" : "error";
+      runStatus = event.status === "pass" ? "passed" : event.status === "fail" ? "failed" : "cancelled";
       const completion = pendingCompletion;
       runProjection = {
         ...runProjection,
         completedAt: event.timestamp,
-        status: event.status === "pass" ? "passed" : hasRunInfrastructureError ? "error" : "failed",
+        status: event.status === "pass"
+          ? "passed"
+          : event.status === "cancelled"
+            ? "cancelled"
+            : hasRunInfrastructureError ? "error" : "failed",
         ...(completion === undefined ? {} : { timing: completion.timing }),
       };
       runProjectionBySequence.set(event.sequence, runProjection);
@@ -1171,6 +1178,15 @@ export function make_hosted_test_report(
         timing: timing ?? { runnerMs: result.summary.msTotal, hostMs: result.summary.msTotal },
       });
       adapter.finishRun(result.ok ? "pass" : "fail", result.summary.msTotal);
+    },
+    cancel(result, timing) {
+      flush_case_lifecycle();
+      flush_pending_cases();
+      pendingCompletion = Object.freeze({
+        result,
+        timing: timing ?? { runnerMs: result.summary.msTotal, hostMs: result.summary.msTotal },
+      });
+      adapter.cancelRemaining(result.summary.msTotal);
     },
     failInfrastructure(error) {
       flush_case_lifecycle();

@@ -115,6 +115,7 @@ async function run_scheduled<T>(
   results: T[],
   onStarted: (entry: IndexedTarget) => void,
   onFinished: (entry: IndexedTarget, result: T) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   if (entries.length === 0) return;
   const initialConcurrency = typeof scheduling === "number"
@@ -128,8 +129,17 @@ async function run_scheduled<T>(
   let concurrency = initialConcurrency;
   let settled = false;
   await new Promise<void>((resolve, reject) => {
+    const complete = (): boolean => {
+      if (cursor < entries.length || active !== 0) return false;
+      settled = true;
+      signal?.removeEventListener("abort", pump);
+      resolve();
+      return true;
+    };
     const pump = (): void => {
       if (settled) return;
+      if (signal?.aborted) cursor = entries.length;
+      if (complete()) return;
       while (active < concurrency && cursor < entries.length) {
         const entry = entries[cursor];
         cursor += 1;
@@ -141,20 +151,18 @@ async function run_scheduled<T>(
             results[entry.index] = result;
             onFinished(entry, result);
             active -= 1;
-            if (cursor === entries.length && active === 0) {
-              settled = true;
-              resolve();
-              return;
-            }
+            if (complete()) return;
             pump();
           },
           (error) => {
             settled = true;
+            signal?.removeEventListener("abort", pump);
             reject(error);
           },
         );
       }
     };
+    signal?.addEventListener("abort", pump, { once: true });
     if (typeof scheduling !== "number") {
       void Promise.resolve(scheduling.increaseAfter).then(
         () => {
@@ -176,6 +184,7 @@ export async function run_external_library_launcher_pool<T>(
   execute: (target: ExternalLibraryLauncherTarget) => Promise<T>,
   scheduling: ExternalLibraryLauncherPoolScheduling = EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY,
   lifecycle: ExternalLibraryLauncherPoolLifecycle<T> = {},
+  signal?: AbortSignal,
 ): Promise<ExternalLibraryLauncherPoolResult<T>> {
   const initialConcurrency = typeof scheduling === "number"
     ? scheduling
@@ -231,6 +240,7 @@ export async function run_external_library_launcher_pool<T>(
       results,
       (entry) => started("ordinary", entry),
       (entry, result) => finished("ordinary", entry, result),
+      signal,
     ),
     run_scheduled(
       special,
@@ -239,10 +249,11 @@ export async function run_external_library_launcher_pool<T>(
       results,
       (entry) => started("special", entry),
       (entry, result) => finished("special", entry, result),
+      signal,
     ),
   ]);
   return Object.freeze({
-    results: Object.freeze(results),
+    results: Object.freeze(results.flatMap((result, index) => index in results ? [result] : [])),
     maximumConcurrent,
     maximumOrdinaryConcurrent,
     maximumSpecialConcurrent,
@@ -331,7 +342,7 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     runtime: result.target.runtime,
     executableChecks: result.target.executableChecks,
     collections: result.target.collections,
-    status: result.ok ? "pass" : "fail",
+    status: result.cancelled ? "cancelled" : result.ok ? "pass" : "fail",
     ms: result.durationMs,
     stdout: result.stdout,
     ordinaryStdout: result.ordinaryStdout,
@@ -346,6 +357,7 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
     ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
     ...(result.completion === undefined ? {} : { completion: result.completion }),
     ...(result.completionError === undefined ? {} : { completionError: result.completionError }),
+    ...(result.completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
   });
 }
 
@@ -371,6 +383,7 @@ export async function run_node_selected_verifications(
   let externalPhaseMs = 0;
   let externalPass = 0;
   let externalFail = 0;
+  let externalCompleted = 0;
   const externalFailures: TestFailure[] = [];
   const terminationGeneration = configuration.launcherService?.terminationGeneration()
     ?? external_library_launcher_termination_generation();
@@ -409,6 +422,7 @@ export async function run_node_selected_verifications(
           try {
             return await (configuration.launcherService?.run ?? run_external_library_launcher)(availability, target.id, {
               terminationGeneration,
+              ...(options.signal === undefined ? {} : { signal: options.signal }),
               forceTsx: configuration.externalInvocation === "tsx",
               forceVerifiedDirect: configuration.externalInvocation === "verified",
             });
@@ -423,9 +437,14 @@ export async function run_node_selected_verifications(
             onEvent(external_state_event(target, "running"));
           },
           finished(target, launcherResult) {
-            if (launcherResult.ok) externalPass += 1;
-            else {
+            if (launcherResult.cancelled) {
+              // Cancellation is control truth, never an assertion failure.
+            } else if (launcherResult.ok) {
+              externalPass += 1;
+              externalCompleted += 1;
+            } else {
               externalFail += 1;
+              externalCompleted += 1;
               externalFailures.push(Object.freeze({
                 suite: launcherResult.target.id,
                 name: launcherResult.target.displayName,
@@ -442,6 +461,7 @@ export async function run_node_selected_verifications(
             onEvent(Object.freeze({ t: "suite_end", suite: target.id, ms: launcherResult.durationMs }));
           },
         },
+        options.signal,
       );
       externalPhaseMs = performance.now() - startedAt;
       return result;
@@ -460,10 +480,11 @@ export async function run_node_selected_verifications(
   else configuration.recordMetrics(completedMetrics);
   const fail = canonical.summary.fail + externalFail;
   return Object.freeze({
-    ok: fail === 0,
+    ok: options.signal?.aborted !== true && fail === 0,
+    ...(options.signal?.aborted ? { cancelled: true as const } : {}),
     summary: Object.freeze({
-      suites: canonical.summary.suites + externalTargets.length,
-      cases: canonical.summary.cases + externalTargets.length,
+      suites: canonical.summary.suites + externalCompleted,
+      cases: canonical.summary.cases + externalCompleted,
       pass: canonical.summary.pass + externalPass,
       fail,
       skip: canonical.summary.skip,

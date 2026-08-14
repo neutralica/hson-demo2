@@ -7,6 +7,8 @@ import { node_application_host_suite } from "../../../suites/livehost/node-appli
 import { circuit_worker_service_suite } from "../../../suites/livehost/circuit-worker-service-suite";
 import { circuit_livehost_integration_suite } from "../../../suites/livehost/circuit-livehost-integration-suite";
 import { circuit_worker_parity_suite } from "../../../suites/livehost/circuit-worker-parity-suite";
+import { phase3b_process_cancellation_suite } from "../../../suites/livehost/phase3b-process-cancellation-suite";
+import { phase3b_panel_cancellation_suite } from "../../../suites/livehost/phase3b-panel-cancellation-suite";
 
 export const LOCAL_NODE_LIVEHOST_EXECUTOR = Object.freeze({
   id: "local-node-livehost",
@@ -17,7 +19,7 @@ export const LOCAL_NODE_LIVEHOST_EXECUTOR = Object.freeze({
     provides: Object.freeze(["javascript", "node", "synthetic-dom", "worker"] as const),
   }),
   supportsStreaming: true,
-  supportsCancellation: false,
+  supportsCancellation: true,
 }) satisfies TestExecutorDescriptor;
 
 export function make_local_node_livehost_executor_registry(): TestExecutorRegistry {
@@ -29,5 +31,7 @@ export function make_local_node_livehost_executor_registry(): TestExecutorRegist
     circuit_worker_service_suite(),
     circuit_livehost_integration_suite(),
     circuit_worker_parity_suite(),
+    phase3b_process_cancellation_suite(),
+    phase3b_panel_cancellation_suite(),
   ]);
 }

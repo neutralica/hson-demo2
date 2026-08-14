@@ -3,6 +3,7 @@ import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise, Liv
 import type {
   HostedTestActions,
   HostedTestAnyRunResult,
+  HostedTestCancelResult,
   HostedTestCaseDiagnostic,
   HostedTestInspectRequest,
   HostedTestRunResult,
@@ -11,6 +12,7 @@ import type {
 import {
   decode_hosted_test_discovery_response,
   decode_hosted_test_inspect_response,
+  decode_hosted_test_cancel_response,
   decode_hosted_test_run_response,
   decode_selected_hosted_test_run_response,
 } from "../../../../../tests/harness/hosted/hosted-test-client-action";
@@ -54,6 +56,7 @@ export type HostedTestPanelRuntimeStatus =
   | "discovering"
   | "ready"
   | "running"
+  | "cancelling"
   | "completed"
   | "reconnecting"
   | "recovering"
@@ -69,6 +72,7 @@ export type HostedTestRemoteRun = Readonly<{
   on_change(listener: (observation?: LiveMapCommitObservation) => void): () => void;
   ready(): Promise<void>;
   inspect(request: HostedTestInspectRequest): Promise<HostedTestCaseDiagnostic>;
+  cancel(): Promise<HostedTestCancelResult>;
   dispose(): void;
 }>;
 
@@ -392,6 +396,21 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     return decode_selected_hosted_test_run_response(response);
   }
 
+  async function retry_safe_cancel_result(
+    action: LiveHostClientActionPromise<HostedTestActions, "tests.cancel">,
+    request: Readonly<{ runId: string; attemptId: HostedTestAttemptId }>,
+  ): Promise<HostedTestCancelResult> {
+    let response: unknown;
+    try {
+      response = await action;
+    } catch (error) {
+      if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+      await ensure_reconnected();
+      response = await coordinatorClient.retry_action(action.request);
+    }
+    return decode_hosted_test_cancel_response(response, request);
+  }
+
   function wait_for_association(
     requestId: string,
     target: HostedTestRunTarget,
@@ -446,7 +465,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     function settle_report_if_terminal(): void {
       if (reportTerminalSettled || reportClient === undefined) return;
       const status = reportClient.recovery.map.snap(["run", "status"]);
-      if (status !== "passed" && status !== "failed" && status !== "error") return;
+      if (status !== "passed" && status !== "failed" && status !== "cancelled" && status !== "error") return;
       reportTerminalSettled = true;
       resolveReportTerminal();
     }
@@ -559,6 +578,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         reportHostId: association.reportHostId,
         reportRev,
         ok: report.run.status === "passed",
+        cancelled: report.run.status === "cancelled",
         summary: result_summary_from_report(report),
         timing: report.run.timing,
       };
@@ -608,6 +628,15 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
           response = await reportClient.retry_action(pending.request);
         }
         return decode_hosted_test_inspect_response(response, request.caseKey);
+      },
+      async cancel() {
+        const request = Object.freeze({ runId: association.runId, attemptId: association.attemptId });
+        const action = coordinatorClient.action("tests.cancel", request);
+        const result = await retry_safe_cancel_result(action, request);
+        if (result.accepted && result.controlStatus === "cancelling" && !disposed && !runDisposed) {
+          status = "cancelling";
+        }
+        return result;
       },
       dispose() {
         if (runDisposed) return;

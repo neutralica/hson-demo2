@@ -58,8 +58,8 @@ function router_failure(code: HostedTestReportRouterFailureCode, message: string
   return Object.freeze({ code, message });
 }
 
-function terminal_status(status: string): status is "passed" | "failed" | "error" {
-  return status === "passed" || status === "failed" || status === "error";
+function terminal_status(status: string): status is "passed" | "failed" | "cancelled" | "error" {
+  return status === "passed" || status === "failed" || status === "cancelled" || status === "error";
 }
 
 export function make_hosted_test_report_router(

@@ -8,7 +8,12 @@ export const HOSTED_TEST_COORDINATOR_HOST_ID = "hosted-tests";
 
 export type HostedTestAttemptId = string;
 
-export type HostedTestAttemptControlStatus = "accepted" | "running" | "settled";
+export type HostedTestAttemptControlStatus = "accepted" | "running" | "cancelling" | "settled";
+
+export type HostedTestCancellationIdentity = Readonly<{
+  clientId: LiveHostId;
+  requestId: LiveHostActionRequestId;
+}>;
 
 export type HostedTestRunRequestAssociation = Readonly<{
   clientId: LiveHostId;
@@ -22,6 +27,7 @@ export type HostedTestCoordinatedAttempt = Readonly<{
   ordinal: number;
   reportHostId: string;
   controlStatus: HostedTestAttemptControlStatus;
+  cancellation: HostedTestCancellationIdentity | null;
 }>;
 
 export type HostedTestCoordinatedRun = Readonly<{
@@ -46,6 +52,7 @@ export type HostedTestRunAssociation = HostedTestRunRequestAssociation & Readonl
   reportHostId: string;
   suite: HostedTestRunTarget;
   controlStatus: HostedTestAttemptControlStatus;
+  cancellation: HostedTestCancellationIdentity | null;
   acceptedPlan: TestRunPlan | null;
 }>;
 
@@ -69,6 +76,7 @@ export function hosted_test_run_association(
     reportHostId: attempt.reportHostId,
     suite: run.suite,
     controlStatus: attempt.controlStatus,
+    cancellation: attempt.cancellation,
     acceptedPlan: run.acceptedPlan,
   });
 }

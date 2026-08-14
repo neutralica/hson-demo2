@@ -97,6 +97,13 @@ export type TestEvent =
     metaPatch?: Record<string, string>; // ADDED
   }
   | {
+    t: "case_cancelled";
+    suite: string;
+    caseId: string;
+    name: string;
+    ms: number;
+  }
+  | {
     t: "external_state";
     id: string;
     suite: string;
@@ -116,7 +123,7 @@ export type TestEvent =
     runtime: string;
     executableChecks: number;
     collections: readonly string[];
-    status: "pass" | "fail";
+    status: "pass" | "fail" | "cancelled";
     ms: number;
     stdout: string;
     stderr: string;
@@ -132,6 +139,7 @@ export type TestEvent =
       failed: number;
     }>;
     completionError?: string;
+    completionAcceptedBeforeCancellation?: boolean;
     ordinaryStdout?: string;
     stdoutBytes?: number;
     stderrBytes?: number;
@@ -225,6 +233,8 @@ export type RunOptions = Readonly<{
 export type RunResult = Readonly<{
   ok: boolean;
   summary: TestSummary;
+  /** Internal executor truth: semantic completion did not win the authority race. */
+  cancelled?: true;
 }>;
 
 export type UiLevel = "quiet" | "normal";

@@ -126,6 +126,7 @@ export type TestLifecycleEvent =
 export type TestLifecycleAdapter = Readonly<{
   accept(event: TestEvent): void;
   finishRun(status: "pass" | "fail" | "cancelled", durationMs: number): void;
+  cancelRemaining(durationMs: number): void;
   infrastructureError(error: unknown): void;
   sequence(): number;
 }>;
@@ -167,6 +168,12 @@ function strip_completion_control_frames(stdout: string): string {
 }
 
 function external_error(event: Extract<TestEvent, { t: "external_end" }>): TestLifecycleError | undefined {
+  if (event.status === "cancelled") return Object.freeze({ kind: "cancelled", message: "External library launcher was cancelled." });
+  if (event.completionAcceptedBeforeCancellation) {
+    return event.completion !== undefined && event.completion.failed > 0
+      ? Object.freeze({ kind: "assertion", message: `External launcher reported ${event.completion.failed} failed checks.` })
+      : undefined;
+  }
   if (event.timedOut) return Object.freeze({ kind: "timeout", message: "External library launcher timed out." });
   if (event.spawnError) return Object.freeze({ kind: "infrastructure", message: event.spawnError });
   if (event.completionError) return Object.freeze({ kind: "protocol", message: event.completionError });
@@ -194,6 +201,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
   const shapes = new Map(options.runPlan?.suites.map((suite) => [suite.id, suite.executionShape]) ?? []);
   const startedSuites = new Set<string>();
   const terminalSuites = new Set<string>();
+  const suiteStatuses = new Map<string, TestLifecycleTerminalStatus>();
   const caseStatuses = new Map<string, Map<string, TestLifecycleTerminalStatus>>();
   const suiteErrors = new Map<string, TestLifecycleError[]>();
 
@@ -253,13 +261,29 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         });
         return;
       }
+      if (event.t === "case_cancelled") {
+        const suiteCases = caseStatuses.get(event.suite) ?? new Map<string, TestLifecycleTerminalStatus>();
+        suiteCases.set(event.caseId, "cancelled");
+        caseStatuses.set(event.suite, suiteCases);
+        emit({
+          t: "case_finished",
+          suiteId: event.suite,
+          caseId: event.caseId,
+          title: event.name,
+          status: "cancelled",
+          durationMs: event.ms,
+        });
+        return;
+      }
       if (event.t === "suite_end") {
         if (terminalSuites.has(event.suite)) return;
         terminalSuites.add(event.suite);
+        const status = terminal_from_cases(caseStatuses.get(event.suite) ?? new Map());
+        suiteStatuses.set(event.suite, status);
         emit({
           t: "suite_finished",
           suiteId: event.suite,
-          status: terminal_from_cases(caseStatuses.get(event.suite) ?? new Map()),
+          status,
           durationMs: event.ms,
           ...(suiteErrors.has(event.suite) ? { errors: Object.freeze([...(suiteErrors.get(event.suite) ?? [])]) } : {}),
         });
@@ -319,31 +343,35 @@ export function make_test_lifecycle_adapter(options: Readonly<{
         });
       }
       const classifiedError = external_error(event);
-      if (classifiedError !== undefined && classifiedError.kind !== "assertion") {
+      if (classifiedError !== undefined && classifiedError.kind !== "assertion" && classifiedError.kind !== "cancelled") {
         emit({ t: "infrastructure_error", suiteId: event.suite, error: classifiedError });
       }
       // A completion rejected by protocol reconciliation is evidence, not a
       // trustworthy count source. Keep the advertised declaration and surface
       // the protocol error without constructing contradictory lifecycle counts.
-      const completion = event.completionError === undefined ? event.completion : undefined;
+      const completion = event.status !== "cancelled" && event.completionError === undefined ? event.completion : undefined;
+      const cancelledChecks = event.status === "cancelled" ? event.executableChecks : 0;
       const counts: TestLifecycleCounts = Object.freeze({
         declared: event.executableChecks,
-        total: completion?.executed ?? 0,
+        total: event.status === "cancelled" ? event.executableChecks : completion?.executed ?? 0,
         executed: completion?.executed ?? 0,
         passed: completion?.passed ?? 0,
         failed: completion?.failed ?? 0,
         skipped: 0,
         unsupported: 0,
-        cancelled: 0,
+        cancelled: cancelledChecks,
       });
       terminalSuites.add(event.suite);
+      suiteStatuses.set(event.suite, event.status);
       emit({
         t: "suite_finished",
         suiteId: event.suite,
         status: event.status,
         durationMs: event.ms,
         counts,
-        ...(classifiedError === undefined ? {} : { errors: Object.freeze([classifiedError]) }),
+        ...(classifiedError === undefined || classifiedError.kind === "cancelled"
+          ? {}
+          : { errors: Object.freeze([classifiedError]) }),
         opaque: Object.freeze({
           ...opaque,
           stdout: event.stdout,
@@ -357,6 +385,73 @@ export function make_test_lifecycle_adapter(options: Readonly<{
     },
     finishRun(status, durationMs) {
       emit({ t: "run_finished", status, durationMs });
+    },
+    cancelRemaining(durationMs) {
+      if (options.runPlan === undefined) {
+        emit({ t: "run_finished", status: "cancelled", durationMs });
+        return;
+      }
+      for (const suite of options.runPlan.suites) {
+        if (terminalSuites.has(suite.id)) continue;
+        if (suite.executionShape === "cases") {
+          const statuses = caseStatuses.get(suite.id) ?? new Map<string, TestLifecycleTerminalStatus>();
+          for (const testCase of suite.cases) {
+            if (statuses.has(testCase.caseId)) continue;
+            statuses.set(testCase.caseId, "cancelled");
+            emit({
+              t: "case_finished",
+              suiteId: suite.id,
+              caseId: testCase.caseId,
+              title: testCase.title,
+              status: "cancelled",
+              durationMs: 0,
+            });
+          }
+          caseStatuses.set(suite.id, statuses);
+          const values = [...statuses.values()];
+          const status = terminal_from_cases(statuses);
+          const counts: TestLifecycleCounts = Object.freeze({
+            declared: suite.cases.length,
+            total: suite.cases.length,
+            executed: values.filter((value) => value !== "cancelled").length,
+            passed: values.filter((value) => value === "pass").length,
+            failed: values.filter((value) => value === "fail").length,
+            skipped: values.filter((value) => value === "skip").length,
+            unsupported: values.filter((value) => value === "unsupported").length,
+            cancelled: values.filter((value) => value === "cancelled").length,
+          });
+          terminalSuites.add(suite.id);
+          suiteStatuses.set(suite.id, status);
+          emit({ t: "suite_finished", suiteId: suite.id, status, durationMs, counts });
+          continue;
+        }
+        const declared = suite.declaredChecks ?? 0;
+        const status = "cancelled" as const;
+        terminalSuites.add(suite.id);
+        suiteStatuses.set(suite.id, status);
+        emit({
+          t: "suite_finished",
+          suiteId: suite.id,
+          status,
+          durationMs,
+          counts: Object.freeze({
+            declared,
+            total: declared,
+            executed: 0,
+            passed: 0,
+            failed: 0,
+            skipped: 0,
+            unsupported: 0,
+            cancelled: declared,
+          }),
+        });
+      }
+      const statuses = [...suiteStatuses.values()];
+      emit({
+        t: "run_finished",
+        status: statuses.some((status) => status === "fail") ? "fail" : "cancelled",
+        durationMs,
+      });
     },
     infrastructureError(error) {
       emit({

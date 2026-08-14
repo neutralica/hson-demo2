@@ -90,10 +90,10 @@ const domCore = await registered.get("dom/core").run(undefined, { yieldEveryCase
 const canvasCore = await registered.get("canvas/core").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 const hostedAll = await registered.get("hosted/all").run(undefined, { yieldEveryCases: 0, yieldBetweenSuites: false });
 expect_registry(replay.ok && replay.summary.suites === 1 && replay.summary.cases === 45, "registered replay runner passes 45 cases under Node");
-expect_registry(livehost.ok && livehost.summary.suites === 10 && livehost.summary.cases === 174, "registered LiveHost runner passes 174 cases under Node");
-expect_registry(nodeAll.ok && nodeAll.summary.suites === 58 && nodeAll.summary.cases === 1407, "registered aggregate runner passes every Node-safe case exactly once");
+expect_registry(livehost.ok && livehost.summary.suites === 14 && livehost.summary.cases === 202, "registered LiveHost runner passes 202 cases under Node");
+expect_registry(nodeAll.ok && nodeAll.summary.suites === 62 && nodeAll.summary.cases === 1435, "registered aggregate runner passes every Node-safe case exactly once");
 expect_registry(domCore.ok && domCore.summary.suites === 77 && domCore.summary.cases === 931, "registered DOM runner passes the canonical jsdom and geometry tranche without removed debug-node cases");
 expect_registry(canvasCore.ok && canvasCore.summary.suites === 6 && canvasCore.summary.cases === 62, "registered canvas runner passes the deterministic command/state tranche");
-expect_registry(hostedAll.ok && hostedAll.summary.suites === 141 && hostedAll.summary.cases === 2400 && hostedAll.summary.pass === 2400, "registered complete runner passes every canonical hosted case exactly once");
+expect_registry(hostedAll.ok && hostedAll.summary.suites === 145 && hostedAll.summary.cases === 2428 && hostedAll.summary.pass === 2428, "registered complete runner passes every canonical hosted case exactly once");
 expect_registry(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined", "both registered runners are Node-safe");
 console.log("hosted suite registry: ok");

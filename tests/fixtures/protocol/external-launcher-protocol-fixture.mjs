@@ -58,10 +58,17 @@ switch (scenario) {
     break;
   case "graceful-timeout":
     process.on("SIGTERM", () => process.exit(0));
+    process.stdout.write("ready\n");
     setInterval(() => undefined, 1_000);
     break;
   case "resistant-timeout":
     process.on("SIGTERM", () => undefined);
+    process.stdout.write("ready\n");
+    setInterval(() => undefined, 1_000);
+    break;
+  case "completed-then-wait":
+    completion();
+    process.on("SIGTERM", () => process.exit(0));
     setInterval(() => undefined, 1_000);
     break;
   case "large-stdout":

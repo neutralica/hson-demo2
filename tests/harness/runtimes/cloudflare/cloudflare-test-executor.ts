@@ -11,7 +11,7 @@ export const CLOUDFLARE_LIVEHOST_EXECUTOR = Object.freeze({
     provides: Object.freeze(["javascript"] as const),
   }),
   supportsStreaming: true,
-  supportsCancellation: false,
+  supportsCancellation: true,
 }) satisfies TestExecutorDescriptor;
 
 export function make_cloudflare_livehost_executor_registry(): TestExecutorRegistry {

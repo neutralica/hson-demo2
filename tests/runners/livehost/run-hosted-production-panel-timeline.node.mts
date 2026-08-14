@@ -27,6 +27,9 @@ async function wait_for_async(predicate: () => Promise<boolean>, description: st
 
 const timeline: HostedTestTimelineEvent[] = [];
 const startupOnly = process.argv.includes("--startup-only");
+const cancelRun = process.argv.includes("--cancel");
+let cancellationTransportInterrupted = false;
+assert.ok(!(startupOnly && cancelRun), "startup-only and cancellation modes are mutually exclusive");
 const originalConsole = Object.freeze({
   log: console.log,
   warn: console.warn,
@@ -86,10 +89,13 @@ serverProcess.on("message", (message: Readonly<{
 });
 serverProcess.once("error", readyReject);
 const serverUrl = await ready;
-const serverRequest = <T,>(command: "snapshot" | "metrics" | "memory" | "stop"): Promise<T> => new Promise((resolve, reject) => {
+const serverRequest = <T,>(
+  command: "snapshot" | "metrics" | "memory" | "disconnect" | "stop",
+  authorityId?: string,
+): Promise<T> => new Promise((resolve, reject) => {
   const id = ++requestId;
   pending.set(id, { resolve: (value) => resolve(value as T), reject });
-  serverProcess.send({ id, command });
+  serverProcess.send({ id, command, ...(authorityId === undefined ? {} : { authorityId }) });
 });
 const dom = install_hosted_dom_runtime();
 let panel: ReturnType<typeof tp_factory> | undefined;
@@ -116,17 +122,36 @@ try {
       30_000,
     );
   } else {
+    if (cancelRun) {
+      await wait_for(
+        () => observedStages.has("first_suite_or_case_started")
+          && panel?.branch.attrs.get("data-hosted-panel-state") === "running",
+        "production Test panel cancellable execution",
+        30_000,
+      );
+      const cancelButton = panel.branch.find.byId("test-cancel");
+      assert.ok(cancelButton, "production Test panel exposes its authoritative stop control");
+      cancelButton.dom.must.el().dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+      await wait_for(
+        () => panel?.branch.attrs.get("data-hosted-panel-state") === "cancelling",
+        "authoritative production cancellation acknowledgement",
+        30_000,
+      );
+      await serverRequest("disconnect");
+      cancellationTransportInterrupted = true;
+    }
     await wait_for(
       () => {
         const state = panel?.branch.attrs.get("data-hosted-panel-state");
-        return state === "completed" || state === "run-rejected";
+        return state === "completed" || state === "cancelled" || state === "run-rejected";
       },
       "production Test panel run completion",
       10 * 60_000,
     );
     const panelState = panel.branch.attrs.get("data-hosted-panel-state");
-    const rejectedConnections = panelState === "completed" ? null : await serverRequest("snapshot");
-    assert.equal(panelState, "completed", JSON.stringify({
+    const expectedPanelState = cancelRun ? "cancelled" : "completed";
+    const rejectedConnections = panelState === expectedPanelState ? null : await serverRequest("snapshot");
+    assert.equal(panelState, expectedPanelState, JSON.stringify({
       panelState,
       logger: panel.logger.dom.must.el().textContent,
       timeline,
@@ -192,7 +217,14 @@ try {
     recoveredOpaqueChecks = recoveredReport.suiteRuns
       .filter((suite) => suite.executionShape === "opaque-aggregate")
       .reduce((total, suite) => total + suite.counts.passed, 0);
-    if (recoveredReport.run.status !== "passed") {
+    const recoveredCancelledCases = recoveredReport.suiteRuns
+      .filter((suite) => suite.executionShape === "cases")
+      .reduce((total, suite) => total + suite.counts.cancelled, 0);
+    const recoveredCancelledChecks = recoveredReport.suiteRuns
+      .filter((suite) => suite.executionShape === "opaque-aggregate")
+      .reduce((total, suite) => total + suite.counts.cancelled, 0);
+    const expectedReportStatus = cancelRun ? "cancelled" : "passed";
+    if (recoveredReport.run.status !== expectedReportStatus) {
       originalConsole.error(JSON.stringify({
         status: recoveredReport.run.status,
         summary: recoveredReport.summary,
@@ -209,11 +241,20 @@ try {
           })),
       }, null, 2));
     }
-    assert.equal(recoveredReport.run.status, "passed", "recovered production report is successful");
-    assert.equal(recoveredReport.summary.cases, 2_645, "recovered production report retains every canonical case");
-    assert.equal(recoveredReport.summary.pass, 2_645, "recovered production report retains every canonical pass");
+    assert.equal(recoveredReport.run.status, expectedReportStatus, "recovered production report retains authoritative terminal truth");
+    assert.equal(recoveredResult.cancelled === true, cancelRun, "recovered production result retains cancellation truth");
+    assert.ok(
+      recoveredReport.suiteRuns.every((suite) => suite.counts.executed + suite.counts.cancelled === suite.counts.total),
+      "every recovered suite reconciles known execution and cancellation against its planned total",
+    );
+    if (cancelRun) {
+      assert.ok(recoveredCancelledCases + recoveredCancelledChecks > 0, "real production cancellation terminalizes remaining planned work");
+    } else {
+      assert.equal(recoveredReport.summary.cases, 2_683, "recovered production report retains every canonical case");
+      assert.equal(recoveredReport.summary.pass, 2_683, "recovered production report retains every canonical pass");
+    }
     assert.equal(recoveredReport.summary.fail, 0, "recovered production report has no canonical failures");
-    assert.equal(recoveredOpaqueChecks, 2_933, "recovered production report retains every opaque check pass");
+    if (!cancelRun) assert.equal(recoveredOpaqueChecks, 2_933, "recovered production report retains every opaque check pass");
     assert.ok(recoveredResult.attemptId, "recovered production result retains execution-attempt identity");
     recovery = Object.freeze({
       runId: recoveredResult.runId,
@@ -226,6 +267,8 @@ try {
       evidenceBytes: recoveredEvidenceBytes,
       externalOutputBytes: recoveredExternalOutputBytes,
       opaqueChecks: recoveredOpaqueChecks,
+      cancelledCases: recoveredCancelledCases,
+      cancelledChecks: recoveredCancelledChecks,
       attemptId: recoveredResult.attemptId,
     });
     recovered.dispose();
@@ -246,6 +289,8 @@ try {
     current: NodeJS.MemoryUsage;
   }>>("memory");
   originalConsole.log(JSON.stringify({
+    mode: cancelRun ? "cancel" : startupOnly ? "startup" : "all",
+    cancellationTransportInterrupted,
     selectionCount: panel.branch.attrs.get("data-hosted-selection-count"),
     timeline: ordered,
     connections: await serverRequest("snapshot"),

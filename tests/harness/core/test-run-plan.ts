@@ -9,6 +9,7 @@ import type {
 } from "./test-contracts";
 import { is_test_case_id, is_test_suite_id } from "./test-identity";
 import { compare_test_descriptors, compare_test_suites } from "./test-order";
+import { SelectedTestResolutionError } from "./test-selected-run";
 
 export type PlannedTestCase = Readonly<{
   id: string;
@@ -64,7 +65,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
   for (const id of selected) {
     if (is_test_case_id(id)) {
       const descriptor = options.catalog.tests.find((candidate) => candidate.id === id);
-      if (descriptor === undefined) throw new Error(`Test RunPlan selection is unavailable: ${id}`);
+      if (descriptor === undefined) throw new SelectedTestResolutionError(id, options.executorId);
       const cases = casesBySuite.get(descriptor.suiteId) ?? [];
       cases.push(descriptor);
       casesBySuite.set(descriptor.suiteId, cases);
@@ -73,7 +74,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
     if (!is_test_suite_id(id)) throw new Error(`Malformed Test RunPlan selection identity: ${id}`);
     const suite = suiteById.get(id);
     if (suite === undefined || suite.executionShape !== "opaque-aggregate") {
-      throw new Error(`Test RunPlan opaque suite selection is unavailable: ${id}`);
+      throw new SelectedTestResolutionError(id, options.executorId);
     }
     opaqueSuites.add(id);
   }

@@ -4,7 +4,7 @@ import type { HostedTestRunTarget } from "../../hosted/hosted-test-suite";
 import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../../core/test-contracts";
 import type { TestErrorKind, TestLifecycleCounts, TestLifecycleStatus } from "../../core/test-lifecycle";
 
-export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "error";
+export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "cancelled" | "error";
 
 export type HostedTestCaseReport = Readonly<{
   key: string;
@@ -119,7 +119,7 @@ export type HostedTestReport = Readonly<{
     runtime: string;
     executableChecks: number;
     collections: readonly string[];
-    status: "queued" | "running" | "pass" | "fail";
+    status: "queued" | "running" | "pass" | "fail" | "cancelled";
     ms: number;
     stdout: string;
     stderr: string;

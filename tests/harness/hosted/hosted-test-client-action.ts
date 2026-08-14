@@ -1,5 +1,7 @@
 import type {
   HostedTestCaseDiagnostic,
+  HostedTestCancelRequest,
+  HostedTestCancelResult,
   HostedTestInspectRequest,
   HostedTestRunRequest,
   HostedTestRunResult,
@@ -43,6 +45,32 @@ export async function run_selected_hosted_tests_action(
 ): Promise<HostedTestSelectedRunResult> {
   const response = await client.action("tests.runSelected", { testIds: [...testIds] });
   return decode_selected_hosted_test_run_response(response);
+}
+
+export async function cancel_hosted_test_action(
+  client: Readonly<{ action: (name: "tests.cancel", payload: HostedTestCancelRequest) => Promise<unknown> }>,
+  request: HostedTestCancelRequest,
+): Promise<HostedTestCancelResult> {
+  return decode_hosted_test_cancel_response(await client.action("tests.cancel", request), request);
+}
+
+export function decode_hosted_test_cancel_response(
+  response: unknown,
+  request: HostedTestCancelRequest,
+): HostedTestCancelResult {
+  if (typeof response !== "object" || response === null || (response as { type?: unknown }).type !== "ack") {
+    const message = (response as { error?: { message?: unknown } })?.error?.message;
+    throw new Error(typeof message === "string" ? message : "Hosted test cancellation failed.");
+  }
+  const result = (response as { result?: unknown }).result;
+  if (typeof result !== "object" || result === null
+    || (result as { runId?: unknown }).runId !== request.runId
+    || (result as { attemptId?: unknown }).attemptId !== request.attemptId
+    || typeof (result as { reportHostId?: unknown }).reportHostId !== "string"
+    || typeof (result as { accepted?: unknown }).accepted !== "boolean") {
+    throw new Error("Hosted test cancellation returned an invalid authoritative result.");
+  }
+  return result as HostedTestCancelResult;
 }
 
 export function decode_selected_hosted_test_run_response(

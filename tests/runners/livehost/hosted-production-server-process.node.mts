@@ -33,7 +33,11 @@ async function retained_memory(): Promise<NodeJS.MemoryUsage> {
 }
 
 process.send({ type: "ready", url: server.url });
-process.on("message", async (message: Readonly<{ id: number; command: "snapshot" | "metrics" | "memory" | "stop" }>) => {
+process.on("message", async (message: Readonly<{
+  id: number;
+  command: "snapshot" | "metrics" | "memory" | "disconnect" | "stop";
+  authorityId?: string;
+}>) => {
   try {
     const value = message.command === "snapshot"
       ? server.connectionSnapshot()
@@ -41,7 +45,9 @@ process.on("message", async (message: Readonly<{ id: number; command: "snapshot"
         ? server.metrics()
         : message.command === "memory"
           ? { baseline: memoryBaseline, peakRss, peakHeapUsed, current: await retained_memory() }
-          : await server.stop();
+          : message.command === "disconnect"
+            ? server.disconnectConnections(message.authorityId)
+            : await server.stop();
     if (message.command === "stop") clearInterval(memorySampler);
     process.send!({ type: "response", id: message.id, value });
   } catch (error) {

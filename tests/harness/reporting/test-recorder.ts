@@ -69,6 +69,20 @@ export class TestRecorder {
                 this.failures.push(meta ? { ...base, meta } : base);
             }
         }
+
+        if (e.t === "case_cancelled") {
+            const k = this.key(e.suite, e.caseId);
+            if (!this.activeCases.delete(k)) {
+                throw new Error(`[TEST_RECORDER_CASE_CANCELLED_WITHOUT_BEGIN] ${k}`);
+            }
+            if (this.completedCases.has(k)) {
+                throw new Error(`[TEST_RECORDER_DUPLICATE_CASE_CANCELLED] ${k}`);
+            }
+            this.completedCases.add(k);
+            // A cancelled case is report lifecycle truth, not a semantic test
+            // result. Keep legacy TestSummary's case universe semantic-only.
+            this.cases -= 1;
+        }
     }
     
     public summary(): TestSummary {

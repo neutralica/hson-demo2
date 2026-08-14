@@ -24,6 +24,7 @@ import { run_selected_test_ids } from "../core/run-selected-test-suites";
 import { HostedTestUnknownSuiteError } from "./hosted-test-action-error";
 import type {
   HostedTestActions,
+  HostedTestCancelResult,
   HostedTestCaseDiagnostic,
   HostedTestInspectRequest,
   HostedTestRunResult,
@@ -63,6 +64,10 @@ import {
   type HostedTestRunAssociation,
   type HostedTestRunRequestAssociation,
 } from "./hosted-test-application.types";
+import {
+  make_hosted_test_execution_control,
+  type HostedTestExecutionControl,
+} from "./hosted-test-execution-control";
 import {
   create_livehost,
   create_livehost_authority_registry,
@@ -129,7 +134,8 @@ export const HOSTED_TEST_COORDINATOR_SCHEMA = hson.liveMap.schema.define((s) => 
     id: s.string,
     ordinal: positiveInteger,
     reportHostId: s.string,
-    controlStatus: s.pick("accepted", "running", "settled"),
+    controlStatus: s.pick("accepted", "running", "cancelling", "settled"),
+    cancellation: s.object.exact({ clientId: s.string, requestId: s.string }).nullable,
   });
   const run = s.object.exact({
     id: s.string,
@@ -235,6 +241,18 @@ function decode_run(value: unknown) {
   return { ok: false, issues: ["tests.run requires a registered hosted-test suite ID."] } as const;
 }
 
+function decode_cancel(value: unknown) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { ok: false, issues: ["tests.cancel requires exact runId and attemptId strings."] } as const;
+  }
+  const record = value as { runId?: unknown; attemptId?: unknown };
+  if (Object.keys(record).length !== 2 || typeof record.runId !== "string" || !record.runId
+    || typeof record.attemptId !== "string" || !record.attemptId) {
+    return { ok: false, issues: ["tests.cancel requires exact non-empty runId and attemptId strings."] } as const;
+  }
+  return { ok: true, value: { runId: record.runId, attemptId: record.attemptId } } as const;
+}
+
 function decode_inspect(value: unknown) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return { ok: false, issues: ["tests.inspect requires runId and caseKey strings."] } as const;
@@ -314,12 +332,24 @@ export function create_hosted_test_application(
     for (const resolve of reportProjectionWaiters.get(runId) ?? []) resolve();
     reportProjectionWaiters.delete(runId);
   };
-  const wait_for_report_projection = (runId: string): Promise<void> => {
-    if (projectedReportIds.has(runId)) return Promise.resolve();
-    return new Promise<void>((resolve) => {
+  const wait_for_report_projection_or_cancel = async (runId: string, signal: AbortSignal): Promise<void> => {
+    if (signal.aborted || projectedReportIds.has(runId)) return;
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = (): void => {
+        if (settled) return;
+        settled = true;
+        signal.removeEventListener("abort", finish);
+        const waiters = reportProjectionWaiters.get(runId);
+        waiters?.delete(finish);
+        if (waiters?.size === 0) reportProjectionWaiters.delete(runId);
+        resolve();
+      };
       const waiters = reportProjectionWaiters.get(runId) ?? new Set();
-      waiters.add(resolve);
+      waiters.add(finish);
       reportProjectionWaiters.set(runId, waiters);
+      signal.addEventListener("abort", finish, { once: true });
+      if (signal.aborted || projectedReportIds.has(runId)) finish();
     });
   };
 
@@ -340,6 +370,7 @@ export function create_hosted_test_application(
   const reportBlueprints = new Map<string, ReportBlueprint>();
   const coordinatorMap = hson.liveMap.fromJson({ requests: {}, runs: {} })
     .schema.use(HOSTED_TEST_COORDINATOR_SCHEMA) as unknown as HostedTestCoordinatorMap;
+  const attemptControls = new Map<string, HostedTestExecutionControl>();
   let coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestActions>;
   let disposing = false;
 
@@ -420,6 +451,43 @@ export function create_hosted_test_application(
         },
       });
 
+  function report_outcome(status: HostedTestReport["run"]["status"] | undefined): HostedTestCancelResult["outcome"] {
+    if (status === "passed" || status === "failed" || status === "cancelled" || status === "error") return status;
+    return "pending";
+  }
+
+  async function cancellation_result(
+    state: HostedTestCoordinatorState,
+    runId: HostedTestRunId,
+    attemptId: HostedTestAttemptId,
+  ): Promise<HostedTestCancelResult> {
+    const run = state.runs[runId];
+    const attempt = run?.attempts[attemptId];
+    if (run === undefined || attempt === undefined || attempt.id !== attemptId) {
+      throw new Error(`HOSTED_TEST_UNKNOWN_ATTEMPT: Hosted test attempt "${runId}/${attemptId}" is unavailable.`);
+    }
+    let status: HostedTestReport["run"]["status"] | undefined;
+    if (reportRegistry === undefined) {
+      const host = store.get(attempt.reportHostId) as LiveHost<HostedTestReportState, HostedTestReportActions> | undefined;
+      status = host?.map.capture().value.run.status;
+    } else if (reportRegistry.has(attempt.reportHostId)) {
+      const acquired = await reportRegistry.acquire(attempt.reportHostId);
+      if (acquired.ok) {
+        try { status = acquired.value.authority.map.capture().value.run.status; }
+        finally { acquired.value.release(); }
+      }
+    }
+    return Object.freeze({
+      runId,
+      attemptId,
+      reportHostId: attempt.reportHostId,
+      accepted: attempt.cancellation !== null,
+      controlStatus: attempt.controlStatus,
+      outcome: report_outcome(status),
+      cancellation: attempt.cancellation,
+    });
+  }
+
   async function execute_run(
     plan: ExecutionPlan,
     clientId: HostedTestRunAssociation["clientId"],
@@ -484,6 +552,8 @@ export function create_hosted_test_application(
     }
     let associationRetained = false;
     let report: HostedTestReportController | undefined;
+    const executionControl = make_hosted_test_execution_control();
+    attemptControls.set(attemptId, executionControl);
     try {
       reportHostIds.add(reportHostId);
       retention.retain(runId, plan.target);
@@ -514,6 +584,7 @@ export function create_hosted_test_application(
             ordinal: 1,
             reportHostId,
             controlStatus: "accepted",
+            cancellation: null,
           },
         },
       };
@@ -521,48 +592,83 @@ export function create_hosted_test_application(
       associationRetained = true;
       observe_hosted_test_timeline(options.timeline, "coordinator_association_committed", { runId, attemptId, reportHostId });
       if (options.requireReportReady === true) {
-        await wait_for_report_projection(runId);
-        observe_hosted_test_timeline(options.timeline, "report_client_ready", { runId, reportHostId });
+        await wait_for_report_projection_or_cancel(runId, executionControl.signal);
+        if (!executionControl.signal.aborted) {
+          observe_hosted_test_timeline(options.timeline, "report_client_ready", { runId, reportHostId });
+        }
       }
-      await setAttemptStatus(runId, attemptId, "running");
 
       const hostStartedAt = performance.now();
       let result: RunResult;
       try {
-        let firstStartObserved = false;
-        result = await plan.run((event) => {
-          if (!firstStartObserved && (event.t === "suite_begin" || event.t === "case_begin"
-            || (event.t === "external_state" && event.status === "running"))) {
-            firstStartObserved = true;
-            observe_hosted_test_timeline(options.timeline, "first_suite_or_case_started", {
-              runId,
-              event: event.t,
-              suite: event.suite,
-            });
-          }
-          activeReport.reduce(event);
-        }, HOSTED_TEST_RUN_OPTIONS);
+        let mayExecute = false;
+        if (executionControl.phase() === "ready") {
+          await setAttemptStatus(runId, attemptId, "running");
+          mayExecute = executionControl.begin();
+        }
+        if (mayExecute) {
+          let firstStartObserved = false;
+          result = await plan.run((event) => {
+            if (!executionControl.acceptsEvent(event)) return;
+            if (!firstStartObserved && (event.t === "suite_begin" || event.t === "case_begin"
+              || (event.t === "external_state" && event.status === "running"))) {
+              firstStartObserved = true;
+              observe_hosted_test_timeline(options.timeline, "first_suite_or_case_started", {
+                runId,
+                event: event.t,
+                suite: event.suite,
+              });
+            }
+            activeReport.reduce(event);
+          }, { ...HOSTED_TEST_RUN_OPTIONS, signal: executionControl.signal });
+        } else {
+          result = Object.freeze({
+            ok: false,
+            cancelled: true,
+            summary: Object.freeze({ suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: Object.freeze([]) }),
+          });
+        }
+        const naturalTerminal = await executionControl.acceptNaturalTerminal();
+        if (!naturalTerminal) result = Object.freeze({ ...result, ok: false, cancelled: true });
         observe_hosted_test_timeline(options.timeline, "run_finished", {
           runId,
           runnerMs: result.summary.msTotal,
           cases: result.summary.cases,
           failures: result.summary.fail,
         });
-        activeReport.complete(result, {
+        const timing = {
           runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
           hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
-        });
+        };
+        if (naturalTerminal) activeReport.complete(result, timing);
+        else activeReport.cancel(result, timing);
         await activeReport.settle();
+        if (!naturalTerminal) executionControl.markCancellationTerminal();
         observe_hosted_test_timeline(options.timeline, "report_terminal_committed", {
           runId,
           revision: reportHost.stream.headRev,
         });
       } catch (error) {
+        const naturalTerminal = await executionControl.acceptNaturalTerminal();
+        if (!naturalTerminal) {
+          result = Object.freeze({
+            ok: false,
+            cancelled: true,
+            summary: Object.freeze({ suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: performance.now() - hostStartedAt, failures: Object.freeze([]) }),
+          });
+          activeReport.cancel(result, {
+            runnerMs: result.summary.msTotal,
+            hostMs: performance.now() - hostStartedAt,
+          });
+          await activeReport.settle();
+          executionControl.markCancellationTerminal();
+        } else {
         activeReport.failInfrastructure(error);
         await activeReport.settle();
         await setAttemptStatus(runId, attemptId, "settled");
         activeReport.dispose();
         throw error;
+        }
       }
 
       activeReport.dispose();
@@ -599,6 +705,7 @@ export function create_hosted_test_application(
           suite: HOSTED_TEST_SELECTED_RUN_TARGET,
           testIds: reportPlan.selectionIds,
           ok: state.run.status === "passed",
+          cancelled: state.run.status === "cancelled",
           summary: authoritativeSummary,
           timing,
         };
@@ -612,11 +719,14 @@ export function create_hosted_test_application(
         reportHostId,
         reportRev: reportHost.stream.headRev,
         suite: plan.target,
-        ok: result.ok,
+        ok: state.run.status === "passed",
+        cancelled: state.run.status === "cancelled",
         summary,
         timing,
       };
     } finally {
+      attemptControls.delete(attemptId);
+      executionControl.release();
       reportAcquisition?.release();
       if (!associationRetained) {
         report?.dispose();
@@ -727,6 +837,44 @@ export function create_hosted_test_application(
       );
       return JSON.parse(JSON.stringify(result)) as JsonValue;
     },
+    "tests.cancel": async (context, request, message) => {
+      if (!message.clientId || !message.requestId) {
+        throw new Error("HOSTED_TEST_REQUEST_ID_REQUIRED: tests.cancel requires a retry-safe client and request identity.");
+      }
+      const initial = context.map.capture().value;
+      const run = initial.runs[request.runId];
+      const attempt = run?.attempts[request.attemptId];
+      if (run === undefined || attempt === undefined || attempt.id !== request.attemptId) {
+        throw new Error(`HOSTED_TEST_UNKNOWN_ATTEMPT: Hosted test attempt "${request.runId}/${request.attemptId}" is unavailable.`);
+      }
+      if (attempt.controlStatus === "settled" || attempt.cancellation !== null) {
+        return JSON.parse(JSON.stringify(await cancellation_result(initial, request.runId, request.attemptId))) as JsonValue;
+      }
+      const executionControl = attemptControls.get(request.attemptId);
+      if (executionControl === undefined) {
+        throw new Error(`HOSTED_TEST_EXECUTOR_CONTROL_UNAVAILABLE: Attempt "${request.runId}/${request.attemptId}" has no active executor control.`);
+      }
+      await executionControl.requestCancellation(async () => {
+        await context.mutate((draft) => draft.batch((tx) => {
+          tx.replace(["runs", request.runId, "attempts", request.attemptId, "controlStatus"], "cancelling");
+          tx.replace(["runs", request.runId, "attempts", request.attemptId, "cancellation"], {
+            clientId: message.clientId!,
+            requestId: message.requestId!,
+          });
+        }));
+        observe_hosted_test_timeline(options.timeline, "coordinator_request_accepted", {
+          requestId: message.requestId!,
+          action: "tests.cancel",
+          runId: request.runId,
+          attemptId: request.attemptId,
+        });
+      });
+      return JSON.parse(JSON.stringify(await cancellation_result(
+        context.map.capture().value,
+        request.runId,
+        request.attemptId,
+      ))) as JsonValue;
+    },
     // Compatibility only: production inspection is registered on each report
     // host so it shares that run's session and retry-safe action namespace.
     "tests.inspect": async () => {
@@ -738,6 +886,7 @@ export function create_hosted_test_application(
       "tests.discover": { payload: decode_test_executor_discovery_request },
       "tests.run": { payload: decode_run },
       "tests.runSelected": { payload: decode_run_selected_tests_request },
+      "tests.cancel": { payload: decode_cancel },
       "tests.inspect": { payload: decode_inspect },
     },
   };
@@ -782,6 +931,11 @@ export function create_hosted_test_application(
     sweepReports: () => reportRegistry?.sweep() ?? Promise.resolve(0),
     async dispose() {
       disposing = true;
+      const activeControls = [...attemptControls.values()];
+      await Promise.allSettled(activeControls.map((control) => (
+        control.requestCancellation(() => Promise.resolve())
+      )));
+      await Promise.allSettled(activeControls.map((control) => control.released()));
       for (const waiters of reportProjectionWaiters.values()) for (const resolve of waiters) resolve();
       reportProjectionWaiters.clear();
       projectedReportIds.clear();
@@ -796,6 +950,8 @@ export function create_hosted_test_application(
       }
       reportHostIds.clear();
       reportBlueprints.clear();
+      for (const control of attemptControls.values()) control.release();
+      attemptControls.clear();
       retention.clear();
       store.delete(HOSTED_TEST_COORDINATOR_HOST_ID);
       coordinator.dispose();

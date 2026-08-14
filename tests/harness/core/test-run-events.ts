@@ -6,7 +6,7 @@ export type NormalizedTestRunEvent =
   | Readonly<{
       type: "test-finished";
       test: TestDescriptor;
-      status: "pass" | "fail" | "skip";
+      status: "pass" | "fail" | "skip" | "cancelled";
       durationMs: number;
       error?: string;
       assertRows?: readonly TestAssertRow[];
@@ -32,6 +32,14 @@ export function normalize_test_event(
   if (descriptor === undefined) throw new Error(`No canonical descriptor for ${event.suite}::${event.caseId}`);
   if (event.t === "case_begin") {
     return Object.freeze({ type: "test-started", test: descriptor, ...(event.meta === undefined ? {} : { meta: event.meta }) });
+  }
+  if (event.t === "case_cancelled") {
+    return Object.freeze({
+      type: "test-finished",
+      test: descriptor,
+      status: "cancelled",
+      durationMs: event.ms,
+    });
   }
   return Object.freeze({
     type: "test-finished",

@@ -10,6 +10,21 @@ export type HostedTestRunRequest = Readonly<{
   suite: HostedTestSuiteId;
 }>;
 
+export type HostedTestCancelRequest = Readonly<{
+  runId: HostedTestRunId;
+  attemptId: HostedTestAttemptId;
+}>;
+
+export type HostedTestCancelResult = Readonly<{
+  runId: HostedTestRunId;
+  attemptId: HostedTestAttemptId;
+  reportHostId: string;
+  accepted: boolean;
+  controlStatus: "accepted" | "running" | "cancelling" | "settled";
+  outcome: "pending" | "passed" | "failed" | "cancelled" | "error";
+  cancellation: Readonly<{ clientId: string; requestId: string }> | null;
+}>;
+
 export type HostedTestRunResult = Readonly<{
   runId: HostedTestRunId;
   attemptId: HostedTestAttemptId;
@@ -17,6 +32,7 @@ export type HostedTestRunResult = Readonly<{
   reportRev?: number;
   suite: HostedTestSuiteId;
   ok: boolean;
+  cancelled?: boolean;
   summary: TestSummary;
   timing: Readonly<{
     runnerMs: number;
@@ -32,6 +48,7 @@ export type HostedTestSelectedRunResult = Readonly<{
   suite: "canonical/selected";
   testIds: readonly string[];
   ok: boolean;
+  cancelled?: boolean;
   summary: TestSummary;
   timing: Readonly<{
     runnerMs: number;
@@ -80,5 +97,6 @@ export type HostedTestActions = Readonly<{
   "tests.discover": TestExecutorDiscoveryRequest;
   "tests.run": HostedTestRunRequest;
   "tests.runSelected": RunSelectedTestsRequest;
+  "tests.cancel": HostedTestCancelRequest;
   "tests.inspect": HostedTestInspectRequest;
 }>;

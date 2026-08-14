@@ -163,6 +163,10 @@ function cancelled_error(id: string): Error {
   return new Error(`[TEST_CASE_CANCELLED] ${id} was cancelled before completion.`);
 }
 
+function is_cancelled_error(error: unknown): boolean {
+  return error instanceof Error && /^\[TEST_CASE_CANCELLED\]/.test(error.message);
+}
+
 async function run_bounded<T>(
   run: () => T | Promise<T>,
   timeoutMs: number,
@@ -217,6 +221,7 @@ export async function run_test_suites(
   const yieldAfterMs = opts.yieldAfterMs;
   let caseCounter = 0;
   let lastYieldAt = now();
+  let cancelled = opts.signal?.aborted === true;
 
   const case_boundary = async (): Promise<void> => {
     caseCounter += 1;
@@ -227,7 +232,8 @@ export async function run_test_suites(
     lastYieldAt = now();
   };
 
-  for (const suite of suites) {
+  suiteLoop: for (const suite of suites) {
+    if (opts.signal?.aborted) { cancelled = true; break; }
     if (opts.filterSuite && suite.suite !== opts.filterSuite) continue;
     const selectedCases = suite.cases.filter(
       (testCase) => !opts.filterCase || testCase.name.includes(opts.filterCase),
@@ -243,6 +249,7 @@ export async function run_test_suites(
 
     await yield_to_event_loop();
     lastYieldAt = now();
+    if (opts.signal?.aborted) { cancelled = true; break; }
 
     if (suite.setup !== undefined) {
       try {
@@ -254,6 +261,10 @@ export async function run_test_suites(
           opts.signal,
         );
       } catch (error) {
+        if (is_cancelled_error(error)) {
+          cancelled = true;
+          break suiteLoop;
+        }
         for (const tc of selectedCases) {
           const c0 = now();
           const begin = { t: "case_begin", suite: tc.suite, caseId: tc.caseId, name: tc.name } as const;
@@ -276,6 +287,7 @@ export async function run_test_suites(
     }
 
     for (const tc of selectedCases) {
+      if (opts.signal?.aborted) { cancelled = true; break; }
 
       const c0 = now();
       const evBase = { t: "case_begin", suite: tc.suite, caseId: tc.caseId, name: tc.name } as const;
@@ -419,6 +431,17 @@ export async function run_test_suites(
         );
       } catch (err) {
         if (err instanceof TestEventDeliveryError) throw err;
+        if (is_cancelled_error(err)) {
+          emit(rec, onEvent, {
+            t: "case_cancelled",
+            suite: tc.suite,
+            caseId: tc.caseId,
+            name: tc.name,
+            ms: now() - c0,
+          });
+          cancelled = true;
+          break;
+        }
         const msg = asErrMsg(err);
         const shortMsg = asErrMessage(err);
         const metaPatch = readMetaPatch(err);
@@ -482,6 +505,11 @@ export async function run_test_suites(
       await case_boundary();
     }
 
+    if (cancelled || opts.signal?.aborted) {
+      cancelled = true;
+      break;
+    }
+
     emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
 
     // suite-level yield by default so suite_begin/suite_end logs can paint between suites.
@@ -495,5 +523,5 @@ export async function run_test_suites(
 
   const totalMs = now() - t0;
   const summary = _freeze({ ...rec.summary(), msTotal: totalMs });
-  return _freeze({ ok: summary.fail === 0, summary });
+  return _freeze({ ok: !cancelled && summary.fail === 0, summary, ...(cancelled ? { cancelled: true as const } : {}) });
 }

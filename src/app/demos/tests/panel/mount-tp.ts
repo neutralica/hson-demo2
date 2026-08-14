@@ -145,6 +145,7 @@ function set_selector_enabled(selector: LiveTree, enabled: boolean): void {
 
 type TestConsoleParts = {
     runBtn: LiveTree;
+    cancelBtn: LiveTree;
     suiteSel: LiveTree;
     targetedSuiteSel: LiveTree;
     targetedTestSel: LiveTree;
@@ -162,9 +163,13 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         ...TEST_RUN_BTNcss,
         gridColumn: "1 / 2",
     });
-    const clearBtn = mk_div_id_txt(controlsRow, "test-clear", "clear").css.setMany({
+    const cancelBtn = mk_div_id_txt(controlsRow, "test-cancel", "stop").css.setMany({
         ...TEST_CLEAR_BTNcss,
         gridColumn: "2 / 3",
+    });
+    const clearBtn = mk_div_id_txt(controlsRow, "test-clear", "clear").css.setMany({
+        ...TEST_CLEAR_BTNcss,
+        gridColumn: "1 / 3",
     });
     const suiteSel = controlsRow.create.select().id.set("test-select").css.setMany({
         ...TEST_SELECTORcss,
@@ -195,7 +200,7 @@ function create_test_console(leftColumn: LiveTree, rightColumn: LiveTree): TestC
         });
     const chips = create_test_chips(rowContainer);
 
-    return { runBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips };
+    return { runBtn, cancelBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips };
 }
 
 type TestSurfaceParts = {
@@ -241,7 +246,7 @@ export function tp_factory(options: Readonly<{
         .css.setMany(TP_BRANCHcss);
 
     const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
-    const { runBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips } = create_test_console(leftColumn, rightColumn);
+    const { runBtn, cancelBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips } = create_test_console(leftColumn, rightColumn);
     let hostedAdapter: HostedTestPanelAdapter | undefined;
     let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start"]>> | undefined;
     let caseList: HostedTestCaseList | undefined;
@@ -364,6 +369,18 @@ export function tp_factory(options: Readonly<{
             opaqueSuiteTerminal = 0;
             chronology.begin(context?.recovered ?? false);
             appendLogLine(`${context?.recovered ? "recover" : "run"} section — ${suite}`);
+            if (context?.controlStatus === "cancelling") {
+                branch.attrs.set("data-hosted-panel-state", "cancelling");
+                cancelBtn.flags.set("disabled");
+                executorLabel.text.set("cancelling…");
+            } else if (context?.controlStatus === "accepted" || context?.controlStatus === "running") {
+                branch.attrs.set("data-hosted-panel-state", "running");
+                cancelBtn.flags.clear("disabled");
+            } else if (context?.recovered === false) {
+                cancelBtn.flags.clear("disabled");
+            } else {
+                cancelBtn.flags.set("disabled");
+            }
         },
         ingest(update) {
             const projection = caseList;
@@ -424,6 +441,7 @@ export function tp_factory(options: Readonly<{
                 });
             }
             update_run_progress();
+            if (update.terminal) cancelBtn.flags.set("disabled");
         },
         showInfrastructureError(message) {
             appendLogLine(`infrastructure error — ${message}`);
@@ -437,6 +455,7 @@ export function tp_factory(options: Readonly<{
         },
     });
     runBtn.flags.set("disabled");
+    cancelBtn.flags.set("disabled");
     suiteSel.flags.set("disabled");
     set_selector_enabled(targetedSuiteSel, false);
     set_selector_enabled(targetedTestSel, false);
@@ -622,6 +641,7 @@ export function tp_factory(options: Readonly<{
         });
 
         implClickFeedback(runBtn);
+        implClickFeedback(cancelBtn);
         implClickFeedback(clearBtn);
         implClickFeedback(copyReportsBtn);
 
@@ -645,6 +665,7 @@ export function tp_factory(options: Readonly<{
                 observe_hosted_test_timeline(options.timeline, "run_button_invoked");
                 branch.attrs.set("data-hosted-panel-state", "running");
                 runBtn.flags.set("disabled");
+                cancelBtn.flags.clear("disabled");
                 suiteSel.flags.set("disabled");
                 set_selector_enabled(targetedSuiteSel, false);
                 set_selector_enabled(targetedTestSel, false);
@@ -669,13 +690,14 @@ export function tp_factory(options: Readonly<{
                     });
                 } else throw new Error("Canonical hosted-test discovery has not completed.");
                 remember_hosted_test_run({ runId: lastResult.runId, attemptId: lastResult.attemptId });
-                branch.attrs.set("data-hosted-panel-state", "completed");
+                branch.attrs.set("data-hosted-panel-state", lastResult.cancelled ? "cancelled" : "completed");
             } catch (error) {
                 branch.attrs.set("data-hosted-panel-state", "run-rejected");
                 if (hostedAdapter.router === undefined) {
                     appendLogLine(`run rejected: ${error instanceof Error ? error.message : String(error)}`);
                 }
             } finally {
+                cancelBtn.flags.set("disabled");
                 suiteSel.flags.clear("disabled");
                 if (discovery !== undefined) {
                     const primaryChoice = selectionChoices.find((choice) => choice.key === selectionKey);
@@ -690,6 +712,22 @@ export function tp_factory(options: Readonly<{
                     }
                     if (discovery.catalog.tests.length + discovery.externalTargets.length > 0) runBtn.flags.clear("disabled");
                 }
+            }
+        });
+
+        cancelBtn.listen.onClick(async () => {
+            if (branch.attrs.get("data-hosted-panel-state") !== "running") return;
+            cancelBtn.flags.set("disabled");
+            try {
+                const cancellation = await hostedAdapter!.cancel();
+                if (cancellation.accepted && cancellation.controlStatus === "cancelling") {
+                    branch.attrs.set("data-hosted-panel-state", "cancelling");
+                    executorLabel.text.set("cancelling…");
+                    appendLogLine(`cancellation accepted — ${cancellation.runId} · ${cancellation.attemptId}`);
+                }
+            } catch (error) {
+                if (branch.attrs.get("data-hosted-panel-state") === "running") cancelBtn.flags.clear("disabled");
+                appendLogLine(`cancellation rejected: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
 

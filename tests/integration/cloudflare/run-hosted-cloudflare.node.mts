@@ -18,6 +18,7 @@ import { test_catalog_version } from "../../harness/core/test-catalog";
 import type { HostedTestSelectedRunResult } from "../../harness/hosted/hosted-test-action.types";
 import { hosted_test_report_cases, type HostedTestReportState } from "../../harness/reporting/hosted/hosted-test-report.types";
 import { make_towl_socket } from "../../suites/towl/towl-test-helpers";
+import { all_livehost_suites } from "../../suites/livehost/suite-registry";
 
 function expect_cloudflare(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted Cloudflare: ${message}`);
@@ -161,7 +162,8 @@ expect_cloudflare(
 const replay = await registry.get("livemap/replay").run();
 expect_cloudflare(replay.ok && replay.summary.cases === 45, "the Worker-compatible replay route executes through the existing runner");
 const advertisedRun = await registry.get("livehost/all").run();
-expect_cloudflare(advertisedRun.ok && advertisedRun.summary.cases === 174, "an advertised Worker test family remains executable through the legacy run surface");
+const advertisedLiveHostCases = all_livehost_suites().reduce((total, suite) => total + suite.cases.length, 0);
+expect_cloudflare(advertisedRun.ok && advertisedRun.summary.cases === advertisedLiveHostCases, "an advertised Worker test family remains executable through the legacy run surface");
 let unavailable: unknown;
 try { await registry.get("hosted/all").run(); }
 catch (error) { unavailable = error; }
@@ -286,7 +288,7 @@ expect_cloudflare(
   nodeOnlyWorkerResponse.type === "error"
     && nodeOnlyWorkerResponse.error.message.includes("HOSTED_TEST_UNAVAILABLE_ON_EXECUTOR")
     && nodeOnlyWorkerResponse.error.message.includes("cloudflare-livehost"),
-  "the Worker rejects a Node-only stable ID before execution",
+  `the Worker rejects a Node-only stable ID before execution (${JSON.stringify(nodeOnlyWorkerResponse)})`,
 );
 const transformOnlyId = "transform/json/basic-test::test.unknownfail";
 const transformWorkerResponse = await workerApplication.coordinator.dispatch_action({

@@ -7,6 +7,7 @@ import type {
 } from "../../harness/hosted/hosted-test-action.types";
 import {
   decode_hosted_test_discovery_response,
+  decode_hosted_test_cancel_response,
   decode_hosted_test_run_response,
   decode_selected_hosted_test_run_response,
   inspect_hosted_test_action,
@@ -104,6 +105,7 @@ export function make_in_memory_hosted_test_runtime(
       reportHostId: association.reportHostId,
       reportRev: reportClient.recovery.lastAppliedRev ?? 0,
       ok: recovered.run.status === "passed",
+      cancelled: association.cancellation !== null,
       summary: {
         suites: recovered.suites.length,
         cases: recovered.summary.cases,
@@ -132,6 +134,10 @@ export function make_in_memory_hosted_test_runtime(
       on_change(listener) { return reportClient.recovery.on_change(() => listener()); },
       async ready() {},
       inspect(request) { return inspect_hosted_test_action(reportClient, request); },
+      async cancel() {
+        const request = { runId: association.runId, attemptId: association.attemptId };
+        return decode_hosted_test_cancel_response(await client.action("tests.cancel", request), request);
+      },
       dispose() {
         if (runDisposed) return;
         runDisposed = true;
