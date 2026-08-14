@@ -215,6 +215,7 @@ export type RunOptions = Readonly<{
   filterSuite?: string; // exact match
   filterCase?: string; // substring match
   yieldEveryCases?: number;  // e.g. 1 = every case, 5 = every 5 cases
+  yieldAfterMs?: number; // elapsed execution budget between event-loop yields
   yieldBetweenSuites?: boolean;
   includePassedDiagnostics?: boolean;
   caseTimeoutMs?: number;

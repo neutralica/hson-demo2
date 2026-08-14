@@ -1,5 +1,6 @@
 import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action";
 import type { HostedTestSuiteRegistry } from "../../../hosted/hosted-test-suite";
+import type { HostedTestApplicationOptions } from "../../../hosted/hosted-test-application";
 import type { TestExecutorRegistry } from "../../../core/test-executor";
 import {
   start_node_application_host,
@@ -22,6 +23,7 @@ export type HostedTestServerOptions = Readonly<{
   registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
+  runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
   log?: (event: NodeHostOperationalEvent) => void;
   deployment?: NodeHostDeployment;
   security?: NodeApplicationSecurity;
@@ -39,6 +41,12 @@ export type HostedTestServer = Readonly<{
   port: number;
   url: string;
   connectionCount(): number;
+  connectionSnapshot(): Readonly<{
+    total: number;
+    hostedTests: ReturnType<Awaited<ReturnType<typeof create_node_hosted_tests_application>>["connectionSnapshot"]>;
+    towl: number;
+    circuitVerification: number;
+  }>;
   disconnectConnections(hostId?: string): void;
   metrics(): Readonly<{ sentMessages: number; sentBytes: number }>;
   stop(): Promise<void>;
@@ -58,6 +66,7 @@ export async function start_hosted_test_server(
     ...(options.registry === undefined ? {} : { registry: options.registry }),
     ...(options.inspectCase === undefined ? {} : { inspectCase: options.inspectCase }),
     ...(options.executorRegistry === undefined ? {} : { executorRegistry: options.executorRegistry }),
+    ...(options.runSelected === undefined ? {} : { runSelected: options.runSelected }),
     ...(options.security === undefined ? {} : { security: options.security }),
     lifecycle: {
       maxReports: authorityLifecycle.maxHostedReports,
@@ -104,6 +113,14 @@ export async function start_hosted_test_server(
     port: host.port,
     url: host.url,
     connectionCount: host.connectionCount,
+    connectionSnapshot() {
+      return Object.freeze({
+        total: host.connectionCount(),
+        hostedTests: hostedTests.connectionSnapshot(),
+        towl: towl.connectionCount(),
+        circuitVerification: circuitVerification.connectionCount(),
+      });
+    },
     disconnectConnections(hostId) {
       if (hostId === undefined || hostId === CIRCUIT_VERIFICATION_HOST_ID) {
         circuitVerification.disconnectConnections();

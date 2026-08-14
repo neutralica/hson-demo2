@@ -3,6 +3,7 @@ import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action
 import { make_hosted_test_run_id_factory } from "../../../hosted/hosted-test-action";
 import type { HostedTestSuiteRegistry } from "../../../hosted/hosted-test-suite";
 import type { TestExecutorRegistry } from "../../../core/test-executor";
+import type { HostedTestApplicationOptions } from "../../../hosted/hosted-test-application";
 import {
   create_external_library_launcher_service,
   resolve_external_library_launchers,
@@ -18,11 +19,11 @@ import {
   type HostedTestApplication,
 } from "../../../hosted/hosted-test-application";
 import { make_registered_hosted_test_suite_registry } from "../../../hosted/registered-hosted-test-suites";
+import type { NodeApplicationSecurity, NodeHostedApplication } from "hson-live/livehost/node";
 import {
-  create_node_livehost_socket,
-  type NodeApplicationSecurity,
-  type NodeHostedApplication,
-} from "hson-live/livehost/node";
+  create_node_capacity_livehost_socket,
+  type NodeCapacityLiveHostSocket,
+} from "./node-capacity-livehost-socket";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
@@ -31,6 +32,7 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
   registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
+  runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
   security?: NodeApplicationSecurity;
   lifecycle?: Readonly<{
     maxReports: number;
@@ -43,6 +45,21 @@ export type NodeHostedTestsApplication = Readonly<{
   registration: NodeHostedApplication;
   authorities: HostedTestApplication;
   connectionCount(): number;
+  connectionSnapshot(): Readonly<{
+    total: number;
+    coordinator: number;
+    reports: number;
+    authorityIds: readonly string[];
+    sending: number;
+    inFlightMessages: number;
+    queuedMessages: number;
+    queuedBytes: number;
+    largestSentBytes: number;
+    peakInFlightMessages: number;
+    peakQueuedMessages: number;
+    peakQueuedBytes: number;
+    backpressureRejections: number;
+  }>;
   disconnectConnections(authorityId?: string): void;
   metrics(): Readonly<{ sentMessages: number; sentBytes: number }>;
 }>;
@@ -62,7 +79,7 @@ export async function create_node_hosted_tests_application(
     inspectCase: options.inspectCase ?? make_hosted_test_case_inspector(executorRegistry),
     discovery: make_test_executor_discovery(executorRegistry, externalLaunchers.targets),
     executorRegistry,
-    runSelected: externalLaunchers.targets.length === 0
+    runSelected: options.runSelected ?? (externalLaunchers.targets.length === 0
       ? run_fresh_node_selected_test_ids
       : (selectedRegistry, ids, onEvent, runOptions) => selectedVerification.run(
         selectedRegistry,
@@ -70,13 +87,22 @@ export async function create_node_hosted_tests_application(
         ids,
         onEvent,
         runOptions,
-      ),
+      )),
     ...(options.lifecycle === undefined ? {} : { lifecycle: options.lifecycle }),
   });
-  const connections = new Map<WebSocket, Readonly<{ authorityId: string; disconnect: () => void }>>();
+  const connections = new Map<WebSocket, Readonly<{
+    authorityId: string;
+    disconnect: () => void;
+    transport: NodeCapacityLiveHostSocket;
+  }>>();
   let disposed = false;
   let sentMessages = 0;
   let sentBytes = 0;
+  let largestSentBytes = 0;
+  let peakInFlightMessages = 0;
+  let peakQueuedMessages = 0;
+  let peakQueuedBytes = 0;
+  let backpressureRejections = 0;
 
   const registration: NodeHostedApplication = Object.freeze({
     name: NODE_HOSTED_TESTS_APPLICATION_NAME,
@@ -91,16 +117,32 @@ export async function create_node_hosted_tests_application(
         websocket.close(1012, "Hosted-tests application stopping.");
         return;
       }
-      const socket = create_node_livehost_socket(websocket, {
+      const socket = create_node_capacity_livehost_socket(websocket, {
           onSend(message) {
+            const messageBytes = Buffer.byteLength(message, "utf8");
             sentMessages += 1;
-            sentBytes += Buffer.byteLength(message, "utf8");
+            sentBytes += messageBytes;
+            largestSentBytes = Math.max(largestSentBytes, messageBytes);
           },
           maxBufferedAmount: context.transportPolicy.maxBufferedAmount,
-          onBackpressure: context.transportPolicy.onBackpressure,
+          onBackpressure() {
+            backpressureRejections += 1;
+            context.transportPolicy.onBackpressure();
+          },
+          onCapacityChange(snapshot) {
+            peakInFlightMessages = Math.max(peakInFlightMessages, snapshot.inFlightMessages);
+            peakQueuedMessages = Math.max(peakQueuedMessages, snapshot.queuedMessages);
+            peakQueuedBytes = Math.max(peakQueuedBytes, snapshot.queuedBytes);
+          },
       });
       const bounded = options.lifecycle !== undefined;
       if (bounded) websocket.pause();
+      let websocketClosed = false;
+      websocket.once("close", () => {
+        websocketClosed = true;
+        connections.get(websocket)?.disconnect();
+        connections.delete(websocket);
+      });
       let connected;
       try {
         connected = bounded
@@ -128,17 +170,20 @@ export async function create_node_hosted_tests_application(
         return;
       }
       const disconnect = connected.value;
-      connections.set(websocket, { authorityId, disconnect });
-      websocket.once("close", () => {
-        connections.get(websocket)?.disconnect();
-        connections.delete(websocket);
-      });
+      if (websocketClosed) {
+        disconnect();
+        return;
+      }
+      connections.set(websocket, { authorityId, disconnect, transport: socket });
     },
     async dispose() {
       if (disposed) return;
       disposed = true;
       launcherService.terminate();
-      for (const connection of connections.values()) connection.disconnect();
+      for (const [websocket, connection] of connections) {
+        connection.disconnect();
+        websocket.close(1012, "Hosted-tests application stopping.");
+      }
       connections.clear();
       await authorities.dispose();
     },
@@ -148,6 +193,25 @@ export async function create_node_hosted_tests_application(
     registration,
     authorities,
     connectionCount: () => connections.size,
+    connectionSnapshot() {
+      const values = [...connections.values()];
+      const capacity = values.map((connection) => connection.transport.capacity());
+      return Object.freeze({
+        total: values.length,
+        coordinator: values.filter((connection) => connection.authorityId === HOSTED_TEST_COORDINATOR_HOST_ID).length,
+        reports: values.filter((connection) => connection.authorityId.startsWith(HOSTED_TEST_REPORT_AUTHORITY_PREFIX)).length,
+        authorityIds: Object.freeze(values.map((connection) => connection.authorityId).sort()),
+        sending: capacity.filter((entry) => entry.sending).length,
+        inFlightMessages: capacity.reduce((total, entry) => total + entry.inFlightMessages, 0),
+        queuedMessages: capacity.reduce((total, entry) => total + entry.queuedMessages, 0),
+        queuedBytes: capacity.reduce((total, entry) => total + entry.queuedBytes, 0),
+        largestSentBytes,
+        peakInFlightMessages,
+        peakQueuedMessages,
+        peakQueuedBytes,
+        backpressureRejections,
+      });
+    },
     disconnectConnections(authorityId) {
       for (const [websocket, connection] of [...connections]) {
         if (authorityId !== undefined && connection.authorityId !== authorityId) continue;

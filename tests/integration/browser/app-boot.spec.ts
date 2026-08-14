@@ -265,7 +265,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(targetedSuite).toBeEnabled();
   await targetedSuite.selectOption("suite:livehost/authority");
   await expect(targetedCase).toBeDisabled();
-  await expect(targetedCase.locator("option")).toHaveText(["all cases (21)"]);
+  await expect(targetedCase.locator("option")).toHaveText(["all checks (21)"]);
 
   await selector.selectOption("all");
   await expect(targetedSuite).toBeDisabled();
@@ -284,21 +284,29 @@ test("hosted panel discovers curated categories and runs one canonical category"
 
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "1");
   await expect(page.locator("#test-logger")).toContainText("elapsed", { timeout: 15_000 });
+  await expect(page.locator("#test-logger")).toContainText("queued livetree/canvas-clear — 3 cases");
+  await expect(page.locator("#test-logger")).toContainText("running livetree/canvas-clear");
   await expect(page.locator("#test-logger")).toContainText("pass livetree/canvas-clear — 3 cases");
   await expect(page.locator("#test-case-pane [data-hosted-suite]")).toHaveCount(1);
+  await page.locator("#test-clear").click();
+  await expect(page.locator("#test-logger")).toHaveText("");
+  await expect(page.locator("#test-case-pane [data-hosted-suite]")).toHaveCount(1);
+  await expect(page.locator("#test-chips .test-chip-value").first()).toHaveText("1");
 
   await selector.selectOption("subject:livehost");
   await targetedSuite.selectOption("suite:livehost/authority");
   await page.locator("#test-run").click();
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "2");
   await expect(page.locator("#test-logger")).toContainText(
-    "pass livehost/authority — 21 cases",
+    "pass livehost/authority — 21 checks",
     { timeout: 15_000 },
   );
   await expect(page.locator("#test-logger")).not.toContainText("ok 1 -");
   const externalRow = page.locator('[data-hosted-suite="livehost/authority"]');
   await externalRow.click();
-  await expect(page.locator(".hosted-external-output")).toContainText("ok 1 -");
-  await expect(page.locator("#test-chips .test-chip-value")).toHaveText(["21", "21", "0", /\d/]);
+  await expect(page.locator('[data-evidence-kind="stdout"] .hosted-evidence-content')).toContainText("ok 1 -");
+  await expect(page.locator("#test-chips .test-chip-value")).toHaveText([
+    "1", "0", "0", "0", "0", "21", "21", "0", /\d/,
+  ]);
   assertNoErrors();
 });

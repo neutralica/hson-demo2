@@ -11,10 +11,10 @@ import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
 import { make_hosted_test_case_list, type HostedTestCaseList } from "./hosted-test-case-list";
 import {
     copy_hosted_case_report,
-    hosted_external_launcher_log_projection,
     open_hosted_case_report,
     serialize_hosted_run_report,
 } from "./hosted-test-report-view";
+import { make_hosted_test_chronology } from "./hosted-test-presentation";
 import {
     hosted_test_projection_footer,
     hosted_test_projection_summary,
@@ -95,11 +95,12 @@ function populate_targeted_test_selector(
     choices: readonly HostedTestPanelSelectionChoice[],
     selectedKey?: string,
     allCasesCount?: number,
+    countNoun: "cases" | "checks" = "cases",
 ): void {
     testSel.empty();
     const entireSuite = testSel.create.option();
     entireSuite.attrs.set("value", "");
-    entireSuite.text.set(allCasesCount === undefined ? "all cases" : `all cases (${allCasesCount})`);
+    entireSuite.text.set(allCasesCount === undefined ? `all ${countNoun}` : `all ${countNoun} (${allCasesCount})`);
     if (selectedKey === undefined) entireSuite.flags.set("selected");
     for (const choice of choices) {
         const option = testSel.create.option();
@@ -228,11 +229,6 @@ export function tp_factory(): TestPanel {
     let latestSummaryProjectionKey = "";
     let cancelSummaryFrame: (() => void) | undefined;
     let explicitExecutionCount = 0;
-    let plannedCanonicalSuites = 0;
-    let plannedExternalSuites = 0;
-    const completedCanonicalSuites = new Set<string>();
-    const completedExternalSuites = new Set<string>();
-    const canonicalSuiteCases = new Map<string, Readonly<{ total: number; fail: number }>>();
 
     const make_case_list = (): HostedTestCaseList => {
         let projection: HostedTestCaseList;
@@ -307,19 +303,21 @@ export function tp_factory(): TestPanel {
     };
 
     const hostedRuntime = make_remote_hosted_test_runtime();
-    const externalLogRows = new Map<string, LiveTree>();
-    const externalLogStatuses = new Map<string, string>();
-    const shownExternalFailures = new Set<string>();
+    const chronology = make_hosted_test_chronology();
 
-    const update_run_progress = (): void => {
+    const update_run_progress = (report?: Parameters<typeof chronology.ingest>[0]): void => {
         if (branch.attrs.get("data-hosted-panel-state") !== "running") return;
+        if (report === undefined) return;
+        const canonical = report.suiteRuns.filter((suite) => suite.executionShape === "cases");
+        const opaque = report.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate");
+        const terminal = (status: string): boolean => status !== "queued" && status !== "running";
         executorLabel.text.set(
-            `running · canonical ${completedCanonicalSuites.size}/${plannedCanonicalSuites} suites · library ${completedExternalSuites.size}/${plannedExternalSuites} suites`,
+            `running · case suites ${canonical.filter((suite) => terminal(suite.status)).length}/${canonical.length} · opaque suites ${opaque.filter((suite) => terminal(suite.status)).length}/${opaque.length}`,
         );
     };
 
     hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime, {
-        reset(suite) {
+        reset(suite, context) {
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;
             chips.clear();
@@ -327,14 +325,8 @@ export function tp_factory(): TestPanel {
             latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             latestProjectionSummary = undefined;
             latestSummaryProjectionKey = "";
-            externalLogRows.clear();
-            externalLogStatuses.clear();
-            shownExternalFailures.clear();
-            completedCanonicalSuites.clear();
-            completedExternalSuites.clear();
-            canonicalSuiteCases.clear();
-            appendLogLine(`running hosted ${suite}…`);
-            update_run_progress();
+            chronology.begin(context?.recovered ?? false);
+            appendLogLine(`${context?.recovered ? "recover" : "run"} section — ${suite}`);
         },
         ingest(update) {
             const projection = caseList;
@@ -356,45 +348,11 @@ export function tp_factory(): TestPanel {
                 latestSummaryProjectionKey = summaryProjectionKey;
                 schedule_summary(update.terminal);
             }
-            for (const testCase of update.newCases) {
-                const previous = canonicalSuiteCases.get(testCase.suite) ?? { total: 0, fail: 0 };
-                canonicalSuiteCases.set(testCase.suite, Object.freeze({
-                    total: previous.total + 1,
-                    fail: previous.fail + (testCase.status === "fail" ? 1 : 0),
-                }));
-            }
-            for (const timing of update.newSuiteTimings) {
-                if (update.report.suiteRuns.find((suite) => suite.id === timing.suite)?.executionShape === "opaque-aggregate"
-                    || update.report.externalResults[timing.suite] !== undefined) continue;
-                if (completedCanonicalSuites.has(timing.suite)) continue;
-                completedCanonicalSuites.add(timing.suite);
-                const counts = canonicalSuiteCases.get(timing.suite) ?? { total: 0, fail: 0 };
-                appendLogLine(
-                    `${counts.fail === 0 ? "pass" : "fail"} ${timing.suite} — ${counts.total} cases — ${format_hosted_test_duration(timing.ms)}`,
-                );
-            }
-            for (const launcher of Object.values(update.report.externalResults)) {
-                const previousStatus = externalLogStatuses.get(launcher.id);
-                const logProjection = hosted_external_launcher_log_projection(launcher);
-                if (previousStatus !== launcher.status) {
-                    externalLogStatuses.set(launcher.id, launcher.status);
-                    const row = externalLogRows.get(launcher.id) ?? appendLogLine(logProjection.line);
-                    externalLogRows.set(launcher.id, row);
-                    row.css.setMany(TP_LOG_ROWcss(logProjection.line));
-                    row.text.set(logProjection.line);
-                }
-                if (launcher.status === "pass" || launcher.status === "fail") {
-                    completedExternalSuites.add(launcher.id);
-                }
-                if (launcher.status === "fail" && !shownExternalFailures.has(launcher.id)) {
-                    shownExternalFailures.add(launcher.id);
-                    for (const diagnostic of logProjection.failureDiagnostics) appendLogLine(diagnostic);
-                }
-            }
-            update_run_progress();
+            for (const line of chronology.ingest(update.report)) appendLogLine(line);
+            update_run_progress(update.report);
         },
         showInfrastructureError(message) {
-            appendLogLine(`host error: ${message}`);
+            appendLogLine(`infrastructure error — ${message}`);
             caseList?.show_error(message);
         },
         renderTiming(timing) {
@@ -421,7 +379,7 @@ export function tp_factory(): TestPanel {
         const choice = selected_choice();
         if (discovery !== undefined) {
             executorLabel.text.set(
-                `${discovery.executor.label} · ${discovery.catalog.tests.length} canonical cases · ${discovery.externalTargets.length} library launchers · ${choice === undefined ? "no selection" : hosted_test_panel_display_label(choice.label)}`,
+                `${discovery.executor.label} · ${discovery.catalog.tests.length} canonical cases · ${discovery.externalTargets.length} opaque suites · ${choice === undefined ? "no selection" : hosted_test_panel_display_label(choice.label)}`,
             );
         }
         branch.attrs.setMany({
@@ -551,13 +509,20 @@ export function tp_factory(): TestPanel {
             targetedSuiteKey = targetedSuiteChoices.some((choice) => choice.key === value) ? value : undefined;
             targetedTestKey = undefined;
             const targetedSuite = targetedSuiteChoices.find((choice) => choice.key === targetedSuiteKey);
+            const selectedSuiteId = targetedSuite?.selection.kind === "suite" ? targetedSuite.selection.suite : undefined;
+            const opaqueSuite = selectedSuiteId !== undefined
+              && discovery.externalTargets.some((target) => target.id === selectedSuiteId);
             targetedTestChoices = targetedSuite?.selection.kind === "suite"
                 ? hosted_test_panel_test_choices(discovery.catalog.tests, targetedSuite.selection.suite, discovery.externalTargets)
                 : Object.freeze([]);
-            populate_targeted_test_selector(targetedTestSel, targetedTestChoices, undefined, targetedSuite?.count);
-            const selectedSuiteId = targetedSuite?.selection.kind === "suite" ? targetedSuite.selection.suite : undefined;
-            if (targetedSuiteKey === undefined || selectedSuiteId !== undefined
-              && discovery.externalTargets.some((target) => target.id === selectedSuiteId)) {
+            populate_targeted_test_selector(
+              targetedTestSel,
+              targetedTestChoices,
+              undefined,
+              targetedSuite?.count,
+              opaqueSuite ? "checks" : "cases",
+            );
+            if (targetedSuiteKey === undefined || opaqueSuite) {
                 set_selector_enabled(targetedTestSel, false);
             } else set_selector_enabled(targetedTestSel, true);
             const choice = selected_choice();
@@ -618,10 +583,6 @@ export function tp_factory(): TestPanel {
                         ? Object.freeze([])
                         : hosted_test_panel_selected_ids(activeDiscovery.catalog.tests, choice.selection, activeDiscovery.externalTargets);
                     if (testIds.length === 0) throw new Error("The active discovered selection contains no tests.");
-                    plannedCanonicalSuites = new Set(testIds
-                        .map((id) => activeDiscovery.catalog.tests.find((test) => test.id === id)?.suiteId)
-                        .filter((suite): suite is string => suite !== undefined)).size;
-                    plannedExternalSuites = testIds.filter((id) => activeDiscovery.catalog.tests.every((test) => test.id !== id)).length;
                     lastResult = await hostedAdapter!.start_selected(testIds);
                 } else throw new Error("Canonical hosted-test discovery has not completed.");
                 remember_hosted_test_run(lastResult.runId);
@@ -661,17 +622,8 @@ export function tp_factory(): TestPanel {
         });
 
         clearBtn.listen.onClick(() => {
-            hostedAdapter.dispose();
-            cancelSummaryFrame?.();
-            cancelSummaryFrame = undefined;
-            chips.clear();
             clearLogLines();
-            appendLogLine("idle");
-            replace_case_list();
-            latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
-            latestProjectionSummary = undefined;
-            lastResult = undefined;
-            remember_hosted_test_run();
+            chronology.clearPresentation();
         });
 
     };

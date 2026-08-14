@@ -1,7 +1,6 @@
-import { create_test_log } from "../../../src/app/demos/tests/panel/test-logger";
 import { TestRecorder } from "../../harness/reporting/test-recorder";
 import { run_test_suites } from "../../harness/core/test-runner";
-import type { CaseKey, TestEvent, TestSuite } from "../../harness/core/test-contracts";
+import type { TestEvent, TestSuite } from "../../harness/core/test-contracts";
 
 type CaseEndEvent = Extract<TestEvent, { t: "case_end" }>;
 
@@ -30,7 +29,6 @@ export function unit_test_harness(): TestSuite {
           const nestedSuite = "unit/test-harness/nested";
           const nestedCase = "returns failed assertion row";
           const events: TestEvent[] = [];
-          const log = create_test_log();
 
           const result = await run_test_suites(
             [
@@ -57,7 +55,6 @@ export function unit_test_harness(): TestSuite {
             ],
             (event) => {
               events.push(event);
-              log.onEvent(event);
             },
           );
 
@@ -67,15 +64,6 @@ export function unit_test_harness(): TestSuite {
           expect_true("expected RunResult.ok false", result.ok === false);
           expect_true("expected RunResult summary fail count", result.summary.fail === 1);
 
-          const logSummary = log.getSummary();
-          expect_true("expected logger summary fail count", logSummary.fail === 1);
-          expect_true(
-            "expected logger listFailures to include nested case",
-            log.listFailures().some((failure) => (
-              failure.suite === nestedSuite &&
-              failure.name === nestedCase
-            )),
-          );
         },
       },
       {
@@ -84,9 +72,7 @@ export function unit_test_harness(): TestSuite {
         run: () => {
           const nestedSuite = "unit/test-harness/defensive";
           const nestedCase = "impossible pass event";
-          const key = `${nestedSuite}::impossible-pass-event` as CaseKey;
           const recorder = new TestRecorder();
-          const log = create_test_log();
           const events: TestEvent[] = [
             { t: "suite_begin", suite: nestedSuite, totalPlanned: 1 },
             { t: "case_begin", suite: nestedSuite, caseId: "impossible-pass-event", name: nestedCase },
@@ -110,7 +96,6 @@ export function unit_test_harness(): TestSuite {
 
           for (const event of events) {
             recorder.ingest(event);
-            log.onEvent(event);
           }
 
           const recorderSummary = recorder.summary();
@@ -124,16 +109,44 @@ export function unit_test_harness(): TestSuite {
             )),
           );
 
-          const logSummary = log.getSummary();
-          expect_true("expected logger downgrade fail count", logSummary.fail === 1);
-          expect_true("expected logger downgrade pass count", logSummary.pass === 0);
-          expect_true("expected logger case status fail", log.getCase(key)?.status === "fail");
+        },
+      },
+      {
+        suite,
+        caseId: "elapsed-budget-yields-between-fast-cases", name: "elapsed budget yields between fast cases",
+        run: async () => {
+          const nestedSuite = "unit/test-harness/cooperative-budget";
+          const total = 40;
+          let completed = 0;
+          const checkpoints: number[] = [];
+          const scheduleCheckpoint = (): void => {
+            setImmediate(() => {
+              checkpoints.push(completed);
+              if (completed < total) scheduleCheckpoint();
+            });
+          };
+          scheduleCheckpoint();
+          const result = await run_test_suites(
+            [{
+              suite: nestedSuite,
+              cases: Array.from({ length: total }, (_, index) => ({
+                suite: nestedSuite,
+                caseId: `fast-${index}`,
+                name: `fast ${index}`,
+                run() {
+                  const deadline = performance.now() + 0.25;
+                  while (performance.now() < deadline) { /* bounded synchronous fixture */ }
+                },
+              })),
+            }],
+            (event) => { if (event.t === "case_end") completed += 1; },
+            { yieldEveryCases: 0, yieldAfterMs: 2, yieldBetweenSuites: false },
+          );
+          await new Promise<void>((resolve) => setImmediate(resolve));
+          expect_true("elapsed-budget nested run passes", result.ok && result.summary.cases === total);
           expect_true(
-            "expected logger failure list to include case",
-            log.listFailures().some((failure) => (
-              failure.suite === nestedSuite &&
-              failure.name === nestedCase
-            )),
+            "a macrotask observes partial progress before terminal completion",
+            checkpoints.some((count) => count > 0 && count < total),
           );
         },
       },

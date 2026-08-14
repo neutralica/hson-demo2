@@ -97,7 +97,6 @@ export const HRcss: CssMap = {
 
 
 export const TOC_BTNcss: CssMap = {
-  // ...FONT_FAM_MONO,
   boxSizing: "border-box",
   cursor: "pointer",
   userSelect: "none",
@@ -138,7 +137,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
   background: "transparent",
   textDecoration: "none",
   opacity: "0.8",
-  fontSize: _fontSize.main,
+  fontSize: _fontSize.smol,
   __after: {},
   _hover: {
     __after: {

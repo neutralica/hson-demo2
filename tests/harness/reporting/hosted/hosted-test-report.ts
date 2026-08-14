@@ -375,6 +375,7 @@ export type HostedTestReportController = Readonly<{
 }>;
 
 export const DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE = 32;
+export const DEFAULT_HOSTED_TEST_LIFECYCLE_BATCH_SIZE = 8;
 
 export type HostedTestReportOptions = Readonly<{
   caseBatchSize?: number;
@@ -407,6 +408,7 @@ export function make_hosted_test_report(
   });
   let disposed = false;
   const pendingMutations = new Set<Promise<unknown>>();
+  let pendingMutationFailure: unknown;
   type ReportTxOperation = (tx: LiveMapBatchTx<HostedTestReport>) => void;
   let pendingCaseLifecycle: ReportTxOperation[] = [];
   let pendingCases: HostedTestCaseReport[] = [];
@@ -471,7 +473,13 @@ export function make_hosted_test_report(
     }
     const pending = options.mutate(operation);
     pendingMutations.add(pending);
-    void pending.finally(() => pendingMutations.delete(pending));
+    void pending.then(
+      () => pendingMutations.delete(pending),
+      (error) => {
+        pendingMutations.delete(pending);
+        pendingMutationFailure ??= error;
+      },
+    );
   }
 
   function flush_case_lifecycle(): void {
@@ -489,7 +497,7 @@ export function make_hosted_test_report(
       return;
     }
     pendingCaseLifecycle.push(operation);
-    if (pendingCaseLifecycle.length >= caseBatchSize * 2) flush_case_lifecycle();
+    if (pendingCaseLifecycle.length >= DEFAULT_HOSTED_TEST_LIFECYCLE_BATCH_SIZE * 2) flush_case_lifecycle();
   }
 
   function terminal(status: TestLifecycleStatus): status is TestLifecycleTerminalStatus {
@@ -966,6 +974,7 @@ export function make_hosted_test_report(
     async settle() {
       flush_case_lifecycle();
       while (pendingMutations.size > 0) await Promise.all([...pendingMutations]);
+      if (pendingMutationFailure !== undefined) throw pendingMutationFailure;
     },
     dispose() {
       if (disposed) return;

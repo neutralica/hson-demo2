@@ -24,6 +24,7 @@ import { decode_run_selected_tests_request } from "../core/test-selected-run";
 import { run_selected_test_ids } from "../core/run-selected-test-suites";
 import { HOSTED_TEST_SELECTED_RUN_TARGET } from "./hosted-test-suite";
 import type { HostedTestSelectedRunResult } from "./hosted-test-action.types";
+import { HOSTED_TEST_RUN_OPTIONS } from "./hosted-test-scheduling";
 
 export type {
   HostedTestActions,
@@ -196,10 +197,7 @@ export function create_hosted_test_livehost(
       }
       let result: RunResult;
       try {
-        result = await descriptor.run(report.reduce, {
-          yieldEveryCases: 0,
-          yieldBetweenSuites: false,
-        });
+        result = await descriptor.run(report.reduce, HOSTED_TEST_RUN_OPTIONS);
         report.complete(result, {
           runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
           hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
@@ -247,10 +245,7 @@ export function create_hosted_test_livehost(
       }
       let result: RunResult;
       try {
-        result = await runSelected(executorRegistry, request.testIds, report.reduce, {
-          yieldEveryCases: 0,
-          yieldBetweenSuites: false,
-        });
+        result = await runSelected(executorRegistry, request.testIds, report.reduce, HOSTED_TEST_RUN_OPTIONS);
         report.complete(result, {
           runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
           hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),

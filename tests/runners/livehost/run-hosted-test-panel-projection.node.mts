@@ -158,7 +158,7 @@ try {
   projection.set_expanded("suite/alpha", true);
   const expanded = projection.snapshot();
   expect_projection(expanded.metrics.visibleCaseRows === 2 && expanded.metrics.caseRowsCreated === 2, "expanding one suite creates exactly that suite's cases");
-  const expandedNames = Array.from(runtime.document.querySelectorAll(".hosted-case-name"), (element) => element.textContent);
+  const expandedNames = Array.from(runtime.document.querySelectorAll(".hosted-case-title"), (element) => element.textContent);
   expect_projection(expandedNames.join(",") === "first,second", "expanded cases retain canonical order");
   expect_projection(projectionClickRegistrations === 1, "expansion registers no per-case click listeners");
 
@@ -177,7 +177,7 @@ try {
   expect_projection(runtime.document.querySelectorAll(".hosted-case-row").length === 0, "collapse removes the case projection from the DOM");
 
   projection.set_expanded("suite/alpha", true);
-  const reexpandedNames = Array.from(runtime.document.querySelectorAll(".hosted-case-name"), (element) => element.textContent);
+  const reexpandedNames = Array.from(runtime.document.querySelectorAll(".hosted-case-title"), (element) => element.textContent);
   expect_projection(reexpandedNames.join(",") === "first,second" && projectionClickRegistrations === 1, "re-expansion preserves order without adding listeners");
 
   projection.dispose();
@@ -293,12 +293,13 @@ try {
   );
   for (const caseKey of [portableCaseKey, circuitCaseKey]) {
     const testCase = inspectionCases.find((candidate) => candidate.key === caseKey);
-    const heading = `${testCase?.suite} :: ${testCase?.name}`;
+    const heading = testCase?.name ?? "";
     expect_projection(
       viewedKeys.includes(caseKey)
         && copiedKeys.includes(caseKey)
         && renderedViews.get(caseKey)?.includes(heading) === true
-        && copiedReports.get(heading)?.includes(heading) === true,
+        && renderedViews.get(caseKey)?.includes(caseKey) === true
+        && copiedReports.get(heading)?.includes(`id: ${caseKey}`) === true,
       `view and copy resolve and serialize the same intended case ${caseKey}`,
     );
   }
@@ -363,12 +364,12 @@ try {
   expect_projection(
     runtime.document.querySelector(`[data-hosted-suite="${passing.id}"]`) === externalRowsBefore[0]
       && runtime.document.querySelector(
-        `[data-hosted-suite="${passing.id}"] + .hosted-case-block .hosted-external-output`,
+        `[data-hosted-suite="${passing.id}"] + .hosted-case-block .hosted-evidence-content`,
       )?.textContent?.includes("verbatim stdout") === true,
     "passing raw stdout remains available behind the stable suite disclosure",
   );
   expect_projection(
-    Array.from(runtime.document.querySelectorAll(".hosted-external-output"))
+    Array.from(runtime.document.querySelectorAll(".hosted-evidence-content"))
       .some((element) => element.textContent?.includes("meaningful stderr")),
     "failed launcher output remains visible beneath its failing suite",
   );
@@ -390,8 +391,8 @@ try {
   const externalFooter = hosted_test_projection_footer(externalSummary, 1956);
   expect_projection(
     externalFooter.map((entry) => entry.label).join("|")
-      === "cases|case pass|checks|check pass|failed|elapsed"
-      && externalFooter.slice(0, 5).map((entry) => entry.value).join("|") === "0|0|24|16|1 suite",
+      === "suites|suite fail|cases|case pass|case fail|checks|check pass|check fail|elapsed"
+      && externalFooter.slice(0, 8).map((entry) => entry.value).join("|") === "2|1|0|0|0|24|16|unknown",
     "external-only footer keeps opaque checks distinct from canonical cases",
   );
 
@@ -407,17 +408,18 @@ try {
   const mixedFooter = hosted_test_projection_footer(mixedSummary, 10);
   expect_projection(
     mixedFooter.map((entry) => entry.label).join("|")
-      === "cases|case pass|checks|check pass|failed|elapsed"
-      && mixedFooter.slice(0, 5).map((entry) => entry.value).join("|") === "1|1|16|16|0",
+      === "suites|suite fail|cases|case pass|case fail|checks|check pass|check fail|elapsed"
+      && mixedFooter.slice(0, 8).map((entry) => entry.value).join("|") === "2|0|1|1|0|16|16|0",
     "an all-green mixed summary preserves separate case and check universes",
   );
   const allGreenFooter = hosted_test_projection_footer(Object.freeze({
+    suites: Object.freeze({ total: 30, pass: 30, fail: 0 }),
     canonical: Object.freeze({ total: 2103, pass: 2103, fail: 0, skip: 0 }),
-    launchers: Object.freeze({ total: 28, pass: 28, fail: 0, declaredChecks: 502, passedChecks: 502 }),
+    launchers: Object.freeze({ total: 28, pass: 28, fail: 0, declaredChecks: 502, passedChecks: 502, failedChecks: 0 }),
   }), 10);
   expect_projection(
-    allGreenFooter.slice(0, 5).map((entry) => `${entry.label}:${entry.value}`).join("|")
-      === "cases:2103|case pass:2103|checks:502|check pass:502|failed:0",
+    allGreenFooter.slice(0, 8).map((entry) => `${entry.label}:${entry.value}`).join("|")
+      === "suites:30|suite fail:0|cases:2103|case pass:2103|case fail:0|checks:502|check pass:502|check fail:0",
     "the complete successful mixed run does not fabricate a grand case/check equivalence",
   );
   expect_projection(
@@ -439,10 +441,10 @@ try {
     10,
   );
   expect_projection(
-    failedMixedFooter.map((entry) => entry.label).join("|") === "cases|case pass|checks|check pass|failed|elapsed"
-      && failedMixedFooter.find((entry) => entry.label === "failed")?.value === "1 suite"
+    failedMixedFooter.map((entry) => entry.label).join("|") === "suites|suite fail|cases|case pass|case fail|checks|check pass|check fail|elapsed"
+      && failedMixedFooter.find((entry) => entry.label === "suite fail")?.value === 1
       && failedMixedFooter.find((entry) => entry.label === "case pass")?.value === 1
-      && failedMixedFooter.find((entry) => entry.label === "failed")?.value !== failing.executableChecks,
+      && failedMixedFooter.find((entry) => entry.label === "check fail")?.value === "unknown",
     "a failed external suite is identified without fabricating failed internal cases",
   );
 
@@ -452,8 +454,8 @@ try {
     })),
   ), 10);
   expect_projection(
-    canonicalFooter.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`).join("|")
-      === "cases:1|passed:1|failed:0",
+    canonicalFooter.slice(0, 5).map((entry) => `${entry.label}:${entry.value}`).join("|")
+      === "suites:1|suite fail:0|cases:1|passed:1|failed:0",
     "canonical-only and Worker-compatible summaries retain their ordinary counters",
   );
 
@@ -479,7 +481,7 @@ try {
   );
   expect_projection(
     copiedMixed.includes("canonical cases: 1 passed")
-      && copiedMixed.includes("library suites: 1/1 passed")
+      && copiedMixed.includes("opaque suites: 1/1 passed")
       && copiedMixed.includes(passing.id)
       && mixedReport.externalResults[passing.id]?.runtime === "node",
     "copied and raw reports preserve canonical versus external execution provenance",
@@ -495,7 +497,7 @@ try {
       && allSummary.launchers.total === 28
       && allSummary.launchers.pass === 28
       && allSummary.launchers.declaredChecks === 502,
-    "28-suite projection reports 28 passed library suites and 502 manifest cases without fabricated structured cases",
+    "28-suite projection reports 28 passed opaque suites and 502 manifest checks without fabricated structured cases",
   );
   externalProjection.dispose();
 

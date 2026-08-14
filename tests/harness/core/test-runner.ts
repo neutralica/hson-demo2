@@ -10,10 +10,17 @@ import type { RunCaseRet, RunOptions, RunResult, TestEvent, TestExpected, TestEx
 export const DEFAULT_TEST_CASE_TIMEOUT_MS = 30_000;
 export const TEST_FAILURE_DETAIL_LIMIT = 16 * 1024;
 
-// cooperative yield so the browser can paint + process input.
-// - requestAnimationFrame - "UI-friendly" yield.
-// - fallback to setTimeout for non-DOM contexts.
-async function yield_to_ui(): Promise<void> {
+// Cooperative macrotask yield so Node can service transports and browsers can
+// paint/process input. Prefer the real Node scheduler even when a synthetic DOM
+// has installed requestAnimationFrame on globalThis.
+async function yield_to_event_loop(): Promise<void> {
+  const immediate = (globalThis as typeof globalThis & {
+    setImmediate?: (callback: () => void) => unknown;
+  }).setImmediate;
+  if (typeof immediate === "function") {
+    await new Promise<void>((resolve) => immediate(resolve));
+    return;
+  }
   const raf = globalThis.requestAnimationFrame;
   if (typeof raf === "function") {
     await new Promise<void>((resolve) => raf(() => resolve()));
@@ -127,6 +134,9 @@ function validate_run_configuration(suites: readonly TestSuite[], options: RunOp
   if (options.caseTimeoutMs !== undefined) {
     validated_timeout(options.caseTimeoutMs, "Run default timeout");
   }
+  if (options.yieldAfterMs !== undefined && (!Number.isFinite(options.yieldAfterMs) || options.yieldAfterMs <= 0)) {
+    throw new Error("[TEST_RUNNER_INVALID_YIELD_BUDGET] yieldAfterMs must be a positive finite number.");
+  }
   for (const suite of suites) {
     if (suite.timeoutMs !== undefined) validated_timeout(suite.timeoutMs, `Suite "${suite.suite}" timeout`);
     for (const testCase of suite.cases) {
@@ -204,7 +214,18 @@ export async function run_test_suites(
 
 
   const yieldEvery = opts.yieldEveryCases ?? 5;
+  const yieldAfterMs = opts.yieldAfterMs;
   let caseCounter = 0;
+  let lastYieldAt = now();
+
+  const case_boundary = async (): Promise<void> => {
+    caseCounter += 1;
+    const countBudgetExpired = yieldEvery > 0 && caseCounter % yieldEvery === 0;
+    const timeBudgetExpired = yieldAfterMs !== undefined && now() - lastYieldAt >= yieldAfterMs;
+    if (!countBudgetExpired && !timeBudgetExpired) return;
+    await yield_to_event_loop();
+    lastYieldAt = now();
+  };
 
   for (const suite of suites) {
     if (opts.filterSuite && suite.suite !== opts.filterSuite) continue;
@@ -220,7 +241,8 @@ export async function run_test_suites(
       totalPlanned: selectedCases.length,
     });
 
-    await yield_to_ui();
+    await yield_to_event_loop();
+    lastYieldAt = now();
 
     if (suite.setup !== undefined) {
       try {
@@ -245,7 +267,7 @@ export async function run_test_suites(
             ms: now() - c0,
             err: `[TEST_SUITE_SETUP_FAILED] ${asErrMsg(error)}`,
           });
-          caseCounter += 1;
+          await case_boundary();
         }
         emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
         if (opts.bail || opts.signal?.aborted) break;
@@ -340,10 +362,7 @@ export async function run_test_suites(
                 : endBase
           );
 
-          caseCounter += 1;
-          if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
-            await yield_to_ui();
-          }
+          await case_boundary();
 
           if ((!failedAsExpected && opts.bail) || opts.signal?.aborted) break;
           continue;
@@ -372,10 +391,7 @@ export async function run_test_suites(
               : endBase
           );
 
-          caseCounter += 1;
-          if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
-            await yield_to_ui();
-          }
+          await case_boundary();
 
           if (opts.bail || opts.signal?.aborted) break;
           continue;
@@ -428,10 +444,7 @@ export async function run_test_suites(
             metaPatch ? { ...endBase, metaPatch } : endBase
           );
 
-          caseCounter += 1;
-          if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
-            await yield_to_ui();
-          }
+          await case_boundary();
 
           continue;
         }
@@ -459,26 +472,22 @@ export async function run_test_suites(
             : endBase
         );
 
-        caseCounter += 1;
-        if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
-          await yield_to_ui();
-        }
+        await case_boundary();
 
         if (opts.bail || opts.signal?.aborted) break;
+        continue;
       }
 
       // yield periodically so UI can paint + pointer events can run
-      caseCounter += 1;
-      if (yieldEvery > 0 && caseCounter % yieldEvery === 0) {
-        await yield_to_ui();
-      }
+      await case_boundary();
     }
 
     emit(rec, onEvent, { t: "suite_end", suite: suite.suite, ms: now() - s0 });
 
     // suite-level yield by default so suite_begin/suite_end logs can paint between suites.
     if (opts.yieldBetweenSuites !== false) {
-      await yield_to_ui();
+      await yield_to_event_loop();
+      lastYieldAt = now();
     }
 
     if (opts.bail && rec.summary().fail > 0) break;

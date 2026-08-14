@@ -18,7 +18,7 @@ export type HostedTestPanelReportUpdate = Readonly<{
 }>;
 
 export type HostedTestPanelSink = Readonly<{
-  reset(target: HostedTestRunTarget): void;
+  reset(target: HostedTestRunTarget, context?: Readonly<{ recovered: boolean }>): void;
   ingest(update: HostedTestPanelReportUpdate): void;
   showInfrastructureError(message: string): void;
   renderTiming?(timing: HostedTestPanelRunResult["timing"]): void;
@@ -115,7 +115,7 @@ export function make_hosted_test_panel_adapter(
       dispose_current();
       lastResult = undefined;
       inspectionRequests.clear();
-      sink.reset(suite);
+      sink.reset(suite, { recovered: false });
 
       let owned: OwnedRun;
       const observe = make_report_observer(sink);
@@ -215,11 +215,11 @@ function make_generic_hosted_test_panel_adapter(
     dispose_current();
     lastResult = undefined;
     inspectionRequests.clear();
-    if (requestedTarget !== undefined) sink.reset(requestedTarget);
+    if (requestedTarget !== undefined) sink.reset(requestedTarget, { recovered: false });
 
     const run = await open();
     const target = run.association.suite;
-    if (requestedTarget === undefined) sink.reset(target);
+    if (requestedTarget === undefined) sink.reset(target, { recovered: true });
     if (generation !== runGeneration) {
       run.dispose();
       throw new Error("Hosted test run was superseded before report recovery.");

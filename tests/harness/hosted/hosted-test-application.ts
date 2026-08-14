@@ -62,6 +62,7 @@ import {
   create_livehost_authority_registry,
   create_livehost_store,
 } from "hson-live/livehost";
+import { HOSTED_TEST_RUN_OPTIONS } from "./hosted-test-scheduling";
 
 export { HOSTED_TEST_COORDINATOR_HOST_ID } from "./hosted-test-application.types";
 export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "./hosted-test-application.types";
@@ -336,7 +337,7 @@ export function create_hosted_test_application(
       const hostStartedAt = performance.now();
       let result: RunResult;
       try {
-        result = await plan.run(report.reduce, { yieldEveryCases: 0, yieldBetweenSuites: false });
+        result = await plan.run(report.reduce, HOSTED_TEST_RUN_OPTIONS);
         report.complete(result, {
           runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
           hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),

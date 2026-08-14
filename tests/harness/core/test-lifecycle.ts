@@ -322,7 +322,10 @@ export function make_test_lifecycle_adapter(options: Readonly<{
       if (classifiedError !== undefined && classifiedError.kind !== "assertion") {
         emit({ t: "infrastructure_error", suiteId: event.suite, error: classifiedError });
       }
-      const completion = event.completion;
+      // A completion rejected by protocol reconciliation is evidence, not a
+      // trustworthy count source. Keep the advertised declaration and surface
+      // the protocol error without constructing contradictory lifecycle counts.
+      const completion = event.completionError === undefined ? event.completion : undefined;
       const counts: TestLifecycleCounts = Object.freeze({
         declared: event.executableChecks,
         total: completion?.executed ?? 0,

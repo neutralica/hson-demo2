@@ -194,6 +194,23 @@ const protocolFinal = protocolReport.map.capture().value.suiteRuns[0]!;
 certify(protocolFinal.errors.some((error) => error.kind === "protocol" && error.executorId === "livehost-authority"), "protocol failure is classified with executor context");
 certify(protocolReport.map.capture().value.externalResults[opaqueSuite.id]?.stderr === "raw stderr\n", "protocol diagnostics are not synthesized into raw stderr");
 
+const mismatchedCompletionReport = make_hosted_test_report(() => 61, undefined, "hosted/all", { runId: "phase2a-mismatched-completion", runPlan: plan_for("phase2a-mismatched-completion", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
+mismatchedCompletionReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
+mismatchedCompletionReport.reduce({
+  t: "external_end", ...sharedExternal, status: "fail", ms: 2, stdout: "", ordinaryStdout: "", stderr: "",
+  exitCode: 0, signal: null, timedOut: false,
+  completion: { version: 1, launcherId: "opaque", executed: 6, passed: 6, failed: 0 },
+  completionError: "External launcher executed 6 checks, manifest declares 5.",
+});
+const mismatchedCompletionFinal = mismatchedCompletionReport.map.capture().value.suiteRuns[0]!;
+certify(
+  mismatchedCompletionFinal.status === "fail"
+    && mismatchedCompletionFinal.counts.declared === 5
+    && mismatchedCompletionFinal.counts.executed === 0
+    && mismatchedCompletionFinal.errors.some((error) => error.kind === "protocol"),
+  "rejected completion counts remain protocol evidence instead of crashing lifecycle reconciliation",
+);
+
 const impossiblePlan = plan_for("phase2a-impossible", canonicalCatalog, [canonicalCase.id]);
 const impossibleReport = make_hosted_test_report(() => 0, undefined, "hosted/all", { runId: impossiblePlan.runId, runPlan: impossiblePlan });
 certify(rejects(() => impossibleReport.reduceLifecycle({

@@ -1,0 +1,11 @@
+import type { RunOptions } from "../core/test-contracts";
+
+// Half of a nominal 60 Hz frame: enough room for transport/recovery work while
+// keeping runner batching intact. This is an execution budget, not a timeout.
+export const HOSTED_TEST_EVENT_LOOP_BUDGET_MS = 8;
+
+export const HOSTED_TEST_RUN_OPTIONS: RunOptions = Object.freeze({
+  yieldEveryCases: 0,
+  yieldAfterMs: HOSTED_TEST_EVENT_LOOP_BUDGET_MS,
+  yieldBetweenSuites: false,
+});

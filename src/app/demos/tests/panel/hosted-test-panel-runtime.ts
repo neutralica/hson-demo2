@@ -399,8 +399,31 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     let reportReconnecting: Promise<void> | undefined;
     const reportListeners = new Set<() => void>();
     let runDisposed = false;
+    let reportTerminalSettled = false;
+    let resolveReportTerminal: () => void = () => undefined;
+    let rejectReportTerminal: (error: Error) => void = () => undefined;
+    const reportTerminal = new Promise<void>((resolve, reject) => {
+      resolveReportTerminal = resolve;
+      rejectReportTerminal = reject;
+    });
+    void reportTerminal.catch(() => undefined);
+
+    function fail_report(error: unknown): void {
+      if (reportTerminalSettled) return;
+      reportTerminalSettled = true;
+      rejectReportTerminal(error instanceof Error ? error : new Error(String(error)));
+    }
+
+    function settle_report_if_terminal(): void {
+      if (reportTerminalSettled || reportClient === undefined) return;
+      const status = reportClient.recovery.map.capture().value.run.status;
+      if (status !== "passed" && status !== "failed" && status !== "error") return;
+      reportTerminalSettled = true;
+      resolveReportTerminal();
+    }
 
     function notify_report(): void {
+      settle_report_if_terminal();
       for (const listener of [...reportListeners]) listener();
     }
 
@@ -435,7 +458,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       stopReportChanges = next.recovery.on_change(notify_report);
       stopReportClose = nextTransport.socket.onClose(() => {
         if (disposed || runDisposed || reportTransport !== nextTransport) return;
-        void ensure_report_reconnected();
+        void ensure_report_reconnected().catch(() => undefined);
       }) ?? undefined;
       previous?.recovery.dispose();
       previous?.session.dispose();
@@ -458,52 +481,39 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         }
         retainedFailure ??= lastError instanceof Error ? lastError : new Error(String(lastError));
         status = "failed";
+        fail_report(retainedFailure);
         throw retainedFailure;
       })().finally(() => { reportReconnecting = undefined; });
       return reportReconnecting;
     }
 
     await open_report();
-    const actionResult = requestedActionResult ?? new Promise<HostedTestAnyRunResult>((resolve, reject) => {
-      const finish = (): boolean => {
-        const report = reportClient.recovery.map.capture().value;
-        if (report.run.id !== association.runId || report.run.suite !== association.suite) {
-          reject(new Error("Recovered hosted report identity does not match the explicitly requested run."));
-          return true;
-        }
-        if (report.run.status !== "passed" && report.run.status !== "failed" && report.run.status !== "error") return false;
-        if (report.run.timing === null) {
-          reject(new Error("Recovered hosted report completed without timing."));
-          return true;
-        }
-        const reportRev = reportClient.recovery.lastAppliedRev;
-        if (reportRev === undefined) {
-          reject(new Error("Recovered hosted report completed without a revision cursor."));
-          return true;
-        }
-        const common = {
-          runId: association.runId,
-          reportHostId: association.reportHostId,
-          reportRev,
-          ok: report.run.status === "passed",
-          summary: result_summary_from_report(report),
-          timing: report.run.timing,
-        };
-        resolve(target === HOSTED_TEST_SELECTED_RUN_TARGET
-          ? Object.freeze({
-            ...common,
-            suite: HOSTED_TEST_SELECTED_RUN_TARGET,
-            testIds: selected_ids_from_report(report),
-          })
-          : Object.freeze({ ...common, suite: target }));
-        return true;
+    const recovered_result = (): HostedTestAnyRunResult => {
+      const report = reportClient.recovery.map.capture().value;
+      if (report.run.id !== association.runId || report.run.suite !== association.suite) {
+        throw new Error("Recovered hosted report identity does not match the explicitly requested run.");
+      }
+      if (report.run.timing === null) throw new Error("Recovered hosted report completed without timing.");
+      const reportRev = reportClient.recovery.lastAppliedRev;
+      if (reportRev === undefined) throw new Error("Recovered hosted report completed without a revision cursor.");
+      const common = {
+        runId: association.runId,
+        reportHostId: association.reportHostId,
+        reportRev,
+        ok: report.run.status === "passed",
+        summary: result_summary_from_report(report),
+        timing: report.run.timing,
       };
-      if (finish()) return;
-      let stop = (): void => undefined;
-      stop = reportClient.recovery.on_change(() => {
-        if (!finish()) return;
-        stop();
-      });
+      return target === HOSTED_TEST_SELECTED_RUN_TARGET
+        ? Object.freeze({ ...common, suite: HOSTED_TEST_SELECTED_RUN_TARGET, testIds: selected_ids_from_report(report) })
+        : Object.freeze({ ...common, suite: target });
+    };
+    const terminalResult = requestedActionResult === undefined
+      ? reportTerminal.then(recovered_result)
+      : Promise.all([requestedActionResult, reportTerminal]).then(([result]) => result);
+    const actionResult: Promise<HostedTestAnyRunResult> = terminalResult.then((result) => {
+      if (!disposed && !runDisposed) status = "completed";
+      return result;
     });
     void actionResult.catch(() => undefined);
     const run: HostedTestRemoteRun = Object.freeze({
@@ -528,6 +538,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       dispose() {
         if (runDisposed) return;
         runDisposed = true;
+        fail_report(new LiveHostDisconnectedError());
         activeRuns.delete(run);
         reportListeners.clear();
         stopReportClose?.();
@@ -548,10 +559,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     status = "running";
     const action = coordinatorClient.action("tests.run", { suite });
-    const actionResult = retry_safe_result(action, suite).then((result) => {
-      status = "completed";
-      return result;
-    }, (cause: unknown) => {
+    const actionResult = retry_safe_result(action, suite).then(undefined, (cause: unknown) => {
       status = "run-rejected";
       throw cause;
     });
@@ -577,10 +585,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (unknown !== undefined) throw new Error(`Hosted-test selection contains an undiscovered test ID "${unknown}".`);
     status = "running";
     const action = coordinatorClient.action("tests.runSelected", { testIds: [...ids] });
-    const actionResult = retry_safe_selected_result(action).then((result) => {
-      status = "completed";
-      return result;
-    }, (cause: unknown) => {
+    const actionResult = retry_safe_selected_result(action).then(undefined, (cause: unknown) => {
       status = "run-rejected";
       throw cause;
     });

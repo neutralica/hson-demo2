@@ -89,4 +89,15 @@ observerFailure.failInfrastructure(new Error("terminal"));
 expect_batch(hosted_test_report_cases(observerFailure.map.capture().value).length === 1, "a post-commit observer error cannot cause the committed pending batch to be duplicated");
 observerFailure.dispose();
 
+const mutationFailure = make_hosted_test_report(() => 1, undefined, "livemap/replay", {
+  mutate: async () => { throw new Error("authority mutation rejected"); },
+});
+mutationFailure.reduce(begin);
+await new Promise<void>((resolve) => setImmediate(resolve));
+let mutationFailureObserved = false;
+try { await mutationFailure.settle(); }
+catch (error) { mutationFailureObserved = error instanceof Error && error.message === "authority mutation rejected"; }
+expect_batch(mutationFailureObserved, "a mutation rejection remains observable even when it settles before report.settle");
+mutationFailure.dispose();
+
 console.log("hosted report batching: ok");
