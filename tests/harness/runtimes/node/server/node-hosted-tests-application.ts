@@ -24,6 +24,10 @@ import {
   create_node_capacity_livehost_socket,
   type NodeCapacityLiveHostSocket,
 } from "./node-capacity-livehost-socket";
+import {
+  observe_hosted_test_timeline,
+  type HostedTestTimelineObserver,
+} from "../../../hosted/hosted-test-timeline";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
@@ -34,6 +38,7 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
   executorRegistry?: TestExecutorRegistry;
   runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
   security?: NodeApplicationSecurity;
+  timeline?: HostedTestTimelineObserver;
   lifecycle?: Readonly<{
     maxReports: number;
     terminalRetentionMs: number;
@@ -61,7 +66,17 @@ export type NodeHostedTestsApplication = Readonly<{
     backpressureRejections: number;
   }>;
   disconnectConnections(authorityId?: string): void;
-  metrics(): Readonly<{ sentMessages: number; sentBytes: number }>;
+  metrics(): Readonly<{
+    sentMessages: number;
+    sentBytes: number;
+    largestSentBytes: number;
+    reportSnapshots: number;
+    reportSnapshotBytes: number;
+    reportCommits: number;
+    reportCommitBytes: number;
+    reportRecoveryCommits: number;
+    reportRecoveryCommitBytes: number;
+  }>;
 }>;
 
 export async function create_node_hosted_tests_application(
@@ -89,6 +104,8 @@ export async function create_node_hosted_tests_application(
         runOptions,
       )),
     ...(options.lifecycle === undefined ? {} : { lifecycle: options.lifecycle }),
+    ...(options.timeline === undefined ? {} : { timeline: options.timeline }),
+    requireReportReady: true,
   });
   const connections = new Map<WebSocket, Readonly<{
     authorityId: string;
@@ -103,6 +120,14 @@ export async function create_node_hosted_tests_application(
   let peakQueuedMessages = 0;
   let peakQueuedBytes = 0;
   let backpressureRejections = 0;
+  let reportSnapshots = 0;
+  let reportSnapshotBytes = 0;
+  let reportCommits = 0;
+  let reportCommitBytes = 0;
+  let reportRecoveryCommits = 0;
+  let reportRecoveryCommitBytes = 0;
+  const reportedInitialFrames = new Set<string>();
+  const serializedInitialFrames = new Set<string>();
 
   const registration: NodeHostedApplication = Object.freeze({
     name: NODE_HOSTED_TESTS_APPLICATION_NAME,
@@ -123,6 +148,45 @@ export async function create_node_hosted_tests_application(
             sentMessages += 1;
             sentBytes += messageBytes;
             largestSentBytes = Math.max(largestSentBytes, messageBytes);
+            if (authorityId.startsWith(HOSTED_TEST_REPORT_AUTHORITY_PREFIX)) {
+              try {
+                const decoded = JSON.parse(message) as { type?: unknown };
+                if (decoded.type === "recovery-snapshot") {
+                  reportSnapshots += 1;
+                  reportSnapshotBytes += messageBytes;
+                } else if (decoded.type === "commit") {
+                  reportCommits += 1;
+                  reportCommitBytes += messageBytes;
+                } else if (decoded.type === "recovery-commit") {
+                  reportRecoveryCommits += 1;
+                  reportRecoveryCommitBytes += messageBytes;
+                }
+                if (decoded.type === "recovery-snapshot") {
+                  if (!serializedInitialFrames.has(authorityId)) {
+                    serializedInitialFrames.add(authorityId);
+                    observe_hosted_test_timeline(options.timeline, "first_report_frame_serialized", {
+                      reportHostId: authorityId,
+                      bytes: messageBytes,
+                    });
+                  }
+                }
+              } catch { /* LiveHost owns protocol validation. */ }
+            }
+          },
+          onSent(message) {
+            if (authorityId.startsWith(HOSTED_TEST_REPORT_AUTHORITY_PREFIX) && !reportedInitialFrames.has(authorityId)) {
+              try {
+                const decoded = JSON.parse(message) as { type?: unknown };
+                if (decoded.type === "recovery-snapshot") {
+                  reportedInitialFrames.add(authorityId);
+                  const messageBytes = Buffer.byteLength(message, "utf8");
+                  observe_hosted_test_timeline(options.timeline, "first_report_frame_sent", {
+                    reportHostId: authorityId,
+                    bytes: messageBytes,
+                  });
+                }
+              } catch { /* LiveHost owns protocol validation. */ }
+            }
           },
           maxBufferedAmount: context.transportPolicy.maxBufferedAmount,
           onBackpressure() {
@@ -219,6 +283,16 @@ export async function create_node_hosted_tests_application(
         websocket.close(1012, "Hosted-test connection interrupted.");
       }
     },
-    metrics: () => Object.freeze({ sentMessages, sentBytes }),
+    metrics: () => Object.freeze({
+      sentMessages,
+      sentBytes,
+      largestSentBytes,
+      reportSnapshots,
+      reportSnapshotBytes,
+      reportCommits,
+      reportCommitBytes,
+      reportRecoveryCommits,
+      reportRecoveryCommitBytes,
+    }),
   });
 }

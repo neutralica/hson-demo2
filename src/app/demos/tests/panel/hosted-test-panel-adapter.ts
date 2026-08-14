@@ -1,7 +1,7 @@
-import type { LiveHostEventListener } from "hson-live/types";
+import type { LiveHostEventListener, LiveMapAnyOp, LiveMapCommitObservation } from "hson-live/types";
 import type { HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestPanelRunResult, HostedTestRunRequest, HostedTestRunResult } from "../../../../../tests/harness/hosted/hosted-test-action.types";
 import { inspect_hosted_test_action, run_hosted_test_action } from "../../../../../tests/harness/hosted/hosted-test-client-action";
-import type { HostedTestCaseReport, HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
+import type { HostedTestCaseReport, HostedTestReport, HostedTestSuiteRunReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import type { HostedTestReportMirror } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-mirror.types";
 import { make_hosted_test_report_router } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-router";
 import type { HostedTestReportRouter } from "../../../../../tests/harness/reporting/hosted/hosted-test-report-router.types";
@@ -12,6 +12,7 @@ import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-
 
 export type HostedTestPanelReportUpdate = Readonly<{
   report: HostedTestReport;
+  changedSuites?: readonly HostedTestSuiteRunReport[];
   newCases: readonly HostedTestCaseReport[];
   newSuiteTimings: readonly Readonly<{ suite: string; ms: number }>[];
   terminal: boolean;
@@ -38,6 +39,56 @@ export type HostedTestPanelAdapter = Readonly<{
   capture(): HostedTestReport | undefined;
   dispose(): void;
 }>;
+
+function clone_container(value: unknown): Record<PropertyKey, unknown> | unknown[] {
+  if (Array.isArray(value)) return [...value];
+  if (typeof value === "object" && value !== null) return { ...value };
+  throw new Error("Hosted report commit path traversed a non-container value.");
+}
+
+/** Apply one already-authoritative data commit with one shallow copy per touched container. */
+function apply_report_commit(report: HostedTestReport, observation: LiveMapCommitObservation): HostedTestReport {
+  if (observation.kind !== "commit" || !observation.commit.changed) return report;
+  const root = clone_container(report);
+  const copied = new WeakSet<object>([root]);
+
+  for (const candidate of observation.commit.ops) {
+    const op = candidate as LiveMapAnyOp & { readonly kind?: string; readonly path?: readonly (string | number)[]; readonly next?: unknown };
+    if (op.kind === undefined || op.path === undefined) {
+      throw new Error("Hosted report received a non-data LiveMap commit.");
+    }
+    if (op.path.length === 0) {
+      if (op.kind === "delete" || typeof op.next !== "object" || op.next === null) {
+        throw new Error("Hosted report received an invalid root data operation.");
+      }
+      return op.next as HostedTestReport;
+    }
+
+    let parent: Record<PropertyKey, unknown> | unknown[] = root;
+    for (let index = 0; index < op.path.length - 1; index += 1) {
+      const key = op.path[index] as PropertyKey;
+      let child = (parent as Record<PropertyKey, unknown>)[key];
+      if (typeof child !== "object" || child === null) {
+        throw new Error("Hosted report commit path does not exist in the current projection.");
+      }
+      if (!copied.has(child)) {
+        child = clone_container(child);
+        copied.add(child as object);
+        (parent as Record<PropertyKey, unknown>)[key] = child;
+      }
+      parent = child as Record<PropertyKey, unknown> | unknown[];
+    }
+
+    const key = op.path[op.path.length - 1] as PropertyKey;
+    if (op.kind === "delete") {
+      if (Array.isArray(parent) && typeof key === "number") parent.splice(key, 1);
+      else delete (parent as Record<PropertyKey, unknown>)[key];
+    } else {
+      (parent as Record<PropertyKey, unknown>)[key] = op.next;
+    }
+  }
+  return root as unknown as HostedTestReport;
+}
 
 type OwnedRun = {
   generation: number;
@@ -196,6 +247,7 @@ function make_generic_hosted_test_panel_adapter(
   let current: HostedTestRemoteRun | undefined;
   let stopChanges: (() => void) | undefined;
   let lastResult: HostedTestPanelRunResult | undefined;
+  let currentReport: HostedTestReport | undefined;
   const inspectionRequests = new Map<string, Promise<HostedTestCaseDiagnostic>>();
 
   function dispose_current(): void {
@@ -203,6 +255,7 @@ function make_generic_hosted_test_panel_adapter(
     stopChanges = undefined;
     current?.dispose();
     current = undefined;
+    currentReport = undefined;
   }
 
   async function present(
@@ -225,15 +278,21 @@ function make_generic_hosted_test_panel_adapter(
       throw new Error("Hosted test run was superseded before report recovery.");
     }
     current = run;
+    currentReport = run.client.recovery.map.capture().value;
+    let projectedOnce = false;
     let consumedCaseBatches = 0;
     let consumedSuiteTimings = 0;
     let infrastructureErrorShown = false;
     let terminalResolve: () => void = () => undefined;
     const terminal = new Promise<void>((resolve) => { terminalResolve = resolve; });
 
-    const project = (): void => {
+    const project = (observation?: LiveMapCommitObservation): void => {
       if (current !== run || generation !== runGeneration) return;
-      const report = run.client.recovery.map.capture().value;
+      if (observation?.kind === "snapshot") currentReport = run.client.recovery.map.capture().value;
+      else if (observation?.kind === "commit" && currentReport !== undefined) currentReport = apply_report_commit(currentReport, observation);
+      else if (observation === undefined && projectedOnce) currentReport = run.client.recovery.map.capture().value;
+      const report = currentReport ?? run.client.recovery.map.capture().value;
+      projectedOnce = true;
       if (report.run.id !== run.association.runId || report.run.suite !== target) {
         throw new Error("Recovered hosted report identity does not match the requested run.");
       }
@@ -248,8 +307,24 @@ function make_generic_hosted_test_panel_adapter(
       }
       const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
       consumedSuiteTimings = report.suites.length;
+      let changedSuites = report.suiteRuns;
+      if (observation?.kind === "commit") {
+        const indexes = new Set<number>();
+        let replacesRoot = false;
+        for (const candidate of observation.commit.ops) {
+          const op = candidate as LiveMapAnyOp & { readonly path?: readonly (string | number)[] };
+          if (op.path?.length === 0) replacesRoot = true;
+          else if (op.path?.[0] === "suiteRuns" && typeof op.path[1] === "number") indexes.add(op.path[1]);
+        }
+        changedSuites = replacesRoot
+          ? report.suiteRuns
+          : Object.freeze([...indexes].sort((left, right) => left - right).flatMap((index) => (
+              report.suiteRuns[index] === undefined ? [] : [report.suiteRuns[index]!]
+            )));
+      }
       sink.ingest(Object.freeze({
         report,
+        changedSuites,
         newCases: Object.freeze(newCases),
         newSuiteTimings: Object.freeze([...newSuiteTimings]),
         terminal: terminalState,
@@ -263,12 +338,13 @@ function make_generic_hosted_test_panel_adapter(
 
     stopChanges = run.on_change(project);
     project();
+    await run.ready();
     try {
       const [result] = await Promise.all([run.actionResult, terminal]);
       if (current !== run || generation !== runGeneration) {
         return Object.freeze({ ...result, timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }) });
       }
-      const report = run.client.recovery.map.capture().value;
+      const report = currentReport ?? run.client.recovery.map.capture().value;
       const cursor = run.client.recovery.lastAppliedRev ?? -1;
       const expectedOk = report.run.status === "passed";
       if (result.runId !== report.run.id || result.reportHostId !== run.association.reportHostId
@@ -320,7 +396,7 @@ function make_generic_hosted_test_panel_adapter(
       catch (error) { inspectionRequests.delete(caseKey); throw error; }
     },
     capture() {
-      return current?.client.recovery.map.capture().value;
+      return currentReport;
     },
     dispose() {
       generation += 1;

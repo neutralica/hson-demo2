@@ -63,12 +63,17 @@ import {
   create_livehost_store,
 } from "hson-live/livehost";
 import { HOSTED_TEST_RUN_OPTIONS } from "./hosted-test-scheduling";
+import {
+  observe_hosted_test_timeline,
+  type HostedTestTimelineObserver,
+} from "./hosted-test-timeline";
 
 export { HOSTED_TEST_COORDINATOR_HOST_ID } from "./hosted-test-application.types";
 export type { HostedTestCoordinatorState, HostedTestRunAssociation } from "./hosted-test-application.types";
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": HostedTestInspectRequest;
+  "tests.ready": Readonly<{ runId: string }>;
 }>;
 
 type HostedTestReportHost = LiveHostForMap<HostedTestReportMap, HostedTestReportActions>;
@@ -107,6 +112,9 @@ export type HostedTestApplicationOptions = Readonly<{
     onEvent?: (event: TestEvent) => void,
     options?: RunOptions,
   ) => Promise<RunResult>;
+  timeline?: HostedTestTimelineObserver;
+  /** Production control-plane barrier: execution begins after initial report projection acknowledges readiness. */
+  requireReportReady?: boolean;
   lifecycle?: Readonly<{
     maxReports: number;
     terminalRetentionMs: number;
@@ -163,6 +171,15 @@ function decode_inspect(value: unknown) {
   return { ok: true, value: { runId: record.runId as HostedTestRunId, caseKey: record.caseKey } } as const;
 }
 
+function decode_report_ready(value: unknown) {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)
+    && Object.keys(value).length === 1 && typeof (value as { runId?: unknown }).runId === "string"
+    && (value as { runId: string }).runId.length > 0) {
+    return { ok: true, value: { runId: (value as { runId: string }).runId } } as const;
+  }
+  return { ok: false, issues: ["tests.ready requires one non-empty runId string."] } as const;
+}
+
 function report_options(
   configured: HostedTestReportOptions | undefined,
   runId: HostedTestRunId,
@@ -172,6 +189,7 @@ function report_options(
 ): HostedTestReportOptions {
   return {
     runId,
+    captureCommits: false,
     map: map as unknown as HostedTestReportMap,
     mutate: (operation) => mutate((draft) => operation(draft as unknown as HostedTestReportMap)),
     ...(runPlan === undefined ? {} : { runPlan }),
@@ -210,6 +228,21 @@ export function create_hosted_test_application(
   const retention = options.retention ?? make_hosted_test_run_retention(16);
   const makeRunId = options.makeRunId ?? make_hosted_test_run_id;
   const reportHostIds = new Set<string>();
+  const projectedReportIds = new Set<string>();
+  const reportProjectionWaiters = new Map<string, Set<() => void>>();
+  const mark_report_projected = (runId: string): void => {
+    projectedReportIds.add(runId);
+    for (const resolve of reportProjectionWaiters.get(runId) ?? []) resolve();
+    reportProjectionWaiters.delete(runId);
+  };
+  const wait_for_report_projection = (runId: string): Promise<void> => {
+    if (projectedReportIds.has(runId)) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const waiters = reportProjectionWaiters.get(runId) ?? new Set();
+      waiters.add(resolve);
+      reportProjectionWaiters.set(runId, waiters);
+    });
+  };
 
   type ExecutionPlan = Readonly<{
     target: HostedTestRunTarget;
@@ -234,19 +267,38 @@ export function create_hosted_test_application(
         });
         return JSON.parse(JSON.stringify(diagnostic)) as JsonValue;
       },
+      "tests.ready": async (_reportContext, request) => {
+        if (request.runId !== runId) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${request.runId}" is not owned by this report host.`);
+        mark_report_projected(runId);
+        return { ready: true };
+      },
     };
     const reportSchema: LiveHostSchema<HostedTestReportState, HostedTestReportActions> = {
-      actions: { "tests.inspect": { payload: decode_inspect } },
+      actions: {
+        "tests.inspect": { payload: decode_inspect },
+        "tests.ready": { payload: decode_report_ready },
+      },
     };
-    const map = hson.liveMap.fromJson(
-      make_initial_hosted_test_report(plan.target, runId, reportPlan) as HostedTestReportState,
-    ).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
-    return create_livehost({
+    const initial = make_initial_hosted_test_report(plan.target, runId, reportPlan) as HostedTestReportState;
+    observe_hosted_test_timeline(options.timeline, "report_seeded_queued", {
+      runId,
+      suites: initial.suiteRuns.length,
+      cases: initial.suiteRuns.reduce((total, suiteRun) => total + suiteRun.cases.length, 0),
+    });
+    const map = hson.liveMap.fromJson(initial).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
+    const host = create_livehost({
       map,
       actions: reportActions,
       schema: reportSchema,
       logicalMapId: reportHostId,
     });
+    observe_hosted_test_timeline(options.timeline, "report_host_allocated", { runId, reportHostId });
+    observe_hosted_test_timeline(options.timeline, "initial_report_mutation_committed", {
+      runId,
+      revision: host.stream.headRev,
+      initialAuthorityState: true,
+    });
+    return host;
   }
 
   const reportRegistry: LiveHostAuthorityRegistry<ReportHost> | undefined = options.lifecycle === undefined
@@ -275,7 +327,7 @@ export function create_hosted_test_application(
     plan: ExecutionPlan,
     clientId: HostedTestRunAssociation["clientId"],
     requestId: HostedTestRunAssociation["requestId"],
-    retainAssociation: (association: HostedTestRunAssociation) => void,
+    retainAssociation: (association: HostedTestRunAssociation) => Promise<void>,
     replaceAssociation: (association: HostedTestRunAssociation) => void,
   ): Promise<HostedTestRunResult | HostedTestSelectedRunResult> {
     const runId = makeRunId() as HostedTestRunId;
@@ -291,6 +343,11 @@ export function create_hosted_test_application(
           catalog: options.discovery.catalog,
           selectedIds: plan.testIds,
         });
+    observe_hosted_test_timeline(options.timeline, "run_plan_created", {
+      runId,
+      selectedIds: reportPlan?.selectionIds.length ?? 0,
+      suites: reportPlan?.suites.length ?? 0,
+    });
     let reportAcquisition: LiveHostAuthorityAcquisition<ReportHost> | undefined;
     let reportHost: ReportHost;
     if (reportRegistry === undefined) {
@@ -332,19 +389,47 @@ export function create_hosted_test_application(
         status: "running",
         reportRev: reportHost.stream.headRev,
       };
-      retainAssociation(association);
+      await retainAssociation(association);
+      observe_hosted_test_timeline(options.timeline, "coordinator_association_committed", { runId, reportHostId });
+      if (options.requireReportReady === true) {
+        await wait_for_report_projection(runId);
+        observe_hosted_test_timeline(options.timeline, "report_client_ready", { runId, reportHostId });
+      }
 
       const hostStartedAt = performance.now();
       let result: RunResult;
       try {
-        result = await plan.run(report.reduce, HOSTED_TEST_RUN_OPTIONS);
+        let firstStartObserved = false;
+        result = await plan.run((event) => {
+          if (!firstStartObserved && (event.t === "suite_begin" || event.t === "case_begin"
+            || (event.t === "external_state" && event.status === "running"))) {
+            firstStartObserved = true;
+            observe_hosted_test_timeline(options.timeline, "first_suite_or_case_started", {
+              runId,
+              event: event.t,
+              suite: event.suite,
+            });
+          }
+          report.reduce(event);
+        }, HOSTED_TEST_RUN_OPTIONS);
+        observe_hosted_test_timeline(options.timeline, "run_finished", {
+          runId,
+          runnerMs: result.summary.msTotal,
+          cases: result.summary.cases,
+          failures: result.summary.fail,
+        });
         report.complete(result, {
           runnerMs: finite(result.summary.msTotal, "timing.runnerMs"),
           hostMs: finite(performance.now() - hostStartedAt, "timing.hostMs"),
         });
         await report.settle();
+        observe_hosted_test_timeline(options.timeline, "report_terminal_committed", {
+          runId,
+          revision: reportHost.stream.headRev,
+        });
       } catch (error) {
         report.failInfrastructure(error);
+        await report.settle();
         replaceAssociation({ ...association, status: "error", reportRev: reportHost.stream.headRev });
         report.dispose();
         throw error;
@@ -358,14 +443,32 @@ export function create_hosted_test_application(
       if (timing === null) throw new Error("Hosted test report completed without timing.");
       const summary = normalize_summary(result.summary);
       if (plan.testIds !== undefined) {
+        const authoritativeFailures = Object.values(state.caseBatches).flat()
+          .filter((testCase) => testCase.status === "fail")
+          .map((testCase) => Object.freeze({
+            suite: testCase.suite,
+            caseId: testCase.caseId,
+            name: testCase.name,
+            err: testCase.err ?? "",
+            ms: testCase.ms,
+          }));
+        const authoritativeSummary = normalize_summary({
+          suites: state.suiteRuns.length,
+          cases: state.summary.cases,
+          pass: state.summary.pass,
+          fail: state.summary.fail,
+          skip: state.summary.skip,
+          msTotal: summary.msTotal,
+          failures: authoritativeFailures,
+        });
         return {
           runId,
           reportHostId,
           reportRev: reportHost.stream.headRev,
           suite: HOSTED_TEST_SELECTED_RUN_TARGET,
           testIds: plan.testIds,
-          ok: result.ok,
-          summary,
+          ok: state.run.status === "passed",
+          summary: authoritativeSummary,
           timing,
         };
       }
@@ -398,11 +501,12 @@ export function create_hosted_test_application(
       catch { throw new HostedTestUnknownSuiteError(request.suite, true); }
       const clientId = message.clientId;
       const requestId = message.requestId;
-      const retainAssociation = (association: HostedTestRunAssociation): void => {
+      observe_hosted_test_timeline(options.timeline, "coordinator_request_accepted", { requestId, action: "tests.run" });
+      const retainAssociation = async (association: HostedTestRunAssociation): Promise<void> => {
         if (context.map.capture().value.requests[clientId] === undefined) {
-          void context.mutate((draft) => draft.setMany(["requests"], { [clientId]: { [requestId]: association } }));
+          await context.mutate((draft) => draft.setMany(["requests"], { [clientId]: { [requestId]: association } }));
         } else {
-          void context.mutate((draft) => draft.setMany(["requests", clientId], { [requestId]: association }));
+          await context.mutate((draft) => draft.setMany(["requests", clientId], { [requestId]: association }));
         }
       };
       const replaceAssociation = (association: HostedTestRunAssociation): void => {
@@ -425,11 +529,12 @@ export function create_hosted_test_application(
       const executorRegistry = options.executorRegistry;
       const clientId = message.clientId;
       const requestId = message.requestId;
-      const retainAssociation = (association: HostedTestRunAssociation): void => {
+      observe_hosted_test_timeline(options.timeline, "coordinator_request_accepted", { requestId, action: "tests.runSelected" });
+      const retainAssociation = async (association: HostedTestRunAssociation): Promise<void> => {
         if (context.map.capture().value.requests[clientId] === undefined) {
-          void context.mutate((draft) => draft.setMany(["requests"], { [clientId]: { [requestId]: association } }));
+          await context.mutate((draft) => draft.setMany(["requests"], { [clientId]: { [requestId]: association } }));
         } else {
-          void context.mutate((draft) => draft.setMany(["requests", clientId], { [requestId]: association }));
+          await context.mutate((draft) => draft.setMany(["requests", clientId], { [requestId]: association }));
         }
       };
       const replaceAssociation = (association: HostedTestRunAssociation): void => {
@@ -507,6 +612,9 @@ export function create_hosted_test_application(
     ),
     sweepReports: () => reportRegistry?.sweep() ?? Promise.resolve(0),
     async dispose() {
+      for (const waiters of reportProjectionWaiters.values()) for (const resolve of waiters) resolve();
+      reportProjectionWaiters.clear();
+      projectedReportIds.clear();
       coordinator.dispose();
       if (reportRegistry !== undefined) {
         await reportRegistry.dispose();

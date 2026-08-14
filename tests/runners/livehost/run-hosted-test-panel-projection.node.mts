@@ -505,35 +505,32 @@ try {
   const chipDisplay = create_test_chips(chipHost);
   const chipNodes = Array.from(runtime.document.querySelectorAll("#test-chips .test-chip"));
   chipDisplay.renderEntries([
-    { label: "cases", value: 9 },
-    { label: "passed", value: 8 },
-    { label: "failed", value: 1 },
-    { label: "elapsed", value: "9 ms" },
+    { key: "cases", label: "cases", value: 9 },
+    { key: "case-pass", label: "passed", value: 8 },
+    { key: "case-fail", label: "failed", value: 1 },
+    { key: "elapsed", label: "elapsed", value: "9 ms" },
   ]);
   const metricsAfterFirstChipUpdate = chipDisplay.metrics();
-  chipDisplay.renderEntries([
-    { label: "cases", value: 2605 },
-    { label: "passed", value: 2605 },
-    { label: "failed", value: 0 },
-    { label: "elapsed", value: "15.0 s" },
-  ]);
+  chipDisplay.renderEntries(mixedFooter);
   const metricsAfterSecondChipUpdate = chipDisplay.metrics();
-  chipDisplay.renderEntries([
-    { label: "cases", value: 2605 },
-    { label: "passed", value: 2605 },
-    { label: "failed", value: 0 },
-    { label: "elapsed", value: "15.0 s" },
-  ]);
+  chipDisplay.renderEntries(canonicalFooter);
+  chipDisplay.renderEntries(mixedFooter);
+  chipDisplay.renderEntries(mixedFooter);
   expect_projection(
     Array.from(runtime.document.querySelectorAll("#test-chips .test-chip"))
       .every((node, index) => node === chipNodes[index])
+      && chipNodes.length === 9
       && chipDisplay.metrics().layoutBuilds === 1,
-    "summary DOM identity remains stable across progressive and terminal updates",
+    "summary DOM identity remains stable across legacy, mixed, and canonical report updates",
   );
   expect_projection(
-    chipDisplay.metrics().valueUpdates === metricsAfterSecondChipUpdate.valueUpdates
+    chipDisplay.metrics().valueUpdates > metricsAfterSecondChipUpdate.valueUpdates
       && metricsAfterSecondChipUpdate.valueUpdates > metricsAfterFirstChipUpdate.valueUpdates,
-    "summary values update only when their displayed value changes",
+    "summary values update without throwing as the settled count universe changes",
+  );
+  expect_projection(
+    chipNodes.every((node) => runtime.window.getComputedStyle(node as Element).display !== "none"),
+    "all nine keyed mixed-summary entries are visible after repeated report updates",
   );
   expect_projection(
     TEST_CHIP_ROWcss.gridTemplateColumns === "repeat(4, minmax(9ch, 1fr))"

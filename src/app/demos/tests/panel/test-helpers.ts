@@ -1,4 +1,4 @@
-import  { LiveTree } from "hson-live/livetree";
+import type { LiveTree } from "hson-live";
 import { _colors } from "../../../core/consts/colors.consts";
 import { mk_div_id, mk_div_cls } from "../../../utils/makers";
 import type { TestSummary } from "../../../../../tests/harness/core/test-contracts";
@@ -8,8 +8,27 @@ import { format_hosted_test_duration } from "../../../../../tests/harness/report
 export type ChipDisplay = Readonly<{
   clear: () => void;
   render: (s: TestSummary) => void;
-  renderEntries: (entries: readonly Readonly<{ label: string; value: string | number }>[]) => void;
+  renderEntries: (entries: readonly TestSummaryEntry[]) => void;
   metrics: () => Readonly<{ layoutBuilds: 1; labelUpdates: number; valueUpdates: number }>;
+}>;
+
+export const TEST_SUMMARY_ENTRY_ORDER = Object.freeze([
+  "suites",
+  "suite-fail",
+  "cases",
+  "case-pass",
+  "case-fail",
+  "checks",
+  "check-pass",
+  "check-fail",
+  "elapsed",
+] as const);
+
+export type TestSummaryEntryKey = typeof TEST_SUMMARY_ENTRY_ORDER[number];
+export type TestSummaryEntry = Readonly<{
+  key: TestSummaryEntryKey;
+  label: string;
+  value: string | number;
 }>;
 
 
@@ -26,6 +45,9 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     let currentLabel = label;
     let currentValue = "—";
     return {
+      show(visible: boolean) {
+        chip.css.set.display(visible ? "grid" : "none");
+      },
       update(nextLabel: string, nextValue: string | number) {
         const value = String(nextValue);
         if (nextLabel !== currentLabel) {
@@ -41,28 +63,48 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       },
     };
   };
-  const initial = [
-    { label: "cases", value: "—" },
-    { label: "passed", value: "—" },
-    { label: "failed", value: "—" },
-    { label: "elapsed", value: "—" },
+  const definitions: Readonly<Record<TestSummaryEntryKey, string>> = Object.freeze({
+    suites: "suites",
+    "suite-fail": "suite fail",
+    cases: "cases",
+    "case-pass": "case pass",
+    "case-fail": "case fail",
+    checks: "checks",
+    "check-pass": "check pass",
+    "check-fail": "check fail",
+    elapsed: "elapsed",
+  });
+  const slots = new Map(TEST_SUMMARY_ENTRY_ORDER.map((key) => [key, makeChip(definitions[key])] as const));
+  const initial: readonly TestSummaryEntry[] = [
+    { key: "cases", label: "cases", value: "—" },
+    { key: "case-pass", label: "passed", value: "—" },
+    { key: "case-fail", label: "failed", value: "—" },
+    { key: "elapsed", label: "elapsed", value: "—" },
   ] as const;
-  const slots = initial.map((entry) => makeChip(entry.label));
-  const renderEntries = (entries: readonly Readonly<{ label: string; value: string | number }>[]): void => {
-    if (entries.length !== slots.length) {
-      throw new Error(`Hosted summary requires exactly ${slots.length} stable entries, received ${entries.length}.`);
+  const renderEntries = (entries: readonly TestSummaryEntry[]): void => {
+    const keys = entries.map((entry) => entry.key);
+    if (new Set(keys).size !== keys.length) {
+      throw new Error("Hosted summary entry keys must be unique.");
     }
-    entries.forEach((entry, index) => slots[index]?.update(entry.label, entry.value));
+    const indices = keys.map((key) => TEST_SUMMARY_ENTRY_ORDER.indexOf(key));
+    if (indices.some((index) => index < 0) || indices.some((index, position) => position > 0 && index <= (indices[position - 1] ?? -1))) {
+      throw new Error("Hosted summary entry keys must follow the stable semantic order.");
+    }
+    const visible = new Set(keys);
+    for (const [key, slot] of slots) slot.show(visible.has(key));
+    for (const entry of entries) slots.get(entry.key)?.update(entry.label, entry.value);
   };
+
+  renderEntries(initial);
 
   return {
     clear: () => renderEntries(initial),
     render: (s) => {
       renderEntries([
-        { label: "cases", value: s.cases },
-        { label: "passed", value: s.pass },
-        { label: "failed", value: s.fail },
-        { label: "elapsed", value: format_hosted_test_duration(s.msTotal) },
+        { key: "cases", label: "cases", value: s.cases },
+        { key: "case-pass", label: "passed", value: s.pass },
+        { key: "case-fail", label: "failed", value: s.fail },
+        { key: "elapsed", label: "elapsed", value: format_hosted_test_duration(s.msTotal) },
       ]);
     },
     renderEntries,

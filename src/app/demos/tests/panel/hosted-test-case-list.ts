@@ -98,6 +98,7 @@ type SuiteProjection = {
   caseRowsHost: LiveTree | undefined;
   presentation: HostedTestSuitePresentation | undefined;
   detailsSignature: string;
+  lastSequence: number;
   external?: HostedTestReport["externalResults"][string];
 };
 
@@ -309,6 +310,7 @@ export function make_hosted_test_case_list(
       caseRowsHost: undefined,
       presentation: undefined,
       detailsSignature: "",
+      lastSequence: -1,
     };
     suites.set(suite, created);
     dirtySuites.add(suite);
@@ -537,9 +539,12 @@ export function make_hosted_test_case_list(
   return Object.freeze({
     ingest(update: HostedTestPanelReportUpdate) {
       if (disposed) return;
-      for (const suiteRun of [...update.report.suiteRuns].sort((left, right) => left.order - right.order)) {
+      for (const suiteRun of [...(update.changedSuites ?? update.report.suiteRuns)].sort((left, right) => left.order - right.order)) {
+        const existing = suites.get(suiteRun.id);
+        if (existing !== undefined && existing.lastSequence === suiteRun.lastSequence) continue;
         const presentation = hosted_test_suite_presentation(suiteRun);
         const state = ensure_suite(suiteRun.id, suiteRun.title, presentation.group);
+        state.lastSequence = suiteRun.lastSequence;
         state.presentation = presentation;
         state.status = suiteRun.status;
         state.executionShape = suiteRun.executionShape;
@@ -577,7 +582,7 @@ export function make_hosted_test_case_list(
       }
       // Phase 1 bridge for legacy, unplanned report routes. Exact selected runs
       // project seeded suiteRuns above; Phase 2 removes these completion views.
-      for (const external of Object.values(update.report.externalResults)) {
+      for (const external of update.report.suiteRuns.length === 0 ? Object.values(update.report.externalResults) : []) {
         const state = ensure_suite(external.suite);
         state.external = external;
         state.executionShape = "opaque-aggregate";

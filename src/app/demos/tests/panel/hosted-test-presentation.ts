@@ -297,7 +297,7 @@ function terminal_line(suite: HostedTestSuiteRunReport): string {
 
 export type HostedTestChronology = Readonly<{
   begin(recovered?: boolean): void;
-  ingest(report: HostedTestReport): readonly string[];
+  ingest(report: HostedTestReport, changedSuites?: readonly HostedTestSuiteRunReport[]): readonly string[];
   clearPresentation(): void;
 }>;
 
@@ -314,14 +314,14 @@ export function make_hosted_test_chronology(): HostedTestChronology {
       statuses.clear();
       evidenceSequences.clear();
     },
-    ingest(report) {
+    ingest(report, changedSuites = report.suiteRuns) {
       const lines: string[] = [];
       const chronological: Array<Readonly<{ sequence: number; ordinal: number; line: string }>> = [];
       let ordinal = 0;
       const append = (sequence: number, line: string): void => {
         chronological.push(Object.freeze({ sequence, ordinal: ordinal++, line }));
       };
-      const suites = [...report.suiteRuns].sort((left, right) => left.order - right.order);
+      const suites = [...changedSuites].sort((left, right) => left.order - right.order);
       if (first && recovered) {
         lines.push(`recovered ${report.run.id ?? report.run.suite} — authoritative ${report.run.status} snapshot`);
       }

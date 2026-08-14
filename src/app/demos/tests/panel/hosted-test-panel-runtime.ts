@@ -1,5 +1,5 @@
 import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
-import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise } from "hson-live/types";
+import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise, LiveMapCommitObservation } from "hson-live/types";
 import type {
   HostedTestActions,
   HostedTestAnyRunResult,
@@ -31,9 +31,14 @@ import {
   type BrowserWebSocketConstructor,
   type BrowserLiveHostSocket as HostedTestBrowserSocket,
 } from "hson-live/livehost";
+import {
+  observe_hosted_test_timeline,
+  type HostedTestTimelineObserver,
+} from "../../../../../tests/harness/hosted/hosted-test-timeline";
 
 type HostedTestReportActions = Readonly<{
   "tests.inspect": Readonly<{ runId: string; caseKey: string }>;
+  "tests.ready": Readonly<{ runId: string }>;
 }>;
 
 type HostedTestAssociationWaiter = Readonly<{
@@ -58,7 +63,8 @@ export type HostedTestRemoteRun = Readonly<{
   association: HostedTestRunAssociation;
   readonly client: LiveHostClient<HostedTestReportState, HostedTestReportActions>;
   actionResult: Promise<HostedTestAnyRunResult>;
-  on_change(listener: () => void): () => void;
+  on_change(listener: (observation?: LiveMapCommitObservation) => void): () => void;
+  ready(): Promise<void>;
   inspect(request: HostedTestInspectRequest): Promise<HostedTestCaseDiagnostic>;
   dispose(): void;
 }>;
@@ -87,6 +93,7 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   makeClientId?: () => string;
   /** Fresh-action identity factory. Primarily injectable for deterministic tests. */
   makeActionId?: () => LiveHostActionId;
+  timeline?: HostedTestTimelineObserver;
 }>;
 
 export type HostedTestBuildEnvironment = Readonly<{
@@ -397,7 +404,8 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     let stopReportClose: (() => void) | undefined;
     let stopReportChanges: (() => void) | undefined;
     let reportReconnecting: Promise<void> | undefined;
-    const reportListeners = new Set<() => void>();
+    const reportListeners = new Set<(observation?: LiveMapCommitObservation) => void>();
+    let readyAction: Promise<void> | undefined;
     let runDisposed = false;
     let reportTerminalSettled = false;
     let resolveReportTerminal: () => void = () => undefined;
@@ -416,15 +424,15 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
 
     function settle_report_if_terminal(): void {
       if (reportTerminalSettled || reportClient === undefined) return;
-      const status = reportClient.recovery.map.capture().value.run.status;
+      const status = reportClient.recovery.map.snap(["run", "status"]);
       if (status !== "passed" && status !== "failed" && status !== "error") return;
       reportTerminalSettled = true;
       resolveReportTerminal();
     }
 
-    function notify_report(): void {
+    function notify_report(observation?: LiveMapCommitObservation): void {
       settle_report_if_terminal();
-      for (const listener of [...reportListeners]) listener();
+      for (const listener of [...reportListeners]) listener(observation);
     }
 
     async function open_report(previous?: LiveHostClient<HostedTestReportState, HostedTestReportActions>): Promise<void> {
@@ -434,6 +442,20 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       const cursor = previous?.recovery.incarnationId !== undefined && previous.recovery.lastAppliedRev !== undefined
         ? { incarnationId: previous.recovery.incarnationId, lastAppliedRev: previous.recovery.lastAppliedRev }
         : undefined;
+      let firstReportFrameObserved = false;
+      const stopTimeline = nextTransport.socket.onMessage((message) => {
+        if (firstReportFrameObserved) return;
+        try {
+          const decoded = JSON.parse(message) as { type?: unknown };
+          if (decoded.type !== "recovery-snapshot") return;
+        } catch { return; }
+        firstReportFrameObserved = true;
+        observe_hosted_test_timeline(options.timeline, "browser_received_first_report_frame", {
+          runId: association.runId,
+          reportHostId: association.reportHostId,
+        });
+        stopTimeline?.();
+      });
       const next = create_livehost_client<HostedTestReportState, HostedTestReportActions>({
         socket: nextTransport.socket,
         clientId: previous?.clientId ?? reportClientId,
@@ -455,7 +477,8 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       const oldTransport = reportTransport;
       reportTransport = nextTransport;
       reportClient = next;
-      stopReportChanges = next.recovery.on_change(notify_report);
+      stopReportChanges = next.recovery.on_change(settle_report_if_terminal);
+      const stopReportCommits = next.recovery.map.commits.observe(notify_report);
       stopReportClose = nextTransport.socket.onClose(() => {
         if (disposed || runDisposed || reportTransport !== nextTransport) return;
         void ensure_report_reconnected().catch(() => undefined);
@@ -464,7 +487,17 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       previous?.session.dispose();
       oldTransport?.dispose();
       status = "ready";
-      notify_report();
+      notify_report(Object.freeze({
+        kind: "snapshot",
+        origin: "snapshot",
+        revision: next.recovery.lastAppliedRev ?? next.recovery.map.rev,
+      }));
+
+      const priorDispose = stopReportChanges;
+      stopReportChanges = () => {
+        priorDispose?.();
+        stopReportCommits();
+      };
     }
 
     async function ensure_report_reconnected(): Promise<void> {
@@ -524,6 +557,18 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         reportListeners.add(listener);
         return () => reportListeners.delete(listener);
       },
+      ready() {
+        readyAction ??= (async () => {
+          const pending = reportClient.action("tests.ready", { runId: association.runId });
+          try { await pending; }
+          catch (error) {
+            if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+            await ensure_report_reconnected();
+            await reportClient.retry_action(pending.request);
+          }
+        })();
+        return readyAction;
+      },
       async inspect(request) {
         const pending = reportClient.action("tests.inspect", request);
         let response: unknown;
@@ -559,6 +604,10 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     status = "running";
     const action = coordinatorClient.action("tests.run", { suite });
+    observe_hosted_test_timeline(options.timeline, "coordinator_request_sent", {
+      requestId: action.request.requestId,
+      action: "tests.run",
+    });
     const actionResult = retry_safe_result(action, suite).then(undefined, (cause: unknown) => {
       status = "run-rejected";
       throw cause;
@@ -585,6 +634,11 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (unknown !== undefined) throw new Error(`Hosted-test selection contains an undiscovered test ID "${unknown}".`);
     status = "running";
     const action = coordinatorClient.action("tests.runSelected", { testIds: [...ids] });
+    observe_hosted_test_timeline(options.timeline, "coordinator_request_sent", {
+      requestId: action.request.requestId,
+      action: "tests.runSelected",
+      selectedIds: ids.length,
+    });
     const actionResult = retry_safe_selected_result(action).then(undefined, (cause: unknown) => {
       status = "run-rejected";
       throw cause;

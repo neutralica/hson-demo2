@@ -15,6 +15,7 @@ import {
 import { create_node_towl_application } from "./node-towl-application";
 import { create_node_circuit_verification_application } from "./node-circuit-verification-application";
 import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
+import type { HostedTestTimelineObserver } from "../../../hosted/hosted-test-timeline";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
@@ -27,6 +28,7 @@ export type HostedTestServerOptions = Readonly<{
   log?: (event: NodeHostOperationalEvent) => void;
   deployment?: NodeHostDeployment;
   security?: NodeApplicationSecurity;
+  timeline?: HostedTestTimelineObserver;
   authorityLifecycle?: Readonly<{
     maxTowlRooms: number;
     towlIdleMs: number;
@@ -48,7 +50,7 @@ export type HostedTestServer = Readonly<{
     circuitVerification: number;
   }>;
   disconnectConnections(hostId?: string): void;
-  metrics(): Readonly<{ sentMessages: number; sentBytes: number }>;
+  metrics(): ReturnType<Awaited<ReturnType<typeof create_node_hosted_tests_application>>["metrics"]>;
   stop(): Promise<void>;
 }>;
 
@@ -68,6 +70,7 @@ export async function start_hosted_test_server(
     ...(options.executorRegistry === undefined ? {} : { executorRegistry: options.executorRegistry }),
     ...(options.runSelected === undefined ? {} : { runSelected: options.runSelected }),
     ...(options.security === undefined ? {} : { security: options.security }),
+    ...(options.timeline === undefined ? {} : { timeline: options.timeline }),
     lifecycle: {
       maxReports: authorityLifecycle.maxHostedReports,
       terminalRetentionMs: authorityLifecycle.hostedReportRetentionMs,
@@ -135,6 +138,13 @@ export async function start_hosted_test_server(
       return Object.freeze({
         sentMessages: hosted.sentMessages + circuit.sentMessages,
         sentBytes: hosted.sentBytes + circuit.sentBytes,
+        largestSentBytes: hosted.largestSentBytes,
+        reportSnapshots: hosted.reportSnapshots,
+        reportSnapshotBytes: hosted.reportSnapshotBytes,
+        reportCommits: hosted.reportCommits,
+        reportCommitBytes: hosted.reportCommitBytes,
+        reportRecoveryCommits: hosted.reportRecoveryCommits,
+        reportRecoveryCommitBytes: hosted.reportRecoveryCommitBytes,
       });
     },
     stop: host.stop,

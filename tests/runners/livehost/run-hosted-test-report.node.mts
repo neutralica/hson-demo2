@@ -105,12 +105,13 @@ report.map.feed([], (event) => feedEvents.push(event));
 report.reduce({ t: "suite_begin", suite: "livemap/replay", totalPlanned: 2 });
 expect_report(report.map.rev === 1, "start consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "running", "start sets running");
-expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 4, "start commit includes lifecycle chronology and run state");
+expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 1, "start commit includes atomic lifecycle chronology and run state");
 expect_report(report.commits().length === 1, "capture begins before start mutation");
 const startCommit = must_commit(report.commits()[0], "start commit must exist");
 expect_report(startCommit.prevRev === 0 && startCommit.rev === 1, "start capture begins at initial revision");
-expect_report(find_op(startCommit, ["run", "status"])?.next === "running", "start commit records running status");
-expect_report(find_op(startCommit, ["run", "startedAt"])?.next === 200, "start commit records start time after queued seeding");
+const startedRun = find_op(startCommit, ["run"])?.next as { status?: unknown; startedAt?: unknown; lastSequence?: unknown } | undefined;
+expect_report(startedRun?.status === "running" && startedRun.lastSequence === 1, "start commit records running status and chronology atomically");
+expect_report(startedRun?.startedAt === 200, "start commit records start time after queued seeding");
 
 report.reduce({ t: "case_begin", suite: "livemap/replay", caseId: "round-trips-a-commit", name: "round trips a commit" });
 expect_report(Number(report.map.rev) === 2, "case_begin records normalized chronology even for a legacy unplanned route");
@@ -133,11 +134,12 @@ report.complete(passingResult);
 expect_report(Number(report.map.rev) === 4, "terminal update consumes one revision");
 expect_report(report.map.snap(["run", "status"]) === "passed", "passing result is terminal passed");
 expect_report(report.map.snap(["run", "completedAt"]) === 300, "terminal time is finite");
-expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 5, "terminal commit contains chronology, completion, status, and timing");
+expect_report((feedEvents.at(-1)?.commit.ops.length ?? 0) >= 1, "terminal commit contains atomic chronology, completion status, and timing");
 expect_report(report.commits().length === 4, "normal terminal commit is captured");
 const terminalCommit = must_commit(report.commits()[3], "terminal commit must exist");
-expect_report(find_op(terminalCommit, ["run", "status"])?.next === "passed", "terminal commit records passed status");
-expect_report(find_op(terminalCommit, ["run", "completedAt"])?.next === 300, "terminal commit records completion time");
+const completedRun = find_op(terminalCommit, ["run"])?.next as { status?: unknown; completedAt?: unknown; timing?: unknown } | undefined;
+expect_report(completedRun?.status === "passed", "terminal commit records passed status");
+expect_report(completedRun?.completedAt === 300 && completedRun.timing !== null, "terminal commit records completion time and timing");
 expect_contiguous(report.commits(), initial.rev);
 equal(replay_commits(initial.value, report.commits()), report.map.capture().value, "captured commits reconstruct final report");
 
@@ -208,7 +210,10 @@ const infrastructureError = errored.map.snap(["error"]) as HostedTestReport["err
 expect_report(infrastructureError?.kind === "infrastructure" && infrastructureError.executorId === "legacy" && infrastructureError.message === "runner exploded", "infrastructure error retains classification and executor context");
 expect_report(typeof infrastructureError.stack === "string" && infrastructureError.stack.includes("runner exploded"), "infrastructure error retains an available stack");
 expect_report(errored.commits().length === 3, "infrastructure evidence and terminal lifecycle follow the earlier start commit");
-expect_report(find_op(must_commit(errored.commits()[2], "error commit must exist"), ["run", "status"])?.next === "error", "infrastructure terminal commit records error status");
+expect_report(
+  (find_op(must_commit(errored.commits()[2], "error commit must exist"), ["run"])?.next as { status?: unknown } | undefined)?.status === "error",
+  "infrastructure terminal commit records error status",
+);
 
 function reduce_sequence(): HostedTestReport {
   const target = make_hosted_test_report(() => 1);

@@ -80,7 +80,10 @@ const hostedSuite: TestSuite = Object.freeze({
     suite: "progress/websocket",
     caseId: `case-${index.toString().padStart(3, "0")}`,
     name: `case ${index}`,
-    run: () => busy_for(0.75),
+    run: () => {
+      busy_for(0.75);
+      if (index === 64) throw new Error("intentional progressive failure");
+    },
   }))),
 });
 const executor: TestExecutorDescriptor = Object.freeze({
@@ -94,6 +97,16 @@ const executor: TestExecutorDescriptor = Object.freeze({
 });
 const executorRegistry = make_test_executor_registry(executor, [hostedSuite]);
 const selectedIds = executorRegistry.catalog.tests.map((test) => test.id);
+const directStartedAt = performance.now();
+const directResult = await run_node_selected_test_ids(
+  executorRegistry,
+  selectedIds,
+  () => undefined,
+  { yieldEveryCases: 0, yieldAfterMs: HOSTED_TEST_EVENT_LOOP_BUDGET_MS, yieldBetweenSuites: false },
+);
+const directMs = performance.now() - directStartedAt;
+assert.equal(directResult.summary.cases, 320);
+assert.equal(directResult.summary.fail, 1);
 
 const heartbeatEvents: string[] = [];
 const server = await start_hosted_test_server({
@@ -140,6 +153,7 @@ try {
     cases: number;
     suiteStatus: string | undefined;
     passed: number;
+    failed: number;
     sequence: number;
   }>> = [];
   const deliveryLatencies: number[] = [];
@@ -161,6 +175,7 @@ try {
         cases: update.newCases.length,
         suiteStatus: suiteRun?.status,
         passed: suiteRun?.counts.passed ?? 0,
+        failed: suiteRun?.counts.failed ?? 0,
         sequence: update.report.run.lastSequence,
       }));
       for (const testCase of update.newCases) {
@@ -181,10 +196,11 @@ try {
   }
   const roundTripMs = performance.now() - startedAt;
   assert.equal(result.summary.cases, 320);
-  assert.equal(result.summary.fail, 0);
+  assert.equal(result.summary.fail, 1);
   assert.ok(queuedPresentedAt <= Math.min(...producedAt.values()), "queued presentation precedes case execution");
   assert.ok(updates.some((update) => !update.terminal && update.suiteStatus === "running"), "running suite state is visible before terminal completion");
   assert.ok(updates.some((update) => !update.terminal && update.passed > 0), "normalized pass progress is visible during execution");
+  assert.ok(updates.some((update) => !update.terminal && update.failed > 0), "normalized failure progress is visible before terminal completion");
   assert.ok(updates.some((update) => !update.terminal && update.cases > 0), "report cases arrive before terminal completion");
   assert.ok(new Set(updates.filter((update) => !update.terminal).map((update) => update.sequence)).size > 2, "normalized chronology advances across intermediate revisions");
   assert.ok(deliveryLatencies.length === 320, "every produced case reaches browser-side report application");
@@ -200,7 +216,9 @@ try {
     scheduler: await scheduler_probe(),
     synchronousCaseMs: await single_case_probe(),
     websocket: {
+      directMs,
       roundTripMs,
+      hostedToDirectRatio: roundTripMs / directMs,
       progressiveUpdates: updates.filter((update) => !update.terminal && update.cases > 0).length,
       progressiveSequences: new Set(updates.filter((update) => !update.terminal).map((update) => update.sequence)).size,
       firstProgressMs: (updates.find((update) => !update.terminal && update.cases > 0)?.at ?? startedAt) - startedAt,

@@ -1,6 +1,7 @@
 import type { HostedTestReport } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import { hosted_test_report_cases } from "../../../../../tests/harness/reporting/hosted/hosted-test-report.types";
 import { format_hosted_test_duration } from "../../../../../tests/harness/reporting/hosted/hosted-test-timing";
+import type { TestSummaryEntry } from "./test-helpers";
 
 export type HostedTestProjectionSummary = Readonly<{
   suites: Readonly<{
@@ -25,11 +26,11 @@ export type HostedTestProjectionSummary = Readonly<{
 }>;
 
 export function hosted_test_projection_summary(report: HostedTestReport): HostedTestProjectionSummary {
-  const normalizedCases = report.suiteRuns.flatMap((suite) => suite.cases);
-  const legacyCases = hosted_test_report_cases(report);
-  const cases = normalizedCases.length > 0 ? normalizedCases : legacyCases;
+  const normalized = report.suiteRuns.length > 0;
+  const legacyCases = normalized ? [] : hosted_test_report_cases(report);
   const normalizedLaunchers = report.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate");
-  const legacyLaunchers = Object.values(report.externalResults);
+  const normalizedCaseSuites = report.suiteRuns.filter((suite) => suite.executionShape === "cases");
+  const legacyLaunchers = normalized ? [] : Object.values(report.externalResults);
   const normalizedSuites = report.suiteRuns;
   const legacySuiteIds = new Set([...legacyCases.map((entry) => entry.suite), ...legacyLaunchers.map((entry) => entry.suite)]);
   return Object.freeze({
@@ -49,10 +50,12 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
         ]).size,
     }),
     canonical: Object.freeze({
-      total: cases.length,
-      pass: cases.filter((entry) => entry.status === "pass").length,
-      fail: cases.filter((entry) => entry.status === "fail").length,
-      skip: cases.filter((entry) => entry.status === "skip").length,
+      total: normalized
+        ? normalizedCaseSuites.reduce((total, suite) => total + suite.counts.total, 0)
+        : legacyCases.length,
+      pass: normalized ? report.summary.pass : legacyCases.filter((entry) => entry.status === "pass").length,
+      fail: normalized ? report.summary.fail : legacyCases.filter((entry) => entry.status === "fail").length,
+      skip: normalized ? report.summary.skip : legacyCases.filter((entry) => entry.status === "skip").length,
     }),
     launchers: Object.freeze({
       total: normalizedLaunchers.length || legacyLaunchers.length,
@@ -78,27 +81,27 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
 export function hosted_test_projection_footer(
   summary: HostedTestProjectionSummary,
   elapsedMs: number,
-): readonly Readonly<{ label: string; value: string | number }>[] {
-  const elapsed = Object.freeze({ label: "elapsed", value: format_hosted_test_duration(elapsedMs) });
+): readonly TestSummaryEntry[] {
+  const elapsed: TestSummaryEntry = Object.freeze({ key: "elapsed", label: "elapsed", value: format_hosted_test_duration(elapsedMs) });
   if (summary.launchers.total > 0) {
     return Object.freeze([
-      Object.freeze({ label: "suites", value: summary.suites.total }),
-      Object.freeze({ label: "suite fail", value: summary.suites.fail }),
-      Object.freeze({ label: "cases", value: summary.canonical.total }),
-      Object.freeze({ label: "case pass", value: summary.canonical.pass }),
-      Object.freeze({ label: "case fail", value: summary.canonical.fail }),
-      Object.freeze({ label: "checks", value: summary.launchers.declaredChecks }),
-      Object.freeze({ label: "check pass", value: summary.launchers.passedChecks }),
-      Object.freeze({ label: "check fail", value: summary.launchers.failedChecks ?? "unknown" }),
+      Object.freeze({ key: "suites", label: "suites", value: summary.suites.total }),
+      Object.freeze({ key: "suite-fail", label: "suite fail", value: summary.suites.fail }),
+      Object.freeze({ key: "cases", label: "cases", value: summary.canonical.total }),
+      Object.freeze({ key: "case-pass", label: "case pass", value: summary.canonical.pass }),
+      Object.freeze({ key: "case-fail", label: "case fail", value: summary.canonical.fail }),
+      Object.freeze({ key: "checks", label: "checks", value: summary.launchers.declaredChecks }),
+      Object.freeze({ key: "check-pass", label: "check pass", value: summary.launchers.passedChecks }),
+      Object.freeze({ key: "check-fail", label: "check fail", value: summary.launchers.failedChecks ?? "unknown" }),
       elapsed,
     ]);
   }
   return Object.freeze([
-    Object.freeze({ label: "suites", value: summary.suites.total }),
-    Object.freeze({ label: "suite fail", value: summary.suites.fail }),
-    Object.freeze({ label: "cases", value: summary.canonical.total }),
-    Object.freeze({ label: "passed", value: summary.canonical.pass }),
-    Object.freeze({ label: "failed", value: summary.canonical.fail }),
+    Object.freeze({ key: "suites", label: "suites", value: summary.suites.total }),
+    Object.freeze({ key: "suite-fail", label: "suite fail", value: summary.suites.fail }),
+    Object.freeze({ key: "cases", label: "cases", value: summary.canonical.total }),
+    Object.freeze({ key: "case-pass", label: "passed", value: summary.canonical.pass }),
+    Object.freeze({ key: "case-fail", label: "failed", value: summary.canonical.fail }),
     elapsed,
   ]);
 }

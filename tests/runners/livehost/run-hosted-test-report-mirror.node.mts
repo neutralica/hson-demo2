@@ -129,7 +129,14 @@ conflict.subscribe(() => {
 });
 const conflictEnvelope = decode_hosted_test_report_commit_envelope({
   ...start,
-  ops: start.ops.map((op, index) => index === 0 ? { ...op, prev: { kind: "value", value: "passed" } } : op),
+  ops: start.ops.map((op, index) => index === 0
+    ? {
+        kind: "set",
+        path: ["run", "status"],
+        prev: { kind: "value", value: "passed" },
+        next: { kind: "value", value: "running" },
+      }
+    : op),
 });
 expect_failure(conflict, () => conflict.apply(conflictEnvelope), "REPLAY_FAILED");
 expect_mirror(conflictNotifications === 1, "failed commit emits no subscription notification");
@@ -141,8 +148,14 @@ expect_mirror(conflictNotifications === 1, "failed mirror rejects later commits 
 const schemaFailure = fresh(initial);
 const schemaEnvelope = decode_hosted_test_report_commit_envelope({
   ...start,
-  ops: start.ops.map((op) => op.path.join("/") === "run/status"
-    ? { ...op, next: { kind: "value", value: "not-a-report-status" } }
+  ops: start.ops.map((op) => op.path.join("/") === "run"
+    ? {
+        ...op,
+        next: {
+          kind: "value",
+          value: { ...((op.next as { value: object }).value), status: "not-a-report-status" },
+        },
+      }
     : op),
 });
 expect_failure(schemaFailure, () => schemaFailure.apply(schemaEnvelope), "REPLAY_FAILED");

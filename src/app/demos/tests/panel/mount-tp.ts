@@ -30,6 +30,11 @@ import {
     hosted_test_panel_test_choices,
     type HostedTestPanelSelectionChoice,
 } from "./hosted-test-panel-selection";
+import {
+    observe_hosted_test_timeline,
+    type HostedTestTimelineObserver,
+} from "../../../../../tests/harness/hosted/hosted-test-timeline";
+import type { HostedTestPanelRuntime } from "./hosted-test-panel-runtime";
 
 const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
 
@@ -199,7 +204,10 @@ function createTestSurface(branch: LiveTree): TestSurfaceParts {
     return { leftColumn, rightColumn, casePane, logger };
 }
 
-export function tp_factory(): TestPanel {
+export function tp_factory(options: Readonly<{
+    hostedRuntime?: HostedTestPanelRuntime;
+    timeline?: HostedTestTimelineObserver;
+}> = {}): TestPanel {
     let mounted = false;
     let level: UiLevel = "normal";
     let discovery: TestExecutorDiscovery | undefined;
@@ -227,8 +235,16 @@ export function tp_factory(): TestPanel {
     let latestSummary: TestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
     let latestProjectionSummary: HostedTestProjectionSummary | undefined;
     let latestSummaryProjectionKey = "";
+    let latestRunId = "";
+    let latestHasQueued = false;
     let cancelSummaryFrame: (() => void) | undefined;
     let explicitExecutionCount = 0;
+    const queuedSuiteIds = new Set<string>();
+    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "opaque-aggregate"; terminal: boolean }>>();
+    let canonicalSuiteTotal = 0;
+    let canonicalSuiteTerminal = 0;
+    let opaqueSuiteTotal = 0;
+    let opaqueSuiteTerminal = 0;
 
     const make_case_list = (): HostedTestCaseList => {
         let projection: HostedTestCaseList;
@@ -259,6 +275,7 @@ export function tp_factory(): TestPanel {
         cancelSummaryFrame = undefined;
         if (latestProjectionSummary === undefined) chips.render(latestSummary);
         else chips.renderEntries(hosted_test_projection_footer(latestProjectionSummary, latestSummary.msTotal));
+        if (latestHasQueued) observe_hosted_test_timeline(options.timeline, "summary_projected_queued", { runId: latestRunId });
     };
 
     const schedule_summary = (terminal: boolean): void => {
@@ -273,6 +290,7 @@ export function tp_factory(): TestPanel {
             if (active) {
                 if (latestProjectionSummary === undefined) chips.render(latestSummary);
                 else chips.renderEntries(hosted_test_projection_footer(latestProjectionSummary, latestSummary.msTotal));
+                if (latestHasQueued) observe_hosted_test_timeline(options.timeline, "summary_projected_queued", { runId: latestRunId });
             }
         });
         cancelSummaryFrame = () => {
@@ -302,17 +320,15 @@ export function tp_factory(): TestPanel {
         logger.empty();
     };
 
-    const hostedRuntime = make_remote_hosted_test_runtime();
+    const hostedRuntime = options.hostedRuntime ?? make_remote_hosted_test_runtime(
+        options.timeline === undefined ? {} : { timeline: options.timeline },
+    );
     const chronology = make_hosted_test_chronology();
 
-    const update_run_progress = (report?: Parameters<typeof chronology.ingest>[0]): void => {
+    const update_run_progress = (): void => {
         if (branch.attrs.get("data-hosted-panel-state") !== "running") return;
-        if (report === undefined) return;
-        const canonical = report.suiteRuns.filter((suite) => suite.executionShape === "cases");
-        const opaque = report.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate");
-        const terminal = (status: string): boolean => status !== "queued" && status !== "running";
         executorLabel.text.set(
-            `running · case suites ${canonical.filter((suite) => terminal(suite.status)).length}/${canonical.length} · opaque suites ${opaque.filter((suite) => terminal(suite.status)).length}/${opaque.length}`,
+            `running · case suites ${canonicalSuiteTerminal}/${canonicalSuiteTotal} · opaque suites ${opaqueSuiteTerminal}/${opaqueSuiteTotal}`,
         );
     };
 
@@ -325,6 +341,14 @@ export function tp_factory(): TestPanel {
             latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             latestProjectionSummary = undefined;
             latestSummaryProjectionKey = "";
+            latestRunId = "";
+            latestHasQueued = false;
+            queuedSuiteIds.clear();
+            suiteProgress.clear();
+            canonicalSuiteTotal = 0;
+            canonicalSuiteTerminal = 0;
+            opaqueSuiteTotal = 0;
+            opaqueSuiteTerminal = 0;
             chronology.begin(context?.recovered ?? false);
             appendLogLine(`${context?.recovered ? "recover" : "run"} section — ${suite}`);
         },
@@ -332,24 +356,61 @@ export function tp_factory(): TestPanel {
             const projection = caseList;
             if (projection === undefined) return;
             projection.ingest(update);
+            const changedSuites = update.changedSuites ?? update.report.suiteRuns;
+            for (const suiteRun of changedSuites) {
+                const isTerminal = suiteRun.status !== "queued" && suiteRun.status !== "running";
+                const previous = suiteProgress.get(suiteRun.id);
+                if (previous === undefined) {
+                    if (suiteRun.executionShape === "cases") {
+                        canonicalSuiteTotal += 1;
+                        if (isTerminal) canonicalSuiteTerminal += 1;
+                    } else {
+                        opaqueSuiteTotal += 1;
+                        if (isTerminal) opaqueSuiteTerminal += 1;
+                    }
+                } else if (previous.terminal !== isTerminal) {
+                    if (suiteRun.executionShape === "cases") canonicalSuiteTerminal += isTerminal ? 1 : -1;
+                    else opaqueSuiteTerminal += isTerminal ? 1 : -1;
+                }
+                suiteProgress.set(suiteRun.id, { shape: suiteRun.executionShape, terminal: isTerminal });
+                if (suiteRun.status === "queued") queuedSuiteIds.add(suiteRun.id);
+                else queuedSuiteIds.delete(suiteRun.id);
+            }
+            if (queuedSuiteIds.size > 0) {
+                observe_hosted_test_timeline(options.timeline, "inspector_projected_queued", {
+                    runId: update.report.run.id ?? "",
+                    suites: projection.suite_count(),
+                });
+            }
+            const projectionSummary = hosted_test_projection_summary(update.report);
             latestSummary = {
                 suites: projection.suite_count(),
-                cases: hosted_test_projection_summary(update.report).canonical.total,
-                pass: hosted_test_projection_summary(update.report).canonical.pass,
-                fail: hosted_test_projection_summary(update.report).canonical.fail,
-                skip: hosted_test_projection_summary(update.report).canonical.skip,
+                cases: projectionSummary.canonical.total,
+                pass: projectionSummary.canonical.pass,
+                fail: projectionSummary.canonical.fail,
+                skip: projectionSummary.canonical.skip,
                 msTotal: update.report.run.timing?.runnerMs ?? 0,
                 failures: [],
             };
-            latestProjectionSummary = hosted_test_projection_summary(update.report);
+            latestProjectionSummary = projectionSummary;
+            latestRunId = update.report.run.id ?? "";
+            latestHasQueued = queuedSuiteIds.size > 0;
             const footer = hosted_test_projection_footer(latestProjectionSummary, latestSummary.msTotal);
             const summaryProjectionKey = JSON.stringify(footer);
             if (summaryProjectionKey !== latestSummaryProjectionKey) {
                 latestSummaryProjectionKey = summaryProjectionKey;
-                schedule_summary(update.terminal);
+                if (update.report.run.status === "idle") flush_summary();
+                else schedule_summary(update.terminal);
             }
-            for (const line of chronology.ingest(update.report)) appendLogLine(line);
-            update_run_progress(update.report);
+            const chronologyLines = chronology.ingest(update.report, changedSuites);
+            for (const line of chronologyLines) appendLogLine(line);
+            if (chronologyLines.some((line) => line.startsWith("queued"))) {
+                observe_hosted_test_timeline(options.timeline, "logger_projected_queued", {
+                    runId: update.report.run.id ?? "",
+                    lines: chronologyLines.length,
+                });
+            }
+            update_run_progress();
         },
         showInfrastructureError(message) {
             appendLogLine(`infrastructure error — ${message}`);
@@ -568,6 +629,7 @@ export function tp_factory(): TestPanel {
         runBtn.listen.onClick(async () => {
 
             try {
+                observe_hosted_test_timeline(options.timeline, "run_button_invoked");
                 branch.attrs.set("data-hosted-panel-state", "running");
                 runBtn.flags.set("disabled");
                 suiteSel.flags.set("disabled");
@@ -582,8 +644,16 @@ export function tp_factory(): TestPanel {
                     const testIds = choice === undefined
                         ? Object.freeze([])
                         : hosted_test_panel_selected_ids(activeDiscovery.catalog.tests, choice.selection, activeDiscovery.externalTargets);
+                    observe_hosted_test_timeline(options.timeline, "selection_completed", {
+                        selectedIds: testIds.length,
+                    });
                     if (testIds.length === 0) throw new Error("The active discovered selection contains no tests.");
                     lastResult = await hostedAdapter!.start_selected(testIds);
+                    observe_hosted_test_timeline(options.timeline, "panel_run_completed", {
+                        runId: lastResult.runId,
+                        roundTripMs: lastResult.timing.roundTripMs,
+                        runnerMs: lastResult.timing.runnerMs,
+                    });
                 } else throw new Error("Canonical hosted-test discovery has not completed.");
                 remember_hosted_test_run(lastResult.runId);
                 branch.attrs.set("data-hosted-panel-state", "completed");

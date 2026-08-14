@@ -212,7 +212,17 @@ const fakeServer: HostedTestServer = {
     circuitVerification: 0,
   }),
   disconnectConnections() {},
-  metrics: () => Object.freeze({ sentMessages: 0, sentBytes: 0 }),
+  metrics: () => Object.freeze({
+    sentMessages: 0,
+    sentBytes: 0,
+    largestSentBytes: 0,
+    reportSnapshots: 0,
+    reportSnapshotBytes: 0,
+    reportCommits: 0,
+    reportCommitBytes: 0,
+    reportRecoveryCommits: 0,
+    reportRecoveryCommitBytes: 0,
+  }),
   async stop() { stopCalls += 1; },
 };
 await run_hosted_test_server_process({

@@ -28,6 +28,7 @@ export function create_node_capacity_livehost_socket(
   options: Readonly<{
     maxBufferedAmount: number;
     onSend?(message: string): void;
+    onSent?(message: string): void;
     onBackpressure?(): void;
     onCapacityChange?(snapshot: NodeCapacitySocketSnapshot): void;
   }>,
@@ -115,6 +116,7 @@ export function create_node_capacity_livehost_socket(
           fail_transport(1011, "LiveHost WebSocket send failed.");
           return;
         }
+        options.onSent?.(pending.value);
         flush();
       });
     } catch {

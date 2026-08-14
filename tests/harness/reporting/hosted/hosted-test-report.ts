@@ -16,6 +16,7 @@ import type { TestRunPlan } from "../../core/test-run-plan";
 import type {
   HostedTestCaseReport,
   HostedTestInfrastructureError,
+  HostedTestPlannedCaseReport,
   HostedTestReport,
   HostedTestReportCommit,
   HostedTestReportMap,
@@ -374,11 +375,20 @@ export type HostedTestReportController = Readonly<{
   failInfrastructure: (error: unknown) => void;
 }>;
 
+type MutableHostedTestPlannedCaseReport = Omit<HostedTestPlannedCaseReport, "errors" | "evidenceRefs"> & {
+  errors: HostedTestInfrastructureError[];
+  evidenceRefs: string[];
+};
+
 export const DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE = 32;
 export const DEFAULT_HOSTED_TEST_LIFECYCLE_BATCH_SIZE = 8;
+export const DEFAULT_HOSTED_TEST_REPORT_FLUSH_INTERVAL_MS = 100;
+export const DEFAULT_HOSTED_TEST_REPORT_OPERATION_BUDGET = 64;
+const HOSTED_TEST_CASE_LIFECYCLE_OPERATION_WEIGHT = 4;
 
 export type HostedTestReportOptions = Readonly<{
   caseBatchSize?: number;
+  captureCommits?: boolean;
   runId?: string;
   runPlan?: TestRunPlan;
   map?: HostedTestReportMap;
@@ -401,18 +411,36 @@ export function make_hosted_test_report(
     ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap
     : options.map;
   const captured: HostedTestReportCommit[] = [];
-  const unsubscribe = map.feed([], (event) => {
-    const commit = capture_commit(event.commit);
-    captured.push(commit);
-    onCommit?.(commit);
-  });
+  const unsubscribe = options.captureCommits === false
+    ? () => undefined
+    : map.feed([], (event) => {
+        const commit = capture_commit(event.commit);
+        captured.push(commit);
+        onCommit?.(commit);
+      });
   let disposed = false;
   const pendingMutations = new Set<Promise<unknown>>();
   let pendingMutationFailure: unknown;
   type ReportTxOperation = (tx: LiveMapBatchTx<HostedTestReport>) => void;
-  let pendingCaseLifecycle: ReportTxOperation[] = [];
+  type PendingReportOperation = Readonly<{
+    operation: ReportTxOperation;
+    weight: number;
+    coalesce?: "queued-run-stamp";
+  }>;
+  let pendingReportOperations: PendingReportOperation[] = [];
+  let reportFlushTimer: ReturnType<typeof setTimeout> | undefined;
+  let activeMutation: Promise<unknown> | undefined;
+  type PendingCaseLifecycleOperation = Readonly<{
+    operation: ReportTxOperation;
+    caseKey?: string;
+    phase?: "start" | "finish";
+    stamp?: Readonly<{ event: TestLifecycleEvent; eventSignature: string }>;
+    counts?: Readonly<{ suiteIndex: number; value: TestLifecycleCounts }>;
+  }>;
+  let pendingCaseLifecycle: PendingCaseLifecycleOperation[] = [];
   let pendingCases: HostedTestCaseReport[] = [];
   const recovered = map.capture().value;
+  const reportRunId = recovered.run.id ?? options.runId ?? `legacy:${suite}`;
   let caseBatchId = Math.max(0, ...Object.keys(recovered.caseBatches).map((key) => Number(key) || 0));
   let suiteTimingCount = recovered.suites.length;
   let summaryCases = recovered.summary.cases;
@@ -427,13 +455,26 @@ export function make_hosted_test_report(
   }> | undefined;
   let lastSequence = recovered.run.lastSequence;
   let lastRunSignature = recovered.run.lastEventSignature;
+  let runProjection = { ...recovered.run };
+  const runProjectionBySequence = new Map<number, typeof runProjection>();
   const suiteRunIndex = new Map(recovered.suiteRuns.map((suiteRun, index) => [suiteRun.id, index]));
+  const suiteCounts = new Map(recovered.suiteRuns.map((suiteRun) => [suiteRun.id, { ...suiteRun.counts }]));
+  const caseTitles = new Map(recovered.suiteRuns.flatMap((suiteRun) => (
+    suiteRun.cases.map((testCase) => [testCase.id, testCase.title] as const)
+  )));
   const caseRunIndex = new Map(recovered.suiteRuns.flatMap((suiteRun, suiteIndex) => (
     suiteRun.cases.map((testCase, caseIndex) => [testCase.id, { suiteIndex, caseIndex }] as const)
   )));
   const suiteStatuses = new Map(recovered.suiteRuns.map((suiteRun) => [suiteRun.id, suiteRun.status]));
   const caseStatuses = new Map(recovered.suiteRuns.flatMap((suiteRun) => (
     suiteRun.cases.map((testCase) => [testCase.id, testCase.status] as const)
+  )));
+  const caseRunStates = new Map<string, MutableHostedTestPlannedCaseReport>(recovered.suiteRuns.flatMap((suiteRun) => (
+    suiteRun.cases.map((testCase) => [testCase.id, {
+      ...testCase,
+      errors: [...testCase.errors],
+      evidenceRefs: [...testCase.evidenceRefs],
+    }] as const)
   )));
   const suiteExecutors = new Map(recovered.suiteRuns.map((suiteRun) => [suiteRun.id, new Set(suiteRun.executorIds)]));
   const caseExecutors = new Map(recovered.suiteRuns.flatMap((suiteRun) => (
@@ -466,37 +507,117 @@ export function make_hosted_test_report(
     new Set(suiteRun.errors.map((error) => `${error.executorId}\u0000${error.kind}\u0000${error.message}`)),
   ]));
 
-  function mutate(operation: (draft: HostedTestReportMap) => LiveMapCommit): void {
-    if (options.mutate === undefined) {
-      operation(map);
+  function clear_report_flush_timer(): void {
+    if (reportFlushTimer === undefined) return;
+    clearTimeout(reportFlushTimer);
+    reportFlushTimer = undefined;
+  }
+
+  function start_report_mutation(): void {
+    clear_report_flush_timer();
+    if (options.mutate === undefined || activeMutation !== undefined || pendingReportOperations.length === 0) return;
+    const operations: PendingReportOperation[] = [];
+    let operationWeight = 0;
+    while (pendingReportOperations.length > 0) {
+      const next = pendingReportOperations[0]!;
+      if (operations.length > 0 && operationWeight + next.weight > DEFAULT_HOSTED_TEST_REPORT_OPERATION_BUDGET) break;
+      pendingReportOperations.shift();
+      operations.push(next);
+      operationWeight += next.weight;
+    }
+    let pending: Promise<unknown>;
+    try {
+      pending = options.mutate((draft) => draft.batch((tx) => {
+        for (const entry of operations) entry.operation(tx);
+      }));
+    } catch (error) {
+      pendingMutationFailure ??= error;
       return;
     }
-    const pending = options.mutate(operation);
+    activeMutation = pending;
     pendingMutations.add(pending);
     void pending.then(
-      () => pendingMutations.delete(pending),
+      () => {
+        pendingMutations.delete(pending);
+        activeMutation = undefined;
+        schedule_report_mutation();
+      },
       (error) => {
         pendingMutations.delete(pending);
+        activeMutation = undefined;
         pendingMutationFailure ??= error;
       },
     );
+  }
+
+  function schedule_report_mutation(): void {
+    if (options.mutate === undefined || activeMutation !== undefined
+      || reportFlushTimer !== undefined || pendingReportOperations.length === 0) return;
+    reportFlushTimer = setTimeout(start_report_mutation, DEFAULT_HOSTED_TEST_REPORT_FLUSH_INTERVAL_MS);
+  }
+
+  function mutate(
+    operation: ReportTxOperation,
+    weight = 1,
+    coalesce?: PendingReportOperation["coalesce"],
+  ): void {
+    if (options.mutate === undefined) {
+      map.batch(operation);
+      return;
+    }
+    if (coalesce !== undefined && pendingReportOperations.at(-1)?.coalesce === coalesce) {
+      pendingReportOperations[pendingReportOperations.length - 1] = { operation, weight, coalesce };
+    } else {
+      pendingReportOperations.push({ operation, weight, ...(coalesce === undefined ? {} : { coalesce }) });
+    }
+    schedule_report_mutation();
+  }
+
+  function mutate_queued_run_stamp(event: TestLifecycleEvent, eventSignature: string): void {
+    mutate((tx) => stamp_run(tx, event, eventSignature), 1, "queued-run-stamp");
   }
 
   function flush_case_lifecycle(): void {
     if (pendingCaseLifecycle.length === 0) return;
     const operations = pendingCaseLifecycle;
     pendingCaseLifecycle = [];
-    mutate((draft) => draft.batch((tx) => {
-      for (const operation of operations) operation(tx);
-    }));
+    mutate((tx) => {
+      for (const entry of operations) entry.operation(tx);
+      const counts = new Map<number, TestLifecycleCounts>();
+      for (const entry of operations) {
+        if (entry.counts !== undefined) counts.set(entry.counts.suiteIndex, entry.counts.value);
+      }
+      for (const [suiteIndex, value] of counts) tx.set(["suiteRuns", suiteIndex, "counts"], value);
+      let stamp: PendingCaseLifecycleOperation["stamp"];
+      for (let index = operations.length - 1; index >= 0; index -= 1) {
+        if (operations[index]!.stamp === undefined) continue;
+        stamp = operations[index]!.stamp;
+        break;
+      }
+      if (stamp !== undefined) stamp_run(tx, stamp.event, stamp.eventSignature);
+    }, HOSTED_TEST_CASE_LIFECYCLE_OPERATION_WEIGHT);
   }
 
-  function mutate_case(operation: ReportTxOperation): void {
+  function mutate_case(
+    operation: ReportTxOperation,
+    metadata: Omit<PendingCaseLifecycleOperation, "operation"> = {},
+  ): void {
     if (options.mutate === undefined || options.runPlan === undefined) {
-      mutate((draft) => draft.batch(operation));
+      mutate((tx) => {
+        operation(tx);
+        if (metadata.counts !== undefined) {
+          tx.set(["suiteRuns", metadata.counts.suiteIndex, "counts"], metadata.counts.value);
+        }
+        if (metadata.stamp !== undefined) stamp_run(tx, metadata.stamp.event, metadata.stamp.eventSignature);
+      });
       return;
     }
-    pendingCaseLifecycle.push(operation);
+    if (metadata.phase === "finish") {
+      pendingCaseLifecycle = pendingCaseLifecycle.filter((entry) => (
+        entry.caseKey !== metadata.caseKey || entry.phase !== "start"
+      ));
+    }
+    pendingCaseLifecycle.push({ operation, ...metadata });
     if (pendingCaseLifecycle.length >= DEFAULT_HOSTED_TEST_LIFECYCLE_BATCH_SIZE * 2) flush_case_lifecycle();
   }
 
@@ -519,7 +640,6 @@ export function make_hosted_test_report(
   }
 
   function validate_event(event: TestLifecycleEvent): string | undefined {
-    const reportRunId = recovered.run.id ?? options.runId ?? `legacy:${suite}`;
     if (event.runId !== reportRunId) throw new Error(`TEST_LIFECYCLE_RUN_MISMATCH: ${event.runId} !== ${reportRunId}.`);
     if (!Number.isSafeInteger(event.sequence) || event.sequence < 1 || !Number.isFinite(event.timestamp)) {
       throw new Error("TEST_LIFECYCLE_EVENT_INVALID: sequence and timestamp must be finite positive chronology evidence.");
@@ -532,28 +652,38 @@ export function make_hosted_test_report(
     lastSequence = event.sequence;
     lastRunSignature = eventSignature;
     receipts.set(event.sequence, eventSignature);
+    runProjection = { ...runProjection, lastSequence: event.sequence, lastEventSignature: eventSignature };
+    runProjectionBySequence.set(event.sequence, runProjection);
     return eventSignature;
   }
 
   function stamp_run(tx: LiveMapBatchTx<HostedTestReport>, event: TestLifecycleEvent, eventSignature: string): void {
-    tx.set(["run", "lastSequence"], event.sequence);
-    tx.set(["run", "lastEventSignature"], eventSignature);
+    const projection = runProjectionBySequence.get(event.sequence);
+    if (projection === undefined || projection.lastEventSignature !== eventSignature) {
+      throw new Error(`TEST_LIFECYCLE_RUN_PROJECTION_MISSING: sequence ${event.sequence} has no accepted run projection.`);
+    }
+    tx.replace(["run"], projection);
+    for (const sequence of runProjectionBySequence.keys()) {
+      if (sequence <= event.sequence) runProjectionBySequence.delete(sequence);
+    }
   }
 
   function canonical_counts(suiteId: string): TestLifecycleCounts {
-    const suiteIndex = suiteRunIndex.get(suiteId);
-    const suiteRun = suiteIndex === undefined ? undefined : recovered.suiteRuns[suiteIndex];
-    const statuses = suiteRun?.cases.map((testCase) => caseStatuses.get(testCase.id) ?? testCase.status) ?? [];
-    return {
-      declared: statuses.length,
-      total: statuses.length,
-      executed: statuses.filter(terminal).length,
-      passed: statuses.filter((status) => status === "pass").length,
-      failed: statuses.filter((status) => status === "fail").length,
-      skipped: statuses.filter((status) => status === "skip").length,
-      unsupported: statuses.filter((status) => status === "unsupported").length,
-      cancelled: statuses.filter((status) => status === "cancelled").length,
-    };
+    return { ...(suiteCounts.get(suiteId) ?? {
+      declared: 0, total: 0, executed: 0, passed: 0, failed: 0,
+      skipped: 0, unsupported: 0, cancelled: 0,
+    }) };
+  }
+
+  function record_case_terminal(suiteId: string, status: TestLifecycleTerminalStatus): void {
+    const counts = suiteCounts.get(suiteId);
+    if (counts === undefined) return;
+    counts.executed += 1;
+    if (status === "pass") counts.passed += 1;
+    else if (status === "fail") counts.failed += 1;
+    else if (status === "skip") counts.skipped += 1;
+    else if (status === "unsupported") counts.unsupported += 1;
+    else counts.cancelled += 1;
   }
 
   function validate_counts(counts: TestLifecycleCounts, suiteId: string): void {
@@ -618,7 +748,7 @@ export function make_hosted_test_report(
     }
     const beforeRev = map.rev;
     try {
-      mutate((draft) => draft.batch((tx) => {
+      mutate((tx) => {
         if (batch.length > 0) {
           caseBatchId += 1;
           tx.setMany(["caseBatches"], { [caseBatchId.toString().padStart(6, "0")]: batch });
@@ -635,7 +765,7 @@ export function make_hosted_test_report(
           tx.splice(["suites"], suiteTimingCount, 0, suiteEnd);
           suiteTimingCount += 1;
         }
-      }));
+      });
       pendingCases = [];
     } catch (error) {
       if (map.rev !== beforeRev) pendingCases = [];
@@ -678,7 +808,7 @@ export function make_hosted_test_report(
       if (event.t === "case_queued" && caseStatuses.get(`${event.suiteId}::${event.caseId}`) !== "queued") {
         throw new Error(`TEST_LIFECYCLE_REQUEUE_FORBIDDEN: ${event.suiteId}::${event.caseId} is not queued.`);
       }
-      mutate((draft) => draft.batch((tx) => stamp_run(tx, event, eventSignature)));
+      mutate_queued_run_stamp(event, eventSignature);
       return;
     }
 
@@ -690,13 +820,19 @@ export function make_hosted_test_report(
         if (changed) suiteStatuses.set(event.suiteId, "running");
       }
       const startsRun = runStatus === "idle";
-      if (startsRun) runStatus = "running";
-      mutate((draft) => draft.batch((tx) => {
+      if (startsRun) {
+        runStatus = "running";
+        runProjection = {
+          ...runProjection,
+          status: "running",
+          startedAt: event.timestamp,
+          completedAt: null,
+        };
+        runProjectionBySequence.set(event.sequence, runProjection);
+      }
+      mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         if (startsRun) {
-          tx.set(["run", "status"], "running");
-          tx.set(["run", "startedAt"], event.timestamp);
-          tx.set(["run", "completedAt"], null);
           tx.replace(["error"], null);
         }
         if (suiteIndex !== undefined) {
@@ -715,35 +851,42 @@ export function make_hosted_test_report(
             exitCode: null, signal: null, timedOut: false, spawnError: null,
           } });
         }
-      }));
+      });
       return;
     }
 
     if (event.t === "case_started") {
       const key = `${event.suiteId}::${event.caseId}`;
       const location = caseRunIndex.get(key);
+      let nextState: MutableHostedTestPlannedCaseReport | undefined;
       if (location !== undefined) {
         assign_case_executor(key, event.executorId);
         const current = caseStatuses.get(key) ?? "queued";
         if (transition(current, "running", key)) caseStatuses.set(key, "running");
+        const currentState = caseRunStates.get(key)!;
+        nextState = {
+          ...currentState,
+          status: "running",
+          startedAt: event.timestamp,
+          executorId: event.executorId,
+          lastSequence: event.sequence,
+          lastEventSignature: eventSignature,
+        };
+        caseRunStates.set(key, nextState);
       }
       mutate_case((tx) => {
-        stamp_run(tx, event, eventSignature);
         if (location !== undefined) {
           attach_suite_executor(tx, event.suiteId, location.suiteIndex, event.executorId);
-          tx.set(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "status"], "running");
-          tx.set(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "startedAt"], event.timestamp);
-          tx.set(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "executorId"], event.executorId);
-          tx.set(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "lastSequence"], event.sequence);
-          tx.set(["suiteRuns", location.suiteIndex, "cases", location.caseIndex, "lastEventSignature"], eventSignature);
+          tx.replace(["suiteRuns", location.suiteIndex, "cases", location.caseIndex], nextState!);
         }
-      });
+      }, { caseKey: key, phase: "start", stamp: { event, eventSignature } });
       return;
     }
 
     if (event.t === "case_finished") {
       const key = `${event.suiteId}::${event.caseId}`;
       const location = caseRunIndex.get(key);
+      let nextState: MutableHostedTestPlannedCaseReport | undefined;
       const terminalEvidence = JSON.stringify({
         status: event.status,
         durationMs: finite_or_zero(event.durationMs),
@@ -756,19 +899,36 @@ export function make_hosted_test_report(
           if (caseTerminalEvidence.get(key) !== terminalEvidence) {
             throw new Error(`TEST_LIFECYCLE_TERMINAL_CONTRADICTION: ${key} received different terminal evidence.`);
           }
-          mutate_case((tx) => stamp_run(tx, event, eventSignature));
+          mutate_case(() => undefined, { stamp: { event, eventSignature } });
           return;
         }
-        if (transition(current, event.status, key)) caseStatuses.set(key, event.status);
+        if (transition(current, event.status, key)) {
+          caseStatuses.set(key, event.status);
+          record_case_terminal(event.suiteId, event.status);
+        }
         caseTerminalEvidence.set(key, terminalEvidence);
+        const currentState = caseRunStates.get(key)!;
+        const durationMs = finite_or_zero(event.durationMs);
+        nextState = {
+          ...currentState,
+          status: event.status,
+          completedAt: event.timestamp,
+          durationMs,
+          ms: durationMs,
+          err: event.error?.message ?? null,
+          errors: event.error === undefined ? [] : [normalized_error(event.error, event.executorId)],
+          executorId: event.executorId,
+          lastSequence: event.sequence,
+          lastEventSignature: eventSignature,
+        };
+        caseRunStates.set(key, nextState);
       }
       const counts = canonical_counts(event.suiteId);
       let projectedCase: HostedTestCaseReport | undefined;
       if (event.status === "pass" || event.status === "fail" || event.status === "skip") {
-        const planned = location === undefined ? undefined : recovered.suiteRuns[location.suiteIndex]?.cases[location.caseIndex];
         projectedCase = case_report(
           event as typeof event & Readonly<{ status: "pass" | "fail" | "skip" }>,
-          planned?.title ?? event.title ?? event.caseId,
+          caseTitles.get(key) ?? event.title ?? event.caseId,
         );
         pendingCases.push(projectedCase);
       }
@@ -776,22 +936,16 @@ export function make_hosted_test_report(
       const beforeRev = map.rev;
       try {
         mutate_case((tx) => {
-          stamp_run(tx, event, eventSignature);
           if (location !== undefined) {
             attach_suite_executor(tx, event.suiteId, location.suiteIndex, event.executorId);
-            const base = ["suiteRuns", location.suiteIndex, "cases", location.caseIndex] as const;
-            tx.set([...base, "status"], event.status);
-            tx.set([...base, "completedAt"], event.timestamp);
-            tx.set([...base, "durationMs"], finite_or_zero(event.durationMs));
-            tx.set([...base, "ms"], finite_or_zero(event.durationMs));
-            tx.set([...base, "err"], event.error?.message ?? null);
-            tx.set([...base, "errors"], event.error === undefined ? [] : [normalized_error(event.error, event.executorId)]);
-            tx.set([...base, "executorId"], event.executorId);
-            tx.set([...base, "lastSequence"], event.sequence);
-            tx.set([...base, "lastEventSignature"], eventSignature);
-            tx.set(["suiteRuns", location.suiteIndex, "counts"], counts);
+            tx.replace(["suiteRuns", location.suiteIndex, "cases", location.caseIndex], nextState!);
           }
           if (projectedBatch !== undefined) write_case_batch(tx, projectedBatch);
+        }, {
+          caseKey: key,
+          phase: "finish",
+          stamp: { event, eventSignature },
+          ...(location === undefined ? {} : { counts: { suiteIndex: location.suiteIndex, value: counts } }),
         });
       } catch (error) {
         if (projectedBatch !== undefined && map.rev !== beforeRev) pendingCases = [];
@@ -804,7 +958,7 @@ export function make_hosted_test_report(
     if (event.t === "output" || event.t === "artifact") {
       flush_case_lifecycle();
       if (suiteIndex === undefined) {
-        mutate((draft) => draft.batch((tx) => stamp_run(tx, event, eventSignature)));
+        mutate((tx) => stamp_run(tx, event, eventSignature));
         return;
       }
       const evidenceIndex = evidenceCounts.get(event.suiteId) ?? 0;
@@ -812,11 +966,19 @@ export function make_hosted_test_report(
       const evidenceId = `${event.suiteId}:e${event.sequence}`;
       const caseKey = event.caseId === undefined ? undefined : `${event.suiteId}::${event.caseId}`;
       const caseLocation = caseKey === undefined ? undefined : caseRunIndex.get(caseKey);
-      if (caseKey !== undefined && caseLocation !== undefined) assign_case_executor(caseKey, event.executorId);
+      if (caseKey !== undefined && caseLocation !== undefined) {
+        assign_case_executor(caseKey, event.executorId);
+        const current = caseRunStates.get(caseKey)!;
+        caseRunStates.set(caseKey, {
+          ...current,
+          evidenceRefs: [...current.evidenceRefs, evidenceId],
+          executorId: event.executorId,
+        });
+      }
       const kind = event.t === "output" ? event.stream : event.kind;
       const name = event.t === "output" ? event.stream : event.name;
       const content = event.t === "output" ? event.text : event.content;
-      mutate((draft) => draft.batch((tx) => {
+      mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         tx.splice(["suiteRuns", suiteIndex, "evidence"], evidenceIndex, 0, {
           id: evidenceId, sequence: event.sequence, timestamp: event.timestamp, executorId: event.executorId,
@@ -843,14 +1005,14 @@ export function make_hosted_test_report(
         }
         tx.set(["suiteRuns", suiteIndex, "lastSequence"], event.sequence);
         tx.set(["suiteRuns", suiteIndex, "lastEventSignature"], eventSignature);
-      }));
+      });
       return;
     }
 
     if (event.t === "infrastructure_error") {
       flush_case_lifecycle();
       if (event.suiteId === undefined) hasRunInfrastructureError = true;
-      mutate((draft) => draft.batch((tx) => {
+      mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         if (event.suiteId === undefined) tx.replace(["error"], normalized_error(event.error, event.executorId));
         else append_suite_error(tx, event.suiteId, event.error, event.executorId);
@@ -859,7 +1021,7 @@ export function make_hosted_test_report(
           tx.set(["suiteRuns", suiteIndex, "lastSequence"], event.sequence);
           tx.set(["suiteRuns", suiteIndex, "lastEventSignature"], eventSignature);
         }
-      }));
+      });
       return;
     }
 
@@ -879,14 +1041,14 @@ export function make_hosted_test_report(
           if (suiteTerminalEvidence.get(event.suiteId) !== terminalEvidence) {
             throw new Error(`TEST_LIFECYCLE_TERMINAL_CONTRADICTION: ${event.suiteId} received different terminal evidence.`);
           }
-          mutate((draft) => draft.batch((tx) => stamp_run(tx, event, eventSignature)));
+          mutate((tx) => stamp_run(tx, event, eventSignature));
           return;
         }
         if (transition(current, event.status, event.suiteId)) suiteStatuses.set(event.suiteId, event.status);
         suiteTerminalEvidence.set(event.suiteId, terminalEvidence);
       }
       flush_pending_cases({ suite: event.suiteId, ms: finite_or_zero(event.durationMs) });
-      mutate((draft) => draft.batch((tx) => {
+      mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         if (suiteIndex !== undefined) {
           attach_suite_executor(tx, event.suiteId, suiteIndex, event.executorId);
@@ -909,7 +1071,7 @@ export function make_hosted_test_report(
             timedOut: event.opaque.timedOut ?? false, spawnError: event.opaque.spawnError ?? null,
           } });
         }
-      }));
+      });
       return;
     }
 
@@ -917,7 +1079,14 @@ export function make_hosted_test_report(
       flush_case_lifecycle();
       runStatus = event.status === "pass" ? "passed" : event.status === "fail" ? "failed" : "error";
       const completion = pendingCompletion;
-      mutate((draft) => draft.batch((tx) => {
+      runProjection = {
+        ...runProjection,
+        completedAt: event.timestamp,
+        status: event.status === "pass" ? "passed" : hasRunInfrastructureError ? "error" : "failed",
+        ...(completion === undefined ? {} : { timing: completion.timing }),
+      };
+      runProjectionBySequence.set(event.sequence, runProjection);
+      mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         if (completion !== undefined) {
           const plannedCaseStatuses = options.runPlan === undefined ? undefined : [...caseStatuses.values()];
@@ -933,11 +1102,8 @@ export function make_hosted_test_report(
           tx.set(["summary", "skip"], plannedCaseStatuses === undefined
             ? completion.result.summary.skip
             : plannedCaseStatuses.filter((status) => status === "skip").length);
-          tx.replace(["run", "timing"], completion.timing);
         }
-        tx.set(["run", "completedAt"], event.timestamp);
-        tx.set(["run", "status"], event.status === "pass" ? "passed" : hasRunInfrastructureError ? "error" : "failed");
-      }));
+      });
       pendingCompletion = undefined;
     }
   }
@@ -945,6 +1111,7 @@ export function make_hosted_test_report(
   function reduce_lifecycle(event: TestLifecycleEvent): void {
     const previousSequence = lastSequence;
     const previousSignature = lastRunSignature;
+    const previousRunProjection = runProjection;
     try {
       reduce_lifecycle_unchecked(event);
     } catch (error) {
@@ -952,13 +1119,15 @@ export function make_hosted_test_report(
         receipts.delete(event.sequence);
         lastSequence = previousSequence;
         lastRunSignature = previousSignature;
+        runProjection = previousRunProjection;
+        runProjectionBySequence.delete(event.sequence);
       }
       throw error;
     }
   }
 
   const adapter = make_test_lifecycle_adapter({
-    runId: recovered.run.id ?? options.runId ?? `legacy:${suite}`,
+    runId: reportRunId,
     executorId: options.runPlan?.executorId ?? "legacy",
     ...(options.runPlan === undefined ? {} : { runPlan: options.runPlan }),
     initialSequence: lastSequence,
@@ -973,13 +1142,22 @@ export function make_hosted_test_report(
     },
     async settle() {
       flush_case_lifecycle();
-      while (pendingMutations.size > 0) await Promise.all([...pendingMutations]);
+      clear_report_flush_timer();
+      while (pendingReportOperations.length > 0 || activeMutation !== undefined) {
+        start_report_mutation();
+        const active = activeMutation;
+        if (active !== undefined) await Promise.allSettled([active]);
+        if (pendingMutationFailure !== undefined) break;
+        clear_report_flush_timer();
+      }
       if (pendingMutationFailure !== undefined) throw pendingMutationFailure;
     },
     dispose() {
       if (disposed) return;
       flush_case_lifecycle();
       flush_pending_cases();
+      clear_report_flush_timer();
+      start_report_mutation();
       disposed = true;
       unsubscribe();
     },

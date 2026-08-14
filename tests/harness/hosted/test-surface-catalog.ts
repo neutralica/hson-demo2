@@ -79,6 +79,10 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:hosted-generic-livehost-node": "tests/runners/livehost/run-hosted-generic-livehost.node.mts",
   "test:hosted-websocket-lifecycle-node": "tests/runners/livehost/run-hosted-websocket-lifecycle.node.mts",
   "test:hosted-deployment-node": "tests/runners/livehost/run-hosted-deployment.node.mts",
+  "test:node-host-backpressure": "tests/runners/livehost/run-node-host-backpressure.node.mts",
+  "test:hosted-progress-starvation-node": "tests/runners/livehost/run-hosted-progress-starvation.node.mts",
+  "test:hosted-report-authority-scaling-node": "tests/runners/livehost/run-hosted-report-authority-scaling.node.mts",
+  "test:hosted-production-panel-timeline-node": "tests/runners/livehost/run-hosted-production-panel-timeline.node.mts",
   "test:node-application-host": "tests/runners/harness/run-canonical-tests.node.mts",
   "test:circuit-worker-service": "tests/runners/harness/run-canonical-tests.node.mts",
   "test:circuit-livehost-integration": "tests/runners/harness/run-canonical-tests.node.mts",
@@ -137,10 +141,12 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:external-library-node": "tests/runners/harness/run-external-library-launchers.node.mts",
   "test:external-library-all-node": "tests/runners/harness/run-external-library-launchers.node.mts",
   "test:external-launcher-protocol-node": "tests/runners/harness/run-external-launcher-protocol.node.mts",
+  "test:external-launcher-manifest-audit-node": "tests/runners/harness/run-external-launcher-manifest-audit.node.mts",
   "test:runner-truthfulness-node": "tests/runners/harness/run-test-runner-truthfulness.node.mts",
   "test:splash-lifecycle-node": "tests/runners/app/run-splash-lifecycle.node.mts",
   "test:inclusive-library-node": "tests/runners/harness/run-inclusive-library-verification.node.mts",
   "test:hosted-performance-node": "tests/runners/harness/run-hosted-test-performance.node.mts",
+  "test:direct-all-performance-node": "tests/runners/harness/run-direct-all-performance.node.mts",
 } as const);
 
 const CANONICAL_COMMANDS = new Set(["test:canonical-node", "test:node-application-host"]);
@@ -169,6 +175,9 @@ const UTILITY_REASONS = Object.freeze({
   "test:hosted-dom-behavior-diagnostics-node": "Developer diagnostic output; durable DOM assertions live in canonical suites.",
   "test:hosted-dom-layout-diagnostics-node": "Developer layout diagnostic output; it is not a rendering certification.",
   "test:hosted-performance-node": "Developer performance matrix that repeatedly composes canonical and external inventories.",
+  "test:direct-all-performance-node": "Developer direct-execution baseline for the complete canonical and external inventory.",
+  "test:hosted-report-authority-scaling-node": "Focused synthetic scaling certificate for hosted report authority overhead.",
+  "test:hosted-production-panel-timeline-node": "Production-panel latency, memory, transport, and recovery certificate.",
 } satisfies Readonly<Record<string, string>>);
 const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
   "test:node-application-host": Object.freeze({ environment: "Node", transport: "real HTTP + WebSocket" }),
@@ -177,6 +186,8 @@ const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
   "test:node-production-runtime": Object.freeze({ environment: "built Node production artifact", transport: "real HTTP + WebSocket" }),
   "test:inclusive-library-node": Object.freeze({ environment: "Node + synthetic DOM + child processes", transport: "mixed canonical and external" }),
   "test:hosted-performance-node": Object.freeze({ environment: "Node child processes", transport: "mixed canonical and external" }),
+  "test:direct-all-performance-node": Object.freeze({ environment: "Node + child processes", transport: "mixed canonical and external" }),
+  "test:hosted-production-panel-timeline-node": Object.freeze({ environment: "Node child process + synthetic DOM", transport: "real WebSocket" }),
   "test:hosted-cloudflare": Object.freeze({ environment: "checked-in Cloudflare Worker adapter", transport: "in-memory Durable Object sockets" }),
   "test:parsing-browser-certificate": Object.freeze({ environment: "Node + synthetic DOM", transport: "none" }),
 } satisfies Readonly<Record<string, Readonly<{ environment: string; transport: string }>>>);

@@ -126,6 +126,7 @@ export function make_in_memory_hosted_test_runtime(
       client: reportClient as LiveHostClient<HostedTestReportState, ReportActions>,
       actionResult: settledResult,
       on_change(listener) { return reportClient.recovery.on_change(() => listener()); },
+      async ready() {},
       inspect(request) { return inspect_hosted_test_action(reportClient, request); },
       dispose() {
         if (runDisposed) return;

@@ -59,6 +59,8 @@
     "test:hosted-deployment-node": "tsx tests/runners/livehost/run-hosted-deployment.node.mts",
     "test:node-host-backpressure": "node --import=tsx tests/runners/livehost/run-node-host-backpressure.node.mts",
     "test:hosted-progress-starvation-node": "node --import=tsx tests/runners/livehost/run-hosted-progress-starvation.node.mts",
+    "test:hosted-report-authority-scaling-node": "node --expose-gc --import=tsx tests/runners/livehost/run-hosted-report-authority-scaling.node.mts",
+    "test:hosted-production-panel-timeline-node": "node --expose-gc --import=tsx tests/runners/livehost/run-hosted-production-panel-timeline.node.mts",
     "test:node-application-host": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/node-application-host",
     "test:circuit-worker-service": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-service",
     "test:circuit-livehost-integration": "node --import=tsx tests/runners/harness/run-canonical-tests.node.mts --suite livehost/circuit-worker-action",
@@ -114,10 +116,12 @@
     "test:external-library-node": "node --import=tsx tests/runners/harness/run-external-library-launchers.node.mts",
     "test:external-library-all-node": "node --import=tsx tests/runners/harness/run-external-library-launchers.node.mts --all",
     "test:external-launcher-protocol-node": "node --import=tsx tests/runners/harness/run-external-launcher-protocol.node.mts",
+    "test:external-launcher-manifest-audit-node": "node --import=tsx tests/runners/harness/run-external-launcher-manifest-audit.node.mts",
     "test:runner-truthfulness-node": "node --import=tsx tests/runners/harness/run-test-runner-truthfulness.node.mts",
     "test:splash-lifecycle-node": "node --import=tsx tests/runners/app/run-splash-lifecycle.node.mts",
     "test:inclusive-library-node": "node --import=tsx tests/runners/harness/run-inclusive-library-verification.node.mts",
-    "test:hosted-performance-node": "node --import=tsx tests/runners/harness/run-hosted-test-performance.node.mts"
+    "test:hosted-performance-node": "node --import=tsx tests/runners/harness/run-hosted-test-performance.node.mts",
+    "test:direct-all-performance-node": "node --expose-gc --import=tsx tests/runners/harness/run-direct-all-performance.node.mts"
   },
   "keywords": [],
   "author": "terminal_gothic",
