@@ -149,6 +149,72 @@ expect_cloudflare(detachments === 1, "socket close detaches its LiveHost connect
 runtime.dispose();
 expect_cloudflare(detachments === 2, "runtime disposal detaches every remaining LiveHost connection");
 
+const cloudflareDiagnosticEntries: unknown[][] = [];
+const originalConsoleError = console.error;
+try {
+  console.error = (...args: unknown[]): void => { cloudflareDiagnosticEntries.push(args); };
+
+  const quietRuntime = make_hosted_test_durable_object_runtime(application);
+  const quietSocket = new FakeWebSocket();
+  quietRuntime.accept("hosted-tests", quietSocket as unknown as WebSocket & { accept(): void });
+  quietSocket.emit("close");
+  quietRuntime.dispose();
+  expect_cloudflare(cloudflareDiagnosticEntries.length === 0, "successful Cloudflare authority traffic remains quiet");
+
+  const rejectedRuntime = make_hosted_test_durable_object_runtime({
+    connect() {
+      return {
+        ok: false as const,
+        error: {
+          code: "LIVEHOST_STORE_UNKNOWN_ID",
+          message: "Unknown hosted report authority; token=report-token-value",
+        },
+      };
+    },
+  });
+  const rejectedSocket = new FakeWebSocket();
+  rejectedRuntime.accept(
+    "hosted-report:run-diagnostic-1",
+    rejectedSocket as unknown as WebSocket & { accept(): void },
+  );
+  rejectedRuntime.dispose();
+
+  const throwingRuntime = make_hosted_test_durable_object_runtime({
+    connect() {
+      throw new Error("Authority construction failed; authorization=Bearer top-secret", {
+        cause: new Error("cookie=session-cookie-value"),
+      });
+    },
+  });
+  const throwingSocket = new FakeWebSocket();
+  let throwingCause: unknown;
+  try {
+    throwingRuntime.accept(
+      "towl:room-secret-value",
+      throwingSocket as unknown as WebSocket & { accept(): void },
+    );
+  } catch (cause) {
+    throwingCause = cause;
+  }
+  throwingRuntime.dispose();
+  expect_cloudflare(throwingCause instanceof Error, "Cloudflare authority exceptions retain their existing failure semantics");
+} finally {
+  console.error = originalConsoleError;
+}
+
+const cloudflareDiagnosticText = JSON.stringify(cloudflareDiagnosticEntries);
+expect_cloudflare(
+  cloudflareDiagnosticEntries.length === 2
+    && cloudflareDiagnosticText.includes("authority.connect")
+    && cloudflareDiagnosticText.includes("LIVEHOST_STORE_UNKNOWN_ID")
+    && cloudflareDiagnosticText.includes("hosted-report:run-diagnostic-1")
+    && cloudflareDiagnosticText.includes('"cause"'),
+  `Cloudflare authority rejection and exception diagnostics retain safe operation, identity, code, stack, and cause context (${cloudflareDiagnosticText})`,
+);
+for (const secret of ["report-token-value", "top-secret", "session-cookie-value", "room-secret-value"] as const) {
+  expect_cloudflare(!cloudflareDiagnosticText.includes(secret), `Cloudflare authority diagnostics redact ${secret}`);
+}
+
 const workerExecutorRegistry = make_cloudflare_livehost_executor_registry();
 const workerDiscovery = make_test_executor_discovery(workerExecutorRegistry);
 const workerApplication = create_hosted_test_application({
