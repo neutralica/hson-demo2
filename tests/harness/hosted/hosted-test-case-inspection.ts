@@ -108,6 +108,8 @@ function normalize_loop_report(
     assertions: Object.freeze([]),
     values: Object.freeze([{ label: "input", value: input }]),
     artifacts: Object.freeze((report.artifacts ?? []).map((artifact) => Object.freeze({
+      lap: artifact.lap,
+      label: artifact.label ?? `lap ${artifact.lap} ${artifact.fmt}`,
       format: artifact.fmt,
       text: artifact.text,
       node: artifact.node,
@@ -124,26 +126,24 @@ async function inspect_match(
   request: HostedTestCaseInspectionRequest,
   match: HostedTestCaseInspectionMatch,
 ): Promise<HostedTestCaseDiagnostic> {
-  if (match.testCase.suite.startsWith("transform/")) {
-    const captures = new Map<CaseKey, () => Promise<LoopReport>>();
-    all_deterministic_transform_test_suites(captures);
-    const capture = captures.get(request.caseKey as CaseKey);
-    if (capture !== undefined) {
-      return with_hosted_dom_runtime(async () => {
-        const startedAt = performance.now();
-        const report = await capture();
-        return normalize_loop_report(
-          request.runId,
-          request.suite,
-          request.caseKey,
-          match.testCase.suite,
-          match.testCase.name,
-          performance.now() - startedAt,
-          report,
-          match.testCase.meta?.input ?? null,
-        );
-      });
-    }
+  const captures = new Map<CaseKey, () => Promise<LoopReport>>();
+  all_deterministic_transform_test_suites(captures);
+  const capture = captures.get(request.caseKey as CaseKey);
+  if (capture !== undefined) {
+    return with_hosted_dom_runtime(async () => {
+      const startedAt = performance.now();
+      const report = await capture();
+      return normalize_loop_report(
+        request.runId,
+        request.suite,
+        request.caseKey,
+        match.testCase.suite,
+        match.testCase.name,
+        performance.now() - startedAt,
+        report,
+        match.testCase.meta?.input ?? null,
+      );
+    });
   }
 
   const event = await run_one(match.runtime, match.suite);

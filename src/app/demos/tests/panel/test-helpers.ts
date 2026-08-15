@@ -14,24 +14,8 @@ export type ChipDisplay = Readonly<{
 
 export const TEST_SUMMARY_ENTRY_ORDER = Object.freeze([
   "suites",
-  "suite-fail",
-  "cases",
-  "case-pass",
-  "case-fail",
-  "case-skip",
-  "case-cancel",
-  "checks",
-  "check-pass",
-  "check-fail",
-  "check-cancel",
-  "certifications",
-  "cert-pass",
-  "cert-fail",
-  "cert-cancel",
-  "browser",
-  "browser-pass",
-  "browser-fail",
-  "browser-cancel",
+  "tests",
+  "failed",
   "elapsed",
 ] as const);
 
@@ -76,31 +60,15 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
   };
   const definitions: Readonly<Record<TestSummaryEntryKey, string>> = Object.freeze({
     suites: "suites",
-    "suite-fail": "suites failed",
-    cases: "cases",
-    "case-pass": "cases passed",
-    "case-fail": "cases failed",
-    "case-skip": "cases skipped",
-    "case-cancel": "cases cancelled",
-    checks: "checks",
-    "check-pass": "checks passed",
-    "check-fail": "checks failed",
-    "check-cancel": "checks cancelled",
-    certifications: "certifications",
-    "cert-pass": "certifications passed",
-    "cert-fail": "certifications failed",
-    "cert-cancel": "certifications cancelled",
-    browser: "browser journeys",
-    "browser-pass": "browser passed",
-    "browser-fail": "browser failed",
-    "browser-cancel": "browser cancelled",
+    tests: "tests",
+    failed: "failed",
     elapsed: "elapsed",
   });
   const slots = new Map(TEST_SUMMARY_ENTRY_ORDER.map((key) => [key, makeChip(definitions[key])] as const));
   const initial: readonly TestSummaryEntry[] = [
-    { key: "cases", label: "cases", value: "—" },
-    { key: "case-pass", label: "cases passed", value: "—" },
-    { key: "case-fail", label: "cases failed", value: "—" },
+    { key: "suites", label: "suites", value: "—" },
+    { key: "tests", label: "tests", value: "—" },
+    { key: "failed", label: "failed", value: "—" },
     { key: "elapsed", label: "elapsed", value: "—" },
   ] as const;
   const renderEntries = (entries: readonly TestSummaryEntry[]): void => {
@@ -123,9 +91,9 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     clear: () => renderEntries(initial),
     render: (s) => {
       renderEntries([
-        { key: "cases", label: "cases", value: s.cases },
-        { key: "case-pass", label: "cases passed", value: s.pass },
-        { key: "case-fail", label: "cases failed", value: s.fail },
+        { key: "suites", label: "suites", value: s.suites },
+        { key: "tests", label: "tests", value: s.cases },
+        { key: "failed", label: "failed", value: s.fail },
         { key: "elapsed", label: "elapsed", value: format_hosted_test_duration(s.msTotal) },
       ]);
     },

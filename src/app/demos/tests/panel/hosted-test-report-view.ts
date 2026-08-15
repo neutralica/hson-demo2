@@ -50,7 +50,7 @@ export function serialize_hosted_case_diagnostic(diagnostic: HostedTestCaseDiagn
   for (const value of diagnostic.values) lines.push("", `${value.label}:`, value.value ?? "unavailable");
   if (diagnostic.type === "transform") {
     for (const artifact of diagnostic.artifacts) {
-      lines.push("", `[${artifact.format.toUpperCase()}]`, artifact.text);
+      lines.push("", `[${artifact.label}] lap ${artifact.lap} · ${artifact.format.toUpperCase()}`, artifact.text);
       if (artifact.node !== null) lines.push("node:", artifact.node);
     }
   }
@@ -58,23 +58,23 @@ export function serialize_hosted_case_diagnostic(diagnostic: HostedTestCaseDiagn
   return lines.join("\n");
 }
 
-function transform_columns(diagnostic: HostedTestCaseDiagnostic): string {
-  const formats = ["hson", "json", "html"] as const;
-  return `<div class="artifacts">${formats.map((format) => {
-    const matches = diagnostic.artifacts.filter((artifact) => artifact.format === format);
-    const artifact = matches.at(-1);
-    if (!artifact) return `<section><h2>${format}</h2><p class="muted">unavailable</p></section>`;
-    return `<section><h2>${format}</h2><pre>${escape_html(artifact.text)}</pre>${artifact.node === null ? "" : `<details><summary>node</summary><pre>${escape_html(artifact.node)}</pre></details>`}</section>`;
-  }).join("")}</div>`;
+function transform_circuit(diagnostic: HostedTestCaseDiagnostic): string {
+  const trace = diagnostic.trace.length === 0
+    ? ""
+    : `<details class="trace"><summary>verified circuit trace (${diagnostic.trace.length})</summary><ol>${diagnostic.trace.map((step) => `<li class="${step.ok ? "ok" : "fail"}">${escape_html(step.step)}${step.error === null ? "" : ` — ${escape_html(step.error)}`}</li>`).join("")}</ol></details>`;
+  const artifacts = diagnostic.artifacts.length === 0
+    ? `<p class="muted">No circuit artifacts were reproduced.</p>`
+    : `<div class="artifacts">${diagnostic.artifacts.map((artifact, index) => `<section class="artifact"><h2><span>${index + 1}</span> ${escape_html(artifact.label)}</h2><p class="meta">lap ${artifact.lap} · ${artifact.format}</p><pre>${escape_html(artifact.text)}</pre>${artifact.node === null ? "" : `<details><summary>canonical HsonNode</summary><pre>${escape_html(artifact.node)}</pre></details>`}</section>`).join("")}</div>`;
+  return `${trace}${artifacts}`;
 }
 
 export function render_hosted_case_diagnostic_html(diagnostic: HostedTestCaseDiagnostic): string {
   const text = serialize_hosted_case_diagnostic(diagnostic);
   const body = diagnostic.type === "transform"
-    ? transform_columns(diagnostic)
+    ? transform_circuit(diagnostic)
     : `<pre>${escape_html(text)}</pre>`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>${escape_html(diagnostic.caseKey)}</title><style>
-  :root{color-scheme:dark}body{margin:0;background:#080a09;color:#e8e4d7;font:13px/1.5 "DM Mono",ui-monospace,monospace;padding:28px}header{border-bottom:1px solid #49534d;padding-bottom:14px;margin-bottom:20px}h1{font-size:17px;color:#d7ff70;margin:0 0 6px}h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#7dd8cf}p{margin:0}.status{color:${diagnostic.status === "pass" ? "#9ddf8b" : "#ff8778"}}pre{white-space:pre-wrap;overflow:auto;max-height:68vh;border-left:1px solid #49534d;padding:10px 12px;margin:0;background:#0c100e}.artifacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.muted{color:#7c817d}details{margin-top:8px;color:#b7c3bb}summary{cursor:pointer}@media(max-width:900px){.artifacts{grid-template-columns:1fr}}
+  :root{color-scheme:dark}body{margin:0;background:#080a09;color:#e8e4d7;font:13px/1.5 "DM Mono",ui-monospace,monospace;padding:28px}header{border-bottom:1px solid #49534d;padding-bottom:14px;margin-bottom:20px}h1{font-size:17px;color:#d7ff70;margin:0 0 6px}h2{font-size:12px;letter-spacing:.06em;color:#7dd8cf;margin:0}.meta{color:#7c817d;margin:2px 0 8px}.status,.ok{color:${diagnostic.status === "pass" ? "#9ddf8b" : "#ff8778"}}.fail{color:#ff8778}pre{white-space:pre-wrap;overflow:auto;max-height:42vh;border-left:1px solid #49534d;padding:10px 12px;margin:0;background:#0c100e}.artifacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.artifact{min-width:0;border-top:1px solid #354039;padding-top:10px}.artifact h2 span{color:#d7ff70}.muted{color:#7c817d}details{margin-top:8px;color:#b7c3bb}summary{cursor:pointer}.trace{margin:0 0 24px;padding:10px 12px;border:1px solid #354039}.trace ol{columns:2;column-gap:32px}@media(max-width:900px){.artifacts{grid-template-columns:1fr}.trace ol{columns:1}}
   </style></head><body><header><h1>${escape_html(diagnostic.name)}</h1><p>${escape_html(diagnostic.caseKey)}</p><p><span class="status">${diagnostic.status.toUpperCase()}</span> · ${escape_html(format_hosted_test_duration(diagnostic.ms))}</p></header>${body}</body></html>`;
 }
 

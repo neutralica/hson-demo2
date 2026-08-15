@@ -227,7 +227,9 @@ export function make_hosted_test_panel_adapter(
       const pending = run.inspect({ runId: result.runId, caseKey });
       inspectionRequests.set(caseKey, pending);
       try { return await pending; }
-      catch (error) { inspectionRequests.delete(caseKey); throw error; }
+      finally {
+        if (inspectionRequests.get(caseKey) === pending) inspectionRequests.delete(caseKey);
+      }
     },
     capture() {
       return currentReport;

@@ -20,7 +20,6 @@ import {
     hosted_test_projection_summary,
     type HostedTestProjectionSummary,
 } from "./hosted-test-report-summary";
-import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
 import type { TestExecutorDiscovery } from "../../../../shared/testing/test-discovery-contract";
 import {
     hosted_test_panel_selected_ids,
@@ -32,6 +31,7 @@ import {
 } from "./hosted-test-panel-selection";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../shared/hosted-tests/hosted-test-timeline";
 import type { HostedTestPanelRuntime } from "./hosted-test-panel-runtime";
+import { make_hosted_test_stopwatch } from "./hosted-test-stopwatch";
 
 const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
 
@@ -251,6 +251,7 @@ export function tp_factory(options: Readonly<{
     let latestSummaryProjectionKey = "";
     let latestRunId = "";
     let latestHasQueued = false;
+    let latestElapsedMs: number | null = null;
     let cancelSummaryFrame: (() => void) | undefined;
     let explicitExecutionCount = 0;
     const queuedSuiteIds = new Set<string>();
@@ -284,11 +285,22 @@ export function tp_factory(options: Readonly<{
         caseList = make_case_list();
     };
 
+    const render_summary = (): void => {
+        if (latestProjectionSummary === undefined) chips.render(latestSummary);
+        else chips.renderEntries(hosted_test_projection_footer(latestProjectionSummary, latestElapsedMs));
+    };
+
+    const stopwatch = make_hosted_test_stopwatch({
+        render(elapsedMs) {
+            latestElapsedMs = elapsedMs;
+            render_summary();
+        },
+    });
+
     const flush_summary = (): void => {
         cancelSummaryFrame?.();
         cancelSummaryFrame = undefined;
-        if (latestProjectionSummary === undefined) chips.render(latestSummary);
-        else chips.renderEntries(hosted_test_projection_footer(latestProjectionSummary, latestSummary.msTotal));
+        render_summary();
         if (latestHasQueued) observe_hosted_test_timeline(options.timeline, "summary_projected_queued", { runId: latestRunId });
     };
 
@@ -302,8 +314,7 @@ export function tp_factory(options: Readonly<{
         const id = requestAnimationFrame(() => {
             cancelSummaryFrame = undefined;
             if (active) {
-                if (latestProjectionSummary === undefined) chips.render(latestSummary);
-                else chips.renderEntries(hosted_test_projection_footer(latestProjectionSummary, latestSummary.msTotal));
+                render_summary();
                 if (latestHasQueued) observe_hosted_test_timeline(options.timeline, "summary_projected_queued", { runId: latestRunId });
             }
         });
@@ -354,6 +365,7 @@ export function tp_factory(options: Readonly<{
             replace_case_list();
             latestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
             latestProjectionSummary = undefined;
+            latestElapsedMs = null;
             latestSummaryProjectionKey = "";
             latestRunId = "";
             latestHasQueued = false;
@@ -364,7 +376,7 @@ export function tp_factory(options: Readonly<{
             opaqueSuiteTotal = 0;
             opaqueSuiteTerminal = 0;
             chronology.begin(context?.recovered ?? false);
-            appendLogLine(`${context?.recovered ? "recover" : "run"} section — ${suite}`);
+            stopwatch.reset();
             if (context?.controlStatus === "cancelling") {
                 branch.attrs.set("data-hosted-panel-state", "cancelling");
                 cancelBtn.flags.set("disabled");
@@ -421,7 +433,8 @@ export function tp_factory(options: Readonly<{
             latestProjectionSummary = projectionSummary;
             latestRunId = update.report.run.id ?? "";
             latestHasQueued = queuedSuiteIds.size > 0;
-            const footer = hosted_test_projection_footer(latestProjectionSummary, latestSummary.msTotal);
+            stopwatch.update(update.report.run);
+            const footer = hosted_test_projection_footer(latestProjectionSummary, latestElapsedMs);
             const summaryProjectionKey = JSON.stringify(footer);
             if (summaryProjectionKey !== latestSummaryProjectionKey) {
                 latestSummaryProjectionKey = summaryProjectionKey;
@@ -446,7 +459,6 @@ export function tp_factory(options: Readonly<{
         renderTiming(timing) {
             latestSummary = { ...latestSummary, msTotal: timing.roundTripMs };
             flush_summary();
-            appendLogLine(`elapsed ${format_hosted_test_duration(timing.roundTripMs)} · runner ${format_hosted_test_duration(timing.runnerMs)} · host ${format_hosted_test_duration(timing.hostMs)}`);
             update_selected_presentation();
         },
     });
@@ -467,13 +479,8 @@ export function tp_factory(options: Readonly<{
     const update_selected_presentation = (): void => {
         const choice = selected_choice();
         if (discovery !== undefined) {
-            const opaqueChecks = discovery.catalog.suites
-                .filter((suite) => suite.executionShape === "opaque-aggregate")
-                .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
-            const certifications = discovery.catalog.suites
-                .filter((suite) => suite.executionShape === "certification-aggregate").length;
             executorLabel.text.set(
-                `${discovery.executor.label} · ${discovery.catalog.tests.length} cases · ${opaqueChecks} checks · ${certifications} certifications · ${choice === undefined ? "no selection" : hosted_test_panel_display_label(choice.label)}`,
+                `${discovery.executor.label} · ${choice === undefined ? "no selection" : hosted_test_panel_display_label(choice.label)}`,
             );
         }
         branch.attrs.setMany({
@@ -765,6 +772,7 @@ export function tp_factory(options: Readonly<{
         dispose: () => {
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;
+            stopwatch.dispose();
             caseList?.dispose();
             hostedAdapter?.dispose();
             hostedRuntime.dispose();

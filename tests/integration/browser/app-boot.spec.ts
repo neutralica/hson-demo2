@@ -189,10 +189,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await open_demo(page, "test");
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "node-livehost-mothership", { timeout: 10_000 });
-  await expect(page.getByTestId("hosted-test-executor")).toContainText("Node LiveHost Mothership");
-  await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ cases/);
-  await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ checks/);
-  await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ certifications/);
+  await expect(page.getByTestId("hosted-test-executor")).toHaveText(/^Node LiveHost Mothership · all \(\d+\)$/);
   await panel.evaluate((element) => element.setAttribute("data-retention-probe", "same-instance"));
   await open_demo(page, "about");
   await expect(panel).not.toBeVisible();
@@ -272,9 +269,9 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await page.locator("#test-run").click();
 
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "1");
-  await expect(page.locator("#test-logger")).toContainText("elapsed", { timeout: 15_000 });
-  await expect(page.locator("#test-logger")).toContainText("queued livetree/canvas-clear — 3 cases");
-  await expect(page.locator("#test-logger")).toContainText("pass livetree/canvas-clear — 3 cases");
+  await expect(page.locator("#test-logger")).toContainText("passed ·", { timeout: 15_000 });
+  await expect(page.locator("#test-logger")).toContainText("queued");
+  await expect(page.locator("#test-logger")).not.toContainText("3 cases · 3 pass");
   await expect(page.locator("#test-case-pane [data-hosted-suite]")).toHaveCount(1);
   await page.locator("#test-clear").click();
   await expect(page.locator("#test-logger")).toHaveText("");
@@ -285,20 +282,17 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await targetedSuite.selectOption("suite:livehost/authority");
   await page.locator("#test-run").click();
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "2");
-  await expect(page.locator("#test-logger")).toContainText(
-    "pass livehost/authority — 21 checks",
-    { timeout: 15_000 },
-  );
-  await expect(page.locator("#test-logger")).toContainText("stdout livehost/authority");
+  await expect(page.locator("#test-logger")).toContainText("passed ·", { timeout: 15_000 });
+  await expect(page.locator("#test-logger")).not.toContainText("21 checks · 21 pass");
+  await expect(page.locator("#test-logger")).not.toContainText("stdout livehost/authority");
   const externalRow = page.locator('[data-hosted-suite="livehost/authority"]');
   await externalRow.click();
   await expect(page.locator('[data-evidence-kind="stdout"] .hosted-evidence-content')).toContainText("ok 1 -");
   await expect(page.locator("#test-chips .test-chip:visible .test-chip-value")).toHaveText([
-    "1", "0", "0", "0", "0", "21", "21", "0", /\d/,
+    "1", "21", "0", /\d/,
   ]);
   await expect(page.locator("#test-chips .test-chip:visible .test-chip-label")).toHaveText([
-    "suites", "suites failed", "cases", "cases passed", "cases failed",
-    "checks", "checks passed", "checks failed", "elapsed",
+    "suites", "tests", "failed", "elapsed",
   ]);
   assertNoErrors();
 });

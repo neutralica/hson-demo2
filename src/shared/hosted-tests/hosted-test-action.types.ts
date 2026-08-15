@@ -69,7 +69,13 @@ export type HostedTestCaseDiagnostic = Readonly<{
   error: string | null;
   assertions: readonly Readonly<{ ok: boolean; label: string; actual: string | null; expected: string | null }>[];
   values: readonly HostedTestDiagnosticText[];
-  artifacts: readonly Readonly<{ format: "hson" | "json" | "html"; text: string; node: string | null }>[];
+  artifacts: readonly Readonly<{
+    lap: number;
+    label: string;
+    format: "hson" | "json" | "html";
+    text: string;
+    node: string | null;
+  }>[];
   trace: readonly Readonly<{ ok: boolean; step: string; error: string | null }>[];
 }>;
 

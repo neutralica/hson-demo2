@@ -126,7 +126,6 @@ const PANEL_STYLES = Object.freeze({
   disclosure: { color: "#d7ff70", textAlign: "center" },
   suiteName: { minWidth: "0", display: "grid", gap: "1px" },
   suiteTitle: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  identity: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#81948a", fontSize: ".68rem" },
   suiteSummary: { color: "#9bb3a6", whiteSpace: "nowrap" },
   suiteDuration: { color: "#89948d", textAlign: "right", whiteSpace: "nowrap" },
   suiteFailed: { color: "#ff8778" },
@@ -238,7 +237,6 @@ export function make_hosted_test_case_list(
   css.selector("& .hosted-suite-disclosure").setMany(PANEL_STYLES.disclosure);
   css.selector("& .hosted-suite-name").setMany(PANEL_STYLES.suiteName);
   css.selector("& .hosted-suite-title").setMany(PANEL_STYLES.suiteTitle);
-  css.selector("& .hosted-suite-identity").setMany(PANEL_STYLES.identity);
   css.selector("& .hosted-suite-summary").setMany(PANEL_STYLES.suiteSummary);
   css.selector("& .hosted-suite-duration").setMany(PANEL_STYLES.suiteDuration);
   css.selector("& .hosted-suite-row.is-failed").setMany(PANEL_STYLES.suiteFailed);
@@ -291,11 +289,10 @@ export function make_hosted_test_case_list(
     });
     const disclosure = row.create.span().classlist.set("hosted-suite-disclosure").text.set("▸");
     const name = row.create.span().classlist.set("hosted-suite-name");
-    name.create.span().classlist.set("hosted-suite-title").text.set(title);
-    name.create.span().classlist.set("hosted-suite-identity").text.set(suite);
+    name.create.span().classlist.set("hosted-suite-title").attrs.set("title", title).text.set(suite);
     const summary = row.create.span().classlist.set("hosted-suite-summary").text.set("0 cases");
     const duration = row.create.span().classlist.set("hosted-suite-duration").text.set("running");
-    liveTreesConstructed += 8;
+    liveTreesConstructed += 7;
     suiteRowsCreated += 1;
     const created: SuiteProjection = {
       suite,

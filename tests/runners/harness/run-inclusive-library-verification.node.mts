@@ -134,15 +134,12 @@ assert.ok(
   events.findIndex((event) => event.t === "external_end") < events.length - 1,
   "an external completion is reported before the combined run completes",
 );
-assert.equal(footer.find((entry) => entry.key === "cases")?.value, canonicalCaseCount);
-assert.equal(footer.find((entry) => entry.key === "case-pass")?.value, canonicalCaseCount);
-assert.equal(footer.find((entry) => entry.key === "case-fail")?.value, 0);
-assert.equal(footer.find((entry) => entry.key === "checks")?.value, manifestExternalCheckCount);
-assert.equal(footer.find((entry) => entry.key === "check-pass")?.value, manifestExternalCheckCount);
-assert.equal(footer.find((entry) => entry.key === "check-fail")?.value, 0);
-assert.ok(!footer.some((entry) => entry.label === "passed" || entry.label === "failed"), "mixed totals never collapse cases and opaque checks into one universe");
+assert.equal(footer.find((entry) => entry.key === "tests")?.value, canonicalCaseCount + manifestExternalCheckCount);
+assert.equal(footer.find((entry) => entry.key === "failed")?.value, 0);
+assert.deepEqual(footer.map((entry) => entry.label), ["suites", "tests", "failed", "elapsed"]);
 assert.equal(projection.canonical.total, canonicalCaseCount);
 assert.equal(projection.launchers.total, availability.targets.length);
+assert.equal(projection.launchers.declaredChecks, manifestExternalCheckCount);
 const projectedLauncherIssues = availability.targets.flatMap((target) => {
   const projected = captured.suiteRuns.find((suite) => suite.id === target.id);
   if (projected === undefined) {

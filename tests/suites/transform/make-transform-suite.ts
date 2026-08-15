@@ -66,7 +66,7 @@ export function make_transform_test_suite(
           const report = hson._circuit_test(atom, {
             ...base,
             verbose: true,
-            capture: true,
+            capture: false,
           });
 
           const didPass = report.ok;

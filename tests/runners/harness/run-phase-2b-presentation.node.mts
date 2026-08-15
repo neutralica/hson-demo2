@@ -84,6 +84,9 @@ try {
   certify(initial.groupOrder.join("|") === HOSTED_TEST_PRESENTATION_GROUP_ORDER.join("|"), "actual Inspector projection ignores shuffled discovery insertion and uses semantic group order");
   certify(initial.suiteOrder.join("|") === plan.suites.map((entry) => entry.id).join("|"), "all queued Inspector suites use frozen RunPlan order");
   certify(runtime.document.querySelector('[data-hosted-subject="transform"] [data-hosted-suite="transform/hson-tokenizer"]') !== null, "opaque Transform launcher renders inside the Transform group");
+  certify(runtime.document.querySelector('[data-hosted-suite="transform/hson-tokenizer"] .hosted-suite-title')?.textContent === "transform/hson-tokenizer"
+    && runtime.document.querySelector('[data-hosted-suite="transform/hson-tokenizer"] .hosted-suite-identity') === null,
+  "canonical suite path stands alone without friendly-title duplication");
   certify(runtime.document.querySelector('[data-hosted-subject="library"]') === null, "actual Inspector DOM has no Library group");
   certify(runtime.document.querySelectorAll('[data-hosted-suite]').length === plan.suites.length, "all planned rows exist while queued");
   const rowBefore = runtime.document.querySelector('[data-hosted-suite="livemap/demo"]');
@@ -199,7 +202,7 @@ try {
   certify(largeReport.suiteRuns.filter((entry) => entry.executionShape === "opaque-aggregate").reduce((total, entry) => total + entry.counts.declared, 0) === 502, "representative opaque count universe contains 502 checks");
   certify(largeSnapshot.metrics.caseRowsCreated === 0 && largeSnapshot.metrics.visibleCaseRows === 0 && largeRuntime.document.querySelectorAll(".hosted-case-row").length === 0, "2,103 queued canonical cases remain lazy while collapsed");
   certify(largeSnapshot.metrics.actionHandleEntries === 0 && largeSnapshot.metrics.liveCaseTrees === 0, "collapsed large projection owns no hidden case-action handles or case LiveTrees");
-  certify(largeSnapshot.metrics.suiteRowsCreated === 30 && largeSnapshot.metrics.listenerRegistrations === 1 && largeSnapshot.metrics.liveTreesConstructed === 244, "large Inspector materializes only stable suite/group rows with one delegated listener");
+  certify(largeSnapshot.metrics.suiteRowsCreated === 30 && largeSnapshot.metrics.listenerRegistrations === 1 && largeSnapshot.metrics.liveTreesConstructed === 214, "large Inspector materializes only stable suite/group rows with one delegated listener");
   largeInspector.set_expanded("transform/large", true);
   const largeExpanded = largeInspector.snapshot();
   certify(largeExpanded.metrics.visibleCaseRows === 2_103 && largeExpanded.metrics.actionHandleEntries === 4_206 && largeExpanded.metrics.listenerRegistrations === 1, "expanding one large suite materializes only that suite's rows and two controls per canonical case");
@@ -208,7 +211,7 @@ try {
   certify(largeRecollapsed.metrics.visibleCaseRows === 0 && largeRecollapsed.metrics.actionHandleEntries === 0 && largeRecollapsed.metrics.liveCaseTrees === 0, "collapsing the large suite releases all case presentation ownership");
   const largeChronology = make_hosted_test_chronology();
   largeChronology.begin();
-  certify(largeChronology.ingest(largeReport).length === 30 && largeRuntime.document.querySelectorAll(".hosted-suite-details").length === 0, "large Logger append is suite-bounded and evidence panels remain unmaterialized");
+  certify(largeChronology.ingest(largeReport).length === 1 && largeRuntime.document.querySelectorAll(".hosted-suite-details").length === 0, "large clean Logger remains run-bounded and evidence panels remain unmaterialized");
   largeInspector.dispose();
 } finally {
   largeRuntime.dispose();
@@ -220,8 +223,7 @@ certify(classified.warnings.length === 1 && classified.stderr === "meaningful fa
 const chronology = make_hosted_test_chronology();
 chronology.begin(false);
 const queueLines = chronology.ingest(queued);
-certify(queueLines.length === plan.suites.length && queueLines.every((line) => line.startsWith("queued")), "Logger begins with one retained queued line per planned suite");
-certify(queueLines.map((line) => line.split(" — ", 1)[0]?.trim().split(/\s+/).at(-1)).join("|") === plan.suites.map((entry) => entry.id).join("|"), "Logger queue lines begin in RunPlan order");
+certify(queueLines.length === 1 && queueLines[0] === "queued", "Logger collapses routine queued suite chatter to one run line");
 const concurrent = clone_report(queued) as HostedTestReport & { suiteRuns: HostedTestSuiteRunReport[] };
 const transformRunning = suite(concurrent, "transform/demo") as HostedTestSuiteRunReport & { status: "running"; lastSequence: number };
 const liveTreeRunning = suite(concurrent, "livetree/demo") as HostedTestSuiteRunReport & { status: "running"; lastSequence: number };
@@ -230,7 +232,7 @@ transformRunning.lastSequence = 12;
 liveTreeRunning.status = "running";
 liveTreeRunning.lastSequence = 11;
 const startLines = chronology.ingest(concurrent);
-certify(startLines.join("|").startsWith("running livetree/demo|running transform/demo"), "concurrent Logger starts follow accepted event chronology, not Inspector order");
+certify(startLines.join("|") === "running · livetree/demo", "Logger retains only the first chronologically active suite as compact running context");
 const terminal = clone_report(concurrent) as HostedTestReport & { suiteRuns: HostedTestSuiteRunReport[] };
 const transformTerminal = suite(terminal, "transform/demo") as HostedTestSuiteRunReport & { status: "pass"; durationMs: number; ms: number; lastSequence: number };
 const liveTreeTerminal = suite(terminal, "livetree/demo") as HostedTestSuiteRunReport & { status: "fail"; durationMs: number; ms: number; lastSequence: number };
@@ -245,8 +247,8 @@ liveTreeTerminal.ms = 8;
 liveTreeTerminal.lastSequence = 14;
 Object.assign(liveTreeTerminal.counts, { executed: 1, failed: 1 });
 const terminalLines = chronology.ingest(terminal);
-certify(terminalLines[0]?.startsWith("fail livetree/demo") && terminalLines[1]?.startsWith("pass transform/demo"), "hostile terminal Logger lines retain chronology while Inspector order remains frozen");
-certify(terminalLines[1]?.includes(hosted_test_suite_presentation(transformTerminal).summary) === true, "Logger terminal status/count language agrees exactly with Inspector presentation");
+certify(terminalLines.length === 1 && terminalLines[0]?.startsWith("fail livetree/demo"), "Logger suppresses ordinary successful suite completion while retaining failure chronology");
+certify(!terminalLines.join("\n").includes(hosted_test_suite_presentation(transformTerminal).summary), "Logger omits routine successful count summaries retained by the Inspector");
 const authorityBeforeClear = JSON.stringify(terminal);
 chronology.clearPresentation();
 certify(chronology.ingest(terminal).length === 0 && JSON.stringify(terminal) === authorityBeforeClear, "explicit Logger Clear neither replays nor mutates report authority");

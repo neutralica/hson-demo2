@@ -118,6 +118,13 @@ function runtime_warning_line(line: string): boolean {
     || /^\(Use `node --trace-(?:warnings|deprecation)/.test(line);
 }
 
+function routine_launcher_bootstrap_warning(line: string): boolean {
+  return /ExperimentalWarning: `--experimental-loader` may be removed/.test(line)
+    || line.includes("register(\"ts-node/esm\"")
+    || /\[DEP0180\] DeprecationWarning: fs\.Stats constructor is deprecated/.test(line)
+    || /^\(Use `node --trace-(?:warnings|deprecation)/.test(line);
+}
+
 export function classify_hosted_test_stderr(stderr: string): Readonly<{
   stderr: string;
   warnings: readonly string[];
@@ -291,7 +298,7 @@ function concise_output(value: string): string {
 }
 
 function terminal_line(suite: HostedTestSuiteRunReport): string {
-  return `${suite.status} ${suite.id} — ${hosted_test_suite_summary(suite)} — ${suite.durationMs === null ? suite.status : format_hosted_test_duration(suite.durationMs)}`;
+  return `${suite.status} ${suite.id}${suite.durationMs === null ? "" : ` · ${format_hosted_test_duration(suite.durationMs)}`}`;
 }
 
 export type HostedTestChronology = Readonly<{
@@ -303,6 +310,9 @@ export type HostedTestChronology = Readonly<{
 export function make_hosted_test_chronology(): HostedTestChronology {
   let recovered = false;
   let first = true;
+  let queuedEmitted = false;
+  let runningEmitted = false;
+  let runStatus: HostedTestReport["run"]["status"] | undefined;
   const statuses = new Map<string, TestLifecycleStatus>();
   const evidenceSequences = new Map<string, number>();
 
@@ -310,6 +320,9 @@ export function make_hosted_test_chronology(): HostedTestChronology {
     begin(isRecovery = false) {
       recovered = isRecovery;
       first = true;
+      queuedEmitted = false;
+      runningEmitted = false;
+      runStatus = undefined;
       statuses.clear();
       evidenceSequences.clear();
     },
@@ -323,40 +336,47 @@ export function make_hosted_test_chronology(): HostedTestChronology {
       const suites = [...changedSuites].sort((left, right) => left.order - right.order);
       if (first && recovered) {
         lines.push(`recovered ${report.run.id ?? report.run.suite} — authoritative ${report.run.status} snapshot`);
+      } else if (!queuedEmitted && report.suiteRuns.length > 0) {
+        lines.push("queued");
+        queuedEmitted = true;
+      }
+      if (!recovered && !runningEmitted) {
+        const running = suites
+          .filter((suite) => suite.status === "running" && statuses.get(suite.id) !== "running")
+          .sort((left, right) => left.lastSequence - right.lastSequence)[0];
+        if (running !== undefined) {
+          append(running.lastSequence, `running · ${running.id}`);
+          runningEmitted = true;
+        }
       }
       for (const suite of suites) {
         const previous = statuses.get(suite.id);
         if (previous === undefined) {
-          if (first && recovered) lines.push(`state ${suite.id} — ${suite.status} — ${hosted_test_suite_summary(suite)}`);
-          else {
-            const total = suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys"
-              ? suite.counts.declared : suite.counts.total;
-            const noun = suite.executionShape === "opaque-aggregate"
-              ? total === 1 ? "check" : "checks"
-              : suite.executionShape === "certification-aggregate"
-                ? total === 1 ? "certification" : "certifications"
-                : total === 1 ? "case" : "cases";
-            lines.push(`queued ${suite.id} — ${total} ${noun}`);
-            if (suite.status === "running") append(suite.lastSequence, `running ${suite.id}`);
-            else if (suite.status !== "queued") append(suite.lastSequence, terminal_line(suite));
+          if (first && recovered && (suite.status === "fail" || suite.status === "cancelled" || suite.status === "unsupported")) {
+            lines.push(`state ${suite.id} — ${suite.status}`);
+          } else if (!recovered && suite.status !== "queued" && suite.status !== "running" && suite.status !== "pass") {
+            append(suite.lastSequence, terminal_line(suite));
           }
         } else if (previous !== suite.status) {
-          if (suite.status === "running") append(suite.lastSequence, `running ${suite.id}`);
-          else if (suite.status !== "queued") append(suite.lastSequence, terminal_line(suite));
+          if (suite.status !== "queued" && suite.status !== "running" && suite.status !== "pass") append(suite.lastSequence, terminal_line(suite));
+        }
+        if (previous !== suite.status && (suite.status === "fail" || suite.status === "unsupported" || suite.status === "cancelled")) {
+          for (const error of suite.errors) append(suite.lastSequence, `${error.kind} ${suite.id} — ${concise_output(error.message)}`);
         }
         statuses.set(suite.id, suite.status);
 
         const lastEvidence = evidenceSequences.get(suite.id) ?? 0;
         for (const evidence of [...suite.evidence].sort((left, right) => left.sequence - right.sequence)) {
           if (evidence.sequence <= lastEvidence || (first && recovered)) continue;
-          if (evidence.kind === "stdout") {
+          if (evidence.kind === "stdout" && suite.status === "fail") {
             const output = concise_output(strip_control_frames(evidence.content));
             if (output !== "") append(evidence.sequence, `stdout ${suite.id} — ${output}`);
           } else if (evidence.kind === "stderr") {
             const classified = classify_hosted_test_stderr(evidence.content);
             const stderr = concise_output(classified.stderr);
             if (stderr !== "") append(evidence.sequence, `stderr ${suite.id} — ${stderr}`);
-            if (classified.warnings.length > 0) append(evidence.sequence, `warning ${suite.id} — ${classified.warnings.length} runtime warning line${classified.warnings.length === 1 ? "" : "s"}`);
+            const meaningfulWarnings = classified.warnings.filter((line) => !routine_launcher_bootstrap_warning(line));
+            if (meaningfulWarnings.length > 0) append(evidence.sequence, `warning ${suite.id} — ${meaningfulWarnings.length} runtime warning line${meaningfulWarnings.length === 1 ? "" : "s"}`);
           } else if (evidence.kind === "runtime_warning") {
             append(evidence.sequence, `warning ${suite.id} — ${concise_output(evidence.content)}`);
           }
@@ -366,6 +386,12 @@ export function make_hosted_test_chronology(): HostedTestChronology {
       lines.push(...chronological
         .sort((left, right) => left.sequence - right.sequence || left.ordinal - right.ordinal)
         .map((entry) => entry.line));
+      if (runStatus !== report.run.status && report.run.status !== "idle" && report.run.status !== "running") {
+        const elapsed = report.run.timing?.runnerMs
+          ?? (report.run.startedAt !== null && report.run.completedAt !== null ? report.run.completedAt - report.run.startedAt : null);
+        lines.push(`${report.run.status}${elapsed === null ? "" : ` · ${format_hosted_test_duration(elapsed)}`}`);
+      }
+      runStatus = report.run.status;
       first = false;
       return Object.freeze(lines);
     },
