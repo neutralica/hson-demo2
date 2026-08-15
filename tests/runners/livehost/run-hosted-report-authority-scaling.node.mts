@@ -48,7 +48,7 @@ function memory() {
 
 globalThis.gc?.();
 const baseline = memory();
-const initial = make_initial_hosted_test_report(HOSTED_TEST_SELECTED_RUN_TARGET, runId, runPlan);
+const initial = make_initial_hosted_test_report(runPlan);
 const initialJson = JSON.stringify(initial);
 const map = hson.liveMap.fromJson(JSON.parse(initialJson)).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
 const host = create_livehost({ map, logicalMapId: `hosted-report:${runId}` });
@@ -89,8 +89,7 @@ const stopCommits = host.stream.on_commit((commit) => {
     bytes,
   }));
 });
-const report = make_hosted_test_report(Date.now, undefined, HOSTED_TEST_SELECTED_RUN_TARGET, {
-  runId,
+const report = make_hosted_test_report(Date.now, undefined, {
   runPlan,
   captureCommits,
   map,

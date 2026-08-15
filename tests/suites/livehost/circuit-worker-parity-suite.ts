@@ -54,7 +54,7 @@ export function circuit_worker_parity_suite(): TestSuite {
   const quoted = hsonTransform.fromJson({ "quoted name": 1, "colon:name": 2 }).toHson().serialize();
   return Object.freeze({
     suite: SUITE,
-    descriptor: Object.freeze({ subject: "transform", requirements: Object.freeze(["javascript", "node", "worker"] as const) }),
+    descriptor: Object.freeze({ subject: "transform", requirements: Object.freeze(["javascript", "node", "worker-threads"] as const) }),
     cases: Object.freeze([
       parity_case("explicit-hson", "explicit HSON agrees with direct universal execution", "hson", "<\n  phase 2\n  worker true\n>"),
       parity_case("explicit-json", "explicit JSON agrees with direct universal execution", "json", '{"phase":2,"worker":true}'),

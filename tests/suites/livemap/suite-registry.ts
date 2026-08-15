@@ -26,7 +26,6 @@ import { livemap_suites_bridge_livetree_controls } from "./bridge-livetree-2";
 import { livemap_suites_schema_controls } from "./generated-control-suite";
 import { livemap_suites_schema_validation_controls } from "./schema-control-suite-2";
 import { livemap_misc_suite } from "./misc-suite";
-import { livemap_path_handle_suite } from "./path-handle-suite";
 import { livemap_bind_suite } from "./bind-suite";
 import { livemap_error_handling } from "./error-handling-suite";
 import { livemap_suite_rev } from "./rev-suite";
@@ -37,11 +36,6 @@ import {
   livemap_projected_ingress_suite,
 } from "./projected-ingress-suite";
 import { livemap_projected_equality_suite } from "./projected-equality-suite";
-import { livemap_carrier_mutation_planning_suite } from "./carrier-mutation-planning-suite";
-import { livemap_exact_transport_suite } from "./exact-transport-suite";
-import { livemap_exact_transport_rejection_suite } from "./exact-transport-rejection-suite";
-import { livemap_exact_propagation_suite } from "./exact-propagation-suite";
-import { livemap_schema_value_boundary_suite } from "./schema-value-boundary-suite";
 import { livemap_ordered_object_array_helpers_suite } from "./ordered-object-array-helpers-suite";
 import { livemap_equivalence_mutation_matrix_suite } from "./equivalence-mutation-matrix-suite";
 import { livemap_equivalence_schema_helper_matrix_suite } from "./equivalence-schema-helper-matrix-suite";
@@ -118,7 +112,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_suites_schema_controls(),
     livemap_suites_schema_validation_controls(),
     livemap_misc_suite(),
-    livemap_path_handle_suite(),
     livemap_bind_suite(),
     livemap_error_handling(),
     livemap_suite_rev(),
@@ -127,11 +120,6 @@ export function all_livemap_suites(): readonly TestSuite[] {
     livemap_projected_ingress_suite(),
     livemap_projected_ingress_rejection_suite(),
     livemap_projected_equality_suite(),
-    livemap_carrier_mutation_planning_suite(),
-    livemap_exact_transport_suite(),
-    livemap_exact_transport_rejection_suite(),
-    livemap_exact_propagation_suite(),
-    livemap_schema_value_boundary_suite(),
     livemap_ordered_object_array_helpers_suite(),
     livemap_equivalence_mutation_matrix_suite(),
     livemap_equivalence_schema_helper_matrix_suite(),

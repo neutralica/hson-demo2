@@ -35,7 +35,7 @@ import type { HostedTestPanelRuntime } from "./hosted-test-panel-runtime";
 
 const HOSTED_TEST_RECOVERY_RUN_KEY = "hson-livedemo.hosted-test.run-id";
 
-type RememberedHostedTestRun = Readonly<{ runId: string; attemptId?: string }>;
+type RememberedHostedTestRun = Readonly<{ runId: string; attemptId: string }>;
 
 function remembered_hosted_test_run(): RememberedHostedTestRun | undefined {
     try {
@@ -43,12 +43,11 @@ function remembered_hosted_test_run(): RememberedHostedTestRun | undefined {
         if (stored === undefined) return undefined;
         try {
             const parsed = JSON.parse(stored) as { runId?: unknown; attemptId?: unknown };
-            if (typeof parsed.runId !== "string" || !parsed.runId) return undefined;
-            if (parsed.attemptId !== undefined && (typeof parsed.attemptId !== "string" || !parsed.attemptId)) return undefined;
-            return Object.freeze({ runId: parsed.runId, ...(parsed.attemptId === undefined ? {} : { attemptId: parsed.attemptId }) });
-        } catch {
-            return Object.freeze({ runId: stored });
-        }
+            if (typeof parsed.runId !== "string" || !parsed.runId
+              || typeof parsed.attemptId !== "string" || !parsed.attemptId
+              || Object.keys(parsed).length !== 2) return undefined;
+            return Object.freeze({ runId: parsed.runId, attemptId: parsed.attemptId });
+        } catch { return undefined; }
     }
     catch { return undefined; }
 }
@@ -110,7 +109,7 @@ function populate_targeted_test_selector(
     choices: readonly HostedTestPanelSelectionChoice[],
     selectedKey?: string,
     allCasesCount?: number,
-    countNoun: "cases" | "checks" = "cases",
+    countNoun: "cases" | "checks" | "certifications" = "cases",
 ): void {
     testSel.empty();
     const entireSuite = testSel.create.option();
@@ -245,7 +244,7 @@ export function tp_factory(options: Readonly<{
     const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
     const { runBtn, cancelBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips } = create_test_console(leftColumn, rightColumn);
     let hostedAdapter: HostedTestPanelAdapter | undefined;
-    let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start"]>> | undefined;
+    let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start_selected"]>> | undefined;
     let caseList: HostedTestCaseList | undefined;
     let latestSummary: TestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
     let latestProjectionSummary: HostedTestProjectionSummary | undefined;
@@ -255,7 +254,7 @@ export function tp_factory(options: Readonly<{
     let cancelSummaryFrame: (() => void) | undefined;
     let explicitExecutionCount = 0;
     const queuedSuiteIds = new Set<string>();
-    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "opaque-aggregate"; terminal: boolean }>>();
+    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "opaque-aggregate" | "certification-aggregate"; terminal: boolean }>>();
     let canonicalSuiteTotal = 0;
     let canonicalSuiteTerminal = 0;
     let opaqueSuiteTotal = 0;
@@ -343,7 +342,7 @@ export function tp_factory(options: Readonly<{
     const update_run_progress = (): void => {
         if (branch.attrs.get("data-hosted-panel-state") !== "running") return;
         executorLabel.text.set(
-            `running · case suites ${canonicalSuiteTerminal}/${canonicalSuiteTotal} · opaque suites ${opaqueSuiteTerminal}/${opaqueSuiteTotal}`,
+            `running · case suites ${canonicalSuiteTerminal}/${canonicalSuiteTotal} · aggregate suites ${opaqueSuiteTerminal}/${opaqueSuiteTotal}`,
         );
     };
 
@@ -468,8 +467,13 @@ export function tp_factory(options: Readonly<{
     const update_selected_presentation = (): void => {
         const choice = selected_choice();
         if (discovery !== undefined) {
+            const opaqueChecks = discovery.catalog.suites
+                .filter((suite) => suite.executionShape === "opaque-aggregate")
+                .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
+            const certifications = discovery.catalog.suites
+                .filter((suite) => suite.executionShape === "certification-aggregate").length;
             executorLabel.text.set(
-                `${discovery.executor.label} · ${discovery.catalog.tests.length} canonical cases · ${discovery.externalTargets.length} opaque suites · ${choice === undefined ? "no selection" : hosted_test_panel_display_label(choice.label)}`,
+                `${discovery.executor.label} · ${discovery.catalog.tests.length} cases · ${opaqueChecks} checks · ${certifications} certifications · ${choice === undefined ? "no selection" : hosted_test_panel_display_label(choice.label)}`,
             );
         }
         branch.attrs.setMany({
@@ -480,12 +484,12 @@ export function tp_factory(options: Readonly<{
 
     const apply_discovery = (next: TestExecutorDiscovery): void => {
         discovery = next;
-        selectionChoices = hosted_test_panel_primary_choices(next.catalog.tests, next.externalTargets);
+        selectionChoices = hosted_test_panel_primary_choices(next.catalog.tests, next.catalog.suites);
         selectionKey = selectionChoices[0]?.key ?? "all";
         const primaryChoice = selectionChoices.find((choice) => choice.key === selectionKey);
         targetedSuiteChoices = primaryChoice === undefined
             ? Object.freeze([])
-            : hosted_test_panel_suite_choices(next.catalog.tests, next.externalTargets, primaryChoice.selection);
+            : hosted_test_panel_suite_choices(next.catalog.tests, next.catalog.suites, primaryChoice.selection);
         targetedSuiteKey = undefined;
         targetedTestChoices = Object.freeze([]);
         targetedTestKey = undefined;
@@ -506,7 +510,7 @@ export function tp_factory(options: Readonly<{
         set_selector_enabled(targetedSuiteSel, false);
         set_selector_enabled(targetedTestSel, false);
         update_selected_presentation();
-        if (next.catalog.tests.length + next.externalTargets.length > 0) runBtn.flags.clear("disabled");
+        if (next.catalog.tests.length + next.catalog.suites.filter((suite) => suite.executionShape !== "cases").length > 0) runBtn.flags.clear("disabled");
         else {
             runBtn.flags.set("disabled");
             appendLogLine("host discovery returned no executable tests");
@@ -567,7 +571,7 @@ export function tp_factory(options: Readonly<{
                     ? Object.freeze([])
                     : hosted_test_panel_suite_choices(
                         discovery.catalog.tests,
-                        discovery.externalTargets,
+                        discovery.catalog.suites,
                         primaryChoice.selection,
                     );
                 targetedSuiteKey = undefined;
@@ -583,11 +587,11 @@ export function tp_factory(options: Readonly<{
                 set_selector_enabled(targetedSuiteSel, primaryChoice?.selection.kind !== "all");
                 set_selector_enabled(targetedTestSel, false);
                 const choice = selected_choice();
-                const testIds = choice === undefined
+                const selectionIds = choice === undefined
                     ? Object.freeze([])
-                    : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection, discovery.externalTargets);
+                    : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection, discovery.catalog.suites);
                 update_selected_presentation();
-                if (testIds.length > 0) runBtn.flags.clear("disabled");
+                if (selectionIds.length > 0) runBtn.flags.clear("disabled");
                 else runBtn.flags.set("disabled");
                 return;
             }
@@ -600,27 +604,29 @@ export function tp_factory(options: Readonly<{
             targetedTestKey = undefined;
             const targetedSuite = targetedSuiteChoices.find((choice) => choice.key === targetedSuiteKey);
             const selectedSuiteId = targetedSuite?.selection.kind === "suite" ? targetedSuite.selection.suite : undefined;
-            const opaqueSuite = selectedSuiteId !== undefined
-              && discovery.externalTargets.some((target) => target.id === selectedSuiteId);
+            const aggregateSuite = selectedSuiteId === undefined
+              ? undefined
+              : discovery.catalog.suites.find((suite) => suite.executionShape !== "cases" && suite.id === selectedSuiteId);
             targetedTestChoices = targetedSuite?.selection.kind === "suite"
-                ? hosted_test_panel_test_choices(discovery.catalog.tests, targetedSuite.selection.suite, discovery.externalTargets)
+                ? hosted_test_panel_test_choices(discovery.catalog.tests, targetedSuite.selection.suite, discovery.catalog.suites)
                 : Object.freeze([]);
             populate_targeted_test_selector(
               targetedTestSel,
               targetedTestChoices,
               undefined,
               targetedSuite?.count,
-              opaqueSuite ? "checks" : "cases",
+              aggregateSuite?.executionShape === "certification-aggregate" ? "certifications"
+                : aggregateSuite?.executionShape === "opaque-aggregate" ? "checks" : "cases",
             );
-            if (targetedSuiteKey === undefined || opaqueSuite) {
+            if (targetedSuiteKey === undefined || aggregateSuite !== undefined) {
                 set_selector_enabled(targetedTestSel, false);
             } else set_selector_enabled(targetedTestSel, true);
             const choice = selected_choice();
-            const testIds = choice === undefined
+            const selectionIds = choice === undefined
                 ? Object.freeze([])
-                : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection, discovery.externalTargets);
+                : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection, discovery.catalog.suites);
             update_selected_presentation();
-            if (testIds.length > 0) runBtn.flags.clear("disabled");
+            if (selectionIds.length > 0) runBtn.flags.clear("disabled");
             else runBtn.flags.set("disabled");
         });
 
@@ -629,11 +635,11 @@ export function tp_factory(options: Readonly<{
             const value = targetedTestSel.form.getValue() ?? "";
             targetedTestKey = targetedTestChoices.some((choice) => choice.key === value) ? value : undefined;
             const choice = selected_choice();
-            const testIds = choice === undefined
+            const selectionIds = choice === undefined
                 ? Object.freeze([])
-                : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection, discovery.externalTargets);
+                : hosted_test_panel_selected_ids(discovery.catalog.tests, choice.selection, discovery.catalog.suites);
             update_selected_presentation();
-            if (testIds.length > 0) runBtn.flags.clear("disabled");
+            if (selectionIds.length > 0) runBtn.flags.clear("disabled");
             else runBtn.flags.set("disabled");
         });
 
@@ -672,14 +678,14 @@ export function tp_factory(options: Readonly<{
                 if (discovery !== undefined) {
                     const activeDiscovery = discovery;
                     const choice = selected_choice();
-                    const testIds = choice === undefined
+                    const selectionIds = choice === undefined
                         ? Object.freeze([])
-                        : hosted_test_panel_selected_ids(activeDiscovery.catalog.tests, choice.selection, activeDiscovery.externalTargets);
+                        : hosted_test_panel_selected_ids(activeDiscovery.catalog.tests, choice.selection, activeDiscovery.catalog.suites);
                     observe_hosted_test_timeline(options.timeline, "selection_completed", {
-                        selectedIds: testIds.length,
+                        selectedIds: selectionIds.length,
                     });
-                    if (testIds.length === 0) throw new Error("The active discovered selection contains no tests.");
-                    lastResult = await hostedAdapter!.start_selected(testIds);
+                    if (selectionIds.length === 0) throw new Error("The active discovered selection contains no tests.");
+                    lastResult = await hostedAdapter!.start_selected(selectionIds);
                     observe_hosted_test_timeline(options.timeline, "panel_run_completed", {
                         runId: lastResult.runId,
                         roundTripMs: lastResult.timing.roundTripMs,
@@ -700,12 +706,12 @@ export function tp_factory(options: Readonly<{
                     const targetedSuite = targetedSuiteChoices.find((choice) => choice.key === targetedSuiteKey);
                     const selectedSuiteId = targetedSuite?.selection.kind === "suite" ? targetedSuite.selection.suite : undefined;
                     if (selectedSuiteId !== undefined
-                      && !discovery.externalTargets.some((target) => target.id === selectedSuiteId)) {
+                      && !discovery.catalog.suites.some((suite) => suite.executionShape !== "cases" && suite.id === selectedSuiteId)) {
                         set_selector_enabled(targetedTestSel, true);
                     } else {
                         set_selector_enabled(targetedTestSel, false);
                     }
-                    if (discovery.catalog.tests.length + discovery.externalTargets.length > 0) runBtn.flags.clear("disabled");
+                    if (discovery.catalog.tests.length + discovery.catalog.suites.filter((suite) => suite.executionShape !== "cases").length > 0) runBtn.flags.clear("disabled");
                 }
             }
         });

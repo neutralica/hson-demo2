@@ -9,10 +9,6 @@ import { HSON_FIXTURES, HSON_FXT_INVALID } from "../../fixtures/transform/hson/h
 import { JSON_FIXTURES_LEVEL2 } from "../../fixtures/transform/json/json-level-2";
 import { make_transform_test_suite } from "../../suites/transform/make-transform-suite";
 import { HTML_FIXTURES_NEW } from "../../fixtures/transform/html/new-html-fixtures";
-import {
-  transform_quoted_name_acceptance_suite,
-  transform_quoted_name_rejection_suite,
-} from "../../suites/transform/quoted-name-suites";
 
 /** Fixed, reproducible transform suites. Generated/fuzz declarations are intentionally excluded. */
 export function all_deterministic_transform_test_suites(
@@ -28,7 +24,5 @@ export function all_deterministic_transform_test_suites(
     make_transform_test_suite({ _circuit_test }, JSON_FIXTURES_LEVEL2, "transform/json/level-2", captureMap),
     make_transform_test_suite({ _circuit_test }, TRANSFORM_FAILS, "transform/invalid", captureMap, "auto", "fail"),
     make_transform_test_suite({ _circuit_test }, HSON_FXT_INVALID, "transform/hson/invalid", captureMap, "hson", "fail"),
-    transform_quoted_name_acceptance_suite(),
-    transform_quoted_name_rejection_suite(),
   ]);
 }

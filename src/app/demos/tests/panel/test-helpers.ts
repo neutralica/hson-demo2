@@ -18,11 +18,16 @@ export const TEST_SUMMARY_ENTRY_ORDER = Object.freeze([
   "cases",
   "case-pass",
   "case-fail",
+  "case-skip",
   "case-cancel",
   "checks",
   "check-pass",
   "check-fail",
   "check-cancel",
+  "certifications",
+  "cert-pass",
+  "cert-fail",
+  "cert-cancel",
   "elapsed",
 ] as const);
 
@@ -67,22 +72,27 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
   };
   const definitions: Readonly<Record<TestSummaryEntryKey, string>> = Object.freeze({
     suites: "suites",
-    "suite-fail": "suite fail",
+    "suite-fail": "suites failed",
     cases: "cases",
-    "case-pass": "case pass",
-    "case-fail": "case fail",
-    "case-cancel": "case cancel",
+    "case-pass": "cases passed",
+    "case-fail": "cases failed",
+    "case-skip": "cases skipped",
+    "case-cancel": "cases cancelled",
     checks: "checks",
-    "check-pass": "check pass",
-    "check-fail": "check fail",
-    "check-cancel": "check cancel",
+    "check-pass": "checks passed",
+    "check-fail": "checks failed",
+    "check-cancel": "checks cancelled",
+    certifications: "certifications",
+    "cert-pass": "certifications passed",
+    "cert-fail": "certifications failed",
+    "cert-cancel": "certifications cancelled",
     elapsed: "elapsed",
   });
   const slots = new Map(TEST_SUMMARY_ENTRY_ORDER.map((key) => [key, makeChip(definitions[key])] as const));
   const initial: readonly TestSummaryEntry[] = [
     { key: "cases", label: "cases", value: "—" },
-    { key: "case-pass", label: "passed", value: "—" },
-    { key: "case-fail", label: "failed", value: "—" },
+    { key: "case-pass", label: "cases passed", value: "—" },
+    { key: "case-fail", label: "cases failed", value: "—" },
     { key: "elapsed", label: "elapsed", value: "—" },
   ] as const;
   const renderEntries = (entries: readonly TestSummaryEntry[]): void => {
@@ -106,8 +116,8 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     render: (s) => {
       renderEntries([
         { key: "cases", label: "cases", value: s.cases },
-        { key: "case-pass", label: "passed", value: s.pass },
-        { key: "case-fail", label: "failed", value: s.fail },
+        { key: "case-pass", label: "cases passed", value: s.pass },
+        { key: "case-fail", label: "cases failed", value: s.fail },
         { key: "elapsed", label: "elapsed", value: format_hosted_test_duration(s.msTotal) },
       ]);
     },

@@ -5,9 +5,9 @@ import { run_test_suites } from "./test-runner";
 
 export function run_selected_test_ids(
   registry: TestExecutorRegistry,
-  testIds: readonly string[],
+  selectionIds: readonly string[],
   onEvent: (event: TestEvent) => void,
   options: RunOptions = {},
 ): Promise<RunResult> {
-  return run_test_suites(selected_test_suites(registry, testIds), onEvent, options);
+  return run_test_suites(selected_test_suites(registry, selectionIds), onEvent, options);
 }

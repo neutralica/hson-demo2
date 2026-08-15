@@ -1,7 +1,5 @@
 import type { LiveHostSocketLike } from "hson-live/types";
 import { make_hosted_test_durable_object_runtime } from "../../harness/runtimes/cloudflare/hosted-test-durable-object-runtime";
-import { make_cloudflare_hosted_test_suite_registry } from "../../harness/runtimes/cloudflare/cloudflare-hosted-test-suites";
-import { HOSTED_TEST_SUITE_IDS } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import {
   HOSTED_TEST_DURABLE_OBJECT_NAME,
   route_hosted_test_worker_request,
@@ -16,7 +14,6 @@ import { test_catalog_version } from "../../../src/shared/testing/test-catalog-c
 import type { HostedTestSelectedRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import { hosted_test_report_cases, type HostedTestReportState } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_towl_socket } from "../../suites/towl/towl-test-helpers";
-import { all_livehost_suites } from "../../suites/livehost/suite-registry";
 
 function expect_cloudflare(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted Cloudflare: ${message}`);
@@ -152,27 +149,9 @@ expect_cloudflare(detachments === 1, "socket close detaches its LiveHost connect
 runtime.dispose();
 expect_cloudflare(detachments === 2, "runtime disposal detaches every remaining LiveHost connection");
 
-const registry = make_cloudflare_hosted_test_suite_registry();
-expect_cloudflare(
-  registry.list().length === HOSTED_TEST_SUITE_IDS.length,
-  "the Worker registry keeps every existing hosted-test route explicit",
-);
-const replay = await registry.get("livemap/replay").run();
-expect_cloudflare(replay.ok && replay.summary.cases === 45, "the Worker-compatible replay route executes through the existing runner");
-const advertisedRun = await registry.get("livehost/all").run();
-const advertisedLiveHostCases = all_livehost_suites().reduce((total, suite) => total + suite.cases.length, 0);
-expect_cloudflare(advertisedRun.ok && advertisedRun.summary.cases === advertisedLiveHostCases, "an advertised Worker test family remains executable through the legacy run surface");
-let unavailable: unknown;
-try { await registry.get("hosted/all").run(); }
-catch (error) { unavailable = error; }
-expect_cloudflare(
-  unavailable instanceof Error && unavailable.message.includes("CLOUDFLARE_HOSTED_SUITE_UNAVAILABLE"),
-  "Node/jsdom-only routes remain explicit and fail without importing a shadow implementation",
-);
-
 const workerExecutorRegistry = make_cloudflare_livehost_executor_registry();
 const workerDiscovery = make_test_executor_discovery(workerExecutorRegistry);
-const workerApplication = create_hosted_test_application(registry, {
+const workerApplication = create_hosted_test_application({
   discovery: workerDiscovery,
   executorRegistry: workerExecutorRegistry,
 });
@@ -208,16 +187,14 @@ expect_cloudflare(
   decodedDiscovery.value.catalogVersion === test_catalog_version(decodedDiscovery.value.catalog),
   "the Worker catalog version matches its descriptor content",
 );
-const unsupportedDiscoveryRoutes = [
-  "hosted/all", "node/all", "dom/core", "canvas/core", "category/livetree", "category/livemap", "category/dev",
-];
 expect_cloudflare(
-  !decodedDiscovery.value.catalog.tests.some((test) => unsupportedDiscoveryRoutes.includes(test.id) || unsupportedDiscoveryRoutes.includes(test.suite)),
-  "legacy unsupported route IDs are absent from Worker discovery",
+  !Object.hasOwn(decodedDiscovery.value, "externalTargets")
+    && decodedDiscovery.value.catalog.suites.every((suite) => suite.executionShape === "cases"),
+  "Worker discovery contains only exact executable case suites and no external side list",
 );
 
 let selectedActionNumber = 0;
-async function run_worker_selected(testIds: readonly string[]): Promise<Readonly<{
+async function run_worker_selected(selectionIds: readonly string[]): Promise<Readonly<{
   result: HostedTestSelectedRunResult;
   report: HostedTestReportState;
 }>> {
@@ -228,7 +205,7 @@ async function run_worker_selected(testIds: readonly string[]): Promise<Readonly
     clientId: "worker-selected-test",
     requestId: `worker-selected-request-${selectedActionNumber}`,
     name: "tests.runSelected",
-    payload: { testIds: [...testIds] },
+    payload: { selectionIds: [...selectionIds] },
   });
   expect_cloudflare(response.type === "ack", `Worker selected action ${selectedActionNumber} is acknowledged (${JSON.stringify(response)})`);
   const result = response.result as unknown as HostedTestSelectedRunResult;
@@ -247,7 +224,7 @@ const workerSingle = await run_worker_selected([workerFirst.id]);
 expect_cloudflare(
   workerSingle.result.ok
     && workerSingle.result.summary.cases === 1
-    && hosted_test_report_cases(workerSingle.report)[0]?.key === workerFirst.id,
+    && hosted_test_report_cases(workerSingle.report)[0]?.id === workerFirst.id,
   "one exact advertised Worker test executes through canonical selection",
 );
 const workerSameSuite = workerExecutorRegistry.catalog.tests
@@ -255,9 +232,9 @@ const workerSameSuite = workerExecutorRegistry.catalog.tests
   .slice(0, 3);
 const workerSeveral = await run_worker_selected(workerSameSuite.map((descriptor) => descriptor.id).reverse());
 expect_cloudflare(
-  hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.key).join("|")
+  hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.id).join("|")
     === workerSameSuite.map((descriptor) => descriptor.id).join("|"),
-  `several Worker tests execute once in frozen descriptor order (observed ${hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.key).join("|")})`,
+  `several Worker tests execute once in frozen descriptor order (observed ${hosted_test_report_cases(workerSeveral.report).map((testCase) => testCase.id).join("|")})`,
 );
 const workerSecondSuite = workerExecutorRegistry.catalog.tests.find((descriptor) => descriptor.suiteId !== workerFirst.suiteId);
 expect_cloudflare(workerSecondSuite !== undefined, "Worker catalog includes multiple original suites");
@@ -280,7 +257,7 @@ const nodeOnlyWorkerResponse = await workerApplication.coordinator.dispatch_acti
   clientId: "worker-selected-test",
   requestId: "worker-selected-node-only-request",
   name: "tests.runSelected",
-  payload: { testIds: [nodeOnlyId] },
+  payload: { selectionIds: [nodeOnlyId] },
 });
 expect_cloudflare(
   nodeOnlyWorkerResponse.type === "error"
@@ -295,7 +272,7 @@ const transformWorkerResponse = await workerApplication.coordinator.dispatch_act
   clientId: "worker-selected-test",
   requestId: "worker-selected-transform-only-request",
   name: "tests.runSelected",
-  payload: { testIds: [transformOnlyId] },
+  payload: { selectionIds: [transformOnlyId] },
 });
 expect_cloudflare(
   transformWorkerResponse.type === "error"
@@ -309,14 +286,14 @@ const canvasWorkerResponse = await workerApplication.coordinator.dispatch_action
   clientId: "worker-selected-test",
   requestId: "worker-selected-canvas-only-request",
   name: "tests.runSelected",
-  payload: { testIds: [canvasOnlyId] },
+  payload: { selectionIds: [canvasOnlyId] },
 });
 expect_cloudflare(
   canvasWorkerResponse.type === "error"
     && canvasWorkerResponse.error.message.includes("HOSTED_TEST_UNAVAILABLE_ON_EXECUTOR"),
   "the Worker rejects a deterministic-canvas Node ID before report construction",
 );
-const legacyWorkerRun = await workerApplication.coordinator.dispatch_action({
+const legacyWorkerRun = await (workerApplication.coordinator.dispatch_action as unknown as (action: unknown) => Promise<{ type: string }> )({
   type: "action",
   id: "worker-legacy-after-selected",
   clientId: "worker-selected-test",
@@ -324,7 +301,7 @@ const legacyWorkerRun = await workerApplication.coordinator.dispatch_action({
   name: "tests.run",
   payload: { suite: "livehost/all" },
 });
-expect_cloudflare(legacyWorkerRun.type === "ack", "legacy Worker tests.run remains operational after canonical selection");
+expect_cloudflare(legacyWorkerRun.type === "error", "legacy Worker tests.run is rejected after canonical selection");
 const workerTowl = create_towl_authority_application();
 const composedWorkerApplication = compose_worker_authority_application(workerApplication, workerTowl);
 const workerTowlConnection = composedWorkerApplication.connect("towl:worker-room", make_towl_socket());

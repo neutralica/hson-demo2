@@ -1,4 +1,3 @@
-import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES, type HostedTestSuiteId } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import {
   HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
   hson_live_non_launcher_test_scripts,
@@ -47,7 +46,6 @@ export type TestSurfaceCatalogEntry = Readonly<{
   environment: string;
   transport: string;
   runner: string;
-  hostedSuiteId?: HostedTestSuiteId;
   externalLauncher?: ExternalLauncherCatalogProjection;
   appearsInHostedUi: boolean;
   status: TestCatalogStatus;
@@ -61,26 +59,8 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:liveinspect-node": "tests/runners/liveinspect/run-live-inspector.node.mts",
   "test:liveinspect-scaling-node": "tests/runners/liveinspect/run-live-inspector-scaling.node.mts",
   "test:liveinspect-materialization-node": "tests/runners/liveinspect/run-live-inspector-materialization.node.mts",
-  "test:hosted-replay-node": "tests/runners/livehost/run-hosted-replay-action.node.mts",
-  "test:hosted-report-node": "tests/runners/livehost/run-hosted-test-report.node.mts",
-  "test:hosted-report-wire-node": "tests/runners/livehost/run-hosted-test-report-wire.node.mts",
-  "test:hosted-report-protocol-node": "tests/runners/livehost/run-hosted-test-report-protocol.node.mts",
-  "test:hosted-report-initial-node": "tests/runners/livehost/run-hosted-test-report-initial.node.mts",
-  "test:hosted-report-mirror-node": "tests/runners/livehost/run-hosted-test-report-mirror.node.mts",
-  "test:hosted-report-router-node": "tests/runners/livehost/run-hosted-test-report-router.node.mts",
-  "test:hosted-replay-router-node": "tests/runners/livehost/run-hosted-replay-router.node.mts",
-  "test:hosted-test-panel-adapter-node": "tests/runners/livehost/run-hosted-test-panel-adapter.node.mts",
-  "test:hosted-test-panel-projection-node": "tests/runners/livehost/run-hosted-test-panel-projection.node.mts",
-  "test:hosted-suite-registry-node": "tests/runners/livehost/run-hosted-suite-registry.node.mts",
-  "test:hosted-node-all-node": "tests/runners/livehost/run-hosted-node-all.node.mts",
-  "test:hosted-report-batch-node": "tests/runners/livehost/run-hosted-test-report-batch.node.mts",
-  "test:hosted-report-performance-node": "tests/runners/livehost/run-hosted-report-performance.node.mts",
-  "test:hosted-real-websocket-node": "tests/runners/livehost/run-hosted-real-websocket.node.mts",
-  "test:hosted-generic-livehost-node": "tests/runners/livehost/run-hosted-generic-livehost.node.mts",
-  "test:hosted-websocket-lifecycle-node": "tests/runners/livehost/run-hosted-websocket-lifecycle.node.mts",
   "test:hosted-deployment-node": "tests/runners/livehost/run-hosted-deployment.node.mts",
   "test:node-host-backpressure": "tests/runners/livehost/run-node-host-backpressure.node.mts",
-  "test:hosted-progress-starvation-node": "tests/runners/livehost/run-hosted-progress-starvation.node.mts",
   "test:hosted-report-authority-scaling-node": "tests/runners/livehost/run-hosted-report-authority-scaling.node.mts",
   "test:hosted-production-panel-timeline-node": "tests/runners/livehost/run-hosted-production-panel-timeline.node.mts",
   "test:phase3b-cancellation-node": "tests/runners/livehost/run-hosted-phase-3b-cancellation.node.mts",
@@ -99,30 +79,19 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:hosted-jsdom-runtime-node": "tests/runners/livehost/run-hosted-jsdom-runtime.node.mts",
   "test:hosted-dom-collection-node": "tests/runners/livehost/run-hosted-dom-collection.node.mts",
   "test:hosted-dom-compatibility-node": "tests/runners/livehost/run-hosted-dom-compatibility.node.mts",
-  "test:hosted-dom-real-websocket-node": "tests/runners/livehost/run-hosted-dom-real-websocket.node.mts",
-  "test:hosted-stale-suite-real-websocket-node": "tests/runners/livehost/run-hosted-stale-suite-real-websocket.node.mts",
   "test:hosted-dom-behavior-diagnostics-node": "tests/runners/livehost/run-hosted-dom-behavior-diagnostics.node.mts",
   "test:hosted-dom-layout-diagnostics-node": "tests/runners/livehost/run-hosted-dom-layout-diagnostics.node.mts",
   "test:hosted-sanitizer-node": "tests/runners/livehost/run-hosted-sanitizer.node.mts",
   "test:hosted-canvas-runtime-node": "tests/runners/livehost/run-hosted-canvas-runtime.node.mts",
   "test:hosted-canvas-collection-node": "tests/runners/livehost/run-hosted-canvas-collection.node.mts",
-  "test:hosted-canvas-real-websocket-node": "tests/runners/livehost/run-hosted-canvas-real-websocket.node.mts",
-  "test:hosted-all-real-websocket-node": "tests/runners/livehost/run-hosted-all-real-websocket.node.mts",
-  "test:hosted-case-inspection-node": "tests/runners/livehost/run-hosted-case-inspection.node.mts",
   "test:hosted-test-timing-node": "tests/runners/livehost/run-hosted-test-timing.node.mts",
-  "test:hosted-multi-suite-concurrent-node": "tests/runners/livehost/run-hosted-multi-suite-concurrent.node.mts",
-  "test:hosted-app-boundary-node": "tests/runners/livehost/run-hosted-app-boundary.node.mts",
-  "test:hosted-run-identity-node": "tests/runners/livehost/run-hosted-run-identity.node.mts",
   "test:phase3a-coordinator-node": "tests/runners/livehost/run-hosted-phase-3a-coordinator.node.mts",
-  "test:hosted-retry-classification-node": "tests/runners/livehost/run-hosted-retry-classification.node.mts",
   "test:livetree-lifecycle-foundations-node": "tests/runners/livehost/run-livetree-lifecycle-foundations.node.mts",
   "test:livetree-lifecycle-public-node": "tests/runners/livehost/run-livetree-lifecycle-public.node.mts",
   "test:livetree-lifecycle-ownership-node": "tests/runners/livehost/run-livetree-lifecycle-ownership.node.mts",
   "test:livetree-allocation-node": "tests/runners/livehost/run-livetree-allocation.node.mts",
   "test:hson-node-representation-node": "tests/runners/livehost/run-hson-node-representation.node.mts",
   "test:generated-json-node": "tests/runners/diagnostics/run-generated-json.node.mts",
-  "test:hosted-replay-events-node": "tests/runners/livehost/run-hosted-replay-events.node.mts",
-  "test:hosted-replay-concurrent-node": "tests/runners/livehost/run-hosted-replay-concurrent.node.mts",
   "test:amoebi-geometry": "tests/runners/app/run-amoebi-geometry.node.mts",
   "test:soft-tile-node": "tests/runners/app/run-soft-tile.node.mts",
   "test:browser": "playwright.config.ts",
@@ -137,12 +106,11 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:stage4a-selected-worker": "tests/integration/cloudflare/run-hosted-cloudflare.node.mts",
   "test:stage4b-panel-node": "tests/runners/harness/run-stage-4b-panel.node.mts",
   "test:stage5a-corpus-node": "tests/runners/harness/run-stage-5a-corpus.node.mts",
-  "test:stage5b-dom-node": "tests/runners/harness/run-stage-5b-dom.node.mts",
-  "test:stage5c-closeout-node": "tests/runners/harness/run-stage-5c-closeout.node.mts",
   "test:phase1-convergence-node": "tests/runners/harness/run-phase-1-convergence.node.mts",
   "test:phase2a-lifecycle-node": "tests/runners/harness/run-phase-2a-lifecycle.node.mts",
   "test:phase2b-presentation-node": "tests/runners/harness/run-phase-2b-presentation.node.mts",
   "test:phase4a-layering-node": "tests/runners/harness/run-phase-4a-layering.node.mts",
+  "test:phase4b-retirement-node": "tests/runners/harness/run-phase-4b-retirement.node.mts",
   "test:external-library-node": "tests/runners/harness/run-external-library-launchers.node.mts",
   "test:external-library-all-node": "tests/runners/harness/run-external-library-launchers.node.mts",
   "test:external-launcher-protocol-node": "tests/runners/harness/run-external-launcher-protocol.node.mts",
@@ -152,6 +120,8 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:inclusive-library-node": "tests/runners/harness/run-inclusive-library-verification.node.mts",
   "test:hosted-performance-node": "tests/runners/harness/run-hosted-test-performance.node.mts",
   "test:direct-all-performance-node": "tests/runners/harness/run-direct-all-performance.node.mts",
+  "test:phase6a-node-mothership": "tests/runners/harness/run-phase-6a-node-mothership.node.mts",
+  "test:phase6a-full-node-hosted": "tests/runners/harness/run-phase-6a-full-node-hosted.node.mts",
 } as const);
 
 const CANONICAL_COMMANDS = new Set(["test:canonical-node", "test:node-application-host"]);
@@ -163,18 +133,19 @@ const AGGREGATE_COMMANDS = new Set([
   "test:stage4a-selected-worker",
   "test:stage4b-panel-node",
   "test:stage5a-corpus-node",
-  "test:stage5b-dom-node",
-  "test:stage5c-closeout-node",
   "test:phase1-convergence-node",
   "test:phase2a-lifecycle-node",
   "test:phase2b-presentation-node",
   "test:phase4a-layering-node",
+  "test:phase4b-retirement-node",
   "test:phase3b-cancellation-node",
   "test:phase3b-process-cancellation-node",
   "test:phase3b-panel-cancellation-node",
   "test:external-library-node",
   "test:external-library-all-node",
   "test:inclusive-library-node",
+  "test:phase6a-node-mothership",
+  "test:phase6a-full-node-hosted",
 ]);
 const ARTIFACT_COMMANDS = new Set(["test:node-production-runtime"]);
 const UTILITY_REASONS = Object.freeze({
@@ -284,6 +255,11 @@ function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalog
 const LIVE_SUPPORT_RUNNERS: readonly (readonly [string, string, TestClassification])[] = [
   ["build", "tsc production emit", "build/typecheck certification"],
   ["check", "strict no-emit typecheck", "build/typecheck certification"],
+  ["check:source", "strict source no-emit typecheck", "build/typecheck certification"],
+  ["check:tests", "strict test no-emit typecheck", "build/typecheck certification"],
+  ["check:entrypoints", "public and environment entrypoint compile certification", "build/typecheck certification"],
+  ["corpus:review", "authored-corpus human review artifact generator", "temporary diagnostic"],
+  ["livemap:operators:review", "LiveMap operator human review artifact generator", "temporary diagnostic"],
   ["test:hson-array-index", "HSON array-index acceptance", "library acceptance"],
   ["test:hson-attribute-transport", "HSON attribute transport acceptance", "library acceptance"],
   ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
@@ -295,8 +271,16 @@ const LIVE_SUPPORT_RUNNERS: readonly (readonly [string, string, TestClassificati
 function live_support_role(name: string): Readonly<{
   role: TestSurfaceRole;
   exposure: TestSurfaceExposure;
+  exclusionReason?: string;
 }> {
-  if (name === "build" || name === "check" || name === "test:root-compatibility") {
+  if (name === "corpus:review" || name === "livemap:operators:review") {
+    return Object.freeze({
+      role: "developer utility",
+      exposure: "explicitly excluded",
+      exclusionReason: "Generates a human review artifact and executes no independent semantic test.",
+    });
+  }
+  if (name === "build" || name === "check" || name.startsWith("check:") || name === "test:root-compatibility") {
     return Object.freeze({ role: "production artifact verification", exposure: "command only" });
   }
   if (name === "test:diagnostics-inventory") {
@@ -370,7 +354,7 @@ function live_launcher_entry(launcher: HsonLiveTestLauncher): TestSurfaceCatalog
 const LIVE_SUPPORT_ENTRIES: readonly TestSurfaceCatalogEntry[] =
 LIVE_SUPPORT_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
   id: `hson-live:${name}`, label: name,
-  category: name === "build" || name === "check" || name === "test:root-compatibility"
+  category: name === "build" || name === "check" || name.startsWith("check:") || name === "test:root-compatibility"
     ? "Build / Types"
     : name.includes("hson") || name.includes("transform") ? "Transforms" : "LiveHost",
   repository: "hson-live", path: name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
@@ -395,21 +379,9 @@ const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = Object.freeze([
   ...LIVE_SUPPORT_ENTRIES,
 ]);
 
-const visibleLabelById = new Map<HostedTestSuiteId, string>(HOSTED_TEST_VISIBLE_SUITES.map((suite) => [suite.id, suite.label]));
-const HOSTED_ENTRIES = HOSTED_TEST_SUITE_IDS.map((suiteId): TestSurfaceCatalogEntry => Object.freeze({
-  id: `hosted-suite:${suiteId}`, label: visibleLabelById.get(suiteId) ?? suiteId,
-  category: suiteId.includes("livetree") ? "LiveTree" : suiteId.includes("livemap") ? "LiveMap" : suiteId.includes("transform") ? "Transforms" : suiteId.includes("livehost") ? "LiveHost" : "Hosted Runtime",
-  repository: "hson-demo2", path: "tests/harness/hosted/registered-hosted-test-suites.ts",
-  behavior: suiteId === "hosted/all"
-    ? "Complete deterministic hosted collection; generated/fuzz transform verification runs separately."
-    : `Hosted fixture collection ${suiteId}, reachable through a visible category or the all collection.`, classification: "fixture",
-  role: "canonical selectable suite", exposure: "hosted selectable", environment: "browser or hosted Node",
-  transport: "dedicated LiveHost report host", runner: "Hosted Tests UI", hostedSuiteId: suiteId, appearsInHostedUi: true, status: "available",
-}));
-
 const LIVE_IDENTITY_FIXTURE: TestSurfaceCatalogEntry = Object.freeze({
   id: "hson-live:fixture:default-identity-runtime", label: "default identity browser-runtime fixture", category: "LiveHost",
-  repository: "hson-live", path: "tests/fixtures/livehost-default-identity-runtime.mts",
+  repository: "hson-live", path: "tests/runtime-probes/fixtures/livehost-default-identity-runtime.mjs",
   behavior: "Separately initialized runtimes generate reload-safe default client and fresh action request identities.",
   classification: "fixture", role: "integration journey", exposure: "command only",
   aliasOf: "hson-live:test:livehost-action-dedupe",
@@ -417,21 +389,47 @@ const LIVE_IDENTITY_FIXTURE: TestSurfaceCatalogEntry = Object.freeze({
   runner: "npm run test:livehost-action-dedupe", appearsInHostedUi: false, status: "available",
 });
 
-const DEMO_CERTIFICATIONS: readonly TestSurfaceCatalogEntry[] = ["build", "check"].map((name): TestSurfaceCatalogEntry => Object.freeze({
+const DEMO_CERTIFICATIONS: readonly TestSurfaceCatalogEntry[] = ["build", "check", "build:node-production", "check:cloudflare", "cloudflare:types"].map((name): TestSurfaceCatalogEntry => Object.freeze({
   id: `hson-demo2:${name}`, label: name, category: "Build / Types", repository: "hson-demo2", path: "package.json",
-  behavior: name === "build" ? "Production Vite build completes." : "Strict TypeScript no-emit check completes.",
+  behavior: name === "build"
+    ? "Production Vite build completes."
+    : name === "build:node-production"
+      ? "Production Node server and circuit-worker entrypoints bundle successfully."
+      : name === "cloudflare:types"
+        ? "Cloudflare runtime bindings are generated from the deployment configuration."
+        : "Strict TypeScript no-emit check completes.",
   classification: "build/typecheck certification", role: "production artifact verification", exposure: "command only",
-  environment: "Node", transport: "none", runner: `npm run ${name}`,
+  environment: name.includes("cloudflare") ? "Node + Cloudflare build tooling" : "Node + build tooling", transport: "none", runner: `npm run ${name}`,
   appearsInHostedUi: false, status: "available",
 }));
 
+const DEMO_NON_TEST_VERIFICATIONS: readonly TestSurfaceCatalogEntry[] = Object.freeze([
+  Object.freeze({
+    id: "hson-demo2:diagnose:towl-deployed", label: "deployed TOWL diagnosis", category: "Hosted Runtime",
+    repository: "hson-demo2", path: "tests/runners/towl/diagnose-deployed-towl.node.mts",
+    behavior: "Exercises the deployed TOWL runtime boundary and reports transport evidence.",
+    classification: "real transport integration", role: "integration journey", exposure: "command only",
+    environment: "Node against deployed Worker", transport: "network + real WebSocket",
+    runner: "npm run diagnose:towl-deployed", appearsInHostedUi: false, status: "available",
+  }),
+  Object.freeze({
+    id: "hson-demo2:measure:circuit-worker", label: "circuit Worker measurement", category: "Hosted Runtime",
+    repository: "hson-demo2", path: "tests/runners/livehost/measure-circuit-worker.node.mts",
+    behavior: "Developer measurement command; durable circuit Worker assertions live in canonical suites.",
+    classification: "temporary diagnostic", role: "developer utility", exposure: "explicitly excluded",
+    exclusionReason: "Performance measurement is not a stable semantic verification surface.",
+    environment: "Node + Worker", transport: "in-memory worker threads",
+    runner: "npm run measure:circuit-worker", appearsInHostedUi: false, status: "available",
+  }),
+]);
+
 export const TEST_SURFACE_CATALOG = Object.freeze([
-  ...HOSTED_ENTRIES,
   ...LIVE_ENTRIES,
   LIVE_IDENTITY_FIXTURE,
   ...DEMO_CERTIFICATIONS,
+  ...DEMO_NON_TEST_VERIFICATIONS,
   ...Object.entries(DEMO_TEST_SCRIPTS).map(demo_entry),
 ]);
 
-export const TEST_SURFACE_COMMAND_ENTRIES = Object.freeze(TEST_SURFACE_CATALOG.filter((entry) => entry.hostedSuiteId === undefined));
+export const TEST_SURFACE_COMMAND_ENTRIES = TEST_SURFACE_CATALOG;
 export const DECLARED_DEMO_TEST_SCRIPTS = Object.freeze(Object.keys(DEMO_TEST_SCRIPTS));

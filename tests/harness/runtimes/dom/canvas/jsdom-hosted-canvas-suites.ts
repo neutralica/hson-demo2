@@ -2,6 +2,8 @@ import { run_test_suites } from "../../../core/test-runner";
 import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../../core/test-contracts";
 import { all_livetree_suites } from "../../../../suites/livetree/suite-registry";
 import { with_hosted_dom_runtime } from "../hosted-dom-mutex";
+export { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "./canvas-fidelity-manifest";
+import { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "./canvas-fidelity-manifest";
 
 export const JSDOM_HOSTED_CANVAS_SUITE_IDS = Object.freeze([
   "livetree/canvas",
@@ -10,13 +12,6 @@ export const JSDOM_HOSTED_CANVAS_SUITE_IDS = Object.freeze([
   "livetree/canvas-clear",
   "livetree/canvas-plot",
   "livetree/canvas-pointer",
-] as const);
-
-export const JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS = Object.freeze([
-  "livetree/canvas-clear::canvas.clear-clears-full-backing-bitmap",
-  "livetree/canvas-clear::canvas.clear-rectangle-clears-only-requested-region",
-  "livetree/canvas-plot::canvas.plot-runs-callback-with-native-2d-context-when-mounted",
-  "livetree/canvas-plot::canvas.must.plot-runs-callback-with-native-2d-context-when-mounted",
 ] as const);
 
 export const JSDOM_HOSTED_CANVAS_DUPLICATE_CASE_KEYS = Object.freeze([

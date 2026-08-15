@@ -1,105 +1,113 @@
-# Persistent test surface inventory
+# Test surface census
 
-This is the declared inventory for hson-live and hson-demo2. “Available” means that the runner is discoverable; it is deliberately not a claim that the test passed in the current session. Runtime result reports remain the authority for pass, fail, skipped, unavailable, and duration metadata.
+This document is a readable snapshot of the derived Phase 6A census. It is not a
+second inventory authority.
 
-The catalog source and enumeration test reject undeclared runnable entrypoints, package/catalog drift, hosted-suite registration drift, duplicate IDs, and any remaining migration-required entry.
+The descriptive authority is:
 
-The authoritative persistent test root is `tests`; the shipped LiveDemo panel is the sole exception under `src/app/demos/tests`. Browser specifications are owned by `test:browser`; support files must be reachable from those specifications. Application/demo tests are cataloged separately from LiveHost and do not become Hosted Tests selector choices.
+- `tests/harness/hosted/test-surface-catalog.ts` for package commands and
+  manifested hson-live launchers;
+- the executable Node and Worker catalogs for canonical suites and cases;
+- the files under `tests/integration/browser` for Playwright journeys;
+- `JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS` for authored raster cases that do not
+  yet have a passing executor;
+- `tests/runners/harness/run-test-surface-enumeration.node.mts` for repository
+  discovery, parity, reachability, and the complete composed census.
 
-Focused LiveTree completion work remains separately owned future coverage for lookup, document ownership, event teardown, detached-tree behavior, and construction fencing; the Chromium application suite does not absorb those library contracts.
+Run `npm run test:surface-enumeration-node` to derive current counts and reject
+orphaned files, deleted targets, duplicate identities, unmanifested scripts,
+missing census fields, or unclassified hostability.
 
-CI browser-certification sequence:
+## Denominators
 
-1. Select a Vite-supported Node version.
-2. Run `npm ci`.
-3. Run `npm run test:browser:install` to install Chromium only.
-4. Run `npm run check`.
-5. Run the declared Node, jsdom, canvas, and real-WebSocket scripts.
-6. Run `npm run test:browser`.
-7. Run `npm run build`.
+The current derived snapshot is:
 
-Audit dispositions outside the retained catalog:
+| Denominator | Current truth | Meaning |
+|---|---:|---|
+| Runnable/verification surfaces | 376 | Independently selectable suites, launchers, browser specs/fidelity cases, standalone runners, aggregate runners, and certification commands. Developer-only utilities are excluded. |
+| Canonical suites | 153 | Structured hson-demo2 suites in the local Node executor. |
+| Canonical cases | 2,499 | Stable suite/case identities with case lifecycle. |
+| Opaque launchers | 126 | Manifested hson-live launchers. |
+| Opaque checks | 2,994 | Launcher-declared checks without structured case identity. |
+| Hosted semantic checks | 5,493 | Canonical cases plus opaque checks after semantic duplicate retirement. |
+| Playwright specs / journeys | 14 / 67 | Real Chromium files and Playwright-owned test granularity. |
+| Browser fidelity cases | 4 | Authored canvas raster cases awaiting a browser executor. |
+| Generated/fuzz surfaces | 1 dynamic runner | Seed and count are controlled by `HOSTED_FUZZ_SEED` and `HOSTED_FUZZ_CASES`; this is not folded into a fixed total. |
+| Certification surfaces | 56 | Typecheck, build/entrypoint, inventory/meta, Node-LiveHost command certifications, and production-artifact verification remain a separate denominator. |
 
-- `src/tests/livetree/livetree-00-expect-fail.ts` — obsolete deliberate-failure styling scratch fixture; removed.
-- `src/tests/livetree/livetree-assert.ts` — unreachable unused helper; removed.
-- `tests/suites/livemap/compile-tests-api-bulk.ts` and `compile-tests-schema.ts` — retained compile-only probes owned by `hson-demo2:check`, not runtime suites.
-- ignored `_archive-delete`, `_archive`, `_docs`, `_scripts`, generated `dist`, dependency trees, and `.DS_Store` content — not persistent behavioral verification; not promoted.
+The 5,493 figure is legitimate because the 2,499 canonical identities and
+2,994 opaque checks no longer claim the same semantic propositions. Browser,
+generated, and certification universes are deliberately not added to it.
 
-| Test / script | Path | Repository | Behavior guaranteed | Environment | Transport | Declared runner | Hosted UI | Status | Classification | Recommendation |
-|---|---|---|---|---|---|---|---|---|---|---|
-| hosted-suite:hosted/all | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Complete deterministic hosted collection; generated/fuzz transform verification runs separately. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:livemap/replay | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection livemap/replay. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:livehost/all | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection livehost/all. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:node/all | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection node/all. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:dom/core | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection dom/core. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:canvas/core | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection canvas/core. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:category/livetree | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection category/livetree. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:category/livemap | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection category/livemap. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:category/livehost | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection category/livehost. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:category/transform | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection category/transform. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:category/unit | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection category/unit. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hosted-suite:category/dev | tests/harness/hosted/registered-hosted-test-suites.ts | hson-demo2 | Browser-selectable hosted fixture collection category/dev. | browser or hosted Node | dedicated LiveHost report host | Hosted Tests UI | yes | available | fixture | keep |
-| hson-live:build | package.json | hson-live | tsc production emit | Node | none | npm run build | yes | available | build/typecheck certification | keep |
-| hson-live:check | package.json | hson-live | strict no-emit typecheck | Node | none | npm run check | yes | available | build/typecheck certification | keep |
-| hson-live:test:livehost-recovery | tests/livehost-recovery.acceptance.mts | hson-live | server recovery and replay | Node | in-memory socket | npm run test:livehost-recovery | yes | available | library acceptance | keep |
-| hson-live:test:livehost-client-recovery | tests/livehost-client-recovery.acceptance.mts | hson-live | client recovery lifecycle | Node | in-memory socket | npm run test:livehost-client-recovery | yes | available | library acceptance | keep |
-| hson-live:test:livehost-session | tests/livehost-session.acceptance.mts | hson-live | session identity and lifecycle | Node | in-memory socket | npm run test:livehost-session | yes | available | library acceptance | keep |
-| hson-live:test:livehost-action-dedupe | tests/livehost-action-dedupe.acceptance.mts | hson-live | client/request identity, retry stability, and reload-safe defaults | Node | in-memory socket | npm run test:livehost-action-dedupe | yes | available | library acceptance | keep |
-| hson-live:fixture:default-identity-runtime | tests/fixtures/livehost-default-identity-runtime.mts | hson-live | Separately initialized runtimes generate reload-safe default client and fresh action request identities. | separate Node processes modeling browser reloads | in-memory socket | npm run test:livehost-action-dedupe | yes | available | fixture | promote |
-| hson-demo2:build | package.json | hson-demo2 | Production Vite build completes. | Node | none | npm run build | yes | available | build/typecheck certification | keep |
-| hson-demo2:check | package.json | hson-demo2 | Strict TypeScript no-emit check completes. | Node | none | npm run check | yes | available | build/typecheck certification | keep |
-| hson-demo2:test:replay-node | tests/runners/livemap/run-replay-suite.node.mts | hson-demo2 | Permanent test:replay-node contract declared by hson-demo2/package.json. | Node | none | npm run test:replay-node | yes | available | runtime integration | keep |
-| hson-demo2:test:reflect-keyed-node | tests/runners/reflect/run-keyed-projection.node.mts | hson-demo2 | Permanent test:reflect-keyed-node contract declared by hson-demo2/package.json. | Node | none | npm run test:reflect-keyed-node | yes | available | runtime integration | keep |
-| hson-demo2:test:liveinspect-node | tests/runners/liveinspect/run-live-inspector.node.mts | hson-demo2 | Permanent test:liveinspect-node contract declared by hson-demo2/package.json. | Node | none | npm run test:liveinspect-node | yes | available | runtime integration | keep |
-| hson-demo2:test:liveinspect-scaling-node | tests/runners/liveinspect/run-live-inspector-scaling.node.mts | hson-demo2 | Permanent test:liveinspect-scaling-node contract declared by hson-demo2/package.json. | Node | none | npm run test:liveinspect-scaling-node | yes | available | runtime integration | keep |
-| hson-demo2:test:liveinspect-materialization-node | tests/runners/liveinspect/run-live-inspector-materialization.node.mts | hson-demo2 | Permanent test:liveinspect-materialization-node contract declared by hson-demo2/package.json. | Node | none | npm run test:liveinspect-materialization-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-replay-node | tests/runners/livehost/run-hosted-replay-action.node.mts | hson-demo2 | Permanent test:hosted-replay-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-replay-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-node | tests/runners/livehost/run-hosted-test-report.node.mts | hson-demo2 | Permanent test:hosted-report-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-wire-node | tests/runners/livehost/run-hosted-test-report-wire.node.mts | hson-demo2 | Permanent test:hosted-report-wire-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-wire-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-protocol-node | tests/runners/livehost/run-hosted-test-report-protocol.node.mts | hson-demo2 | Permanent test:hosted-report-protocol-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-protocol-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-initial-node | tests/runners/livehost/run-hosted-test-report-initial.node.mts | hson-demo2 | Permanent test:hosted-report-initial-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-initial-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-mirror-node | tests/runners/livehost/run-hosted-test-report-mirror.node.mts | hson-demo2 | Permanent test:hosted-report-mirror-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-mirror-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-router-node | tests/runners/livehost/run-hosted-test-report-router.node.mts | hson-demo2 | Permanent test:hosted-report-router-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-router-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-replay-router-node | tests/runners/livehost/run-hosted-replay-router.node.mts | hson-demo2 | Permanent test:hosted-replay-router-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-replay-router-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-test-panel-adapter-node | tests/runners/livehost/run-hosted-test-panel-adapter.node.mts | hson-demo2 | Permanent test:hosted-test-panel-adapter-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-test-panel-adapter-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-test-panel-projection-node | tests/runners/livehost/run-hosted-test-panel-projection.node.mts | hson-demo2 | Permanent test:hosted-test-panel-projection-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-test-panel-projection-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-suite-registry-node | tests/runners/livehost/run-hosted-suite-registry.node.mts | hson-demo2 | Permanent test:hosted-suite-registry-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-suite-registry-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-node-all-node | tests/runners/livehost/run-hosted-node-all.node.mts | hson-demo2 | Permanent test:hosted-node-all-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-node-all-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-batch-node | tests/runners/livehost/run-hosted-test-report-batch.node.mts | hson-demo2 | Permanent test:hosted-report-batch-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-batch-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-report-performance-node | tests/runners/livehost/run-hosted-report-performance.node.mts | hson-demo2 | Permanent test:hosted-report-performance-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-report-performance-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-real-websocket-node | tests/runners/livehost/run-hosted-real-websocket.node.mts | hson-demo2 | Permanent test:hosted-real-websocket-node contract declared by hson-demo2/package.json. | Node | real WebSocket | npm run test:hosted-real-websocket-node | yes | available | real transport integration | migrate |
-| hson-demo2:test:hosted-generic-livehost-node | tests/runners/livehost/run-hosted-generic-livehost.node.mts | hson-demo2 | Permanent test:hosted-generic-livehost-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-generic-livehost-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-websocket-lifecycle-node | tests/runners/livehost/run-hosted-websocket-lifecycle.node.mts | hson-demo2 | Permanent test:hosted-websocket-lifecycle-node contract declared by hson-demo2/package.json. | Node | real WebSocket | npm run test:hosted-websocket-lifecycle-node | yes | available | real transport integration | migrate |
-| hson-demo2:test:hosted-jsdom-runtime-node | tests/runners/livehost/run-hosted-jsdom-runtime.node.mts | hson-demo2 | Permanent test:hosted-jsdom-runtime-node contract declared by hson-demo2/package.json. | Node + jsdom | in-memory / local runtime | npm run test:hosted-jsdom-runtime-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-dom-collection-node | tests/runners/livehost/run-hosted-dom-collection.node.mts | hson-demo2 | Permanent test:hosted-dom-collection-node contract declared by hson-demo2/package.json. | Node + jsdom | in-memory / local runtime | npm run test:hosted-dom-collection-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-dom-compatibility-node | tests/runners/livehost/run-hosted-dom-compatibility.node.mts | hson-demo2 | Permanent test:hosted-dom-compatibility-node contract declared by hson-demo2/package.json. | Node + jsdom | in-memory / local runtime | npm run test:hosted-dom-compatibility-node | yes | available | runtime integration | promote |
-| hson-demo2:test:hosted-dom-real-websocket-node | tests/runners/livehost/run-hosted-dom-real-websocket.node.mts | hson-demo2 | Permanent test:hosted-dom-real-websocket-node contract declared by hson-demo2/package.json. | Node + jsdom | real WebSocket | npm run test:hosted-dom-real-websocket-node | yes | available | real transport integration | migrate |
-| hson-demo2:test:hosted-stale-suite-real-websocket-node | tests/runners/livehost/run-hosted-stale-suite-real-websocket.node.mts | hson-demo2 | Permanent test:hosted-stale-suite-real-websocket-node contract declared by hson-demo2/package.json. | Node | real WebSocket | npm run test:hosted-stale-suite-real-websocket-node | yes | available | real transport integration | migrate |
-| hson-demo2:test:hosted-dom-behavior-diagnostics-node | tests/runners/livehost/run-hosted-dom-behavior-diagnostics.node.mts | hson-demo2 | Permanent test:hosted-dom-behavior-diagnostics-node contract declared by hson-demo2/package.json. | Node + jsdom | in-memory / local runtime | npm run test:hosted-dom-behavior-diagnostics-node | yes | available | temporary diagnostic | keep |
-| hson-demo2:test:hosted-dom-layout-diagnostics-node | tests/runners/livehost/run-hosted-dom-layout-diagnostics.node.mts | hson-demo2 | Permanent test:hosted-dom-layout-diagnostics-node contract declared by hson-demo2/package.json. | Node + jsdom | in-memory / local runtime | npm run test:hosted-dom-layout-diagnostics-node | yes | available | temporary diagnostic | keep |
-| hson-demo2:test:hosted-sanitizer-node | tests/runners/livehost/run-hosted-sanitizer.node.mts | hson-demo2 | Permanent test:hosted-sanitizer-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-sanitizer-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-canvas-runtime-node | tests/runners/livehost/run-hosted-canvas-runtime.node.mts | hson-demo2 | Permanent test:hosted-canvas-runtime-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-canvas-runtime-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-canvas-collection-node | tests/runners/livehost/run-hosted-canvas-collection.node.mts | hson-demo2 | Permanent test:hosted-canvas-collection-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-canvas-collection-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-canvas-real-websocket-node | tests/runners/livehost/run-hosted-canvas-real-websocket.node.mts | hson-demo2 | Permanent test:hosted-canvas-real-websocket-node contract declared by hson-demo2/package.json. | Node | real WebSocket | npm run test:hosted-canvas-real-websocket-node | yes | available | real transport integration | migrate |
-| hson-demo2:test:hosted-all-real-websocket-node | tests/runners/livehost/run-hosted-all-real-websocket.node.mts | hson-demo2 | Permanent test:hosted-all-real-websocket-node contract declared by hson-demo2/package.json. | Node | real WebSocket | npm run test:hosted-all-real-websocket-node | yes | available | real transport integration | keep |
-| hson-demo2:test:hosted-case-inspection-node | tests/runners/livehost/run-hosted-case-inspection.node.mts | hson-demo2 | Permanent test:hosted-case-inspection-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-case-inspection-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-test-timing-node | tests/runners/livehost/run-hosted-test-timing.node.mts | hson-demo2 | Permanent test:hosted-test-timing-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-test-timing-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-multi-suite-concurrent-node | tests/runners/livehost/run-hosted-multi-suite-concurrent.node.mts | hson-demo2 | Permanent test:hosted-multi-suite-concurrent-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-multi-suite-concurrent-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-app-boundary-node | tests/runners/livehost/run-hosted-app-boundary.node.mts | hson-demo2 | Permanent test:hosted-app-boundary-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-app-boundary-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-run-identity-node | tests/runners/livehost/run-hosted-run-identity.node.mts | hson-demo2 | Permanent test:hosted-run-identity-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-run-identity-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-retry-classification-node | tests/runners/livehost/run-hosted-retry-classification.node.mts | hson-demo2 | Permanent test:hosted-retry-classification-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-retry-classification-node | yes | available | runtime integration | keep |
-| hson-demo2:test:livetree-lifecycle-foundations-node | tests/runners/livehost/run-livetree-lifecycle-foundations.node.mts | hson-demo2 | Permanent test:livetree-lifecycle-foundations-node contract declared by hson-demo2/package.json. | Node | none | npm run test:livetree-lifecycle-foundations-node | yes | available | runtime integration | keep |
-| hson-demo2:test:livetree-lifecycle-public-node | tests/runners/livehost/run-livetree-lifecycle-public.node.mts | hson-demo2 | Permanent test:livetree-lifecycle-public-node contract declared by hson-demo2/package.json. | Node | none | npm run test:livetree-lifecycle-public-node | yes | available | runtime integration | keep |
-| hson-demo2:test:livetree-lifecycle-ownership-node | tests/runners/livehost/run-livetree-lifecycle-ownership.node.mts | hson-demo2 | Permanent test:livetree-lifecycle-ownership-node contract declared by hson-demo2/package.json. | Node | none | npm run test:livetree-lifecycle-ownership-node | yes | available | runtime integration | keep |
-| hson-demo2:test:livetree-allocation-node | tests/runners/livehost/run-livetree-allocation.node.mts | hson-demo2 | Permanent test:livetree-allocation-node contract declared by hson-demo2/package.json. | Node | none | npm run test:livetree-allocation-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hson-node-representation-node | tests/runners/livehost/run-hson-node-representation.node.mts | hson-demo2 | Permanent test:hson-node-representation-node contract declared by hson-demo2/package.json. | Node | none | npm run test:hson-node-representation-node | yes | available | runtime integration | keep |
-| hson-demo2:test:generated-json-node | tests/runners/diagnostics/run-generated-json.node.mts | hson-demo2 | Permanent test:generated-json-node contract declared by hson-demo2/package.json. | Node | none | npm run test:generated-json-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-replay-events-node | tests/runners/livehost/run-hosted-replay-events.node.mts | hson-demo2 | Permanent test:hosted-replay-events-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-replay-events-node | yes | available | runtime integration | keep |
-| hson-demo2:test:hosted-replay-concurrent-node | tests/runners/livehost/run-hosted-replay-concurrent.node.mts | hson-demo2 | Permanent test:hosted-replay-concurrent-node contract declared by hson-demo2/package.json. | Node | in-memory / local runtime | npm run test:hosted-replay-concurrent-node | yes | available | runtime integration | keep |
-| hson-demo2:test:amoebi-geometry | tests/runners/app/run-amoebi-geometry.node.mts | hson-demo2 | Permanent test:amoebi-geometry contract declared by hson-demo2/package.json. | Node | none | npm run test:amoebi-geometry | yes | available | runtime integration | keep |
-| hson-demo2:test:soft-tile-node | tests/runners/app/run-soft-tile.node.mts | hson-demo2 | Deterministic soft-tile packing, contact, protected-core, and direction guarantees. | Node | none | npm run test:soft-tile-node | yes | available | runtime integration | promote |
-| hson-demo2:test:browser | tests/integration/browser/*.spec.ts | hson-demo2 | Chromium certifies boot plus Parse and Build user journeys. | real Chromium | localhost Vite | npm run test:browser | no | available | runtime integration | promote |
-| hson-demo2:test:browser:headed | playwright.config.ts | hson-demo2 | Local headed mode for the owned browser suite. | real Chromium | localhost Vite | npm run test:browser:headed | no | available | runtime integration | keep |
-| hson-demo2:test:browser:debug | playwright.config.ts | hson-demo2 | Local Playwright inspector mode for the owned browser suite. | real Chromium | localhost Vite | npm run test:browser:debug | no | available | runtime integration | keep |
-| hson-demo2:test:browser:install | playwright.config.ts | hson-demo2 | Installs the pinned Chromium runtime required by browser certification. | Node | download | npm run test:browser:install | no | available | build/typecheck certification | keep |
-| hson-demo2:test:surface-enumeration-node | tests/runners/harness/run-test-surface-enumeration.node.mts | hson-demo2 | Permanent test:surface-enumeration-node contract declared by hson-demo2/package.json. | Node | none | npm run test:surface-enumeration-node | yes | available | runtime integration | keep |
+Counts above are a Phase 5 snapshot for human review. Tests never pin them as
+inventory contracts; the enumeration certificate derives the same quantities
+from current authorities.
+
+## Public terms
+
+- A **case** is a structured canonical test with stable suite/case identity and
+  case lifecycle.
+- A **check** is an assertion count reported by an opaque launcher without
+  structured case identity.
+- **Semantic checks** means cases plus opaque checks only when those sets are
+  semantically nonduplicative.
+
+The Test panel summary uses suites, cases, checks, certifications, their
+applicable pass/fail/skip/cancel metrics, and elapsed. The Inspector retains the
+same denominator per suite. The Logger remains chronological evidence, never a
+second totals authority.
+
+## Current hostability
+
+Semantic identities and executor executions are separate dimensions. A
+portable canonical case run in Node and Worker is one semantic case with two
+executor executions.
+
+| Current class | Exact census population | Phase 6 implication |
+|---|---|---|
+| `hosted-deployed-now` | none verified from repository authority | The Worker is deployable, but the repository records neither a concrete deployed endpoint nor a deployed frontend endpoint configuration. |
+| `hosted-local-now` | 328 surfaces | All semantic cases/checks plus promoted Node command certifications and semantic command aliases use LiveHost authority locally. Deployment now requires only the complete Node service. |
+| `hostable-worker` | 1 Cloudflare adapter portability certificate | Optional because its explicit subject is the Worker environment. |
+| `hostable-node` | none | Phase 6A closed command, jsdom, canvas, generated, integration, and source/meta dispatch. |
+| `hostable-external-process` | none | Phase 6A generalized the proven launcher supervisor. |
+| `hostable-browser` | 19 surfaces: 14 Playwright specs, their aggregate command, and 4 raster fidelity cases | Add managed Chromium, supervised servers, normalized lifecycle, and artifact upload. |
+| `verification-only` | 28 build/type/artifact, deployment-dependent, recursive, and historical aggregate command surfaces | Separate from semantic totals; promote only when operationally useful and nonrecursive. |
+| `blocked-external` | none | No legitimate current test is considered inherently unhostable. |
+
+The machine census records every stable identity and all required fields:
+subject, provenance, shape, current executor, capabilities, four availability
+dimensions, cancellation, recovery/reporting, evidence, non-deployment reason,
+exact missing capability, and proposed Phase 6 executor class.
+
+## Capability vocabulary
+
+Only capabilities observed in current sources are used:
+
+`javascript`, `node`, `worker-threads`, `cloudflare-worker`, `filesystem`, `process`, `synthetic-dom`,
+`synthetic-canvas`, `browser-dom`, `browser`, `chromium`, `websocket`, `network`,
+`local-server`, `compiler/typescript`, `build-tooling`, `dynamic-generated`,
+`environment/secrets`, and `deployment-access`.
+
+These are executor requirements, not exclusion labels.
+
+The Node executor must also satisfy the repository engine contract
+(`>=22.12.0 <25`). Phase 5 verification used the bundled Node 24 runtime; an
+accidental Node 20 launch reproduced a CSS-runtime failure and was rejected as
+an unsupported executor version rather than treated as a test exclusion.
+
+## Duplicate ownership retired in Phase 5
+
+| Removed hson-demo2 identity | Retained hson-live launcher | Proposition | Removed cases |
+|---|---|---|---:|
+| `transform/hson/quoted-name-acceptance` | `transform.hson-quoted-name-acceptance` | quoted property-name acceptance grammar | 24 |
+| `transform/hson/quoted-name-rejection` | `transform.hson-quoted-name-rejection` | quoted property-name rejection grammar | 25 |
+| `livemap/path-handle` | `livemap.path-handle` | path-handle semantics | 8 |
+| `livemap/carrier-mutation-planning` | `livemap.carrier-mutation-planning` | carrier mutation planning | 23 |
+| `livemap/exact-transport` | `livemap.exact-transport` | exact transport | 23 |
+| `livemap/exact-transport-rejection` | `livemap.exact-transport-rejection` | exact transport rejection | 10 |
+| `livemap/exact-propagation` | `livemap.exact-propagation` | exact propagation | 23 |
+| `livemap/schema-value-boundary` | `livemap.schema-value-boundary` | schema value boundary | 24 |
+
+All eight were core hson-live contracts asserted at the same library boundary.
+The retained launchers are broader and manifested, so hson-live is the single
+semantic owner. Cross-runtime Node/Worker execution was not removed.

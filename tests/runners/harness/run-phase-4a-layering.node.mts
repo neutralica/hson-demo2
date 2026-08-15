@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { resolve, dirname, relative, sep } from "node:path";
 import ts from "typescript";
-import { PHASE4A_TEST_COMPATIBILITY_BRIDGES } from "../../harness/core/test-convergence-compatibility";
+import { TEST_CONVERGENCE_BOUNDARIES } from "../../harness/core/test-convergence-compatibility";
 
 const root = resolve(import.meta.dirname, "../../..");
 const appRoot = resolve(root, "src/app/demos/tests");
@@ -128,9 +128,9 @@ certify(
 const appText = (await Promise.all(appFiles.map((file) => readFile(file, "utf8")))).join("\n");
 certify(!appText.includes("hson:quid") && !appText.includes("find.byQuid"), "ordinary Test UI action routing contains no DOM/QUID rediscovery bridge");
 certify(
-  PHASE4A_TEST_COMPATIBILITY_BRIDGES.length === 13
-    && new Set(PHASE4A_TEST_COMPATIBILITY_BRIDGES.map((bridge) => bridge.id)).size === 13
-    && PHASE4A_TEST_COMPATIBILITY_BRIDGES.every((bridge) => bridge.deletionGate.length > 0),
+  TEST_CONVERGENCE_BOUNDARIES.length === 1
+    && new Set(TEST_CONVERGENCE_BOUNDARIES.map((bridge) => bridge.id)).size === 1
+    && TEST_CONVERGENCE_BOUNDARIES.every((bridge) => bridge.deletionGate.length > 0),
   "finite Phase 4A compatibility inventory has unique identities, dispositions, and deletion gates",
 );
 

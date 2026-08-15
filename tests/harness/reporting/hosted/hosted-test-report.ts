@@ -6,9 +6,8 @@ import type { RunResult, TestEvent } from "../../core/test-contracts";
 import { make_test_lifecycle_adapter } from "../../core/test-lifecycle";
 import { TEST_ERROR_KINDS, TEST_LIFECYCLE_STATUSES, type TestLifecycleCounts, type TestLifecycleError, type TestLifecycleEvent, type TestLifecycleStatus, type TestLifecycleTerminalStatus } from "../../../../src/shared/testing/test-lifecycle-contract";
 import type { TestRunPlan } from "../../../../src/shared/testing/test-run-contract";
-import type { HostedTestCaseReport, HostedTestInfrastructureError, HostedTestPlannedCaseReport, HostedTestReport, HostedTestReportCommit, HostedTestReportMap } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
-import { HOSTED_TEST_SELECTED_RUN_TARGET, HOSTED_TEST_SUITE_IDS } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
-import type { HostedTestRunTarget } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
+import type { HostedTestInfrastructureError, HostedTestPlannedCaseReport, HostedTestReport, HostedTestReportCommit, HostedTestReportMap } from "../../../../src/shared/hosted-tests/hosted-test-report.types";
+import { HOSTED_TEST_SELECTED_RUN_TARGET } from "../../../../src/shared/hosted-tests/hosted-test-suite-contract";
 
 export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   const nonNegativeInteger = s.number.constrain(
@@ -36,8 +35,8 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
   });
   return s.object.exact({
     run: s.object.exact({
-      id: s.string.optional,
-      suite: s.pick(...HOSTED_TEST_SUITE_IDS, HOSTED_TEST_SELECTED_RUN_TARGET),
+      id: s.string,
+      suite: s.pick(HOSTED_TEST_SELECTED_RUN_TARGET),
       status: s.pick("idle", "running", "passed", "failed", "cancelled", "error"),
       startedAt: finiteNumber.nullable,
       completedAt: finiteNumber.nullable,
@@ -56,7 +55,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       catalogVersion: s.string,
       executorId: s.string,
       selectionIds: s.array(s.string),
-    }).nullable,
+    }),
     suiteRuns: s.array(s.object.exact({
       id: s.string,
       title: s.string,
@@ -64,7 +63,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
       collections: s.array(s.pick("unit", "dev")),
       provenance: s.pick("hson-demo2", "hson-live"),
       order: nonNegativeInteger,
-      executionShape: s.pick("cases", "opaque-aggregate"),
+      executionShape: s.pick("cases", "opaque-aggregate", "certification-aggregate"),
       sourceRef: s.string.nullable,
       declaredChecks: nonNegativeInteger.nullable,
       status: s.pick(...TEST_LIFECYCLE_STATUSES),
@@ -113,47 +112,18 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
         lastEventSignature: s.string,
       })),
     })),
-    caseBatches: s.record(s.array(s.object.exact({
-      key: s.string,
-      suite: s.string,
-      caseId: s.string,
-      name: s.string,
-      status: s.pick("pass", "fail", "skip"),
-      ms: finiteNumber,
-      err: s.string.nullable,
-    }))),
-    suites: s.array(s.object.exact({ suite: s.string, ms: finiteNumber })),
-    externalResults: s.record(s.object.exact({
-      id: s.string,
-      suite: s.string,
-      name: s.string,
-      subject: s.string,
-      runtime: s.string,
-      executableChecks: nonNegativeInteger,
-      collections: s.array(s.string),
-      status: s.pick("queued", "running", "pass", "fail", "cancelled"),
-      ms: finiteNumber,
-      stdout: s.string,
-      stderr: s.string,
-      exitCode: s.number.nullable,
-      signal: s.string.nullable,
-      timedOut: s.boolean,
-      spawnError: s.string.nullable,
-    })),
     error: lifecycleError.nullable,
   });
 });
 
 export function make_initial_hosted_test_report(
-  suite: HostedTestRunTarget,
-  runId?: string,
-  runPlan?: TestRunPlan,
+  runPlan: TestRunPlan,
   queuedAt = Date.now(),
 ): HostedTestReport {
   return {
     run: {
-      ...(runId !== undefined ? { id: runId } : {}),
-      suite,
+      id: runPlan.runId,
+      suite: HOSTED_TEST_SELECTED_RUN_TARGET,
       status: "idle",
       startedAt: null,
       completedAt: null,
@@ -162,13 +132,13 @@ export function make_initial_hosted_test_report(
       lastEventSignature: "",
     },
     summary: { cases: 0, pass: 0, fail: 0, skip: 0 },
-    plan: runPlan === undefined ? null : {
+    plan: {
       protocolVersion: runPlan.protocolVersion,
       catalogVersion: runPlan.catalogVersion,
       executorId: runPlan.executorId,
       selectionIds: [...runPlan.selectionIds],
     },
-    suiteRuns: runPlan === undefined ? [] : runPlan.suites.map((plannedSuite) => ({
+    suiteRuns: runPlan.suites.map((plannedSuite) => ({
       id: plannedSuite.id,
       title: plannedSuite.title,
       subject: plannedSuite.subject,
@@ -221,9 +191,6 @@ export function make_initial_hosted_test_report(
         lastEventSignature: "",
       })),
     })),
-    caseBatches: {},
-    suites: [],
-    externalResults: {},
     error: null,
   };
 }
@@ -245,21 +212,6 @@ function normalized_error(error: TestLifecycleError, executorId: string): Hosted
     stack: error.stack ?? null,
     expected: error.expected ?? null,
     actual: error.actual ?? null,
-  };
-}
-
-function case_report(
-  event: Extract<TestLifecycleEvent, { t: "case_finished" }> & Readonly<{ status: "pass" | "fail" | "skip" }>,
-  name: string,
-): HostedTestCaseReport {
-  return {
-    key: `${event.suiteId}::${event.caseId}`,
-    suite: event.suiteId,
-    caseId: event.caseId,
-    name,
-    status: event.status,
-    ms: finite_or_zero(event.durationMs),
-    err: event.error?.message ?? null,
   };
 }
 
@@ -353,7 +305,7 @@ export type HostedTestReportController = Readonly<{
   map: HostedTestReportMap;
   commits: () => readonly HostedTestReportCommit[];
   dispose: () => void;
-  /** Compatibility adapter: legacy runner events are normalized before reduction. */
+  /** Runner events are normalized before reduction. */
   reduce: (event: TestEvent) => void;
   reduceLifecycle: (event: TestLifecycleEvent) => void;
   complete: (result: RunResult, timing?: Readonly<{ runnerMs: number; hostMs: number }>) => void;
@@ -367,33 +319,25 @@ type MutableHostedTestPlannedCaseReport = Omit<HostedTestPlannedCaseReport, "err
   evidenceRefs: string[];
 };
 
-export const DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE = 32;
 export const DEFAULT_HOSTED_TEST_LIFECYCLE_BATCH_SIZE = 8;
 export const DEFAULT_HOSTED_TEST_REPORT_FLUSH_INTERVAL_MS = 100;
 export const DEFAULT_HOSTED_TEST_REPORT_OPERATION_BUDGET = 64;
 const HOSTED_TEST_CASE_LIFECYCLE_OPERATION_WEIGHT = 4;
 
 export type HostedTestReportOptions = Readonly<{
-  caseBatchSize?: number;
   captureCommits?: boolean;
-  runId?: string;
-  runPlan?: TestRunPlan;
+  runPlan: TestRunPlan;
   map?: HostedTestReportMap;
   mutate?: (mutation: (draft: HostedTestReportMap) => LiveMapCommit) => Promise<LiveMapCommit<LiveMapAnyOp>>;
 }>;
 
 export function make_hosted_test_report(
   now: () => number = Date.now,
-  onCommit?: (commit: HostedTestReportCommit) => void,
-  suite: HostedTestRunTarget = "livemap/replay",
-  options: HostedTestReportOptions = {},
+  onCommit: ((commit: HostedTestReportCommit) => void) | undefined,
+  options: HostedTestReportOptions,
 ): HostedTestReportController {
-  const caseBatchSize = options.caseBatchSize ?? DEFAULT_HOSTED_TEST_CASE_BATCH_SIZE;
-  if (!Number.isInteger(caseBatchSize) || caseBatchSize <= 0) {
-    throw new Error("Hosted test report caseBatchSize must be a positive integer.");
-  }
   const queuedAt = finite_time(now);
-  const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(suite, options.runId, options.runPlan, queuedAt))) as JsonValue;
+  const initialJson = JSON.parse(JSON.stringify(make_initial_hosted_test_report(options.runPlan, queuedAt))) as JsonValue;
   const map = options.map === undefined
     ? hson.liveMap.fromJson(initialJson).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap
     : options.map;
@@ -425,11 +369,8 @@ export function make_hosted_test_report(
     counts?: Readonly<{ suiteIndex: number; value: TestLifecycleCounts }>;
   }>;
   let pendingCaseLifecycle: PendingCaseLifecycleOperation[] = [];
-  let pendingCases: HostedTestCaseReport[] = [];
   const recovered = map.capture().value;
-  const reportRunId = recovered.run.id ?? options.runId ?? `legacy:${suite}`;
-  let caseBatchId = Math.max(0, ...Object.keys(recovered.caseBatches).map((key) => Number(key) || 0));
-  let suiteTimingCount = recovered.suites.length;
+  const reportRunId = recovered.run.id;
   let summaryCases = recovered.summary.cases;
   let summaryPass = recovered.summary.pass;
   let summaryFail = recovered.summary.fail;
@@ -446,9 +387,6 @@ export function make_hosted_test_report(
   const runProjectionBySequence = new Map<number, typeof runProjection>();
   const suiteRunIndex = new Map(recovered.suiteRuns.map((suiteRun, index) => [suiteRun.id, index]));
   const suiteCounts = new Map(recovered.suiteRuns.map((suiteRun) => [suiteRun.id, { ...suiteRun.counts }]));
-  const caseTitles = new Map(recovered.suiteRuns.flatMap((suiteRun) => (
-    suiteRun.cases.map((testCase) => [testCase.id, testCase.title] as const)
-  )));
   const caseRunIndex = new Map(recovered.suiteRuns.flatMap((suiteRun, suiteIndex) => (
     suiteRun.cases.map((testCase, caseIndex) => [testCase.id, { suiteIndex, caseIndex }] as const)
   )));
@@ -589,7 +527,7 @@ export function make_hosted_test_report(
     operation: ReportTxOperation,
     metadata: Omit<PendingCaseLifecycleOperation, "operation"> = {},
   ): void {
-    if (options.mutate === undefined || options.runPlan === undefined) {
+    if (options.mutate === undefined) {
       mutate((tx) => {
         operation(tx);
         if (metadata.counts !== undefined) {
@@ -722,66 +660,6 @@ export function make_hosted_test_report(
     tx.splice(["suiteRuns", suiteIndex, "errors"], keys.size - 1, 0, normalized_error(error, executorId));
   }
 
-  function flush_pending_cases(suiteEnd?: Readonly<{ suite: string; ms: number }>): void {
-    if (pendingCases.length === 0 && suiteEnd === undefined) return;
-    const batch = pendingCases;
-    let pass = 0;
-    let fail = 0;
-    let skip = 0;
-    for (const testCase of batch) {
-      if (testCase.status === "pass") pass += 1;
-      else if (testCase.status === "fail") fail += 1;
-      else skip += 1;
-    }
-    const beforeRev = map.rev;
-    try {
-      mutate((tx) => {
-        if (batch.length > 0) {
-          caseBatchId += 1;
-          tx.setMany(["caseBatches"], { [caseBatchId.toString().padStart(6, "0")]: batch });
-          summaryCases += batch.length;
-          summaryPass += pass;
-          summaryFail += fail;
-          summarySkip += skip;
-          tx.set(["summary", "cases"], summaryCases);
-          tx.set(["summary", "pass"], summaryPass);
-          tx.set(["summary", "fail"], summaryFail);
-          tx.set(["summary", "skip"], summarySkip);
-        }
-        if (suiteEnd !== undefined) {
-          tx.splice(["suites"], suiteTimingCount, 0, suiteEnd);
-          suiteTimingCount += 1;
-        }
-      });
-      pendingCases = [];
-    } catch (error) {
-      if (map.rev !== beforeRev) pendingCases = [];
-      throw error;
-    }
-  }
-
-  function write_case_batch(tx: LiveMapBatchTx<HostedTestReport>, batch: HostedTestCaseReport[]): void {
-    if (batch.length === 0) return;
-    let pass = 0;
-    let fail = 0;
-    let skip = 0;
-    for (const testCase of batch) {
-      if (testCase.status === "pass") pass += 1;
-      else if (testCase.status === "fail") fail += 1;
-      else skip += 1;
-    }
-    caseBatchId += 1;
-    tx.setMany(["caseBatches"], { [caseBatchId.toString().padStart(6, "0")]: batch });
-    summaryCases += batch.length;
-    summaryPass += pass;
-    summaryFail += fail;
-    summarySkip += skip;
-    tx.set(["summary", "cases"], summaryCases);
-    tx.set(["summary", "pass"], summaryPass);
-    tx.set(["summary", "fail"], summaryFail);
-    tx.set(["summary", "skip"], summarySkip);
-  }
-
   function reduce_lifecycle_unchecked(event: TestLifecycleEvent): void {
     const eventSignature = validate_event(event);
     if (eventSignature === undefined) return;
@@ -829,14 +707,6 @@ export function make_hosted_test_report(
           tx.set(["suiteRuns", suiteIndex, "lastSequence"], event.sequence);
           tx.set(["suiteRuns", suiteIndex, "lastEventSignature"], eventSignature);
           if (event.opaque !== undefined) tx.set(["suiteRuns", suiteIndex, "runtime"], event.opaque.runtime);
-        }
-        if (event.opaque !== undefined) {
-          tx.setMany(["externalResults"], { [event.opaque.id]: {
-            id: event.opaque.id, suite: event.suiteId, name: event.opaque.name, subject: event.opaque.subject,
-            runtime: event.opaque.runtime, executableChecks: event.opaque.executableChecks,
-            collections: [...event.opaque.collections], status: "running", ms: 0, stdout: "", stderr: "",
-            exitCode: null, signal: null, timedOut: false, spawnError: null,
-          } });
         }
       });
       return;
@@ -911,34 +781,27 @@ export function make_hosted_test_report(
         caseRunStates.set(key, nextState);
       }
       const counts = canonical_counts(event.suiteId);
-      let projectedCase: HostedTestCaseReport | undefined;
       if (event.status === "pass" || event.status === "fail" || event.status === "skip") {
-        projectedCase = case_report(
-          event as typeof event & Readonly<{ status: "pass" | "fail" | "skip" }>,
-          caseTitles.get(key) ?? event.title ?? event.caseId,
-        );
-        pendingCases.push(projectedCase);
+        summaryCases += 1;
+        if (event.status === "pass") summaryPass += 1;
+        else if (event.status === "fail") summaryFail += 1;
+        else summarySkip += 1;
       }
-      const projectedBatch = pendingCases.length >= caseBatchSize ? pendingCases : undefined;
-      const beforeRev = map.rev;
-      try {
-        mutate_case((tx) => {
-          if (location !== undefined) {
-            attach_suite_executor(tx, event.suiteId, location.suiteIndex, event.executorId);
-            tx.replace(["suiteRuns", location.suiteIndex, "cases", location.caseIndex], nextState!);
-          }
-          if (projectedBatch !== undefined) write_case_batch(tx, projectedBatch);
-        }, {
-          caseKey: key,
-          phase: "finish",
-          stamp: { event, eventSignature },
-          ...(location === undefined ? {} : { counts: { suiteIndex: location.suiteIndex, value: counts } }),
-        });
-      } catch (error) {
-        if (projectedBatch !== undefined && map.rev !== beforeRev) pendingCases = [];
-        throw error;
-      }
-      if (projectedBatch !== undefined) pendingCases = [];
+      mutate_case((tx) => {
+        if (location !== undefined) {
+          attach_suite_executor(tx, event.suiteId, location.suiteIndex, event.executorId);
+          tx.replace(["suiteRuns", location.suiteIndex, "cases", location.caseIndex], nextState!);
+        }
+        tx.set(["summary", "cases"], summaryCases);
+        tx.set(["summary", "pass"], summaryPass);
+        tx.set(["summary", "fail"], summaryFail);
+        tx.set(["summary", "skip"], summarySkip);
+      }, {
+        caseKey: key,
+        phase: "finish",
+        stamp: { event, eventSignature },
+        ...(location === undefined ? {} : { counts: { suiteIndex: location.suiteIndex, value: counts } }),
+      });
       return;
     }
 
@@ -1034,7 +897,6 @@ export function make_hosted_test_report(
         if (transition(current, event.status, event.suiteId)) suiteStatuses.set(event.suiteId, event.status);
         suiteTerminalEvidence.set(event.suiteId, terminalEvidence);
       }
-      flush_pending_cases({ suite: event.suiteId, ms: finite_or_zero(event.durationMs) });
       mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         if (suiteIndex !== undefined) {
@@ -1047,18 +909,6 @@ export function make_hosted_test_report(
           for (const error of event.errors ?? []) append_suite_error(tx, event.suiteId, error, event.executorId);
           tx.set(["suiteRuns", suiteIndex, "lastSequence"], event.sequence);
           tx.set(["suiteRuns", suiteIndex, "lastEventSignature"], eventSignature);
-        }
-        if (event.opaque !== undefined) {
-          tx.setMany(["externalResults"], { [event.opaque.id]: {
-            id: event.opaque.id, suite: event.suiteId, name: event.opaque.name, subject: event.opaque.subject,
-            runtime: event.opaque.runtime, executableChecks: event.opaque.executableChecks,
-            collections: [...event.opaque.collections], status: event.status === "cancelled"
-              ? "cancelled"
-              : event.status === "pass" ? "pass" : "fail",
-            ms: finite_or_zero(event.durationMs), stdout: event.opaque.stdout ?? "", stderr: event.opaque.stderr ?? "",
-            exitCode: event.opaque.exitCode ?? null, signal: event.opaque.signal ?? null,
-            timedOut: event.opaque.timedOut ?? false, spawnError: event.opaque.spawnError ?? null,
-          } });
         }
       });
       return;
@@ -1082,19 +932,11 @@ export function make_hosted_test_report(
       mutate((tx) => {
         stamp_run(tx, event, eventSignature);
         if (completion !== undefined) {
-          const plannedCaseStatuses = options.runPlan === undefined ? undefined : [...caseStatuses.values()];
-          tx.set(["summary", "cases"], plannedCaseStatuses === undefined
-            ? completion.result.summary.cases
-            : plannedCaseStatuses.filter((status) => status === "pass" || status === "fail" || status === "skip").length);
-          tx.set(["summary", "pass"], plannedCaseStatuses === undefined
-            ? completion.result.summary.pass
-            : plannedCaseStatuses.filter((status) => status === "pass").length);
-          tx.set(["summary", "fail"], plannedCaseStatuses === undefined
-            ? completion.result.summary.fail
-            : plannedCaseStatuses.filter((status) => status === "fail").length);
-          tx.set(["summary", "skip"], plannedCaseStatuses === undefined
-            ? completion.result.summary.skip
-            : plannedCaseStatuses.filter((status) => status === "skip").length);
+          const plannedCaseStatuses = [...caseStatuses.values()];
+          tx.set(["summary", "cases"], plannedCaseStatuses.filter((status) => status === "pass" || status === "fail" || status === "skip").length);
+          tx.set(["summary", "pass"], plannedCaseStatuses.filter((status) => status === "pass").length);
+          tx.set(["summary", "fail"], plannedCaseStatuses.filter((status) => status === "fail").length);
+          tx.set(["summary", "skip"], plannedCaseStatuses.filter((status) => status === "skip").length);
         }
       });
       pendingCompletion = undefined;
@@ -1121,8 +963,8 @@ export function make_hosted_test_report(
 
   const adapter = make_test_lifecycle_adapter({
     runId: reportRunId,
-    executorId: options.runPlan?.executorId ?? "legacy",
-    ...(options.runPlan === undefined ? {} : { runPlan: options.runPlan }),
+    executorId: options.runPlan.executorId,
+    runPlan: options.runPlan,
     initialSequence: lastSequence,
     now,
     emit: reduce_lifecycle,
@@ -1148,7 +990,6 @@ export function make_hosted_test_report(
     dispose() {
       if (disposed) return;
       flush_case_lifecycle();
-      flush_pending_cases();
       clear_report_flush_timer();
       start_report_mutation();
       disposed = true;
@@ -1158,7 +999,6 @@ export function make_hosted_test_report(
     reduceLifecycle: reduce_lifecycle,
     complete(result, timing) {
       flush_case_lifecycle();
-      flush_pending_cases();
       pendingCompletion = Object.freeze({
         result,
         timing: timing ?? { runnerMs: result.summary.msTotal, hostMs: result.summary.msTotal },
@@ -1167,7 +1007,6 @@ export function make_hosted_test_report(
     },
     cancel(result, timing) {
       flush_case_lifecycle();
-      flush_pending_cases();
       pendingCompletion = Object.freeze({
         result,
         timing: timing ?? { runnerMs: result.summary.msTotal, hostMs: result.summary.msTotal },
@@ -1176,7 +1015,6 @@ export function make_hosted_test_report(
     },
     failInfrastructure(error) {
       flush_case_lifecycle();
-      flush_pending_cases();
       adapter.infrastructureError(error);
       adapter.finishRun("fail", 0);
     },

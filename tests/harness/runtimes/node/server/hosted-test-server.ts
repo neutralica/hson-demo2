@@ -1,5 +1,4 @@
 import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action";
-import type { HostedTestSuiteRegistry } from "../../../hosted/hosted-test-suite";
 import type { HostedTestApplicationOptions } from "../../../hosted/hosted-test-application";
 import type { TestExecutorRegistry } from "../../../core/test-executor";
 import {
@@ -21,7 +20,6 @@ export type HostedTestServerOptions = Readonly<{
   host?: string;
   port?: number;
   shutdownTimeoutMs?: number;
-  registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
   runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
@@ -65,7 +63,6 @@ export async function start_hosted_test_server(
     sweepIntervalMs: 30_000,
   });
   const hostedTests = await create_node_hosted_tests_application({
-    ...(options.registry === undefined ? {} : { registry: options.registry }),
     ...(options.inspectCase === undefined ? {} : { inspectCase: options.inspectCase }),
     ...(options.executorRegistry === undefined ? {} : { executorRegistry: options.executorRegistry }),
     ...(options.runSelected === undefined ? {} : { runSelected: options.runSelected }),

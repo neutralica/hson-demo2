@@ -1,98 +1,64 @@
-# Test environments outside the canonical Node corpus
+# Phase 6 executor capability backlog
 
-The canonical Node LiveHost contains the fixed deterministic corpus supported by
-ordinary Node, synthetic DOM, and the hosted deterministic canvas recorder.
-The following surfaces require a materially different execution boundary.
+This is a capability backlog, not a list of tests excluded from LiveHost.
+Every legitimate current test is either hosted now or assigned to a concrete
+Phase 6 executor class by the derived census.
 
-## Phase 4A source-layering certificate
+## Deployed Node executor
 
-- **Command:** `npm run test:phase4a-layering-node`
-- **Required environment:** repository checkout with Node filesystem access and the TypeScript parser.
-- **Why it is not a hosted case:** the current hosted Node executor intentionally advertises runtime execution capabilities, not repository-filesystem or build-source inspection. The Worker executor cannot truthfully inspect a checkout.
-- **Smallest future adapter:** a bounded source-certificate launcher exposed as an opaque hosted suite after the hosted executor gains an explicit filesystem/build-certificate boundary.
-- **Current location:** `tests/runners/harness/run-phase-4a-layering.node.mts`.
+Implemented locally in Phase 6A for every nonbrowser Node surface. The remaining
+work is operational deployment of the same complete server. Its runtime must
+satisfy the repository engine contract (`>=22.12.0 <25`).
 
-## Real browser and Playwright
+Synthetic DOM and the deterministic canvas recorder are ordinary Node
+capabilities. They are not reasons to exclude a test from hosting.
 
-- **Sources:** `tests/integration/browser`, application boot/panel fixtures, rendered
-  pseudo-element cases recorded in `DEFERRED_BROWSER_FIDELITY_CASES`.
-- **Coverage:** four known pseudo-element readback cases plus browser application
-  scenarios; browser scenarios are not represented as a speculative case total.
-- **Requirement:** a real page, CSS rendering, layout, and browser event loop.
-- **Factories:** the four deferred cases originate in reusable LiveTree suites;
-  Playwright scenarios use their existing browser-test format.
-- **Verification:** automated assertions.
-- **Smallest future boundary:** Playwright as an internal adapter behind the Node
-  LiveHost protocol.
+## Supervised process executor
 
-## Native or raster rendering
+Implemented locally in Phase 6A for hson-live launchers and promoted command
+certifications, including process-tree termination, timeouts, server lifecycle,
+bounded stdout/stderr, normalized evidence, and terminal events.
 
-- **Sources:** two cases in `livetree/canvas-clear` and two in
-  `livetree/canvas-plot`, listed by `JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS`.
-- **Coverage:** four unique automated cases.
-- **Requirement:** actual 2D rasterization and `getImageData` pixel readback.
-- **Factories:** reusable original LiveTree suite factories exist, but the
-  rendering cases share suites with deterministic cases.
-- **Verification:** automated pixel assertions.
-- **Smallest future boundary:** a real-browser canvas adapter. The deterministic
-  recorder deliberately throws for pixel, image-loading, and font-metric APIs.
+This can be a specialization of the deployed Node executor, but the process
+control contract must remain explicit.
 
-## Real WebSocket server
+## Browser executor
 
-- **Sources:** `hosted-real-websocket`, `hosted-websocket-lifecycle`,
-  `hosted-dom-real-websocket`, `hosted-stale-suite-real-websocket`,
-  `hosted-canvas-real-websocket`, and `hosted-all-real-websocket` launchers.
-- **Coverage:** six launcher families; their transport assertions are not
-  duplicated as canonical cases.
-- **Requirement:** Node WebSocket server lifecycle and real network transport.
-- **Factories:** some launchers reuse hosted suites; transport coordination
-  remains launcher-owned.
-- **Verification:** automated assertions.
-- **Smallest future boundary:** a narrowly scoped WebSocket execution adapter
-  within the Node LiveHost.
+Required for 67 Playwright journeys and four authored canvas raster-readback
+cases. It needs managed Chromium, browser DOM/layout/canvas, supervised Vite and
+LiveHost servers, network/WebSocket access, cancellation, traces, screenshots,
+video where configured, server logs, and normalized reports.
 
-## Filesystem, process, and build
+The four raster cases are exactly the identities in
+`JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS`. The synthetic canvas recorder remains
+authoritative for deterministic command/state behavior; it intentionally does
+not pretend to implement pixel output.
 
-- **Sources:** generated-fixture diagnostics, type/build checks, Wrangler dry
-  runs, and deployment verification commands.
-- **Coverage:** command-oriented checks; no speculative case total.
-- **Requirement:** controlled filesystem access, process execution, or build
-  tools.
-- **Factories:** generally command launchers rather than reusable `TestSuite`
-  factories.
-- **Verification:** automated command results and diagnostics.
-- **Smallest future boundary:** explicit allow-listed Node host actions, if
-  remote execution becomes valuable.
+## Optional Worker portability
 
-## Cloudflare binding integration
+The Worker executor remains an optional portability adapter. Its single
+unhosted census surface explicitly certifies the Cloudflare environment. It is
+not a dependency of Node LiveHost, and absence of a deployed Worker does not
+reduce general hosted-test availability.
 
-- **Sources:** Durable Object and Worker adapter tests in `tests/integration/cloudflare`.
-- **Coverage:** checked-in Worker runtime verification; no excluded canonical
-  suite currently requires a Cloudflare-only binding.
-- **Requirement:** Worker and Durable Object bindings.
-- **Factories:** adapter tests, not self-hosted executor registrations.
-- **Verification:** automated assertions.
-- **Smallest future boundary:** the existing Worker adapter test command.
+## Verification executor
 
-## Standalone adapters without suite factories
+TypeScript checks, builds, public-entrypoint certification, Cloudflare typing,
+production bundling, inventory/meta checks, and artifact validation use a
+separate verification denominator. A bounded executor needs compiler/build
+tooling, repository inputs, controlled filesystem output, diagnostics, exit
+status, and artifact identity.
 
-- **Sources:** TOWL room, LiveInspector, application geometry, and similar
-  standalone launchers.
-- **Coverage:** launcher-specific; not assigned a speculative total.
-- **Requirement:** varies by adapter.
-- **Factories:** no reusable canonical `TestSuite` boundary currently exists.
-- **Verification:** automated where the launcher asserts; diagnostic where it
-  reports measurements.
-- **Smallest future boundary:** extract a genuine suite factory before executor
-  registration. Do not reproduce individual assertions as wrapper cases.
+## Deployment environment
 
-## Manual visual and interactive demonstrations
+The deployed TOWL probe additionally requires network access,
+`TOWL_DEPLOYED_WS_URL`, and deployment access. This is a current environment
+dependency, not an inherent hosting block. Phase 6 should model the endpoint as
+an executor capability/configuration and keep secrets out of RunPlan payloads
+and reports.
 
-- **Sources:** LiveDemo layout, animation, hover, pointer, transition, and visual
-  composition fixtures.
-- **Coverage:** demonstrations, not missing automated cases.
-- **Requirement:** a real browser and human visual or interactive judgment.
-- **Factories:** presentation fixtures rather than automated test suites.
-- **Verification:** manual.
-- **Smallest future boundary:** retain as demonstrations unless a deterministic
-  behavioral core can be extracted independently.
+## External blocks
+
+None are currently proven. Node, filesystem, processes, DOM, canvas, Chromium,
+WebSocket, compiler tooling, and deployment access all describe executor or
+environment requirements with viable hosted executor designs.

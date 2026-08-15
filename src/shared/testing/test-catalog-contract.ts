@@ -20,9 +20,9 @@ function validate_catalog(catalog: TestCatalog): void {
     if (new Set(descriptor.collections).size !== descriptor.collections.length) {
       throw new Error(`Duplicate test collection on ${descriptor.id}.`);
     }
-    if (descriptor.executionShape === "opaque-aggregate"
+    if (descriptor.executionShape !== "cases"
       && (!Number.isSafeInteger(descriptor.declaredChecks) || (descriptor.declaredChecks ?? 0) < 1)) {
-      throw new Error(`Opaque suite ${descriptor.id} requires a positive declaredChecks count.`);
+      throw new Error(`Aggregate suite ${descriptor.id} requires a positive declaredChecks count.`);
     }
     suites.set(descriptor.id, descriptor);
   }

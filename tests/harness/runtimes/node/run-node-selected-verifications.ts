@@ -1,16 +1,24 @@
 import type { RunOptions, RunResult, TestEvent } from "../../core/test-contracts";
 import type { TestFailure } from "../../../../src/shared/testing/test-contracts";
 import type { TestExecutorRegistry } from "../../core/test-executor";
+import type { TestCatalog } from "../../../../src/shared/testing/test-catalog-contract";
 import { is_test_case_id } from "../../../../src/shared/testing/test-identity";
 import {
   external_library_launcher_termination_generation,
   run_external_library_launcher,
+  resolve_external_launcher_binding,
   type ExternalLibraryLauncherService,
   type ExternalLibraryLauncherAvailability,
   type ExternalLibraryLauncherResult,
+  type SupervisedNodeCommandResult,
 } from "./external-library-launchers";
 import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
 import { run_fresh_node_selected_test_ids } from "./run-node-selected-test-suites";
+import {
+  resolve_node_command_binding,
+  type NodeCommandSurfaceAvailability,
+  type NodeCommandSurfaceTarget,
+} from "./node-command-surfaces";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY = 2;
 
@@ -49,13 +57,15 @@ export type NodeSelectedVerificationScheduling =
 export type NodeSelectedVerificationConfiguration = Readonly<{
   externalScheduling?: NodeSelectedVerificationScheduling;
   externalInvocation?: "verified" | "tsx";
-  launcherService?: Pick<ExternalLibraryLauncherService, "run" | "terminationGeneration">;
+  launcherService?: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">;
+  commandAvailability?: NodeCommandSurfaceAvailability;
   recordMetrics?: (metrics: NodeSelectedVerificationMetrics) => void;
 }>;
 
 export type NodeSelectedVerificationService = Readonly<{
   run(
     registry: TestExecutorRegistry,
+    catalog: TestCatalog,
     availability: ExternalLibraryLauncherAvailability,
     selectedIds: readonly string[],
     onEvent?: (event: TestEvent) => void,
@@ -81,13 +91,15 @@ export function node_selected_verification_metrics(): NodeSelectedVerificationMe
 }
 
 export function create_node_selected_verification_service(
-  launcherService: Pick<ExternalLibraryLauncherService, "run" | "terminationGeneration">,
+  launcherService: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">,
+  commandAvailability?: NodeCommandSurfaceAvailability,
 ): NodeSelectedVerificationService {
   let metrics: NodeSelectedVerificationMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
   return Object.freeze({
-    run(registry, availability, selectedIds, onEvent, options, configuration) {
+    run(registry, catalog, availability, selectedIds, onEvent, options, configuration) {
       return run_node_selected_verifications(
         registry,
+        catalog,
         availability,
         selectedIds,
         onEvent,
@@ -95,6 +107,7 @@ export function create_node_selected_verification_service(
         {
           ...configuration,
           launcherService,
+          ...(commandAvailability === undefined ? {} : { commandAvailability }),
           recordMetrics(value) { metrics = value; },
         },
       );
@@ -362,8 +375,77 @@ function external_end_event(result: ExternalLibraryLauncherResult): TestEvent {
   });
 }
 
+function command_state_event(
+  target: NodeCommandSurfaceTarget,
+  status: "queued" | "running",
+): TestEvent {
+  return Object.freeze({
+    t: "external_state",
+    id: target.id,
+    suite: target.id,
+    name: target.title,
+    subject: target.subject,
+    runtime: "supervised-node-command",
+    executableChecks: 1,
+    collections: Object.freeze(["dev"]),
+    status,
+  });
+}
+
+function command_end_event(target: NodeCommandSurfaceTarget, result: SupervisedNodeCommandResult): TestEvent {
+  return Object.freeze({
+    t: "external_end",
+    id: target.id,
+    suite: target.id,
+    name: target.title,
+    subject: target.subject,
+    runtime: "supervised-node-command",
+    executableChecks: 1,
+    collections: Object.freeze(["dev"]),
+    status: result.cancelled ? "cancelled" : result.ok ? "pass" : "fail",
+    ms: result.durationMs,
+    stdout: result.stdout,
+    ordinaryStdout: result.stdout,
+    stderr: result.stderr,
+    stdoutBytes: result.stdoutBytes,
+    stderrBytes: result.stderrBytes,
+    stdoutTruncated: result.stdoutTruncated,
+    stderrTruncated: result.stderrTruncated,
+    exitCode: result.exitCode,
+    signal: result.signal,
+    timedOut: result.timedOut,
+    ...(result.spawnError === undefined ? {} : { spawnError: result.spawnError }),
+  });
+}
+
+async function run_command_targets(
+  targets: readonly NodeCommandSurfaceTarget[],
+  execute: (target: NodeCommandSurfaceTarget) => Promise<SupervisedNodeCommandResult>,
+  lifecycle: Readonly<{
+    started(target: NodeCommandSurfaceTarget): void;
+    finished(target: NodeCommandSurfaceTarget, result: SupervisedNodeCommandResult): void;
+  }>,
+  concurrency = EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY,
+  signal?: AbortSignal,
+): Promise<void> {
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(concurrency, targets.length) }, async () => {
+    while (!signal?.aborted) {
+      const index = cursor;
+      cursor += 1;
+      const target = targets[index];
+      if (target === undefined) return;
+      lifecycle.started(target);
+      const result = await execute(target);
+      lifecycle.finished(target, result);
+    }
+  });
+  await Promise.all(workers);
+}
+
 export async function run_node_selected_verifications(
   registry: TestExecutorRegistry,
+  catalog: TestCatalog,
   availability: ExternalLibraryLauncherAvailability,
   selectedIds: readonly string[],
   onEvent: (event: TestEvent) => void = () => undefined,
@@ -372,19 +454,32 @@ export async function run_node_selected_verifications(
 ): Promise<RunResult> {
   const overallStartedAt = performance.now();
   const canonicalIds = selectedIds.filter(is_test_case_id);
-  const externalIds = selectedIds.filter((id) => !is_test_case_id(id));
-  const externalTargets = externalIds.map((id) => {
-    const selected = availability.targets.find((target) => target.id === id);
-    if (selected === undefined) throw new Error(`External library launcher is unavailable: ${id}`);
-    return selected;
+  const aggregateDescriptors = selectedIds.filter((id) => !is_test_case_id(id)).map((id) => {
+    const descriptor = catalog.suites.find((suite) => suite.id === id);
+    if (descriptor === undefined) throw new Error(`HOSTED_TEST_AGGREGATE_SELECTION_UNKNOWN: ${id} is not in the accepted catalog.`);
+    return descriptor;
   });
-  for (const target of externalTargets) onEvent(external_state_event(target, "queued"));
+  const opaqueTargets = aggregateDescriptors
+    .filter((descriptor) => descriptor.executionShape === "opaque-aggregate")
+    .map((descriptor) => resolve_external_launcher_binding(availability, descriptor));
+  const commandDescriptors = aggregateDescriptors.filter((descriptor) => descriptor.executionShape === "certification-aggregate");
+  if (commandDescriptors.length > 0 && configuration.commandAvailability === undefined) {
+    throw new Error("HOSTED_TEST_COMMAND_EXECUTOR_UNAVAILABLE: accepted certification work has no Node command availability.");
+  }
+  const commandTargets = commandDescriptors.map((descriptor) => (
+    resolve_node_command_binding(configuration.commandAvailability!, descriptor)
+  ));
+  for (const target of opaqueTargets) onEvent(external_state_event(target, "queued"));
+  for (const target of commandTargets) onEvent(command_state_event(target, "queued"));
 
   let canonicalPhaseMs = 0;
   let externalPhaseMs = 0;
   let externalPass = 0;
   let externalFail = 0;
   let externalCompleted = 0;
+  let commandPass = 0;
+  let commandFail = 0;
+  let commandCompleted = 0;
   const externalFailures: TestFailure[] = [];
   const terminationGeneration = configuration.launcherService?.terminationGeneration()
     ?? external_library_launcher_termination_generation();
@@ -417,8 +512,8 @@ export async function run_node_selected_verifications(
     },
     async () => {
       const startedAt = performance.now();
-      const result = await run_external_library_launcher_pool(
-        externalTargets,
+      const [result] = await Promise.all([run_external_library_launcher_pool(
+        opaqueTargets,
         async (target) => {
           try {
             return await (configuration.launcherService?.run ?? run_external_library_launcher)(availability, target.id, {
@@ -463,7 +558,57 @@ export async function run_node_selected_verifications(
           },
         },
         options.signal,
-      );
+      ), run_command_targets(
+        commandTargets,
+        async (target) => {
+          if (configuration.launcherService === undefined) {
+            throw new Error("HOSTED_TEST_COMMAND_EXECUTOR_UNAVAILABLE: Node process supervisor is not installed.");
+          }
+          return configuration.launcherService.runCommand({
+            id: target.id,
+            cwd: target.cwd,
+            command: target.command,
+            args: target.args,
+            environment: target.environment,
+            timeoutMs: target.timeoutMs,
+          }, {
+            terminationGeneration,
+            ...(options.signal === undefined ? {} : { signal: options.signal }),
+          });
+        },
+        {
+          started(target) {
+            onEvent(Object.freeze({ t: "suite_begin", suite: target.id, totalPlanned: 1 }));
+            onEvent(command_state_event(target, "running"));
+          },
+          finished(target, commandResult) {
+            if (commandResult.cancelled) {
+              // Cancellation is control truth, never an assertion failure.
+            } else if (commandResult.ok) {
+              commandPass += 1;
+              commandCompleted += 1;
+            } else {
+              commandFail += 1;
+              commandCompleted += 1;
+              externalFailures.push(Object.freeze({
+                suite: target.id,
+                name: target.title,
+                err: [
+                  commandResult.timedOut ? "Supervised Node command timed out." : "",
+                  commandResult.forceKilled ? "Supervised Node command required forced termination." : "",
+                  commandResult.spawnError ?? "",
+                  commandResult.stderr,
+                ].filter(Boolean).join("\n"),
+                ms: commandResult.durationMs,
+              }));
+            }
+            onEvent(command_end_event(target, commandResult));
+            onEvent(Object.freeze({ t: "suite_end", suite: target.id, ms: commandResult.durationMs }));
+          },
+        },
+        requestedScheduling.kind === "fixed" ? requestedScheduling.concurrency : requestedScheduling.lowConcurrency,
+        options.signal,
+      )]);
       externalPhaseMs = performance.now() - startedAt;
       return result;
     },
@@ -479,14 +624,14 @@ export async function run_node_selected_verifications(
   });
   if (configuration.recordMetrics === undefined) latestMetrics = completedMetrics;
   else configuration.recordMetrics(completedMetrics);
-  const fail = canonical.summary.fail + externalFail;
+  const fail = canonical.summary.fail + externalFail + commandFail;
   return Object.freeze({
     ok: options.signal?.aborted !== true && fail === 0,
     ...(options.signal?.aborted ? { cancelled: true as const } : {}),
     summary: Object.freeze({
-      suites: canonical.summary.suites + externalCompleted,
-      cases: canonical.summary.cases + externalCompleted,
-      pass: canonical.summary.pass + externalPass,
+      suites: canonical.summary.suites + externalCompleted + commandCompleted,
+      cases: canonical.summary.cases + externalCompleted + commandCompleted,
+      pass: canonical.summary.pass + externalPass + commandPass,
       fail,
       skip: canonical.summary.skip,
       msTotal: overlappedTotalMs,

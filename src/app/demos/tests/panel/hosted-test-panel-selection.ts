@@ -1,8 +1,7 @@
 import { CANONICAL_TEST_SUBJECT_ORDER, type TestSubject } from "../../../../shared/testing/test-contracts";
-import type { TestCollection, TestDescriptor } from "../../../../shared/testing/test-contracts";
+import type { TestCollection, TestDescriptor, TestSuiteDescriptor } from "../../../../shared/testing/test-contracts";
 import { select_test_descriptors } from "../../../../shared/testing/test-selection";
 import { compare_test_descriptors, compare_test_suites, test_presentation_rank } from "../../../../shared/testing/test-order";
-import { external_launcher_suite_descriptor, type ExternalLibraryLauncherTarget } from "../../../../shared/testing/external-launcher-contract";
 
 export type HostedTestPanelSelection =
   | Readonly<{ kind: "all" }>
@@ -58,53 +57,36 @@ function canonical_for_selection(
   return select_test_descriptors(descriptors, { test: selection.testId });
 }
 
-export type ExternalLibraryPanelCategory = TestSubject;
-
-export type ExternalLibraryPanelProjectionRule = Readonly<{
-  launcherId: string;
-  primarySubject: ExternalLibraryLauncherTarget["subject"];
-  projectedCategory: ExternalLibraryPanelCategory;
-  rationale: string;
-}>;
-
-/** Pre-epoch placeholder: Phase 1 has no cross-subject projection aliases. */
-export const EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES:
-readonly ExternalLibraryPanelProjectionRule[] = Object.freeze([]);
-
-export function hosted_test_panel_external_category(
-  target: ExternalLibraryLauncherTarget,
-): ExternalLibraryPanelCategory {
-  return target.subject;
-}
-
-function external_matches(
-  target: ExternalLibraryLauncherTarget,
+function suite_matches(
+  suite: TestSuiteDescriptor,
   selection: HostedTestPanelSelection,
 ): boolean {
+  if (suite.executionShape === "certification-aggregate"
+    && (selection.kind === "all" || selection.kind === "subject")) return false;
   return selection.kind === "all"
-    || (selection.kind === "subject" && target.subject === selection.subject)
-    || (selection.kind === "collection" && target.collections.includes(selection.collection))
-    || (selection.kind === "suite" && target.id === selection.suite)
-    || (selection.kind === "test" && target.id === selection.testId);
+    || (selection.kind === "subject" && suite.subject === selection.subject)
+    || (selection.kind === "collection" && suite.collections.includes(selection.collection))
+    || (selection.kind === "suite" && suite.id === selection.suite)
+    || (selection.kind === "test" && suite.id === selection.testId);
 }
 
 export function hosted_test_panel_selection_case_count(
   descriptors: readonly TestDescriptor[],
   selection: HostedTestPanelSelection,
-  externalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  suites: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): number {
   return canonical_for_selection(descriptors, selection).length
-    + externalTargets.filter((target) => external_matches(target, selection))
-      .reduce((total, target) => total + target.executableChecks, 0);
+    + suites.filter((suite) => suite.executionShape !== "cases" && suite_matches(suite, selection))
+      .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
 }
 
 export function hosted_test_panel_selected_ids(
   descriptors: readonly TestDescriptor[],
   selection: HostedTestPanelSelection,
-  externalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  suites: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): readonly string[] {
   const selected = canonical_for_selection(descriptors, selection);
-  const external = externalTargets.filter((target) => external_matches(target, selection));
+  const opaque = suites.filter((suite) => suite.executionShape !== "cases" && suite_matches(suite, selection));
   const ordered = [
     ...selected.map((descriptor) => Object.freeze({
       id: descriptor.id,
@@ -112,7 +94,7 @@ export function hosted_test_panel_selected_ids(
       suiteOrder: descriptor.suiteOrdinal,
       caseOrder: descriptor.caseOrdinal,
     })),
-    ...external.map((entry) => Object.freeze({
+    ...opaque.map((entry) => Object.freeze({
       id: entry.id,
       rank: test_presentation_rank(entry.subject, entry.collections),
       suiteOrder: entry.order,
@@ -127,10 +109,10 @@ export function hosted_test_panel_selected_ids(
 
 export function hosted_test_panel_primary_choices(
   descriptors: readonly TestDescriptor[],
-  externalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  suites: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): readonly HostedTestPanelSelectionChoice[] {
   return Object.freeze(PRIMARY_DEFINITIONS.flatMap((definition) => {
-    const count = hosted_test_panel_selection_case_count(descriptors, definition.selection, externalTargets);
+    const count = hosted_test_panel_selection_case_count(descriptors, definition.selection, suites);
     if (definition.selection.kind !== "all" && count === 0) return [];
     return [Object.freeze({
       ...definition,
@@ -142,16 +124,15 @@ export function hosted_test_panel_primary_choices(
 
 export function hosted_test_panel_suite_choices(
   descriptors: readonly TestDescriptor[],
-  externalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  suiteDescriptors: readonly TestSuiteDescriptor[] = Object.freeze([]),
   primarySelection?: HostedTestPanelSelection,
 ): readonly HostedTestPanelSelectionChoice[] {
   if (primarySelection?.kind === "all") return Object.freeze([]);
   const scopedDescriptors = primarySelection === undefined
     ? descriptors
     : canonical_for_selection(descriptors, primarySelection);
-  const scopedExternalTargets = primarySelection === undefined
-    ? externalTargets
-    : externalTargets.filter((target) => external_matches(target, primarySelection));
+  const scopedOpaqueSuites = suiteDescriptors.filter((suite) => suite.executionShape !== "cases")
+    .filter((suite) => primarySelection === undefined || suite_matches(suite, primarySelection));
   const suites = [...new Set(scopedDescriptors.map((descriptor) => descriptor.suiteId))]
     .sort((left, right) => compare_test_descriptors(
       scopedDescriptors.find((descriptor) => descriptor.suiteId === left)!,
@@ -159,7 +140,7 @@ export function hosted_test_panel_suite_choices(
     ));
   const canonical = suites.map((suite) => {
     const selection = Object.freeze({ kind: "suite" as const, suite });
-    const count = hosted_test_panel_selection_case_count(descriptors, selection);
+    const count = hosted_test_panel_selection_case_count(descriptors, selection, suiteDescriptors);
     return Object.freeze({
       key: `suite:${suite}`,
       label: `${suite} (${count})`,
@@ -167,34 +148,35 @@ export function hosted_test_panel_suite_choices(
       count,
     });
   });
-  const external = scopedExternalTargets.map((target) => Object.freeze({
-    key: `suite:${target.id}`,
-    label: `${target.displayName} (${target.executableChecks})`,
-    selection: Object.freeze({ kind: "suite" as const, suite: target.id }),
-    count: target.executableChecks,
+  const opaque = scopedOpaqueSuites.map((suite) => Object.freeze({
+    key: `suite:${suite.id}`,
+    label: suite.executionShape === "certification-aggregate"
+      ? `${suite.title} (1 certification)`
+      : `${suite.title} (${suite.declaredChecks ?? 0})`,
+    selection: Object.freeze({ kind: "suite" as const, suite: suite.id }),
+    count: suite.declaredChecks ?? 0,
   }));
-  const suiteDescriptors = new Map([
+  const descriptorBySuite = new Map([
     ...scopedDescriptors.map((descriptor) => [descriptor.suiteId, {
       id: descriptor.suiteId,
       subject: descriptor.subject,
       collections: descriptor.collections,
       order: descriptor.suiteOrdinal,
     }] as const),
-    ...scopedExternalTargets.map((target) => [target.id, external_launcher_suite_descriptor(target)] as const),
+    ...scopedOpaqueSuites.map((suite) => [suite.id, suite] as const),
   ]);
-  return Object.freeze([...canonical, ...external].sort((left, right) => compare_test_suites(
-    suiteDescriptors.get(left.selection.kind === "suite" ? left.selection.suite : left.key)!,
-    suiteDescriptors.get(right.selection.kind === "suite" ? right.selection.suite : right.key)!,
+  return Object.freeze([...canonical, ...opaque].sort((left, right) => compare_test_suites(
+    descriptorBySuite.get(left.selection.kind === "suite" ? left.selection.suite : left.key)!,
+    descriptorBySuite.get(right.selection.kind === "suite" ? right.selection.suite : right.key)!,
   )));
 }
 
 export function hosted_test_panel_test_choices(
   descriptors: readonly TestDescriptor[],
   suite: string,
-  externalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  suiteDescriptors: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): readonly HostedTestPanelSelectionChoice[] {
-  const external = externalTargets.find((target) => target.id === suite);
-  if (external !== undefined) return Object.freeze([]);
+  if (suiteDescriptors.some((descriptor) => descriptor.id === suite && descriptor.executionShape !== "cases")) return Object.freeze([]);
   return Object.freeze(
     descriptors
       .filter((descriptor) => descriptor.suiteId === suite)

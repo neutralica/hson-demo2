@@ -1,3 +1,4 @@
+import "hson-live";
 import { performance } from "node:perf_hooks";
 import { run_test_suites } from "../../harness/core/test-runner";
 import type { TestSuite } from "../../harness/core/test-contracts";
@@ -50,15 +51,19 @@ try {
   console.error = originalError;
 }
 
-expect_collection(HOSTED_CANVAS_MIGRATION_CASES.length === 69, "inventory classifies all 69 source declarations");
-expect_collection(HOSTED_CANVAS_MIGRATION_CASES.filter((entry) => entry.duplicateDeclaration).length === 3, "three repeated source declarations are explicit");
-expect_collection(counts.get("DEFERRED_PIXEL_OUTPUT") === 4, "four raster-readback declarations remain deferred");
+const sourceDeclarations = sourceSuites.reduce((total, suite) => total + suite.cases.length, 0);
+const sourceIdentities = sourceSuites.flatMap((suite) => suite.cases.map((testCase) => `${suite.suite}::${testCase.caseId}`));
+const sourceDuplicateDeclarations = sourceIdentities.length - new Set(sourceIdentities).size;
+expect_collection(HOSTED_CANVAS_MIGRATION_CASES.length === sourceDeclarations, "inventory classifies every current source declaration");
+expect_collection(HOSTED_CANVAS_MIGRATION_CASES.filter((entry) => entry.duplicateDeclaration).length === sourceDuplicateDeclarations, "every repeated source declaration is explicit");
+expect_collection(counts.get("DEFERRED_PIXEL_OUTPUT") === JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.length, "raster-readback declarations exactly match the deferred manifest");
 expect_collection(!counts.has("UNKNOWN"), "no canvas declaration remains UNKNOWN");
 
 const suites = all_jsdom_hosted_canvas_suites();
-expect_collection(suites.length === 6, "canonical collection retains six suite identities");
-expect_collection(suites.reduce((total, suite) => total + suite.cases.length, 0) === 62, "canonical collection contains 62 unique migratable cases");
-expect_collection(JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.length === 4, "four unique pixel cases are excluded rather than skipped");
+const canonicalCases = suites.reduce((total, suite) => total + suite.cases.length, 0);
+expect_collection(suites.length === sourceSuites.length && new Set(suites.map((suite) => suite.suite)).size === suites.length, "canonical collection retains every unique source suite identity");
+expect_collection(canonicalCases === new Set(sourceIdentities).size - JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.length, "canonical collection contains every unique non-deferred case");
+expect_collection(new Set(JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS).size === JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.length, "deferred pixel identities are unique and excluded rather than skipped");
 
 let commandCount = 0;
 let maximumCommandsPerCase = 0;
@@ -86,14 +91,14 @@ const direct = await with_hosted_dom_runtime((runtime) => run_test_suites(
   { yieldEveryCases: 0, yieldBetweenSuites: false },
 ));
 const directMs = performance.now() - started;
-expect_collection(direct.ok && direct.summary.cases === 62 && direct.summary.pass === 62 && direct.summary.fail === 0, "direct canonical collection passes 62/62");
+expect_collection(direct.ok && direct.summary.cases === canonicalCases && direct.summary.pass === canonicalCases && direct.summary.fail === 0, "direct canonical collection passes every current case");
 
 originalLog(JSON.stringify({
-  sourceDeclarations: 69,
-  duplicateDeclarations: 3,
-  canonicalCases: 66,
-  migratedCases: 62,
-  deferredCases: 4,
+  sourceDeclarations,
+  duplicateDeclarations: sourceDuplicateDeclarations,
+  canonicalCases: new Set(sourceIdentities).size,
+  migratedCases: canonicalCases,
+  deferredCases: JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS.length,
   counts: Object.fromEntries(counts),
   commandCount,
   maximumCommandsPerCase,

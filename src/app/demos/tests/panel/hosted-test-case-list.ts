@@ -5,7 +5,6 @@ import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hos
 import { _fontSize } from "../../../core/consts/ui-consts";
 import type { TestLifecycleCounts, TestLifecycleStatus } from "../../../../shared/testing/test-lifecycle-contract";
 import {
-  classify_hosted_test_stderr,
   hosted_test_presentation_group_label,
   hosted_test_suite_presentation,
   type HostedTestPresentationGroup,
@@ -85,7 +84,7 @@ type SuiteProjection = {
   groupKey: HostedTestPresentationGroup;
   cases: ProjectedCase[];
   status: TestLifecycleStatus;
-  executionShape: "cases" | "opaque-aggregate";
+  executionShape: "cases" | "opaque-aggregate" | "certification-aggregate";
   declaredChecks: number | null;
   counts: TestLifecycleCounts | null;
   pass: number;
@@ -104,7 +103,6 @@ type SuiteProjection = {
   presentation: HostedTestSuitePresentation | undefined;
   detailsSignature: string;
   lastSequence: number;
-  external?: HostedTestReport["externalResults"][string];
 };
 
 type SubjectProjection = Readonly<{
@@ -280,14 +278,7 @@ export function make_hosted_test_case_list(
     return created;
   }
 
-  function legacy_group(suite: string): HostedTestPresentationGroup {
-    const prefix = suite.split("/", 1)[0];
-    return prefix === "transform" || prefix === "livetree" || prefix === "livemap" || prefix === "livehost" || prefix === "reflect" || prefix === "unit" || prefix === "dev"
-      ? prefix
-      : "other";
-  }
-
-  function ensure_suite(suite: string, title = suite, groupKey: HostedTestPresentationGroup = legacy_group(suite)): SuiteProjection {
+  function ensure_suite(suite: string, title: string, groupKey: HostedTestPresentationGroup): SuiteProjection {
     const existing = suites.get(suite);
     if (existing !== undefined) return existing;
     const subject = ensure_subject(groupKey);
@@ -343,7 +334,7 @@ export function make_hosted_test_case_list(
       ? `${state.cases.length} cases · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
       : state.counts !== null && state.counts.executed > 0
         ? `${state.counts.executed}/${state.counts.declared} checks · ${state.counts.passed} pass · ${state.counts.failed} fail`
-        : `${state.declaredChecks ?? state.external?.executableChecks ?? 0} checks · ${state.status}`;
+        : `${state.declaredChecks ?? 0} checks · ${state.status}`;
   }
 
   function render_suite(state: SuiteProjection): void {
@@ -417,36 +408,6 @@ export function make_hosted_test_case_list(
     testCase.durationView = durationView;
   }
 
-  function render_external_output(state: SuiteProjection): void {
-    const caseHost = state.detailsHost;
-    const external = state.external;
-    if (caseHost === undefined || external === undefined) return;
-    caseHost.empty();
-    if (external.status === "queued" || external.status === "running") {
-      caseHost.create.div().classlist.set("hosted-external-output").text.set(external.status);
-      liveTreesConstructed += 1;
-      return;
-    }
-    caseHost.create.div().classlist.set("hosted-suite-meta").text.set([
-      `id: ${external.id}`,
-      `executor runtime: ${external.runtime}`,
-      `exit: ${external.exitCode ?? "none"}${external.signal ? ` · signal ${external.signal}` : ""}${external.timedOut ? " · timeout" : ""}`,
-    ].join("\n"));
-    liveTreesConstructed += 1;
-    const classified = classify_hosted_test_stderr(external.stderr);
-    const sections = [
-      ...(external.stdout ? [{ label: "stdout", content: external.stdout }] : []),
-      ...(classified.stderr ? [{ label: "stderr", content: classified.stderr }] : []),
-      ...(classified.warnings.length > 0 ? [{ label: `warnings (${classified.warnings.length})`, content: classified.warnings.join("\n") }] : []),
-    ];
-    for (const section of sections) {
-      const details = caseHost.create.details().classlist.set("hosted-evidence-section");
-      details.create.summary().classlist.set("hosted-evidence-summary").text.set(section.label);
-      details.create.pre().classlist.set("hosted-evidence-content").text.set(section.content);
-      liveTreesConstructed += 3;
-    }
-  }
-
   function render_presentation_details(state: SuiteProjection): void {
     const host = state.detailsHost;
     const presentation = state.presentation;
@@ -513,10 +474,7 @@ export function make_hosted_test_case_list(
     state.caseRowsHost = state.caseHost.create.div().classlist.set("hosted-case-rows");
     liveTreesConstructed += 3;
     render_presentation_details(state);
-    if (state.executionShape === "opaque-aggregate") {
-      if (state.presentation === undefined) render_external_output(state);
-      return;
-    }
+    if (state.executionShape !== "cases") return;
     for (const testCase of state.cases) append_case(state, testCase);
   }
 
@@ -605,38 +563,6 @@ export function make_hosted_test_case_list(
         dirtySuites.add(state.suite);
         if (state.expanded) render_presentation_details(state);
         else if (presentation.failures.length > 0) set_expanded(state.suite, true);
-      }
-      // Phase 1 bridge for legacy, unplanned report routes. Exact selected runs
-      // project seeded suiteRuns above; Phase 2 removes these completion views.
-      for (const external of update.report.suiteRuns.length === 0 ? Object.values(update.report.externalResults) : []) {
-        const state = ensure_suite(external.suite);
-        state.external = external;
-        state.executionShape = "opaque-aggregate";
-        state.declaredChecks = external.executableChecks;
-        state.status = external.status;
-        state.ms = external.status === "pass" || external.status === "fail" ? external.ms : undefined;
-        dirtySuites.add(state.suite);
-        if (state.expanded && state.presentation === undefined) render_external_output(state);
-        else if (external.status === "fail") set_expanded(state.suite, true);
-      }
-      for (const testCase of update.newCases) {
-        if (caseRecords.has(testCase.key)) continue;
-        const state = ensure_suite(testCase.suite);
-        const projected: ProjectedCase = { ...testCase };
-        caseRecords.set(projected.key, projected);
-        state.cases.push(projected);
-        if (testCase.status === "pass") state.pass += 1;
-        else if (testCase.status === "fail") state.fail += 1;
-        else state.skip += 1;
-        state.status = state.fail > 0 ? "fail" : "running";
-        dirtySuites.add(state.suite);
-        if (state.expanded) append_case(state, projected);
-      }
-      for (const timing of update.newSuiteTimings) {
-        const state = ensure_suite(timing.suite);
-        state.ms = timing.ms;
-        if (state.executionShape === "cases") state.status = state.fail > 0 ? "fail" : "pass";
-        dirtySuites.add(state.suite);
       }
       schedule_render();
       if (update.terminal) flush();

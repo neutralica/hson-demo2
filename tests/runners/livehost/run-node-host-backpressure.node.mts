@@ -6,8 +6,7 @@ import { make_hosted_test_panel_adapter } from "../../../src/app/demos/tests/pan
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
-import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
-import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
+import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
 import { create_node_capacity_livehost_socket } from "../../harness/runtimes/node/server/node-capacity-livehost-socket";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
@@ -174,7 +173,7 @@ let cleanExecutions = 0;
 const cleanServer = await start_hosted_test_server({
   port: 0,
   executorRegistry: largeRegistry,
-  async runSelected(_registry, _testIds, onEvent = () => undefined) {
+  async runSelected(_registry, _selectionIds, onEvent = () => undefined) {
     cleanExecutions += 1;
     onEvent({ t: "suite_begin", suite: largeSuite.suite, totalPlanned: 0 });
     onEvent({ t: "suite_end", suite: largeSuite.suite, ms: 0 });
@@ -262,25 +261,36 @@ class FailReportReconnectWebSocket extends WebSocket {
   }
 }
 
-const registered = make_registered_hosted_test_suite_registry();
 let releaseRun: () => void = () => undefined;
 let markRunStarted: () => void = () => undefined;
 let markRunCompleted: () => void = () => undefined;
 const runGate = new Promise<void>((resolve) => { releaseRun = resolve; });
 const runStarted = new Promise<void>((resolve) => { markRunStarted = resolve; });
 const runCompleted = new Promise<void>((resolve) => { markRunCompleted = resolve; });
-const gatedRegistry = make_hosted_test_suite_registry(registered.list().map((descriptor) => (
-  descriptor.id !== "livemap/replay" ? descriptor : {
-    ...descriptor,
-    async run(...args: Parameters<typeof descriptor.run>) {
-      markRunStarted();
-      await runGate;
-      try { return await descriptor.run(...args); }
-      finally { markRunCompleted(); }
-    },
-  }
-)));
-const terminalServer = await start_hosted_test_server({ port: 0, registry: gatedRegistry });
+const terminalSuite: TestSuite = Object.freeze({
+  suite: "livehost/backpressure-terminal",
+  descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node"] as const) }),
+  cases: Object.freeze([{ suite: "livehost/backpressure-terminal", caseId: "held", name: "held", run() {} }]),
+});
+const terminalRegistry = make_test_executor_registry(Object.freeze({
+  id: "backpressure-terminal-node",
+  kind: "node",
+  label: "Backpressure terminal fixture",
+  location: "hosted",
+  capabilities: Object.freeze({ provides: Object.freeze(["javascript", "node"] as const) }),
+  supportsStreaming: true,
+  supportsCancellation: true,
+}), [terminalSuite]);
+const terminalServer = await start_hosted_test_server({
+  port: 0,
+  executorRegistry: terminalRegistry,
+  async runSelected(registry, selectionIds, onEvent = () => undefined, options = {}) {
+    markRunStarted();
+    await runGate;
+    try { return await run_selected_test_ids(registry, selectionIds, onEvent, options); }
+    finally { markRunCompleted(); }
+  },
+});
 const terminalRuntime = make_remote_hosted_test_runtime({
   url: terminalServer.url,
   WebSocketConstructor: FailReportReconnectWebSocket as unknown as BrowserWebSocketConstructor,
@@ -294,7 +304,8 @@ const terminalAdapter = make_hosted_test_panel_adapter(terminalRuntime, {
 });
 try {
   await bounded(terminalRuntime.ready(), "terminal coordinator readiness");
-  const pendingRun = terminalAdapter.start("livemap/replay");
+  await bounded(terminalRuntime.discover(), "terminal discovery");
+  const pendingRun = terminalAdapter.start_selected([terminalRegistry.catalog.tests[0]!.id]);
   await bounded(runStarted, "gated execution start");
   await eventually(() => terminalServer.connectionSnapshot().hostedTests.reports === 1, "initial report attachment");
   const reportHostId = terminalServer.connectionSnapshot().hostedTests.authorityIds.find((id) => id.startsWith("hosted-report:"));

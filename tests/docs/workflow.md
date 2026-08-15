@@ -420,27 +420,6 @@ tests.discover
 
 This reports the tests executable by the connected host.
 
-### Legacy execution
-
-Existing hosted execution still supports legacy suite routes through:
-
-```text
-tests.run
-```
-
-Examples include historical routes such as:
-
-```text
-category/livehost
-hosted/all
-node/all
-dom/core
-canvas/core
-```
-
-These remain compatibility paths for existing clients. The browser panel does
-not use them as selector authority.
-
 ### Exact selected execution
 
 Canonical exact-ID execution uses:
@@ -453,7 +432,7 @@ Conceptual request:
 
 ```ts
 {
-  testIds: [
+  selectionIds: [
     "livehost/core::create initializes map from state",
     "livehost/core::set applies a commit",
   ],
@@ -474,7 +453,9 @@ request exact execution
 receive the existing streamed report
 ```
 
-The host resolves IDs directly through its canonical executor registry. It must not translate them back into legacy aggregate routes.
+The host resolves IDs directly through its canonical executor registry and
+persists the resulting complete RunPlan. Removed generic and category routes
+are rejected rather than translated or aliased.
 
 ---
 

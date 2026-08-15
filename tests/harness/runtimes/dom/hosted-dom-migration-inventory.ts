@@ -7,6 +7,11 @@ import {
   all_jsdom_hosted_canvas_suites,
   JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS,
 } from "./canvas/jsdom-hosted-canvas-suites";
+import {
+  DEFAULT_GENERATED_JSON_CASES,
+  GENERATED_JSON_COUNT_ENVIRONMENT,
+  GENERATED_JSON_SEED_ENVIRONMENT,
+} from "../../hosted/generated-test-policy";
 
 export type HostedDomMigrationStatus =
   | "JSDOM_READY"
@@ -217,9 +222,16 @@ function deferred(
 
 export const LAYOUT_REQUIRED_SUITES = deferred("LAYOUT_REQUIRED", "no rendered CSS application remains synthetic-owned", []);
 
-export const CANVAS_REQUIRED_SUITES = deferred("CANVAS_REQUIRED", "pixel readback requires real rasterization", [
-  ["livetree/canvas-clear::pixel-output", 2], ["livetree/canvas-plot::pixel-output", 2],
-]);
+const deferredCanvasCounts = new Map<string, number>();
+for (const key of JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS) {
+  const suite = key.slice(0, key.indexOf("::"));
+  deferredCanvasCounts.set(suite, (deferredCanvasCounts.get(suite) ?? 0) + 1);
+}
+export const CANVAS_REQUIRED_SUITES = deferred(
+  "CANVAS_REQUIRED",
+  "pixel readback requires real rasterization",
+  [...deferredCanvasCounts].map(([suite, cases]) => [`${suite}::pixel-output`, cases] as const),
+);
 
 export const BROWSER_ONLY_SUITES: readonly HostedDomMigrationEntry[] = deferred(
   "BROWSER_ONLY",
@@ -230,9 +242,13 @@ export const BROWSER_ONLY_SUITES: readonly HostedDomMigrationEntry[] = deferred(
 export const UNKNOWN_DOM_SUITES = deferred("UNKNOWN", "no unexplained deterministic DOM cases remain", [
 ]);
 
-export const GENERATED_DOM_ENTRIES = Object.freeze([
-  Object.freeze({ suite: "transform/fuzz-json/seed_<startup-seed>", cases: 50 }),
-  Object.freeze({ suite: "generated/json/seed_<run-seed>", cases: 200 }),
+export const GENERATED_DOM_SURFACES = Object.freeze([
+  Object.freeze({
+    suite: "generated/json/seed_<run-seed>",
+    seedEnvironment: GENERATED_JSON_SEED_ENVIRONMENT,
+    countEnvironment: GENERATED_JSON_COUNT_ENVIRONMENT,
+    defaultCases: DEFAULT_GENERATED_JSON_CASES,
+  }),
 ]);
 
 export const HOSTED_DOM_MIGRATION_INVENTORY = Object.freeze([

@@ -14,6 +14,8 @@ import {
   resolve_external_library_launchers,
 } from "../../harness/runtimes/node/external-library-launchers";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { make_test_run_plan } from "../../harness/core/test-run-plan";
 
 type Policy = Readonly<{
   label: string;
@@ -68,6 +70,7 @@ async function run_sample(
 ): Promise<Sample> {
   const registry = make_local_node_livehost_executor_registry();
   const availability = await resolve_external_library_launchers();
+  const discovery = make_test_executor_discovery(registry, availability.targets);
   const canonicalChecks = registry.catalog.tests.length;
   const externalChecks = availability.targets.reduce(
     (total, target) => total + target.executableChecks,
@@ -78,10 +81,19 @@ async function run_sample(
     ...availability.targets.map((target) => target.id),
   ]);
   reset_external_library_launcher_metrics();
-  const report = make_hosted_test_report(Date.now, undefined, "canonical/selected");
+  const runPlan = make_test_run_plan({
+    runId: `hosted-performance-${selectedPolicy.label}`,
+    protocolVersion: discovery.protocolVersion,
+    catalogVersion: discovery.catalogVersion,
+    executorId: discovery.executor.id,
+    catalog: discovery.catalog,
+    selectedIds,
+  });
+  const report = make_hosted_test_report(Date.now, undefined, { runPlan });
   const totalStartedAt = performance.now();
   const result = await run_node_selected_verifications(
     registry,
+    discovery.catalog,
     availability,
     selectedIds,
     report.reduce,
@@ -109,14 +121,9 @@ async function run_sample(
   if (!result.ok) {
     throw new Error(`Inclusive performance sample failed: ${JSON.stringify({
       failures: result.summary.failures,
-      externalFailures: Object.values(report.map.capture().value.externalResults)
-        .filter((external) => external.status === "fail")
-        .map((external) => ({
-          id: external.id,
-          exitCode: external.exitCode,
-          signal: external.signal,
-          stderr: external.stderr,
-        })),
+      externalFailures: report.map.capture().value.suiteRuns
+        .filter((suite) => suite.executionShape === "opaque-aggregate" && suite.status === "fail")
+        .map((suite) => ({ id: suite.id, errors: suite.errors, evidence: suite.evidence })),
     })}`);
   }
   report.dispose();

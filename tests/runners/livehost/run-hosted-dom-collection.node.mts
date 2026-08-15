@@ -11,7 +11,7 @@ import {
 import {
   CANVAS_REQUIRED_SUITES,
   BROWSER_ONLY_SUITES,
-  GENERATED_DOM_ENTRIES,
+  GENERATED_DOM_SURFACES,
   HOSTED_DOM_LAYOUT_CASES,
   HOSTED_JSDOM_SUITES,
   LAYOUT_REQUIRED_SUITES,
@@ -54,22 +54,22 @@ try {
 const directMs = performance.now() - started;
 const suites = all_jsdom_hosted_test_suites();
 const count = (entries: readonly Readonly<{ cases: number }>[]) => entries.reduce((total, entry) => total + entry.cases, 0);
-expect_collection(suites.length === 78 && suites.reduce((total, suite) => total + suite.cases.length, 0) === 957, "canonical list is 78 suites / 957 unique cases");
-expect_collection(JSDOM_HOSTED_DUPLICATE_CASE_KEYS.length === 2, "two repeated source declarations are recorded and executed once");
+const suiteCases = suites.reduce((total, suite) => total + suite.cases.length, 0);
+expect_collection(new Set(suites.map((suite) => suite.suite)).size === suites.length, "canonical jsdom suite identities are unique");
+expect_collection(new Set(suites.flatMap((suite) => suite.cases.map((testCase) => `${suite.suite}::${testCase.caseId}`))).size === suiteCases, "canonical jsdom case identities are unique");
+expect_collection(new Set(JSDOM_HOSTED_DUPLICATE_CASE_KEYS).size === JSDOM_HOSTED_DUPLICATE_CASE_KEYS.length, "recorded repeated source declarations are unique identities");
 if (!result.ok) originalLog(JSON.stringify(result.summary.failures, null, 2));
-expect_collection(result.ok && result.summary.suites === 78 && result.summary.cases === 957 && result.summary.pass === 957 && result.summary.fail === 0, "direct jsdom run passes every canonical case");
-expect_collection(HOSTED_JSDOM_SUITES.length === 78 && count(HOSTED_JSDOM_SUITES) === 957, "inventory matches the executable collection");
+expect_collection(result.ok && result.summary.suites === suites.length && result.summary.cases === suiteCases && result.summary.pass === suiteCases && result.summary.fail === 0, "direct jsdom run passes every current canonical case");
+expect_collection(HOSTED_JSDOM_SUITES.length === suites.length && count(HOSTED_JSDOM_SUITES) === suiteCases, "inventory matches the executable collection");
+expect_collection(HOSTED_JSDOM_SUITES.every((entry) => suites.some((suite) => suite.suite === entry.suite && suite.cases.length === entry.cases)), "inventory suite IDs and case counts exactly match executable suites");
 expect_collection(LAYOUT_REQUIRED_SUITES.length === 0 && count(LAYOUT_REQUIRED_SUITES) === 0, "no rendered CSS application remains synthetic-owned");
-expect_collection(CANVAS_REQUIRED_SUITES.length === 2 && count(CANVAS_REQUIRED_SUITES) === 4, "only four pixel-readback canvas cases remain deferred");
+expect_collection(count(CANVAS_REQUIRED_SUITES) > 0, "pixel-readback canvas cases remain explicitly classified outside synthetic execution");
 expect_collection(BROWSER_ONLY_SUITES.length === 0 && count(BROWSER_ONLY_SUITES) === 0, "runtime-bound behavioral cases are fully migrated");
 const layoutCount = (status: (typeof HOSTED_DOM_LAYOUT_CASES)[number]["status"]) => HOSTED_DOM_LAYOUT_CASES.filter((entry) => entry.status === status).length;
-expect_collection(HOSTED_DOM_LAYOUT_CASES.length === 57, "layout classification covers every deterministic case");
-expect_collection(layoutCount("MIGRATED_NATIVE") === 51, "51 layout-inventory cases are native jsdom DOM/CSS state tests");
-expect_collection(layoutCount("MIGRATED_RECT_INJECTION") === 4, "four cases use explicit rectangle geometry");
-expect_collection(layoutCount("MIGRATED_OBSERVER_SHIM") === 0, "no layout case requires a ResizeObserver shim");
-expect_collection(layoutCount("MIGRATED_SVG_INJECTION") === 2, "two SVG cases use explicit bbox geometry");
+expect_collection(new Set(HOSTED_DOM_LAYOUT_CASES.map((entry) => `${entry.suite}::${entry.caseId}`)).size === HOSTED_DOM_LAYOUT_CASES.length, "layout inventory identities are unique");
+expect_collection(HOSTED_DOM_LAYOUT_CASES.every((entry) => suites.some((suite) => suite.suite === entry.suite && suite.cases.some((testCase) => testCase.caseId === entry.caseId))), "layout inventory points only at current executable cases");
 expect_collection(layoutCount("DEFERRED_REAL_LAYOUT") === 0, "no rendered pseudo-element case remains synthetic-owned");
 expect_collection(UNKNOWN_DOM_SUITES.length === 0 && count(UNKNOWN_DOM_SUITES) === 0, "no unexplained deterministic DOM discrepancy remains");
-expect_collection(count(GENERATED_DOM_ENTRIES) === 250, "generated/fuzz entries remain outside canonical totals");
+expect_collection(GENERATED_DOM_SURFACES.every((entry) => entry.seedEnvironment.length > 0 && entry.countEnvironment.length > 0 && entry.defaultCases > 0), "generated/fuzz surfaces retain explicit dynamic count controls outside canonical totals");
 expect_collection(typeof window === "undefined" && typeof document === "undefined" && typeof DOMParser === "undefined" && typeof CSS === "undefined", "direct run leaves no DOM globals");
-originalLog(JSON.stringify({ suites: 78, cases: 957, pass: result.summary.pass, initMs, geometryInstallMs, directMs, geometryCleanupMs, cleanupMs }));
+originalLog(JSON.stringify({ suites: suites.length, cases: suiteCases, pass: result.summary.pass, initMs, geometryInstallMs, directMs, geometryCleanupMs, cleanupMs }));

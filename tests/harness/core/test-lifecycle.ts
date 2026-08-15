@@ -114,7 +114,7 @@ export function make_test_lifecycle_adapter(options: Readonly<{
   return Object.freeze({
     accept(event) {
       if (event.t === "suite_begin") {
-        if (shapes.get(event.suite) !== "opaque-aggregate") startSuite(event.suite);
+        if (shapes.get(event.suite) === "cases") startSuite(event.suite);
         return;
       }
       if (event.t === "case_begin") {
@@ -237,17 +237,28 @@ export function make_test_lifecycle_adapter(options: Readonly<{
       // trustworthy count source. Keep the advertised declaration and surface
       // the protocol error without constructing contradictory lifecycle counts.
       const completion = event.status !== "cancelled" && event.completionError === undefined ? event.completion : undefined;
-      const cancelledChecks = event.status === "cancelled" ? event.executableChecks : 0;
-      const counts: TestLifecycleCounts = Object.freeze({
-        declared: event.executableChecks,
-        total: event.status === "cancelled" ? event.executableChecks : completion?.executed ?? 0,
-        executed: completion?.executed ?? 0,
-        passed: completion?.passed ?? 0,
-        failed: completion?.failed ?? 0,
-        skipped: 0,
-        unsupported: 0,
-        cancelled: cancelledChecks,
-      });
+      const certification = shapes.get(event.suite) === "certification-aggregate";
+      const counts: TestLifecycleCounts = certification
+        ? Object.freeze({
+            declared: 1,
+            total: 1,
+            executed: event.status === "cancelled" ? 0 : 1,
+            passed: event.status === "pass" ? 1 : 0,
+            failed: event.status === "fail" ? 1 : 0,
+            skipped: 0,
+            unsupported: 0,
+            cancelled: event.status === "cancelled" ? 1 : 0,
+          })
+        : Object.freeze({
+            declared: event.executableChecks,
+            total: event.status === "cancelled" ? event.executableChecks : completion?.executed ?? 0,
+            executed: completion?.executed ?? 0,
+            passed: completion?.passed ?? 0,
+            failed: completion?.failed ?? 0,
+            skipped: 0,
+            unsupported: 0,
+            cancelled: event.status === "cancelled" ? event.executableChecks : 0,
+          });
       terminalSuites.add(event.suite);
       suiteStatuses.set(event.suite, event.status);
       emit({

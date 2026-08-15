@@ -17,9 +17,12 @@ import {
 } from "../../../src/app/demos/tests/panel/hosted-test-report-summary";
 import type { TestEvent } from "../../harness/core/test-contracts";
 import { TEST_SURFACE_CATALOG } from "../../harness/hosted/test-surface-catalog";
+import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { make_test_run_plan } from "../../harness/core/test-run-plan";
 
 const registry = make_local_node_livehost_executor_registry();
 const availability = await resolve_external_library_launchers();
+const discovery = make_test_executor_discovery(registry, availability.targets);
 const canonicalCaseCount = registry.catalog.tests.length;
 const manifestExternalCheckCount = hson_live_test_launchers.reduce(
   (total, launcher) => total + launcher.executableChecks,
@@ -49,7 +52,18 @@ const selectedIds = Object.freeze([
   ...registry.catalog.tests.map((test) => test.id),
   ...availability.targets.map((target) => target.id),
 ]);
-const report = make_hosted_test_report(Date.now, undefined, "canonical/selected");
+const runPlan = make_test_run_plan({
+  runId: "inclusive-library-verification",
+  protocolVersion: discovery.protocolVersion,
+  catalogVersion: discovery.catalogVersion,
+  executorId: discovery.executor.id,
+  catalog: discovery.catalog,
+  selectedIds,
+});
+const plannedExternalIds = runPlan.suites
+  .filter((suite) => suite.executionShape === "opaque-aggregate")
+  .map((suite) => suite.id);
+const report = make_hosted_test_report(Date.now, undefined, { runPlan });
 const events: TestEvent[] = [];
 let canonicalActive = false;
 let externalActive = false;
@@ -62,6 +76,7 @@ const completedExternalIds: string[] = [];
 reset_external_library_launcher_metrics();
 const result = await run_node_selected_verifications(
   registry,
+  discovery.catalog,
   availability,
   selectedIds,
   (event) => {
@@ -104,33 +119,40 @@ assert.equal(
 );
 assert.equal(canonicalCases, canonicalCaseCount);
 assert.equal(completedExternalIds.length, availability.targets.length);
-assert.deepEqual(queuedExternalIds, availability.targets.map((target) => target.id));
-assert.deepEqual(Object.keys(captured.externalResults), availability.targets.map((target) => target.id));
+assert.deepEqual(
+  [...queuedExternalIds].sort(),
+  [...plannedExternalIds].sort(),
+  "external queue identities exactly match the authoritative RunPlan; chronological queue evidence retains executor order",
+);
+assert.deepEqual(
+  captured.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").map((suite) => suite.id),
+  plannedExternalIds,
+  "normalized report order follows the authoritative RunPlan",
+);
 assert.equal(firstSuiteCompletionSawBothPhases, true, "both phases become active before either suite completes");
 assert.ok(
   events.findIndex((event) => event.t === "external_end") < events.length - 1,
   "an external completion is reported before the combined run completes",
 );
-assert.deepEqual(
-  footer.slice(0, 3).map((entry) => `${entry.label}:${entry.value}`),
-  [
-    `cases:${canonicalCaseCount + manifestExternalCheckCount}`,
-    `passed:${canonicalCaseCount + manifestExternalCheckCount}`,
-    "failed:0",
-  ],
-);
+assert.equal(footer.find((entry) => entry.key === "cases")?.value, canonicalCaseCount);
+assert.equal(footer.find((entry) => entry.key === "case-pass")?.value, canonicalCaseCount);
+assert.equal(footer.find((entry) => entry.key === "case-fail")?.value, 0);
+assert.equal(footer.find((entry) => entry.key === "checks")?.value, manifestExternalCheckCount);
+assert.equal(footer.find((entry) => entry.key === "check-pass")?.value, manifestExternalCheckCount);
+assert.equal(footer.find((entry) => entry.key === "check-fail")?.value, 0);
+assert.ok(!footer.some((entry) => entry.label === "passed" || entry.label === "failed"), "mixed totals never collapse cases and opaque checks into one universe");
 assert.equal(projection.canonical.total, canonicalCaseCount);
 assert.equal(projection.launchers.total, availability.targets.length);
 const projectedLauncherIssues = availability.targets.flatMap((target) => {
-  const projected = captured.externalResults[target.id];
+  const projected = captured.suiteRuns.find((suite) => suite.id === target.id);
   if (projected === undefined) {
     return [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: missing`];
   }
-  return projected.executableChecks === target.executableChecks
+  return projected.declaredChecks === target.executableChecks
     ? []
-    : [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: ${projected.executableChecks}`];
+    : [`launcher: ${target.launcherId}; declared checks: ${target.executableChecks}; projected checks: ${projected.declaredChecks}`];
 });
-const unexpectedProjectedIds = Object.keys(captured.externalResults).filter(
+const unexpectedProjectedIds = captured.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").map((suite) => suite.id).filter(
   (id) => !availability.targets.some((target) => target.id === id),
 );
 assert.deepEqual(

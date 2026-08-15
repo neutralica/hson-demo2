@@ -1,17 +1,13 @@
 import type { LiveMapAnyOp, LiveMapCommitObservation } from "hson-live/types";
 import type { HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestPanelRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
-import type { HostedTestCaseReport, HostedTestReport, HostedTestSuiteRunReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
-import { is_hosted_test_suite_id, type HostedTestRunTarget, type HostedTestSuiteId } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
-import type { TestRunMode } from "../../../../shared/testing/test-contracts";
-import { hosted_test_action_error_message } from "../../../../shared/hosted-tests/hosted-test-action-error";
+import type { HostedTestReport, HostedTestSuiteRunReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
+import type { HostedTestRunTarget } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "./hosted-test-panel-runtime";
 import type { HostedTestAttemptId } from "../../../../shared/hosted-tests/hosted-test-application.types";
 
 export type HostedTestPanelReportUpdate = Readonly<{
   report: HostedTestReport;
   changedSuites?: readonly HostedTestSuiteRunReport[];
-  newCases: readonly HostedTestCaseReport[];
-  newSuiteTimings: readonly Readonly<{ suite: string; ms: number }>[];
   terminal: boolean;
 }>;
 
@@ -23,9 +19,8 @@ export type HostedTestPanelSink = Readonly<{
 }>;
 
 export type HostedTestPanelAdapter = Readonly<{
-  start(suite: HostedTestSuiteId): Promise<HostedTestPanelRunResult>;
-  start_selected(testIds: readonly string[]): Promise<HostedTestPanelRunResult>;
-  recover(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestPanelRunResult>;
+  start_selected(selectionIds: readonly string[]): Promise<HostedTestPanelRunResult>;
+  recover(runId: string, attemptId: HostedTestAttemptId): Promise<HostedTestPanelRunResult>;
   cancel(): Promise<HostedTestCancelResult>;
   inspect(caseKey: string): Promise<HostedTestCaseDiagnostic>;
   capture(): HostedTestReport | undefined;
@@ -82,16 +77,6 @@ function apply_report_commit(report: HostedTestReport, observation: LiveMapCommi
   return root as unknown as HostedTestReport;
 }
 
-export function hosted_test_suite_for_panel_mode(mode: TestRunMode): HostedTestSuiteId {
-  if (mode === "hosted-all") return "hosted/all";
-  if (mode === "livemap-replay") return "livemap/replay";
-  if (mode === "livehost-all") return "livehost/all";
-  if (mode === "node-all") return "node/all";
-  if (mode === "dom-core") return "dom/core";
-  if (mode === "canvas-core") return "canvas/core";
-  return `category/${mode}`;
-}
-
 export function make_hosted_test_panel_adapter(
   runtime: HostedTestPanelRuntime,
   sink: HostedTestPanelSink,
@@ -136,8 +121,6 @@ export function make_hosted_test_panel_adapter(
     current = run;
     currentReport = run.client.recovery.map.capture().value;
     let projectedOnce = false;
-    let consumedCaseBatches = 0;
-    let consumedSuiteTimings = 0;
     let infrastructureErrorShown = false;
     let terminalResolve: () => void = () => undefined;
     const terminal = new Promise<void>((resolve) => { terminalResolve = resolve; });
@@ -154,16 +137,6 @@ export function make_hosted_test_panel_adapter(
       }
       const terminalState = report.run.status === "passed" || report.run.status === "failed"
         || report.run.status === "cancelled" || report.run.status === "error";
-      const newCases: HostedTestCaseReport[] = [];
-      while (true) {
-        const batchKey = (consumedCaseBatches + 1).toString().padStart(6, "0");
-        const batch = report.caseBatches[batchKey];
-        if (batch === undefined) break;
-        consumedCaseBatches += 1;
-        newCases.push(...batch);
-      }
-      const newSuiteTimings = report.suites.slice(consumedSuiteTimings);
-      consumedSuiteTimings = report.suites.length;
       let changedSuites = report.suiteRuns;
       if (observation?.kind === "commit") {
         const indexes = new Set<number>();
@@ -182,8 +155,6 @@ export function make_hosted_test_panel_adapter(
       sink.ingest(Object.freeze({
         report,
         changedSuites,
-        newCases: Object.freeze(newCases),
-        newSuiteTimings: Object.freeze([...newSuiteTimings]),
         terminal: terminalState,
       }));
       if (report.run.status === "error" && report.error !== null && !infrastructureErrorShown) {
@@ -230,24 +201,17 @@ export function make_hosted_test_panel_adapter(
       return panelResult;
     } catch (error) {
       if (current === run && generation === runGeneration && !infrastructureErrorShown) {
-        sink.showInfrastructureError(
-          is_hosted_test_suite_id(target)
-            ? hosted_test_action_error_message(error, target)
-            : error instanceof Error ? error.message : String(error),
-        );
+        sink.showInfrastructureError(error instanceof Error ? error.message : String(error));
       }
       throw error;
     }
   }
 
   return Object.freeze({
-    async start(suite: HostedTestSuiteId) {
-      return present(() => runtime.start_run(suite), suite);
+    async start_selected(selectionIds: readonly string[]) {
+      return present(() => runtime.start_selected(selectionIds), "canonical/selected");
     },
-    async start_selected(testIds: readonly string[]) {
-      return present(() => runtime.start_selected(testIds), "canonical/selected");
-    },
-    async recover(runId: string, attemptId?: HostedTestAttemptId) {
+    async recover(runId: string, attemptId: HostedTestAttemptId) {
       return present(() => runtime.recover_run(runId, attemptId));
     },
     async cancel() {

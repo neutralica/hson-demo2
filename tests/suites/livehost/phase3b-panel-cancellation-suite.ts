@@ -1,7 +1,6 @@
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
 import type { HostedTestCancelResult, HostedTestPanelRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
-import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
 import { hosted_test_recovery_association } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import type { HostedTestReport } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { make_hosted_test_panel_adapter } from "../../../src/app/demos/tests/panel/hosted-test-panel-adapter";
@@ -70,7 +69,7 @@ function panel_evidence(): Promise<PanelEvidence> {
       supportsCancellation: true,
     });
     const registry = make_test_executor_registry(executor, Object.freeze([fixture]));
-    const runtime = make_in_memory_hosted_test_runtime(make_hosted_test_suite_registry([]), registry);
+    const runtime = make_in_memory_hosted_test_runtime(registry);
     await runtime.ready();
     await runtime.discover();
     let report: HostedTestReport | undefined;

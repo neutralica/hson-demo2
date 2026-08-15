@@ -1,4 +1,10 @@
-# Cloudflare hosted-test Worker
+# Optional Cloudflare hosted-test Worker
+
+This adapter is a portability target, not the LiveHost server architecture.
+The complete Node LiveHost builds, starts, discovers, executes, cancels,
+recovers, reports, and shuts down without Wrangler, bindings, Durable Objects,
+or a Worker URL. Removing this adapter excludes only certification whose
+explicit subject is Cloudflare Worker compatibility.
 
 ## Scope and authority lifetime
 
@@ -23,14 +29,12 @@ and incur Durable Object duration usage. This is suitable for deployment proof
 and bounded hosted-test sessions, but it does not receive the cost benefit of
 WebSocket hibernation.
 
-The Worker registry executes the Worker-compatible `livemap/replay`,
-`livehost/all`, `category/livehost`, `category/transform`, and `category/unit`
-routes. The canonical `hosted/all`, `node/all`, `category/livetree`,
-`category/livemap`, `category/dev`, `dom/core`, and `canvas/core` routes remain
-registered but return a clear `CLOUDFLARE_HOSTED_SUITE_UNAVAILABLE`
-infrastructure failure because they require the Node/jsdom runtime. Lazy case
-inspection is likewise unavailable in this slice. The conventional Node server
-continues to provide the complete registry and inspection behavior unchanged.
+The Worker advertises only the canonical case descriptors it can execute and
+accepts those identities through `tests.runSelected`. It does not advertise
+Node-only opaque launchers or synthetic-DOM work, and removed aggregate/category
+routes are not registered. Absence from Worker discovery is capability truth,
+not an unsupported-result projection. Lazy case inspection remains unavailable
+in this slice.
 
 Full hibernation/reconstruction support requires one canonical hosted-test
 application checkpoint surface capable of exporting and restoring coordinator

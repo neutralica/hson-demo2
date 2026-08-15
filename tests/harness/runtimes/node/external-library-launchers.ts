@@ -10,6 +10,7 @@ import {
 } from "hson-live/test-launchers";
 import type { TestCapability, TestCollection, TestSubject } from "../../../../src/shared/testing/test-contracts";
 import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
+import type { TestSuiteDescriptor } from "../../../../src/shared/testing/test-contracts";
 import { validate_test_suite_id } from "../../../../src/shared/testing/test-identity";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS = 120_000;
@@ -20,7 +21,7 @@ export const EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER = "<HSON_LIVE_TEST_OUTP
 export const HSON_LIVE_TEST_COMPLETION_PREFIX = "<HSON_LIVE_TEST_COMPLETION>";
 export const HSON_LIVE_TEST_COMPLETION_VERSION = 1;
 const COMPLETION_LINE_LIMIT = 16 * 1024;
-const TSX_IMPORT_PATH = fileURLToPath(import.meta.resolve("tsx"));
+export const NODE_TSX_IMPORT_PATH = fileURLToPath(import.meta.resolve("tsx"));
 
 export type ExternalLibraryLauncherInvocationKind = "direct" | "package-script";
 
@@ -75,10 +76,12 @@ export type ExternalLibraryLauncherCompletion = Readonly<{
 type ExternalLibraryLauncherState = {
   readonly activeChildren: Map<ChildProcess, () => void>;
   readonly activeLaunchers: Map<string, Promise<ExternalLibraryLauncherResult>>;
+  readonly activeCommands: Map<string, Promise<SupervisedNodeCommandResult>>;
   maximumObservedConcurrentChildren: number;
   terminationGeneration: number;
   directLauncherStarts: number;
   packageScriptStarts: number;
+  commandStarts: number;
 };
 
 export type ExternalLibraryLauncherRunOptions = Readonly<{
@@ -94,12 +97,43 @@ export type ExternalLibraryLauncherRunOptions = Readonly<{
   observeStdoutChunk?: (text: string) => void;
 }>;
 
+export type SupervisedNodeCommand = Readonly<{
+  id: string;
+  cwd: string;
+  command: string;
+  args: readonly string[];
+  environment: Readonly<Record<string, string>>;
+  timeoutMs: number;
+}>;
+
+export type SupervisedNodeCommandResult = Readonly<{
+  id: string;
+  stdout: string;
+  stderr: string;
+  stdoutBytes: number;
+  stderrBytes: number;
+  stdoutTruncated: boolean;
+  stderrTruncated: boolean;
+  exitCode: number | null;
+  signal: NodeJS.Signals | null;
+  durationMs: number;
+  timedOut: boolean;
+  cancelled: boolean;
+  forceKilled: boolean;
+  spawnError?: string;
+  ok: boolean;
+}>;
+
 export type ExternalLibraryLauncherService = Readonly<{
   run(
     availability: ExternalLibraryLauncherAvailability,
     targetId: string,
     options?: ExternalLibraryLauncherRunOptions,
   ): Promise<ExternalLibraryLauncherResult>;
+  runCommand(
+    command: SupervisedNodeCommand,
+    options?: Readonly<{ signal?: AbortSignal; terminationGeneration?: number }>,
+  ): Promise<SupervisedNodeCommandResult>;
   terminate(): void;
   terminationGeneration(): number;
   resetMetrics(): void;
@@ -108,6 +142,7 @@ export type ExternalLibraryLauncherService = Readonly<{
     maximumObservedConcurrentChildren: number;
     directLauncherStarts: number;
     packageScriptStarts: number;
+    commandStarts: number;
   }>;
 }>;
 
@@ -115,10 +150,12 @@ function make_external_library_launcher_state(): ExternalLibraryLauncherState {
   return {
     activeChildren: new Map(),
     activeLaunchers: new Map(),
+    activeCommands: new Map(),
     maximumObservedConcurrentChildren: 0,
     terminationGeneration: 0,
     directLauncherStarts: 0,
     packageScriptStarts: 0,
+    commandStarts: 0,
   };
 }
 
@@ -156,32 +193,17 @@ function tsx_invocation(
   return Object.freeze({
     kind: "direct",
     command: process.execPath,
-    args: Object.freeze(["--import", TSX_IMPORT_PATH, launcher.repositoryModule]),
+    args: Object.freeze(["--import", NODE_TSX_IMPORT_PATH, launcher.repositoryModule]),
     env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
     ...(fallback === undefined ? {} : { fallback }),
   });
 }
 
-export const PHASE1_EXTERNAL_SUITE_COLLISION_RESOLUTIONS = Object.freeze([
-  Object.freeze({ launcherId: "livemap.path-handle", suiteId: "livemap/path-handle/conformance" }),
-  Object.freeze({ launcherId: "livemap.carrier-mutation-planning", suiteId: "livemap/carrier-mutation-planning/conformance" }),
-  Object.freeze({ launcherId: "livemap.exact-transport", suiteId: "livemap/exact-transport/conformance" }),
-  Object.freeze({ launcherId: "livemap.exact-transport-rejection", suiteId: "livemap/exact-transport-rejection/conformance" }),
-  Object.freeze({ launcherId: "livemap.exact-propagation", suiteId: "livemap/exact-propagation/conformance" }),
-  Object.freeze({ launcherId: "livemap.schema-value-boundary", suiteId: "livemap/schema-value-boundary/conformance" }),
-]);
-
 const SEMANTIC_SUITE_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
   "core.hson-number": "transform/hson-number",
   "core.canonical-hson-equality": "transform/canonical-hson-equality",
   "core.public-boundaries": "integration/public-boundaries",
-  ...Object.fromEntries(PHASE1_EXTERNAL_SUITE_COLLISION_RESOLUTIONS.map((entry) => [entry.launcherId, entry.suiteId])),
 });
-
-export const PHASE1_DUPLICATE_PROPOSITION_CANDIDATES = Object.freeze([
-  Object.freeze({ hsonDemo2SuiteId: "transform/hson/quoted-name-acceptance", sourceRef: "hson-live:transform.hson-quoted-name-acceptance" }),
-  Object.freeze({ hsonDemo2SuiteId: "transform/hson/quoted-name-rejection", sourceRef: "hson-live:transform.hson-quoted-name-rejection" }),
-]);
 
 function semantic_suite_id(launcher: HsonLiveTestLauncher): string {
   const explicit = SEMANTIC_SUITE_OVERRIDES[launcher.id];
@@ -342,6 +364,28 @@ export async function resolve_external_library_launchers(
     unavailable: Object.freeze(unavailable.map((entry) => Object.freeze(entry))),
     invocations: Object.freeze(invocations),
   });
+}
+
+export function resolve_external_launcher_binding(
+  availability: ExternalLibraryLauncherAvailability,
+  descriptor: TestSuiteDescriptor,
+): ExternalLibraryLauncherTarget {
+  if (descriptor.executionShape !== "opaque-aggregate" || descriptor.provenance !== "hson-live"
+    || descriptor.sourceRef === undefined || !descriptor.sourceRef.startsWith("hson-live:")) {
+    throw new Error(`HOSTED_TEST_OPAQUE_DESCRIPTOR_INVALID: ${descriptor.id} has no valid hson-live sourceRef binding.`);
+  }
+  const matches = availability.targets.filter((target) => target.sourceRef === descriptor.sourceRef);
+  if (matches.length !== 1) {
+    throw new Error(
+      `HOSTED_TEST_OPAQUE_BINDING_INVALID: ${descriptor.id} sourceRef "${descriptor.sourceRef}" resolved to ${matches.length} launchers.`,
+    );
+  }
+  const target = matches[0]!;
+  if (target.id !== descriptor.id || target.displayName !== descriptor.title
+    || target.subject !== descriptor.subject || target.executableChecks !== descriptor.declaredChecks) {
+    throw new Error(`HOSTED_TEST_OPAQUE_BINDING_MISMATCH: ${descriptor.id} binding disagrees with the accepted catalog descriptor.`);
+  }
+  return target;
 }
 
 class BoundedOutputCapture {
@@ -560,6 +604,90 @@ function terminate_process_tree(child: ChildProcess, signal: NodeJS.Signals): vo
   child.kill(signal);
 }
 
+async function run_supervised_node_command_with_state(
+  state: ExternalLibraryLauncherState,
+  invocation: SupervisedNodeCommand,
+  options: Readonly<{ signal?: AbortSignal; terminationGeneration?: number }> = {},
+): Promise<SupervisedNodeCommandResult> {
+  if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.terminationGeneration) {
+    throw new Error(`Supervised Node command was cancelled before start: ${invocation.id}`);
+  }
+  const active = state.activeCommands.get(invocation.id);
+  if (active !== undefined) return active;
+  state.commandStarts += 1;
+  const startedAt = performance.now();
+  const execution = new Promise<SupervisedNodeCommandResult>((resolve) => {
+    const stdoutCapture = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES);
+    const stderrCapture = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES);
+    let timedOut = false;
+    let cancelled = false;
+    let forceKilled = false;
+    let spawnError: string | undefined;
+    let settled = false;
+    let terminationRequested = false;
+    let forceTimer: ReturnType<typeof setTimeout> | undefined;
+    const child = spawn(invocation.command, invocation.args, {
+      cwd: invocation.cwd,
+      env: { ...process.env, ...invocation.environment, FORCE_COLOR: "0", NO_COLOR: "1" },
+      stdio: ["ignore", "pipe", "pipe"],
+      detached: process.platform !== "win32",
+    });
+    const requestTermination = (): void => {
+      if (terminationRequested || settled) return;
+      terminationRequested = true;
+      terminate_process_tree(child, "SIGTERM");
+      forceTimer = setTimeout(() => {
+        if (settled) return;
+        forceKilled = true;
+        terminate_process_tree(child, "SIGKILL");
+      }, EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS);
+    };
+    state.activeChildren.set(child, requestTermination);
+    state.maximumObservedConcurrentChildren = Math.max(state.maximumObservedConcurrentChildren, state.activeChildren.size);
+    child.stdout?.on("data", (chunk: Buffer) => stdoutCapture.add(chunk));
+    child.stderr?.on("data", (chunk: Buffer) => stderrCapture.add(chunk));
+    const timer = setTimeout(() => {
+      timedOut = true;
+      requestTermination();
+    }, invocation.timeoutMs);
+    const abort = (): void => {
+      cancelled = true;
+      requestTermination();
+    };
+    options.signal?.addEventListener("abort", abort, { once: true });
+    if (options.signal?.aborted) abort();
+    child.once("error", (error) => { spawnError = error.message; });
+    child.once("close", (exitCode, signal) => {
+      if (settled) return;
+      settled = true;
+      state.activeChildren.delete(child);
+      clearTimeout(timer);
+      if (forceTimer !== undefined) clearTimeout(forceTimer);
+      options.signal?.removeEventListener("abort", abort);
+      const durationMs = performance.now() - startedAt;
+      resolve(Object.freeze({
+        id: invocation.id,
+        stdout: stdoutCapture.text(),
+        stderr: stderrCapture.text(),
+        stdoutBytes: stdoutCapture.totalBytes,
+        stderrBytes: stderrCapture.totalBytes,
+        stdoutTruncated: stdoutCapture.truncated,
+        stderrTruncated: stderrCapture.truncated,
+        exitCode,
+        signal,
+        durationMs,
+        timedOut,
+        cancelled,
+        forceKilled,
+        ...(spawnError === undefined ? {} : { spawnError }),
+        ok: exitCode === 0 && signal === null && spawnError === undefined && !timedOut && !cancelled,
+      }));
+    });
+  });
+  state.activeCommands.set(invocation.id, execution);
+  return execution.finally(() => state.activeCommands.delete(invocation.id));
+}
+
 async function run_external_library_launcher_with_state(
   state: ExternalLibraryLauncherState,
   availability: ExternalLibraryLauncherAvailability,
@@ -723,6 +851,7 @@ export function create_external_library_launcher_service(): ExternalLibraryLaunc
   return Object.freeze({
     run: (availability, targetId, options) =>
       run_external_library_launcher_with_state(state, availability, targetId, options ?? {}),
+    runCommand: (command, options) => run_supervised_node_command_with_state(state, command, options),
     terminate() {
       state.terminationGeneration += 1;
       for (const terminate of state.activeChildren.values()) terminate();
@@ -735,12 +864,14 @@ export function create_external_library_launcher_service(): ExternalLibraryLaunc
       state.maximumObservedConcurrentChildren = 0;
       state.directLauncherStarts = 0;
       state.packageScriptStarts = 0;
+      state.commandStarts = 0;
     },
     metrics: () => Object.freeze({
       activeChildren: state.activeChildren.size,
       maximumObservedConcurrentChildren: state.maximumObservedConcurrentChildren,
       directLauncherStarts: state.directLauncherStarts,
       packageScriptStarts: state.packageScriptStarts,
+      commandStarts: state.commandStarts,
     }),
   });
 }

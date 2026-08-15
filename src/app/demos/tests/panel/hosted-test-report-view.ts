@@ -5,8 +5,6 @@ import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hos
 import { hosted_test_projection_summary } from "./hosted-test-report-summary";
 import { classify_hosted_test_stderr, hosted_test_suite_presentation } from "./hosted-test-presentation";
 
-type ExternalLauncherReport = HostedTestReport["externalResults"][string];
-
 function escape_html(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
@@ -35,27 +33,6 @@ export function visible_external_launcher_stderr(stderr: string): string {
     visible.push(line);
   }
   return visible.join("\n");
-}
-
-export function hosted_external_launcher_log_projection(
-  launcher: ExternalLauncherReport,
-): Readonly<{ line: string; failureDiagnostics: readonly string[] }> {
-  const prefix = launcher.status === "running" ? "run " : launcher.status.padEnd(4);
-  const line = `${prefix} ${launcher.id} — ${launcher.executableChecks} checks${launcher.status === "pass" || launcher.status === "fail"
-    ? ` — ${format_hosted_test_duration(launcher.ms)}`
-    : ""}`;
-  if (launcher.status !== "fail") {
-    return Object.freeze({ line, failureDiagnostics: Object.freeze([]) });
-  }
-  const visibleStderr = visible_external_launcher_stderr(launcher.stderr);
-  return Object.freeze({
-    line,
-    failureDiagnostics: Object.freeze([
-      ...(launcher.stdout ? [`stdout\n${launcher.stdout}`] : []),
-      ...(visibleStderr ? [`stderr\n${visibleStderr}`] : []),
-      ...(launcher.spawnError ? [`spawn error\n${launcher.spawnError}`] : []),
-    ]),
-  });
 }
 
 export function serialize_hosted_case_diagnostic(diagnostic: HostedTestCaseDiagnostic): string {
@@ -118,21 +95,23 @@ export async function serialize_hosted_run_report(
   inspect: (caseKey: string) => Promise<HostedTestCaseDiagnostic>,
 ): Promise<string> {
   const cases = hosted_test_report_cases(report);
-  const external = Object.values(report.externalResults);
   const summary = hosted_test_projection_summary(report);
   const presentations = report.suiteRuns.map(hosted_test_suite_presentation);
   const lines = [
     `${result.suite} — run ${result.runId}`,
     `${result.ok ? "PASS" : "FAIL"} · round trip ${format_hosted_test_duration(result.timing.roundTripMs)} · runner ${format_hosted_test_duration(result.timing.runnerMs)} · host ${format_hosted_test_duration(result.timing.hostMs)}`,
-    `suites: ${report.suiteRuns.length || result.summary.suites}`,
+    `suites: ${report.suiteRuns.length}`,
     ...(summary.canonical.total > 0
       ? [`canonical cases: ${summary.canonical.pass} passed · ${summary.canonical.fail} failed · ${summary.canonical.skip} skipped`]
       : []),
     ...(summary.launchers.total > 0
       ? [`opaque suites: ${summary.launchers.pass}/${summary.launchers.total} passed · ${summary.launchers.fail} failed · ${summary.launchers.declaredChecks} checks`]
       : []),
+    ...(summary.certifications.total > 0
+      ? [`certifications: ${summary.certifications.pass}/${summary.certifications.total} passed · ${summary.certifications.fail} failed`]
+      : []),
     "",
-    ...cases.map((testCase) => `${testCase.status.toUpperCase().padEnd(11)} ${format_hosted_test_duration(testCase.ms).padStart(9)} ${testCase.key} — ${testCase.name}${testCase.err ? ` — ${testCase.err}` : ""}`),
+    ...cases.map((testCase) => `${testCase.status.toUpperCase().padEnd(11)} ${testCase.ms === null ? testCase.status.padStart(9) : format_hosted_test_duration(testCase.ms).padStart(9)} ${testCase.id} — ${testCase.title}${testCase.err ? ` — ${testCase.err}` : ""}`),
   ];
   for (const presentation of presentations) {
     lines.push("", `${presentation.status.toUpperCase()} ${presentation.id} — ${presentation.summary} — ${presentation.duration}`);
@@ -147,23 +126,10 @@ export async function serialize_hosted_run_report(
       lines.push("", `[${section.label}]`, ...section.entries);
     }
   }
-  if (presentations.length === 0) for (const launcher of external) {
-    lines.push(
-      "",
-      `${launcher.id} — ${launcher.executableChecks} checks · ${launcher.status} — ${format_hosted_test_duration(launcher.ms)}`,
-      `launcher: ${launcher.id}`,
-      `runtime: ${launcher.runtime}`,
-      `exit: ${launcher.exitCode ?? "none"}${launcher.signal ? ` signal ${launcher.signal}` : ""}${launcher.timedOut ? " timeout" : ""}`,
-      "stdout:",
-      launcher.stdout,
-      "stderr:",
-      launcher.stderr,
-    );
-  }
   const failed = cases.filter((testCase) => testCase.status === "fail");
   for (let offset = 0; offset < failed.length; offset += 4) {
     const batch = failed.slice(offset, offset + 4);
-    const diagnostics = await Promise.all(batch.map((testCase) => inspect(testCase.key)));
+    const diagnostics = await Promise.all(batch.map((testCase) => inspect(testCase.id)));
     for (const diagnostic of diagnostics) lines.push("", "---- failure detail ----", serialize_hosted_case_diagnostic(diagnostic));
   }
   return lines.join("\n");

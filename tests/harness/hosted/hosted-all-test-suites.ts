@@ -7,11 +7,8 @@ import { all_jsdom_hosted_test_suites } from "../runtimes/dom/jsdom-hosted-test-
 import { all_node_safe_hosted_test_suites } from "./node-safe-hosted-test-suites";
 
 export type HostedTestRuntimeKind = "node" | "dom" | "canvas";
-export type HostedTestCategory = "transform" | "livetree" | "livemap" | "livehost" | "reflect" | "unit" | "dev";
-
 export type HostedExecutableSuite = Readonly<{
   runtime: HostedTestRuntimeKind;
-  category: HostedTestCategory;
   suite: TestSuite;
 }>;
 
@@ -44,70 +41,11 @@ export function all_hosted_test_suites(): readonly TestSuite[] {
   return suites;
 }
 
-const DEV_SUITES = new Set(["livemap/rev", "livetree/quid-level-2"]);
-const DOM_LIVEMAP_SUITES = new Set([
-  "livemap/bridge-livetree",
-  "livemap/bridge-livetree-controls",
-  "livemap/schema-controls",
-  "livemap/schema-validation-controls",
-  "livemap/bind",
-]);
-
-function category_for(runtime: HostedTestRuntimeKind, suite: TestSuite): HostedTestCategory {
-  if (suite.descriptor?.collections?.includes("dev") || DEV_SUITES.has(suite.suite)) return "dev";
-  if (suite.descriptor?.collections?.includes("unit")) return "unit";
-  const subject = suite.descriptor?.subject;
-  if (subject === "transform" || subject === "livetree" || subject === "livemap"
-    || subject === "livehost" || subject === "reflect") return subject;
-  // Transitional legacy-route fallback; exact discovery and RunPlan selection use descriptor metadata directly.
-  if (runtime === "node" || DOM_LIVEMAP_SUITES.has(suite.suite)) return "livemap";
-  return "livetree";
-}
-
 export function all_hosted_executable_suites(): readonly HostedExecutableSuite[] {
   return Object.freeze(HOSTED_ALL_RUNTIME_GROUPS.flatMap((group) => group.suites().map((suite) => Object.freeze({
     runtime: group.runtime,
-    category: category_for(group.runtime, suite),
     suite,
   }))));
-}
-
-async function run_runtime_group(
-  runtime: HostedTestRuntimeKind,
-  suites: readonly TestSuite[],
-  onEvent: (event: TestEvent) => void,
-  options: RunOptions,
-): Promise<RunResult> {
-  if (suites.length === 0) {
-    return Object.freeze({ ok: true, summary: Object.freeze({ suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: Object.freeze([]) }) });
-  }
-  if (runtime === "node") return with_hosted_node_globals(() => run_test_suites(suites, onEvent, options));
-  return with_hosted_dom_runtime((hostedRuntime) => run_test_suites(
-    suites,
-    (event) => {
-      if (event.t === "suite_begin") hostedRuntime.reset_document();
-      if (event.t === "case_begin") {
-        hostedRuntime.geometry.clear_all_element_rects();
-        if (runtime === "canvas") hostedRuntime.canvas.clear_all_canvases();
-      }
-      onEvent(event);
-    },
-    options,
-  ));
-}
-
-export async function run_hosted_test_category(
-  category: HostedTestCategory,
-  onEvent: (event: TestEvent) => void = () => undefined,
-  options: RunOptions = {},
-): Promise<RunResult> {
-  const startedAt = performance.now();
-  const entries = all_hosted_executable_suites().filter((entry) => entry.category === category);
-  const results: RunResult[] = [];
-  for (const runtime of ["node", "dom", "canvas"] as const) {
-    results.push(await run_runtime_group(runtime, entries.filter((entry) => entry.runtime === runtime).map((entry) => entry.suite), onEvent, options));
-  }
-  return combine_results(results, startedAt);
 }
 
 function combine_results(results: readonly RunResult[], startedAt: number): RunResult {

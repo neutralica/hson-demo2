@@ -3,6 +3,12 @@ import { with_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-m
 import { run_test_suites } from "../../harness/core/test-runner";
 import { make_json_fuzz_suite } from "../../tools/json-fuzzer/fuzzer-builder";
 import { make_transform_test_suite } from "../../suites/transform/make-transform-suite";
+import {
+  DEFAULT_GENERATED_JSON_CASES,
+  DEFAULT_GENERATED_JSON_SEED,
+  GENERATED_JSON_COUNT_ENVIRONMENT,
+  GENERATED_JSON_SEED_ENVIRONMENT,
+} from "../../harness/hosted/generated-test-policy";
 
 function positive_integer(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -11,8 +17,8 @@ function positive_integer(name: string, fallback: number): number {
   return value;
 }
 
-const seed = positive_integer("HOSTED_FUZZ_SEED", 1);
-const cases = positive_integer("HOSTED_FUZZ_CASES", 200);
+const seed = positive_integer(GENERATED_JSON_SEED_ENVIRONMENT, DEFAULT_GENERATED_JSON_SEED);
+const cases = positive_integer(GENERATED_JSON_COUNT_ENVIRONMENT, DEFAULT_GENERATED_JSON_CASES);
 const suite = make_transform_test_suite(
   { _circuit_test },
   make_json_fuzz_suite(cases, seed),

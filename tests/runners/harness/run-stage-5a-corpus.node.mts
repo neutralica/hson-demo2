@@ -79,12 +79,14 @@ expect_stage5a(new Set(unitIds).size === unitIds.length && new Set(devIds).size 
 
 const targetedSuites = hosted_test_panel_suite_choices(node.catalog.tests);
 const replaySuite = targetedSuites.find((choice) => choice.key === "suite:livemap/replay");
-expect_stage5a(replaySuite?.count === 45, "targeted suite selection resolves exact canonical IDs");
 const replayCases = hosted_test_panel_test_choices(node.catalog.tests, "livemap/replay");
+const registeredReplayCases = node.catalog.tests.filter((descriptor) => descriptor.suiteId === "livemap/replay");
 expect_stage5a(
-  replayCases.length === 45
+  replaySuite?.count === registeredReplayCases.length
+    && replayCases.length === registeredReplayCases.length
+    && replayCases.every((choice) => registeredReplayCases.some((descriptor) => descriptor.id === choice.key.slice("test:".length)))
     && hosted_test_panel_selected_ids(node.catalog.tests, replayCases[0]!.selection).length === 1,
-  "targeted exact-test selection remains available outside the primary taxonomy",
+  "targeted suite and exact-test selections derive from current canonical identities",
 );
 
 expect_stage5a(
@@ -117,12 +119,12 @@ expect_stage5a(
 const domPending = all_jsdom_hosted_test_suites();
 const canvasPending = all_jsdom_hosted_canvas_suites();
 expect_stage5a(
-  domPending.length === 77 && domPending.reduce((total, suite) => total + suite.cases.length, 0) === 931,
-  "pending synthetic-DOM inventory remains explicit after public debug-node removal",
+  domPending.every((suite) => suite.cases.every((testCase) => node.get(`${suite.suite}::${testCase.caseId}`) !== undefined))
+    && new Set(domPending.map((suite) => suite.suite)).size === domPending.length,
+  "synthetic-DOM inventory remains explicit, unique, and canonically registered",
 );
 expect_stage5a(
-  canvasPending.length === 6
-    && canvasPending.reduce((total, suite) => total + suite.cases.length, 0) === 62
+  new Set(canvasPending.map((suite) => suite.suite)).size === canvasPending.length
     && canvasPending.every((suite) => suite.cases.every((testCase) => node.get(`${suite.suite}::${testCase.caseId}`) !== undefined)),
   "deterministic canvas inventory remains explicit and canonically registered",
 );

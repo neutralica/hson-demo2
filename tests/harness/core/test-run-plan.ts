@@ -26,7 +26,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
 
   const suiteById = new Map(options.catalog.suites.map((descriptor) => [descriptor.id, descriptor]));
   const casesBySuite = new Map<string, typeof options.catalog.tests[number][]>();
-  const opaqueSuites = new Set<string>();
+  const aggregateSuites = new Set<string>();
   for (const id of selected) {
     if (is_test_case_id(id)) {
       const descriptor = options.catalog.tests.find((candidate) => candidate.id === id);
@@ -38,14 +38,14 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
     }
     if (!is_test_suite_id(id)) throw new Error(`Malformed Test RunPlan selection identity: ${id}`);
     const suite = suiteById.get(id);
-    if (suite === undefined || suite.executionShape !== "opaque-aggregate") {
+    if (suite === undefined || suite.executionShape === "cases") {
       throw new SelectedTestResolutionError(id, options.executorId);
     }
-    opaqueSuites.add(id);
+    aggregateSuites.add(id);
   }
 
   const selectedSuiteDescriptors = options.catalog.suites
-    .filter((suite) => casesBySuite.has(suite.id) || opaqueSuites.has(suite.id))
+    .filter((suite) => casesBySuite.has(suite.id) || aggregateSuites.has(suite.id))
     .sort(compare_test_suites);
   const suites = selectedSuiteDescriptors.map((suite, order) => {
     const cases = (casesBySuite.get(suite.id) ?? []).sort(compare_test_descriptors)
@@ -71,7 +71,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
   });
   Object.freeze(suites);
   const selectionIds = Object.freeze(suites.flatMap((suite) => (
-    suite.executionShape === "opaque-aggregate" ? [suite.id] : suite.cases.map((testCase) => testCase.id)
+    suite.executionShape !== "cases" ? [suite.id] : suite.cases.map((testCase) => testCase.id)
   )));
   return Object.freeze({
     runId: options.runId,

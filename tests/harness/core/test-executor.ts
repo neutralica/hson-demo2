@@ -20,7 +20,7 @@ export type TestExecutorRegistry = Readonly<{
 
 export function executor_supports(
   executor: TestExecutorDescriptor,
-  descriptor: TestDescriptor,
+  descriptor: Pick<TestDescriptor, "requirements">,
 ): boolean {
   const provided = new Set<TestCapability>(executor.capabilities.provides);
   return descriptor.requirements.every((requirement) => provided.has(requirement));
@@ -126,7 +126,7 @@ export function make_test_executor_registry_from_registrations(
 }
 
 export function select_executor(
-  descriptor: TestDescriptor,
+  descriptor: Pick<TestDescriptor, "requirements">,
   executors: readonly TestExecutorDescriptor[],
 ): TestExecutorDescriptor | undefined {
   return executors.find((executor) => executor_supports(executor, descriptor));

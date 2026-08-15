@@ -177,7 +177,7 @@ async function invalid_payload(payload: unknown): Promise<Readonly<{ type: strin
 export function circuit_livehost_integration_suite(): TestSuite {
   return Object.freeze({
     suite: SUITE,
-    descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node", "worker"] as const) }),
+    descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node", "worker-threads"] as const) }),
     cases: Object.freeze([
       Object.freeze({ suite: SUITE, caseId: "typed-action-returns-a-detached-verification-result", name: "typed action returns a detached verification result", run: async () => {
         const service = mock_service(); const connected = await pair(service);

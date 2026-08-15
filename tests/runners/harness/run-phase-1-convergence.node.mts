@@ -5,17 +5,14 @@ import { make_test_catalog } from "../../harness/core/test-catalog";
 import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
 import { format_test_case_id, parse_test_case_id, validate_test_case_id, validate_test_suite_id } from "../../../src/shared/testing/test-identity";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
-import { PHASE1_TEST_COMPATIBILITY_BRIDGES } from "../../harness/core/test-convergence-compatibility";
+import { TEST_CONVERGENCE_BOUNDARIES } from "../../harness/core/test-convergence-compatibility";
 import { CANONICAL_TEST_COLLECTION_ORDER, CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
 import { test_presentation_rank } from "../../../src/shared/testing/test-order";
-import type { ExternalLibraryLauncherTarget } from "../../../src/shared/testing/external-launcher-contract";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
+import { external_launcher_suite_descriptor } from "../../../src/shared/testing/external-launcher-contract";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
-import {
-  PHASE1_DUPLICATE_PROPOSITION_CANDIDATES,
-  resolve_external_library_launchers,
-} from "../../harness/runtimes/node/external-library-launchers";
+import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
@@ -140,36 +137,24 @@ certify("taxonomy", externalAvailability.targets.every((target) => !target.id.st
 certify("taxonomy", externalAvailability.targets.every((target) => target.collections.every((collection) => collection === "unit" || collection === "dev")), "normalized launcher collections contain only tier metadata");
 certify("taxonomy", externalAvailability.targets.every((target) => !target.requirements.includes("unit" as never) && !target.requirements.includes("dev" as never)), "Unit and Dev are never runtime requirements");
 certify("taxonomy", liveDev?.subject === "integration" && liveDev.collections.includes("dev"), "an external Dev suite retains a separate semantic subject");
-certify("taxonomy", liveDev !== undefined && hosted_test_panel_selected_ids(Object.freeze([]), { kind: "collection", collection: "dev" }, Object.freeze([liveDev])).join() === liveDev.id, "external collection filtering reads collections without rewriting subject");
+certify("taxonomy", liveDev !== undefined && hosted_test_panel_selected_ids(Object.freeze([]), { kind: "collection", collection: "dev" }, Object.freeze([external_launcher_suite_descriptor(liveDev)])).join() === liveDev.id, "external collection filtering reads collections without rewriting subject");
 certify("taxonomy", case_descriptor(suite_descriptor("livemap/unit-proof", "livemap", 0, Object.freeze(["unit"])), "proof", 0).subject === "livemap", "a Unit case retains one LiveMap semantic identity");
 certify("taxonomy", case_descriptor(suite_descriptor("livemap/unit-proof", "livemap", 0, Object.freeze(["unit"])), "proof", 0).collections.includes("unit"), "the same case independently retains Unit membership");
 certify("taxonomy", test_presentation_rank("livemap", Object.freeze(["unit"])) === 2, "collection membership never displaces a first-class semantic subject");
 certify("taxonomy", test_presentation_rank("integration", Object.freeze(["unit"])) === 5 && test_presentation_rank("integration", Object.freeze(["dev"])) === 6, "collection-only suites rank after all semantic subjects");
 certify("taxonomy", transformCanonical.subject === transformOpaque.subject && transformCanonical.provenance !== transformOpaque.provenance, "provenance does not alter semantic subject classification");
 certify("taxonomy", externalAvailability.targets.every((target) => target.executableChecks > 0), "opaque launcher declared-check evidence remains aggregate metadata");
-certify("taxonomy", PHASE1_DUPLICATE_PROPOSITION_CANDIDATES.length === 2, "known quoted-name proposition duplicates are recorded without deleting or aliasing them");
-certify("taxonomy", PHASE1_TEST_COMPATIBILITY_BRIDGES.length === 5 && PHASE1_TEST_COMPATIBILITY_BRIDGES.every((bridge) => bridge.deletionGate.length > 0), "every retained Phase 1 compatibility bridge has an explicit deletion gate");
+certify("taxonomy", TEST_CONVERGENCE_BOUNDARIES.length === 1 && TEST_CONVERGENCE_BOUNDARIES.every((bridge) => bridge.deletionGate.length > 0), "the sole retained cross-repository bridge has an explicit deletion gate");
 
-const syntheticExternalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([
-  Object.freeze({
-    id: transformOpaque.id, launcherId: "transform.hson-tokenizer", sourceRef: transformOpaque.sourceRef!, subject: "transform",
-    displayName: transformOpaque.title, runtime: "node", executableChecks: 7, collections: Object.freeze([]), tags: Object.freeze([]),
-    requirements: Object.freeze(["javascript", "node"] as const), order: transformOpaque.order,
-  }),
-  Object.freeze({
-    id: livemapOpaque.id, launcherId: "livemap.canonical-ownership", sourceRef: livemapOpaque.sourceRef!, subject: "livemap",
-    displayName: livemapOpaque.title, runtime: "node", executableChecks: 7, collections: Object.freeze([]), tags: Object.freeze([]),
-    requirements: Object.freeze(["javascript", "node"] as const), order: livemapOpaque.order,
-  }),
-]);
-const primaryKeys = hosted_test_panel_primary_choices(mixedCatalog.tests, syntheticExternalTargets).map((choice) => choice.key);
+const syntheticOpaqueSuites: readonly TestSuiteDescriptor[] = Object.freeze([transformOpaque, livemapOpaque]);
+const primaryKeys = hosted_test_panel_primary_choices(mixedCatalog.tests, syntheticOpaqueSuites).map((choice) => choice.key);
 certify("taxonomy", primaryKeys.join("|") === "all|subject:transform|subject:livetree|subject:livemap|subject:livehost|subject:reflect|collection:unit|collection:dev", "selector order is exactly All, Transform, LiveTree, LiveMap, LiveHost, Reflect, Unit, Dev");
 certify("taxonomy", primaryKeys.every((key) => key !== "library" && key !== "subject:library"), "Library is not a primary selector category");
-const unitIds = hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "collection", collection: "unit" }, syntheticExternalTargets);
+const unitIds = hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "collection", collection: "unit" }, syntheticOpaqueSuites);
 certify("taxonomy", unitIds.join() === "unit/demo::proof", "Unit filtering lowers to an exact canonical case ID");
-certify("taxonomy", new Set(hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "all" }, syntheticExternalTargets)).size === 9, "overlapping subject and collection discovery never duplicates execution");
+certify("taxonomy", new Set(hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "all" }, syntheticOpaqueSuites)).size === 9, "overlapping subject and collection discovery never duplicates execution");
 
-const selectedIds = hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "all" }, syntheticExternalTargets);
+const selectedIds = hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "all" }, syntheticOpaqueSuites);
 const plan = make_test_run_plan({
   runId: "phase1-mixed-run",
   protocolVersion: 3,
@@ -191,17 +176,17 @@ certify("planAndReport", samePlan.selectionIds.join("|") === plan.selectionIds.j
 certify("planAndReport", plan.suites[0]?.provenance === "hson-live" && plan.suites[1]?.provenance === "hson-demo2", "provenance is frozen evidence but not the ordering axis");
 certify("planAndReport", plan.suites.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.cases.length === 0), "opaque suites contain no fabricated cases");
 
-const report = make_hosted_test_report(() => 100, undefined, "hosted/all", { runId: plan.runId, runPlan: plan, caseBatchSize: 2 });
+const report = make_hosted_test_report(() => 100, undefined, { runPlan: plan });
 const initial = report.map.capture().value;
 certify("planAndReport", initial.suiteRuns.map((suite) => suite.id).join("|") === expectedSuiteOrder, "the report reducer seeds final suite positions before evidence");
 certify("planAndReport", initial.suiteRuns.every((suite) => suite.status === "queued"), "every selected suite is initially queued");
 certify("planAndReport", initial.suiteRuns.filter((suite) => suite.executionShape === "cases").every((suite) => suite.cases.length === 1 && suite.cases[0]?.status === "queued"), "every selected canonical case is initially queued");
 certify("planAndReport", initial.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.cases.length === 0), "opaque launchers seed suite rows only");
-certify("planAndReport", initial.caseBatches && hosted_test_report_cases(initial).length === 0, "queued authority is normalized suiteRuns rather than fabricated completion batches");
+certify("planAndReport", hosted_test_report_cases(initial).every((testCase) => testCase.status === "queued"), "queued authority is normalized suiteRuns without fabricated completion projections");
 
 const dom = install_hosted_dom_runtime();
 const inspector = make_hosted_test_case_list(hson.liveTree.queryBody().graft(), { async view() {}, async copy() {} });
-inspector.ingest({ report: initial, newCases: Object.freeze([]), newSuiteTimings: Object.freeze([]), terminal: false });
+inspector.ingest({ report: initial, terminal: false });
 inspector.flush();
 const initialInspector = inspector.snapshot();
 certify("planAndReport", Object.keys(initialInspector.statusesBySuite).join("|") === expectedSuiteOrder, "Inspector projects the reducer-seeded order before completion");
@@ -256,7 +241,7 @@ certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.status ==
 certify("planAndReport", finalReport.suiteRuns.flatMap((suite) => suite.cases).filter((testCase) => testCase.status === "fail").length === 1, "case records transition in place with one controlled failure");
 certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.counts.passed === 7 && suite.cases.length === 0), "opaque suites retain check counts without fabricated cases");
 certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.evidence.some((item) => item.kind === "stdout")), "opaque output attaches as evidence rather than a result model");
-inspector.ingest({ report: finalReport, newCases: hosted_test_report_cases(finalReport), newSuiteTimings: finalReport.suites, terminal: true });
+inspector.ingest({ report: finalReport, terminal: true });
 inspector.flush();
 const finalInspector = inspector.snapshot();
 certify("planAndReport", Object.keys(finalInspector.statusesBySuite).join("|") === expectedSuiteOrder, "Inspector final order equals its initial queued order");
@@ -270,7 +255,7 @@ const nodeDiscovery = make_test_executor_discovery(nodeRegistry, externalAvailab
 const workerDiscovery = make_test_executor_discovery(make_cloudflare_livehost_executor_registry());
 certify("planAndReport", nodeDiscovery.catalog.suites.some((suite) => suite.executionShape === "opaque-aggregate" && suite.provenance === "hson-live"), "Node discovery exposes normalized executable opaque suites");
 certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape === "cases" && suite.provenance === "hson-demo2"), "Worker discovery exposes only its exact executable case suites");
-certify("planAndReport", workerDiscovery.externalTargets.length === 0, "external launchers remain unavailable rather than failed on Worker");
+certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape !== "opaque-aggregate"), "external launchers remain absent rather than failed on Worker");
 certify("planAndReport", nodeDiscovery.catalog.tests.every((descriptor) => nodeRegistry.get(descriptor.id) !== undefined), "every Node case descriptor has exact executable registration");
 
 console.log(JSON.stringify({ counts, initialOrder: expectedSuiteOrder.split("|"), hostileCompletion: ["dev", "livemap opaque", "reflect", "transform opaque", "remaining canonical"], finalOrder: finalReport.suiteRuns.map((suite) => suite.id) }));

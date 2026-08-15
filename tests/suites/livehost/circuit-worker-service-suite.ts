@@ -119,7 +119,7 @@ function fake_options(factory: () => FakeWorker, maxWorkerReplacements = 2): Cir
 export function circuit_worker_service_suite(): TestSuite {
   return Object.freeze({
     suite: SUITE,
-    descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node", "worker"] as const) }),
+    descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node", "worker-threads"] as const) }),
     cases: Object.freeze([
       Object.freeze({ suite: SUITE, caseId: "starts-exactly-one-persistent-worker", name: "starts exactly one persistent worker", run: () => with_service(async (service) => {
         expect(service.diagnostics().workerStarts === 1, "ready service must own one worker");

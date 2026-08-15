@@ -36,7 +36,7 @@ export type HostedTestCoordinatedRun = Readonly<{
   requestId: LiveHostActionRequestId;
   suite: HostedTestRunTarget;
   activeAttemptId: HostedTestAttemptId;
-  acceptedPlan: TestRunPlan | null;
+  acceptedPlan: TestRunPlan;
   attempts: Readonly<Record<HostedTestAttemptId, HostedTestCoordinatedAttempt>>;
 }>;
 
@@ -53,7 +53,7 @@ export type HostedTestRunAssociation = HostedTestRunRequestAssociation & Readonl
   suite: HostedTestRunTarget;
   controlStatus: HostedTestAttemptControlStatus;
   cancellation: HostedTestCancellationIdentity | null;
-  acceptedPlan: TestRunPlan | null;
+  acceptedPlan: TestRunPlan;
 }>;
 
 export function hosted_test_run_association(
@@ -69,7 +69,7 @@ export function hosted_test_run_association(
     || run.requestId !== request.requestId
     || run.activeAttemptId !== request.attemptId
     || attempt.id !== request.attemptId
-    || (run.acceptedPlan !== null && run.acceptedPlan.runId !== run.id)
+    || run.acceptedPlan.runId !== run.id
   ) return undefined;
   return Object.freeze({
     ...request,
@@ -84,12 +84,11 @@ export function hosted_test_run_association(
 export function hosted_test_recovery_association(
   state: HostedTestCoordinatorState,
   runId: HostedTestRunId,
-  attemptId?: HostedTestAttemptId,
+  attemptId: HostedTestAttemptId,
 ): HostedTestRunAssociation | undefined {
   const run = state.runs[runId];
   if (run === undefined) return undefined;
-  const resolvedAttemptId = attemptId ?? run.activeAttemptId;
   const request = state.requests[run.clientId]?.[run.requestId];
-  if (request?.attemptId !== resolvedAttemptId) return undefined;
+  if (request?.attemptId !== attemptId || run.activeAttemptId !== attemptId) return undefined;
   return request === undefined ? undefined : hosted_test_run_association(state, request);
 }

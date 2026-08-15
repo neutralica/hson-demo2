@@ -64,7 +64,7 @@ function update(report: HostedTestReport, terminal = false): HostedTestPanelRepo
   return Object.freeze({ report, newCases: Object.freeze([]), newSuiteTimings: Object.freeze([]), terminal });
 }
 
-const queued = make_initial_hosted_test_report("canonical/selected", plan.runId, plan, 10);
+const queued = make_initial_hosted_test_report(plan, 10);
 certify(HOSTED_TEST_PRESENTATION_GROUP_ORDER.join("|") === "transform|livetree|livemap|livehost|reflect|unit|dev", "semantic group order is exact and contains no Library group");
 certify(hosted_test_suite_presentation(suite(queued, "transform/hson-tokenizer")).group === "transform", "hson-live Transform launcher groups with Transform");
 certify(hosted_test_suite_presentation(suite(queued, "unit/demo")).group === "unit", "Unit collection projects as Unit without changing semantic identity");
@@ -186,7 +186,7 @@ const largePlan: TestRunPlan = Object.freeze({
     })),
   ]),
 });
-const largeReport = make_initial_hosted_test_report("canonical/selected", largePlan.runId, largePlan, 100);
+const largeReport = make_initial_hosted_test_report(largePlan, 100);
 const largeRuntime = install_hosted_dom_runtime({ html: "<!doctype html><html><head></head><body></body></html>" });
 try {
   const largeHost = hson.liveTree.queryBody().graft();

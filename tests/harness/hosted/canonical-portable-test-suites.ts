@@ -22,7 +22,6 @@ import {
 import { livemap_link_contract_suites } from "../../suites/livemap/link-contract-suite";
 import { livemap_suites_bridge } from "../../suites/livemap/bridge-suite";
 import { livemap_misc_suite } from "../../suites/livemap/misc-suite";
-import { livemap_path_handle_suite } from "../../suites/livemap/path-handle-suite";
 import { livemap_error_handling } from "../../suites/livemap/error-handling-suite";
 import { livemap_suite_rev } from "../../suites/livemap/rev-suite";
 import { livemap_suite_replay } from "../../suites/livemap/replay-suite";
@@ -33,20 +32,11 @@ import {
   livemap_projected_ingress_suite,
 } from "../../suites/livemap/projected-ingress-suite";
 import { livemap_projected_equality_suite } from "../../suites/livemap/projected-equality-suite";
-import { livemap_carrier_mutation_planning_suite } from "../../suites/livemap/carrier-mutation-planning-suite";
-import { livemap_exact_transport_suite } from "../../suites/livemap/exact-transport-suite";
-import { livemap_exact_transport_rejection_suite } from "../../suites/livemap/exact-transport-rejection-suite";
-import { livemap_exact_propagation_suite } from "../../suites/livemap/exact-propagation-suite";
-import { livemap_schema_value_boundary_suite } from "../../suites/livemap/schema-value-boundary-suite";
 import { livemap_ordered_object_array_helpers_suite } from "../../suites/livemap/ordered-object-array-helpers-suite";
 import { livemap_equivalence_mutation_matrix_suite } from "../../suites/livemap/equivalence-mutation-matrix-suite";
 import { livemap_equivalence_schema_helper_matrix_suite } from "../../suites/livemap/equivalence-schema-helper-matrix-suite";
 import { livemap_equivalence_transport_propagation_suite } from "../../suites/livemap/equivalence-transport-propagation-suite";
 import { livemap_equivalence_rejection_isolation_suite } from "../../suites/livemap/equivalence-rejection-isolation-suite";
-import {
-  transform_quoted_name_acceptance_suite,
-  transform_quoted_name_rejection_suite,
-} from "../../suites/transform/quoted-name-suites";
 import { parsing_verification_coordinator_suite } from "../../suites/transform/parsing-verification-coordinator-suite";
 
 const DEV_SUITES = new Set(["livemap/rev"]);
@@ -112,25 +102,17 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_link_contract_suites(),
     livemap_suites_bridge(),
     livemap_misc_suite(),
-    livemap_path_handle_suite(),
     livemap_error_handling(),
     livemap_suite_rev(),
     livemap_suite_replay(),
     livemap_projected_ingress_suite(),
     livemap_projected_ingress_rejection_suite(),
     livemap_projected_equality_suite(),
-    livemap_carrier_mutation_planning_suite(),
-    livemap_exact_transport_suite(),
-    livemap_exact_transport_rejection_suite(),
-    livemap_exact_propagation_suite(),
-    livemap_schema_value_boundary_suite(),
     livemap_ordered_object_array_helpers_suite(),
     livemap_equivalence_mutation_matrix_suite(),
     livemap_equivalence_schema_helper_matrix_suite(),
     livemap_equivalence_transport_propagation_suite(),
     livemap_equivalence_rejection_isolation_suite(),
-    transform_quoted_name_acceptance_suite(),
-    transform_quoted_name_rejection_suite(),
     parsing_verification_coordinator_suite(),
     ...all_livehost_suites(),
     ...all_towl_suites(),

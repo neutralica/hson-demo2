@@ -9,14 +9,16 @@ import {
   type TestExecutorDiscovery,
 } from "../../../src/shared/testing/test-discovery-contract";
 import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
+import type { TestSuiteDescriptor } from "../../../src/shared/testing/test-contracts";
 
 export function make_test_executor_discovery(
   registry: TestExecutorRegistry,
-  externalTargets: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  launcherBindings: readonly ExternalLibraryLauncherTarget[] = Object.freeze([]),
+  additionalSuites: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): TestExecutorDiscovery {
   const catalog = make_test_catalog(
     registry.catalog.tests,
-    [...registry.catalog.suites, ...externalTargets.map(external_launcher_suite_descriptor)],
+    [...registry.catalog.suites, ...launcherBindings.map(external_launcher_suite_descriptor), ...additionalSuites],
   );
   return Object.freeze({
     executor: Object.freeze({
@@ -26,6 +28,5 @@ export function make_test_executor_discovery(
     protocolVersion: TEST_EXECUTOR_PROTOCOL_VERSION,
     catalogVersion: test_catalog_version(catalog),
     catalog,
-    externalTargets: Object.freeze([...externalTargets]),
   });
 }

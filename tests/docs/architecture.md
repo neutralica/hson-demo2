@@ -52,9 +52,9 @@ order do not alter the fingerprint.
 
 ## Exact selection
 
-`tests.runSelected` accepts only stable test IDs advertised by the active
-executor. It rejects malformed, duplicate, unknown, and executor-unavailable
-IDs before constructing a report. Selection size is bounded by the active
+`tests.runSelected` accepts only exact `selectionIds` advertised by the active
+executor. It deduplicates repeated identities in first-seen order and rejects
+malformed, unknown, and executor-unavailable IDs before constructing a report. Selection size is bounded by the active
 catalog size; general LiveHost payload limits protect incoming JSON.
 
 IDs are resolved directly through the executor registry. They are never
@@ -84,9 +84,13 @@ Portable JavaScript cannot attribute arbitrary detached asynchronous work to a
 case without a scoped runtime mechanism. Test bodies must therefore return or
 await every asynchronous operation that contributes to their result.
 
-## Node execution contexts
+## Node execution contexts and command assignment
 
-The Node LiveHost advertises `javascript`, `node`, and `synthetic-dom`.
+The Node LiveHost is the generalist executor. It advertises its actual
+JavaScript, Node, process, worker-thread, filesystem, synthetic DOM/canvas,
+WebSocket/network, local-server, build/compiler, and dynamic-generated
+capabilities. Descriptors are assigned by capability set inclusion; semantic
+identity and catalog order do not depend on executor identity.
 
 - Ordinary suites run while holding a shared guard that guarantees temporary DOM
   globals are absent.
@@ -101,6 +105,12 @@ The DOM runtime resets the document per suite and geometry and canvas state per
 case. Setup and teardown restore every installed global and patched prototype,
 including failure paths. No separate canvas execution context or public canvas
 capability is needed.
+
+Opaque hson-live launchers and independent Node command certifications use one
+general supervised-process service with bounded concurrency/output, process-
+group termination, cancellation, and normalized terminal evidence. Command
+entrypoints that repeat already-hosted cases/checks are descriptive semantic
+aliases and are not executed twice.
 
 Some original factories keep mutable closure state. The hosted Node boundary
 therefore reconstructs original suites for each selected request, then verifies
@@ -129,10 +139,10 @@ presentation. Its primary taxonomy is:
 ```text
 All discovered tests
 Transform
-LiveMap
-Reflect
 LiveTree
+LiveMap
 LiveHost
+Reflect
 Unit
 Dev
 ```
@@ -143,9 +153,9 @@ either the entire suite or one exact case. Changing suites clears stale case
 selection.
 
 Discovery failure is an error, not an empty catalog and not a reason to silently
-fall back to hard-coded legacy routes. Existing legacy actions and launchers
-remain compatibility surfaces for other clients, but they are not panel
-authority.
+fall back to hard-coded routes. The only surviving adapter is the hson-live
+launcher manifest boundary: Node normalizes its entries into canonical opaque
+suite descriptors and resolves execution from each accepted `sourceRef`.
 
 ## Reports and Worker boundary
 
@@ -161,8 +171,8 @@ before report construction.
 
 ## External environments
 
-The canonical Node catalog is complete for the execution semantics currently
-provided. Real browser rendering, raster pixels, real WebSocket servers,
-filesystem/process/build commands, standalone adapters without suite factories,
-and manual visual demonstrations remain distinct future or manual boundaries.
-See `pending-test-environments.md` for the concrete inventory.
+The Node catalog plus aggregate descriptors is complete for current nonbrowser
+execution semantics. Real browser rendering and raster pixels remain the Phase
+6B executor boundary. Cloudflare Worker execution remains an optional
+portability target only. See `pending-environments.md` and
+`phase-6a-node-mothership.md` for the concrete inventories.

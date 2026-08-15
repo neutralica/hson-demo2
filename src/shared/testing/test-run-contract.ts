@@ -37,7 +37,7 @@ export type TestRunPlan = Readonly<{
 
 /** LiveHost's JSON action constraint spells wire arrays as mutable arrays. */
 export type RunSelectedTestsRequest = Readonly<{
-  testIds: string[];
+  selectionIds: string[];
 }>;
 
 export type RunSelectedTestsDecodeResult =
@@ -53,31 +53,26 @@ export function is_canonical_test_id(value: unknown): value is string {
 }
 
 export function decode_run_selected_tests_request(value: unknown): RunSelectedTestsDecodeResult {
-  if (!is_record(value) || Object.keys(value).length !== 1 || !Array.isArray(value.testIds)) {
-    return Object.freeze({ ok: false, issues: Object.freeze(["tests.runSelected requires exactly one testIds array."]) });
+  if (!is_record(value) || Object.keys(value).length !== 1 || !Array.isArray(value.selectionIds)) {
+    return Object.freeze({ ok: false, issues: Object.freeze(["tests.runSelected requires exactly one selectionIds array."]) });
   }
-  if (value.testIds.length === 0) {
+  if (value.selectionIds.length === 0) {
     return Object.freeze({ ok: false, issues: Object.freeze(["tests.runSelected requires at least one test ID."]) });
   }
-  const testIds: string[] = [];
+  const selectionIds: string[] = [];
   const seen = new Set<string>();
-  for (let index = 0; index < value.testIds.length; index += 1) {
-    const testId = value.testIds[index];
-    if (!is_canonical_test_id(testId)) {
+  for (let index = 0; index < value.selectionIds.length; index += 1) {
+    const selectionId = value.selectionIds[index];
+    if (!is_canonical_test_id(selectionId)) {
       return Object.freeze({
         ok: false,
-        issues: Object.freeze([`tests.runSelected testIds[${index}] must be a canonical case or opaque-suite ID.`]),
+        issues: Object.freeze([`tests.runSelected selectionIds[${index}] must be a canonical case or opaque-suite ID.`]),
       });
     }
-    if (seen.has(testId)) {
-      return Object.freeze({
-        ok: false,
-        issues: Object.freeze([`tests.runSelected contains duplicate test ID "${testId}".`]),
-      });
-    }
-    seen.add(testId);
-    testIds.push(testId);
+    if (seen.has(selectionId)) continue;
+    seen.add(selectionId);
+    selectionIds.push(selectionId);
   }
-  Object.freeze(testIds);
-  return Object.freeze({ ok: true, value: Object.freeze({ testIds }) });
+  Object.freeze(selectionIds);
+  return Object.freeze({ ok: true, value: Object.freeze({ selectionIds }) });
 }

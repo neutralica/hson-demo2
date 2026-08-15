@@ -1,20 +1,26 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HOSTED_TEST_SUITE_IDS, HOSTED_TEST_VISIBLE_SUITES } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import {
   DECLARED_DEMO_TEST_SCRIPTS,
   HSON_LIVE_NON_LAUNCHER_TEST_SCRIPT_REASONS,
   TEST_SURFACE_CATALOG,
   TEST_SURFACE_CATEGORIES,
 } from "../../harness/hosted/test-surface-catalog";
-import { make_registered_hosted_test_suite_registry } from "../../harness/hosted/registered-hosted-test-suites";
-import { CANONICAL_TEST_SUBJECT_ORDER } from "../../../src/shared/testing/test-contracts";
+import {
+  BROWSER_SPEC_PATHS,
+  PHASE5_DUPLICATE_RETIREMENTS,
+  TEST_CENSUS_CAPABILITIES,
+  build_test_surface_census,
+  test_census_denominators,
+  type BrowserSurfaceInventory,
+} from "../../harness/hosted/test-surface-census";
 import {
   HSON_LIVE_TEST_COMPLETION_REQUIREMENT,
   hson_live_non_launcher_test_scripts,
   hson_live_test_launchers,
 } from "hson-live/test-launchers";
+import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 
 function expect_surface(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`test surface enumeration: ${message}`);
@@ -34,22 +40,31 @@ for (const name of demoTests) {
   );
   expect_surface(entries.length === 1, `package script ${name} must have exactly one command classification`);
 }
-expect_surface(
-  HOSTED_TEST_VISIBLE_SUITES.map((entry) => `${entry.label}:${entry.id}`).join("|")
-    === [
-      "all:hosted/all",
-      ...CANONICAL_TEST_SUBJECT_ORDER
-        .map((subject) => `${subject}:category/${subject}`),
-      "unit:category/unit",
-      "dev:category/dev",
-    ].join("|"),
-  "hosted selector must retain the eight centrally ordered lowercase runnable choices",
-);
-
+for (const name of ["build", "check", "build:node-production", "check:cloudflare", "cloudflare:types", "diagnose:towl-deployed", "measure:circuit-worker"] as const) {
+  expect_surface(demoPackage.scripts[name] !== undefined, `classified hson-demo2 verification command ${name} is missing from package.json`);
+  expect_surface(
+    TEST_SURFACE_CATALOG.filter((entry) => entry.repository === "hson-demo2" && entry.runner === `npm run ${name}`).length === 1,
+    `hson-demo2 verification command ${name} must have exactly one census owner`,
+  );
+}
 const liveDeclared = new Set(TEST_SURFACE_CATALOG.filter((entry) => entry.repository === "hson-live").map((entry) => entry.runner.slice("npm run ".length)));
-for (const name of ["build", "check", ...Object.keys(livePackage.scripts).filter((entry) => entry.startsWith("test:"))]) {
+for (const name of ["build", "check", "check:source", "check:tests", "check:entrypoints", "corpus:review", "livemap:operators:review", ...Object.keys(livePackage.scripts).filter((entry) => entry.startsWith("test:"))]) {
   expect_surface(liveDeclared.has(name), `hson-live runner ${name} is missing from the catalog`);
 }
+const liveScriptEntrypoints = new Set(Object.values(livePackage.scripts).flatMap((command) => {
+  const match = command.match(/\b(tests\/[^ ]+\.(?:mts|mjs|ts))\b/);
+  return match?.[1] === undefined ? [] : [match[1]];
+}));
+const liveTestSources = await sourceFiles(resolve(liveRoot, "tests"));
+const liveRunnableEntrypoints = liveTestSources
+  .map((path) => relative(liveRoot, path))
+  .filter((path) => path.endsWith(".acceptance.mts")
+    || path.endsWith(".acceptance.mjs")
+    || path.endsWith("generate-review-artifact.mts"));
+expect_surface(
+  liveRunnableEntrypoints.every((path) => liveScriptEntrypoints.has(path)),
+  `hson-live runnable files lack package-script ownership: ${liveRunnableEntrypoints.filter((path) => !liveScriptEntrypoints.has(path)).join(", ")}`,
+);
 
 const declaredEntrypoints = new Set(Object.values(demoPackage.scripts).flatMap((command) => {
   const match = command.match(/(?:tsx|node\s+[^ ]+)\s+((?:src|tests)\/[^ ]+\.(?:mts|ts))/);
@@ -75,6 +90,17 @@ const browserFixtureRoot = resolve(demoRoot, "tests/fixtures/browser");
 const browserSources = await sourceFiles(browserRoot);
 const browserSpecs = browserSources.filter((path) => path.endsWith(".spec.ts"));
 expect_surface(browserSpecs.length > 0, "the test:browser aggregate must own at least one browser journey spec");
+const browserSpecPaths = browserSpecs.map((path) => relative(demoRoot, path)).sort();
+expect_surface(
+  JSON.stringify(browserSpecPaths) === JSON.stringify([...BROWSER_SPEC_PATHS].sort()),
+  `browser spec census differs: source ${browserSpecPaths.join(", ")}; census ${BROWSER_SPEC_PATHS.join(", ")}`,
+);
+const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freeze(await Promise.all(browserSpecs.map(async (path) => {
+  const source = await readFile(path, "utf8");
+  const cases = [...source.matchAll(/^\s*test(?:\.(?:skip|fixme|only))?\s*\(/gm)].length;
+  expect_surface(cases > 0, `browser spec ${relative(demoRoot, path)} declares no Playwright journeys`);
+  return Object.freeze({ path: relative(demoRoot, path) as BrowserSurfaceInventory["path"], cases });
+})));
 expect_surface(TEST_SURFACE_CATALOG.some((entry) => entry.runner === "npm run test:browser" && entry.category === "Application / Demo"), "browser aggregate is missing its application/demo catalog owner");
 expect_surface(TEST_SURFACE_CATALOG.filter((entry) => entry.runner.startsWith("npm run test:browser")).every((entry) => !entry.appearsInHostedUi), "browser commands must remain outside the Hosted Tests UI");
 expect_surface(TEST_SURFACE_CATALOG.find((entry) => entry.id === "hson-demo2:test:amoebi-geometry")?.category === "Application / Demo", "Amoebi geometry must be owned by Application / Demo");
@@ -106,7 +132,6 @@ for (const name of await readdir(browserFixtureRoot)) {
     if (match[1] !== undefined) roots.push(resolve(demoRoot, match[1]));
   }
 }
-roots.push(resolve(demoRoot, "tests/harness/hosted/registered-hosted-test-suites.ts"));
 roots.push(resolve(demoRoot, "tests/harness/index.ts"));
 roots.push(resolve(demoRoot, "tests/harness/runtimes/cloudflare/worker.ts"));
 roots.push(resolve(demoRoot, "tests/harness/runtimes/node/server/hosted-test-server-production-entry.node.ts"));
@@ -127,11 +152,6 @@ const testSources = await sourceFiles(resolve(demoRoot, "tests"));
 const approvedPersistentSources = testSources;
 const unreachable = approvedPersistentSources.filter((path) => !reachable.has(path));
 expect_surface(unreachable.length === 0, `test source files are unreachable from declared runners or the hosted factory: ${unreachable.map((path) => relative(demoRoot, path)).join(", ")}`);
-
-const registered = make_registered_hosted_test_suite_registry().list().map((entry) => entry.id).sort();
-expect_surface(JSON.stringify(registered) === JSON.stringify([...HOSTED_TEST_SUITE_IDS].sort()), "registered hosted suites and declared suite IDs differ");
-const catalogSuites = TEST_SURFACE_CATALOG.flatMap((entry) => entry.hostedSuiteId === undefined ? [] : [entry.hostedSuiteId]).sort();
-expect_surface(JSON.stringify(catalogSuites) === JSON.stringify([...HOSTED_TEST_SUITE_IDS].sort()), "every hosted suite must appear exactly once in the UI catalog");
 
 const ids = TEST_SURFACE_CATALOG.map((entry) => entry.id);
 expect_surface(new Set(ids).size === ids.length, "catalog IDs must be unique");
@@ -155,11 +175,19 @@ expect_surface(
   "canonical selectable suites cannot be mislabeled as aggregates or command-only checks",
 );
 for (const entry of TEST_SURFACE_CATALOG) {
+  if (!entry.path.includes("*") && !entry.path.includes("(") && !entry.path.startsWith("canonical suite ")) {
+    const root = entry.repository === "hson-live" ? liveRoot : demoRoot;
+    try {
+      expect_surface((await stat(resolve(root, entry.path))).isFile(), `catalog target ${entry.id} is not a file: ${entry.path}`);
+    } catch {
+      throw new Error(`test surface enumeration: catalog target ${entry.id} is missing: ${entry.path}`);
+    }
+  }
   if (entry.aliasOf === undefined) continue;
   expect_surface(entry.aliasOf !== entry.id && ids.includes(entry.aliasOf), `catalog alias ${entry.id} must name another catalog entry`);
 }
 const commandClaims = new Map<string, typeof TEST_SURFACE_CATALOG[number][]>();
-for (const entry of TEST_SURFACE_CATALOG.filter((candidate) => candidate.hostedSuiteId === undefined)) {
+for (const entry of TEST_SURFACE_CATALOG) {
   const key = `${entry.repository}:${entry.runner}`;
   const claims = commandClaims.get(key) ?? [];
   claims.push(entry);
@@ -284,8 +312,8 @@ expect_surface(
 expect_surface(
   TEST_SURFACE_CATALOG
     .filter((entry) => entry.role === "external diagnostic launcher")
-    .every((entry) => entry.hostedSuiteId === undefined),
-  "external launchers must not be duplicated as canonical hosted suites",
+    .every((entry) => entry.externalLauncher !== undefined),
+  "external launchers must be manifest-derived catalog entries",
 );
 const exactPolicies = new Map(TEST_SURFACE_CATALOG.map((entry) => [entry.id, entry]));
 expect_surface(
@@ -305,12 +333,75 @@ expect_surface(
   exactPolicies.get("hson-demo2:test:hosted-performance-node")?.exposure === "explicitly excluded",
   "the performance matrix must be explicitly excluded from ordinary hosted discovery",
 );
-const hostedAll = TEST_SURFACE_CATALOG.find((entry) => entry.id === "hosted-suite:hosted/all");
-expect_surface(hostedAll?.behavior.includes("deterministic") === true && hostedAll.behavior.includes("generated/fuzz") === true, "hosted/all must explicitly exclude separately-run generated/fuzz verification");
 
+const census = build_test_surface_census(browserSurfaceInventory);
+const censusIds = census.map((entry) => entry.id);
+expect_surface(new Set(censusIds).size === censusIds.length, "complete census identities must be unique");
+const capabilityVocabulary = new Set(TEST_CENSUS_CAPABILITIES);
+for (const entry of census) {
+  expect_surface(entry.id.length > 0 && entry.semanticSubject.length > 0 && entry.path.length > 0, `census entry ${entry.id} is missing identity, subject, or path`);
+  expect_surface(entry.currentExecutor.length > 0, `census entry ${entry.id} is missing its current executor`);
+  expect_surface(entry.requiredCapabilities.length > 0, `census entry ${entry.id} has no capability requirements`);
+  expect_surface(entry.requiredCapabilities.every((capability) => capabilityVocabulary.has(capability)), `census entry ${entry.id} uses an undeclared capability`);
+  expect_surface(entry.artifactEvidenceRequirements.length > 0, `census entry ${entry.id} has no evidence requirement`);
+  if (entry.currentDeployedLiveHostAvailability) {
+    expect_surface(entry.currentDeployedAvailability && entry.hostabilityClass === "hosted-deployed-now", `deployed LiveHost surface ${entry.id} has inconsistent hostability`);
+  } else if (entry.hostabilityClass !== "excluded-developer-utility") {
+    expect_surface((entry.reasonNotCurrentlyDeployed?.length ?? 0) > 0, `non-deployed census entry ${entry.id} needs an exact reason`);
+  }
+  if (entry.hostabilityClass === "blocked-external") {
+    expect_surface((entry.exactMissingCapability?.length ?? 0) > 0, `externally blocked surface ${entry.id} needs a concrete constraint`);
+  }
+}
+expect_surface(
+  census.filter((entry) => entry.executionShape === "browser spec").length === browserSpecs.length,
+  "every browser spec must have exactly one census entry",
+);
+const canonicalCensus = census.filter((entry) => entry.executionShape === "canonical suite");
+const localNodeCatalog = make_local_node_livehost_executor_registry().catalog;
+expect_surface(canonicalCensus.length === localNodeCatalog.suites.length, "every canonical Node suite must have exactly one census entry");
+expect_surface(
+  canonicalCensus.reduce((total, entry) => total + (entry.semanticCount ?? 0), 0) === localNodeCatalog.tests.length,
+  "canonical census case counts must derive from the executable Node catalog",
+);
+for (const retirement of PHASE5_DUPLICATE_RETIREMENTS) {
+  expect_surface(!localNodeCatalog.suites.some((suite) => suite.id === retirement.removedTestIdentity), `retired duplicate ${retirement.removedTestIdentity} remains canonical`);
+  expect_surface(hson_live_test_launchers.some((launcher) => launcher.id === retirement.retainedAuthoritativeIdentity), `retained duplicate owner ${retirement.retainedAuthoritativeIdentity} is not manifested`);
+}
+const denominators = test_census_denominators(census);
+const semanticChecks = denominators["canonical cases"] + denominators["opaque checks"];
+expect_surface(
+  denominators["opaque checks"] === hson_live_test_launchers.reduce((total, launcher) => total + launcher.executableChecks, 0),
+  "opaque denominator must derive exactly from manifested executable checks",
+);
+expect_surface(
+  census.filter((entry) => entry.executionShape === "browser spec").reduce((total, entry) => total + (entry.semanticCount ?? 0), 0)
+    === browserSurfaceInventory.reduce((total, surface) => total + surface.cases, 0),
+  "Playwright journey denominator must derive from current browser spec declarations",
+);
+expect_surface(
+  census.every((entry) => entry.hostabilityClass !== "blocked-external"),
+  "no current surface is genuinely externally blocked; executor requirements must not be exclusions",
+);
+const runnableSurfaces = census.filter((entry) => entry.verificationKind !== "developer utility").length;
+const hostability = Object.fromEntries([...new Set(census.map((entry) => entry.hostabilityClass))].sort().map((hostabilityClass) => [
+  hostabilityClass,
+  census.filter((entry) => entry.hostabilityClass === hostabilityClass).length,
+]));
 for (const category of TEST_SURFACE_CATEGORIES) {
   const entries = TEST_SURFACE_CATALOG.filter((entry) => entry.category === category);
   console.log(`${category}: ${entries.length}`);
   for (const entry of entries) console.log(`  ${entry.id} | ${entry.environment} | ${entry.transport} | ${entry.status}`);
 }
-console.log(`test surface enumeration: ok (${TEST_SURFACE_CATALOG.length} catalog entries, ${registered.length} hosted suites, ${demoTests.length} demo test scripts, ${approvedPersistentSources.length} reachable approved-root test source files)`);
+console.log(JSON.stringify({
+  runnableSurfaces,
+  catalogEntries: TEST_SURFACE_CATALOG.length,
+  demoTestScripts: demoTests.length,
+  reachableTestSources: approvedPersistentSources.length,
+  denominators,
+  semanticChecks,
+  retiredDuplicateSuites: PHASE5_DUPLICATE_RETIREMENTS.length,
+  retiredDuplicateCases: PHASE5_DUPLICATE_RETIREMENTS.reduce((total, entry) => total + entry.removedCanonicalCases, 0),
+  hostability,
+}));
+console.log("test surface enumeration: ok");

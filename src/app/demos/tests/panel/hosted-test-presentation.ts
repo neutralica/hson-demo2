@@ -7,7 +7,7 @@ export const HOSTED_TEST_PRESENTATION_GROUP_ORDER = Object.freeze([
   "transform", "livetree", "livemap", "livehost", "reflect", "unit", "dev",
 ] as const);
 
-export type HostedTestPresentationGroup = typeof HOSTED_TEST_PRESENTATION_GROUP_ORDER[number] | "other";
+export type HostedTestPresentationGroup = typeof HOSTED_TEST_PRESENTATION_GROUP_ORDER[number];
 
 const GROUP_LABELS: Readonly<Record<HostedTestPresentationGroup, string>> = Object.freeze({
   transform: "Transform",
@@ -17,7 +17,6 @@ const GROUP_LABELS: Readonly<Record<HostedTestPresentationGroup, string>> = Obje
   reflect: "Reflect",
   unit: "Unit",
   dev: "Dev",
-  other: "Other",
 });
 
 const FAILURE_LABELS = Object.freeze({
@@ -74,9 +73,10 @@ export function hosted_test_presentation_group(input: Readonly<{
 }>): HostedTestPresentationGroup {
   const collection = collection_group(input.collections);
   if (collection !== undefined) return collection;
-  return input.subject === "transform" || input.subject === "livetree" || input.subject === "livemap" || input.subject === "livehost" || input.subject === "reflect"
-    ? input.subject
-    : "other";
+  if (input.subject === "transform" || input.subject === "livetree" || input.subject === "livemap" || input.subject === "livehost" || input.subject === "reflect") {
+    return input.subject;
+  }
+  throw new Error(`Hosted suite subject "${input.subject}" requires explicit Unit or Dev collection metadata.`);
 }
 
 export function hosted_test_presentation_group_label(group: HostedTestPresentationGroup): string {
@@ -93,12 +93,14 @@ function terminal_extra(status: TestLifecycleStatus, unsupported: number, cancel
 
 export function hosted_test_suite_summary(suite: HostedTestSuiteRunReport): string {
   const counts = suite.counts;
-  const total = suite.executionShape === "opaque-aggregate"
+  const total = suite.executionShape !== "cases"
     ? (counts.total > 0 ? counts.total : counts.declared)
     : counts.total;
   const noun = suite.executionShape === "opaque-aggregate"
     ? total === 1 ? "check" : "checks"
-    : total === 1 ? "case" : "cases";
+    : suite.executionShape === "certification-aggregate"
+      ? total === 1 ? "certification" : "certifications"
+      : total === 1 ? "case" : "cases";
   return `${total} ${noun} · ${counts.passed} pass · ${counts.failed} fail`
     + (suite.executionShape === "cases" ? ` · ${counts.skipped} skip` : "")
     + terminal_extra(suite.status, counts.unsupported, counts.cancelled);
@@ -325,10 +327,12 @@ export function make_hosted_test_chronology(): HostedTestChronology {
         if (previous === undefined) {
           if (first && recovered) lines.push(`state ${suite.id} — ${suite.status} — ${hosted_test_suite_summary(suite)}`);
           else {
-            const total = suite.executionShape === "opaque-aggregate" ? suite.counts.declared : suite.counts.total;
+            const total = suite.executionShape !== "cases" ? suite.counts.declared : suite.counts.total;
             const noun = suite.executionShape === "opaque-aggregate"
               ? total === 1 ? "check" : "checks"
-              : total === 1 ? "case" : "cases";
+              : suite.executionShape === "certification-aggregate"
+                ? total === 1 ? "certification" : "certifications"
+                : total === 1 ? "case" : "cases";
             lines.push(`queued ${suite.id} — ${total} ${noun}`);
             if (suite.status === "running") append(suite.lastSequence, `running ${suite.id}`);
             else if (suite.status !== "queued") append(suite.lastSequence, terminal_line(suite));

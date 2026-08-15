@@ -1089,11 +1089,12 @@ export function extraCases(): readonly TestSuite[] {
       suite: SUITE,
       caseId: "css-manager-writes-separate-rules-per-node", name: "css manager writes separate rules per node",
       html: `
-      <main>
+      <main id="css-manager">
         <div id="a"></div>
         <div id="b"></div>
       </main>
     `,
+      dom: true,
       fixture: "css/scoping",
       sub: "multiple-nodes",
 
@@ -1109,22 +1110,14 @@ export function extraCases(): readonly TestSuite[] {
       },
 
       assert(tree, t) {
-        const host = document.querySelector("#css-manager") as HTMLElement | null;
-        if (!host) {
-          t.ok("DOM not mounted, skipping css check", true);
-          return;
-        }
-
-        const styleEl = host.querySelector("#_hson") as HTMLStyleElement | null;
-        const css = styleEl?.textContent ?? "";
+        const css = tree.css.devSnapshot();
 
         t.ok("opacity 0.3 present", css.includes("0.3"));
         t.ok("opacity 0.8 present", css.includes("0.8"));
       },
 
-      preview() {
-        const styleEl = document.querySelector("#_hson") as HTMLStyleElement | null;
-        return styleEl?.textContent?.slice(0, 200) ?? "<no css>";
+      preview(tree) {
+        return tree.css.devSnapshot().slice(0, 200);
       },
     },
 

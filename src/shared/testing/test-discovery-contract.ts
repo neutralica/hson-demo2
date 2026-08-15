@@ -13,7 +13,6 @@ import type {
   TestExecutorKind,
   TestExecutorLocation,
 } from "./test-executor-contract";
-import type { ExternalLibraryLauncherTarget } from "./external-launcher-contract";
 import { is_test_case_id, is_test_suite_id } from "./test-identity";
 
 export const TEST_EXECUTOR_PROTOCOL_VERSION = 3;
@@ -25,8 +24,6 @@ export type TestExecutorDiscovery = Readonly<{
   protocolVersion: number;
   catalogVersion: string;
   catalog: TestCatalog;
-  /** Transitional process-launch adapter; semantic suite truth is catalog.suites. */
-  externalTargets: readonly ExternalLibraryLauncherTarget[];
 }>;
 
 export type TestDecodeResult<T> =
@@ -34,16 +31,16 @@ export type TestDecodeResult<T> =
   | Readonly<{ ok: false; issues: readonly string[] }>;
 
 const CAPABILITIES: readonly TestCapability[] = Object.freeze([
-  "javascript", "node", "synthetic-dom", "browser-dom", "worker", "filesystem", "websocket",
+  "javascript", "node", "process", "worker-threads", "synthetic-dom", "synthetic-canvas",
+  "browser-dom", "browser", "chromium", "cloudflare-worker", "filesystem", "websocket",
+  "network", "local-server", "compiler/typescript", "build-tooling", "dynamic-generated",
+  "environment/secrets", "deployment-access",
 ]);
 const SUBJECTS: readonly TestSubject[] = TEST_SUBJECT_IDENTIFIERS;
 const COLLECTIONS: readonly TestCollection[] = Object.freeze(["unit", "dev"]);
 const PROVENANCES: readonly TestProvenance[] = Object.freeze(["hson-demo2", "hson-live"]);
 const EXECUTOR_KINDS: readonly TestExecutorKind[] = Object.freeze(["node", "cloudflare-worker", "browser"]);
 const EXECUTOR_LOCATIONS: readonly TestExecutorLocation[] = Object.freeze(["hosted", "local"]);
-const RUNTIMES = Object.freeze([
-  "node", "node-synthetic-dom", "node-real-websocket", "node-real-websocket-process",
-] as const);
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -126,7 +123,9 @@ function decode_suite_descriptor(value: unknown): TestSuiteDescriptor | undefine
     || typeof input.subject !== "string" || !SUBJECTS.includes(input.subject as TestSubject)
     || typeof input.provenance !== "string" || !PROVENANCES.includes(input.provenance as TestProvenance)
     || !non_negative_integer(input.order)
-    || (input.executionShape !== "cases" && input.executionShape !== "opaque-aggregate")
+    || (input.executionShape !== "cases"
+      && input.executionShape !== "opaque-aggregate"
+      && input.executionShape !== "certification-aggregate")
     || (input.sourceRef !== undefined && typeof input.sourceRef !== "string")
     || (input.declaredChecks !== undefined && (!non_negative_integer(input.declaredChecks) || input.declaredChecks < 1))
     || requirements === undefined || collections === undefined) return undefined;
@@ -170,43 +169,9 @@ function decode_executor(value: unknown): TestExecutorDescriptor | undefined {
   });
 }
 
-function decode_external_target(value: unknown): ExternalLibraryLauncherTarget | undefined {
-  const input = record(value);
-  if (input === undefined || !exact_keys(input, [
-    "id", "launcherId", "sourceRef", "subject", "displayName", "runtime", "executableChecks",
-    "collections", "tags", "requirements", "order",
-  ])) return undefined;
-  const collections = string_set(input.collections, COLLECTIONS);
-  const tags = Array.isArray(input.tags) && input.tags.every((tag) => typeof tag === "string")
-    ? Object.freeze([...input.tags] as string[]) : undefined;
-  const requirements = string_set(input.requirements, CAPABILITIES);
-  if (!is_test_suite_id(input.id)
-    || typeof input.launcherId !== "string" || !input.launcherId
-    || input.sourceRef !== `hson-live:${input.launcherId}`
-    || typeof input.subject !== "string" || !SUBJECTS.includes(input.subject as TestSubject)
-    || typeof input.displayName !== "string" || !input.displayName
-    || typeof input.runtime !== "string" || !RUNTIMES.includes(input.runtime as typeof RUNTIMES[number])
-    || !non_negative_integer(input.executableChecks) || input.executableChecks < 1
-    || !non_negative_integer(input.order)
-    || collections === undefined || tags === undefined || requirements === undefined) return undefined;
-  return Object.freeze({
-    id: input.id,
-    launcherId: input.launcherId,
-    sourceRef: input.sourceRef,
-    subject: input.subject as TestSubject,
-    displayName: input.displayName,
-    runtime: input.runtime as typeof RUNTIMES[number],
-    executableChecks: input.executableChecks,
-    collections,
-    tags,
-    requirements,
-    order: input.order,
-  });
-}
-
 export function decode_test_executor_discovery(value: unknown): TestDecodeResult<TestExecutorDiscovery> {
   const input = record(value);
-  if (input === undefined || !exact_keys(input, ["executor", "protocolVersion", "catalogVersion", "catalog", "externalTargets"])) {
+  if (input === undefined || !exact_keys(input, ["executor", "protocolVersion", "catalogVersion", "catalog"])) {
     return Object.freeze({ ok: false, issues: Object.freeze(["Invalid tests.discover result shape."]) });
   }
   const executor = decode_executor(input.executor);
@@ -215,13 +180,10 @@ export function decode_test_executor_discovery(value: unknown): TestDecodeResult
     && Array.isArray(catalogInput.suites) ? catalogInput.suites.map(decode_suite_descriptor) : undefined;
   const tests = catalogInput !== undefined && Array.isArray(catalogInput.tests)
     ? catalogInput.tests.map(decode_descriptor) : undefined;
-  const externalTargets = Array.isArray(input.externalTargets)
-    ? input.externalTargets.map(decode_external_target) : undefined;
   if (executor === undefined || input.protocolVersion !== TEST_EXECUTOR_PROTOCOL_VERSION
     || typeof input.catalogVersion !== "string" || !input.catalogVersion
     || suites === undefined || suites.some((descriptor) => descriptor === undefined)
-    || tests === undefined || tests.some((descriptor) => descriptor === undefined)
-    || externalTargets === undefined || externalTargets.some((target) => target === undefined)) {
+    || tests === undefined || tests.some((descriptor) => descriptor === undefined)) {
     return Object.freeze({ ok: false, issues: Object.freeze(["Invalid tests.discover result data."]) });
   }
   let catalog: TestCatalog;
@@ -245,7 +207,6 @@ export function decode_test_executor_discovery(value: unknown): TestDecodeResult
       protocolVersion: TEST_EXECUTOR_PROTOCOL_VERSION,
       catalogVersion: expectedVersion,
       catalog,
-      externalTargets: Object.freeze(externalTargets as ExternalLibraryLauncherTarget[]),
     }),
   });
 }

@@ -8,8 +8,8 @@ import {
   resolve_hosted_test_websocket_url,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../../src/shared/hosted-tests/hosted-test-application.types";
-import { make_hosted_test_suite_registry } from "../../harness/hosted/hosted-test-suite";
-import { run_test_suites } from "../../harness/core/test-runner";
+import { make_test_executor_registry } from "../../harness/core/test-executor";
+import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
 import { start_hosted_test_server, type HostedTestServer } from "../../harness/runtimes/node/server/hosted-test-server";
 import {
   hosted_test_server_bind_options,
@@ -85,17 +85,26 @@ expect_deployment(
 );
 unsupportedRuntime.dispose();
 
-const registry = make_hosted_test_suite_registry([{
-  id: "livemap/replay",
-  label: "deployment routing fixture",
-  run(onEvent = () => undefined, options = {}) {
-    return run_test_suites([{
-      suite: "hosted/deployment",
-      cases: [{ suite: "hosted/deployment", caseId: "routing-fixture", name: "routing fixture", run() {} }],
-    }], onEvent, options);
-  },
-}]);
-const server = await start_hosted_test_server({ port: 0, registry });
+const executorRegistry = make_test_executor_registry(Object.freeze({
+  id: "deployment-node",
+  kind: "node",
+  label: "Deployment fixture",
+  location: "hosted",
+  capabilities: Object.freeze({ provides: Object.freeze(["javascript", "node"] as const) }),
+  supportsStreaming: true,
+  supportsCancellation: true,
+}), Object.freeze([Object.freeze({
+  suite: "hosted/deployment",
+  descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node"] as const) }),
+  cases: Object.freeze([{ suite: "hosted/deployment", caseId: "routing-fixture", name: "routing fixture", run() {} }]),
+})]));
+const server = await start_hosted_test_server({
+  port: 0,
+  executorRegistry,
+  runSelected: (registry, selectionIds, onEvent = () => undefined, options = {}) => (
+    run_selected_test_ids(registry, selectionIds, onEvent, options)
+  ),
+});
 const publicBase = "wss://example.test/socket?token=public";
 const openedUrls: string[] = [];
 class RoutedWebSocket extends WebSocket {
@@ -117,7 +126,9 @@ const runtime = make_remote_hosted_test_runtime({
 });
 try {
   await runtime.ready();
-  const run = await runtime.start_run("livemap/replay");
+  const discovery = await runtime.discover();
+  const run = await runtime.start_selected([discovery.catalog.tests[0]!.id]);
+  await run.ready();
   await run.actionResult;
   const initialUrls = openedUrls.map((value) => new URL(value));
   expect_deployment(
@@ -130,7 +141,7 @@ try {
 
   server.disconnectConnections(HOSTED_TEST_COORDINATOR_HOST_ID);
   const deadline = Date.now() + 1_000;
-  while (openedUrls.length < 3 && Date.now() < deadline) {
+  while ((openedUrls.length < 3 || runtime.status !== "ready") && Date.now() < deadline) {
     await new Promise<void>((resolve) => setTimeout(resolve, 5));
   }
   const reconnectUrl = openedUrls[2] === undefined ? undefined : new URL(openedUrls[2]);
@@ -138,7 +149,8 @@ try {
     reconnectUrl?.origin === "wss://example.test"
       && reconnectUrl.pathname === "/socket"
       && reconnectUrl.searchParams.get("token") === "public"
-      && reconnectUrl.searchParams.get("livehost") === HOSTED_TEST_COORDINATOR_HOST_ID,
+      && reconnectUrl.searchParams.get("livehost") === HOSTED_TEST_COORDINATOR_HOST_ID
+      && runtime.status === "ready",
     "coordinator reconnect reuses the configured base endpoint",
   );
   run.dispose();

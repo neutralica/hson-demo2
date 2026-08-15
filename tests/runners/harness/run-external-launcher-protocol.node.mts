@@ -45,9 +45,15 @@ function fixture_availability(
 async function run(
   scenario: string,
   timeoutMs = 5_000,
+  signal?: AbortSignal,
+  observeStdoutChunk?: (text: string) => void,
 ): Promise<Readonly<{ result: ExternalLibraryLauncherResult; activeChildren: number }>> {
   const service = create_external_library_launcher_service();
-  const result = await service.run(fixture_availability(target, scenario), target.id, { timeoutMs });
+  const result = await service.run(fixture_availability(target, scenario), target.id, {
+    timeoutMs,
+    ...(signal === undefined ? {} : { signal }),
+    ...(observeStdoutChunk === undefined ? {} : { observeStdoutChunk }),
+  });
   return Object.freeze({ result, activeChildren: service.metrics().activeChildren });
 }
 
@@ -98,9 +104,12 @@ assert.equal(graceful.result.forceKilled, undefined);
 assert.equal(graceful.activeChildren, 0, "gracefully terminated child closes");
 
 const resistantStarted = performance.now();
-const resistant = await run("resistant-timeout", 20);
-assert.equal(resistant.result.ok, false, "SIGTERM-resistant timeout fails");
-assert.equal(resistant.result.timedOut, true);
+const resistantAbort = new AbortController();
+const resistant = await run("resistant-timeout", 5_000, resistantAbort.signal, (text) => {
+  if (text.includes("ready")) resistantAbort.abort();
+});
+assert.equal(resistant.result.ok, false, "SIGTERM-resistant cancellation fails");
+assert.equal(resistant.result.cancelled, true);
 assert.equal(resistant.result.forceKilled, true);
 assert.equal(resistant.result.signal, "SIGKILL");
 assert.equal(resistant.activeChildren, 0, "force-killed child closes");

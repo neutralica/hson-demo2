@@ -85,11 +85,11 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/hosted-test/dom/hosted-dom-runtime.ts` | runtime adapter | `tests/harness/runtimes/dom/hosted-dom-runtime.ts` |
 | `src/hosted-test/dom/jsdom-hosted-test-suites.ts` | runtime adapter | `tests/harness/runtimes/dom/jsdom-hosted-test-suites.ts` |
 | `src/hosted-test/dom/jsdom.types.d.ts` | runtime adapter | `tests/harness/runtimes/dom/jsdom.types.d.ts` |
-| `src/hosted-test/final-harness-migration-inventory.ts` | harness core | `tests/harness/hosted/final-harness-migration-inventory.ts` |
+| `src/hosted-test/final-harness-migration-inventory.ts` | historical migration ledger | retired in Phase 5; current truth derives from `test-surface-census.ts` |
 | `src/hosted-test/hosted-all-test-suites.ts` | harness core | `tests/harness/hosted/hosted-all-test-suites.ts` |
 | `src/hosted-test/hosted-test-application.ts` | harness core | `tests/harness/hosted/hosted-test-application.ts` |
 | `src/hosted-test/hosted-test-case-inspection.ts` | harness core | `tests/harness/hosted/hosted-test-case-inspection.ts` |
-| `src/hosted-test/hosted-test-migration-inventory.ts` | harness core | `tests/harness/hosted/hosted-test-migration-inventory.ts` |
+| `src/hosted-test/hosted-test-migration-inventory.ts` | historical migration ledger | retired in Phase 5; current truth derives from `test-surface-census.ts` |
 | `src/hosted-test/livehost-authority-composition.ts` | harness core | `tests/harness/hosted/livehost-authority-composition.ts` |
 | `src/hosted-test/node-safe-hosted-test-suites.ts` | harness core | `tests/harness/hosted/node-safe-hosted-test-suites.ts` |
 | `src/hosted-test/registered-hosted-test-suites.ts` | harness core | `tests/harness/hosted/registered-hosted-test-suites.ts` |
@@ -224,7 +224,7 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/livemap-tests/link-contract-suite.ts` | suite definition | `tests/suites/livemap/link-contract-suite.ts` |
 | `src/tests/livemap-tests/link-suite.ts` | suite definition | `tests/suites/livemap/link-suite.ts` |
 | `src/tests/livemap-tests/misc-suite.ts` | suite definition | `tests/suites/livemap/misc-suite.ts` |
-| `src/tests/livemap-tests/path-handle-suite.ts` | suite definition | `tests/suites/livemap/path-handle-suite.ts` |
+| `src/tests/livemap-tests/path-handle-suite.ts` | suite definition | retired in Phase 5; authoritative owner is hson-live launcher `livemap.path-handle` |
 | `src/tests/livemap-tests/path-suite.ts` | suite definition | `tests/suites/livemap/path-suite.ts` |
 | `src/tests/livemap-tests/proxy-suite.ts` | suite definition | `tests/suites/livemap/proxy-suite.ts` |
 | `src/tests/livemap-tests/replay-suite.ts` | suite definition | `tests/suites/livemap/replay-suite.ts` |

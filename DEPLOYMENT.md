@@ -15,8 +15,8 @@ Consequently, the checked-in deployment model requires two services:
 2. a WebSocket-capable host running either the complete hosted-test Node
    process or the bounded Cloudflare Durable Object adapter.
 
-The repository also contains a Cloudflare Workers + Durable Objects
-proof-of-deployment option. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
+The repository also contains an optional Cloudflare Workers + Durable Objects
+portability proof. See [CLOUDFLARE.md](./CLOUDFLARE.md). It is
 explicitly non-hibernating and currently exposes only the Worker-compatible
 suite subset documented there; the conventional Node service remains the
 complete hosted-test deployment.
@@ -222,10 +222,13 @@ Hosted-test durations use the monotonic `performance.now()` clock:
 The reproducible performance probe is:
 
 ```sh
-npm run test:hosted-performance-node -- --repeats=3 --policies=fixed:1,fixed:2 --invocation=tsx
+npm run test:hosted-performance-node -- --repeats=1 --policies=fixed:2 --invocation=verified
 ```
 
-Each sample runs the same 2,605-case inclusive selection in a fresh Node
-process. The matrix driver reports phase medians, inclusive median and range,
+The representative production-mode sample derives the current canonical-case
+and opaque-check selection in a fresh Node process. Increase repeats or add
+policies for comparative tuning; `tsx` remains an optional source-loader
+comparison rather than the production baseline. The matrix driver reports the
+two denominators separately, phase medians, inclusive median and range,
 observed concurrency, launcher starts, and pass/fail totals. Timing values are
 diagnostic measurements, not correctness thresholds.

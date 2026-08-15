@@ -16,9 +16,9 @@ function runtime_for(suite: TestSuite): SelectedRuntime {
 
 export function plan_node_selected_test_suites(
   registry: TestExecutorRegistry,
-  testIds: readonly string[],
+  selectionIds: readonly string[],
 ): readonly SelectedGroup[] {
-  const suites = selected_test_suites(registry, testIds);
+  const suites = selected_test_suites(registry, selectionIds);
   const groups: { runtime: SelectedRuntime; suites: TestSuite[] }[] = [];
   for (const suite of suites) {
     const runtime = runtime_for(suite);
@@ -48,13 +48,13 @@ function combine(results: readonly RunResult[], startedAt: number): RunResult {
 
 export async function run_node_selected_test_ids(
   registry: TestExecutorRegistry,
-  testIds: readonly string[],
+  selectionIds: readonly string[],
   onEvent: (event: TestEvent) => void = () => undefined,
   options: RunOptions = {},
 ): Promise<RunResult> {
   const startedAt = performance.now();
   const results: RunResult[] = [];
-  for (const group of plan_node_selected_test_suites(registry, testIds)) {
+  for (const group of plan_node_selected_test_suites(registry, selectionIds)) {
     if (group.runtime === "node") {
       results.push(await with_hosted_node_globals(() => run_test_suites(group.suites, onEvent, options)));
       continue;
@@ -82,7 +82,7 @@ export async function run_node_selected_test_ids(
 
 export async function run_fresh_node_selected_test_ids(
   advertisedRegistry: TestExecutorRegistry,
-  testIds: readonly string[],
+  selectionIds: readonly string[],
   onEvent: (event: TestEvent) => void = () => undefined,
   options: RunOptions = {},
 ): Promise<RunResult> {
@@ -97,5 +97,5 @@ export async function run_fresh_node_selected_test_ids(
   ) {
     throw new Error("HOSTED_TEST_EXECUTOR_CONFIGURATION_INVALID: fresh Node registry differs from advertised catalog");
   }
-  return run_node_selected_test_ids(registry, testIds, onEvent, options);
+  return run_node_selected_test_ids(registry, selectionIds, onEvent, options);
 }

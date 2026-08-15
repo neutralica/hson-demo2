@@ -1,19 +1,9 @@
 import type { LiveMap, LiveMapCommit } from "hson-live/livemap";
 import type { JsonValue } from "hson-live/types";
-import type { HostedTestRunTarget } from "./hosted-test-suite-contract";
 import type { TestCollection, TestExecutionShape, TestProvenance, TestSubject } from "../testing/test-contracts";
 import type { TestErrorKind, TestLifecycleCounts, TestLifecycleStatus } from "../testing/test-lifecycle-contract";
 
 export type HostedTestReportStatus = "idle" | "running" | "passed" | "failed" | "cancelled" | "error";
-
-export type HostedTestCaseReport = Readonly<{
-  key: string;
-  suite: string;
-  caseId: string; name: string;
-  status: "pass" | "fail" | "skip";
-  ms: number;
-  err: string | null;
-}>;
 
 export type HostedTestInfrastructureError = Readonly<{
   kind: TestErrorKind;
@@ -87,8 +77,8 @@ export type HostedTestSuiteRunReport = Readonly<{
 
 export type HostedTestReport = Readonly<{
   run: Readonly<{
-    id?: string;
-    suite: HostedTestRunTarget;
+    id: string;
+    suite: "canonical/selected";
     status: HostedTestReportStatus;
     startedAt: number | null;
     completedAt: number | null;
@@ -107,27 +97,8 @@ export type HostedTestReport = Readonly<{
     catalogVersion: string;
     executorId: string;
     selectionIds: readonly string[];
-  }> | null;
+  }>;
   suiteRuns: readonly HostedTestSuiteRunReport[];
-  caseBatches: Readonly<Record<string, readonly HostedTestCaseReport[]>>;
-  suites: readonly Readonly<{ suite: string; ms: number }>[];
-  externalResults: Readonly<Record<string, Readonly<{
-    id: string;
-    suite: string;
-    name: string;
-    subject: string;
-    runtime: string;
-    executableChecks: number;
-    collections: readonly string[];
-    status: "queued" | "running" | "pass" | "fail" | "cancelled";
-    ms: number;
-    stdout: string;
-    stderr: string;
-    exitCode: number | null;
-    signal: string | null;
-    timedOut: boolean;
-    spawnError: string | null;
-  }>>>;
   error: HostedTestInfrastructureError | null;
 }>;
 
@@ -138,6 +109,6 @@ export type HostedTestReportMap = LiveMap<HostedTestReport>;
 
 export type HostedTestReportCommit = LiveMapCommit;
 
-export function hosted_test_report_cases(report: HostedTestReport): readonly HostedTestCaseReport[] {
-  return Object.freeze(Object.keys(report.caseBatches).sort().flatMap((key) => report.caseBatches[key] ?? []));
+export function hosted_test_report_cases(report: HostedTestReport): readonly HostedTestPlannedCaseReport[] {
+  return Object.freeze(report.suiteRuns.flatMap((suite) => suite.cases));
 }

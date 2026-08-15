@@ -32,7 +32,7 @@ export const jsonHtml = hson.fromJson(jsonStub).toHtml().serialize();
 
 export const SLIDES: readonly DeckSlideConfig[] = [
   {
-    headerA: "view === state",
+    headerA: "view == state",
     // headerB: "hson-live / LiveTree",
     // headerC: "LiveTree",
     stackAlign: "center",
@@ -80,13 +80,21 @@ Uniting two non-interchangeable building blocks of the web suggests new ways of 
     bodyA: {
       kind: "text",
       text: `
-hson-live is a Typescript library with two core components:
+hson-live is a Typescript library built on HSON
 #__#
 ### hson.transform
-converts JSON and HTML data to and from HSON
+converts JSON and XML/HTML/SVG to and from HSON
 #__#
 ### hson.liveTree
-a web authoring interface built on HSON
+a "live" web-authoring and rendering interface
+#__#
+### hson.liveMap
+typed, canonical application state machine with bindings to LiveTree
+#__#
+### hson.liveHost
+server-side authority, coordination, history, and recovery
+
+Reflection connects authoritative LiveMap document state to LiveTree when the same graph needs to become an interface.
 `,
     },
     footer: "about / hson-live",
@@ -255,9 +263,12 @@ JSON-derived HSON object values use an angle closer:
     bodyA: {
       kind: "text",
       text: `
-### markup + state + styling: a single source of truth
-LiveTree is a live web-authoring interface built on HSON. Web content is stored as a HSON node graph, serialized to html, and projected to the DOM. Mutations are made to the underlying node graph and reflected to the DOM in realtime.
+### markup + styling + interaction in one live graph
+LiveTree is a live web-authoring interface built on HSON. Web content is represented as a HSON node graph and projected to the DOM. Mutations to the live graph are reflected to the DOM in realtime.
+
 LiveTree's chainable API brings markup, CSS, events, SVG, canvas, forms, input, and DOM traversal together in a low-friction typed interface.
+
+Used alone, that graph can act as local application state. When integrated with LiveMap, LiveTree becomes a projection of canonical authority.
 `,
     },
     footer: "livetree / about",
@@ -300,7 +311,7 @@ const button = hson.queryBody()                    // Query document.body, deep-
     },
     footer: "livetree features",
   },
-  {
+    {
     headerA: "LiveDemo",
     bodyB: {
       kind: "text",
@@ -308,7 +319,10 @@ const button = hson.queryBody()                    // Query document.body, deep-
 ### the first site made entirely with hson-live:
 ### www.terminalgothic.com
 
-LiveDemo is a test and development environment for hson-live. LiveDemo is a proof-of-concept and demonstration of the claims made here. LiveDemo provides a growing menu of interactive demos showcasing hson-live's capabilities. visitors may run the 1000+ system tests and verify the results for themselves.
+LiveDemo is a test and development environment for hson-live. It is both a test utility and a proof-of-concept demonstration.
+
+LiveDemo provides a growing collection of interactive applications showcasing hson-live's capabilities. Visitors can also run thousands of system tests and checks through the same public interface and inspect the results for themselves.
+
 LiveDemo is intentionally minimalist in styling.
       `,
     },

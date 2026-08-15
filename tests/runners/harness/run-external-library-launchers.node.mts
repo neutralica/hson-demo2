@@ -20,8 +20,6 @@ import {
   run_node_verification_phases,
 } from "../../harness/runtimes/node/run-node-selected-verifications";
 import {
-  EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES,
-  hosted_test_panel_external_category,
   hosted_test_panel_primary_choices,
   hosted_test_panel_selection_case_count,
   hosted_test_panel_selected_ids,
@@ -31,9 +29,11 @@ import {
 import { CANONICAL_TEST_SUBJECT_ORDER, TEST_SUBJECT_IDENTIFIERS } from "../../../src/shared/testing/test-contracts";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
+import { external_launcher_suite_descriptor } from "../../../src/shared/testing/external-launcher-contract";
 
 const all = process.argv.includes("--all");
 const availability = await resolve_external_library_launchers();
+const catalogSuites = Object.freeze(availability.targets.map(external_launcher_suite_descriptor));
 const manifestIds = hson_live_test_launchers.map((launcher) => launcher.id);
 const manifestCheckCount = hson_live_test_launchers.reduce(
   (total, launcher) => total + launcher.executableChecks,
@@ -98,7 +98,7 @@ assert.deepEqual(
 );
 const categoryTargets = new Map<string, typeof availability.targets>();
 for (const target of availability.targets) {
-  const category = hosted_test_panel_external_category(target);
+  const category = target.subject;
   categoryTargets.set(category, Object.freeze([...(categoryTargets.get(category) ?? []), target]));
 }
 assert.equal(
@@ -129,7 +129,7 @@ assert.equal(
 );
 
 const nodeRegistry = make_local_node_livehost_executor_registry();
-const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, availability.targets);
+const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, catalogSuites);
 assert.deepEqual(
   CANONICAL_TEST_SUBJECT_ORDER,
   ["transform", "livetree", "livemap", "livehost", "reflect"],
@@ -150,7 +150,7 @@ assert.deepEqual(
 assert.deepEqual(
   hosted_test_panel_primary_choices(
     [...nodeRegistry.catalog.tests].reverse(),
-    [...availability.targets].reverse(),
+    [...catalogSuites].reverse(),
   )
     .filter((choice) => choice.selection.kind === "subject")
     .map((choice) => choice.selection.kind === "subject" ? choice.selection.subject : undefined),
@@ -161,7 +161,7 @@ for (const choice of primary) {
   const count = hosted_test_panel_selection_case_count(
     nodeRegistry.catalog.tests,
     choice.selection,
-    availability.targets,
+    catalogSuites,
   );
   assert.equal(choice.label.endsWith(`(${count})`), true, `${choice.label} derives its current case count`);
 }
@@ -170,7 +170,7 @@ const allSelection = primary[0]!.selection;
 const allSelectedIds = hosted_test_panel_selected_ids(
   nodeRegistry.catalog.tests,
   allSelection,
-  availability.targets,
+  catalogSuites,
 );
 assert.equal(new Set(allSelectedIds).size, allSelectedIds.length, "inclusive all selects unique IDs");
 for (const target of availability.targets) {
@@ -180,7 +180,7 @@ assert.equal(
   hosted_test_panel_selection_case_count(
     nodeRegistry.catalog.tests,
     allSelection,
-    availability.targets,
+    catalogSuites,
   ),
   nodeRegistry.catalog.tests.length + manifestCheckCount,
   "complete selection derives canonical plus each manifested external check exactly once",
@@ -196,18 +196,6 @@ assert.equal(
   manifestCheckCount,
   "semantic subject buckets do not inflate the complete external total",
 );
-assert.equal(
-  new Set(EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.map((rule) => rule.launcherId)).size,
-  EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES.length,
-  "cross-subject projection rules have unique launcher IDs",
-);
-for (const rule of EXTERNAL_LIBRARY_PANEL_PROJECTION_RULES) {
-  const projected = availability.targets.find((target) => target.launcherId === rule.launcherId);
-  assert.ok(projected, `projection rule resolves manifested launcher ${rule.launcherId}`);
-  assert.equal(projected.subject, rule.primarySubject, `projection rule preserves ${rule.launcherId} primary subject`);
-  assert.equal(hosted_test_panel_external_category(projected), rule.projectedCategory);
-  assert.ok(rule.rationale.trim().length > 0, `projection rule ${rule.launcherId} explains its subject view`);
-}
 const transformSelection = primary.find(
   (choice) => choice.selection.kind === "subject"
     && choice.selection.subject === "transform",
@@ -227,7 +215,7 @@ assert.equal(
   hosted_test_panel_selection_case_count(
     nodeRegistry.catalog.tests,
     transformSelection,
-    availability.targets,
+    catalogSuites,
   ),
   transformCanonicalCount + transformExternalCount,
   "Transform total derives from canonical cases plus semantic external subjects",
@@ -236,12 +224,12 @@ const jsonIngressTarget = availability.targets.find(
   (target) => target.launcherId === "transform.json-ingress",
 );
 assert.ok(jsonIngressTarget, "JSON ingress is externally discoverable");
-assert.equal(hosted_test_panel_external_category(jsonIngressTarget), "transform");
+assert.equal(jsonIngressTarget.subject, "transform");
 assert.equal(
   hosted_test_panel_selected_ids(
     nodeRegistry.catalog.tests,
     transformSelection,
-    availability.targets,
+    catalogSuites,
   ).includes(jsonIngressTarget.id),
   true,
   "JSON ingress is selectable through the Transform projection",
@@ -255,9 +243,9 @@ assert.equal(installed.targets.length, 0, "installed package without repository 
 assert.equal(installed.unavailable.length, hson_live_test_launchers.length);
 
 const authorityId = external_library_target_id("livehost.authority");
-assert.deepEqual(hosted_test_panel_selected_ids([], { kind: "suite", suite: authorityId }, availability.targets), [authorityId]);
-assert.equal(hosted_test_panel_test_choices([], authorityId, availability.targets).length, 0);
-assert.ok(hosted_test_panel_suite_choices([], availability.targets).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(21)"));
+assert.deepEqual(hosted_test_panel_selected_ids([], { kind: "suite", suite: authorityId }, catalogSuites), [authorityId]);
+assert.equal(hosted_test_panel_test_choices([], authorityId, catalogSuites).length, 0);
+assert.ok(hosted_test_panel_suite_choices([], catalogSuites).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(21)"));
 
 const spawnFailure = await run_external_library_launcher(availability, authorityId, {
   command: join(installedRoot, "missing-npm"),

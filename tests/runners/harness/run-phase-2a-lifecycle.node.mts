@@ -77,7 +77,7 @@ const canonicalCase = test_case(canonicalSuite, "passes");
 const canonicalCatalog = make_test_catalog([canonicalCase], [canonicalSuite]);
 const canonicalPlan = plan_for("phase2a-canonical", canonicalCatalog, [canonicalCase.id]);
 let now = 10;
-const canonicalReport = make_hosted_test_report(() => now++, undefined, "hosted/all", { runId: canonicalPlan.runId, runPlan: canonicalPlan });
+const canonicalReport = make_hosted_test_report(() => now++, undefined, { runPlan: canonicalPlan });
 const canonicalInitial = canonicalReport.map.capture().value;
 certify(canonicalInitial.suiteRuns[0]?.status === "queued" && canonicalInitial.suiteRuns[0].cases[0]?.status === "queued", "RunPlan seeds suite and case queued");
 certify(canonicalInitial.suiteRuns[0]?.counts.declared === 1 && canonicalInitial.suiteRuns[0].counts.executed === 0, "canonical queued counts are declared but unexecuted");
@@ -107,7 +107,7 @@ const remoteCase = test_case(remoteSuite, "skips");
 const opaqueSuite = suite("livemap/opaque", 0, "opaque-aggregate", 5);
 const mixedCatalog = make_test_catalog([canonicalCase, remoteCase], [opaqueSuite, remoteSuite, canonicalSuite]);
 const mixedPlan = plan_for("phase2a-heterogeneous", mixedCatalog, [canonicalCase.id, remoteCase.id, opaqueSuite.id]);
-const mixedReport = make_hosted_test_report(() => 0, undefined, "hosted/all", { runId: mixedPlan.runId, runPlan: mixedPlan });
+const mixedReport = make_hosted_test_report(() => 0, undefined, { runPlan: mixedPlan });
 const initialOrder = mixedReport.map.capture().value.suiteRuns.map((entry) => entry.id).join("|");
 let sequence = 0;
 type Unsequenced<T> = T extends TestLifecycleEvent ? Omit<T, "runId" | "sequence" | "timestamp"> : never;
@@ -146,8 +146,7 @@ certify(rejects(() => mixedReport.reduceLifecycle({ ...opaqueTerminal, status: "
 certify(rejects(() => mixedReport.reduceLifecycle(event({ t: "suite_started", executorId: "node-child-02", suiteId: opaqueSuite.id })), /TERMINAL_REOPEN/), "terminal suite cannot reopen");
 const recoveredMap = mixedReport.map;
 mixedReport.dispose();
-const recoveredReport = make_hosted_test_report(() => 0, undefined, "hosted/all", {
-  runId: mixedPlan.runId,
+const recoveredReport = make_hosted_test_report(() => 0, undefined, {
   runPlan: mixedPlan,
   map: recoveredMap,
 });
@@ -163,7 +162,7 @@ recoveredReport.dispose();
 
 // Opaque adapter: completion is control authority, raw output remains an artifact.
 const opaquePlan = plan_for("phase2a-opaque", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]);
-const opaqueReport = make_hosted_test_report(() => 50, undefined, "hosted/all", { runId: opaquePlan.runId, runPlan: opaquePlan });
+const opaqueReport = make_hosted_test_report(() => 50, undefined, { runPlan: opaquePlan });
 const sharedExternal = {
   id: opaqueSuite.id, suite: opaqueSuite.id, name: opaqueSuite.title, subject: opaqueSuite.subject,
   runtime: "node", executableChecks: 5, collections: Object.freeze([]),
@@ -179,9 +178,9 @@ const opaqueFinal = opaqueReport.map.capture().value.suiteRuns[0]!;
 certify(opaqueFinal.evidence.find((item) => item.kind === "stdout")?.content === "human\n", "completion control frame never enters ordinary stdout evidence");
 certify(opaqueFinal.evidence.find((item) => item.kind === "raw_process_output")?.content.includes("HSON_LIVE_TEST_COMPLETION") === true, "untouched raw process output remains recoverable");
 certify(opaqueFinal.evidence.some((item) => item.kind === "protocol_control"), "structured completion is retained as control evidence");
-certify(opaqueReport.map.capture().value.externalResults[opaqueSuite.id]?.status === opaqueFinal.status, "externalResults is a reducer-derived compatibility projection");
+certify(opaqueFinal.status === "pass" && opaqueFinal.counts.passed === 5, "opaque completion is authoritative normalized suite state");
 
-const protocolReport = make_hosted_test_report(() => 60, undefined, "hosted/all", { runId: "phase2a-protocol", runPlan: plan_for("phase2a-protocol", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
+const protocolReport = make_hosted_test_report(() => 60, undefined, { runPlan: plan_for("phase2a-protocol", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
 protocolReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
 protocolReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 1, stdout: "", ordinaryStdout: "", stderr: "raw stderr\n",
@@ -189,9 +188,9 @@ protocolReport.reduce({
 });
 const protocolFinal = protocolReport.map.capture().value.suiteRuns[0]!;
 certify(protocolFinal.errors.some((error) => error.kind === "protocol" && error.executorId === "livehost-authority"), "protocol failure is classified with executor context");
-certify(protocolReport.map.capture().value.externalResults[opaqueSuite.id]?.stderr === "raw stderr\n", "protocol diagnostics are not synthesized into raw stderr");
+certify(protocolFinal.evidence.some((item) => item.kind === "stderr" && item.content === "raw stderr\n"), "protocol diagnostics retain stderr as normalized evidence");
 
-const mismatchedCompletionReport = make_hosted_test_report(() => 61, undefined, "hosted/all", { runId: "phase2a-mismatched-completion", runPlan: plan_for("phase2a-mismatched-completion", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
+const mismatchedCompletionReport = make_hosted_test_report(() => 61, undefined, { runPlan: plan_for("phase2a-mismatched-completion", make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]) });
 mismatchedCompletionReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
 mismatchedCompletionReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 2, stdout: "", ordinaryStdout: "", stderr: "",
@@ -209,7 +208,7 @@ certify(
 );
 
 const impossiblePlan = plan_for("phase2a-impossible", canonicalCatalog, [canonicalCase.id]);
-const impossibleReport = make_hosted_test_report(() => 0, undefined, "hosted/all", { runId: impossiblePlan.runId, runPlan: impossiblePlan });
+const impossibleReport = make_hosted_test_report(() => 0, undefined, { runPlan: impossiblePlan });
 certify(rejects(() => impossibleReport.reduceLifecycle({
   t: "case_finished", runId: impossiblePlan.runId, executorId: "node-01", sequence: 1, timestamp: 1,
   suiteId: canonicalSuite.id, caseId: canonicalCase.caseId, status: "pass", durationMs: 1,
@@ -218,7 +217,7 @@ certify(rejects(() => impossibleReport.reduceLifecycle({
 for (const [index, status] of (["unsupported", "cancelled"] as const).entries()) {
   const runId = `phase2a-${status}`;
   const terminalPlan = plan_for(runId, canonicalCatalog, [canonicalCase.id]);
-  const terminalReport = make_hosted_test_report(() => 0, undefined, "hosted/all", { runId, runPlan: terminalPlan });
+  const terminalReport = make_hosted_test_report(() => 0, undefined, { runPlan: terminalPlan });
   terminalReport.reduceLifecycle({
     t: "case_finished", runId, executorId: "remote-model", sequence: 1, timestamp: 1,
     suiteId: canonicalSuite.id, caseId: canonicalCase.caseId, status, durationMs: 0,
@@ -236,7 +235,7 @@ for (const [index, status] of (["unsupported", "cancelled"] as const).entries())
 
 const timeoutRunId = "phase2a-timeout";
 const timeoutPlan = plan_for(timeoutRunId, make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]);
-const timeoutReport = make_hosted_test_report(() => 70, undefined, "hosted/all", { runId: timeoutRunId, runPlan: timeoutPlan });
+const timeoutReport = make_hosted_test_report(() => 70, undefined, { runPlan: timeoutPlan });
 timeoutReport.reduce({ t: "external_state", ...sharedExternal, status: "running" });
 timeoutReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 1000, stdout: "partial output", ordinaryStdout: "partial output", stderr: "",
@@ -246,7 +245,7 @@ certify(timeoutReport.map.capture().value.suiteRuns[0]?.errors.some((error) => e
 
 const invalidCountsRunId = "phase2a-invalid-counts";
 const invalidCountsPlan = plan_for(invalidCountsRunId, make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]);
-const invalidCountsReport = make_hosted_test_report(() => 0, undefined, "hosted/all", { runId: invalidCountsRunId, runPlan: invalidCountsPlan });
+const invalidCountsReport = make_hosted_test_report(() => 0, undefined, { runPlan: invalidCountsPlan });
 invalidCountsReport.reduceLifecycle({ t: "suite_started", runId: invalidCountsRunId, executorId: "node-child", sequence: 1, timestamp: 1, suiteId: opaqueSuite.id });
 certify(rejects(() => invalidCountsReport.reduceLifecycle({
   t: "suite_finished", runId: invalidCountsRunId, executorId: "node-child", sequence: 2, timestamp: 2,

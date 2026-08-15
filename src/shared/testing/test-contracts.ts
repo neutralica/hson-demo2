@@ -3,11 +3,23 @@ import type { Artifact } from "hson-live/diagnostics";
 export type TestCapability =
   | "javascript"
   | "node"
+  | "process"
+  | "worker-threads"
   | "synthetic-dom"
+  | "synthetic-canvas"
   | "browser-dom"
-  | "worker"
+  | "browser"
+  | "chromium"
+  | "cloudflare-worker"
   | "filesystem"
-  | "websocket";
+  | "websocket"
+  | "network"
+  | "local-server"
+  | "compiler/typescript"
+  | "build-tooling"
+  | "dynamic-generated"
+  | "environment/secrets"
+  | "deployment-access";
 
 /** Stable presentation and serialization order for selectable semantic subjects. */
 export const CANONICAL_TEST_SUBJECT_ORDER = Object.freeze([
@@ -30,7 +42,7 @@ export const TEST_SUBJECT_IDENTIFIERS = Object.freeze([
 export type TestSubject = typeof TEST_SUBJECT_IDENTIFIERS[number];
 export type TestCollection = "unit" | "dev";
 export type TestProvenance = "hson-demo2" | "hson-live";
-export type TestExecutionShape = "cases" | "opaque-aggregate";
+export type TestExecutionShape = "cases" | "opaque-aggregate" | "certification-aggregate";
 
 export type TestDescriptorMetadata = Readonly<{
   subject: TestSubject;
@@ -102,19 +114,5 @@ export type TestSummary = Readonly<{
   msTotal: number;
   failures: readonly TestFailure[];
 }>;
-
-export type TestRunMode =
-  | "hosted-all"
-  | "livetree"
-  | "livemap"
-  | "livehost"
-  | "transform"
-  | "unit"
-  | "dev"
-  | "livemap-replay"
-  | "livehost-all"
-  | "node-all"
-  | "dom-core"
-  | "canvas-core";
 
 export type UiLevel = "quiet" | "normal";

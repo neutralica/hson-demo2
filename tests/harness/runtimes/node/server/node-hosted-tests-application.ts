@@ -1,8 +1,8 @@
 import type { WebSocket } from "ws";
 import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action";
 import { make_hosted_test_run_id_factory } from "../../../hosted/hosted-test-action";
-import type { HostedTestSuiteRegistry } from "../../../hosted/hosted-test-suite";
 import type { TestExecutorRegistry } from "../../../core/test-executor";
+import { executor_supports } from "../../../core/test-executor";
 import type { HostedTestApplicationOptions } from "../../../hosted/hosted-test-application";
 import {
   create_external_library_launcher_service,
@@ -12,13 +12,16 @@ import { make_test_executor_discovery } from "../../../core/test-discovery";
 import { make_local_node_livehost_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
+import {
+  node_command_suite_descriptor,
+  resolve_node_command_surfaces,
+} from "../node-command-surfaces";
 import { make_hosted_test_case_inspector } from "../../../hosted/hosted-test-case-inspection";
 import {
   create_hosted_test_application,
   HOSTED_TEST_COORDINATOR_HOST_ID,
   type HostedTestApplication,
 } from "../../../hosted/hosted-test-application";
-import { make_registered_hosted_test_suite_registry } from "../../../hosted/registered-hosted-test-suites";
 import type { NodeApplicationSecurity, NodeHostedApplication } from "hson-live/livehost/node";
 import {
   create_node_capacity_livehost_socket,
@@ -30,7 +33,6 @@ export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
 
 export type NodeHostedTestsApplicationOptions = Readonly<{
-  registry?: HostedTestSuiteRegistry;
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
   runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
@@ -79,22 +81,39 @@ export type NodeHostedTestsApplication = Readonly<{
 export async function create_node_hosted_tests_application(
   options: NodeHostedTestsApplicationOptions = {},
 ): Promise<NodeHostedTestsApplication> {
-  const registry = options.registry ?? make_registered_hosted_test_suite_registry();
   const executorRegistry = options.executorRegistry ?? make_local_node_livehost_executor_registry();
   const externalLaunchers = options.executorRegistry === undefined
     ? await resolve_external_library_launchers()
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
+  const hsonLiveRoot = "repositoryRoot" in externalLaunchers ? externalLaunchers.repositoryRoot : undefined;
+  const commandSurfaces = options.executorRegistry === undefined
+    ? resolve_node_command_surfaces({
+        demoRoot: process.cwd(),
+        ...(hsonLiveRoot === undefined ? {} : { hsonLiveRoot }),
+      })
+    : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
+  for (const target of commandSurfaces.targets) {
+    if (!executor_supports(executorRegistry.executor, target)) {
+      throw new Error(`HOSTED_TEST_COMMAND_ASSIGNMENT_UNSATISFIED: ${target.id}`);
+    }
+  }
   const launcherService = create_external_library_launcher_service();
-  const selectedVerification = create_node_selected_verification_service(launcherService);
-  const authorities = create_hosted_test_application(registry, {
+  const selectedVerification = create_node_selected_verification_service(launcherService, commandSurfaces);
+  const discovery = make_test_executor_discovery(
+    executorRegistry,
+    externalLaunchers.targets,
+    commandSurfaces.targets.map(node_command_suite_descriptor),
+  );
+  const authorities = create_hosted_test_application({
     makeRunId: make_hosted_test_run_id_factory(),
     inspectCase: options.inspectCase ?? make_hosted_test_case_inspector(executorRegistry),
-    discovery: make_test_executor_discovery(executorRegistry, externalLaunchers.targets),
+    discovery,
     executorRegistry,
-    runSelected: options.runSelected ?? (externalLaunchers.targets.length === 0
+    runSelected: options.runSelected ?? (externalLaunchers.targets.length === 0 && commandSurfaces.targets.length === 0
       ? run_fresh_node_selected_test_ids
       : (selectedRegistry, ids, onEvent, runOptions) => selectedVerification.run(
         selectedRegistry,
+        discovery.catalog,
         externalLaunchers,
         ids,
         onEvent,

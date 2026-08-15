@@ -1,9 +1,9 @@
 import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
 import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise, LiveMapCommitObservation } from "hson-live/types";
-import type { HostedTestActions, HostedTestAnyRunResult, HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestRunResult, HostedTestSelectedRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
-import { decode_hosted_test_discovery_response, decode_hosted_test_inspect_response, decode_hosted_test_cancel_response, decode_hosted_test_run_response, decode_selected_hosted_test_run_response } from "../../../../shared/hosted-tests/hosted-test-client-action";
+import type { HostedTestActions, HostedTestAnyRunResult, HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestSelectedRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
+import { decode_hosted_test_discovery_response, decode_hosted_test_inspect_response, decode_hosted_test_cancel_response, decode_selected_hosted_test_run_response } from "../../../../shared/hosted-tests/hosted-test-client-action";
 import type { HostedTestReportState } from "../../../../shared/hosted-tests/hosted-test-report.types";
-import { HOSTED_TEST_SELECTED_RUN_TARGET, type HostedTestRunTarget, type HostedTestSuiteId } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
+import { HOSTED_TEST_SELECTED_RUN_TARGET, type HostedTestRunTarget } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
 import type { TestExecutorDiscovery } from "../../../../shared/testing/test-discovery-contract";
 import { HOSTED_TEST_COORDINATOR_HOST_ID, hosted_test_recovery_association, hosted_test_run_association, type HostedTestAttemptId, type HostedTestCoordinatorState, type HostedTestRunAssociation } from "../../../../shared/hosted-tests/hosted-test-application.types";
 import {
@@ -55,9 +55,8 @@ export type HostedTestPanelRuntime = Readonly<{
   readonly discovery: TestExecutorDiscovery | undefined;
   ready(): Promise<void>;
   discover(): Promise<TestExecutorDiscovery>;
-  start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun>;
-  start_selected(testIds: readonly string[]): Promise<HostedTestRemoteRun>;
-  recover_run(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestRemoteRun>;
+  start_selected(selectionIds: readonly string[]): Promise<HostedTestRemoteRun>;
+  recover_run(runId: string, attemptId: HostedTestAttemptId): Promise<HostedTestRemoteRun>;
   dispose(): void;
 }>;
 
@@ -146,12 +145,12 @@ function association_from(
   return request === undefined ? undefined : hosted_test_run_association(state, request);
 }
 
-function result_summary_from_report(report: HostedTestReportState): HostedTestRunResult["summary"] {
-  const failures = Object.values(report.caseBatches).flat()
+function result_summary_from_report(report: HostedTestReportState): HostedTestSelectedRunResult["summary"] {
+  const failures = report.suiteRuns.flatMap((suite) => suite.cases
     .filter((testCase) => testCase.status === "fail")
-    .map((testCase) => ({ suite: testCase.suite, caseId: testCase.caseId, name: testCase.name, err: testCase.err ?? "", ms: testCase.ms }));
+    .map((testCase) => ({ suite: suite.id, caseId: testCase.caseId, name: testCase.title, err: testCase.err ?? "", ms: testCase.ms ?? 0 })));
   return Object.freeze({
-    suites: report.suites.length,
+    suites: report.suiteRuns.length,
     cases: report.summary.cases,
     pass: report.summary.pass,
     fail: report.summary.fail,
@@ -280,7 +279,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     bind_coordinator_changes();
     stopCoordinatorClose = transport.socket.onClose(() => {
       if (disposed || coordinatorTransport !== transport) return;
-      void ensure_reconnected();
+      void ensure_reconnected().catch(() => undefined);
     }) ?? undefined;
     previous?.recovery.dispose();
     previous?.session.dispose();
@@ -337,21 +336,6 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       status = "discovery-failed";
       throw failure;
     }
-  }
-
-  async function retry_safe_result(
-    action: LiveHostClientActionPromise<HostedTestActions, "tests.run">,
-    suite: HostedTestSuiteId,
-  ): Promise<HostedTestRunResult> {
-    let response: unknown;
-    try {
-      response = await action;
-    } catch (error) {
-      if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
-      await ensure_reconnected();
-      response = await coordinatorClient.retry_action(action.request);
-    }
-    return decode_hosted_test_run_response(response, suite);
   }
 
   async function retry_safe_selected_result(
@@ -554,13 +538,11 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         summary: result_summary_from_report(report),
         timing: report.run.timing,
       };
-      return target === HOSTED_TEST_SELECTED_RUN_TARGET
-        ? Object.freeze({
-            ...common,
-            suite: HOSTED_TEST_SELECTED_RUN_TARGET,
-            testIds: association.acceptedPlan?.selectionIds ?? Object.freeze([]),
-          })
-        : Object.freeze({ ...common, suite: target });
+      return Object.freeze({
+        ...common,
+        suite: HOSTED_TEST_SELECTED_RUN_TARGET,
+        selectionIds: association.acceptedPlan.selectionIds,
+      });
     };
     const terminalResult = requestedActionResult === undefined
       ? reportTerminal.then(recovered_result)
@@ -628,42 +610,23 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     return run;
   }
 
-  async function start_run(suite: HostedTestSuiteId): Promise<HostedTestRemoteRun> {
-    await readiness;
-    if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
-    if (disposed) throw new Error("Hosted-test runtime is disposed.");
-    status = "running";
-    const action = coordinatorClient.action("tests.run", { suite });
-    observe_hosted_test_timeline(options.timeline, "coordinator_request_sent", {
-      requestId: action.request.requestId,
-      action: "tests.run",
-    });
-    const actionResult = retry_safe_result(action, suite).then(undefined, (cause: unknown) => {
-      status = "run-rejected";
-      throw cause;
-    });
-    void actionResult.catch(() => undefined);
-    const association = await wait_for_association(action.request.requestId, suite, actionResult);
-    return attach_run(association, actionResult);
-  }
-
-  async function start_selected(testIds: readonly string[]): Promise<HostedTestRemoteRun> {
+  async function start_selected(selectionIds: readonly string[]): Promise<HostedTestRemoteRun> {
     await readiness;
     if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     const discovery = discoveredExecutor;
     if (discovery === undefined) throw new Error("Hosted-test selected execution requires successful executor discovery.");
-    const ids = Object.freeze([...new Set(testIds)]);
+    const ids = Object.freeze([...new Set(selectionIds)]);
     if (ids.length === 0) throw new Error("Hosted-test selected execution requires at least one test ID.");
-    if (ids.length !== testIds.length) throw new Error("Hosted-test selected execution does not accept duplicate test IDs.");
+    if (ids.length !== selectionIds.length) throw new Error("Hosted-test selected execution does not accept duplicate selection IDs.");
     const advertised = new Set([
       ...discovery.catalog.tests.map((descriptor) => descriptor.id),
-      ...discovery.externalTargets.map((target) => target.id),
+      ...discovery.catalog.suites.filter((suite) => suite.executionShape !== "cases").map((suite) => suite.id),
     ]);
     const unknown = ids.find((id) => !advertised.has(id));
     if (unknown !== undefined) throw new Error(`Hosted-test selection contains an undiscovered test ID "${unknown}".`);
     status = "running";
-    const action = coordinatorClient.action("tests.runSelected", { testIds: [...ids] });
+    const action = coordinatorClient.action("tests.runSelected", { selectionIds: [...ids] });
     observe_hosted_test_timeline(options.timeline, "coordinator_request_sent", {
       requestId: action.request.requestId,
       action: "tests.runSelected",
@@ -682,11 +645,11 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     return attach_run(association, actionResult);
   }
 
-  async function recover_run(runId: string, attemptId?: HostedTestAttemptId): Promise<HostedTestRemoteRun> {
+  async function recover_run(runId: string, attemptId: HostedTestAttemptId): Promise<HostedTestRemoteRun> {
     await readiness;
     if (status === "reconnecting" || status === "recovering") await ensure_reconnected();
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
-    if (!runId) throw new Error("Hosted-test recovery requires an explicit non-empty run ID.");
+    if (!runId || !attemptId) throw new Error("Hosted-test recovery requires exact non-empty run and attempt IDs.");
     const association = hosted_test_recovery_association(
       coordinatorClient.recovery.map.capture().value,
       runId,
@@ -703,7 +666,6 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     get discovery() { return discoveredExecutor; },
     ready: () => readiness,
     discover,
-    start_run,
     start_selected,
     recover_run,
     dispose() {

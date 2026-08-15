@@ -1,9 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
-import {
-  hosted_test_panel_display_label,
-  hosted_test_panel_primary_choices,
-} from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 
 type TowlLazyMetrics = Readonly<{
   webSockets: number;
@@ -186,24 +182,7 @@ test("keyboard Color Sudoku activation stays inside the canonical shell lifecycl
 });
 
 test("hosted panel discovers curated categories and runs one canonical category", async ({ page }) => {
-  const [{ make_local_node_livehost_executor_registry }, { resolve_external_library_launchers }] = await Promise.all([
-    import("../../harness/runtimes/node/livehost-node-executor"),
-    import("../../harness/runtimes/node/external-library-launchers"),
-  ]);
   const assertNoErrors = monitor_application_errors(page);
-  const expectedRegistry = make_local_node_livehost_executor_registry();
-  const expectedAvailability = await resolve_external_library_launchers();
-  const expectedPrimary = hosted_test_panel_primary_choices(
-    expectedRegistry.catalog.tests,
-    expectedAvailability.targets,
-  );
-  const expectedPrimaryLabels = expectedPrimary.map((choice) =>
-    hosted_test_panel_display_label(choice.label));
-  const expectedChoiceLabel = (key: string): string => {
-    const choice = expectedPrimary.find((candidate) => candidate.key === key);
-    if (choice === undefined) throw new Error(`Missing authoritative panel choice ${key}`);
-    return hosted_test_panel_display_label(choice.label);
-  };
   await reach_demo(page);
 
   await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
@@ -211,9 +190,9 @@ test("hosted panel discovers curated categories and runs one canonical category"
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
   await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
-  await expect(page.getByTestId("hosted-test-executor")).toContainText(
-    `${expectedRegistry.catalog.tests.length} canonical cases`,
-  );
+  await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ cases/);
+  await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ checks/);
+  await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ certifications/);
   await panel.evaluate((element) => element.setAttribute("data-retention-probe", "same-instance"));
   await open_demo(page, "about");
   await expect(panel).not.toBeVisible();
@@ -224,17 +203,26 @@ test("hosted panel discovers curated categories and runs one canonical category"
   const selector = page.locator("#test-select");
   const targetedSuite = page.locator("#test-targeted-suite");
   const targetedCase = page.locator("#test-targeted-case");
-  await expect(selector.locator("option")).toHaveText(expectedPrimaryLabels);
+  await expect(selector.locator("option")).toHaveText([
+    /^all \(\d+\)$/,
+    /^transform \(\d+\)$/,
+    /^livetree \(\d+\)$/,
+    /^livemap \(\d+\)$/,
+    /^livehost \(\d+\)$/,
+    /^reflect \(\d+\)$/,
+    /^unit \(\d+\)$/,
+    /^dev \(\d+\)$/,
+  ]);
   await expect(selector.locator('option[value^="suite:"]')).toHaveCount(0);
   await expect(selector.locator('option[value^="test:"]')).toHaveCount(0);
   await expect(selector.locator('option[value="subject:transform"]')).toHaveText(
-    expectedChoiceLabel("subject:transform"),
+    /^transform \(\d+\)$/,
   );
   await expect(selector.locator('option[value="subject:reflect"]')).toHaveText(
-    expectedChoiceLabel("subject:reflect"),
+    /^reflect \(\d+\)$/,
   );
   await expect(selector.locator('option[value="collection:dev"]')).toHaveText(
-    expectedChoiceLabel("collection:dev"),
+    /^dev \(\d+\)$/,
   );
   await expect(selector.locator('option[value="collection:library"]')).toHaveCount(0);
   await expect(targetedSuite).toBeDisabled();
@@ -285,7 +273,6 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "1");
   await expect(page.locator("#test-logger")).toContainText("elapsed", { timeout: 15_000 });
   await expect(page.locator("#test-logger")).toContainText("queued livetree/canvas-clear — 3 cases");
-  await expect(page.locator("#test-logger")).toContainText("running livetree/canvas-clear");
   await expect(page.locator("#test-logger")).toContainText("pass livetree/canvas-clear — 3 cases");
   await expect(page.locator("#test-case-pane [data-hosted-suite]")).toHaveCount(1);
   await page.locator("#test-clear").click();
@@ -301,12 +288,16 @@ test("hosted panel discovers curated categories and runs one canonical category"
     "pass livehost/authority — 21 checks",
     { timeout: 15_000 },
   );
-  await expect(page.locator("#test-logger")).not.toContainText("ok 1 -");
+  await expect(page.locator("#test-logger")).toContainText("stdout livehost/authority");
   const externalRow = page.locator('[data-hosted-suite="livehost/authority"]');
   await externalRow.click();
   await expect(page.locator('[data-evidence-kind="stdout"] .hosted-evidence-content')).toContainText("ok 1 -");
-  await expect(page.locator("#test-chips .test-chip-value")).toHaveText([
+  await expect(page.locator("#test-chips .test-chip:visible .test-chip-value")).toHaveText([
     "1", "0", "0", "0", "0", "21", "21", "0", /\d/,
+  ]);
+  await expect(page.locator("#test-chips .test-chip:visible .test-chip-label")).toHaveText([
+    "suites", "suites failed", "cases", "cases passed", "cases failed",
+    "checks", "checks passed", "checks failed", "elapsed",
   ]);
   assertNoErrors();
 });

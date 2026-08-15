@@ -1,13 +1,9 @@
 import type { TestSummary } from "../testing/test-contracts";
-import type { HostedTestRunTarget, HostedTestSuiteId } from "./hosted-test-suite-contract";
+import type { HostedTestRunTarget } from "./hosted-test-suite-contract";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
 import type { TestExecutorDiscoveryRequest } from "../testing/test-discovery-contract";
 import type { RunSelectedTestsRequest } from "../testing/test-run-contract";
 import type { HostedTestAttemptId } from "./hosted-test-application.types";
-
-export type HostedTestRunRequest = Readonly<{
-  suite: HostedTestSuiteId;
-}>;
 
 export type HostedTestCancelRequest = Readonly<{
   runId: HostedTestRunId;
@@ -24,28 +20,13 @@ export type HostedTestCancelResult = Readonly<{
   cancellation: Readonly<{ clientId: string; requestId: string }> | null;
 }>;
 
-export type HostedTestRunResult = Readonly<{
-  runId: HostedTestRunId;
-  attemptId: HostedTestAttemptId;
-  reportHostId?: string;
-  reportRev?: number;
-  suite: HostedTestSuiteId;
-  ok: boolean;
-  cancelled?: boolean;
-  summary: TestSummary;
-  timing: Readonly<{
-    runnerMs: number;
-    hostMs: number;
-  }>;
-}>;
-
 export type HostedTestSelectedRunResult = Readonly<{
   runId: HostedTestRunId;
   attemptId: HostedTestAttemptId;
   reportHostId?: string;
   reportRev?: number;
   suite: "canonical/selected";
-  testIds: readonly string[];
+  selectionIds: readonly string[];
   ok: boolean;
   cancelled?: boolean;
   summary: TestSummary;
@@ -55,7 +36,7 @@ export type HostedTestSelectedRunResult = Readonly<{
   }>;
 }>;
 
-export type HostedTestAnyRunResult = HostedTestRunResult | HostedTestSelectedRunResult;
+export type HostedTestAnyRunResult = HostedTestSelectedRunResult;
 
 type HostedTestPanelResultFor<T extends HostedTestAnyRunResult> =
   T extends HostedTestAnyRunResult
@@ -94,8 +75,6 @@ export type HostedTestCaseDiagnostic = Readonly<{
 
 export type HostedTestActions = Readonly<{
   "tests.discover": TestExecutorDiscoveryRequest;
-  "tests.run": HostedTestRunRequest;
   "tests.runSelected": RunSelectedTestsRequest;
   "tests.cancel": HostedTestCancelRequest;
-  "tests.inspect": HostedTestInspectRequest;
 }>;
