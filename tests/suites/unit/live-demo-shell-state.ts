@@ -29,11 +29,11 @@ export function live_demo_shell_state_suite(): TestSuite {
   const cases: readonly TestCase[] = [
     {
       suite: SUITE,
-      caseId: "initial-shell-state-keeps-desktop-view-null-and-bling-active", name: "initial shell state keeps desktop view null and Bling active",
+      caseId: "initial-shell-state-keeps-view-null-and-ornament-opt-in", name: "initial shell state keeps the view null and ornament opt-in",
       run: () => {
         const store = create_demo_store();
         if (store.getView() !== null) throw new Error("expected initial currentView to be null");
-        assert_widgets(store.getWidgets(), ["bling"]);
+        assert_widgets(store.getWidgets(), []);
       },
     },
     {

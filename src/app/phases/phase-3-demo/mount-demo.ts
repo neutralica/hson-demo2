@@ -137,6 +137,20 @@ function make_plain_menu(menuBox: LiveTree, onToggle: (key: MenuKey) => void): P
     .id.set("plain-menu-demo")
     .attrs.setMany({ role: "group", "aria-label": "Demo navigation", "data-navigation-skin": "plain" })
     .css.setMany(PLAIN_MENU_ROOTcss);
+  root.css.selector("& .plain-menu-marker").setMany({
+    display: "block",
+    width: "3ch",
+    minWidth: "3ch",
+    textAlign: "right",
+    paddingRight: "1ch",
+    boxSizing: "border-box",
+  });
+  root.css.selector("& .plain-menu-marker::before").set.content("");
+  root.css.selector("& button:hover .plain-menu-marker::before").set.content(">>");
+  root.css.selector("& button:focus-visible .plain-menu-marker::before").set.content(">>");
+  root.css.selector("& button[data-active] .plain-menu-marker::before").set.content(">");
+  root.css.selector("& button[data-active]:hover .plain-menu-marker::before").set.content("X");
+  root.css.selector("& button[data-active]:focus-visible .plain-menu-marker::before").set.content("X");
   const buttons = new Map<MenuKey, LiveTree>();
   const release: Array<() => void> = [];
   for (const key of MENU_OPTIONS) {
@@ -145,8 +159,9 @@ function make_plain_menu(menuBox: LiveTree, onToggle: (key: MenuKey) => void): P
       .id.set(`${key}-button`)
       .classlist.set(widget ? "widget-button" : "view-button")
       .attrs.setMany({ type: "button", "aria-label": key, "aria-pressed": "false", "data-menu-key": key })
-      .text.set(key)
       .css.setMany({ ...MAIN_MENUcss, color: widget ? _colors.txt.widget : _colors.txt.menu });
+    button.create.span().classlist.set("plain-menu-marker").attrs.set("aria-hidden", "true");
+    button.create.span().classlist.set("plain-menu-label").text.set(key);
     const listener = button.listen.stopProp().onClick(() => onToggle(key));
     release.push(() => listener.off());
     buttons.set(key, button);

@@ -42,8 +42,8 @@ export function normalize_motes_opts(inOpts: Partial<MotesOpts>): MotesOpts {
     char: inOpts.char ?? "*",
 
     colors: inOpts.colors ?? [OKLCH_VIBRANT.orangeTangerine],
-    sizePx: inOpts.sizePx ?? [10, 38],
-    opacity: inOpts.opacity ?? [0.2, 0.5],
+    sizePx: inOpts.sizePx ?? [10, 18],
+    opacity: inOpts.opacity ?? [0.5,0.8],
     blurPx: [1.3, 2.6],
 
     densityPerKpx2: inOpts.densityPerKpx2 ?? 74,

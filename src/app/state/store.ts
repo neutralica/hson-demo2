@@ -7,7 +7,7 @@ export function make_initial_demo_state(): DemoState {
   return {
     ui: {
       currentView: null,
-      activeWidgets: ["bling"],
+      activeWidgets: [],
     },
   };
 }

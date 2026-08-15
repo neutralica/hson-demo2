@@ -181,6 +181,8 @@ test("OKLCH reverts instance-owned CSS projection and recreates cleanly", async 
 
 test("Amoeba emits one shell intent and projects shell selection without local canonical state", async ({ page }) => {
   await reach_demo(page);
+  await open_demo(page, "bling");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-navigation-skin", "amoebic");
   const source = readFileSync(fileURLToPath(new URL("../../../src/app/demos/amoeba/make-amoebi.ts", import.meta.url)), "utf8");
   const types = readFileSync(fileURLToPath(new URL("../../../src/app/demos/amoeba/amoebi.types.ts", import.meta.url)), "utf8");
   expect(source).not.toContain('["activeIds"]');

@@ -24,12 +24,19 @@ test("application boot reaches one clean usable demo without auto-running hosted
   await reach_demo(page);
 
   await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
-  await expect(page.locator("#screen")).toHaveAttribute("data-shell-active-widgets", "bling");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-active-widgets", "");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-navigation-skin", "plain");
   await expect(page.locator('[data-shell-main-surface]')).toHaveCount(0);
   await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
   await expect(page.getByTestId("parse-root")).toHaveCount(0);
   await expect(page.getByTestId("towl-root")).toHaveCount(0);
-  await expect(page.locator("#motes-root")).toHaveCount(1);
+  await expect(page.locator("#plain-menu-demo")).toBeVisible();
+  await expect(page.locator("#amoebi-menu-demo")).toBeHidden();
+  await expect(page.locator("#hson-headline")).toBeVisible();
+  await expect(page.locator("#livedemo-subhead")).toBeVisible();
+  await expect(page.locator("#graffiti-layer")).toBeHidden();
+  await expect(page.locator("#motes-root")).toHaveCount(0);
+  await expect(page.locator("#motes")).toBeHidden();
   await expect(page.locator("#mouse-host, #oklch")).toHaveCount(0);
   await open_demo(page, "parse");
   await expect(page.getByTestId("parse-root")).toBeVisible();
@@ -46,9 +53,37 @@ test("application boot reaches one clean usable demo without auto-running hosted
   await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
   await expect(page.getByTestId("parse-root")).toHaveCount(0);
   await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-active-widgets", "");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-navigation-skin", "plain");
+  await expect(page.locator("#motes-root")).toHaveCount(0);
+  await expect(page.locator("#graffiti-layer")).toBeHidden();
   await expect(page.locator("#sky, #logo-box")).toHaveCount(0);
   await expect(page.locator("#deck-cover")).not.toBeVisible();
   assertNoErrors();
+});
+
+test("explicit TOWL entry and browser history remain distinct from the quiet root boot", async ({ page }) => {
+  await reach_demo(page);
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
+
+  await page.goto("/towl");
+  await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "towl");
+  await expect(page.getByTestId("towl-root")).toBeVisible();
+
+  await page.goBack();
+  const rootStage = page.locator("#stage");
+  await expect(rootStage).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
+  await rootStage.click({ position: { x: 4, y: 4 } });
+  await expect(rootStage).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+
+  await page.goForward();
+  await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "towl");
+  await expect(page.getByTestId("towl-root")).toBeVisible();
 });
 
 test("TOWL performs no room, storage, runtime, or socket work before activation", async ({ page }) => {
@@ -140,7 +175,7 @@ test("an invalid ordinary room query keeps the fresh shell neutral and TOWL iner
 
 test("widget membership lazily mounts and recreates disposable widget instances", async ({ page }) => {
   await reach_demo(page);
-  await expect(page.locator("#motes-root")).toHaveCount(1);
+  await expect(page.locator("#motes-root")).toHaveCount(0);
   await expect(page.locator("#mouse-host, #oklch")).toHaveCount(0);
 
   await open_demo(page, "point");
@@ -159,9 +194,9 @@ test("widget membership lazily mounts and recreates disposable widget instances"
   await expect(page.locator("#oklch")).toHaveCount(0);
 
   await open_demo(page, "bling");
-  await expect(page.locator("#motes-root")).toHaveCount(0);
-  await open_demo(page, "bling");
   await expect(page.locator("#motes-root")).toHaveCount(1);
+  await open_demo(page, "bling");
+  await expect(page.locator("#motes-root")).toHaveCount(0);
 });
 
 test("keyboard Color Sudoku activation stays inside the canonical shell lifecycle", async ({ page }) => {

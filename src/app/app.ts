@@ -27,7 +27,7 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 
 export async function run_app(root: LiveTree): Promise<void> {
   const entry = classify_towl_entry_url(new URL(globalThis.location.href));
-  if (entry.selectsTowl) set_view("towl");
+  set_view(entry.selectsTowl ? "towl" : null);
 
   demoShell?.dispose();
   demoShell = undefined;

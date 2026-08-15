@@ -60,52 +60,30 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 export const MENU_ACTIVE_VIEWcss: CssMap = {
   fontWeight: _fontWeight.fat,
   opacity: "1",
-  __after: {},
   _hover: {
     background: _colors.txt.grey,
     color: _colors.backlo,
-    fontWeight: _fontWeight.main,
-    __after: {
-      content: "X",
-      position: "absolute",
-      marginLeft: "1ch",
-    },
+    fontWeight: _fontWeight.fat,
   },
   _focusVisible: {
     background: _colors.txt.grey,
     color: _colors.backlo,
-    fontWeight: _fontWeight.main,
-    __after: {
-      content: "X",
-      position: "absolute",
-      marginLeft: "1ch",
-    },
+    fontWeight: _fontWeight.fat,
   },
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
   fontWeight: _fontWeight.fat,
   opacity: "1",
-  __after: {},
   _hover: {
-    __after: {
-      content: "X",
-      position: "absolute",
-      marginLeft: "1ch",
-    },
     background: _colors.txt.grey,
     color: _colors.backlo,
-    fontWeight: _fontWeight.main,
+    fontWeight: _fontWeight.fat,
   },
   _focusVisible: {
-    __after: {
-      content: "X",
-      position: "absolute",
-      marginLeft: "1ch",
-    },
     background: _colors.txt.grey,
     color: _colors.backlo,
-    fontWeight: _fontWeight.main,
+    fontWeight: _fontWeight.fat,
   },
 
 };

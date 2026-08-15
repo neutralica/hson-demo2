@@ -101,76 +101,84 @@ test("bling switches one navigation model between amoebic and historical plain p
   const plain = page.locator("#plain-menu-demo");
   const menuOrder = ["about", "test", "parse", "build", "bar-bar", "towl", "cells", "fleurs", "point", "oklch", "bling"];
 
-  await expect(screen).toHaveAttribute("data-shell-navigation-skin", "amoebic");
-  await expect(amoebic).toBeVisible();
-  await expect(plain).toBeHidden();
-  await expect(page.locator("#motes-root")).toHaveCount(1);
-  await expect(page.locator("#graffiti-layer")).toBeVisible();
-  expect(await amoebic.locator("[data-amoebi-hit-target]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-amoebi-hit-target")))).toEqual(menuOrder);
-  expect(await plain.locator("[data-menu-key]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-menu-key")))).toEqual(menuOrder);
-
-  await open_demo(page, "parse");
-  const parseRoot = page.getByTestId("parse-root");
-  await parseRoot.evaluate((element) => element.setAttribute("data-bling-retention", "same-instance"));
-  const urlBefore = page.url();
-  await open_demo(page, "bling");
-
+  await expect(screen).toHaveAttribute("data-shell-current-main", "");
+  await expect(screen).toHaveAttribute("data-shell-active-widgets", "");
   await expect(screen).toHaveAttribute("data-shell-navigation-skin", "plain");
-  await expect(screen).toHaveAttribute("data-shell-current-main", "parse");
-  await expect(parseRoot).toHaveAttribute("data-bling-retention", "same-instance");
-  expect(page.url()).toBe(urlBefore);
   await expect(amoebic).toBeHidden();
   await expect(plain).toBeVisible();
   await expect(page.locator("#motes-root")).toHaveCount(0);
   await expect(page.locator("#motes")).toBeHidden();
   await expect(page.locator("#graffiti-layer")).toBeHidden();
+  expect(await amoebic.locator("[data-amoebi-hit-target]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-amoebi-hit-target")))).toEqual(menuOrder);
+  expect(await plain.locator("[data-menu-key]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-menu-key")))).toEqual(menuOrder);
 
   const parseButton = plain.getByRole("button", { name: "parse", exact: true });
   const aboutButton = plain.getByRole("button", { name: "about", exact: true });
   const pointButton = plain.getByRole("button", { name: "point", exact: true });
+  const parseLabel = parseButton.locator(".plain-menu-label");
+  const aboutLabel = aboutButton.locator(".plain-menu-label");
+  const parseMarker = parseButton.locator(".plain-menu-marker");
+  const aboutMarker = aboutButton.locator(".plain-menu-marker");
   await expect(parseButton).toHaveCSS("color", "oklch(0.75 0.06 300)");
   await expect(pointButton).toHaveCSS("color", "oklch(0.7 0.001 101)");
+  const aboutIdleX = await aboutLabel.evaluate((element) => element.getBoundingClientRect().x);
+  expect(await aboutMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   await aboutButton.hover();
-  expect(await aboutButton.evaluate((element) => getComputedStyle(element, "::after").content)).toBe('"<<"');
+  expect(await aboutMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe('">>"');
+  expect(await aboutLabel.evaluate((element) => element.getBoundingClientRect().x)).toBe(aboutIdleX);
   await aboutButton.focus();
-  expect(await aboutButton.evaluate((element) => getComputedStyle(element, "::after").content)).toBe('"<<"');
-  await parseButton.hover();
-  expect(await parseButton.evaluate((element) => getComputedStyle(element, "::after").content)).toBe('"X"');
-  await parseButton.focus();
-  expect(await parseButton.evaluate((element) => getComputedStyle(element, "::after").content)).toBe('"X"');
+  expect(await aboutMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe('">>"');
+  expect(await aboutLabel.evaluate((element) => element.getBoundingClientRect().x)).toBe(aboutIdleX);
 
-  await aboutButton.press("Enter");
-  await expect(screen).toHaveAttribute("data-shell-current-main", "about");
-  await plain.getByRole("button", { name: "about", exact: true }).press("Enter");
-  await expect(screen).toHaveAttribute("data-shell-current-main", "");
-  await plain.getByRole("button", { name: "parse", exact: true }).press("Enter");
+  const parseIdleX = await parseLabel.evaluate((element) => element.getBoundingClientRect().x);
+  await parseButton.click();
   await expect(screen).toHaveAttribute("data-shell-current-main", "parse");
-  await page.getByTestId("parse-root").evaluate((element) => {
-    element.setAttribute("data-bling-retention", "same-instance-after-nav");
-  });
+  await expect(parseButton).toHaveCSS("font-weight", "900");
+  await parseButton.hover();
+  expect(await parseMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe('"X"');
+  expect(await parseLabel.evaluate((element) => element.getBoundingClientRect().x)).toBe(parseIdleX);
+  await parseButton.focus();
+  expect(await parseMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe('"X"');
+  expect(await parseLabel.evaluate((element) => element.getBoundingClientRect().x)).toBe(parseIdleX);
+  await page.mouse.move(1300, 800);
+  await aboutButton.focus();
+  expect(await parseMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe('">"');
+  expect(await parseLabel.evaluate((element) => element.getBoundingClientRect().x)).toBe(parseIdleX);
+
+  const parseRoot = page.getByTestId("parse-root");
+  await parseRoot.evaluate((element) => element.setAttribute("data-bling-retention", "same-instance"));
+  const urlBefore = page.url();
 
   await plain.getByRole("button", { name: "bling", exact: true }).click();
   await expect(screen).toHaveAttribute("data-shell-navigation-skin", "amoebic");
   await expect(screen).toHaveAttribute("data-shell-current-main", "parse");
   await expect(page.getByTestId("parse-root")).toHaveAttribute(
     "data-bling-retention",
-    "same-instance-after-nav",
+    "same-instance",
   );
+  expect(page.url()).toBe(urlBefore);
   await expect(amoebic).toBeVisible();
   await expect(plain).toBeHidden();
   await expect(page.locator("#motes-root")).toHaveCount(1);
   await expect(page.locator("#graffiti-layer")).toBeVisible();
   await expect(page.locator("#motes")).toHaveCSS("background-image", /linear-gradient/);
 
-  await open_demo(page, "bling");
-  await plain.getByRole("button", { name: "bling", exact: true }).click();
+  await amoebic.getByRole("button", { name: "parse", exact: true }).click();
+  await expect(screen).toHaveAttribute("data-shell-current-main", "");
+  await expect(page.getByTestId("parse-root")).toHaveCount(0);
+  await amoebic.getByRole("button", { name: "bling", exact: true }).click();
+  await expect(screen).toHaveAttribute("data-shell-navigation-skin", "plain");
+  await expect(screen).toHaveAttribute("data-shell-current-main", "");
+  await aboutButton.press("Enter");
+  await expect(screen).toHaveAttribute("data-shell-current-main", "about");
+  await expect(aboutButton).toHaveCSS("font-weight", "900");
+  expect(await aboutMarker.evaluate((element) => getComputedStyle(element, "::before").content)).toBe('"X"');
+  await aboutButton.press("Enter");
+  await expect(screen).toHaveAttribute("data-shell-current-main", "");
   await expect(page.locator("#amoebi-menu-demo")).toHaveCount(1);
   await expect(page.locator("#plain-menu-demo")).toHaveCount(1);
-  await expect(screen).toHaveAttribute("data-shell-current-main", "parse");
 
   await page.setViewportSize({ width: 1024, height: 768 });
-  await expect(amoebic).toBeVisible();
-  await open_demo(page, "bling");
   await expect(plain).toBeVisible();
   await expect(plain.locator("[data-menu-key]")).toHaveCount(menuOrder.length);
   for (const key of menuOrder) await expect(plain.getByRole("button", { name: key, exact: true })).toBeVisible();
