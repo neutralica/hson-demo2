@@ -621,7 +621,9 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (ids.length !== selectionIds.length) throw new Error("Hosted-test selected execution does not accept duplicate selection IDs.");
     const advertised = new Set([
       ...discovery.catalog.tests.map((descriptor) => descriptor.id),
-      ...discovery.catalog.suites.filter((suite) => suite.executionShape !== "cases").map((suite) => suite.id),
+      ...discovery.catalog.suites
+        .filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys")
+        .map((suite) => suite.id),
     ]);
     const unknown = ids.find((id) => !advertised.has(id));
     if (unknown !== undefined) throw new Error(`Hosted-test selection contains an undiscovered test ID "${unknown}".`);

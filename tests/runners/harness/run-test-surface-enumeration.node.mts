@@ -21,6 +21,10 @@ import {
   hson_live_test_launchers,
 } from "hson-live/test-launchers";
 import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import {
+  BROWSER_RASTER_SUITE_MANIFEST,
+  BROWSER_SUITE_MANIFEST,
+} from "../../harness/runtimes/node/browser/browser-test-manifest";
 
 function expect_surface(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`test surface enumeration: ${message}`);
@@ -101,6 +105,19 @@ const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freez
   expect_surface(cases > 0, `browser spec ${relative(demoRoot, path)} declares no Playwright journeys`);
   return Object.freeze({ path: relative(demoRoot, path) as BrowserSurfaceInventory["path"], cases });
 })));
+for (const surface of browserSurfaceInventory) {
+  const manifest = BROWSER_SUITE_MANIFEST.find((entry) => entry.path === surface.path);
+  expect_surface(manifest !== undefined, `browser spec ${surface.path} has no LiveHost browser manifest binding`);
+  expect_surface(manifest.journeys.length === surface.cases, `browser spec ${surface.path} source and LiveHost journey counts differ`);
+  const source = await readFile(resolve(demoRoot, surface.path), "utf8");
+  for (const journey of manifest.journeys) {
+    expect_surface(source.includes(`test(\"${journey.title}\"`), `browser journey ${surface.path} :: ${journey.title} is not declared exactly once`);
+  }
+}
+const rasterSource = await readFile(resolve(demoRoot, BROWSER_RASTER_SUITE_MANIFEST.reportPath!), "utf8");
+for (const journey of BROWSER_RASTER_SUITE_MANIFEST.journeys) {
+  expect_surface(rasterSource.includes(`test(\"${journey.title}\"`), `browser raster journey ${journey.title} is not registered`);
+}
 expect_surface(TEST_SURFACE_CATALOG.some((entry) => entry.runner === "npm run test:browser" && entry.category === "Application / Demo"), "browser aggregate is missing its application/demo catalog owner");
 expect_surface(TEST_SURFACE_CATALOG.filter((entry) => entry.runner.startsWith("npm run test:browser")).every((entry) => !entry.appearsInHostedUi), "browser commands must remain outside the Hosted Tests UI");
 expect_surface(TEST_SURFACE_CATALOG.find((entry) => entry.id === "hson-demo2:test:amoebi-geometry")?.category === "Application / Demo", "Amoebi geometry must be owned by Application / Demo");
@@ -125,6 +142,7 @@ async function resolvableImport(from: string, specifier: string): Promise<string
 }
 const roots = [...declaredEntrypoints].map((path) => resolve(demoRoot, path));
 roots.push(...browserSpecs);
+roots.push(resolve(demoRoot, "tests/integration/browser/livehost-playwright-reporter.ts"));
 for (const name of await readdir(browserFixtureRoot)) {
   if (!name.endsWith(".html")) continue;
   const html = await readFile(resolve(browserFixtureRoot, name), "utf8");
@@ -359,9 +377,12 @@ expect_surface(
 );
 const canonicalCensus = census.filter((entry) => entry.executionShape === "canonical suite");
 const localNodeCatalog = make_local_node_livehost_executor_registry().catalog;
-expect_surface(canonicalCensus.length === localNodeCatalog.suites.length, "every canonical Node suite must have exactly one census entry");
+const localCanonicalSuites = localNodeCatalog.suites.filter((suite) => suite.executionShape === "cases");
+const localCanonicalIds = new Set(localCanonicalSuites.map((suite) => suite.id));
+expect_surface(canonicalCensus.length === localCanonicalSuites.length, "every canonical Node suite must have exactly one census entry");
 expect_surface(
-  canonicalCensus.reduce((total, entry) => total + (entry.semanticCount ?? 0), 0) === localNodeCatalog.tests.length,
+  canonicalCensus.reduce((total, entry) => total + (entry.semanticCount ?? 0), 0)
+    === localNodeCatalog.tests.filter((entry) => localCanonicalIds.has(entry.suiteId)).length,
   "canonical census case counts must derive from the executable Node catalog",
 );
 for (const retirement of PHASE5_DUPLICATE_RETIREMENTS) {
@@ -382,6 +403,10 @@ expect_surface(
 expect_surface(
   census.every((entry) => entry.hostabilityClass !== "blocked-external"),
   "no current surface is genuinely externally blocked; executor requirements must not be exclusions",
+);
+expect_surface(
+  census.every((entry) => entry.hostabilityClass !== "hostable-browser"),
+  "all browser-classified surfaces must be locally hosted by Node LiveHost",
 );
 const runnableSurfaces = census.filter((entry) => entry.verificationKind !== "developer utility").length;
 const hostability = Object.fromEntries([...new Set(census.map((entry) => entry.hostabilityClass))].sort().map((hostabilityClass) => [

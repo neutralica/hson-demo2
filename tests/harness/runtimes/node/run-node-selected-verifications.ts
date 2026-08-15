@@ -19,6 +19,7 @@ import {
   type NodeCommandSurfaceAvailability,
   type NodeCommandSurfaceTarget,
 } from "./node-command-surfaces";
+import type { PlaywrightBrowserExecutor } from "./browser/playwright-browser-executor";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY = 2;
 
@@ -59,6 +60,7 @@ export type NodeSelectedVerificationConfiguration = Readonly<{
   externalInvocation?: "verified" | "tsx";
   launcherService?: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">;
   commandAvailability?: NodeCommandSurfaceAvailability;
+  browserExecutor?: PlaywrightBrowserExecutor;
   recordMetrics?: (metrics: NodeSelectedVerificationMetrics) => void;
 }>;
 
@@ -93,6 +95,7 @@ export function node_selected_verification_metrics(): NodeSelectedVerificationMe
 export function create_node_selected_verification_service(
   launcherService: Pick<ExternalLibraryLauncherService, "run" | "runCommand" | "terminationGeneration">,
   commandAvailability?: NodeCommandSurfaceAvailability,
+  browserExecutor?: PlaywrightBrowserExecutor,
 ): NodeSelectedVerificationService {
   let metrics: NodeSelectedVerificationMetrics = EMPTY_NODE_SELECTED_VERIFICATION_METRICS;
   return Object.freeze({
@@ -108,6 +111,7 @@ export function create_node_selected_verification_service(
           ...configuration,
           launcherService,
           ...(commandAvailability === undefined ? {} : { commandAvailability }),
+          ...(browserExecutor === undefined ? {} : { browserExecutor }),
           recordMetrics(value) { metrics = value; },
         },
       );
@@ -453,7 +457,16 @@ export async function run_node_selected_verifications(
   configuration: NodeSelectedVerificationConfiguration = {},
 ): Promise<RunResult> {
   const overallStartedAt = performance.now();
-  const canonicalIds = selectedIds.filter(is_test_case_id);
+  const selectedCaseIds = selectedIds.filter(is_test_case_id);
+  const browserIds = selectedCaseIds.filter((id) => {
+    const descriptor = catalog.tests.find((candidate) => candidate.id === id);
+    return catalog.suites.find((suite) => suite.id === descriptor?.suiteId)?.executionShape === "browser-journeys";
+  });
+  const browserIdSet = new Set(browserIds);
+  const canonicalIds = selectedCaseIds.filter((id) => !browserIdSet.has(id));
+  if (browserIds.length > 0 && configuration.browserExecutor === undefined) {
+    throw new Error("HOSTED_TEST_BROWSER_EXECUTOR_UNAVAILABLE: accepted browser work has no Playwright executor.");
+  }
   const aggregateDescriptors = selectedIds.filter((id) => !is_test_case_id(id)).map((id) => {
     const descriptor = catalog.suites.find((suite) => suite.id === id);
     if (descriptor === undefined) throw new Error(`HOSTED_TEST_AGGREGATE_SELECTION_UNKNOWN: ${id} is not in the accepted catalog.`);
@@ -480,6 +493,7 @@ export async function run_node_selected_verifications(
   let commandPass = 0;
   let commandFail = 0;
   let commandCompleted = 0;
+  let browserResult = empty_result();
   const externalFailures: TestFailure[] = [];
   const terminationGeneration = configuration.launcherService?.terminationGeneration()
     ?? external_library_launcher_termination_generation();
@@ -512,7 +526,7 @@ export async function run_node_selected_verifications(
     },
     async () => {
       const startedAt = performance.now();
-      const [result] = await Promise.all([run_external_library_launcher_pool(
+      const [result, , browser] = await Promise.all([run_external_library_launcher_pool(
         opaqueTargets,
         async (target) => {
           try {
@@ -608,7 +622,10 @@ export async function run_node_selected_verifications(
         },
         requestedScheduling.kind === "fixed" ? requestedScheduling.concurrency : requestedScheduling.lowConcurrency,
         options.signal,
-      )]);
+      ), browserIds.length === 0
+        ? empty_result()
+        : configuration.browserExecutor!.run(catalog, browserIds, onEvent, options)]);
+      browserResult = browser;
       externalPhaseMs = performance.now() - startedAt;
       return result;
     },
@@ -624,18 +641,18 @@ export async function run_node_selected_verifications(
   });
   if (configuration.recordMetrics === undefined) latestMetrics = completedMetrics;
   else configuration.recordMetrics(completedMetrics);
-  const fail = canonical.summary.fail + externalFail + commandFail;
+  const fail = canonical.summary.fail + externalFail + commandFail + browserResult.summary.fail;
   return Object.freeze({
     ok: options.signal?.aborted !== true && fail === 0,
     ...(options.signal?.aborted ? { cancelled: true as const } : {}),
     summary: Object.freeze({
-      suites: canonical.summary.suites + externalCompleted + commandCompleted,
-      cases: canonical.summary.cases + externalCompleted + commandCompleted,
-      pass: canonical.summary.pass + externalPass + commandPass,
+      suites: canonical.summary.suites + externalCompleted + commandCompleted + browserResult.summary.suites,
+      cases: canonical.summary.cases + externalCompleted + commandCompleted + browserResult.summary.cases,
+      pass: canonical.summary.pass + externalPass + commandPass + browserResult.summary.pass,
       fail,
-      skip: canonical.summary.skip,
+      skip: canonical.summary.skip + browserResult.summary.skip,
       msTotal: overlappedTotalMs,
-      failures: Object.freeze([...canonical.summary.failures, ...externalFailures]),
+      failures: Object.freeze([...canonical.summary.failures, ...externalFailures, ...browserResult.summary.failures]),
     }),
   });
 }

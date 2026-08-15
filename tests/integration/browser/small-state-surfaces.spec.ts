@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./livehost-browser-test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
 
 test("About switches local topics, presents one selection, and resets on remount", async ({ page }) => {

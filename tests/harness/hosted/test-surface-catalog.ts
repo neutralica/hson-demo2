@@ -122,6 +122,10 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:direct-all-performance-node": "tests/runners/harness/run-direct-all-performance.node.mts",
   "test:phase6a-node-mothership": "tests/runners/harness/run-phase-6a-node-mothership.node.mts",
   "test:phase6a-full-node-hosted": "tests/runners/harness/run-phase-6a-full-node-hosted.node.mts",
+  "test:phase6b-browser-executor": "tests/runners/harness/run-phase-6b-browser-executor.node.mts",
+  "test:phase6b-browser-cancellation": "tests/runners/harness/run-phase-6b-browser-cancellation.node.mts",
+  "test:phase6b-mixed-run": "tests/runners/harness/run-phase-6b-mixed-run.node.mts",
+  "test:phase6b-full-browser-hosted": "tests/runners/harness/run-phase-6b-full-browser-hosted.node.mts",
 } as const);
 
 const CANONICAL_COMMANDS = new Set(["test:canonical-node", "test:node-application-host"]);
@@ -146,6 +150,10 @@ const AGGREGATE_COMMANDS = new Set([
   "test:inclusive-library-node",
   "test:phase6a-node-mothership",
   "test:phase6a-full-node-hosted",
+  "test:phase6b-browser-executor",
+  "test:phase6b-browser-cancellation",
+  "test:phase6b-mixed-run",
+  "test:phase6b-full-browser-hosted",
 ]);
 const ARTIFACT_COMMANDS = new Set(["test:node-production-runtime"]);
 const UTILITY_REASONS = Object.freeze({

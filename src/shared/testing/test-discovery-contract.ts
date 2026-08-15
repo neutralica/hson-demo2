@@ -32,7 +32,7 @@ export type TestDecodeResult<T> =
 
 const CAPABILITIES: readonly TestCapability[] = Object.freeze([
   "javascript", "node", "process", "worker-threads", "synthetic-dom", "synthetic-canvas",
-  "browser-dom", "browser", "chromium", "cloudflare-worker", "filesystem", "websocket",
+  "browser-dom", "browser-raster", "browser", "chromium", "cloudflare-worker", "filesystem", "websocket",
   "network", "local-server", "compiler/typescript", "build-tooling", "dynamic-generated",
   "environment/secrets", "deployment-access",
 ]);
@@ -123,7 +123,7 @@ function decode_suite_descriptor(value: unknown): TestSuiteDescriptor | undefine
     || typeof input.subject !== "string" || !SUBJECTS.includes(input.subject as TestSubject)
     || typeof input.provenance !== "string" || !PROVENANCES.includes(input.provenance as TestProvenance)
     || !non_negative_integer(input.order)
-    || (input.executionShape !== "cases"
+    || (input.executionShape !== "cases" && input.executionShape !== "browser-journeys"
       && input.executionShape !== "opaque-aggregate"
       && input.executionShape !== "certification-aggregate")
     || (input.sourceRef !== undefined && typeof input.sourceRef !== "string")

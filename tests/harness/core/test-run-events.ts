@@ -29,6 +29,9 @@ export function normalize_test_event(
   if (event.t === "external_end" || event.t === "external_state") {
     throw new Error(`External launcher events are not canonical TestCase events: ${event.id}`);
   }
+  if (event.t === "evidence") {
+    throw new Error("Evidence events are normalized directly by the LiveHost lifecycle adapter.");
+  }
   const descriptor = descriptorFor(event.suite, event.caseId);
   if (descriptor === undefined) throw new Error(`No canonical descriptor for ${event.suite}::${event.caseId}`);
   if (event.t === "case_begin") {

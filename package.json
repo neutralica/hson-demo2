@@ -98,7 +98,11 @@
     "test:hosted-performance-node": "node --import=tsx tests/runners/harness/run-hosted-test-performance.node.mts",
     "test:direct-all-performance-node": "node --expose-gc --import=tsx tests/runners/harness/run-direct-all-performance.node.mts",
     "test:phase6a-node-mothership": "node --import=tsx tests/runners/harness/run-phase-6a-node-mothership.node.mts",
-    "test:phase6a-full-node-hosted": "node --import=tsx tests/runners/harness/run-phase-6a-full-node-hosted.node.mts"
+    "test:phase6a-full-node-hosted": "node --import=tsx tests/runners/harness/run-phase-6a-full-node-hosted.node.mts",
+    "test:phase6b-browser-executor": "node --import=tsx tests/runners/harness/run-phase-6b-browser-executor.node.mts",
+    "test:phase6b-browser-cancellation": "node --import=tsx tests/runners/harness/run-phase-6b-browser-cancellation.node.mts",
+    "test:phase6b-mixed-run": "node --import=tsx tests/runners/harness/run-phase-6b-mixed-run.node.mts",
+    "test:phase6b-full-browser-hosted": "node --import=tsx tests/runners/harness/run-phase-6b-full-browser-hosted.node.mts"
   },
   "keywords": [],
   "author": "terminal_gothic",

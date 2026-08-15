@@ -21,6 +21,7 @@ export type PlannedTestSuite = Readonly<{
   provenance: TestProvenance;
   order: number;
   executionShape: TestExecutionShape;
+  executorId?: string;
   sourceRef?: string;
   declaredChecks?: number;
   cases: readonly PlannedTestCase[];

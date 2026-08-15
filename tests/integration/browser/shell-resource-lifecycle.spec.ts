@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./livehost-browser-test";
 import { OKLCH_COLOR_TARGETS } from "../../../src/app/demos/oklch/link-colors";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
 

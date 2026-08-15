@@ -49,6 +49,7 @@ export type HostedTestServer = Readonly<{
   }>;
   disconnectConnections(hostId?: string): void;
   metrics(): ReturnType<Awaited<ReturnType<typeof create_node_hosted_tests_application>>["metrics"]>;
+  browserMetrics?(): ReturnType<Awaited<ReturnType<typeof create_node_hosted_tests_application>>["browserMetrics"]>;
   stop(): Promise<void>;
 }>;
 
@@ -144,6 +145,7 @@ export async function start_hosted_test_server(
         reportRecoveryCommitBytes: hosted.reportRecoveryCommitBytes,
       });
     },
+    browserMetrics: hostedTests.browserMetrics,
     stop: host.stop,
   });
 }

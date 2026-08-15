@@ -132,7 +132,12 @@ export type ExternalLibraryLauncherService = Readonly<{
   ): Promise<ExternalLibraryLauncherResult>;
   runCommand(
     command: SupervisedNodeCommand,
-    options?: Readonly<{ signal?: AbortSignal; terminationGeneration?: number }>,
+    options?: Readonly<{
+      signal?: AbortSignal;
+      terminationGeneration?: number;
+      observeStdoutChunk?: (text: string) => void;
+      observeStderrChunk?: (text: string) => void;
+    }>,
   ): Promise<SupervisedNodeCommandResult>;
   terminate(): void;
   terminationGeneration(): number;
@@ -607,7 +612,12 @@ function terminate_process_tree(child: ChildProcess, signal: NodeJS.Signals): vo
 async function run_supervised_node_command_with_state(
   state: ExternalLibraryLauncherState,
   invocation: SupervisedNodeCommand,
-  options: Readonly<{ signal?: AbortSignal; terminationGeneration?: number }> = {},
+  options: Readonly<{
+    signal?: AbortSignal;
+    terminationGeneration?: number;
+    observeStdoutChunk?: (text: string) => void;
+    observeStderrChunk?: (text: string) => void;
+  }> = {},
 ): Promise<SupervisedNodeCommandResult> {
   if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.terminationGeneration) {
     throw new Error(`Supervised Node command was cancelled before start: ${invocation.id}`);
@@ -644,8 +654,14 @@ async function run_supervised_node_command_with_state(
     };
     state.activeChildren.set(child, requestTermination);
     state.maximumObservedConcurrentChildren = Math.max(state.maximumObservedConcurrentChildren, state.activeChildren.size);
-    child.stdout?.on("data", (chunk: Buffer) => stdoutCapture.add(chunk));
-    child.stderr?.on("data", (chunk: Buffer) => stderrCapture.add(chunk));
+    child.stdout?.on("data", (chunk: Buffer) => {
+      stdoutCapture.add(chunk);
+      options.observeStdoutChunk?.(chunk.toString("utf8"));
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderrCapture.add(chunk);
+      options.observeStderrChunk?.(chunk.toString("utf8"));
+    });
     const timer = setTimeout(() => {
       timedOut = true;
       requestTermination();

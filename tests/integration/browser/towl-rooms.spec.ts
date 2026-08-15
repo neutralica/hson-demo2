@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./livehost-browser-test";
 import { open_demo } from "./app-test-support";
 
 test.setTimeout(90_000);

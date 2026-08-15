@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "./livehost-browser-test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
 
 async function open_cellsheet(page: Page): Promise<Locator> {

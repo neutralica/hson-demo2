@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./livehost-browser-test";
 import { monitor_application_errors, open_demo, reach_demo } from "./app-test-support";
 
 type TowlLazyMetrics = Readonly<{
@@ -188,8 +188,8 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
   await open_demo(page, "test");
   const panel = page.getByTestId("hosted-test-panel");
-  await expect(panel).toHaveAttribute("data-hosted-executor", "local-node-livehost", { timeout: 10_000 });
-  await expect(page.getByTestId("hosted-test-executor")).toContainText("Local Node LiveHost");
+  await expect(panel).toHaveAttribute("data-hosted-executor", "node-livehost-mothership", { timeout: 10_000 });
+  await expect(page.getByTestId("hosted-test-executor")).toContainText("Node LiveHost Mothership");
   await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ cases/);
   await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ checks/);
   await expect(page.getByTestId("hosted-test-executor")).toContainText(/\d+ certifications/);
@@ -236,6 +236,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(targetedSuite).toBeEnabled();
   await expect(targetedSuite.locator("option").first()).toHaveText(/^all livetree suites \(\d+\)$/);
   await expect(targetedSuite.locator('option[value^="suite:livemap/"]')).toHaveCount(0);
+  await expect(targetedSuite.locator('option[value="suite:livetree/browser-raster-fidelity"]')).toHaveCount(1);
   await expect(targetedCase).toBeDisabled();
   await targetedSuite.selectOption("suite:livetree/canvas-clear");
   await expect(targetedCase).toBeEnabled();

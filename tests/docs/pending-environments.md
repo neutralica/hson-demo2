@@ -24,15 +24,23 @@ control contract must remain explicit.
 
 ## Browser executor
 
-Required for 67 Playwright journeys and four authored canvas raster-readback
-cases. It needs managed Chromium, browser DOM/layout/canvas, supervised Vite and
-LiveHost servers, network/WebSocket access, cancellation, traces, screenshots,
-video where configured, server logs, and normalized reports.
+Implemented locally in Phase 6B for 67 Playwright journeys and four authored
+canvas raster-readback cases. Node LiveHost owns selection, RunPlan, report
+authority, cancellation, process supervision, and recovery; one isolated native
+Playwright child owns Chromium plus the existing Playwright fixtures, contexts,
+retries, Vite server, and hosted-test server.
 
-The four raster cases are exactly the identities in
-`JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS`. The synthetic canvas recorder remains
-authoritative for deterministic command/state behavior; it intentionally does
-not pretend to implement pixel output.
+The executor provides browser DOM/layout/canvas, network/WebSocket access,
+process-tree cancellation, bounded stdout/stderr, console/page/network evidence,
+and trace/screenshot references when Playwright produces them. Artifact paths
+are unique per run, survive report recovery, and are removed when the owning
+Node-hosted server is disposed.
+
+The four raster cases remain exactly the identities in
+`JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS`, but are no longer deferred from local
+hosting. The synthetic canvas recorder remains authoritative for deterministic
+command/state behavior; it intentionally does not pretend to implement pixel
+output.
 
 ## Optional Worker portability
 

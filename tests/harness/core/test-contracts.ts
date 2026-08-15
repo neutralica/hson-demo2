@@ -19,7 +19,9 @@ export type TestExpectedError = Readonly<{
 }>;
 
 // allow runner to attach derived diagnostics after executing the case
-export type TestEvent =
+type TestEventExecutor = Readonly<{ executorId?: string }>;
+
+export type TestEvent = (
   | { t: "suite_begin"; suite: string; totalPlanned?: number }
   | { t: "suite_end"; suite: string; ms: number }
   | { t: "case_begin"; suite: string; caseId: string; name: string; meta?: Record<string, string> }
@@ -84,7 +86,20 @@ export type TestEvent =
     stderrBytes?: number;
     stdoutTruncated?: boolean;
     stderrTruncated?: boolean;
-  };
+  }
+  | {
+    t: "evidence";
+    suite: string;
+    caseId?: string;
+    kind: "stdout" | "stderr" | "runtime_warning" | "artifact";
+    name: string;
+    content: string;
+    reference?: string;
+    mediaType?: string;
+    truncated?: boolean;
+    knownBytes?: number;
+  }
+) & TestEventExecutor;
 
 export type TestCase = Readonly<{
   suite: string;

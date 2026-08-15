@@ -12,6 +12,7 @@ export type MakeTestRunPlanOptions = Readonly<{
   executorId: string;
   catalog: TestCatalog;
   selectedIds: readonly string[];
+  assignExecutor?: (suite: TestCatalog["suites"][number]) => string;
 }>;
 
 export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan {
@@ -38,7 +39,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
     }
     if (!is_test_suite_id(id)) throw new Error(`Malformed Test RunPlan selection identity: ${id}`);
     const suite = suiteById.get(id);
-    if (suite === undefined || suite.executionShape === "cases") {
+    if (suite === undefined || suite.executionShape === "cases" || suite.executionShape === "browser-journeys") {
       throw new SelectedTestResolutionError(id, options.executorId);
     }
     aggregateSuites.add(id);
@@ -64,6 +65,7 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
       provenance: suite.provenance,
       order,
       executionShape: suite.executionShape,
+      executorId: options.assignExecutor?.(suite) ?? options.executorId,
       ...(suite.sourceRef === undefined ? {} : { sourceRef: suite.sourceRef }),
       ...(suite.declaredChecks === undefined ? {} : { declaredChecks: suite.declaredChecks }),
       cases,
@@ -71,7 +73,9 @@ export function make_test_run_plan(options: MakeTestRunPlanOptions): TestRunPlan
   });
   Object.freeze(suites);
   const selectionIds = Object.freeze(suites.flatMap((suite) => (
-    suite.executionShape !== "cases" ? [suite.id] : suite.cases.map((testCase) => testCase.id)
+    suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys"
+      ? [suite.id]
+      : suite.cases.map((testCase) => testCase.id)
   )));
   return Object.freeze({
     runId: options.runId,

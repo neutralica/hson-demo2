@@ -26,6 +26,7 @@ export const TEST_CENSUS_CAPABILITIES = Object.freeze([
   "synthetic-dom",
   "synthetic-canvas",
   "browser-dom",
+  "browser-raster",
   "browser",
   "chromium",
   "websocket",
@@ -212,7 +213,7 @@ function command_hostability(entry: TestSurfaceCatalogEntry, capabilities: reado
   if (entry.classification === "build/typecheck certification" || entry.role === "production artifact verification") {
     return Object.freeze({ hostabilityClass: "verification-only", phase6ExecutorClass: "verification-executor", missing: "remote build/typecheck execution and artifact capture" });
   }
-  if (capabilities.includes("browser")) return Object.freeze({ hostabilityClass: "hostable-browser", phase6ExecutorClass: "browser-executor", missing: "managed Chromium with supervised local server and artifact upload" });
+  if (capabilities.includes("browser")) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: "browser-executor", missing: "deploy the complete Node LiveHost mothership with Chromium" });
   if (entry.appearsInHostedUi) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: capabilities.includes("process") ? "deployed supervised process executor" : "deployed Node executor" });
   if (capabilities.includes("process")) return Object.freeze({ hostabilityClass: "hostable-external-process", phase6ExecutorClass: "supervised-process-executor", missing: "deployed supervised process execution" });
   if (capabilities.includes("cloudflare-worker")) return Object.freeze({ hostabilityClass: "hostable-worker", phase6ExecutorClass: "deployed-worker-executor", missing: "optional Cloudflare Worker portability executor" });
@@ -228,7 +229,8 @@ function command_census(entry: TestSurfaceCatalogEntry): TestSurfaceCensusEntry 
   const certification = kind === "type/compile certification" || kind === "build/entrypoint certification" || kind === "inventory/meta certification";
   const hostedCommand = (NODE_HOSTED_COMMAND_SURFACE_IDS as readonly string[]).includes(entry.id);
   const hostedAlias = (NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS as readonly string[]).includes(entry.id);
-  const localLiveHost = entry.appearsInHostedUi || hostedCommand || hostedAlias;
+  const localLiveHost = entry.appearsInHostedUi || hostedCommand || hostedAlias || capabilities.includes("browser");
+  const browserAggregate = entry.id === "hson-demo2:test:browser";
   return Object.freeze({
     id: entry.id,
     semanticSubject: entry.externalLauncher?.primarySubject ?? entry.category,
@@ -239,7 +241,9 @@ function command_census(entry: TestSurfaceCatalogEntry): TestSurfaceCensusEntry 
     denominator: opaque ? "opaque checks" : generated ? "dynamic/generated checks" : certification || hostedCommand ? "certification surfaces" : "none",
     semanticCount: opaque ? entry.externalLauncher!.executableChecks : generated ? null : certification || hostedCommand ? 1 : null,
     ...(generated ? { dynamicCountPolicy: `${GENERATED_JSON_SEED_ENVIRONMENT} selects the seed; ${GENERATED_JSON_COUNT_ENVIRONMENT} selects the generated check count (default ${DEFAULT_GENERATED_JSON_CASES}).` } : {}),
-    currentExecutor: hostedCommand
+    currentExecutor: browserAggregate
+      ? "semantic alias for the Node LiveHost supervised Playwright/Chromium all-browser selection"
+      : hostedCommand
       ? "Node LiveHost supervised command executor"
       : hostedAlias ? "Node LiveHost canonical/opaque executor" : entry.environment,
     requiredCapabilities: capabilities,
@@ -249,10 +253,10 @@ function command_census(entry: TestSurfaceCatalogEntry): TestSurfaceCensusEntry 
     currentDeployedLiveHostAvailability: false,
     cancellationSupport: localLiveHost ? "authoritative" : entry.role === "developer utility" ? "not applicable" : "runner-local",
     recoveryReportSupport: localLiveHost ? "normalized LiveHost report" : certification ? "artifact result" : entry.role === "developer utility" ? "not applicable" : "terminal evidence only",
-    artifactEvidenceRequirements: Object.freeze(localLiveHost
-      ? ["normalized lifecycle", "normalized report", "captured stdout/stderr for opaque launchers"]
-      : capabilities.includes("browser")
+    artifactEvidenceRequirements: Object.freeze(capabilities.includes("browser")
         ? ["journey result", "trace/screenshot/video on failure", "server logs"]
+      : localLiveHost
+        ? ["normalized lifecycle", "normalized report", "captured stdout/stderr for opaque launchers"]
         : certification
           ? ["exit status", "compiler/build diagnostics", "produced artifact identity when applicable"]
           : ["exit status", "stdout/stderr"]),
@@ -274,18 +278,18 @@ function browser_fidelity_census(id: string): TestSurfaceCensusEntry {
     verificationKind: "semantic runtime test",
     denominator: "browser journeys",
     semanticCount: 1,
-    currentExecutor: "no passing executor; jsdom diagnostics certify the unsupported raster boundary",
-    requiredCapabilities: Object.freeze(["javascript", "browser-dom", "browser", "chromium"] as const),
-    currentLocalAvailability: false,
-    currentLocalLiveHostAvailability: false,
+    currentExecutor: "Node LiveHost supervised Playwright/Chromium browser executor",
+    requiredCapabilities: Object.freeze(["javascript", "node", "process", "browser-dom", "browser-raster", "browser", "chromium", "local-server"] as const),
+    currentLocalAvailability: true,
+    currentLocalLiveHostAvailability: true,
     currentDeployedAvailability: false,
     currentDeployedLiveHostAvailability: false,
-    cancellationSupport: "none",
-    recoveryReportSupport: "terminal evidence only",
-    artifactEvidenceRequirements: Object.freeze(["pixel assertion result", "failure screenshot/trace"]),
-    hostabilityClass: "hostable-browser",
-    reasonNotCurrentlyDeployed: "The deterministic synthetic-canvas recorder intentionally has no raster readback.",
-    exactMissingCapability: "real CanvasRenderingContext2D rasterization and getImageData in a managed browser",
+    cancellationSupport: "authoritative",
+    recoveryReportSupport: "normalized LiveHost report",
+    artifactEvidenceRequirements: Object.freeze(["normalized pixel assertion lifecycle", "failure screenshot/trace reference"]),
+    hostabilityClass: "hosted-local-now",
+    reasonNotCurrentlyDeployed: "The Node LiveHost mothership and its supervised Chromium process are not deployed yet.",
+    exactMissingCapability: "deploy the Node LiveHost mothership with Playwright Chromium system dependencies",
     phase6ExecutorClass: "browser-executor",
   });
 }
@@ -294,7 +298,7 @@ function canonical_census(): readonly TestSurfaceCensusEntry[] {
   const node = make_local_node_livehost_executor_registry();
   const worker = make_cloudflare_livehost_executor_registry();
   const workerSuites = new Set(worker.catalog.suites.map((suite) => suite.id));
-  return Object.freeze(node.catalog.suites.map((suite) => {
+  return Object.freeze(node.catalog.suites.filter((suite) => suite.executionShape === "cases").map((suite) => {
     const workerCapable = workerSuites.has(suite.id);
     const cases = node.catalog.tests.filter((test) => test.suiteId === suite.id);
     const capabilities = unique_capabilities(cases.flatMap((test) => test.requirements as readonly TestCensusCapability[]));
@@ -339,18 +343,18 @@ function browser_census(surface: BrowserSurfaceInventory): TestSurfaceCensusEntr
     verificationKind: "semantic runtime test",
     denominator: "browser journeys",
     semanticCount: surface.cases,
-    currentExecutor: "local Playwright Chromium",
+    currentExecutor: "Node LiveHost supervised Playwright/Chromium browser executor",
     requiredCapabilities: Object.freeze(["javascript", "node", "process", "browser-dom", "browser", "chromium", "network", "local-server"] as const),
     currentLocalAvailability: true,
-    currentLocalLiveHostAvailability: false,
+    currentLocalLiveHostAvailability: true,
     currentDeployedAvailability: false,
     currentDeployedLiveHostAvailability: false,
-    cancellationSupport: "runner-local",
-    recoveryReportSupport: "artifact result",
-    artifactEvidenceRequirements: Object.freeze(["Playwright result", "trace/screenshot/video on failure", "Vite and LiveHost server logs"]),
-    hostabilityClass: "hostable-browser",
-    reasonNotCurrentlyDeployed: "No deployed browser executor is registered with LiveHost.",
-    exactMissingCapability: "managed Chromium, supervised Vite/LiveHost servers, lifecycle normalization, and artifact upload",
+    cancellationSupport: "authoritative",
+    recoveryReportSupport: "normalized LiveHost report",
+    artifactEvidenceRequirements: Object.freeze(["normalized journey lifecycle", "trace/screenshot references on failure", "browser console/network and supervised server evidence"]),
+    hostabilityClass: "hosted-local-now",
+    reasonNotCurrentlyDeployed: "The Node LiveHost mothership and its supervised Chromium process are not deployed yet.",
+    exactMissingCapability: "deploy the Node LiveHost mothership with Playwright Chromium system dependencies",
     phase6ExecutorClass: "browser-executor",
   });
 }

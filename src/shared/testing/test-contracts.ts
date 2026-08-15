@@ -8,6 +8,7 @@ export type TestCapability =
   | "synthetic-dom"
   | "synthetic-canvas"
   | "browser-dom"
+  | "browser-raster"
   | "browser"
   | "chromium"
   | "cloudflare-worker"
@@ -42,7 +43,7 @@ export const TEST_SUBJECT_IDENTIFIERS = Object.freeze([
 export type TestSubject = typeof TEST_SUBJECT_IDENTIFIERS[number];
 export type TestCollection = "unit" | "dev";
 export type TestProvenance = "hson-demo2" | "hson-live";
-export type TestExecutionShape = "cases" | "opaque-aggregate" | "certification-aggregate";
+export type TestExecutionShape = "cases" | "browser-journeys" | "opaque-aggregate" | "certification-aggregate";
 
 export type TestDescriptorMetadata = Readonly<{
   subject: TestSubject;
@@ -51,6 +52,8 @@ export type TestDescriptorMetadata = Readonly<{
   title?: string;
   provenance?: TestProvenance;
   order?: number;
+  executionShape?: TestExecutionShape;
+  sourceRef?: string;
 }>;
 
 export type TestDescriptorMetadataOverride = Readonly<{

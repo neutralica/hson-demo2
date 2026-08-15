@@ -20,7 +20,7 @@ function validate_catalog(catalog: TestCatalog): void {
     if (new Set(descriptor.collections).size !== descriptor.collections.length) {
       throw new Error(`Duplicate test collection on ${descriptor.id}.`);
     }
-    if (descriptor.executionShape !== "cases"
+    if (descriptor.executionShape !== "cases" && descriptor.executionShape !== "browser-journeys"
       && (!Number.isSafeInteger(descriptor.declaredChecks) || (descriptor.declaredChecks ?? 0) < 1)) {
       throw new Error(`Aggregate suite ${descriptor.id} requires a positive declaredChecks count.`);
     }
@@ -39,7 +39,8 @@ function validate_catalog(catalog: TestCatalog): void {
     if (new Set(descriptor.collections).size !== descriptor.collections.length) {
       throw new Error(`Duplicate test collection on ${descriptor.id}.`);
     }
-    if (suites.get(descriptor.suiteId)?.executionShape !== "cases") {
+    const shape = suites.get(descriptor.suiteId)?.executionShape;
+    if (shape !== "cases" && shape !== "browser-journeys") {
       throw new Error(`Canonical case ${descriptor.id} has no case-based suite descriptor.`);
     }
   }

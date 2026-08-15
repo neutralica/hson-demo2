@@ -254,7 +254,7 @@ export function tp_factory(options: Readonly<{
     let cancelSummaryFrame: (() => void) | undefined;
     let explicitExecutionCount = 0;
     const queuedSuiteIds = new Set<string>();
-    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "opaque-aggregate" | "certification-aggregate"; terminal: boolean }>>();
+    const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "browser-journeys" | "opaque-aggregate" | "certification-aggregate"; terminal: boolean }>>();
     let canonicalSuiteTotal = 0;
     let canonicalSuiteTerminal = 0;
     let opaqueSuiteTotal = 0;
@@ -387,7 +387,7 @@ export function tp_factory(options: Readonly<{
                 const isTerminal = suiteRun.status !== "queued" && suiteRun.status !== "running";
                 const previous = suiteProgress.get(suiteRun.id);
                 if (previous === undefined) {
-                    if (suiteRun.executionShape === "cases") {
+                    if (suiteRun.executionShape === "cases" || suiteRun.executionShape === "browser-journeys") {
                         canonicalSuiteTotal += 1;
                         if (isTerminal) canonicalSuiteTerminal += 1;
                     } else {
@@ -395,7 +395,7 @@ export function tp_factory(options: Readonly<{
                         if (isTerminal) opaqueSuiteTerminal += 1;
                     }
                 } else if (previous.terminal !== isTerminal) {
-                    if (suiteRun.executionShape === "cases") canonicalSuiteTerminal += isTerminal ? 1 : -1;
+                    if (suiteRun.executionShape === "cases" || suiteRun.executionShape === "browser-journeys") canonicalSuiteTerminal += isTerminal ? 1 : -1;
                     else opaqueSuiteTerminal += isTerminal ? 1 : -1;
                 }
                 suiteProgress.set(suiteRun.id, { shape: suiteRun.executionShape, terminal: isTerminal });
@@ -510,7 +510,7 @@ export function tp_factory(options: Readonly<{
         set_selector_enabled(targetedSuiteSel, false);
         set_selector_enabled(targetedTestSel, false);
         update_selected_presentation();
-        if (next.catalog.tests.length + next.catalog.suites.filter((suite) => suite.executionShape !== "cases").length > 0) runBtn.flags.clear("disabled");
+        if (next.catalog.tests.length + next.catalog.suites.filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys").length > 0) runBtn.flags.clear("disabled");
         else {
             runBtn.flags.set("disabled");
             appendLogLine("host discovery returned no executable tests");
@@ -606,7 +606,7 @@ export function tp_factory(options: Readonly<{
             const selectedSuiteId = targetedSuite?.selection.kind === "suite" ? targetedSuite.selection.suite : undefined;
             const aggregateSuite = selectedSuiteId === undefined
               ? undefined
-              : discovery.catalog.suites.find((suite) => suite.executionShape !== "cases" && suite.id === selectedSuiteId);
+              : discovery.catalog.suites.find((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys" && suite.id === selectedSuiteId);
             targetedTestChoices = targetedSuite?.selection.kind === "suite"
                 ? hosted_test_panel_test_choices(discovery.catalog.tests, targetedSuite.selection.suite, discovery.catalog.suites)
                 : Object.freeze([]);
@@ -706,12 +706,12 @@ export function tp_factory(options: Readonly<{
                     const targetedSuite = targetedSuiteChoices.find((choice) => choice.key === targetedSuiteKey);
                     const selectedSuiteId = targetedSuite?.selection.kind === "suite" ? targetedSuite.selection.suite : undefined;
                     if (selectedSuiteId !== undefined
-                      && !discovery.catalog.suites.some((suite) => suite.executionShape !== "cases" && suite.id === selectedSuiteId)) {
+                      && !discovery.catalog.suites.some((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys" && suite.id === selectedSuiteId)) {
                         set_selector_enabled(targetedTestSel, true);
                     } else {
                         set_selector_enabled(targetedTestSel, false);
                     }
-                    if (discovery.catalog.tests.length + discovery.catalog.suites.filter((suite) => suite.executionShape !== "cases").length > 0) runBtn.flags.clear("disabled");
+                    if (discovery.catalog.tests.length + discovery.catalog.suites.filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys").length > 0) runBtn.flags.clear("disabled");
                 }
             }
         });

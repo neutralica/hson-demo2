@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./livehost-browser-test";
 import { monitor_application_errors } from "./app-test-support";
 import type {
   run_sanitizer_metadata_fixture,

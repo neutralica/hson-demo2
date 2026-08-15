@@ -7,7 +7,7 @@ import type { TestSuite } from "../../harness/core/test-contracts";
 import { executor_supports, make_test_executor_registry, select_executor } from "../../harness/core/test-executor";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { create_external_library_launcher_service } from "../../harness/runtimes/node/external-library-launchers";
-import { LOCAL_NODE_LIVEHOST_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
+import { LOCAL_NODE_LIVEHOST_EXECUTOR, NODE_LIVEHOST_MOTHERSHIP_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 const originalWorkerEndpoint = process.env.VITE_HOSTED_TEST_WS_URL;
@@ -29,12 +29,13 @@ let commandEvidence = "";
 try {
   await runtime.ready();
   const discovery = await runtime.discover();
-  assert.equal(discovery.executor.id, LOCAL_NODE_LIVEHOST_EXECUTOR.id);
+  assert.equal(discovery.executor.id, NODE_LIVEHOST_MOTHERSHIP_EXECUTOR.id);
   assert.equal(discovery.executor.kind, "node");
   assert.equal(discovery.catalog.tests.length > 0, true);
   assert.equal(discovery.catalog.suites.some((suite) => suite.executionShape === "opaque-aggregate"), true);
   assert.equal(discovery.catalog.suites.some((suite) => suite.executionShape === "certification-aggregate"), true);
   assert.equal(discovery.catalog.suites.some((suite) => suite.requirements.includes("cloudflare-worker")), false);
+  assert.equal(discovery.catalog.suites.some((suite) => suite.executionShape === "browser-journeys"), true);
 
   const canonicalId = discovery.catalog.tests[0]!.id;
   const canonical = await runtime.start_selected([canonicalId]);
@@ -74,7 +75,7 @@ try {
   assert.deepEqual(commandSuiteRun.counts, {
     declared: 1, total: 1, executed: 1, passed: 1, failed: 0, skipped: 0, unsupported: 0, cancelled: 0,
   });
-  assert.deepEqual(commandSuiteRun.executorIds, [LOCAL_NODE_LIVEHOST_EXECUTOR.id]);
+  assert.deepEqual(commandSuiteRun.executorIds, [NODE_LIVEHOST_MOTHERSHIP_EXECUTOR.id]);
   commandEvidence = commandSuiteRun.evidence.map((entry) => entry.content).join("\n");
   assert.match(commandEvidence, /hosted test timing: ok/);
   command.dispose();

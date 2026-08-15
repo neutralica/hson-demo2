@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./livehost-browser-test";
 import { monitor_application_errors } from "./app-test-support";
 
 test("canonical QUID selectors schedule, apply, update, isolate, and clean up in HTML and SVG", async ({ page }) => {

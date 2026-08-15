@@ -83,7 +83,7 @@ export function make_test_catalog(
     if (!Number.isSafeInteger(descriptor.order) || descriptor.order < 0) {
       throw new Error(`Invalid canonical suite order for ${descriptor.id}.`);
     }
-    if (descriptor.executionShape !== "cases"
+    if (descriptor.executionShape !== "cases" && descriptor.executionShape !== "browser-journeys"
       && (!Number.isSafeInteger(descriptor.declaredChecks) || (descriptor.declaredChecks ?? 0) < 1)) {
       throw new Error(`Aggregate suite ${descriptor.id} requires a positive declaredChecks count.`);
     }
@@ -95,8 +95,8 @@ export function make_test_catalog(
   }
   for (const descriptor of tests) {
     const suite = suiteById.get(descriptor.suiteId);
-    if (suite === undefined || suite.executionShape !== "cases") {
-      throw new Error(`Canonical case ${descriptor.id} has no case-based suite descriptor.`);
+    if (suite === undefined || (suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys")) {
+      throw new Error(`Test case ${descriptor.id} has no case-based suite descriptor.`);
     }
   }
   return Object.freeze({ suites: Object.freeze([...suiteById.values()]), tests });
@@ -136,7 +136,8 @@ export function catalog_from_test_suites(suites: readonly TestSuite[]): TestCata
       provenance: metadata.provenance ?? "hson-demo2",
       order: metadata.order ?? suiteOrdinal,
       requirements: Object.freeze([...metadata.requirements]),
-      executionShape: "cases",
+      executionShape: metadata.executionShape ?? "cases",
+      ...(metadata.sourceRef === undefined ? {} : { sourceRef: metadata.sourceRef }),
     });
   });
   return make_test_catalog(

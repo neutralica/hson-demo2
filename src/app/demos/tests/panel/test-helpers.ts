@@ -28,6 +28,10 @@ export const TEST_SUMMARY_ENTRY_ORDER = Object.freeze([
   "cert-pass",
   "cert-fail",
   "cert-cancel",
+  "browser",
+  "browser-pass",
+  "browser-fail",
+  "browser-cancel",
   "elapsed",
 ] as const);
 
@@ -86,6 +90,10 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
     "cert-pass": "certifications passed",
     "cert-fail": "certifications failed",
     "cert-cancel": "certifications cancelled",
+    browser: "browser journeys",
+    "browser-pass": "browser passed",
+    "browser-fail": "browser failed",
+    "browser-cancel": "browser cancelled",
     elapsed: "elapsed",
   });
   const slots = new Map(TEST_SUMMARY_ENTRY_ORDER.map((key) => [key, makeChip(definitions[key])] as const));

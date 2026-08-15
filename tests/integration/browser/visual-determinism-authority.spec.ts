@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./livehost-browser-test";
+import { register_browser_raster_fidelity_tests } from "./browser-raster-fidelity";
 import { monitor_application_errors, reach_demo } from "./app-test-support";
 
 const source = (relative: string): string => readFileSync(
@@ -180,3 +181,5 @@ test("Fireworks projects flash and canvas presentation through LiveTree", async 
   expect(projected).toBe(true);
   assertNoErrors();
 });
+
+register_browser_raster_fidelity_tests(test);

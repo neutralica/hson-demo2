@@ -85,7 +85,8 @@ export const HOSTED_TEST_COORDINATOR_SCHEMA = hson.liveMap.schema.define((s) => 
     collections: s.array(s.pick("unit", "dev")),
     provenance: s.pick("hson-demo2", "hson-live"),
     order: nonNegativeInteger,
-    executionShape: s.pick("cases", "opaque-aggregate", "certification-aggregate"),
+    executionShape: s.pick("cases", "browser-journeys", "opaque-aggregate", "certification-aggregate"),
+    executorId: s.string.optional,
     sourceRef: s.string.optional,
     declaredChecks: nonNegativeInteger.optional,
     cases: s.array(plannedCase),
@@ -170,6 +171,7 @@ export type HostedTestApplicationOptions = Readonly<{
   timeline?: HostedTestTimelineObserver;
   /** Production control-plane barrier: execution begins after initial report projection acknowledges readiness. */
   requireReportReady?: boolean;
+  assignExecutor?: (suite: TestExecutorDiscovery["catalog"]["suites"][number]) => string;
   lifecycle?: Readonly<{
     maxReports: number;
     terminalRetentionMs: number;
@@ -469,6 +471,7 @@ export function create_hosted_test_application(
       executorId: options.discovery.executor.id,
       catalog: options.discovery.catalog,
       selectedIds: plan.selectionIds,
+      ...(options.assignExecutor === undefined ? {} : { assignExecutor: options.assignExecutor }),
     });
     observe_hosted_test_timeline(options.timeline, "run_plan_created", {
       runId,

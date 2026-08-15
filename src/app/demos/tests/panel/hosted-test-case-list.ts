@@ -84,7 +84,7 @@ type SuiteProjection = {
   groupKey: HostedTestPresentationGroup;
   cases: ProjectedCase[];
   status: TestLifecycleStatus;
-  executionShape: "cases" | "opaque-aggregate" | "certification-aggregate";
+  executionShape: "cases" | "browser-journeys" | "opaque-aggregate" | "certification-aggregate";
   declaredChecks: number | null;
   counts: TestLifecycleCounts | null;
   pass: number;
@@ -330,7 +330,7 @@ export function make_hosted_test_case_list(
 
   function suite_summary(state: SuiteProjection): string {
     if (state.presentation !== undefined) return state.presentation.summary;
-    return state.executionShape === "cases"
+    return state.executionShape === "cases" || state.executionShape === "browser-journeys"
       ? `${state.cases.length} cases · ${state.pass} pass · ${state.fail} fail · ${state.skip} skip`
       : state.counts !== null && state.counts.executed > 0
         ? `${state.counts.executed}/${state.counts.declared} checks · ${state.counts.passed} pass · ${state.counts.failed} fail`
@@ -474,7 +474,7 @@ export function make_hosted_test_case_list(
     state.caseRowsHost = state.caseHost.create.div().classlist.set("hosted-case-rows");
     liveTreesConstructed += 3;
     render_presentation_details(state);
-    if (state.executionShape !== "cases") return;
+    if (state.executionShape !== "cases" && state.executionShape !== "browser-journeys") return;
     for (const testCase of state.cases) append_case(state, testCase);
   }
 

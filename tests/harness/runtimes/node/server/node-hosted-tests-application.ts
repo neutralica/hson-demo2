@@ -9,7 +9,7 @@ import {
   resolve_external_library_launchers,
 } from "../external-library-launchers";
 import { make_test_executor_discovery } from "../../../core/test-discovery";
-import { make_local_node_livehost_executor_registry } from "../livehost-node-executor";
+import { make_node_livehost_mothership_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
 import {
@@ -28,6 +28,7 @@ import {
   type NodeCapacityLiveHostSocket,
 } from "./node-capacity-livehost-socket";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
+import { create_playwright_browser_executor, LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../browser/playwright-browser-executor";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
@@ -76,12 +77,13 @@ export type NodeHostedTestsApplication = Readonly<{
     reportRecoveryCommits: number;
     reportRecoveryCommitBytes: number;
   }>;
+  browserMetrics(): ReturnType<ReturnType<typeof create_playwright_browser_executor>["metrics"]>;
 }>;
 
 export async function create_node_hosted_tests_application(
   options: NodeHostedTestsApplicationOptions = {},
 ): Promise<NodeHostedTestsApplication> {
-  const executorRegistry = options.executorRegistry ?? make_local_node_livehost_executor_registry();
+  const executorRegistry = options.executorRegistry ?? make_node_livehost_mothership_executor_registry();
   const externalLaunchers = options.executorRegistry === undefined
     ? await resolve_external_library_launchers()
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
@@ -98,7 +100,8 @@ export async function create_node_hosted_tests_application(
     }
   }
   const launcherService = create_external_library_launcher_service();
-  const selectedVerification = create_node_selected_verification_service(launcherService, commandSurfaces);
+  const browserExecutor = create_playwright_browser_executor(launcherService);
+  const selectedVerification = create_node_selected_verification_service(launcherService, commandSurfaces, browserExecutor);
   const discovery = make_test_executor_discovery(
     executorRegistry,
     externalLaunchers.targets,
@@ -122,6 +125,12 @@ export async function create_node_hosted_tests_application(
     ...(options.lifecycle === undefined ? {} : { lifecycle: options.lifecycle }),
     ...(options.timeline === undefined ? {} : { timeline: options.timeline }),
     requireReportReady: true,
+    assignExecutor(suite) {
+      return suite.requirements.includes("browser")
+        && executor_supports(LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR, suite)
+        ? LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id
+        : executorRegistry.executor.id;
+    },
   });
   const connections = new Map<WebSocket, Readonly<{
     authorityId: string;
@@ -266,6 +275,7 @@ export async function create_node_hosted_tests_application(
       }
       connections.clear();
       await authorities.dispose();
+      await browserExecutor.dispose();
     },
   });
 
@@ -310,5 +320,6 @@ export async function create_node_hosted_tests_application(
       reportRecoveryCommits,
       reportRecoveryCommitBytes,
     }),
+    browserMetrics: browserExecutor.metrics,
   });
 }

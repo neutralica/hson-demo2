@@ -9,8 +9,8 @@ The descriptive authority is:
   manifested hson-live launchers;
 - the executable Node and Worker catalogs for canonical suites and cases;
 - the files under `tests/integration/browser` for Playwright journeys;
-- `JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS` for authored raster cases that do not
-  yet have a passing executor;
+- `JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS` for the four authored raster semantic
+  identities now mapped to the browser executor;
 - `tests/runners/harness/run-test-surface-enumeration.node.mts` for repository
   discovery, parity, reachability, and the complete composed census.
 
@@ -24,16 +24,16 @@ The current derived snapshot is:
 
 | Denominator | Current truth | Meaning |
 |---|---:|---|
-| Runnable/verification surfaces | 376 | Independently selectable suites, launchers, browser specs/fidelity cases, standalone runners, aggregate runners, and certification commands. Developer-only utilities are excluded. |
+| Runnable/verification surfaces | 380 | Independently selectable suites, launchers, browser specs/fidelity cases, standalone runners, aggregate runners, and certification commands. Developer-only utilities are excluded. |
 | Canonical suites | 153 | Structured hson-demo2 suites in the local Node executor. |
 | Canonical cases | 2,499 | Stable suite/case identities with case lifecycle. |
 | Opaque launchers | 126 | Manifested hson-live launchers. |
 | Opaque checks | 2,994 | Launcher-declared checks without structured case identity. |
 | Hosted semantic checks | 5,493 | Canonical cases plus opaque checks after semantic duplicate retirement. |
 | Playwright specs / journeys | 14 / 67 | Real Chromium files and Playwright-owned test granularity. |
-| Browser fidelity cases | 4 | Authored canvas raster cases awaiting a browser executor. |
+| Browser fidelity cases | 4 | Authored canvas raster cases executed by real Chromium through Node LiveHost. |
 | Generated/fuzz surfaces | 1 dynamic runner | Seed and count are controlled by `HOSTED_FUZZ_SEED` and `HOSTED_FUZZ_CASES`; this is not folded into a fixed total. |
-| Certification surfaces | 56 | Typecheck, build/entrypoint, inventory/meta, Node-LiveHost command certifications, and production-artifact verification remain a separate denominator. |
+| Certification surfaces | 60 | Typecheck, build/entrypoint, inventory/meta, Node-LiveHost command certifications, and production-artifact verification remain a separate denominator. |
 
 The 5,493 figure is legitimate because the 2,499 canonical identities and
 2,994 opaque checks no longer claim the same semantic propositions. Browser,
@@ -66,12 +66,12 @@ executor executions.
 | Current class | Exact census population | Phase 6 implication |
 |---|---|---|
 | `hosted-deployed-now` | none verified from repository authority | The Worker is deployable, but the repository records neither a concrete deployed endpoint nor a deployed frontend endpoint configuration. |
-| `hosted-local-now` | 328 surfaces | All semantic cases/checks plus promoted Node command certifications and semantic command aliases use LiveHost authority locally. Deployment now requires only the complete Node service. |
+| `hosted-local-now` | 347 surfaces | All semantic cases/checks, browser journeys, raster cases, promoted Node command certifications, and semantic command aliases use LiveHost authority locally. Deployment now requires the complete Node service plus Chromium system dependencies. |
 | `hostable-worker` | 1 Cloudflare adapter portability certificate | Optional because its explicit subject is the Worker environment. |
 | `hostable-node` | none | Phase 6A closed command, jsdom, canvas, generated, integration, and source/meta dispatch. |
 | `hostable-external-process` | none | Phase 6A generalized the proven launcher supervisor. |
-| `hostable-browser` | 19 surfaces: 14 Playwright specs, their aggregate command, and 4 raster fidelity cases | Add managed Chromium, supervised servers, normalized lifecycle, and artifact upload. |
-| `verification-only` | 28 build/type/artifact, deployment-dependent, recursive, and historical aggregate command surfaces | Separate from semantic totals; promote only when operationally useful and nonrecursive. |
+| `hostable-browser` | none | Phase 6B closed the 19-surface browser gap locally. |
+| `verification-only` | 32 build/type/artifact, deployment-dependent, recursive, and historical aggregate command surfaces | Separate from semantic totals; promote only when operationally useful and nonrecursive. |
 | `blocked-external` | none | No legitimate current test is considered inherently unhostable. |
 
 The machine census records every stable identity and all required fields:
@@ -84,7 +84,7 @@ exact missing capability, and proposed Phase 6 executor class.
 Only capabilities observed in current sources are used:
 
 `javascript`, `node`, `worker-threads`, `cloudflare-worker`, `filesystem`, `process`, `synthetic-dom`,
-`synthetic-canvas`, `browser-dom`, `browser`, `chromium`, `websocket`, `network`,
+`synthetic-canvas`, `browser-dom`, `browser-raster`, `browser`, `chromium`, `websocket`, `network`,
 `local-server`, `compiler/typescript`, `build-tooling`, `dynamic-generated`,
 `environment/secrets`, and `deployment-access`.
 

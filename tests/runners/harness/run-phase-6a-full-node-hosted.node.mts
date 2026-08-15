@@ -24,7 +24,10 @@ try {
 
   await runtime.ready();
   const discovery = await runtime.discover();
-  const canonicalIds = discovery.catalog.tests.map((entry) => entry.id);
+  const canonicalSuiteIds = new Set(discovery.catalog.suites
+    .filter((suite) => suite.executionShape === "cases")
+    .map((suite) => suite.id));
+  const canonicalIds = discovery.catalog.tests.filter((entry) => canonicalSuiteIds.has(entry.suiteId)).map((entry) => entry.id);
   const opaqueSuiteIds = discovery.catalog.suites
     .filter((suite) => suite.executionShape === "opaque-aggregate")
     .map((suite) => suite.id);
@@ -65,6 +68,10 @@ try {
   assert.equal(recovered.client.recovery.map.capture().value.run.status, "passed");
   const metrics = server.metrics();
   const connections = server.connectionSnapshot();
+  const browserMetrics = server.browserMetrics!();
+  assert.equal(browserMetrics.launches, 0);
+  assert.equal(browserMetrics.activeProcesses, 0);
+  assert.equal(browserMetrics.activeJourneys, 0);
   const healthAfter = await fetch(healthUrl);
   assert.equal(healthAfter.status, 200);
 
@@ -83,6 +90,7 @@ try {
     backpressureRejections: connections.hostedTests.backpressureRejections,
     heartbeatHealth: healthAfter.status === 200,
     reportCommits: metrics.reportCommits,
+    browserLaunches: browserMetrics.launches,
     wallMs: performance.now() - startedAt,
   }));
   recovered.dispose();

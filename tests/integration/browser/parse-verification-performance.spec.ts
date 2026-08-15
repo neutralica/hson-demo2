@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./livehost-browser-test";
 import { open_demo, reach_demo } from "./app-test-support";
 
 type PanelMeasurement = Readonly<{

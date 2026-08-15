@@ -55,6 +55,7 @@ export type HostedTestSuiteRunReport = Readonly<{
   provenance: TestProvenance;
   order: number;
   executionShape: TestExecutionShape;
+  plannedExecutorId: string;
   sourceRef: string | null;
   declaredChecks: number | null;
   status: TestLifecycleStatus;

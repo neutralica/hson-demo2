@@ -70,13 +70,29 @@ function suite_matches(
     || (selection.kind === "test" && suite.id === selection.testId);
 }
 
+function explicit_browser_selection(selection: HostedTestPanelSelection): boolean {
+  return selection.kind === "suite" || selection.kind === "test";
+}
+
+function without_implicit_browser_cases(
+  descriptors: readonly TestDescriptor[],
+  selection: HostedTestPanelSelection,
+  suites: readonly TestSuiteDescriptor[],
+): readonly TestDescriptor[] {
+  if (explicit_browser_selection(selection)) return descriptors;
+  const browserSuiteIds = new Set(suites
+    .filter((suite) => suite.executionShape === "browser-journeys")
+    .map((suite) => suite.id));
+  return descriptors.filter((descriptor) => !browserSuiteIds.has(descriptor.suiteId));
+}
+
 export function hosted_test_panel_selection_case_count(
   descriptors: readonly TestDescriptor[],
   selection: HostedTestPanelSelection,
   suites: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): number {
-  return canonical_for_selection(descriptors, selection).length
-    + suites.filter((suite) => suite.executionShape !== "cases" && suite_matches(suite, selection))
+  return without_implicit_browser_cases(canonical_for_selection(descriptors, selection), selection, suites).length
+    + suites.filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys" && suite_matches(suite, selection))
       .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
 }
 
@@ -85,8 +101,12 @@ export function hosted_test_panel_selected_ids(
   selection: HostedTestPanelSelection,
   suites: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): readonly string[] {
-  const selected = canonical_for_selection(descriptors, selection);
-  const opaque = suites.filter((suite) => suite.executionShape !== "cases" && suite_matches(suite, selection));
+  const selected = without_implicit_browser_cases(
+    canonical_for_selection(descriptors, selection),
+    selection,
+    suites,
+  );
+  const opaque = suites.filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys" && suite_matches(suite, selection));
   const ordered = [
     ...selected.map((descriptor) => Object.freeze({
       id: descriptor.id,
@@ -131,7 +151,7 @@ export function hosted_test_panel_suite_choices(
   const scopedDescriptors = primarySelection === undefined
     ? descriptors
     : canonical_for_selection(descriptors, primarySelection);
-  const scopedOpaqueSuites = suiteDescriptors.filter((suite) => suite.executionShape !== "cases")
+  const scopedOpaqueSuites = suiteDescriptors.filter((suite) => suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys")
     .filter((suite) => primarySelection === undefined || suite_matches(suite, primarySelection));
   const suites = [...new Set(scopedDescriptors.map((descriptor) => descriptor.suiteId))]
     .sort((left, right) => compare_test_descriptors(
@@ -176,7 +196,8 @@ export function hosted_test_panel_test_choices(
   suite: string,
   suiteDescriptors: readonly TestSuiteDescriptor[] = Object.freeze([]),
 ): readonly HostedTestPanelSelectionChoice[] {
-  if (suiteDescriptors.some((descriptor) => descriptor.id === suite && descriptor.executionShape !== "cases")) return Object.freeze([]);
+  if (suiteDescriptors.some((descriptor) => descriptor.id === suite
+    && descriptor.executionShape !== "cases" && descriptor.executionShape !== "browser-journeys")) return Object.freeze([]);
   return Object.freeze(
     descriptors
       .filter((descriptor) => descriptor.suiteId === suite)

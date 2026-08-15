@@ -32,11 +32,19 @@ export type HostedTestProjectionSummary = Readonly<{
     fail: number;
     cancelled: number;
   }>;
+  browser: Readonly<{
+    total: number;
+    pass: number;
+    fail: number;
+    skip: number;
+    cancelled: number;
+  }>;
 }>;
 
 export function hosted_test_projection_summary(report: HostedTestReport): HostedTestProjectionSummary {
   const normalizedLaunchers = report.suiteRuns.filter((suite) => suite.executionShape === "opaque-aggregate");
   const normalizedCaseSuites = report.suiteRuns.filter((suite) => suite.executionShape === "cases");
+  const normalizedBrowserSuites = report.suiteRuns.filter((suite) => suite.executionShape === "browser-journeys");
   const normalizedCertifications = report.suiteRuns.filter((suite) => suite.executionShape === "certification-aggregate");
   return Object.freeze({
     suites: Object.freeze({
@@ -67,6 +75,13 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
       pass: normalizedCertifications.filter((entry) => entry.status === "pass").length,
       fail: normalizedCertifications.filter((entry) => entry.status === "fail").length,
       cancelled: normalizedCertifications.filter((entry) => entry.status === "cancelled").length,
+    }),
+    browser: Object.freeze({
+      total: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.total, 0),
+      pass: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.passed, 0),
+      fail: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.failed, 0),
+      skip: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.skipped, 0),
+      cancelled: normalizedBrowserSuites.reduce((total, suite) => total + suite.counts.cancelled, 0),
     }),
   });
 }
@@ -102,6 +117,14 @@ export function hosted_test_projection_footer(
       Object.freeze({ key: "cert-fail" as const, label: "certifications failed", value: summary.certifications.fail }),
       ...(summary.certifications.cancelled > 0
         ? [Object.freeze({ key: "cert-cancel" as const, label: "certifications cancelled", value: summary.certifications.cancelled })]
+        : []),
+    ] : []),
+    ...(summary.browser.total > 0 ? [
+      Object.freeze({ key: "browser" as const, label: "browser journeys", value: summary.browser.total }),
+      Object.freeze({ key: "browser-pass" as const, label: "browser passed", value: summary.browser.pass }),
+      Object.freeze({ key: "browser-fail" as const, label: "browser failed", value: summary.browser.fail }),
+      ...(summary.browser.cancelled > 0
+        ? [Object.freeze({ key: "browser-cancel" as const, label: "browser cancelled", value: summary.browser.cancelled })]
         : []),
     ] : []),
     elapsed,

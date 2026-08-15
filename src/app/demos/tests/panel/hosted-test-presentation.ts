@@ -93,7 +93,7 @@ function terminal_extra(status: TestLifecycleStatus, unsupported: number, cancel
 
 export function hosted_test_suite_summary(suite: HostedTestSuiteRunReport): string {
   const counts = suite.counts;
-  const total = suite.executionShape !== "cases"
+  const total = suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys"
     ? (counts.total > 0 ? counts.total : counts.declared)
     : counts.total;
   const noun = suite.executionShape === "opaque-aggregate"
@@ -102,7 +102,7 @@ export function hosted_test_suite_summary(suite: HostedTestSuiteRunReport): stri
       ? total === 1 ? "certification" : "certifications"
       : total === 1 ? "case" : "cases";
   return `${total} ${noun} · ${counts.passed} pass · ${counts.failed} fail`
-    + (suite.executionShape === "cases" ? ` · ${counts.skipped} skip` : "")
+    + (suite.executionShape === "cases" || suite.executionShape === "browser-journeys" ? ` · ${counts.skipped} skip` : "")
     + terminal_extra(suite.status, counts.unsupported, counts.cancelled);
 }
 
@@ -275,6 +275,8 @@ export function hosted_test_suite_presentation(suite: HostedTestSuiteRunReport):
     metadata: Object.freeze([
       `id: ${suite.id}`,
       `source: ${suite.provenance}`,
+      `planned executor: ${suite.plannedExecutorId}`,
+      ...(suite.executionShape === "browser-journeys" ? ["capabilities: Playwright Chromium · real browser DOM/raster"] : []),
       ...(suite.executorIds.length === 0 ? [] : [`executor: ${suite.executorIds.join(", ")}`]),
       ...(suite.runtime === null ? [] : [`runtime: ${suite.runtime}`]),
     ]),
@@ -327,7 +329,8 @@ export function make_hosted_test_chronology(): HostedTestChronology {
         if (previous === undefined) {
           if (first && recovered) lines.push(`state ${suite.id} — ${suite.status} — ${hosted_test_suite_summary(suite)}`);
           else {
-            const total = suite.executionShape !== "cases" ? suite.counts.declared : suite.counts.total;
+            const total = suite.executionShape !== "cases" && suite.executionShape !== "browser-journeys"
+              ? suite.counts.declared : suite.counts.total;
             const noun = suite.executionShape === "opaque-aggregate"
               ? total === 1 ? "check" : "checks"
               : suite.executionShape === "certification-aggregate"

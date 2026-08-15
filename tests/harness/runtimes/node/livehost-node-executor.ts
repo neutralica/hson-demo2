@@ -9,6 +9,7 @@ import { circuit_livehost_integration_suite } from "../../../suites/livehost/cir
 import { circuit_worker_parity_suite } from "../../../suites/livehost/circuit-worker-parity-suite";
 import { phase3b_process_cancellation_suite } from "../../../suites/livehost/phase3b-process-cancellation-suite";
 import { phase3b_panel_cancellation_suite } from "../../../suites/livehost/phase3b-panel-cancellation-suite";
+import { all_browser_livehost_test_suites } from "./browser/browser-test-suites";
 
 export const LOCAL_NODE_LIVEHOST_EXECUTOR = Object.freeze({
   id: "local-node-livehost",
@@ -46,5 +47,32 @@ export function make_local_node_livehost_executor_registry(): TestExecutorRegist
     circuit_worker_parity_suite(),
     phase3b_process_cancellation_suite(),
     phase3b_panel_cancellation_suite(),
+  ]);
+}
+
+export const NODE_LIVEHOST_MOTHERSHIP_EXECUTOR = Object.freeze({
+  ...LOCAL_NODE_LIVEHOST_EXECUTOR,
+  id: "node-livehost-mothership",
+  label: "Node LiveHost Mothership",
+  capabilities: Object.freeze({ provides: Object.freeze([
+    ...LOCAL_NODE_LIVEHOST_EXECUTOR.capabilities.provides,
+    "browser-dom",
+    "browser-raster",
+    "browser",
+    "chromium",
+  ] as const) }),
+}) satisfies TestExecutorDescriptor;
+
+export function make_node_livehost_mothership_executor_registry(): TestExecutorRegistry {
+  return make_test_executor_registry(NODE_LIVEHOST_MOTHERSHIP_EXECUTOR, [
+    ...all_canonical_portable_test_suites(),
+    ...all_canonical_synthetic_dom_test_suites(),
+    node_application_host_suite(),
+    circuit_worker_service_suite(),
+    circuit_livehost_integration_suite(),
+    circuit_worker_parity_suite(),
+    phase3b_process_cancellation_suite(),
+    phase3b_panel_cancellation_suite(),
+    ...all_browser_livehost_test_suites(),
   ]);
 }
