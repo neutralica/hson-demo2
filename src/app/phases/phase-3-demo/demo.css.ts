@@ -36,6 +36,10 @@ export const UI_ROOTcss: CssMap = {
 
 export const MAIN_MENUcss: CssMap = {
   ...FONT_FAM_MONO,
+  display: "block",
+  width: "16ch",
+  border: "0",
+  appearance: "none",
   userSelect: "none",
   pointerEvents: "all",
   cursor: "pointer",
@@ -44,17 +48,30 @@ export const MAIN_MENUcss: CssMap = {
   opacity: "0.9",
   textIndent: "1rem",
   paddingLeft: "1ch",
+  paddingRight: "3ch",
+  alignItems: "start",
+  textAlign: "left",
   fontWeight: _fontWeight.main,
-  __before: {},
+  __after: {},
   _hover: {
-    // fontWeight: øfontWeight.main,
     background: _colors.txt.menu,
     color: _colors.backhi,
-    __before: {
-      content: ">>",
+    __after: {
+      content: "<<",
       position: "absolute",
-      left: "-1rem"
+      marginLeft: "1ch",
     }
+  },
+  _focusVisible: {
+    background: _colors.txt.menu,
+    color: _colors.backhi,
+    outline: `1px solid ${_colors.txt.menu}`,
+    outlineOffset: "2px",
+    __after: {
+      content: "<<",
+      position: "absolute",
+      marginLeft: "1ch",
+    },
   },
   _active: {
     background: _colors.backhi,
@@ -62,6 +79,16 @@ export const MAIN_MENUcss: CssMap = {
     fontWeight: _fontWeight.fat,
   }
 }
+
+export const PLAIN_MENU_ROOTcss: CssMap = {
+  position: "relative",
+  display: "grid",
+  justifyItems: "start",
+  alignContent: "start",
+  // width: "fit-content",
+  marginTop: "0.5rem",
+  pointerEvents: "auto",
+};
 
 
 export const MENU_BOXcss: CssMap = {
@@ -199,4 +226,3 @@ export const COPYRITEcss: CssMap = {
   color: _colors.txt.copyright,
   zIndex: "-10",
 };
-

@@ -11,10 +11,11 @@ import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
 import { make_hosted_test_case_list, type HostedTestCaseList } from "./hosted-test-case-list";
 import {
     copy_hosted_case_report,
-    open_hosted_case_report,
+    mount_hosted_case_report,
     serialize_hosted_run_report,
+    type HostedCaseReportSurface,
 } from "./hosted-test-report-view";
-import { make_hosted_test_chronology } from "./hosted-test-presentation";
+import { hosted_test_running_readout, make_hosted_test_chronology } from "./hosted-test-presentation";
 import {
     hosted_test_projection_footer,
     hosted_test_projection_summary,
@@ -244,6 +245,7 @@ export function tp_factory(options: Readonly<{
     const { leftColumn, rightColumn, casePane, logger } = createTestSurface(branch);
     const { runBtn, cancelBtn, suiteSel, targetedSuiteSel, targetedTestSel, clearBtn, copyReportsBtn, executorLabel, chips } = create_test_console(leftColumn, rightColumn);
     let hostedAdapter: HostedTestPanelAdapter | undefined;
+    let caseReportSurface: HostedCaseReportSurface | undefined;
     let lastResult: Awaited<ReturnType<HostedTestPanelAdapter["start_selected"]>> | undefined;
     let caseList: HostedTestCaseList | undefined;
     let latestSummary: TestSummary = { suites: 0, cases: 0, pass: 0, fail: 0, skip: 0, msTotal: 0, failures: [] };
@@ -253,6 +255,7 @@ export function tp_factory(options: Readonly<{
     let latestHasQueued = false;
     let latestElapsedMs: number | null = null;
     let cancelSummaryFrame: (() => void) | undefined;
+    let runningLogRow: LiveTree | undefined;
     let explicitExecutionCount = 0;
     const queuedSuiteIds = new Set<string>();
     const suiteProgress = new Map<string, Readonly<{ shape: "cases" | "browser-journeys" | "opaque-aggregate" | "certification-aggregate"; terminal: boolean }>>();
@@ -268,7 +271,10 @@ export function tp_factory(options: Readonly<{
                 const adapter = hostedAdapter;
                 if (!adapter) throw new Error("Hosted runtime is not ready.");
                 const diagnostic = await adapter.inspect(key);
-                if (caseList === projection) open_hosted_case_report(diagnostic);
+                if (caseList === projection) {
+                    caseReportSurface?.dispose();
+                    caseReportSurface = mount_hosted_case_report(branch, diagnostic);
+                }
             },
             async copy(key) {
                 const adapter = hostedAdapter;
@@ -343,6 +349,17 @@ export function tp_factory(options: Readonly<{
 
     const clearLogLines = (): void => {
         logger.empty();
+        runningLogRow = undefined;
+    };
+
+    const update_running_log_line = (report: Parameters<typeof hosted_test_running_readout>[0]): void => {
+        const line = hosted_test_running_readout(report);
+        if (line === null) return;
+        if (runningLogRow === undefined || runningLogRow.isDisposed) {
+            runningLogRow = mkLogRow(line)
+                .attrs.set("data-hosted-live-running", "true");
+        }
+        runningLogRow.text.set(line).css.setMany(TP_LOG_ROWcss(line));
     };
 
     const hostedRuntime = options.hostedRuntime ?? make_remote_hosted_test_runtime(
@@ -359,6 +376,8 @@ export function tp_factory(options: Readonly<{
 
     hostedAdapter = make_hosted_test_panel_adapter(hostedRuntime, {
         reset(suite, context) {
+            caseReportSurface?.dispose();
+            caseReportSurface = undefined;
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;
             chips.clear();
@@ -375,6 +394,8 @@ export function tp_factory(options: Readonly<{
             canonicalSuiteTerminal = 0;
             opaqueSuiteTotal = 0;
             opaqueSuiteTerminal = 0;
+            if (runningLogRow !== undefined && !runningLogRow.isDisposed) runningLogRow.remove();
+            runningLogRow = undefined;
             chronology.begin(context?.recovered ?? false);
             stopwatch.reset();
             if (context?.controlStatus === "cancelling") {
@@ -443,6 +464,7 @@ export function tp_factory(options: Readonly<{
             }
             const chronologyLines = chronology.ingest(update.report, changedSuites);
             for (const line of chronologyLines) appendLogLine(line);
+            update_running_log_line(update.report);
             if (chronologyLines.some((line) => line.startsWith("queued"))) {
                 observe_hosted_test_timeline(options.timeline, "logger_projected_queued", {
                     runId: update.report.run.id ?? "",
@@ -773,6 +795,8 @@ export function tp_factory(options: Readonly<{
             cancelSummaryFrame?.();
             cancelSummaryFrame = undefined;
             stopwatch.dispose();
+            caseReportSurface?.dispose();
+            caseReportSurface = undefined;
             caseList?.dispose();
             hostedAdapter?.dispose();
             hostedRuntime.dispose();

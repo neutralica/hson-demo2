@@ -58,44 +58,50 @@ export const GLOB_SCROLL_THUMBcss: CssMap = {
 };
 
 export const MENU_ACTIVE_VIEWcss: CssMap = {
-  // textDecoration: "underline",
-  // textUnderlineOffset: "0.3em",
   fontWeight: _fontWeight.fat,
   opacity: "1",
-  __before: {
-    content: "> ",
-    position: "absolute",
-    left: "-1rem",
-  },
+  __after: {},
   _hover: {
-    // color: $gry_.dim,
     background: _colors.txt.grey,
     color: _colors.backlo,
     fontWeight: _fontWeight.main,
-    __before: {
-      content: "x ",
+    __after: {
+      content: "X",
       position: "absolute",
-      left: "-1rem",
+      marginLeft: "1ch",
+    },
+  },
+  _focusVisible: {
+    background: _colors.txt.grey,
+    color: _colors.backlo,
+    fontWeight: _fontWeight.main,
+    __after: {
+      content: "X",
+      position: "absolute",
+      marginLeft: "1ch",
     },
   },
 };
 
 export const MENU_ACTIVE_WIDGETcss: CssMap = {
-  // textDecoration: "underline",
-  // textUnderlineOffset: "0.3em",
-  // color: øHSON_COL.o,
   fontWeight: _fontWeight.fat,
   opacity: "1",
-  __before: {
-    content: "• ",
-    position: "absolute",
-    left: "-1rem",
-  },
+  __after: {},
   _hover: {
-    __before: {
-      content: "x ",
+    __after: {
+      content: "X",
       position: "absolute",
-      left: "-1rem",
+      marginLeft: "1ch",
+    },
+    background: _colors.txt.grey,
+    color: _colors.backlo,
+    fontWeight: _fontWeight.main,
+  },
+  _focusVisible: {
+    __after: {
+      content: "X",
+      position: "absolute",
+      marginLeft: "1ch",
     },
     background: _colors.txt.grey,
     color: _colors.backlo,

@@ -140,7 +140,7 @@ const PANEL_STYLES = Object.freeze({
   caseName: { minWidth: "0", display: "grid", gap: "1px", overflow: "hidden" },
   caseIdentity: { color: "#81948a", fontSize: ".66rem" },
   caseDuration: { textAlign: "right", color: "#89948d", whiteSpace: "nowrap" },
-  caseActions: { display: "flex", justifyContent: "flex-end", gap: "5px", opacity: "0", pointerEvents: "none" },
+  caseActions: { display: "flex", justifyContent: "flex-end", gap: "5px", opacity: "0", pointerEvents: "auto" },
   caseActionsVisible: { opacity: "1", pointerEvents: "auto" },
   caseAction: {
     appearance: "none", border: "1px solid rgba(200,220,208,.3)", background: "transparent", color: "#9bb3a6", cursor: "pointer", minHeight: "22px", padding: "2px 7px", font: "inherit",

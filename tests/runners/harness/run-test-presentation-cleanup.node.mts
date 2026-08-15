@@ -4,7 +4,7 @@ import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract"
 import type { HostedTestCaseDiagnostic } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import type { HostedTestReport, HostedTestSuiteRunReport } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { hosted_test_projection_footer, hosted_test_projection_summary } from "../../../src/app/demos/tests/panel/hosted-test-report-summary";
-import { make_hosted_test_chronology } from "../../../src/app/demos/tests/panel/hosted-test-presentation";
+import { hosted_test_running_readout, make_hosted_test_chronology } from "../../../src/app/demos/tests/panel/hosted-test-presentation";
 import { make_hosted_test_stopwatch } from "../../../src/app/demos/tests/panel/hosted-test-stopwatch";
 import { render_hosted_case_diagnostic_html, serialize_hosted_case_diagnostic } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 import { make_initial_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
@@ -48,9 +48,10 @@ Object.assign(report.suiteRuns[3]!.counts, { total: 1, executed: 1, passed: 1 })
 const summary = hosted_test_projection_summary(report);
 const footer = hosted_test_projection_footer(summary, null);
 certify(summary.tests.total === 8, "presentable tests combine canonical cases, opaque checks, and browser journeys without relabeling certifications as tests");
+certify(summary.tests.passed === 5, "presentable passed tests combine canonical cases, opaque checks, and browser journeys truthfully");
 certify(summary.tests.failed === 3, "failed tests combine underlying failure counts without changing them");
 certify(summary.canonical.total === 2 && summary.launchers.declaredChecks === 5 && summary.browser.total === 1 && summary.certifications.total === 1, "underlying case/check/browser/certification counts remain distinct");
-certify(footer.map((entry) => entry.label).join("|") === "suites|tests|failed|elapsed", "normal summary is four sparse values with no suite-failed KPI");
+certify(footer.map((entry) => entry.label).join("|") === "suites|tests|passed|failed|elapsed", "normal summary is five sparse values with passed and no suite-failed KPI");
 certify(footer.at(-1)?.value === "—", "queued summary makes no elapsed claim");
 
 const cleanChronology = make_hosted_test_chronology();
@@ -62,7 +63,14 @@ runningReport.run.status = "running";
 runningReport.run.startedAt = 100;
 runningReport.suiteRuns[0]!.status = "running";
 runningReport.suiteRuns[0]!.lastSequence = 2;
-certify(cleanChronology.ingest(runningReport).join("|") === "running · transform/canonical", "clean Logger retains compact running context");
+certify(cleanChronology.ingest(runningReport).length === 0 && hosted_test_running_readout(runningReport) === "running · 1/4 · transform/canonical", "clean Logger projects one replaceable running context outside accumulated chronology");
+const advancedRunningReport = structuredClone(runningReport) as MutableReport;
+advancedRunningReport.suiteRuns[0]!.status = "pass";
+advancedRunningReport.suiteRuns[1]!.status = "running";
+advancedRunningReport.suiteRuns[1]!.lastSequence = 8;
+const advancedAuthorityBefore = JSON.stringify(advancedRunningReport);
+certify(hosted_test_running_readout(advancedRunningReport) === "running · 2/4 · transform/opaque", "live running context advances beyond the first suite without accumulated rows");
+certify(JSON.stringify(advancedRunningReport) === advancedAuthorityBefore, "live running projection creates no synthetic report mutation");
 const passedReport = structuredClone(runningReport) as MutableReport;
 passedReport.run.status = "passed";
 passedReport.run.completedAt = 125;
@@ -85,6 +93,18 @@ failedReport.suiteRuns[0]!.evidence = [{ id: "stdout", sequence: 8, timestamp: 1
 const failureLines = failureChronology.ingest(failedReport).join("\n");
 certify(failureLines.includes("fail transform/canonical") && failureLines.includes("infrastructure transform/canonical — worker vanished"), "failure and infrastructure chronology remain visible");
 certify(failureLines.includes("stdout transform/canonical — meaningful failure output"), "exceptional failed stdout remains visible");
+
+const cancelledChronology = make_hosted_test_chronology();
+cancelledChronology.begin();
+cancelledChronology.ingest(report);
+const cancelledReport = structuredClone(runningReport) as MutableReport;
+cancelledReport.run.status = "cancelled";
+cancelledReport.run.completedAt = 135;
+cancelledReport.run.timing = { runnerMs: 35, hostMs: 38 };
+cancelledReport.suiteRuns[0]!.status = "cancelled";
+cancelledReport.suiteRuns[0]!.lastSequence = 7;
+const cancelledLines = cancelledChronology.ingest(cancelledReport).join("\n");
+certify(cancelledLines.includes("cancelled transform/canonical") && cancelledLines.includes("cancelled · 35.0 ms"), "suite and terminal cancellation remain visible in sparse chronology");
 
 let now = 1_000;
 let scheduled: (() => void) | undefined;

@@ -1,15 +1,10 @@
 import  { CssManager } from "hson-live/livetree";
 import { COLOR_VAR_SOURCES } from "../../core/consts/colors.consts";
 import { $PANEL_HIDDEN, _fontSize, _fontWeight } from "../../core/consts/ui-consts";
-import { MENU_OPTIONS, MIN_DESKTOP_WIDTH } from "./demo.consts";
+import { MIN_DESKTOP_WIDTH } from "./demo.consts";
 import { GLOB_HIDEcss, GLOB_SCROLLBARcss, GLOB_WEBKIT_SCROLLcss, SCROLL_HOVER_COLcss, GLOB_SCROLL_THUMBcss, WEBKIT_SCROLL_TRKcss, MENU_ACTIVE_VIEWcss, MENU_ACTIVE_WIDGETcss, DISP_SIZE_ALERTcss } from "./global.css";
 
-const mobileMenuButtonSelector = MENU_OPTIONS
-  .map((opt) => `#${opt}-button`)
-  .join(", ");
-
 const mobileHiddenSelector = [
-  mobileMenuButtonSelector,
   "#ui-root",
   "#mouse-slot",
 ].join(", ");
@@ -201,11 +196,6 @@ export const set_global_css = (): void => {
   gcss.rule("::-webkit-scrollbar-track", "::-webkit-scrollbar-track",)
     .setMany(WEBKIT_SCROLL_TRKcss);
   
-    /* for now, hide fleurs button too 
-        (when about is available on mobile both will be shown) */
-  gcss.rule("mobile-fleurs-btn", "#fleurs-button")
-    .set.display("block");
-  
   /* (about panel -- currently unavailable on mobile) */
   gcss.rule("about-toc-open-grid", ".about-toc")
     .set.display("grid");
@@ -226,19 +216,14 @@ export const set_global_css = (): void => {
     // pointer: "coarse"
   })
 
-  /* hide all menu buttons on mobile */
-  //// clunky and stringly
-  mobile.rule("hide-mobile-buttons", mobileHiddenSelector)
+  /* keep either navigation skin available while the mobile demo surface is withheld */
+  mobile.rule("hide-mobile-demo-surface", mobileHiddenSelector)
   .set.display("none");
 
   mobile.rule("show-disp-size-warning", "#demo #demo-screen")
     .setMany(DISP_SIZE_ALERTcss("on"))
   mobile.rule("small-copyright-msg", "#copyright-footer")
     .set.fontSize(_fontSize.wee)
-
-  /* fleurs button mobile styling (should match about) */
-  mobile.rule("mobile-fleurs-btn", "#fleurs-button")
-    .set.display("none");
 
   install_towl_focus_rules();
 

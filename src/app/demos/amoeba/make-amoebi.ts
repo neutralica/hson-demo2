@@ -196,7 +196,7 @@ function bind_amoebi_interaction(
   onToggle: ((id: string) => void) | undefined,
   isolatedIds: readonly string[],
 ): void {
-  const enter = target.listen.on("pointerenter", () => {
+  const showHover = (): void => {
     if (runtime.isDisposed()) return;
     runtime.clearTimeouts();
     const activeIds = selection.snap();
@@ -210,9 +210,9 @@ function bind_amoebi_interaction(
 
     map.at(["hoveredId"]).set(parts.button.id);
     apply_amoebi_appearance(tiles, parts.button.id, activeIds, isolatedIds);
-  });
+  };
 
-  const leave = target.listen.on("pointerleave", () => {
+  const clearHover = (): void => {
     const leavingId = parts.button.id;
 
     runtime.timeout(() => {
@@ -235,15 +235,28 @@ function bind_amoebi_interaction(
         isolatedIds,
       );
     }, 45);
-  });
+  };
+
+  const enter = target.listen.on("pointerenter", showHover);
+  const leave = target.listen.on("pointerleave", clearHover);
+  const focus = target.listen.on("focus", showHover);
+  const blur = target.listen.on("blur", clearHover);
 
   const click = target.listen.stopProp().onClick(() => {
     if (!runtime.isDisposed()) onToggle?.(parts.button.id);
   });
+  const keydown = target.listen.on("keydown", (event: KeyboardEvent) => {
+    if (runtime.isDisposed() || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    onToggle?.(parts.button.id);
+  });
 
   runtime.own(() => enter.off());
   runtime.own(() => leave.off());
+  runtime.own(() => focus.off());
+  runtime.own(() => blur.off());
   runtime.own(() => click.off());
+  runtime.own(() => keydown.off());
 }
 
 function render_amoebi_body(

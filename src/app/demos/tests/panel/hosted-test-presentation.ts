@@ -307,11 +307,21 @@ export type HostedTestChronology = Readonly<{
   clearPresentation(): void;
 }>;
 
+export function hosted_test_running_readout(report: HostedTestReport): string | null {
+  if (report.run.status !== "running") return null;
+  const running = report.suiteRuns
+    .filter((suite) => suite.status === "running")
+    .sort((left, right) => left.lastSequence - right.lastSequence || left.order - right.order)
+    .at(-1);
+  if (running === undefined) return null;
+  const started = report.suiteRuns.filter((suite) => suite.status !== "queued").length;
+  return `running · ${started}/${report.suiteRuns.length} · ${running.id}`;
+}
+
 export function make_hosted_test_chronology(): HostedTestChronology {
   let recovered = false;
   let first = true;
   let queuedEmitted = false;
-  let runningEmitted = false;
   let runStatus: HostedTestReport["run"]["status"] | undefined;
   const statuses = new Map<string, TestLifecycleStatus>();
   const evidenceSequences = new Map<string, number>();
@@ -321,7 +331,6 @@ export function make_hosted_test_chronology(): HostedTestChronology {
       recovered = isRecovery;
       first = true;
       queuedEmitted = false;
-      runningEmitted = false;
       runStatus = undefined;
       statuses.clear();
       evidenceSequences.clear();
@@ -339,15 +348,6 @@ export function make_hosted_test_chronology(): HostedTestChronology {
       } else if (!queuedEmitted && report.suiteRuns.length > 0) {
         lines.push("queued");
         queuedEmitted = true;
-      }
-      if (!recovered && !runningEmitted) {
-        const running = suites
-          .filter((suite) => suite.status === "running" && statuses.get(suite.id) !== "running")
-          .sort((left, right) => left.lastSequence - right.lastSequence)[0];
-        if (running !== undefined) {
-          append(running.lastSequence, `running · ${running.id}`);
-          runningEmitted = true;
-        }
       }
       for (const suite of suites) {
         const previous = statuses.get(suite.id);

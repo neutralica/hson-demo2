@@ -1,4 +1,5 @@
 import type { HostedTestCaseDiagnostic, HostedTestPanelRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
+import type { LiveTree } from "hson-live/livetree";
 import type { HostedTestReport } from "../../../../shared/hosted-tests/hosted-test-report.types";
 import { hosted_test_report_cases } from "../../../../shared/hosted-tests/hosted-test-report.types";
 import { format_hosted_test_duration } from "../../../../shared/hosted-tests/hosted-test-timing";
@@ -78,11 +79,108 @@ export function render_hosted_case_diagnostic_html(diagnostic: HostedTestCaseDia
   </style></head><body><header><h1>${escape_html(diagnostic.name)}</h1><p>${escape_html(diagnostic.caseKey)}</p><p><span class="status">${diagnostic.status.toUpperCase()}</span> · ${escape_html(format_hosted_test_duration(diagnostic.ms))}</p></header>${body}</body></html>`;
 }
 
-export function open_hosted_case_report(diagnostic: HostedTestCaseDiagnostic): void {
-  const url = URL.createObjectURL(new Blob([render_hosted_case_diagnostic_html(diagnostic)], { type: "text/html" }));
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  if (opened === null) throw new Error("The browser blocked the diagnostic report tab. Allow popups and try again.");
+export type HostedCaseReportSurface = Readonly<{
+  root: LiveTree;
+  dispose(): void;
+}>;
+
+export function mount_hosted_case_report(host: LiveTree, diagnostic: HostedTestCaseDiagnostic): HostedCaseReportSurface {
+  const root = host.create.div()
+    .attrs.setMany({
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": `Transform report for ${diagnostic.name}`,
+      "data-testid": "hosted-case-report",
+      "data-case-key": diagnostic.caseKey,
+    })
+    .css.setMany({
+      position: "absolute",
+      inset: "0",
+      zIndex: "120",
+      display: "grid",
+      gridTemplateRows: "auto minmax(0, 1fr)",
+      minWidth: "0",
+      minHeight: "0",
+      padding: "1rem",
+      boxSizing: "border-box",
+      background: "rgba(8, 10, 9, 0.985)",
+      color: "#e8e4d7",
+      fontFamily: '"DM Mono", ui-monospace, monospace',
+      pointerEvents: "auto",
+    });
+  const header = root.create.header().css.setMany({
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) auto",
+    gap: "1rem",
+    alignItems: "start",
+    borderBottom: "1px solid #49534d",
+    paddingBottom: "0.75rem",
+  });
+  const identity = header.create.div();
+  identity.create.div().text.set(diagnostic.name).css.setMany({ color: "#d7ff70", fontSize: "1rem" });
+  identity.create.div().text.set(diagnostic.caseKey).css.setMany({ color: "#b7c3bb", overflowWrap: "anywhere" });
+  identity.create.div()
+    .text.set(`${diagnostic.status.toUpperCase()} · ${format_hosted_test_duration(diagnostic.ms)}`)
+    .css.setMany({ color: diagnostic.status === "pass" ? "#9ddf8b" : "#ff8778" });
+  const close = header.create.button()
+    .attrs.setMany({ type: "button", "aria-label": "Close Transform report" })
+    .text.set("[ close ]")
+    .css.setMany({ color: "#d7ff70", border: "1px solid #49534d", padding: "0.35rem 0.6rem", cursor: "pointer" });
+  const body = root.create.div().css.setMany({ overflow: "auto", minHeight: "0", paddingTop: "1rem" });
+
+  if (diagnostic.type === "transform") {
+    if (diagnostic.trace.length > 0) {
+      const trace = body.create.details()
+        .attrs.setMany({ open: "", "data-hosted-report-trace": String(diagnostic.trace.length) })
+        .css.setMany({ border: "1px solid #354039", padding: "0.65rem", marginBottom: "1rem" });
+      trace.create.summary().text.set(`verified circuit trace (${diagnostic.trace.length})`).css.set.cursor("pointer");
+      const list = trace.create.ol().css.setMany({ columns: "2", columnGap: "2rem" });
+      for (const step of diagnostic.trace) {
+        list.create.li()
+          .text.set(`${step.step}${step.error === null ? "" : ` — ${step.error}`}`)
+          .css.set.color(step.ok ? "#9ddf8b" : "#ff8778");
+      }
+    }
+    const artifacts = body.create.div().css.setMany({
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(min(26rem, 100%), 1fr))",
+      gap: "0.9rem",
+    });
+    diagnostic.artifacts.forEach((artifact, index) => {
+      const section = artifacts.create.section()
+        .attrs.setMany({
+          "data-hosted-report-artifact": String(index + 1),
+          "data-artifact-format": artifact.format,
+          "data-artifact-lap": String(artifact.lap),
+        })
+        .css.setMany({ minWidth: "0", borderTop: "1px solid #354039", paddingTop: "0.65rem" });
+      section.create.div().text.set(`${index + 1} · ${artifact.label}`).css.setMany({ color: "#7dd8cf", letterSpacing: "0.04em" });
+      section.create.div().text.set(`lap ${artifact.lap} · ${artifact.format}`).css.setMany({ color: "#7c817d", marginBottom: "0.4rem" });
+      section.create.pre()
+        .attrs.set("data-hosted-report-text", String(index + 1))
+        .text.set(artifact.text)
+        .css.setMany({ whiteSpace: "pre-wrap", overflow: "auto", maxHeight: "24rem", margin: "0", padding: "0.65rem", borderLeft: "1px solid #49534d", background: "#0c100e" });
+      if (artifact.node !== null) {
+        const node = section.create.details()
+          .attrs.set("data-hosted-report-node", String(index + 1))
+          .css.setMany({ marginTop: "0.5rem", color: "#b7c3bb" });
+        node.create.summary().text.set("canonical HsonNode").css.set.cursor("pointer");
+        node.create.pre().text.set(artifact.node).css.setMany({ whiteSpace: "pre-wrap", overflow: "auto", maxHeight: "24rem", padding: "0.65rem", background: "#0c100e" });
+      }
+    });
+  } else {
+    body.create.pre().text.set(serialize_hosted_case_diagnostic(diagnostic)).css.setMany({ whiteSpace: "pre-wrap", overflow: "auto" });
+  }
+
+  let disposed = false;
+  const dispose = (): void => {
+    if (disposed) return;
+    disposed = true;
+    closeListener.off();
+    if (!root.isDisposed) root.remove();
+  };
+  const closeListener = close.listen.onClick(dispose);
+  return Object.freeze({ root, dispose });
 }
 
 export async function copy_hosted_case_report(diagnostic: HostedTestCaseDiagnostic): Promise<void> {

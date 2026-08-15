@@ -41,6 +41,7 @@ export type HostedTestProjectionSummary = Readonly<{
   }>;
   tests: Readonly<{
     total: number;
+    passed: number;
     failed: number;
   }>;
 }>;
@@ -93,6 +94,7 @@ export function hosted_test_projection_summary(report: HostedTestReport): Hosted
     browser,
     tests: Object.freeze({
       total: canonical.total + browser.total + launchers.declaredChecks,
+      passed: canonical.pass + browser.pass + launchers.passedChecks,
       failed: canonical.fail + browser.fail + (launchers.failedChecks ?? launchers.fail) + certifications.fail,
     }),
   });
@@ -105,6 +107,7 @@ export function hosted_test_projection_footer(
   return Object.freeze([
     Object.freeze({ key: "suites", label: "suites", value: summary.suites.total }),
     Object.freeze({ key: "tests", label: "tests", value: summary.tests.total }),
+    Object.freeze({ key: "passed", label: "passed", value: summary.tests.passed }),
     Object.freeze({ key: "failed", label: "failed", value: summary.tests.failed }),
     Object.freeze({ key: "elapsed", label: "elapsed", value: elapsedMs === null ? "—" : format_hosted_test_duration(elapsedMs) }),
   ]);

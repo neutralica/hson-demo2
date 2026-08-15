@@ -59,6 +59,8 @@ import {
   DEMO_HEADLINEcss,
   HSON_WORDcss,
   HSON_SUBcss,
+  MAIN_MENUcss,
+  PLAIN_MENU_ROOTcss,
   OKLCH_HOSTcss,
   MENU_BOXcss,
 } from "./demo.css";
@@ -92,6 +94,12 @@ type DemoShell = {
   motesLayer: LiveTree;
 };
 
+type PlainMenuApi = Readonly<{
+  root: LiveTree;
+  setActiveIds(ids: readonly string[]): void;
+  dispose(): void;
+}>;
+
 let activeDemoShell: DemoShellController | undefined;
 
 const _hide = (tree: LiveTree): void => { tree.classlist.add($PANEL_HIDDEN); };
@@ -122,6 +130,42 @@ function amoebi_menu_items(): readonly AmoebiMenuItem[] {
     label: key,
     tone: is_widget_menu_key(key) ? _colors.txt.widget : _colors.txt.menu,
   }));
+}
+
+function make_plain_menu(menuBox: LiveTree, onToggle: (key: MenuKey) => void): PlainMenuApi {
+  const root = menuBox.create.div()
+    .id.set("plain-menu-demo")
+    .attrs.setMany({ role: "group", "aria-label": "Demo navigation", "data-navigation-skin": "plain" })
+    .css.setMany(PLAIN_MENU_ROOTcss);
+  const buttons = new Map<MenuKey, LiveTree>();
+  const release: Array<() => void> = [];
+  for (const key of MENU_OPTIONS) {
+    const widget = is_widget_menu_key(key);
+    const button = root.create.button()
+      .id.set(`${key}-button`)
+      .classlist.set(widget ? "widget-button" : "view-button")
+      .attrs.setMany({ type: "button", "aria-label": key, "aria-pressed": "false", "data-menu-key": key })
+      .text.set(key)
+      .css.setMany({ ...MAIN_MENUcss, color: widget ? _colors.txt.widget : _colors.txt.menu });
+    const listener = button.listen.stopProp().onClick(() => onToggle(key));
+    release.push(() => listener.off());
+    buttons.set(key, button);
+  }
+  return Object.freeze({
+    root,
+    setActiveIds(ids) {
+      const active = new Set(ids);
+      for (const [key, button] of buttons) {
+        const selected = active.has(key);
+        button.data.set("active", selected ? "true" : null);
+        button.attrs.set("aria-pressed", selected ? "true" : "false");
+      }
+    },
+    dispose() {
+      for (const off of release.splice(0)) off();
+      if (!root.isDisposed) root.remove();
+    },
+  });
 }
 
 function after_paint(): Promise<void> {
@@ -341,7 +385,11 @@ function make_main_registrations(
   return registrations;
 }
 
-function make_widget_registrations(shell: DemoShell, pointSlot: LiveTree): Record<WidgetId, SurfaceRegistration> {
+function make_widget_registrations(
+  shell: DemoShell,
+  pointSlot: LiveTree,
+  setBlingPresentation: (enabled: boolean) => void,
+): Record<WidgetId, SurfaceRegistration> {
   const registrations = {
     [$POINT]: {
       retention: "recreate",
@@ -367,6 +415,7 @@ function make_widget_registrations(shell: DemoShell, pointSlot: LiveTree): Recor
       retention: "recreate",
       mount: () => {
         let disposed = false;
+        setBlingPresentation(true);
         _unhide(shell.motesLayer);
         _unhide(shell.graffitiLayer);
         const rig = mount_motes(shell.motesLayer);
@@ -377,6 +426,7 @@ function make_widget_registrations(shell: DemoShell, pointSlot: LiveTree): Recor
             rig.dispose();
             _hide(shell.motesLayer);
             _hide(shell.graffitiLayer);
+            setBlingPresentation(false);
           },
         });
       },
@@ -425,14 +475,15 @@ export async function mount_demo(
     screen.attrs.set("data-shell-entry", "standard");
     set_view(null);
   };
-  const mainRegistrations = make_main_registrations(shell, backFromTowl, leaveTowl);
-  const widgetRegistrations = make_widget_registrations(shell, pointSlot);
-  const lifecycle = create_shell_lifecycle_reconciler({
-    mainIds: MAIN_VIEW_IDS,
-    widgetIds: WIDGET_IDS,
-    main: mainRegistrations,
-    widgets: widgetRegistrations,
-  });
+  const toggleMenuKey = (key: MenuKey): void => {
+    if (is_widget_menu_key(key)) {
+      toggle_widget(key);
+      return;
+    }
+    if (!is_demo_menu_key(key)) return;
+    if (key === $FLEURS && currentView.snap() === $FLEURS) fleurField.empty();
+    toggle_view(key);
+  };
 
   const amoebiMenu = make_amoebi(menuBox, {
     selection: {
@@ -454,25 +505,36 @@ export async function mount_demo(
     onToggle: (id) => {
       const key = menu_key_from_id(id);
       if (key === undefined) return;
-
-      if (is_widget_menu_key(key)) {
-        toggle_widget(key);
-        return;
-      }
-
-      if (!is_demo_menu_key(key)) return;
-      if (key === $FLEURS && currentView.snap() === $FLEURS) fleurField.empty();
-      toggle_view(key);
+      toggleMenuKey(key);
     },
+  });
+  const plainMenu = make_plain_menu(menuBox, toggleMenuKey);
+  const setBlingPresentation = (enabled: boolean): void => {
+    screen.attrs.set("data-shell-navigation-skin", enabled ? "amoebic" : "plain");
+    amoebiMenu.root.css.set.display(enabled ? "block" : "none");
+    plainMenu.root.css.set.display(enabled ? "none" : "grid");
+  };
+  plainMenu.setActiveIds(active_menu_ids(initialView, initialWidgets));
+  setBlingPresentation(initialWidgets.includes("bling"));
+
+  const mainRegistrations = make_main_registrations(shell, backFromTowl, leaveTowl);
+  const widgetRegistrations = make_widget_registrations(shell, pointSlot, setBlingPresentation);
+  const lifecycle = create_shell_lifecycle_reconciler({
+    mainIds: MAIN_VIEW_IDS,
+    widgetIds: WIDGET_IDS,
+    main: mainRegistrations,
+    widgets: widgetRegistrations,
   });
 
   const reconcileMain = (next: DemoView): void => {
     lifecycle.reconcileMain(next);
     screen.attrs.set("data-shell-current-main", next ?? "");
+    plainMenu.setActiveIds(active_menu_ids(next, activeWidgets.snap()));
   };
   const reconcileWidgets = (next: readonly WidgetId[]): void => {
     lifecycle.reconcileWidgets(next);
     screen.attrs.set("data-shell-active-widgets", next.join(" "));
+    plainMenu.setActiveIds(active_menu_ids(currentView.snap(), next));
   };
 
   const stopView = currentView.watch(reconcileMain);
@@ -525,6 +587,7 @@ export async function mount_demo(
       fireworks?.teardown();
       deck.dispose();
       amoebiMenu.dispose();
+      plainMenu.dispose();
       if (!demoLayer.isDisposed) demoLayer.remove();
       if (activeDemoShell === controller) activeDemoShell = undefined;
     },

@@ -15,6 +15,7 @@ export type ChipDisplay = Readonly<{
 export const TEST_SUMMARY_ENTRY_ORDER = Object.freeze([
   "suites",
   "tests",
+  "passed",
   "failed",
   "elapsed",
 ] as const);
@@ -61,6 +62,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
   const definitions: Readonly<Record<TestSummaryEntryKey, string>> = Object.freeze({
     suites: "suites",
     tests: "tests",
+    passed: "passed",
     failed: "failed",
     elapsed: "elapsed",
   });
@@ -68,6 +70,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
   const initial: readonly TestSummaryEntry[] = [
     { key: "suites", label: "suites", value: "—" },
     { key: "tests", label: "tests", value: "—" },
+    { key: "passed", label: "passed", value: "—" },
     { key: "failed", label: "failed", value: "—" },
     { key: "elapsed", label: "elapsed", value: "—" },
   ] as const;
@@ -93,6 +96,7 @@ export function create_test_chips(host: LiveTree): ChipDisplay {
       renderEntries([
         { key: "suites", label: "suites", value: s.suites },
         { key: "tests", label: "tests", value: s.cases },
+        { key: "passed", label: "passed", value: s.pass },
         { key: "failed", label: "failed", value: s.fail },
         { key: "elapsed", label: "elapsed", value: format_hosted_test_duration(s.msTotal) },
       ]);

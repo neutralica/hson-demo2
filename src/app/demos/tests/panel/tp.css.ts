@@ -8,6 +8,7 @@ import { OKLCH_FLEURS } from "../../fleurs/fleurs.consts";
 import { get_line_color } from "./test-helpers";
 
 export const TP_BRANCHcss: CssMap = {
+  position: "relative",
   display: "grid",
   // padding: "10px",
   width: "100%",
@@ -75,7 +76,7 @@ export const TP_CONTROL_ROWcss: CssMap = {
 
 export const TEST_CHIP_ROWcss = {
   display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(9ch, 1fr))",
+  gridTemplateColumns: "repeat(5, minmax(9ch, 1fr))",
   gap: "6px",
   gridRow: "1",
   gridColumn: "1",

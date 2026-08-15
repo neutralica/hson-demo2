@@ -6,6 +6,7 @@ import { make_hosted_test_case_list } from "../../../src/app/demos/tests/panel/h
 import {
   HOSTED_TEST_PRESENTATION_GROUP_ORDER,
   classify_hosted_test_stderr,
+  hosted_test_running_readout,
   hosted_test_suite_presentation,
   make_hosted_test_chronology,
 } from "../../../src/app/demos/tests/panel/hosted-test-presentation";
@@ -225,6 +226,7 @@ chronology.begin(false);
 const queueLines = chronology.ingest(queued);
 certify(queueLines.length === 1 && queueLines[0] === "queued", "Logger collapses routine queued suite chatter to one run line");
 const concurrent = clone_report(queued) as HostedTestReport & { suiteRuns: HostedTestSuiteRunReport[] };
+Object.assign(concurrent.run, { status: "running", startedAt: 1 });
 const transformRunning = suite(concurrent, "transform/demo") as HostedTestSuiteRunReport & { status: "running"; lastSequence: number };
 const liveTreeRunning = suite(concurrent, "livetree/demo") as HostedTestSuiteRunReport & { status: "running"; lastSequence: number };
 transformRunning.status = "running";
@@ -232,7 +234,7 @@ transformRunning.lastSequence = 12;
 liveTreeRunning.status = "running";
 liveTreeRunning.lastSequence = 11;
 const startLines = chronology.ingest(concurrent);
-certify(startLines.join("|") === "running · livetree/demo", "Logger retains only the first chronologically active suite as compact running context");
+certify(startLines.length === 0 && hosted_test_running_readout(concurrent) === "running · 2/9 · transform/demo", "Logger keeps current progress in one replaceable live readout rather than chronology rows");
 const terminal = clone_report(concurrent) as HostedTestReport & { suiteRuns: HostedTestSuiteRunReport[] };
 const transformTerminal = suite(terminal, "transform/demo") as HostedTestSuiteRunReport & { status: "pass"; durationMs: number; ms: number; lastSequence: number };
 const liveTreeTerminal = suite(terminal, "livetree/demo") as HostedTestSuiteRunReport & { status: "fail"; durationMs: number; ms: number; lastSequence: number };

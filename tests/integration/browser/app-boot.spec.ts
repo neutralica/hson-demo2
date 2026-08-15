@@ -289,10 +289,10 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await externalRow.click();
   await expect(page.locator('[data-evidence-kind="stdout"] .hosted-evidence-content')).toContainText("ok 1 -");
   await expect(page.locator("#test-chips .test-chip:visible .test-chip-value")).toHaveText([
-    "1", "21", "0", /\d/,
+    "1", "21", "21", "0", /\d/,
   ]);
   await expect(page.locator("#test-chips .test-chip:visible .test-chip-label")).toHaveText([
-    "suites", "tests", "failed", "elapsed",
+    "suites", "tests", "passed", "failed", "elapsed",
   ]);
   assertNoErrors();
 });

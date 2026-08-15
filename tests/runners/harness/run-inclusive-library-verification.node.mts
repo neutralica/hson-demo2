@@ -136,7 +136,7 @@ assert.ok(
 );
 assert.equal(footer.find((entry) => entry.key === "tests")?.value, canonicalCaseCount + manifestExternalCheckCount);
 assert.equal(footer.find((entry) => entry.key === "failed")?.value, 0);
-assert.deepEqual(footer.map((entry) => entry.label), ["suites", "tests", "failed", "elapsed"]);
+assert.deepEqual(footer.map((entry) => entry.label), ["suites", "tests", "passed", "failed", "elapsed"]);
 assert.equal(projection.canonical.total, canonicalCaseCount);
 assert.equal(projection.launchers.total, availability.targets.length);
 assert.equal(projection.launchers.declaredChecks, manifestExternalCheckCount);
