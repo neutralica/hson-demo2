@@ -205,11 +205,12 @@ test("Back resumes the same seat while Leave vacates it, clears the credential, 
 
     await second.getByRole("button", { name: "back", exact: true }).click();
     await expect(second.getByTestId("towl-root")).toHaveCount(0);
-    expect(new URL(second.url()).searchParams.get("room")).toBe(roomId);
+    expect(new URL(second.url()).searchParams.get("room")).toBeNull();
     expect(await second.evaluate((key) => localStorage.getItem(key), credentialKey)).toBe(credential);
     await expect(first.getByTestId("towl-player2")).toContainText("disconnected");
 
     await open_demo(second, "towl");
+    expect(new URL(second.url()).searchParams.get("room")).toBe(roomId);
     await expect(second.getByTestId("towl-status")).toContainText("connected", { timeout: 15_000 });
     await expect(second.getByTestId("towl-local-seat")).toHaveText("local seat: player2");
     await expect(first.getByTestId("towl-player2")).toContainText("connected");

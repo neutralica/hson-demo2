@@ -290,7 +290,7 @@ test("two fresh phones share, play, recover, resume, and explicitly Leave one TO
 
     await second.getByRole("button", { name: "back", exact: true }).click();
     await expect(second.getByTestId("towl-root")).toHaveCount(0);
-    expect(new URL(second.url()).searchParams.get("room")).toBe(roomId);
+    expect(new URL(second.url()).searchParams.get("room")).toBeNull();
     expect(await second.evaluate((key) => localStorage.getItem(key), credentialKey)).toBe(credential);
     await open_direct_towl(second, invite.toString());
     await expect(second.getByTestId("towl-local-seat")).toHaveText("local seat: player2");
@@ -413,16 +413,15 @@ test("portrait, landscape, and desktop-like resizing preserves one room, session
   await expect(page.getByTestId("towl-root")).toHaveCount(0);
   await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
   expect(new URL(page.url()).pathname).toBe("/");
-  expect(new URL(page.url()).searchParams.get("room")).toBe(roomId);
+  expect(new URL(page.url()).searchParams.get("room")).toBeNull();
   expect(await page.evaluate((key) => localStorage.getItem(key), credentialKey)).toBe(credential);
 
   await page.reload();
+  await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
+  await page.locator("#stage").click({ position: { x: 4, y: 4 } });
   await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
-  await expect(page.getByTestId("towl-status")).toHaveText(
-    "connection: connected · session restored",
-    { timeout: 15_000 },
-  );
-  await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
 });
 
 test("desktop shell selection retains ordinary chrome and focus styles do not leak", async ({ page }) => {

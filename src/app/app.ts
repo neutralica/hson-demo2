@@ -15,7 +15,8 @@ import { mount_demo, type DemoShellController } from "./phases/phase-3-demo/moun
 import { CssManager,  LiveTree } from "hson-live/livetree";
 import { create_splash_run, type SplashRun } from "./phases/phase-2-splash/splash-lifecycle";
 import { classify_towl_entry_url } from "./demos/towl/towl.room";
-import { set_view } from "./state/store";
+import { canonicalize_widget_ids, demo_shell_locations, set_view } from "./state/store";
+import { read_bling_preference } from "./state/local-preferences";
 
 
 const gcss = CssManager.api();
@@ -28,6 +29,10 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 export async function run_app(root: LiveTree): Promise<void> {
   const entry = classify_towl_entry_url(new URL(globalThis.location.href));
   set_view(entry.selectsTowl ? "towl" : null);
+  const widgets = demo_shell_locations.activeWidgets.snap().filter((widget) => widget !== "bling");
+  demo_shell_locations.activeWidgets.set(canonicalize_widget_ids(
+    read_bling_preference() ? [...widgets, "bling"] : widgets,
+  ));
 
   demoShell?.dispose();
   demoShell = undefined;

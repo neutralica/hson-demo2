@@ -70,6 +70,15 @@ export const MAIN_MENUcss: CssMap = {
   }
 }
 
+export const PLAIN_MENU_MARKERcss: CssMap = {
+  display: "block",
+  width: "3ch",
+  minWidth: "3ch",
+  textAlign: "right",
+  paddingRight: "1ch",
+  boxSizing: "border-box",
+};
+
 export const PLAIN_MENU_ROOTcss: CssMap = {
   position: "relative",
   display: "grid",
@@ -183,14 +192,14 @@ export const HSON_GRAFFITIcss: CssMap = {
 export const HSON_SUBcss: CssMap = {
   ...FONT_FAM_MONO,
   position: "relative",
+  display: "grid",
+  gridTemplateColumns: "3ch minmax(0, 1fr)",
   textWrap: "nowrap",
   color: OKLCH_NEUTRALS.ash,
   // color: ACID_WASH_RGBA.wornPurple,
   // color: ACID_WASH_OKLCH.steel,
   marginBottom: "0.5rem",
   userSelect: "none",
-  textIndent: "1rem",
-  paddingLeft: "1ch",
 }
 
 export const OKLCH_HOSTcss = {

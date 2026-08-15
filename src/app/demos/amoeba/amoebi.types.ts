@@ -59,6 +59,9 @@ export type AmoebiMenuItem = AmoebaButtonInput;
 export type AmoebiMenuApi = Readonly<{
   root: LiveTree;
   setHoveredId: (id: string | null) => void;
+  enter: () => void;
+  exit: (onComplete: () => void) => void;
+  hideInstantly: () => void;
   dispose: () => void;
 }>;
 

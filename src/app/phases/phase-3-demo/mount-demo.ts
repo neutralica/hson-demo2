@@ -22,7 +22,7 @@ import { mount_point_panel } from "../../demos/pointer/point-factory";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
 import { mount_test_panels } from "../../demos/tests/panel/mount-tp";
 import { mount_towl_panel } from "../../demos/towl/mount-towl";
-import { towl_departure_url } from "../../demos/towl/towl.room";
+import { classify_towl_room_url, create_towl_room_url, is_direct_towl_path, towl_departure_url } from "../../demos/towl/towl.room";
 import mount_color_sudoku from "../../demos/mount-color-sudoku";
 import { make_amoebi } from "../../demos/amoeba/make-amoebi";
 import type { AmoebiMenuItem } from "../../demos/amoeba/amoebi.types";
@@ -30,8 +30,9 @@ import type { DemoView, DemoWidget, MainViewId, WidgetId } from "../../state/sta
 import type { PublicMainViewId } from "../../state/shell-ids";
 import { MAIN_VIEW_IDS, PUBLIC_MAIN_VIEW_IDS, WIDGET_IDS } from "../../state/shell-ids";
 import { demo_shell_locations, set_view, toggle_view, deactivate_widget, toggle_widget } from "../../state/store";
+import { write_bling_preference } from "../../state/local-preferences";
 import { mount_panel_simple } from "../../ui/panels/panel-simple";
-import { mk_div_id_cls, mk_div_id, mk_span_id, mk_div_id_txt } from "../../utils/makers";
+import { mk_div_id_cls, mk_div_id, mk_span_id } from "../../utils/makers";
 import {
   MENU_OPTIONS,
   WIDGET_MENU_KEYS,
@@ -61,6 +62,7 @@ import {
   HSON_SUBcss,
   MAIN_MENUcss,
   PLAIN_MENU_ROOTcss,
+  PLAIN_MENU_MARKERcss,
   OKLCH_HOSTcss,
   MENU_BOXcss,
 } from "./demo.css";
@@ -137,14 +139,7 @@ function make_plain_menu(menuBox: LiveTree, onToggle: (key: MenuKey) => void): P
     .id.set("plain-menu-demo")
     .attrs.setMany({ role: "group", "aria-label": "Demo navigation", "data-navigation-skin": "plain" })
     .css.setMany(PLAIN_MENU_ROOTcss);
-  root.css.selector("& .plain-menu-marker").setMany({
-    display: "block",
-    width: "3ch",
-    minWidth: "3ch",
-    textAlign: "right",
-    paddingRight: "1ch",
-    boxSizing: "border-box",
-  });
+  root.css.selector("& .plain-menu-marker").setMany(PLAIN_MENU_MARKERcss);
   root.css.selector("& .plain-menu-marker::before").set.content("");
   root.css.selector("& button:hover .plain-menu-marker::before").set.content(">>");
   root.css.selector("& button:focus-visible .plain-menu-marker::before").set.content(">>");
@@ -266,7 +261,12 @@ function create_demo_wordmark(menuContainer: LiveTree): void {
       .css.selector(`.${shade_class(key)}`).setMany({ color: _colors.hson[key] });
   });
 
-  mk_div_id_txt(menuContainer, "livedemo-subhead", "liveDemo").css.setMany(HSON_SUBcss);
+  const subhead = mk_div_id(menuContainer, "livedemo-subhead").css.setMany(HSON_SUBcss);
+  subhead.create.span()
+    .classlist.set("plain-menu-marker")
+    .attrs.set("aria-hidden", "true")
+    .css.setMany(PLAIN_MENU_MARKERcss);
+  subhead.create.span().classlist.set("livedemo-label").text.set("liveDemo");
 }
 
 function host_controller(host: LiveTree, cleanup: () => void = () => undefined): SurfaceController {
@@ -475,19 +475,14 @@ export async function mount_demo(
   const activeWidgets = demo_shell_locations.activeWidgets;
   const initialView = currentView.snap();
   const initialWidgets = activeWidgets.snap();
+  const initialRoom = classify_towl_room_url(new URL(globalThis.location.href));
+  let rememberedTowlRoomId = initialRoom.kind === "valid" ? initialRoom.roomId : undefined;
+  let forgetTowlRoomOnDeparture = false;
   const backFromTowl = (): void => {
-    const url = new URL(globalThis.location.href);
-    if (options.directTowlEntry === true && (url.pathname === "/towl" || url.pathname === "/towl/")) {
-      url.pathname = "/";
-      globalThis.history.pushState(globalThis.history.state, "", url.toString());
-      screen.attrs.set("data-shell-entry", "standard");
-    }
     set_view(null);
   };
   const leaveTowl = (): void => {
-    const url = towl_departure_url(new URL(globalThis.location.href));
-    globalThis.history.replaceState(globalThis.history.state, "", url.toString());
-    screen.attrs.set("data-shell-entry", "standard");
+    forgetTowlRoomOnDeparture = true;
     set_view(null);
   };
   const toggleMenuKey = (key: MenuKey): void => {
@@ -524,13 +519,33 @@ export async function mount_demo(
     },
   });
   const plainMenu = make_plain_menu(menuBox, toggleMenuKey);
-  const setBlingPresentation = (enabled: boolean): void => {
-    screen.attrs.set("data-shell-navigation-skin", enabled ? "amoebic" : "plain");
-    amoebiMenu.root.css.set.display(enabled ? "block" : "none");
-    plainMenu.root.css.set.display(enabled ? "none" : "grid");
+  let blingPresentationToken = 0;
+  const setBlingPresentation = (enabled: boolean, animate = true): void => {
+    blingPresentationToken += 1;
+    const token = blingPresentationToken;
+    if (enabled) {
+      screen.attrs.set("data-shell-navigation-skin", "amoebic");
+      plainMenu.root.css.set.display("none");
+      amoebiMenu.root.css.set.display("block");
+      if (animate) amoebiMenu.enter();
+      return;
+    }
+    if (!animate) {
+      amoebiMenu.hideInstantly();
+      amoebiMenu.root.css.set.display("none");
+      plainMenu.root.css.set.display("grid");
+      screen.attrs.set("data-shell-navigation-skin", "plain");
+      return;
+    }
+    amoebiMenu.exit(() => {
+      if (token !== blingPresentationToken) return;
+      amoebiMenu.root.css.set.display("none");
+      plainMenu.root.css.set.display("grid");
+      screen.attrs.set("data-shell-navigation-skin", "plain");
+    });
   };
   plainMenu.setActiveIds(active_menu_ids(initialView, initialWidgets));
-  setBlingPresentation(initialWidgets.includes("bling"));
+  setBlingPresentation(false, false);
 
   const mainRegistrations = make_main_registrations(shell, backFromTowl, leaveTowl);
   const widgetRegistrations = make_widget_registrations(shell, pointSlot, setBlingPresentation);
@@ -541,8 +556,34 @@ export async function mount_demo(
     widgets: widgetRegistrations,
   });
 
+  let reconciledView: DemoView = null;
   const reconcileMain = (next: DemoView): void => {
+    const source = new URL(globalThis.location.href);
+    if (next === $TOWL) {
+      const room = classify_towl_room_url(source);
+      if (room.kind === "valid") {
+        rememberedTowlRoomId = room.roomId;
+        if (room.changed) globalThis.history.replaceState(globalThis.history.state, "", room.url.toString());
+      } else if (room.kind === "absent") {
+        const address = rememberedTowlRoomId === undefined
+          ? create_towl_room_url(source)
+          : create_towl_room_url(source, () => rememberedTowlRoomId!);
+        rememberedTowlRoomId = address.roomId;
+        globalThis.history.replaceState(globalThis.history.state, "", address.url.toString());
+      }
+    } else if (reconciledView === $TOWL) {
+      const room = classify_towl_room_url(source);
+      if (!forgetTowlRoomOnDeparture && room.kind === "valid") rememberedTowlRoomId = room.roomId;
+      if (forgetTowlRoomOnDeparture) rememberedTowlRoomId = undefined;
+      forgetTowlRoomOnDeparture = false;
+      const departure = towl_departure_url(source);
+      if (departure.toString() !== source.toString()) {
+        globalThis.history.replaceState(globalThis.history.state, "", departure.toString());
+      }
+      if (is_direct_towl_path(source.pathname)) screen.attrs.set("data-shell-entry", "standard");
+    }
     lifecycle.reconcileMain(next);
+    reconciledView = next;
     screen.attrs.set("data-shell-current-main", next ?? "");
     plainMenu.setActiveIds(active_menu_ids(next, activeWidgets.snap()));
   };
@@ -553,7 +594,10 @@ export async function mount_demo(
   };
 
   const stopView = currentView.watch(reconcileMain);
-  const stopWidgets = activeWidgets.watch(reconcileWidgets);
+  const stopWidgets = activeWidgets.watch((next) => {
+    write_bling_preference(next.includes("bling"));
+    reconcileWidgets(next);
+  });
   reconcileMain(initialView);
   reconcileWidgets(initialWidgets);
 

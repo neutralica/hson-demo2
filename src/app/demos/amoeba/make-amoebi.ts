@@ -586,6 +586,61 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
     options.onToggle,
     isolatedIds,
   );
+  let presentationToken = 0;
+  let presentationTimeout: number | undefined;
+
+  const cancelPresentationCompletion = (): number => {
+    presentationToken += 1;
+    if (presentationTimeout !== undefined) window.clearTimeout(presentationTimeout);
+    presentationTimeout = undefined;
+    return presentationToken;
+  };
+
+  const enter = (): void => {
+    cancelPresentationCompletion();
+    root.data.set("amoebi-transition", "entering");
+    tiles.forEach((tile) => {
+      RECEDED_AMOEBI_TILES.delete(tile);
+      ordered_cell_entries(tile).forEach(({ cell, coord, index }) => {
+        grow_amoebi_cell(
+          runtime,
+          cell,
+          coord,
+          tile.index * 72 + Math.round(cell_distance_from_label(tile.button, coord) * 1.4 + index * 9),
+        );
+      });
+      grow_amoebi_outline(runtime, tile.body, tile.button, tile.index);
+      grow_amoebi_node(runtime, tile.label, { x: tile.button.cx, y: tile.button.cy }, tile.index * 72 + 250, 220);
+    });
+    const token = presentationToken;
+    presentationTimeout = window.setTimeout(() => {
+      if (token !== presentationToken || runtime.isDisposed()) return;
+      presentationTimeout = undefined;
+      root.data.set("amoebi-transition", "settled");
+    }, 1_200);
+  };
+
+  const exit = (onComplete: () => void): void => {
+    const token = cancelPresentationCompletion();
+    root.data.set("amoebi-transition", "exiting");
+    let completionDelay = 470;
+    tiles.forEach((tile) => {
+      recede_amoebi_tile(runtime, tile);
+      recede_amoebi_node(runtime, tile.label, { x: tile.button.cx, y: tile.button.cy }, 40, 430);
+      completionDelay = Math.max(completionDelay, 35 + Math.max(0, tile.cells.length - 1) * 10 + 420);
+    });
+    presentationTimeout = window.setTimeout(() => {
+      if (token !== presentationToken || runtime.isDisposed()) return;
+      presentationTimeout = undefined;
+      root.data.set("amoebi-transition", "hidden");
+      onComplete();
+    }, completionDelay + 40);
+  };
+
+  const hideInstantly = (): void => {
+    cancelPresentationCompletion();
+    root.data.set("amoebi-transition", "hidden");
+  };
 
   const refresh = (ids: readonly string[]): void => {
     if (runtime.isDisposed()) return;
@@ -604,6 +659,7 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
   };
 
   const dispose = (): void => {
+    cancelPresentationCompletion();
     runtime.dispose();
     if (!root.isDisposed) root.remove();
   };
@@ -611,6 +667,9 @@ export function make_amoebi(stage: LiveTree, options: AmoebiMenuOptions = {}): A
   return Object.freeze({
     root,
     setHoveredId,
+    enter,
+    exit,
+    hideInstantly,
     dispose,
   });
 }

@@ -5,6 +5,7 @@ import {
   make_oklch_schema,
   type OklchCanonicalState,
 } from "../../../src/app/demos/oklch/oklch.state";
+import { read_bling_preference, write_bling_preference } from "../../../src/app/state/local-preferences";
 
 const SUITE = "unit/livedemo-small-state";
 const PATHS = ["txt.main", "txt.menu"] as const;
@@ -96,6 +97,30 @@ export function live_demo_small_state_suite(): TestSuite {
         }
         if (!rejected) throw new Error("expected unknown active path to reject");
         if (store.locations.activePath.snap() !== PATHS[0]) throw new Error("rejected write changed canonical state");
+      },
+    },
+    {
+      suite: SUITE,
+      caseId: "bling-preference-is-small-local-and-fault-tolerant", name: "Bling preference is small, local, and fault tolerant",
+      run: () => {
+        const values = new Map<string, string>();
+        const storage = {
+          getItem: (key: string) => values.get(key) ?? null,
+          setItem: (key: string, value: string) => { values.set(key, value); },
+        };
+        if (read_bling_preference(storage) !== false) throw new Error("fresh preference must default off");
+        write_bling_preference(true, storage);
+        if (read_bling_preference(storage) !== true) throw new Error("stored on preference was not restored");
+        write_bling_preference(false, storage);
+        if (read_bling_preference(storage) !== false) throw new Error("stored off preference was not restored");
+        values.set("hson-livedemo.preference.bling", "stale");
+        if (read_bling_preference(storage) !== false) throw new Error("malformed preference must fall back off");
+        const failing = {
+          getItem: () => { throw new Error("storage unavailable"); },
+          setItem: () => { throw new Error("storage unavailable"); },
+        };
+        if (read_bling_preference(failing) !== false) throw new Error("failed storage read must fall back off");
+        write_bling_preference(true, failing);
       },
     },
   ];

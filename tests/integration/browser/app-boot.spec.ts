@@ -124,11 +124,36 @@ test("TOWL performs no room, storage, runtime, or socket work before activation"
   expect(new URL(page.url()).searchParams.get("room")).toBeNull();
   expect(await readMetrics()).toEqual({ webSockets: 0, historyReplaces: 0, credentialReads: 0 });
 
+  await page.evaluate(() => history.replaceState(history.state, "", "/?mode=play#shell-state"));
   await open_demo(page, "towl");
   await expect(page.getByTestId("towl-root")).toBeVisible();
   await expect(page.getByTestId("towl-status")).toHaveText("connection: connected · session attached");
-  expect(new URL(page.url()).searchParams.get("room")).toMatch(/^[a-z0-9][a-z0-9-]{5,23}$/);
-  expect(await readMetrics()).toEqual({ webSockets: 1, historyReplaces: 1, credentialReads: 1 });
+  const roomId = new URL(page.url()).searchParams.get("room");
+  expect(roomId).toMatch(/^[a-z0-9][a-z0-9-]{5,23}$/);
+  expect(new URL(page.url()).searchParams.get("mode")).toBe("play");
+  expect(new URL(page.url()).hash).toBe("#shell-state");
+  expect(await readMetrics()).toEqual({ webSockets: 1, historyReplaces: 2, credentialReads: 1 });
+
+  await open_demo(page, "towl");
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.get("room")).toBeNull();
+  expect(new URL(page.url()).searchParams.get("mode")).toBe("play");
+  expect(new URL(page.url()).hash).toBe("#shell-state");
+
+  await open_demo(page, "towl");
+  expect(new URL(page.url()).searchParams.get("room")).toBe(roomId);
+  await open_demo(page, "about");
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "about");
+  expect(new URL(page.url()).searchParams.get("room")).toBeNull();
+  expect(new URL(page.url()).searchParams.get("mode")).toBe("play");
+  expect(new URL(page.url()).hash).toBe("#shell-state");
+
+  await page.reload();
+  await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "splash", { timeout: 15_000 });
+  await page.locator("#stage").click({ position: { x: 4, y: 4 } });
+  await expect(page.locator("#stage")).toHaveAttribute("data-app-phase", "demo-ready", { timeout: 15_000 });
+  await expect(page.getByTestId("towl-root")).toHaveCount(0);
+  await expect(page.locator("#screen")).toHaveAttribute("data-shell-current-main", "");
 });
 
 test("an invalid ordinary room query keeps the fresh shell neutral and TOWL inert", async ({ page }) => {
