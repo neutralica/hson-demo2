@@ -33,6 +33,26 @@ import { create_playwright_browser_executor, LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR }
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
 
+function redact_node_hosted_diagnostic_text(value: string, maxLength: number): string {
+  return value
+    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [redacted]")
+    .replace(/\b(authorization|cookie|token|credential|secret|password)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
+    .replace(/((?:wss?|https?):\/\/[^\s?#]+)\?[^\s#]*/gi, "$1?[redacted]")
+    .slice(0, maxLength);
+}
+
+function safe_node_hosted_error(error: unknown, depth = 0): Readonly<Record<string, unknown>> {
+  if (!(error instanceof Error)) return Object.freeze({ type: error === null ? "null" : typeof error });
+  const code = Reflect.get(error, "code");
+  return Object.freeze({
+    name: error.name,
+    message: redact_node_hosted_diagnostic_text(error.message, 2_048),
+    ...(typeof code === "string" && /^[A-Z][A-Z0-9_]{0,95}$/.test(code) ? { code } : {}),
+    ...(error.stack === undefined ? {} : { stack: redact_node_hosted_diagnostic_text(error.stack, 8_192) }),
+    ...(depth === 0 && error.cause instanceof Error ? { cause: safe_node_hosted_error(error.cause, depth + 1) } : {}),
+  });
+}
+
 export type NodeHostedTestsApplicationOptions = Readonly<{
   inspectCase?: HostedTestCaseInspector;
   executorRegistry?: TestExecutorRegistry;
@@ -227,10 +247,27 @@ export async function create_node_hosted_tests_application(
       const bounded = options.lifecycle !== undefined;
       if (bounded) websocket.pause();
       let websocketClosed = false;
-      websocket.once("close", () => {
+      websocket.once("error", (cause) => {
+        console.error("[hosted-tests] websocket transport failed", Object.freeze({
+          application: NODE_HOSTED_TESTS_APPLICATION_NAME,
+          authorityId,
+          correlationId: context.request.correlationId,
+          error: safe_node_hosted_error(cause),
+        }));
+      });
+      websocket.once("close", (code, reason) => {
         websocketClosed = true;
         connections.get(websocket)?.disconnect();
         connections.delete(websocket);
+        if (code !== 1000 && code !== 1001 && code !== 1012) {
+          console.error("[hosted-tests] websocket closed unexpectedly", Object.freeze({
+            application: NODE_HOSTED_TESTS_APPLICATION_NAME,
+            authorityId,
+            correlationId: context.request.correlationId,
+            closeCode: code,
+            ...(reason.byteLength === 0 ? {} : { reason: redact_node_hosted_diagnostic_text(reason.toString(), 512) }),
+          }));
+        }
       });
       let connected;
       try {
@@ -251,10 +288,25 @@ export async function create_node_hosted_tests_application(
                 attachment: context.principal.value,
               },
             );
+      } catch (cause) {
+        console.error("[hosted-tests] authority connection failed", Object.freeze({
+          application: NODE_HOSTED_TESTS_APPLICATION_NAME,
+          authorityId,
+          correlationId: context.request.correlationId,
+          error: safe_node_hosted_error(cause),
+        }));
+        throw cause;
       } finally {
         if (bounded) websocket.resume();
       }
       if (!connected.ok) {
+        console.error("[hosted-tests] authority connection rejected", Object.freeze({
+          application: NODE_HOSTED_TESTS_APPLICATION_NAME,
+          authorityId,
+          correlationId: context.request.correlationId,
+          errorCode: connected.error.code,
+          message: redact_node_hosted_diagnostic_text(connected.error.message, 2_048),
+        }));
         websocket.close(1008, connected.error.code ?? "Unknown hosted-test LiveHost.");
         return;
       }

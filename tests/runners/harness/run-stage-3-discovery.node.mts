@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import { decode_test_executor_discovery } from "../../../src/shared/testing/test-discovery-contract";
+import {
+  decode_hosted_test_discovery_response,
+  hosted_test_client_failure_diagnostic,
+} from "../../../src/shared/hosted-tests/hosted-test-client-action";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import {
@@ -32,7 +36,35 @@ for (const descriptor of opaque) {
 }
 
 const withRemovedField = { ...JSON.parse(JSON.stringify(node)), externalTargets: [] };
-assert.equal(decode_test_executor_discovery(withRemovedField).ok, false);
+const shapeFailure = decode_test_executor_discovery(withRemovedField);
+assert.equal(shapeFailure.ok, false);
+assert.ok(!shapeFailure.ok && shapeFailure.issues.includes("$.externalTargets: unexpected field"));
+
+const legacySecret = "deployment-secret-must-not-appear";
+const legacyResult = {
+  ...JSON.parse(JSON.stringify(node)),
+  protocolVersion: 2,
+  externalTargets: [{ token: legacySecret }],
+  catalog: { tests: [{ name: legacySecret, suite: "legacy" }] },
+};
+const legacyValidation = decode_test_executor_discovery(legacyResult);
+assert.equal(legacyValidation.ok, false);
+assert.ok(!legacyValidation.ok && legacyValidation.issues.includes("$.externalTargets: unexpected field"));
+assert.ok(!legacyValidation.ok && legacyValidation.issues.includes("$.catalog.suites: missing required field"));
+
+let clientFailure: unknown;
+try { decode_hosted_test_discovery_response({ type: "ack", result: legacyResult }); }
+catch (cause) { clientFailure = cause; }
+assert.equal(clientFailure instanceof Error ? clientFailure.message : undefined, "Invalid tests.discover result shape.");
+const diagnostic = hosted_test_client_failure_diagnostic(clientFailure);
+assert.equal(diagnostic?.operation, "tests.discover");
+assert.equal(diagnostic?.expectedContract, "TestExecutorDiscovery v3");
+assert.equal(diagnostic?.received.protocolVersion, 2);
+assert.deepEqual(diagnostic?.received.catalog?.keys, ["tests"]);
+assert.equal(diagnostic?.received.catalog?.tests?.length, 1);
+assert.equal(diagnostic?.received.externalTargets?.length, 1);
+assert.ok(diagnostic?.issues.includes("$.catalog.suites: missing required field"));
+assert.equal(JSON.stringify(diagnostic).includes(legacySecret), false);
 
 console.log(JSON.stringify({
   certificate: "stage-3-discovery",

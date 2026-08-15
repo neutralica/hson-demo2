@@ -59,6 +59,9 @@ let constructedWithoutConfiguration = 0;
 class NeverConstructWebSocket {
   constructor(_url: string) { constructedWithoutConfiguration += 1; }
 }
+const originalConsoleError = console.error;
+const startupDiagnostics: unknown[][] = [];
+console.error = (...args: unknown[]) => { startupDiagnostics.push(args); };
 const missingRuntime = make_remote_hosted_test_runtime({
   environment: production,
   WebSocketConstructor: NeverConstructWebSocket as unknown as BrowserWebSocketConstructor,
@@ -79,11 +82,18 @@ const unsupportedRuntime = make_remote_hosted_test_runtime({
   WebSocketConstructor: NeverConstructWebSocket as unknown as BrowserWebSocketConstructor,
 });
 const unsupportedError = await captured_error(unsupportedRuntime.ready());
+console.error = originalConsoleError;
 expect_deployment(
   unsupportedError?.message.includes("must use ws:// or wss://") && constructedWithoutConfiguration === 0,
   "unsupported protocols fail before constructing a WebSocket",
 );
 unsupportedRuntime.dispose();
+expect_deployment(
+  startupDiagnostics.length === 2
+    && startupDiagnostics.every((entry) => entry[0] === "[hosted-tests] coordinator.startup failed")
+    && startupDiagnostics.every((entry) => typeof (entry[1] as { error?: { stack?: unknown } })?.error?.stack === "string"),
+  "browser startup failures emit stack-bearing diagnostics while retaining concise runtime errors",
+);
 
 const executorRegistry = make_test_executor_registry(Object.freeze({
   id: "deployment-node",
@@ -118,6 +128,8 @@ class RoutedWebSocket extends WebSocket {
   }
 }
 
+const successDiagnostics: unknown[][] = [];
+console.error = (...args: unknown[]) => { successDiagnostics.push(args); };
 const runtime = make_remote_hosted_test_runtime({
   url: publicBase,
   environment: production,
@@ -157,7 +169,138 @@ try {
 } finally {
   runtime.dispose();
   await server.stop();
+  console.error = originalConsoleError;
 }
+expect_deployment(successDiagnostics.length === 0, "successful discovery, execution, and recovery remain quiet");
+
+const serverSecret = "server-secret-must-not-appear";
+const endpointSecret = "endpoint-secret-must-not-appear";
+const diagnosticServer = await start_hosted_test_server({
+  port: 0,
+  executorRegistry,
+  async runSelected() {
+    throw new Error("Browser executor startup failed.", {
+      cause: new Error(`Authorization: Bearer ${serverSecret}`),
+    });
+  },
+});
+
+function diagnostic_server_url(address: string): string {
+  const publicUrl = new URL(address);
+  const localUrl = new URL(diagnosticServer.url);
+  localUrl.pathname = publicUrl.pathname;
+  localUrl.search = publicUrl.search;
+  return localUrl.toString();
+}
+
+class DiagnosticRoutedWebSocket extends WebSocket {
+  constructor(address: string) { super(diagnostic_server_url(address)); }
+}
+
+class MalformedDiscoveryWebSocket extends DiagnosticRoutedWebSocket {
+  override emit(event: string | symbol, ...args: any[]): boolean {
+    if (event === "message" && Buffer.isBuffer(args[0])) {
+      const message = JSON.parse(args[0].toString()) as {
+        type?: unknown;
+        result?: { executor?: unknown; protocolVersion?: unknown; catalog?: { tests?: unknown } };
+      };
+      if (message.type === "ack" && message.result?.executor !== undefined && message.result.catalog !== undefined) {
+        args[0] = Buffer.from(JSON.stringify({
+          ...message,
+          result: {
+            ...message.result,
+            protocolVersion: 2,
+            externalTargets: [],
+            catalog: { tests: message.result.catalog.tests },
+          },
+        }));
+      }
+    }
+    return super.emit(event, ...args);
+  }
+}
+
+const malformedDiagnostics: unknown[][] = [];
+console.error = (...args: unknown[]) => { malformedDiagnostics.push(args); };
+const malformedRuntime = make_remote_hosted_test_runtime({
+  url: `wss://diagnostics.example/socket?token=${endpointSecret}`,
+  environment: production,
+  WebSocketConstructor: MalformedDiscoveryWebSocket as unknown as BrowserWebSocketConstructor,
+});
+let malformedError: Error | undefined;
+try {
+  await malformedRuntime.ready();
+  malformedError = await captured_error(malformedRuntime.discover());
+} finally {
+  malformedRuntime.dispose();
+  console.error = originalConsoleError;
+}
+expect_deployment(
+  malformedError?.message === "Invalid tests.discover result shape.",
+  "malformed discovery retains a concise user-facing failure",
+);
+const malformedDiagnostic = malformedDiagnostics.find((entry) => (
+  (entry[1] as { operation?: unknown })?.operation === "tests.discover"
+))?.[1] as {
+  endpoint?: unknown;
+  error?: { stack?: unknown; cause?: { issues?: unknown; received?: { protocolVersion?: unknown; catalog?: { keys?: unknown } } } };
+} | undefined;
+expect_deployment(
+  malformedDiagnostic?.endpoint === "wss://diagnostics.example"
+    && typeof malformedDiagnostic.error?.stack === "string"
+    && Array.isArray(malformedDiagnostic.error?.cause?.issues)
+    && malformedDiagnostic.error.cause.issues.includes("$.externalTargets: unexpected field")
+    && malformedDiagnostic.error.cause.issues.includes("$.catalog.suites: missing required field")
+    && malformedDiagnostic.error.cause.received?.protocolVersion === 2
+    && JSON.stringify(malformedDiagnostic.error.cause.received?.catalog?.keys) === JSON.stringify(["tests"])
+    && !JSON.stringify(malformedDiagnostics).includes(endpointSecret),
+  "malformed discovery emits bounded contract evidence without endpoint query secrets",
+);
+
+const actionDiagnostics: unknown[][] = [];
+console.error = (...args: unknown[]) => { actionDiagnostics.push(args); };
+const failureRuntime = make_remote_hosted_test_runtime({
+  url: `wss://diagnostics.example/socket?token=${endpointSecret}`,
+  environment: production,
+  WebSocketConstructor: DiagnosticRoutedWebSocket as unknown as BrowserWebSocketConstructor,
+});
+try {
+  await failureRuntime.ready();
+  const discovery = await failureRuntime.discover();
+  const run = await failureRuntime.start_selected([discovery.catalog.tests[0]!.id]);
+  await run.ready();
+  const actionError = await captured_error(run.actionResult);
+  expect_deployment(actionError?.message === "Browser executor startup failed.", "hosted action rejection remains concise in the client");
+  run.dispose();
+} finally {
+  failureRuntime.dispose();
+  await diagnosticServer.stop();
+  console.error = originalConsoleError;
+}
+const serverActionDiagnostic = actionDiagnostics.find((entry) => (
+  (entry[1] as { action?: unknown })?.action === "tests.runSelected"
+))?.[1] as { clientId?: unknown; requestId?: unknown; runId?: unknown; attemptId?: unknown; executorId?: unknown; error?: { stack?: unknown; cause?: unknown } } | undefined;
+const browserActionDiagnostic = actionDiagnostics.find((entry) => (
+  (entry[1] as { operation?: unknown })?.operation === "tests.runSelected"
+))?.[1] as { endpoint?: unknown; clientId?: unknown; requestId?: unknown; executorId?: unknown; error?: { stack?: unknown } } | undefined;
+const serializedActionDiagnostics = JSON.stringify(actionDiagnostics);
+expect_deployment(
+  typeof serverActionDiagnostic?.clientId === "string"
+    && typeof serverActionDiagnostic.requestId === "string"
+    && typeof serverActionDiagnostic.runId === "string"
+    && typeof serverActionDiagnostic.attemptId === "string"
+    && serverActionDiagnostic.executorId === "deployment-node"
+    && typeof serverActionDiagnostic.error?.stack === "string"
+    && serverActionDiagnostic.error.cause !== undefined
+    && browserActionDiagnostic?.endpoint === "wss://diagnostics.example"
+    && typeof browserActionDiagnostic.clientId === "string"
+    && typeof browserActionDiagnostic.requestId === "string"
+    && browserActionDiagnostic.executorId === "deployment-node"
+    && typeof browserActionDiagnostic.error?.stack === "string"
+    && !serializedActionDiagnostics.includes(serverSecret)
+    && !serializedActionDiagnostics.includes(endpointSecret),
+  "server and browser action failures retain identifiers, stack/cause, and redaction",
+);
 
 expect_deployment(
   JSON.stringify(hosted_test_server_bind_options({}))

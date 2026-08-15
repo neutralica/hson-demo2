@@ -181,6 +181,50 @@ export type HostedTestApplicationOptions = Readonly<{
   }>;
 }>;
 
+function redact_hosted_server_diagnostic_text(value: string, maxLength: number): string {
+  return value
+    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [redacted]")
+    .replace(/\b(authorization|cookie|token|credential|secret|password)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
+    .replace(/((?:wss?|https?):\/\/[^\s?#]+)\?[^\s#]*/gi, "$1?[redacted]")
+    .slice(0, maxLength);
+}
+
+function safe_hosted_server_error(error: unknown, depth = 0): Readonly<Record<string, unknown>> {
+  if (!(error instanceof Error)) return Object.freeze({ type: error === null ? "null" : typeof error });
+  const code = Reflect.get(error, "code");
+  return Object.freeze({
+    name: error.name,
+    message: redact_hosted_server_diagnostic_text(error.message, 2_048),
+    ...(typeof code === "string" && /^[A-Z][A-Z0-9_]{0,95}$/.test(code) ? { code } : {}),
+    ...(error.stack === undefined ? {} : { stack: redact_hosted_server_diagnostic_text(error.stack, 8_192) }),
+    ...(depth === 0 && error.cause instanceof Error ? { cause: safe_hosted_server_error(error.cause, depth + 1) } : {}),
+  });
+}
+
+function log_hosted_server_action_failure(
+  action: keyof HostedTestActions & string,
+  error: unknown,
+  context: Readonly<{
+    clientId?: string;
+    requestId?: string;
+    runId?: string;
+    attemptId?: string;
+    executorId?: string;
+  }>,
+): void {
+  console.error(`[hosted-tests] ${action} failed`, Object.freeze({
+    application: "hosted-tests",
+    action,
+    authorityId: HOSTED_TEST_COORDINATOR_HOST_ID,
+    ...(context.clientId === undefined ? {} : { clientId: context.clientId }),
+    ...(context.requestId === undefined ? {} : { requestId: context.requestId }),
+    ...(context.runId === undefined ? {} : { runId: context.runId }),
+    ...(context.attemptId === undefined ? {} : { attemptId: context.attemptId }),
+    ...(context.executorId === undefined ? {} : { executorId: context.executorId }),
+    error: safe_hosted_server_error(error),
+  }));
+}
+
 function finite(value: number, field: string): number {
   if (!Number.isFinite(value)) throw new Error(`Hosted test result has non-finite ${field}.`);
   return value;
@@ -458,11 +502,13 @@ export function create_hosted_test_application(
       attemptId: HostedTestAttemptId,
       status: "running" | "settled",
     ) => Promise<void>,
+    identifyRun: (runId: HostedTestRunId, attemptId: HostedTestAttemptId) => void,
   ): Promise<HostedTestSelectedRunResult> {
     const runId = makeRunId() as HostedTestRunId;
     if (!runId) throw new Error("Hosted test run ID must be non-empty.");
     const attemptId = makeAttemptId(runId, 1);
     if (!attemptId) throw new Error("Hosted test attempt ID must be non-empty.");
+    identifyRun(runId, attemptId);
     const reportHostId = `hosted-report:${runId}`;
     const reportPlan = make_test_run_plan({
       runId,
@@ -680,10 +726,21 @@ export function create_hosted_test_application(
   }
 
   const actions: LiveHostActions<HostedTestActions, HostedTestCoordinatorState> = {
-    "tests.discover": async () => {
-      return JSON.parse(JSON.stringify(options.discovery)) as JsonValue;
+    "tests.discover": async (_context, _request, message) => {
+      try {
+        return JSON.parse(JSON.stringify(options.discovery)) as JsonValue;
+      } catch (cause) {
+        log_hosted_server_action_failure("tests.discover", cause, {
+          ...(message.clientId === undefined ? {} : { clientId: message.clientId }),
+          ...(message.requestId === undefined ? {} : { requestId: message.requestId }),
+          executorId: options.discovery.executor.id,
+        });
+        throw cause;
+      }
     },
     "tests.runSelected": async (context, request, message) => {
+      let runIdentity: Readonly<{ runId: HostedTestRunId; attemptId: HostedTestAttemptId }> | undefined;
+      try {
       if (!message.clientId || !message.requestId) throw new Error("HOSTED_TEST_REQUEST_ID_REQUIRED: tests.runSelected requires a retry-safe client and request identity.");
       const executorRegistry = options.executorRegistry;
       const clientId = message.clientId;
@@ -727,10 +784,21 @@ export function create_hosted_test_application(
         requestId,
         retainRun,
         setAttemptStatus,
+        (runId, attemptId) => { runIdentity = Object.freeze({ runId, attemptId }); },
       );
       return JSON.parse(JSON.stringify(result)) as JsonValue;
+      } catch (cause) {
+        log_hosted_server_action_failure("tests.runSelected", cause, {
+          ...(message.clientId === undefined ? {} : { clientId: message.clientId }),
+          ...(message.requestId === undefined ? {} : { requestId: message.requestId }),
+          ...(runIdentity === undefined ? {} : runIdentity),
+          executorId: options.discovery.executor.id,
+        });
+        throw cause;
+      }
     },
     "tests.cancel": async (context, request, message) => {
+      try {
       if (!message.clientId || !message.requestId) {
         throw new Error("HOSTED_TEST_REQUEST_ID_REQUIRED: tests.cancel requires a retry-safe client and request identity.");
       }
@@ -767,6 +835,16 @@ export function create_hosted_test_application(
         request.runId,
         request.attemptId,
       ))) as JsonValue;
+      } catch (cause) {
+        log_hosted_server_action_failure("tests.cancel", cause, {
+          ...(message.clientId === undefined ? {} : { clientId: message.clientId }),
+          ...(message.requestId === undefined ? {} : { requestId: message.requestId }),
+          runId: request.runId,
+          attemptId: request.attemptId,
+          executorId: options.discovery.executor.id,
+        });
+        throw cause;
+      }
     },
   };
   const schema: LiveHostSchema<HostedTestCoordinatorState, HostedTestActions> = {

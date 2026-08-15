@@ -1,7 +1,14 @@
 import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
 import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise, LiveMapCommitObservation } from "hson-live/types";
 import type { HostedTestActions, HostedTestAnyRunResult, HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestSelectedRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
-import { decode_hosted_test_discovery_response, decode_hosted_test_inspect_response, decode_hosted_test_cancel_response, decode_selected_hosted_test_run_response } from "../../../../shared/hosted-tests/hosted-test-client-action";
+import {
+  decode_hosted_test_discovery_response,
+  decode_hosted_test_inspect_response,
+  decode_hosted_test_cancel_response,
+  decode_selected_hosted_test_run_response,
+  hosted_test_client_failure_diagnostic,
+  summarize_hosted_test_protocol_value,
+} from "../../../../shared/hosted-tests/hosted-test-client-action";
 import type { HostedTestReportState } from "../../../../shared/hosted-tests/hosted-test-report.types";
 import { HOSTED_TEST_SELECTED_RUN_TARGET, type HostedTestRunTarget } from "../../../../shared/hosted-tests/hosted-test-suite-contract";
 import type { TestExecutorDiscovery } from "../../../../shared/testing/test-discovery-contract";
@@ -120,7 +127,7 @@ export function resolve_hosted_test_websocket_url(
   }
   let url: URL;
   try { url = new URL(configured); }
-  catch { throw new Error(`Hosted-test WebSocket URL is invalid: ${configured}`); }
+  catch { throw new Error("Hosted-test WebSocket URL is invalid."); }
   if (url.protocol !== "ws:" && url.protocol !== "wss:") {
     throw new Error(`Hosted-test WebSocket URL must use ws:// or wss://, received ${url.protocol}`);
   }
@@ -134,6 +141,30 @@ export function hosted_test_host_url(base: string, hostId: string): string {
   const url = new URL(base);
   url.searchParams.set("livehost", hostId);
   return url.toString();
+}
+
+function redact_hosted_test_diagnostic_text(value: string, maxLength: number): string {
+  return value
+    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [redacted]")
+    .replace(/\b(authorization|cookie|token|credential|secret|password)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
+    .replace(/((?:wss?|https?):\/\/[^\s?#]+)\?[^\s#]*/gi, "$1?[redacted]")
+    .slice(0, maxLength);
+}
+
+function safe_hosted_test_error(error: unknown, depth = 0): Readonly<Record<string, unknown>> {
+  if (!(error instanceof Error)) return Object.freeze({ type: error === null ? "null" : typeof error });
+  const diagnostic = hosted_test_client_failure_diagnostic(error);
+  const code = Reflect.get(error, "code");
+  return Object.freeze({
+    name: error.name,
+    message: redact_hosted_test_diagnostic_text(error.message, 2_048),
+    ...(typeof code === "string" && /^[A-Z][A-Z0-9_]{0,95}$/.test(code) ? { code } : {}),
+    ...(error.stack === undefined ? {} : { stack: redact_hosted_test_diagnostic_text(error.stack, 8_192) }),
+    ...(diagnostic === undefined ? {} : { cause: diagnostic }),
+    ...(diagnostic === undefined && depth === 0 && error.cause instanceof Error
+      ? { cause: safe_hosted_test_error(error.cause, depth + 1) }
+      : {}),
+  });
 }
 
 function association_from(
@@ -209,6 +240,38 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   const cancelDelays = new Set<() => void>();
   const activeRuns = new Set<HostedTestRemoteRun>();
   const associationWaiters = new Map<string, Set<HostedTestAssociationWaiter>>();
+
+  function endpoint_identity(): string | undefined {
+    try { return new URL(configured_base_url()).origin; }
+    catch { return undefined; }
+  }
+
+  function log_browser_failure(
+    operation: string,
+    cause: unknown,
+    context: Readonly<{
+      authorityId?: string;
+      requestId?: string;
+      runId?: string;
+      attemptId?: string;
+      executorId?: string;
+      response?: unknown;
+    }> = {},
+  ): void {
+    console.error(`[hosted-tests] ${operation} failed`, Object.freeze({
+      application: "hosted-tests",
+      operation,
+      endpoint: endpoint_identity(),
+      authorityId: context.authorityId ?? HOSTED_TEST_COORDINATOR_HOST_ID,
+      clientId: coordinatorClientId,
+      ...(context.requestId === undefined ? {} : { requestId: context.requestId }),
+      ...(context.runId === undefined ? {} : { runId: context.runId }),
+      ...(context.attemptId === undefined ? {} : { attemptId: context.attemptId }),
+      ...(context.executorId === undefined ? {} : { executorId: context.executorId }),
+      ...(context.response === undefined ? {} : { received: summarize_hosted_test_protocol_value(context.response) }),
+      error: safe_hosted_test_error(cause),
+    }));
+  }
 
   function wait_delay(ms: number): Promise<void> {
     if (ms === 0) return Promise.resolve();
@@ -307,6 +370,10 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       }
       retainedFailure ??= lastError instanceof Error ? lastError : new Error(String(lastError));
       status = "failed";
+      log_browser_failure("coordinator.reconnect", retainedFailure, {
+        authorityId: HOSTED_TEST_COORDINATOR_HOST_ID,
+        ...(discoveredExecutor === undefined ? {} : { executorId: discoveredExecutor.executor.id }),
+      });
       throw retainedFailure;
     })().finally(() => { reconnecting = undefined; });
     return reconnecting;
@@ -315,6 +382,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   const readiness = open_coordinator().catch((cause: unknown) => {
     retainedFailure ??= cause instanceof Error ? cause : new Error(String(cause));
     if (!disposed) status = "failed";
+    if (!disposed) log_browser_failure("coordinator.startup", retainedFailure, { authorityId: HOSTED_TEST_COORDINATOR_HOST_ID });
     throw retainedFailure;
   });
 
@@ -322,10 +390,13 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     await readiness;
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     status = "discovering";
+    let response: unknown;
+    let requestId: string | undefined;
     try {
-      const discovery = decode_hosted_test_discovery_response(
-        await coordinatorClient.action("tests.discover", {}),
-      );
+      const action = coordinatorClient.action("tests.discover", {});
+      requestId = action.request.requestId;
+      response = await action;
+      const discovery = decode_hosted_test_discovery_response(response);
       discoveredExecutor = discovery;
       retainedFailure = undefined;
       status = "ready";
@@ -334,6 +405,11 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       const failure = cause instanceof Error ? cause : new Error(String(cause));
       retainedFailure = failure;
       status = "discovery-failed";
+      log_browser_failure("tests.discover", failure, {
+        authorityId: HOSTED_TEST_COORDINATOR_HOST_ID,
+        ...(requestId === undefined ? {} : { requestId }),
+        ...(response === undefined ? {} : { response }),
+      });
       throw failure;
     }
   }
@@ -343,13 +419,25 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   ): Promise<HostedTestSelectedRunResult> {
     let response: unknown;
     try {
-      response = await action;
-    } catch (error) {
-      if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
-      await ensure_reconnected();
-      response = await coordinatorClient.retry_action(action.request);
+      try {
+        response = await action;
+      } catch (error) {
+        if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+        await ensure_reconnected();
+        response = await coordinatorClient.retry_action(action.request);
+      }
+      return decode_selected_hosted_test_run_response(response);
+    } catch (cause) {
+      if (!disposed) {
+        log_browser_failure("tests.runSelected", cause, {
+          authorityId: HOSTED_TEST_COORDINATOR_HOST_ID,
+          requestId: action.request.requestId,
+          ...(discoveredExecutor === undefined ? {} : { executorId: discoveredExecutor.executor.id }),
+          ...(response === undefined ? {} : { response }),
+        });
+      }
+      throw cause;
     }
-    return decode_selected_hosted_test_run_response(response);
   }
 
   async function retry_safe_cancel_result(
@@ -358,13 +446,27 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   ): Promise<HostedTestCancelResult> {
     let response: unknown;
     try {
-      response = await action;
-    } catch (error) {
-      if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
-      await ensure_reconnected();
-      response = await coordinatorClient.retry_action(action.request);
+      try {
+        response = await action;
+      } catch (error) {
+        if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+        await ensure_reconnected();
+        response = await coordinatorClient.retry_action(action.request);
+      }
+      return decode_hosted_test_cancel_response(response, request);
+    } catch (cause) {
+      if (!disposed) {
+        log_browser_failure("tests.cancel", cause, {
+          authorityId: HOSTED_TEST_COORDINATOR_HOST_ID,
+          requestId: action.request.requestId,
+          runId: request.runId,
+          attemptId: request.attemptId,
+          ...(discoveredExecutor === undefined ? {} : { executorId: discoveredExecutor.executor.id }),
+          ...(response === undefined ? {} : { response }),
+        });
+      }
+      throw cause;
     }
-    return decode_hosted_test_cancel_response(response, request);
   }
 
   function wait_for_association(
@@ -511,12 +613,27 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         retainedFailure ??= lastError instanceof Error ? lastError : new Error(String(lastError));
         status = "failed";
         fail_report(retainedFailure);
+        log_browser_failure("report.reconnect", retainedFailure, {
+          authorityId: association.reportHostId,
+          runId: association.runId,
+          attemptId: association.attemptId,
+          executorId: association.acceptedPlan.executorId,
+        });
         throw retainedFailure;
       })().finally(() => { reportReconnecting = undefined; });
       return reportReconnecting;
     }
 
-    await open_report();
+    try { await open_report(); }
+    catch (cause) {
+      log_browser_failure("report.startup", cause, {
+        authorityId: association.reportHostId,
+        runId: association.runId,
+        attemptId: association.attemptId,
+        executorId: association.acceptedPlan.executorId,
+      });
+      throw cause;
+    }
     const recovered_result = (): HostedTestAnyRunResult => {
       const report = reportClient.recovery.map.capture().value;
       if (report.run.id !== association.runId || report.run.suite !== association.suite) {
@@ -547,10 +664,22 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const terminalResult = requestedActionResult === undefined
       ? reportTerminal.then(recovered_result)
       : Promise.all([requestedActionResult, reportTerminal]).then(([result]) => result);
-    const actionResult: Promise<HostedTestAnyRunResult> = terminalResult.then((result) => {
-      if (!disposed && !runDisposed) status = "completed";
-      return result;
-    });
+    const actionResult: Promise<HostedTestAnyRunResult> = terminalResult
+      .then((result) => {
+        if (!disposed && !runDisposed) status = "completed";
+        return result;
+      })
+      .catch((cause: unknown) => {
+        if (requestedActionResult === undefined && !disposed && !runDisposed) {
+          log_browser_failure("tests.recover", cause, {
+            authorityId: association.reportHostId,
+            runId: association.runId,
+            attemptId: association.attemptId,
+            executorId: association.acceptedPlan.executorId,
+          });
+        }
+        throw cause;
+      });
     void actionResult.catch(() => undefined);
     const run: HostedTestRemoteRun = Object.freeze({
       association,
@@ -563,11 +692,24 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       ready() {
         readyAction ??= (async () => {
           const pending = reportClient.action("tests.ready", { runId: association.runId });
-          try { await pending; }
-          catch (error) {
-            if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
-            await ensure_report_reconnected();
-            await reportClient.retry_action(pending.request);
+          try {
+            try { await pending; }
+            catch (error) {
+              if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+              await ensure_report_reconnected();
+              await reportClient.retry_action(pending.request);
+            }
+          } catch (cause) {
+            if (!disposed && !runDisposed) {
+              log_browser_failure("tests.ready", cause, {
+                authorityId: association.reportHostId,
+                requestId: pending.request.requestId,
+                runId: association.runId,
+                attemptId: association.attemptId,
+                executorId: association.acceptedPlan.executorId,
+              });
+            }
+            throw cause;
           }
         })();
         return readyAction;
@@ -575,13 +717,27 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       async inspect(request) {
         const pending = reportClient.action("tests.inspect", request);
         let response: unknown;
-        try { response = await pending; }
-        catch (error) {
-          if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
-          await ensure_report_reconnected();
-          response = await reportClient.retry_action(pending.request);
+        try {
+          try { response = await pending; }
+          catch (error) {
+            if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+            await ensure_report_reconnected();
+            response = await reportClient.retry_action(pending.request);
+          }
+          return decode_hosted_test_inspect_response(response, request.caseKey);
+        } catch (cause) {
+          if (!disposed && !runDisposed) {
+            log_browser_failure("tests.inspect", cause, {
+              authorityId: association.reportHostId,
+              requestId: pending.request.requestId,
+              runId: association.runId,
+              attemptId: association.attemptId,
+              executorId: association.acceptedPlan.executorId,
+              ...(response === undefined ? {} : { response }),
+            });
+          }
+          throw cause;
         }
-        return decode_hosted_test_inspect_response(response, request.caseKey);
       },
       async cancel() {
         const request = Object.freeze({ runId: association.runId, attemptId: association.attemptId });
