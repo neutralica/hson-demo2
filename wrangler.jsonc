@@ -12,6 +12,9 @@
       }
     ]
   },
+  "limits": {
+  "cpu_ms": 30000
+},
   "migrations": [
     {
       "tag": "v1",
