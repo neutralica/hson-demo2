@@ -1,4 +1,3 @@
-import { spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { access, readFile, realpath } from "node:fs/promises";
 import { dirname, join, parse } from "node:path";
@@ -12,6 +11,12 @@ import type { TestCapability, TestCollection, TestSubject } from "../../../../sr
 import type { ExternalLibraryLauncherTarget } from "../../../../src/shared/testing/external-launcher-contract";
 import type { TestSuiteDescriptor } from "../../../../src/shared/testing/test-contracts";
 import { validate_test_suite_id } from "../../../../src/shared/testing/test-identity";
+import {
+  BoundedOutputCapture,
+  create_node_process_supervisor,
+  type NodeProcessResult,
+  type NodeProcessSupervisor,
+} from "./node-process-supervisor";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS = 120_000;
 export const EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS = 1_000;
@@ -74,11 +79,9 @@ export type ExternalLibraryLauncherCompletion = Readonly<{
 }>;
 
 type ExternalLibraryLauncherState = {
-  readonly activeChildren: Map<ChildProcess, () => void>;
+  readonly processSupervisor: NodeProcessSupervisor;
   readonly activeLaunchers: Map<string, Promise<ExternalLibraryLauncherResult>>;
   readonly activeCommands: Map<string, Promise<SupervisedNodeCommandResult>>;
-  maximumObservedConcurrentChildren: number;
-  terminationGeneration: number;
   directLauncherStarts: number;
   packageScriptStarts: number;
   commandStarts: number;
@@ -106,23 +109,7 @@ export type SupervisedNodeCommand = Readonly<{
   timeoutMs: number;
 }>;
 
-export type SupervisedNodeCommandResult = Readonly<{
-  id: string;
-  stdout: string;
-  stderr: string;
-  stdoutBytes: number;
-  stderrBytes: number;
-  stdoutTruncated: boolean;
-  stderrTruncated: boolean;
-  exitCode: number | null;
-  signal: NodeJS.Signals | null;
-  durationMs: number;
-  timedOut: boolean;
-  cancelled: boolean;
-  forceKilled: boolean;
-  spawnError?: string;
-  ok: boolean;
-}>;
+export type SupervisedNodeCommandResult = NodeProcessResult & Readonly<{ id: string }>;
 
 export type ExternalLibraryLauncherService = Readonly<{
   run(
@@ -139,6 +126,7 @@ export type ExternalLibraryLauncherService = Readonly<{
       observeStderrChunk?: (text: string) => void;
     }>,
   ): Promise<SupervisedNodeCommandResult>;
+  readonly processSupervisor: NodeProcessSupervisor;
   terminate(): void;
   terminationGeneration(): number;
   resetMetrics(): void;
@@ -153,11 +141,14 @@ export type ExternalLibraryLauncherService = Readonly<{
 
 function make_external_library_launcher_state(): ExternalLibraryLauncherState {
   return {
-    activeChildren: new Map(),
+    processSupervisor: create_node_process_supervisor({
+      stdoutLimitBytes: EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES,
+      stderrLimitBytes: EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES,
+      truncationMarker: EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER,
+      terminationGraceMs: EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS,
+    }),
     activeLaunchers: new Map(),
     activeCommands: new Map(),
-    maximumObservedConcurrentChildren: 0,
-    terminationGeneration: 0,
     directLauncherStarts: 0,
     packageScriptStarts: 0,
     commandStarts: 0,
@@ -393,60 +384,6 @@ export function resolve_external_launcher_binding(
   return target;
 }
 
-class BoundedOutputCapture {
-  readonly #headLimit: number;
-  readonly #tailLimit: number;
-  readonly #full: Buffer[] = [];
-  #fullBytes = 0;
-  #head = Buffer.alloc(0);
-  #tail = Buffer.alloc(0);
-  #totalBytes = 0;
-  #truncated = false;
-
-  constructor(readonly limitBytes: number) {
-    const markerReserve = Math.min(128, Math.floor(limitBytes / 4));
-    const retained = limitBytes - markerReserve;
-    this.#headLimit = Math.floor(retained / 2);
-    this.#tailLimit = retained - this.#headLimit;
-  }
-
-  add(chunk: Buffer): void {
-    this.#totalBytes += chunk.length;
-    if (!this.#truncated) {
-      if (this.#fullBytes + chunk.length <= this.limitBytes) {
-        this.#full.push(chunk);
-        this.#fullBytes += chunk.length;
-      } else {
-        this.#truncated = true;
-        const prior = Buffer.concat([...this.#full, chunk]);
-        this.#head = prior.subarray(0, this.#headLimit);
-        this.#tail = prior.subarray(Math.max(0, prior.length - this.#tailLimit));
-        this.#full.length = 0;
-        this.#fullBytes = 0;
-      }
-      return;
-    }
-    if (this.#head.length < this.#headLimit) {
-      const needed = this.#headLimit - this.#head.length;
-      this.#head = Buffer.concat([this.#head, chunk.subarray(0, needed)]);
-    }
-    this.#tail = Buffer.concat([this.#tail, chunk]);
-    if (this.#tail.length > this.#tailLimit) {
-      this.#tail = this.#tail.subarray(this.#tail.length - this.#tailLimit);
-    }
-  }
-
-  text(): string {
-    if (!this.#truncated) return Buffer.concat(this.#full).toString("utf8");
-    const omitted = Math.max(0, this.#totalBytes - this.#head.length - this.#tail.length);
-    const marker = `\n${EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER} ${omitted} bytes omitted\n`;
-    return `${this.#head.toString("utf8")}${marker}${this.#tail.toString("utf8")}`;
-  }
-
-  get totalBytes(): number { return this.#totalBytes; }
-  get truncated(): boolean { return this.#truncated; }
-}
-
 type CompletionScan = Readonly<{
   records: readonly unknown[];
   malformedRecords: number;
@@ -462,7 +399,10 @@ class CompletionScanner {
   #malformedRecords = 0;
   #sawCompletionLine = false;
   #trailingOutput = false;
-  readonly #ordinaryOutput = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES);
+  readonly #ordinaryOutput = new BoundedOutputCapture(
+    EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES,
+    EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER,
+  );
 
   add(chunk: Buffer): void {
     this.#consume(this.#decoder.write(chunk));
@@ -476,7 +416,7 @@ class CompletionScanner {
       records: Object.freeze([...this.#records]),
       malformedRecords: this.#malformedRecords,
       trailingOutput: this.#trailingOutput,
-      ordinaryStdout: this.#ordinaryOutput.text(),
+      ordinaryStdout: this.#ordinaryOutput.snapshot().text,
     });
   }
 
@@ -485,7 +425,7 @@ class CompletionScanner {
       records: Object.freeze([...this.#records]),
       malformedRecords: this.#malformedRecords,
       trailingOutput: this.#trailingOutput,
-      ordinaryStdout: this.#ordinaryOutput.text(),
+      ordinaryStdout: this.#ordinaryOutput.snapshot().text,
     });
   }
 
@@ -600,15 +540,6 @@ export function reconcile_external_launcher_completion(
   return Object.freeze({ completion });
 }
 
-function terminate_process_tree(child: ChildProcess, signal: NodeJS.Signals): void {
-  if (child.pid === undefined) return;
-  if (process.platform !== "win32") {
-    try { process.kill(-child.pid, signal); } catch { child.kill(signal); }
-    return;
-  }
-  child.kill(signal);
-}
-
 async function run_supervised_node_command_with_state(
   state: ExternalLibraryLauncherState,
   invocation: SupervisedNodeCommand,
@@ -619,87 +550,29 @@ async function run_supervised_node_command_with_state(
     observeStderrChunk?: (text: string) => void;
   }> = {},
 ): Promise<SupervisedNodeCommandResult> {
-  if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.terminationGeneration) {
+  if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.processSupervisor.generation()) {
     throw new Error(`Supervised Node command was cancelled before start: ${invocation.id}`);
   }
   const active = state.activeCommands.get(invocation.id);
   if (active !== undefined) return active;
   state.commandStarts += 1;
-  const startedAt = performance.now();
-  const execution = new Promise<SupervisedNodeCommandResult>((resolve) => {
-    const stdoutCapture = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES);
-    const stderrCapture = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES);
-    let timedOut = false;
-    let cancelled = false;
-    let forceKilled = false;
-    let spawnError: string | undefined;
-    let settled = false;
-    let terminationRequested = false;
-    let forceTimer: ReturnType<typeof setTimeout> | undefined;
-    const child = spawn(invocation.command, invocation.args, {
-      cwd: invocation.cwd,
-      env: { ...process.env, ...invocation.environment, FORCE_COLOR: "0", NO_COLOR: "1" },
-      stdio: ["ignore", "pipe", "pipe"],
-      detached: process.platform !== "win32",
-    });
-    const requestTermination = (): void => {
-      if (terminationRequested || settled) return;
-      terminationRequested = true;
-      terminate_process_tree(child, "SIGTERM");
-      forceTimer = setTimeout(() => {
-        if (settled) return;
-        forceKilled = true;
-        terminate_process_tree(child, "SIGKILL");
-      }, EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS);
-    };
-    state.activeChildren.set(child, requestTermination);
-    state.maximumObservedConcurrentChildren = Math.max(state.maximumObservedConcurrentChildren, state.activeChildren.size);
-    child.stdout?.on("data", (chunk: Buffer) => {
-      stdoutCapture.add(chunk);
-      options.observeStdoutChunk?.(chunk.toString("utf8"));
-    });
-    child.stderr?.on("data", (chunk: Buffer) => {
-      stderrCapture.add(chunk);
-      options.observeStderrChunk?.(chunk.toString("utf8"));
-    });
-    const timer = setTimeout(() => {
-      timedOut = true;
-      requestTermination();
-    }, invocation.timeoutMs);
-    const abort = (): void => {
-      cancelled = true;
-      requestTermination();
-    };
-    options.signal?.addEventListener("abort", abort, { once: true });
-    if (options.signal?.aborted) abort();
-    child.once("error", (error) => { spawnError = error.message; });
-    child.once("close", (exitCode, signal) => {
-      if (settled) return;
-      settled = true;
-      state.activeChildren.delete(child);
-      clearTimeout(timer);
-      if (forceTimer !== undefined) clearTimeout(forceTimer);
-      options.signal?.removeEventListener("abort", abort);
-      const durationMs = performance.now() - startedAt;
-      resolve(Object.freeze({
-        id: invocation.id,
-        stdout: stdoutCapture.text(),
-        stderr: stderrCapture.text(),
-        stdoutBytes: stdoutCapture.totalBytes,
-        stderrBytes: stderrCapture.totalBytes,
-        stdoutTruncated: stdoutCapture.truncated,
-        stderrTruncated: stderrCapture.truncated,
-        exitCode,
-        signal,
-        durationMs,
-        timedOut,
-        cancelled,
-        forceKilled,
-        ...(spawnError === undefined ? {} : { spawnError }),
-        ok: exitCode === 0 && signal === null && spawnError === undefined && !timedOut && !cancelled,
-      }));
-    });
+  const processExecution = state.processSupervisor.start({
+    cwd: invocation.cwd,
+    command: invocation.command,
+    args: invocation.args,
+    environment: invocation.environment,
+    timeoutMs: invocation.timeoutMs,
+  }, {
+    ...(options.signal === undefined ? {} : { signal: options.signal }),
+    ...(options.terminationGeneration === undefined ? {} : { generation: options.terminationGeneration }),
+    ...(options.observeStdoutChunk === undefined ? {} : {
+      observeStdoutChunk: (chunk: Buffer) => options.observeStdoutChunk?.(chunk.toString("utf8")),
+    }),
+    ...(options.observeStderrChunk === undefined ? {} : {
+      observeStderrChunk: (chunk: Buffer) => options.observeStderrChunk?.(chunk.toString("utf8")),
+    }),
   });
+  const execution = processExecution.result.then((result) => Object.freeze({ id: invocation.id, ...result }));
   state.activeCommands.set(invocation.id, execution);
   return execution.finally(() => state.activeCommands.delete(invocation.id));
 }
@@ -710,7 +583,7 @@ async function run_external_library_launcher_with_state(
   targetId: string,
   options: ExternalLibraryLauncherRunOptions = {},
 ): Promise<ExternalLibraryLauncherResult> {
-  if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.terminationGeneration) {
+  if (options.terminationGeneration !== undefined && options.terminationGeneration !== state.processSupervisor.generation()) {
     throw new Error(`External library launcher was cancelled before start: ${targetId}`);
   }
   if (availability.repositoryRoot === undefined) throw new Error("External hson-live repository is unavailable.");
@@ -721,141 +594,105 @@ async function run_external_library_launcher_with_state(
   const timeoutMs = options.timeoutMs ?? EXTERNAL_LIBRARY_LAUNCHER_TIMEOUT_MS;
   const active = state.activeLaunchers.get(targetId);
   if (active !== undefined) return active;
-  const startedAt = performance.now();
-  const execution = new Promise<ExternalLibraryLauncherResult>((resolve) => {
-    const stdoutCapture = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES);
-    const stderrCapture = new BoundedOutputCapture(EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES);
-    const completionScanner = new CompletionScanner();
-    let timedOut = false;
-    let spawnError: string | undefined;
-    let settled = false;
-    let terminationRequested = false;
-    let forceKilled = false;
-    let cancelled = false;
-    let completionAcceptedBeforeCancellation: ExternalLibraryLauncherCompletion | undefined;
-    let forceTimer: ReturnType<typeof setTimeout> | undefined;
-    const configuredInvocation = availability.invocations?.[targetId];
-    let resolvedInvocation: ExternalLibraryLauncherInvocation;
-    if (options.forcePackageScript) {
-      resolvedInvocation = Object.freeze({
-        kind: "package-script" as const,
-        command: "npm",
-        args: Object.freeze(["run", "--silent", launcher.packageScript]),
-        env: Object.freeze({}),
-      });
-    } else if (options.forceTsx) {
-      resolvedInvocation = tsx_invocation(launcher);
-    } else if (options.forcePlainNode) {
-      resolvedInvocation = Object.freeze({
-        kind: "direct",
-        command: process.execPath,
-        args: Object.freeze([launcher.repositoryModule]),
-        env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
-      });
-    } else {
-      resolvedInvocation = (
-        options.forceVerifiedDirect
-          ? configuredInvocation?.fallback ?? configuredInvocation
-          : configuredInvocation
-      ) ?? Object.freeze({
-        kind: "package-script" as const,
-        command: "npm",
-        args: Object.freeze(["run", "--silent", launcher.packageScript]),
-        env: Object.freeze({}),
-      });
-    }
-    const invocation = options.command === undefined
-      ? resolvedInvocation
-      : Object.freeze({ ...resolvedInvocation, command: options.command });
-    if (invocation.kind === "direct") state.directLauncherStarts += 1;
-    else state.packageScriptStarts += 1;
-    const child = spawn(invocation.command, invocation.args, {
-      cwd: availability.repositoryRoot,
-      env: { ...process.env, ...invocation.env, FORCE_COLOR: "0", NO_COLOR: "1" },
-      stdio: ["ignore", "pipe", "pipe"],
-      detached: process.platform !== "win32",
+  const configuredInvocation = availability.invocations?.[targetId];
+  let resolvedInvocation: ExternalLibraryLauncherInvocation;
+  if (options.forcePackageScript) {
+    resolvedInvocation = Object.freeze({
+      kind: "package-script" as const,
+      command: "npm",
+      args: Object.freeze(["run", "--silent", launcher.packageScript]),
+      env: Object.freeze({}),
     });
-    const requestTermination = (): void => {
-      if (terminationRequested || settled) return;
-      terminationRequested = true;
-      terminate_process_tree(child, "SIGTERM");
-      forceTimer = setTimeout(() => {
-        if (settled) return;
-        forceKilled = true;
-        terminate_process_tree(child, "SIGKILL");
-      }, EXTERNAL_LIBRARY_LAUNCHER_TERMINATION_GRACE_MS);
-    };
-    state.activeChildren.set(child, requestTermination);
-    state.maximumObservedConcurrentChildren = Math.max(
-      state.maximumObservedConcurrentChildren,
-      state.activeChildren.size,
-    );
-    child.stdout?.on("data", (chunk: Buffer) => {
-      stdoutCapture.add(chunk);
+  } else if (options.forceTsx) {
+    resolvedInvocation = tsx_invocation(launcher);
+  } else if (options.forcePlainNode) {
+    resolvedInvocation = Object.freeze({
+      kind: "direct",
+      command: process.execPath,
+      args: Object.freeze([launcher.repositoryModule]),
+      env: Object.freeze({ TS_NODE_TRANSPILE_ONLY: "true" }),
+    });
+  } else {
+    resolvedInvocation = (
+      options.forceVerifiedDirect
+        ? configuredInvocation?.fallback ?? configuredInvocation
+        : configuredInvocation
+    ) ?? Object.freeze({
+      kind: "package-script" as const,
+      command: "npm",
+      args: Object.freeze(["run", "--silent", launcher.packageScript]),
+      env: Object.freeze({}),
+    });
+  }
+  const invocation = options.command === undefined
+    ? resolvedInvocation
+    : Object.freeze({ ...resolvedInvocation, command: options.command });
+  if (invocation.kind === "direct") state.directLauncherStarts += 1;
+  else state.packageScriptStarts += 1;
+
+  const completionScanner = new CompletionScanner();
+  let cancelled = false;
+  let terminationRequested = false;
+  let completionAcceptedBeforeCancellation: ExternalLibraryLauncherCompletion | undefined;
+  const processExecution = state.processSupervisor.start({
+    cwd: availability.repositoryRoot,
+    command: invocation.command,
+    args: invocation.args,
+    environment: invocation.env,
+    timeoutMs,
+  }, {
+    observeStdoutChunk(chunk) {
       completionScanner.add(chunk);
       options.observeStdoutChunk?.(chunk.toString("utf8"));
-    });
-    child.stderr?.on("data", (chunk: Buffer) => { stderrCapture.add(chunk); });
-    const timer = setTimeout(() => {
-      timedOut = true;
-      requestTermination();
-    }, timeoutMs);
-    const abort = (): void => {
-      const observed = reconcile_external_launcher_completion(completionScanner.snapshot(), selectedTarget);
-      if (observed.error === undefined && observed.completion !== undefined) {
-        completionAcceptedBeforeCancellation = observed.completion;
-      } else {
-        cancelled = true;
-      }
-      requestTermination();
-    };
-    options.signal?.addEventListener("abort", abort, { once: true });
-    if (options.signal?.aborted) abort();
-    child.once("error", (error) => { spawnError = error.message; });
-    child.once("close", (exitCode, signal) => {
-      if (settled) return;
-      settled = true;
-      state.activeChildren.delete(child);
-      clearTimeout(timer);
-      if (forceTimer !== undefined) clearTimeout(forceTimer);
-      options.signal?.removeEventListener("abort", abort);
-      const completionScan = completionScanner.finish();
-      const completionResult: Readonly<{ completion?: ExternalLibraryLauncherCompletion; error?: string }> = completionAcceptedBeforeCancellation === undefined
-        ? reconcile_external_launcher_completion(completionScan, selectedTarget)
-        : Object.freeze({ completion: completionAcceptedBeforeCancellation });
-      const stdout = stdoutCapture.text();
-      const stderr = stderrCapture.text();
-      const durationMs = performance.now() - startedAt;
-      resolve(Object.freeze({
-        target: selectedTarget,
-        stdout,
-        ordinaryStdout: completionScan.ordinaryStdout,
-        stderr,
-        stdoutBytes: stdoutCapture.totalBytes,
-        stderrBytes: stderrCapture.totalBytes,
-        stdoutTruncated: stdoutCapture.truncated,
-        stderrTruncated: stderrCapture.truncated,
-        exitCode,
-        signal,
-        durationMs,
-        timedOut,
-        ...(spawnError === undefined ? {} : { spawnError }),
-        ...(completionResult.completion === undefined ? {} : { completion: completionResult.completion }),
-        ...(completionResult.error === undefined ? {} : { completionError: completionResult.error }),
-        ...(forceKilled ? { forceKilled: true } : {}),
-        ...(cancelled ? { cancelled: true } : {}),
-        ...(completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
-        invocationKind: invocation.kind,
-        ok: completionAcceptedBeforeCancellation !== undefined
-          ? completionAcceptedBeforeCancellation.failed === 0
-          : exitCode === 0
-          && signal === null
-          && spawnError === undefined
-          && !timedOut
-          && !terminationRequested
-          && completionResult.error === undefined
-          && completionResult.completion?.failed === 0,
-      }));
+    },
+  });
+  const abort = (): void => {
+    const observed = reconcile_external_launcher_completion(completionScanner.snapshot(), selectedTarget);
+    if (observed.error === undefined && observed.completion !== undefined) {
+      completionAcceptedBeforeCancellation = observed.completion;
+    } else {
+      cancelled = true;
+    }
+    terminationRequested = true;
+    processExecution.terminate();
+  };
+  options.signal?.addEventListener("abort", abort, { once: true });
+  if (options.signal?.aborted) abort();
+  const execution = processExecution.result.then((processResult): ExternalLibraryLauncherResult => {
+    options.signal?.removeEventListener("abort", abort);
+    const completionScan = completionScanner.finish();
+    const completionResult: Readonly<{ completion?: ExternalLibraryLauncherCompletion; error?: string }> = completionAcceptedBeforeCancellation === undefined
+      ? reconcile_external_launcher_completion(completionScan, selectedTarget)
+      : Object.freeze({ completion: completionAcceptedBeforeCancellation });
+    return Object.freeze({
+      target: selectedTarget,
+      stdout: processResult.stdout,
+      ordinaryStdout: completionScan.ordinaryStdout,
+      stderr: processResult.stderr,
+      stdoutBytes: processResult.stdoutBytes,
+      stderrBytes: processResult.stderrBytes,
+      stdoutTruncated: processResult.stdoutTruncated,
+      stderrTruncated: processResult.stderrTruncated,
+      exitCode: processResult.exitCode,
+      signal: processResult.signal,
+      durationMs: processResult.durationMs,
+      timedOut: processResult.timedOut,
+      ...(processResult.spawnError === undefined ? {} : { spawnError: processResult.spawnError }),
+      ...(completionResult.completion === undefined ? {} : { completion: completionResult.completion }),
+      ...(completionResult.error === undefined ? {} : { completionError: completionResult.error }),
+      ...(processResult.forceKilled ? { forceKilled: true } : {}),
+      ...(cancelled ? { cancelled: true } : {}),
+      ...(completionAcceptedBeforeCancellation === undefined ? {} : { completionAcceptedBeforeCancellation: true }),
+      invocationKind: invocation.kind,
+      ok: completionAcceptedBeforeCancellation !== undefined
+        ? completionAcceptedBeforeCancellation.failed === 0
+        : processResult.exitCode === 0
+        && processResult.signal === null
+        && processResult.spawnError === undefined
+        && !processResult.timedOut
+        && !terminationRequested
+        && completionResult.error === undefined
+        && completionResult.completion?.failed === 0,
     });
   });
   state.activeLaunchers.set(targetId, execution);
@@ -865,30 +702,33 @@ async function run_external_library_launcher_with_state(
 export function create_external_library_launcher_service(): ExternalLibraryLauncherService {
   const state = make_external_library_launcher_state();
   return Object.freeze({
+    processSupervisor: state.processSupervisor,
     run: (availability, targetId, options) =>
       run_external_library_launcher_with_state(state, availability, targetId, options ?? {}),
     runCommand: (command, options) => run_supervised_node_command_with_state(state, command, options),
     terminate() {
-      state.terminationGeneration += 1;
-      for (const terminate of state.activeChildren.values()) terminate();
+      state.processSupervisor.dispose();
     },
-    terminationGeneration: () => state.terminationGeneration,
+    terminationGeneration: () => state.processSupervisor.generation(),
     resetMetrics() {
-      if (state.activeChildren.size !== 0) {
+      if (state.processSupervisor.metrics().activeChildren !== 0) {
         throw new Error("Cannot reset external launcher metrics while children are active.");
       }
-      state.maximumObservedConcurrentChildren = 0;
+      state.processSupervisor.resetMetrics();
       state.directLauncherStarts = 0;
       state.packageScriptStarts = 0;
       state.commandStarts = 0;
     },
-    metrics: () => Object.freeze({
-      activeChildren: state.activeChildren.size,
-      maximumObservedConcurrentChildren: state.maximumObservedConcurrentChildren,
-      directLauncherStarts: state.directLauncherStarts,
-      packageScriptStarts: state.packageScriptStarts,
-      commandStarts: state.commandStarts,
-    }),
+    metrics: () => {
+      const processMetrics = state.processSupervisor.metrics();
+      return Object.freeze({
+        activeChildren: processMetrics.activeChildren,
+        maximumObservedConcurrentChildren: processMetrics.maximumObservedConcurrentChildren,
+        directLauncherStarts: state.directLauncherStarts,
+        packageScriptStarts: state.packageScriptStarts,
+        commandStarts: state.commandStarts,
+      });
+    },
   });
 }
 

@@ -6,7 +6,7 @@ import type { TestCatalog } from "../../../../../src/shared/testing/test-catalog
 import type { TestExecutorDescriptor } from "../../../../../src/shared/testing/test-executor-contract";
 import type { TestFailure } from "../../../../../src/shared/testing/test-contracts";
 import type { RunOptions, RunResult, TestEvent } from "../../../core/test-contracts";
-import type { ExternalLibraryLauncherService, SupervisedNodeCommandResult } from "../external-library-launchers";
+import type { NodeProcessResult, NodeProcessSupervisor } from "../node-process-supervisor";
 import { ALL_BROWSER_SUITE_MANIFEST } from "./browser-test-manifest";
 
 export const LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR = Object.freeze({
@@ -125,7 +125,7 @@ function empty_metrics(): BrowserExecutorMetrics {
 }
 
 export function create_playwright_browser_executor(
-  supervisor: Pick<ExternalLibraryLauncherService, "runCommand" | "terminationGeneration">,
+  supervisor: NodeProcessSupervisor,
 ): PlaywrightBrowserExecutor {
   let metrics = empty_metrics();
   const retainedArtifactRoots = new Set<string>();
@@ -316,10 +316,9 @@ export function create_playwright_browser_executor(
         maximumActiveProcesses: Math.max(metrics.maximumActiveProcesses, metrics.activeProcesses + 1),
         retainedArtifactRoots: retainedArtifactRoots.size,
       });
-      let result: SupervisedNodeCommandResult;
+      let result: NodeProcessResult;
       try {
-        result = await supervisor.runCommand({
-          id: `playwright-browser:${outputToken}`,
+        result = await supervisor.start({
           cwd: process.cwd(),
           command: process.execPath,
           args: Object.freeze([
@@ -339,9 +338,9 @@ export function create_playwright_browser_executor(
           timeoutMs: PLAYWRIGHT_SERVER_STARTUP_BUDGET_MS + (selectedIds.length * PLAYWRIGHT_CASE_TIMEOUT_MS),
         }, {
           ...(options.signal === undefined ? {} : { signal: options.signal }),
-          terminationGeneration: supervisor.terminationGeneration(),
-          observeStdoutChunk: parseChunk,
-        });
+          generation: supervisor.generation(),
+          observeStdoutChunk: (chunk) => parseChunk(chunk.toString("utf8")),
+        }).result;
       } finally {
         metrics = Object.freeze({ ...metrics, activeProcesses: Math.max(0, metrics.activeProcesses - 1) });
       }

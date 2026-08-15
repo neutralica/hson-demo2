@@ -100,7 +100,7 @@ export async function create_node_hosted_tests_application(
     }
   }
   const launcherService = create_external_library_launcher_service();
-  const browserExecutor = create_playwright_browser_executor(launcherService);
+  const browserExecutor = create_playwright_browser_executor(launcherService.processSupervisor);
   const selectedVerification = create_node_selected_verification_service(launcherService, commandSurfaces, browserExecutor);
   const discovery = make_test_executor_discovery(
     executorRegistry,
