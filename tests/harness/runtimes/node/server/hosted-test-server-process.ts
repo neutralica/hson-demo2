@@ -5,6 +5,7 @@ import {
 } from "./hosted-test-server";
 import { assert_supported_livehost_node_runtime } from "hson-live/livehost/node";
 import { create_node_production_security } from "./node-production-security";
+import { HOSTED_TEST_AUTHORITY_LIFECYCLE } from "../../../hosted/hosted-test-application";
 
 export type HostedTestServerEnvironment = Readonly<{
   HOST?: string;
@@ -75,15 +76,19 @@ export function hosted_test_authority_lifecycle_options(
 ): NonNullable<HostedTestServerOptions["authorityLifecycle"]> {
   const maxTowlRooms = positive_environment_integer(environment.LIVEHOST_MAX_TOWL_ROOMS, 128, "LIVEHOST_MAX_TOWL_ROOMS");
   const towlIdleMs = positive_environment_integer(environment.LIVEHOST_TOWL_IDLE_MS, 30 * 60_000, "LIVEHOST_TOWL_IDLE_MS");
-  const maxHostedReports = positive_environment_integer(environment.LIVEHOST_MAX_HOSTED_REPORTS, 16, "LIVEHOST_MAX_HOSTED_REPORTS");
+  const maxHostedReports = positive_environment_integer(
+    environment.LIVEHOST_MAX_HOSTED_REPORTS,
+    HOSTED_TEST_AUTHORITY_LIFECYCLE.maxReports,
+    "LIVEHOST_MAX_HOSTED_REPORTS",
+  );
   const hostedReportRetentionMs = positive_environment_integer(
     environment.LIVEHOST_HOSTED_REPORT_RETENTION_MS,
-    10 * 60_000,
+    HOSTED_TEST_AUTHORITY_LIFECYCLE.terminalRetentionMs,
     "LIVEHOST_HOSTED_REPORT_RETENTION_MS",
   );
   const sweepIntervalMs = positive_environment_integer(
     environment.LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS,
-    30_000,
+    HOSTED_TEST_AUTHORITY_LIFECYCLE.sweepIntervalMs,
     "LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS",
   );
   if (towlIdleMs < 30_000) {

@@ -15,6 +15,7 @@ import { create_node_towl_application } from "./node-towl-application";
 import { create_node_circuit_verification_application } from "./node-circuit-verification-application";
 import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
 import type { HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
+import { HOSTED_TEST_AUTHORITY_LIFECYCLE } from "../../../hosted/hosted-test-application";
 
 export type HostedTestServerOptions = Readonly<{
   host?: string;
@@ -59,9 +60,9 @@ export async function start_hosted_test_server(
   const authorityLifecycle = options.authorityLifecycle ?? Object.freeze({
     maxTowlRooms: 128,
     towlIdleMs: 30 * 60_000,
-    maxHostedReports: 16,
-    hostedReportRetentionMs: 10 * 60_000,
-    sweepIntervalMs: 30_000,
+    maxHostedReports: HOSTED_TEST_AUTHORITY_LIFECYCLE.maxReports,
+    hostedReportRetentionMs: HOSTED_TEST_AUTHORITY_LIFECYCLE.terminalRetentionMs,
+    sweepIntervalMs: HOSTED_TEST_AUTHORITY_LIFECYCLE.sweepIntervalMs,
   });
   const hostedTests = await create_node_hosted_tests_application({
     ...(options.inspectCase === undefined ? {} : { inspectCase: options.inspectCase }),

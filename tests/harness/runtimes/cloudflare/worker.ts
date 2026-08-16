@@ -1,4 +1,8 @@
-import { create_hosted_test_application } from "../../hosted/hosted-test-application";
+import {
+  create_hosted_test_application,
+  HOSTED_TEST_AUTHORITY_LIFECYCLE,
+  type HostedTestApplication,
+} from "../../hosted/hosted-test-application";
 import { compose_worker_authority_application } from "../../hosted/livehost-authority-composition";
 import { create_towl_authority_application } from "../../hosted/towl-authority-application";
 import { make_hosted_test_durable_object_runtime } from "./hosted-test-durable-object-runtime";
@@ -15,6 +19,15 @@ import {
 
 export interface HostedTestWorkerEnv {
   HOSTED_TESTS: HostedTestDurableObjectNamespace;
+}
+
+export function create_cloudflare_hosted_test_application(): HostedTestApplication {
+  const executorRegistry = make_cloudflare_livehost_executor_registry();
+  return create_hosted_test_application({
+    discovery: make_test_executor_discovery(executorRegistry),
+    executorRegistry,
+    lifecycle: HOSTED_TEST_AUTHORITY_LIFECYCLE,
+  });
 }
 
 type HostedTestDurableObjectState = Readonly<{ storage: unknown }>;
@@ -57,11 +70,7 @@ function safe_worker_authority(hostId: string): Readonly<Record<string, string>>
 }
 
 export class HostedTestDurableObject {
-  private readonly executorRegistry = make_cloudflare_livehost_executor_registry();
-  private readonly hostedTests = create_hosted_test_application({
-      discovery: make_test_executor_discovery(this.executorRegistry),
-      executorRegistry: this.executorRegistry,
-    });
+  private readonly hostedTests = create_cloudflare_hosted_test_application();
   private readonly towl = create_towl_authority_application();
   private readonly application = compose_worker_authority_application(this.hostedTests, this.towl);
   private readonly sockets = make_hosted_test_durable_object_runtime(this.application);
@@ -87,7 +96,7 @@ export class HostedTestDurableObject {
       const pair = new WebSocketPair();
       const client = pair[0];
       const server = pair[1];
-      this.sockets.accept(hostId, server);
+      await this.sockets.accept(hostId, server);
       return new Response(null, { status: 101, webSocket: client } as ResponseInit & { webSocket: WebSocket });
     } catch (cause) {
       console.error("[hosted-tests:cloudflare] websocket.upgrade failed", Object.freeze({

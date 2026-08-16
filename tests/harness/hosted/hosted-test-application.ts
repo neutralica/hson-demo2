@@ -122,7 +122,7 @@ export const HOSTED_TEST_COORDINATOR_SCHEMA = hson.liveMap.schema.define((s) => 
     attempts: s.record(attempt),
   });
   return s.object.exact({
-    requests: s.record(s.record(request.optional)),
+    requests: s.record(s.record(request.optional).optional),
     runs: s.record(run.optional),
   });
 });
@@ -180,6 +180,12 @@ export type HostedTestApplicationOptions = Readonly<{
     schedule?: (delayMs: number, callback: () => void) => () => void;
   }>;
 }>;
+
+export const HOSTED_TEST_AUTHORITY_LIFECYCLE = Object.freeze({
+  maxReports: 16,
+  terminalRetentionMs: 10 * 60_000,
+  sweepIntervalMs: 30_000,
+});
 
 function redact_hosted_server_diagnostic_text(value: string, maxLength: number): string {
   return value
@@ -353,6 +359,11 @@ export function create_hosted_test_application(
       if (signal.aborted || projectedReportIds.has(runId)) finish();
     });
   };
+  const clear_report_projection = (runId: string): void => {
+    projectedReportIds.delete(runId);
+    for (const resolve of reportProjectionWaiters.get(runId) ?? []) resolve();
+    reportProjectionWaiters.delete(runId);
+  };
 
   type ExecutionPlan = Readonly<{
     target: typeof HOSTED_TEST_SELECTED_RUN_TARGET;
@@ -438,17 +449,39 @@ export function create_hosted_test_application(
         },
         async dispose(host) {
           const blueprint = reportBlueprints.get(host.stream.logicalMapId);
-          const runId = blueprint?.runId;
-          reportBlueprints.delete(host.stream.logicalMapId);
-          reportHostIds.delete(host.stream.logicalMapId);
-          if (runId !== undefined) retention.remove(runId);
-          host.dispose();
           if (!disposing && blueprint !== undefined) {
+            const state = coordinator.map.capture().value;
+            const run = state.runs[blueprint.runId];
+            const attempt = run?.attempts[blueprint.attemptId];
+            const request = state.requests[blueprint.clientId]?.[blueprint.requestId];
+            const ownsRun = run?.id === blueprint.runId
+              && run.clientId === blueprint.clientId
+              && run.requestId === blueprint.requestId
+              && run.activeAttemptId === blueprint.attemptId
+              && attempt?.reportHostId === host.stream.logicalMapId;
+            const ownsRequest = request?.runId === blueprint.runId
+              && request.attemptId === blueprint.attemptId
+              && request.clientId === blueprint.clientId
+              && request.requestId === blueprint.requestId;
             await coordinator.mutate((draft) => draft.batch((tx) => {
-              tx.delete(["runs", blueprint.runId]);
-              tx.delete(["requests", blueprint.clientId, blueprint.requestId]);
+              if (ownsRun) tx.delete(["runs", blueprint.runId]);
+              if (ownsRequest) {
+                const clientRequests = state.requests[blueprint.clientId];
+                if (clientRequests !== undefined && Object.keys(clientRequests).length === 1) {
+                  tx.delete(["requests", blueprint.clientId]);
+                } else {
+                  tx.delete(["requests", blueprint.clientId, blueprint.requestId]);
+                }
+              }
             }));
           }
+          reportBlueprints.delete(host.stream.logicalMapId);
+          reportHostIds.delete(host.stream.logicalMapId);
+          if (blueprint !== undefined) {
+            retention.remove(blueprint.runId);
+            clear_report_projection(blueprint.runId);
+          }
+          host.dispose();
         },
       });
 

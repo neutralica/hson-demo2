@@ -9,6 +9,7 @@ import { circuit_livehost_integration_suite } from "../../../suites/livehost/cir
 import { circuit_worker_parity_suite } from "../../../suites/livehost/circuit-worker-parity-suite";
 import { phase3b_process_cancellation_suite } from "../../../suites/livehost/phase3b-process-cancellation-suite";
 import { phase3b_panel_cancellation_suite } from "../../../suites/livehost/phase3b-panel-cancellation-suite";
+import { hosted_test_lifecycle_suite } from "../../../suites/livehost/hosted-test-lifecycle-suite";
 import { all_browser_livehost_test_suites } from "./browser/browser-test-suites";
 
 export const LOCAL_NODE_LIVEHOST_EXECUTOR = Object.freeze({
@@ -42,6 +43,7 @@ export function make_local_node_livehost_executor_registry(): TestExecutorRegist
     ...all_canonical_portable_test_suites(),
     ...all_canonical_synthetic_dom_test_suites(),
     node_application_host_suite(),
+    hosted_test_lifecycle_suite(),
     circuit_worker_service_suite(),
     circuit_livehost_integration_suite(),
     circuit_worker_parity_suite(),
@@ -68,6 +70,7 @@ export function make_node_livehost_mothership_executor_registry(): TestExecutorR
     ...all_canonical_portable_test_suites(),
     ...all_canonical_synthetic_dom_test_suites(),
     node_application_host_suite(),
+    hosted_test_lifecycle_suite(),
     circuit_worker_service_suite(),
     circuit_livehost_integration_suite(),
     circuit_worker_parity_suite(),

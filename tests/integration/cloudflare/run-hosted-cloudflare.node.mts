@@ -107,7 +107,7 @@ const hostIds: string[] = [];
 const received: string[] = [];
 let detachments = 0;
 const application = {
-  connect(hostId: string, socket: LiveHostSocketLike) {
+  async connectBounded(hostId: string, socket: LiveHostSocketLike) {
     hostIds.push(hostId);
     socket.onMessage((message) => received.push(`${hostId}:${message}`));
     socket.onClose(() => undefined);
@@ -125,8 +125,8 @@ const application = {
 const runtime = make_hosted_test_durable_object_runtime(application);
 const coordinatorSocket = new FakeWebSocket();
 const reportSocket = new FakeWebSocket();
-runtime.accept("hosted-tests", coordinatorSocket as unknown as WebSocket & { accept(): void });
-runtime.accept("hosted-report:run-1", reportSocket as unknown as WebSocket & { accept(): void });
+await runtime.accept("hosted-tests", coordinatorSocket as unknown as WebSocket & { accept(): void });
+await runtime.accept("hosted-report:run-1", reportSocket as unknown as WebSocket & { accept(): void });
 expect_cloudflare(
   coordinatorSocket.accepts === 1 && reportSocket.accepts === 1
     && hostIds.join("|") === "hosted-tests|hosted-report:run-1",
@@ -156,13 +156,13 @@ try {
 
   const quietRuntime = make_hosted_test_durable_object_runtime(application);
   const quietSocket = new FakeWebSocket();
-  quietRuntime.accept("hosted-tests", quietSocket as unknown as WebSocket & { accept(): void });
+  await quietRuntime.accept("hosted-tests", quietSocket as unknown as WebSocket & { accept(): void });
   quietSocket.emit("close");
   quietRuntime.dispose();
   expect_cloudflare(cloudflareDiagnosticEntries.length === 0, "successful Cloudflare authority traffic remains quiet");
 
   const rejectedRuntime = make_hosted_test_durable_object_runtime({
-    connect() {
+    async connectBounded() {
       return {
         ok: false as const,
         error: {
@@ -173,14 +173,14 @@ try {
     },
   });
   const rejectedSocket = new FakeWebSocket();
-  rejectedRuntime.accept(
+  await rejectedRuntime.accept(
     "hosted-report:run-diagnostic-1",
     rejectedSocket as unknown as WebSocket & { accept(): void },
   );
   rejectedRuntime.dispose();
 
   const throwingRuntime = make_hosted_test_durable_object_runtime({
-    connect() {
+    async connectBounded() {
       throw new Error("Authority construction failed; authorization=Bearer top-secret", {
         cause: new Error("cookie=session-cookie-value"),
       });
@@ -189,7 +189,7 @@ try {
   const throwingSocket = new FakeWebSocket();
   let throwingCause: unknown;
   try {
-    throwingRuntime.accept(
+    await throwingRuntime.accept(
       "towl:room-secret-value",
       throwingSocket as unknown as WebSocket & { accept(): void },
     );
@@ -370,14 +370,14 @@ const legacyWorkerRun = await (workerApplication.coordinator.dispatch_action as 
 expect_cloudflare(legacyWorkerRun.type === "error", "legacy Worker tests.run is rejected after canonical selection");
 const workerTowl = create_towl_authority_application();
 const composedWorkerApplication = compose_worker_authority_application(workerApplication, workerTowl);
-const workerTowlConnection = composedWorkerApplication.connect("towl:worker-room", make_towl_socket());
+const workerTowlConnection = await composedWorkerApplication.connectBounded("towl:worker-room", make_towl_socket());
 expect_cloudflare(
   workerTowlConnection.ok
     && workerTowl.store.has("towl:worker-room")
     && !workerApplication.store.has("towl:worker-room"),
   "the Worker explicitly composes TOWL while keeping its authority store separate from hosted tests",
 );
-composedWorkerApplication.dispose();
+await composedWorkerApplication.dispose();
 
 console.log(JSON.stringify({
   durableObjectName: HOSTED_TEST_DURABLE_OBJECT_NAME,

@@ -4,7 +4,7 @@ import {
   type CloudflareAcceptedWebSocket,
 } from "./cloudflare-websocket-socket";
 
-type CloudflareHostedTestApplication = Pick<LiveHostAuthorityConnector, "connect">;
+type CloudflareHostedTestApplication = Pick<LiveHostAuthorityConnector, "connectBounded">;
 
 function redact_cloudflare_diagnostic_text(value: string, maxLength: number): string {
   return value
@@ -56,7 +56,7 @@ function log_cloudflare_authority_failure(
 }
 
 export type HostedTestDurableObjectRuntime = Readonly<{
-  accept(hostId: string, websocket: CloudflareAcceptedWebSocket): void;
+  accept(hostId: string, websocket: CloudflareAcceptedWebSocket): Promise<void>;
   dispose(): void;
 }>;
 
@@ -66,7 +66,7 @@ export function make_hosted_test_durable_object_runtime(
   const connections = new Map<CloudflareAcceptedWebSocket, () => void>();
   let disposed = false;
 
-  function accept(hostId: string, websocket: CloudflareAcceptedWebSocket): void {
+  async function accept(hostId: string, websocket: CloudflareAcceptedWebSocket): Promise<void> {
     if (disposed) {
       websocket.close(1012, "Hosted-test authority is restarting.");
       return;
@@ -76,9 +76,9 @@ export function make_hosted_test_durable_object_runtime(
     // live object prevents reconstruction while this in-memory authority is in use.
     websocket.accept();
     const transport = make_cloudflare_websocket_livehost_socket(websocket);
-    let connected: ReturnType<CloudflareHostedTestApplication["connect"]>;
+    let connected: Awaited<ReturnType<CloudflareHostedTestApplication["connectBounded"]>>;
     try {
-      connected = application.connect(hostId, transport.socket);
+      connected = await application.connectBounded(hostId, transport.socket);
     } catch (cause) {
       log_cloudflare_authority_failure("authority.connect", hostId, cause);
       transport.closed();

@@ -4,12 +4,12 @@ import type { HostedTestApplication } from "./hosted-test-application";
 import type { TowlAuthorityApplication } from "./towl-authority-application";
 
 export type LiveHostAuthorityConnector = Readonly<{
-  connect(
+  connectBounded(
     hostId: string,
     socket: LiveHostSocketLike,
     context?: LiveHostConnectionContext,
-  ): ReturnType<LiveHostStore["connect"]>;
-  dispose(): void;
+  ): Promise<ReturnType<LiveHostStore["connect"]>>;
+  dispose(): void | Promise<void>;
 }>;
 
 export function compose_worker_authority_application(
@@ -18,16 +18,15 @@ export function compose_worker_authority_application(
 ): LiveHostAuthorityConnector {
   let disposed = false;
   return Object.freeze({
-    connect(hostId, socket, context) {
+    connectBounded(hostId, socket, context) {
       return towl_room_id_from_host_id(hostId) === undefined
-        ? hostedTests.connect(hostId, socket, context)
-        : towl.connect(hostId, socket, context);
+        ? hostedTests.connectBounded(hostId, socket, context)
+        : Promise.resolve(towl.connect(hostId, socket, context));
     },
-    dispose() {
+    async dispose() {
       if (disposed) return;
       disposed = true;
-      hostedTests.dispose();
-      towl.dispose();
+      await Promise.all([hostedTests.dispose(), towl.dispose()]);
     },
   });
 }
