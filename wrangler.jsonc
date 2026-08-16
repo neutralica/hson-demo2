@@ -13,8 +13,17 @@
     ]
   },
   "limits": {
-  "cpu_ms": 30000
-},
+    "cpu_ms": 30000
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false
+    }
+  },
   "migrations": [
     {
       "tag": "v1",
