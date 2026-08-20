@@ -1,10 +1,16 @@
 import type { LiveHostSocketLike } from "hson-live/types";
+import { createHash } from "node:crypto";
 import { make_hosted_test_durable_object_runtime } from "../../harness/runtimes/cloudflare/hosted-test-durable-object-runtime";
 import {
   HOSTED_TEST_DURABLE_OBJECT_NAME,
   route_hosted_test_worker_request,
 } from "../../harness/runtimes/cloudflare/worker-routing";
-import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
+import {
+  create_hosted_test_application,
+  type HostedTestDiagnosticConstructionEvent,
+  type HostedTestDiagnosticLane,
+  type HostedTestDiagnosticRunLaneResult,
+} from "../../harness/hosted/hosted-test-application";
 import { compose_worker_authority_application } from "../../harness/hosted/livehost-authority-composition";
 import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
 import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
@@ -217,9 +223,11 @@ for (const secret of ["report-token-value", "top-secret", "session-cookie-value"
 
 const workerExecutorRegistry = make_cloudflare_livehost_executor_registry();
 const workerDiscovery = make_test_executor_discovery(workerExecutorRegistry);
+const workerDiagnosticConstructions: HostedTestDiagnosticConstructionEvent[] = [];
 const workerApplication = create_hosted_test_application({
   discovery: workerDiscovery,
   executorRegistry: workerExecutorRegistry,
+  observeDiagnosticConstruction: (event) => workerDiagnosticConstructions.push(event),
 });
 const discoveryResponse = await workerApplication.coordinator.dispatch_action({
   type: "action",
@@ -316,6 +324,69 @@ expect_cloudflare(
     && hosted_test_report_cases(workerWhole.report).length === workerExecutorRegistry.catalog.tests.length,
   "the entire discovered Worker catalog is canonically executable",
 );
+
+const exactLivetreeSelection = workerDiscovery.catalog.tests
+  .filter((descriptor) => descriptor.subject === "livetree")
+  .map((descriptor) => descriptor.id);
+const exactLivetreeSha256 = createHash("sha256").update(exactLivetreeSelection.join("\n")).digest("hex");
+const exactLivetreeSuiteCount = new Set(exactLivetreeSelection.map((id) => id.slice(0, id.indexOf("::")))).size;
+expect_cloudflare(
+  exactLivetreeSelection.length === 161
+    && exactLivetreeSuiteCount === 13
+    && exactLivetreeSha256 === "9b4a1cd2b1fd440b93d7148e25aafb2021b4a93f9e1b48e0aeea6efe4c6c6c5a",
+  `the established livetree witness remains exact (${JSON.stringify({ selectionCount: exactLivetreeSelection.length, suiteCount: exactLivetreeSuiteCount, sha256: exactLivetreeSha256 })})`,
+);
+const workerDiagnosticResults = {} as Record<HostedTestDiagnosticLane, Readonly<{
+  result: HostedTestDiagnosticRunLaneResult;
+  wallMs: number;
+  cpuMs: number;
+  constructions: readonly HostedTestDiagnosticConstructionEvent[];
+}>>;
+for (const lane of ["runner", "report-map", "report-authority"] as const) {
+  workerDiagnosticConstructions.length = 0;
+  const stateBefore = JSON.stringify(workerApplication.coordinator.map.capture().value);
+  const reportCountBefore = workerApplication.reportCount();
+  const cpuBefore = process.cpuUsage();
+  const startedAt = performance.now();
+  const response = await workerApplication.coordinator.dispatch_action({
+    type: "action",
+    id: `worker-diagnostic-${lane}`,
+    clientId: "worker-diagnostic-client",
+    requestId: `worker-diagnostic-${lane}`,
+    name: "tests.diagnostic.runLane",
+    payload: { lane, selectionIds: [...exactLivetreeSelection] },
+  });
+  const wallMs = performance.now() - startedAt;
+  const cpu = process.cpuUsage(cpuBefore);
+  expect_cloudflare(response.type === "ack", `${lane} exact diagnostic action is acknowledged (${JSON.stringify(response)})`);
+  const result = response.result as unknown as HostedTestDiagnosticRunLaneResult;
+  const expectedConstructions = lane === "runner"
+    ? ["runner"]
+    : lane === "report-map"
+      ? ["report-map", "report-reducer", "runner"]
+      : ["report-map", "report-authority", "report-reducer", "runner", "report-authority-disposed"];
+  expect_cloudflare(
+    result.lane === lane
+      && result.selectionCount === 161
+      && result.summary.suites === 13
+      && result.summary.cases === 161
+      && result.summary.pass === 161
+      && result.summary.fail === 0
+      && result.report.reducer === (lane !== "runner")
+      && result.report.map === (lane !== "runner")
+      && result.report.authority === (lane === "report-authority")
+      && workerDiagnosticConstructions.join("|") === expectedConstructions.join("|")
+      && JSON.stringify(workerApplication.coordinator.map.capture().value) === stateBefore
+      && workerApplication.reportCount() === reportCountBefore,
+    `${lane} exact diagnostic composition remains isolated and truthful (${JSON.stringify({ result, constructions: workerDiagnosticConstructions })})`,
+  );
+  workerDiagnosticResults[lane] = Object.freeze({
+    result,
+    wallMs,
+    cpuMs: (cpu.user + cpu.system) / 1_000,
+    constructions: Object.freeze([...workerDiagnosticConstructions]),
+  });
+}
 const nodeOnlyId = "livehost/hosted-replay-action-in-memory::hosted-replay-action-preserves-request-result-and-failure-semantics";
 const nodeOnlyWorkerResponse = await workerApplication.coordinator.dispatch_action({
   type: "action",
@@ -402,5 +473,11 @@ console.log(JSON.stringify({
       ? canvasWorkerResponse.error.code
       : null,
     payloadBytes: new TextEncoder().encode(JSON.stringify(workerDiscovery)).byteLength,
+  },
+  diagnostic: {
+    selectionCount: exactLivetreeSelection.length,
+    selectionSha256: exactLivetreeSha256,
+    suiteCount: exactLivetreeSuiteCount,
+    lanes: workerDiagnosticResults,
   },
 }));

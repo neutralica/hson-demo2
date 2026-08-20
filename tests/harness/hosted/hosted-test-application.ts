@@ -63,6 +63,38 @@ export type {
   HostedTestRunRequestAssociation,
 } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 
+// Temporary Cloudflare localization surface. Remove with tests.diagnostic.runLane.
+export type HostedTestDiagnosticLane = "runner" | "report-map" | "report-authority";
+export type HostedTestDiagnosticRunLanePayload = Readonly<{
+  lane: HostedTestDiagnosticLane;
+  selectionIds: readonly string[];
+}>;
+export type HostedTestDiagnosticRunLaneResult = Readonly<{
+  lane: HostedTestDiagnosticLane;
+  selectionCount: number;
+  summary: Readonly<{ suites: number; cases: number; pass: number; fail: number }>;
+  elapsedMs: number;
+  runnerMs: number;
+  report: Readonly<{
+    reducer: boolean;
+    map: boolean;
+    authority: boolean;
+    rev?: number;
+  }>;
+}>;
+
+type HostedTestApplicationActions = HostedTestActions & Readonly<{
+  /** LiveHost's JSON action constraint spells wire arrays as mutable arrays. */
+  "tests.diagnostic.runLane": Readonly<{ lane: HostedTestDiagnosticLane; selectionIds: string[] }>;
+}>;
+
+export type HostedTestDiagnosticConstructionEvent =
+  | "runner"
+  | "report-reducer"
+  | "report-map"
+  | "report-authority"
+  | "report-authority-disposed";
+
 export const HOSTED_TEST_COORDINATOR_SCHEMA = hson.liveMap.schema.define((s) => {
   const nonNegativeInteger = s.number.constrain(
     "non-negative integer",
@@ -136,7 +168,7 @@ type HostedTestReportHost = LiveHostForMap<HostedTestReportMap, HostedTestReport
 
 export type HostedTestApplication = Readonly<{
   store: LiveHostStore;
-  coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestActions>;
+  coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestApplicationActions>;
   retention: HostedTestRunRetention;
   connect(
     hostId: string,
@@ -169,6 +201,8 @@ export type HostedTestApplicationOptions = Readonly<{
     options?: RunOptions,
   ) => Promise<RunResult>;
   timeline?: HostedTestTimelineObserver;
+  /** Temporary construction proof for tests.diagnostic.runLane. */
+  observeDiagnosticConstruction?: (event: HostedTestDiagnosticConstructionEvent) => void;
   /** Production control-plane barrier: execution begins after initial report projection acknowledges readiness. */
   requireReportReady?: boolean;
   assignExecutor?: (suite: TestExecutorDiscovery["catalog"]["suites"][number]) => string;
@@ -291,6 +325,23 @@ function decode_report_ready(value: unknown) {
   return { ok: false, issues: ["tests.ready requires one non-empty runId string."] } as const;
 }
 
+function decode_diagnostic_run_lane(value: unknown) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { ok: false, issues: ["tests.diagnostic.runLane requires exact lane and selectionIds fields."] } as const;
+  }
+  const record = value as { lane?: unknown; selectionIds?: unknown };
+  if (Object.keys(record).length !== 2
+    || (record.lane !== "runner" && record.lane !== "report-map" && record.lane !== "report-authority")) {
+    return { ok: false, issues: ["tests.diagnostic.runLane lane must be exactly runner, report-map, or report-authority."] } as const;
+  }
+  const selection = decode_run_selected_tests_request({ selectionIds: record.selectionIds });
+  if (!selection.ok) return selection;
+  return {
+    ok: true,
+    value: Object.freeze({ lane: record.lane, selectionIds: selection.value.selectionIds }),
+  } as const;
+}
+
 function report_options(
   map: HostedTestReportHost["map"],
   mutate: HostedTestReportHost["mutate"],
@@ -383,10 +434,22 @@ export function create_hosted_test_application(
   const coordinatorMap = hson.liveMap.fromJson({ requests: {}, runs: {} })
     .schema.use(HOSTED_TEST_COORDINATOR_SCHEMA) as unknown as HostedTestCoordinatorMap;
   const attemptControls = new Map<string, HostedTestExecutionControl>();
-  let coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestActions>;
+  let coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestApplicationActions>;
   let disposing = false;
 
-  function create_report_host(reportHostId: string, blueprint: ReportBlueprint): ReportHost {
+  function create_report_map(reportPlan: TestRunPlan, diagnostic = false): HostedTestReportMap {
+    const initial = make_initial_hosted_test_report(reportPlan) as HostedTestReportState;
+    observe_hosted_test_timeline(options.timeline, "report_seeded_queued", {
+      runId: reportPlan.runId,
+      suites: initial.suiteRuns.length,
+      cases: initial.suiteRuns.reduce((total, suiteRun) => total + suiteRun.cases.length, 0),
+    });
+    const map = hson.liveMap.fromJson(initial).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
+    if (diagnostic) options.observeDiagnosticConstruction?.("report-map");
+    return map;
+  }
+
+  function create_report_host(reportHostId: string, blueprint: ReportBlueprint, diagnostic = false): ReportHost {
     const { runId, plan, reportPlan } = blueprint;
     const reportActions: LiveHostActionsForMap<HostedTestReportActions, HostedTestReportMap> = {
       "tests.inspect": async (_reportContext, inspectRequest) => {
@@ -412,19 +475,14 @@ export function create_hosted_test_application(
         "tests.ready": { payload: decode_report_ready },
       },
     };
-    const initial = make_initial_hosted_test_report(reportPlan) as HostedTestReportState;
-    observe_hosted_test_timeline(options.timeline, "report_seeded_queued", {
-      runId,
-      suites: initial.suiteRuns.length,
-      cases: initial.suiteRuns.reduce((total, suiteRun) => total + suiteRun.cases.length, 0),
-    });
-    const map = hson.liveMap.fromJson(initial).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
+    const map = create_report_map(reportPlan, diagnostic);
     const host = create_livehost({
       map,
       actions: reportActions,
       schema: reportSchema,
       logicalMapId: reportHostId,
     });
+    if (diagnostic) options.observeDiagnosticConstruction?.("report-authority");
     observe_hosted_test_timeline(options.timeline, "report_host_allocated", { runId, reportHostId });
     observe_hosted_test_timeline(options.timeline, "initial_report_mutation_committed", {
       runId,
@@ -432,6 +490,119 @@ export function create_hosted_test_application(
       initialAuthorityState: true,
     });
     return host;
+  }
+
+  async function run_diagnostic_lane(
+    payload: HostedTestDiagnosticRunLanePayload,
+  ): Promise<HostedTestDiagnosticRunLaneResult> {
+    const startedAt = performance.now();
+    const runId = makeRunId() as HostedTestRunId;
+    if (!runId) throw new Error("Hosted diagnostic run ID must be non-empty.");
+    const reportPlan = make_test_run_plan({
+      runId,
+      protocolVersion: options.discovery.protocolVersion,
+      catalogVersion: options.discovery.catalogVersion,
+      executorId: options.discovery.executor.id,
+      catalog: options.discovery.catalog,
+      selectedIds: payload.selectionIds,
+      ...(options.assignExecutor === undefined ? {} : { assignExecutor: options.assignExecutor }),
+    });
+    const executionControl = make_hosted_test_execution_control();
+    let report: HostedTestReportController | undefined;
+    let reportMap: HostedTestReportMap | undefined;
+    let reportAuthority: ReportHost | undefined;
+    let result: RunResult | undefined;
+    const lifecycleSink = { events: 0, terminalCases: 0, terminalSuites: 0 };
+    try {
+      if (payload.lane === "report-map") {
+        reportMap = create_report_map(reportPlan, true);
+      } else if (payload.lane === "report-authority") {
+        reportAuthority = create_report_host(`hosted-diagnostic-report:${runId}`, {
+          runId,
+          clientId: "diagnostic",
+          requestId: "diagnostic",
+          attemptId: `${runId}:diagnostic`,
+          plan: { target: HOSTED_TEST_SELECTED_RUN_TARGET, selectionIds: reportPlan.selectionIds, run: () => Promise.reject(new Error("unused diagnostic report blueprint")) },
+          reportPlan,
+        }, true);
+        reportMap = reportAuthority.map as unknown as HostedTestReportMap;
+      }
+      if (reportMap !== undefined) {
+        const mutate: NonNullable<HostedTestReportOptions["mutate"]> = reportAuthority === undefined
+          ? (operation) => Promise.resolve().then(() => operation(reportMap!))
+          : (operation) => reportAuthority!.mutate((draft) => operation(draft as unknown as HostedTestReportMap));
+        report = make_hosted_test_report(Date.now, undefined, {
+          ...report_options(reportMap as unknown as HostedTestReportHost["map"], mutate as HostedTestReportHost["mutate"], reportPlan),
+          captureCommits: false,
+        });
+        options.observeDiagnosticConstruction?.("report-reducer");
+      }
+
+      if (!executionControl.begin()) throw new Error("Hosted diagnostic execution control did not begin.");
+      options.observeDiagnosticConstruction?.("runner");
+      result = await (options.runSelected ?? run_selected_test_ids)(
+        options.executorRegistry,
+        reportPlan.selectionIds,
+        (event) => {
+          lifecycleSink.events += 1;
+          if (event.t === "case_end" || event.t === "case_cancelled" || event.t === "external_end") lifecycleSink.terminalCases += 1;
+          if (event.t === "suite_end") lifecycleSink.terminalSuites += 1;
+          report?.reduce(event);
+        },
+        { ...HOSTED_TEST_RUN_OPTIONS, signal: executionControl.signal },
+      );
+      const naturalTerminal = await executionControl.acceptNaturalTerminal();
+      if (!naturalTerminal) result = Object.freeze({ ...result, ok: false, cancelled: true });
+      if (report !== undefined) {
+        const timing = {
+          runnerMs: finite(result.summary.msTotal, "diagnostic.runnerMs"),
+          hostMs: finite(performance.now() - startedAt, "diagnostic.hostMs"),
+        };
+        if (naturalTerminal) report.complete(result, timing);
+        else report.cancel(result, timing);
+        await report.settle();
+        const terminal = report.map.capture().value;
+        if (terminal.summary.cases !== result.summary.cases
+          || terminal.summary.pass !== result.summary.pass
+          || terminal.summary.fail !== result.summary.fail
+          || terminal.summary.skip !== result.summary.skip) {
+          throw new Error("HOSTED_TEST_DIAGNOSTIC_REPORT_MISMATCH: Report terminal summary differs from runner truth.");
+        }
+      }
+      const elapsedMs = finite(performance.now() - startedAt, "diagnostic.elapsedMs");
+      void lifecycleSink;
+      return Object.freeze({
+        lane: payload.lane,
+        selectionCount: reportPlan.selectionIds.length,
+        summary: Object.freeze({
+          suites: result.summary.suites,
+          cases: result.summary.cases,
+          pass: result.summary.pass,
+          fail: result.summary.fail,
+        }),
+        elapsedMs,
+        runnerMs: finite(result.summary.msTotal, "diagnostic.runnerMs"),
+        report: Object.freeze({
+          reducer: report !== undefined,
+          map: reportMap !== undefined,
+          authority: reportAuthority !== undefined,
+          ...(reportMap === undefined ? {} : { rev: reportAuthority?.stream.headRev ?? reportMap.capture().rev }),
+        }),
+      });
+    } catch (cause) {
+      if (report !== undefined && result === undefined) {
+        report.failInfrastructure(cause);
+        await report.settle();
+      }
+      throw cause;
+    } finally {
+      report?.dispose();
+      if (reportAuthority !== undefined) {
+        reportAuthority.dispose();
+        options.observeDiagnosticConstruction?.("report-authority-disposed");
+      }
+      executionControl.release();
+    }
   }
 
   const reportRegistry: LiveHostAuthorityRegistry<ReportHost> | undefined = options.lifecycle === undefined
@@ -758,7 +929,7 @@ export function create_hosted_test_application(
     }
   }
 
-  const actions: LiveHostActions<HostedTestActions, HostedTestCoordinatorState> = {
+  const actions: LiveHostActions<HostedTestApplicationActions, HostedTestCoordinatorState> = {
     "tests.discover": async (_context, _request, message) => {
       try {
         return JSON.parse(JSON.stringify(options.discovery)) as JsonValue;
@@ -879,12 +1050,16 @@ export function create_hosted_test_application(
         throw cause;
       }
     },
+    "tests.diagnostic.runLane": async (_context, request) => (
+      JSON.parse(JSON.stringify(await run_diagnostic_lane(request))) as JsonValue
+    ),
   };
-  const schema: LiveHostSchema<HostedTestCoordinatorState, HostedTestActions> = {
+  const schema: LiveHostSchema<HostedTestCoordinatorState, HostedTestApplicationActions> = {
     actions: {
       "tests.discover": { payload: decode_test_executor_discovery_request },
       "tests.runSelected": { payload: decode_run_selected_tests_request },
       "tests.cancel": { payload: decode_cancel },
+      "tests.diagnostic.runLane": { payload: decode_diagnostic_run_lane },
     },
   };
   coordinator = create_livehost({
