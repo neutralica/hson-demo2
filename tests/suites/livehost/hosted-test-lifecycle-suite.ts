@@ -4,8 +4,6 @@ import { make_test_executor_registry, type TestExecutorRegistry } from "../../ha
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import {
   create_hosted_test_application,
-  type HostedTestDiagnosticConstructionEvent,
-  type HostedTestDiagnosticRunLaneResult,
   type HostedTestApplication,
 } from "../../harness/hosted/hosted-test-application";
 import { hosted_test_recovery_association } from "../../../src/shared/hosted-tests/hosted-test-application.types";
@@ -70,17 +68,6 @@ function selected_request(id: string, selectionId: string, clientId = "lifecycle
     requestId: id,
     name: "tests.runSelected" as const,
     payload: { selectionIds: [selectionId] },
-  };
-}
-
-function diagnostic_request(id: string, lane: "runner" | "report-map" | "report-authority", selectionId: string) {
-  return {
-    type: "action" as const,
-    id,
-    clientId: "diagnostic-client",
-    requestId: id,
-    name: "tests.diagnostic.runLane" as const,
-    payload: { lane, selectionIds: [selectionId] },
   };
 }
 
@@ -166,144 +153,6 @@ export function hosted_test_lifecycle_suite(): TestSuite {
       requirements: Object.freeze(["javascript", "node"] as const),
     }),
     cases: Object.freeze([
-      Object.freeze({
-        suite,
-        caseId: "temporary-diagnostic-action-isolates-runner-map-and-authority",
-        name: "temporary diagnostic action isolates runner, map, and authority",
-        run: async () => {
-          let executions = 0;
-          let nextRun = 0;
-          const executor = make_executor(async () => { executions += 1; });
-          const selectionId = executor.catalog.tests[0]!.id;
-          const constructions: HostedTestDiagnosticConstructionEvent[] = [];
-          const application = create_hosted_test_application({
-            executorRegistry: executor,
-            discovery: make_test_executor_discovery(executor),
-            makeRunId: () => `diagnostic-${++nextRun}`,
-            observeDiagnosticConstruction: (event) => constructions.push(event),
-          });
-          try {
-            const expected = new Map([
-              ["runner", ["runner"]],
-              ["report-map", ["report-map", "report-reducer", "runner"]],
-              ["report-authority", ["report-map", "report-authority", "report-reducer", "runner", "report-authority-disposed"]],
-            ] as const);
-            for (const lane of ["runner", "report-map", "report-authority"] as const) {
-              constructions.length = 0;
-              const response = await application.coordinator.dispatch_action(diagnostic_request(`diagnostic-${lane}`, lane, selectionId));
-              const result = response.type === "ack" ? response.result as unknown as HostedTestDiagnosticRunLaneResult : undefined;
-              expect_lifecycle(
-                response.type === "ack"
-                  && result?.lane === lane
-                  && result.selectionCount === 1
-                  && result.summary.cases === 1
-                  && result.summary.pass === 1
-                  && result.summary.fail === 0
-                  && result.report.reducer === (lane !== "runner")
-                  && result.report.map === (lane !== "runner")
-                  && result.report.authority === (lane === "report-authority")
-                  && (lane === "runner" ? result.report.rev === undefined : Number.isSafeInteger(result.report.rev))
-                  && constructions.join("|") === expected.get(lane)?.join("|")
-                  && Object.keys(application.coordinator.map.capture().value.requests).length === 0
-                  && Object.keys(application.coordinator.map.capture().value.runs).length === 0
-                  && application.reportCount() === 0,
-                `${lane} must execute only its declared diagnostic layers without recoverable topology (${JSON.stringify({ response, constructions })})`,
-              );
-            }
-            expect_lifecycle(executions === 3, "all diagnostic lanes must execute the same selected case function exactly once");
-          } finally {
-            await application.dispose();
-          }
-        },
-      }),
-      Object.freeze({
-        suite,
-        caseId: "temporary-diagnostic-action-validates-exact-lanes-and-cleans-failures",
-        name: "temporary diagnostic action validates exact lanes and cleans failures",
-        run: async () => {
-          const executor = make_executor();
-          const selectionId = executor.catalog.tests[0]!.id;
-          const invalidApplication = create_hosted_test_application({
-            executorRegistry: executor,
-            discovery: make_test_executor_discovery(executor),
-            makeRunId: () => "diagnostic-invalid",
-          });
-          try {
-            const invalid = await (invalidApplication.coordinator.dispatch_action as unknown as (message: unknown) => Promise<{ type: string; error?: { message?: string } }> )({
-              type: "action",
-              id: "diagnostic-invalid",
-              clientId: "diagnostic-client",
-              requestId: "diagnostic-invalid",
-              name: "tests.diagnostic.runLane",
-              payload: { lane: " runner ", selectionIds: [selectionId] },
-            });
-            expect_lifecycle(
-              invalid.type === "error" && JSON.stringify(invalid).includes("runner, report-map, or report-authority"),
-              `invalid diagnostic lane must reject deterministically (${JSON.stringify(invalid)})`,
-            );
-          } finally {
-            await invalidApplication.dispose();
-          }
-
-          const constructions: HostedTestDiagnosticConstructionEvent[] = [];
-          const failingApplication = create_hosted_test_application({
-            executorRegistry: executor,
-            discovery: make_test_executor_discovery(executor),
-            makeRunId: () => "diagnostic-failure",
-            runSelected: async () => { throw new Error("diagnostic fixture failure"); },
-            observeDiagnosticConstruction: (event) => constructions.push(event),
-          });
-          try {
-            const failed = await failingApplication.coordinator.dispatch_action(
-              diagnostic_request("diagnostic-failure", "report-authority", selectionId),
-            );
-            expect_lifecycle(
-              failed.type === "error"
-                && constructions.includes("report-authority")
-                && constructions.at(-1) === "report-authority-disposed"
-                && failingApplication.reportCount() === 0
-                && Object.keys(failingApplication.coordinator.map.capture().value.runs).length === 0,
-              `diagnostic failure must dispose owned authority and create no product association (${JSON.stringify({ failed, constructions })})`,
-            );
-          } finally {
-            await failingApplication.dispose();
-          }
-        },
-      }),
-      Object.freeze({
-        suite,
-        caseId: "temporary-diagnostic-action-does-not-change-normal-report-contract",
-        name: "temporary diagnostic action does not change normal report contract",
-        run: async () => {
-          const executor = make_executor();
-          const selectionId = executor.catalog.tests[0]!.id;
-          const application = create_hosted_test_application({
-            executorRegistry: executor,
-            discovery: make_test_executor_discovery(executor),
-            makeRunId: () => "normal-contract",
-          });
-          try {
-            const response = await application.coordinator.dispatch_action(selected_request("normal-contract", selectionId));
-            const result = response.type === "ack"
-              ? response.result as unknown as Readonly<{ runId: string; attemptId: string; reportHostId: string }>
-              : undefined;
-            const association = result === undefined ? undefined : hosted_test_recovery_association(
-              application.coordinator.map.capture().value,
-              result.runId,
-              result.attemptId,
-            );
-            expect_lifecycle(
-              response.type === "ack"
-                && result?.reportHostId === "hosted-report:normal-contract"
-                && association?.reportHostId === result.reportHostId
-                && application.hasReport(result.reportHostId),
-              "normal tests.runSelected must retain its mandatory real report authority and recovery association",
-            );
-          } finally {
-            await application.dispose();
-          }
-        },
-      }),
       Object.freeze({
         suite,
         caseId: "worker-production-policy-bounds-report-and-coordinator-state",
