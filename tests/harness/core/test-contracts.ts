@@ -138,6 +138,8 @@ export type RunOptions = Readonly<{
   includePassedDiagnostics?: boolean;
   caseTimeoutMs?: number;
   signal?: AbortSignal;
+  /** Internal run-local scheduling/reporting clock; defaults to performance.now(). */
+  now?: () => number;
 }>;
 
 export type RunResult = Readonly<{

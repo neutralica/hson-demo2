@@ -5,7 +5,6 @@ import type { RunOptions } from "../core/test-contracts";
 export const HOSTED_TEST_EVENT_LOOP_BUDGET_MS = 8;
 
 export const HOSTED_TEST_RUN_OPTIONS: RunOptions = Object.freeze({
-  yieldEveryCases: 0,
   yieldAfterMs: HOSTED_TEST_EVENT_LOOP_BUDGET_MS,
   yieldBetweenSuites: false,
 });

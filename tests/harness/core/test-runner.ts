@@ -45,7 +45,7 @@ function emit(rec: TestRecorder, onEvent: (e: TestEvent) => void, e: TestEvent):
   }
 }
 
-function now(): number {
+function default_now(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
 
@@ -214,6 +214,7 @@ export async function run_test_suites(
 ): Promise<RunResult> {
   validate_run_configuration(suites, opts);
   const rec = new TestRecorder();
+  const now = opts.now ?? default_now;
   const t0 = now();
 
 

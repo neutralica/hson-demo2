@@ -117,8 +117,11 @@ export function unit_test_harness(): TestSuite {
         run: async () => {
           const nestedSuite = "unit/test-harness/cooperative-budget";
           const total = 40;
+          const elapsedPerCase = 0.25;
+          let syntheticNow = 0;
           let completed = 0;
           const checkpoints: number[] = [];
+          const frozenRuntimeNow = (): number => 0;
           const scheduleCheckpoint = (): void => {
             setImmediate(() => {
               checkpoints.push(completed);
@@ -134,16 +137,23 @@ export function unit_test_harness(): TestSuite {
                 caseId: `fast-${index}`,
                 name: `fast ${index}`,
                 run() {
-                  const deadline = performance.now() + 0.25;
-                  while (performance.now() < deadline) { /* bounded synchronous fixture */ }
+                  const frozenBefore = frozenRuntimeNow();
+                  syntheticNow += elapsedPerCase;
+                  expect_true("finite case does not require runtime clock progress", frozenRuntimeNow() === frozenBefore);
                 },
               })),
             }],
             (event) => { if (event.t === "case_end") completed += 1; },
-            { yieldEveryCases: 0, yieldAfterMs: 2, yieldBetweenSuites: false },
+            {
+              yieldEveryCases: 0,
+              yieldAfterMs: 2,
+              yieldBetweenSuites: false,
+              now: () => syntheticNow,
+            },
           );
           await new Promise<void>((resolve) => setImmediate(resolve));
           expect_true("elapsed-budget nested run passes", result.ok && result.summary.cases === total);
+          expect_true("synthetic elapsed clock advances exactly once per case", syntheticNow === total * elapsedPerCase);
           expect_true(
             "a macrotask observes partial progress before terminal completion",
             checkpoints.some((count) => count > 0 && count < total),
