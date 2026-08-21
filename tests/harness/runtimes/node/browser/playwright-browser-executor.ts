@@ -327,8 +327,8 @@ export function create_playwright_browser_executor(
             ...selectedPaths,
           ]),
           environment: Object.freeze({
-            LOCUS_PLAYWRIGHT: "1",
-            LOCUS_PLAYWRIGHT_TITLES: JSON.stringify(selectedTitles),
+            LIVEHOST_PLAYWRIGHT: "1",
+            LIVEHOST_PLAYWRIGHT_TITLES: JSON.stringify(selectedTitles),
             HOSTED_TEST_PORT: String(hostedPort),
             PLAYWRIGHT_APP_PORT: String(appPort),
             PLAYWRIGHT_OUTPUT_DIR: outputRoot,

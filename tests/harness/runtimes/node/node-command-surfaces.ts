@@ -6,7 +6,7 @@ import { NODE_TSX_IMPORT_PATH } from "./external-library-launchers";
 export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-live:test:hson-array-index",
   "hson-live:test:hson-attribute-transport",
-  "hson-live:test:livehost-graph-content-codec",
+  "hson-live:test:locus-graph-content-codec",
   "hson-live:test:transform-worker",
   "hson-demo2:test:reflect-keyed-node",
   "hson-demo2:test:liveinspect-node",
