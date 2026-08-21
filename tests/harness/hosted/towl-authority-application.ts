@@ -54,7 +54,7 @@ export function create_towl_authority_application(
     const registry = create_livehost_locus_registry<ManagedTowlRuntime>({
       maxLoci: lifecycle.maxRooms,
       idleMs: lifecycle.idleMs,
-      ...(lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: lifecycle.sweepIntervalMs }),
+      automaticSweep: false,
       create(hostId) {
         if (towl_room_id_from_host_id(hostId) === undefined) {
           throw new Error("Unknown TOWL room authority.");

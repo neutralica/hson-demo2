@@ -235,6 +235,8 @@ export function towl_room_suite(): TestSuite {
           second.value();
           secondSocket.emit_close();
           await flush();
+          await new Promise<void>((resolve) => setTimeout(resolve, 110));
+          const wallClockRetained = application.hasRoom(hostId);
           const zeroAgeScheduled = scheduled;
           if (zeroAgeScheduled === undefined) throw new Error("Expected an application-private scheduled sweep.");
           zeroAgeScheduled();
@@ -245,15 +247,19 @@ export function towl_room_suite(): TestSuite {
           if (thresholdScheduled === undefined) throw new Error("Expected the application-private sweep to reschedule.");
           thresholdScheduled();
           await flush();
+          await application.dispose();
+          const schedulerCancelled = scheduled === undefined;
           return {
             zeroAge,
             belowThreshold,
             threshold,
             active,
             activeRetained,
+            wallClockRetained,
             scheduledZeroAgeRetained,
             scheduledThresholdEvicted: !application.hasRoom(hostId),
             schedulerConsumed: scheduleCalls >= 3,
+            schedulerCancelled,
           };
         } finally {
           await application.dispose();
@@ -264,9 +270,11 @@ export function towl_room_suite(): TestSuite {
         threshold: 1,
         active: 0,
         activeRetained: true,
+        wallClockRetained: true,
         scheduledZeroAgeRetained: true,
         scheduledThresholdEvicted: true,
         schedulerConsumed: true,
+        schedulerCancelled: true,
       }),
     ],
   };

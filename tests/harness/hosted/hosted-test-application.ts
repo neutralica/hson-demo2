@@ -440,7 +440,7 @@ export function create_hosted_test_application(
     : create_livehost_locus_registry<ReportHost>({
         maxLoci: options.lifecycle.maxReports,
         idleMs: options.lifecycle.terminalRetentionMs,
-        ...(options.lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: options.lifecycle.sweepIntervalMs }),
+        automaticSweep: false,
         create(reportHostId) {
           const blueprint = reportBlueprints.get(reportHostId);
           if (blueprint === undefined) throw new Error("Hosted report authority is unknown or evicted.");

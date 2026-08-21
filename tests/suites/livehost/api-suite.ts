@@ -294,13 +294,12 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-protocol-decodes-hello-host-id", name: "hson livehost protocol decodes hello host id",
+        caseId: "hson-livehost-protocol-decodes-current-hello", name: "hson livehost protocol decodes current hello",
         input: {},
         act: () => {
           const decoded = hson.locus.protocol.decode(JSON.stringify({
             type: "hello",
             clientId: "client-a",
-            hostId: "counter",
           }));
 
           return {

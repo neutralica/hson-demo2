@@ -78,12 +78,12 @@ export function locus_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Locus hello no longer accepts an action-sequence recovery cursor.",
+          message: "Locus hello contains a removed field.",
         },
       }),
       read_case({
         suite: SUITE,
-        caseId: "decode-accepts-hello-hostid", name: "decode accepts hello hostId",
+        caseId: "decode-rejects-hello-hostid", name: "decode rejects hello hostId",
         input: {},
         act: () => {
           const decoded = decode_locus_message(JSON.stringify({
@@ -94,21 +94,17 @@ export function locus_protocol_suite(): TestSuite {
 
           return {
             ok: decoded.ok,
-            type: decoded.ok ? decoded.value.type : undefined,
-            clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
-            hasHostId: decoded.ok && decoded.value.type === "hello" ? "hostId" in decoded.value : undefined,
+            message: decoded.ok ? undefined : decoded.error.message,
           };
         },
         expected: {
-          ok: true,
-          type: "hello",
-          clientId: "client-a",
-          hasHostId: false,
+          ok: false,
+          message: "Locus hello contains a removed field.",
         },
       }),
       read_case({
         suite: SUITE,
-        caseId: "decode-ignores-invalid-hello-hostid", name: "decode ignores invalid hello hostId",
+        caseId: "decode-rejects-invalid-hello-hostid", name: "decode rejects invalid hello hostId",
         input: {},
         act: () => {
           const decoded = decode_locus_message(JSON.stringify({
@@ -119,16 +115,12 @@ export function locus_protocol_suite(): TestSuite {
 
           return {
             ok: decoded.ok,
-            type: decoded.ok ? decoded.value.type : undefined,
-            clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
-            hasHostId: decoded.ok && decoded.value.type === "hello" ? "hostId" in decoded.value : undefined,
+            message: decoded.ok ? undefined : decoded.error.message,
           };
         },
         expected: {
-          ok: true,
-          type: "hello",
-          clientId: "client-a",
-          hasHostId: false,
+          ok: false,
+          message: "Locus hello contains a removed field.",
         },
       }),
       read_case({
@@ -149,7 +141,7 @@ export function locus_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Locus hello no longer accepts an action-sequence recovery cursor.",
+          message: "Locus hello contains a removed field.",
         },
       }),
       read_case({

@@ -289,6 +289,11 @@ export function hosted_test_lifecycle_suite(): TestSuite {
             connected.value();
             socket.disconnect();
             await settle_activity();
+            await new Promise<void>((resolve) => setTimeout(resolve, 110));
+            expect_lifecycle(
+              application.hasReport(second.reportHostId),
+              "wall-clock time must not evict a report while the application clock remains fixed",
+            );
             const zeroAgeScheduled = scheduled;
             expect_lifecycle(zeroAgeScheduled !== undefined, "application scheduler must receive the sweep callback");
             zeroAgeScheduled();
@@ -300,6 +305,8 @@ export function hosted_test_lifecycle_suite(): TestSuite {
             thresholdScheduled();
             await settle_activity();
             expect_lifecycle(!application.hasReport(second.reportHostId) && scheduleCalls >= 3, "scheduled threshold sweep must evict and remain scheduled");
+            await application.dispose();
+            expect_lifecycle(scheduled === undefined, "application disposal must cancel the pending private sweep");
           } finally {
             await application.dispose();
           }
