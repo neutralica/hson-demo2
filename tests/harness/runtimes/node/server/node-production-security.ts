@@ -44,11 +44,11 @@ export function create_node_production_security(
     allowMissing: false,
     allowNull: false,
   });
-  const cookieName = options.cookieName ?? "livehost_auth";
+  const cookieName = options.cookieName ?? "locus_auth";
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(cookieName)) {
     throw new Error("Production LiveHost authentication cookie name is invalid.");
   }
-  const applicationSecurity: NodeApplicationSecurity = Object.freeze({
+  const policy: NodeApplicationSecurity = {
     origin,
     authenticate(context) {
       const authorization = context.headers.get("authorization");
@@ -71,10 +71,11 @@ export function create_node_production_security(
         }),
       };
     },
-    authorizeAuthority(_context, _principal, _operation) {
+    authorize() {
       return { ok: true, value: undefined };
     },
-  });
+  };
+  const applicationSecurity = Object.freeze(policy);
   const trusted = new Set(options.trustedProxyPeers ?? []);
   const deployment: NodeHostDeployment = trusted.size === 0
     ? Object.freeze({ mode: "production" })

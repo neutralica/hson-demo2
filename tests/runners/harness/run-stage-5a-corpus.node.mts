@@ -1,7 +1,7 @@
 import { run_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
 import { selected_test_suites } from "../../harness/core/test-selected-run";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
-import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_cloudflare_locus_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import {
   hosted_test_panel_primary_choices,
   hosted_test_panel_selected_ids,
@@ -16,8 +16,8 @@ function expect_stage5a(condition: unknown, message: string): asserts condition 
   if (!condition) throw new Error(`Stage 5A corpus: ${message}`);
 }
 
-const node = make_local_node_livehost_executor_registry();
-const worker = make_cloudflare_livehost_executor_registry();
+const node = make_local_node_locus_executor_registry();
+const worker = make_cloudflare_locus_executor_registry();
 const primary = hosted_test_panel_primary_choices(node.catalog.tests);
 const primaryKeys = primary.map((choice) => choice.key);
 const executorSubjectKeys = CANONICAL_TEST_SUBJECT_ORDER
@@ -42,7 +42,7 @@ const allIds = idsFor("all");
 const transformIds = idsFor("subject:transform");
 const liveMapIds = idsFor("subject:livemap");
 const liveTreeIds = idsFor("subject:livetree");
-const liveHostIds = idsFor("subject:livehost");
+const locusIds = idsFor("subject:livehost");
 const unitIds = idsFor("collection:unit");
 const devIds = idsFor("collection:dev");
 expect_stage5a(allIds.length === node.catalog.tests.length, "All resolves to the complete active catalog");
@@ -50,7 +50,7 @@ for (const [subject, ids] of [
   ["transform", transformIds],
   ["livemap", liveMapIds],
   ["livetree", liveTreeIds],
-  ["livehost", liveHostIds],
+  ["livehost", locusIds],
 ] as const) {
   const registered = node.catalog.tests.filter((descriptor) => descriptor.subject === subject);
   expect_stage5a(

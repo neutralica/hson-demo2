@@ -1,4 +1,4 @@
-import type { JsonValue, LiveHostActionRequestId, LiveHostId } from "hson-live/types";
+import type { JsonValue, LocusActionRequestId, LocusClientId } from "hson-live/types";
 import type { LiveMap } from "hson-live/livemap";
 import type { HostedTestRunTarget } from "./hosted-test-suite-contract";
 import type { HostedTestRunId } from "./hosted-test-report-wire.types";
@@ -11,13 +11,13 @@ export type HostedTestAttemptId = string;
 export type HostedTestAttemptControlStatus = "accepted" | "running" | "cancelling" | "settled";
 
 export type HostedTestCancellationIdentity = Readonly<{
-  clientId: LiveHostId;
-  requestId: LiveHostActionRequestId;
+  clientId: LocusClientId;
+  requestId: LocusActionRequestId;
 }>;
 
 export type HostedTestRunRequestAssociation = Readonly<{
-  clientId: LiveHostId;
-  requestId: LiveHostActionRequestId;
+  clientId: LocusClientId;
+  requestId: LocusActionRequestId;
   runId: HostedTestRunId;
   attemptId: HostedTestAttemptId;
 }>;
@@ -32,8 +32,8 @@ export type HostedTestCoordinatedAttempt = Readonly<{
 
 export type HostedTestCoordinatedRun = Readonly<{
   id: HostedTestRunId;
-  clientId: LiveHostId;
-  requestId: LiveHostActionRequestId;
+  clientId: LocusClientId;
+  requestId: LocusActionRequestId;
   suite: HostedTestRunTarget;
   activeAttemptId: HostedTestAttemptId;
   acceptedPlan: TestRunPlan;
@@ -41,7 +41,7 @@ export type HostedTestCoordinatedRun = Readonly<{
 }>;
 
 export type HostedTestCoordinatorState = Readonly<{
-  requests: Readonly<Record<LiveHostId, Readonly<Record<LiveHostActionRequestId, HostedTestRunRequestAssociation>>>>;
+  requests: Readonly<Record<LocusClientId, Readonly<Record<LocusActionRequestId, HostedTestRunRequestAssociation>>>>;
   runs: Readonly<Record<HostedTestRunId, HostedTestCoordinatedRun>>;
 }> & JsonValue;
 

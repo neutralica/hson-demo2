@@ -1,17 +1,17 @@
 import { hson } from "hson-live";
-import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
+import { create_locus_client, LocusDisconnectedError } from "hson-live/locus";
 import type {
   JsonValue,
-  LiveHostClient,
-  LiveHostClientActionPromise,
-  LiveHostClientActionRequest,
-  LiveHostClientActionResult,
-  LiveHostClientOptions,
-  LiveHostClientRecoveryCursor,
-  LiveHostClientRecoveryResult,
-  LiveHostClientSessionResult,
-  LiveHostDisposer,
-  LiveHostSessionCredential,
+  LocusClient,
+  LocusClientActionPromise,
+  LocusClientActionRequest,
+  LocusClientActionResult,
+  LocusClientOptions,
+  LocusClientRecoveryCursor,
+  LocusClientRecoveryResult,
+  LocusClientSessionResult,
+  LocusDisposer,
+  LocusSessionCredential,
   LiveMap,
   LiveMapPathHandle,
 } from "hson-live/types";
@@ -29,38 +29,38 @@ import type {
 } from "./towl.types";
 
 export type TowlSeat = TowlSeatId;
-export type TowlUncertainAction = LiveHostClientActionRequest<TowlActions>;
+export type TowlUncertainAction = LocusClientActionRequest<TowlActions>;
 
 export function create_towl_client_mirror(): LiveMap<TowlState> {
   return hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
 }
 
 export type TowlClientOptions = Omit<
-  LiveHostClientOptions<TowlState>,
+  LocusClientOptions<LiveMap<TowlState>>,
   "map" | "recovery" | "session"
 > & Readonly<{
   logicalMapId: string;
-  credential?: LiveHostSessionCredential;
+  credential?: LocusSessionCredential;
   mirror?: LiveMap<TowlState>;
-  recoveryCursor?: LiveHostClientRecoveryCursor;
+  recoveryCursor?: LocusClientRecoveryCursor;
   onUncertainAction?: (request: TowlUncertainAction) => void;
 }>;
 
 export type TowlClient = Readonly<{
-  livehost: LiveHostClient<TowlState, TowlActions>;
+  livehost: LocusClient<LiveMap<TowlState>, TowlActions>;
   root: LiveMapPathHandle<TowlState>;
 
   get state(): TowlState;
   get seat(): TowlSeat | undefined;
 
-  connect(): LiveHostDisposer;
+  connect(): LocusDisposer;
   disconnect(): void;
 
-  createSession(): Promise<LiveHostClientSessionResult>;
+  createSession(): Promise<LocusClientSessionResult>;
   reattachSession(
-    credential?: LiveHostSessionCredential,
-  ): Promise<LiveHostClientSessionResult>;
-  recover(): Promise<LiveHostClientRecoveryResult>;
+    credential?: LocusSessionCredential,
+  ): Promise<LocusClientSessionResult>;
+  recover(): Promise<LocusClientRecoveryResult>;
   goodbyeSession(): Promise<void>;
 
   join(): Promise<TowlJoinResult>;
@@ -71,7 +71,7 @@ export type TowlClient = Readonly<{
 }>;
 
 function action_error_message(
-  response: Extract<LiveHostClientActionResult, { type: "error" }>,
+  response: Extract<LocusClientActionResult, { type: "error" }>,
 ): string {
   const error = response.error;
 
@@ -88,7 +88,7 @@ function action_error_message(
 }
 
 function unwrap_action_result<TResult extends JsonValue>(
-  response: LiveHostClientActionResult,
+  response: LocusClientActionResult,
 ): TResult {
   if (response.type === "error") {
     throw new Error(action_error_message(response));
@@ -126,7 +126,7 @@ export function create_towl_client(
     ...clientOptions
   } = options;
 
-  const livehost = create_livehost_client<
+  const livehost = create_locus_client<
     TowlState,
     TowlActions
   >({
@@ -144,7 +144,7 @@ export function create_towl_client(
   });
   const root = livehost.map.at([]);
 
-  function connect(): LiveHostDisposer {
+  function connect(): LocusDisposer {
     return livehost.connect();
   }
 
@@ -152,18 +152,18 @@ export function create_towl_client(
     livehost.disconnect();
   }
 
-  async function createSession(): Promise<LiveHostClientSessionResult> {
+  async function createSession(): Promise<LocusClientSessionResult> {
     return livehost.session.create();
   }
 
 
   async function reattachSession(
     credential = livehost.session.credential,
-  ): Promise<LiveHostClientSessionResult> {
+  ): Promise<LocusClientSessionResult> {
     return livehost.session.reattach(credential);
   }
 
-  async function recover(): Promise<LiveHostClientRecoveryResult> {
+  async function recover(): Promise<LocusClientRecoveryResult> {
     return livehost.recovery.recover();
   }
 
@@ -172,12 +172,12 @@ export function create_towl_client(
   }
 
   async function submit<TResult extends JsonValue>(
-    pending: LiveHostClientActionPromise<TowlActions>,
+    pending: LocusClientActionPromise<TowlActions>,
   ): Promise<TResult> {
     try {
       return unwrap_action_result<TResult>(await pending);
     } catch (error) {
-      if (error instanceof LiveHostDisconnectedError) onUncertainAction?.(pending.request);
+      if (error instanceof LocusDisconnectedError) onUncertainAction?.(pending.request);
       throw error;
     }
   }

@@ -1,15 +1,12 @@
 import type {
-  LiveHostAuthorityEvictionResult,
-  LiveHostConnectionContext,
-  LiveHostResult,
-  LiveHostSessionOptions,
-  LiveHostSocketLike,
-  LiveHostStore,
+  LocusConnectionContext,
+  LocusResult,
+  LocusSessionOptions,
+  LocusSocketLike,
 } from "hson-live/types";
-import {
-  create_livehost_authority_registry,
-  create_livehost_store,
-} from "hson-live/livehost";
+import { create_livehost_locus_registry, type LiveHostLocusEvictionResult } from "hson-live/livehost";
+import { create_application_locus_store, type ApplicationLocusStore } from "./application-locus-store";
+import { create_application_idle_sweep, type ApplicationIdleSweep } from "./application-idle-sweep";
 import {
   create_towl_runtime,
   towl_room_id_from_host_id,
@@ -17,21 +14,21 @@ import {
 } from "../../../src/app/demos/towl/index";
 
 export type TowlAuthorityApplication = Readonly<{
-  store: LiveHostStore;
+  store: ApplicationLocusStore;
   roomCount(): number;
   hasRoom(hostId: string): boolean;
   connect(
     hostId: string,
-    socket: LiveHostSocketLike,
-    context?: LiveHostConnectionContext,
-  ): ReturnType<LiveHostStore["connect"]>;
+    socket: LocusSocketLike,
+    context?: LocusConnectionContext,
+  ): ReturnType<ApplicationLocusStore["connect"]>;
   connectBounded(
     hostId: string,
-    socket: LiveHostSocketLike,
-    context?: LiveHostConnectionContext,
-  ): Promise<LiveHostResult<() => void>>;
+    socket: LocusSocketLike,
+    context?: LocusConnectionContext,
+  ): Promise<LocusResult<() => void>>;
   disposeRoom(hostId: string): boolean;
-  evictRoom(hostId: string): Promise<LiveHostAuthorityEvictionResult>;
+  evictRoom(hostId: string): Promise<LiveHostLocusEvictionResult>;
   sweep(): Promise<number>;
   dispose(): void | Promise<void>;
 }>;
@@ -42,7 +39,7 @@ export type TowlAuthorityLifecycleOptions = Readonly<{
   sweepIntervalMs?: number;
   now?: () => number;
   schedule?: (delayMs: number, callback: () => void) => () => void;
-  sessions?: LiveHostSessionOptions;
+  sessions?: LocusSessionOptions;
 }>;
 
 type ManagedTowlRuntime = TowlRuntime & Readonly<{ activity: TowlRuntime["host"]["activity"] }>;
@@ -50,14 +47,14 @@ type ManagedTowlRuntime = TowlRuntime & Readonly<{ activity: TowlRuntime["host"]
 export function create_towl_authority_application(
   lifecycle?: TowlAuthorityLifecycleOptions,
 ): TowlAuthorityApplication {
-  const store = create_livehost_store();
+  const store = create_application_locus_store();
   if (lifecycle !== undefined) {
-    const registry = create_livehost_authority_registry<ManagedTowlRuntime>({
-      maxAuthorities: lifecycle.maxRooms,
+    const boundedIds = new Set<string>();
+    let idleSweep: ApplicationIdleSweep | undefined;
+    const registry = create_livehost_locus_registry<ManagedTowlRuntime>({
+      maxLoci: lifecycle.maxRooms,
       idleMs: lifecycle.idleMs,
       ...(lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: lifecycle.sweepIntervalMs }),
-      ...(lifecycle.now === undefined ? {} : { now: lifecycle.now }),
-      ...(lifecycle.schedule === undefined ? {} : { schedule: lifecycle.schedule }),
       create(hostId) {
         if (towl_room_id_from_host_id(hostId) === undefined) {
           throw new Error("Unknown TOWL room authority.");
@@ -66,23 +63,38 @@ export function create_towl_authority_application(
           logicalMapId: hostId,
           ...(lifecycle.sessions === undefined ? {} : { sessions: lifecycle.sessions }),
         });
-        return Object.freeze({ ...runtime, activity: runtime.host.activity });
+        boundedIds.add(hostId);
+        const managed = Object.freeze({ ...runtime, activity: runtime.host.activity });
+        idleSweep?.track(hostId, managed.activity);
+        return managed;
       },
-      dispose: (runtime) => runtime.dispose(),
+      dispose(runtime) {
+        const hostId = runtime.host.stream.logicalMapId;
+        boundedIds.delete(hostId);
+        idleSweep?.remove(hostId);
+        runtime.dispose();
+      },
+    });
+    idleSweep = create_application_idle_sweep({
+      idleMs: lifecycle.idleMs,
+      ...(lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: lifecycle.sweepIntervalMs }),
+      ...(lifecycle.now === undefined ? {} : { now: lifecycle.now }),
+      ...(lifecycle.schedule === undefined ? {} : { schedule: lifecycle.schedule }),
+      evict: (hostId) => registry.evict(hostId),
     });
     let disposed = false;
     const application = {
       store,
 
-      roomCount: () => registry.diagnostics().entryCount,
+      roomCount: () => boundedIds.size,
 
       hasRoom: (hostId: string) => registry.has(hostId),
 
       connect(
         _hostId: string,
-        _socket: LiveHostSocketLike,
-        _context?: LiveHostConnectionContext,
-      ): ReturnType<LiveHostStore["connect"]> {
+        _socket: LocusSocketLike,
+        _context?: LocusConnectionContext,
+      ): ReturnType<ApplicationLocusStore["connect"]> {
         return {
           ok: false,
           error: {
@@ -95,9 +107,9 @@ export function create_towl_authority_application(
 
       async connectBounded(
         hostId: string,
-        socket: LiveHostSocketLike,
-        context?: LiveHostConnectionContext,
-      ): Promise<LiveHostResult<() => void>> {
+        socket: LocusSocketLike,
+        context?: LocusConnectionContext,
+      ): Promise<LocusResult<() => void>> {
         if (
           disposed ||
           towl_room_id_from_host_id(hostId) === undefined
@@ -105,7 +117,7 @@ export function create_towl_authority_application(
           return {
             ok: false,
             error: {
-              code: "LIVEHOST_STORE_UNKNOWN_ID",
+              code: "LOCUS_STORE_UNKNOWN_ID",
               message: "Unknown TOWL room authority.",
             },
           };
@@ -114,9 +126,10 @@ export function create_towl_authority_application(
         if (!acquired.ok) {
           return acquired;
         }
+        idleSweep?.beginAcquisition(hostId);
         try {
           const connection =
-            acquired.value.authority.host.connect(
+            acquired.value.locus.host.connect(
               socket,
               context,
             );
@@ -127,18 +140,22 @@ export function create_towl_authority_application(
           };
         } finally {
           acquired.value.release();
+          idleSweep?.endAcquisition(hostId);
         }
       },
       disposeRoom: (_hostId: string) => false,
       evictRoom: (hostId: string) =>
         registry.evict(hostId),
-      sweep: () => registry.sweep(),
+      async sweep(): Promise<number> {
+        return idleSweep?.sweep() ?? 0;
+      },
       async dispose(): Promise<void> {
         if (disposed) {
           return;
         }
 
         disposed = true;
+        idleSweep?.dispose();
         await registry.dispose();
       },
     } satisfies TowlAuthorityApplication;

@@ -20,7 +20,7 @@ import {
   hson_live_non_launcher_test_scripts,
   hson_live_test_launchers,
 } from "hson-live/test-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import {
   BROWSER_RASTER_SUITE_MANIFEST,
   BROWSER_SUITE_MANIFEST,
@@ -107,8 +107,8 @@ const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freez
 })));
 for (const surface of browserSurfaceInventory) {
   const manifest = BROWSER_SUITE_MANIFEST.find((entry) => entry.path === surface.path);
-  expect_surface(manifest !== undefined, `browser spec ${surface.path} has no LiveHost browser manifest binding`);
-  expect_surface(manifest.journeys.length === surface.cases, `browser spec ${surface.path} source and LiveHost journey counts differ`);
+  expect_surface(manifest !== undefined, `browser spec ${surface.path} has no Locus browser manifest binding`);
+  expect_surface(manifest.journeys.length === surface.cases, `browser spec ${surface.path} source and Locus journey counts differ`);
   const source = await readFile(resolve(demoRoot, surface.path), "utf8");
   for (const journey of manifest.journeys) {
     expect_surface(source.includes(`test(\"${journey.title}\"`), `browser journey ${surface.path} :: ${journey.title} is not declared exactly once`);
@@ -362,8 +362,8 @@ for (const entry of census) {
   expect_surface(entry.requiredCapabilities.length > 0, `census entry ${entry.id} has no capability requirements`);
   expect_surface(entry.requiredCapabilities.every((capability) => capabilityVocabulary.has(capability)), `census entry ${entry.id} uses an undeclared capability`);
   expect_surface(entry.artifactEvidenceRequirements.length > 0, `census entry ${entry.id} has no evidence requirement`);
-  if (entry.currentDeployedLiveHostAvailability) {
-    expect_surface(entry.currentDeployedAvailability && entry.hostabilityClass === "hosted-deployed-now", `deployed LiveHost surface ${entry.id} has inconsistent hostability`);
+  if (entry.currentDeployedLocusAvailability) {
+    expect_surface(entry.currentDeployedAvailability && entry.hostabilityClass === "hosted-deployed-now", `deployed Locus surface ${entry.id} has inconsistent hostability`);
   } else if (entry.hostabilityClass !== "excluded-developer-utility") {
     expect_surface((entry.reasonNotCurrentlyDeployed?.length ?? 0) > 0, `non-deployed census entry ${entry.id} needs an exact reason`);
   }
@@ -376,7 +376,7 @@ expect_surface(
   "every browser spec must have exactly one census entry",
 );
 const canonicalCensus = census.filter((entry) => entry.executionShape === "canonical suite");
-const localNodeCatalog = make_local_node_livehost_executor_registry().catalog;
+const localNodeCatalog = make_local_node_locus_executor_registry().catalog;
 const localCanonicalSuites = localNodeCatalog.suites.filter((suite) => suite.executionShape === "cases");
 const localCanonicalIds = new Set(localCanonicalSuites.map((suite) => suite.id));
 expect_surface(canonicalCensus.length === localCanonicalSuites.length, "every canonical Node suite must have exactly one census entry");
@@ -406,7 +406,7 @@ expect_surface(
 );
 expect_surface(
   census.every((entry) => entry.hostabilityClass !== "hostable-browser"),
-  "all browser-classified surfaces must be locally hosted by Node LiveHost",
+  "all browser-classified surfaces must be locally hosted by Node Locus",
 );
 const runnableSurfaces = census.filter((entry) => entry.verificationKind !== "developer utility").length;
 const hostability = Object.fromEntries([...new Set(census.map((entry) => entry.hostabilityClass))].sort().map((hostabilityClass) => [

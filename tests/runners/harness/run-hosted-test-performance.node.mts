@@ -13,7 +13,7 @@ import {
   reset_external_library_launcher_metrics,
   resolve_external_library_launchers,
 } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 
@@ -68,7 +68,7 @@ async function run_sample(
   selectedPolicy: Policy,
   invocation: "verified" | "tsx",
 ): Promise<Sample> {
-  const registry = make_local_node_livehost_executor_registry();
+  const registry = make_local_node_locus_executor_registry();
   const availability = await resolve_external_library_launchers();
   const discovery = make_test_executor_discovery(registry, availability.targets);
   const canonicalChecks = registry.catalog.tests.length;
@@ -106,7 +106,7 @@ async function run_sample(
   const timing = node_selected_verification_metrics();
   report.complete(result, { runnerMs: timing.overlappedTotalMs, hostMs: timing.overlappedTotalMs });
   const totalMs = performance.now() - totalStartedAt;
-  const projection = hosted_test_projection_summary(report.map.capture().value);
+  const projection = hosted_test_projection_summary(report.map.snap());
   const processMetrics = external_library_launcher_metrics();
   const sample = Object.freeze({
     canonicalMs: timing.canonicalPhaseMs,
@@ -121,7 +121,7 @@ async function run_sample(
   if (!result.ok) {
     throw new Error(`Inclusive performance sample failed: ${JSON.stringify({
       failures: result.summary.failures,
-      externalFailures: report.map.capture().value.suiteRuns
+      externalFailures: report.map.snap().suiteRuns
         .filter((suite) => suite.executionShape === "opaque-aggregate" && suite.status === "fail")
         .map((suite) => ({ id: suite.id, errors: suite.errors, evidence: suite.evidence })),
     })}`);

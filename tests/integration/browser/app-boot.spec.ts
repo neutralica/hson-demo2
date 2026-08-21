@@ -94,8 +94,8 @@ test("TOWL performs no room, storage, runtime, or socket work before activation"
     const NativeWebSocket = window.WebSocket;
     class CountingWebSocket extends NativeWebSocket {
       constructor(url: string | URL, protocols?: string | string[]) {
-        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
-        if (livehost?.startsWith("towl:") === true) metrics.webSockets += 1;
+        const locus = new URL(String(url), window.location.href).searchParams.get("locus");
+        if (locus?.startsWith("towl:") === true) metrics.webSockets += 1;
         if (protocols === undefined) super(url);
         else super(url, protocols);
       }
@@ -164,8 +164,8 @@ test("an invalid ordinary room query keeps the fresh shell neutral and TOWL iner
     const NativeWebSocket = window.WebSocket;
     class CountingWebSocket extends NativeWebSocket {
       constructor(url: string | URL, protocols?: string | string[]) {
-        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
-        if (livehost?.startsWith("towl:") === true) metrics.webSockets += 1;
+        const locus = new URL(String(url), window.location.href).searchParams.get("locus");
+        if (locus?.startsWith("towl:") === true) metrics.webSockets += 1;
         if (protocols === undefined) super(url);
         else super(url, protocols);
       }
@@ -249,7 +249,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await open_demo(page, "test");
   const panel = page.getByTestId("hosted-test-panel");
   await expect(panel).toHaveAttribute("data-hosted-executor", "node-livehost-mothership", { timeout: 10_000 });
-  await expect(page.getByTestId("hosted-test-executor")).toHaveText(/^Node LiveHost Mothership · all \(\d+\)$/);
+  await expect(page.getByTestId("hosted-test-executor")).toHaveText(/^Node Locus Mothership · all \(\d+\)$/);
   await panel.evaluate((element) => element.setAttribute("data-retention-probe", "same-instance"));
   await open_demo(page, "about");
   await expect(panel).not.toBeVisible();

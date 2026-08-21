@@ -2,15 +2,15 @@
 
 
 import {
-  decode_livehost_message,
-  decode_livehost_server_message,
-  encode_livehost_message,
-} from "hson-live/livehost";
+  decode_locus_message,
+  decode_locus_server_message,
+  encode_locus_message,
+} from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "../livemap/handle-helpers";
 
 
-export function livehost_protocol_suite(): TestSuite {
+export function locus_protocol_suite(): TestSuite {
   const SUITE = "livehost/protocol";
 
   return {
@@ -21,7 +21,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-hello-message", name: "decode accepts hello message",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
           }));
@@ -43,7 +43,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-ignores-invalid-optional-hello-fields", name: "decode ignores invalid optional hello fields",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: 123,
           }));
@@ -65,7 +65,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-historical-hello-lastseq-cursor", name: "decode rejects historical hello lastSeq cursor",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
             lastSeq: 0,
@@ -78,7 +78,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost hello no longer accepts an action-sequence recovery cursor.",
+          message: "Locus hello no longer accepts an action-sequence recovery cursor.",
         },
       }),
       read_case({
@@ -86,7 +86,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-hello-hostid", name: "decode accepts hello hostId",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
             hostId: "counter-a",
@@ -96,14 +96,14 @@ export function livehost_protocol_suite(): TestSuite {
             ok: decoded.ok,
             type: decoded.ok ? decoded.value.type : undefined,
             clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
-            hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
+            hasHostId: decoded.ok && decoded.value.type === "hello" ? "hostId" in decoded.value : undefined,
           };
         },
         expected: {
           ok: true,
           type: "hello",
           clientId: "client-a",
-          hostId: "counter-a",
+          hasHostId: false,
         },
       }),
       read_case({
@@ -111,7 +111,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-ignores-invalid-hello-hostid", name: "decode ignores invalid hello hostId",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
             hostId: 123,
@@ -121,14 +121,14 @@ export function livehost_protocol_suite(): TestSuite {
             ok: decoded.ok,
             type: decoded.ok ? decoded.value.type : undefined,
             clientId: decoded.ok && decoded.value.type === "hello" ? decoded.value.clientId : undefined,
-            hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
+            hasHostId: decoded.ok && decoded.value.type === "hello" ? "hostId" in decoded.value : undefined,
           };
         },
         expected: {
           ok: true,
           type: "hello",
           clientId: "client-a",
-          hostId: undefined,
+          hasHostId: false,
         },
       }),
       read_case({
@@ -136,7 +136,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-fractional-historical-hello-cursor", name: "decode rejects fractional historical hello cursor",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "hello",
             clientId: "client-a",
             lastSeq: 1.5,
@@ -149,7 +149,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost hello no longer accepts an action-sequence recovery cursor.",
+          message: "Locus hello no longer accepts an action-sequence recovery cursor.",
         },
       }),
       read_case({
@@ -157,7 +157,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-action-message", name: "decode accepts action message",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "rename_user",
@@ -185,7 +185,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-subscribe-message", name: "decode accepts subscribe message",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "subscribe",
             path: ["ui", "selected"],
           }));
@@ -207,7 +207,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-unsubscribe-message", name: "decode accepts unsubscribe message",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "unsubscribe",
             path: ["ui", "selected"],
           }));
@@ -229,7 +229,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-numeric-path-parts", name: "decode accepts numeric path parts",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "subscribe",
             path: ["rows", 3, "label"],
           }));
@@ -251,7 +251,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-primitive-action-payload", name: "decode accepts primitive action payload",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "set_mode",
@@ -275,7 +275,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-null-action-payload", name: "decode accepts null action payload",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "clear_selection",
@@ -299,7 +299,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-accepts-nested-json-action-payload", name: "decode accepts nested json action payload",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "set_rows",
@@ -325,7 +325,7 @@ export function livehost_protocol_suite(): TestSuite {
         act: () => {
           const sparse: unknown[] = [];
           sparse[1] = "present";
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "set_rows",
@@ -349,7 +349,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-action-payload-with-non-json-function-value", name: "decode rejects action payload with non-json function value",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "set_value",
@@ -363,7 +363,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Invalid LiveHost message JSON.",
+          message: "Invalid Locus message JSON.",
         },
       }),
       read_case({
@@ -371,7 +371,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-action-omits-absent-payload-field", name: "decode action omits absent payload field",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "increment",
@@ -394,7 +394,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-invalid-json", name: "decode rejects invalid json",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message("{ nope");
+          const decoded = decode_locus_message("{ nope");
 
           return {
             ok: decoded.ok,
@@ -403,7 +403,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Invalid LiveHost message JSON.",
+          message: "Invalid Locus message JSON.",
         },
       }),
       read_case({
@@ -411,7 +411,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-non-object-json", name: "decode rejects non-object json",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify("hello"));
+          const decoded = decode_locus_message(JSON.stringify("hello"));
 
           return {
             ok: decoded.ok,
@@ -420,7 +420,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost message must be an object.",
+          message: "Locus message must be an object.",
         },
       }),
       read_case({
@@ -428,7 +428,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-unknown-message-type", name: "decode rejects unknown message type",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({ type: "mystery" }));
+          const decoded = decode_locus_message(JSON.stringify({ type: "mystery" }));
 
           return {
             ok: decoded.ok,
@@ -437,7 +437,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "Unknown LiveHost message type.",
+          message: "Unknown Locus message type.",
         },
       }),
       read_case({
@@ -445,7 +445,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-action-without-id", name: "decode rejects action without id",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             name: "rename_user",
           }));
@@ -457,7 +457,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost action message requires string id.",
+          message: "Locus action message requires string id.",
         },
       }),
       read_case({
@@ -465,7 +465,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-action-without-name", name: "decode rejects action without name",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "action",
             id: "action-a",
           }));
@@ -477,7 +477,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost action message requires string name.",
+          message: "Locus action message requires string name.",
         },
       }),
       read_case({
@@ -485,7 +485,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-subscribe-without-path", name: "decode rejects subscribe without path",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "subscribe",
           }));
 
@@ -496,7 +496,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost subscribe message requires path.",
+          message: "Locus subscribe message requires path.",
         },
       }),
       read_case({
@@ -504,7 +504,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-subscribe-with-invalid-path-parts", name: "decode rejects subscribe with invalid path parts",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "subscribe",
             path: ["ui", true],
           }));
@@ -516,7 +516,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost subscribe message requires path.",
+          message: "Locus subscribe message requires path.",
         },
       }),
       read_case({
@@ -524,7 +524,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-unsubscribe-without-path", name: "decode rejects unsubscribe without path",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "unsubscribe",
           }));
 
@@ -535,7 +535,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost unsubscribe message requires path.",
+          message: "Locus unsubscribe message requires path.",
         },
       }),
       read_case({
@@ -543,7 +543,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-top-level-arrays", name: "decode rejects top-level arrays",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify(["hello"]));
+          const decoded = decode_locus_message(JSON.stringify(["hello"]));
 
           return {
             ok: decoded.ok,
@@ -552,7 +552,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost message must be an object.",
+          message: "Locus message must be an object.",
         },
       }),
       read_case({
@@ -560,7 +560,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "decode-rejects-unsubscribe-with-invalid-path-parts", name: "decode rejects unsubscribe with invalid path parts",
         input: {},
         act: () => {
-          const decoded = decode_livehost_message(JSON.stringify({
+          const decoded = decode_locus_message(JSON.stringify({
             type: "unsubscribe",
             path: ["ui", false],
           }));
@@ -572,7 +572,7 @@ export function livehost_protocol_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          message: "LiveHost unsubscribe message requires path.",
+          message: "Locus unsubscribe message requires path.",
         },
       }),
       read_case({
@@ -580,7 +580,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "encode-serializes-error-messages-as-json", name: "encode serializes error messages as json",
         input: {},
         act: () => {
-          const encoded = encode_livehost_message({
+          const encoded = encode_locus_message({
             type: "error",
             id: "action-a",
             ok: false,
@@ -619,7 +619,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "encode-serializes-server-messages-as-json", name: "encode serializes server messages as json",
         input: {},
         act: () => {
-          const encoded = encode_livehost_message({
+          const encoded = encode_locus_message({
             type: "hello",
             sessionId: "session-a",
             seq: 7,
@@ -646,7 +646,7 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "encode-serializes-sync-messages-as-json", name: "encode serializes sync messages as json",
         input: {},
         act: () => {
-          const encoded = encode_livehost_message({
+          const encoded = encode_locus_message({
             type: "sync",
             seq: 3,
             path: ["user", "name"],
@@ -672,7 +672,7 @@ export function livehost_protocol_suite(): TestSuite {
         suite: SUITE,
         caseId: "encode-serializes-action-result-payload", name: "encode serializes action result payload",
         input: {},
-        act: () => JSON.parse(encode_livehost_message({
+        act: () => JSON.parse(encode_locus_message({
           type: "ack",
           id: "result-a",
           ok: true,
@@ -692,12 +692,12 @@ export function livehost_protocol_suite(): TestSuite {
         caseId: "server-event-protocol-round-trips-nested-json-payload", name: "server event protocol round-trips nested JSON payload",
         input: {},
         act: () => {
-          const encoded = encode_livehost_message({
+          const encoded = encode_locus_message({
             type: "event",
             event: "demo-event",
             payload: { nested: [1, null, { kind: "undefined" }] },
           });
-          const decoded = decode_livehost_server_message(encoded);
+          const decoded = decode_locus_server_message(encoded);
           return decoded.ok ? decoded.value : decoded.error;
         },
         expected: {
@@ -717,7 +717,7 @@ export function livehost_protocol_suite(): TestSuite {
           { type: "event", event: "", payload: {} },
           { type: "event", event: "x" },
           { type: "event", event: "x", payload: {}, extra: true },
-        ].map((message) => decode_livehost_server_message(JSON.stringify(message)).ok),
+        ].map((message) => decode_locus_server_message(JSON.stringify(message)).ok),
         expected: [false, false, false, false, false, false],
       }),
       read_case({
@@ -737,7 +737,7 @@ export function livehost_protocol_suite(): TestSuite {
           ];
           return invalid.map((payload) => {
             try {
-              encode_livehost_message({ type: "event", event: "x", payload } as never);
+              encode_locus_message({ type: "event", event: "x", payload } as never);
               return false;
             } catch {
               return true;

@@ -25,7 +25,7 @@ export type HostedTestExecutionControl = Readonly<{
 }>;
 
 /**
- * Generic attempt-local executor control. LiveHost owns whether cancellation is
+ * Generic attempt-local executor control. Locus owns whether cancellation is
  * accepted; this boundary only fences scheduling, propagates cooperative abort,
  * acknowledges executor terminality, and releases its controller reference.
  */

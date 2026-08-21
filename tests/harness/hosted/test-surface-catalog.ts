@@ -6,7 +6,7 @@ import {
 } from "hson-live/test-launchers";
 
 export const TEST_SURFACE_CATEGORIES = [
-  "Transforms", "LiveTree", "LiveMap", "Reflect", "LiveHost", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
+  "Transforms", "LiveTree", "LiveMap", "Reflect", "Locus", "LiveInspector", "Application / Demo", "Hosted Runtime", "Real WebSocket", "Build / Types",
 ] as const;
 
 export type TestSurfaceCategory = typeof TEST_SURFACE_CATEGORIES[number];
@@ -176,9 +176,9 @@ const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
   "test:hosted-performance-node": Object.freeze({ environment: "Node child processes", transport: "mixed canonical and external" }),
   "test:direct-all-performance-node": Object.freeze({ environment: "Node + child processes", transport: "mixed canonical and external" }),
   "test:hosted-production-panel-timeline-node": Object.freeze({ environment: "Node child process + synthetic DOM", transport: "real WebSocket" }),
-  "test:phase3b-cancellation-node": Object.freeze({ environment: "Node + Worker-portable", transport: "in-memory LiveHost authority" }),
+  "test:phase3b-cancellation-node": Object.freeze({ environment: "Node + Worker-portable", transport: "in-memory Locus authority" }),
   "test:phase3b-process-cancellation-node": Object.freeze({ environment: "Node child processes", transport: "supervised process control" }),
-  "test:phase3b-panel-cancellation-node": Object.freeze({ environment: "Node + production panel adapter", transport: "in-memory LiveHost authority" }),
+  "test:phase3b-panel-cancellation-node": Object.freeze({ environment: "Node + production panel adapter", transport: "in-memory Locus authority" }),
   "test:hosted-cloudflare": Object.freeze({ environment: "checked-in Cloudflare Worker adapter", transport: "in-memory Durable Object sockets" }),
   "test:parsing-browser-certificate": Object.freeze({ environment: "Node + synthetic DOM", transport: "none" }),
 } satisfies Readonly<Record<string, Readonly<{ environment: string; transport: string }>>>);
@@ -230,7 +230,7 @@ function category_for(name: string): TestSurfaceCategory {
   if (name.includes("generated-json")) return "Transforms";
   if (name.includes("surface-enumeration")) return "Build / Types";
   if (name.includes("browser") || name.includes("amoebi") || name.includes("soft-tile") || name.includes("splash")) return "Application / Demo";
-  return name.includes("hosted") ? "Hosted Runtime" : "LiveHost";
+  return name.includes("hosted") ? "Hosted Runtime" : "Locus";
 }
 
 function demo_entry([name, path]: readonly [string, string]): TestSurfaceCatalogEntry {
@@ -271,7 +271,7 @@ const LIVE_SUPPORT_RUNNERS: readonly (readonly [string, string, TestClassificati
   ["test:hson-array-index", "HSON array-index acceptance", "library acceptance"],
   ["test:hson-attribute-transport", "HSON attribute transport acceptance", "library acceptance"],
   ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
-  ["test:livehost-graph-content-codec", "LiveHost graph-content codec acceptance", "library acceptance"],
+  ["test:livehost-graph-content-codec", "Locus graph-content codec acceptance", "library acceptance"],
   ["test:root-compatibility", "root compatibility acceptance", "library acceptance"],
   ["test:transform-worker", "Worker transform entrypoint acceptance", "library acceptance"],
 ];
@@ -323,7 +323,7 @@ function live_launcher_category(launcher: HsonLiveTestLauncher): TestSurfaceCate
   if (launcher.subject === "LiveTree") return "LiveTree";
   if (launcher.subject === "LiveMap") return "LiveMap";
   if (launcher.subject === "Reflect") return "Reflect";
-  if (launcher.subject === "LiveHost") return "LiveHost";
+  if (launcher.subject === "Locus") return "Locus";
   return launcher.id === "core.public-boundaries" ? "Build / Types" : "Transforms";
 }
 
@@ -364,7 +364,7 @@ LIVE_SUPPORT_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
   id: `hson-live:${name}`, label: name,
   category: name === "build" || name === "check" || name.startsWith("check:") || name === "test:root-compatibility"
     ? "Build / Types"
-    : name.includes("hson") || name.includes("transform") ? "Transforms" : "LiveHost",
+    : name.includes("hson") || name.includes("transform") ? "Transforms" : "Locus",
   repository: "hson-live", path: name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
   behavior, classification,
   ...live_support_role(name),
@@ -388,7 +388,7 @@ const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = Object.freeze([
 ]);
 
 const LIVE_IDENTITY_FIXTURE: TestSurfaceCatalogEntry = Object.freeze({
-  id: "hson-live:fixture:default-identity-runtime", label: "default identity browser-runtime fixture", category: "LiveHost",
+  id: "hson-live:fixture:default-identity-runtime", label: "default identity browser-runtime fixture", category: "Locus",
   repository: "hson-live", path: "tests/runtime-probes/fixtures/livehost-default-identity-runtime.mjs",
   behavior: "Separately initialized runtimes generate reload-safe default client and fresh action request identities.",
   classification: "fixture", role: "integration journey", exposure: "command only",

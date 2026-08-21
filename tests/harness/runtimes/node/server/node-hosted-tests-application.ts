@@ -1,4 +1,8 @@
-import type { WebSocket } from "ws";
+import type {
+  LiveHostApplication,
+  LiveHostApplicationContext,
+  LiveHostConnection,
+} from "hson-live/livehost";
 import type { HostedTestCaseInspector } from "../../../hosted/hosted-test-action";
 import { make_hosted_test_run_id_factory } from "../../../hosted/hosted-test-action";
 import type { TestExecutorRegistry } from "../../../core/test-executor";
@@ -9,7 +13,7 @@ import {
   resolve_external_library_launchers,
 } from "../external-library-launchers";
 import { make_test_executor_discovery } from "../../../core/test-discovery";
-import { make_node_livehost_mothership_executor_registry } from "../livehost-node-executor";
+import { make_node_locus_mothership_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
 import {
@@ -22,15 +26,16 @@ import {
   HOSTED_TEST_COORDINATOR_HOST_ID,
   type HostedTestApplication,
 } from "../../../hosted/hosted-test-application";
-import type { NodeApplicationSecurity, NodeHostedApplication } from "hson-live/livehost/node";
+import type { NodeApplicationSecurity } from "hson-live/livehost/node";
 import {
-  create_node_capacity_livehost_socket,
-  type NodeCapacityLiveHostSocket,
+  create_node_capacity_locus_socket,
+  type NodeCapacityLocusSocket,
 } from "./node-capacity-livehost-socket";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
 import { create_playwright_browser_executor, LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../browser/playwright-browser-executor";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
+export const NODE_HOSTED_TESTS_CONNECTION_PATH = "/hosted-tests";
 export const HOSTED_TEST_REPORT_AUTHORITY_PREFIX = "hosted-report:";
 
 function redact_node_hosted_diagnostic_text(value: string, maxLength: number): string {
@@ -67,7 +72,8 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
 }>;
 
 export type NodeHostedTestsApplication = Readonly<{
-  registration: NodeHostedApplication;
+  registration: LiveHostApplication;
+  security?: NodeApplicationSecurity;
   authorities: HostedTestApplication;
   connectionCount(): number;
   connectionSnapshot(): Readonly<{
@@ -103,7 +109,7 @@ export type NodeHostedTestsApplication = Readonly<{
 export async function create_node_hosted_tests_application(
   options: NodeHostedTestsApplicationOptions = {},
 ): Promise<NodeHostedTestsApplication> {
-  const executorRegistry = options.executorRegistry ?? make_node_livehost_mothership_executor_registry();
+  const executorRegistry = options.executorRegistry ?? make_node_locus_mothership_executor_registry();
   const externalLaunchers = options.executorRegistry === undefined
     ? await resolve_external_library_launchers()
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
@@ -152,10 +158,10 @@ export async function create_node_hosted_tests_application(
         : executorRegistry.executor.id;
     },
   });
-  const connections = new Map<WebSocket, Readonly<{
+  const connections = new Map<LiveHostConnection, Readonly<{
     authorityId: string;
     disconnect: () => void;
-    transport: NodeCapacityLiveHostSocket;
+    transport: NodeCapacityLocusSocket;
   }>>();
   let disposed = false;
   let sentMessages = 0;
@@ -174,20 +180,22 @@ export async function create_node_hosted_tests_application(
   const reportedInitialFrames = new Set<string>();
   const serializedInitialFrames = new Set<string>();
 
-  const registration: NodeHostedApplication = Object.freeze({
+  const registration: LiveHostApplication = Object.freeze({
     name: NODE_HOSTED_TESTS_APPLICATION_NAME,
-    authorities: Object.freeze([
-      Object.freeze({ kind: "exact" as const, value: HOSTED_TEST_COORDINATOR_HOST_ID }),
-      Object.freeze({ kind: "prefix" as const, value: HOSTED_TEST_REPORT_AUTHORITY_PREFIX }),
-    ]),
-    ...(options.security === undefined ? {} : { security: options.security }),
     ready: () => !disposed,
-    async acceptWebSocket(authorityId, websocket, context) {
-      if (disposed) {
-        websocket.close(1012, "Hosted-tests application stopping.");
+    connections: Object.freeze([Object.freeze({
+      path: NODE_HOSTED_TESTS_CONNECTION_PATH,
+      async accept(request: Request, connection: LiveHostConnection, context: LiveHostApplicationContext) {
+      const authorityId = new URL(request.url).searchParams.get("locus") ?? "";
+      if (authorityId !== HOSTED_TEST_COORDINATOR_HOST_ID && !authorityId.startsWith(HOSTED_TEST_REPORT_AUTHORITY_PREFIX)) {
+        connection.close(1008, "Unknown hosted-test Locus.");
         return;
       }
-      const socket = create_node_capacity_livehost_socket(websocket, {
+      if (disposed) {
+        connection.close(1012, "Hosted-tests application stopping.");
+        return;
+      }
+      const socket = create_node_capacity_locus_socket(connection, {
           onSend(message) {
             const messageBytes = Buffer.byteLength(message, "utf8");
             sentMessages += 1;
@@ -215,7 +223,7 @@ export async function create_node_hosted_tests_application(
                     });
                   }
                 }
-              } catch { /* LiveHost owns protocol validation. */ }
+              } catch { /* Locus owns protocol validation. */ }
             }
           },
           onSent(message) {
@@ -230,13 +238,8 @@ export async function create_node_hosted_tests_application(
                     bytes: messageBytes,
                   });
                 }
-              } catch { /* LiveHost owns protocol validation. */ }
+              } catch { /* Locus owns protocol validation. */ }
             }
-          },
-          maxBufferedAmount: context.transportPolicy.maxBufferedAmount,
-          onBackpressure() {
-            backpressureRejections += 1;
-            context.transportPolicy.onBackpressure();
           },
           onCapacityChange(snapshot) {
             peakInFlightMessages = Math.max(peakInFlightMessages, snapshot.inFlightMessages);
@@ -245,29 +248,11 @@ export async function create_node_hosted_tests_application(
           },
       });
       const bounded = options.lifecycle !== undefined;
-      if (bounded) websocket.pause();
-      let websocketClosed = false;
-      websocket.once("error", (cause) => {
-        console.error("[hosted-tests] websocket transport failed", Object.freeze({
-          application: NODE_HOSTED_TESTS_APPLICATION_NAME,
-          authorityId,
-          correlationId: context.request.correlationId,
-          error: safe_node_hosted_error(cause),
-        }));
-      });
-      websocket.once("close", (code, reason) => {
-        websocketClosed = true;
-        connections.get(websocket)?.disconnect();
-        connections.delete(websocket);
-        if (code !== 1000 && code !== 1001 && code !== 1012) {
-          console.error("[hosted-tests] websocket closed unexpectedly", Object.freeze({
-            application: NODE_HOSTED_TESTS_APPLICATION_NAME,
-            authorityId,
-            correlationId: context.request.correlationId,
-            closeCode: code,
-            ...(reason.byteLength === 0 ? {} : { reason: redact_node_hosted_diagnostic_text(reason.toString(), 512) }),
-          }));
-        }
+      let connectionClosed = false;
+      connection.onClose(() => {
+        connectionClosed = true;
+        connections.get(connection)?.disconnect();
+        connections.delete(connection);
       });
       let connected;
       try {
@@ -292,38 +277,37 @@ export async function create_node_hosted_tests_application(
         console.error("[hosted-tests] authority connection failed", Object.freeze({
           application: NODE_HOSTED_TESTS_APPLICATION_NAME,
           authorityId,
-          correlationId: context.request.correlationId,
+          correlationId: context.correlationId,
           error: safe_node_hosted_error(cause),
         }));
         throw cause;
-      } finally {
-        if (bounded) websocket.resume();
       }
       if (!connected.ok) {
         console.error("[hosted-tests] authority connection rejected", Object.freeze({
           application: NODE_HOSTED_TESTS_APPLICATION_NAME,
           authorityId,
-          correlationId: context.request.correlationId,
+          correlationId: context.correlationId,
           errorCode: connected.error.code,
           message: redact_node_hosted_diagnostic_text(connected.error.message, 2_048),
         }));
-        websocket.close(1008, connected.error.code ?? "Unknown hosted-test LiveHost.");
+        connection.close(1008, connected.error.code ?? "Unknown hosted-test Locus.");
         return;
       }
       const disconnect = connected.value;
-      if (websocketClosed) {
+      if (connectionClosed) {
         disconnect();
         return;
       }
-      connections.set(websocket, { authorityId, disconnect, transport: socket });
-    },
+      connections.set(connection, { authorityId, disconnect, transport: socket });
+      },
+    })]),
     async dispose() {
       if (disposed) return;
       disposed = true;
       launcherService.terminate();
-      for (const [websocket, connection] of connections) {
-        connection.disconnect();
-        websocket.close(1012, "Hosted-tests application stopping.");
+      for (const [transport, hostedConnection] of connections) {
+        hostedConnection.disconnect();
+        transport.close(1012, "Hosted-tests application stopping.");
       }
       connections.clear();
       await authorities.dispose();
@@ -333,6 +317,7 @@ export async function create_node_hosted_tests_application(
 
   return Object.freeze({
     registration,
+    ...(options.security === undefined ? {} : { security: options.security }),
     authorities,
     connectionCount: () => connections.size,
     connectionSnapshot() {
@@ -355,10 +340,10 @@ export async function create_node_hosted_tests_application(
       });
     },
     disconnectConnections(authorityId) {
-      for (const [websocket, connection] of [...connections]) {
-        if (authorityId !== undefined && connection.authorityId !== authorityId) continue;
-        connection.disconnect();
-        websocket.close(1012, "Hosted-test connection interrupted.");
+      for (const [transport, hostedConnection] of [...connections]) {
+        if (authorityId !== undefined && hostedConnection.authorityId !== authorityId) continue;
+        hostedConnection.disconnect();
+        transport.close(1012, "Hosted-test connection interrupted.");
       }
     },
     metrics: () => Object.freeze({

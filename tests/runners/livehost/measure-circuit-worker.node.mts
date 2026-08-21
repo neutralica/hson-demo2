@@ -1,6 +1,6 @@
 import { Worker } from "node:worker_threads";
 import WebSocket from "ws";
-import { create_browser_livehost_socket, create_livehost_client, type BrowserWebSocketConstructor } from "hson-live/livehost";
+import { create_browser_locus_socket, create_locus_client, type BrowserWebSocketConstructor } from "hson-live/locus";
 import { start_node_application_host } from "hson-live/livehost/node";
 import type { CircuitVerificationActions, CircuitVerificationResult } from "../../../src/shared/circuit-verification-contract";
 import { create_circuit_verification_service } from "../../harness/runtimes/node/circuit-verification-service";
@@ -122,15 +122,15 @@ await replacementService.dispose();
 
 const application = await create_node_circuit_verification_application();
 const host = await start_node_application_host({ port: 0, applications: [application.registration] });
-const transport = create_browser_livehost_socket(
-  `${host.url}?livehost=circuit-verifier`,
+const transport = create_browser_locus_socket(
+  `${host.url}/circuit-verification?locus=circuit-verifier`,
   WebSocket as unknown as BrowserWebSocketConstructor,
 );
-let liveHostTotalMs = 0;
-let liveHostWorkerExecutionMs = 0;
+let locusTotalMs = 0;
+let locusWorkerExecutionMs = 0;
 try {
   await transport.ready;
-  const client = create_livehost_client<undefined, CircuitVerificationActions>({ socket: transport.socket });
+  const client = create_locus_client<undefined, CircuitVerificationActions>({ socket: transport.socket });
   client.connect();
   await new Promise<void>((resolve) => setTimeout(resolve, 10));
   const began = performance.now();
@@ -140,24 +140,24 @@ try {
     entry: "json",
     source: ordinary_source(),
   });
-  liveHostTotalMs = performance.now() - began;
-  if (response.type !== "ack") throw new Error(`LiveHost measurement failed: ${response.error.code}`);
+  locusTotalMs = performance.now() - began;
+  if (response.type !== "ack") throw new Error(`Locus measurement failed: ${response.error.code}`);
   const result = response.result as unknown as CircuitVerificationResult;
-  liveHostWorkerExecutionMs = result.durationMs;
+  locusWorkerExecutionMs = result.durationMs;
   client.disconnect();
   client.session.dispose();
   client.recovery.dispose();
 } finally {
   transport.dispose();
-  await host.stop();
+  await host.dispose();
 }
 
 console.log(JSON.stringify({
   ...measurements,
   workerReplacementMs: rounded(workerReplacementMs),
-  localhostLiveHost: {
-    totalMs: rounded(liveHostTotalMs),
-    workerExecutionMs: rounded(liveHostWorkerExecutionMs),
-    liveHostAndNetworkOverheadMs: rounded(Math.max(0, liveHostTotalMs - liveHostWorkerExecutionMs)),
+  localhostLocus: {
+    totalMs: rounded(locusTotalMs),
+    workerExecutionMs: rounded(locusWorkerExecutionMs),
+    locusAndNetworkOverheadMs: rounded(Math.max(0, locusTotalMs - locusWorkerExecutionMs)),
   },
 }, null, 2));

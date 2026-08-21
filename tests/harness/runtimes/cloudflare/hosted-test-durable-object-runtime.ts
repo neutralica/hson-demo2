@@ -1,10 +1,10 @@
-import type { LiveHostAuthorityConnector } from "../../hosted/livehost-authority-composition";
+import type { LocusAuthorityConnector } from "../../hosted/livehost-authority-composition";
 import {
-  make_cloudflare_websocket_livehost_socket,
+  make_cloudflare_websocket_locus_socket,
   type CloudflareAcceptedWebSocket,
 } from "./cloudflare-websocket-socket";
 
-type CloudflareHostedTestApplication = Pick<LiveHostAuthorityConnector, "connectBounded">;
+type CloudflareHostedTestApplication = Pick<LocusAuthorityConnector, "connectBounded">;
 
 function redact_cloudflare_diagnostic_text(value: string, maxLength: number): string {
   return value
@@ -75,7 +75,7 @@ export function make_hosted_test_durable_object_runtime(
     // Ordinary acceptance is intentional. Keeping the socket attached to the
     // live object prevents reconstruction while this in-memory authority is in use.
     websocket.accept();
-    const transport = make_cloudflare_websocket_livehost_socket(websocket);
+    const transport = make_cloudflare_websocket_locus_socket(websocket);
     let connected: Awaited<ReturnType<CloudflareHostedTestApplication["connectBounded"]>>;
     try {
       connected = await application.connectBounded(hostId, transport.socket);
@@ -91,7 +91,7 @@ export function make_hosted_test_durable_object_runtime(
         new Error(redact_cloudflare_diagnostic_text(connected.error.message, 2_048)),
         connected.error.code,
       );
-      websocket.close(1008, connected.error.code ?? "Unknown hosted-test LiveHost.");
+      websocket.close(1008, connected.error.code ?? "Unknown hosted-test Locus.");
       transport.closed();
       return;
     }

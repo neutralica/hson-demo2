@@ -32,7 +32,7 @@ export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-demo2:test:splash-lifecycle-node",
 ] as const);
 
-/** Command entrypoints whose semantic work is already exactly selectable in the Node LiveHost catalog. */
+/** Command entrypoints whose semantic work is already exactly selectable in the Node Locus catalog. */
 export const NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS = Object.freeze([
   "hson-live:fixture:default-identity-runtime",
   "hson-demo2:test:towl",
@@ -107,7 +107,7 @@ const SUBJECT_BY_CATEGORY: Readonly<Record<TestSurfaceCatalogEntry["category"], 
   LiveTree: "livetree",
   LiveMap: "livemap",
   Reflect: "reflect",
-  LiveHost: "livehost",
+  Locus: "livehost",
   LiveInspector: "integration",
   "Application / Demo": "livedemo",
   "Hosted Runtime": "livehost",

@@ -1,6 +1,7 @@
 // api-suite.ts
 
 import { hson } from "hson-live";
+import { create_application_locus_store } from "../../harness/hosted/application-locus-store";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "../livemap/handle-helpers";
 
@@ -62,7 +63,7 @@ function make_api_socket(): ApiSocket {
   });
 }
 
-export function livehost_api_suite(): TestSuite {
+export function locus_api_suite(): TestSuite {
   const SUITE = "livehost/api";
 
   return {
@@ -73,7 +74,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-create-exposes-host", name: "hson livehost create exposes host",
         input: {},
         act: () => {
-          const host = hson.liveHost.create({ state: { count: 1 } });
+          const host = hson.locus.create({ state: { count: 1 } });
 
           return {
             seq: host.seq,
@@ -91,7 +92,7 @@ export function livehost_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.liveHost.client<{ ready: boolean }>({ socket });
+          const client = hson.locus.client<{ ready: boolean }>({ socket });
 
           client.connect();
           socket.receive({
@@ -119,7 +120,7 @@ export function livehost_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.liveHost.client<{ count: number }>({ socket });
+          const client = hson.locus.client<{ count: number }>({ socket });
 
           client.connect();
           socket.receive({
@@ -151,7 +152,7 @@ export function livehost_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.liveHost.client({ socket });
+          const client = hson.locus.client({ socket });
 
           client.connect();
           client.subscribe(["count"]);
@@ -177,7 +178,7 @@ export function livehost_api_suite(): TestSuite {
         input: {},
         act: () => {
           const socket = make_api_socket();
-          const client = hson.liveHost.client<undefined, { setCount: number }>({
+          const client = hson.locus.client<undefined, { setCount: number }>({
             socket,
             actionId: () => "action-a",
           });
@@ -206,7 +207,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-registry-creates-host", name: "hson livehost registry creates host",
         input: {},
         act: () => {
-          const registry = hson.liveHost.registry();
+          const registry = create_application_locus_store();
           const result = registry.create("counter", { state: { count: 2 } });
 
           return {
@@ -226,7 +227,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-registry-rejects-duplicate-id", name: "hson livehost registry rejects duplicate id",
         input: {},
         act: () => {
-          const registry = hson.liveHost.registry();
+          const registry = create_application_locus_store();
           const first = registry.create("counter", { state: { count: 1 } });
           const second = registry.create("counter", { state: { count: 2 } });
 
@@ -249,7 +250,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-registry-rejects-unknown-connect", name: "hson livehost registry rejects unknown connect",
         input: {},
         act: () => {
-          const registry = hson.liveHost.registry();
+          const registry = create_application_locus_store();
           const socket = make_api_socket();
           const connected = registry.connect("missing", socket);
 
@@ -268,7 +269,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-registry-connects-socket", name: "hson livehost registry connects socket",
         input: {},
         act: () => {
-          const registry = hson.liveHost.registry();
+          const registry = create_application_locus_store();
           const socket = make_api_socket();
           const created = registry.create("counter", { state: { count: 2 } });
           const connected = registry.connect("counter", socket);
@@ -296,7 +297,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-protocol-decodes-hello-host-id", name: "hson livehost protocol decodes hello host id",
         input: {},
         act: () => {
-          const decoded = hson.liveHost.protocol.decode(JSON.stringify({
+          const decoded = hson.locus.protocol.decode(JSON.stringify({
             type: "hello",
             clientId: "client-a",
             hostId: "counter",
@@ -305,13 +306,13 @@ export function livehost_api_suite(): TestSuite {
           return {
             ok: decoded.ok,
             type: decoded.ok ? decoded.value.type : undefined,
-            hostId: decoded.ok && decoded.value.type === "hello" ? decoded.value.hostId : undefined,
+            hasHostId: decoded.ok && decoded.value.type === "hello" ? "hostId" in decoded.value : undefined,
           };
         },
         expected: {
           ok: true,
           type: "hello",
-          hostId: "counter",
+          hasHostId: false,
         },
       }),
       read_case({
@@ -319,7 +320,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-protocol-decodes-action", name: "hson livehost protocol decodes action",
         input: {},
         act: () => {
-          const decoded = hson.liveHost.protocol.decode(JSON.stringify({
+          const decoded = hson.locus.protocol.decode(JSON.stringify({
             type: "action",
             id: "action-a",
             name: "setCount",
@@ -347,7 +348,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-protocol-encodes-sync", name: "hson livehost protocol encodes sync",
         input: {},
         act: () => {
-          const encoded = hson.liveHost.protocol.encode({
+          const encoded = hson.locus.protocol.encode({
             type: "sync",
             seq: 3,
             path: ["count"],
@@ -374,7 +375,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-protocol-encodes-error", name: "hson livehost protocol encodes error",
         input: {},
         act: () => {
-          const encoded = hson.liveHost.protocol.encode({
+          const encoded = hson.locus.protocol.encode({
             type: "error",
             id: "action-a",
             ok: false,
@@ -413,7 +414,7 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-protocol-rejects-invalid-json", name: "hson livehost protocol rejects invalid json",
         input: {},
         act: () => {
-          const decoded = hson.liveHost.protocol.decode("{");
+          const decoded = hson.locus.protocol.decode("{");
 
           return {
             ok: decoded.ok,
@@ -429,7 +430,7 @@ export function livehost_api_suite(): TestSuite {
         input: {},
         act: () => {
           return {
-            hasResumeLog: Object.hasOwn(hson.liveHost.debug, "resumeLog"),
+            hasResumeLog: Object.hasOwn(hson.locus.debug, "resumeLog"),
           };
         },
         expected: {
@@ -441,9 +442,9 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-debug-exposes-sync-manager", name: "hson livehost debug exposes sync manager",
         input: {},
         act: () => {
-          const host = hson.liveHost.create({ state: { count: 5 } });
+          const host = hson.locus.create({ state: { count: 5 } });
           const messages: unknown[] = [];
-          const sync = hson.liveHost.debug.syncManager(host.map);
+          const sync = hson.locus.debug.syncManager(host.map);
           const added = sync.add_session("session-a", (message) => {
             messages.push(message);
           });
@@ -471,8 +472,8 @@ export function livehost_api_suite(): TestSuite {
         caseId: "hson-livehost-debug-sync-manager-rejects-duplicate-session", name: "hson livehost debug sync manager rejects duplicate session",
         input: {},
         act: () => {
-          const host = hson.liveHost.create({ state: { count: 5 } });
-          const sync = hson.liveHost.debug.syncManager(host.map);
+          const host = hson.locus.create({ state: { count: 5 } });
+          const sync = hson.locus.debug.syncManager(host.map);
           const first = sync.add_session("session-a", () => undefined);
           const second = sync.add_session("session-a", () => undefined);
 

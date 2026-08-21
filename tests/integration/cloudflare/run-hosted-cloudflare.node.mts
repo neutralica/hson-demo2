@@ -1,4 +1,4 @@
-import type { LiveHostSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/types";
 import { make_hosted_test_durable_object_runtime } from "../../harness/runtimes/cloudflare/hosted-test-durable-object-runtime";
 import {
   HOSTED_TEST_DURABLE_OBJECT_NAME,
@@ -7,7 +7,7 @@ import {
 import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
 import { compose_worker_authority_application } from "../../harness/hosted/livehost-authority-composition";
 import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
-import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { make_cloudflare_locus_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import { decode_test_executor_discovery } from "../../../src/shared/testing/test-discovery-contract";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { test_catalog_version } from "../../../src/shared/testing/test-catalog-contract";
@@ -40,12 +40,12 @@ const namespace = {
 };
 
 const nonUpgrade = await route_hosted_test_worker_request(
-  new Request("https://worker.example/socket?livehost=hosted-tests"),
+  new Request("https://worker.example/socket?locus=hosted-tests"),
   namespace,
 );
 expect_cloudflare(nonUpgrade.status === 426 && routedRequests.length === 0, "non-upgrade requests are rejected before Durable Object routing");
 
-for (const url of ["https://worker.example/socket", "https://worker.example/socket?livehost="] as const) {
+for (const url of ["https://worker.example/socket", "https://worker.example/socket?locus="] as const) {
   const response = await route_hosted_test_worker_request(
     new Request(url, { headers: { Upgrade: "websocket" } }),
     namespace,
@@ -54,11 +54,11 @@ for (const url of ["https://worker.example/socket", "https://worker.example/sock
 }
 
 const coordinatorRequest = new Request(
-  "https://worker.example/optional/path?token=public&livehost=hosted-tests",
+  "https://worker.example/optional/path?token=public&locus=hosted-tests",
   { headers: { Upgrade: "WebSocket" } },
 );
 const reportRequest = new Request(
-  "https://worker.example/optional/path?token=public&livehost=hosted-report%3Arun-1",
+  "https://worker.example/optional/path?token=public&locus=hosted-report%3Arun-1",
   { headers: { Upgrade: "websocket" } },
 );
 const coordinatorResponse = await route_hosted_test_worker_request(coordinatorRequest, namespace);
@@ -77,8 +77,8 @@ expect_cloudflare(
 expect_cloudflare(
   routedRequests[0]?.url === coordinatorRequest.url
     && routedRequests[1]?.url === reportRequest.url
-    && new URL(routedRequests[1]!.url).searchParams.get("livehost") === "hosted-report:run-1",
-  "the optional path, existing query, and livehost routing reach the object unchanged",
+    && new URL(routedRequests[1]!.url).searchParams.get("locus") === "hosted-report:run-1",
+  "the optional path, existing query, and Locus routing reach the object unchanged",
 );
 
 type Listener = (event: Readonly<{ data?: string | ArrayBuffer }>) => void;
@@ -107,7 +107,7 @@ const hostIds: string[] = [];
 const received: string[] = [];
 let detachments = 0;
 const application = {
-  async connectBounded(hostId: string, socket: LiveHostSocketLike) {
+  async connectBounded(hostId: string, socket: LocusSocketLike) {
     hostIds.push(hostId);
     socket.onMessage((message) => received.push(`${hostId}:${message}`));
     socket.onClose(() => undefined);
@@ -134,7 +134,7 @@ expect_cloudflare(
 );
 
 coordinatorSocket.emit("message", "livehost-text-frame");
-expect_cloudflare(received[0] === "hosted-tests:livehost-text-frame", "text frames reach the existing LiveHostSocketLike message listener");
+expect_cloudflare(received[0] === "hosted-tests:livehost-text-frame", "text frames reach the existing LocusSocketLike message listener");
 
 coordinatorSocket.emit("message", new Uint8Array([1, 2, 3]).buffer);
 expect_cloudflare(
@@ -144,10 +144,10 @@ expect_cloudflare(
 
 reportSocket.emit("close");
 reportSocket.emit("close");
-expect_cloudflare(detachments === 1, "socket close detaches its LiveHost connection exactly once");
+expect_cloudflare(detachments === 1, "socket close detaches its Locus connection exactly once");
 
 runtime.dispose();
-expect_cloudflare(detachments === 2, "runtime disposal detaches every remaining LiveHost connection");
+expect_cloudflare(detachments === 2, "runtime disposal detaches every remaining Locus connection");
 
 const cloudflareDiagnosticEntries: unknown[][] = [];
 const originalConsoleError = console.error;
@@ -166,7 +166,7 @@ try {
       return {
         ok: false as const,
         error: {
-          code: "LIVEHOST_STORE_UNKNOWN_ID",
+          code: "LOCUS_STORE_UNKNOWN_ID",
           message: "Unknown hosted report authority; token=report-token-value",
         },
       };
@@ -206,7 +206,7 @@ const cloudflareDiagnosticText = JSON.stringify(cloudflareDiagnosticEntries);
 expect_cloudflare(
   cloudflareDiagnosticEntries.length === 2
     && cloudflareDiagnosticText.includes("authority.connect")
-    && cloudflareDiagnosticText.includes("LIVEHOST_STORE_UNKNOWN_ID")
+    && cloudflareDiagnosticText.includes("LOCUS_STORE_UNKNOWN_ID")
     && cloudflareDiagnosticText.includes("hosted-report:run-diagnostic-1")
     && cloudflareDiagnosticText.includes('"cause"'),
   `Cloudflare authority rejection and exception diagnostics retain safe operation, identity, code, stack, and cause context (${cloudflareDiagnosticText})`,
@@ -215,7 +215,7 @@ for (const secret of ["report-token-value", "top-secret", "session-cookie-value"
   expect_cloudflare(!cloudflareDiagnosticText.includes(secret), `Cloudflare authority diagnostics redact ${secret}`);
 }
 
-const workerExecutorRegistry = make_cloudflare_livehost_executor_registry();
+const workerExecutorRegistry = make_cloudflare_locus_executor_registry();
 const workerDiscovery = make_test_executor_discovery(workerExecutorRegistry);
 const workerApplication = create_hosted_test_application({
   discovery: workerDiscovery,
@@ -280,7 +280,7 @@ async function run_worker_selected(selectionIds: readonly string[]): Promise<Rea
   expect_cloudflare(reportHost !== undefined, "Worker selected report remains available through the existing report store");
   return Object.freeze({
     result,
-    report: reportHost.map.capture().value as HostedTestReportState,
+    report: reportHost.map.snap() as HostedTestReportState,
   });
 }
 

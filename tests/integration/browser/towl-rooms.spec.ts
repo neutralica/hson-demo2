@@ -86,8 +86,8 @@ test("TOWL replaces a lost browser transport and restores the same session seat"
       constructor(url: string | URL, protocols?: string | string[]) {
         if (protocols === undefined) super(url);
         else super(url, protocols);
-        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
-        if (livehost?.startsWith("towl:") === true) {
+        const locus = new URL(String(url), window.location.href).searchParams.get("locus");
+        if (locus?.startsWith("towl:") === true) {
           latestTowlSocket = this;
           towlSocketCount += 1;
         }
@@ -106,7 +106,7 @@ test("TOWL replaces a lost browser transport and restores the same session seat"
   await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
   const roomId = new URL(page.url()).searchParams.get("room");
   expect(roomId).not.toBeNull();
-  const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
+  const credentialKey = `hson-livedemo.towl.${roomId}.locus-credential`;
   const originalCredential = await page.evaluate((key) => localStorage.getItem(key), credentialKey);
   expect(originalCredential).not.toBeNull();
 
@@ -192,7 +192,7 @@ test("Back resumes the same seat while Leave vacates it, clears the credential, 
     const inviteUrl = first.url();
     const roomId = new URL(inviteUrl).searchParams.get("room");
     expect(roomId).not.toBeNull();
-    const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
+    const credentialKey = `hson-livedemo.towl.${roomId}.locus-credential`;
     await first.getByRole("button", { name: "join", exact: true }).click();
     await expect(first.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
 

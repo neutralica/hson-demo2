@@ -15,8 +15,8 @@ export function request_error(message: string, status: number): Response {
   });
 }
 
-export function livehost_id(request: Request): string | undefined {
-  const value = new URL(request.url).searchParams.get("livehost");
+export function locus_id(request: Request): string | undefined {
+  const value = new URL(request.url).searchParams.get("locus");
   return value === null || value.trim() === "" ? undefined : value;
 }
 
@@ -31,7 +31,7 @@ export async function route_hosted_test_worker_request(
   if (!is_websocket_upgrade(request)) {
     return request_error("Expected a WebSocket upgrade request.", 426);
   }
-  if (livehost_id(request) === undefined) {
+  if (locus_id(request) === undefined) {
     return request_error("Hosted-test WebSocket requests require a non-empty livehost query parameter.", 400);
   }
   const id = namespace.idFromName(HOSTED_TEST_DURABLE_OBJECT_NAME);

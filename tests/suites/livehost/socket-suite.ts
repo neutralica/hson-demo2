@@ -1,10 +1,10 @@
 // livehost/socket-suite.ts
 
-import { create_livehost } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type LiveHostSocketReadCaseSpec = Readonly<{
+type LocusSocketReadCaseSpec = Readonly<{
   suite: string;
   caseId: string; name: string;
   input: unknown;
@@ -27,7 +27,7 @@ type MemorySocket = Readonly<{
   listener_count: () => number;
 }>;
 
-function livehost_socket_read_case(spec: LiveHostSocketReadCaseSpec): TestCase {
+function locus_socket_read_case(spec: LocusSocketReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
     caseId: spec.caseId, name: spec.name,
@@ -96,18 +96,18 @@ function message_error_field(message: unknown, field: string): unknown {
   return error[field];
 }
 
-export function livehost_socket_suite(): TestSuite {
+export function locus_socket_suite(): TestSuite {
   const SUITE = "livehost/socket";
 
   return {
     suite: SUITE,
     cases: [
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-hello-sends-snapshot", name: "connect hello sends snapshot",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             sessionId: "session-a",
           });
@@ -131,12 +131,12 @@ export function livehost_socket_suite(): TestSuite {
           snapshot: { user: { name: "Ada" } },
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-invalid-json-sends-error", name: "connect invalid json sends error",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_locus({ state: {} });
           const socket = make_memory_socket();
 
           host.connect(socket);
@@ -152,15 +152,15 @@ export function livehost_socket_suite(): TestSuite {
         expected: {
           type: "error",
           seq: 0,
-          message: "Invalid LiveHost message JSON.",
+          message: "Invalid Locus message JSON.",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-action-sends-ack-and-mutates-map", name: "connect action sends ack and mutates map",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             actions: {
               rename_user: (ctx, payload) => {
@@ -199,12 +199,12 @@ export function livehost_socket_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-unknown-action-sends-error", name: "connect unknown action sends error",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_locus({ state: {} });
           const socket = make_memory_socket();
 
           host.connect(socket);
@@ -231,16 +231,16 @@ export function livehost_socket_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_UNKNOWN_ACTION",
-          errorMessage: "Unknown LiveHost action: missing_action",
+          code: "LOCUS_UNKNOWN_ACTION",
+          errorMessage: "Unknown Locus action: missing_action",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-subscribe-sends-current-value-sync", name: "connect subscribe sends current value sync",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { ui: { selected: "home" } } });
+          const host = create_locus({ state: { ui: { selected: "home" } } });
           const socket = make_memory_socket();
 
           host.connect(socket);
@@ -261,12 +261,12 @@ export function livehost_socket_suite(): TestSuite {
           value: "home",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-unsubscribe-sends-no-message-on-success", name: "connect unsubscribe sends no message on success",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { ui: { selected: "home" } } });
+          const host = create_locus({ state: { ui: { selected: "home" } } });
           const socket = make_memory_socket();
 
           host.connect(socket);
@@ -283,12 +283,12 @@ export function livehost_socket_suite(): TestSuite {
           firstType: "sync",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-hello-after-action-reports-updated-seq-and-snapshot", name: "connect hello after action reports updated seq and snapshot",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             sessionId: "session-a",
             actions: {
@@ -325,12 +325,12 @@ export function livehost_socket_suite(): TestSuite {
           snapshot: { user: { name: "Grace" } },
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-two-actions-return-increasing-ack-seqs", name: "connect two actions return increasing ack seqs",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -368,12 +368,12 @@ export function livehost_socket_suite(): TestSuite {
           count: 2,
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-malformed-action-does-not-increment-seq", name: "connect malformed action does not increment seq",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_locus({ state: {} });
           const socket = make_memory_socket();
 
           host.connect(socket);
@@ -391,15 +391,15 @@ export function livehost_socket_suite(): TestSuite {
           type: "error",
           seq: 0,
           hostSeq: 0,
-          errorMessage: "LiveHost action message requires string id.",
+          errorMessage: "Locus action message requires string id.",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-action-applies-schema-validator-before-ack", name: "connect action applies schema validator before ack",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -450,12 +450,12 @@ export function livehost_socket_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-action-rejects-schema-invalid-payload", name: "connect action rejects schema-invalid payload",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -505,17 +505,17 @@ export function livehost_socket_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
-          errorMessage: "Value failed LiveHost schema validation.",
+          code: "LOCUS_SCHEMA_INVALID_PAYLOAD",
+          errorMessage: "Value failed Locus schema validation.",
           name: "Ada",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-action-applies-schema-decoder-before-handler", name: "connect action applies schema decoder before handler",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -564,12 +564,12 @@ export function livehost_socket_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-subscribed-path-syncs-after-action-ack", name: "connect subscribed path syncs after action ack",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             actions: {
               rename_user: (ctx, payload) => {
@@ -615,12 +615,12 @@ export function livehost_socket_suite(): TestSuite {
           updateValue: "Grace",
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-unsubscribe-prevents-later-action-sync", name: "connect unsubscribe prevents later action sync",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -657,12 +657,12 @@ export function livehost_socket_suite(): TestSuite {
           count: 1,
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-multiple-sessions-receive-subscribed-action-sync", name: "connect multiple sessions receive subscribed action sync",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -711,13 +711,13 @@ export function livehost_socket_suite(): TestSuite {
           count: 1,
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "lazy-socket-action-receives-trusted-non-resumable-session-origin", name: "lazy socket action receives trusted non-resumable session origin",
         input: {},
         act: async () => {
           let origin: unknown;
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             sessionId: () => "server-lazy-session",
             actions: { inspect: (ctx) => { origin = ctx.origin; } },
@@ -740,13 +740,13 @@ export function livehost_socket_suite(): TestSuite {
           resumable: false,
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "explicit-socket-session-action-receives-trusted-resumable-origin", name: "explicit socket session action receives trusted resumable origin",
         input: {},
         act: async () => {
           let origin: unknown;
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             sessionId: () => "server-resumable-session",
             actions: { inspect: (ctx) => { origin = ctx.origin; } },
@@ -770,12 +770,12 @@ export function livehost_socket_suite(): TestSuite {
           resumable: true,
         },
       }),
-      livehost_socket_read_case({
+      locus_socket_read_case({
         suite: SUITE,
         caseId: "connect-disposer-detaches-socket-listeners", name: "connect disposer detaches socket listeners",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_locus({ state: {} });
           const socket = make_memory_socket();
 
           const stop = host.connect(socket);

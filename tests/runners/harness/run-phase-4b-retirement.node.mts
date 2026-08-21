@@ -7,7 +7,7 @@ import { TEST_CONVERGENCE_BOUNDARIES } from "../../harness/core/test-convergence
 import { HOSTED_TEST_COORDINATOR_SCHEMA } from "../../harness/hosted/hosted-test-application";
 import { HOSTED_TEST_REPORT_SCHEMA, make_initial_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import { resolve_external_launcher_binding, resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { hosted_test_panel_primary_choices, hosted_test_panel_selected_ids } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 
 let checks = 0;
@@ -23,7 +23,7 @@ function schema_accepts(value: unknown, schema: unknown): boolean {
   } catch { return false; }
 }
 
-const registry = make_local_node_livehost_executor_registry();
+const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
 const discovery = make_test_executor_discovery(registry, availability.targets);
 const canonicalId = discovery.catalog.tests[0]!.id;

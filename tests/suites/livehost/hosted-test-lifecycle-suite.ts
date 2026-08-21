@@ -1,4 +1,4 @@
-import type { LiveHostDisposer, LiveHostSocketLike } from "hson-live/livehost";
+import type { LocusDisposer, LocusSocketLike } from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_registry, type TestExecutorRegistry } from "../../harness/core/test-executor";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
@@ -8,7 +8,7 @@ import {
 } from "../../harness/hosted/hosted-test-application";
 import { hosted_test_recovery_association } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import { create_cloudflare_hosted_test_application } from "../../harness/runtimes/cloudflare/worker";
-import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { make_cloudflare_locus_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 
 function expect_lifecycle(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`hosted test lifecycle: ${message}`);
@@ -42,6 +42,7 @@ function make_application(
     maxReports: number;
     terminalRetentionMs: number;
     now?: () => number;
+    schedule?: (delayMs: number, callback: () => void) => () => void;
     requireReportReady?: boolean;
   }>,
 ): HostedTestApplication {
@@ -55,7 +56,7 @@ function make_application(
       terminalRetentionMs: options.terminalRetentionMs,
       sweepIntervalMs: Math.max(1, options.terminalRetentionMs),
       ...(options.now === undefined ? {} : { now: options.now }),
-      schedule: () => () => {},
+      schedule: options.schedule ?? (() => () => {}),
     },
   });
 }
@@ -77,7 +78,7 @@ async function run_selected(application: HostedTestApplication, id: string, sele
   return response.result as Readonly<{ runId: string; attemptId: string; reportHostId: string }>;
 }
 
-type TestSocket = LiveHostSocketLike & Readonly<{
+type TestSocket = LocusSocketLike & Readonly<{
   receive(message: unknown): Promise<void>;
   disconnect(): void;
   sent(): readonly Record<string, unknown>[];
@@ -90,11 +91,11 @@ function make_socket(): TestSocket {
   return Object.freeze({
     send(message: string) { sent.push(message); },
     close() {},
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       messages.add(listener);
       return () => { messages.delete(listener); };
     },
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       closes.add(listener);
       return () => { closes.delete(listener); };
     },
@@ -110,7 +111,7 @@ function make_socket(): TestSocket {
 
 async function wait_for_report(application: HostedTestApplication, hostId: string, runId?: string): Promise<void> {
   for (let index = 0; index < 40; index += 1) {
-    if (application.hasReport(hostId) && (runId === undefined || application.coordinator.map.capture().value.runs[runId] !== undefined)) return;
+    if (application.hasReport(hostId) && (runId === undefined || application.coordinator.map.snap().runs[runId] !== undefined)) return;
     await Promise.resolve();
   }
   expect_lifecycle(false, `${hostId} must be allocated and associated`);
@@ -160,11 +161,11 @@ export function hosted_test_lifecycle_suite(): TestSuite {
         run: async () => {
           const application = create_cloudflare_hosted_test_application();
           try {
-            const workerSelectionId = make_cloudflare_livehost_executor_registry().catalog.tests[0]!.id;
+            const workerSelectionId = make_cloudflare_locus_executor_registry().catalog.tests[0]!.id;
             for (let index = 1; index <= 17; index += 1) {
               await run_selected(application, `worker-${index}`, workerSelectionId);
             }
-            const state = application.coordinator.map.capture().value;
+            const state = application.coordinator.map.snap();
             expect_lifecycle(application.reportCount() === 16, "Worker must retain only 16 terminal reports");
             expect_lifecycle(Object.keys(state.runs).length === 16, "Worker coordinator runs must follow report capacity");
             expect_lifecycle(
@@ -193,7 +194,7 @@ export function hosted_test_lifecycle_suite(): TestSuite {
             await run_selected(application, "request-one", selectionId, "shared-client");
             await run_selected(application, "request-two", selectionId, "shared-client");
             await run_selected(application, "request-three", selectionId, "other-client");
-            let state = application.coordinator.map.capture().value;
+            let state = application.coordinator.map.snap();
             expect_lifecycle(application.reportCount() === 2 && !application.hasReport("hosted-report:capacity-1"), "oldest idle report must be evicted");
             expect_lifecycle(application.retention.size() === 2 && application.retention.get("capacity-1") === undefined, "inspection retention must follow authority eviction");
             expect_lifecycle(state.runs["capacity-1"] === undefined && state.runs["capacity-2"] !== undefined, "only the evicted run association must be removed");
@@ -201,7 +202,7 @@ export function hosted_test_lifecycle_suite(): TestSuite {
             await settle_activity();
             const secondEviction = await application.evictReport("hosted-report:capacity-2");
             expect_lifecycle(secondEviction.status === "evicted", `second report must evict normally: ${JSON.stringify(secondEviction)}`);
-            state = application.coordinator.map.capture().value;
+            state = application.coordinator.map.snap();
             expect_lifecycle(state.requests["shared-client"] === undefined, "empty per-client request container must be removed");
             expect_lifecycle(state.runs["capacity-3"] !== undefined && state.requests["other-client"]?.["request-three"] !== undefined, "unrelated coordinator evidence must remain");
             expect_lifecycle(
@@ -248,6 +249,64 @@ export function hosted_test_lifecycle_suite(): TestSuite {
       }),
       Object.freeze({
         suite,
+        caseId: "explicit-and-scheduled-sweeps-preserve-idle-age",
+        name: "explicit and scheduled sweeps preserve idle age",
+        run: async () => {
+          let now = 1_000;
+          let scheduled: (() => void) | undefined;
+          let scheduleCalls = 0;
+          let nextRun = 0;
+          const executor = make_executor();
+          const selectionId = executor.catalog.tests[0]!.id;
+          const application = make_application(executor, {
+            makeRunId: () => `idle-proof-${++nextRun}`,
+            maxReports: 1,
+            terminalRetentionMs: 100,
+            now: () => now,
+            schedule: (_delayMs, callback) => {
+              scheduleCalls += 1;
+              scheduled = callback;
+              return () => {
+                if (scheduled === callback) scheduled = undefined;
+              };
+            },
+          });
+          try {
+            const first = await run_selected(application, "idle-proof-one", selectionId);
+            await settle_activity();
+            expect_lifecycle(await application.sweepReports() === 0 && application.hasReport(first.reportHostId), "zero-age report must be retained");
+            now = 1_099;
+            expect_lifecycle(await application.sweepReports() === 0 && application.hasReport(first.reportHostId), "below-threshold report must be retained");
+            now = 1_100;
+            expect_lifecycle(await application.sweepReports() === 1 && !application.hasReport(first.reportHostId), "threshold report must be evicted");
+
+            const second = await run_selected(application, "idle-proof-two", selectionId);
+            const socket = make_socket();
+            const connected = await application.connectBounded(second.reportHostId, socket);
+            expect_lifecycle(connected.ok, "active proof connection must attach");
+            now = 1_200;
+            expect_lifecycle(await application.sweepReports() === 0 && application.hasReport(second.reportHostId), "active report must remain protected past threshold");
+            connected.value();
+            socket.disconnect();
+            await settle_activity();
+            const zeroAgeScheduled = scheduled;
+            expect_lifecycle(zeroAgeScheduled !== undefined, "application scheduler must receive the sweep callback");
+            zeroAgeScheduled();
+            await settle_activity();
+            expect_lifecycle(application.hasReport(second.reportHostId), "scheduled zero-age sweep must retain the report");
+            now = 1_300;
+            const thresholdScheduled = scheduled;
+            expect_lifecycle(thresholdScheduled !== undefined, "application sweep must reschedule after execution");
+            thresholdScheduled();
+            await settle_activity();
+            expect_lifecycle(!application.hasReport(second.reportHostId) && scheduleCalls >= 3, "scheduled threshold sweep must evict and remain scheduled");
+          } finally {
+            await application.dispose();
+          }
+        },
+      }),
+      Object.freeze({
+        suite,
         caseId: "active-attempt-remains-acquired-through-settlement",
         name: "active attempt remains acquired through settlement",
         run: async () => {
@@ -274,7 +333,7 @@ export function hosted_test_lifecycle_suite(): TestSuite {
               payload: { runId: "active-1", attemptId: "active-1:attempt:1" },
             });
             for (let index = 0; index < 40
-              && application.coordinator.map.capture().value.runs["active-1"]?.attempts["active-1:attempt:1"]?.controlStatus !== "cancelling";
+              && application.coordinator.map.snap().runs["active-1"]?.attempts["active-1:attempt:1"]?.controlStatus !== "cancelling";
               index += 1) await Promise.resolve();
             const cancellationBlocked = await application.evictReport("hosted-report:active-1");
             const pressured = await application.coordinator.dispatch_action(selected_request("active-two", selectionId));
@@ -361,11 +420,11 @@ export function hosted_test_lifecycle_suite(): TestSuite {
               `dedupe must retain the same historical terminal result: ${JSON.stringify({ original, retried })}`,
             );
             expect_lifecycle(nextRun === 2, "historical retry must not execute a replacement run");
-            expect_lifecycle(application.coordinator.actionRequests.debug().cachedOutcomeResponseCount === 1, "retry must be served from generic LiveHost dedupe");
+            expect_lifecycle(application.coordinator.actionRequests.debug().cachedOutcomeResponseCount === 1, "retry must be served from generic Locus dedupe");
             const unavailable = await application.connectBounded(originalResult.reportHostId, make_socket());
             expect_lifecycle(!unavailable.ok, "expired report authority must remain unavailable");
             expect_lifecycle(
-              hosted_test_recovery_association(application.coordinator.map.capture().value, originalResult.runId, originalResult.attemptId) === undefined,
+              hosted_test_recovery_association(application.coordinator.map.snap(), originalResult.runId, originalResult.attemptId) === undefined,
               "expired report recovery must not retarget to a retained authority",
             );
           } finally {

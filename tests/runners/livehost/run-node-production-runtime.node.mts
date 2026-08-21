@@ -31,9 +31,9 @@ const child = spawn(process.execPath, [artifact.pathname], {
     HOST: "127.0.0.1",
     PORT: String(port),
     SHUTDOWN_TIMEOUT_MS: "2000",
-    LIVEHOST_DEPLOYMENT: "production",
-    LIVEHOST_ALLOWED_ORIGINS: "https://public.example",
-    LIVEHOST_BEARER_TOKEN: "production-smoke-secret",
+    LOCUS_DEPLOYMENT: "production",
+    LOCUS_ALLOWED_ORIGINS: "https://public.example",
+    LOCUS_BEARER_TOKEN: "production-smoke-secret",
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -72,11 +72,11 @@ assert.deepEqual(await health.json(), {
 });
 
 const websocket = new WebSocket(
-  `ws://127.0.0.1:${port}?livehost=hosted-tests`,
+  `ws://127.0.0.1:${port}/hosted-tests?locus=hosted-tests`,
   {
     headers: {
       Origin: "https://public.example",
-      Cookie: "livehost_auth=production-smoke-secret",
+      Cookie: "locus_auth=production-smoke-secret",
     },
   },
 );
@@ -87,11 +87,11 @@ await new Promise<void>((resolve, reject) => {
 websocket.close();
 
 const towl = new WebSocket(
-  `ws://127.0.0.1:${port}?livehost=towl:smoke-room`,
+  `ws://127.0.0.1:${port}/towl?locus=towl:smoke-room`,
   {
     headers: {
       Origin: "https://public.example",
-      Cookie: "livehost_auth=production-smoke-secret",
+      Cookie: "locus_auth=production-smoke-secret",
     },
   },
 );

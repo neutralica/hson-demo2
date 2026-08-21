@@ -85,7 +85,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "measure Phase 3 edit-to-certificate stages without imposing a budget",
   ]),
   browser_suite("parse-verification", [
-    "authored HSON reaches the LiveHost worker and browser certificate",
+    "authored HSON reaches the Locus worker and browser certificate",
     "JSON is an editable explicit verification origin",
     "authored HTML is admitted by DOMParser and reaches the final certificate",
     "an immediate parse failure never dispatches verification",

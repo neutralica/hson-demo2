@@ -26,8 +26,8 @@ async function certify(
     body: Buffer.from(JSON.stringify({ kind, actual, expected }), "utf8"),
     contentType: "application/json",
   });
-  if (process.env.LIVEHOST_PLAYWRIGHT === "1") {
-    process.stdout.write(`<LIVEHOST_BROWSER_TIMING>${JSON.stringify({
+  if (process.env.LOCUS_PLAYWRIGHT === "1") {
+    process.stdout.write(`<LOCUS_BROWSER_TIMING>${JSON.stringify({
       artifactGenerationMs: performance.now() - artifactStartedAt,
     })}\n`);
   }

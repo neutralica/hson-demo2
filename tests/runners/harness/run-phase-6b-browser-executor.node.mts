@@ -7,7 +7,7 @@ import { hosted_test_panel_selected_ids } from "../../../src/app/demos/tests/pan
 import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { BROWSER_JOURNEY_COUNT, BROWSER_RASTER_SUITE_MANIFEST, BROWSER_SUITE_MANIFEST } from "../../harness/runtimes/node/browser/browser-test-manifest";
 import { LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../../harness/runtimes/node/browser/playwright-browser-executor";
-import { NODE_LIVEHOST_MOTHERSHIP_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
+import { NODE_LOCUS_MOTHERSHIP_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 const server = await start_hosted_test_server({ port: 0 });
@@ -26,7 +26,7 @@ const runtime = make_remote_hosted_test_runtime({
 try {
   await runtime.ready();
   const discovery = await runtime.discover();
-  assert.equal(discovery.executor.id, NODE_LIVEHOST_MOTHERSHIP_EXECUTOR.id);
+  assert.equal(discovery.executor.id, NODE_LOCUS_MOTHERSHIP_EXECUTOR.id);
   assert.equal(discovery.executor.capabilities.provides.includes("browser-raster"), true);
   const browserSuites = discovery.catalog.suites.filter((suite) => suite.executionShape === "browser-journeys");
   assert.equal(browserSuites.length, BROWSER_SUITE_MANIFEST.length + 1);
@@ -47,7 +47,7 @@ try {
   await run.ready();
   const result = await run.actionResult;
   assert.equal(result.ok, true);
-  const report = run.client.recovery.map.capture().value;
+  const report = run.client.recovery.map.snap();
   assert.equal(report.run.status, "passed");
   assert.deepEqual(report.plan.selectionIds, [raster.id, dom.id]);
   assert.deepEqual(hosted_test_report_cases(report).map((entry) => entry.status), ["pass", "pass"]);
@@ -57,8 +57,8 @@ try {
   assert.equal(report.suiteRuns.some((suite) => suite.evidence.some((entry) => entry.kind === "artifact")), true);
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
-  assert.equal(recovered.client.recovery.map.capture().value.run.status, "passed");
-  assert.deepEqual(recovered.client.recovery.map.capture().value.plan.selectionIds, report.plan.selectionIds);
+  assert.equal(recovered.client.recovery.map.snap().run.status, "passed");
+  assert.deepEqual(recovered.client.recovery.map.snap().plan.selectionIds, report.plan.selectionIds);
   const metrics = server.browserMetrics!();
   assert.equal(metrics.launches, 1);
   assert.equal(metrics.activeProcesses, 0);

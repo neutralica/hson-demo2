@@ -1,13 +1,13 @@
 import {
-  LiveHostClientRecoveryError,
-  LiveHostClientSessionError,
-  LiveHostDisconnectedError,
-} from "hson-live/livehost";
+  LocusClientRecoveryError,
+  LocusClientSessionError,
+  LocusDisconnectedError,
+} from "hson-live/locus";
 import type {
-  LiveHostClientRecoveryCursor,
-  LiveHostDisposer,
-  LiveHostSessionCredential,
-  LiveHostSocketLike,
+  LocusClientRecoveryCursor,
+  LocusDisposer,
+  LocusSessionCredential,
+  LocusSocketLike,
   LiveMap,
   LiveMapPathHandle,
 } from "hson-live/types";
@@ -22,11 +22,11 @@ import type { TowlState } from "./towl.types";
 export const TOWL_RECONNECT_DELAYS_MS = Object.freeze([0, 250, 1_000, 2_000, 5_000, 10_000] as const);
 
 const DEFINITIVE_CREDENTIAL_REJECTIONS = new Set([
-  "LIVEHOST_SESSION_CREDENTIAL_MISSING",
-  "LIVEHOST_SESSION_CREDENTIAL_MALFORMED",
-  "LIVEHOST_SESSION_CREDENTIAL_UNKNOWN",
-  "LIVEHOST_SESSION_CREDENTIAL_EXPIRED",
-  "LIVEHOST_SESSION_CREDENTIAL_REVOKED",
+  "LOCUS_SESSION_CREDENTIAL_MISSING",
+  "LOCUS_SESSION_CREDENTIAL_MALFORMED",
+  "LOCUS_SESSION_CREDENTIAL_UNKNOWN",
+  "LOCUS_SESSION_CREDENTIAL_EXPIRED",
+  "LOCUS_SESSION_CREDENTIAL_REVOKED",
 ]);
 
 export type TowlConnectionStatus =
@@ -58,7 +58,7 @@ export type TowlLeaveOutcome = Readonly<{
 export type TowlConnectionErrorKind = "credential-rejected" | "transport" | "terminal";
 
 export type TowlConnectionTransport = Readonly<{
-  socket: LiveHostSocketLike;
+  socket: LocusSocketLike;
   ready: Promise<void>;
   dispose(): void;
 }>;
@@ -86,12 +86,12 @@ export type TowlConnectionController = Readonly<{
 export type TowlConnectionOptions = Readonly<{
   logicalMapId: string;
   openTransport(): TowlConnectionTransport;
-  readCredential(): LiveHostSessionCredential | undefined;
-  writeCredential(credential: LiveHostSessionCredential | undefined): void;
+  readCredential(): LocusSessionCredential | undefined;
+  writeCredential(credential: LocusSessionCredential | undefined): void;
   onState(state: TowlState): void;
   onConnection(state: TowlConnectionState): void;
   retryDelaysMs?: readonly number[];
-  schedule?: (delayMs: number, callback: () => void) => LiveHostDisposer;
+  schedule?: (delayMs: number, callback: () => void) => LocusDisposer;
   mirror?: LiveMap<TowlState>;
   clientId?: string;
   leaveRequestTimeoutMs?: number;
@@ -116,7 +116,7 @@ class TowlConnectionAttemptError extends Error {
   }
 }
 
-function default_schedule(delayMs: number, callback: () => void): LiveHostDisposer {
+function default_schedule(delayMs: number, callback: () => void): LocusDisposer {
   const timer = setTimeout(callback, delayMs);
   return () => clearTimeout(timer);
 }
@@ -139,14 +139,14 @@ function bounded_request<T>(request: Promise<T>, timeoutMs: number): Promise<T> 
 }
 
 export function classify_towl_connection_error(error: unknown): TowlConnectionErrorKind {
-  if (error instanceof LiveHostClientSessionError) {
+  if (error instanceof LocusClientSessionError) {
     if (DEFINITIVE_CREDENTIAL_REJECTIONS.has(error.code)) return "credential-rejected";
-    if (error.code === "LIVEHOST_SESSION_DISCONNECTED") return "transport";
+    if (error.code === "LOCUS_SESSION_DISCONNECTED") return "transport";
     return "terminal";
   }
-  if (error instanceof LiveHostDisconnectedError) return "transport";
-  if (error instanceof LiveHostClientRecoveryError) {
-    return error.code === "LIVEHOST_RECOVERY_DISCONNECTED" ? "transport" : "terminal";
+  if (error instanceof LocusDisconnectedError) return "transport";
+  if (error instanceof LocusClientRecoveryError) {
+    return error.code === "LOCUS_RECOVERY_DISCONNECTED" ? "transport" : "terminal";
   }
   return "terminal";
 }
@@ -182,16 +182,16 @@ export function create_towl_connection_controller(
   let disposed = false;
   let generation = 0;
   let credentialLoaded = false;
-  let credential: LiveHostSessionCredential | undefined;
+  let credential: LocusSessionCredential | undefined;
   let logicalClientId = options.clientId;
-  let recoveryCursor: LiveHostClientRecoveryCursor | undefined;
+  let recoveryCursor: LocusClientRecoveryCursor | undefined;
   let activeClient: TowlClient | undefined;
   let activeTransport: TowlConnectionTransport | undefined;
-  let stopActiveClose: LiveHostDisposer | undefined;
+  let stopActiveClose: LocusDisposer | undefined;
   let openingClient: TowlClient | undefined;
   let openingTransport: TowlConnectionTransport | undefined;
-  let stopRootWatch: LiveHostDisposer | undefined;
-  let cancelRetryDelay: LiveHostDisposer | undefined;
+  let stopRootWatch: LocusDisposer | undefined;
+  let cancelRetryDelay: LocusDisposer | undefined;
   let reconnecting: Promise<void> | undefined;
   let transportAttempts = 0;
   let rootWatchInstallCount = 0;
@@ -223,7 +223,7 @@ export function create_towl_connection_controller(
     if (disposed || generation !== attemptGeneration) throw new TowlConnectionCancelled();
   };
 
-  const load_credential = (): LiveHostSessionCredential | undefined => {
+  const load_credential = (): LocusSessionCredential | undefined => {
     if (!credentialLoaded) {
       credentialLoaded = true;
       credential = options.readCredential();
@@ -231,7 +231,7 @@ export function create_towl_connection_controller(
     return credential;
   };
 
-  const store_credential = (next: LiveHostSessionCredential | undefined): void => {
+  const store_credential = (next: LocusSessionCredential | undefined): void => {
     credentialLoaded = true;
     credential = next;
     options.writeCredential(next);
@@ -277,7 +277,7 @@ export function create_towl_connection_controller(
   async function open(attemptGeneration: number, reconnectAttempt: number): Promise<void> {
     let nextTransport: TowlConnectionTransport | undefined;
     let nextClient: TowlClient | undefined;
-    let stopNextClose: LiveHostDisposer | undefined;
+    let stopNextClose: LocusDisposer | undefined;
     let closeBeforeInstall = false;
     let installed = false;
     let stage: "transport" | "session" | "recovery" = "transport";
@@ -301,7 +301,7 @@ export function create_towl_connection_controller(
       }) ?? undefined;
       await nextTransport.ready;
       assert_current(attemptGeneration);
-      if (closeBeforeInstall) throw new LiveHostDisconnectedError();
+      if (closeBeforeInstall) throw new LocusDisconnectedError();
 
       const currentCredential = load_credential();
       nextClient = create_towl_client({
@@ -346,7 +346,7 @@ export function create_towl_connection_controller(
       if (closeBeforeInstall
         || nextClient.livehost.session.status !== "attached"
         || nextClient.livehost.recovery.status !== "caught_up") {
-        throw new LiveHostDisconnectedError();
+        throw new LocusDisconnectedError();
       }
       record_recovery_evidence(nextClient);
 

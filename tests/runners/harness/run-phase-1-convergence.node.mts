@@ -10,10 +10,10 @@ import { CANONICAL_TEST_COLLECTION_ORDER, CANONICAL_TEST_SUBJECT_ORDER } from ".
 import { test_presentation_rank } from "../../../src/shared/testing/test-order";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { external_launcher_suite_descriptor } from "../../../src/shared/testing/external-launcher-contract";
-import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { make_cloudflare_locus_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import { install_hosted_dom_runtime } from "../../harness/runtimes/dom/hosted-dom-runtime";
 import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import {
@@ -148,7 +148,7 @@ certify("taxonomy", TEST_CONVERGENCE_BOUNDARIES.length === 1 && TEST_CONVERGENCE
 
 const syntheticOpaqueSuites: readonly TestSuiteDescriptor[] = Object.freeze([transformOpaque, livemapOpaque]);
 const primaryKeys = hosted_test_panel_primary_choices(mixedCatalog.tests, syntheticOpaqueSuites).map((choice) => choice.key);
-certify("taxonomy", primaryKeys.join("|") === "all|subject:transform|subject:livetree|subject:livemap|subject:livehost|subject:reflect|collection:unit|collection:dev", "selector order is exactly All, Transform, LiveTree, LiveMap, LiveHost, Reflect, Unit, Dev");
+certify("taxonomy", primaryKeys.join("|") === "all|subject:transform|subject:livetree|subject:livemap|subject:livehost|subject:reflect|collection:unit|collection:dev", "selector order is exactly All, Transform, LiveTree, LiveMap, Locus, Reflect, Unit, Dev");
 certify("taxonomy", primaryKeys.every((key) => key !== "library" && key !== "subject:library"), "Library is not a primary selector category");
 const unitIds = hosted_test_panel_selected_ids(mixedCatalog.tests, { kind: "collection", collection: "unit" }, syntheticOpaqueSuites);
 certify("taxonomy", unitIds.join() === "unit/demo::proof", "Unit filtering lowers to an exact canonical case ID");
@@ -177,7 +177,7 @@ certify("planAndReport", plan.suites[0]?.provenance === "hson-live" && plan.suit
 certify("planAndReport", plan.suites.filter((suite) => suite.executionShape === "opaque-aggregate").every((suite) => suite.cases.length === 0), "opaque suites contain no fabricated cases");
 
 const report = make_hosted_test_report(() => 100, undefined, { runPlan: plan });
-const initial = report.map.capture().value;
+const initial = report.map.snap();
 certify("planAndReport", initial.suiteRuns.map((suite) => suite.id).join("|") === expectedSuiteOrder, "the report reducer seeds final suite positions before evidence");
 certify("planAndReport", initial.suiteRuns.every((suite) => suite.status === "queued"), "every selected suite is initially queued");
 certify("planAndReport", initial.suiteRuns.filter((suite) => suite.executionShape === "cases").every((suite) => suite.cases.length === 1 && suite.cases[0]?.status === "queued"), "every selected canonical case is initially queued");
@@ -235,7 +235,7 @@ const result: RunResult = {
   },
 };
 report.complete(result, { runnerMs: 9, hostMs: 10 });
-const finalReport = report.map.capture().value;
+const finalReport = report.map.snap();
 certify("planAndReport", finalReport.suiteRuns.map((suite) => suite.id).join("|") === expectedSuiteOrder, "hostile completion timing never moves report records");
 certify("planAndReport", finalReport.suiteRuns.filter((suite) => suite.status === "fail").map((suite) => suite.id).join() === reflectSuite.id, "one controlled failure transitions in its seeded position");
 certify("planAndReport", finalReport.suiteRuns.flatMap((suite) => suite.cases).filter((testCase) => testCase.status === "fail").length === 1, "case records transition in place with one controlled failure");
@@ -250,9 +250,9 @@ inspector.dispose();
 dom.dispose();
 report.dispose();
 
-const nodeRegistry = make_local_node_livehost_executor_registry();
+const nodeRegistry = make_local_node_locus_executor_registry();
 const nodeDiscovery = make_test_executor_discovery(nodeRegistry, externalAvailability.targets);
-const workerDiscovery = make_test_executor_discovery(make_cloudflare_livehost_executor_registry());
+const workerDiscovery = make_test_executor_discovery(make_cloudflare_locus_executor_registry());
 certify("planAndReport", nodeDiscovery.catalog.suites.some((suite) => suite.executionShape === "opaque-aggregate" && suite.provenance === "hson-live"), "Node discovery exposes normalized executable opaque suites");
 certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape === "cases" && suite.provenance === "hson-demo2"), "Worker discovery exposes only its exact executable case suites");
 certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape !== "opaque-aggregate"), "external launchers remain absent rather than failed on Worker");

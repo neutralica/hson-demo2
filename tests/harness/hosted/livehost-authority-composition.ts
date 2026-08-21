@@ -1,21 +1,22 @@
-import type { LiveHostConnectionContext, LiveHostSocketLike, LiveHostStore } from "hson-live/types";
+import type { LocusConnectionContext, LocusSocketLike } from "hson-live/types";
+import type { ApplicationLocusStore } from "./application-locus-store";
 import { towl_room_id_from_host_id } from "../../../src/app/demos/towl/index";
 import type { HostedTestApplication } from "./hosted-test-application";
 import type { TowlAuthorityApplication } from "./towl-authority-application";
 
-export type LiveHostAuthorityConnector = Readonly<{
+export type LocusAuthorityConnector = Readonly<{
   connectBounded(
     hostId: string,
-    socket: LiveHostSocketLike,
-    context?: LiveHostConnectionContext,
-  ): Promise<ReturnType<LiveHostStore["connect"]>>;
+    socket: LocusSocketLike,
+    context?: LocusConnectionContext,
+  ): Promise<ReturnType<ApplicationLocusStore["connect"]>>;
   dispose(): void | Promise<void>;
 }>;
 
 export function compose_worker_authority_application(
   hostedTests: HostedTestApplication,
   towl: TowlAuthorityApplication,
-): LiveHostAuthorityConnector {
+): LocusAuthorityConnector {
   let disposed = false;
   return Object.freeze({
     connectBounded(hostId, socket, context) {

@@ -128,8 +128,8 @@ export function decode_hosted_test_discovery_response(response: unknown): TestEx
     throw client_failure(
       typeof message === "string" ? message : "Hosted test executor discovery failed.",
       "tests.discover",
-      `LiveHost ack<TestExecutorDiscovery v${TEST_EXECUTOR_PROTOCOL_VERSION}>`,
-      Object.freeze(["$: expected successful LiveHost action acknowledgement"]),
+      `Locus ack<TestExecutorDiscovery v${TEST_EXECUTOR_PROTOCOL_VERSION}>`,
+      Object.freeze(["$: expected successful Locus action acknowledgement"]),
       response,
     );
   }
@@ -172,8 +172,8 @@ export function decode_hosted_test_cancel_response(
     throw client_failure(
       typeof message === "string" ? message : "Hosted test cancellation failed.",
       "tests.cancel",
-      "LiveHost ack<HostedTestCancelResult>",
-      Object.freeze(["$: expected successful LiveHost action acknowledgement"]),
+      "Locus ack<HostedTestCancelResult>",
+      Object.freeze(["$: expected successful Locus action acknowledgement"]),
       response,
     );
   }
@@ -201,8 +201,8 @@ export function decode_selected_hosted_test_run_response(
     throw client_failure(
       "Selected hosted test action returned an invalid response.",
       "tests.runSelected",
-      "LiveHost ack<HostedTestSelectedRunResult>",
-      Object.freeze(["$: expected LiveHost action response object"]),
+      "Locus ack<HostedTestSelectedRunResult>",
+      Object.freeze(["$: expected Locus action response object"]),
       response,
     );
   }
@@ -211,7 +211,7 @@ export function decode_selected_hosted_test_run_response(
     throw client_failure(
       typeof message === "string" ? message : "Selected hosted test action was rejected.",
       "tests.runSelected",
-      "LiveHost ack<HostedTestSelectedRunResult>",
+      "Locus ack<HostedTestSelectedRunResult>",
       Object.freeze(["$: hosted action was rejected"]),
       response,
     );
@@ -220,7 +220,7 @@ export function decode_selected_hosted_test_run_response(
     throw client_failure(
       "Selected hosted test action returned an invalid response.",
       "tests.runSelected",
-      "LiveHost ack<HostedTestSelectedRunResult>",
+      "Locus ack<HostedTestSelectedRunResult>",
       Object.freeze(["$.type: expected 'ack'"]),
       response,
     );
@@ -264,8 +264,8 @@ export function decode_hosted_test_inspect_response(
     throw client_failure(
       typeof message === "string" ? message : `Hosted case inspection failed for ${caseKey}.`,
       "tests.inspect",
-      "LiveHost ack<HostedTestCaseDiagnostic>",
-      Object.freeze(["$: expected successful LiveHost action acknowledgement"]),
+      "Locus ack<HostedTestCaseDiagnostic>",
+      Object.freeze(["$: expected successful Locus action acknowledgement"]),
       response,
     );
   }

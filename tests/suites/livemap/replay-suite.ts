@@ -6,6 +6,7 @@ import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "./handle-helpers";
 import { json_root_node } from "./json-root-node";
 import { equal_row } from "./assert-helpers";
+import { replay_fixture } from "./replay-test-helper";
 
 
 type InvalidReplayCaseSpec = Readonly<{
@@ -38,7 +39,7 @@ function invalid_replay_case(
       }> | undefined;
 
       try {
-        map.replay(
+        replay_fixture(map,
           spec.input as unknown as Parameters<typeof map.replay>[0],
         );
       } catch (error) {
@@ -301,7 +302,7 @@ export function livemap_suite_replay(): TestSuite {
           let errorResult: unknown;
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: [
                 { kind: "set", path: ["count"], prev: 0, next: 1 },
@@ -350,7 +351,7 @@ export function livemap_suite_replay(): TestSuite {
           let errorResult: unknown;
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: [null],
             } as unknown as Parameters<typeof target.replay>[0]);
@@ -395,7 +396,7 @@ export function livemap_suite_replay(): TestSuite {
           let errorResult: unknown;
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: [
                 { kind: "set", path: ["count"], prev: 0, next: 1 },
@@ -458,7 +459,7 @@ export function livemap_suite_replay(): TestSuite {
             "Grace"
           );
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: target.rev,
             ops: sourceCommit.ops,
           });
@@ -522,7 +523,7 @@ export function livemap_suite_replay(): TestSuite {
             tx.set(["user", "age"], 38);
           });
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: 0,
             ops: sourceCommit.ops,
           });
@@ -572,7 +573,7 @@ export function livemap_suite_replay(): TestSuite {
             "y"
           );
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: 0,
             ops: sourceCommit.ops,
           });
@@ -627,7 +628,7 @@ export function livemap_suite_replay(): TestSuite {
 
           map.set(["count"], 1);
 
-          const commit = map.replay({
+          const commit = replay_fixture(map,{
             prevRev: map.rev,
             ops: [],
           });
@@ -680,7 +681,7 @@ export function livemap_suite_replay(): TestSuite {
           };
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });
@@ -754,7 +755,7 @@ export function livemap_suite_replay(): TestSuite {
           };
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });
@@ -854,7 +855,7 @@ export function livemap_suite_replay(): TestSuite {
           let errorName: string | undefined;
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });
@@ -931,7 +932,7 @@ export function livemap_suite_replay(): TestSuite {
           };
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });
@@ -994,10 +995,7 @@ export function livemap_suite_replay(): TestSuite {
             items: ["a", "b"],
           }));
 
-          const mismatchedOp: Extract<
-            Parameters<typeof target.replay>[0],
-            Readonly<{ ops: readonly unknown[] }>
-          >["ops"][number] = {
+          const mismatchedOp = {
             kind: "splice",
             path: ["items"],
             start: 1,
@@ -1019,7 +1017,7 @@ export function livemap_suite_replay(): TestSuite {
           };
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: [mismatchedOp],
             });
@@ -1100,7 +1098,7 @@ export function livemap_suite_replay(): TestSuite {
 
           let code = "NO_ERROR";
           try {
-            target.replay({ prevRev: 0, ops: sourceCommit.ops });
+            replay_fixture(target,{ prevRev: 0, ops: sourceCommit.ops });
           } catch (error) {
             code = String((error as Error & { code?: unknown }).code);
           }
@@ -1148,7 +1146,7 @@ export function livemap_suite_replay(): TestSuite {
             ],
           } as unknown as Parameters<typeof target.replay>[0];
 
-          const commit = target.replay(input);
+          const commit = replay_fixture(target,input);
 
           path[0] = "changed";
           removed[0] = "changed";
@@ -1209,7 +1207,7 @@ export function livemap_suite_replay(): TestSuite {
             "role",
           ]);
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: 0,
             ops: sourceCommit.ops,
           });
@@ -1267,7 +1265,7 @@ export function livemap_suite_replay(): TestSuite {
             },
           );
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: 0,
             ops: sourceCommit.ops,
           });

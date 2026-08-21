@@ -1,7 +1,7 @@
-import type { LiveHostSocketLike } from "hson-live/types";
+import type { LocusSocketLike } from "hson-live/types";
 
-export type CloudflareLiveHostSocket = Readonly<{
-  socket: LiveHostSocketLike;
+export type CloudflareLocusSocket = Readonly<{
+  socket: LocusSocketLike;
   receive(message: string | ArrayBuffer): void;
   closed(): void;
   errored(): void;
@@ -11,9 +11,9 @@ export type CloudflareAcceptedWebSocket = WebSocket & Readonly<{
   accept(): void;
 }>;
 
-export function make_cloudflare_websocket_livehost_socket(
+export function make_cloudflare_websocket_locus_socket(
   websocket: CloudflareAcceptedWebSocket,
-): CloudflareLiveHostSocket {
+): CloudflareLocusSocket {
   const messageListeners = new Set<(message: string) => void>();
   const closeListeners = new Set<() => void>();
   let detached = false;
@@ -26,7 +26,7 @@ export function make_cloudflare_websocket_livehost_socket(
     closeListeners.clear();
   }
 
-  const socket: LiveHostSocketLike = Object.freeze({
+  const socket: LocusSocketLike = Object.freeze({
     send(message) {
       if (!detached && websocket.readyState === 1) websocket.send(message);
     },
@@ -53,7 +53,7 @@ export function make_cloudflare_websocket_livehost_socket(
     receive(message) {
       if (detached) return;
       if (typeof message !== "string") {
-        websocket.close(1003, "LiveHost accepts text messages only.");
+        websocket.close(1003, "Locus accepts text messages only.");
         return;
       }
       for (const listener of [...messageListeners]) listener(message);

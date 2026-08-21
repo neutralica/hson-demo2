@@ -1,7 +1,8 @@
 import type {
-  LiveHost,
-  LiveHostSessionOptions,
-} from "hson-live/livehost";
+  Locus,
+  LocusSessionOptions,
+} from "hson-live/locus";
+import type { LiveMap } from "hson-live/types";
 
 export type TowlSeatId = "player1" | "player2";
 export type TowlPhase = "lobby" | "ready" | "playing" | "finished";
@@ -61,10 +62,10 @@ export type TowlResetResult = Readonly<{ round: number }>;
 export type TowlRuntimeOptions = Readonly<{
   logicalMapId?: string;
   sessionId?: string | (() => string);
-  sessions?: LiveHostSessionOptions;
+  sessions?: LocusSessionOptions;
 }>;
 
 export type TowlRuntime = Readonly<{
-  host: LiveHost<TowlState, TowlActions>;
+  host: Locus<LiveMap<TowlState>, TowlActions>;
   dispose: () => void;
 }>;

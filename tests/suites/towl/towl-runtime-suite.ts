@@ -1,4 +1,4 @@
-import type { LiveHostDisposer } from "hson-live/livehost";
+import type { LocusDisposer } from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   create_towl_runtime,
@@ -22,7 +22,7 @@ function make_clock() {
   const tasks = new Map<number, ScheduledTask>();
   return Object.freeze({
     now: () => time,
-    schedule(delayMs: number, callback: () => void): LiveHostDisposer {
+    schedule(delayMs: number, callback: () => void): LocusDisposer {
       const id = ++nextId;
       tasks.set(id, Object.freeze({ at: time + delayMs, callback }));
       let active = true;
@@ -189,7 +189,7 @@ export function towl_runtime_suite(): TestSuite {
         });
         const response = pair.first.sent().find((message) => message.id === "invalid-ready");
         return { code: response === undefined ? undefined : error_code(response), revDelta: runtime.host.map.rev - before };
-      }), { code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD", revDelta: 0 }),
+      }), { code: "LOCUS_SCHEMA_INVALID_PAYLOAD", revDelta: 0 }),
       towl_case(SUITE, "pull-actions-move-exactly-once-and-dedupe-retries", "pull actions move exactly once and dedupe retries", async () => with_runtime(async (runtime) => {
         const pair = await start_towl_round(runtime);
         const before = runtime.host.map.rev;

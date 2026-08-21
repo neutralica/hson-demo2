@@ -2,7 +2,7 @@ import type { TestEvent } from "../../harness/core/test-contracts";
 import type { TestSubject } from "../../../src/shared/testing/test-contracts";
 import { run_node_selected_test_ids } from "../../harness/runtimes/node/run-node-selected-test-suites";
 import { find_test_descriptor } from "../../harness/core/test-catalog";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { normalize_test_event } from "../../harness/core/test-run-events";
 import { select_test_descriptors, type TestSelection } from "../../../src/shared/testing/test-selection";
 
@@ -24,7 +24,7 @@ function selection_from_args(args: readonly string[]): TestSelection {
   return selection;
 }
 
-const registry = make_local_node_livehost_executor_registry();
+const registry = make_local_node_locus_executor_registry();
 const selection = selection_from_args(process.argv.slice(2));
 const selected = select_test_descriptors(registry.catalog.tests, selection);
 if (selected.length === 0) throw new Error("Canonical test selection matched no tests.");

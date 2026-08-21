@@ -34,7 +34,7 @@ try {
   assert.equal(cancellation.accepted, true);
   const result = await run.actionResult;
   assert.equal(result.cancelled, true);
-  const report = run.client.recovery.map.capture().value;
+  const report = run.client.recovery.map.snap();
   assert.equal(report.run.status, "cancelled");
   assert.deepEqual(hosted_test_report_cases(report).map((entry) => entry.status), ["cancelled"]);
   assert.equal(server.browserMetrics!().activeProcesses, 0);
@@ -42,7 +42,7 @@ try {
   assert.equal(server.browserMetrics!().cancellations, 1);
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
-  const recoveredReport = recovered.client.recovery.map.capture().value;
+  const recoveredReport = recovered.client.recovery.map.snap();
   assert.equal(recoveredReport.run.status, "cancelled");
   assert.equal(recovered.association.attemptId, run.association.attemptId);
   assert.deepEqual(recoveredReport.plan.selectionIds, [browserCase.id]);

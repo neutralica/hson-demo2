@@ -41,7 +41,7 @@ try {
   const run = await runtime.start_selected(selectionIds);
   await run.ready();
   const result = await run.actionResult;
-  const report = run.client.recovery.map.capture().value;
+  const report = run.client.recovery.map.snap();
   const summary = hosted_test_projection_summary(report);
   if (!result.ok) {
     console.error(JSON.stringify({
@@ -65,7 +65,7 @@ try {
   assert.deepEqual([...report.plan.selectionIds].sort(), [...selectionIds].sort());
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
-  assert.equal(recovered.client.recovery.map.capture().value.run.status, "passed");
+  assert.equal(recovered.client.recovery.map.snap().run.status, "passed");
   const metrics = server.metrics();
   const connections = server.connectionSnapshot();
   const browserMetrics = server.browserMetrics!();

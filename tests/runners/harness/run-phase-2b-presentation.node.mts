@@ -26,7 +26,7 @@ const suiteSpecs = [
   ["livetree/demo", "LiveTree demo", "livetree", [], "hson-demo2", "cases"],
   ["livemap/canonical-ownership", "Canonical ownership", "livemap", [], "hson-live", "cases"],
   ["livemap/demo", "LiveMap demo", "livemap", [], "hson-demo2", "cases"],
-  ["livehost/demo", "LiveHost demo", "livehost", [], "hson-demo2", "cases"],
+  ["livehost/demo", "Locus demo", "livehost", [], "hson-demo2", "cases"],
   ["reflect/demo", "Reflect demo", "reflect", [], "hson-demo2", "cases"],
   ["unit/demo", "Unit demo", "transform", ["unit"], "hson-demo2", "cases"],
   ["dev/demo", "Dev demo", "livehost", ["dev"], "hson-demo2", "cases"],

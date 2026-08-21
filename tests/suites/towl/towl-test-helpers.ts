@@ -1,9 +1,9 @@
-import type { LiveHostSocketLike } from "hson-live/livehost";
+import type { LocusSocketLike } from "hson-live/locus";
 import type { TestCase } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 import type { TowlActions, TowlRuntime } from "../../../src/app/demos/towl/index";
 
-export type TowlMemorySocket = LiveHostSocketLike & Readonly<{
+export type TowlMemorySocket = LocusSocketLike & Readonly<{
   receive: (message: unknown) => Promise<void>;
   emit_close: () => void;
   sent: () => readonly Record<string, unknown>[];

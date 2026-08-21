@@ -36,7 +36,7 @@ try {
   assert.equal(run.association.acceptedPlan.runId, run.association.runId);
   assert.equal(run.association.attemptId.endsWith(":attempt:1"), true);
 
-  const report = run.client.recovery.map.capture().value;
+  const report = run.client.recovery.map.snap();
   assert.equal(report.run.id, run.association.runId);
   assert.equal(report.plan.executorId, executor.id);
   assert.equal(report.suiteRuns[0]?.cases[0]?.id, selectionId);
@@ -45,14 +45,14 @@ try {
   assert.equal(Object.hasOwn(report, "suites"), false);
 
   const association = hosted_test_recovery_association(
-    runtime.client.recovery.map.capture().value,
+    runtime.client.recovery.map.snap(),
     run.association.runId,
     run.association.attemptId,
   );
   assert.equal(association?.reportHostId, run.association.reportHostId);
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
   assert.equal(recovered.association.attemptId, run.association.attemptId);
-  assert.equal(recovered.client.recovery.map.capture().value.run.status, "passed");
+  assert.equal(recovered.client.recovery.map.snap().run.status, "passed");
   await assert.rejects(runtime.recover_run(run.association.runId, ""), /explicit recovery|not available/);
 
   const routeApplication = create_hosted_test_application({ executorRegistry: registry, discovery: make_test_executor_discovery(registry) });

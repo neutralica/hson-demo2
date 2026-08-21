@@ -60,7 +60,7 @@ try {
   );
   const healthResponse = await fetch(`http://127.0.0.1:${port}/healthz`);
   const healthText = await healthResponse.text();
-  const websocket = new WebSocket(`ws://127.0.0.1:${port}?livehost=hosted-tests`);
+  const websocket = new WebSocket(`ws://127.0.0.1:${port}/hosted-tests?locus=hosted-tests`);
   await new Promise<void>((resolve, reject) => {
     websocket.once("open", resolve);
     websocket.once("error", reject);

@@ -30,7 +30,7 @@ export function normalize_test_event(
     throw new Error(`External launcher events are not canonical TestCase events: ${event.id}`);
   }
   if (event.t === "evidence") {
-    throw new Error("Evidence events are normalized directly by the LiveHost lifecycle adapter.");
+    throw new Error("Evidence events are normalized directly by the Locus lifecycle adapter.");
   }
   const descriptor = descriptorFor(event.suite, event.caseId);
   if (descriptor === undefined) throw new Error(`No canonical descriptor for ${event.suite}::${event.caseId}`);

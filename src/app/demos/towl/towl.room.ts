@@ -71,7 +71,7 @@ export function towl_room_id_from_host_id(hostId: string): string | undefined {
 export function towl_room_credential_key(roomId: string): string {
   const normalized = normalize_towl_room_id(roomId);
   if (normalized === undefined) throw new Error("Cannot derive a TOWL credential key from an invalid room ID.");
-  return `hson-livedemo.towl.${normalized}.livehost-credential`;
+  return `hson-livedemo.towl.${normalized}.locus-credential`;
 }
 
 export function is_direct_towl_path(pathname: string): boolean {

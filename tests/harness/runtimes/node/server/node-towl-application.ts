@@ -1,25 +1,23 @@
-import type { WebSocket } from "ws";
-import {
-  TOWL_ROOM_HOST_PREFIX,
-  TOWL_ROOM_ID_MAX_LENGTH,
-  TOWL_ROOM_ID_MIN_LENGTH,
-  TOWL_ROOM_ID_PATTERN,
-} from "../../../../../src/app/demos/towl/index";
+import type {
+  LiveHostApplication,
+  LiveHostApplicationContext,
+  LiveHostConnection,
+} from "hson-live/livehost";
+import type { NodeApplicationSecurity } from "hson-live/livehost/node";
+import type { LocusSocketLike } from "hson-live/types";
+import { towl_room_id_from_host_id } from "../../../../../src/app/demos/towl/index";
 import {
   create_towl_authority_application,
   type TowlAuthorityApplication,
   type TowlAuthorityLifecycleOptions,
 } from "../../../hosted/towl-authority-application";
-import {
-  create_node_livehost_socket,
-  type NodeApplicationSecurity,
-  type NodeHostedApplication,
-} from "hson-live/livehost/node";
 
 export const NODE_TOWL_APPLICATION_NAME = "towl";
+export const NODE_TOWL_CONNECTION_PATH = "/towl";
 
 export type NodeTowlApplication = Readonly<{
-  registration: NodeHostedApplication;
+  registration: LiveHostApplication;
+  security?: NodeApplicationSecurity;
   authorities: TowlAuthorityApplication;
   connectionCount(): number;
 }>;
@@ -29,76 +27,64 @@ export type NodeTowlApplicationOptions = Readonly<{
   lifecycle?: TowlAuthorityLifecycleOptions;
 }>;
 
+function locus_socket(connection: LiveHostConnection): LocusSocketLike {
+  return Object.freeze({
+    send(message: string) { connection.send(message); },
+    close(code?: number, reason?: string) { connection.close(code, reason); },
+    onMessage(listener: (message: string) => void) {
+      return connection.onMessage((message) => {
+        if (typeof message === "string") listener(message);
+        else connection.close(1003, "Locus accepts text messages only.");
+      });
+    },
+    onClose(listener: () => void) { return connection.onClose(listener); },
+  });
+}
+
 export function create_node_towl_application(
   options: NodeTowlApplicationOptions = {},
 ): NodeTowlApplication {
   const authorities = create_towl_authority_application(options.lifecycle);
-  const connections = new Map<WebSocket, () => void>();
+  const connections = new Map<LiveHostConnection, () => void>();
   let disposed = false;
 
-  const registration: NodeHostedApplication = Object.freeze({
+  const registration: LiveHostApplication = Object.freeze({
     name: NODE_TOWL_APPLICATION_NAME,
-    authorities: Object.freeze([
-      Object.freeze({
-        kind: "prefix" as const,
-        value: TOWL_ROOM_HOST_PREFIX,
-        suffix: Object.freeze({
-          minLength: TOWL_ROOM_ID_MIN_LENGTH,
-          maxLength: TOWL_ROOM_ID_MAX_LENGTH,
-          pattern: TOWL_ROOM_ID_PATTERN,
-        }),
-      }),
-    ]),
-    ...(options.security === undefined ? {} : { security: options.security }),
+    connections: Object.freeze([Object.freeze({
+      path: NODE_TOWL_CONNECTION_PATH,
+      async accept(request: Request, connection: LiveHostConnection, context: LiveHostApplicationContext) {
+        if (disposed) { connection.close(1012, "TOWL application stopping."); return; }
+        const locusId = new URL(request.url).searchParams.get("locus") ?? "";
+        if (towl_room_id_from_host_id(locusId) === undefined) {
+          connection.close(1008, "Unknown TOWL room.");
+          return;
+        }
+        const socket = locus_socket(connection);
+        const connected = options.lifecycle === undefined
+          ? authorities.connect(locusId, socket, {
+              ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
+              attachment: context.principal.value,
+            })
+          : await authorities.connectBounded(locusId, socket, {
+              ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
+              attachment: context.principal.value,
+            });
+        if (!connected.ok) { connection.close(1008, connected.error.code ?? "Unknown TOWL room."); return; }
+        connections.set(connection, connected.value);
+        connection.onClose(() => {
+          connections.get(connection)?.();
+          connections.delete(connection);
+        });
+      },
+    })]),
     ready: () => !disposed,
-    async acceptWebSocket(authorityId, websocket, context) {
-      if (disposed) {
-        websocket.close(1012, "TOWL application stopping.");
-        return;
-      }
-      const socket = create_node_livehost_socket(websocket, {
-          maxBufferedAmount: context.transportPolicy.maxBufferedAmount,
-          onBackpressure: context.transportPolicy.onBackpressure,
-      });
-      const bounded = options.lifecycle !== undefined;
-      if (bounded) websocket.pause();
-      let connected;
-      try {
-        connected = bounded
-          ? await authorities.connectBounded(
-              authorityId,
-              socket,
-              {
-                ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
-                attachment: context.principal.value,
-              },
-            )
-          : authorities.connect(
-              authorityId,
-              socket,
-              {
-                ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
-                attachment: context.principal.value,
-              },
-            );
-      } finally {
-        if (bounded) websocket.resume();
-      }
-      if (!connected.ok) {
-        websocket.close(1008, connected.error.code ?? "Unknown TOWL room.");
-        return;
-      }
-      const disconnect = connected.value;
-      connections.set(websocket, disconnect);
-      websocket.once("close", () => {
-        connections.get(websocket)?.();
-        connections.delete(websocket);
-      });
-    },
     async dispose() {
       if (disposed) return;
       disposed = true;
-      for (const disconnect of connections.values()) disconnect();
+      for (const [connection, disconnect] of connections) {
+        disconnect();
+        connection.close(1012, "TOWL application stopping.");
+      }
       connections.clear();
       await authorities.dispose();
     },
@@ -106,6 +92,7 @@ export function create_node_towl_application(
 
   return Object.freeze({
     registration,
+    ...(options.security === undefined ? {} : { security: options.security }),
     authorities,
     connectionCount: () => connections.size,
   });

@@ -1,4 +1,3 @@
-import { EventEmitter } from "node:events";
 import WebSocket from "ws";
 import type { NodeHostOperationalEvent } from "hson-live/livehost/node";
 import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
@@ -7,7 +6,6 @@ import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/pa
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
 import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
-import { create_node_capacity_livehost_socket } from "../../harness/runtimes/node/server/node-capacity-livehost-socket";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 function expect_backpressure(condition: unknown, message: string): asserts condition {
@@ -31,121 +29,6 @@ async function eventually(check: () => boolean, label: string, timeoutMs = 2_000
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
 }
-
-class ControlledWebSocket extends EventEmitter {
-  readyState: number = WebSocket.OPEN;
-  bufferedAmount = 0;
-  readonly sent: string[] = [];
-  readonly closes: Array<Readonly<{ code?: number; reason?: string }>> = [];
-  readonly #completions: Array<(error?: Error) => void> = [];
-
-  send(message: string, callback?: (error?: Error) => void): void {
-    this.sent.push(message);
-    this.bufferedAmount += Buffer.byteLength(message, "utf8");
-    this.#completions.push((error) => {
-      this.bufferedAmount = 0;
-      (callback as ((sendError: Error | null) => void) | undefined)?.(error ?? null);
-    });
-  }
-
-  release_one(): void {
-    this.#completions.shift()?.();
-  }
-
-  fail_one(): void {
-    this.#completions.shift()?.(new Error("controlled send failure"));
-  }
-
-  close(code?: number, reason?: string): void {
-    if (this.readyState === WebSocket.CLOSED) return;
-    this.closes.push(Object.freeze({ ...(code === undefined ? {} : { code }), ...(reason === undefined ? {} : { reason }) }));
-    this.readyState = WebSocket.CLOSED;
-    this.emit("close");
-  }
-}
-
-// Temporary pressure is a bounded, ordered wait. Send completion releases the
-// occupied transport slot and dispatches the same queued messages in order.
-const waitingWebSocket = new ControlledWebSocket();
-let waitingRejections = 0;
-const waitingSocket = create_node_capacity_livehost_socket(waitingWebSocket as unknown as WebSocket, {
-  maxBufferedAmount: 10,
-  onBackpressure() { waitingRejections += 1; },
-});
-waitingSocket.send("first-frame");
-waitingSocket.send("second-frame-is-larger-than-the-high-water-mark");
-waitingSocket.send("tail");
-expect_backpressure(
-  waitingSocket.capacity().sending
-    && waitingSocket.capacity().queuedMessages === 2
-    && waitingRejections === 0,
-  "one in-flight frame plus the truthful waiting window is retryable",
-);
-waitingWebSocket.release_one();
-waitingWebSocket.release_one();
-waitingWebSocket.release_one();
-expect_backpressure(
-  waitingWebSocket.sent.join("|") === "first-frame|second-frame-is-larger-than-the-high-water-mark|tail"
-    && !waitingSocket.capacity().sending
-    && waitingSocket.capacity().queuedMessages === 0
-    && waitingSocket.capacity().queuedBytes === 0,
-  "successful send callbacks release all waiting capacity without changing message identity or order",
-);
-
-// A producer that exceeds the explicit waiting model is terminal, closes once,
-// and releases its queue rather than silently leaving pending work behind.
-const saturatedWebSocket = new ControlledWebSocket();
-let saturationRejections = 0;
-const saturatedSocket = create_node_capacity_livehost_socket(saturatedWebSocket as unknown as WebSocket, {
-  maxBufferedAmount: 10,
-  onBackpressure() { saturationRejections += 1; },
-});
-saturatedSocket.send("active-frame");
-saturatedSocket.send("12345678");
-saturatedSocket.send("abcdefgh");
-saturatedSocket.send("ABCDEFGH");
-expect_backpressure(
-  saturationRejections === 1
-    && saturatedWebSocket.closes.length === 1
-    && saturatedWebSocket.closes[0]?.code === 1013
-    && saturatedSocket.capacity().saturated
-    && !saturatedSocket.capacity().sending
-    && saturatedSocket.capacity().queuedMessages === 0
-    && saturatedSocket.capacity().queuedBytes === 0,
-  "intentional saturation produces one known 1013 terminal close and releases the waiting queue",
-);
-saturatedSocket.close(1013, "duplicate close");
-expect_backpressure(saturatedWebSocket.closes.length === 1, "terminal close and release are idempotent");
-
-const disconnectedWebSocket = new ControlledWebSocket();
-const disconnectedSocket = create_node_capacity_livehost_socket(disconnectedWebSocket as unknown as WebSocket, {
-  maxBufferedAmount: 10,
-});
-disconnectedSocket.send("active-frame");
-disconnectedSocket.send("waiting");
-disconnectedWebSocket.close(1001, "client disconnected");
-expect_backpressure(
-  !disconnectedSocket.capacity().sending
-    && disconnectedSocket.capacity().queuedMessages === 0
-    && disconnectedSocket.capacity().queuedBytes === 0,
-  "socket close releases active and queued accounting",
-);
-
-const failedWebSocket = new ControlledWebSocket();
-const failedSocket = create_node_capacity_livehost_socket(failedWebSocket as unknown as WebSocket, {
-  maxBufferedAmount: 10,
-});
-failedSocket.send("active-frame");
-failedSocket.send("waiting");
-failedWebSocket.fail_one();
-expect_backpressure(
-  failedWebSocket.closes.length === 1
-    && failedWebSocket.closes[0]?.code === 1011
-    && failedSocket.capacity().inFlightMessages === 0
-    && failedSocket.capacity().queuedMessages === 0
-    && failedSocket.capacity().queuedBytes === 0,
-  "transport send failure closes terminally and releases active and queued accounting",
-);
 
 const largeCases = Object.freeze(Array.from({ length: 2_700 }, (_, index) => Object.freeze({
   suite: "transform/backpressure-clean-run",
@@ -253,7 +136,7 @@ class FailReportReconnectWebSocket extends WebSocket {
   static reportAttempts = 0;
 
   constructor(address: string) {
-    const authorityId = new URL(address).searchParams.get("livehost") ?? "";
+    const authorityId = new URL(address).searchParams.get("locus") ?? "";
     const reportAttempt = authorityId.startsWith("hosted-report:")
       ? ++FailReportReconnectWebSocket.reportAttempts
       : 0;
@@ -338,7 +221,5 @@ try {
 console.log(JSON.stringify({
   cleanExecutions,
   cleanLargestMessageBytes,
-  waitingMessages: waitingWebSocket.sent.length,
-  saturationRejections,
   terminalErrors: terminalErrors.length,
 }));

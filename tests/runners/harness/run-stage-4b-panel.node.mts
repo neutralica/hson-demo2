@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import {
   hosted_test_panel_primary_choices,
   hosted_test_panel_selected_ids,
@@ -9,7 +9,7 @@ import {
   hosted_test_panel_test_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 
-const registry = make_local_node_livehost_executor_registry();
+const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
 const discovery = make_test_executor_discovery(registry, availability.targets);
 const suites = discovery.catalog.suites;

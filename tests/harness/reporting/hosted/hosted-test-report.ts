@@ -371,7 +371,7 @@ export function make_hosted_test_report(
     counts?: Readonly<{ suiteIndex: number; value: TestLifecycleCounts }>;
   }>;
   let pendingCaseLifecycle: PendingCaseLifecycleOperation[] = [];
-  const recovered = map.capture().value;
+  const recovered = map.snap();
   const reportRunId = recovered.run.id;
   let summaryCases = recovered.summary.cases;
   let summaryPass = recovered.summary.pass;

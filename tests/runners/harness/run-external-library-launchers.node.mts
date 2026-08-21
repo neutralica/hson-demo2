@@ -27,7 +27,7 @@ import {
   hosted_test_panel_test_choices,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-selection";
 import { CANONICAL_TEST_SUBJECT_ORDER, TEST_SUBJECT_IDENTIFIERS } from "../../../src/shared/testing/test-contracts";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { visible_external_launcher_stderr } from "../../../src/app/demos/tests/panel/hosted-test-report-view";
 import { external_launcher_suite_descriptor } from "../../../src/shared/testing/external-launcher-contract";
 
@@ -128,7 +128,7 @@ assert.equal(
   "Dev membership remains collection metadata independent of semantic subject",
 );
 
-const nodeRegistry = make_local_node_livehost_executor_registry();
+const nodeRegistry = make_local_node_locus_executor_registry();
 const primary = hosted_test_panel_primary_choices(nodeRegistry.catalog.tests, catalogSuites);
 assert.deepEqual(
   CANONICAL_TEST_SUBJECT_ORDER,
@@ -242,7 +242,7 @@ const installed = await resolve_external_library_launchers(new URL(`file://${joi
 assert.equal(installed.targets.length, 0, "installed package without repository launchers is cleanly unavailable");
 assert.equal(installed.unavailable.length, hson_live_test_launchers.length);
 
-const authorityId = external_library_target_id("livehost.authority");
+const authorityId = external_library_target_id("locus.authority");
 assert.deepEqual(hosted_test_panel_selected_ids([], { kind: "suite", suite: authorityId }, catalogSuites), [authorityId]);
 assert.equal(hosted_test_panel_test_choices([], authorityId, catalogSuites).length, 0);
 assert.ok(hosted_test_panel_suite_choices([], catalogSuites).find((choice) => choice.key === `suite:${authorityId}`)?.label.endsWith("(21)"));
@@ -452,10 +452,10 @@ assert.deepEqual(
 );
 
 const representativeIds = [
-  "livehost.authority",
+  "locus.authority",
   "livetree.attrs",
-  "livehost.client-recovery",
-  "livehost.action-dedupe",
+  "locus.client-recovery",
+  "locus.action-dedupe",
 ];
 const selected = all ? hson_live_test_launchers.map((launcher) => launcher.id) : representativeIds;
 const selectedTargets = selected.map((launcherId) => {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { hson } from "hson-live";
-import { create_livehost } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
 import type { TestRunPlan } from "../../../src/shared/testing/test-run-contract";
 import {
   HOSTED_TEST_REPORT_SCHEMA,
@@ -51,7 +51,7 @@ const baseline = memory();
 const initial = make_initial_hosted_test_report(runPlan);
 const initialJson = JSON.stringify(initial);
 const map = hson.liveMap.fromJson(JSON.parse(initialJson)).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
-const host = create_livehost({ map, logicalMapId: `hosted-report:${runId}` });
+const host = create_locus({ map, logicalMapId: `hosted-report:${runId}` });
 let canonicalCommits = 0;
 let canonicalOperations = 0;
 let canonicalBytes = 0;
@@ -137,8 +137,7 @@ const elapsedMs = performance.now() - startedAt;
 clearInterval(sampler);
 sample();
 
-const terminal = map.capture();
-const terminalJson = JSON.stringify(terminal.value);
+const terminalJson = JSON.stringify(map.snap());
 const retainedCommits = report.commits();
 const retainedCommitBytes = Buffer.byteLength(JSON.stringify(retainedCommits), "utf8");
 const completionSegments: Array<Readonly<{ through: number; elapsedMs: number }>> = [];

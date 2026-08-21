@@ -1,10 +1,10 @@
 // livehost/core-suite.ts
 
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
-import { create_livehost } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type LiveHostReadCaseSpec = Readonly<{
+type LocusReadCaseSpec = Readonly<{
   suite: string;
   caseId: string; name: string;
   input: unknown;
@@ -12,15 +12,15 @@ type LiveHostReadCaseSpec = Readonly<{
   expected: unknown;
 }>;
 
-function livehost_response_seq(response: unknown): number | undefined {
-  // changed: generic LiveHost server events do not carry seq, so tests must narrow response messages before reading seq.
+function locus_response_seq(response: unknown): number | undefined {
+  // changed: generic Locus server events do not carry seq, so tests must narrow response messages before reading seq.
   if (typeof response !== "object" || response === null || !("seq" in response)) return undefined;
 
   const seq = (response as { seq?: unknown }).seq;
   return typeof seq === "number" ? seq : undefined;
 }
 
-function livehost_read_case(spec: LiveHostReadCaseSpec): TestCase {
+function locus_read_case(spec: LocusReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
     caseId: spec.caseId, name: spec.name,
@@ -39,18 +39,18 @@ function livehost_read_case(spec: LiveHostReadCaseSpec): TestCase {
   };
 }
 
-export function livehost_core_suite(): TestSuite {
+export function locus_core_suite(): TestSuite {
   const SUITE = "livehost/core";
 
   return {
     suite: SUITE,
     cases: [
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "create-initializes-map-from-state", name: "create initializes map from state",
         input: {},
         act: () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" }, ui: { selected: "home" } },
           });
 
@@ -66,33 +66,33 @@ export function livehost_core_suite(): TestSuite {
           selected: "home",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "create-starts-seq-at-zero", name: "create starts seq at zero",
         input: {},
         act: () => {
-          const host = create_livehost({ state: { ok: true } });
+          const host = create_locus({ state: { ok: true } });
           return { seq: host.seq };
         },
         expected: { seq: 0 },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "create-defaults-to-empty-object-state", name: "create defaults to empty object state",
         input: {},
         act: () => {
-          const host = create_livehost();
+          const host = create_locus();
           return { root: host.map.snap() };
         },
         expected: { root: {} },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "action-context-sees-current-seq-before-ack-increment", name: "action context sees current seq before ack increment",
         input: {},
         act: async () => {
           const seenSeqs: number[] = [];
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               record_seq: (ctx) => {
@@ -106,9 +106,9 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             seenSeqs,
-            firstSeq: livehost_response_seq(first),
-            secondSeq: livehost_response_seq(second),
-            hostSeq: livehost_response_seq(host),
+            firstSeq: locus_response_seq(first),
+            secondSeq: locus_response_seq(second),
+            hostSeq: locus_response_seq(host),
           };
         },
         expected: {
@@ -118,7 +118,7 @@ export function livehost_core_suite(): TestSuite {
           hostSeq: 2,
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "direct-dispatch-receives-immutable-direct-action-origin", name: "direct dispatch receives immutable direct action origin",
         input: {},
@@ -126,7 +126,7 @@ export function livehost_core_suite(): TestSuite {
           let origin: unknown;
           let contextFrozen = false;
           let originFrozen = false;
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               inspect: (ctx) => {
@@ -145,13 +145,13 @@ export function livehost_core_suite(): TestSuite {
           originFrozen: true,
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "direct-dispatch-clientid-cannot-manufacture-session-authority", name: "direct dispatch clientId cannot manufacture session authority",
         input: {},
         act: async () => {
           let origin: unknown;
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: { inspect: (ctx) => { origin = ctx.origin; } },
           });
@@ -165,13 +165,13 @@ export function livehost_core_suite(): TestSuite {
         },
         expected: { kind: "direct" },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-action-calls-registered-handler", name: "dispatch action calls registered handler",
         input: {},
         act: async () => {
           let called = false;
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               mark_called: () => {
@@ -200,12 +200,12 @@ export function livehost_core_suite(): TestSuite {
           responseId: "action-a",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-action-lets-handler-mutate-map", name: "dispatch action lets handler mutate map",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             actions: {
               rename_user: (ctx, payload) => {
@@ -233,12 +233,12 @@ export function livehost_core_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-action-awaits-async-handler-before-ack", name: "dispatch action awaits async handler before ack",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { status: "idle" },
             actions: {
               mark_done: async (ctx) => {
@@ -256,8 +256,8 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             responseType: response.type,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             status: host.map.at(["status"]).snap(),
           };
         },
@@ -268,12 +268,12 @@ export function livehost_core_suite(): TestSuite {
           status: "done",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-action-returns-ack-and-increments-seq", name: "dispatch action returns ack and increments seq",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               noop: () => undefined,
@@ -284,9 +284,9 @@ export function livehost_core_suite(): TestSuite {
           const second = await host.dispatch_action({ type: "action", id: "a2", name: "noop" });
 
           return {
-            firstSeq: livehost_response_seq(first),
-            secondSeq: livehost_response_seq(second),
-            hostSeq: livehost_response_seq(host),
+            firstSeq: locus_response_seq(first),
+            secondSeq: locus_response_seq(second),
+            hostSeq: locus_response_seq(host),
           };
         },
         expected: {
@@ -295,12 +295,12 @@ export function livehost_core_suite(): TestSuite {
           hostSeq: 2,
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-unknown-action-returns-error-without-incrementing-seq", name: "dispatch unknown action returns error without incrementing seq",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: {} });
+          const host = create_locus({ state: {} });
           const response = await host.dispatch_action({
             type: "action",
             id: "action-a",
@@ -311,8 +311,8 @@ export function livehost_core_suite(): TestSuite {
             responseType: response.type,
             id: "id" in response ? response.id : undefined,
             ok: "ok" in response ? response.ok : undefined,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
           };
@@ -323,16 +323,16 @@ export function livehost_core_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_UNKNOWN_ACTION",
-          message: "Unknown LiveHost action: missing_action",
+          code: "LOCUS_UNKNOWN_ACTION",
+          message: "Unknown Locus action: missing_action",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-thrown-action-returns-error-without-incrementing-seq", name: "dispatch thrown action returns error without incrementing seq",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               explode: () => {
@@ -351,8 +351,8 @@ export function livehost_core_suite(): TestSuite {
             responseType: response.type,
             id: "id" in response ? response.id : undefined,
             ok: "ok" in response ? response.ok : undefined,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
           };
@@ -363,16 +363,16 @@ export function livehost_core_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_ACTION_FAILED",
+          code: "LOCUS_ACTION_FAILED",
           message: "boom",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-rejected-async-action-returns-error-without-incrementing-seq", name: "dispatch rejected async action returns error without incrementing seq",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               reject: async () => {
@@ -392,8 +392,8 @@ export function livehost_core_suite(): TestSuite {
             responseType: response.type,
             id: "id" in response ? response.id : undefined,
             ok: "ok" in response ? response.ok : undefined,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
           };
@@ -404,16 +404,16 @@ export function livehost_core_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_ACTION_FAILED",
+          code: "LOCUS_ACTION_FAILED",
           message: "async boom",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "schema-payload-validator-accepts-valid-payload", name: "schema payload validator accepts valid payload",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -445,8 +445,8 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             responseType: response.type,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             name: host.map.at(["user", "name"]).snap(),
           };
         },
@@ -457,12 +457,12 @@ export function livehost_core_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "schema-payload-validator-rejects-invalid-payload-without-incrementing-seq", name: "schema payload validator rejects invalid payload without incrementing seq",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -495,8 +495,8 @@ export function livehost_core_suite(): TestSuite {
           return {
             responseType: response.type,
             ok: "ok" in response ? response.ok : undefined,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
             name: host.map.at(["user", "name"]).snap(),
@@ -507,17 +507,17 @@ export function livehost_core_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
-          message: "Value failed LiveHost schema validation.",
+          code: "LOCUS_SCHEMA_INVALID_PAYLOAD",
+          message: "Value failed Locus schema validation.",
           name: "Ada",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "schema-payload-decoder-passes-decoded-value-to-handler", name: "schema payload decoder passes decoded value to handler",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -550,8 +550,8 @@ export function livehost_core_suite(): TestSuite {
 
           return {
             responseType: response.type,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             name: host.map.at(["user", "name"]).snap(),
           };
         },
@@ -562,12 +562,12 @@ export function livehost_core_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "schema-payload-decoder-reports-custom-issues", name: "schema payload decoder reports custom issues",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               actions: {
@@ -601,8 +601,8 @@ export function livehost_core_suite(): TestSuite {
           return {
             responseType: response.type,
             ok: "ok" in response ? response.ok : undefined,
-            seq: livehost_response_seq(response),
-            hostSeq: livehost_response_seq(host),
+            seq: locus_response_seq(response),
+            hostSeq: locus_response_seq(host),
             code: response.type === "error" ? response.error.code : undefined,
             message: response.type === "error" ? response.error.message : undefined,
             name: host.map.at(["user", "name"]).snap(),
@@ -613,12 +613,12 @@ export function livehost_core_suite(): TestSuite {
           ok: false,
           seq: 0,
           hostSeq: 0,
-          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+          code: "LOCUS_SCHEMA_INVALID_PAYLOAD",
           message: "name must be string; payload rejected",
           name: "Ada",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "create-exposes-schema-reference", name: "create exposes schema reference",
         input: {},
@@ -631,7 +631,7 @@ export function livehost_core_suite(): TestSuite {
                 && typeof (value as { ok?: unknown }).ok === "boolean";
             },
           } as const;
-          const host = create_livehost({
+          const host = create_locus({
             state: { ok: true },
             schema,
           });
@@ -646,13 +646,13 @@ export function livehost_core_suite(): TestSuite {
           root: { ok: true },
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "create-applies-state-schema-validator-before-map-creation", name: "create applies state schema validator before map creation",
         input: {},
         act: () => {
           let validatorCalled = false;
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             schema: {
               state: (value): value is { user: { name: string } } => {
@@ -675,12 +675,12 @@ export function livehost_core_suite(): TestSuite {
           root: { user: { name: "Ada" } },
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "create-applies-state-schema-decoder-before-map-creation", name: "create applies state schema decoder before map creation",
         input: {},
         act: () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "  Ada  " } },
             schema: {
               state: (value) => {
@@ -708,12 +708,12 @@ export function livehost_core_suite(): TestSuite {
           name: "Ada",
         },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-action-returns-json-safe-handler-result", name: "dispatch action returns json-safe handler result",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               read: () => ({ status: "done", count: 2 }),
@@ -724,12 +724,12 @@ export function livehost_core_suite(): TestSuite {
         },
         expected: { status: "done", count: 2 },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "dispatch-action-rejects-non-finite-handler-result", name: "dispatch action rejects non-finite handler result",
         input: {},
         act: async () => {
-          const host = create_livehost({
+          const host = create_locus({
             state: {},
             actions: {
               invalid: () => Number.NaN,
@@ -739,18 +739,18 @@ export function livehost_core_suite(): TestSuite {
           return {
             type: response.type,
             code: response.type === "error" ? response.error.code : undefined,
-            seq: livehost_response_seq(response),
+            seq: locus_response_seq(response),
           };
         },
-        expected: { type: "error", code: "LIVEHOST_ACTION_OUTCOME_NORMALIZATION_FAILED", seq: 0 },
+        expected: { type: "error", code: "LOCUS_ACTION_OUTCOME_NORMALIZATION_FAILED", seq: 0 },
       }),
-      livehost_read_case({
+      locus_read_case({
         suite: SUITE,
         caseId: "schema-payload-rejection-does-not-invoke-handler", name: "schema payload rejection does not invoke handler",
         input: {},
         act: async () => {
           let calls = 0;
-          const host = create_livehost({
+          const host = create_locus({
             state: { value: "unchanged" },
             schema: {
               actions: {
@@ -785,7 +785,7 @@ export function livehost_core_suite(): TestSuite {
             calls,
             responseType: response.type,
             code: response.type === "error" ? response.error.code : undefined,
-            responseSeq: livehost_response_seq(response),
+            responseSeq: locus_response_seq(response),
             hostSeq: host.seq,
             value: host.map.at(["value"]).snap(),
           };
@@ -793,7 +793,7 @@ export function livehost_core_suite(): TestSuite {
         expected: {
           calls: 0,
           responseType: "error",
-          code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+          code: "LOCUS_SCHEMA_INVALID_PAYLOAD",
           responseSeq: 0,
           hostSeq: 0,
           value: "unchanged",

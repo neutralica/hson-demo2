@@ -1,9 +1,9 @@
 import WebSocket from "ws";
 import {
-  create_browser_livehost_socket,
-  LiveHostClientRecoveryError,
+  create_browser_locus_socket,
+  LocusClientRecoveryError,
   type BrowserWebSocketConstructor,
-} from "hson-live/livehost";
+} from "hson-live/locus";
 import { create_towl_client, towl_host_id_for_room } from "../../../src/app/demos/towl/index";
 
 const endpoint = process.env.TOWL_DEPLOYED_WS_URL;
@@ -13,7 +13,7 @@ if (endpoint === undefined) {
 
 const room = `deploy-probe-${Date.now().toString(36)}`;
 const url = new URL(endpoint);
-url.searchParams.set("livehost", towl_host_id_for_room(room));
+url.searchParams.set("locus", towl_host_id_for_room(room));
 let snapshot: unknown;
 
 class DiagnosticWebSocket extends WebSocket {
@@ -37,7 +37,7 @@ function describe(error: unknown): unknown {
   });
 }
 
-const transport = create_browser_livehost_socket(
+const transport = create_browser_locus_socket(
   url.toString(),
   DiagnosticWebSocket as unknown as BrowserWebSocketConstructor,
 );
@@ -64,7 +64,7 @@ try {
 const result = Object.freeze({
   room,
   compatible: error === undefined,
-  recoveryError: error instanceof LiveHostClientRecoveryError,
+  recoveryError: error instanceof LocusClientRecoveryError,
   error: error === undefined ? undefined : describe(error),
   snapshot,
 });

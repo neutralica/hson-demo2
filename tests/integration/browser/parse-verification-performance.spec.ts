@@ -6,7 +6,7 @@ type PanelMeasurement = Readonly<{
   immediateParseMs: number;
   debounceToDispatchMs?: number;
   workerQueueWaitMs?: number;
-  liveHostRoundTripMs?: number;
+  locusRoundTripMs?: number;
   workerDurationMs?: number;
   browserAdmissionAndComparisonMs?: number;
   totalEditToCertificateMs?: number;
@@ -69,7 +69,7 @@ async function measure_edit(
         : 0,
       ...(queued === undefined ? {} : { debounceToDispatchMs: queued - measurement.immediateFinished }),
       ...(queued === undefined || verifying === undefined ? {} : { workerQueueWaitMs: verifying - queued }),
-      ...(queued === undefined || browserCheck === undefined ? {} : { liveHostRoundTripMs: browserCheck - queued }),
+      ...(queued === undefined || browserCheck === undefined ? {} : { locusRoundTripMs: browserCheck - queued }),
       ...(numberAttribute("data-worker-duration-ms") === undefined
         ? {}
         : { workerDurationMs: numberAttribute("data-worker-duration-ms") }),

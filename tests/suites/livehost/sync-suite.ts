@@ -1,10 +1,10 @@
 // livehost/sync-suite.ts
 
-import { create_livehost, make_livehost_sync_manager } from "hson-live/livehost";
+import { create_locus, make_locus_sync_manager } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type LiveHostSyncReadCaseSpec = Readonly<{
+type LocusSyncReadCaseSpec = Readonly<{
   suite: string;
   caseId: string; name: string;
   input: unknown;
@@ -12,7 +12,7 @@ type LiveHostSyncReadCaseSpec = Readonly<{
   expected: unknown;
 }>;
 
-function livehost_sync_read_case(spec: LiveHostSyncReadCaseSpec): TestCase {
+function locus_sync_read_case(spec: LocusSyncReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
     caseId: spec.caseId, name: spec.name,
@@ -31,20 +31,20 @@ function livehost_sync_read_case(spec: LiveHostSyncReadCaseSpec): TestCase {
   };
 }
 
-export function livehost_sync_suite(): TestSuite {
+export function locus_sync_suite(): TestSuite {
   const SUITE = "livehost/sync";
 
   return {
     suite: SUITE,
     cases: [
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "subscribe-sends-current-path-value", name: "subscribe sends current path value",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { ui: { selected: "home" } } });
+          const host = create_locus({ state: { ui: { selected: "home" } } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
 
           const added = sync.add_session("session-a", (message) => sent.push(message));
           const subscribed = sync.subscribe("session-a", ["ui", "selected"], 0);
@@ -68,14 +68,14 @@ export function livehost_sync_suite(): TestSuite {
           value: "home",
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "sync-all-sends-updated-subscribed-value", name: "sync all sends updated subscribed value",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { count: 0 } });
+          const host = create_locus({ state: { count: 0 } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
 
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
@@ -99,14 +99,14 @@ export function livehost_sync_suite(): TestSuite {
           value: 1,
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "unsubscribe-prevents-later-sync", name: "unsubscribe prevents later sync",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { count: 0 } });
+          const host = create_locus({ state: { count: 0 } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
 
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
@@ -132,14 +132,14 @@ export function livehost_sync_suite(): TestSuite {
           },
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "remove-session-prevents-later-sync", name: "remove session prevents later sync",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { count: 0 } });
+          const host = create_locus({ state: { count: 0 } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
 
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
@@ -157,14 +157,14 @@ export function livehost_sync_suite(): TestSuite {
           sessions: [],
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "subscribed-path-is-copied-before-storage", name: "subscribed path is copied before storage",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { ui: { selected: "home" }, other: "nope" } });
+          const host = create_locus({ state: { ui: { selected: "home" }, other: "nope" } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
           const path: Array<string | number> = ["ui", "selected"];
 
           sync.add_session("session-a", (message) => sent.push(message));
@@ -186,14 +186,14 @@ export function livehost_sync_suite(): TestSuite {
           debug: [{ sessionId: "session-a", paths: [["ui", "selected"]] }],
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "sync-all-sends-one-message-per-subscribed-path", name: "sync all sends one message per subscribed path",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { user: { name: "Ada" }, count: 0 } });
+          const host = create_locus({ state: { user: { name: "Ada" }, count: 0 } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
 
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["user", "name"], 0);
@@ -237,14 +237,14 @@ export function livehost_sync_suite(): TestSuite {
           },
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "resubscribe-replaces-existing-path-without-duplicate-syncs", name: "resubscribe replaces existing path without duplicate syncs",
         input: {},
         act: async () => {
-          const host = create_livehost({ state: { count: 0 } });
+          const host = create_locus({ state: { count: 0 } });
           const sent: unknown[] = [];
-          const sync = make_livehost_sync_manager(host.map);
+          const sync = make_locus_sync_manager(host.map);
 
           sync.add_session("session-a", (message) => sent.push(message));
           sync.subscribe("session-a", ["count"], 0);
@@ -271,13 +271,13 @@ export function livehost_sync_suite(): TestSuite {
           debug: [{ sessionId: "session-a", paths: [["count"]] }],
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "duplicate-session-is-rejected", name: "duplicate session is rejected",
         input: {},
         act: () => {
-          const host = create_livehost({ state: {} });
-          const sync = make_livehost_sync_manager(host.map);
+          const host = create_locus({ state: {} });
+          const sync = make_locus_sync_manager(host.map);
 
           const first = sync.add_session("session-a", () => undefined);
           const second = sync.add_session("session-a", () => undefined);
@@ -292,17 +292,17 @@ export function livehost_sync_suite(): TestSuite {
         expected: {
           firstOk: true,
           secondOk: false,
-          code: "LIVEHOST_DUPLICATE_SESSION",
-          message: "LiveHost sync session already exists: session-a",
+          code: "LOCUS_DUPLICATE_SESSION",
+          message: "Locus sync session already exists: session-a",
         },
       }),
-      livehost_sync_read_case({
+      locus_sync_read_case({
         suite: SUITE,
         caseId: "unknown-session-subscribe-is-rejected", name: "unknown session subscribe is rejected",
         input: {},
         act: () => {
-          const host = create_livehost({ state: {} });
-          const sync = make_livehost_sync_manager(host.map);
+          const host = create_locus({ state: {} });
+          const sync = make_locus_sync_manager(host.map);
           const result = sync.subscribe("missing-session", ["count"], 0);
 
           return {
@@ -313,8 +313,8 @@ export function livehost_sync_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          code: "LIVEHOST_UNKNOWN_SESSION",
-          message: "Unknown LiveHost sync session: missing-session",
+          code: "LOCUS_UNKNOWN_SESSION",
+          message: "Unknown Locus sync session: missing-session",
         },
       }),
     ] as const,

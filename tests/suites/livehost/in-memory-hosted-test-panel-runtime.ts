@@ -1,5 +1,5 @@
-import { create_livehost_client } from "hson-live/livehost";
-import type { LiveHostClient, LiveHostSocketLike } from "hson-live/types";
+import { create_locus_client } from "hson-live/locus";
+import type { LiveMap, LocusClient, LocusSocketLike } from "hson-live/types";
 import type { HostedTestPanelRuntime, HostedTestRemoteRun } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import type { HostedTestActions, HostedTestAnyRunResult } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import { decode_hosted_test_discovery_response, decode_hosted_test_cancel_response, decode_selected_hosted_test_run_response, inspect_hosted_test_action } from "../../../src/shared/hosted-tests/hosted-test-client-action";
@@ -15,12 +15,12 @@ import type { TestExecutorDiscovery } from "../../../src/shared/testing/test-dis
 type MessageListener = (message: string) => void;
 type ReportActions = Readonly<{ "tests.inspect": Readonly<{ runId: string; caseKey: string }> }>;
 
-function make_socket_pair(): readonly [LiveHostSocketLike, LiveHostSocketLike] {
+function make_socket_pair(): readonly [LocusSocketLike, LocusSocketLike] {
   const firstMessages = new Set<MessageListener>();
   const secondMessages = new Set<MessageListener>();
   const firstCloses = new Set<() => void>();
   const secondCloses = new Set<() => void>();
-  function socket(ownMessages: Set<MessageListener>, peerMessages: Set<MessageListener>, ownCloses: Set<() => void>, peerCloses: Set<() => void>): LiveHostSocketLike {
+  function socket(ownMessages: Set<MessageListener>, peerMessages: Set<MessageListener>, ownCloses: Set<() => void>, peerCloses: Set<() => void>): LocusSocketLike {
     return {
       send(message) { queueMicrotask(() => { for (const listener of peerMessages) listener(message); }); },
       close() { queueMicrotask(() => { for (const listener of peerCloses) listener(); }); },
@@ -45,14 +45,14 @@ export function make_in_memory_hosted_test_runtime(
     discovery: make_test_executor_discovery(executorRegistry),
   });
   const disposers: (() => void)[] = [];
-  function connect(id: string): LiveHostSocketLike {
+  function connect(id: string): LocusSocketLike {
     const [clientSocket, hostSocket] = make_socket_pair();
     const connected = application.store.connect(id, hostSocket);
     if (!connected.ok) throw new Error(connected.error.message);
     disposers.push(connected.value);
     return clientSocket;
   }
-  const client = create_livehost_client<HostedTestCoordinatorState, HostedTestActions>({
+  const client = create_locus_client<HostedTestCoordinatorState, HostedTestActions>({
     socket: connect(HOSTED_TEST_COORDINATOR_HOST_ID),
     recovery: { logicalMapId: HOSTED_TEST_COORDINATOR_HOST_ID },
     session: {},
@@ -67,7 +67,7 @@ export function make_in_memory_hosted_test_runtime(
     association: HostedTestRunAssociation,
     actionResult?: Promise<HostedTestAnyRunResult>,
   ): Promise<HostedTestRemoteRun> {
-    const reportClient = create_livehost_client<HostedTestReportState, ReportActions>({
+    const reportClient = create_locus_client<HostedTestReportState, ReportActions>({
       socket: connect(association.reportHostId),
       recovery: { logicalMapId: association.reportHostId },
       session: {},
@@ -75,7 +75,7 @@ export function make_in_memory_hosted_test_runtime(
     reportClient.connect();
     await reportClient.session.create();
     await reportClient.recovery.recover();
-    const recovered = reportClient.recovery.map.capture().value;
+    const recovered = reportClient.recovery.map.snap();
     const failures = recovered.suiteRuns.flatMap((suite) => suite.cases
       .filter((testCase) => testCase.status === "fail")
       .map((testCase) => ({ suite: suite.id, caseId: testCase.caseId, name: testCase.title, err: testCase.err ?? "", ms: testCase.ms ?? 0 })));
@@ -105,7 +105,7 @@ export function make_in_memory_hosted_test_runtime(
     let runDisposed = false;
     const run: HostedTestRemoteRun = Object.freeze({
       association,
-      client: reportClient as LiveHostClient<HostedTestReportState, ReportActions>,
+      client: reportClient as LocusClient<LiveMap<HostedTestReportState>, ReportActions>,
       actionResult: settledResult,
       on_change(listener) { return reportClient.recovery.on_change(() => listener()); },
       async ready() {},
@@ -145,12 +145,12 @@ export function make_in_memory_hosted_test_runtime(
       const requestId = action.request.requestId;
       const result = action.then(decode_selected_hosted_test_run_response);
       const association = await new Promise<HostedTestRunAssociation>((resolve, reject) => {
-        const initial = client.recovery.map.capture().value;
+        const initial = client.recovery.map.snap();
         const existing = initial.requests[client.clientId]?.[requestId];
         const joined = existing === undefined ? undefined : hosted_test_run_association(initial, existing);
         if (joined) { resolve(joined); return; }
         const stop = client.recovery.on_change(() => {
-          const state = client.recovery.map.capture().value;
+          const state = client.recovery.map.snap();
           const found = state.requests[client.clientId]?.[requestId];
           const association = found === undefined ? undefined : hosted_test_run_association(state, found);
           if (!association) return;
@@ -166,7 +166,7 @@ export function make_in_memory_hosted_test_runtime(
     },
     async recover_run(runId: string, attemptId: string) {
       await readiness;
-      const association = hosted_test_recovery_association(client.recovery.map.capture().value, runId, attemptId);
+      const association = hosted_test_recovery_association(client.recovery.map.snap(), runId, attemptId);
       if (association === undefined) throw new Error(`Hosted-test run "${runId}" is not available for explicit recovery.`);
       return attach_run(association);
     },

@@ -1,9 +1,9 @@
 // towl-client-suite.ts
 
 import type {
-  LiveHostDisposer,
-  LiveHostSocketLike,
-} from "hson-live/livehost";
+  LocusDisposer,
+  LocusSocketLike,
+} from "hson-live/locus";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
 
@@ -14,7 +14,7 @@ import {
 import { towl_case } from "./towl-test-helpers";
 import { create_towl_client, towl_host_id_for_room, type TowlClient } from "../../../src/app/demos/towl/index";
 
-type SocketEndpoint = LiveHostSocketLike & Readonly<{
+type SocketEndpoint = LocusSocketLike & Readonly<{
   listener_count: () => number;
 }>;
 
@@ -68,7 +68,7 @@ function make_socket_pair(): SocketPair {
 
     close: close_pair,
 
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       if (closed) return () => {};
 
       hostMessages.add(listener);
@@ -77,7 +77,7 @@ function make_socket_pair(): SocketPair {
       };
     },
 
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       if (closed) {
         listener();
         return () => {};
@@ -101,7 +101,7 @@ function make_socket_pair(): SocketPair {
 
     close: close_pair,
 
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       if (closed) return () => {};
 
       clientMessages.add(listener);
@@ -110,7 +110,7 @@ function make_socket_pair(): SocketPair {
       };
     },
 
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       if (closed) {
         listener();
         return () => {};

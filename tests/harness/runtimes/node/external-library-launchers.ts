@@ -161,6 +161,7 @@ const SUBJECTS: Readonly<Record<HsonLiveTestLauncher["subject"], TestSubject>> =
   LiveMap: "livemap",
   Reflect: "reflect",
   LiveHost: "livehost",
+  Locus: "livehost",
   Core: "integration",
 });
 

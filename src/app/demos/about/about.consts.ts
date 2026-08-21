@@ -8,8 +8,8 @@ import HSON_SPEC_JSON from "../../../../../hson-live/docs/hson-json.md?raw";
 import HSON_SPEC_HTML from "../../../../../hson-live/docs/hson-html.md?raw";
 import LIVETREE_LIST from "../../../../../hson-live/docs/livetree/api-livetree.md?raw";
 import LIVEMAP_LIST from "../../../../../hson-live/docs/livemap/api-livemap.md?raw";
-import LIVEHOST_LIST from "../../../../../hson-live/docs/livehost/api-livehost.md?raw";
-import LIVEHOST_ABOUT from "../../../../../hson-live/docs/hson-livehost.md?raw";
+import LOCUS_LIST from "../../../../../hson-live/docs/locus/api-locus.md?raw";
+import LOCUS_ABOUT from "../../../../../hson-live/docs/locus/overview.md?raw";
 import LIVEMAP_ABOUT from "../../../../../hson-live/docs/hson-livemap.md?raw";
 import LIVETREE_ABOUT from "../../../../../hson-live/docs/hson-livetree.md?raw";
 import LIVEDEMO_README from "../../../../README.md?raw";
@@ -27,8 +27,8 @@ export const ABOUT_DOCS: AboutDocs = [
   { key: "livetree-api", title: "LiveTree API", body: LIVETREE_LIST },
   { key: "livemap", title: "LiveMap", body: LIVEMAP_ABOUT },
   { key: "livemap-api", title: "LiveMap API", body: LIVEMAP_LIST },
-  { key: "livehost", title: "LiveHost", body: LIVEHOST_ABOUT },
-  { key: "livehost-api", title: "LiveHost API", body: LIVEHOST_LIST },
+  { key: "livehost", title: "Locus", body: LOCUS_ABOUT },
+  { key: "livehost-api", title: "Locus API", body: LOCUS_LIST },
   { key: "hson-css", title: "css", body: HSON_CSS_API },
   // later:
   // { key: "api", title: "API", body: API_MD },

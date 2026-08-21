@@ -72,7 +72,7 @@ export function join_towl_session(
   sessionId: string,
 ): TowlTransitionResult<TowlJoinResult> {
   if (seat_for_session(state, sessionId) !== undefined) {
-    return reject("TOWL_ALREADY_JOINED", "This LiveHost session already occupies a TOWL seat.");
+    return reject("TOWL_ALREADY_JOINED", "This Locus session already occupies a TOWL seat.");
   }
   const seat = TOWL_SEATS.find((candidate) => state[candidate].sessionId === null);
   if (seat === undefined) return reject("TOWL_ROOM_FULL", "Both TOWL seats are occupied.");
@@ -90,7 +90,7 @@ export function leave_towl_session(
   sessionId: string,
 ): TowlTransitionResult<TowlLeaveResult> {
   const seat = seat_for_session(state, sessionId);
-  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This LiveHost session does not occupy a TOWL seat.");
+  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This Locus session does not occupy a TOWL seat.");
   const cleared = replace_seat(state, seat, { ...VACANT_SEAT });
   return accept(cancel_round(cleared), { seat });
 }
@@ -101,7 +101,7 @@ export function set_towl_ready(
   ready: boolean,
 ): TowlTransitionResult<TowlReadyResult> {
   const seat = seat_for_session(state, sessionId);
-  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This LiveHost session does not occupy a TOWL seat.");
+  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This Locus session does not occupy a TOWL seat.");
   if (state.phase !== "ready") {
     return reject("TOWL_INVALID_PHASE", "TOWL readiness may only change while both players are awaiting play.");
   }
@@ -120,7 +120,7 @@ export function pull_towl_rope(
   sessionId: string,
 ): TowlTransitionResult<TowlPullResult> {
   const seat = seat_for_session(state, sessionId);
-  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This LiveHost session does not occupy a TOWL seat.");
+  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This Locus session does not occupy a TOWL seat.");
   if (state.phase !== "playing") return reject("TOWL_INVALID_PHASE", "The TOWL round is not active.");
   if (occupied_seat_count(state) !== 2) {
     return reject("TOWL_BOTH_PLAYERS_REQUIRED", "Both TOWL seats must remain occupied during play.");
@@ -151,7 +151,7 @@ export function reset_towl_round(
   sessionId: string,
 ): TowlTransitionResult<TowlResetResult> {
   const seat = seat_for_session(state, sessionId);
-  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This LiveHost session does not occupy a TOWL seat.");
+  if (seat === undefined) return reject("TOWL_NOT_JOINED", "This Locus session does not occupy a TOWL seat.");
   if (state.phase !== "finished" || state.winner === null) {
     return reject("TOWL_INVALID_PHASE", "A TOWL round may only reset after a winner is recorded.");
   }

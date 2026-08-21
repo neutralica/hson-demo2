@@ -1,5 +1,5 @@
-import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
-import type { LiveHostActionId, LiveHostClient, LiveHostClientActionPromise, LiveMapCommitObservation } from "hson-live/types";
+import { create_locus_client, LocusDisconnectedError } from "hson-live/locus";
+import type { LiveMap, LocusActionId, LocusClient, LocusClientActionPromise, LiveMapCommitObservation } from "hson-live/types";
 import type { HostedTestActions, HostedTestAnyRunResult, HostedTestCancelResult, HostedTestCaseDiagnostic, HostedTestInspectRequest, HostedTestSelectedRunResult } from "../../../../shared/hosted-tests/hosted-test-action.types";
 import {
   decode_hosted_test_discovery_response,
@@ -14,10 +14,10 @@ import { HOSTED_TEST_SELECTED_RUN_TARGET, type HostedTestRunTarget } from "../..
 import type { TestExecutorDiscovery } from "../../../../shared/testing/test-discovery-contract";
 import { HOSTED_TEST_COORDINATOR_HOST_ID, hosted_test_recovery_association, hosted_test_run_association, type HostedTestAttemptId, type HostedTestCoordinatorState, type HostedTestRunAssociation } from "../../../../shared/hosted-tests/hosted-test-application.types";
 import {
-  create_browser_livehost_socket as make_hosted_test_browser_websocket,
+  create_browser_locus_socket as make_hosted_test_browser_websocket,
   type BrowserWebSocketConstructor,
-  type BrowserLiveHostSocket as HostedTestBrowserSocket,
-} from "hson-live/livehost";
+  type BrowserLocusSocket as HostedTestBrowserSocket,
+} from "hson-live/locus";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../shared/hosted-tests/hosted-test-timeline";
 
 type HostedTestReportActions = Readonly<{
@@ -46,7 +46,7 @@ export type HostedTestPanelRuntimeStatus =
 
 export type HostedTestRemoteRun = Readonly<{
   association: HostedTestRunAssociation;
-  readonly client: LiveHostClient<HostedTestReportState, HostedTestReportActions>;
+  readonly client: LocusClient<LiveMap<HostedTestReportState>, HostedTestReportActions>;
   actionResult: Promise<HostedTestAnyRunResult>;
   on_change(listener: (observation?: LiveMapCommitObservation) => void): () => void;
   ready(): Promise<void>;
@@ -56,7 +56,7 @@ export type HostedTestRemoteRun = Readonly<{
 }>;
 
 export type HostedTestPanelRuntime = Readonly<{
-  readonly client: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>;
+  readonly client: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>;
   readonly status: HostedTestPanelRuntimeStatus;
   readonly failure: Error | undefined;
   readonly discovery: TestExecutorDiscovery | undefined;
@@ -77,7 +77,7 @@ export type HostedTestPanelRuntimeOptions = Readonly<{
   /** Refresh-safe identity factory. Primarily injectable for deterministic tests. */
   makeClientId?: () => string;
   /** Fresh-action identity factory. Primarily injectable for deterministic tests. */
-  makeActionId?: () => LiveHostActionId;
+  makeActionId?: () => LocusActionId;
   timeline?: HostedTestTimelineObserver;
 }>;
 
@@ -139,7 +139,8 @@ export function resolve_hosted_test_websocket_url(
 
 export function hosted_test_host_url(base: string, hostId: string): string {
   const url = new URL(base);
-  url.searchParams.set("livehost", hostId);
+  url.pathname = "/hosted-tests";
+  url.searchParams.set("locus", hostId);
   return url.toString();
 }
 
@@ -168,10 +169,10 @@ function safe_hosted_test_error(error: unknown, depth = 0): Readonly<Record<stri
 }
 
 function association_from(
-  client: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>,
+  client: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>,
   requestId: string,
 ): HostedTestRunAssociation | undefined {
-  const state = client.recovery.map.capture().value;
+  const state = client.recovery.map.snap();
   const request = state.requests[client.clientId]?.[requestId];
   return request === undefined ? undefined : hosted_test_run_association(state, request);
 }
@@ -233,7 +234,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   let discoveredExecutor: TestExecutorDiscovery | undefined;
   let disposed = false;
   let coordinatorTransport: HostedTestBrowserSocket | undefined;
-  let coordinatorClient: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>;
+  let coordinatorClient: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>;
   let stopCoordinatorClose: (() => void) | undefined;
   let stopCoordinatorChanges: (() => void) | undefined;
   let reconnecting: Promise<void> | undefined;
@@ -302,7 +303,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   }
 
   async function open_coordinator(
-    previous?: LiveHostClient<HostedTestCoordinatorState, HostedTestActions>,
+    previous?: LocusClient<LiveMap<HostedTestCoordinatorState>, HostedTestActions>,
   ): Promise<void> {
     const transport = make_hosted_test_browser_websocket(
       hosted_test_host_url(configured_base_url(), HOSTED_TEST_COORDINATOR_HOST_ID),
@@ -313,7 +314,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const cursor = previous?.recovery.incarnationId !== undefined && previous.recovery.lastAppliedRev !== undefined
       ? { incarnationId: previous.recovery.incarnationId, lastAppliedRev: previous.recovery.lastAppliedRev }
       : undefined;
-    const next = create_livehost_client<HostedTestCoordinatorState, HostedTestActions>({
+    const next = create_locus_client<HostedTestCoordinatorState, HostedTestActions>({
       socket: transport.socket,
       clientId: previous?.clientId ?? coordinatorClientId,
       ...(options.makeActionId ? { actionId: options.makeActionId } : {}),
@@ -415,14 +416,14 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   }
 
   async function retry_safe_selected_result(
-    action: LiveHostClientActionPromise<HostedTestActions, "tests.runSelected">,
+    action: LocusClientActionPromise<HostedTestActions, "tests.runSelected">,
   ): Promise<HostedTestSelectedRunResult> {
     let response: unknown;
     try {
       try {
         response = await action;
       } catch (error) {
-        if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+        if (disposed || !(error instanceof LocusDisconnectedError)) throw error;
         await ensure_reconnected();
         response = await coordinatorClient.retry_action(action.request);
       }
@@ -441,7 +442,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
   }
 
   async function retry_safe_cancel_result(
-    action: LiveHostClientActionPromise<HostedTestActions, "tests.cancel">,
+    action: LocusClientActionPromise<HostedTestActions, "tests.cancel">,
     request: Readonly<{ runId: string; attemptId: HostedTestAttemptId }>,
   ): Promise<HostedTestCancelResult> {
     let response: unknown;
@@ -449,7 +450,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       try {
         response = await action;
       } catch (error) {
-        if (disposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+        if (disposed || !(error instanceof LocusDisconnectedError)) throw error;
         await ensure_reconnected();
         response = await coordinatorClient.retry_action(action.request);
       }
@@ -498,7 +499,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     const reportClientId = makeClientId();
     if (!reportClientId) throw new Error("Hosted-test report client ID must be non-empty.");
     let reportTransport: HostedTestBrowserSocket | undefined;
-    let reportClient: LiveHostClient<HostedTestReportState, HostedTestReportActions>;
+    let reportClient: LocusClient<LiveMap<HostedTestReportState>, HostedTestReportActions>;
     let stopReportClose: (() => void) | undefined;
     let stopReportChanges: (() => void) | undefined;
     let reportReconnecting: Promise<void> | undefined;
@@ -533,7 +534,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       for (const listener of [...reportListeners]) listener(observation);
     }
 
-    async function open_report(previous?: LiveHostClient<HostedTestReportState, HostedTestReportActions>): Promise<void> {
+    async function open_report(previous?: LocusClient<LiveMap<HostedTestReportState>, HostedTestReportActions>): Promise<void> {
       const nextTransport = make_hosted_test_browser_websocket(hosted_test_host_url(configured_base_url(), association.reportHostId), options.WebSocketConstructor);
       await nextTransport.ready;
       if (disposed || runDisposed) { nextTransport.dispose(); throw new Error("Hosted-test run was disposed while attaching its report."); }
@@ -554,7 +555,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         });
         stopTimeline?.();
       });
-      const next = create_livehost_client<HostedTestReportState, HostedTestReportActions>({
+      const next = create_locus_client<HostedTestReportState, HostedTestReportActions>({
         socket: nextTransport.socket,
         clientId: previous?.clientId ?? reportClientId,
         ...(previous ? { map: previous.recovery.map } : {}),
@@ -635,7 +636,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       throw cause;
     }
     const recovered_result = (): HostedTestAnyRunResult => {
-      const report = reportClient.recovery.map.capture().value;
+      const report = reportClient.recovery.map.snap();
       if (report.run.id !== association.runId || report.run.suite !== association.suite) {
         throw new Error("Recovered hosted report identity does not match the explicitly requested run.");
       }
@@ -695,7 +696,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
           try {
             try { await pending; }
             catch (error) {
-              if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+              if (disposed || runDisposed || !(error instanceof LocusDisconnectedError)) throw error;
               await ensure_report_reconnected();
               await reportClient.retry_action(pending.request);
             }
@@ -720,7 +721,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
         try {
           try { response = await pending; }
           catch (error) {
-            if (disposed || runDisposed || !(error instanceof LiveHostDisconnectedError)) throw error;
+            if (disposed || runDisposed || !(error instanceof LocusDisconnectedError)) throw error;
             await ensure_report_reconnected();
             response = await reportClient.retry_action(pending.request);
           }
@@ -751,7 +752,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
       dispose() {
         if (runDisposed) return;
         runDisposed = true;
-        fail_report(new LiveHostDisconnectedError());
+        fail_report(new LocusDisconnectedError());
         activeRuns.delete(run);
         reportListeners.clear();
         stopReportClose?.();
@@ -809,7 +810,7 @@ export function make_remote_hosted_test_runtime(options: HostedTestPanelRuntimeO
     if (disposed) throw new Error("Hosted-test runtime is disposed.");
     if (!runId || !attemptId) throw new Error("Hosted-test recovery requires exact non-empty run and attempt IDs.");
     const association = hosted_test_recovery_association(
-      coordinatorClient.recovery.map.capture().value,
+      coordinatorClient.recovery.map.snap(),
       runId,
       attemptId,
     );

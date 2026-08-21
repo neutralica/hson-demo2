@@ -29,7 +29,7 @@ const PRIMARY_DEFINITIONS: readonly PrimaryDefinition[] = Object.freeze([
     key: `subject:${subject}`,
     label: subject === "livemap" ? "LiveMap"
       : subject === "livetree" ? "LiveTree"
-        : subject === "livehost" ? "LiveHost"
+        : subject === "livehost" ? "Locus"
           : subject[0]!.toUpperCase() + subject.slice(1),
     selection: Object.freeze({ kind: "subject" as const, subject }),
   })),

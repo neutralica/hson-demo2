@@ -1,16 +1,14 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
-import WebSocket, { type RawData } from "ws";
+import WebSocket from "ws";
+import type { LiveHostApplication, LiveHostConnection } from "hson-live/livehost";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { create_external_library_launcher_service } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { create_hosted_test_application } from "../../harness/hosted/hosted-test-application";
 import { make_test_executor_registry, type TestExecutorRegistry } from "../../harness/core/test-executor";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { create_towl_authority_application } from "../../harness/hosted/towl-authority-application";
 import {
   start_node_application_host,
-  type NodeAuthorityNamespace,
-  type NodeHostedApplication,
 } from "hson-live/livehost/node";
 import { create_node_hosted_tests_application } from "../../harness/runtimes/node/server/node-hosted-tests-application";
 import { create_node_towl_application } from "../../harness/runtimes/node/server/node-towl-application";
@@ -18,9 +16,9 @@ import { make_towl_socket, send_towl_action } from "../towl/towl-test-helpers";
 import type { TowlState } from "../../../src/app/demos/towl/index";
 import { create_towl_client } from "../../../src/app/demos/towl/index";
 import {
-  create_browser_livehost_socket,
+  create_browser_locus_socket,
   type BrowserWebSocketConstructor,
-} from "hson-live/livehost";
+} from "hson-live/locus";
 
 function expect_node_host(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`node application host: ${message}`);
@@ -48,15 +46,16 @@ function application_options(executorRegistry: TestExecutorRegistry) {
 }
 
 type MockApplication = Readonly<{
-  registration: NodeHostedApplication;
+  registration: LiveHostApplication;
   accepts(): number;
   disposals(): number;
 }>;
 
 function mock_application(
   name: string,
-  authorities: readonly NodeAuthorityNamespace[],
+  _formerAuthorities: readonly unknown[],
   httpPath?: string,
+  connectionPath = `/${name}`,
 ): MockApplication {
   let accepts = 0;
   let disposals = 0;
@@ -64,21 +63,24 @@ function mock_application(
   return Object.freeze({
     registration: Object.freeze({
       name,
-      authorities,
       ...(httpPath === undefined ? {} : {
-        httpRoutes: Object.freeze([Object.freeze({
+        requests: Object.freeze([Object.freeze({
           method: "GET",
           path: httpPath,
-          handle(_request: IncomingMessage, response: ServerResponse) {
-            response.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
-            response.end(name);
+          handle() {
+            return new Response(name, { headers: { "content-type": "text/plain; charset=utf-8" } });
           },
         })]),
       }),
-      acceptWebSocket(_authorityId: string, websocket: WebSocket) {
-        accepts += 1;
-        websocket.on("message", (message: RawData) => websocket.send(`${name}:${message.toString()}`));
-      },
+      connections: Object.freeze([Object.freeze({
+        path: connectionPath,
+        accept(_request: Request, connection: LiveHostConnection) {
+          accepts += 1;
+          connection.onMessage((message) => connection.send(
+            typeof message === "string" ? `${name}:${message}` : message,
+          ));
+        },
+      })]),
       dispose() {
         if (disposed) return;
         disposed = true;
@@ -143,8 +145,8 @@ export function node_application_host_suite(): TestSuite {
           const beta = mock_application("beta", [{ kind: "prefix", value: "beta:" }], "/beta");
           const host = await start_node_application_host({ port: 0, applications: [alpha.registration, beta.registration] });
           try {
-            const alphaSocket = await open_websocket(`${host.url}?livehost=alpha`);
-            const betaSocket = await open_websocket(`${host.url}/any/path?livehost=beta%3Aroom`);
+            const alphaSocket = await open_websocket(`${host.url}/alpha?locus=alpha`);
+            const betaSocket = await open_websocket(`${host.url}/beta?locus=beta%3Aroom`);
             const [alphaHttp, betaHttp, missingHttp] = await Promise.all([
               fetch(`${host.httpUrl}/alpha`),
               fetch(`${host.httpUrl}/beta`),
@@ -161,7 +163,7 @@ export function node_application_host_suite(): TestSuite {
             alphaSocket.close();
             betaSocket.close();
           } finally {
-            await host.stop();
+            await host.dispose();
           }
         },
       }),
@@ -183,7 +185,7 @@ export function node_application_host_suite(): TestSuite {
               "health must expose only readiness and application names",
             );
           } finally {
-            await host.stop();
+            await host.dispose();
           }
         },
       }),
@@ -203,15 +205,15 @@ export function node_application_host_suite(): TestSuite {
             port: 0,
             applications: [firstRoute.registration, secondRoute.registration],
           }));
-          const firstNamespace = mock_application("first-namespace", [{ kind: "prefix", value: "shared:" }]);
-          const secondNamespace = mock_application("second-namespace", [{ kind: "exact", value: "shared:item" }]);
+          const firstNamespace = mock_application("first-namespace", [{ kind: "prefix", value: "shared:" }], undefined, "/shared");
+          const secondNamespace = mock_application("second-namespace", [{ kind: "exact", value: "shared:item" }], undefined, "/shared");
           const namespaceError = await captured_error(() => start_node_application_host({
             port: 0,
             applications: [firstNamespace.registration, secondNamespace.registration],
           }));
           expect_node_host(
             nameError?.message.includes("name") === true
-              && routeError?.message.includes("HTTP route") === true
+              && routeError?.message.includes("route") === true
               && namespaceError?.message.includes("overlap") === true
               && [firstName, secondName, firstRoute, secondRoute, firstNamespace, secondNamespace]
                 .every((application) => application.disposals() === 1),
@@ -233,15 +235,15 @@ export function node_application_host_suite(): TestSuite {
           try {
             const statuses = await Promise.all([
               rejected_websocket_status(host.url),
-              rejected_websocket_status(`${host.url}?livehost=unknown`),
-              rejected_websocket_status(`${host.url}?livehost=towl%3ABAD`),
+              rejected_websocket_status(`${host.url}/unknown?locus=unknown`),
+              rejected_websocket_status(`${host.url}/invalid-towl?locus=towl%3ABAD`),
             ]);
             expect_node_host(
-              statuses.join(",") === "400,404,404" && hosted.accepts() === 0 && towl.accepts() === 0,
-              "invalid authority selection must reject before application dispatch",
+              statuses.join(",") === "404,404,404" && hosted.accepts() === 0 && towl.accepts() === 0,
+              "unmatched exact connection paths must reject before application dispatch",
             );
           } finally {
-            await host.stop();
+            await host.dispose();
           }
         },
       }),
@@ -255,9 +257,9 @@ export function node_application_host_suite(): TestSuite {
             shutdownTimeoutMs: 1_000,
             applications: [application.registration],
           });
-          const websocket = await open_websocket(`${host.url}?livehost=shutdown`);
+          const websocket = await open_websocket(`${host.url}/shutdown?locus=shutdown`);
           const closed = closes(websocket);
-          await Promise.all([host.stop(), host.stop()]);
+          await Promise.all([host.dispose(), host.dispose()]);
           expect_node_host(
             application.disposals() === 1 && await closed === 1001,
             "shutdown must dispose once and preserve the ordinary server-stop close policy",
@@ -275,10 +277,10 @@ export function node_application_host_suite(): TestSuite {
             applications: [application.registration],
             log(event) { events.push(`${event.type}:${event.application ?? ""}:${event.route ?? ""}`); },
           });
-          const websocket = await open_websocket(`${host.url}?livehost=logged`);
+          const websocket = await open_websocket(`${host.url}/logged?locus=logged`);
           await fetch(`${host.httpUrl}/logged`);
           websocket.close();
-          await host.stop();
+          await host.dispose();
           expect_node_host(
             [
               "host-startup",
@@ -299,10 +301,8 @@ export function node_application_host_suite(): TestSuite {
         caseId: "shutdown-timeout-returns-a-clear-failure-for-an-undrained-application", name: "shutdown timeout returns a clear failure for an undrained application",
         run: async () => {
           let disposals = 0;
-          const blocked: NodeHostedApplication = Object.freeze({
+          const blocked: LiveHostApplication = Object.freeze({
             name: "blocked",
-            authorities: Object.freeze([{ kind: "exact" as const, value: "blocked" }]),
-            acceptWebSocket() {},
             dispose() {
               disposals += 1;
               return new Promise<void>(() => undefined);
@@ -313,7 +313,7 @@ export function node_application_host_suite(): TestSuite {
             shutdownTimeoutMs: 25,
             applications: [blocked],
           });
-          const error = await captured_error(host.stop);
+          const error = await captured_error(host.dispose);
           expect_node_host(
             error?.message.includes("shutdown exceeded 25ms") === true && disposals === 1,
             "bounded shutdown must identify its timeout and invoke application disposal once",
@@ -329,14 +329,14 @@ export function node_application_host_suite(): TestSuite {
           const host = await start_node_application_host({ port: 0, applications: [first.registration, second.registration] });
           try {
             await first.registration.dispose();
-            const peer = await open_websocket(`${host.url}?livehost=second`);
+            const peer = await open_websocket(`${host.url}/second?locus=second`);
             expect_node_host(
               first.disposals() === 1 && second.accepts() === 1 && second.disposals() === 0,
               "application disposal must not dispose or suppress peer dispatch",
             );
             peer.close();
           } finally {
-            await host.stop();
+            await host.dispose();
           }
           expect_node_host(
             first.disposals() === 1 && second.disposals() === 1,
@@ -349,7 +349,7 @@ export function node_application_host_suite(): TestSuite {
         caseId: "hosted-tests-and-towl-use-separate-stores-behind-one-node-transport", name: "hosted tests and TOWL use separate stores behind one Node transport",
         run: async () => {
           const hosted = await create_node_hosted_tests_application({
-            executorRegistry: make_local_node_livehost_executor_registry(),
+            executorRegistry: make_local_node_locus_executor_registry(),
           });
           const towl = create_node_towl_application();
           const host = await start_node_application_host({
@@ -357,8 +357,8 @@ export function node_application_host_suite(): TestSuite {
             applications: [hosted.registration, towl.registration],
           });
           try {
-            const coordinator = await open_websocket(`${host.url}?livehost=hosted-tests`);
-            const room = await open_websocket(`${host.url}?livehost=towl%3Aroom-one`);
+            const coordinator = await open_websocket(`${host.url}/hosted-tests?locus=hosted-tests`);
+            const room = await open_websocket(`${host.url}/towl?locus=towl%3Aroom-one`);
             expect_node_host(
               hosted.authorities.store.has("hosted-tests")
                 && !hosted.authorities.store.has("towl:room-one")
@@ -370,7 +370,7 @@ export function node_application_host_suite(): TestSuite {
             coordinator.close();
             room.close();
           } finally {
-            await host.stop();
+            await host.dispose();
           }
         },
       }),
@@ -410,8 +410,8 @@ export function node_application_host_suite(): TestSuite {
         run: async () => {
           const towl = create_node_towl_application();
           const host = await start_node_application_host({ port: 0, applications: [towl.registration] });
-          const transport = create_browser_livehost_socket(
-            `${host.url}?livehost=towl%3Aroute-room`,
+          const transport = create_browser_locus_socket(
+            `${host.url}/towl?locus=towl%3Aroute-room`,
             WebSocket as unknown as BrowserWebSocketConstructor,
           );
           try {
@@ -439,7 +439,7 @@ export function node_application_host_suite(): TestSuite {
             client.livehost.recovery.dispose();
           } finally {
             transport.dispose();
-            await host.stop();
+            await host.dispose();
           }
         },
       }),
@@ -508,7 +508,7 @@ export function node_application_host_suite(): TestSuite {
               "host startup must not allocate DOM, CSS, LiveTree projection, or an authority",
             );
           } finally {
-            await host.stop();
+            await host.dispose();
           }
         },
       }),
@@ -564,7 +564,7 @@ export function node_application_host_suite(): TestSuite {
           await second.receive({ type: "recover", id: "recover-new", logicalMapId: roomId });
           const newPlan = second.sent().find((message) => message.type === "recovery-plan");
           expect_node_host(
-            rejection?.code === "LIVEHOST_SESSION_CREDENTIAL_UNKNOWN"
+            rejection?.code === "LOCUS_SESSION_CREDENTIAL_UNKNOWN"
               && typeof newPlan?.incarnationId === "string"
               && newPlan.incarnationId !== oldPlan?.incarnationId,
             "evicted room must reject old credentials and mint a new incarnation",

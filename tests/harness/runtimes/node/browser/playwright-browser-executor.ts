@@ -22,8 +22,8 @@ export const LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR = Object.freeze({
   supportsCancellation: true,
 }) satisfies TestExecutorDescriptor;
 
-const EVENT_PREFIX = "<LIVEHOST_BROWSER_EVENT>";
-const TIMING_PREFIX = "<LIVEHOST_BROWSER_TIMING>";
+const EVENT_PREFIX = "<LOCUS_BROWSER_EVENT>";
+const TIMING_PREFIX = "<LOCUS_BROWSER_TIMING>";
 const PLAYWRIGHT_SERVER_STARTUP_BUDGET_MS = 60_000;
 const PLAYWRIGHT_CASE_TIMEOUT_MS = 30_000;
 
@@ -327,8 +327,8 @@ export function create_playwright_browser_executor(
             ...selectedPaths,
           ]),
           environment: Object.freeze({
-            LIVEHOST_PLAYWRIGHT: "1",
-            LIVEHOST_PLAYWRIGHT_TITLES: JSON.stringify(selectedTitles),
+            LOCUS_PLAYWRIGHT: "1",
+            LOCUS_PLAYWRIGHT_TITLES: JSON.stringify(selectedTitles),
             HOSTED_TEST_PORT: String(hostedPort),
             PLAYWRIGHT_APP_PORT: String(appPort),
             PLAYWRIGHT_OUTPUT_DIR: outputRoot,

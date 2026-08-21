@@ -60,8 +60,8 @@ export function towl_room_suite(): TestSuite {
         second: towl_room_credential_key("room-b2"),
         distinct: towl_room_credential_key("room-a1") !== towl_room_credential_key("room-b2"),
       }), {
-        first: "hson-livedemo.towl.room-a1.livehost-credential",
-        second: "hson-livedemo.towl.room-b2.livehost-credential",
+        first: "hson-livedemo.towl.room-a1.locus-credential",
+        second: "hson-livedemo.towl.room-b2.locus-credential",
         distinct: true,
       }),
       towl_case(SUITE, "room-url-resolution-preserves-unrelated-address-state", "room URL resolution preserves unrelated address state", () => {
@@ -192,6 +192,82 @@ export function towl_room_suite(): TestSuite {
           application.dispose();
         }
       }, { phase: "ready", occupied: [true, true] }),
+      towl_case(SUITE, "bounded-room-sweeps-preserve-idle-age-and-activity", "bounded room sweeps preserve idle age and activity", async () => {
+        let now = 1_000;
+        let scheduled: (() => void) | undefined;
+        let scheduleCalls = 0;
+        const application = create_towl_authority_application({
+          maxRooms: 1,
+          idleMs: 100,
+          sweepIntervalMs: 100,
+          now: () => now,
+          schedule: (_delayMs, callback) => {
+            scheduleCalls += 1;
+            scheduled = callback;
+            return () => {
+              if (scheduled === callback) scheduled = undefined;
+            };
+          },
+        });
+        const hostId = towl_host_id_for_room("idle-room");
+        const flush = async (): Promise<void> => {
+          for (let index = 0; index < 20; index += 1) await Promise.resolve();
+        };
+        try {
+          const firstSocket = make_towl_socket();
+          const first = await application.connectBounded(hostId, firstSocket);
+          if (!first.ok) throw new Error(first.error.message);
+          first.value();
+          firstSocket.emit_close();
+          await flush();
+          const zeroAge = await application.sweep();
+          now = 1_099;
+          const belowThreshold = await application.sweep();
+          now = 1_100;
+          const threshold = await application.sweep();
+
+          const secondSocket = make_towl_socket();
+          const second = await application.connectBounded(hostId, secondSocket);
+          if (!second.ok) throw new Error(second.error.message);
+          now = 1_200;
+          const active = await application.sweep();
+          const activeRetained = application.hasRoom(hostId);
+          second.value();
+          secondSocket.emit_close();
+          await flush();
+          const zeroAgeScheduled = scheduled;
+          if (zeroAgeScheduled === undefined) throw new Error("Expected an application-private scheduled sweep.");
+          zeroAgeScheduled();
+          await flush();
+          const scheduledZeroAgeRetained = application.hasRoom(hostId);
+          now = 1_300;
+          const thresholdScheduled = scheduled;
+          if (thresholdScheduled === undefined) throw new Error("Expected the application-private sweep to reschedule.");
+          thresholdScheduled();
+          await flush();
+          return {
+            zeroAge,
+            belowThreshold,
+            threshold,
+            active,
+            activeRetained,
+            scheduledZeroAgeRetained,
+            scheduledThresholdEvicted: !application.hasRoom(hostId),
+            schedulerConsumed: scheduleCalls >= 3,
+          };
+        } finally {
+          await application.dispose();
+        }
+      }, {
+        zeroAge: 0,
+        belowThreshold: 0,
+        threshold: 1,
+        active: 0,
+        activeRetained: true,
+        scheduledZeroAgeRetained: true,
+        scheduledThresholdEvicted: true,
+        schedulerConsumed: true,
+      }),
     ],
   };
 }

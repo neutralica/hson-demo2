@@ -103,12 +103,12 @@ export type HostedTestReport = Readonly<{
   error: HostedTestInfrastructureError | null;
 }>;
 
-/** LiveHost's low-level wire constraint uses mutable JSON array types. */
+/** Locus's low-level wire constraint uses mutable JSON array types. */
 export type HostedTestReportState = HostedTestReport & JsonValue;
 
 export type HostedTestReportMap = LiveMap<HostedTestReport>;
 
-export type HostedTestReportCommit = LiveMapCommit;
+export type HostedTestReportCommit = Pick<LiveMapCommit, "changed" | "prevRev" | "rev" | "ops">;
 
 export function hosted_test_report_cases(report: HostedTestReport): readonly HostedTestPlannedCaseReport[] {
   return Object.freeze(report.suiteRuns.flatMap((suite) => suite.cases));

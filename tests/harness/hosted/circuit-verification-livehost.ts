@@ -1,5 +1,5 @@
-import { create_livehost } from "hson-live/livehost";
-import type { JsonValue, LiveHost, LiveHostActions, LiveHostSchema } from "hson-live/types";
+import { create_locus } from "hson-live/locus";
+import type { JsonValue, LiveMap, Locus, LocusActions, LocusSchema } from "hson-live/types";
 import {
   CIRCUIT_VERIFICATION_ACTION,
   CIRCUIT_VERIFICATION_PROGRESS_EVENT,
@@ -8,11 +8,11 @@ import {
   type CircuitVerificationSubmitter,
 } from "../../../src/shared/circuit-verification-contract";
 
-/** Application-specific LiveHost action seam for the Node-owned verifier. */
+/** Application-specific Locus action seam for the Node-owned verifier. */
 export function create_circuit_verification_livehost(
   service: CircuitVerificationSubmitter,
-): LiveHost<undefined, CircuitVerificationActions> {
-  const actions: LiveHostActions<CircuitVerificationActions, undefined> = {
+): Locus<LiveMap<undefined>, CircuitVerificationActions> {
+  const actions: LocusActions<CircuitVerificationActions, LiveMap<undefined>> = {
     [CIRCUIT_VERIFICATION_ACTION]: async (context, request) => {
       const result = await service.submit(request, (progress) => context.emit_event(
         CIRCUIT_VERIFICATION_PROGRESS_EVENT,
@@ -21,12 +21,12 @@ export function create_circuit_verification_livehost(
       return JSON.parse(JSON.stringify(result)) as JsonValue;
     },
   };
-  const schema: LiveHostSchema<undefined, CircuitVerificationActions> = {
+  const schema: LocusSchema<undefined, CircuitVerificationActions> = {
     actions: {
       [CIRCUIT_VERIFICATION_ACTION]: { payload: decode_circuit_verification_request },
     },
   };
-  return create_livehost<undefined, CircuitVerificationActions>({
+  return create_locus<undefined, CircuitVerificationActions>({
     actions,
     schema,
     logicalMapId: "circuit-verifier",

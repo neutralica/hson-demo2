@@ -9,10 +9,10 @@ import type {
   TestResult,
 } from "@playwright/test/reporter";
 
-export const LIVEHOST_BROWSER_EVENT_PREFIX = "<LIVEHOST_BROWSER_EVENT>";
+export const LOCUS_BROWSER_EVENT_PREFIX = "<LOCUS_BROWSER_EVENT>";
 
 function emit(event: Readonly<Record<string, unknown>>): void {
-  process.stdout.write(`${LIVEHOST_BROWSER_EVENT_PREFIX}${JSON.stringify(event)}\n`);
+  process.stdout.write(`${LOCUS_BROWSER_EVENT_PREFIX}${JSON.stringify(event)}\n`);
 }
 
 function test_identity(test: TestCase): Readonly<{ path: string; title: string }> {
@@ -22,7 +22,7 @@ function test_identity(test: TestCase): Readonly<{ path: string; title: string }
   });
 }
 
-export default class LiveHostPlaywrightReporter implements Reporter {
+export default class LocusPlaywrightReporter implements Reporter {
   onBegin(config: FullConfig, suite: Suite): void {
     const require = createRequire(import.meta.url);
     const cachedModules = Object.keys(require.cache);

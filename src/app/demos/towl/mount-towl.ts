@@ -1,8 +1,8 @@
 import type { LiveTree } from "hson-live/livetree";
-import type { LiveHostSessionCredential } from "hson-live/types";
+import type { LocusSessionCredential } from "hson-live/types";
 import {
-  create_browser_livehost_socket,
-} from "hson-live/livehost";
+  create_browser_locus_socket,
+} from "hson-live/locus";
 import {
   TOWL_WIN_POSITION,
   canonical_towl_invite_url,
@@ -81,11 +81,12 @@ type TowlView = Readonly<{
 function configured_url(roomId: string): string {
   const base = import.meta.env.VITE_TOWL_WS_URL ?? import.meta.env.VITE_HOSTED_TEST_WS_URL ?? "ws://127.0.0.1:8787";
   const url = new URL(base);
-  url.searchParams.set("livehost", towl_host_id_for_room(roomId));
+  url.pathname = "/towl";
+  url.searchParams.set("locus", towl_host_id_for_room(roomId));
   return url.toString();
 }
 
-function remembered_credential(roomId: string): LiveHostSessionCredential | undefined {
+function remembered_credential(roomId: string): LocusSessionCredential | undefined {
   try {
     return globalThis.localStorage?.getItem(towl_room_credential_key(roomId)) ?? undefined;
   } catch {
@@ -93,7 +94,7 @@ function remembered_credential(roomId: string): LiveHostSessionCredential | unde
   }
 }
 
-function remember_credential(roomId: string, credential: LiveHostSessionCredential | undefined): void {
+function remember_credential(roomId: string, credential: LocusSessionCredential | undefined): void {
   try {
     const key = towl_room_credential_key(roomId);
     if (credential === undefined) globalThis.localStorage?.removeItem(key);
@@ -371,7 +372,7 @@ export function mount_towl_panel(host: LiveTree, options: TowlPanelOptions): Tow
     disable_game_actions();
     connection = create_towl_connection_controller({
       logicalMapId: towl_host_id_for_room(roomId),
-      openTransport: () => create_browser_livehost_socket(configured_url(roomId)),
+      openTransport: () => create_browser_locus_socket(configured_url(roomId)),
       readCredential: () => remembered_credential(roomId),
       writeCredential: (credential) => remember_credential(roomId, credential),
       onState: render_state,

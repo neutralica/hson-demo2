@@ -1,6 +1,6 @@
 import type { TestCollection, TestDescriptorMetadata, TestSubject } from "../../../src/shared/testing/test-contracts";
 import type { TestSuite } from "../core/test-contracts";
-import { all_livehost_suites } from "../../suites/livehost/suite-registry";
+import { all_locus_suites } from "../../suites/livehost/suite-registry";
 import { livemap_suites_core } from "../../suites/livemap/core-suite";
 import { livemap_suite_editor } from "../../suites/livemap/editor-suite";
 import { livemap_suite_feed } from "../../suites/livemap/feed-suite";
@@ -114,7 +114,7 @@ export function all_canonical_portable_test_suites(): readonly TestSuite[] {
     livemap_equivalence_transport_propagation_suite(),
     livemap_equivalence_rejection_isolation_suite(),
     parsing_verification_coordinator_suite(),
-    ...all_livehost_suites(),
+    ...all_locus_suites(),
     ...all_towl_suites(),
     ...all_unit_tests(),
   ];

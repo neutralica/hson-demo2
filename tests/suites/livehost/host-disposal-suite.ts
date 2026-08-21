@@ -1,9 +1,10 @@
-import { create_livehost, create_livehost_store } from "hson-live/livehost";
-import type { LiveHostDisposer, LiveHostSocketLike } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
+import { create_application_locus_store } from "../../harness/hosted/application-locus-store";
+import type { LocusDisposer, LocusSocketLike } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type DisposalSocket = LiveHostSocketLike & Readonly<{
+type DisposalSocket = LocusSocketLike & Readonly<{
   receive: (message: unknown) => Promise<void>;
   emit_close: () => void;
   sent: () => readonly Record<string, unknown>[];
@@ -19,11 +20,11 @@ function make_socket(): DisposalSocket {
   return Object.freeze({
     send(message: string): void { sent.push(message); },
     close(): void { closeCount += 1; },
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       messages.add(listener);
       return () => { messages.delete(listener); };
     },
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       closes.add(listener);
       return () => { closes.delete(listener); };
     },
@@ -49,14 +50,14 @@ function disposal_case(caseId: string, name: string, act: () => unknown | Promis
   };
 }
 
-export function livehost_host_disposal_suite(): TestSuite {
+export function locus_host_disposal_suite(): TestSuite {
   const SUITE = "livehost/host-disposal";
   return {
     suite: SUITE,
     cases: [
       disposal_case("host-disposal-is-idempotent-inert-and-does-not-own-physical-sockets", "host disposal is idempotent inert and does not own physical sockets", async () => {
         let calls = 0;
-        const host = create_livehost({
+        const host = create_locus({
           state: { preserved: true },
           sessionId: () => "dispose-active",
           actions: { act: () => { calls += 1; } },
@@ -98,10 +99,10 @@ export function livehost_host_disposal_suite(): TestSuite {
         listenersAfter: 0,
         lateListeners: 0,
         calls: 0,
-        lifecycle: ["attached", "revoked:host_disposed"],
+        lifecycle: ["attached", "revoked:locus_disposed"],
         closeCount: 0,
         responseType: "error",
-        responseCode: "LIVEHOST_HOST_DISPOSED",
+        responseCode: "LOCUS_DISPOSED",
         map: { preserved: true },
         state: "revoked",
       }),
@@ -110,7 +111,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         let now = 0;
         let scheduled: (() => void) | undefined;
         let canceled = 0;
-        const host = create_livehost({
+        const host = create_locus({
           state: {}, sessionId: () => "dispose-disconnected",
           sessions: {
             graceMs: 20,
@@ -135,7 +136,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         scheduled?.();
         return { events, canceled, state: host.sessions.debug().sessions[0]?.state };
       }, {
-        events: ["attached", "detached", "revoked:host_disposed"],
+        events: ["attached", "detached", "revoked:locus_disposed"],
         canceled: 1,
         state: "revoked",
       }),
@@ -143,7 +144,7 @@ export function livehost_host_disposal_suite(): TestSuite {
       disposal_case("host-disposal-releases-action-dedupe-retention-resources", "host disposal releases action dedupe retention resources", async () => {
         const scheduled = new Set<() => void>();
         let canceled = 0;
-        const host = create_livehost({
+        const host = create_locus({
           state: {},
           actions: { once: () => ({ ok: true }) },
           actionDedupe: {
@@ -186,7 +187,7 @@ export function livehost_host_disposal_suite(): TestSuite {
       }),
 
       disposal_case("active-recovery-channel-stops-publishing-after-disposal", "active recovery channel stops publishing after disposal", async () => {
-        const host = create_livehost({ state: { count: 0 }, sessionId: () => "recovery-dispose" });
+        const host = create_locus({ state: { count: 0 }, sessionId: () => "recovery-dispose" });
         const socket = make_socket();
         host.connect(socket);
         await socket.receive({ type: "hello" });
@@ -222,7 +223,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         listeners: 0,
         map: { count: 0 },
         closeCount: 0,
-        mutationCode: "LIVEHOST_AUTHORITY_CLOSED",
+        mutationCode: "LOCUS_AUTHORITY_CLOSED",
       }),
 
       disposal_case("pending-async-action-keeps-origin-but-cannot-regain-connection-authority", "pending async action keeps origin but cannot regain connection authority", async () => {
@@ -230,7 +231,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         const gate = new Promise<void>((resolve) => { release = resolve; });
         let origin: unknown;
         let emitted: boolean | undefined;
-        const host = create_livehost<{ finished: boolean }, { delayed: undefined }>({
+        const host = create_locus<{ finished: boolean }, { delayed: undefined }>({
           state: { finished: false }, sessionId: () => "pending-dispose",
           actions: {
             delayed: async (ctx) => {
@@ -257,7 +258,7 @@ export function livehost_host_disposal_suite(): TestSuite {
       }),
 
       disposal_case("store-deletion-remains-non-disposing-and-explicit-teardown-is-safe", "store deletion remains non-disposing and explicit teardown is safe", async () => {
-        const store = create_livehost_store();
+        const store = create_application_locus_store();
         const created = store.create("room-a", {
           state: { count: 0 },
           actions: { increment: (ctx) => { void ctx.mutate((draft) => draft.set(["count"], 1)); } },
@@ -282,7 +283,7 @@ export function livehost_host_disposal_suite(): TestSuite {
         deletedAgain: false,
         storeHas: false,
         beforeType: "ack",
-        afterCode: "LIVEHOST_HOST_DISPOSED",
+        afterCode: "LOCUS_DISPOSED",
         count: 1,
       }),
     ] as const,

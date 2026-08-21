@@ -1,17 +1,16 @@
 
 import type {
-  LiveHost,
-  LiveHostActions,
-  LiveHostActionsForMap,
-  LiveHostAuthorityAcquisition,
-  LiveHostAuthorityEvictionResult,
-  LiveHostAuthorityRegistry,
-  LiveHostConnectionContext,
-  LiveHostForMap,
-  LiveHostSchema,
-  LiveHostSocketLike,
-  LiveHostStore,
+  Locus,
+  LocusActions,
+  LocusConnectionContext,
+  LocusSchema,
+  LocusSocketLike,
 } from "hson-live/types";
+import type {
+  LiveHostLocusAcquisition,
+  LiveHostLocusEvictionResult,
+  LiveHostLocusRegistry,
+} from "hson-live/livehost";
 import { hson } from "hson-live";
 import type { JsonValue } from "hson-live/types";
 import type { TestExecutorDiscovery } from "../../../src/shared/testing/test-discovery-contract";
@@ -47,10 +46,11 @@ import {
   type HostedTestExecutionControl,
 } from "./hosted-test-execution-control";
 import {
-  create_livehost,
-  create_livehost_authority_registry,
-  create_livehost_store,
-} from "hson-live/livehost";
+  create_locus,
+} from "hson-live/locus";
+import { create_livehost_locus_registry } from "hson-live/livehost";
+import { create_application_locus_store, type ApplicationLocusStore } from "./application-locus-store";
+import { create_application_idle_sweep, type ApplicationIdleSweep } from "./application-idle-sweep";
 import { HOSTED_TEST_RUN_OPTIONS } from "./hosted-test-scheduling";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../src/shared/hosted-tests/hosted-test-timeline";
 
@@ -132,25 +132,25 @@ type HostedTestReportActions = Readonly<{
   "tests.ready": Readonly<{ runId: string }>;
 }>;
 
-type HostedTestReportHost = LiveHostForMap<HostedTestReportMap, HostedTestReportActions>;
+type HostedTestReportHost = Locus<HostedTestReportMap, HostedTestReportActions>;
 
 export type HostedTestApplication = Readonly<{
-  store: LiveHostStore;
-  coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestActions>;
+  store: ApplicationLocusStore;
+  coordinator: Locus<HostedTestCoordinatorMap, HostedTestActions>;
   retention: HostedTestRunRetention;
   connect(
     hostId: string,
-    socket: LiveHostSocketLike,
-    context?: LiveHostConnectionContext,
-  ): ReturnType<LiveHostStore["connect"]>;
+    socket: LocusSocketLike,
+    context?: LocusConnectionContext,
+  ): ReturnType<ApplicationLocusStore["connect"]>;
   connectBounded(
     hostId: string,
-    socket: LiveHostSocketLike,
-    context?: LiveHostConnectionContext,
-  ): Promise<ReturnType<LiveHostStore["connect"]>>;
+    socket: LocusSocketLike,
+    context?: LocusConnectionContext,
+  ): Promise<ReturnType<ApplicationLocusStore["connect"]>>;
   reportCount(): number;
   hasReport(hostId: string): boolean;
-  evictReport(hostId: string): Promise<LiveHostAuthorityEvictionResult>;
+  evictReport(hostId: string): Promise<LiveHostLocusEvictionResult>;
   sweepReports(): Promise<number>;
   dispose(): void | Promise<void>;
 }>;
@@ -325,7 +325,7 @@ export function create_hosted_test_application(
       + " An executor advertising synthetic-dom tests must install a selected-run execution strategy.",
     );
   }
-  const store = create_livehost_store();
+  const store = create_application_locus_store();
   const retention = options.retention ?? make_hosted_test_run_retention(16);
   const makeRunId = options.makeRunId ?? make_hosted_test_run_id;
   const makeAttemptId = options.makeAttemptId ?? ((runId: HostedTestRunId, ordinal: number) => (
@@ -383,12 +383,12 @@ export function create_hosted_test_application(
   const coordinatorMap = hson.liveMap.fromJson({ requests: {}, runs: {} })
     .schema.use(HOSTED_TEST_COORDINATOR_SCHEMA) as unknown as HostedTestCoordinatorMap;
   const attemptControls = new Map<string, HostedTestExecutionControl>();
-  let coordinator: LiveHostForMap<HostedTestCoordinatorMap, HostedTestActions>;
+  let coordinator: Locus<HostedTestCoordinatorMap, HostedTestActions>;
   let disposing = false;
 
   function create_report_host(reportHostId: string, blueprint: ReportBlueprint): ReportHost {
     const { runId, plan, reportPlan } = blueprint;
-    const reportActions: LiveHostActionsForMap<HostedTestReportActions, HostedTestReportMap> = {
+    const reportActions: LocusActions<HostedTestReportActions, HostedTestReportMap> = {
       "tests.inspect": async (_reportContext, inspectRequest) => {
         if (inspectRequest.runId !== runId) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${inspectRequest.runId}" is not owned by this report host.`);
         if (retention.get(runId) === undefined) throw new Error(`HOSTED_TEST_UNKNOWN_RUN: Hosted test run "${runId}" is no longer inspectable.`);
@@ -406,7 +406,7 @@ export function create_hosted_test_application(
         return { ready: true };
       },
     };
-    const reportSchema: LiveHostSchema<HostedTestReportState, HostedTestReportActions> = {
+    const reportSchema: LocusSchema<HostedTestReportState, HostedTestReportActions> = {
       actions: {
         "tests.inspect": { payload: decode_inspect },
         "tests.ready": { payload: decode_report_ready },
@@ -419,7 +419,7 @@ export function create_hosted_test_application(
       cases: initial.suiteRuns.reduce((total, suiteRun) => total + suiteRun.cases.length, 0),
     });
     const map = hson.liveMap.fromJson(initial).schema.use(HOSTED_TEST_REPORT_SCHEMA) as unknown as HostedTestReportMap;
-    const host = create_livehost({
+    const host = create_locus({
       map,
       actions: reportActions,
       schema: reportSchema,
@@ -434,23 +434,24 @@ export function create_hosted_test_application(
     return host;
   }
 
-  const reportRegistry: LiveHostAuthorityRegistry<ReportHost> | undefined = options.lifecycle === undefined
+  let reportIdleSweep: ApplicationIdleSweep | undefined;
+  const reportRegistry: LiveHostLocusRegistry<ReportHost> | undefined = options.lifecycle === undefined
     ? undefined
-    : create_livehost_authority_registry<ReportHost>({
-        maxAuthorities: options.lifecycle.maxReports,
+    : create_livehost_locus_registry<ReportHost>({
+        maxLoci: options.lifecycle.maxReports,
         idleMs: options.lifecycle.terminalRetentionMs,
         ...(options.lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: options.lifecycle.sweepIntervalMs }),
-        ...(options.lifecycle.now === undefined ? {} : { now: options.lifecycle.now }),
-        ...(options.lifecycle.schedule === undefined ? {} : { schedule: options.lifecycle.schedule }),
         create(reportHostId) {
           const blueprint = reportBlueprints.get(reportHostId);
           if (blueprint === undefined) throw new Error("Hosted report authority is unknown or evicted.");
-          return create_report_host(reportHostId, blueprint);
+          const host = create_report_host(reportHostId, blueprint);
+          reportIdleSweep?.track(reportHostId, host.activity);
+          return host;
         },
         async dispose(host) {
           const blueprint = reportBlueprints.get(host.stream.logicalMapId);
           if (!disposing && blueprint !== undefined) {
-            const state = coordinator.map.capture().value;
+            const state = coordinator.map.snap();
             const run = state.runs[blueprint.runId];
             const attempt = run?.attempts[blueprint.attemptId];
             const request = state.requests[blueprint.clientId]?.[blueprint.requestId];
@@ -477,6 +478,7 @@ export function create_hosted_test_application(
           }
           reportBlueprints.delete(host.stream.logicalMapId);
           reportHostIds.delete(host.stream.logicalMapId);
+          reportIdleSweep?.remove(host.stream.logicalMapId);
           if (blueprint !== undefined) {
             retention.remove(blueprint.runId);
             clear_report_projection(blueprint.runId);
@@ -484,6 +486,15 @@ export function create_hosted_test_application(
           host.dispose();
         },
       });
+  if (reportRegistry !== undefined && options.lifecycle !== undefined) {
+    reportIdleSweep = create_application_idle_sweep({
+      idleMs: options.lifecycle.terminalRetentionMs,
+      ...(options.lifecycle.sweepIntervalMs === undefined ? {} : { sweepIntervalMs: options.lifecycle.sweepIntervalMs }),
+      ...(options.lifecycle.now === undefined ? {} : { now: options.lifecycle.now }),
+      ...(options.lifecycle.schedule === undefined ? {} : { schedule: options.lifecycle.schedule }),
+      evict: (reportHostId) => reportRegistry.evict(reportHostId),
+    });
+  }
 
   function report_outcome(status: HostedTestReport["run"]["status"] | undefined): HostedTestCancelResult["outcome"] {
     if (status === "passed" || status === "failed" || status === "cancelled" || status === "error") return status;
@@ -502,13 +513,17 @@ export function create_hosted_test_application(
     }
     let status: HostedTestReport["run"]["status"] | undefined;
     if (reportRegistry === undefined) {
-      const host = store.get(attempt.reportHostId) as LiveHost<HostedTestReportState, HostedTestReportActions> | undefined;
-      status = host?.map.capture().value.run.status;
+      const host = store.get(attempt.reportHostId) as Locus<HostedTestReportMap, HostedTestReportActions> | undefined;
+      status = host?.map.snap().run.status;
     } else if (reportRegistry.has(attempt.reportHostId)) {
       const acquired = await reportRegistry.acquire(attempt.reportHostId);
       if (acquired.ok) {
-        try { status = acquired.value.authority.map.capture().value.run.status; }
-        finally { acquired.value.release(); }
+        reportIdleSweep?.beginAcquisition(attempt.reportHostId);
+        try { status = acquired.value.locus.map.snap().run.status; }
+        finally {
+          acquired.value.release();
+          reportIdleSweep?.endAcquisition(attempt.reportHostId);
+        }
       }
     }
     return Object.freeze({
@@ -557,7 +572,7 @@ export function create_hosted_test_application(
       selectedIds: reportPlan.selectionIds.length,
       suites: reportPlan.suites.length,
     });
-    let reportAcquisition: LiveHostAuthorityAcquisition<ReportHost> | undefined;
+    let reportAcquisition: LiveHostLocusAcquisition<ReportHost> | undefined;
     let reportHost: ReportHost;
     if (reportRegistry === undefined) {
       reportHost = create_report_host(reportHostId, {
@@ -565,12 +580,12 @@ export function create_hosted_test_application(
       });
       const stored = store.set(
         reportHostId,
-        reportHost as unknown as LiveHost<HostedTestReportState, HostedTestReportActions>,
+        reportHost,
       );
       if (!stored.ok) throw new Error(stored.error.message);
     } else {
       if (reportRegistry.has(reportHostId) || reportBlueprints.has(reportHostId)) {
-        throw new Error(`LIVEHOST_STORE_DUPLICATE_ID: Hosted report authority already exists: ${reportHostId}`);
+        throw new Error(`LOCUS_STORE_DUPLICATE_ID: Hosted report authority already exists: ${reportHostId}`);
       }
       reportBlueprints.set(reportHostId, {
         runId, clientId, requestId, attemptId, plan, reportPlan,
@@ -581,7 +596,8 @@ export function create_hosted_test_application(
         throw new Error(`${acquired.error.code}: ${acquired.error.message}`);
       }
       reportAcquisition = acquired.value;
-      reportHost = acquired.value.authority;
+      reportIdleSweep?.beginAcquisition(reportHostId);
+      reportHost = acquired.value.locus;
     }
     let associationRetained = false;
     let report: HostedTestReportController | undefined;
@@ -705,7 +721,7 @@ export function create_hosted_test_application(
       }
 
       activeReport.dispose();
-      const state = reportHost.map.capture().value;
+      const state = reportHost.map.snap();
       await setAttemptStatus(runId, attemptId, "settled");
       const timing = state.run.timing;
       if (timing === null) throw new Error("Hosted test report completed without timing.");
@@ -744,6 +760,7 @@ export function create_hosted_test_application(
       attemptControls.delete(attemptId);
       executionControl.release();
       reportAcquisition?.release();
+      if (reportAcquisition !== undefined) reportIdleSweep?.endAcquisition(reportHostId);
       if (!associationRetained) {
         report?.dispose();
         if (reportRegistry === undefined) {
@@ -758,7 +775,7 @@ export function create_hosted_test_application(
     }
   }
 
-  const actions: LiveHostActions<HostedTestActions, HostedTestCoordinatorState> = {
+  const actions: LocusActions<HostedTestActions, HostedTestCoordinatorMap> = {
     "tests.discover": async (_context, _request, message) => {
       try {
         return JSON.parse(JSON.stringify(options.discovery)) as JsonValue;
@@ -783,7 +800,7 @@ export function create_hosted_test_application(
         association: HostedTestRunRequestAssociation,
         run: HostedTestCoordinatedRun,
       ): Promise<void> => {
-        if (context.map.capture().value.requests[clientId] === undefined) {
+        if (context.map.snap().requests[clientId] === undefined) {
           await context.mutate((draft) => draft.batch((tx) => {
             tx.setMany(["requests"], { [clientId]: { [requestId]: association } });
             tx.setMany(["runs"], { [run.id]: run } as unknown as Record<string, JsonValue>);
@@ -835,7 +852,7 @@ export function create_hosted_test_application(
       if (!message.clientId || !message.requestId) {
         throw new Error("HOSTED_TEST_REQUEST_ID_REQUIRED: tests.cancel requires a retry-safe client and request identity.");
       }
-      const initial = context.map.capture().value;
+      const initial = context.map.snap();
       const run = initial.runs[request.runId];
       const attempt = run?.attempts[request.attemptId];
       if (run === undefined || attempt === undefined || attempt.id !== request.attemptId) {
@@ -864,7 +881,7 @@ export function create_hosted_test_application(
         });
       });
       return JSON.parse(JSON.stringify(await cancellation_result(
-        context.map.capture().value,
+        context.map.snap(),
         request.runId,
         request.attemptId,
       ))) as JsonValue;
@@ -880,14 +897,14 @@ export function create_hosted_test_application(
       }
     },
   };
-  const schema: LiveHostSchema<HostedTestCoordinatorState, HostedTestActions> = {
+  const schema: LocusSchema<HostedTestCoordinatorState, HostedTestActions> = {
     actions: {
       "tests.discover": { payload: decode_test_executor_discovery_request },
       "tests.runSelected": { payload: decode_run_selected_tests_request },
       "tests.cancel": { payload: decode_cancel },
     },
   };
-  coordinator = create_livehost({
+  coordinator = create_locus({
     map: coordinatorMap,
     actions,
     schema,
@@ -908,24 +925,28 @@ export function create_hosted_test_application(
         return store.connect(hostId, socket, context);
       }
       if (!reportRegistry.has(hostId)) {
-        return { ok: false, error: { code: "LIVEHOST_STORE_UNKNOWN_ID", message: `Unknown hosted report authority: ${hostId}` } };
+        return { ok: false, error: { code: "LOCUS_STORE_UNKNOWN_ID", message: `Unknown hosted report authority: ${hostId}` } };
       }
       const acquired = await reportRegistry.acquire(hostId);
       if (!acquired.ok) return acquired;
+      reportIdleSweep?.beginAcquisition(hostId);
       try {
-        return { ok: true, value: acquired.value.authority.connect(socket, context) };
+        return { ok: true, value: acquired.value.locus.connect(socket, context) };
       } finally {
         acquired.value.release();
+        reportIdleSweep?.endAcquisition(hostId);
       }
     },
-    reportCount: () => reportRegistry?.diagnostics().entryCount ?? reportHostIds.size,
+    reportCount: () => reportHostIds.size,
     hasReport: (hostId) => reportRegistry?.has(hostId) ?? reportHostIds.has(hostId),
     evictReport: (hostId) => reportRegistry?.evict(hostId) ?? Promise.resolve(
       reportHostIds.has(hostId)
         ? { status: "busy" as const, blockers: Object.freeze(["acquisition" as const]) }
         : { status: "not-found" as const },
     ),
-    sweepReports: () => reportRegistry?.sweep() ?? Promise.resolve(0),
+    async sweepReports(): Promise<number> {
+      return reportIdleSweep?.sweep() ?? 0;
+    },
     async dispose() {
       disposing = true;
       const activeControls = [...attemptControls.values()];
@@ -937,6 +958,7 @@ export function create_hosted_test_application(
       reportProjectionWaiters.clear();
       projectedReportIds.clear();
       if (reportRegistry !== undefined) {
+        reportIdleSweep?.dispose();
         await reportRegistry.dispose();
       } else {
         for (const id of reportHostIds) {

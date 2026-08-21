@@ -119,7 +119,7 @@ export function make_hosted_test_panel_adapter(
       throw new Error("Hosted test run was superseded before report recovery.");
     }
     current = run;
-    currentReport = run.client.recovery.map.capture().value;
+    currentReport = run.client.recovery.map.snap();
     let projectedOnce = false;
     let infrastructureErrorShown = false;
     let terminalResolve: () => void = () => undefined;
@@ -127,10 +127,10 @@ export function make_hosted_test_panel_adapter(
 
     const project = (observation?: LiveMapCommitObservation): void => {
       if (current !== run || generation !== runGeneration) return;
-      if (observation?.kind === "snapshot") currentReport = run.client.recovery.map.capture().value;
+      if (observation?.kind === "snapshot") currentReport = run.client.recovery.map.snap();
       else if (observation?.kind === "commit" && currentReport !== undefined) currentReport = apply_report_commit(currentReport, observation);
-      else if (observation === undefined && projectedOnce) currentReport = run.client.recovery.map.capture().value;
-      const report = currentReport ?? run.client.recovery.map.capture().value;
+      else if (observation === undefined && projectedOnce) currentReport = run.client.recovery.map.snap();
+      const report = currentReport ?? run.client.recovery.map.snap();
       projectedOnce = true;
       if (report.run.id !== run.association.runId || report.run.suite !== target) {
         throw new Error("Recovered hosted report identity does not match the requested run.");
@@ -172,7 +172,7 @@ export function make_hosted_test_panel_adapter(
       if (current !== run || generation !== runGeneration) {
         return Object.freeze({ ...result, timing: Object.freeze({ ...result.timing, roundTripMs: performance.now() - roundTripStartedAt }) });
       }
-      const report = currentReport ?? run.client.recovery.map.capture().value;
+      const report = currentReport ?? run.client.recovery.map.snap();
       const cursor = run.client.recovery.lastAppliedRev ?? -1;
       const expectedOk = report.run.status === "passed";
       const expectedCancelled = report.run.status === "cancelled";

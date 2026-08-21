@@ -27,7 +27,7 @@ try {
   const run = await runtime.start_selected(browserIds);
   await run.ready();
   const result = await run.actionResult;
-  const report = run.client.recovery.map.capture().value;
+  const report = run.client.recovery.map.snap();
   if (!result.ok) {
     console.error(JSON.stringify(report.suiteRuns.filter((suite) => suite.status === "fail").map((suite) => ({
       id: suite.id,
@@ -44,8 +44,8 @@ try {
     BROWSER_RASTER_SUITE_MANIFEST.journeys.length);
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
-  assert.equal(recovered.client.recovery.map.capture().value.run.status, "passed");
-  assert.deepEqual(recovered.client.recovery.map.capture().value.plan.selectionIds, report.plan.selectionIds);
+  assert.equal(recovered.client.recovery.map.snap().run.status, "passed");
+  assert.deepEqual(recovered.client.recovery.map.snap().plan.selectionIds, report.plan.selectionIds);
   const metrics = server.browserMetrics!();
   assert.equal(metrics.launches, 1);
   assert.equal(metrics.activeProcesses, 0);

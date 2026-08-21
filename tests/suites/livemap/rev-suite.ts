@@ -3,6 +3,7 @@ import { make_livemap_core } from "hson-live/livemap";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { json_root_node } from "./core-helpers";
 import { read_case } from "./handle-helpers";
+import { apply_fixture, replay_fixture } from "./replay-test-helper";
 
 
 
@@ -440,7 +441,7 @@ export function livemap_suite_rev(): TestSuite {
 
           return {
             rev: capture.rev,
-            value: capture.value,
+            value: map.snap(),
             mapRev: map.rev,
             frozen: Object.isFrozen(capture),
           };
@@ -471,7 +472,7 @@ export function livemap_suite_rev(): TestSuite {
             commitRev: commit.rev,
             captureRev: capture.rev,
             mapRev: map.rev,
-            value: capture.value,
+            value: map.snap(),
           };
         },
         expected: {
@@ -547,7 +548,7 @@ export function livemap_suite_rev(): TestSuite {
             label: "zero",
           }));
 
-          const commit = map.apply({
+          const commit = apply_fixture(map, {
             prevRev: 0,
             value: {
               count: 1,
@@ -596,7 +597,7 @@ export function livemap_suite_rev(): TestSuite {
 
           const capture = map.capture();
 
-          const commit = map.apply({
+          const commit = apply_fixture(map, {
             prevRev: capture.rev,
             value: {
               count: 2,
@@ -653,7 +654,7 @@ export function livemap_suite_rev(): TestSuite {
           };
 
           try {
-            map.apply({
+            apply_fixture(map, {
               prevRev: staleCapture.rev,
               value: {
                 count: 2,
@@ -715,7 +716,7 @@ export function livemap_suite_rev(): TestSuite {
 
           const first = map.set(["count"], 1);
 
-          const commit = map.apply({
+          const commit = apply_fixture(map, {
             prevRev: map.rev,
             value: {
               count: 1,
@@ -775,7 +776,7 @@ export function livemap_suite_rev(): TestSuite {
           let issueCode: string | undefined;
 
           try {
-            map.apply({
+            apply_fixture(map, {
               prevRev: map.rev,
               value: {
                 user: {
@@ -855,7 +856,7 @@ export function livemap_suite_rev(): TestSuite {
           let message: string | undefined;
 
           try {
-            map.apply({
+            apply_fixture(map, {
               prevRev: -1,
               value: {
                 count: 1,
@@ -908,7 +909,7 @@ export function livemap_suite_rev(): TestSuite {
             "Grace"
           );
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: target.rev,
             ops: sourceCommit.ops,
           });
@@ -972,7 +973,7 @@ export function livemap_suite_rev(): TestSuite {
             tx.set(["user", "age"], 38);
           });
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: 0,
             ops: sourceCommit.ops,
           });
@@ -1022,7 +1023,7 @@ export function livemap_suite_rev(): TestSuite {
             "y"
           );
 
-          const replayCommit = target.replay({
+          const replayCommit = replay_fixture(target,{
             prevRev: 0,
             ops: sourceCommit.ops,
           });
@@ -1077,7 +1078,7 @@ export function livemap_suite_rev(): TestSuite {
 
           map.set(["count"], 1);
 
-          const commit = map.replay({
+          const commit = replay_fixture(map,{
             prevRev: map.rev,
             ops: [],
           });
@@ -1130,7 +1131,7 @@ export function livemap_suite_rev(): TestSuite {
           };
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });
@@ -1204,7 +1205,7 @@ export function livemap_suite_rev(): TestSuite {
           };
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });
@@ -1304,7 +1305,7 @@ export function livemap_suite_rev(): TestSuite {
           let errorName: string | undefined;
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: sourceCommit.ops,
             });

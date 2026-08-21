@@ -91,16 +91,16 @@ function panel_evidence(): Promise<PanelEvidence> {
     const cancellation = await adapter.cancel();
     await cleanupEntered;
     expect(cancellation.accepted && cancellation.controlStatus === "cancelling", "panel receives authoritative cancelling acknowledgement");
-    await eventually(() => runtime.client.recovery.map.capture().value.runs[cancellation.runId]
+    await eventually(() => runtime.client.recovery.map.snap().runs[cancellation.runId]
       ?.attempts[cancellation.attemptId]?.controlStatus === "cancelling", "coordinator cancelling projection");
     const cancellingRecoveryStatus = hosted_test_recovery_association(
-      runtime.client.recovery.map.capture().value,
+      runtime.client.recovery.map.snap(),
       cancellation.runId,
       cancellation.attemptId,
     )?.controlStatus;
     const duplicate = await adapter.cancel();
     releaseCleanup();
-    await eventually(() => runtime.client.recovery.map.capture().value.runs[cancellation.runId]
+    await eventually(() => runtime.client.recovery.map.snap().runs[cancellation.runId]
       ?.attempts[cancellation.attemptId]?.controlStatus === "settled", "coordinator settlement after cleanup");
     const original = await originalPromise;
     const recovered = await adapter.recover(cancellation.runId, cancellation.attemptId);

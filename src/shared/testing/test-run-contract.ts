@@ -36,7 +36,7 @@ export type TestRunPlan = Readonly<{
   suites: readonly PlannedTestSuite[];
 }>;
 
-/** LiveHost's JSON action constraint spells wire arrays as mutable arrays. */
+/** Locus's JSON action constraint spells wire arrays as mutable arrays. */
 export type RunSelectedTestsRequest = Readonly<{
   selectionIds: string[];
 }>;

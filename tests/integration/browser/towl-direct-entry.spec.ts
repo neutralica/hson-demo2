@@ -42,8 +42,8 @@ async function install_towl_boot_metrics(page: Page): Promise<void> {
     const NativeWebSocket = window.WebSocket;
     class CountingWebSocket extends NativeWebSocket {
       constructor(url: string | URL, protocols?: string | string[]) {
-        const livehost = new URL(String(url), window.location.href).searchParams.get("livehost");
-        if (livehost?.startsWith("towl:") === true) metrics.webSockets += 1;
+        const locus = new URL(String(url), window.location.href).searchParams.get("locus");
+        if (locus?.startsWith("towl:") === true) metrics.webSockets += 1;
         if (protocols === undefined) super(url);
         else super(url, protocols);
       }
@@ -192,7 +192,7 @@ test("two fresh phones share, play, recover, resume, and explicitly Leave one TO
       constructor(url: string | URL, protocols?: string | string[]) {
         if (protocols === undefined) super(url);
         else super(url, protocols);
-        if (new URL(String(url), window.location.href).searchParams.get("livehost")?.startsWith("towl:") === true) {
+        if (new URL(String(url), window.location.href).searchParams.get("locus")?.startsWith("towl:") === true) {
           latestTowlSocket = this;
           if (failNextTowlConnections > 0) {
             failNextTowlConnections -= 1;
@@ -272,7 +272,7 @@ test("two fresh phones share, play, recover, resume, and explicitly Leave one TO
       expect((({ text: _text, sameNode: _sameNode, ...metrics }) => metrics)(sample)).toEqual(stableTypography);
     }
 
-    const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
+    const credentialKey = `hson-livedemo.towl.${roomId}.locus-credential`;
     const credential = await second.evaluate((key) => localStorage.getItem(key), credentialKey);
     expect(credential).not.toBeNull();
     await second.evaluate(() => (
@@ -344,7 +344,7 @@ test("manual Reconnect uses the existing room after an exhausted opening transpo
       constructor(url: string | URL, protocols?: string | string[]) {
         if (protocols === undefined) super(url);
         else super(url, protocols);
-        if (new URL(String(url), window.location.href).searchParams.get("livehost")?.startsWith("towl:") === true) {
+        if (new URL(String(url), window.location.href).searchParams.get("locus")?.startsWith("towl:") === true) {
           towlConnections += 1;
           if (failFirstTowlConnection) {
             failFirstTowlConnection = false;
@@ -384,7 +384,7 @@ test("portrait, landscape, and desktop-like resizing preserves one room, session
   await expect(page.getByTestId("towl-local-seat")).toHaveText("local seat: player1");
   const roomId = new URL(page.url()).searchParams.get("room");
   expect(roomId).not.toBeNull();
-  const credentialKey = `hson-livedemo.towl.${roomId}.livehost-credential`;
+  const credentialKey = `hson-livedemo.towl.${roomId}.locus-credential`;
   expect(await read_towl_boot_metrics(page)).toEqual({ webSockets: 1, historyReplaces: 1, credentialReads: 1 });
   const credential = await page.evaluate((key) => localStorage.getItem(key), credentialKey);
   expect(credential).not.toBeNull();

@@ -1,6 +1,7 @@
 // livehost/store-suite.ts
 
-import { create_livehost, create_livehost_store } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
+import { create_application_locus_store } from "../../harness/hosted/application-locus-store";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import { read_case } from "../livemap/handle-helpers";
 
@@ -68,7 +69,7 @@ function make_store_socket(): StoreSocket {
   });
 }
 
-export function livehost_store_suite(): TestSuite {
+export function locus_store_suite(): TestSuite {
   const SUITE = "livehost/store";
 
   return {
@@ -79,7 +80,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "create-stores-host-by-id", name: "create stores host by id",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           const result = store.create("counter", { state: { count: 0 } });
 
           return {
@@ -101,7 +102,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "create-rejects-duplicate-id", name: "create rejects duplicate id",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           const first = store.create("counter", { state: { count: 0 } });
           const second = store.create("counter", { state: { count: 1 } });
 
@@ -115,7 +116,7 @@ export function livehost_store_suite(): TestSuite {
         expected: {
           firstOk: true,
           secondOk: false,
-          code: "LIVEHOST_STORE_DUPLICATE_ID",
+          code: "LOCUS_STORE_DUPLICATE_ID",
           count: 0,
         },
       }),
@@ -124,8 +125,8 @@ export function livehost_store_suite(): TestSuite {
         caseId: "set-stores-existing-host-by-id", name: "set stores existing host by id",
         input: {},
         act: () => {
-          const store = create_livehost_store();
-          const host = create_livehost({ state: { ready: true } });
+          const store = create_application_locus_store();
+          const host = create_locus({ state: { ready: true } });
           const result = store.set("main", host);
 
           return {
@@ -147,9 +148,9 @@ export function livehost_store_suite(): TestSuite {
         caseId: "set-rejects-duplicate-id", name: "set rejects duplicate id",
         input: {},
         act: () => {
-          const store = create_livehost_store();
-          const first = store.set("main", create_livehost({ state: { ready: true } }));
-          const second = store.set("main", create_livehost({ state: { ready: false } }));
+          const store = create_application_locus_store();
+          const first = store.set("main", create_locus({ state: { ready: true } }));
+          const second = store.set("main", create_locus({ state: { ready: false } }));
 
           return {
             firstOk: first.ok,
@@ -161,7 +162,7 @@ export function livehost_store_suite(): TestSuite {
         expected: {
           firstOk: true,
           secondOk: false,
-          code: "LIVEHOST_STORE_DUPLICATE_ID",
+          code: "LOCUS_STORE_DUPLICATE_ID",
           ready: true,
         },
       }),
@@ -170,7 +171,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "delete-removes-host", name: "delete removes host",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           store.create("counter", { state: { count: 0 } });
           const deleted = store.delete("counter");
 
@@ -191,7 +192,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "connect-rejects-unknown-id", name: "connect rejects unknown id",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           const socket = make_store_socket();
           const result = store.connect("missing", socket);
 
@@ -204,7 +205,7 @@ export function livehost_store_suite(): TestSuite {
         },
         expected: {
           ok: false,
-          code: "LIVEHOST_STORE_UNKNOWN_ID",
+          code: "LOCUS_STORE_UNKNOWN_ID",
           sentCount: 0,
           listenerCount: 0,
         },
@@ -214,7 +215,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "connect-routes-socket-to-stored-host", name: "connect routes socket to stored host",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           const socket = make_store_socket();
           store.create("counter", { state: { count: 2 } });
           const result = store.connect("counter", socket);
@@ -244,7 +245,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "connect-routes-action-to-stored-host", name: "connect routes action to stored host",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           const socket = make_store_socket();
           const created = store.create("counter", {
             state: { count: 2 },
@@ -281,7 +282,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "list-returns-registered-entries", name: "list returns registered entries",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           store.create("a", { state: { value: 1 } });
           store.create("b", { state: { value: 2 } });
 
@@ -304,7 +305,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "delete-unknown-id-returns-false", name: "delete unknown id returns false",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
 
           return {
             deleted: store.delete("missing"),
@@ -321,7 +322,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "connect-disposer-detaches-socket-listeners", name: "connect disposer detaches socket listeners",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           const socket = make_store_socket();
           store.create("counter", { state: { count: 0 } });
           const result = store.connect("counter", socket);
@@ -346,7 +347,7 @@ export function livehost_store_suite(): TestSuite {
         caseId: "list-entries-are-frozen-snapshots", name: "list entries are frozen snapshots",
         input: {},
         act: () => {
-          const store = create_livehost_store();
+          const store = create_application_locus_store();
           store.create("a", { state: { value: 1 } });
 
           const firstEntries = store.list();

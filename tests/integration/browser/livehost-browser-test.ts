@@ -3,7 +3,7 @@ import { test as base } from "@playwright/test";
 export { expect } from "@playwright/test";
 export type { Locator, Page } from "@playwright/test";
 
-export const LIVEHOST_BROWSER_TIMING_PREFIX = "<LIVEHOST_BROWSER_TIMING>";
+export const LOCUS_BROWSER_TIMING_PREFIX = "<LOCUS_BROWSER_TIMING>";
 
 type BrowserJourneyClock = {
   startedAt: number;
@@ -60,8 +60,8 @@ export const test = base.extend<{
       });
       artifactGenerationMs = performance.now() - artifactStartedAt;
     }
-    if (process.env.LIVEHOST_PLAYWRIGHT === "1") {
-      process.stdout.write(`${LIVEHOST_BROWSER_TIMING_PREFIX}${JSON.stringify({
+    if (process.env.LOCUS_PLAYWRIGHT === "1") {
+      process.stdout.write(`${LOCUS_BROWSER_TIMING_PREFIX}${JSON.stringify({
         chromiumLaunchMs: Math.max(0, browserJourneyClock.browserReadyAt - browserJourneyClock.startedAt),
         contextCreationMs: Math.max(0, browserJourneyClock.contextReadyAt - browserJourneyClock.browserReadyAt),
         pageCreationMs: browserJourneyClock.pageReadyAt === 0

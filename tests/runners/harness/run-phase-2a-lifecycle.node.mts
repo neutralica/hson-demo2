@@ -78,7 +78,7 @@ const canonicalCatalog = make_test_catalog([canonicalCase], [canonicalSuite]);
 const canonicalPlan = plan_for("phase2a-canonical", canonicalCatalog, [canonicalCase.id]);
 let now = 10;
 const canonicalReport = make_hosted_test_report(() => now++, undefined, { runPlan: canonicalPlan });
-const canonicalInitial = canonicalReport.map.capture().value;
+const canonicalInitial = canonicalReport.map.snap();
 certify(canonicalInitial.suiteRuns[0]?.status === "queued" && canonicalInitial.suiteRuns[0].cases[0]?.status === "queued", "RunPlan seeds suite and case queued");
 certify(canonicalInitial.suiteRuns[0]?.counts.declared === 1 && canonicalInitial.suiteRuns[0].counts.executed === 0, "canonical queued counts are declared but unexecuted");
 const originalQueuedAt = canonicalInitial.suiteRuns[0]?.cases[0]?.queuedAt;
@@ -93,7 +93,7 @@ const canonicalResult = await run_test_suites([{
   cases: [{ suite: canonicalSuite.id, caseId: canonicalCase.caseId, name: canonicalCase.title, run() {} }],
 }], onCanonicalEvent, { yieldEveryCases: 0, yieldBetweenSuites: false });
 canonicalReport.complete(canonicalResult);
-const canonicalFinal = canonicalReport.map.capture().value.suiteRuns[0]!;
+const canonicalFinal = canonicalReport.map.snap().suiteRuns[0]!;
 certify(hiddenClearCalls === 0, "core execution never invokes a callback-attached clear property");
 certify(canonicalFinal.status === "pass" && canonicalFinal.cases[0]?.status === "pass", "canonical adapter maps start/finish into normalized pass state");
 certify(canonicalFinal.queuedAt < canonicalFinal.startedAt! && canonicalFinal.startedAt! <= canonicalFinal.completedAt!, "suite timestamps retain queued/start/completion chronology");
@@ -108,7 +108,7 @@ const opaqueSuite = suite("livemap/opaque", 0, "opaque-aggregate", 5);
 const mixedCatalog = make_test_catalog([canonicalCase, remoteCase], [opaqueSuite, remoteSuite, canonicalSuite]);
 const mixedPlan = plan_for("phase2a-heterogeneous", mixedCatalog, [canonicalCase.id, remoteCase.id, opaqueSuite.id]);
 const mixedReport = make_hosted_test_report(() => 0, undefined, { runPlan: mixedPlan });
-const initialOrder = mixedReport.map.capture().value.suiteRuns.map((entry) => entry.id).join("|");
+const initialOrder = mixedReport.map.snap().suiteRuns.map((entry) => entry.id).join("|");
 let sequence = 0;
 type Unsequenced<T> = T extends TestLifecycleEvent ? Omit<T, "runId" | "sequence" | "timestamp"> : never;
 const event = (value: Unsequenced<TestLifecycleEvent>): TestLifecycleEvent => ({
@@ -120,7 +120,7 @@ const event = (value: Unsequenced<TestLifecycleEvent>): TestLifecycleEvent => ({
 mixedReport.reduceLifecycle(event({ t: "suite_started", executorId: "node-01", suiteId: canonicalSuite.id }));
 mixedReport.reduceLifecycle(event({ t: "case_started", executorId: "node-01", suiteId: canonicalSuite.id, caseId: canonicalCase.caseId }));
 mixedReport.reduceLifecycle(event({ t: "output", executorId: "node-01", suiteId: canonicalSuite.id, caseId: canonicalCase.caseId, stream: "runtime_warning", text: "warning evidence" }));
-certify(mixedReport.map.capture().value.suiteRuns.find((entry) => entry.id === canonicalSuite.id)?.status === "running", "output evidence does not change lifecycle status");
+certify(mixedReport.map.snap().suiteRuns.find((entry) => entry.id === canonicalSuite.id)?.status === "running", "output evidence does not change lifecycle status");
 mixedReport.reduceLifecycle(event({ t: "case_finished", executorId: "node-01", suiteId: canonicalSuite.id, caseId: canonicalCase.caseId, status: "pass", durationMs: 2 }));
 mixedReport.reduceLifecycle(event({ t: "suite_finished", executorId: "node-01", suiteId: canonicalSuite.id, status: "pass", durationMs: 3 }));
 mixedReport.reduceLifecycle(event({ t: "suite_started", executorId: "worker-07", suiteId: remoteSuite.id }));
@@ -133,7 +133,7 @@ const opaqueCounts: TestLifecycleCounts = { declared: 5, total: 5, executed: 5, 
 const opaqueTerminal = event({ t: "suite_finished", executorId: "node-child-02", suiteId: opaqueSuite.id, status: "pass", durationMs: 4, counts: opaqueCounts }) as Extract<TestLifecycleEvent, { t: "suite_finished" }>;
 mixedReport.reduceLifecycle(opaqueTerminal);
 mixedReport.reduceLifecycle(event({ t: "run_finished", executorId: "livehost-authority", status: "pass", durationMs: 8 }));
-const mixedFinal = mixedReport.map.capture().value;
+const mixedFinal = mixedReport.map.snap();
 certify(mixedFinal.suiteRuns.map((entry) => entry.id).join("|") === initialOrder, "hostile lifecycle timing never reorders RunPlan positions");
 certify(mixedFinal.suiteRuns.find((entry) => entry.id === remoteSuite.id)?.cases[0]?.status === "skip", "skip is terminal and non-failing");
 certify(mixedFinal.suiteRuns.find((entry) => entry.id === opaqueSuite.id)?.cases.length === 0, "opaque launchers never fabricate cases");
@@ -141,7 +141,7 @@ certify(mixedFinal.suiteRuns.find((entry) => entry.id === opaqueSuite.id)?.count
 certify(mixedFinal.suiteRuns.map((entry) => entry.executorIds.join()).join("|").includes("node-01") && mixedFinal.suiteRuns.some((entry) => entry.executorIds.includes("worker-07")), "one report retains heterogeneous executor evidence");
 certify(mixedFinal.suiteRuns.find((entry) => entry.id === canonicalSuite.id)?.evidence[0]?.executorId === "node-01", "output evidence names its execution context");
 mixedReport.reduceLifecycle(opaqueTerminal);
-certify(mixedReport.map.capture().value.run.lastSequence === sequence, "exact event replay is idempotent");
+certify(mixedReport.map.snap().run.lastSequence === sequence, "exact event replay is idempotent");
 certify(rejects(() => mixedReport.reduceLifecycle({ ...opaqueTerminal, status: "fail" }), /SEQUENCE_CONTRADICTION/), "same-sequence contradictory replay rejects");
 certify(rejects(() => mixedReport.reduceLifecycle(event({ t: "suite_started", executorId: "node-child-02", suiteId: opaqueSuite.id })), /TERMINAL_REOPEN/), "terminal suite cannot reopen");
 const recoveredMap = mixedReport.map;
@@ -150,12 +150,12 @@ const recoveredReport = make_hosted_test_report(() => 0, undefined, {
   runPlan: mixedPlan,
   map: recoveredMap,
 });
-const recoverySequence = recoveredMap.capture().value.run.lastSequence + 1;
+const recoverySequence = recoveredMap.snap().run.lastSequence + 1;
 recoveredReport.reduceLifecycle({
   t: "output", runId: mixedPlan.runId, executorId: "node-01", sequence: recoverySequence, timestamp: 999,
   suiteId: canonicalSuite.id, stream: "stdout", text: "post-reconnect evidence",
 });
-const recoveredFinal = recoveredMap.capture().value;
+const recoveredFinal = recoveredMap.snap();
 certify(recoveredFinal.suiteRuns.map((entry) => entry.id).join("|") === initialOrder && recoveredFinal.suiteRuns.every((entry) => entry.status !== "queued" && entry.status !== "running"), "recovered report preserves normalized terminal state and RunPlan order");
 certify(recoveredFinal.suiteRuns.find((entry) => entry.id === canonicalSuite.id)?.evidence.at(-1)?.content === "post-reconnect evidence", "recovered authority continues incremental evidence ingestion without raw-output reconstruction");
 recoveredReport.dispose();
@@ -174,7 +174,7 @@ opaqueReport.reduce({
   exitCode: 0, signal: null, timedOut: false,
   completion: { version: 1, launcherId: "opaque", executed: 5, passed: 5, failed: 0 },
 });
-const opaqueFinal = opaqueReport.map.capture().value.suiteRuns[0]!;
+const opaqueFinal = opaqueReport.map.snap().suiteRuns[0]!;
 certify(opaqueFinal.evidence.find((item) => item.kind === "stdout")?.content === "human\n", "completion control frame never enters ordinary stdout evidence");
 certify(opaqueFinal.evidence.find((item) => item.kind === "raw_process_output")?.content.includes("HSON_LIVE_TEST_COMPLETION") === true, "untouched raw process output remains recoverable");
 certify(opaqueFinal.evidence.some((item) => item.kind === "protocol_control"), "structured completion is retained as control evidence");
@@ -186,7 +186,7 @@ protocolReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 1, stdout: "", ordinaryStdout: "", stderr: "raw stderr\n",
   exitCode: 0, signal: null, timedOut: false, completionError: "missing completion",
 });
-const protocolFinal = protocolReport.map.capture().value.suiteRuns[0]!;
+const protocolFinal = protocolReport.map.snap().suiteRuns[0]!;
 certify(protocolFinal.errors.some((error) => error.kind === "protocol" && error.executorId === "livehost-authority"), "protocol failure is classified with executor context");
 certify(protocolFinal.evidence.some((item) => item.kind === "stderr" && item.content === "raw stderr\n"), "protocol diagnostics retain stderr as normalized evidence");
 
@@ -198,7 +198,7 @@ mismatchedCompletionReport.reduce({
   completion: { version: 1, launcherId: "opaque", executed: 6, passed: 6, failed: 0 },
   completionError: "External launcher executed 6 checks, manifest declares 5.",
 });
-const mismatchedCompletionFinal = mismatchedCompletionReport.map.capture().value.suiteRuns[0]!;
+const mismatchedCompletionFinal = mismatchedCompletionReport.map.snap().suiteRuns[0]!;
 certify(
   mismatchedCompletionFinal.status === "fail"
     && mismatchedCompletionFinal.counts.declared === 5
@@ -226,7 +226,7 @@ for (const [index, status] of (["unsupported", "cancelled"] as const).entries())
     t: "suite_finished", runId, executorId: "remote-model", sequence: 2, timestamp: 2,
     suiteId: canonicalSuite.id, status, durationMs: 0,
   });
-  const terminal = terminalReport.map.capture().value.suiteRuns[0]!;
+  const terminal = terminalReport.map.snap().suiteRuns[0]!;
   certify(
     terminal.status === status && terminal.cases[0]?.status === status && terminal.counts[status] === 1 && terminal.errors.length === 0,
     `${status} is modeled as a non-assertion terminal lifecycle state (${index + 1}/2)`,
@@ -241,7 +241,7 @@ timeoutReport.reduce({
   t: "external_end", ...sharedExternal, status: "fail", ms: 1000, stdout: "partial output", ordinaryStdout: "partial output", stderr: "",
   exitCode: null, signal: null, timedOut: true, completionError: "missing completion",
 });
-certify(timeoutReport.map.capture().value.suiteRuns[0]?.errors.some((error) => error.kind === "timeout") === true, "opaque timeout retains partial evidence and timeout classification");
+certify(timeoutReport.map.snap().suiteRuns[0]?.errors.some((error) => error.kind === "timeout") === true, "opaque timeout retains partial evidence and timeout classification");
 
 const invalidCountsRunId = "phase2a-invalid-counts";
 const invalidCountsPlan = plan_for(invalidCountsRunId, make_test_catalog([], [opaqueSuite]), [opaqueSuite.id]);

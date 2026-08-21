@@ -1,11 +1,11 @@
 import WebSocket from "ws";
-import { create_livehost_client } from "hson-live/livehost";
+import { create_locus_client } from "hson-live/locus";
 import {
-  create_browser_livehost_socket,
+  create_browser_locus_socket,
   type BrowserWebSocketConstructor,
-} from "hson-live/livehost";
+} from "hson-live/locus";
 import { start_node_application_host } from "hson-live/livehost/node";
-import type { JsonValue, LiveHostClient, LiveHostSocketLike } from "hson-live/types";
+import type { JsonValue, LiveMap, LocusClient, LocusSocketLike } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
   CIRCUIT_VERIFICATION_MAX_SOURCE_LENGTH,
@@ -29,10 +29,10 @@ import { create_node_circuit_verification_application } from "../../harness/runt
 const SUITE = "livehost/circuit-worker-action";
 
 function expect(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(`circuit LiveHost action: ${message}`);
+  if (!condition) throw new Error(`circuit Locus action: ${message}`);
 }
 
-type PairSocket = LiveHostSocketLike & Readonly<{ sent(): readonly unknown[]; listenerCount(): number }>;
+type PairSocket = LocusSocketLike & Readonly<{ sent(): readonly unknown[]; listenerCount(): number }>;
 
 function make_socket_pair(): readonly [PairSocket, PairSocket] {
   function side(): {
@@ -134,7 +134,7 @@ function mock_service(options: Readonly<{
 
 type Pair = Readonly<{
   host: ReturnType<typeof create_circuit_verification_livehost>;
-  client: LiveHostClient<undefined, CircuitVerificationActions>;
+  client: LocusClient<LiveMap<undefined>, CircuitVerificationActions>;
   clientSocket: PairSocket;
   hostSocket: PairSocket;
   disconnectHost(): void;
@@ -144,7 +144,7 @@ type Pair = Readonly<{
 async function pair(service: CircuitVerificationSubmitter, actionId?: () => string): Promise<Pair> {
   const [clientSocket, hostSocket] = make_socket_pair();
   const host = create_circuit_verification_livehost(service);
-  const client = create_livehost_client<undefined, CircuitVerificationActions>({
+  const client = create_locus_client<undefined, CircuitVerificationActions>({
     socket: clientSocket,
     ...(actionId === undefined ? {} : { actionId }),
   });
@@ -174,7 +174,7 @@ async function invalid_payload(payload: unknown): Promise<Readonly<{ type: strin
   } finally { connected.close(); }
 }
 
-export function circuit_livehost_integration_suite(): TestSuite {
+export function circuit_locus_integration_suite(): TestSuite {
   return Object.freeze({
     suite: SUITE,
     descriptor: Object.freeze({ subject: "livehost", requirements: Object.freeze(["javascript", "node", "worker-threads"] as const) }),
@@ -196,27 +196,27 @@ export function circuit_livehost_integration_suite(): TestSuite {
       } }),
       Object.freeze({ suite: SUITE, caseId: "extra-action-fields-reject-before-worker-dispatch", name: "extra action fields reject before worker dispatch", run: async () => {
         const response = await invalid_payload({ ...request(), extra: true });
-        expect(response.code === "LIVEHOST_SCHEMA_INVALID_PAYLOAD", "extra field must be a schema error");
+        expect(response.code === "LOCUS_SCHEMA_INVALID_PAYLOAD", "extra field must be a schema error");
       } }),
       Object.freeze({ suite: SUITE, caseId: "auto-entry-rejects-before-worker-dispatch", name: "auto entry rejects before worker dispatch", run: async () => {
         const response = await invalid_payload({ ...request(), entry: "auto" });
-        expect(response.code === "LIVEHOST_SCHEMA_INVALID_PAYLOAD", "auto must not cross action boundary");
+        expect(response.code === "LOCUS_SCHEMA_INVALID_PAYLOAD", "auto must not cross action boundary");
       } }),
       Object.freeze({ suite: SUITE, caseId: "negative-revision-rejects-before-worker-dispatch", name: "negative revision rejects before worker dispatch", run: async () => {
         const response = await invalid_payload({ ...request(), inputRevision: -1 });
-        expect(response.code === "LIVEHOST_SCHEMA_INVALID_PAYLOAD", "negative revision must reject");
+        expect(response.code === "LOCUS_SCHEMA_INVALID_PAYLOAD", "negative revision must reject");
       } }),
       Object.freeze({ suite: SUITE, caseId: "fractional-revision-rejects-before-worker-dispatch", name: "fractional revision rejects before worker dispatch", run: async () => {
         const response = await invalid_payload({ ...request(), inputRevision: 1.5 });
-        expect(response.code === "LIVEHOST_SCHEMA_INVALID_PAYLOAD", "fractional revision must reject");
+        expect(response.code === "LOCUS_SCHEMA_INVALID_PAYLOAD", "fractional revision must reject");
       } }),
       Object.freeze({ suite: SUITE, caseId: "empty-panel-correlation-key-rejects-before-dispatch", name: "empty panel correlation key rejects before dispatch", run: async () => {
         const response = await invalid_payload({ ...request(), panelId: "" });
-        expect(response.code === "LIVEHOST_SCHEMA_INVALID_PAYLOAD", "empty panel key must reject");
+        expect(response.code === "LOCUS_SCHEMA_INVALID_PAYLOAD", "empty panel key must reject");
       } }),
       Object.freeze({ suite: SUITE, caseId: "source-size-limit-is-enforced-by-the-action-schema", name: "source-size limit is enforced by the action schema", run: async () => {
         const response = await invalid_payload({ ...request(), source: "x".repeat(CIRCUIT_VERIFICATION_MAX_SOURCE_LENGTH + 1) });
-        expect(response.code === "LIVEHOST_SCHEMA_INVALID_PAYLOAD", "oversized action source must reject before service");
+        expect(response.code === "LOCUS_SCHEMA_INVALID_PAYLOAD", "oversized action source must reject before service");
       } }),
       Object.freeze({ suite: SUITE, caseId: "progress-events-are-connection-scoped-and-ordered-before-ack", name: "progress events are connection scoped and ordered before ack", run: async () => {
         const service = mock_service({ progress: [
@@ -259,12 +259,12 @@ export function circuit_livehost_integration_suite(): TestSuite {
           expect(response.type === "ack" && (response.result as { status?: unknown })?.status === "failed", "semantic failure must not become infrastructure error");
         } finally { connected.close(); }
       } }),
-      Object.freeze({ suite: SUITE, caseId: "service-failure-retains-its-stable-livehost-error-code", name: "service failure retains its stable LiveHost error code", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "service-failure-retains-its-stable-livehost-error-code", name: "service failure retains its stable Locus error code", run: async () => {
         const service = mock_service({ failure: new CircuitVerificationServiceError("CIRCUIT_WORKER_UNAVAILABLE", "Circuit verification worker is unavailable.") });
         const connected = await pair(service);
         try {
           const response = await connected.client.action("circuit.verify", request());
-          expect(response.type === "error" && response.error.code === "CIRCUIT_WORKER_UNAVAILABLE", "service code must survive LiveHost normalization");
+          expect(response.type === "error" && response.error.code === "CIRCUIT_WORKER_UNAVAILABLE", "service code must survive Locus normalization");
         } finally { connected.close(); }
       } }),
       Object.freeze({ suite: SUITE, caseId: "ephemeral-verification-leaves-livemap-revision-unchanged", name: "ephemeral verification leaves LiveMap revision unchanged", run: async () => {
@@ -316,7 +316,7 @@ export function circuit_livehost_integration_suite(): TestSuite {
             ...first.request,
             payload: { ...request(), inputRevision: 2 } as unknown as JsonValue,
           } as never);
-          expect(service.calls() === 1 && conflicting.type === "error" && conflicting.error.code === "LIVEHOST_ACTION_REQUEST_ID_CONFLICT", "request identity cannot be rebound to a new revision");
+          expect(service.calls() === 1 && conflicting.type === "error" && conflicting.error.code === "LOCUS_ACTION_REQUEST_ID_CONFLICT", "request identity cannot be rebound to a new revision");
         } finally { connected.close(); }
       } }),
       Object.freeze({ suite: SUITE, caseId: "connection-disposal-suppresses-stale-progress", name: "connection disposal suppresses stale progress", run: async () => {
@@ -343,13 +343,13 @@ export function circuit_livehost_integration_suite(): TestSuite {
         const latest = new Map([["panel-fence", 10]]);
         expect(!revision_is_current(result_for(request("panel-fence", 9)), latest) && revision_is_current(result_for(request("panel-fence", 10)), latest), "strict equality fence must reject stale result");
       } }),
-      Object.freeze({ suite: SUITE, caseId: "real-worker-result-traverses-typed-livehost-action", name: "real worker result traverses typed LiveHost action", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "real-worker-result-traverses-typed-livehost-action", name: "real worker result traverses typed Locus action", run: async () => {
         const service = create_circuit_verification_service(); await service.ready();
         const connected = await pair(service);
         try {
           const response = await connected.client.action("circuit.verify", request("real", 1));
           const result = response.type === "ack" ? response.result as unknown as CircuitVerificationResult : undefined;
-          expect(result?.status === "verified" && result.operationCounts.serializations === 24 && result.operationCounts.comparisons === 25, "actual worker certificate must cross LiveHost intact");
+          expect(result?.status === "verified" && result.operationCounts.serializations === 24 && result.operationCounts.comparisons === 25, "actual worker certificate must cross Locus intact");
         } finally { connected.close(); await service.dispose(); }
       } }),
       Object.freeze({ suite: SUITE, caseId: "node-application-disposal-owns-verifier-service-disposal", name: "Node application disposal owns verifier service disposal", run: async () => {
@@ -363,17 +363,17 @@ export function circuit_livehost_integration_suite(): TestSuite {
         await application.registration.dispose();
         expect(base.disposed(), "application disposal must release persistent service");
       } }),
-      Object.freeze({ suite: SUITE, caseId: "localhost-node-route-completes-the-worker-backed-livehost-action", name: "localhost Node route completes the worker-backed LiveHost action", run: async () => {
+      Object.freeze({ suite: SUITE, caseId: "localhost-node-route-completes-the-worker-backed-livehost-action", name: "localhost Node route completes the worker-backed Locus action", run: async () => {
         const application = await create_node_circuit_verification_application();
         const host = await start_node_application_host({ port: 0, applications: [application.registration] });
-        const transport = create_browser_livehost_socket(
-          `${host.url}?livehost=circuit-verifier`,
+        const transport = create_browser_locus_socket(
+          `${host.url}/circuit-verification?locus=circuit-verifier`,
           WebSocket as unknown as BrowserWebSocketConstructor,
         );
-        let client: LiveHostClient<undefined, CircuitVerificationActions> | undefined;
+        let client: LocusClient<LiveMap<undefined>, CircuitVerificationActions> | undefined;
         try {
           await transport.ready;
-          client = create_livehost_client<undefined, CircuitVerificationActions>({ socket: transport.socket });
+          client = create_locus_client<undefined, CircuitVerificationActions>({ socket: transport.socket });
           client.connect();
           await new Promise<void>((resolve) => setTimeout(resolve, 10));
           const response = await client.action("circuit.verify", request("localhost", 1));
@@ -384,7 +384,7 @@ export function circuit_livehost_integration_suite(): TestSuite {
           client?.session.dispose();
           client?.recovery.dispose();
           transport.dispose();
-          await host.stop();
+          await host.dispose();
         }
       } }),
     ]),

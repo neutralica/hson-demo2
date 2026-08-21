@@ -3,12 +3,12 @@ import { decode_run_selected_tests_request } from "../../../src/shared/testing/t
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
-import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { make_cloudflare_locus_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import { resolve_external_library_launchers } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 
-const nodeRegistry = make_local_node_livehost_executor_registry();
-const workerRegistry = make_cloudflare_livehost_executor_registry();
+const nodeRegistry = make_local_node_locus_executor_registry();
+const workerRegistry = make_cloudflare_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
 const node = make_test_executor_discovery(nodeRegistry, availability.targets);
 const worker = make_test_executor_discovery(workerRegistry);

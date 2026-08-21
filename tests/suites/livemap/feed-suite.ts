@@ -13,6 +13,7 @@ import {
   type FeedEmitCaseSpec,
 } from "./feed-test-helpers";
 import { json_root_node } from "./core-helpers";
+import { replay_fixture } from "./replay-test-helper";
 
 
 
@@ -110,6 +111,8 @@ export function livemap_suite_feed(): TestSuite {
           changed: false,
           prevRev: 0,
           rev: 0,
+          format: "structural-json",
+          payload: "null",
           ops: [],
         },
         snapValue: "Ada",
@@ -220,6 +223,8 @@ export function livemap_suite_feed(): TestSuite {
             changed: true,
             prevRev: 4,
             rev: 5,
+            format: "structural-json",
+            payload: "null",
             ops: [
               {
                 kind: "set",
@@ -305,6 +310,8 @@ export function livemap_suite_feed(): TestSuite {
             changed: true,
             prevRev: 0,
             rev: 1,
+            format: "structural-json",
+            payload: "null",
             ops: [
               {
                 kind: "splice",
@@ -494,7 +501,7 @@ export function livemap_suite_feed(): TestSuite {
       tx.set(["user", "age"], 38);
     });
 
-    target.replay({
+    replay_fixture(target,{
       prevRev: 0,
       ops: sourceCommit.ops,
     });
@@ -553,7 +560,7 @@ export function livemap_suite_feed(): TestSuite {
     let rejected = false;
 
     try {
-      target.replay({
+      replay_fixture(target,{
         prevRev: 0,
         ops: sourceCommit.ops,
       });
@@ -629,7 +636,7 @@ export function livemap_suite_feed(): TestSuite {
     let rejected = false;
 
     try {
-      target.replay({
+      replay_fixture(target,{
         prevRev: 0,
         ops: sourceCommit.ops,
       });
@@ -685,7 +692,7 @@ export function livemap_suite_feed(): TestSuite {
           });
 
           try {
-            target.replay({
+            replay_fixture(target,{
               prevRev: 0,
               ops: [
                 { kind: "set", path: ["count"], prev: 0, next: 1 },

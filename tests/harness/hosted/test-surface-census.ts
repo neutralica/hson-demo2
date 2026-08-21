@@ -1,6 +1,6 @@
 import { JSDOM_HOSTED_CANVAS_DEFERRED_CASE_KEYS } from "../runtimes/dom/canvas/canvas-fidelity-manifest";
-import { make_cloudflare_livehost_executor_registry } from "../runtimes/cloudflare/cloudflare-test-executor";
-import { make_local_node_livehost_executor_registry } from "../runtimes/node/livehost-node-executor";
+import { make_cloudflare_locus_executor_registry } from "../runtimes/cloudflare/cloudflare-test-executor";
+import { make_local_node_locus_executor_registry } from "../runtimes/node/livehost-node-executor";
 import {
   TEST_SURFACE_CATALOG,
   type TestSurfaceCatalogEntry,
@@ -93,11 +93,11 @@ export type TestSurfaceCensusEntry = Readonly<{
   currentExecutor: string;
   requiredCapabilities: readonly TestCensusCapability[];
   currentLocalAvailability: boolean;
-  currentLocalLiveHostAvailability: boolean;
+  currentLocalLocusAvailability: boolean;
   currentDeployedAvailability: boolean;
-  currentDeployedLiveHostAvailability: boolean;
+  currentDeployedLocusAvailability: boolean;
   cancellationSupport: "authoritative" | "runner-local" | "none" | "not applicable";
-  recoveryReportSupport: "normalized LiveHost report" | "terminal evidence only" | "artifact result" | "not applicable";
+  recoveryReportSupport: "normalized Locus report" | "terminal evidence only" | "artifact result" | "not applicable";
   artifactEvidenceRequirements: readonly string[];
   hostabilityClass: TestHostabilityClass;
   reasonNotCurrentlyDeployed: string | null;
@@ -205,7 +205,7 @@ function command_hostability(entry: TestSurfaceCatalogEntry, capabilities: reado
   if (entry.role === "developer utility") return Object.freeze({ hostabilityClass: "excluded-developer-utility", phase6ExecutorClass: "none", missing: null });
   if ((NODE_HOSTED_COMMAND_SURFACE_IDS as readonly string[]).includes(entry.id)
     || (NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS as readonly string[]).includes(entry.id)) {
-    return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: "deploy the complete Node LiveHost mothership" });
+    return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: "deploy the complete Node Locus mothership" });
   }
   if ((NODE_VERIFICATION_ONLY_SURFACE_IDS as readonly string[]).includes(entry.id)) {
     return Object.freeze({ hostabilityClass: "verification-only", phase6ExecutorClass: "verification-executor", missing: "optional bounded verification-executor promotion" });
@@ -213,7 +213,7 @@ function command_hostability(entry: TestSurfaceCatalogEntry, capabilities: reado
   if (entry.classification === "build/typecheck certification" || entry.role === "production artifact verification") {
     return Object.freeze({ hostabilityClass: "verification-only", phase6ExecutorClass: "verification-executor", missing: "remote build/typecheck execution and artifact capture" });
   }
-  if (capabilities.includes("browser")) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: "browser-executor", missing: "deploy the complete Node LiveHost mothership with Chromium" });
+  if (capabilities.includes("browser")) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: "browser-executor", missing: "deploy the complete Node Locus mothership with Chromium" });
   if (entry.appearsInHostedUi) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: capabilities.includes("process") ? "deployed supervised process executor" : "deployed Node executor" });
   if (capabilities.includes("process")) return Object.freeze({ hostabilityClass: "hostable-external-process", phase6ExecutorClass: "supervised-process-executor", missing: "deployed supervised process execution" });
   if (capabilities.includes("cloudflare-worker")) return Object.freeze({ hostabilityClass: "hostable-worker", phase6ExecutorClass: "deployed-worker-executor", missing: "optional Cloudflare Worker portability executor" });
@@ -229,7 +229,7 @@ function command_census(entry: TestSurfaceCatalogEntry): TestSurfaceCensusEntry 
   const certification = kind === "type/compile certification" || kind === "build/entrypoint certification" || kind === "inventory/meta certification";
   const hostedCommand = (NODE_HOSTED_COMMAND_SURFACE_IDS as readonly string[]).includes(entry.id);
   const hostedAlias = (NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS as readonly string[]).includes(entry.id);
-  const localLiveHost = entry.appearsInHostedUi || hostedCommand || hostedAlias || capabilities.includes("browser");
+  const localLocus = entry.appearsInHostedUi || hostedCommand || hostedAlias || capabilities.includes("browser");
   const browserAggregate = entry.id === "hson-demo2:test:browser";
   return Object.freeze({
     id: entry.id,
@@ -242,20 +242,20 @@ function command_census(entry: TestSurfaceCatalogEntry): TestSurfaceCensusEntry 
     semanticCount: opaque ? entry.externalLauncher!.executableChecks : generated ? null : certification || hostedCommand ? 1 : null,
     ...(generated ? { dynamicCountPolicy: `${GENERATED_JSON_SEED_ENVIRONMENT} selects the seed; ${GENERATED_JSON_COUNT_ENVIRONMENT} selects the generated check count (default ${DEFAULT_GENERATED_JSON_CASES}).` } : {}),
     currentExecutor: browserAggregate
-      ? "semantic alias for the Node LiveHost supervised Playwright/Chromium all-browser selection"
+      ? "semantic alias for the Node Locus supervised Playwright/Chromium all-browser selection"
       : hostedCommand
-      ? "Node LiveHost supervised command executor"
-      : hostedAlias ? "Node LiveHost canonical/opaque executor" : entry.environment,
+      ? "Node Locus supervised command executor"
+      : hostedAlias ? "Node Locus canonical/opaque executor" : entry.environment,
     requiredCapabilities: capabilities,
     currentLocalAvailability: entry.status === "available" && !capabilities.includes("environment/secrets"),
-    currentLocalLiveHostAvailability: localLiveHost,
+    currentLocalLocusAvailability: localLocus,
     currentDeployedAvailability: false,
-    currentDeployedLiveHostAvailability: false,
-    cancellationSupport: localLiveHost ? "authoritative" : entry.role === "developer utility" ? "not applicable" : "runner-local",
-    recoveryReportSupport: localLiveHost ? "normalized LiveHost report" : certification ? "artifact result" : entry.role === "developer utility" ? "not applicable" : "terminal evidence only",
+    currentDeployedLocusAvailability: false,
+    cancellationSupport: localLocus ? "authoritative" : entry.role === "developer utility" ? "not applicable" : "runner-local",
+    recoveryReportSupport: localLocus ? "normalized Locus report" : certification ? "artifact result" : entry.role === "developer utility" ? "not applicable" : "terminal evidence only",
     artifactEvidenceRequirements: Object.freeze(capabilities.includes("browser")
         ? ["journey result", "trace/screenshot/video on failure", "server logs"]
-      : localLiveHost
+      : localLocus
         ? ["normalized lifecycle", "normalized report", "captured stdout/stderr for opaque launchers"]
         : certification
           ? ["exit status", "compiler/build diagnostics", "produced artifact identity when applicable"]
@@ -278,25 +278,25 @@ function browser_fidelity_census(id: string): TestSurfaceCensusEntry {
     verificationKind: "semantic runtime test",
     denominator: "browser journeys",
     semanticCount: 1,
-    currentExecutor: "Node LiveHost supervised Playwright/Chromium browser executor",
+    currentExecutor: "Node Locus supervised Playwright/Chromium browser executor",
     requiredCapabilities: Object.freeze(["javascript", "node", "process", "browser-dom", "browser-raster", "browser", "chromium", "local-server"] as const),
     currentLocalAvailability: true,
-    currentLocalLiveHostAvailability: true,
+    currentLocalLocusAvailability: true,
     currentDeployedAvailability: false,
-    currentDeployedLiveHostAvailability: false,
+    currentDeployedLocusAvailability: false,
     cancellationSupport: "authoritative",
-    recoveryReportSupport: "normalized LiveHost report",
+    recoveryReportSupport: "normalized Locus report",
     artifactEvidenceRequirements: Object.freeze(["normalized pixel assertion lifecycle", "failure screenshot/trace reference"]),
     hostabilityClass: "hosted-local-now",
-    reasonNotCurrentlyDeployed: "The Node LiveHost mothership and its supervised Chromium process are not deployed yet.",
-    exactMissingCapability: "deploy the Node LiveHost mothership with Playwright Chromium system dependencies",
+    reasonNotCurrentlyDeployed: "The Node Locus mothership and its supervised Chromium process are not deployed yet.",
+    exactMissingCapability: "deploy the Node Locus mothership with Playwright Chromium system dependencies",
     phase6ExecutorClass: "browser-executor",
   });
 }
 
 function canonical_census(): readonly TestSurfaceCensusEntry[] {
-  const node = make_local_node_livehost_executor_registry();
-  const worker = make_cloudflare_livehost_executor_registry();
+  const node = make_local_node_locus_executor_registry();
+  const worker = make_cloudflare_locus_executor_registry();
   const workerSuites = new Set(worker.catalog.suites.map((suite) => suite.id));
   return Object.freeze(node.catalog.suites.filter((suite) => suite.executionShape === "cases").map((suite) => {
     const workerCapable = workerSuites.has(suite.id);
@@ -314,11 +314,11 @@ function canonical_census(): readonly TestSurfaceCensusEntry[] {
       currentExecutor: workerCapable ? `${node.executor.id} + ${worker.executor.id} (local adapter)` : node.executor.id,
       requiredCapabilities: capabilities,
       currentLocalAvailability: true,
-      currentLocalLiveHostAvailability: true,
+      currentLocalLocusAvailability: true,
       currentDeployedAvailability: false,
-      currentDeployedLiveHostAvailability: false,
+      currentDeployedLocusAvailability: false,
       cancellationSupport: "authoritative",
-      recoveryReportSupport: "normalized LiveHost report",
+      recoveryReportSupport: "normalized Locus report",
       artifactEvidenceRequirements: Object.freeze(["normalized case lifecycle", "normalized report", "failure diagnostics"]),
       hostabilityClass: "hosted-local-now",
       reasonNotCurrentlyDeployed: workerCapable
@@ -343,18 +343,18 @@ function browser_census(surface: BrowserSurfaceInventory): TestSurfaceCensusEntr
     verificationKind: "semantic runtime test",
     denominator: "browser journeys",
     semanticCount: surface.cases,
-    currentExecutor: "Node LiveHost supervised Playwright/Chromium browser executor",
+    currentExecutor: "Node Locus supervised Playwright/Chromium browser executor",
     requiredCapabilities: Object.freeze(["javascript", "node", "process", "browser-dom", "browser", "chromium", "network", "local-server"] as const),
     currentLocalAvailability: true,
-    currentLocalLiveHostAvailability: true,
+    currentLocalLocusAvailability: true,
     currentDeployedAvailability: false,
-    currentDeployedLiveHostAvailability: false,
+    currentDeployedLocusAvailability: false,
     cancellationSupport: "authoritative",
-    recoveryReportSupport: "normalized LiveHost report",
+    recoveryReportSupport: "normalized Locus report",
     artifactEvidenceRequirements: Object.freeze(["normalized journey lifecycle", "trace/screenshot references on failure", "browser console/network and supervised server evidence"]),
     hostabilityClass: "hosted-local-now",
-    reasonNotCurrentlyDeployed: "The Node LiveHost mothership and its supervised Chromium process are not deployed yet.",
-    exactMissingCapability: "deploy the Node LiveHost mothership with Playwright Chromium system dependencies",
+    reasonNotCurrentlyDeployed: "The Node Locus mothership and its supervised Chromium process are not deployed yet.",
+    exactMissingCapability: "deploy the Node Locus mothership with Playwright Chromium system dependencies",
     phase6ExecutorClass: "browser-executor",
   });
 }

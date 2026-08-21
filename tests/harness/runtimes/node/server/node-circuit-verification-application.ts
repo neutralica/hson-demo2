@@ -1,12 +1,7 @@
-import type { WebSocket } from "ws";
-import {
-  create_node_livehost_socket,
-  type NodeApplicationSecurity,
-  type NodeHostedApplication,
-} from "hson-live/livehost/node";
-import {
-  CIRCUIT_VERIFICATION_HOST_ID,
-} from "../../../../../src/shared/circuit-verification-contract";
+import type { LiveHostApplication, LiveHostApplicationContext, LiveHostConnection } from "hson-live/livehost";
+import type { NodeApplicationSecurity } from "hson-live/livehost/node";
+import type { LocusSocketLike } from "hson-live/types";
+import { CIRCUIT_VERIFICATION_HOST_ID } from "../../../../../src/shared/circuit-verification-contract";
 import { create_circuit_verification_livehost } from "../../../hosted/circuit-verification-livehost";
 import {
   create_circuit_verification_service,
@@ -14,6 +9,7 @@ import {
 } from "../circuit-verification-service";
 
 export const NODE_CIRCUIT_VERIFICATION_APPLICATION_NAME = "circuit-verification";
+export const NODE_CIRCUIT_VERIFICATION_CONNECTION_PATH = "/circuit-verification";
 
 export type NodeCircuitVerificationApplicationOptions = Readonly<{
   security?: NodeApplicationSecurity;
@@ -21,76 +17,88 @@ export type NodeCircuitVerificationApplicationOptions = Readonly<{
 }>;
 
 export type NodeCircuitVerificationApplication = Readonly<{
-  registration: NodeHostedApplication;
+  registration: LiveHostApplication;
+  security?: NodeApplicationSecurity;
   service: CircuitVerificationService;
   connectionCount(): number;
   disconnectConnections(): void;
   metrics(): Readonly<{ sentMessages: number; sentBytes: number }>;
 }>;
 
+function locus_socket(connection: LiveHostConnection, onSend: (message: string) => void): LocusSocketLike {
+  return Object.freeze({
+    send(message: string) { onSend(message); connection.send(message); },
+    close(code?: number, reason?: string) { connection.close(code, reason); },
+    onMessage(listener: (message: string) => void) {
+      return connection.onMessage((message) => {
+        if (typeof message === "string") listener(message);
+        else connection.close(1003, "Locus accepts text messages only.");
+      });
+    },
+    onClose(listener: () => void) { return connection.onClose(listener); },
+  });
+}
+
 export async function create_node_circuit_verification_application(
   options: NodeCircuitVerificationApplicationOptions = {},
 ): Promise<NodeCircuitVerificationApplication> {
   const service = options.service ?? create_circuit_verification_service();
-  try {
-    await service.ready();
-  } catch (error) {
-    await service.dispose();
-    throw error;
-  }
+  try { await service.ready(); }
+  catch (error) { await service.dispose(); throw error; }
 
-  const authority = create_circuit_verification_livehost(service);
-  const connections = new Map<WebSocket, () => void>();
+  const locus = create_circuit_verification_livehost(service);
+  const connections = new Map<LiveHostConnection, () => void>();
   let disposed = false;
   let sentMessages = 0;
   let sentBytes = 0;
 
-  const registration: NodeHostedApplication = Object.freeze({
+  const registration: LiveHostApplication = Object.freeze({
     name: NODE_CIRCUIT_VERIFICATION_APPLICATION_NAME,
-    authorities: Object.freeze([Object.freeze({ kind: "exact" as const, value: CIRCUIT_VERIFICATION_HOST_ID })]),
-    ...(options.security === undefined ? {} : { security: options.security }),
-    ready: () => !disposed,
-    acceptWebSocket(_authorityId, websocket, context) {
-      if (disposed) {
-        websocket.close(1012, "Circuit verifier stopping.");
-        return;
-      }
-      const socket = create_node_livehost_socket(websocket, {
-        onSend(message) {
+    connections: Object.freeze([Object.freeze({
+      path: NODE_CIRCUIT_VERIFICATION_CONNECTION_PATH,
+      accept(request: Request, connection: LiveHostConnection, context: LiveHostApplicationContext) {
+        if (disposed) { connection.close(1012, "Circuit verifier stopping."); return; }
+        if (new URL(request.url).searchParams.get("locus") !== CIRCUIT_VERIFICATION_HOST_ID) {
+          connection.close(1008, "Unknown circuit-verification Locus.");
+          return;
+        }
+        const disconnect = locus.connect(locus_socket(connection, (message) => {
           sentMessages += 1;
           sentBytes += Buffer.byteLength(message, "utf8");
-        },
-        maxBufferedAmount: context.transportPolicy.maxBufferedAmount,
-        onBackpressure: context.transportPolicy.onBackpressure,
-      });
-      const disconnect = authority.connect(socket, {
-        ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
-        attachment: context.principal.value,
-      });
-      connections.set(websocket, disconnect);
-      websocket.once("close", () => {
-        connections.get(websocket)?.();
-        connections.delete(websocket);
-      });
-    },
+        }), {
+          ...(context.principal.id === undefined ? {} : { principalId: context.principal.id }),
+          attachment: context.principal.value,
+        });
+        connections.set(connection, disconnect);
+        connection.onClose(() => {
+          connections.get(connection)?.();
+          connections.delete(connection);
+        });
+      },
+    })]),
+    ready: () => !disposed,
     async dispose() {
       if (disposed) return;
       disposed = true;
-      for (const disconnect of connections.values()) disconnect();
+      for (const [connection, disconnect] of connections) {
+        disconnect();
+        connection.close(1012, "Circuit verification connection interrupted.");
+      }
       connections.clear();
-      authority.dispose();
+      locus.dispose();
       await service.dispose();
     },
   });
 
   return Object.freeze({
     registration,
+    ...(options.security === undefined ? {} : { security: options.security }),
     service,
     connectionCount: () => connections.size,
     disconnectConnections() {
-      for (const [websocket, disconnect] of [...connections]) {
+      for (const [connection, disconnect] of [...connections]) {
         disconnect();
-        websocket.close(1012, "Circuit verification connection interrupted.");
+        connection.close(1012, "Circuit verification connection interrupted.");
       }
     },
     metrics: () => Object.freeze({ sentMessages, sentBytes }),

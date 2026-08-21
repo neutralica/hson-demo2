@@ -102,6 +102,13 @@ export async function start_hosted_test_server(
       shutdownTimeoutMs: options.shutdownTimeoutMs ?? 5_000,
       deployment: options.deployment ?? { mode: "development" },
       applications: [hostedTests.registration, towl.registration, circuitVerification.registration],
+      ...(options.security === undefined ? {} : {
+        security: new Map([
+          [hostedTests.registration.name, options.security],
+          [towl.registration.name, options.security],
+          [circuitVerification.registration.name, options.security],
+        ]),
+      }),
       ...(options.log === undefined ? {} : { log: options.log }),
     });
   } catch (error) {
@@ -147,6 +154,6 @@ export async function start_hosted_test_server(
       });
     },
     browserMetrics: hostedTests.browserMetrics,
-    stop: host.stop,
+    stop: host.dispose,
   });
 }

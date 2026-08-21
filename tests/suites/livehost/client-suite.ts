@@ -1,6 +1,6 @@
 // client-suite.ts
 
-import { create_livehost_client, LiveHostDisconnectedError } from "hson-live/livehost";
+import { create_locus_client, LocusDisconnectedError } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { preview_value, equal_row } from "../livemap/test-helpers";
 
@@ -18,7 +18,7 @@ type MemorySocket = Readonly<{
   listener_count: () => number;
 }>;
 
-type LiveHostClientReadCaseSpec = Readonly<{
+type LocusClientReadCaseSpec = Readonly<{
   suite: string;
   caseId: string; name: string;
   input: unknown;
@@ -83,7 +83,7 @@ function make_memory_socket(): MemorySocket {
   });
 }
 
-function livehost_client_read_case(spec: LiveHostClientReadCaseSpec): TestCase {
+function locus_client_read_case(spec: LocusClientReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
     caseId: spec.caseId, name: spec.name,
@@ -102,19 +102,19 @@ function livehost_client_read_case(spec: LiveHostClientReadCaseSpec): TestCase {
   };
 }
 
-export function livehost_client_suite(): TestSuite {
+export function locus_client_suite(): TestSuite {
   const SUITE = "livehost/client";
 
   return {
     suite: SUITE,
     cases: [
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "connect-sends-hello-message", name: "connect sends hello message",
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({
+          const client = create_locus_client({
             socket,
             clientId: "client-a",
           });
@@ -136,13 +136,13 @@ export function livehost_client_suite(): TestSuite {
           listenerCount: 2,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "hello-replaces-client-map-snapshot", name: "hello replaces client map snapshot",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client<{ user: { name: string } }>({ socket });
+          const client = create_locus_client<{ user: { name: string } }>({ socket });
 
           client.connect();
           await socket.receive({
@@ -164,13 +164,13 @@ export function livehost_client_suite(): TestSuite {
           name: "Ada",
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "sync-updates-client-map-path", name: "sync updates client map path",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client<{ user: { name: string } }>({ socket });
+          const client = create_locus_client<{ user: { name: string } }>({ socket });
 
           client.connect();
           await socket.receive({
@@ -198,13 +198,13 @@ export function livehost_client_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "sync-at-empty-path-replaces-client-map", name: "sync at empty path replaces client map",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client<{ user: { name: string } }>({ socket });
+          const client = create_locus_client<{ user: { name: string } }>({ socket });
 
           client.connect();
           await socket.receive({
@@ -232,13 +232,13 @@ export function livehost_client_suite(): TestSuite {
           name: "Grace",
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "subscribe-sends-path-message", name: "subscribe sends path message",
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
 
           client.subscribe(["ui", "selected"]);
           const [message] = socket.sent() as Array<Record<string, unknown>>;
@@ -253,13 +253,13 @@ export function livehost_client_suite(): TestSuite {
           path: ["ui", "selected"],
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "unsubscribe-sends-path-message", name: "unsubscribe sends path message",
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
 
           client.unsubscribe(["ui", "selected"]);
           const [message] = socket.sent() as Array<Record<string, unknown>>;
@@ -274,7 +274,7 @@ export function livehost_client_suite(): TestSuite {
           path: ["ui", "selected"],
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-sends-message-and-resolves-ack", name: "action sends message and resolves ack",
         input: {},
@@ -283,7 +283,7 @@ export function livehost_client_suite(): TestSuite {
             rename_user: { name: string };
           }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => "action-a",
           });
@@ -319,7 +319,7 @@ export function livehost_client_suite(): TestSuite {
           clientSeq: 1,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-resolves-matching-error", name: "action resolves matching error",
         input: {},
@@ -328,7 +328,7 @@ export function livehost_client_suite(): TestSuite {
             fail: undefined;
           }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => "action-a",
           });
@@ -360,7 +360,7 @@ export function livehost_client_suite(): TestSuite {
           clientSeq: 2,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-ignores-unrelated-ack-until-matching-result-arrives", name: "action ignores unrelated ack until matching result arrives",
         input: {},
@@ -369,7 +369,7 @@ export function livehost_client_suite(): TestSuite {
             save: { id: string };
           }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => "action-a",
           });
@@ -409,13 +409,13 @@ export function livehost_client_suite(): TestSuite {
           clientSeq: 2,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "connect-is-idempotent-while-already-connected", name: "connect is idempotent while already connected",
         input: {},
         act: () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({
+          const client = create_locus_client({
             socket,
             clientId: "client-a",
           });
@@ -437,13 +437,13 @@ export function livehost_client_suite(): TestSuite {
           second: undefined,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "reconnect-sends-fresh-hello-without-historical-cursor", name: "reconnect sends fresh hello without historical cursor",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({
+          const client = create_locus_client({
             socket,
             clientId: "client-a",
           });
@@ -477,13 +477,13 @@ export function livehost_client_suite(): TestSuite {
           listenerCount: 2,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "server-close-detaches-listeners", name: "server close detaches listeners",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
 
           client.connect();
           const before = socket.listener_count();
@@ -510,13 +510,13 @@ export function livehost_client_suite(): TestSuite {
           root: {},
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "invalid-server-message-is-ignored", name: "invalid server message is ignored",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
 
           client.connect();
           await socket.receive(["not", "a", "message"]);
@@ -536,7 +536,7 @@ export function livehost_client_suite(): TestSuite {
           listenerCount: 2,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-without-payload-omits-payload-field", name: "action without payload omits payload field",
         input: {},
@@ -545,7 +545,7 @@ export function livehost_client_suite(): TestSuite {
             ping: undefined;
           }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => "action-a",
           });
@@ -577,13 +577,13 @@ export function livehost_client_suite(): TestSuite {
           clientSeq: 1,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "disconnect-detaches-socket-listeners", name: "disconnect detaches socket listeners",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
 
           client.connect();
           const before = socket.listener_count();
@@ -610,14 +610,14 @@ export function livehost_client_suite(): TestSuite {
           root: {},
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-resolves-ack-result-payload", name: "action resolves ack result payload",
         input: {},
         act: async () => {
           type Actions = Readonly<{ read: undefined }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => "result-a" });
+          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "result-a" });
           client.connect();
           const resultPromise = client.action("read");
           await socket.receive({
@@ -632,20 +632,20 @@ export function livehost_client_suite(): TestSuite {
         },
         expected: { status: "done", count: 2 },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "disconnect-rejects-pending-action-with-stable-error", name: "disconnect rejects pending action with stable error",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => "pending-a" });
+          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "pending-a" });
           client.connect();
           const outcome = client.action("wait").then(
             () => ({ resolved: true as const }),
             (error: unknown) => ({
               resolved: false as const,
-              instance: error instanceof LiveHostDisconnectedError,
+              instance: error instanceof LocusDisconnectedError,
               name: error instanceof Error ? error.name : undefined,
               code: typeof error === "object" && error !== null && "code" in error ? error.code : undefined,
             }),
@@ -657,11 +657,11 @@ export function livehost_client_suite(): TestSuite {
           return { outcome: await outcome, listenerCount: socket.listener_count() };
         },
         expected: {
-          outcome: { resolved: false, instance: true, name: "LiveHostDisconnectedError", code: "LIVEHOST_DISCONNECTED" },
+          outcome: { resolved: false, instance: true, name: "LocusDisconnectedError", code: "LOCUS_DISCONNECTED" },
           listenerCount: 0,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "socket-close-rejects-every-pending-action-once", name: "socket close rejects every pending action once",
         input: {},
@@ -669,7 +669,7 @@ export function livehost_client_suite(): TestSuite {
           type Actions = Readonly<{ wait: { index: number } }>;
           const socket = make_memory_socket();
           let nextId = 0;
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => `pending-${nextId += 1}`,
           });
@@ -693,12 +693,12 @@ export function livehost_client_suite(): TestSuite {
           };
         },
         expected: {
-          outcomes: ["LiveHostDisconnectedError", "LiveHostDisconnectedError", "LiveHostDisconnectedError"],
+          outcomes: ["LocusDisconnectedError", "LocusDisconnectedError", "LocusDisconnectedError"],
           settlements: [1, 1, 1],
           listenerCount: 0,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "disconnect-leaves-completed-action-settled-and-ignores-late-results", name: "disconnect leaves completed action settled and ignores late results",
         input: {},
@@ -708,7 +708,7 @@ export function livehost_client_suite(): TestSuite {
           const ids = ["completed", "pending"];
           let nextId = 0;
           let pendingSettlements = 0;
-          const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => ids[nextId++]! });
+          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => ids[nextId++]! });
           client.connect();
           const completed = client.action("wait");
           const pending = client.action("wait").then(
@@ -739,7 +739,7 @@ export function livehost_client_suite(): TestSuite {
           seq: 1,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "reconnect-starts-with-no-stale-pending-actions", name: "reconnect starts with no stale pending actions",
         input: {},
@@ -748,7 +748,7 @@ export function livehost_client_suite(): TestSuite {
           const socket = make_memory_socket();
           const ids = ["old-action", "new-action"];
           let nextId = 0;
-          const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => ids[nextId++]! });
+          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => ids[nextId++]! });
           client.connect();
           const oldOutcome = client.action("wait").then(
             () => "resolved",
@@ -776,7 +776,7 @@ export function livehost_client_suite(): TestSuite {
           clientSeq: 3,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "disconnect-then-socket-close-is-idempotent", name: "disconnect then socket close is idempotent",
         input: {},
@@ -784,7 +784,7 @@ export function livehost_client_suite(): TestSuite {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
           let settlements = 0;
-          const client = create_livehost_client<undefined, Actions>({ socket });
+          const client = create_locus_client<undefined, Actions>({ socket });
           client.connect();
           const outcome = client.action("wait").catch((error: unknown) => {
             settlements += 1;
@@ -795,9 +795,9 @@ export function livehost_client_suite(): TestSuite {
 
           return { outcome: await outcome, settlements, listenerCount: socket.listener_count() };
         },
-        expected: { outcome: "LiveHostDisconnectedError", settlements: 1, listenerCount: 0 },
+        expected: { outcome: "LocusDisconnectedError", settlements: 1, listenerCount: 0 },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-before-connect-rejects-without-allocating-or-sending", name: "action before connect rejects without allocating or sending",
         input: {},
@@ -805,14 +805,14 @@ export function livehost_client_suite(): TestSuite {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
           let actionIdCalls = 0;
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => `action-${actionIdCalls += 1}`,
           });
           const error = await client.action("wait").catch((reason: unknown) => reason);
 
           return {
-            instance: error instanceof LiveHostDisconnectedError,
+            instance: error instanceof LocusDisconnectedError,
             name: error instanceof Error ? error.name : undefined,
             actionIdCalls,
             sentCount: socket.sent().length,
@@ -820,12 +820,12 @@ export function livehost_client_suite(): TestSuite {
         },
         expected: {
           instance: true,
-          name: "LiveHostDisconnectedError",
+          name: "LocusDisconnectedError",
           actionIdCalls: 1,
           sentCount: 0,
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-after-explicit-disconnect-rejects-without-allocating-or-sending", name: "action after explicit disconnect rejects without allocating or sending",
         input: {},
@@ -833,7 +833,7 @@ export function livehost_client_suite(): TestSuite {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
           let actionIdCalls = 0;
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => `action-${actionIdCalls += 1}`,
           });
@@ -842,14 +842,14 @@ export function livehost_client_suite(): TestSuite {
           const error = await client.action("wait").catch((reason: unknown) => reason);
 
           return {
-            instance: error instanceof LiveHostDisconnectedError,
+            instance: error instanceof LocusDisconnectedError,
             actionIdCalls,
             sentCount: socket.sent().length,
           };
         },
         expected: { instance: true, actionIdCalls: 1, sentCount: 1 },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "action-after-socket-close-rejects-without-allocating-or-sending", name: "action after socket close rejects without allocating or sending",
         input: {},
@@ -857,7 +857,7 @@ export function livehost_client_suite(): TestSuite {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
           let actionIdCalls = 0;
-          const client = create_livehost_client<undefined, Actions>({
+          const client = create_locus_client<undefined, Actions>({
             socket,
             actionId: () => `action-${actionIdCalls += 1}`,
           });
@@ -866,21 +866,21 @@ export function livehost_client_suite(): TestSuite {
           const error = await client.action("wait").catch((reason: unknown) => reason);
 
           return {
-            instance: error instanceof LiveHostDisconnectedError,
+            instance: error instanceof LocusDisconnectedError,
             actionIdCalls,
             sentCount: socket.sent().length,
           };
         },
         expected: { instance: true, actionIdCalls: 1, sentCount: 1 },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "duplicate-logical-request-ids-retain-independent-delivery-attempts", name: "duplicate logical request IDs retain independent delivery attempts",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => "duplicate" });
+          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "duplicate" });
           client.connect();
           const first = client.action("wait");
           const second = client.action("wait");
@@ -902,13 +902,13 @@ export function livehost_client_suite(): TestSuite {
           sentTypes: ["hello", "action", "action"],
         },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "event-listeners-receive-once-and-dispose-idempotently", name: "event listeners receive once and dispose idempotently",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
           const first: string[] = [];
           const second: string[] = [];
           const stopFirst = client.on_event((message) => first.push(message.event));
@@ -922,14 +922,14 @@ export function livehost_client_suite(): TestSuite {
         },
         expected: { first: ["one"], second: ["one", "two"] },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "events-do-not-settle-pending-actions", name: "events do not settle pending actions",
         input: {},
         act: async () => {
           type Actions = Readonly<{ wait: undefined }>;
           const socket = make_memory_socket();
-          const client = create_livehost_client<undefined, Actions>({ socket, actionId: () => "pending" });
+          const client = create_locus_client<undefined, Actions>({ socket, actionId: () => "pending" });
           client.connect();
           let settled = false;
           const pending = client.action("wait").then((result) => {
@@ -944,13 +944,13 @@ export function livehost_client_suite(): TestSuite {
         },
         expected: { settledAfterEvent: false, resultType: "ack" },
       }),
-      livehost_client_read_case({
+      locus_client_read_case({
         suite: SUITE,
         caseId: "event-listeners-persist-across-reconnect-without-detached-delivery", name: "event listeners persist across reconnect without detached delivery",
         input: {},
         act: async () => {
           const socket = make_memory_socket();
-          const client = create_livehost_client({ socket });
+          const client = create_locus_client({ socket });
           const received: string[] = [];
           client.on_event((message) => received.push(message.event));
           client.connect();

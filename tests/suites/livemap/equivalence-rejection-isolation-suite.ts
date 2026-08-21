@@ -36,7 +36,7 @@ function rejects(run: () => unknown): boolean {
 function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[] {
   const sourceMap = hson.liveMap.fromJson({ value: initial(route), guard: 1 })
     .schema.use(hson.liveMap.schema.define((s) => s.object({ value: s.unknown, guard: s.number })));
-  const host = hson.liveHost.create({ map: sourceMap });
+  const host = hson.locus.create({ map: sourceMap });
   const source = host.map as unknown as LiveMap;
   const target = hson.liveMap.fromJson({ value: initial(route), guard: 1 });
   link_livemap(source, target, { path: ["value"] });
@@ -55,7 +55,7 @@ function rejection_rows(witness: unknown, route: Route): readonly TestAssertRow[
     equal_row("commits", commits, 0),
     equal_row("feeds", feeds, 0),
     equal_row("stores", stores, 0),
-    equal_row("LiveHost commits", hostCommits, 0),
+    equal_row("Locus commits", hostCommits, 0),
   ];
 }
 
@@ -101,9 +101,9 @@ export function livemap_equivalence_rejection_isolation_suite(): TestSuite {
       }),
       test("malformed-structural-json-rejects-restore-apply-and-replay-atomically", "malformed structural JSON rejects restore apply and replay atomically", () => {
         const restore = hson.liveMap.fromJson({ value: 1 }); const apply = hson.liveMap.fromJson({ value: 1 }); const replay = hson.liveMap.fromJson({ value: 1 }); const before = restore.capture();
-        const envelope = { format: "structural-json", formatVersion: 1, payload: "{" } as const;
+        const envelope = { format: "structural-json", payload: "{" } as const;
         return { assertRows: [
-          equal_row("restore", rejects(() => restore.restore({ rev: 1, ...envelope })), true),
+          equal_row("restore", rejects(() => restore.restore({ rev: 1, ...envelope } as never)), true),
           equal_row("apply", rejects(() => apply.apply({ prevRev: 0, ...envelope })), true),
           equal_row("replay", rejects(() => replay.replay({ prevRev: 0, ...envelope })), true),
           equal_row("restore atomic", restore.capture(), before), equal_row("apply atomic", apply.capture(), before), equal_row("replay atomic", replay.capture(), before),

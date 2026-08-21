@@ -1,6 +1,6 @@
-import { create_livehost } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
 import { hson } from "hson-live";
-import type { LiveHostActionContext, LiveHostSessionLifecycleEvent, LiveHostActions, LiveHostSchema } from "hson-live/types";
+import type { LiveMap, LocusActionContext, LocusSessionLifecycleEvent, LocusActions, LocusSchema } from "hson-live/types";
 import { TOWL_SCHEMA } from "./towl.schema";
 import { reflect_towl_session_attached, reflect_towl_session_detached, remove_towl_session, join_towl_session, leave_towl_session, set_towl_ready, pull_towl_rope, reset_towl_round, create_towl_state } from "./towl.transitions";
 import type { TowlDomainError, TowlState, TowlJoinResult, TowlLeaveResult, TowlReadyResult, TowlPullResult, TowlResetResult, TowlTransitionResult, TowlRuntime, TowlRuntimeOptions, TowlActions } from "./towl.types";
@@ -32,17 +32,17 @@ function decode_ready(value: unknown) {
   return { ok: true as const, value: { ready: record.ready } };
 }
 
-function require_session(context: LiveHostActionContext<TowlState>): string {
+function require_session(context: LocusActionContext<LiveMap<TowlState>>): string {
   if (context.origin.kind !== "session") {
     throw new TowlActionError({
       code: "TOWL_SESSION_REQUIRED",
-      message: "TOWL player actions require a trusted LiveHost session.",
+      message: "TOWL player actions require a trusted Locus session.",
     });
   }
   if (!context.origin.resumable) {
     throw new TowlActionError({
       code: "TOWL_RESUMABLE_SESSION_REQUIRED",
-      message: "TOWL seats require a resumable LiveHost session.",
+      message: "TOWL seats require a resumable Locus session.",
     });
   }
   return context.origin.sessionId;
@@ -50,7 +50,7 @@ function require_session(context: LiveHostActionContext<TowlState>): string {
 
 async function apply_transition<TResult extends
   TowlJoinResult | TowlLeaveResult | TowlReadyResult | TowlPullResult | TowlResetResult>(
-  context: LiveHostActionContext<TowlState>,
+  context: LocusActionContext<LiveMap<TowlState>>,
   transition: TowlTransitionResult<TResult>,
 ): Promise<TResult> {
   if (!transition.ok) throw new TowlActionError(transition.error);
@@ -60,7 +60,7 @@ async function apply_transition<TResult extends
 
 function reflect_lifecycle(
   host: TowlRuntime["host"],
-  event: LiveHostSessionLifecycleEvent,
+  event: LocusSessionLifecycleEvent,
 ): void {
   const state = host.map.snap();
 
@@ -91,7 +91,7 @@ function reflect_lifecycle(
 }
 
 export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRuntime {
-  const actions: LiveHostActions<TowlActions, TowlState> = {
+  const actions: LocusActions<TowlActions, LiveMap<TowlState>> = {
     join: (context) => apply_transition(context, join_towl_session(context.map.snap(), require_session(context))),
     leave: (context) => apply_transition(context, leave_towl_session(context.map.snap(), require_session(context))),
     set_ready: (context, payload) => apply_transition(
@@ -101,7 +101,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
     pull: (context) => apply_transition(context, pull_towl_rope(context.map.snap(), require_session(context))),
     reset_round: (context) => apply_transition(context, reset_towl_round(context.map.snap(), require_session(context))),
   };
-  const schema: LiveHostSchema<TowlState, TowlActions> = {
+  const schema: LocusSchema<TowlState, TowlActions> = {
     actions: {
       join: { payload: decode_empty },
       leave: { payload: decode_empty },
@@ -111,7 +111,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
     },
   };
   const map = hson.liveMap.fromJson(create_towl_state()).schema.use(TOWL_SCHEMA);
-  const host = create_livehost({
+  const host = create_locus({
     map,
     actions,
     schema,
@@ -121,7 +121,7 @@ export function create_towl_runtime(options: TowlRuntimeOptions = {}): TowlRunti
   });
   let disposed = false;
   const stopLifecycle = host.sessions.on_change((event) => {
-    if (!disposed && !(event.kind === "revoked" && event.reason === "host_disposed")) {
+    if (!disposed && !(event.kind === "revoked" && event.reason === "locus_disposed")) {
       reflect_lifecycle(host, event);
     }
   });

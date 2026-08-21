@@ -9,7 +9,7 @@ import {
   node_selected_verification_metrics,
   run_node_selected_verifications,
 } from "../../harness/runtimes/node/run-node-selected-verifications";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { make_hosted_test_report } from "../../harness/reporting/hosted/hosted-test-report";
 import {
   hosted_test_projection_footer,
@@ -20,7 +20,7 @@ import { TEST_SURFACE_CATALOG } from "../../harness/hosted/test-surface-catalog"
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 
-const registry = make_local_node_livehost_executor_registry();
+const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
 const discovery = make_test_executor_discovery(registry, availability.targets);
 const canonicalCaseCount = registry.catalog.tests.length;
@@ -96,7 +96,7 @@ const result = await run_node_selected_verifications(
 );
 const timing = node_selected_verification_metrics();
 report.complete(result, { runnerMs: timing.overlappedTotalMs, hostMs: timing.overlappedTotalMs });
-const captured = report.map.capture().value;
+const captured = report.map.snap();
 const projection = hosted_test_projection_summary(captured);
 const footer = hosted_test_projection_footer(projection, timing.overlappedTotalMs);
 const processMetrics = external_library_launcher_metrics();

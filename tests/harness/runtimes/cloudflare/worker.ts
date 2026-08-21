@@ -7,11 +7,11 @@ import { compose_worker_authority_application } from "../../hosted/livehost-auth
 import { create_towl_authority_application } from "../../hosted/towl-authority-application";
 import { make_hosted_test_durable_object_runtime } from "./hosted-test-durable-object-runtime";
 import type { CloudflareAcceptedWebSocket } from "./cloudflare-websocket-socket";
-import { make_cloudflare_livehost_executor_registry } from "./cloudflare-test-executor";
+import { make_cloudflare_locus_executor_registry } from "./cloudflare-test-executor";
 import { make_test_executor_discovery } from "../../core/test-discovery";
 import {
   is_websocket_upgrade,
-  livehost_id,
+  locus_id,
   request_error,
   route_hosted_test_worker_request,
   type HostedTestDurableObjectNamespace,
@@ -22,7 +22,7 @@ export interface HostedTestWorkerEnv {
 }
 
 export function create_cloudflare_hosted_test_application(): HostedTestApplication {
-  const executorRegistry = make_cloudflare_livehost_executor_registry();
+  const executorRegistry = make_cloudflare_locus_executor_registry();
   return create_hosted_test_application({
     discovery: make_test_executor_discovery(executorRegistry),
     executorRegistry,
@@ -87,7 +87,7 @@ export class HostedTestDurableObject {
 
   async fetch(request: Request): Promise<Response> {
     if (!is_websocket_upgrade(request)) return request_error("Expected a WebSocket upgrade request.", 426);
-    const hostId = livehost_id(request);
+    const hostId = locus_id(request);
     if (hostId === undefined) {
       return request_error("Hosted-test WebSocket requests require a non-empty livehost query parameter.", 400);
     }

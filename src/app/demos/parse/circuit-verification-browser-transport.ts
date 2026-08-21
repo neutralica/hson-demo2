@@ -1,10 +1,10 @@
 import {
-  create_browser_livehost_socket,
-  create_livehost_client,
-  type BrowserLiveHostSocket,
+  create_browser_locus_socket,
+  create_locus_client,
+  type BrowserLocusSocket,
   type BrowserWebSocketConstructor,
-} from "hson-live/livehost";
-import type { LiveHostClient } from "hson-live/types";
+} from "hson-live/locus";
+import type { LiveMap, LocusClient } from "hson-live/types";
 import {
   CIRCUIT_VERIFICATION_ACTION,
   CIRCUIT_VERIFICATION_HOST_ID,
@@ -19,7 +19,7 @@ import {
 import type { ParsingVerificationTransport } from "./parsing-verification-coordinator";
 
 export const PARSING_VERIFICATION_CONFIGURATION_ERROR =
-  "Parsing verification is unavailable because no LiveHost circuit verifier URL was configured.";
+  "Parsing verification is unavailable because no Locus circuit verifier URL was configured.";
 
 export type ParsingVerificationBuildEnvironment = Readonly<{
   DEV?: boolean;
@@ -80,13 +80,13 @@ export function resolve_parsing_verification_websocket_url(
   catch {
     throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_URL_INVALID",
-      "Parsing verification LiveHost URL is invalid.",
+      "Parsing verification Locus URL is invalid.",
     );
   }
   if (url.protocol !== "ws:" && url.protocol !== "wss:") {
     throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_URL_INVALID",
-      "Parsing verification LiveHost URL must use ws:// or wss://.",
+      "Parsing verification Locus URL must use ws:// or wss://.",
     );
   }
   if (environment.PROD === true && url.protocol !== "wss:") {
@@ -95,7 +95,7 @@ export function resolve_parsing_verification_websocket_url(
       "Production parsing verification requires wss://.",
     );
   }
-  url.searchParams.set("livehost", CIRCUIT_VERIFICATION_HOST_ID);
+  url.searchParams.set("locus", CIRCUIT_VERIFICATION_HOST_ID);
   return url.toString();
 }
 
@@ -103,11 +103,11 @@ export function create_browser_circuit_verification_transport(
   options: BrowserCircuitVerificationTransportOptions = {},
 ): ParsingVerificationTransport {
   let disposed = false;
-  let transport: BrowserLiveHostSocket | undefined;
-  let client: LiveHostClient<undefined, CircuitVerificationActions> | undefined;
-  let opening: Promise<LiveHostClient<undefined, CircuitVerificationActions>> | undefined;
+  let transport: BrowserLocusSocket | undefined;
+  let client: LocusClient<LiveMap<undefined>, CircuitVerificationActions> | undefined;
+  let opening: Promise<LocusClient<LiveMap<undefined>, CircuitVerificationActions>> | undefined;
 
-  async function open(): Promise<LiveHostClient<undefined, CircuitVerificationActions>> {
+  async function open(): Promise<LocusClient<LiveMap<undefined>, CircuitVerificationActions>> {
     if (disposed) throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_TRANSPORT_DISPOSED",
       "Parsing verification transport is disposed.",
@@ -115,15 +115,17 @@ export function create_browser_circuit_verification_transport(
     if (client !== undefined) return client;
     if (opening !== undefined) return opening;
     opening = (async () => {
-      const url = resolve_parsing_verification_websocket_url(options.environment ?? current_environment(), options.url);
-      const nextTransport = create_browser_livehost_socket(url, options.WebSocketConstructor);
+      const url = new URL(resolve_parsing_verification_websocket_url(options.environment ?? current_environment(), options.url));
+      url.pathname = "/circuit-verification";
+      url.searchParams.set("locus", CIRCUIT_VERIFICATION_HOST_ID);
+      const nextTransport = create_browser_locus_socket(url.toString(), options.WebSocketConstructor);
       try {
         await nextTransport.ready;
         if (disposed) throw new BrowserCircuitVerificationTransportError(
           "CIRCUIT_VERIFICATION_TRANSPORT_DISPOSED",
           "Parsing verification transport was disposed while connecting.",
         );
-        const nextClient = create_livehost_client<undefined, CircuitVerificationActions>({ socket: nextTransport.socket });
+        const nextClient = create_locus_client<undefined, CircuitVerificationActions>({ socket: nextTransport.socket });
         nextClient.connect();
         transport = nextTransport;
         client = nextClient;

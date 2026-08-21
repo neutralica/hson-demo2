@@ -3,7 +3,7 @@ import { fork } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import WebSocket from "ws";
 import { hson } from "hson-live";
-import type { BrowserWebSocketConstructor } from "hson-live/livehost";
+import type { BrowserWebSocketConstructor } from "hson-live/locus";
 import { tp_factory } from "../../../src/app/demos/tests/panel/mount-tp";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import type { HostedTestTimelineEvent } from "../../../src/shared/hosted-tests/hosted-test-timeline";
@@ -203,7 +203,7 @@ try {
     assert.equal(typeof completedAttemptId, "string", "completed timeline exposes the authoritative attempt ID");
     const recovered = await runtime.recover_run(completedRunId as string, completedAttemptId as string);
     const recoveredResult = await recovered.actionResult;
-    const recoveredReport = recovered.client.recovery.map.capture().value;
+    const recoveredReport = recovered.client.recovery.map.snap();
     recoveredReportBytes = Buffer.byteLength(JSON.stringify(recoveredReport));
     recoveredEvidenceBytes = recoveredReport.suiteRuns.reduce(
       (total, suite) => total + suite.evidence.reduce(

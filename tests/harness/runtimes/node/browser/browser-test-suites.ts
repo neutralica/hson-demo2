@@ -1,7 +1,7 @@
 import type { TestSuite } from "../../../core/test-contracts";
 import { ALL_BROWSER_SUITE_MANIFEST } from "./browser-test-manifest";
 
-export function all_browser_livehost_test_suites(): readonly TestSuite[] {
+export function all_browser_locus_test_suites(): readonly TestSuite[] {
   return Object.freeze(ALL_BROWSER_SUITE_MANIFEST.map((entry, order) => Object.freeze({
     suite: entry.id,
     descriptor: Object.freeze({

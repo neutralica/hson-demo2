@@ -66,6 +66,8 @@ export function set_commit(
     changed: true,
     prevRev: 0,
     rev: 1,
+    format: "structural-json",
+    payload: "null",
     ops: [{ kind: "set", path, prev, next }],
   };
 }

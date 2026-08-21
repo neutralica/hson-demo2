@@ -1,6 +1,6 @@
 // pair-suite.ts
 
-import { create_livehost, create_livehost_client } from "hson-live/livehost";
+import { create_locus, create_locus_client } from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
@@ -17,7 +17,7 @@ type PairSocket = Readonly<{
   listener_count: () => number;
 }>;
 
-type LiveHostPairReadCaseSpec = Readonly<{
+type LocusPairReadCaseSpec = Readonly<{
   suite: string;
   caseId: string; name: string;
   input: unknown;
@@ -117,7 +117,7 @@ async function settle_pair(): Promise<void> {
   await Promise.resolve();
 }
 
-function livehost_pair_read_case(spec: LiveHostPairReadCaseSpec): TestCase {
+function locus_pair_read_case(spec: LocusPairReadCaseSpec): TestCase {
   return {
     suite: spec.suite,
     caseId: spec.caseId, name: spec.name,
@@ -136,20 +136,20 @@ function livehost_pair_read_case(spec: LiveHostPairReadCaseSpec): TestCase {
   };
 }
 
-export function livehost_pair_suite(): TestSuite {
+export function locus_pair_suite(): TestSuite {
   const SUITE = "livehost/pair";
 
   return {
     suite: SUITE,
     cases: [
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-socket-close-detaches-host-listener", name: "client socket close detaches host listener",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost({ state: { ready: true } });
-          const client = create_livehost_client<{ ready: boolean }>({
+          const host = create_locus({ state: { ready: true } });
+          const client = create_locus_client<{ ready: boolean }>({
             socket: clientSocket,
             clientId: "client-a",
           });
@@ -187,14 +187,14 @@ export function livehost_pair_suite(): TestSuite {
           clientRoot: { ready: true },
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-hello-receives-host-snapshot", name: "client hello receives host snapshot",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost({ state: { user: { name: "Ada" } } });
-          const client = create_livehost_client<{ user: { name: string } }>({
+          const host = create_locus({ state: { user: { name: "Ada" } } });
+          const client = create_locus_client<{ user: { name: string } }>({
             socket: clientSocket,
             clientId: "client-a",
           });
@@ -224,14 +224,14 @@ export function livehost_pair_suite(): TestSuite {
           clientRoot: { user: { name: "Ada" } },
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-subscribe-receives-immediate-host-sync", name: "client subscribe receives immediate host sync",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost({ state: { ui: { selected: "home" } } });
-          const client = create_livehost_client<{ ui: { selected: string } }>({ socket: clientSocket });
+          const host = create_locus({ state: { ui: { selected: "home" } } });
+          const client = create_locus_client<{ ui: { selected: string } }>({ socket: clientSocket });
 
           host.connect(hostSocket);
           client.connect();
@@ -259,7 +259,7 @@ export function livehost_pair_suite(): TestSuite {
           selected: "home",
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-action-resolves-ack-and-receives-sync-update", name: "client action resolves ack and receives sync update",
         input: {},
@@ -268,7 +268,7 @@ export function livehost_pair_suite(): TestSuite {
             rename_user: { name: string };
           }>;
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost({
+          const host = create_locus({
             state: { user: { name: "Ada" } },
             actions: {
               rename_user: (ctx, payload) => {
@@ -278,7 +278,7 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const client = create_livehost_client<{ user: { name: string } }, Actions>({
+          const client = create_locus_client<{ user: { name: string } }, Actions>({
             socket: clientSocket,
             actionId: () => "action-a",
           });
@@ -323,7 +323,7 @@ export function livehost_pair_suite(): TestSuite {
           initialSyncValue: "Ada",
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-action-resolves-host-error", name: "client action resolves host error",
         input: {},
@@ -332,8 +332,8 @@ export function livehost_pair_suite(): TestSuite {
             missing: undefined;
           }>;
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost({ state: {} });
-          const client = create_livehost_client<undefined, Actions>({
+          const host = create_locus({ state: {} });
+          const client = create_locus_client<undefined, Actions>({
             socket: clientSocket,
             actionId: () => "action-a",
           });
@@ -356,12 +356,12 @@ export function livehost_pair_suite(): TestSuite {
         expected: {
           resultType: "error",
           resultSeq: 0,
-          message: "Unknown LiveHost action: missing",
-          code: "LIVEHOST_UNKNOWN_ACTION",
+          message: "Unknown Locus action: missing",
+          code: "LOCUS_UNKNOWN_ACTION",
           clientSeq: 0,
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-unsubscribe-stops-later-sync-update", name: "client unsubscribe stops later sync update",
         input: {},
@@ -370,7 +370,7 @@ export function livehost_pair_suite(): TestSuite {
             increment: undefined;
           }>;
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -379,7 +379,7 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const client = create_livehost_client<{ count: number }, Actions>({
+          const client = create_locus_client<{ count: number }, Actions>({
             socket: clientSocket,
             actionId: () => "action-a",
           });
@@ -415,7 +415,7 @@ export function livehost_pair_suite(): TestSuite {
           lastHostMessageType: "ack",
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "fresh-client-receives-current-snapshot-without-historical-sync", name: "fresh client receives current snapshot without historical sync",
         input: {},
@@ -425,7 +425,7 @@ export function livehost_pair_suite(): TestSuite {
           }>;
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -434,7 +434,7 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const firstClient = create_livehost_client<{ count: number }, Actions>({
+          const firstClient = create_locus_client<{ count: number }, Actions>({
             socket: firstClientSocket,
             actionId: () => "action-a",
           });
@@ -449,7 +449,7 @@ export function livehost_pair_suite(): TestSuite {
           await resultPromise;
           await settle_pair();
 
-          const secondClient = create_livehost_client<{ count: number }, Actions>({
+          const secondClient = create_locus_client<{ count: number }, Actions>({
             socket: secondClientSocket,
             clientId: "client-b",
           });
@@ -484,7 +484,7 @@ export function livehost_pair_suite(): TestSuite {
           secondCount: 1,
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "client-reconnect-receives-current-hello-without-resume-cursor", name: "client reconnect receives current hello without resume cursor",
         input: {},
@@ -494,7 +494,7 @@ export function livehost_pair_suite(): TestSuite {
           }>;
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -503,7 +503,7 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const firstClient = create_livehost_client<{ count: number }, Actions>({
+          const firstClient = create_locus_client<{ count: number }, Actions>({
             socket: firstClientSocket,
             actionId: () => "action-a",
           });
@@ -518,7 +518,7 @@ export function livehost_pair_suite(): TestSuite {
           await resultPromise;
           await settle_pair();
 
-          const secondClient = create_livehost_client<{ count: number }, Actions>({ socket: secondClientSocket });
+          const secondClient = create_locus_client<{ count: number }, Actions>({ socket: secondClientSocket });
           host.connect(secondHostSocket);
           secondClient.connect();
           await settle_pair();
@@ -558,7 +558,7 @@ export function livehost_pair_suite(): TestSuite {
           clientCount: 1,
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "current-hello-snapshot-is-not-followed-by-historical-sync", name: "current hello snapshot is not followed by historical sync",
         input: {},
@@ -568,7 +568,7 @@ export function livehost_pair_suite(): TestSuite {
           }>;
           const [writerClientSocket, writerHostSocket] = make_socket_pair();
           const [readerClientSocket, readerHostSocket] = make_socket_pair();
-          const host = create_livehost({
+          const host = create_locus({
             state: { count: 0 },
             actions: {
               increment: (ctx) => {
@@ -577,7 +577,7 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const writer = create_livehost_client<{ count: number }, Actions>({
+          const writer = create_locus_client<{ count: number }, Actions>({
             socket: writerClientSocket,
             actionId: () => "action-a",
           });
@@ -592,7 +592,7 @@ export function livehost_pair_suite(): TestSuite {
           await resultPromise;
           await settle_pair();
 
-          const reader = create_livehost_client<{ count: number }, Actions>({ socket: readerClientSocket });
+          const reader = create_locus_client<{ count: number }, Actions>({ socket: readerClientSocket });
           host.connect(readerHostSocket);
           reader.connect();
           await settle_pair();
@@ -620,16 +620,16 @@ export function livehost_pair_suite(): TestSuite {
           readerCount: 1,
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "host-connection-emits-one-generic-event-to-one-client", name: "host connection emits one generic event to one client",
         input: {},
         act: async () => {
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_livehost({ state: { ready: true } });
-          const first = create_livehost_client<{ ready: boolean }>({ socket: firstClientSocket });
-          const second = create_livehost_client<{ ready: boolean }>({ socket: secondClientSocket });
+          const host = create_locus({ state: { ready: true } });
+          const first = create_locus_client<{ ready: boolean }>({ socket: firstClientSocket });
+          const second = create_locus_client<{ ready: boolean }>({ socket: secondClientSocket });
           const firstEvents: unknown[] = [];
           const secondEvents: unknown[] = [];
           first.on_event((message) => firstEvents.push(message));
@@ -648,7 +648,7 @@ export function livehost_pair_suite(): TestSuite {
           secondEvents: [],
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "action-context-emits-ordered-events-only-to-invoking-client-before-ack", name: "action context emits ordered events only to invoking client before ack",
         input: {},
@@ -656,7 +656,7 @@ export function livehost_pair_suite(): TestSuite {
           type Actions = Readonly<{ emit: undefined }>;
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_livehost<undefined, Actions>({
+          const host = create_locus<undefined, Actions>({
             actions: {
               emit: (ctx) => {
                 ctx.emit_event("first", { n: 1 });
@@ -665,8 +665,8 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const first = create_livehost_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "emit-a" });
-          const second = create_livehost_client<undefined, Actions>({ socket: secondClientSocket });
+          const first = create_locus_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "emit-a" });
+          const second = create_locus_client<undefined, Actions>({ socket: secondClientSocket });
           const firstEvents: string[] = [];
           const secondEvents: string[] = [];
           first.on_event((message) => firstEvents.push(message.event));
@@ -696,7 +696,7 @@ export function livehost_pair_suite(): TestSuite {
           hostTypes: ["hello", "event", "event", "ack"],
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "action-context-emitter-returns-false-after-originating-connection-closes", name: "action context emitter returns false after originating connection closes",
         input: {},
@@ -709,7 +709,7 @@ export function livehost_pair_suite(): TestSuite {
           let emitted: boolean | undefined;
           let origin: unknown;
           const [clientSocket, hostSocket] = make_socket_pair();
-          const host = create_livehost<undefined, Actions>({
+          const host = create_locus<undefined, Actions>({
             sessionId: () => "async-detach-session",
             actions: {
               delayed: async (ctx) => {
@@ -720,7 +720,7 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const client = create_livehost_client<undefined, Actions>({ socket: clientSocket, actionId: () => "delayed-a" });
+          const client = create_locus_client<undefined, Actions>({ socket: clientSocket, actionId: () => "delayed-a" });
           host.connect(hostSocket);
           client.connect();
           await settle_pair();
@@ -744,7 +744,7 @@ export function livehost_pair_suite(): TestSuite {
           hostEventCount: 0,
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
         suite: SUITE,
         caseId: "concurrent-generic-actions-keep-event-markers-connection-scoped", name: "concurrent generic actions keep event markers connection scoped",
         input: {},
@@ -761,7 +761,7 @@ export function livehost_pair_suite(): TestSuite {
           });
           const [firstClientSocket, firstHostSocket] = make_socket_pair();
           const [secondClientSocket, secondHostSocket] = make_socket_pair();
-          const host = create_livehost<undefined, Actions>({
+          const host = create_locus<undefined, Actions>({
             actions: {
               marked: async (ctx, payload) => {
                 started += 1;
@@ -772,8 +772,8 @@ export function livehost_pair_suite(): TestSuite {
               },
             },
           });
-          const first = create_livehost_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "marked-a" });
-          const second = create_livehost_client<undefined, Actions>({ socket: secondClientSocket, actionId: () => "marked-b" });
+          const first = create_locus_client<undefined, Actions>({ socket: firstClientSocket, actionId: () => "marked-a" });
+          const second = create_locus_client<undefined, Actions>({ socket: secondClientSocket, actionId: () => "marked-b" });
           const firstMarkers: unknown[] = [];
           const secondMarkers: unknown[] = [];
           first.on_event((message) => firstMarkers.push(message.payload));
@@ -805,7 +805,7 @@ export function livehost_pair_suite(): TestSuite {
           secondResult: { marker: "b" },
         },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
   suite: SUITE,
   caseId: "client-supplied-id-cannot-manufacture-session-authority", name: "client supplied id cannot manufacture session authority",
   input: {},
@@ -817,7 +817,7 @@ export function livehost_pair_suite(): TestSuite {
 
     const [clientSocket, hostSocket] = make_socket_pair();
 
-    const host = create_livehost<undefined, Actions>({
+    const host = create_locus<undefined, Actions>({
       sessionId: () => "server-session-a",
 
       actions: {
@@ -827,7 +827,7 @@ export function livehost_pair_suite(): TestSuite {
       },
     });
 
-    const client = create_livehost_client<undefined, Actions>({
+    const client = create_locus_client<undefined, Actions>({
       socket: clientSocket,
       clientId: "impersonated-session",
       actionId: () => "inspect-a",
@@ -860,7 +860,7 @@ export function livehost_pair_suite(): TestSuite {
     },
   },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
   suite: SUITE,
   caseId: "clients-sharing-a-claimed-id-retain-distinct-session-authority", name: "clients sharing a claimed id retain distinct session authority",
   input: {},
@@ -875,7 +875,7 @@ export function livehost_pair_suite(): TestSuite {
     const [firstClientSocket, firstHostSocket] = make_socket_pair();
     const [secondClientSocket, secondHostSocket] = make_socket_pair();
 
-    const host = create_livehost<undefined, Actions>({
+    const host = create_locus<undefined, Actions>({
       sessionId: () => {
         nextSession += 1;
         return `server-session-${nextSession}`;
@@ -888,13 +888,13 @@ export function livehost_pair_suite(): TestSuite {
       },
     });
 
-    const first = create_livehost_client<undefined, Actions>({
+    const first = create_locus_client<undefined, Actions>({
       socket: firstClientSocket,
       clientId: "shared-claimed-id",
       actionId: () => "inspect-a",
     });
 
-    const second = create_livehost_client<undefined, Actions>({
+    const second = create_locus_client<undefined, Actions>({
       socket: secondClientSocket,
       clientId: "shared-claimed-id",
       actionId: () => "inspect-b",
@@ -942,7 +942,7 @@ export function livehost_pair_suite(): TestSuite {
     },
   },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
   suite: SUITE,
   caseId: "client-invalid-payload-is-rejected-before-handler-and-mutation", name: "client invalid payload is rejected before handler and mutation",
   input: {},
@@ -956,7 +956,7 @@ export function livehost_pair_suite(): TestSuite {
 
     const [clientSocket, hostSocket] = make_socket_pair();
 
-    const host = create_livehost<{ value: string }, Actions>({
+    const host = create_locus<{ value: string }, Actions>({
       state: {
         value: "unchanged",
       },
@@ -982,7 +982,7 @@ export function livehost_pair_suite(): TestSuite {
       },
     });
 
-    const client = create_livehost_client<
+    const client = create_locus_client<
       { value: string },
       Actions
     >({
@@ -1019,13 +1019,13 @@ export function livehost_pair_suite(): TestSuite {
   expected: {
     calls: 0,
     resultType: "error",
-    code: "LIVEHOST_SCHEMA_INVALID_PAYLOAD",
+    code: "LOCUS_SCHEMA_INVALID_PAYLOAD",
     resultSeq: 0,
     hostSeq: 0,
     value: "unchanged",
   },
       }),
-      livehost_pair_read_case({
+      locus_pair_read_case({
   suite: SUITE,
   caseId: "repeated-session-action-id-returns-cached-outcome-without-rerunning-handler", name: "repeated session action id returns cached outcome without rerunning handler",
   input: {},
@@ -1039,7 +1039,7 @@ export function livehost_pair_suite(): TestSuite {
 
     const [clientSocket, hostSocket] = make_socket_pair();
 
-    const host = create_livehost<{ count: number }, Actions>({
+    const host = create_locus<{ count: number }, Actions>({
       state: {
         count: 0,
       },
@@ -1064,7 +1064,7 @@ export function livehost_pair_suite(): TestSuite {
       },
     });
 
-    const client = create_livehost_client<
+    const client = create_locus_client<
       { count: number },
       Actions
     >({

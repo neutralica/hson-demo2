@@ -4,11 +4,11 @@ import {
   node_selected_verification_metrics,
   run_node_selected_verifications,
 } from "../../harness/runtimes/node/run-node-selected-verifications";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 import { HOSTED_TEST_RUN_OPTIONS } from "../../harness/hosted/hosted-test-scheduling";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
 
-const registry = make_local_node_livehost_executor_registry();
+const registry = make_local_node_locus_executor_registry();
 const availability = await resolve_external_library_launchers();
 const discovery = make_test_executor_discovery(registry, availability.targets);
 const selectedIds = Object.freeze([

@@ -46,13 +46,13 @@ expect_deployment(
   "an explicit runtime URL overrides build configuration",
 );
 
-const routed = hosted_test_host_url("wss://example.test/socket?token=public&livehost=old", "host:new");
+const routed = hosted_test_host_url("wss://example.test/socket?token=public&locus=old", "host:new");
 const routedUrl = new URL(routed);
 expect_deployment(
-  routedUrl.pathname === "/socket"
+  routedUrl.pathname === "/hosted-tests"
     && routedUrl.searchParams.get("token") === "public"
-    && routedUrl.searchParams.getAll("livehost").join(",") === "host:new",
-  "existing query parameters survive and livehost is replaced exactly once",
+    && routedUrl.searchParams.getAll("locus").join(",") === "host:new",
+  "existing query parameters survive and locus is replaced exactly once",
 );
 
 let constructedWithoutConfiguration = 0;
@@ -145,9 +145,9 @@ try {
   const initialUrls = openedUrls.map((value) => new URL(value));
   expect_deployment(
     initialUrls.length === 2
-      && initialUrls.every((url) => url.origin === "wss://example.test" && url.pathname === "/socket" && url.searchParams.get("token") === "public")
-      && initialUrls[0]?.searchParams.get("livehost") === HOSTED_TEST_COORDINATOR_HOST_ID
-      && initialUrls[1]?.searchParams.get("livehost") === run.association.reportHostId,
+      && initialUrls.every((url) => url.origin === "wss://example.test" && url.pathname === "/hosted-tests" && url.searchParams.get("token") === "public")
+      && initialUrls[0]?.searchParams.get("locus") === HOSTED_TEST_COORDINATOR_HOST_ID
+      && initialUrls[1]?.searchParams.get("locus") === run.association.reportHostId,
     "coordinator and report connections share the configured base endpoint",
   );
 
@@ -159,9 +159,9 @@ try {
   const reconnectUrl = openedUrls[2] === undefined ? undefined : new URL(openedUrls[2]);
   expect_deployment(
     reconnectUrl?.origin === "wss://example.test"
-      && reconnectUrl.pathname === "/socket"
+      && reconnectUrl.pathname === "/hosted-tests"
       && reconnectUrl.searchParams.get("token") === "public"
-      && reconnectUrl.searchParams.get("livehost") === HOSTED_TEST_COORDINATOR_HOST_ID
+      && reconnectUrl.searchParams.get("locus") === HOSTED_TEST_COORDINATOR_HOST_ID
       && runtime.status === "ready",
     "coordinator reconnect reuses the configured base endpoint",
   );

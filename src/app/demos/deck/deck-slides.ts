@@ -63,7 +63,7 @@ a 'glue format' that expresses both JSON and HTML
       ` },
     headerB: "hson-live",
     bodyB: { kind: "text", text: "a TypeScript library with four subsystems:" },
-    bodyC: { kind: "text", text: "# Transform • LiveTree • LiveMap • LiveHost" },
+    bodyC: { kind: "text", text: "# Transform • LiveTree • LiveMap • Locus" },
     footer: "terminology",
   },
   {
@@ -102,7 +102,7 @@ web-authoring & rendering interface via projection from canonical HSON markup
 ### hson.liveMap
 application state machine and HSON graph editor
 #__#
-### hson.liveHost
+### hson.locus
 server-side authority, coordination, history, and recovery
 `,
     },
@@ -1123,15 +1123,15 @@ CSS ownership is scoped to the LiveTree runtime rather than stored as global app
     footer: "livetree / css",
   },
 
-  /* LiveHost */
+  /* Locus */
   {
-    headerA: "hson.liveHost",
+    headerA: "hson.locus",
     bodyA: {
       kind: "text",
       text: `
 ### server-side LiveMap authority
 
-LiveHost manages an authoritative LiveMap in a server environment.
+Locus manages an authoritative LiveMap in a server environment.
 
 It coordinates:
 - client actions
@@ -1145,18 +1145,18 @@ It coordinates:
 - reconnect / recovery
 
 #__#
-LiveHost itself does not require a DOM or LiveTree.
+Locus itself does not require a DOM or LiveTree.
       `,
     },
     footer: "livehost / about",
   },
 
   {
-    headerA: "LiveHost - actions",
+    headerA: "Locus - actions",
     bodyA: {
       kind: "text",
       text: `
-Clients send actions to LiveHost.
+Clients send actions to Locus.
 
 An action can be:
 - typed
@@ -1173,7 +1173,7 @@ Clients do not directly mutate the host's authoritative LiveMap.
   },
 
   {
-    headerA: "LiveHost - flow",
+    headerA: "Locus - flow",
     bodyA: {
       kind: "text",
       text: `
@@ -1182,7 +1182,7 @@ client interaction
         ↓
 typed action
         ↓
-LiveHost
+Locus
         ↓
 host application logic
         ↓
@@ -1190,7 +1190,7 @@ LiveMap validation + mutation
         ↓
 canonical commit
         ↓
-LiveHost record / publication
+Locus record / publication
         ↓
 client applies authoritative commit
 \`\`\`
@@ -1200,11 +1200,11 @@ client applies authoritative commit
   },
 
   {
-    headerA: "LiveHost - ordering",
+    headerA: "Locus - ordering",
     bodyA: {
       kind: "text",
       text: `
-LiveHost assigns an order to accepted authoritative changes.
+Locus assigns an order to accepted authoritative changes.
 
 #__#
 The host tracks:
@@ -1222,7 +1222,7 @@ Clients apply authoritative commits in host order.
   },
 
   {
-    headerA: "LiveHost - commit authority",
+    headerA: "Locus - commit authority",
     stackAlign: "center",
     bodyA: {
       kind: "text",
@@ -1243,7 +1243,7 @@ state n+1
     bodyB: {
       kind: "text",
       text: `
-### LiveHost
+### Locus
 
 authorizes and coordinates the transition
 
@@ -1255,18 +1255,18 @@ publish
 recover
 \`\`\`
 
-LiveHost does not independently recreate LiveMap graph semantics.
+Locus does not independently recreate LiveMap graph semantics.
       `,
     },
     footer: "livehost / commit authority",
   },
 
   {
-    headerA: "LiveHost - snapshots",
+    headerA: "Locus - snapshots",
     bodyA: {
       kind: "text",
       text: `
-A LiveHost can provide a snapshot of current authoritative state.
+A Locus can provide a snapshot of current authoritative state.
 
 #__#
 A snapshot contains enough canonical graph state for a client to establish or replace its local mirror.
@@ -1281,7 +1281,7 @@ Snapshots are used for:
   },
 
   {
-    headerA: "LiveHost - replay",
+    headerA: "Locus - replay",
     bodyA: {
       kind: "text",
       text: `
@@ -1307,7 +1307,7 @@ Replay preserves the same canonical transition semantics as ordinary publication
   },
 
   {
-    headerA: "LiveHost - recovery",
+    headerA: "Locus - recovery",
     bodyA: {
       kind: "text",
       text: `
@@ -1315,7 +1315,7 @@ Reconnect does not create a new authoritative state.
 
 A reconnecting client can provide its known recovery position.
 
-LiveHost can then:
+Locus can then:
 - resume from retained commits
 - replace from a snapshot
 - detect a revision gap
@@ -1329,11 +1329,11 @@ Recovery is based on authoritative host state rather than on reconstructing stat
   },
 
   {
-    headerA: "LiveHost - duplicate requests",
+    headerA: "Locus - duplicate requests",
     bodyA: {
       kind: "text",
       text: `
-LiveHost tracks client request identity.
+Locus tracks client request identity.
 
 #__#
 A retried request can be recognized as the same request rather than applied twice.
@@ -1352,11 +1352,11 @@ Transport retry does not imply a second canonical mutation.
   },
 
   {
-    headerA: "LiveHost - sessions",
+    headerA: "Locus - sessions",
     bodyA: {
       kind: "text",
       text: `
-LiveHost can associate clients with server-side sessions.
+Locus can associate clients with server-side sessions.
 
 Sessions can preserve application identity across:
 - socket replacement
@@ -1371,7 +1371,7 @@ The transport connection and the logical session are separate lifetimes.
   },
 
   {
-    headerA: "LiveHost - subscriptions",
+    headerA: "Locus - subscriptions",
     bodyA: {
       kind: "text",
       text: `
@@ -1387,7 +1387,7 @@ The host remains responsible for ordering the commits delivered through the subs
   },
 
   {
-    headerA: "LiveHost - reconnect",
+    headerA: "Locus - reconnect",
     stackAlign: "center",
     bodyA: {
       kind: "text",
@@ -1422,11 +1422,11 @@ Authoritative state continues independently of a particular connection.
   },
 
   {
-    headerA: "LiveHost - environments",
+    headerA: "Locus - environments",
     bodyA: {
       kind: "text",
       text: `
-LiveHost is not specific to one server platform.
+Locus is not specific to one server platform.
 
 Current authority/runtime work can operate in environments including:
 - Node
@@ -1435,21 +1435,21 @@ Current authority/runtime work can operate in environments including:
 #__#
 Environment-specific adapters provide transport and runtime capabilities.
 
-LiveHost owns the authority model above those adapters.
+Locus owns the authority model above those adapters.
       `,
     },
     footer: "livehost / runtime",
   },
 
   {
-    headerA: "LiveHost + LiveTree",
+    headerA: "Locus + LiveTree",
     bodyA: {
       kind: "text",
       text: `
-LiveHost and LiveTree do not require each other.
+Locus and LiveTree do not require each other.
 
 #__#
-A LiveHost can manage authoritative state without rendering.
+A Locus can manage authoritative state without rendering.
 
 A LiveTree can render and manage a local live document without a server.
 
@@ -1457,7 +1457,7 @@ A LiveTree can render and manage a local live document without a server.
 When combined:
 
 \`\`\`text
-LiveHost
+Locus
   ↓
 authoritative LiveMap
   ↓
@@ -1504,7 +1504,7 @@ DOM / CSS / events / resources
 
 #__#
 
-### LiveHost
+### Locus
 server authority
 
 actions / order / history / recovery
@@ -1530,7 +1530,7 @@ HSON / JSON / document input
         commit
        /      \\
       /        \\
-LiveHost      Reflection
+Locus      Reflection
 authority       ↓
               LiveTree
                 ↓
@@ -1563,7 +1563,7 @@ owns correspondence between authority and projection
 ### LiveTree
 owns live runtime / DOM resources
 
-### LiveHost
+### Locus
 owns server-side ordering, coordination, and recovery
       `,
     },
@@ -1606,7 +1606,7 @@ runtime resources
       text: `
 ### coordination
 
-LiveHost
+Locus
 
 actions
 sessions
@@ -1636,7 +1636,7 @@ DOM
 \`\`\`
 
 #__#
-No LiveHost is required.
+No Locus is required.
 
 The authoritative map lives in the local application.
       `,
@@ -1652,7 +1652,7 @@ The authoritative map lives in the local application.
 A hosted application can use:
 
 \`\`\`text
-server LiveHost
+server Locus
       ↓
 authoritative LiveMap
       ↓

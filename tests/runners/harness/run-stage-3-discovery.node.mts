@@ -5,16 +5,16 @@ import {
   hosted_test_client_failure_diagnostic,
 } from "../../../src/shared/hosted-tests/hosted-test-client-action";
 import { make_test_executor_discovery } from "../../harness/core/test-discovery";
-import { make_cloudflare_livehost_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
+import { make_cloudflare_locus_executor_registry } from "../../harness/runtimes/cloudflare/cloudflare-test-executor";
 import {
   resolve_external_launcher_binding,
   resolve_external_library_launchers,
 } from "../../harness/runtimes/node/external-library-launchers";
-import { make_local_node_livehost_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
+import { make_local_node_locus_executor_registry } from "../../harness/runtimes/node/livehost-node-executor";
 
 const availability = await resolve_external_library_launchers();
-const node = make_test_executor_discovery(make_local_node_livehost_executor_registry(), availability.targets);
-const worker = make_test_executor_discovery(make_cloudflare_livehost_executor_registry());
+const node = make_test_executor_discovery(make_local_node_locus_executor_registry(), availability.targets);
+const worker = make_test_executor_discovery(make_cloudflare_locus_executor_registry());
 
 assert.equal(decode_test_executor_discovery(JSON.parse(JSON.stringify(node))).ok, true);
 assert.equal(decode_test_executor_discovery(JSON.parse(JSON.stringify(worker))).ok, true);

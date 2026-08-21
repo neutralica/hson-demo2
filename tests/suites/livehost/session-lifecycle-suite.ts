@@ -1,13 +1,13 @@
-import { create_livehost } from "hson-live/livehost";
+import { create_locus } from "hson-live/locus";
 import type {
-  LiveHostDisposer,
-  LiveHostSessionLifecycleEvent,
-  LiveHostSocketLike,
-} from "hson-live/livehost";
+  LocusDisposer,
+  LocusSessionLifecycleEvent,
+  LocusSocketLike,
+} from "hson-live/locus";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import { equal_row, preview_value } from "../livemap/test-helpers";
 
-type MemorySocket = LiveHostSocketLike & Readonly<{
+type MemorySocket = LocusSocketLike & Readonly<{
   receive: (message: unknown) => Promise<void>;
   emit_close: () => void;
   sent: () => readonly Record<string, unknown>[];
@@ -23,7 +23,7 @@ function make_clock() {
   const tasks = new Map<number, ScheduledTask>();
   return Object.freeze({
     now: () => time,
-    schedule(delayMs: number, callback: () => void): LiveHostDisposer {
+    schedule(delayMs: number, callback: () => void): LocusDisposer {
       const id = ++nextId;
       tasks.set(id, { at: time + delayMs, callback });
       let active = true;
@@ -53,11 +53,11 @@ function make_socket(): MemorySocket {
   return Object.freeze({
     send(message: string): void { sent.push(message); },
     close(): void { closeCount += 1; },
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       messages.add(listener);
       return () => { messages.delete(listener); };
     },
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       closes.add(listener);
       return () => { closes.delete(listener); };
     },
@@ -73,7 +73,7 @@ function make_socket(): MemorySocket {
   });
 }
 
-function label(event: LiveHostSessionLifecycleEvent): string {
+function label(event: LocusSessionLifecycleEvent): string {
   if (event.kind === "attached") return `attached:${event.attachment}:${event.session.activeConnectionEpoch}`;
   if (event.kind === "fenced") return `fenced:${event.epoch}`;
   if (event.kind === "revoked") return `revoked:${event.reason}`;
@@ -103,13 +103,13 @@ function lifecycle_case(
   };
 }
 
-export function livehost_session_lifecycle_suite(): TestSuite {
+export function locus_session_lifecycle_suite(): TestSuite {
   const SUITE = "livehost/session-lifecycle";
   return {
     suite: SUITE,
     cases: [
       lifecycle_case("lazy-session-emits-attached-detached-expired-in-order", "lazy session emits attached detached expired in order", async () => {
-        const host = create_livehost({ state: {}, sessionId: () => "lazy-a" });
+        const host = create_locus({ state: {}, sessionId: () => "lazy-a" });
         const events: string[] = [];
         host.sessions.on_change((event) => events.push(label(event)));
         const socket = make_socket();
@@ -120,7 +120,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       }, { events: ["attached:created:1", "detached", "expired"], state: "expired" }),
 
       lifecycle_case("explicit-resumable-creation-emits-attached-created", "explicit resumable creation emits attached created", async () => {
-        const host = create_livehost({ state: {}, sessionId: () => "resume-a" });
+        const host = create_locus({ state: {}, sessionId: () => "resume-a" });
         const events: string[] = [];
         host.sessions.on_change((event) => events.push(label(event)));
         const socket = make_socket();
@@ -132,7 +132,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
 
       lifecycle_case("resumable-close-emits-detached-with-matching-timestamps", "resumable close emits detached with matching timestamps", async () => {
         const clock = make_clock();
-        const host = create_livehost({
+        const host = create_locus({
           state: {},
           sessionId: () => "resume-b",
           sessions: { graceMs: 50, now: clock.now, schedule: clock.schedule },
@@ -167,7 +167,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
 
       lifecycle_case("active-reattachment-fences-old-epoch-before-attaching-new-epoch", "active reattachment fences old epoch before attaching new epoch", async () => {
         let next = 0;
-        const host = create_livehost({ state: {}, sessionId: () => `fence-${++next}` });
+        const host = create_locus({ state: {}, sessionId: () => `fence-${++next}` });
         const events: string[] = [];
         host.sessions.on_change((event) => events.push(label(event)));
         const first = make_socket();
@@ -191,7 +191,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       lifecycle_case("reattach-during-grace-cancels-expiry-and-preserves-session-identity", "reattach during grace cancels expiry and preserves session identity", async () => {
         const clock = make_clock();
         const origins: unknown[] = [];
-        const host = create_livehost({
+        const host = create_locus({
           state: {},
           sessionId: () => "grace-a",
           sessions: { graceMs: 50, now: clock.now, schedule: clock.schedule },
@@ -226,7 +226,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
 
       lifecycle_case("grace-expiry-emits-detached-then-expired-and-disposes-resources", "grace expiry emits detached then expired and disposes resources", async () => {
         const clock = make_clock();
-        const host = create_livehost({
+        const host = create_locus({
           state: { value: 1 },
           sessionId: () => "expiry-a",
           sessions: { graceMs: 10, now: clock.now, schedule: clock.schedule },
@@ -256,7 +256,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
 
       lifecycle_case("goodbye-revokes-once-and-prevents-later-expiry", "goodbye revokes once and prevents later expiry", async () => {
         const clock = make_clock();
-        const host = create_livehost({
+        const host = create_locus({
           state: {}, sessionId: () => "goodbye-a",
           sessions: { graceMs: 10, now: clock.now, schedule: clock.schedule },
         });
@@ -276,7 +276,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       lifecycle_case("rejected-attachment-attempts-emit-no-lifecycle-success", "rejected attachment attempts emit no lifecycle success", async () => {
         const clock = make_clock();
         let next = 0;
-        const host = create_livehost({
+        const host = create_locus({
           state: {}, sessionId: () => `reject-${++next}`,
           sessions: { graceMs: 5, now: clock.now, schedule: clock.schedule },
         });
@@ -312,7 +312,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       }),
 
       lifecycle_case("listener-disposal-exceptions-and-debug-snapshots-are-isolated", "listener disposal exceptions and debug snapshots are isolated", async () => {
-        const host = create_livehost({ state: {}, sessionId: () => "listener-a" });
+        const host = create_locus({ state: {}, sessionId: () => "listener-a" });
         const delivered: string[] = [];
         const agreements: boolean[] = [];
         host.sessions.on_change(() => { throw new Error("observer failure"); });
@@ -335,7 +335,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       lifecycle_case("fenced-socket-cannot-act-while-replacement-acts-with-incremented-epoch", "fenced socket cannot act while replacement acts with incremented epoch", async () => {
         let calls = 0;
         const origins: unknown[] = [];
-        const host = create_livehost({
+        const host = create_locus({
           state: {}, sessionId: () => "authority-a",
           actions: { inspect: (ctx) => { calls += 1; origins.push(ctx.origin); } },
         });
@@ -357,7 +357,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       lifecycle_case("session-manager-disposal-revokes-live-sessions-and-leaves-observation-inert", "session manager disposal revokes live sessions and leaves observation inert", async () => {
         const clock = make_clock();
         let next = 0;
-        const host = create_livehost({
+        const host = create_locus({
           state: {}, sessionId: () => `dispose-${++next}`,
           sessions: { graceMs: 20, now: clock.now, schedule: clock.schedule },
         });
@@ -384,7 +384,7 @@ export function livehost_session_lifecycle_suite(): TestSuite {
       }, {
         events: [
           "attached:created:1", "attached:created:1", "detached",
-          "revoked:host_disposed", "revoked:host_disposed",
+          "revoked:locus_disposed", "revoked:locus_disposed",
         ],
         states: ["revoked", "revoked"], pending: 0, replayed: false,
       }),

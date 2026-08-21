@@ -11,17 +11,17 @@ export type HostedTestServerEnvironment = Readonly<{
   HOST?: string;
   PORT?: string;
   SHUTDOWN_TIMEOUT_MS?: string;
-  LIVEHOST_DEPLOYMENT?: string;
-  LIVEHOST_ALLOWED_ORIGINS?: string;
-  LIVEHOST_BEARER_TOKEN?: string;
-  LIVEHOST_AUTH_COOKIE_NAME?: string;
-  LIVEHOST_TRUSTED_PROXY_PEERS?: string;
-  LIVEHOST_FORWARDED_FOR_HOP?: string;
-  LIVEHOST_MAX_TOWL_ROOMS?: string;
-  LIVEHOST_TOWL_IDLE_MS?: string;
-  LIVEHOST_MAX_HOSTED_REPORTS?: string;
-  LIVEHOST_HOSTED_REPORT_RETENTION_MS?: string;
-  LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS?: string;
+  LOCUS_DEPLOYMENT?: string;
+  LOCUS_ALLOWED_ORIGINS?: string;
+  LOCUS_BEARER_TOKEN?: string;
+  LOCUS_AUTH_COOKIE_NAME?: string;
+  LOCUS_TRUSTED_PROXY_PEERS?: string;
+  LOCUS_FORWARDED_FOR_HOP?: string;
+  LOCUS_MAX_TOWL_ROOMS?: string;
+  LOCUS_TOWL_IDLE_MS?: string;
+  LOCUS_MAX_HOSTED_REPORTS?: string;
+  LOCUS_HOSTED_REPORT_RETENTION_MS?: string;
+  LOCUS_AUTHORITY_SWEEP_INTERVAL_MS?: string;
 }>;
 
 export type HostedTestServerProcess = Readonly<{
@@ -74,28 +74,28 @@ function positive_environment_integer(
 export function hosted_test_authority_lifecycle_options(
   environment: HostedTestServerEnvironment,
 ): NonNullable<HostedTestServerOptions["authorityLifecycle"]> {
-  const maxTowlRooms = positive_environment_integer(environment.LIVEHOST_MAX_TOWL_ROOMS, 128, "LIVEHOST_MAX_TOWL_ROOMS");
-  const towlIdleMs = positive_environment_integer(environment.LIVEHOST_TOWL_IDLE_MS, 30 * 60_000, "LIVEHOST_TOWL_IDLE_MS");
+  const maxTowlRooms = positive_environment_integer(environment.LOCUS_MAX_TOWL_ROOMS, 128, "LOCUS_MAX_TOWL_ROOMS");
+  const towlIdleMs = positive_environment_integer(environment.LOCUS_TOWL_IDLE_MS, 30 * 60_000, "LOCUS_TOWL_IDLE_MS");
   const maxHostedReports = positive_environment_integer(
-    environment.LIVEHOST_MAX_HOSTED_REPORTS,
+    environment.LOCUS_MAX_HOSTED_REPORTS,
     HOSTED_TEST_AUTHORITY_LIFECYCLE.maxReports,
-    "LIVEHOST_MAX_HOSTED_REPORTS",
+    "LOCUS_MAX_HOSTED_REPORTS",
   );
   const hostedReportRetentionMs = positive_environment_integer(
-    environment.LIVEHOST_HOSTED_REPORT_RETENTION_MS,
+    environment.LOCUS_HOSTED_REPORT_RETENTION_MS,
     HOSTED_TEST_AUTHORITY_LIFECYCLE.terminalRetentionMs,
-    "LIVEHOST_HOSTED_REPORT_RETENTION_MS",
+    "LOCUS_HOSTED_REPORT_RETENTION_MS",
   );
   const sweepIntervalMs = positive_environment_integer(
-    environment.LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS,
+    environment.LOCUS_AUTHORITY_SWEEP_INTERVAL_MS,
     HOSTED_TEST_AUTHORITY_LIFECYCLE.sweepIntervalMs,
-    "LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS",
+    "LOCUS_AUTHORITY_SWEEP_INTERVAL_MS",
   );
   if (towlIdleMs < 30_000) {
-    throw new Error("LIVEHOST_TOWL_IDLE_MS must be at least the default 30000ms resumable-session grace.");
+    throw new Error("LOCUS_TOWL_IDLE_MS must be at least the default 30000ms resumable-session grace.");
   }
   if (sweepIntervalMs > Math.min(towlIdleMs, hostedReportRetentionMs)) {
-    throw new Error("LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS must not exceed configured idle/retention durations.");
+    throw new Error("LOCUS_AUTHORITY_SWEEP_INTERVAL_MS must not exceed configured idle/retention durations.");
   }
   return Object.freeze({
     maxTowlRooms,
@@ -119,33 +119,33 @@ export async function run_hosted_test_server_process(
   if (options.startServer !== undefined) {
     server = await options.startServer(bind);
   } else {
-    assert_supported_livehost_node_runtime();
-    if (environment.LIVEHOST_DEPLOYMENT === undefined || environment.LIVEHOST_DEPLOYMENT === "development") {
+assert_supported_livehost_node_runtime();
+    if (environment.LOCUS_DEPLOYMENT === undefined || environment.LOCUS_DEPLOYMENT === "development") {
       server = await start_hosted_test_server({
         ...bind,
         authorityLifecycle,
         deployment: { mode: "development" },
         log(event) { log(JSON.stringify(event)); },
       });
-    } else if (environment.LIVEHOST_DEPLOYMENT === "production") {
-      const allowedOrigins = (environment.LIVEHOST_ALLOWED_ORIGINS ?? "")
+    } else if (environment.LOCUS_DEPLOYMENT === "production") {
+      const allowedOrigins = (environment.LOCUS_ALLOWED_ORIGINS ?? "")
         .split(",")
         .map((value) => value.trim())
         .filter((value) => value !== "");
-      const trustedProxyPeers = (environment.LIVEHOST_TRUSTED_PROXY_PEERS ?? "")
+      const trustedProxyPeers = (environment.LOCUS_TRUSTED_PROXY_PEERS ?? "")
         .split(",")
         .map((value) => value.trim())
         .filter((value) => value !== "");
-      const forwardedForHop = environment.LIVEHOST_FORWARDED_FOR_HOP;
+      const forwardedForHop = environment.LOCUS_FORWARDED_FOR_HOP;
       if (forwardedForHop !== undefined && forwardedForHop !== "first" && forwardedForHop !== "last") {
-        throw new Error("LIVEHOST_FORWARDED_FOR_HOP must be first or last.");
+        throw new Error("LOCUS_FORWARDED_FOR_HOP must be first or last.");
       }
       const production = create_node_production_security({
         allowedOrigins,
-        bearerToken: environment.LIVEHOST_BEARER_TOKEN ?? "",
-        ...(environment.LIVEHOST_AUTH_COOKIE_NAME === undefined
+        bearerToken: environment.LOCUS_BEARER_TOKEN ?? "",
+        ...(environment.LOCUS_AUTH_COOKIE_NAME === undefined
           ? {}
-          : { cookieName: environment.LIVEHOST_AUTH_COOKIE_NAME }),
+          : { cookieName: environment.LOCUS_AUTH_COOKIE_NAME }),
         trustedProxyPeers,
         ...(forwardedForHop === undefined ? {} : { forwardedForHop }),
       });
@@ -157,7 +157,7 @@ export async function run_hosted_test_server_process(
         log(event) { log(JSON.stringify(event)); },
       });
     } else {
-      throw new Error("LIVEHOST_DEPLOYMENT must be development or production.");
+      throw new Error("LOCUS_DEPLOYMENT must be development or production.");
     }
   }
   log(`Hosted-test server listening at ${server.url} (bind address).`);

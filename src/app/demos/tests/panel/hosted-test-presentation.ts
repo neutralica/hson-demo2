@@ -13,7 +13,7 @@ const GROUP_LABELS: Readonly<Record<HostedTestPresentationGroup, string>> = Obje
   transform: "Transform",
   livetree: "LiveTree",
   livemap: "LiveMap",
-  livehost: "LiveHost",
+  livehost: "Locus",
   reflect: "Reflect",
   unit: "Unit",
   dev: "Dev",

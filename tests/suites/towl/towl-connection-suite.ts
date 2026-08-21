@@ -1,12 +1,12 @@
 import {
-  LiveHostClientRecoveryError,
-  LiveHostClientSessionError,
-  LiveHostDisconnectedError,
-} from "hson-live/livehost";
+  LocusClientRecoveryError,
+  LocusClientSessionError,
+  LocusDisconnectedError,
+} from "hson-live/locus";
 import type {
-  LiveHostDisposer,
-  LiveHostSessionCredential,
-  LiveHostSocketLike,
+  LocusDisposer,
+  LocusSessionCredential,
+  LocusSocketLike,
 } from "hson-live/types";
 import type { TestSuite } from "../../harness/core/test-contracts";
 import {
@@ -23,7 +23,7 @@ import {
 } from "../../../src/app/demos/towl/index";
 import { towl_case } from "./towl-test-helpers";
 
-type SocketEndpoint = LiveHostSocketLike & Readonly<{
+type SocketEndpoint = LocusSocketLike & Readonly<{
   listenerCount(): number;
 }>;
 
@@ -37,8 +37,8 @@ type SocketPair = Readonly<{
 }>;
 
 type CredentialStore = {
-  value: LiveHostSessionCredential | undefined;
-  writes: Array<LiveHostSessionCredential | undefined>;
+  value: LocusSessionCredential | undefined;
+  writes: Array<LocusSessionCredential | undefined>;
 };
 
 type ConnectionFixture = Readonly<{
@@ -103,12 +103,12 @@ function make_socket_pair(): SocketPair {
       send_to(clientMessages, message);
     },
     close: close_pair,
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       if (closed) return () => {};
       hostMessages.add(listener);
       return () => hostMessages.delete(listener);
     },
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       if (closed) {
         listener();
         return () => {};
@@ -122,12 +122,12 @@ function make_socket_pair(): SocketPair {
   const client: SocketEndpoint = Object.freeze({
     send: (message: string) => send_to(hostMessages, message),
     close: close_pair,
-    onMessage(listener: (message: string) => void): LiveHostDisposer {
+    onMessage(listener: (message: string) => void): LocusDisposer {
       if (closed) return () => {};
       clientMessages.add(listener);
       return () => clientMessages.delete(listener);
     },
-    onClose(listener: () => void): LiveHostDisposer {
+    onClose(listener: () => void): LocusDisposer {
       if (closed) {
         listener();
         return () => {};
@@ -168,7 +168,7 @@ function connected_transport(runtime: TowlRuntime, pair = make_socket_pair()): T
 function failed_transport(pair = make_socket_pair()): TowlConnectionTransport {
   return Object.freeze({
     socket: pair.client,
-    ready: Promise.reject(new LiveHostDisconnectedError()),
+    ready: Promise.reject(new LocusDisconnectedError()),
     dispose: pair.close,
   });
 }
@@ -187,9 +187,9 @@ async function make_connection(
   logicalMapId: string,
   openTransport: () => TowlConnectionTransport,
   options: Readonly<{
-    credential?: LiveHostSessionCredential;
+    credential?: LocusSessionCredential;
     retryDelaysMs?: readonly number[];
-    schedule?: (delayMs: number, callback: () => void) => LiveHostDisposer;
+    schedule?: (delayMs: number, callback: () => void) => LocusDisposer;
     leaveRequestTimeoutMs?: number;
   }> = {},
 ): Promise<ConnectionFixture> {
@@ -216,7 +216,7 @@ async function make_connection(
 }
 
 function make_scheduler(): Readonly<{
-  schedule(delayMs: number, callback: () => void): LiveHostDisposer;
+  schedule(delayMs: number, callback: () => void): LocusDisposer;
   runNext(): number | undefined;
   pending(): number;
 }> {
@@ -264,23 +264,23 @@ export function towl_connection_suite(): TestSuite {
         SUITE,
         "structured-errors-distinguish-credential-transport-and-terminal-failures", "structured errors distinguish credential transport and terminal failures",
         () => ({
-          credential: classify_towl_connection_error(new LiveHostClientSessionError(
-            "LIVEHOST_SESSION_CREDENTIAL_UNKNOWN",
+          credential: classify_towl_connection_error(new LocusClientSessionError(
+            "LOCUS_SESSION_CREDENTIAL_UNKNOWN",
             "unknown",
           )),
-          sessionTransport: classify_towl_connection_error(new LiveHostClientSessionError(
-            "LIVEHOST_SESSION_DISCONNECTED",
+          sessionTransport: classify_towl_connection_error(new LocusClientSessionError(
+            "LOCUS_SESSION_DISCONNECTED",
             "disconnected",
           )),
-          recoveryTransport: classify_towl_connection_error(new LiveHostClientRecoveryError(
-            "LIVEHOST_RECOVERY_DISCONNECTED",
+          recoveryTransport: classify_towl_connection_error(new LocusClientRecoveryError(
+            "LOCUS_RECOVERY_DISCONNECTED",
             "disconnected",
           )),
-          terminalSession: classify_towl_connection_error(new LiveHostClientSessionError(
-            "LIVEHOST_SESSION_ATTACHMENT_FENCED",
+          terminalSession: classify_towl_connection_error(new LocusClientSessionError(
+            "LOCUS_SESSION_ATTACHMENT_FENCED",
             "fenced",
           )),
-          terminalRecovery: classify_towl_connection_error(new LiveHostClientRecoveryError(
+          terminalRecovery: classify_towl_connection_error(new LocusClientRecoveryError(
             "REVISION_AHEAD_OF_AUTHORITY",
             "ahead",
           )),
