@@ -1,6 +1,6 @@
 # Optional Cloudflare hosted-test Worker
 
-This adapter is a portability target, not the LiveHost server architecture.
+This adapter is a portability target, not the Node LiveHost architecture.
 The complete Node LiveHost builds, starts, discovers, executes, cancels,
 recovers, reports, and shuts down without Wrangler, bindings, Durable Objects,
 or a Worker URL. Removing this adapter excludes only certification whose
@@ -10,7 +10,7 @@ explicit subject is Cloudflare Worker compatibility.
 
 This is an explicitly non-hibernating proof-of-deployment adapter. Each
 `HostedTestDurableObject` constructs exactly one in-memory
-`create_hosted_test_application` authority and uses the ordinary
+`create_hosted_test_application` composition and uses the ordinary
 `server.accept()` WebSocket API. It does not call `state.acceptWebSocket()` and
 does not persist application authority in Durable Object storage.
 
@@ -19,7 +19,7 @@ slice intentionally writes nothing to SQLite. Persisting only a subset of the
 authority would create an unsafe shadow state.
 
 Durable Object eviction, restart, deployment, or reconstruction resets all
-coordinator state, dynamically registered report hosts, sessions, action-dedupe
+coordinator state, dynamically registered report Loci, sessions, action-dedupe
 outcomes, canonical revisions and replay history, retention metadata, and
 in-flight runs. Existing clients must reconnect to the new empty authority;
 recovery across reconstruction is not supported or claimed.
@@ -46,10 +46,10 @@ outcomes, retention metadata, and any recoverable execution state.
 The Worker accepts URLs shaped like:
 
 ```text
-wss://<worker-host>/<optional-path>?livehost=<host-id>
+wss://<worker-host>/<optional-path>?locus=<selector>
 ```
 
-Only WebSocket upgrades are accepted. `livehost` is required and must be
+Only WebSocket upgrades are accepted. `locus` is required and must be
 non-empty. The Worker passes the original path and query to one stable Durable
 Object selected with:
 
@@ -58,8 +58,8 @@ idFromName("hson-demo2-hosted-tests-v1")
 ```
 
 Inside that object, the existing hosted-test application distinguishes
-`hosted-tests` from dynamically created `hosted-report:<run-id>` hosts. The
-browser URL construction and LiveHost wire protocol are unchanged.
+`hosted-tests` from dynamically created `hosted-report:<run-id>` Loci. The
+browser URL construction and Locus wire protocol are unchanged.
 
 ## Local development
 
@@ -71,7 +71,7 @@ npm run cloudflare:dev
 ```
 
 Wrangler prints the local HTTP origin. Use its equivalent `ws://` URL plus the
-existing `livehost` query for direct probes. The production browser must be
+existing `locus` query for direct probes. The production browser must be
 built with the deployed secure endpoint:
 
 ```sh

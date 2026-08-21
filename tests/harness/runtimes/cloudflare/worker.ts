@@ -89,7 +89,7 @@ export class HostedTestDurableObject {
     if (!is_websocket_upgrade(request)) return request_error("Expected a WebSocket upgrade request.", 426);
     const hostId = locus_id(request);
     if (hostId === undefined) {
-      return request_error("Hosted-test WebSocket requests require a non-empty livehost query parameter.", 400);
+      return request_error("Hosted-test WebSocket requests require a non-empty locus query parameter.", 400);
     }
 
     try {

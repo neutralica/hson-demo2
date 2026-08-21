@@ -1,6 +1,6 @@
 /**
  * @deprecated Import `create_browser_locus_socket` from
- * `hson-live/livehost`. This compatibility module owns no state.
+ * `hson-live/locus`. This compatibility module owns no state.
  */
 export {
   create_browser_locus_socket as make_hosted_test_browser_websocket,

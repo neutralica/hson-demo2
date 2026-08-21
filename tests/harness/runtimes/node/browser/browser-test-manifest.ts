@@ -45,6 +45,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
   browser_suite("app-boot", [
     "splash completes naturally without retaining work or disposed nodes",
     "application boot reaches one clean usable demo without auto-running hosted tests",
+    "explicit TOWL entry and browser history remain distinct from the quiet root boot",
     "TOWL performs no room, storage, runtime, or socket work before activation",
     "an invalid ordinary room query keeps the fresh shell neutral and TOWL inert",
     "widget membership lazily mounts and recreates disposable widget instances",
@@ -81,6 +82,11 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "Cellsheet reset clears edits instead of restoring mount samples",
     "Cellsheet full remount restores samples, default layout, and no selection",
   ]),
+  browser_suite("final-presentation", [
+    "long clean run keeps one advancing Logger readout beside the local stopwatch",
+    "Transform View renders the reproduced circuit in-app without changing the authoritative run",
+    "bling switches one navigation model between amoebic and historical plain presentations",
+  ], ["websocket"]),
   browser_suite("parse-verification-performance", [
     "measure Phase 3 edit-to-certificate stages without imposing a budget",
   ]),

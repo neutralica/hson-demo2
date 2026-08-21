@@ -1,6 +1,6 @@
 # Phase 6 executor capability backlog
 
-This is a capability backlog, not a list of tests excluded from LiveHost.
+This is a capability backlog, not a list of tests excluded from hosted execution.
 Every legitimate current test is either hosted now or assigned to a concrete
 Phase 6 executor class by the derived census.
 
@@ -25,8 +25,9 @@ control contract must remain explicit.
 ## Browser executor
 
 Implemented locally in Phase 6B for 67 Playwright journeys and four authored
-canvas raster-readback cases. Node LiveHost owns selection, RunPlan, report
-authority, cancellation, process supervision, and recovery; one isolated native
+canvas raster-readback cases. Node LiveHost owns application dispatch and
+process supervision; the hosted-test application owns selection and RunPlan,
+while report Loci own canonical report state and recovery. One isolated native
 Playwright child owns Chromium plus the existing Playwright fixtures, contexts,
 retries, Vite server, and hosted-test server.
 

@@ -66,7 +66,7 @@ executor executions.
 | Current class | Exact census population | Phase 6 implication |
 |---|---|---|
 | `hosted-deployed-now` | none verified from repository authority | The Worker is deployable, but the repository records neither a concrete deployed endpoint nor a deployed frontend endpoint configuration. |
-| `hosted-local-now` | 347 surfaces | All semantic cases/checks, browser journeys, raster cases, promoted Node command certifications, and semantic command aliases use LiveHost authority locally. Deployment now requires the complete Node service plus Chromium system dependencies. |
+| `hosted-local-now` | 347 surfaces | All semantic cases/checks, browser journeys, raster cases, promoted Node command certifications, and semantic command aliases are dispatched by Node LiveHost; Locus-backed applications retain one-map authority. Deployment requires the complete Node service plus Chromium system dependencies. |
 | `hostable-worker` | 1 Cloudflare adapter portability certificate | Optional because its explicit subject is the Worker environment. |
 | `hostable-node` | none | Phase 6A closed command, jsdom, canvas, generated, integration, and source/meta dispatch. |
 | `hostable-external-process` | none | Phase 6A generalized the proven launcher supervisor. |

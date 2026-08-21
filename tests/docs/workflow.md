@@ -277,7 +277,7 @@ Current executor types include:
 
 ```text
 Node LiveHost
-Cloudflare Worker LiveHost
+Cloudflare Worker application runtime
 ```
 
 The Node host currently advertises:
@@ -494,7 +494,7 @@ runner emits events
         ↓
 host batches report updates
         ↓
-LiveHost publishes the report
+report Locus publishes canonical report state
         ↓
 panel displays progress and details
 ```

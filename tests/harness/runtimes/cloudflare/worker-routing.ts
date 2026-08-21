@@ -32,7 +32,7 @@ export async function route_hosted_test_worker_request(
     return request_error("Expected a WebSocket upgrade request.", 426);
   }
   if (locus_id(request) === undefined) {
-    return request_error("Hosted-test WebSocket requests require a non-empty livehost query parameter.", 400);
+    return request_error("Hosted-test WebSocket requests require a non-empty locus query parameter.", 400);
   }
   const id = namespace.idFromName(HOSTED_TEST_DURABLE_OBJECT_NAME);
   return namespace.get(id).fetch(request);

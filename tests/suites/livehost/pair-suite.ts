@@ -144,7 +144,7 @@ export function locus_pair_suite(): TestSuite {
     cases: [
       locus_pair_read_case({
         suite: SUITE,
-        caseId: "client-socket-close-detaches-host-listener", name: "client socket close detaches host listener",
+        caseId: "client-socket-close-detaches-host-listener", name: "client socket close detaches Locus listener",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
@@ -189,7 +189,7 @@ export function locus_pair_suite(): TestSuite {
       }),
       locus_pair_read_case({
         suite: SUITE,
-        caseId: "client-hello-receives-host-snapshot", name: "client hello receives host snapshot",
+        caseId: "client-hello-receives-host-snapshot", name: "client hello receives Locus snapshot",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
@@ -226,7 +226,7 @@ export function locus_pair_suite(): TestSuite {
       }),
       locus_pair_read_case({
         suite: SUITE,
-        caseId: "client-subscribe-receives-immediate-host-sync", name: "client subscribe receives immediate host sync",
+        caseId: "client-subscribe-receives-immediate-host-sync", name: "client subscribe receives immediate Locus sync",
         input: {},
         act: async () => {
           const [clientSocket, hostSocket] = make_socket_pair();
@@ -325,7 +325,7 @@ export function locus_pair_suite(): TestSuite {
       }),
       locus_pair_read_case({
         suite: SUITE,
-        caseId: "client-action-resolves-host-error", name: "client action resolves host error",
+        caseId: "client-action-resolves-host-error", name: "client action resolves Locus error",
         input: {},
         act: async () => {
           type Actions = Readonly<{
@@ -622,7 +622,7 @@ export function locus_pair_suite(): TestSuite {
       }),
       locus_pair_read_case({
         suite: SUITE,
-        caseId: "host-connection-emits-one-generic-event-to-one-client", name: "host connection emits one generic event to one client",
+        caseId: "host-connection-emits-one-generic-event-to-one-client", name: "Locus connection emits one generic event to one client",
         input: {},
         act: async () => {
           const [firstClientSocket, firstHostSocket] = make_socket_pair();

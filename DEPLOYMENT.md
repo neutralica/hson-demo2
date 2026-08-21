@@ -189,7 +189,9 @@ The `Forwarded` header is intentionally unsupported and rejected in trusted
 mode.
 
 The browser preserves existing query parameters and adds or replaces
-`livehost=<host-id>` for coordinator, report, and reconnect sockets. Do not
+`locus=<selector>` for coordinator, report, and reconnect sockets. The
+application interprets this selector; LiveHost does not assign universal
+topology. Do not
 configure a proxy that discards those parameters. Choose proxy and platform
 idle timeouts suitable for WebSocket sessions; this protocol has no polling or
 HTTP fallback. The service must remain a persistent process and should be

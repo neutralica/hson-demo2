@@ -18,7 +18,8 @@ HSON (Hypertext Structured Object Notation) is a "glue format." It models the tr
 
 ## What is hson-live?
 
-hson-live is a TypeScript library that comprises four interdependent subsystems.
+hson-live is a TypeScript library whose state, authority, application, and
+runtime layers remain distinct.
 
 ### hson.transform
 
@@ -67,13 +68,19 @@ Reflect is an optional projection and reconciliation layer, not an automatic par
 
 ---
 
-### LiveHost
+### Locus and LiveHost
 
-LiveHost extends the graph into an authoritative server runtime.
+Locus makes exactly one LiveMap authoritative. It owns ordered actions,
+canonical commits, recovery, sessions, synchronization, and one-map
+persistence. Applications own game/test meaning and decide which Loci exist.
 
-LiveMap-LiveTree browser clients interact via server requests over HTTP or WebSocket
+LiveHost hosts applications and provides the generic request, connection,
+principal, readiness, and runtime boundary. Node LiveHost is the concrete HTTP
+and WebSocket implementation used here. An application may use zero Loci; TOWL
+and hosted tests compose Loci because they require authoritative state.
 
-Validated actions become ordered commits, updating the canonical state and distributing changes to connected clients.
+Validated Locus actions become ordered commits, updating canonical state and
+distributing changes to connected clients.
 
 The result is a shared application model where multiple clients remain synchronized through the same underlying graph, with revision tracking, recovery, and state coordination built into the system.
 
@@ -85,7 +92,7 @@ The result is a shared application model where multiple clients remain synchroni
 
 ### [about]
 
-Complete documentation for HSON, LiveTree, LiveMap, LiveHost, and the surrounding architecture.
+Complete documentation for HSON, LiveTree, LiveMap, Locus, LiveHost, and the surrounding architecture.
 
 ---
 
@@ -99,7 +106,7 @@ The test environment contains more than 2,500 system and unit tests covering:
 - system-wide regression coverage
 - LiveTree construction, mutation, styling, events, SVG, canvas, and forms
 - LiveMap paths, schemas, subscriptions, history, batching, proxies, links, and node operations
-- LiveHost actions, commits, recovery, permissions, sessions, snapshots, and protocol behavior
+- Locus actions, commits, recovery, permissions, sessions, snapshots, and protocol behavior
 
 Circuit tests expose intermediate string and node artifacts, allowing every stage of a transformation to be inspected directly.
 
@@ -202,14 +209,23 @@ Demonstrates:
 
 ### [TOWL - Tug Of War Live]
 
-A deliberately simple multiplayer proof of concept demonstrating LiveHost as a server-hosted state authority. The game state is an authoritative HSON graph which client connect to via 'room'-scoped invite links. Player status, rounds, scores, and rope position exist and are managed in LiveHost. Each browser maintains a local LiveMap mirror of that hosted graph. 
+A deliberately simple multiplayer proof of concept demonstrating a Locus as
+authority over one game-state LiveMap. The application interprets room-scoped
+invite links and acquires the corresponding Locus. Player status, rounds,
+scores, and rope position live in that authoritative graph. Each browser
+maintains a local LiveMap mirror.
 
-Player input is sent to LiveHost as requests to change the state. There is no direct client-side mutation — LiveHost validates the change request and schema, applies the accepted change to the authoritative graph, assigns the next revision, and streams the resulting pathwise commit to every subscribed client.
+Player input is sent as a Locus action. There is no direct client-side mutation:
+the application supplies game semantics and authorization, while Locus admits
+the action, applies accepted canonical mutation, assigns the next revision, and
+streams the resulting pathwise commit to subscribed clients.
 Once accepted, the rope’s new position becomes part of the authoritative graph.
 
-Subscribed clients apply that same ordered commit stream to local LiveMap mirrors;  LiveTree bindings update per changes in graph state. The browsers stay aligned because they are following the same canonical graph and revision history from LiveHost.
+Subscribed clients apply that same ordered commit stream to local LiveMap
+mirrors; LiveTree bindings update with graph state. The browsers stay aligned
+because they follow one Locus's canonical graph and revision history.
 
-• LiveHost server-owned schema, action, and game-rule enforcement
+• application-owned game rules with Locus action and schema enforcement
 • one canonical game state graph shared by multiple clients
 • browser-local LiveMap mirrors kept aligned with a hosted authority
 • player input expressed as validated requests to mutate shared state
@@ -241,7 +257,10 @@ Demonstrates:
 
 The purpose of LiveDemo is to expose the mechanics of hson-live through visible, working examples.
 
-The demonstrations show its subsystems interoperating: HSON as the canonical structure, hson.transform as its conversion circuit, LiveTree as its browser projection, LiveMap as its state model, and LiveHost as its network authority.
+The demonstrations show its subsystems interoperating: HSON as the canonical
+structure, hson.transform as its conversion circuit, LiveTree as its browser
+projection, LiveMap as its state model, Locus as one-map authority, the
+application as semantic/topology owner, and Node LiveHost as the network runtime.
 
 Taken together, they establish:
 

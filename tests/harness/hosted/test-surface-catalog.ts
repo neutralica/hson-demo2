@@ -109,6 +109,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:phase1-convergence-node": "tests/runners/harness/run-phase-1-convergence.node.mts",
   "test:phase2a-lifecycle-node": "tests/runners/harness/run-phase-2a-lifecycle.node.mts",
   "test:phase2b-presentation-node": "tests/runners/harness/run-phase-2b-presentation.node.mts",
+  "test:presentation-cleanup-node": "tests/runners/harness/run-test-presentation-cleanup.node.mts",
   "test:phase4a-layering-node": "tests/runners/harness/run-phase-4a-layering.node.mts",
   "test:phase4b-retirement-node": "tests/runners/harness/run-phase-4b-retirement.node.mts",
   "test:external-library-node": "tests/runners/harness/run-external-library-launchers.node.mts",
@@ -122,6 +123,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:direct-all-performance-node": "tests/runners/harness/run-direct-all-performance.node.mts",
   "test:phase6a-node-mothership": "tests/runners/harness/run-phase-6a-node-mothership.node.mts",
   "test:phase6a-full-node-hosted": "tests/runners/harness/run-phase-6a-full-node-hosted.node.mts",
+  "test:node-process-supervisor": "tests/runners/harness/run-node-process-supervisor.node.mts",
   "test:phase6b-browser-executor": "tests/runners/harness/run-phase-6b-browser-executor.node.mts",
   "test:phase6b-browser-cancellation": "tests/runners/harness/run-phase-6b-browser-cancellation.node.mts",
   "test:phase6b-mixed-run": "tests/runners/harness/run-phase-6b-mixed-run.node.mts",
@@ -140,6 +142,7 @@ const AGGREGATE_COMMANDS = new Set([
   "test:phase1-convergence-node",
   "test:phase2a-lifecycle-node",
   "test:phase2b-presentation-node",
+  "test:presentation-cleanup-node",
   "test:phase4a-layering-node",
   "test:phase4b-retirement-node",
   "test:phase3b-cancellation-node",
@@ -150,6 +153,7 @@ const AGGREGATE_COMMANDS = new Set([
   "test:inclusive-library-node",
   "test:phase6a-node-mothership",
   "test:phase6a-full-node-hosted",
+  "test:node-process-supervisor",
   "test:phase6b-browser-executor",
   "test:phase6b-browser-cancellation",
   "test:phase6b-mixed-run",
@@ -271,7 +275,8 @@ const LIVE_SUPPORT_RUNNERS: readonly (readonly [string, string, TestClassificati
   ["test:hson-array-index", "HSON array-index acceptance", "library acceptance"],
   ["test:hson-attribute-transport", "HSON attribute transport acceptance", "library acceptance"],
   ["test:diagnostics-inventory", "external diagnostics manifest consistency", "runtime integration"],
-  ["test:livehost-graph-content-codec", "Locus graph-content codec acceptance", "library acceptance"],
+  ["test:locus-graph-content-codec", "Locus graph-content codec acceptance", "library acceptance"],
+  ["test:locus-public-contract", "Locus built-package public contract", "library acceptance"],
   ["test:root-compatibility", "root compatibility acceptance", "library acceptance"],
   ["test:transform-worker", "Worker transform entrypoint acceptance", "library acceptance"],
 ];
@@ -296,7 +301,8 @@ function live_support_role(name: string): Readonly<{
   }
   if (name === "test:hson-array-index"
     || name === "test:hson-attribute-transport"
-    || name === "test:livehost-graph-content-codec"
+    || name === "test:locus-graph-content-codec"
+    || name === "test:locus-public-contract"
     || name === "test:transform-worker") {
     return Object.freeze({ role: "integration journey", exposure: "command only" });
   }
@@ -365,7 +371,9 @@ LIVE_SUPPORT_RUNNERS.map(([name, behavior, classification]) => Object.freeze({
   category: name === "build" || name === "check" || name.startsWith("check:") || name === "test:root-compatibility"
     ? "Build / Types"
     : name.includes("hson") || name.includes("transform") ? "Transforms" : "Locus",
-  repository: "hson-live", path: name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
+  repository: "hson-live", path: name === "test:locus-public-contract"
+    ? "tests/locus-public-contract.acceptance.mjs"
+    : name.startsWith("test:") ? `tests/${name.slice(5)}.acceptance.mts` : "package.json",
   behavior, classification,
   ...live_support_role(name),
   environment: "Node",
@@ -389,12 +397,12 @@ const LIVE_ENTRIES: readonly TestSurfaceCatalogEntry[] = Object.freeze([
 
 const LIVE_IDENTITY_FIXTURE: TestSurfaceCatalogEntry = Object.freeze({
   id: "hson-live:fixture:default-identity-runtime", label: "default identity browser-runtime fixture", category: "Locus",
-  repository: "hson-live", path: "tests/runtime-probes/fixtures/livehost-default-identity-runtime.mjs",
+  repository: "hson-live", path: "tests/runtime-probes/fixtures/locus-default-identity-runtime.mjs",
   behavior: "Separately initialized runtimes generate reload-safe default client and fresh action request identities.",
   classification: "fixture", role: "integration journey", exposure: "command only",
-  aliasOf: "hson-live:test:livehost-action-dedupe",
+  aliasOf: "hson-live:test:locus-action-dedupe",
   environment: "separate Node processes modeling browser reloads", transport: "in-memory socket",
-  runner: "npm run test:livehost-action-dedupe", appearsInHostedUi: false, status: "available",
+  runner: "npm run test:locus-action-dedupe", appearsInHostedUi: false, status: "available",
 });
 
 const DEMO_CERTIFICATIONS: readonly TestSurfaceCatalogEntry[] = ["build", "check", "build:node-production", "check:cloudflare", "cloudflare:types"].map((name): TestSurfaceCatalogEntry => Object.freeze({

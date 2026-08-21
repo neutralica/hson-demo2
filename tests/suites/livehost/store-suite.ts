@@ -77,7 +77,7 @@ export function locus_store_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        caseId: "create-stores-host-by-id", name: "create stores host by id",
+        caseId: "create-stores-host-by-id", name: "create stores Locus by application key",
         input: {},
         act: () => {
           const store = create_application_locus_store();
@@ -122,7 +122,7 @@ export function locus_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "set-stores-existing-host-by-id", name: "set stores existing host by id",
+        caseId: "set-stores-existing-host-by-id", name: "set stores an existing Locus by application key",
         input: {},
         act: () => {
           const store = create_application_locus_store();
@@ -168,7 +168,7 @@ export function locus_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "delete-removes-host", name: "delete removes host",
+        caseId: "delete-removes-host", name: "delete removes a stored Locus",
         input: {},
         act: () => {
           const store = create_application_locus_store();
@@ -212,7 +212,7 @@ export function locus_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "connect-routes-socket-to-stored-host", name: "connect routes socket to stored host",
+        caseId: "connect-routes-socket-to-stored-host", name: "connect routes a socket to a stored Locus",
         input: {},
         act: () => {
           const store = create_application_locus_store();
@@ -242,7 +242,7 @@ export function locus_store_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "connect-routes-action-to-stored-host", name: "connect routes action to stored host",
+        caseId: "connect-routes-action-to-stored-host", name: "connect routes an action to a stored Locus",
         input: {},
         act: () => {
           const store = create_application_locus_store();

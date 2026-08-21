@@ -71,7 +71,7 @@ export function locus_api_suite(): TestSuite {
     cases: [
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-create-exposes-host", name: "hson livehost create exposes host",
+        caseId: "hson-livehost-create-exposes-host", name: "hson locus create exposes one authority",
         input: {},
         act: () => {
           const host = hson.locus.create({ state: { count: 1 } });
@@ -88,7 +88,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-client-exposes-mirror", name: "hson livehost client exposes mirror",
+        caseId: "hson-livehost-client-exposes-mirror", name: "hson locus client exposes mirror",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -116,7 +116,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-client-receives-sync", name: "hson livehost client receives sync",
+        caseId: "hson-livehost-client-receives-sync", name: "hson locus client receives sync",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -148,7 +148,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-client-sends-subscribe-and-unsubscribe", name: "hson livehost client sends subscribe and unsubscribe",
+        caseId: "hson-livehost-client-sends-subscribe-and-unsubscribe", name: "hson locus client sends subscribe and unsubscribe",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -174,7 +174,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-client-sends-action-payload", name: "hson livehost client sends action payload",
+        caseId: "hson-livehost-client-sends-action-payload", name: "hson locus client sends action payload",
         input: {},
         act: () => {
           const socket = make_api_socket();
@@ -204,7 +204,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-registry-creates-host", name: "hson livehost registry creates host",
+        caseId: "hson-livehost-registry-creates-host", name: "application Locus store creates a Locus",
         input: {},
         act: () => {
           const registry = create_application_locus_store();
@@ -224,7 +224,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-registry-rejects-duplicate-id", name: "hson livehost registry rejects duplicate id",
+        caseId: "hson-livehost-registry-rejects-duplicate-id", name: "application Locus store rejects a duplicate key",
         input: {},
         act: () => {
           const registry = create_application_locus_store();
@@ -247,7 +247,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-registry-rejects-unknown-connect", name: "hson livehost registry rejects unknown connect",
+        caseId: "hson-livehost-registry-rejects-unknown-connect", name: "application Locus store rejects an unknown connection key",
         input: {},
         act: () => {
           const registry = create_application_locus_store();
@@ -266,7 +266,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-registry-connects-socket", name: "hson livehost registry connects socket",
+        caseId: "hson-livehost-registry-connects-socket", name: "application Locus store connects a socket",
         input: {},
         act: () => {
           const registry = create_application_locus_store();
@@ -294,7 +294,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-protocol-decodes-current-hello", name: "hson livehost protocol decodes current hello",
+        caseId: "hson-livehost-protocol-decodes-current-hello", name: "Locus protocol decodes current hello",
         input: {},
         act: () => {
           const decoded = hson.locus.protocol.decode(JSON.stringify({
@@ -316,7 +316,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-protocol-decodes-action", name: "hson livehost protocol decodes action",
+        caseId: "hson-livehost-protocol-decodes-action", name: "Locus protocol decodes action",
         input: {},
         act: () => {
           const decoded = hson.locus.protocol.decode(JSON.stringify({
@@ -344,7 +344,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-protocol-encodes-sync", name: "hson livehost protocol encodes sync",
+        caseId: "hson-livehost-protocol-encodes-sync", name: "Locus protocol encodes sync",
         input: {},
         act: () => {
           const encoded = hson.locus.protocol.encode({
@@ -371,7 +371,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-protocol-encodes-error", name: "hson livehost protocol encodes error",
+        caseId: "hson-livehost-protocol-encodes-error", name: "Locus protocol encodes error",
         input: {},
         act: () => {
           const encoded = hson.locus.protocol.encode({
@@ -410,7 +410,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-protocol-rejects-invalid-json", name: "hson livehost protocol rejects invalid json",
+        caseId: "hson-livehost-protocol-rejects-invalid-json", name: "Locus protocol rejects invalid JSON",
         input: {},
         act: () => {
           const decoded = hson.locus.protocol.decode("{");
@@ -425,7 +425,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-debug-omits-historical-resume-log", name: "hson livehost debug omits historical resume log",
+        caseId: "hson-livehost-debug-omits-historical-resume-log", name: "Locus debug omits historical resume log",
         input: {},
         act: () => {
           return {
@@ -438,7 +438,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-debug-exposes-sync-manager", name: "hson livehost debug exposes sync manager",
+        caseId: "hson-livehost-debug-exposes-sync-manager", name: "Locus debug exposes sync manager",
         input: {},
         act: () => {
           const host = hson.locus.create({ state: { count: 5 } });
@@ -468,7 +468,7 @@ export function locus_api_suite(): TestSuite {
       }),
       read_case({
         suite: SUITE,
-        caseId: "hson-livehost-debug-sync-manager-rejects-duplicate-session", name: "hson livehost debug sync manager rejects duplicate session",
+        caseId: "hson-livehost-debug-sync-manager-rejects-duplicate-session", name: "Locus debug sync manager rejects duplicate session",
         input: {},
         act: () => {
           const host = hson.locus.create({ state: { count: 5 } });
