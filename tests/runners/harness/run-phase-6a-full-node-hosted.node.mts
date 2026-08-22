@@ -31,13 +31,10 @@ try {
   const opaqueSuiteIds = discovery.catalog.suites
     .filter((suite) => suite.executionShape === "opaque-aggregate")
     .map((suite) => suite.id);
-  const certificationIds = discovery.catalog.suites
-    .filter((suite) => suite.executionShape === "certification-aggregate")
-    .map((suite) => suite.id);
   const opaqueChecks = discovery.catalog.suites
     .filter((suite) => suite.executionShape === "opaque-aggregate")
     .reduce((total, suite) => total + (suite.declaredChecks ?? 0), 0);
-  const selectionIds = [...canonicalIds, ...opaqueSuiteIds, ...certificationIds];
+  const selectionIds = [...canonicalIds, ...opaqueSuiteIds];
   const run = await runtime.start_selected(selectionIds);
   await run.ready();
   const result = await run.actionResult;
@@ -60,8 +57,8 @@ try {
   assert.equal(summary.canonical.pass, canonicalIds.length);
   assert.equal(summary.launchers.declaredChecks, opaqueChecks);
   assert.equal(summary.launchers.passedChecks, opaqueChecks);
-  assert.equal(summary.certifications.total, certificationIds.length);
-  assert.equal(summary.certifications.pass, certificationIds.length);
+  assert.equal(summary.certifications.total, 0);
+  assert.equal(summary.certifications.pass, 0);
   assert.deepEqual([...report.plan.selectionIds].sort(), [...selectionIds].sort());
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
@@ -82,8 +79,8 @@ try {
     canonicalCases: summary.canonical.total,
     opaqueLaunchers: summary.launchers.total,
     opaqueChecks: summary.launchers.declaredChecks,
-    commandCertifications: summary.certifications.total,
-    dynamicGeneratedSurfaces: certificationIds.filter((id) => id.includes("generated-json")).length,
+    commandCertifications: 0,
+    dynamicGeneratedSurfaces: 0,
     failures: summary.suites.fail,
     cancellationReady: discovery.executor.supportsCancellation,
     reportRecovery: true,

@@ -77,7 +77,7 @@ export const NODE_VERIFICATION_ONLY_SURFACE_IDS = Object.freeze([
   "hson-demo2:test:phase2b-presentation-node",
   "hson-demo2:test:phase4a-layering-node",
   "hson-demo2:test:phase4b-retirement-node",
-  "hson-demo2:test:phase6a-node-mothership",
+  "hson-demo2:test:phase6a-node-hosted",
   "hson-demo2:test:phase6a-full-node-hosted",
   "hson-demo2:test:phase6b-browser-executor",
   "hson-demo2:test:phase6b-browser-cancellation",

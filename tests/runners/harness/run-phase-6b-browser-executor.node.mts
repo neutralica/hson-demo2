@@ -7,7 +7,7 @@ import { hosted_test_panel_selected_ids } from "../../../src/app/demos/tests/pan
 import { hosted_test_report_cases } from "../../../src/shared/hosted-tests/hosted-test-report.types";
 import { BROWSER_JOURNEY_COUNT, BROWSER_RASTER_SUITE_MANIFEST, BROWSER_SUITE_MANIFEST } from "../../harness/runtimes/node/browser/browser-test-manifest";
 import { LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../../harness/runtimes/node/browser/playwright-browser-executor";
-import { NODE_LOCUS_MOTHERSHIP_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
+import { NODE_LIVEHOST_HOSTED_TEST_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 const server = await start_hosted_test_server({ port: 0 });
@@ -26,7 +26,7 @@ const runtime = make_remote_hosted_test_runtime({
 try {
   await runtime.ready();
   const discovery = await runtime.discover();
-  assert.equal(discovery.executor.id, NODE_LOCUS_MOTHERSHIP_EXECUTOR.id);
+  assert.equal(discovery.executor.id, NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id);
   assert.equal(discovery.executor.capabilities.provides.includes("browser-raster"), true);
   const browserSuites = discovery.catalog.suites.filter((suite) => suite.executionShape === "browser-journeys");
   assert.equal(browserSuites.length, BROWSER_SUITE_MANIFEST.length + 1);

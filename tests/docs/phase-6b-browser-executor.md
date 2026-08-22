@@ -64,11 +64,11 @@ when the owning Node-hosted application is disposed.
 
 ## Module isolation decision
 
-The Node mothership loads the synthetic-DOM catalog and therefore initializes
+The Node hosted-test executor loads the synthetic-DOM catalog and therefore initializes
 `jsdom`. Playwright's normal CLI, its worker, Chromium, Vite, and the hosted-test
 server are separate processes. The previously reported
 `fallback/encoding.js is not in cache` fault occurred when Playwright startup
 shared the already-initialized Node/jsdom module environment. Current native
 Playwright execution is green when process-isolated. Phase 6B preserves that
-known-good boundary instead of loading Playwright into the mothership process;
+known-good boundary instead of loading Playwright into the hosted-test executor process;
 no `hson-live` or jsdom dependency change is required.

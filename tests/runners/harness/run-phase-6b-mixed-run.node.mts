@@ -3,7 +3,7 @@ import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
 import { LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../../harness/runtimes/node/browser/playwright-browser-executor";
-import { NODE_LOCUS_MOTHERSHIP_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
+import { NODE_LIVEHOST_HOSTED_TEST_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 const server = await start_hosted_test_server({ port: 0 });
@@ -44,11 +44,11 @@ try {
   assert.deepEqual(report.suiteRuns.map((suite) => suite.id), run.association.acceptedPlan.suites.map((suite) => suite.id));
   assert.deepEqual(report.plan.selectionIds, run.association.acceptedPlan.selectionIds);
   assert.equal(run.association.acceptedPlan.suites.filter((suite) => suite.executorId === LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id).length, 2);
-  assert.equal(run.association.acceptedPlan.suites.filter((suite) => suite.executorId === NODE_LOCUS_MOTHERSHIP_EXECUTOR.id).length, 6);
+  assert.equal(run.association.acceptedPlan.suites.filter((suite) => suite.executorId === NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id).length, 6);
   assert.equal(report.suiteRuns.filter((suite) => suite.executionShape === "browser-journeys")
     .every((suite) => suite.executorIds.includes(LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR.id)), true);
   assert.equal(report.suiteRuns.filter((suite) => suite.executionShape !== "browser-journeys")
-    .every((suite) => suite.executorIds.includes(NODE_LOCUS_MOTHERSHIP_EXECUTOR.id)), true);
+    .every((suite) => suite.executorIds.includes(NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id)), true);
 
   const recovered = await runtime.recover_run(run.association.runId, run.association.attemptId);
   assert.equal(recovered.client.recovery.map.snap().run.status, "passed");

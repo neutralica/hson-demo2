@@ -7,7 +7,7 @@ import type { TestSuite } from "../../harness/core/test-contracts";
 import { executor_supports, make_test_executor_registry, select_executor } from "../../harness/core/test-executor";
 import { make_test_run_plan } from "../../harness/core/test-run-plan";
 import { create_external_library_launcher_service } from "../../harness/runtimes/node/external-library-launchers";
-import { LOCAL_NODE_LOCUS_EXECUTOR, NODE_LOCUS_MOTHERSHIP_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
+import { LOCAL_NODE_LOCUS_EXECUTOR, NODE_LIVEHOST_HOSTED_TEST_EXECUTOR } from "../../harness/runtimes/node/livehost-node-executor";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
 const originalWorkerEndpoint = process.env.VITE_HOSTED_TEST_WS_URL;
@@ -29,7 +29,7 @@ let commandEvidence = "";
 try {
   await runtime.ready();
   const discovery = await runtime.discover();
-  assert.equal(discovery.executor.id, NODE_LOCUS_MOTHERSHIP_EXECUTOR.id);
+  assert.equal(discovery.executor.id, NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id);
   assert.equal(discovery.executor.kind, "node");
   assert.equal(discovery.catalog.tests.length > 0, true);
   assert.equal(discovery.catalog.suites.some((suite) => suite.executionShape === "opaque-aggregate"), true);
@@ -83,7 +83,7 @@ try {
     assert.deepEqual(commandSuiteRun.counts, {
       declared: 1, total: 1, executed: 1, passed: 1, failed: 0, skipped: 0, unsupported: 0, cancelled: 0,
     });
-    assert.deepEqual(commandSuiteRun.executorIds, [NODE_LOCUS_MOTHERSHIP_EXECUTOR.id]);
+    assert.deepEqual(commandSuiteRun.executorIds, [NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id]);
     commandEvidence += commandSuiteRun.evidence.map((entry) => entry.content).join("\n");
     command.dispose();
   }
@@ -158,7 +158,7 @@ assert.deepEqual(orderPlan.selectionIds, orderRegistry.catalog.tests.map((entry)
 assert.equal(orderPlan.executorId, LOCAL_NODE_LOCUS_EXECUTOR.id);
 
 console.log(JSON.stringify({
-  certificate: "phase6a-node-mothership",
+  certificate: "phase6a-node-hosted",
   canonicalRunId,
   opaqueChecks,
   commandEvidence: /hosted test timing: ok/.test(commandEvidence),

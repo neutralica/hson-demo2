@@ -144,49 +144,21 @@ The result is a fluid, automatically-updating interface assembled and orchestrat
 
 ### [TOWL - Tug Of War Live]
 
-A deliberately simple multiplayer "game" and proof of concept demonstrating a Locus as
-authority over one game state LiveMap. 
+A deliberately simple multiplayer "game" and proof of concept demonstrating Locus's authority over shared app state. Users share their room link url with another player via text or email; when both are joined in the same "room" they may compete in a hosted game of tug of war. 
 
-The application interprets room-scoped
-invite links and acquires the corresponding Locus. Player status, rounds,
-scores, and rope position live in that authoritative graph. Each browser
-maintains a local LiveMap mirror.
+Each browser maintains a local mirror of the room's authoritative game state — the simplest state object possible, containing a single value: rope position. 
 
-Player input is sent as a Locus action. There is no direct client-side mutation:
-the application supplies game semantics and authorization, while Locus admits
-the action, applies accepted canonical mutation, assigns the next revision, and
-streams the resulting pathwise commit to subscribed clients.
-Once accepted, the rope’s new position becomes part of the authoritative graph.
+As players press 'pull', input is sent to the server as a change request. Locus validates requests, applies mutation, increments revision, and streams changes to each client via commits. Rather than maintaining a separate game state, clients subscribe to the authoritative rope position; their LiveTree bindings update DOM as underlying graph state changes. 
 
-Subscribed clients apply that same ordered commit stream to local LiveMap
-mirrors; LiveTree bindings update with graph state. The browsers stay aligned
-because they follow one Locus's canonical graph and revision history.
-
-• application-owned game rules with Locus action and schema enforcement
-• one canonical game state graph shared by multiple clients
-• browser-local LiveMap mirrors kept aligned with a hosted authority
-• player input expressed as validated requests to mutate shared state
-• ordered, revisioned, pathwise graph changes streamed over WebSocket 
-• LiveTree interfaces derived from the same accepted graph state, synchronized across client
-• multiplayer consistency without peer-to-peer coordination or independent client simulation
+Using Locus as the shared source of server truth, browsers stay aligned on a single canonical graph and revision history without complex synchronization, peer-to-peer coordination, or independent client simulation.
 
 ---
 
 ### [fleurs]
 
-Clicking the background places procedurally generated SVG flowers into the document.
+Clicking the background places randomly generated SVG flowers into the document. LiveTree applies generated JavaScript values directly as SVG and CSS properties, without stringly typed uncertainty or an intermediate class or custom-property layer.
 
-The demonstration exercises LiveTree's SVG construction and document manipulation while remaining intentionally simple.
-
-On mobile devices, fleurs serves as the primary interactive demonstration.
-
-Demonstrates:
-
-- native SVG construction
-- automatic namespace handling
-- procedural document generation
-- pointer-driven creation
-- direct graph-to-DOM updates
+This is how the author shows his mother what he is working on. 
 
 ---
 

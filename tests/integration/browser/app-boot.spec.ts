@@ -248,8 +248,8 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(page.getByTestId("hosted-test-panel")).toHaveCount(0);
   await open_demo(page, "test");
   const panel = page.getByTestId("hosted-test-panel");
-  await expect(panel).toHaveAttribute("data-hosted-executor", "node-livehost-mothership", { timeout: 10_000 });
-  await expect(page.getByTestId("hosted-test-executor")).toHaveText(/^Node Locus Mothership · all \(\d+\)$/);
+  await expect(panel).toHaveAttribute("data-hosted-executor", "node-livehost-hosted-test-executor", { timeout: 10_000 });
+  await expect(page.getByTestId("hosted-test-executor")).toHaveText(/^Node LiveHost test executor · all \(\d+\)$/);
   await panel.evaluate((element) => element.setAttribute("data-retention-probe", "same-instance"));
   await open_demo(page, "about");
   await expect(panel).not.toBeVisible();

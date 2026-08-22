@@ -2,9 +2,9 @@ import type { RunOptions, RunResult, TestEvent, TestSuite } from "../../core/tes
 import type { TestFailure, TestSummary } from "../../../../src/shared/testing/test-contracts";
 import type { TestExecutorRegistry } from "../../core/test-executor";
 import {
-  NODE_LOCUS_MOTHERSHIP_EXECUTOR,
+  NODE_LIVEHOST_HOSTED_TEST_EXECUTOR,
   make_local_node_locus_executor_registry,
-  make_node_locus_mothership_executor_registry,
+  make_node_livehost_hosted_test_executor_registry,
 } from "./livehost-node-executor";
 import { test_catalog_version } from "../../../../src/shared/testing/test-catalog-contract";
 import { selected_test_suites } from "../../core/test-selected-run";
@@ -90,8 +90,8 @@ export async function run_fresh_node_selected_test_ids(
   onEvent: (event: TestEvent) => void = () => undefined,
   options: RunOptions = {},
 ): Promise<RunResult> {
-  const registry = advertisedRegistry.executor.id === NODE_LOCUS_MOTHERSHIP_EXECUTOR.id
-    ? make_node_locus_mothership_executor_registry()
+  const registry = advertisedRegistry.executor.id === NODE_LIVEHOST_HOSTED_TEST_EXECUTOR.id
+    ? make_node_livehost_hosted_test_executor_registry()
     : make_local_node_locus_executor_registry();
   const advertisedIds = advertisedRegistry.catalog.tests.map((test) => test.id);
   const freshIds = registry.catalog.tests.map((test) => test.id);

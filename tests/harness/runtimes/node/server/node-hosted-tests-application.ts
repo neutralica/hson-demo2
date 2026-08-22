@@ -13,7 +13,7 @@ import {
   resolve_external_library_launchers,
 } from "../external-library-launchers";
 import { make_test_executor_discovery } from "../../../core/test-discovery";
-import { make_node_locus_mothership_executor_registry } from "../livehost-node-executor";
+import { make_node_livehost_hosted_test_executor_registry } from "../livehost-node-executor";
 import { create_node_selected_verification_service } from "../run-node-selected-verifications";
 import { run_fresh_node_selected_test_ids } from "../run-node-selected-test-suites";
 import {
@@ -109,7 +109,7 @@ export type NodeHostedTestsApplication = Readonly<{
 export async function create_node_hosted_tests_application(
   options: NodeHostedTestsApplicationOptions = {},
 ): Promise<NodeHostedTestsApplication> {
-  const executorRegistry = options.executorRegistry ?? make_node_locus_mothership_executor_registry();
+  const executorRegistry = options.executorRegistry ?? make_node_livehost_hosted_test_executor_registry();
   const externalLaunchers = options.executorRegistry === undefined
     ? await resolve_external_library_launchers()
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });

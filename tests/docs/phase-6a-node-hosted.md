@@ -1,4 +1,4 @@
-# Phase 6A Node LiveHost mothership
+# Phase 6A Node hosted-test executor
 
 This is the audit record for Node-generalist closure. The machine-readable
 authority remains the surface catalog, executable registries, Node command
@@ -32,7 +32,7 @@ routing, and generated types are referenced only from the optional Worker
 adapter, its checks, or its documentation. They are not accepted RunPlan,
 coordinator, lifecycle, report, cancellation, or recovery concepts.
 
-## Node mothership flow
+## Node hosted-test executor flow
 
 ```text
 dist-node/livehost-server.mjs / local server entry

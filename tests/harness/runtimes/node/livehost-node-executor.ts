@@ -52,10 +52,10 @@ export function make_local_node_locus_executor_registry(): TestExecutorRegistry 
   ]);
 }
 
-export const NODE_LOCUS_MOTHERSHIP_EXECUTOR = Object.freeze({
+export const NODE_LIVEHOST_HOSTED_TEST_EXECUTOR = Object.freeze({
   ...LOCAL_NODE_LOCUS_EXECUTOR,
-  id: "node-livehost-mothership",
-  label: "Node Locus Mothership",
+  id: "node-livehost-hosted-test-executor",
+  label: "Node LiveHost test executor",
   capabilities: Object.freeze({ provides: Object.freeze([
     ...LOCAL_NODE_LOCUS_EXECUTOR.capabilities.provides,
     "browser-dom",
@@ -65,8 +65,8 @@ export const NODE_LOCUS_MOTHERSHIP_EXECUTOR = Object.freeze({
   ] as const) }),
 }) satisfies TestExecutorDescriptor;
 
-export function make_node_locus_mothership_executor_registry(): TestExecutorRegistry {
-  return make_test_executor_registry(NODE_LOCUS_MOTHERSHIP_EXECUTOR, [
+export function make_node_livehost_hosted_test_executor_registry(): TestExecutorRegistry {
+  return make_test_executor_registry(NODE_LIVEHOST_HOSTED_TEST_EXECUTOR, [
     ...all_canonical_portable_test_suites(),
     ...all_canonical_synthetic_dom_test_suites(),
     node_application_host_suite(),

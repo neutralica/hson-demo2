@@ -207,7 +207,7 @@ function command_hostability(entry: TestSurfaceCatalogEntry, capabilities: reado
   if (entry.role === "developer utility") return Object.freeze({ hostabilityClass: "excluded-developer-utility", phase6ExecutorClass: "none", missing: null });
   if ((NODE_HOSTED_COMMAND_SURFACE_IDS as readonly string[]).includes(entry.id)
     || (NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS as readonly string[]).includes(entry.id)) {
-    return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: "deploy the complete Node Locus mothership" });
+    return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: "deploy the complete Node hosted-test service" });
   }
   if ((NODE_VERIFICATION_ONLY_SURFACE_IDS as readonly string[]).includes(entry.id)) {
     return Object.freeze({ hostabilityClass: "verification-only", phase6ExecutorClass: "verification-executor", missing: "optional bounded verification-executor promotion" });
@@ -215,7 +215,7 @@ function command_hostability(entry: TestSurfaceCatalogEntry, capabilities: reado
   if (entry.classification === "build/typecheck certification" || entry.role === "production artifact verification") {
     return Object.freeze({ hostabilityClass: "verification-only", phase6ExecutorClass: "verification-executor", missing: "remote build/typecheck execution and artifact capture" });
   }
-  if (capabilities.includes("browser")) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: "browser-executor", missing: "deploy the complete Node Locus mothership with Chromium" });
+  if (capabilities.includes("browser")) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: "browser-executor", missing: "deploy the complete Node hosted-test service with Chromium" });
   if (entry.appearsInHostedUi) return Object.freeze({ hostabilityClass: "hosted-local-now", phase6ExecutorClass: capabilities.includes("process") ? "supervised-process-executor" : "deployed-node-executor", missing: capabilities.includes("process") ? "deployed supervised process executor" : "deployed Node executor" });
   if (capabilities.includes("process")) return Object.freeze({ hostabilityClass: "hostable-external-process", phase6ExecutorClass: "supervised-process-executor", missing: "deployed supervised process execution" });
   if (capabilities.includes("cloudflare-worker")) return Object.freeze({ hostabilityClass: "hostable-worker", phase6ExecutorClass: "deployed-worker-executor", missing: "optional Cloudflare Worker portability executor" });
@@ -290,8 +290,8 @@ function browser_fidelity_census(id: string): TestSurfaceCensusEntry {
     recoveryReportSupport: "normalized Locus report",
     artifactEvidenceRequirements: Object.freeze(["normalized pixel assertion lifecycle", "failure screenshot/trace reference"]),
     hostabilityClass: "hosted-local-now",
-    reasonNotCurrentlyDeployed: "The Node Locus mothership and its supervised Chromium process are not deployed yet.",
-    exactMissingCapability: "deploy the Node Locus mothership with Playwright Chromium system dependencies",
+    reasonNotCurrentlyDeployed: "The Node hosted-test service and its supervised Chromium process are not deployed yet.",
+    exactMissingCapability: "deploy the Node hosted-test service with Playwright Chromium system dependencies",
     phase6ExecutorClass: "browser-executor",
   });
 }
@@ -355,8 +355,8 @@ function browser_census(surface: BrowserSurfaceInventory): TestSurfaceCensusEntr
     recoveryReportSupport: "normalized Locus report",
     artifactEvidenceRequirements: Object.freeze(["normalized journey lifecycle", "trace/screenshot references on failure", "browser console/network and supervised server evidence"]),
     hostabilityClass: "hosted-local-now",
-    reasonNotCurrentlyDeployed: "The Node Locus mothership and its supervised Chromium process are not deployed yet.",
-    exactMissingCapability: "deploy the Node Locus mothership with Playwright Chromium system dependencies",
+    reasonNotCurrentlyDeployed: "The Node hosted-test service and its supervised Chromium process are not deployed yet.",
+    exactMissingCapability: "deploy the Node hosted-test service with Playwright Chromium system dependencies",
     phase6ExecutorClass: "browser-executor",
   });
 }

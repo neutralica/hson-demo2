@@ -175,4 +175,4 @@ The Node catalog plus aggregate descriptors is complete for current nonbrowser
 execution semantics. Real browser rendering and raster pixels remain the Phase
 6B executor boundary. Cloudflare Worker execution remains an optional
 portability target only. See `pending-environments.md` and
-`phase-6a-node-mothership.md` for the concrete inventories.
+`phase-6a-node-hosted.md` for the concrete inventories.
