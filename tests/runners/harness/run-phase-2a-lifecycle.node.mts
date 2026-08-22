@@ -253,4 +253,4 @@ certify(rejects(() => invalidCountsReport.reduceLifecycle({
   counts: { declared: 5, total: 6, executed: 6, passed: 6, failed: 0, skipped: 0, unsupported: 0, cancelled: 0 },
 }), /COUNTS_CONTRADICTION/), "contradictory normalized count evidence rejects");
 
-console.log(JSON.stringify({ suite: "phase2a-lifecycle", checks, order: initialOrder.split("|"), executors: ["node-01", "worker-07", "node-child-02"] }));
+console.log(JSON.stringify({ certificate: "phase2a-lifecycle", suite: "phase2a-lifecycle", checks, order: initialOrder.split("|"), executors: ["node-01", "worker-07", "node-child-02"] }));

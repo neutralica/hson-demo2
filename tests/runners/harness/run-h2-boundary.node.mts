@@ -61,8 +61,54 @@ try {
   check(!h2_completion_accepted("ordinary output", "{"), "missing completion evidence rejects");
   const terminalDescriptors = H2_VERIFICATION_IDS.map(resolve_h2_verification).filter((descriptor) => descriptor.completion.kind === "terminal-json");
   check(terminalDescriptors.length === 8 && new Set(terminalDescriptors.map((descriptor) => descriptor.completion.kind === "terminal-json" ? descriptor.completion.certificate : "")).size === 8, "all eight formerly weak H2 descriptors use distinct terminal JSON certificate contracts");
+  const descriptorRealSuccess: Readonly<Record<string, string>> = {
+    "hson-demo2:test:surface-enumeration-node": "test surface enumeration: ok",
+    "hson-demo2:test:stage2-contracts-node": "Stage 2 contracts: ok",
+    "hson-demo2:test:stage3-discovery-node": JSON.stringify({ certificate: "stage-3-discovery", node: {}, worker: {} }),
+    "hson-demo2:test:stage4a-selected-node": JSON.stringify({ certificate: "stage-4a-selected", selectionId: "selection", node: {}, worker: {}, opaqueId: "opaque" }),
+    "hson-demo2:test:stage4b-panel-node": JSON.stringify({ certificate: "stage-4b-panel", selectors: [], all: 1, unit: 1, dev: 1, overlap: 1, reflect: 1 }),
+    "hson-demo2:test:phase1-convergence-node": JSON.stringify({ certificate: "phase1-convergence", counts: {}, initialOrder: [], hostileCompletion: [], finalOrder: [] }),
+    "hson-demo2:test:phase2a-lifecycle-node": JSON.stringify({ certificate: "phase2a-lifecycle", suite: "phase2a-lifecycle", checks: 1, order: [], executors: [] }),
+    "hson-demo2:test:phase2b-presentation-node": JSON.stringify({ certificate: "phase2b-presentation", suite: "phase2b-presentation", checks: 1, groups: [], suites: 1 }),
+    "hson-demo2:test:phase4a-layering-node": JSON.stringify({ certificate: "phase-4a-layering", checks: 1, appFiles: 1, reachableSourceFiles: 1 }),
+    "hson-demo2:test:phase4b-retirement-node": JSON.stringify({ certificate: "phase4b-retirement", checks: 1, canonicalId: "canonical", opaqueId: "opaque", selectors: [] }),
+  };
+  for (const descriptor of H2_VERIFICATION_IDS.map(resolve_h2_verification)) {
+    const output = descriptorRealSuccess[descriptor.id]!;
+    const accepted = descriptor.completion.kind === "stdout-marker"
+      ? h2_completion_accepted(output, descriptor.completion.marker)
+      : h2_terminal_json_completion_accepted(output, descriptor.completion.certificate);
+    check(accepted, `${descriptor.id} representative real-success completion contract accepts`);
+  }
   const validCertificate = JSON.stringify({ certificate: "stage-4b-panel", selectors: [], all: 1, unit: 1, dev: 1, overlap: 1, reflect: 1 });
   check(h2_terminal_json_completion_accepted(validCertificate, "stage-4b-panel"), "valid terminal JSON certificate accepts");
+  const finalRecordExpected = JSON.stringify({ certificate: "stage-4b-panel", selectors: [], all: 1, unit: 1, dev: 1, overlap: 1, reflect: 1 });
+  const finalRecordWrongSuite = JSON.stringify({ certificate: "stage-3-discovery", node: {}, worker: {} });
+  const finalRecordUnrelated = JSON.stringify({ note: "history" });
+  const finalRecordFailure = JSON.stringify({ certificate: "stage-4b-panel", selectors: [], all: 1, unit: 1, dev: 1, overlap: 1, reflect: 1, status: "fail" });
+  for (const [output, accepted, name] of [
+    [finalRecordExpected, true, "final-record authority accepts valid expected certificate"],
+    [finalRecordUnrelated + "\n" + finalRecordExpected, true, "final-record authority permits unrelated JSON before expected certificate"],
+    [finalRecordWrongSuite + "\n" + finalRecordExpected, true, "final-record authority permits wrong-suite JSON before expected certificate"],
+    [finalRecordExpected + "\n" + finalRecordExpected, true, "final-record authority permits duplicate expected JSON before final expected certificate"],
+    [finalRecordExpected + "\n" + finalRecordUnrelated, false, "final-record authority rejects unrelated JSON after expected certificate"],
+    [finalRecordExpected + "\nprose", false, "final-record authority rejects prose after expected certificate"],
+    [finalRecordExpected + "\n{not-json", false, "final-record authority rejects malformed JSON after expected certificate"],
+    [finalRecordWrongSuite, false, "final-record authority rejects wrong final certificate identity"],
+    [finalRecordFailure, false, "final-record authority rejects failure final certificate state"],
+    [finalRecordExpected + "\n\n", true, "final-record authority permits blank lines after expected certificate"],
+  ] as const) check(h2_terminal_json_completion_accepted(output, "stage-4b-panel") === accepted, name);
+  const realSuccessRecords = [
+    ["phase2a-lifecycle", { certificate: "phase2a-lifecycle", suite: "phase2a-lifecycle", checks: 1, order: [], executors: [] }],
+    ["phase2b-presentation", { certificate: "phase2b-presentation", suite: "phase2b-presentation", checks: 1, groups: [], suites: 1 }],
+    ["phase-4a-layering", { certificate: "phase-4a-layering", checks: 1, appFiles: 1, reachableSourceFiles: 1 }],
+    ["phase4b-retirement", { certificate: "phase4b-retirement", checks: 1, canonicalId: "canonical", opaqueId: "opaque", selectors: [] }],
+  ] as const;
+  for (const [certificate, record] of realSuccessRecords) {
+    check(h2_terminal_json_completion_accepted(JSON.stringify(record), certificate), `${certificate} real successful terminal schema accepts`);
+    check(!h2_terminal_json_completion_accepted(JSON.stringify({ ...record, certificate: "wrong-certificate" }), certificate), `${certificate} rejects mutated certificate identity`);
+    check(!h2_terminal_json_completion_accepted(JSON.stringify({ ...record, checks: [] }), certificate), `${certificate} rejects mutated checks type`);
+  }
   for (const [output, name] of [
     ["", "missing terminal JSON certificate rejects"], ["{", "bare brace rejects"], ["{not-json", "malformed terminal JSON rejects"], [JSON.stringify({ certificate: "stage-4b-panel" }), "wrong-shaped terminal JSON rejects"], [JSON.stringify({ ...JSON.parse(validCertificate), certificate: "stage-4a-selected" }), "wrong certificate identity rejects"], [JSON.stringify({ ...JSON.parse(validCertificate), status: "fail" }), "explicit failure terminal JSON rejects"], ["{not-json\n" + validCertificate.slice(0, -1), "malformed marker-bearing terminal JSON rejects"],
   ] as const) check(!h2_terminal_json_completion_accepted(output, "stage-4b-panel"), name);

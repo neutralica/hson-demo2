@@ -276,4 +276,4 @@ const visibleText = [
 certify(!visibleText.includes("library::") && !visibleText.includes("Library"), "visible presentation contains no stale Library identity or principal group");
 certify(visibleText.includes("transform/hson-tokenizer") && visibleText.includes("executor: node-child-03"), "canonical slash identity and executor metadata coexist without conflation");
 
-console.log(JSON.stringify({ suite: "phase2b-presentation", checks, groups: HOSTED_TEST_PRESENTATION_GROUP_ORDER, suites: plan.suites.length }));
+console.log(JSON.stringify({ certificate: "phase2b-presentation", suite: "phase2b-presentation", checks, groups: HOSTED_TEST_PRESENTATION_GROUP_ORDER, suites: plan.suites.length }));

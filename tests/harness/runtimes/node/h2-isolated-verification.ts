@@ -190,15 +190,16 @@ export function h2_terminal_json_completion_accepted(stdout: string, certificate
  * deliberately an internal fixed-ID contract, not caller-supplied schema. */
 const is_record = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const is_string_array = (value: unknown): boolean => Array.isArray(value) && value.every((item) => typeof item === "string");
+const is_check_count = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 const TERMINAL_CERTIFICATE_VALIDATORS: Readonly<Record<string, (record: Record<string, unknown>) => boolean>> = Object.freeze({
   "stage-3-discovery": (r) => is_record(r.node) && is_record(r.worker),
   "stage-4a-selected": (r) => typeof r.selectionId === "string" && is_record(r.node) && is_record(r.worker) && typeof r.opaqueId === "string",
   "stage-4b-panel": (r) => is_string_array(r.selectors) && [r.all, r.unit, r.dev, r.overlap, r.reflect].every((value) => typeof value === "number"),
   "phase1-convergence": (r) => is_record(r.counts) && is_string_array(r.initialOrder) && is_string_array(r.hostileCompletion) && is_string_array(r.finalOrder),
-  "phase2a-lifecycle": (r) => r.suite === "phase2a-lifecycle" && is_string_array(r.checks) && is_string_array(r.order) && is_string_array(r.executors),
-  "phase2b-presentation": (r) => r.suite === "phase2b-presentation" && is_string_array(r.checks) && is_string_array(r.groups) && typeof r.suites === "number",
-  "phase-4a-layering": (r) => is_string_array(r.checks) && typeof r.appFiles === "number" && typeof r.reachableSourceFiles === "number",
-  "phase4b-retirement": (r) => is_string_array(r.checks) && typeof r.canonicalId === "string" && typeof r.opaqueId === "string" && is_string_array(r.selectors),
+  "phase2a-lifecycle": (r) => r.suite === "phase2a-lifecycle" && is_check_count(r.checks) && is_string_array(r.order) && is_string_array(r.executors),
+  "phase2b-presentation": (r) => r.suite === "phase2b-presentation" && is_check_count(r.checks) && is_string_array(r.groups) && typeof r.suites === "number",
+  "phase-4a-layering": (r) => is_check_count(r.checks) && typeof r.appFiles === "number" && typeof r.reachableSourceFiles === "number",
+  "phase4b-retirement": (r) => is_check_count(r.checks) && typeof r.canonicalId === "string" && typeof r.opaqueId === "string" && is_string_array(r.selectors),
 });
 
 async function materialize(source: RepositoryManifest, target: string): Promise<void> {
