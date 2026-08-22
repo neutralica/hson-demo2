@@ -156,7 +156,7 @@ Using Locus as the shared source of server truth, browsers stay aligned on a sin
 
 ### [fleurs]
 
-Clicking the background places randomly generated SVG flowers into the document. LiveTree applies generated JavaScript values directly as SVG and CSS properties, without stringly typed uncertainty or an intermediate class or custom-property layer.
+Clicking the background places randomly generated SVG flowers into the document. LiveTree applies generated JavaScript values directly as dynamic SVG and CSS properties without an intermediate class or custom-property layer.
 
 This is how the author shows his mother what he is working on. 
 
@@ -164,22 +164,23 @@ This is how the author shows his mother what he is working on.
 
 ## Purpose
 
-The purpose of LiveDemo is to expose the mechanics of hson-live through visible, working examples.
+The purpose of LiveDemo is to expose the mechanics of hson-live through visible, working examples. The demonstrations show its interoperating subsystems: 
 
-The demonstrations show its subsystems interoperating: HSON as the canonical
-structure, hson.transform as its conversion circuit, LiveTree as its browser
-projection, LiveMap as its state model, Locus as one-map authority, the
-application as semantic/topology owner, and Node LiveHost as the network runtime.
+- HSON - canonical structure 
+- Transform - conversion engine
+- LiveTree - browse projection 
+- LiveMap - state model 
+- Locus - one-map server authority
+- LiveHost - network runtime.
 
-Taken together, they establish:
+Taken together, these establish:
 
-- HTML and JSON represented within one canonical typed graph
-- deterministic transformation among HTML, JSON, SVG, XML, and HSON
-- live browser documents projected directly from canonical graph state
-- document structure, application data, styling, and interaction operating within one model
-- TypeScript-shaped contracts enforced after compilation at runtime
-- the same state system scaling from one local widget to a hosted multiplayer application
-- direct two-way linkage between structured data and browser interfaces
-- server-owned state shared across clients without competing canonical copies
-- ordered graph commits driving browser updates over the network
-- complex interactive documents built without templates, virtual DOM, framework state, or reconciliation
+- HTML and JSON joined in one canonical typed graph format
+- stable, deterministic, lossless transformation between HTML, JSON, and HSON
+- live browser documents projected directly from a single canonical graph state
+- document structure, application data, styling, and interaction managed in one low-friction ecosystem
+- TypeScript-compatible schema enforcement at runtime
+- direct two-way linkage between application state and browser view
+- server-owned authoritative single state, shared across clients
+- browser updates driven by server-side graph commits across the network
+- complex interactive documents built without templates, virtual or shadow DOM, frameworks, or reconciliation steps

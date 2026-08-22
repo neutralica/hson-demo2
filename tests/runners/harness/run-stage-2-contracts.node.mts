@@ -107,7 +107,7 @@ expect_stage_2(livehostSuites.length > 0 && livehostSuites.every((entry) => entr
 
 const neutralFiles = [
   "tests/harness/core/test-catalog.ts",
-  "tests/harness/core/test-selection.ts",
+  "src/shared/testing/test-selection.ts",
   "tests/harness/core/test-executor.ts",
   "tests/harness/core/test-run-events.ts",
   "tests/harness/core/test-discovery.ts",

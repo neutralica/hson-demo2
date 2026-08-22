@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
+import { H2_VERIFICATION_IDS, resolve_h2_verification } from "../../harness/runtimes/node/h2-isolated-verification";
+
+assert.equal(H2_VERIFICATION_IDS.length, 10);
+assert.throws(() => resolve_h2_verification("forged-command"), /UNKNOWN_H2_VERIFICATION_ID/);
 
 const supervisor = create_node_process_supervisor({
   stdoutLimitBytes: 256,
@@ -26,6 +30,19 @@ assert.equal(successful.stderr, "stderr");
 const nonzero = await supervisor.start(invocation("process.exitCode = 7")).result;
 assert.equal(nonzero.ok, false);
 assert.equal(nonzero.exitCode, 7);
+
+const isolatedSupervisor = create_node_process_supervisor({
+  stdoutLimitBytes: 256,
+  stderrLimitBytes: 256,
+  truncationMarker: "<TRUNCATED>",
+  terminationGraceMs: 100,
+  environmentMode: "replace",
+});
+const replacedEnvironment = await isolatedSupervisor.start({
+  ...invocation("process.stdout.write([process.env.NODE_OPTIONS ?? 'absent', process.env.H2_SECRET ?? 'absent', process.env.H2_ALLOWED ?? 'absent'].join('|'))"),
+  environment: Object.freeze({ PATH: process.env.PATH ?? "/usr/bin:/bin", H2_ALLOWED: "present" }),
+}).result;
+assert.equal(replacedEnvironment.stdout, "absent|absent|present");
 
 const bounded = await supervisor.start(invocation(
   "process.stdout.write('head-' + 'x'.repeat(1_000) + '-tail')",
@@ -99,4 +116,5 @@ console.log(JSON.stringify({
   forcedTermination: forceKilled.forceKilled,
   processTreeCleanup: true,
   activeChildDisposal: supervisor.metrics().activeChildren === 0,
+  replacementEnvironment: replacedEnvironment.ok,
 }));

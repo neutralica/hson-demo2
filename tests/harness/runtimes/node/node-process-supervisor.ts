@@ -128,6 +128,8 @@ export function create_node_process_supervisor(configuration: Readonly<{
   stderrLimitBytes: number;
   truncationMarker: string;
   terminationGraceMs: number;
+  /** Existing launchers inherit; H2 uses an allow-list environment. */
+  environmentMode?: "inherit" | "replace";
 }>): NodeProcessSupervisor {
   const activeChildren = new Map<ChildProcess, () => void>();
   let maximumObservedConcurrentChildren = 0;
@@ -150,7 +152,9 @@ export function create_node_process_supervisor(configuration: Readonly<{
       let forceTimer: ReturnType<typeof setTimeout> | undefined;
       const child = spawn(invocation.command, invocation.args, {
         cwd: invocation.cwd,
-        env: { ...process.env, ...invocation.environment, FORCE_COLOR: "0", NO_COLOR: "1" },
+        env: configuration.environmentMode === "replace"
+          ? { ...invocation.environment, FORCE_COLOR: "0", NO_COLOR: "1" }
+          : { ...process.env, ...invocation.environment, FORCE_COLOR: "0", NO_COLOR: "1" },
         stdio: ["ignore", "pipe", "pipe"],
         detached: process.platform !== "win32",
       });
