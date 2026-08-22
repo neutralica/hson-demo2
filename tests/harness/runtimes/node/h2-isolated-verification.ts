@@ -41,7 +41,7 @@ type Descriptor = Readonly<{
   preparation: "build-hson-live";
   capabilityProfile: "source-meta";
   timeoutMs: number;
-  completion: Readonly<{ kind: "stdout-marker"; marker: string }>;
+  completion: Readonly<{ kind: "stdout-marker"; marker: string }> | Readonly<{ kind: "terminal-json"; certificate: string }>;
   artifactPolicy: "discard";
 }>;
 
@@ -53,9 +53,20 @@ const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
     preparation: "build-hson-live" as const,
     capabilityProfile: "source-meta" as const,
     timeoutMs: 180_000,
-    completion: Object.freeze({ kind: "stdout-marker" as const, marker: id.endsWith("surface-enumeration-node")
-      ? "test surface enumeration: ok"
-      : id.endsWith("stage2-contracts-node") ? "Stage 2 contracts: ok" : "{" }),
+    completion: id.endsWith("surface-enumeration-node")
+      ? Object.freeze({ kind: "stdout-marker" as const, marker: "test surface enumeration: ok" })
+      : id.endsWith("stage2-contracts-node")
+        ? Object.freeze({ kind: "stdout-marker" as const, marker: "Stage 2 contracts: ok" })
+        : Object.freeze({ kind: "terminal-json" as const, certificate: ({
+          "hson-demo2:test:stage3-discovery-node": "stage-3-discovery",
+          "hson-demo2:test:stage4a-selected-node": "stage-4a-selected",
+          "hson-demo2:test:stage4b-panel-node": "stage-4b-panel",
+          "hson-demo2:test:phase1-convergence-node": "phase1-convergence",
+          "hson-demo2:test:phase2a-lifecycle-node": "phase2a-lifecycle",
+          "hson-demo2:test:phase2b-presentation-node": "phase2b-presentation",
+          "hson-demo2:test:phase4a-layering-node": "phase-4a-layering",
+          "hson-demo2:test:phase4b-retirement-node": "phase4b-retirement",
+        } as const)[id as Exclude<H2VerificationId, "hson-demo2:test:surface-enumeration-node" | "hson-demo2:test:stage2-contracts-node">] }),
     artifactPolicy: "discard" as const,
   })]),
 );
@@ -161,6 +172,35 @@ export function h2_completion_accepted(stdout: string, marker: string): boolean 
     && !/"(?:status|result)"\s*:\s*"fail"|"pass"\s*:\s*false|"ok"\s*:\s*false/i.test(stdout);
 }
 
+/** A terminal JSON certificate is authoritative only when the final non-empty
+ * stdout record is the expected, successful certificate for this fixed ID. */
+export function h2_terminal_json_completion_accepted(stdout: string, certificate: string): boolean {
+  const line = stdout.trimEnd().split("\n").at(-1);
+  if (line === undefined || line === "") return false;
+  let value: unknown;
+  try { value = JSON.parse(line); } catch { return false; }
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  if (record.certificate !== certificate) return false;
+  if (record.status === "fail" || record.result === "fail" || record.pass === false || record.ok === false) return false;
+  return TERMINAL_CERTIFICATE_VALIDATORS[certificate]?.(record) === true;
+}
+
+/** Fields are taken from each runner's existing final JSON record.  This is
+ * deliberately an internal fixed-ID contract, not caller-supplied schema. */
+const is_record = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+const is_string_array = (value: unknown): boolean => Array.isArray(value) && value.every((item) => typeof item === "string");
+const TERMINAL_CERTIFICATE_VALIDATORS: Readonly<Record<string, (record: Record<string, unknown>) => boolean>> = Object.freeze({
+  "stage-3-discovery": (r) => is_record(r.node) && is_record(r.worker),
+  "stage-4a-selected": (r) => typeof r.selectionId === "string" && is_record(r.node) && is_record(r.worker) && typeof r.opaqueId === "string",
+  "stage-4b-panel": (r) => is_string_array(r.selectors) && [r.all, r.unit, r.dev, r.overlap, r.reflect].every((value) => typeof value === "number"),
+  "phase1-convergence": (r) => is_record(r.counts) && is_string_array(r.initialOrder) && is_string_array(r.hostileCompletion) && is_string_array(r.finalOrder),
+  "phase2a-lifecycle": (r) => r.suite === "phase2a-lifecycle" && is_string_array(r.checks) && is_string_array(r.order) && is_string_array(r.executors),
+  "phase2b-presentation": (r) => r.suite === "phase2b-presentation" && is_string_array(r.checks) && is_string_array(r.groups) && typeof r.suites === "number",
+  "phase-4a-layering": (r) => is_string_array(r.checks) && typeof r.appFiles === "number" && typeof r.reachableSourceFiles === "number",
+  "phase4b-retirement": (r) => is_string_array(r.checks) && typeof r.canonicalId === "string" && typeof r.opaqueId === "string" && is_string_array(r.selectors),
+});
+
 async function materialize(source: RepositoryManifest, target: string): Promise<void> {
   for (const entry of source.entries) {
     const destination = resolve(target, entry.relativePath);
@@ -225,7 +265,7 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
     .update(await readFile(join(sourceDemo, "package-lock.json")))
     .update(process.version)
     .update(await execFileAsync("npm", ["--version"]).then((result) => result.stdout.trim()))
-    .update("h2-prepared-dependencies-v4")
+    .update("h2-prepared-dependencies-v5")
     .digest("hex");
   const prepared = join(preparedRoot, key, "node_modules");
   try { await stat(prepared); } catch {
@@ -253,8 +293,24 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
     }
   }
-  await symlink(prepared, join(snapshotLive, "node_modules"), "dir");
+  // The prepared tree is a reusable template only.  Every verification gets
+  // one writable copy.  The paired library uses that same run-owned tree so a
+  // run does not spend its 1 GiB budget on two identical dependency graphs.
   await cp(prepared, join(snapshotDemo, "node_modules"), { recursive: true, dereference: true });
+  // `cp(..., dereference)` is required for a self-contained tree, but it turns
+  // .bin links into copied launcher files whose relative imports are wrong.
+  // Restore those links from the prepared template; they point only within the
+  // per-run node_modules tree.
+  const runBin = join(snapshotDemo, "node_modules", ".bin");
+  await rm(runBin, { recursive: true, force: true });
+  await mkdir(runBin);
+  for (const entry of await readdir(join(prepared, ".bin"))) {
+    const templateEntry = join(prepared, ".bin", entry);
+    const info = await lstat(templateEntry);
+    if (info.isSymbolicLink()) await symlink(await readlink(templateEntry), join(runBin, entry));
+    else await copyFile(templateEntry, join(runBin, entry));
+  }
+  await symlink(join("..", "hson-demo2", "node_modules"), join(snapshotLive, "node_modules"), "dir");
   await symlink(snapshotLive, join(snapshotDemo, "node_modules", "hson-live"), "dir");
   const resolved = await realpath(join(snapshotDemo, "node_modules", "hson-live"));
   if (!inside(await realpath(snapshotLive), resolved)) throw new Error("DEPENDENCY_RESOLUTION_ESCAPES_SNAPSHOT");
@@ -420,8 +476,10 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
       else if (!processResult.ok) failureReason = processResult.timedOut ? "TIMEOUT" : processResult.cancelled ? "CANCELLED" : "PROCESS_FAILED";
       else if (workspaceLimitExceeded) failureReason = "WORKSPACE_LIMIT_EXCEEDED";
       else {
-        const accepted = h2_completion_accepted(processResult.stdout, descriptor.completion.marker);
-        completion = Object.freeze({ kind: "terminal-json", accepted, detail: descriptor.completion.marker });
+        const accepted = descriptor.completion.kind === "stdout-marker"
+          ? h2_completion_accepted(processResult.stdout, descriptor.completion.marker)
+          : h2_terminal_json_completion_accepted(processResult.stdout, descriptor.completion.certificate);
+        completion = Object.freeze({ kind: "terminal-json", accepted, detail: descriptor.completion.kind === "stdout-marker" ? descriptor.completion.marker : descriptor.completion.certificate });
         if (!accepted) failureReason = "COMPLETION_REJECTED";
       }
     }

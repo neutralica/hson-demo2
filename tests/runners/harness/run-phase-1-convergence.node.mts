@@ -258,4 +258,4 @@ certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.e
 certify("planAndReport", workerDiscovery.catalog.suites.every((suite) => suite.executionShape !== "opaque-aggregate"), "external launchers remain absent rather than failed on Worker");
 certify("planAndReport", nodeDiscovery.catalog.tests.every((descriptor) => nodeRegistry.get(descriptor.id) !== undefined), "every Node case descriptor has exact executable registration");
 
-console.log(JSON.stringify({ counts, initialOrder: expectedSuiteOrder.split("|"), hostileCompletion: ["dev", "livemap opaque", "reflect", "transform opaque", "remaining canonical"], finalOrder: finalReport.suiteRuns.map((suite) => suite.id) }));
+console.log(JSON.stringify({ certificate: "phase1-convergence", counts, initialOrder: expectedSuiteOrder.split("|"), hostileCompletion: ["dev", "livemap opaque", "reflect", "transform opaque", "remaining canonical"], finalOrder: finalReport.suiteRuns.map((suite) => suite.id) }));

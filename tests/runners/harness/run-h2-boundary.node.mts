@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, stat, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { capture_h2_source_manifest, execute_h2_verification, h2_completion_accepted, h2_owned_quarantine_path, h2_paired_manifest_digest, h2_workspace_bytes_for_tests, H2_WORKSPACE_POLL_INTERVAL_MS, resolve_h2_verification, sweep_stale_h2_workspaces } from "../../harness/runtimes/node/h2-isolated-verification";
+import { capture_h2_source_manifest, execute_h2_verification, h2_completion_accepted, h2_owned_quarantine_path, h2_paired_manifest_digest, h2_terminal_json_completion_accepted, h2_workspace_bytes_for_tests, H2_VERIFICATION_IDS, H2_WORKSPACE_POLL_INTERVAL_MS, resolve_h2_verification, sweep_stale_h2_workspaces } from "../../harness/runtimes/node/h2-isolated-verification";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
 
 const exec = promisify(execFile);
@@ -21,7 +21,7 @@ async function h2_fixture(name: string): Promise<Readonly<{ live: string; demo: 
   await writeFile(join(live, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n"); await writeFile("dist/preparation-budget.bin", Buffer.alloc(65536)); console.log("preparation-fixture-write");`);
   await writeFile(join(demo, "package.json"), JSON.stringify({ name: "hson-demo2", version: "0.0.0", type: "module", scripts: { "test:surface-enumeration-node": "node child.mjs" } }));
   await writeFile(join(demo, "package-lock.json"), "{}\n");
-  await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
+  await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync, readFileSync, existsSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), sentinel: readFileSync("node_modules/sentinel", "utf8"), canary: existsSync("node_modules/run-canary"), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
   await writeFile(join(demo, ".gitignore"), "node_modules\n"); await mkdir(join(demo, "node_modules", ".bin"), { recursive: true }); await writeFile(join(demo, "node_modules", "sentinel"), "fixture"); await symlink("../sentinel", join(demo, "node_modules", ".bin", "sentinel"));
   await exec("git", ["-C", live, "add", "."]); await exec("git", ["-C", live, "commit", "-qm", "fixture"]);
   await exec("git", ["-C", demo, "add", "."]); await exec("git", ["-C", demo, "commit", "-qm", "fixture"]);
@@ -59,6 +59,13 @@ try {
   check(h2_completion_accepted('{"status":"pass"}', "{"), "authoritative successful completion accepted");
   check(!h2_completion_accepted('{"status":"fail"}', "{"), "exit-zero failure completion rejects");
   check(!h2_completion_accepted("ordinary output", "{"), "missing completion evidence rejects");
+  const terminalDescriptors = H2_VERIFICATION_IDS.map(resolve_h2_verification).filter((descriptor) => descriptor.completion.kind === "terminal-json");
+  check(terminalDescriptors.length === 8 && new Set(terminalDescriptors.map((descriptor) => descriptor.completion.kind === "terminal-json" ? descriptor.completion.certificate : "")).size === 8, "all eight formerly weak H2 descriptors use distinct terminal JSON certificate contracts");
+  const validCertificate = JSON.stringify({ certificate: "stage-4b-panel", selectors: [], all: 1, unit: 1, dev: 1, overlap: 1, reflect: 1 });
+  check(h2_terminal_json_completion_accepted(validCertificate, "stage-4b-panel"), "valid terminal JSON certificate accepts");
+  for (const [output, name] of [
+    ["", "missing terminal JSON certificate rejects"], ["{", "bare brace rejects"], ["{not-json", "malformed terminal JSON rejects"], [JSON.stringify({ certificate: "stage-4b-panel" }), "wrong-shaped terminal JSON rejects"], [JSON.stringify({ ...JSON.parse(validCertificate), certificate: "stage-4a-selected" }), "wrong certificate identity rejects"], [JSON.stringify({ ...JSON.parse(validCertificate), status: "fail" }), "explicit failure terminal JSON rejects"], ["{not-json\n" + validCertificate.slice(0, -1), "malformed marker-bearing terminal JSON rejects"],
+  ] as const) check(!h2_terminal_json_completion_accepted(output, "stage-4b-panel"), name);
   const supervisor = create_node_process_supervisor({ stdoutLimitBytes: 64, stderrLimitBytes: 64, truncationMarker: "<CUT>", terminationGraceMs: 50, environmentMode: "replace" });
   const overflow = await supervisor.start({ cwd: root, command: process.execPath, args: ["-e", "process.stdout.write('x'.repeat(512));setInterval(()=>{},1000)"], environment: { PATH: process.env.PATH ?? "/usr/bin:/bin" }, timeoutMs: 2_000 }).result;
   check(overflow.outputLimitExceeded && !overflow.ok, "stdout overflow terminates process");
@@ -88,6 +95,20 @@ try {
   const isolatedRoot = "/isolated-child/run-";
   check(isolated.status === "PASS" && isolated.cleanup === "removed" && childEvidence.live?.includes(isolatedRoot) === true && childEvidence.launchers?.includes(isolatedRoot) === true && !childEvidence.live.includes(fixture.live) && !childEvidence.launchers.includes(fixture.demo), "actual isolated child resolves hson-live and test-launchers inside its run workspace");
   check(["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY"].every((name) => childEvidence.env?.[name] === null) && ["HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"].every((name) => typeof childEvidence.env?.[name] === "string" && childEvidence.env[name] !== ""), "actual isolated child has replacement-environment canaries and executor-owned values");
+  const dependencyRoot = join(root, "dependency-isolation");
+  const runA = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot, testHooks: { async beforeExecution(_workspace, snapshotDemo) { await writeFile(join(snapshotDemo, "node_modules", "run-canary"), "run-a"); await writeFile(join(snapshotDemo, "node_modules", "sentinel"), "mutated-by-run-a"); } } }, "hson-demo2:test:surface-enumeration-node");
+  check(runA.status === "PASS", "dependency-isolation run A completes");
+  const preparedDirectories = await readdir(join(dependencyRoot, "prepared-dependencies"));
+  const prepared = join(dependencyRoot, "prepared-dependencies", preparedDirectories.find((name) => !name.includes(".staging-"))!, "node_modules");
+  let preparedHasCanary = true;
+  try { await stat(join(prepared, "run-canary")); } catch { preparedHasCanary = false; }
+  check(!preparedHasCanary, "prepared template has no run A canary");
+  check(await readFile(join(prepared, "sentinel"), "utf8") === "fixture", "prepared template bytes survive run A mutation");
+  const runB = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: dependencyRoot }, "hson-demo2:test:surface-enumeration-node");
+  const runBEvidenceText = runB.process?.stdout.split("\n").find((line) => line.startsWith('{"live"')) ?? "";
+  const runBEvidence = JSON.parse(runBEvidenceText) as { sentinel: string; canary: boolean };
+  check(runB.status === "PASS" && runBEvidence.canary === false, "run B cannot observe run A canary");
+  check(runBEvidence.sentinel === "fixture", "run B observes original disposable dependency bytes");
   const quarantine = h2_owned_quarantine_path(join(root, "owned-root"), join(root, "owned-root", "run-fixture"));
   check(quarantine === join(root, "owned-root", "run-fixture") && h2_owned_quarantine_path(join(root, "owned-root"), join(root, "outside", "run-fixture")) === undefined, "cleanup quarantine evidence is bounded to an owned run workspace");
   console.log(JSON.stringify({ certificate: "h2-boundary", checks, total: checks.length }));
