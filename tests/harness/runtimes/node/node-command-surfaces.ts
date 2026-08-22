@@ -2,6 +2,7 @@ import type { TestCapability, TestSubject, TestSuiteDescriptor } from "../../../
 import type { TestSurfaceCatalogEntry } from "../../hosted/test-surface-catalog";
 import { TEST_SURFACE_CATALOG } from "../../hosted/test-surface-catalog";
 import { NODE_TSX_IMPORT_PATH } from "./external-library-launchers";
+import type { H2ExecutorTestHooks } from "./h2-isolated-verification";
 
 export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-live:test:hson-array-index",
@@ -99,7 +100,7 @@ export type NodeCommandSurfaceTarget = Readonly<{
   args: readonly string[];
   environment: Readonly<Record<string, string>>;
   timeoutMs: number;
-  h2?: Readonly<{ hsonLiveRoot: string; hsonDemo2Root: string }>;
+  h2?: Readonly<{ hsonLiveRoot: string; hsonDemo2Root: string; testHooks?: H2ExecutorTestHooks }>;
 }>;
 
 export type NodeCommandSurfaceAvailability = Readonly<{
@@ -140,6 +141,8 @@ function requirements(entry: TestSurfaceCatalogEntry): readonly TestCapability[]
 export function resolve_node_command_surfaces(options: Readonly<{
   demoRoot: string;
   hsonLiveRoot?: string;
+  /** Private hosted-harness seam for lifecycle certification. */
+  h2TestHooks?: H2ExecutorTestHooks;
 }>): NodeCommandSurfaceAvailability {
   const byId = new Map(TEST_SURFACE_CATALOG.map((entry) => [entry.id, entry]));
   const targets: NodeCommandSurfaceTarget[] = [];
@@ -162,7 +165,8 @@ export function resolve_node_command_surfaces(options: Readonly<{
         id: suite_id(entry), sourceCatalogId, title: entry.label, subject: SUBJECT_BY_CATEGORY[entry.category], provenance: entry.repository,
         sourceRef: `node-command:${sourceCatalogId}`, requirements: requirements(entry), order: 20_000 + order, cwd, command: process.execPath,
         args: Object.freeze([]), environment: Object.freeze({}), timeoutMs: 180_000,
-        h2: Object.freeze({ hsonLiveRoot: options.hsonLiveRoot, hsonDemo2Root: options.demoRoot }),
+        h2: Object.freeze({ hsonLiveRoot: options.hsonLiveRoot, hsonDemo2Root: options.demoRoot,
+          ...(options.h2TestHooks === undefined ? {} : { testHooks: options.h2TestHooks }) }),
       }));
       continue;
     }

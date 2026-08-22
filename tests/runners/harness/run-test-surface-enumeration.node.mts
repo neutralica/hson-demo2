@@ -12,6 +12,7 @@ import {
   PHASE5_DUPLICATE_RETIREMENTS,
   TEST_CENSUS_CAPABILITIES,
   build_test_surface_census,
+  reconcile_certification_accounting,
   test_census_denominators,
   type BrowserSurfaceInventory,
 } from "../../harness/hosted/test-surface-census";
@@ -390,6 +391,14 @@ for (const retirement of PHASE5_DUPLICATE_RETIREMENTS) {
   expect_surface(hson_live_test_launchers.some((launcher) => launcher.id === retirement.retainedAuthoritativeIdentity), `retained duplicate owner ${retirement.retainedAuthoritativeIdentity} is not manifested`);
 }
 const denominators = test_census_denominators(census);
+const certificationAccounting = reconcile_certification_accounting(census);
+expect_surface(
+  certificationAccounting.rawCertificationLikeEntries === certificationAccounting.supportedCertifications
+    + certificationAccounting.duplicateAliases + certificationAccounting.semanticAliases
+    + certificationAccounting.harnessCertificates + certificationAccounting.developerUtilities
+    + certificationAccounting.dynamicSurfaces + certificationAccounting.externalDeployedDiagnostics,
+  "every raw certification-like surface must have one explicit accounting category",
+);
 const semanticChecks = denominators["canonical cases"] + denominators["opaque checks"];
 expect_surface(
   denominators["opaque checks"] === hson_live_test_launchers.reduce((total, launcher) => total + launcher.executableChecks, 0),
@@ -424,6 +433,7 @@ console.log(JSON.stringify({
   demoTestScripts: demoTests.length,
   reachableTestSources: approvedPersistentSources.length,
   denominators,
+  certificationAccounting,
   semanticChecks,
   retiredDuplicateSuites: PHASE5_DUPLICATE_RETIREMENTS.length,
   retiredDuplicateCases: PHASE5_DUPLICATE_RETIREMENTS.reduce((total, entry) => total + entry.removedCanonicalCases, 0),

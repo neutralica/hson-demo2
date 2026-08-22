@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { capture_h2_source_manifest, execute_h2_verification, h2_completion_accepted, h2_owned_quarantine_path, h2_paired_manifest_digest, H2_WORKSPACE_POLL_INTERVAL_MS, resolve_h2_verification, sweep_stale_h2_workspaces } from "../../harness/runtimes/node/h2-isolated-verification";
+import { capture_h2_source_manifest, execute_h2_verification, h2_completion_accepted, h2_owned_quarantine_path, h2_paired_manifest_digest, h2_workspace_bytes_for_tests, H2_WORKSPACE_POLL_INTERVAL_MS, resolve_h2_verification, sweep_stale_h2_workspaces } from "../../harness/runtimes/node/h2-isolated-verification";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
 
 const exec = promisify(execFile);
@@ -39,6 +39,12 @@ try {
   await rm(join(live, "tracked.txt")); check(!(await capture_h2_source_manifest("hson-live", live)).entries.some((entry) => entry.relativePath === "tracked.txt"), "deleted tracked file absent");
   await symlink("/etc/passwd", join(live, "escape")); await assert.rejects(() => capture_h2_source_manifest("hson-live", live), /SOURCE_SYMLINK_REJECTED/); checks.push("absolute symlink rejected"); await rm(join(live, "escape"));
   await symlink("../demo", join(live, "relative-escape")); await assert.rejects(() => capture_h2_source_manifest("hson-live", live), /SOURCE_SYMLINK_REJECTED/); checks.push("relative symlink rejected"); await rm(join(live, "relative-escape"));
+  const churn = join(root, "workspace-churn"); await mkdir(join(churn, "vanishing-directory"), { recursive: true }); await writeFile(join(churn, "vanishing-file"), "transient");
+  let removedDuringScan = false;
+  const churnBytes = await h2_workspace_bytes_for_tests(churn, async (path) => {
+    if (path === churn && !removedDuringScan) { removedDuringScan = true; await rm(join(churn, "vanishing-directory"), { recursive: true }); await rm(join(churn, "vanishing-file")); }
+  });
+  check(removedDuringScan && churnBytes === 0, "workspace accounting tolerates an enumerated file or directory disappearing during scan");
   assert.throws(() => resolve_h2_verification("forged-command"), /UNKNOWN_H2_VERIFICATION_ID/); checks.push("fixed ID rejects forged command");
   const stale = join(root, "stale"); await mkdir(join(stale, "run-old"), { recursive: true }); await writeFile(join(stale, "run-old", "marker.json"), JSON.stringify({ owner: "hson-h2-isolated-verification-v1", createdAt: new Date(Date.now() - 7 * 60 * 60_000).toISOString() })); await mkdir(join(stale, "run-fresh"), { recursive: true }); await writeFile(join(stale, "run-fresh", "marker.json"), JSON.stringify({ owner: "hson-h2-isolated-verification-v1", createdAt: new Date().toISOString() })); await mkdir(join(stale, "run-unmarked")); await sweep_stale_h2_workspaces(stale); await assert.rejects(() => import("node:fs/promises").then(({ stat }) => stat(join(stale, "run-old")))); checks.push("stale owned workspace removed"); check(true, "fresh and unmarked workspaces retained");
   const mismatchLive = await repo("mismatch-live"); const mismatchDemo = await repo("mismatch-demo");

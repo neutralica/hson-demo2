@@ -85,6 +85,9 @@ export type H2ExecutorTestHooks = Readonly<{
   afterCapture?(attempt: number): Promise<void> | void;
   afterMaterialization?(attempt: number): Promise<void> | void;
   beforeCleanup?(workspace: string): Promise<void> | void;
+  /** Test-only seam used by hosted lifecycle certification fixtures after the
+   * copied dependency graph is ready but before the verification child starts. */
+  beforeExecution?(workspace: string, snapshotDemo: string): Promise<void> | void;
 }>;
 export type H2ExecutorOptions = Readonly<{
   hsonLiveRoot: string;
@@ -181,15 +184,39 @@ async function verify_materialized_manifest(source: RepositoryManifest, target: 
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("MATERIALIZED_SNAPSHOT_MISMATCH");
 }
 
-async function workspace_bytes(root: string): Promise<number> {
+function is_missing_path(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException).code === "ENOENT";
+}
+
+/** Workspace preparation legitimately replaces directories while the monitor is
+ * walking them.  A path that disappears after enumeration contributes zero;
+ * other filesystem failures remain accounting failures. */
+async function workspace_bytes(root: string, afterReadDirectory?: (path: string) => Promise<void> | void): Promise<number> {
   let total = 0;
-  for (const item of await readdir(root, { withFileTypes: true })) {
+  let entries;
+  try { entries = await readdir(root, { withFileTypes: true }); }
+  catch (error) {
+    if (is_missing_path(error)) return 0;
+    throw error;
+  }
+  await afterReadDirectory?.(root);
+  for (const item of entries) {
     const path = join(root, item.name);
     if (item.isSymbolicLink()) continue;
-    if (item.isDirectory()) total += await workspace_bytes(path);
-    else if (item.isFile()) total += (await stat(path)).size;
+    if (item.isDirectory()) total += await workspace_bytes(path, afterReadDirectory);
+    else if (item.isFile()) {
+      try { total += (await stat(path)).size; }
+      catch (error) {
+        if (!is_missing_path(error)) throw error;
+      }
+    }
   }
   return total;
+}
+
+/** Deterministic H2 boundary seam for a directory-entry disappearance race. */
+export async function h2_workspace_bytes_for_tests(root: string, afterReadDirectory: (path: string) => Promise<void> | void): Promise<number> {
+  return workspace_bytes(root, afterReadDirectory);
 }
 
 async function prepare_dependencies(sourceLive: string, sourceDemo: string, snapshotDemo: string, snapshotLive: string, preparedRoot: string): Promise<void> {
@@ -351,6 +378,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
     if (workspaceLimitExceeded) throw new Error("WORKSPACE_LIMIT_EXCEEDED");
     if (workspaceScanFailed) throw new Error("WORKSPACE_ACCOUNTING_FAILED");
     const dependencies = join(snapshotDemo, "node_modules");
+    await options.testHooks?.beforeExecution?.(workspace, snapshotDemo);
     const supervisor = create_node_process_supervisor({ stdoutLimitBytes: OUTPUT_LIMIT_BYTES, stderrLimitBytes: OUTPUT_LIMIT_BYTES, truncationMarker: "<H2_OUTPUT_TRUNCATED>", terminationGraceMs: 1_000, environmentMode: "replace" });
     const npmCli = await npm_cli_path();
     // This is executor-owned preparation: it builds only the copied library

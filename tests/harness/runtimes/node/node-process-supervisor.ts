@@ -125,6 +125,19 @@ function terminate_process_tree(child: ChildProcess, signal: NodeJS.Signals): vo
   child.kill(signal);
 }
 
+/** A detached Unix child leads the process group that this supervisor owns.
+ * Signal zero is a non-destructive liveness probe: ESRCH means the group is
+ * gone; success and EPERM both mean that it still exists. */
+function owned_process_group_exists(child: ChildProcess): boolean {
+  if (process.platform === "win32" || child.pid === undefined) return false;
+  try {
+    process.kill(-child.pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code !== "ESRCH";
+  }
+}
+
 export function create_node_process_supervisor(configuration: Readonly<{
   stdoutLimitBytes: number;
   stderrLimitBytes: number;
@@ -153,6 +166,11 @@ export function create_node_process_supervisor(configuration: Readonly<{
       let settled = false;
       let terminationRequested = false;
       let forceTimer: ReturnType<typeof setTimeout> | undefined;
+      let groupProbeTimer: ReturnType<typeof setInterval> | undefined;
+      let settlementFailureTimer: ReturnType<typeof setTimeout> | undefined;
+      let parentClosed = false;
+      let parentExitCode: number | null = null;
+      let parentSignal: NodeJS.Signals | null = null;
       const child = spawn(invocation.command, invocation.args, {
         cwd: invocation.cwd,
         env: configuration.environmentMode === "replace"
@@ -161,14 +179,68 @@ export function create_node_process_supervisor(configuration: Readonly<{
         stdio: ["ignore", "pipe", "pipe"],
         detached: process.platform !== "win32",
       });
+      const resolve_settlement = (): void => {
+        if (settled || !parentClosed) return;
+        if (owned_process_group_exists(child)) return;
+        settled = true;
+        activeChildren.delete(child);
+        clearTimeout(timeoutTimer);
+        if (forceTimer !== undefined) clearTimeout(forceTimer);
+        if (groupProbeTimer !== undefined) clearInterval(groupProbeTimer);
+        if (settlementFailureTimer !== undefined) clearTimeout(settlementFailureTimer);
+        options.signal?.removeEventListener("abort", abort);
+        const stdout = stdoutCapture.snapshot();
+        const stderr = stderrCapture.snapshot();
+        resolveResult(Object.freeze({
+          stdout: stdout.text,
+          stderr: stderr.text,
+          stdoutBytes: stdout.totalBytes,
+          stderrBytes: stderr.totalBytes,
+          stdoutTruncated: stdout.truncated,
+          stderrTruncated: stderr.truncated,
+          exitCode: parentExitCode,
+          signal: parentSignal,
+          durationMs: performance.now() - startedAt,
+          timedOut,
+          cancelled,
+          outputLimitExceeded,
+          forceKilled,
+          ...(spawnError === undefined ? {} : { spawnError }),
+          ok: parentExitCode === 0 && parentSignal === null && spawnError === undefined && !timedOut && !cancelled && !terminationRequested,
+        }));
+      };
+      const begin_group_probe = (): void => {
+        if (process.platform === "win32" || groupProbeTimer !== undefined) return;
+        groupProbeTimer = setInterval(resolve_settlement, 25);
+      };
       const terminate = (): void => {
         if (terminationRequested || settled) return;
         terminationRequested = true;
         terminate_process_tree(child, "SIGTERM");
+        begin_group_probe();
         forceTimer = setTimeout(() => {
           if (settled) return;
-          forceKilled = true;
-          terminate_process_tree(child, "SIGKILL");
+          if (owned_process_group_exists(child)) {
+            forceKilled = true;
+            terminate_process_tree(child, "SIGKILL");
+            // SIGKILL delivery is not proof of group settlement.  Leave the
+            // result pending until the non-destructive group probe observes it.
+            settlementFailureTimer = setTimeout(() => {
+              if (settled) return;
+              spawnError ??= "PROCESS_TREE_SETTLEMENT_FAILED";
+              // This is an explicit non-success terminal failure if the OS
+              // cannot confirm disappearance within the bounded wait.
+              settled = true;
+              activeChildren.delete(child);
+              clearTimeout(timeoutTimer);
+              if (groupProbeTimer !== undefined) clearInterval(groupProbeTimer);
+              options.signal?.removeEventListener("abort", abort);
+              const stdout = stdoutCapture.snapshot();
+              const stderr = stderrCapture.snapshot();
+              resolveResult(Object.freeze({ stdout: stdout.text, stderr: stderr.text, stdoutBytes: stdout.totalBytes, stderrBytes: stderr.totalBytes, stdoutTruncated: stdout.truncated, stderrTruncated: stderr.truncated, exitCode: parentExitCode, signal: parentSignal, durationMs: performance.now() - startedAt, timedOut, cancelled, outputLimitExceeded, forceKilled, spawnError, ok: false }));
+            }, Math.max(1_000, configuration.terminationGraceMs));
+          }
+          resolve_settlement();
         }, configuration.terminationGraceMs);
       };
       activeChildren.set(child, terminate);
@@ -200,34 +272,20 @@ export function create_node_process_supervisor(configuration: Readonly<{
       options.signal?.addEventListener("abort", abort, { once: true });
       if (options.signal?.aborted) abort();
 
+      let resolveResult!: (result: NodeProcessResult) => void;
       const result = new Promise<NodeProcessResult>((resolve) => {
+        resolveResult = resolve;
         child.once("error", (error) => { spawnError = error.message; });
         child.once("close", (exitCode, signal) => {
           if (settled) return;
-          settled = true;
-          activeChildren.delete(child);
-          clearTimeout(timeoutTimer);
-          if (forceTimer !== undefined) clearTimeout(forceTimer);
-          options.signal?.removeEventListener("abort", abort);
-          const stdout = stdoutCapture.snapshot();
-          const stderr = stderrCapture.snapshot();
-          resolve(Object.freeze({
-            stdout: stdout.text,
-            stderr: stderr.text,
-            stdoutBytes: stdout.totalBytes,
-            stderrBytes: stderr.totalBytes,
-            stdoutTruncated: stdout.truncated,
-            stderrTruncated: stderr.truncated,
-            exitCode,
-            signal,
-            durationMs: performance.now() - startedAt,
-            timedOut,
-            cancelled,
-            outputLimitExceeded,
-            forceKilled,
-            ...(spawnError === undefined ? {} : { spawnError }),
-            ok: exitCode === 0 && signal === null && spawnError === undefined && !timedOut && !cancelled && !terminationRequested,
-          }));
+          parentClosed = true;
+          parentExitCode = exitCode;
+          parentSignal = signal;
+          // A normal parent exit may still leave processes in the owned group.
+          // Treat it as a tree termination, not as successful completion.
+          if (owned_process_group_exists(child) && !terminationRequested) terminate();
+          begin_group_probe();
+          resolve_settlement();
         });
       });
       return Object.freeze({ result, terminate });

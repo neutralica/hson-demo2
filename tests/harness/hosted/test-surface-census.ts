@@ -53,6 +53,33 @@ export type TestCensusDenominator =
   | "dynamic/generated checks"
   | "certification surfaces"
   | "none";
+/** Classification is deliberately separate from executable-check denominators:
+ * it accounts for certification commands without recursively counting harnesses
+ * or aliases as supported verification capabilities. */
+export const CERTIFICATION_ACCOUNTING_CATEGORIES = Object.freeze([
+  "SUPPORTED_CERTIFICATION",
+  "DUPLICATE_ALIAS",
+  "SEMANTIC_ALIAS",
+  "HARNESS_CERTIFICATE",
+  "DEVELOPER_UTILITY",
+  "DYNAMIC_SURFACE",
+  "EXTERNAL_DEPLOYED_DIAGNOSTIC",
+] as const);
+export type CertificationAccountingCategory = typeof CERTIFICATION_ACCOUNTING_CATEGORIES[number];
+export type CertificationAccounting = Readonly<{
+  rawCertificationLikeEntries: number;
+  supportedCertifications: number;
+  duplicateAliases: number;
+  semanticAliases: number;
+  harnessCertificates: number;
+  developerUtilities: number;
+  dynamicSurfaces: number;
+  externalDeployedDiagnostics: number;
+  alreadyHostedBeforeH2: number;
+  h2SupportedAdditions: number;
+  hostedAfterH2: number;
+  remainingH2CD: number;
+}>;
 export type TestSurfaceShape =
   | "canonical suite"
   | "opaque launcher"
@@ -385,4 +412,65 @@ export function test_census_denominators(census: readonly TestSurfaceCensusEntry
     if (entry.semanticCount !== null) totals[entry.denominator] += entry.semanticCount;
   }
   return Object.freeze(totals);
+}
+
+const DUPLICATE_CERTIFICATION_ALIASES = new Set<string>([
+  "hson-demo2:test:stage4a-selected-worker",
+]);
+const SEMANTIC_CERTIFICATION_ALIASES = new Set<string>([
+  "hson-demo2:test:phase3b-cancellation-node",
+  "hson-demo2:test:phase3b-process-cancellation-node",
+  "hson-demo2:test:phase3b-panel-cancellation-node",
+  "hson-demo2:test:external-library-node",
+  "hson-demo2:test:external-library-all-node",
+  "hson-demo2:test:inclusive-library-node",
+]);
+const H2_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
+  "hson-demo2:test:surface-enumeration-node",
+  "hson-demo2:test:stage2-contracts-node",
+  "hson-demo2:test:stage3-discovery-node",
+  "hson-demo2:test:stage4a-selected-node",
+  "hson-demo2:test:stage4b-panel-node",
+  "hson-demo2:test:phase1-convergence-node",
+  "hson-demo2:test:phase2a-lifecycle-node",
+  "hson-demo2:test:phase2b-presentation-node",
+  "hson-demo2:test:phase4a-layering-node",
+  "hson-demo2:test:phase4b-retirement-node",
+]);
+
+/** Mechanical H2 denominator reconciliation.  Each raw certification command
+ * belongs to exactly one category, so aliases remain inspectable exclusions. */
+export function classify_certification_surface(entry: TestSurfaceCensusEntry): CertificationAccountingCategory | undefined {
+  if (entry.denominator !== "certification surfaces") return undefined;
+  if (DUPLICATE_CERTIFICATION_ALIASES.has(entry.id)) return "DUPLICATE_ALIAS";
+  if (SEMANTIC_CERTIFICATION_ALIASES.has(entry.id)) return "SEMANTIC_ALIAS";
+  return "SUPPORTED_CERTIFICATION";
+}
+
+export function reconcile_certification_accounting(census: readonly TestSurfaceCensusEntry[]): CertificationAccounting {
+  const totals: Record<CertificationAccountingCategory, number> = {
+    SUPPORTED_CERTIFICATION: 0, DUPLICATE_ALIAS: 0, SEMANTIC_ALIAS: 0,
+    HARNESS_CERTIFICATE: 0, DEVELOPER_UTILITY: 0, DYNAMIC_SURFACE: 0, EXTERNAL_DEPLOYED_DIAGNOSTIC: 0,
+  };
+  const raw = census.filter((entry) => classify_certification_surface(entry) !== undefined);
+  for (const entry of raw) totals[classify_certification_surface(entry)!] += 1;
+  const supported = raw.filter((entry) => classify_certification_surface(entry) === "SUPPORTED_CERTIFICATION");
+  const h2SupportedAdditions = supported.filter((entry) => H2_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
+  const alreadyHostedBeforeH2 = supported.filter((entry) => entry.currentLocalLocusAvailability && !H2_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
+  const reconciled = Object.values(totals).reduce((sum, count) => sum + count, 0);
+  if (reconciled !== raw.length) throw new Error(`CERTIFICATION_ACCOUNTING_UNRECONCILED: ${raw.length} raw entries, ${reconciled} classified.`);
+  return Object.freeze({
+    rawCertificationLikeEntries: raw.length,
+    supportedCertifications: totals.SUPPORTED_CERTIFICATION,
+    duplicateAliases: totals.DUPLICATE_ALIAS,
+    semanticAliases: totals.SEMANTIC_ALIAS,
+    harnessCertificates: totals.HARNESS_CERTIFICATE,
+    developerUtilities: totals.DEVELOPER_UTILITY,
+    dynamicSurfaces: totals.DYNAMIC_SURFACE,
+    externalDeployedDiagnostics: totals.EXTERNAL_DEPLOYED_DIAGNOSTIC,
+    alreadyHostedBeforeH2,
+    h2SupportedAdditions,
+    hostedAfterH2: alreadyHostedBeforeH2 + h2SupportedAdditions,
+    remainingH2CD: totals.SUPPORTED_CERTIFICATION - (alreadyHostedBeforeH2 + h2SupportedAdditions),
+  });
 }

@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
 import { H2_VERIFICATION_IDS, resolve_h2_verification } from "../../harness/runtimes/node/h2-isolated-verification";
 
@@ -81,6 +84,70 @@ assert.equal(forceKilled.cancelled, true);
 assert.equal(forceKilled.forceKilled, true);
 assert.equal(forceKilled.signal, "SIGKILL");
 
+const treeSupervisor = create_node_process_supervisor({
+  stdoutLimitBytes: 256,
+  stderrLimitBytes: 256,
+  truncationMarker: "<TRUNCATED>",
+  terminationGraceMs: 1_000,
+});
+const wait = (milliseconds: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const process_exists = (pid: number): boolean => {
+  try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code !== "ESRCH"; }
+};
+async function cancellation_tree(source: string, options: Readonly<{ descendantTermMarker?: string; mustSurviveGrace?: boolean }> = {}): Promise<Readonly<{ result: Awaited<ReturnType<typeof treeSupervisor.start>["result"]>; descendantPid: number; parentPid: number; parentTermObserved: boolean; descendantTermObserved: boolean }>> {
+  let output = "";
+  let descendantPid = 0;
+  let parentPid = 0;
+  let readyResolve!: () => void;
+  const ready = new Promise<void>((resolve) => { readyResolve = resolve; });
+  const execution = treeSupervisor.start(invocation(source), { observeStdoutChunk(chunk) {
+    output += chunk.toString("utf8");
+    const match = /^ready:(\d+)/m.exec(output);
+    if (match !== null) { descendantPid = Number(match[1]); readyResolve(); }
+    const parentMatch = /parent:(\d+)/.exec(output);
+    if (parentMatch !== null) parentPid = Number(parentMatch[1]);
+  } });
+  await ready;
+  if (process.platform !== "win32") assert.equal(process_exists(-parentPid), true, "detached parent owns a live process group");
+  execution.terminate();
+  // The fixture writes this immediately before its direct parent exits.  The
+  // result must remain pending even though the parent has already closed.
+  while (!output.includes("parent-term")) await wait(5);
+  let settled = false;
+  void execution.result.then(() => { settled = true; });
+  await wait(50);
+  if (options.mustSurviveGrace === true) {
+    assert.equal(process_exists(descendantPid), true, "descendant remains alive during termination grace");
+    if (process.platform !== "win32") assert.equal(process_exists(-parentPid), true, "owned process group remains alive after parent close");
+    assert.equal(settled, false, "parent close does not settle a live owned process group");
+  }
+  const result = await execution.result;
+  const descendantTermObserved = options.descendantTermMarker === undefined
+    ? output.includes("descendant-term")
+    : await readFile(options.descendantTermMarker, "utf8").then((value) => value === "SIGTERM", () => false);
+  return Object.freeze({ result, descendantPid, parentPid, parentTermObserved: output.includes("parent-term"), descendantTermObserved });
+}
+
+const resistantFixtureDirectory = await mkdtemp(join(tmpdir(), "hson-supervisor-resistant-"));
+const resistantTermMarker = join(resistantFixtureDirectory, "descendant-term");
+const resistantTree = await cancellation_tree(
+  `const{spawn}=require('node:child_process');const c=spawn(process.execPath,['-e',${JSON.stringify(`const{writeFileSync}=require('node:fs');process.on('SIGTERM',()=>writeFileSync(${JSON.stringify(resistantTermMarker)},'SIGTERM'));setInterval(()=>{},1000);process.stdout.write('descendant-ready')`)}],{stdio:['ignore','pipe','ignore']});let armed=false;c.stdout.on('data',b=>{const s=b.toString();if(s.includes('descendant-ready')&&!armed){armed=true;process.stdout.write('ready:'+c.pid+' parent:'+process.pid)}});process.on('SIGTERM',()=>{process.stdout.write(' parent-term');process.exit(0)});setInterval(()=>{},1000)`,
+  { descendantTermMarker: resistantTermMarker, mustSurviveGrace: true },
+);
+assert.equal(resistantTree.parentTermObserved, true);
+assert.equal(resistantTree.descendantTermObserved, true, "resistant descendant receives SIGTERM before SIGKILL");
+assert.equal(resistantTree.result.forceKilled, true, "SIGKILL follows the preserved grace period for a resistant descendant");
+if (process.platform !== "win32") assert.equal(process_exists(resistantTree.descendantPid), false, "resistant descendant is gone before settlement");
+if (process.platform !== "win32") assert.equal(process_exists(-resistantTree.parentPid), false, "resistant process group is gone before settlement");
+await rm(resistantFixtureDirectory, { recursive: true, force: true });
+
+const cooperativeTree = await cancellation_tree(
+  "const{spawn}=require('node:child_process');const c=spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>process.exit(0));setInterval(()=>{},1000);process.stdout.write('descendant-ready')\"],{stdio:['ignore','pipe','ignore']});c.stdout.on('data',b=>{if(b.toString().includes('descendant-ready'))process.stdout.write('ready:'+c.pid+' parent:'+process.pid)});process.on('SIGTERM',()=>{process.stdout.write(' parent-term');process.exit(0)});setInterval(()=>{},1000)",
+);
+assert.equal(cooperativeTree.result.forceKilled, false, "cooperative process group does not receive SIGKILL");
+if (process.platform !== "win32") assert.equal(process_exists(cooperativeTree.descendantPid), false, "cooperative descendant is gone before settlement");
+if (process.platform !== "win32") assert.equal(process_exists(-cooperativeTree.parentPid), false, "cooperative process group is gone before settlement");
+
 let descendantPid = 0;
 let descendantPidResolve!: () => void;
 const descendantPidReady = new Promise<void>((resolve) => { descendantPidResolve = resolve; });
@@ -114,6 +181,10 @@ console.log(JSON.stringify({
   timeout: timedOut.timedOut,
   cooperativeCancellation: cooperativelyCancelled.cancelled && !cooperativelyCancelled.forceKilled,
   forcedTermination: forceKilled.forceKilled,
+  resistantDescendantForceKilled: resistantTree.result.forceKilled,
+  resistantDescendantGone: !process_exists(resistantTree.descendantPid),
+  resistantDescendantTermObserved: resistantTree.descendantTermObserved,
+  cooperativeDescendantForceKilled: cooperativeTree.result.forceKilled,
   processTreeCleanup: true,
   activeChildDisposal: supervisor.metrics().activeChildren === 0,
   replacementEnvironment: replacedEnvironment.ok,

@@ -33,6 +33,7 @@ import {
 } from "./node-capacity-livehost-socket";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../../../src/shared/hosted-tests/hosted-test-timeline";
 import { create_playwright_browser_executor, LOCAL_PLAYWRIGHT_BROWSER_EXECUTOR } from "../browser/playwright-browser-executor";
+import type { H2ExecutorTestHooks } from "../h2-isolated-verification";
 
 export const NODE_HOSTED_TESTS_APPLICATION_NAME = "hosted-tests";
 export const NODE_HOSTED_TESTS_CONNECTION_PATH = "/hosted-tests";
@@ -64,6 +65,8 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
   runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
   security?: NodeApplicationSecurity;
   timeline?: HostedTestTimelineObserver;
+  /** Private hosted-harness seam for lifecycle certification. */
+  h2TestHooks?: H2ExecutorTestHooks;
   lifecycle?: Readonly<{
     maxReports: number;
     terminalRetentionMs: number;
@@ -116,8 +119,9 @@ export async function create_node_hosted_tests_application(
   const hsonLiveRoot = "repositoryRoot" in externalLaunchers ? externalLaunchers.repositoryRoot : undefined;
   const commandSurfaces = options.executorRegistry === undefined
     ? resolve_node_command_surfaces({
-        demoRoot: process.cwd(),
+      demoRoot: process.cwd(),
         ...(hsonLiveRoot === undefined ? {} : { hsonLiveRoot }),
+        ...(options.h2TestHooks === undefined ? {} : { h2TestHooks: options.h2TestHooks }),
       })
     : Object.freeze({ targets: Object.freeze([]), unavailable: Object.freeze([]) });
   for (const target of commandSurfaces.targets) {
