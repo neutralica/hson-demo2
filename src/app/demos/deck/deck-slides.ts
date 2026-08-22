@@ -326,7 +326,9 @@ const button = hson.queryBody()                    // Query document.body, deep-
       kind: "text",
       text: `
 ### canonical application state
-LiveMap owns, edits, and tracks HSON graphs for both application state and page markup. Via Reflection, application state can be directly linked to, and automatically update, DOM values in LiveTree.
+LiveMap owns, edits, and tracks HSON graphs for both application state and page markup. It manages changes to the state graph, enforcing schema, creating commits, and updating subscribers. 
+LiveMap can manage document and styling properties such as color values, geometry, and text content. 
+Via Reflection, application state can be directly linked to, and automatically update, DOM values in LiveTree.
 
 #__#
 LiveMap provides:
@@ -357,37 +359,15 @@ button.flags.has("disabled");
     bodyB: {
       kind: "text",
       text: `
+Integrated with LiveTree, LiveMap manages page markup alongside application state, controling access and mutation to an application's styling, structure, and metadata. 
 
-Linked with LiveTree, LiveMap can maintain page markup alongside application state. Via Relection, changes to state push effects synchronously to LiveTree.
+Changes to state push effects synchronously to the DOM via Reflection.
 
-Via LiveMap's proxy, HTML and the DOM can be traversed using standard JS object and array methods. LiveMap makes bulk structural changes lightweight, compared with LiveTree's granular node-focused interface.
+LiveMap makes bulk structural changes to documents or data lightweight, relative to LiveTree's granular, node-scoped interface.
 
-#__#
-When integrated, LiveMap controls access and mutation to an application's styling, structure, and metadata. 
       `,
     },
     footer: "livemap / document",
-  },
-
-  /* Reflection */
-  {
-    headerA: "Reflection - updates",
-    bodyA: {
-      kind: "text",
-      text: `
-When the authoritative LiveMap document commits a structural change, Reflection reconciles the corresponding LiveTree:
-- insertions
-- removals
-- replacements
-- moves
-- attribute changes
-- text/content changes
-
-#__#
-The DOM is updated from the resulting LiveTree projection in realtime.
-      `,
-    },
-    footer: "reflection / reconciliation",
   },
 
   /* Locus */
@@ -398,7 +378,7 @@ The DOM is updated from the resulting LiveTree projection in realtime.
       text: `
 ### server-side LiveMap authority
 
-Locus manages an authoritative LiveMap in a server environment.
+Locus manages an authoritative LiveMap in a server environment. It holds app state in a single location and streams commit changes to clients via WebSocket. 
 
 It coordinates:
 - canonical mutations
@@ -444,409 +424,13 @@ client applies authoritative commit
     },
     footer: "locus / authority flow",
   },
+
   {
-    headerA: "Locus - commit authority",
-    stackAlign: "center",
+    headerA: "use case - local application",
     bodyA: {
       kind: "text",
       text: `
-### LiveMap
-
-creates the canonical graph transition
-
-\`\`\`text
-state n
-  ↓
-operation
-  ↓
-state n+1
-\`\`\`
-      `,
-    },
-    bodyB: {
-      kind: "text",
-      text: `
-### Locus
-
-authorizes and coordinates the transition
-
-\`\`\`text
-accept
-order
-record
-publish
-recover
-\`\`\`
-
-Locus does not independently recreate LiveMap graph semantics.
-      `,
-    },
-    footer: "locus / commit authority",
-  },
-
-  {
-    headerA: "Locus - snapshots",
-    bodyA: {
-      kind: "text",
-      text: `
-A Locus can provide a snapshot of current authoritative state.
-
-#__#
-A snapshot contains enough canonical graph state for a client to establish or replace its local mirror.
-
-Snapshots are used for:
-- initial attachment
-- recovery
-- state replacement when replay is not available or appropriate
-      `,
-    },
-    footer: "locus / snapshots",
-  },
-
-  {
-    headerA: "Locus - replay",
-    bodyA: {
-      kind: "text",
-      text: `
-When retained history is sufficient, a client can recover by replaying authoritative commits after a known revision.
-
-\`\`\`text
-client has revision 80
-
-host has revision 84
-
-replay:
-81
-82
-83
-84
-\`\`\`
-
-#__#
-Replay preserves the same canonical transition semantics as ordinary publication.
-      `,
-    },
-    footer: "locus / replay",
-  },
-
-  {
-    headerA: "Locus - recovery",
-    bodyA: {
-      kind: "text",
-      text: `
-Reconnect does not create a new authoritative state.
-
-A reconnecting client can provide its known recovery position.
-
-Locus can then:
-- resume from retained commits
-- replace from a snapshot
-- detect a revision gap
-- reject contradictory recovery evidence
-
-#__#
-Recovery is based on authoritative host state rather than on reconstructing state from the client UI.
-      `,
-    },
-    footer: "locus / recovery",
-  },
-
-  {
-    headerA: "Locus - duplicate requests",
-    bodyA: {
-      kind: "text",
-      text: `
-Locus tracks client request identity.
-
-#__#
-A retried request can be recognized as the same request rather than applied twice.
-
-This is distinct from:
-- graph identity
-- path identity
-- session identity
-- revision identity
-
-#__#
-Transport retry does not imply a second canonical mutation.
-      `,
-    },
-    footer: "locus / deduplication",
-  },
-
-  {
-    headerA: "Locus - sessions",
-    bodyA: {
-      kind: "text",
-      text: `
-Locus can associate clients with server-side sessions.
-
-Sessions can preserve application identity across:
-- socket replacement
-- reconnect
-- temporary transport loss
-
-#__#
-The transport connection and the logical session are separate lifetimes.
-      `,
-    },
-    footer: "locus / sessions",
-  },
-
-  {
-    headerA: "Locus - subscriptions",
-    bodyA: {
-      kind: "text",
-      text: `
-Clients can subscribe to selected authoritative paths rather than treating every client as an observer of every part of the map.
-
-#__#
-Path subscriptions are tied to canonical LiveMap locations.
-
-The host remains responsible for ordering the commits delivered through the subscription.
-      `,
-    },
-    footer: "locus / subscriptions",
-  },
-
-  {
-    headerA: "Locus - reconnect",
-    stackAlign: "center",
-    bodyA: {
-      kind: "text",
-      text: `
-### transport
-
-\`\`\`text
-socket A
-   ×
-socket B
-\`\`\`
-
-A network connection can be replaced.
-      `,
-    },
-    bodyB: {
-      kind: "text",
-      text: `
-### authority
-
-\`\`\`text
-session
-revision
-LiveMap
-history
-\`\`\`
-
-Authoritative state continues independently of a particular connection.
-      `,
-    },
-    footer: "locus / transport",
-  },
-
-  {
-    headerA: "Locus - environments",
-    bodyA: {
-      kind: "text",
-      text: `
-Locus is not specific to one server platform.
-
-Current authority/runtime work can operate in environments including:
-- Node
-- Cloudflare Workers
-
-#__#
-Environment-specific adapters provide transport and runtime capabilities.
-
-Locus owns the authority model above those adapters.
-      `,
-    },
-    footer: "locus / runtime",
-  },
-
-  {
-    headerA: "Locus + LiveTree",
-    bodyA: {
-      kind: "text",
-      text: `
-Locus and LiveTree do not require each other.
-
-#__#
-A Locus can manage authoritative state without rendering.
-
-A LiveTree can render and manage a local live document without a server.
-
-#__#
-When combined:
-
-\`\`\`text
-Locus
-  ↓
-authoritative LiveMap
-  ↓
-client LiveMap
-  ↓
-Reflection
-  ↓
-LiveTree
-  ↓
-DOM
-\`\`\`
-      `,
-    },
-    footer: "locus / client projection",
-  },
-
-  /* combined architecture */
-  {
-    headerA: "HSON graph layers",
-    stackAlign: "center",
-    bodyA: {
-      kind: "text",
-      text: `
-### transform
-representation
-
-JSON / HTML / SVG / HSON / HsonNode
-
-#__#
-
-### LiveMap
-canonical state
-
-paths / schema / commits / revisions
-      `,
-    },
-    bodyB: {
-      kind: "text",
-      text: `
-### LiveTree
-runtime projection
-
-DOM / CSS / events / resources
-
-#__#
-
-### Locus
-server authority
-
-actions / order / history / recovery
-      `,
-    },
-    footer: "architecture / layers",
-  },
-
-  {
-    headerA: "one state flow",
-    bodyA: {
-      kind: "text",
-      text: `
-\`\`\`text
-HSON / JSON / document input
-          ↓
-       LiveMap
-          ↓
-    schema admission
-          ↓
- canonical revision
-          ↓
-        commit
-       /      \\
-      /        \\
-Locus      Reflection
-authority       ↓
-              LiveTree
-                ↓
-               DOM
-\`\`\`
-
-Each subsystem has a separate ownership role.
-      `,
-    },
-    footer: "architecture / state flow",
-  },
-
-  {
-    headerA: "ownership",
-    bodyA: {
-      kind: "text",
-      text: `
-### Transform
-owns conversion between representations
-
-### LiveMap
-owns canonical graph state
-
-### Schema
-defines admissible graph structure and values
-
-### Reflection
-owns correspondence between authority and projection
-
-### LiveTree
-owns live runtime / DOM resources
-
-### Locus
-owns server-side commit ordering, client coordination, and recovery
-      `,
-    },
-    footer: "architecture / ownership",
-  },
-
-  {
-    headerA: "state / projection / transport",
-    stackAlign: "center",
-    bodyA: {
-      kind: "text",
-      text: `
-### state
-
-LiveMap
-
-canonical graph
-schema
-revision
-identity
-history
-      `,
-    },
-    bodyB: {
-      kind: "text",
-      text: `
-### projection
-
-LiveTree + Reflection
-
-DOM
-events
-CSS
-canvas
-runtime resources
-      `,
-    },
-    bodyC: {
-      kind: "text",
-      text: `
-### coordination
-
-Locus
-
-actions
-sessions
-ordering
-subscriptions
-recovery
-      `,
-    },
-    footer: "architecture / roles",
-  },
-
-  {
-    headerA: "local application",
-    bodyA: {
-      kind: "text",
-      text: `
-A local application can use:
+For an interactive CSR or SPA, A local application can use:
 
 \`\`\`text
 LiveMap
@@ -858,21 +442,18 @@ LiveTree
 DOM
 \`\`\`
 
-#__#
-No Locus is required.
-
-The authoritative map lives in the local application.
+The authoritative map lives in the local application. 
       `,
     },
     footer: "architecture / local",
   },
 
   {
-    headerA: "hosted application",
+    headerA: "use case - hosted application",
     bodyA: {
       kind: "text",
       text: `
-A hosted application can use:
+A hosted application could use:
 
 \`\`\`text
 server-side Locus,
@@ -887,14 +468,14 @@ Reflection
 LiveTree / DOM
 \`\`\`
 
-#__#
-The client retains a local mirror to the authoritative host.
+The client retains a local mirror to the authoritative Locus and all changes are server-driven.
+
       `,
     },
     footer: "architecture / hosted",
   },
   {
-    headerA: "LiveDemo",
+    headerA: "LiveDemo (this site)",
     bodyB: {
       kind: "text",
       text: `

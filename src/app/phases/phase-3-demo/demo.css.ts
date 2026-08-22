@@ -168,7 +168,6 @@ export const DEMO_SCREENcss: CssMap = {
   gridTemplateRows: "minmax(0, 1fr)",
 
   gap: GRID_GAPstr,
-
 }
 
 export const HSON_GRAFFITIcss: CssMap = {

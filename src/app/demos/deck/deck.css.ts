@@ -171,7 +171,6 @@ export const deckRootCss:CssMap = {
   // CHANGED: the deck root itself stays transparent so the hson/livedemo
   // lighthouse mark can remain visually distinct.
   pointerEvents: "all",
-  filter: "saturate(140%) contrast(110%) brightness(130%)",
 };
 export const deckCodeContentCss: CssMap = {
   position: "relative",
