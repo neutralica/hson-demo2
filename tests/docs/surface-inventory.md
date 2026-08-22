@@ -30,7 +30,7 @@ The current derived snapshot is:
 | Opaque launchers | 126 | Manifested hson-live launchers. |
 | Opaque checks | 2,994 | Launcher-declared checks without structured case identity. |
 | Hosted semantic checks | 5,493 | Canonical cases plus opaque checks after semantic duplicate retirement. |
-| Playwright specs / journeys | 14 / 67 | Real Chromium files and Playwright-owned test granularity. |
+| Playwright specs / journeys | 15 / 71 | Real Chromium files and Playwright-owned test granularity. |
 | Browser fidelity cases | 4 | Authored canvas raster cases executed by real Chromium through Node LiveHost. |
 | Generated/fuzz surfaces | 1 dynamic runner | Seed and count are controlled by `HOSTED_FUZZ_SEED` and `HOSTED_FUZZ_CASES`; this is not folded into a fixed total. |
 | Certification surfaces | 60 | Typecheck, build/entrypoint, inventory/meta, Node-LiveHost command certifications, and production-artifact verification remain a separate denominator. |

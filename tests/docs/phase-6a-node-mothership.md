@@ -179,7 +179,7 @@ proxy/static host, but its Worker runtime is not required in the execution path.
 There are 376 legitimate runnable/verification surfaces. Current semantic truth
 is unchanged at 153 canonical suites / 2,499 cases plus 126 opaque launchers /
 2,994 checks = 5,493 nonduplicative semantic checks. Browser truth is 14 specs /
-67 journeys plus four raster fidelity cases. One generated surface stays
+71 journeys plus four raster fidelity cases. One generated surface stays
 dynamic. The separate certification denominator is 56.
 
 The only unhosted execution capability in the ordinary runnable population is

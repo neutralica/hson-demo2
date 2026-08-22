@@ -24,7 +24,7 @@ control contract must remain explicit.
 
 ## Browser executor
 
-Implemented locally in Phase 6B for 67 Playwright journeys and four authored
+Implemented locally in Phase 6B for 71 Playwright journeys and four authored
 canvas raster-readback cases. Node LiveHost owns application dispatch and
 process supervision; the hosted-test application owns selection and RunPlan,
 while report Loci own canonical report state and recovery. One isolated native

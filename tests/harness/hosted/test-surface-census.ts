@@ -112,6 +112,7 @@ export type BrowserSurfaceInventory = Readonly<{
 
 export const BROWSER_SPEC_PATHS = Object.freeze([
   "tests/integration/browser/app-boot.spec.ts",
+  "tests/integration/browser/binary-hson.spec.ts",
   "tests/integration/browser/build.spec.ts",
   "tests/integration/browser/cellsheet-resize.spec.ts",
   "tests/integration/browser/cellsheet.spec.ts",

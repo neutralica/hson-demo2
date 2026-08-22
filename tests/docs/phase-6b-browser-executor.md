@@ -3,7 +3,7 @@
 ## Scope audit
 
 The pre-Phase-6B browser gap was exactly 19 census surfaces. The 14 spec
-surfaces contain 67 stable Playwright journeys. `hson-demo2:test:browser` is the
+surfaces contain 71 stable Playwright journeys. `hson-demo2:test:browser` is the
 aggregate command surface and maps semantically to selecting all 71 browser
 journeys through Node LiveHost; it is not counted as a second execution of the
 same tests. The final four surfaces are stable raster-readback identities.
