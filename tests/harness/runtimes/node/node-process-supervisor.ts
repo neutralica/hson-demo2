@@ -20,6 +20,8 @@ export type NodeProcessResult = Readonly<{
   durationMs: number;
   timedOut: boolean;
   cancelled: boolean;
+  /** A configured stream bound was crossed and termination began immediately. */
+  outputLimitExceeded: boolean;
   forceKilled: boolean;
   spawnError?: string;
   ok: boolean;
@@ -145,6 +147,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
       const stderrCapture = new BoundedOutputCapture(configuration.stderrLimitBytes, configuration.truncationMarker);
       let timedOut = false;
       let cancelled = false;
+      let outputLimitExceeded = false;
       let forceKilled = false;
       let spawnError: string | undefined;
       let settled = false;
@@ -173,10 +176,18 @@ export function create_node_process_supervisor(configuration: Readonly<{
       child.stdout?.on("data", (chunk: Buffer) => {
         stdoutCapture.add(chunk);
         options.observeStdoutChunk?.(chunk);
+        if (stdoutCapture.snapshot().truncated) {
+          outputLimitExceeded = true;
+          terminate();
+        }
       });
       child.stderr?.on("data", (chunk: Buffer) => {
         stderrCapture.add(chunk);
         options.observeStderrChunk?.(chunk);
+        if (stderrCapture.snapshot().truncated) {
+          outputLimitExceeded = true;
+          terminate();
+        }
       });
       const timeoutTimer = setTimeout(() => {
         timedOut = true;
@@ -212,6 +223,7 @@ export function create_node_process_supervisor(configuration: Readonly<{
             durationMs: performance.now() - startedAt,
             timedOut,
             cancelled,
+            outputLimitExceeded,
             forceKilled,
             ...(spawnError === undefined ? {} : { spawnError }),
             ok: exitCode === 0 && signal === null && spawnError === undefined && !timedOut && !cancelled && !terminationRequested,

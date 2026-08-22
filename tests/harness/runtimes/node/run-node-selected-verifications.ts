@@ -20,6 +20,7 @@ import {
   type NodeCommandSurfaceTarget,
 } from "./node-command-surfaces";
 import type { PlaywrightBrowserExecutor } from "./browser/playwright-browser-executor";
+import { execute_h2_verification } from "./h2-isolated-verification";
 
 export const EXTERNAL_LIBRARY_LAUNCHER_CONCURRENCY = 2;
 
@@ -575,6 +576,29 @@ export async function run_node_selected_verifications(
       ), run_command_targets(
         commandTargets,
         async (target) => {
+          if (target.h2 !== undefined) {
+            const startedAt = performance.now();
+            const h2 = await execute_h2_verification(target.h2, target.sourceCatalogId, options.signal);
+            const process = h2.process;
+            return Object.freeze({
+              id: target.id,
+              stdout: process?.stdout ?? "",
+              stderr: [process?.stderr ?? "", h2.failureReason ?? ""].filter(Boolean).join("\n"),
+              stdoutBytes: process?.stdoutBytes ?? 0,
+              stderrBytes: process?.stderrBytes ?? 0,
+              stdoutTruncated: process?.stdoutTruncated ?? false,
+              stderrTruncated: process?.stderrTruncated ?? false,
+              exitCode: process?.exitCode ?? (h2.status === "PASS" ? 0 : 1),
+              signal: process?.signal ?? null,
+              durationMs: process?.durationMs ?? performance.now() - startedAt,
+              timedOut: process?.timedOut ?? false,
+              cancelled: process?.cancelled ?? options.signal?.aborted === true,
+              outputLimitExceeded: process?.outputLimitExceeded ?? h2.failureReason === "OUTPUT_LIMIT_EXCEEDED",
+              forceKilled: process?.forceKilled ?? false,
+              ok: h2.status === "PASS",
+              ...(process?.spawnError === undefined ? {} : { spawnError: process.spawnError }),
+            });
+          }
           if (configuration.launcherService === undefined) {
             throw new Error("HOSTED_TEST_COMMAND_EXECUTOR_UNAVAILABLE: Node process supervisor is not installed.");
           }

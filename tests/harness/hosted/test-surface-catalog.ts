@@ -101,6 +101,8 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:surface-enumeration-node": "tests/runners/harness/run-test-surface-enumeration.node.mts",
   "test:canonical-node": "tests/runners/harness/run-canonical-tests.node.mts",
   "test:stage2-contracts-node": "tests/runners/harness/run-stage-2-contracts.node.mts",
+  "test:h2b-hosted": "tests/runners/harness/run-h2b-hosted.node.mts",
+  "test:h2-boundary": "tests/runners/harness/run-h2-boundary.node.mts",
   "test:stage3-discovery-node": "tests/runners/harness/run-stage-3-discovery.node.mts",
   "test:stage4a-selected-node": "tests/runners/harness/run-stage-4a-selected.node.mts",
   "test:stage4a-selected-worker": "tests/integration/cloudflare/run-hosted-cloudflare.node.mts",
@@ -170,6 +172,8 @@ const UTILITY_REASONS = Object.freeze({
   "test:direct-all-performance-node": "Developer direct-execution baseline for the complete canonical and external inventory.",
   "test:hosted-report-authority-scaling-node": "Focused synthetic scaling certificate for hosted report authority overhead.",
   "test:hosted-production-panel-timeline-node": "Production-panel latency, memory, transport, and recovery certificate.",
+  "test:h2b-hosted": "H2 executor meta-certificate; it validates certification infrastructure and is intentionally excluded from the supported certification denominator.",
+  "test:h2-boundary": "H2 hostile boundary harness; it validates executor controls and is intentionally excluded from the supported certification denominator.",
 } satisfies Readonly<Record<string, string>>);
 const DEMO_ENVIRONMENT_OVERRIDES = Object.freeze({
   "test:node-application-host": Object.freeze({ environment: "Node", transport: "real HTTP + WebSocket" }),

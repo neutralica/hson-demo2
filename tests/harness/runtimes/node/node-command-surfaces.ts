@@ -34,6 +34,16 @@ export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-demo2:test:presentation-cleanup-node",
   "hson-demo2:test:node-process-supervisor",
   "hson-demo2:test:hosted-cloudflare",
+  "hson-demo2:test:surface-enumeration-node",
+  "hson-demo2:test:stage2-contracts-node",
+  "hson-demo2:test:stage3-discovery-node",
+  "hson-demo2:test:stage4a-selected-node",
+  "hson-demo2:test:stage4b-panel-node",
+  "hson-demo2:test:phase1-convergence-node",
+  "hson-demo2:test:phase2a-lifecycle-node",
+  "hson-demo2:test:phase2b-presentation-node",
+  "hson-demo2:test:phase4a-layering-node",
+  "hson-demo2:test:phase4b-retirement-node",
 ] as const);
 
 /** Command entrypoints whose semantic work is already exactly selectable in the Node Locus catalog. */
@@ -65,18 +75,8 @@ export const NODE_HOSTED_SEMANTIC_ALIAS_SURFACE_IDS = Object.freeze([
 export const NODE_VERIFICATION_ONLY_SURFACE_IDS = Object.freeze([
   "hson-live:test:diagnostics-inventory",
   "hson-demo2:diagnose:towl-deployed",
-  "hson-demo2:test:surface-enumeration-node",
-  "hson-demo2:test:stage2-contracts-node",
-  "hson-demo2:test:stage3-discovery-node",
-  "hson-demo2:test:stage4a-selected-node",
   "hson-demo2:test:stage4a-selected-worker",
-  "hson-demo2:test:stage4b-panel-node",
   "hson-demo2:test:stage5a-corpus-node",
-  "hson-demo2:test:phase1-convergence-node",
-  "hson-demo2:test:phase2a-lifecycle-node",
-  "hson-demo2:test:phase2b-presentation-node",
-  "hson-demo2:test:phase4a-layering-node",
-  "hson-demo2:test:phase4b-retirement-node",
   "hson-demo2:test:phase6a-node-hosted",
   "hson-demo2:test:phase6a-full-node-hosted",
   "hson-demo2:test:phase6b-browser-executor",
@@ -99,6 +99,7 @@ export type NodeCommandSurfaceTarget = Readonly<{
   args: readonly string[];
   environment: Readonly<Record<string, string>>;
   timeoutMs: number;
+  h2?: Readonly<{ hsonLiveRoot: string; hsonDemo2Root: string }>;
 }>;
 
 export type NodeCommandSurfaceAvailability = Readonly<{
@@ -152,6 +153,17 @@ export function resolve_node_command_surfaces(options: Readonly<{
         sourceCatalogId,
         reason: "hson-live repository root is unavailable",
       });
+      continue;
+    }
+    if (sourceCatalogId.startsWith("hson-demo2:test:")
+      && ["surface-enumeration-node", "stage2-contracts-node", "stage3-discovery-node", "stage4a-selected-node", "stage4b-panel-node", "phase1-convergence-node", "phase2a-lifecycle-node", "phase2b-presentation-node", "phase4a-layering-node", "phase4b-retirement-node"].some((suffix) => sourceCatalogId.endsWith(suffix))) {
+      if (options.hsonLiveRoot === undefined) throw new Error("H2_HSON_LIVE_ROOT_UNAVAILABLE");
+      targets.push(Object.freeze({
+        id: suite_id(entry), sourceCatalogId, title: entry.label, subject: SUBJECT_BY_CATEGORY[entry.category], provenance: entry.repository,
+        sourceRef: `node-command:${sourceCatalogId}`, requirements: requirements(entry), order: 20_000 + order, cwd, command: process.execPath,
+        args: Object.freeze([]), environment: Object.freeze({}), timeoutMs: 180_000,
+        h2: Object.freeze({ hsonLiveRoot: options.hsonLiveRoot, hsonDemo2Root: options.demoRoot }),
+      }));
       continue;
     }
     targets.push(Object.freeze({
