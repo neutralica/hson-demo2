@@ -583,7 +583,7 @@ export async function run_node_selected_verifications(
             return Object.freeze({
               id: target.id,
               stdout: process?.stdout ?? "",
-              stderr: [process?.stderr ?? "", h2.failureReason ?? ""].filter(Boolean).join("\n"),
+              stderr: [process?.stderr ?? "", h2.failureReason ?? "", JSON.stringify({ h2WorkspacePeakBytes: h2.workspacePeakBytes, h2Cleanup: h2.cleanup })].filter(Boolean).join("\n"),
               stdoutBytes: process?.stdoutBytes ?? 0,
               stderrBytes: process?.stderrBytes ?? 0,
               stdoutTruncated: process?.stdoutTruncated ?? false,

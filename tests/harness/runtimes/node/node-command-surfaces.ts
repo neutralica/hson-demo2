@@ -2,9 +2,15 @@ import type { TestCapability, TestSubject, TestSuiteDescriptor } from "../../../
 import type { TestSurfaceCatalogEntry } from "../../hosted/test-surface-catalog";
 import { TEST_SURFACE_CATALOG } from "../../hosted/test-surface-catalog";
 import { NODE_TSX_IMPORT_PATH } from "./external-library-launchers";
-import type { H2ExecutorTestHooks } from "./h2-isolated-verification";
+import { H2_VERIFICATION_IDS, type H2ExecutorTestHooks } from "./h2-isolated-verification";
 
 export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
+  "hson-live:build",
+  "hson-live:check",
+  "hson-live:check:source",
+  "hson-live:check:tests",
+  "hson-live:check:entrypoints",
+  "hson-live:test:diagnostics-inventory",
   "hson-live:test:hson-array-index",
   "hson-live:test:hson-attribute-transport",
   "hson-live:test:locus-graph-content-codec",
@@ -35,6 +41,11 @@ export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-demo2:test:presentation-cleanup-node",
   "hson-demo2:test:node-process-supervisor",
   "hson-demo2:test:hosted-cloudflare",
+  "hson-demo2:build",
+  "hson-demo2:check",
+  "hson-demo2:build:node-production",
+  "hson-demo2:check:cloudflare",
+  "hson-demo2:cloudflare:types",
   "hson-demo2:test:surface-enumeration-node",
   "hson-demo2:test:stage2-contracts-node",
   "hson-demo2:test:stage3-discovery-node",
@@ -158,8 +169,7 @@ export function resolve_node_command_surfaces(options: Readonly<{
       });
       continue;
     }
-    if (sourceCatalogId.startsWith("hson-demo2:test:")
-      && ["surface-enumeration-node", "stage2-contracts-node", "stage3-discovery-node", "stage4a-selected-node", "stage4b-panel-node", "phase1-convergence-node", "phase2a-lifecycle-node", "phase2b-presentation-node", "phase4a-layering-node", "phase4b-retirement-node"].some((suffix) => sourceCatalogId.endsWith(suffix))) {
+    if ((H2_VERIFICATION_IDS as readonly string[]).includes(sourceCatalogId)) {
       if (options.hsonLiveRoot === undefined) throw new Error("H2_HSON_LIVE_ROOT_UNAVAILABLE");
       targets.push(Object.freeze({
         id: suite_id(entry), sourceCatalogId, title: entry.label, subject: SUBJECT_BY_CATEGORY[entry.category], provenance: entry.repository,

@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, readdir, rm, stat, symlink, utimes, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { capture_h2_source_manifest, execute_h2_verification, h2_completion_accepted, h2_owned_quarantine_path, h2_paired_manifest_digest, h2_terminal_json_completion_accepted, h2_workspace_bytes_for_tests, H2_VERIFICATION_IDS, H2_WORKSPACE_POLL_INTERVAL_MS, resolve_h2_verification, sweep_stale_h2_workspaces } from "../../harness/runtimes/node/h2-isolated-verification";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
+import { collect_h2_artifact_manifest, h2c_terminal_certificate, resolve_h2c_descriptor, run_h2c_artifact_certification, verify_h2_artifact_manifest } from "../../harness/runtimes/node/h2-artifact-certification";
 
 const exec = promisify(execFile);
 const root = await mkdtemp(join(tmpdir(), "h2-boundary-"));
@@ -59,7 +60,7 @@ try {
   check(h2_completion_accepted('{"status":"pass"}', "{"), "authoritative successful completion accepted");
   check(!h2_completion_accepted('{"status":"fail"}', "{"), "exit-zero failure completion rejects");
   check(!h2_completion_accepted("ordinary output", "{"), "missing completion evidence rejects");
-  const terminalDescriptors = H2_VERIFICATION_IDS.map(resolve_h2_verification).filter((descriptor) => descriptor.completion.kind === "terminal-json");
+  const terminalDescriptors = H2_VERIFICATION_IDS.map(resolve_h2_verification).filter((descriptor) => descriptor.capabilityProfile === "source-meta" && descriptor.completion.kind === "terminal-json");
   check(terminalDescriptors.length === 8 && new Set(terminalDescriptors.map((descriptor) => descriptor.completion.kind === "terminal-json" ? descriptor.completion.certificate : "")).size === 8, "all eight formerly weak H2 descriptors use distinct terminal JSON certificate contracts");
   const descriptorRealSuccess: Readonly<Record<string, string>> = {
     "hson-demo2:test:surface-enumeration-node": "test surface enumeration: ok",
@@ -73,7 +74,7 @@ try {
     "hson-demo2:test:phase4a-layering-node": JSON.stringify({ certificate: "phase-4a-layering", checks: 1, appFiles: 1, reachableSourceFiles: 1 }),
     "hson-demo2:test:phase4b-retirement-node": JSON.stringify({ certificate: "phase4b-retirement", checks: 1, canonicalId: "canonical", opaqueId: "opaque", selectors: [] }),
   };
-  for (const descriptor of H2_VERIFICATION_IDS.map(resolve_h2_verification)) {
+  for (const descriptor of H2_VERIFICATION_IDS.map(resolve_h2_verification).filter((entry) => entry.capabilityProfile === "source-meta")) {
     const output = descriptorRealSuccess[descriptor.id]!;
     const accepted = descriptor.completion.kind === "stdout-marker"
       ? h2_completion_accepted(output, descriptor.completion.marker)
@@ -157,5 +158,67 @@ try {
   check(runBEvidence.sentinel === "fixture", "run B observes original disposable dependency bytes");
   const quarantine = h2_owned_quarantine_path(join(root, "owned-root"), join(root, "owned-root", "run-fixture"));
   check(quarantine === join(root, "owned-root", "run-fixture") && h2_owned_quarantine_path(join(root, "owned-root"), join(root, "outside", "run-fixture")) === undefined, "cleanup quarantine evidence is bounded to an owned run workspace");
+
+  const npmCli = await realpath((await exec("which", ["npm"])).stdout.trim());
+  const artifactDemo = join(root, "artifact-demo"); await mkdir(artifactDemo);
+  const validLive = join(root, "artifact-valid-live"); await mkdir(join(validLive, "src"), { recursive: true });
+  await writeFile(join(validLive, "src", "index.ts"), "export const fresh = true;\n");
+  await mkdir(join(validLive, "dist"), { recursive: true });
+  await writeFile(join(validLive, "dist", "index.js"), "stale-runtime\n");
+  await writeFile(join(validLive, "dist", "index.d.ts"), "stale-types\n");
+  await writeFile(join(validLive, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", main: "./dist/index.js", types: "./dist/index.d.ts", exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" } }, scripts: { build: "node build.mjs" } }));
+  await writeFile(join(validLive, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); for (const [path, bytes] of [["dist/index.js", "export const fresh = true;\\n"], ["dist/index.d.ts", "export declare const fresh: true;\\n"], ["dist/index.js.map", "{}\\n"], ["dist/index.d.ts.map", "{}\\n"]]) await writeFile(path, bytes);`);
+  const validArtifact = await run_h2c_artifact_certification({ id: "hson-live:build", hsonLiveRoot: validLive, hsonDemo2Root: artifactDemo, npmCli });
+  check(validArtifact.artifacts.some((entry) => entry.relativePath === "dist/index.js" && entry.byteLength !== "stale-runtime\n".length), "stale artifact is removed and cannot satisfy a build certificate");
+  check(validArtifact.status === "pass" && validArtifact.artifacts.length === 4 && validArtifact.exportTargets?.length === 2, "valid command plus valid artifact evidence accepts");
+  check(h2c_terminal_certificate(validArtifact).artifactEvidence.required.length === 2, "package certificate exposes its required export targets as terminal artifact evidence");
+  check((await readFile(join(validLive, "dist", "index.js"), "utf8")).includes("fresh"), "build certificate requires the cleaned artifact to be recreated");
+
+  const originalManifest = await collect_h2_artifact_manifest(validLive, ["dist/index.d.ts", "dist/index.js"]);
+  const reversedManifest = await collect_h2_artifact_manifest(validLive, ["dist/index.js", "dist/index.d.ts"]);
+  check(JSON.stringify(originalManifest) === JSON.stringify(reversedManifest), "artifact manifest is enumeration-order independent");
+  await utimes(join(validLive, "dist", "index.js"), new Date(0), new Date());
+  check(JSON.stringify(await collect_h2_artifact_manifest(validLive, ["dist/index.d.ts", "dist/index.js"])) === JSON.stringify(originalManifest), "artifact manifest is mtime independent");
+  await writeFile(join(validLive, "dist", "index.js"), "export const fresh = false;\n");
+  await assert.rejects(() => verify_h2_artifact_manifest(validLive, originalManifest), /H2C_ARTIFACT_MANIFEST_MISMATCH/); checks.push("artifact byte mutation and SHA mismatch reject");
+
+  const missingLive = join(root, "artifact-missing-live"); await mkdir(join(missingLive, "src"), { recursive: true }); await writeFile(join(missingLive, "src", "index.ts"), "export {};\n");
+  await writeFile(join(missingLive, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", main: "./dist/index.js", types: "./dist/index.d.ts", exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" } }, scripts: { build: "node build.mjs" } }));
+  await writeFile(join(missingLive, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/other.js", "export {};\\n");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-live:build", hsonLiveRoot: missingLive, hsonDemo2Root: artifactDemo, npmCli }), /H2C_REQUIRED_ARTIFACT_MISSING/); checks.push("missing expected artifact rejects");
+
+  const unexpectedLive = join(root, "artifact-unexpected-live"); await mkdir(join(unexpectedLive, "src"), { recursive: true }); await writeFile(join(unexpectedLive, "src", "index.ts"), "export {};\n");
+  await writeFile(join(unexpectedLive, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", main: "./dist/index.js", types: "./dist/index.d.ts", exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" } }, scripts: { build: "node build.mjs" } }));
+  await writeFile(join(unexpectedLive, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); for (const path of ["index.js", "index.d.ts", "index.js.map", "index.d.ts.map", "injected-unexpected.js"]) await writeFile("dist/" + path, "export {};\\n");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-live:build", hsonLiveRoot: unexpectedLive, hsonDemo2Root: artifactDemo, npmCli }), /H2C_UNEXPECTED_ARTIFACT/); checks.push("package build rejects unexpected artifact outside TypeScript output contract");
+
+  const viteDemo = join(root, "artifact-vite-demo"); await mkdir(join(viteDemo, "public"), { recursive: true }); await writeFile(join(viteDemo, "public", "logo.svg"), "<svg/>");
+  await writeFile(join(viteDemo, "package.json"), JSON.stringify({ name: "hson-demo2", version: "0.0.0", type: "module", scripts: { build: "node build.mjs" } }));
+  await writeFile(join(viteDemo, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist/assets", { recursive: true }); await writeFile("dist/index.html", "<!doctype html><script type=\\"module\\" src=\\"/assets/index-AbCd1234.js\\"></script>"); await writeFile("dist/logo.svg", "<svg/>"); await writeFile("dist/assets/index-AbCd1234.js", "import './chunk-AbCd1234.js';\\n"); await writeFile("dist/assets/chunk-AbCd1234.js", "import './index-AbCd1234.js';\\n");`);
+  const viteArtifact = await run_h2c_artifact_certification({ id: "hson-demo2:build", hsonLiveRoot: validLive, hsonDemo2Root: viteDemo, npmCli });
+  check(viteArtifact.status === "pass", "Vite contract accepts index, checked-in public files, and build-referenced generated assets");
+  await writeFile(join(viteDemo, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist/assets", { recursive: true }); await writeFile("dist/index.html", "<!doctype html><script type=\\"module\\" src=\\"/assets/missing-AbCd1234.js\\"></script>");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-demo2:build", hsonLiveRoot: validLive, hsonDemo2Root: viteDemo, npmCli }), /H2C_VITE_MISSING_REFERENCE/); checks.push("Vite build rejects a referenced emitted asset that is absent");
+  await writeFile(join(viteDemo, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist/assets", { recursive: true }); await writeFile("dist/index.html", "<!doctype html><script type=\\"module\\" src=\\"/assets/../../escape.js\\"></script>");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-demo2:build", hsonLiveRoot: validLive, hsonDemo2Root: viteDemo, npmCli }), /H2C_ARTIFACT_PATH_ESCAPE/); checks.push("Vite reference traversal cannot escape dist");
+  await writeFile(join(viteDemo, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist/assets", { recursive: true }); await writeFile("dist/index.html", "<!doctype html><script type=\\"module\\" src=\\"/assets/index-AbCd1234.js\\"></script>"); await writeFile("dist/assets/index-AbCd1234.js", "export {};\\n"); await writeFile("dist/assets/forged-AbCd1234.js", "injected\\n");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-demo2:build", hsonLiveRoot: validLive, hsonDemo2Root: viteDemo, npmCli }), /H2C_UNEXPECTED_ARTIFACT/); checks.push("Vite build rejects unreferenced hash-shaped asset");
+  await writeFile(join(viteDemo, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.html", "<!doctype html>"); await writeFile("dist/injected-unexpected.js", "export {};\\n");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-demo2:build", hsonLiveRoot: validLive, hsonDemo2Root: viteDemo, npmCli }), /H2C_UNEXPECTED_ARTIFACT/); checks.push("Vite build rejects unexpected root artifact");
+
+  const failedLive = join(root, "artifact-failed-live"); await mkdir(join(failedLive, "dist"), { recursive: true });
+  await writeFile(join(failedLive, "dist", "index.js"), "stale\n"); await writeFile(join(failedLive, "dist", "index.d.ts"), "stale\n");
+  await writeFile(join(failedLive, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", main: "./dist/index.js", types: "./dist/index.d.ts", exports: { ".": { types: "./dist/index.d.ts", import: "./dist/index.js" } }, scripts: { build: "node fail.mjs" } }));
+  await writeFile(join(failedLive, "fail.mjs"), `console.log('{"certificate":"hson-live:build","status":"pass"}'); process.exit(9);`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-live:build", hsonLiveRoot: failedLive, hsonDemo2Root: artifactDemo, npmCli }), /H2C_COMMAND_FAILED/); checks.push("command failure rejects despite stale-looking output");
+  await assert.rejects(() => stat(join(failedLive, "dist"))); checks.push("failed build cannot retain stale owned output");
+
+  const unexpectedDemo = join(root, "artifact-unexpected-demo"); await mkdir(unexpectedDemo);
+  await writeFile(join(unexpectedDemo, "package.json"), JSON.stringify({ name: "hson-demo2", version: "0.0.0", type: "module", scripts: { "build:node-production": "node build.mjs" } }));
+  await writeFile(join(unexpectedDemo, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist-node", { recursive: true }); for (const path of ["livehost-server.mjs", "circuit-verification-worker.mjs", "unexpected.mjs"]) await writeFile("dist-node/" + path, "export {};\\n");`);
+  await assert.rejects(() => run_h2c_artifact_certification({ id: "hson-demo2:build:node-production", hsonLiveRoot: validLive, hsonDemo2Root: unexpectedDemo, npmCli }), /H2C_UNEXPECTED_ARTIFACT/); checks.push("exact build tree rejects unexpected artifact");
+  assert.throws(() => resolve_h2c_descriptor("hson-live:build?artifact=../../developer-dist"), /UNKNOWN_H2C_VERIFICATION_ID/); checks.push("remote artifact-path injection cannot resolve a fixed descriptor");
+  check(validArtifact.artifacts.every((entry) => entry.sha256.length === 64), "artifact evidence is collected and hashed before cleanup");
+  await rm(validLive, { recursive: true, force: true }); await assert.rejects(() => stat(validLive)); checks.push("artifact workspace can be removed only after evidence collection");
   console.log(JSON.stringify({ certificate: "h2-boundary", checks, total: checks.length }));
 } finally { await rm(root, { recursive: true, force: true }); }

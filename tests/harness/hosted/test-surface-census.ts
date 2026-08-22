@@ -76,6 +76,8 @@ export type CertificationAccounting = Readonly<{
   dynamicSurfaces: number;
   externalDeployedDiagnostics: number;
   alreadyHostedBeforeH2: number;
+  h2bSupportedAdditions: number;
+  h2cSupportedAdditions: number;
   h2SupportedAdditions: number;
   hostedAfterH2: number;
   remainingH2CD: number;
@@ -425,7 +427,7 @@ const SEMANTIC_CERTIFICATION_ALIASES = new Set<string>([
   "hson-demo2:test:external-library-all-node",
   "hson-demo2:test:inclusive-library-node",
 ]);
-const H2_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
+const H2B_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
   "hson-demo2:test:surface-enumeration-node",
   "hson-demo2:test:stage2-contracts-node",
   "hson-demo2:test:stage3-discovery-node",
@@ -436,6 +438,23 @@ const H2_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
   "hson-demo2:test:phase2b-presentation-node",
   "hson-demo2:test:phase4a-layering-node",
   "hson-demo2:test:phase4b-retirement-node",
+]);
+const H2C_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
+  "hson-live:build",
+  "hson-live:check",
+  "hson-live:check:source",
+  "hson-live:check:tests",
+  "hson-live:check:entrypoints",
+  "hson-live:test:diagnostics-inventory",
+  "hson-demo2:build",
+  "hson-demo2:check",
+  "hson-demo2:build:node-production",
+  "hson-demo2:check:cloudflare",
+  "hson-demo2:cloudflare:types",
+]);
+const H2_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
+  ...H2B_SUPPORTED_CERTIFICATION_IDS,
+  ...H2C_SUPPORTED_CERTIFICATION_IDS,
 ]);
 
 /** Mechanical H2 denominator reconciliation.  Each raw certification command
@@ -455,7 +474,9 @@ export function reconcile_certification_accounting(census: readonly TestSurfaceC
   const raw = census.filter((entry) => classify_certification_surface(entry) !== undefined);
   for (const entry of raw) totals[classify_certification_surface(entry)!] += 1;
   const supported = raw.filter((entry) => classify_certification_surface(entry) === "SUPPORTED_CERTIFICATION");
-  const h2SupportedAdditions = supported.filter((entry) => H2_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
+  const h2bSupportedAdditions = supported.filter((entry) => H2B_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
+  const h2cSupportedAdditions = supported.filter((entry) => H2C_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
+  const h2SupportedAdditions = h2bSupportedAdditions + h2cSupportedAdditions;
   const alreadyHostedBeforeH2 = supported.filter((entry) => entry.currentLocalLocusAvailability && !H2_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
   const reconciled = Object.values(totals).reduce((sum, count) => sum + count, 0);
   if (reconciled !== raw.length) throw new Error(`CERTIFICATION_ACCOUNTING_UNRECONCILED: ${raw.length} raw entries, ${reconciled} classified.`);
@@ -469,6 +490,8 @@ export function reconcile_certification_accounting(census: readonly TestSurfaceC
     dynamicSurfaces: totals.DYNAMIC_SURFACE,
     externalDeployedDiagnostics: totals.EXTERNAL_DEPLOYED_DIAGNOSTIC,
     alreadyHostedBeforeH2,
+    h2bSupportedAdditions,
+    h2cSupportedAdditions,
     h2SupportedAdditions,
     hostedAfterH2: alreadyHostedBeforeH2 + h2SupportedAdditions,
     remainingH2CD: totals.SUPPORTED_CERTIFICATION - (alreadyHostedBeforeH2 + h2SupportedAdditions),

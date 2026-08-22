@@ -9,18 +9,21 @@ import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { create_node_process_supervisor, type NodeProcessResult } from "./node-process-supervisor";
+import { H2C_VERIFICATION_IDS, clean_h2c_owned_outputs, h2c_certificate_valid, resolve_h2c_descriptor } from "./h2-artifact-certification";
+import type { H2CChildModule } from "../../../runners/harness/h2-artifact-certification-child.node.mts";
 
 const execFileAsync = promisify(execFile);
 const H2_MARKER = "hson-h2-isolated-verification-v1";
 const MAX_WORKSPACE_BYTES = 1024 * 1024 * 1024;
 const OUTPUT_LIMIT_BYTES = 256 * 1024;
 const STALE_AGE_MS = 6 * 60 * 60 * 1000;
+const H2C_CHILD_RELATIVE_PATH: H2CChildModule extends true ? string : never = "tests/runners/harness/h2-artifact-certification-child.node.mts";
 /** Polling detects growth while subprocesses run.  A writer may therefore
  * overshoot by up to one polling interval plus one filesystem walk; this is a
  * bounded detection policy, not a kernel quota. */
 export const H2_WORKSPACE_POLL_INTERVAL_MS = 250;
 
-export const H2_VERIFICATION_IDS = Object.freeze([
+const H2B_VERIFICATION_IDS = Object.freeze([
   "hson-demo2:test:surface-enumeration-node",
   "hson-demo2:test:stage2-contracts-node",
   "hson-demo2:test:stage3-discovery-node",
@@ -32,21 +35,40 @@ export const H2_VERIFICATION_IDS = Object.freeze([
   "hson-demo2:test:phase4a-layering-node",
   "hson-demo2:test:phase4b-retirement-node",
 ] as const);
+export const H2_VERIFICATION_IDS = Object.freeze([...H2B_VERIFICATION_IDS, ...H2C_VERIFICATION_IDS] as const);
 export type H2VerificationId = typeof H2_VERIFICATION_IDS[number];
 
 type Descriptor = Readonly<{
   id: H2VerificationId;
-  scope: "hson-demo2";
-  packageScript: H2VerificationId extends `hson-demo2:${infer Script}` ? Script : never;
+  scope: "hson-live" | "hson-demo2";
+  packageScript: string;
   preparation: "build-hson-live";
-  capabilityProfile: "source-meta";
+  capabilityProfile: "source-meta" | "artifact";
   timeoutMs: number;
   completion: Readonly<{ kind: "stdout-marker"; marker: string }> | Readonly<{ kind: "terminal-json"; certificate: string }>;
   artifactPolicy: "discard";
+  execution: "package-script" | "h2c-wrapper";
 }>;
 
+const H2B_TERMINAL_CERTIFICATES: Readonly<Record<string, string>> = Object.freeze({
+  "hson-demo2:test:stage3-discovery-node": "stage-3-discovery",
+  "hson-demo2:test:stage4a-selected-node": "stage-4a-selected",
+  "hson-demo2:test:stage4b-panel-node": "stage-4b-panel",
+  "hson-demo2:test:phase1-convergence-node": "phase1-convergence",
+  "hson-demo2:test:phase2a-lifecycle-node": "phase2a-lifecycle",
+  "hson-demo2:test:phase2b-presentation-node": "phase2b-presentation",
+  "hson-demo2:test:phase4a-layering-node": "phase-4a-layering",
+  "hson-demo2:test:phase4b-retirement-node": "phase4b-retirement",
+});
+
+function h2b_terminal_certificate(id: string): string {
+  const certificate = H2B_TERMINAL_CERTIFICATES[id];
+  if (certificate === undefined) throw new Error(`H2B_DESCRIPTOR_CERTIFICATE_MISSING: ${id}`);
+  return certificate;
+}
+
 const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
-  H2_VERIFICATION_IDS.map((id) => [id, Object.freeze({
+  [...H2B_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => [id, Object.freeze({
     id,
     scope: "hson-demo2" as const,
     packageScript: id.slice("hson-demo2:".length) as Descriptor["packageScript"],
@@ -57,18 +79,23 @@ const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
       ? Object.freeze({ kind: "stdout-marker" as const, marker: "test surface enumeration: ok" })
       : id.endsWith("stage2-contracts-node")
         ? Object.freeze({ kind: "stdout-marker" as const, marker: "Stage 2 contracts: ok" })
-        : Object.freeze({ kind: "terminal-json" as const, certificate: ({
-          "hson-demo2:test:stage3-discovery-node": "stage-3-discovery",
-          "hson-demo2:test:stage4a-selected-node": "stage-4a-selected",
-          "hson-demo2:test:stage4b-panel-node": "stage-4b-panel",
-          "hson-demo2:test:phase1-convergence-node": "phase1-convergence",
-          "hson-demo2:test:phase2a-lifecycle-node": "phase2a-lifecycle",
-          "hson-demo2:test:phase2b-presentation-node": "phase2b-presentation",
-          "hson-demo2:test:phase4a-layering-node": "phase-4a-layering",
-          "hson-demo2:test:phase4b-retirement-node": "phase4b-retirement",
-        } as const)[id as Exclude<H2VerificationId, "hson-demo2:test:surface-enumeration-node" | "hson-demo2:test:stage2-contracts-node">] }),
+        : Object.freeze({ kind: "terminal-json" as const, certificate: h2b_terminal_certificate(id) }),
     artifactPolicy: "discard" as const,
-  })]),
+    execution: "package-script" as const,
+  })]), ...H2C_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => {
+    const artifact = resolve_h2c_descriptor(id);
+    return [id, Object.freeze({
+      id,
+      scope: artifact.repository,
+      packageScript: artifact.script,
+      preparation: "build-hson-live" as const,
+      capabilityProfile: "artifact" as const,
+      timeoutMs: 180_000,
+      completion: Object.freeze({ kind: "terminal-json" as const, certificate: id }),
+      artifactPolicy: "discard" as const,
+      execution: "h2c-wrapper" as const,
+    })];
+  })],
 );
 
 export type H2SnapshotMetadata = Readonly<{
@@ -89,6 +116,7 @@ export type H2ExecutionResult = Readonly<{
   cleanup: "removed" | "quarantined";
   quarantinePath?: string;
   completion?: Readonly<{ kind: "terminal-json"; accepted: boolean; detail: string }>;
+  workspacePeakBytes: number;
 }>;
 /** Test hooks are intentionally private to the H2 harness: they never cross the
  * hosted request boundary, whose input remains a fixed verification ID only. */
@@ -183,6 +211,7 @@ export function h2_terminal_json_completion_accepted(stdout: string, certificate
   const record = value as Record<string, unknown>;
   if (record.certificate !== certificate) return false;
   if (record.status === "fail" || record.result === "fail" || record.pass === false || record.ok === false) return false;
+  if (H2C_VERIFICATION_IDS.includes(certificate as typeof H2C_VERIFICATION_IDS[number])) return h2c_certificate_valid(record, certificate);
   return TERMINAL_CERTIFICATE_VALIDATORS[certificate]?.(record) === true;
 }
 
@@ -335,8 +364,8 @@ function supported_node(): boolean {
 }
 
 async function npm_cli_path(): Promise<string> {
-  const root = (await execFileAsync("npm", ["root", "-g"])).stdout.trim();
-  const candidate = join(root, "npm", "bin", "npm-cli.js");
+  const executable = (await execFileAsync("which", ["npm"])).stdout.trim();
+  const candidate = await realpath(executable);
   if (!(await stat(candidate)).isFile()) throw new Error("H2_NPM_CLI_UNAVAILABLE");
   return candidate;
 }
@@ -345,6 +374,31 @@ export function resolve_h2_verification(id: string): Descriptor {
   const descriptor = H2_REGISTRY.get(id as H2VerificationId);
   if (descriptor === undefined) throw new Error(`UNKNOWN_H2_VERIFICATION_ID: ${id}`);
   return descriptor;
+}
+
+function combine_h2_process_results(command: NodeProcessResult, evidence: NodeProcessResult): NodeProcessResult {
+  const separator = command.stdout !== "" && !command.stdout.endsWith("\n") ? "\n" : "";
+  const stdout = command.stdout + separator + evidence.stdout;
+  const stderrSeparator = command.stderr !== "" && evidence.stderr !== "" && !command.stderr.endsWith("\n") ? "\n" : "";
+  const stderr = command.stderr + stderrSeparator + evidence.stderr;
+  const stdoutBytes = Buffer.byteLength(stdout);
+  const stderrBytes = Buffer.byteLength(stderr);
+  const outputLimitExceeded = command.outputLimitExceeded || evidence.outputLimitExceeded || stdoutBytes > OUTPUT_LIMIT_BYTES || stderrBytes > OUTPUT_LIMIT_BYTES;
+  const spawnError = command.spawnError ?? evidence.spawnError;
+  return Object.freeze({
+    stdout, stderr, stdoutBytes, stderrBytes,
+    stdoutTruncated: command.stdoutTruncated || evidence.stdoutTruncated,
+    stderrTruncated: command.stderrTruncated || evidence.stderrTruncated,
+    exitCode: evidence.exitCode,
+    signal: evidence.signal,
+    durationMs: command.durationMs + evidence.durationMs,
+    timedOut: command.timedOut || evidence.timedOut,
+    cancelled: command.cancelled || evidence.cancelled,
+    outputLimitExceeded,
+    forceKilled: command.forceKilled || evidence.forceKilled,
+    ...(spawnError === undefined ? {} : { spawnError }),
+    ok: command.ok && evidence.ok && !outputLimitExceeded,
+  });
 }
 
 export async function sweep_stale_h2_workspaces(tempRoot = join(tmpdir(), "hson-h2")): Promise<void> {
@@ -381,6 +435,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
   let cleanup: H2ExecutionResult["cleanup"] = "removed";
   let quarantinePath: string | undefined;
   let completion: H2ExecutionResult["completion"] | undefined;
+  let workspacePeakBytes = 0;
   let diskTimer: ReturnType<typeof setInterval> | undefined;
   try {
     await mkdir(join(workspace, "root"), { recursive: true });
@@ -395,7 +450,9 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
       if (scanning) return;
       scanning = true;
       try {
-        if ((await workspace_bytes(workspace)) > workspaceLimit) {
+        const bytes = await workspace_bytes(workspace);
+        workspacePeakBytes = Math.max(workspacePeakBytes, bytes);
+        if (bytes > workspaceLimit) {
           workspaceLimitExceeded = true;
           activeExecution?.terminate();
         }
@@ -463,13 +520,32 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
         : preparationResult.timedOut ? "PREPARATION_TIMEOUT" : preparationResult.cancelled ? "CANCELLED" : "PREPARATION_FAILED";
       processResult = preparationResult;
     } else {
+      const executionCwd = descriptor.scope === "hson-live" ? snapshotLive : snapshotDemo;
+      const h2c = descriptor.execution === "h2c-wrapper" ? resolve_h2c_descriptor(descriptor.id) : undefined;
+      if (h2c !== undefined) await clean_h2c_owned_outputs({ id: descriptor.id, hsonLiveRoot: snapshotLive, hsonDemo2Root: snapshotDemo });
+      const executionArgs = h2c?.directModule === undefined
+        ? Object.freeze([npmCli, "run", descriptor.packageScript])
+        : Object.freeze(["--import", "tsx", join(executionCwd, h2c.directModule)]);
       const execution = supervisor.start(
-        { cwd: snapshotDemo, command: process.execPath, args: Object.freeze([npmCli, "run", descriptor.packageScript]), environment: replacement_environment(workspace, dependencies), timeoutMs: descriptor.timeoutMs },
+        { cwd: executionCwd, command: process.execPath, args: executionArgs, environment: replacement_environment(workspace, dependencies), timeoutMs: descriptor.timeoutMs },
         signal === undefined ? {} : { signal },
       );
       activeExecution = execution;
       if (workspaceLimitExceeded || workspaceScanFailed) execution.terminate();
-      processResult = await execution.result;
+      const commandResult = await execution.result;
+      processResult = commandResult;
+      if (commandResult.ok && h2c !== undefined) {
+        const evidenceExecution = supervisor.start({
+          cwd: executionCwd,
+          command: process.execPath,
+          args: Object.freeze(["--import", "tsx", join(snapshotDemo, H2C_CHILD_RELATIVE_PATH), descriptor.id, snapshotLive, snapshotDemo]),
+          environment: replacement_environment(workspace, dependencies),
+          timeoutMs: descriptor.timeoutMs,
+        }, signal === undefined ? {} : { signal });
+        activeExecution = evidenceExecution;
+        if (workspaceLimitExceeded || workspaceScanFailed) evidenceExecution.terminate();
+        processResult = combine_h2_process_results(commandResult, await evidenceExecution.result);
+      }
       await scan();
       if (workspaceLimitExceeded) failureReason = "WORKSPACE_LIMIT_EXCEEDED";
       else if (workspaceScanFailed) failureReason = "WORKSPACE_ACCOUNTING_FAILED";
@@ -494,5 +570,5 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
   if (metadata === undefined) {
     metadata = Object.freeze({ hsonLiveHead: "", hsonDemo2Head: "", hsonLiveDirty: false, hsonDemo2Dirty: false, sourceDigest: "", snapshotTime: new Date().toISOString(), nodeVersion: process.version });
   }
-  return Object.freeze({ id: descriptor.id, status: failureReason === undefined && cleanup === "removed" ? "PASS" : "FAIL", metadata, ...(processResult === undefined ? {} : { process: processResult }), ...(failureReason === undefined ? {} : { failureReason }), cleanup, ...(quarantinePath === undefined ? {} : { quarantinePath }), ...(completion === undefined ? {} : { completion }) });
+  return Object.freeze({ id: descriptor.id, status: failureReason === undefined && cleanup === "removed" ? "PASS" : "FAIL", metadata, ...(processResult === undefined ? {} : { process: processResult }), ...(failureReason === undefined ? {} : { failureReason }), cleanup, workspacePeakBytes, ...(quarantinePath === undefined ? {} : { quarantinePath }), ...(completion === undefined ? {} : { completion }) });
 }

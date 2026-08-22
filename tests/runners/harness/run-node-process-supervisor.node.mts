@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
 import { H2_VERIFICATION_IDS, resolve_h2_verification } from "../../harness/runtimes/node/h2-isolated-verification";
 
-assert.equal(H2_VERIFICATION_IDS.length, 10);
+assert.equal(H2_VERIFICATION_IDS.length, 21);
 assert.throws(() => resolve_h2_verification("forged-command"), /UNKNOWN_H2_VERIFICATION_ID/);
 
 const supervisor = create_node_process_supervisor({
