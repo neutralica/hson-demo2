@@ -371,35 +371,6 @@ When integrated, LiveMap controls access and mutation to an application's stylin
 
   /* Reflection */
   {
-    headerA: "Reflection",
-    bodyA: {
-      kind: "text",
-      text: `
-Reflection connects a LiveMap document authority to a LiveTree projection.
-
-\`\`\`text
-LiveMap
-canonical document state
-        ↓
-Reflection
-correspondence + reconciliation
-        ↓
-LiveTree
-runtime document graph
-        ↓
-DOM
-\`\`\`
-
-#__#
-LiveMap remains authoritative.
-
-LiveTree remains the rendering/runtime owner.
-      `,
-    },
-    footer: "reflection / about",
-  },
-
-  {
     headerA: "Reflection - updates",
     bodyA: {
       kind: "text",
