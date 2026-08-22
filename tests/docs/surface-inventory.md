@@ -24,19 +24,19 @@ The current derived snapshot is:
 
 | Denominator | Current truth | Meaning |
 |---|---:|---|
-| Runnable/verification surfaces | 380 | Independently selectable suites, launchers, browser specs/fidelity cases, standalone runners, aggregate runners, and certification commands. Developer-only utilities are excluded. |
+| Runnable/verification surfaces | 390 | Independently selectable suites, launchers, browser specs/fidelity cases, standalone runners, aggregate runners, and certification commands. Developer-only utilities are excluded. |
 | Canonical suites | 153 | Structured hson-demo2 suites in the local Node executor. |
-| Canonical cases | 2,499 | Stable suite/case identities with case lifecycle. |
-| Opaque launchers | 126 | Manifested hson-live launchers. |
-| Opaque checks | 2,994 | Launcher-declared checks without structured case identity. |
-| Hosted semantic checks | 5,493 | Canonical cases plus opaque checks after semantic duplicate retirement. |
-| Playwright specs / journeys | 15 / 71 | Real Chromium files and Playwright-owned test granularity. |
+| Canonical cases | 2,508 | Stable suite/case identities with case lifecycle. |
+| Opaque launchers | 127 | Manifested hson-live launchers. |
+| Opaque checks | 3,079 | Launcher-declared checks without structured case identity. |
+| Hosted semantic checks | 5,587 | Canonical cases plus opaque checks after semantic duplicate retirement. |
+| Playwright specs / journeys | 17 / 80 | Real Chromium files and Playwright-owned test granularity. |
 | Browser fidelity cases | 4 | Authored canvas raster cases executed by real Chromium through Node LiveHost. |
 | Generated/fuzz surfaces | 1 dynamic runner | Seed and count are controlled by `HOSTED_FUZZ_SEED` and `HOSTED_FUZZ_CASES`; this is not folded into a fixed total. |
-| Certification surfaces | 60 | Typecheck, build/entrypoint, inventory/meta, Node-LiveHost command certifications, and production-artifact verification remain a separate denominator. |
+| Certification surfaces | 64 | Typecheck, build/entrypoint, inventory/meta, Node-LiveHost command certifications, and production-artifact verification remain a separate denominator. |
 
-The 5,493 figure is legitimate because the 2,499 canonical identities and
-2,994 opaque checks no longer claim the same semantic propositions. Browser,
+The 5,587 figure is legitimate because the 2,508 canonical identities and
+3,079 opaque checks no longer claim the same semantic propositions. Browser,
 generated, and certification universes are deliberately not added to it.
 
 Counts above are a Phase 5 snapshot for human review. Tests never pin them as
@@ -66,7 +66,7 @@ executor executions.
 | Current class | Exact census population | Phase 6 implication |
 |---|---|---|
 | `hosted-deployed-now` | none verified from repository authority | The Worker is deployable, but the repository records neither a concrete deployed endpoint nor a deployed frontend endpoint configuration. |
-| `hosted-local-now` | 347 surfaces | All semantic cases/checks, browser journeys, raster cases, promoted Node command certifications, and semantic command aliases are dispatched by Node LiveHost; Locus-backed applications retain one-map authority. Deployment requires the complete Node service plus Chromium system dependencies. |
+| `hosted-local-now` | 358 surfaces | All semantic cases/checks, browser journeys, raster cases, promoted Node command certifications, and semantic command aliases are dispatched by Node LiveHost; Locus-backed applications retain one-map authority. Deployment requires the complete Node service plus Chromium system dependencies. |
 | `hostable-worker` | 1 Cloudflare adapter portability certificate | Optional because its explicit subject is the Worker environment. |
 | `hostable-node` | none | Phase 6A closed command, jsdom, canvas, generated, integration, and source/meta dispatch. |
 | `hostable-external-process` | none | Phase 6A generalized the proven launcher supervisor. |

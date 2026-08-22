@@ -309,7 +309,11 @@ try {
       authority.at(["items"]).array.move(2, 0),
       authority.at(["items"]).array.remove(2),
     ];
-    for (const commit of commits) replay_fixture(replay,{ prevRev: commit.prevRev, ops: commit.ops });
+    for (const commit of commits) replay_fixture(replay, {
+      prevRev: commit.prevRev,
+      format: commit.format,
+      payload: commit.payload,
+    });
     expect(JSON.stringify(replay.at(["items"]).snap()) === JSON.stringify(authority.at(["items"]).snap()), "semantic replay converges to authoritative source structure");
     expect(order(view.projection.host).join("|") === "B|A2", "projection converges while replay commits apply");
     expect(view.projection.debugMappings().find((entry) => entry.applicationKey === "a")?.viewQuid === aQuid, "replay reconciliation preserves surviving keyed view identity");

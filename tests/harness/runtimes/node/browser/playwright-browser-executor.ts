@@ -1,6 +1,6 @@
 import { createServer } from "node:net";
 import { rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { delimiter, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { TestCatalog } from "../../../../../src/shared/testing/test-catalog-contract";
 import type { TestExecutorDescriptor } from "../../../../../src/shared/testing/test-executor-contract";
@@ -48,6 +48,7 @@ export type BrowserExecutorMetrics = Readonly<{
   lastChildPid: number | null;
   lastChildJsdomModules: number | null;
   lastChildEncodingFallbackLoaded: boolean | null;
+  lastChildNodeVersion: string | null;
   retainedArtifactRoots: number;
 }>;
 
@@ -120,6 +121,7 @@ function empty_metrics(): BrowserExecutorMetrics {
     lastChildPid: null,
     lastChildJsdomModules: null,
     lastChildEncodingFallbackLoaded: null,
+    lastChildNodeVersion: null,
     retainedArtifactRoots: 0,
   });
 }
@@ -190,6 +192,7 @@ export function create_playwright_browser_executor(
             lastChildEncodingFallbackLoaded: typeof event.encodingFallbackLoaded === "boolean"
               ? event.encodingFallbackLoaded
               : null,
+            lastChildNodeVersion: typeof event.nodeVersion === "string" ? event.nodeVersion : null,
           });
           return;
         }
@@ -332,6 +335,7 @@ export function create_playwright_browser_executor(
             HOSTED_TEST_PORT: String(hostedPort),
             PLAYWRIGHT_APP_PORT: String(appPort),
             PLAYWRIGHT_OUTPUT_DIR: outputRoot,
+            PATH: `${dirname(process.execPath)}${delimiter}${process.env.PATH ?? ""}`,
           }),
           // This watchdog preserves Playwright's existing 30-second journey timeout;
           // it only adds the two existing 30-second web-server startup budgets.

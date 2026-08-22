@@ -105,7 +105,7 @@ test("an unavailable verifier preserves the immediate local preview", async ({ p
     window.WebSocket = class extends NativeWebSocket {
       constructor(url: string | URL, protocols?: string | string[]) {
         const requested = String(url);
-        super(requested.includes("livehost=circuit-verifier") ? "ws://127.0.0.1:1" : requested, protocols);
+        super(requested.includes("locus=circuit-verifier") ? "ws://127.0.0.1:1" : requested, protocols);
       }
     };
   });

@@ -69,6 +69,8 @@ try {
   assert.notEqual(metrics.lastChildPid, process.pid);
   assert.equal(metrics.lastChildJsdomModules, 0);
   assert.equal(metrics.lastChildEncodingFallbackLoaded, false);
+  assert.equal(metrics.lastChildNodeVersion === null, false);
+  assert.match(metrics.lastChildNodeVersion!, /^v(?:22\.(?:1[2-9]|[2-9]\d)|23\.|24\.)/);
 
   console.log(JSON.stringify({
     certificate: "phase6b-browser-executor",

@@ -7,6 +7,7 @@ export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-live:test:hson-array-index",
   "hson-live:test:hson-attribute-transport",
   "hson-live:test:locus-graph-content-codec",
+  "hson-live:test:locus-public-contract",
   "hson-live:test:transform-worker",
   "hson-demo2:test:reflect-keyed-node",
   "hson-demo2:test:liveinspect-node",
@@ -30,6 +31,9 @@ export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-demo2:test:external-launcher-manifest-audit-node",
   "hson-demo2:test:runner-truthfulness-node",
   "hson-demo2:test:splash-lifecycle-node",
+  "hson-demo2:test:presentation-cleanup-node",
+  "hson-demo2:test:node-process-supervisor",
+  "hson-demo2:test:hosted-cloudflare",
 ] as const);
 
 /** Command entrypoints whose semantic work is already exactly selectable in the Node Locus catalog. */

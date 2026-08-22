@@ -63,22 +63,31 @@ try {
   assert.equal(opaqueChecks, opaqueSuite.declaredChecks);
   opaque.dispose();
 
-  const commandSuite = discovery.catalog.suites.find((suite) => (
-    suite.sourceRef === "node-command:hson-demo2:test:hosted-test-timing-node"
-  ))!;
-  const command = await runtime.start_selected([commandSuite.id]);
-  await command.ready();
-  assert.equal((await command.actionResult).ok, true);
-  const commandReport = command.client.recovery.map.snap();
-  const commandSuiteRun = commandReport.suiteRuns[0]!;
-  assert.equal(commandSuiteRun.executionShape, "certification-aggregate");
-  assert.deepEqual(commandSuiteRun.counts, {
-    declared: 1, total: 1, executed: 1, passed: 1, failed: 0, skipped: 0, unsupported: 0, cancelled: 0,
-  });
-  assert.deepEqual(commandSuiteRun.executorIds, [NODE_LOCUS_MOTHERSHIP_EXECUTOR.id]);
-  commandEvidence = commandSuiteRun.evidence.map((entry) => entry.content).join("\n");
+  const commandSourceIds = [
+    "hson-demo2:test:hosted-test-timing-node",
+    "hson-live:test:locus-public-contract",
+    "hson-demo2:test:presentation-cleanup-node",
+    "hson-demo2:test:node-process-supervisor",
+    "hson-demo2:test:hosted-cloudflare",
+  ];
+  for (const sourceId of commandSourceIds) {
+    const commandSuite = discovery.catalog.suites.find((suite) => (
+      suite.sourceRef === `node-command:${sourceId}`
+    ))!;
+    const command = await runtime.start_selected([commandSuite.id]);
+    await command.ready();
+    assert.equal((await command.actionResult).ok, true);
+    const commandReport = command.client.recovery.map.snap();
+    const commandSuiteRun = commandReport.suiteRuns[0]!;
+    assert.equal(commandSuiteRun.executionShape, "certification-aggregate");
+    assert.deepEqual(commandSuiteRun.counts, {
+      declared: 1, total: 1, executed: 1, passed: 1, failed: 0, skipped: 0, unsupported: 0, cancelled: 0,
+    });
+    assert.deepEqual(commandSuiteRun.executorIds, [NODE_LOCUS_MOTHERSHIP_EXECUTOR.id]);
+    commandEvidence += commandSuiteRun.evidence.map((entry) => entry.content).join("\n");
+    command.dispose();
+  }
   assert.match(commandEvidence, /hosted test timing: ok/);
-  command.dispose();
 } finally {
   runtime.dispose();
   await server.stop();

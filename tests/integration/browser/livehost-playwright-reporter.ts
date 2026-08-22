@@ -33,6 +33,7 @@ export default class LocusPlaywrightReporter implements Reporter {
       pid: process.pid,
       jsdomModules: cachedModules.filter((path) => path.includes("/jsdom/")).length,
       encodingFallbackLoaded: cachedModules.some((path) => path.endsWith("/fallback/encoding.js")),
+      nodeVersion: process.version,
       timestamp: Date.now(),
     });
   }

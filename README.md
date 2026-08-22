@@ -32,19 +32,16 @@ hson-live is built on this shared canonical representation.
 
 LiveTree is a responsive HTML interface that replaces the DOM with a live projection from a canonical HSON source graph. It renders live browser documents to the DOM and provides a rich API for creating, modifying, styling, and interacting with page markup.
 
-LiveTree manages element structure, SVG and canvas support, animations, and events by editing the underlying HSON graph. Content, CSS, events, and interaction all operate through the same model with changes reflected directly in the browser.
+By editing the the underlying HSON graph, LiveTree offers an editing surface for markup content, styling, and interaction. Alone, it provides a self-contained document runtime for the browser. When integrated with LiveMap it becomes a projection endpoint for responsive, "live" user interfaces that respond to state changes in realtime.
 
-LiveTree owns DOM, CSS, event, and runtime projection resources. 
 
 ---
 
 ### LiveMap
 
-LiveMap "is" JSON.
+LiveMap manages application data via a HSON graph-based state machine. It provides graph editing, schema enforcement, subscriber updates, LiveTree bindings, and commit history. 
 
-LiveMap manages application data via a HSON graph-based state machine with schema enforcement, subscriber updates, LiveTree bindings, and commit history, ensures state changes flow consistently between local interfaces, derived views, and hosted environments. 
-
-LiveMap 
+LiveMap owns and manages both JSON and HTML. When integrated with LiveTree, LiveMap unifies view and data in a single system that reflects canonical app state in realtime, ensuring changes flow consistently between local interfaces, derived views, and hosted environments
 
 ```text
 LiveMap
@@ -65,19 +62,16 @@ Reflect is an optional projection and reconciliation layer, not an automatic par
 
 ### Locus and LiveHost
 
-Locus makes exactly one LiveMap authoritative. It owns ordered actions,
-canonical commits, recovery, sessions, synchronization, and one-map
-persistence. Applications own game/test meaning and decide which Loci exist.
+Locus is a server-side LiveMap that establishes distributed canonical application state. It manages authority and validation, graph history, recovery, sessions, synchronization, and map persistence. 
 
-LiveHost hosts applications and provides the generic request, connection,
-principal, readiness, and runtime boundary. Node LiveHost is the concrete HTTP
-and WebSocket implementation used here. An application may use zero Loci; TOWL
-and hosted tests compose Loci because they require authoritative state.
+Locus accepts mutation requests from clients, validates them, and communicates changes via an ordered commit history. Clients do not own their state; they instead track graph changes streamed from Locus over WebSocket. 
 
-Validated Locus actions become ordered commits, updating canonical state and
-distributing changes to connected clients.
+#__#
 
-The result is a shared application model where multiple clients remain synchronized through the same underlying graph, with revision tracking, recovery, and state coordination built into the system.
+LiveHost provides hson-live's application layer and HTTP + WebSocket implementations, managing requests, connections, sessions, readiness, and runtime boundaries to create an end-to-end full stack pipeline with a single source of application truth. 
+
+
+The result is a shared system model where multiple clients remain synchronized to the same underlying graph, with revision tracking, recovery, and state coordination built in.
 
 ---
 
@@ -87,13 +81,13 @@ The result is a shared application model where multiple clients remain synchroni
 
 ### [about]
 
-Complete documentation for HSON, LiveTree, LiveMap, Locus, LiveHost, and the surrounding architecture.
+Complete documentation for HSON, hson-live, and related subsystems.
 
 ---
 
 ### [test]
 
-The test environment contains more than 2,500 system and unit tests covering:
+hson-live's full test harness of over 5500 cases is publicly accessible for independent verification. These tests cover all aspects of the system:
 
 - repeated three-format transformation circuits
 - parser and serializer fidelity
@@ -103,84 +97,38 @@ The test environment contains more than 2,500 system and unit tests covering:
 - LiveMap paths, schemas, subscriptions, history, batching, proxies, links, and node operations
 - Locus actions, commits, recovery, permissions, sessions, snapshots, and protocol behavior
 
-Circuit tests expose intermediate string and node artifacts, allowing every stage of a transformation to be inspected directly.
-
-Test execution is hosted through LiveHost. Independent suites run concurrently on the server, while ordered progress and results are streamed to the browser as they complete.
-
-- server-side concurrency
-- hosted test execution
-- progressive result streaming
+All tests are executed server-side by Locus, which streams results to the browser as each test completes.
 
 ---
 
 ### [parse]
 
-Interactive transformation between HTML, JSON, and HSON. As input changes, each panel updates synchronously.
-
-- canonical IR expressed in all formats
-- deterministic transforms
-- mixed-content handling
-- realtime parsing & DOM updates 
+[parse] offers 3-way conversion from HTML, JSON, or HSON. Panels update synchronously as valid input is entered. [parse] is a useful way to obtain canonical HSON from any valid JSON or HTML string.
 
 ---
 
 ### [build]
 
-A live HSON markup editor. Valid HSON in the left panel is parsed and immediately reflected as browser DOM in the right panel.
-
-- HSON as viable document markup
-- direct graph-to-DOM reflection
-- realtime document construction
-- the connection between hson.transform and LiveTree
+A live editor demonstrating HSON's viability as a markup notation. Visitors edit the HSON in the left panel; if valid, it is parsed and immediately reflected as browser DOM in the right panel.
 
 ---
 
 ### [point]
 
-A diagnostic interface for pointer position, browser geometry, document hierarchy, and direction.
+A reference interface that turns dynamic browser conditions — pointer position, browser geometry, and document hierarchy — into directly observable graph state that updates synchronously with mouse cursor movement.
 
-Pointer data and inspected DOM state are continuously reflected in a LiveTree display, turning dynamic browser conditions into directly observable graph state.
-
-Demonstrates:
-
-- live browser geometry
-- pointer and document inspection
-- continuously updated shared state
-- event-driven graph mutation
-- bound diagnostic output
 
 ---
 
 ### [oklch]
 
-An interactive system color editor.
-
-Sliders, numeric fields, resolved color values, CSS variables, and previews share a self-contained LiveMap. A change made through any control enters the same canonical state and is reflected throughout the application.
-
-Demonstrates:
-
-- user-controlled local state
-- multiple controls bound to one value
-- derived and normalized color data
-- subscription-driven updates
-- dynamic styling reflected from graph state
+An interactive color picker directly that edits the underlying color system state (an HSON graph), with changes updated synchronously throughout the application.
 
 ---
 
 ### [cells]
 
-A small resizable mock spreadsheet.
-
-Cell contents, selection, dimensions, and editing state are held in one LiveMap and reflected into the sheet through LiveTree. Rows and columns remain ordinary structured graph data even while the user edits and resizes their browser representation.
-
-Demonstrates:
-
-- structured application state
-- dynamic rows and columns
-- selection and inline editing
-- resizable layout
-- coordinated operations across interrelated data
-- direct binding between graph state and interactive markup
+A mock spreadsheet app. Cell contents, selection, dimensions, and editing state are held in LiveMap and reflected through LiveTree. User changes to cell contents are validated and updated across the spreadsheet, demonstrating the bidirectional control of graph state between LiveMap and LiveTree.
 
 ---
 
@@ -188,24 +136,18 @@ Demonstrates:
 
 An experimental organic interface built from generated HSON structures.
 
-Each amoeba combines its own geometry, controls, styling, and behavioral state while remaining part of the larger LiveMap. Shared controls can affect the population as a whole, while individual organisms retain independently addressable state.
+Each amoeba combines its own geometry, controls, styling, and behavioral state while remaining part of the larger LiveMap. Shared controls affect the population as a whole, while individual organisms retain independently addressable state. 
 
-The result is a fluid interface assembled from ordinary graph operations rather than isolated component state.
-
-Demonstrates:
-
-- generated interactive structures
-- shared state interacting with per-entity state
-- independent mutation within a common graph
-- automatic visual updates from data changes
-- optional state-to-view reflection with explicit reconciliation
+The result is a fluid, automatically-updating interface assembled and orchestrated via canonical graph operations rather than isolated component state.
 
 ---
 
 ### [TOWL - Tug Of War Live]
 
-A deliberately simple multiplayer proof of concept demonstrating a Locus as
-authority over one game-state LiveMap. The application interprets room-scoped
+A deliberately simple multiplayer "game" and proof of concept demonstrating a Locus as
+authority over one game state LiveMap. 
+
+The application interprets room-scoped
 invite links and acquires the corresponding Locus. Player status, rounds,
 scores, and rope position live in that authoritative graph. Each browser
 maintains a local LiveMap mirror.

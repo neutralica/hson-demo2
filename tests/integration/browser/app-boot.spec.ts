@@ -265,7 +265,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
     /^transform \(\d+\)$/,
     /^livetree \(\d+\)$/,
     /^livemap \(\d+\)$/,
-    /^livehost \(\d+\)$/,
+    /^locus \(\d+\)$/,
     /^reflect \(\d+\)$/,
     /^unit \(\d+\)$/,
     /^dev \(\d+\)$/,
@@ -309,7 +309,7 @@ test("hosted panel discovers curated categories and runs one canonical category"
 
   await selector.selectOption("subject:livehost");
   await expect(targetedSuite).toBeEnabled();
-  await targetedSuite.selectOption("suite:livehost/authority");
+  await targetedSuite.selectOption("suite:livehost/locus/authority");
   await expect(targetedCase).toBeDisabled();
   await expect(targetedCase.locator("option")).toHaveText(["all checks (21)"]);
 
@@ -339,13 +339,13 @@ test("hosted panel discovers curated categories and runs one canonical category"
   await expect(page.locator("#test-chips .test-chip-value").first()).toHaveText("1");
 
   await selector.selectOption("subject:livehost");
-  await targetedSuite.selectOption("suite:livehost/authority");
+  await targetedSuite.selectOption("suite:livehost/locus/authority");
   await page.locator("#test-run").click();
   await expect(panel).toHaveAttribute("data-hosted-execution-count", "2");
   await expect(page.locator("#test-logger")).toContainText("passed ·", { timeout: 15_000 });
   await expect(page.locator("#test-logger")).not.toContainText("21 checks · 21 pass");
-  await expect(page.locator("#test-logger")).not.toContainText("stdout livehost/authority");
-  const externalRow = page.locator('[data-hosted-suite="livehost/authority"]');
+  await expect(page.locator("#test-logger")).not.toContainText("stdout livehost/locus/authority");
+  const externalRow = page.locator('[data-hosted-suite="livehost/locus/authority"]');
   await externalRow.click();
   await expect(page.locator('[data-evidence-kind="stdout"] .hosted-evidence-content')).toContainText("ok 1 -");
   await expect(page.locator("#test-chips .test-chip:visible .test-chip-value")).toHaveText([
