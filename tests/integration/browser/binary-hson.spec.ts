@@ -32,3 +32,8 @@ test("browser Binary HSON SHA-256 equals browser WebCrypto over exact binary byt
   await run_in_browser(page, "verify_browser_binary_sha256");
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("browser HSON JSON and HTML SHA-256 equal browser WebCrypto over exact UTF-8 bytes", async ({ page }) => {
+  await run_in_browser(page, "verify_browser_textual_sha256");
+  await expect(page).toHaveURL(/\/$/);
+});

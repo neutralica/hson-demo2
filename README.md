@@ -8,7 +8,7 @@ Its interactive demos showcase the working features and components of hson-live 
 
 ---
 
-### What is HSON?
+## What is HSON?
 
 HSON (Hypertext Structured Object Notation) is a "glue format." It models the tree structure shared by JSON and HTML, and can fully express both in a single notation.
 
@@ -18,8 +18,7 @@ HSON (Hypertext Structured Object Notation) is a "glue format." It models the tr
 
 ## What is hson-live?
 
-hson-live is a TypeScript library whose state, authority, application, and
-runtime layers remain distinct.
+hson-live is a web authoring environment built on top of HSON.
 
 ### hson.transform
 
@@ -31,25 +30,21 @@ hson-live is built on this shared canonical representation.
 
 ### LiveTree
 
-LiveTree creates live browser documents, projecting to the DOM from the source graph and providing a unified API for creating, modifying, styling, and interacting with graph-backed markup.
+LiveTree is a responsive HTML interface that replaces the DOM with a live projection from a canonical HSON source graph. It renders live browser documents to the DOM and provides a rich API for creating, modifying, styling, and interacting with page markup.
 
-Element creation, SVG and canvas support, animations, and events are managed through LiveTree. Structure, CSS, events, and interaction all operate through the same model with changes reflected directly in the browser.
+LiveTree manages element structure, SVG and canvas support, animations, and events by editing the underlying HSON graph. Content, CSS, events, and interaction all operate through the same model with changes reflected directly in the browser.
 
-LiveTree owns DOM, CSS, event, and runtime projection resources. It does not share canonical application-state authority with LiveMap.
-
-(LiveTree "is" HTML.)
+LiveTree owns DOM, CSS, event, and runtime projection resources. 
 
 ---
 
 ### LiveMap
 
-LiveMap turns the graph model into application state.
+LiveMap "is" JSON.
 
-State, schemas, history, subscriptions, derived views, and bindings all operate directly on the same graph structure. LiveMap edits the graph and emits changes via commits.
+LiveMap manages application data via a HSON graph-based state machine with schema enforcement, subscriber updates, LiveTree bindings, and commit history, ensures state changes flow consistently between local interfaces, derived views, and hosted environments. 
 
-Graph commits become the shared language of the system, allowing state changes to flow consistently between local interfaces, derived views, and hosted environments. LiveMap remains the sole authority for canonical revisioned state.
-
-An interface may optionally connect that state to a view through Reflect:
+LiveMap 
 
 ```text
 LiveMap

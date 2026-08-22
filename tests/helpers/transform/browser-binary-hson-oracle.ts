@@ -89,3 +89,18 @@ export async function verify_browser_binary_sha256(): Promise<void> {
   const expected = hex(new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", web_crypto_bytes)));
   assert(await representation.sha256() === expected, "Binary SHA-256 did not hash the exact serialized bytes with browser WebCrypto");
 }
+
+export async function verify_browser_textual_sha256(): Promise<void> {
+  const source = hson.fromJson({ note: "café" });
+  const representations = [
+    { label: "HSON", value: source.toHson(), exact: `<note "café">` },
+    { label: "JSON", value: source.toJson(), exact: `{\n  "note": "café"\n}` },
+    { label: "HTML", value: source.toHtml(), exact: `<_hson_obj>\n<note><_hson_obj>\n<_hson_str>&quot;caf\\u00e9&quot;</_hson_str>\n</_hson_obj></note>\n</_hson_obj>` },
+  ] as const;
+  for (const representation of representations) {
+    const serialized = representation.value.serialize();
+    assert(serialized === representation.exact, `${representation.label} browser serialization differs from its exact fixture`);
+    const expected = hex(new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(serialized))));
+    assert(await representation.value.sha256() === expected, `${representation.label} SHA-256 differs from browser-native WebCrypto`);
+  }
+}

@@ -47,6 +47,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "browser Binary HSON typed units preserve absent, undefined, empty, and px states",
     "browser Binary HSON preserves UTF-16 lone surrogates and negative zero",
     "browser Binary HSON SHA-256 equals browser WebCrypto over exact binary bytes",
+    "browser HSON JSON and HTML SHA-256 equal browser WebCrypto over exact UTF-8 bytes",
   ]),
   browser_suite("app-boot", [
     "splash completes naturally without retaining work or disposed nodes",
