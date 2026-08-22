@@ -513,26 +513,12 @@ export function livemap_suite_rev(): TestSuite {
         expected: {
           before: {
             rev: 0,
-            value: {
-              user: {
-                name: "Ada",
-                age: 37,
-              },
-            },
             format: "structural-json",
-            formatVersion: 1,
             payload: "{\n  \"user\": {\n    \"name\": \"Ada\",\n    \"age\": 37\n  }\n}",
           },
           after: {
             rev: 2,
-            value: {
-              user: {
-                name: "Grace",
-                age: 38,
-              },
-            },
             format: "structural-json",
-            formatVersion: 1,
             payload: "{\n  \"user\": {\n    \"name\": \"Grace\",\n    \"age\": 38\n  }\n}",
           },
           mapRev: 2,
@@ -547,13 +533,12 @@ export function livemap_suite_rev(): TestSuite {
             count: 0,
             label: "zero",
           }));
+          const incoming = hson.liveMap.fromJson({ count: 1, label: "one" }).capture();
 
           const commit = apply_fixture(map, {
             prevRev: 0,
-            value: {
-              count: 1,
-              label: "one",
-            },
+            format: incoming.format,
+            payload: incoming.payload,
           });
 
           const op = commit.ops[0];
@@ -596,12 +581,12 @@ export function livemap_suite_rev(): TestSuite {
           map.set(["count"], 1);
 
           const capture = map.capture();
+          const incoming = hson.liveMap.fromJson({ count: 2 }).capture();
 
           const commit = apply_fixture(map, {
             prevRev: capture.rev,
-            value: {
-              count: 2,
-            },
+            format: incoming.format,
+            payload: incoming.payload,
           });
 
           return {
@@ -639,6 +624,7 @@ export function livemap_suite_rev(): TestSuite {
           }));
 
           const staleCapture = map.capture();
+          const incoming = hson.liveMap.fromJson({ count: 2 }).capture();
 
           map.set(["count"], 1);
 
@@ -656,9 +642,8 @@ export function livemap_suite_rev(): TestSuite {
           try {
             apply_fixture(map, {
               prevRev: staleCapture.rev,
-              value: {
-                count: 2,
-              },
+              format: incoming.format,
+              payload: incoming.payload,
             });
           } catch (error) {
             const revError = error as Error & {
@@ -715,12 +700,12 @@ export function livemap_suite_rev(): TestSuite {
           }));
 
           const first = map.set(["count"], 1);
+          const incoming = hson.liveMap.fromJson({ count: 1 }).capture();
 
           const commit = apply_fixture(map, {
             prevRev: map.rev,
-            value: {
-              count: 1,
-            },
+            format: incoming.format,
+            payload: incoming.payload,
           });
 
           return {
@@ -770,6 +755,12 @@ export function livemap_suite_rev(): TestSuite {
           })).schema.use(schema);
 
           const first = map.set(["user", "age"], 38);
+          const incoming = hson.liveMap.fromJson({
+            user: {
+              name: "Grace",
+              age: "invalid",
+            },
+          }).capture();
 
           let rejected = false;
           let errorName: string | undefined;
@@ -778,17 +769,8 @@ export function livemap_suite_rev(): TestSuite {
           try {
             apply_fixture(map, {
               prevRev: map.rev,
-              value: {
-                user: {
-                  name: "Grace",
-                  age: "invalid",
-                },
-              } as unknown as {
-                user: {
-                  name: string;
-                  age: number;
-                };
-              },
+              format: incoming.format,
+              payload: incoming.payload,
             });
           } catch (error) {
             rejected = true;
@@ -851,6 +833,7 @@ export function livemap_suite_rev(): TestSuite {
           const map = make_livemap_core(json_root_node({
             count: 0,
           }));
+          const incoming = hson.liveMap.fromJson({ count: 1 }).capture();
 
           let threw = false;
           let message: string | undefined;
@@ -858,9 +841,8 @@ export function livemap_suite_rev(): TestSuite {
           try {
             apply_fixture(map, {
               prevRev: -1,
-              value: {
-                count: 1,
-              },
+              format: incoming.format,
+              payload: incoming.payload,
             });
           } catch (error) {
             threw = true;
@@ -911,7 +893,8 @@ export function livemap_suite_rev(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: target.rev,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           return {
@@ -975,7 +958,8 @@ export function livemap_suite_rev(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: 0,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           return {
@@ -1025,7 +1009,8 @@ export function livemap_suite_rev(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: 0,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           const op = replayCommit.ops[0];
@@ -1080,7 +1065,8 @@ export function livemap_suite_rev(): TestSuite {
 
           const commit = replay_fixture(map,{
             prevRev: map.rev,
-            ops: [],
+            format: "structural-json",
+            payload: "[]",
           });
 
           return {
@@ -1133,7 +1119,8 @@ export function livemap_suite_rev(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             const revError = error as Error & {
@@ -1207,7 +1194,8 @@ export function livemap_suite_rev(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             const replayError = error as Error & {
@@ -1307,7 +1295,8 @@ export function livemap_suite_rev(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             rejected = true;

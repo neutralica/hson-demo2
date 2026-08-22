@@ -503,7 +503,8 @@ export function livemap_suite_feed(): TestSuite {
 
     replay_fixture(target,{
       prevRev: 0,
-      ops: sourceCommit.ops,
+      format: sourceCommit.format,
+      payload: sourceCommit.payload,
     });
 
     return {
@@ -562,7 +563,8 @@ export function livemap_suite_feed(): TestSuite {
     try {
       replay_fixture(target,{
         prevRev: 0,
-        ops: sourceCommit.ops,
+        format: sourceCommit.format,
+        payload: sourceCommit.payload,
       });
     } catch {
       rejected = true;
@@ -638,7 +640,8 @@ export function livemap_suite_feed(): TestSuite {
     try {
       replay_fixture(target,{
         prevRev: 0,
-        ops: sourceCommit.ops,
+        format: sourceCommit.format,
+        payload: sourceCommit.payload,
       });
     } catch {
       rejected = true;
@@ -694,10 +697,8 @@ export function livemap_suite_feed(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: [
-                { kind: "set", path: ["count"], prev: 0, next: 1 },
-                null,
-              ],
+              format: "structural-json",
+              payload: '[{"kind":"set","path":["count"],"prev":[0],"next":[1]},null]',
             } as unknown as Parameters<typeof target.replay>[0]);
           } catch (error) {
             const replayError = error as Error & Readonly<{

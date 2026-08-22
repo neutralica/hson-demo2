@@ -142,152 +142,147 @@ export function livemap_suite_replay(): TestSuite {
         {
           caseId: "replay-rejects-missing-ops",
           name: "replay rejects missing ops",
-          input: { prevRev: 0 },
-          expectedReason: "ops is not an array",
+          input: { prevRev: 0, format: "structural-json", payload: "{}" },
+          expectedReason: "payload root is not an operation array",
         },
         {
           caseId: "replay-rejects-non-array-ops",
           name: "replay rejects non-array ops",
-          input: { prevRev: 0, ops: {} },
-          expectedReason: "ops is not an array",
+          input: { prevRev: 0, format: "structural-json", payload: "null" },
+          expectedReason: "payload root is not an operation array",
         },
         {
           caseId: "replay-rejects-non-object-operation",
           name: "replay rejects non-object operation",
-          input: { prevRev: 0, ops: [null] },
+          input: { prevRev: 0, format: "structural-json", payload: "[null]" },
           expectedReason: "operation is not an object",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-unsupported-operation-kind",
           name: "replay rejects unsupported operation kind",
-          input: { prevRev: 0, ops: [{ kind: "future" }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"future"}]' },
           expectedReason: "kind is not supported",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-missing-operation-path",
           name: "replay rejects missing operation path",
-          input: { prevRev: 0, ops: [{ kind: "set", prev: 0, next: 1 }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":null,"prev":[0],"next":[1]}]' },
           expectedReason: "path is not valid",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-array-operation-path",
           name: "replay rejects non-array operation path",
-          input: { prevRev: 0, ops: [{ kind: "set", path: "count", prev: 0, next: 1 }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":"count","prev":[0],"next":[1]}]' },
           expectedReason: "path is not valid",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-invalid-operation-path-segment",
           name: "replay rejects invalid operation path segment",
-          input: { prevRev: 0, ops: [{ kind: "set", path: [true], prev: 0, next: 1 }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":[true],"prev":[0],"next":[1]}]' },
           expectedReason: "path is not valid",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-missing-operation-prev",
           name: "replay rejects missing operation prev",
-          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], next: 1 }] },
-          expectedReason: "prev is missing",
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":["count"],"prev":null,"next":[1]}]' },
+          expectedReason: "prev presence is invalid",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-missing-set-next",
           name: "replay rejects missing set next",
-          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: 0 }] },
-          expectedReason: "next is missing",
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":["count"],"prev":[0],"next":[]}]' },
+          expectedReason: "set next is absent",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-json-prev",
           name: "replay rejects non-JSON prev",
-          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: Number.NaN, next: 1 }] },
-          expectedReason: "prev is not JSON",
-          expectedOpIndex: 0,
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":["count"],"prev":[NaN],"next":[1]}]' },
+          expectedReason: "payload is not valid structural JSON",
         },
         {
           caseId: "replay-rejects-non-json-set-next",
           name: "replay rejects non-JSON set next",
-          input: { prevRev: 0, ops: [{ kind: "set", path: ["count"], prev: 0, next: undefined }] },
-          expectedReason: "next is not JSON",
-          expectedOpIndex: 0,
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"set","path":["count"],"prev":[0],"next":[NaN]}]' },
+          expectedReason: "payload is not valid structural JSON",
         },
         {
           caseId: "replay-rejects-missing-replace-next",
           name: "replay rejects missing replace next",
-          input: { prevRev: 0, ops: [{ kind: "replace", path: [], prev: { count: 0 } }] },
-          expectedReason: "next is missing",
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"replace","path":[],"prev":[{"count":0}],"next":[]}]' },
+          expectedReason: "replace next is absent",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-json-replace-next",
           name: "replay rejects non-JSON replace next",
-          input: { prevRev: 0, ops: [{ kind: "replace", path: [], prev: { count: 0 }, next: Number.NaN }] },
-          expectedReason: "next is not JSON",
-          expectedOpIndex: 0,
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"replace","path":[],"prev":[{"count":0}],"next":[NaN]}]' },
+          expectedReason: "payload is not valid structural JSON",
         },
         {
           caseId: "replay-rejects-delete-with-defined-next",
           name: "replay rejects delete with defined next",
-          input: { prevRev: 0, ops: [{ kind: "delete", path: ["count"], prev: 0, next: null }] },
-          expectedReason: "delete next must be undefined",
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"delete","path":["count"],"prev":[0],"next":[null]}]' },
+          expectedReason: "delete next must be absent",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-negative-splice-start",
           name: "replay rejects negative splice start",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: -1, removed: [], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":-1,"removed":[],"inserted":[],"prev":["a","b"],"next":["a","b"]}]' },
           expectedReason: "splice start is not a non-negative integer",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-fractional-splice-start",
           name: "replay rejects fractional splice start",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0.5, removed: [], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0.5,"removed":[],"inserted":[],"prev":["a","b"],"next":["a","b"]}]' },
           expectedReason: "splice start is not a non-negative integer",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-array-splice-removed",
           name: "replay rejects non-array splice removed",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: "a", inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
-          expectedReason: "splice removed is not an array",
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0,"removed":"a","inserted":[],"prev":["a","b"],"next":["a","b"]}]' },
+          expectedReason: "removed is not an array",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-array-splice-inserted",
           name: "replay rejects non-array splice inserted",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: "a", prev: ["a", "b"], next: ["a", "b"] }] },
-          expectedReason: "splice inserted is not an array",
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0,"removed":[],"inserted":"a","prev":["a","b"],"next":["a","b"]}]' },
+          expectedReason: "inserted is not an array",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-json-splice-removed-item",
           name: "replay rejects non-JSON splice removed item",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [Number.NaN], inserted: [], prev: ["a", "b"], next: ["a", "b"] }] },
-          expectedReason: "removed is not JSON",
-          expectedOpIndex: 0,
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0,"removed":[NaN],"inserted":[],"prev":["a","b"],"next":["a","b"]}]' },
+          expectedReason: "payload is not valid structural JSON",
         },
         {
           caseId: "replay-rejects-non-json-splice-inserted-item",
           name: "replay rejects non-JSON splice inserted item",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [Number.NaN], prev: ["a", "b"], next: ["a", "b"] }] },
-          expectedReason: "inserted is not JSON",
-          expectedOpIndex: 0,
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0,"removed":[],"inserted":[NaN],"prev":["a","b"],"next":["a","b"]}]' },
+          expectedReason: "payload is not valid structural JSON",
         },
         {
           caseId: "replay-rejects-non-array-splice-prev",
           name: "replay rejects non-array splice prev",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [], prev: "invalid", next: ["a", "b"] }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0,"removed":[],"inserted":[],"prev":"invalid","next":["a","b"]}]' },
           expectedReason: "prev is not an array",
           expectedOpIndex: 0,
         },
         {
           caseId: "replay-rejects-non-array-splice-next",
           name: "replay rejects non-array splice next",
-          input: { prevRev: 0, ops: [{ kind: "splice", path: ["items"], start: 0, removed: [], inserted: [], prev: ["a", "b"], next: "invalid" }] },
+          input: { prevRev: 0, format: "structural-json", payload: '[{"kind":"splice","path":["items"],"start":0,"removed":[],"inserted":[],"prev":["a","b"],"next":"invalid"}]' },
           expectedReason: "next is not an array",
           expectedOpIndex: 0,
         },
@@ -304,10 +299,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: [
-                { kind: "set", path: ["count"], prev: 0, next: 1 },
-                null,
-              ],
+              format: "structural-json",
+              payload: '[{"kind":"set","path":["count"],"prev":[0],"next":[1]},null]',
             } as unknown as Parameters<typeof target.replay>[0]);
           } catch (error) {
             const replayError = error as Error & Readonly<{
@@ -353,7 +346,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: [null],
+              format: "structural-json",
+              payload: "[null]",
             } as unknown as Parameters<typeof target.replay>[0]);
           } catch (error) {
             const replayError = error as Error & Readonly<{
@@ -398,10 +392,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: [
-                { kind: "set", path: ["count"], prev: 0, next: 1 },
-                null,
-              ],
+              format: "structural-json",
+              payload: '[{"kind":"set","path":["count"],"prev":[0],"next":[1]},null]',
             } as unknown as Parameters<typeof target.replay>[0]);
           } catch (error) {
             const replayError = error as Error & Readonly<{
@@ -461,7 +453,8 @@ export function livemap_suite_replay(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: target.rev,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           return {
@@ -525,7 +518,8 @@ export function livemap_suite_replay(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: 0,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           return {
@@ -575,7 +569,8 @@ export function livemap_suite_replay(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: 0,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           const op = replayCommit.ops[0];
@@ -630,7 +625,8 @@ export function livemap_suite_replay(): TestSuite {
 
           const commit = replay_fixture(map,{
             prevRev: map.rev,
-            ops: [],
+            format: "structural-json",
+            payload: "[]",
           });
 
           return {
@@ -683,7 +679,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             const revError = error as Error & {
@@ -757,7 +754,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             const replayError = error as Error & {
@@ -857,7 +855,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             rejected = true;
@@ -934,7 +933,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: sourceCommit.ops,
+              format: sourceCommit.format,
+              payload: sourceCommit.payload,
             });
           } catch (error) {
             const replayError = error as Error & {
@@ -995,16 +995,6 @@ export function livemap_suite_replay(): TestSuite {
             items: ["a", "b"],
           }));
 
-          const mismatchedOp = {
-            kind: "splice",
-            path: ["items"],
-            start: 1,
-            removed: ["b"],
-            inserted: ["x"],
-            prev: ["a", "b"],
-            next: ["a", "wrong"],
-          };
-
           let errorResult: {
             threw: boolean;
             name?: string;
@@ -1019,7 +1009,8 @@ export function livemap_suite_replay(): TestSuite {
           try {
             replay_fixture(target,{
               prevRev: 0,
-              ops: [mismatchedOp],
+              format: "structural-json",
+              payload: '[{"kind":"splice","path":["items"],"start":1,"removed":["b"],"inserted":["x"],"prev":["a","b"],"next":["a","wrong"]}]',
             });
           } catch (error) {
             const replayError = error as Error & {
@@ -1098,7 +1089,7 @@ export function livemap_suite_replay(): TestSuite {
 
           let code = "NO_ERROR";
           try {
-            replay_fixture(target,{ prevRev: 0, ops: sourceCommit.ops });
+            replay_fixture(target,{ prevRev: 0, format: sourceCommit.format, payload: sourceCommit.payload });
           } catch (error) {
             code = String((error as Error & { code?: unknown }).code);
           }
@@ -1125,34 +1116,20 @@ export function livemap_suite_replay(): TestSuite {
             items: ["a", "b"],
           }));
 
-          const path: (string | number)[] = ["items"];
-          const removed = ["b"];
-          const inserted = ["x"];
-          const prev = ["a", "b"];
-          const next = ["a", "x"];
+          const source = make_livemap_core(json_root_node({
+            items: ["a", "b"],
+          }));
+          const sourceCommit = source.splice(["items"], 1, 1, "x");
 
           const input = {
             prevRev: 0,
-            ops: [
-              {
-                kind: "splice",
-                path,
-                start: 1,
-                removed,
-                inserted,
-                prev,
-                next,
-              },
-            ],
-          } as unknown as Parameters<typeof target.replay>[0];
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
+          };
 
           const commit = replay_fixture(target,input);
 
-          path[0] = "changed";
-          removed[0] = "changed";
-          inserted[0] = "changed";
-          prev[0] = "changed";
-          next[0] = "changed";
+          input.payload = "[]";
 
           const op = commit.ops[0];
 
@@ -1209,7 +1186,8 @@ export function livemap_suite_replay(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: 0,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           return {
@@ -1267,7 +1245,8 @@ export function livemap_suite_replay(): TestSuite {
 
           const replayCommit = replay_fixture(target,{
             prevRev: 0,
-            ops: sourceCommit.ops,
+            format: sourceCommit.format,
+            payload: sourceCommit.payload,
           });
 
           return {

@@ -169,7 +169,7 @@ export function livemap_projected_equality_suite(): TestSuite {
         const commit = source.replace(["user"], { a: 3, b: 4 });
         const target = hson.liveMap.fromJson('{"user":{"b":2,"a":1}}');
         let code = "NO_ERROR";
-        try { replay_fixture(target,{ prevRev: 0, ops: commit.ops }); }
+        try { replay_fixture(target,{ prevRev: 0, format: commit.format, payload: commit.payload }); }
         catch (error) { code = String((error as Error & { code?: unknown }).code); }
         return { assertRows: [
           equal_row("replay reports ordered conflict", code, "REPLAY_CONFLICT"),
@@ -180,7 +180,7 @@ export function livemap_projected_equality_suite(): TestSuite {
         const source = hson.liveMap.fromJson('{"user":{"a":1,"b":2}}');
         const commit = source.replace(["user"], { a: 3, b: 4 });
         const target = hson.liveMap.fromJson('{"user":{"a":1,"b":2}}');
-        const replayed = replay_fixture(target,{ prevRev: 0, ops: commit.ops });
+        const replayed = replay_fixture(target,{ prevRev: 0, format: commit.format, payload: commit.payload });
         return { assertRows: [
           equal_row("same order replay changed", replayed.changed, true),
           equal_row("target revision advanced", target.rev, 1),

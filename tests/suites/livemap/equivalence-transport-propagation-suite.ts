@@ -87,9 +87,10 @@ export function livemap_equivalence_transport_propagation_suite(): TestSuite {
         const map = hson.liveMap.fromJson('{"value":{"10":10,"2":2,"1":1}}'); const host = hson.locus.create({ map }); const plan = host.recovery.plan({ logicalMapId: host.stream.logicalMapId }); if (plan.outcome !== "snapshot") return { assertRows: [equal_row("outcome", plan.outcome, "snapshot")] }; if (!("hson" in plan.body)) { plan.dispose(); return { assertRows: [equal_row("snapshot format", plan.body.format, "hson")] }; } const restored = hson.liveMap.fromHson(plan.body.hson); const capture = restored.capture(); plan.dispose();
         return { assertRows: [equal_row("payload", "payload" in capture ? capture.payload : undefined, host.map.capture().payload)] };
       }),
-      test("legacy-capture-stays-readable-and-observably-lossy", "legacy capture stays readable and observably lossy", () => {
-        const source = hson.liveMap.fromJson('{"10":10,"2":2,"1":1}'); const target = hson.liveMap.fromJson({}); target.restore({ rev: source.rev, value: source.snap() as JsonValue } as never);
-        return { assertRows: [equal_row("changed bytes", target.capture().payload === source.capture().payload, false), equal_row("public value", target.snap(), source.snap())] };
+      test("legacy-capture-is-rejected", "legacy capture is rejected", () => {
+        const source = hson.liveMap.fromJson('{"10":10,"2":2,"1":1}'); const target = hson.liveMap.fromJson({}); let code = "NO_ERROR";
+        try { target.restore({ rev: source.rev, value: source.snap() as JsonValue } as never); } catch (error) { code = String((error as Error & { code?: unknown }).code); }
+        return { assertRows: [equal_row("legacy capture rejects", code, "INVALID_PROJECTED_TRANSPORT"), equal_row("target remains unchanged", target.snap(), {})] };
       }),
     ],
   };

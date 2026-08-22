@@ -127,7 +127,6 @@ export function locus_sync_suite(): TestSuite {
             path: ["count"],
             value: 0,
             format: "structural-json",
-            formatVersion: 1,
             payload: "0",
           },
         },

@@ -95,13 +95,13 @@ export const deckHeaderCss: CssMap = {
   // padding: "0.12rem 0 0.3rem 0",
   // letterSpacing: "-0.055em",
   // marginTop:"2rem",
-  
   transform: "translateY(-0.22rem)",
   transition: "opacity 220ms ease, transform 220ms ease, text-shadow 220ms ease",
 };
 export const deckHeaderVisibleCss: CssMap = {
   opacity: "1",
   transform: "translateY(0)",
+  // filter: "saturate(110%) contrast(110%) brightness(160%)",
 };
 export const deckBodyGridCss: CssMap = {
   display: "grid",
@@ -111,6 +111,7 @@ export const deckBodyGridCss: CssMap = {
   // height: "100%",
   marginBottom: "2rem",
   overflow: "hidden",
+  // filter: "saturate(120%) contrast(120%) brightness(120%)",
 };
 export const deckBodyCss: CssMap = {
   minWidth: "0",
@@ -170,6 +171,7 @@ export const deckRootCss:CssMap = {
   // CHANGED: the deck root itself stays transparent so the hson/livedemo
   // lighthouse mark can remain visually distinct.
   pointerEvents: "all",
+  filter: "saturate(140%) contrast(110%) brightness(130%)",
 };
 export const deckCodeContentCss: CssMap = {
   position: "relative",
