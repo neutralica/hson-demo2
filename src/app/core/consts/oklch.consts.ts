@@ -30,6 +30,7 @@ export const OKLCH_VIBRANT = {
   yellowCanary: "oklch(0.90 0.160 100)", // bright signal yellow
   yellowVolt: "oklch(0.86 0.200 105)", // electric yellow spike
   yellowSunStaringEyesBright: "oklch(0.7 0.001 101)", // electric yellow spike
+  yellowNeon:"oklch(0.9437 0.1746 122.85)",
 
 
   // --- yellow-greens / greens ---
