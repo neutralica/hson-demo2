@@ -8,7 +8,8 @@ static Vite application, deploy the persistent Node service, commit a release,
 or push Git state. The parent command verifies clean, gitlink-pinned
 `hson-live` and `hson-demo2` checkouts; builds; checks the `hson-live` public
 entrypoints and built package surface; and typechecks this package before it
-checks for `CLOUDFLARE_API_TOKEN` and invokes Wrangler. See
+checks for either `CLOUDFLARE_API_TOKEN` or an authenticated local Wrangler
+session and invokes Wrangler. See
 [`../DEPLOYMENT.md`](../DEPLOYMENT.md) for the full local preflight.
 
 ## Architecture
