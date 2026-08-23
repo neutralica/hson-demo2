@@ -7,6 +7,7 @@ import {
   make_remote_hosted_test_runtime,
   resolve_hosted_test_websocket_url,
 } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
+import { resolve_parsing_verification_websocket_url } from "../../../src/app/demos/parse/circuit-verification-browser-transport";
 import { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../../src/shared/hosted-tests/hosted-test-application.types";
 import { make_test_executor_registry } from "../../harness/core/test-executor";
 import { run_selected_test_ids } from "../../harness/core/run-selected-test-suites";
@@ -44,6 +45,18 @@ expect_deployment(
     "wss://override.test/socket",
   ) === "wss://override.test/socket",
   "an explicit runtime URL overrides build configuration",
+);
+expect_deployment(
+  resolve_hosted_test_websocket_url(
+    { ...production, VITE_HOSTED_TEST_WS_URL: "ws://127.0.0.1:4191" },
+  ) === "ws://127.0.0.1:4191/",
+  "local production simulation accepts an explicit loopback ws endpoint",
+);
+expect_deployment(
+  resolve_parsing_verification_websocket_url(
+    { ...production, VITE_HOSTED_TEST_WS_URL: "ws://127.0.0.1:4191/base?preserved=yes" },
+  ) === "ws://127.0.0.1:4191/base?preserved=yes&locus=circuit-verifier",
+  "circuit verification falls back to the hosted endpoint and retains its query",
 );
 
 const routed = hosted_test_host_url("wss://example.test/socket?token=public&locus=old", "host:new");

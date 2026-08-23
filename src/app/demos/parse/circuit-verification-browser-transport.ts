@@ -21,6 +21,10 @@ import type { ParsingVerificationTransport } from "./parsing-verification-coordi
 export const PARSING_VERIFICATION_CONFIGURATION_ERROR =
   "Parsing verification is unavailable because no Locus circuit verifier URL was configured.";
 
+function is_local_websocket_origin(url: URL): boolean {
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+}
+
 export type ParsingVerificationBuildEnvironment = Readonly<{
   DEV?: boolean;
   PROD?: boolean;
@@ -89,7 +93,7 @@ export function resolve_parsing_verification_websocket_url(
       "Parsing verification Locus URL must use ws:// or wss://.",
     );
   }
-  if (environment.PROD === true && url.protocol !== "wss:") {
+  if (environment.PROD === true && url.protocol !== "wss:" && !is_local_websocket_origin(url)) {
     throw new BrowserCircuitVerificationTransportError(
       "CIRCUIT_VERIFICATION_URL_INSECURE",
       "Production parsing verification requires wss://.",

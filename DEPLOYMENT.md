@@ -98,12 +98,16 @@ WebSocket configuration.
 Set the public WebSocket endpoint while building the Vite frontend:
 
 ```sh
-VITE_HOSTED_TEST_WS_URL=wss://hosted-tests.example.com/socket npm run build
+VITE_HOSTED_TEST_WS_URL=wss://<node-service-host> npm run build
 ```
 
 `VITE_HOSTED_TEST_WS_URL` is public build-time configuration, not a secret.
 Changing it requires rebuilding and redeploying the frontend. Production builds
-require an explicit `wss://` URL. If it is absent, the test panel reports:
+require an explicit `wss://` URL, apart from `ws://localhost`, `ws://127.0.0.1`,
+or `ws://[::1]` used only for local production simulation. TOWL and circuit
+verification normally inherit this endpoint; their optional
+`VITE_TOWL_WS_URL` and `VITE_CIRCUIT_VERIFICATION_WS_URL` overrides are only for
+intentional split-service or compatibility testing. If it is absent, the test panel reports:
 
 > Hosted tests are unavailable because VITE_HOSTED_TEST_WS_URL was not configured for this deployment.
 
@@ -170,7 +174,7 @@ credentials, runtime, or numeric configuration are invalid. It runs
 | `LOCUS_TRUSTED_PROXY_PEERS` | Optional comma-separated immediate proxy peer addresses. Leave unset for direct mode. |
 | `LOCUS_FORWARDED_FOR_HOP` | Optional only with trusted peers; `first` or `last`. |
 | `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, `LOCUS_MAX_HOSTED_REPORTS`, `LOCUS_HOSTED_REPORT_RETENTION_MS`, `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS` | Optional positive-integer lifecycle limits. Defaults are described below; the idle and sweep relationships are validated before listening. |
-| `VITE_HOSTED_TEST_WS_URL` | Frontend build-time public endpoint setting, not read by the Node service. It is the next frontend-wiring phase. |
+| `VITE_HOSTED_TEST_WS_URL` | Required public frontend build-time Node WebSocket origin; hosted tests derive `/hosted-tests`, TOWL derives `/towl`, and circuit verification derives `/circuit-verification`. |
 | `CLOUDFLARE_API_TOKEN`, `TOWL_DEPLOYED_WS_URL` | Worker compatibility deployment/probe only; not required by the Node authority. |
 
 The local readiness endpoint is unauthenticated `GET /healthz`. It returns 200

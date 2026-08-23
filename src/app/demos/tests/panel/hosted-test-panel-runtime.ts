@@ -90,6 +90,10 @@ export type HostedTestBuildEnvironment = Readonly<{
 export const HOSTED_TEST_WS_CONFIGURATION_ERROR =
   "Hosted tests are unavailable because VITE_HOSTED_TEST_WS_URL was not configured for this deployment.";
 
+function is_local_websocket_origin(url: URL): boolean {
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+}
+
 let fallbackClientId = 0;
 
 function make_browser_client_id(): string {
@@ -131,7 +135,7 @@ export function resolve_hosted_test_websocket_url(
   if (url.protocol !== "ws:" && url.protocol !== "wss:") {
     throw new Error(`Hosted-test WebSocket URL must use ws:// or wss://, received ${url.protocol}`);
   }
-  if (environment.PROD === true && url.protocol !== "wss:") {
+  if (environment.PROD === true && url.protocol !== "wss:" && !is_local_websocket_origin(url)) {
     throw new Error("Hosted-test WebSocket URL must use wss:// in a production build.");
   }
   return url.toString();

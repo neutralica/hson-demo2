@@ -104,6 +104,7 @@ export const TOC_BTNcss: CssMap = {
   lineHeight: "2",
   paddingRight: "2rem",
   color: _colors.bluelike,
+  fontWeight: _fontWeight.main,
   // _hover: {
   //   background: TOCcol,
   //   color: øCOLS.backlo
@@ -138,6 +139,7 @@ export const TOC_BTN_IDLEcss: CssMap = {
   textDecoration: "none",
   opacity: "0.8",
   fontSize: _fontSize.smol,
+  fontWeight: _fontWeight.main,
   __after: {},
   _hover: {
     __after: {
