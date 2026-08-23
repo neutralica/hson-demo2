@@ -78,6 +78,7 @@ export type CertificationAccounting = Readonly<{
   alreadyHostedBeforeH2: number;
   h2bSupportedAdditions: number;
   h2cSupportedAdditions: number;
+  h2dSupportedAdditions: number;
   h2SupportedAdditions: number;
   hostedAfterH2: number;
   remainingH2CD: number;
@@ -452,9 +453,19 @@ const H2C_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
   "hson-demo2:check:cloudflare",
   "hson-demo2:cloudflare:types",
 ]);
+const H2D_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
+  "hson-demo2:test:stage5a-corpus-node",
+  "hson-demo2:test:phase6a-node-hosted",
+  "hson-demo2:test:phase6a-full-node-hosted",
+  "hson-demo2:test:phase6b-browser-executor",
+  "hson-demo2:test:phase6b-browser-cancellation",
+  "hson-demo2:test:phase6b-mixed-run",
+  "hson-demo2:test:phase6b-full-browser-hosted",
+]);
 const H2_SUPPORTED_CERTIFICATION_IDS = new Set<string>([
   ...H2B_SUPPORTED_CERTIFICATION_IDS,
   ...H2C_SUPPORTED_CERTIFICATION_IDS,
+  ...H2D_SUPPORTED_CERTIFICATION_IDS,
 ]);
 
 /** Mechanical H2 denominator reconciliation.  Each raw certification command
@@ -476,7 +487,8 @@ export function reconcile_certification_accounting(census: readonly TestSurfaceC
   const supported = raw.filter((entry) => classify_certification_surface(entry) === "SUPPORTED_CERTIFICATION");
   const h2bSupportedAdditions = supported.filter((entry) => H2B_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
   const h2cSupportedAdditions = supported.filter((entry) => H2C_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
-  const h2SupportedAdditions = h2bSupportedAdditions + h2cSupportedAdditions;
+  const h2dSupportedAdditions = supported.filter((entry) => H2D_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
+  const h2SupportedAdditions = h2bSupportedAdditions + h2cSupportedAdditions + h2dSupportedAdditions;
   const alreadyHostedBeforeH2 = supported.filter((entry) => entry.currentLocalLocusAvailability && !H2_SUPPORTED_CERTIFICATION_IDS.has(entry.id)).length;
   const reconciled = Object.values(totals).reduce((sum, count) => sum + count, 0);
   if (reconciled !== raw.length) throw new Error(`CERTIFICATION_ACCOUNTING_UNRECONCILED: ${raw.length} raw entries, ${reconciled} classified.`);
@@ -492,6 +504,7 @@ export function reconcile_certification_accounting(census: readonly TestSurfaceC
     alreadyHostedBeforeH2,
     h2bSupportedAdditions,
     h2cSupportedAdditions,
+    h2dSupportedAdditions,
     h2SupportedAdditions,
     hostedAfterH2: alreadyHostedBeforeH2 + h2SupportedAdditions,
     remainingH2CD: totals.SUPPORTED_CERTIFICATION - (alreadyHostedBeforeH2 + h2SupportedAdditions),

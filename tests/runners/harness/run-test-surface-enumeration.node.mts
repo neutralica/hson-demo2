@@ -399,7 +399,7 @@ expect_surface(
     + certificationAccounting.dynamicSurfaces + certificationAccounting.externalDeployedDiagnostics,
   "every raw certification-like surface must have one explicit accounting category",
 );
-const semanticChecks = denominators["canonical cases"] + denominators["opaque checks"];
+const semanticChecks = denominators["canonical cases"] + denominators["opaque checks"] + denominators["browser journeys"];
 expect_surface(
   denominators["opaque checks"] === hson_live_test_launchers.reduce((total, launcher) => total + launcher.executableChecks, 0),
   "opaque denominator must derive exactly from manifested executable checks",

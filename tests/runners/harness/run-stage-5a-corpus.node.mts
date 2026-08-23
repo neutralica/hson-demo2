@@ -130,6 +130,7 @@ expect_stage5a(
 );
 
 console.log(JSON.stringify({
+  certificate: "stage5a-corpus",
   node: { tests: node.catalog.tests.length, suites: selectedSuites.length, passed: result.summary.pass },
   worker: { tests: worker.catalog.tests.length, suites: new Set(worker.catalog.tests.map((test) => test.suiteId)).size },
   taxonomy: Object.fromEntries(primary.map((choice) => [choice.key, choice.count])),

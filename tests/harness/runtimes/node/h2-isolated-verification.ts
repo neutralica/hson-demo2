@@ -23,7 +23,7 @@ const H2C_CHILD_RELATIVE_PATH: H2CChildModule extends true ? string : never = "t
  * bounded detection policy, not a kernel quota. */
 export const H2_WORKSPACE_POLL_INTERVAL_MS = 250;
 
-const H2B_VERIFICATION_IDS = Object.freeze([
+export const H2B_VERIFICATION_IDS = Object.freeze([
   "hson-demo2:test:surface-enumeration-node",
   "hson-demo2:test:stage2-contracts-node",
   "hson-demo2:test:stage3-discovery-node",
@@ -35,7 +35,16 @@ const H2B_VERIFICATION_IDS = Object.freeze([
   "hson-demo2:test:phase4a-layering-node",
   "hson-demo2:test:phase4b-retirement-node",
 ] as const);
-export const H2_VERIFICATION_IDS = Object.freeze([...H2B_VERIFICATION_IDS, ...H2C_VERIFICATION_IDS] as const);
+export const H2D_VERIFICATION_IDS = Object.freeze([
+  "hson-demo2:test:stage5a-corpus-node",
+  "hson-demo2:test:phase6a-node-hosted",
+  "hson-demo2:test:phase6a-full-node-hosted",
+  "hson-demo2:test:phase6b-browser-executor",
+  "hson-demo2:test:phase6b-browser-cancellation",
+  "hson-demo2:test:phase6b-mixed-run",
+  "hson-demo2:test:phase6b-full-browser-hosted",
+] as const);
+export const H2_VERIFICATION_IDS = Object.freeze([...H2B_VERIFICATION_IDS, ...H2C_VERIFICATION_IDS, ...H2D_VERIFICATION_IDS] as const);
 export type H2VerificationId = typeof H2_VERIFICATION_IDS[number];
 
 type Descriptor = Readonly<{
@@ -43,7 +52,7 @@ type Descriptor = Readonly<{
   scope: "hson-live" | "hson-demo2";
   packageScript: string;
   preparation: "build-hson-live";
-  capabilityProfile: "source-meta" | "artifact";
+  capabilityProfile: "source-meta" | "artifact" | "aggregate-node" | "hosted-node" | "browser-chromium" | "mixed-node-browser";
   timeoutMs: number;
   completion: Readonly<{ kind: "stdout-marker"; marker: string }> | Readonly<{ kind: "terminal-json"; certificate: string }>;
   artifactPolicy: "discard";
@@ -68,7 +77,8 @@ function h2b_terminal_certificate(id: string): string {
 }
 
 const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
-  [...H2B_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => [id, Object.freeze({
+  [
+  ...H2B_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => [id, Object.freeze({
     id,
     scope: "hson-demo2" as const,
     packageScript: id.slice("hson-demo2:".length) as Descriptor["packageScript"],
@@ -82,7 +92,8 @@ const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
         : Object.freeze({ kind: "terminal-json" as const, certificate: h2b_terminal_certificate(id) }),
     artifactPolicy: "discard" as const,
     execution: "package-script" as const,
-  })]), ...H2C_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => {
+  })]),
+  ...H2C_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => {
     const artifact = resolve_h2c_descriptor(id);
     return [id, Object.freeze({
       id,
@@ -93,9 +104,26 @@ const H2_REGISTRY: ReadonlyMap<H2VerificationId, Descriptor> = new Map(
       timeoutMs: 180_000,
       completion: Object.freeze({ kind: "terminal-json" as const, certificate: id }),
       artifactPolicy: "discard" as const,
-      execution: "h2c-wrapper" as const,
+    execution: "h2c-wrapper" as const,
     })];
-  })],
+  }),
+  ...H2D_VERIFICATION_IDS.map((id): readonly [H2VerificationId, Descriptor] => [id, Object.freeze({
+    id,
+    scope: "hson-demo2" as const,
+    packageScript: id.slice("hson-demo2:".length) as Descriptor["packageScript"],
+    preparation: "build-hson-live" as const,
+    capabilityProfile: id.endsWith("stage5a-corpus-node") ? "aggregate-node" as const
+      : id.endsWith("phase6a-node-hosted") || id.endsWith("phase6a-full-node-hosted") ? "hosted-node" as const
+        : id.endsWith("mixed-run") ? "mixed-node-browser" as const : "browser-chromium" as const,
+    timeoutMs: id.endsWith("full-browser-hosted") ? 600_000 : 300_000,
+    completion: Object.freeze({
+      kind: "terminal-json" as const,
+      certificate: id.endsWith("stage5a-corpus-node") ? "stage5a-corpus" : id.slice("hson-demo2:test:".length),
+    }),
+    artifactPolicy: "discard" as const,
+    execution: "package-script" as const,
+  })]),
+  ],
 );
 
 export type H2SnapshotMetadata = Readonly<{
@@ -229,6 +257,13 @@ const TERMINAL_CERTIFICATE_VALIDATORS: Readonly<Record<string, (record: Record<s
   "phase2b-presentation": (r) => r.suite === "phase2b-presentation" && is_check_count(r.checks) && is_string_array(r.groups) && typeof r.suites === "number",
   "phase-4a-layering": (r) => is_check_count(r.checks) && typeof r.appFiles === "number" && typeof r.reachableSourceFiles === "number",
   "phase4b-retirement": (r) => is_check_count(r.checks) && typeof r.canonicalId === "string" && typeof r.opaqueId === "string" && is_string_array(r.selectors),
+  "stage5a-corpus": (r) => is_record(r.node) && is_record(r.worker) && is_record(r.taxonomy) && is_record(r.executionContexts),
+  "phase6a-node-hosted": (r) => typeof r.canonicalRunId === "string" && typeof r.opaqueChecks === "number" && r.cleanShutdown === true,
+  "phase6a-full-node-hosted": (r) => typeof r.selectedSurfaces === "number" && typeof r.canonicalCases === "number" && r.browserLaunches === 0 && r.failures === 0,
+  "phase6b-browser-executor": (r) => r.executorId === "local-playwright-chromium" && is_record(r.metrics) && r.metrics.activeProcesses === 0 && r.metrics.maximumActiveProcesses === 1,
+  "phase6b-browser-cancellation": (r) => r.cancellationAccepted === true && is_record(r.metrics) && r.metrics.activeProcesses === 0 && r.metrics.activeJourneys === 0,
+  "phase6b-mixed-run": (r) => r.oneRunPlan === true && r.oneReportAuthority === true && is_record(r.browserMetrics) && r.browserMetrics.activeProcesses === 0,
+  "phase6b-full-browser-hosted": (r) => r.failures === 0 && is_record(r.metrics) && r.metrics.activeProcesses === 0 && r.metrics.activeJourneys === 0 && r.metrics.maximumActiveProcesses === 1,
 });
 
 async function materialize(source: RepositoryManifest, target: string): Promise<void> {
@@ -346,7 +381,40 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
   if (!inside(await realpath(snapshotLive), resolved)) throw new Error("DEPENDENCY_RESOLUTION_ESCAPES_SNAPSHOT");
 }
 
-function replacement_environment(workspace: string, dependencies: string): Readonly<Record<string, string>> {
+function host_playwright_browsers_path(): string {
+  const home = process.env.HOME;
+  if (home === undefined || home === "") throw new Error("H2_PLAYWRIGHT_BROWSER_SOURCE_UNAVAILABLE");
+  return process.platform === "darwin"
+    ? join(home, "Library", "Caches", "ms-playwright")
+    : join(home, ".cache", "ms-playwright");
+}
+
+/** The host cache is only a provisioning source.  Children receive a copy in
+ * their H2 workspace and never resolve Chromium from the developer cache. */
+async function prepare_playwright_browsers(workspace: string, preparedRoot: string): Promise<string> {
+  const source = host_playwright_browsers_path();
+  const sourceInfo = await stat(source).catch(() => undefined);
+  if (sourceInfo?.isDirectory() !== true) throw new Error("H2_PLAYWRIGHT_BROWSER_SOURCE_UNAVAILABLE");
+  const prepared = join(preparedRoot, "playwright-browsers-v2");
+  try { await stat(prepared); } catch {
+    const staging = `${prepared}.staging-${randomUUID()}`;
+    await cp(source, staging, {
+      recursive: true,
+      dereference: false,
+      filter: (path) => basename(path) !== ".links",
+    });
+    try { await rename(staging, prepared); }
+    catch (error) {
+      await rm(staging, { recursive: true, force: true });
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    }
+  }
+  const runBrowsers = join(workspace, "playwright-browsers");
+  await cp(prepared, runBrowsers, { recursive: true, dereference: false });
+  return runBrowsers;
+}
+
+function replacement_environment(workspace: string, dependencies: string, playwrightBrowsersPath?: string): Readonly<Record<string, string>> {
   const home = join(workspace, "home");
   return Object.freeze({
     PATH: [dirname(process.execPath), join(dependencies, ".bin"), "/usr/local/bin", "/usr/bin", "/bin"].join(":"),
@@ -355,6 +423,7 @@ function replacement_environment(workspace: string, dependencies: string): Reado
     XDG_CACHE_HOME: join(home, ".cache"),
     npm_config_cache: join(home, ".npm"),
     CI: "true", FORCE_COLOR: "0", NO_COLOR: "1", HSON_HOSTED_VERIFICATION_DEPTH: "1",
+    ...(playwrightBrowsersPath === undefined ? {} : { PLAYWRIGHT_BROWSERS_PATH: playwrightBrowsersPath }),
   });
 }
 
@@ -492,6 +561,9 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
     if (workspaceLimitExceeded) throw new Error("WORKSPACE_LIMIT_EXCEEDED");
     if (workspaceScanFailed) throw new Error("WORKSPACE_ACCOUNTING_FAILED");
     const dependencies = join(snapshotDemo, "node_modules");
+    const playwrightBrowsersPath = descriptor.capabilityProfile === "browser-chromium" || descriptor.capabilityProfile === "mixed-node-browser"
+      ? await prepare_playwright_browsers(workspace, preparedRoot)
+      : undefined;
     await options.testHooks?.beforeExecution?.(workspace, snapshotDemo);
     const supervisor = create_node_process_supervisor({ stdoutLimitBytes: OUTPUT_LIMIT_BYTES, stderrLimitBytes: OUTPUT_LIMIT_BYTES, truncationMarker: "<H2_OUTPUT_TRUNCATED>", terminationGraceMs: 1_000, environmentMode: "replace" });
     const npmCli = await npm_cli_path();
@@ -501,7 +573,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
       cwd: snapshotLive,
       command: process.execPath,
       args: Object.freeze([npmCli, "run", "build"]),
-      environment: replacement_environment(workspace, dependencies),
+      environment: replacement_environment(workspace, dependencies, playwrightBrowsersPath),
       timeoutMs: descriptor.timeoutMs,
     }, signal === undefined ? {} : { signal });
     activeExecution = preparation;
@@ -527,7 +599,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
         ? Object.freeze([npmCli, "run", descriptor.packageScript])
         : Object.freeze(["--import", "tsx", join(executionCwd, h2c.directModule)]);
       const execution = supervisor.start(
-        { cwd: executionCwd, command: process.execPath, args: executionArgs, environment: replacement_environment(workspace, dependencies), timeoutMs: descriptor.timeoutMs },
+        { cwd: executionCwd, command: process.execPath, args: executionArgs, environment: replacement_environment(workspace, dependencies, playwrightBrowsersPath), timeoutMs: descriptor.timeoutMs },
         signal === undefined ? {} : { signal },
       );
       activeExecution = execution;
@@ -539,7 +611,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
           cwd: executionCwd,
           command: process.execPath,
           args: Object.freeze(["--import", "tsx", join(snapshotDemo, H2C_CHILD_RELATIVE_PATH), descriptor.id, snapshotLive, snapshotDemo]),
-          environment: replacement_environment(workspace, dependencies),
+          environment: replacement_environment(workspace, dependencies, playwrightBrowsersPath),
           timeoutMs: descriptor.timeoutMs,
         }, signal === undefined ? {} : { signal });
         activeExecution = evidenceExecution;

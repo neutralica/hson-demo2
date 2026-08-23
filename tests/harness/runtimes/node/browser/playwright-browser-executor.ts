@@ -159,6 +159,7 @@ export function create_playwright_browser_executor(
       }));
       const selectedTitles = descriptors.map(({ descriptor }) => descriptor.title);
       const selectedPaths = [...new Set(descriptors.map(({ suite }) => suite.sourceRef!))];
+      const selectedTitlePattern = `(?:${selectedTitles.map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`;
       const suiteStarted = new Set<string>();
       const suiteStartedAt = new Map<string, number>();
       const suiteRemaining = new Map<string, number>();
@@ -328,10 +329,11 @@ export function create_playwright_browser_executor(
             fileURLToPath(import.meta.resolve("@playwright/test/cli")),
             "test",
             ...selectedPaths,
+            "--grep",
+            selectedTitlePattern,
           ]),
           environment: Object.freeze({
             LIVEHOST_PLAYWRIGHT: "1",
-            LIVEHOST_PLAYWRIGHT_TITLES: JSON.stringify(selectedTitles),
             HOSTED_TEST_PORT: String(hostedPort),
             PLAYWRIGHT_APP_PORT: String(appPort),
             PLAYWRIGHT_OUTPUT_DIR: outputRoot,

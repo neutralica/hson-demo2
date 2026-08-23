@@ -56,6 +56,13 @@ export const NODE_HOSTED_COMMAND_SURFACE_IDS = Object.freeze([
   "hson-demo2:test:phase2b-presentation-node",
   "hson-demo2:test:phase4a-layering-node",
   "hson-demo2:test:phase4b-retirement-node",
+  "hson-demo2:test:stage5a-corpus-node",
+  "hson-demo2:test:phase6a-node-hosted",
+  "hson-demo2:test:phase6a-full-node-hosted",
+  "hson-demo2:test:phase6b-browser-executor",
+  "hson-demo2:test:phase6b-browser-cancellation",
+  "hson-demo2:test:phase6b-mixed-run",
+  "hson-demo2:test:phase6b-full-browser-hosted",
 ] as const);
 
 /** Command entrypoints whose semantic work is already exactly selectable in the Node Locus catalog. */

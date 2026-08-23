@@ -5,7 +5,7 @@ import { join } from "node:path";
 import WebSocket from "ws";
 import type { BrowserWebSocketConstructor } from "../../../src/app/demos/tests/hosted-client/browser-websocket-socket";
 import { make_remote_hosted_test_runtime } from "../../../src/app/demos/tests/panel/hosted-test-panel-runtime";
-import { H2_VERIFICATION_IDS } from "../../harness/runtimes/node/h2-isolated-verification";
+import { H2B_VERIFICATION_IDS, H2D_VERIFICATION_IDS, H2_VERIFICATION_IDS } from "../../harness/runtimes/node/h2-isolated-verification";
 import { H2C_VERIFICATION_IDS } from "../../harness/runtimes/node/h2-artifact-certification";
 import { start_hosted_test_server } from "../../harness/runtimes/node/server/hosted-test-server";
 
@@ -111,7 +111,9 @@ try {
   const discovery = await runtime.discover();
   const selected = process.env.H2_ONLY !== undefined
     ? H2_VERIFICATION_IDS.filter((id) => id === process.env.H2_ONLY)
-    : process.env.H2_SET === "H2C" ? H2C_VERIFICATION_IDS : H2_VERIFICATION_IDS;
+    : process.env.H2_SET === "H2B" ? H2B_VERIFICATION_IDS
+      : process.env.H2_SET === "H2C" ? H2C_VERIFICATION_IDS
+        : process.env.H2_SET === "H2D" ? H2D_VERIFICATION_IDS : H2_VERIFICATION_IDS;
   assert.equal(selected.length > 0, true, "H2_ONLY must name a fixed H2 verification ID");
   for (const id of selected) {
     const suite = discovery.catalog.suites.find((candidate) => candidate.sourceRef === `node-command:${id}`);
