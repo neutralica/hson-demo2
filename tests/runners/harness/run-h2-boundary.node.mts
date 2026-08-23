@@ -18,8 +18,11 @@ async function repo(name: string): Promise<string> {
 async function h2_fixture(name: string): Promise<Readonly<{ live: string; demo: string }>> {
   const live = await repo(`${name}-live`); const demo = await repo(`${name}-demo`);
   await writeFile(join(live, "package.json"), JSON.stringify({ name: "hson-live", version: "0.0.0", type: "module", scripts: { build: "node build.mjs" }, exports: { ".": "./dist/index.js", "./test-launchers": "./dist/test-launchers.js" } }));
-  await writeFile(join(live, "package-lock.json"), "{}\n");
-  await writeFile(join(live, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n"); await writeFile("dist/preparation-budget.bin", Buffer.alloc(65536)); console.log("preparation-fixture-write");`);
+  await writeFile(join(live, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": { name: "hson-live" }, "node_modules/ts-node": { version: "0.0.0-fixture" } } }));
+  await writeFile(join(live, ".gitignore"), "node_modules\n");
+  await mkdir(join(live, "node_modules", "ts-node"), { recursive: true });
+  await writeFile(join(live, "node_modules", "ts-node", "package.json"), JSON.stringify({ name: "ts-node", version: "0.0.0-fixture" }));
+  await writeFile(join(live, "build.mjs"), `import { mkdir, writeFile } from "node:fs/promises"; await mkdir("dist", { recursive: true }); await writeFile("dist/index.js", "export const fixture = true;\\n"); await writeFile("dist/test-launchers.js", "export const fixtureLauncher = true;\\n");`);
   await writeFile(join(demo, "package.json"), JSON.stringify({ name: "hson-demo2", version: "0.0.0", type: "module", scripts: { "test:surface-enumeration-node": "node child.mjs" } }));
   await writeFile(join(demo, "package-lock.json"), "{}\n");
   await writeFile(join(demo, "child.mjs"), `import { createRequire } from "node:module"; import { realpathSync, readFileSync, existsSync } from "node:fs"; const require = createRequire(import.meta.url); const names = ["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY", "HOME", "TMPDIR", "XDG_CACHE_HOME", "npm_config_cache", "CI", "HSON_HOSTED_VERIFICATION_DEPTH"]; console.log(JSON.stringify({ live: realpathSync(require.resolve("hson-live")), launchers: realpathSync(require.resolve("hson-live/test-launchers")), sentinel: readFileSync("node_modules/sentinel", "utf8"), canary: existsSync("node_modules/run-canary"), env: Object.fromEntries(names.map((name) => [name, process.env[name] ?? null])) })); console.log("test surface enumeration: ok");`);
@@ -130,8 +133,9 @@ try {
   check(canary.stdout === "absent|absent|absent|absent|absent|absent|absent", "replacement environment strips parent secret canaries");
   check(canary.ok, "replacement environment child succeeds with executor-owned variables");
   const fixture = await h2_fixture("real");
-  const workspaceLimit = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: join(root, "workspace-limit"), workspaceLimitBytes: 16 * 1024 }, "hson-demo2:test:surface-enumeration-node");
-  check(workspaceLimit.status === "FAIL" && workspaceLimit.failureReason === "WORKSPACE_LIMIT_EXCEEDED" && workspaceLimit.process?.stdout.includes("preparation-fixture-write") === true && workspaceLimit.cleanup === "removed", `preparation workspace limit is authoritative (poll ${H2_WORKSPACE_POLL_INTERVAL_MS}ms; bounded polling overshoot)`);
+  const preparationWorkspaceLimitBytes = 16 * 1024;
+  const workspaceLimit = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: join(root, "workspace-limit"), workspaceLimitBytes: preparationWorkspaceLimitBytes }, "hson-demo2:test:surface-enumeration-node");
+  check(workspaceLimit.status === "FAIL" && workspaceLimit.failureReason === "WORKSPACE_LIMIT_EXCEEDED" && workspaceLimit.process?.ok === true && workspaceLimit.process.stdout.includes("> hson-live@0.0.0 build") && workspaceLimit.workspacePeakBytes > preparationWorkspaceLimitBytes && workspaceLimit.cleanup === "removed", `build preparation workspace limit is authoritative before child execution (poll ${H2_WORKSPACE_POLL_INTERVAL_MS}ms; bounded polling overshoot)`);
   const originalCanaries = Object.fromEntries(["NODE_OPTIONS", "H2_SECRET", "GITHUB_TOKEN", "CLOUDFLARE_API_TOKEN", "AWS_SECRET_ACCESS_KEY", "TOWL_DEPLOYED_WS_URL", "VITE_SECRET_CANARY"].map((name) => [name, process.env[name]]));
   Object.assign(process.env, Object.fromEntries(Object.keys(originalCanaries).map((name) => [name, `${name}-parent-canary`])));
   const isolated = await execute_h2_verification({ hsonLiveRoot: fixture.live, hsonDemo2Root: fixture.demo, tempRoot: join(root, "isolated-child") }, "hson-demo2:test:surface-enumeration-node");

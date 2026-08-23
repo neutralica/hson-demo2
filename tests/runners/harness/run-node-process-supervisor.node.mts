@@ -5,7 +5,11 @@ import { join } from "node:path";
 import { create_node_process_supervisor } from "../../harness/runtimes/node/node-process-supervisor";
 import { H2_VERIFICATION_IDS, resolve_h2_verification } from "../../harness/runtimes/node/h2-isolated-verification";
 
-assert.equal(H2_VERIFICATION_IDS.length, 21);
+assert.deepEqual(
+  H2_VERIFICATION_IDS.map((id) => resolve_h2_verification(id).id),
+  H2_VERIFICATION_IDS,
+  "every registered H2 verification identity resolves to its fixed descriptor",
+);
 assert.throws(() => resolve_h2_verification("forged-command"), /UNKNOWN_H2_VERIFICATION_ID/);
 
 const supervisor = create_node_process_supervisor({

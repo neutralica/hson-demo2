@@ -41,7 +41,7 @@ By editing the the underlying HSON graph, LiveTree offers an editing surface for
 
 LiveMap manages application data via a HSON graph-based state machine. It provides graph editing, schema enforcement, subscriber updates, LiveTree bindings, and commit history. 
 
-LiveMap owns and manages both JSON and HTML. When integrated with LiveTree, LiveMap unifies view and data in a single system that reflects canonical app state in realtime, ensuring changes flow consistently between local interfaces, derived views, and hosted environments
+LiveMap owns and manages both JSON and HTML. When integrated, LiveTree and LiveMap unify view and data in a system that reflects canonical app state in realtime, ensuring changes flow consistently between  hosted environments, local interfaces, and derived views.
 
 ```text
 LiveMap
@@ -54,10 +54,6 @@ LiveTree
   owns DOM, CSS, event, and runtime projection resources
 ```
 
-Reflect is an optional projection and reconciliation layer, not an automatic part of every LiveMap.
-
-(LiveMap "is" JSON.)
-
 ---
 
 ### Locus and LiveHost
@@ -66,7 +62,7 @@ Locus is a server-side LiveMap that establishes distributed canonical applicatio
 
 Locus accepts mutation requests from clients, validates them, and communicates changes via an ordered commit history. Clients do not own their state; they instead track graph changes streamed from Locus over WebSocket. 
 
-#__#
+---
 
 LiveHost provides hson-live's application layer and HTTP + WebSocket implementations, managing requests, connections, sessions, readiness, and runtime boundaries to create an end-to-end full stack pipeline with a single source of application truth. 
 
@@ -75,7 +71,7 @@ The result is a shared system model where multiple clients remain synchronized t
 
 ---
 
-## Demos
+# Demos
 
 ---
 
