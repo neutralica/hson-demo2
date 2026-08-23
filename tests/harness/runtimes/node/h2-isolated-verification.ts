@@ -362,6 +362,24 @@ async function prepare_dependencies(sourceLive: string, sourceDemo: string, snap
   // one writable copy.  The paired library uses that same run-owned tree so a
   // run does not spend its 1 GiB budget on two identical dependency graphs.
   await cp(prepared, join(snapshotDemo, "node_modules"), { recursive: true, dereference: true });
+  // Opaque hson-live launchers execute the library's declared test runtime.
+  // Keep that small, explicit closure in the run-owned graph instead of
+  // resolving it through the developer checkout.
+  const liveLock = JSON.parse(await readFile(join(sourceLive, "package-lock.json"), "utf8")) as {
+    packages?: Readonly<Record<string, Readonly<{ dependencies?: Readonly<Record<string, string>> }>>>;
+  };
+  const livePackages = liveLock.packages ?? {};
+  const copy_live_dependency = async (name: string): Promise<void> => {
+    const lockPath = `node_modules/${name}`;
+    const dependency = livePackages[lockPath];
+    if (dependency === undefined) throw new Error(`H2_LIVE_DEPENDENCY_LOCK_MISSING: ${name}`);
+    const source = join(sourceLive, "node_modules", name);
+    const target = join(snapshotDemo, "node_modules", name);
+    await mkdir(dirname(target), { recursive: true });
+    await cp(source, target, { recursive: true, dereference: true });
+    for (const child of Object.keys(dependency.dependencies ?? {})) await copy_live_dependency(child);
+  };
+  await copy_live_dependency("ts-node");
   // `cp(..., dereference)` is required for a self-contained tree, but it turns
   // .bin links into copied launcher files whose relative imports are wrong.
   // Restore those links from the prepared template; they point only within the

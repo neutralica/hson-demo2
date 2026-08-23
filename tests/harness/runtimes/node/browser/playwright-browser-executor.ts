@@ -337,6 +337,9 @@ export function create_playwright_browser_executor(
             HOSTED_TEST_PORT: String(hostedPort),
             PLAYWRIGHT_APP_PORT: String(appPort),
             PLAYWRIGHT_OUTPUT_DIR: outputRoot,
+            ...(process.env.PLAYWRIGHT_BROWSERS_PATH === undefined
+              ? {}
+              : { PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH }),
             PATH: `${dirname(process.execPath)}${delimiter}${process.env.PATH ?? ""}`,
           }),
           // This watchdog preserves Playwright's existing 30-second journey timeout;
