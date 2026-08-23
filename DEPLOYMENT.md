@@ -41,7 +41,8 @@ protocol data; deploying a newer strict parser beside an older Worker serializer
 can let the socket and session attach succeed but fail the first recovery
 snapshot before TOWL state is installed.
 
-After deploying the Worker and before promoting the matching static bundle, run:
+After a Worker compatibility deployment and before promoting a static bundle
+that targets it, run:
 
 ```sh
 TOWL_DEPLOYED_WS_URL=wss://<worker-host>/socket npm run diagnose:towl-deployed
@@ -126,8 +127,8 @@ Build and start the deterministic JavaScript artifact on supported Node
 ```sh
 npm run build:node-production
 HOST=0.0.0.0 PORT="$PORT" \
-LIVEHOST_ALLOWED_ORIGINS=https://hson.example.com \
-LIVEHOST_BEARER_TOKEN="$LIVEHOST_BEARER_TOKEN" \
+LOCUS_ALLOWED_ORIGINS=https://hson.example.com \
+LOCUS_BEARER_TOKEN="$LOCUS_BEARER_TOKEN" \
 npm run start:production
 ```
 
@@ -136,7 +137,7 @@ Production platforms normally supply `PORT`; bind `HOST` to `0.0.0.0` so the
 platform proxy can reach the process. A bind address such as
 `ws://0.0.0.0:8787` is diagnostic only and must never be used as the browser
 configuration. The production entry defaults to
-`LIVEHOST_DEPLOYMENT=production` and fails before listening when origins,
+`LOCUS_DEPLOYMENT=production` and fails before listening when origins,
 credentials, runtime, or numeric configuration are invalid. It runs
 `dist-node/livehost-server.mjs`, not TypeScript or `tsx`.
 
@@ -151,9 +152,9 @@ transport limits:
   after terminal execution and subscribers are gone.
 - one unreferenced 30-second sweep applies both policies.
 
-Configure these with `LIVEHOST_MAX_TOWL_ROOMS`, `LIVEHOST_TOWL_IDLE_MS`,
-`LIVEHOST_MAX_HOSTED_REPORTS`, `LIVEHOST_HOSTED_REPORT_RETENTION_MS`, and
-`LIVEHOST_AUTHORITY_SWEEP_INTERVAL_MS`. Values are finite positive integers.
+Configure these with `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`,
+`LOCUS_MAX_HOSTED_REPORTS`, `LOCUS_HOSTED_REPORT_RETENTION_MS`, and
+`LOCUS_AUTHORITY_SWEEP_INTERVAL_MS`. Values are finite positive integers.
 TOWL idle time cannot be shorter than its 30-second resumable-session grace,
 and the sweep interval cannot exceed either retention duration. Invalid values
 fail before listening.
@@ -183,18 +184,18 @@ behavior instead of using this Node policy.
 The public service must terminate TLS and expose a `wss://` URL. Its reverse
 proxy must forward HTTP Upgrade and Connection headers to the Node process and
 must retain the full path and query string. Exact browser origins are required
-through `LIVEHOST_ALLOWED_ORIGINS`; missing and `null` origins reject in this
+through `LOCUS_ALLOWED_ORIGINS`; missing and `null` origins reject in this
 production composition. Bootstrap HTTP and WebSocket requests independently
 authenticate the same principal. Non-browser clients may use an
 `Authorization: Bearer` header. Browser deployments provision an HttpOnly
 `livehost_auth` cookie (name configurable with
-`LIVEHOST_AUTH_COOKIE_NAME`) at the proxy/application identity boundary; this
+`LOCUS_AUTH_COOKIE_NAME`) at the proxy/application identity boundary; this
 server does not create login routes or cookies. The token is never placed in
 bootstrap state or query parameters.
 
 Direct mode ignores all forwarded identity headers. To trust a TLS-terminating
-proxy, set `LIVEHOST_TRUSTED_PROXY_PEERS` to the comma-separated immediate peer
-addresses and optionally `LIVEHOST_FORWARDED_FOR_HOP=first|last`. Only trusted
+proxy, set `LOCUS_TRUSTED_PROXY_PEERS` to the comma-separated immediate peer
+addresses and optionally `LOCUS_FORWARDED_FOR_HOP=first|last`. Only trusted
 peers influence effective scheme, host, and client address through
 `X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Forwarded-Host`.
 The `Forwarded` header is intentionally unsupported and rejected in trusted
