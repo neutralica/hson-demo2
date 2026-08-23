@@ -59,11 +59,11 @@ can execute a persistent Node process. Do not point the browser at a Worker,
 function, or static host unless that product explicitly supports this stateful,
 long-running WebSocket server.
 
-The `hson-demo2` package is not a workspace of the parent package. It has its
-own `package.json` and lockfile and currently resolves `hson-live` from the
-sibling `../hson-live` directory. A server build context must therefore contain
-both sibling directories in that layout. `ws` is a direct runtime dependency
-of `hson-demo2`; `@types/ws` is a direct development dependency.
+The `hson-demo2` package is a parent-workspace member with its own
+`package.json` and lockfile. It resolves `hson-live` from the sibling
+`../hson-live` directory. A server build context must therefore contain both
+sibling directories in that layout. `ws` is a direct runtime dependency of
+`hson-demo2`; `@types/ws` is a direct development dependency.
 
 ## Local development
 
@@ -112,24 +112,39 @@ precedence over the Vite value.
 
 ## Server production runtime
 
-Install and validate the server from a build context containing both
-`hson-demo2` and its sibling `hson-live`:
+The Node service is the default hosted authority. It runs from the parent
+deployment workspace, which must retain sibling `hson-demo2` and `hson-live`
+directories, their installed runtime packages, and these build artifacts:
+
+- `hson-demo2/dist-node/livehost-server.mjs`;
+- `hson-demo2/dist-node/circuit-verification-worker.mjs`; and
+- `hson-live/dist/` resolved through `hson-demo2`'s unchanged
+  `file:../hson-live` dependency.
+
+The production server artifact is bundled from application source, so TypeScript
+source files are not required after build. It intentionally retains runtime
+package imports: `hson-live`, `ws`, `jsdom`, `dompurify`, `domhandler`, and
+`htmlparser2` must remain installed. Install and validate from that sibling
+layout; do not copy individual artifacts into a different package boundary.
 
 ```sh
-cd hson-demo2
+cd ..
 npm ci
-npm run check
+LOCUS_ALLOWED_ORIGINS=https://hson.example.com \
+LOCUS_BEARER_TOKEN="$LOCUS_BEARER_TOKEN" \
+npm run prepare:node-production
 ```
 
-Build and start the deterministic JavaScript artifact on supported Node
-`>=22.12.0 <25`:
+`prepare:node-production` is repository-side preparation, not a deployment.
+It verifies, builds, checks, and validates the Node production contract. Start
+the deterministic JavaScript artifact on supported Node `>=22.12.0 <25`:
 
 ```sh
 npm run build:node-production
 HOST=0.0.0.0 PORT="$PORT" \
 LOCUS_ALLOWED_ORIGINS=https://hson.example.com \
 LOCUS_BEARER_TOKEN="$LOCUS_BEARER_TOKEN" \
-npm run start:production
+npm -w hson-demo2 run start:production
 ```
 
 `HOST` defaults to `127.0.0.1` and `PORT` defaults to `8787` for local use.
@@ -140,6 +155,29 @@ configuration. The production entry defaults to
 `LOCUS_DEPLOYMENT=production` and fails before listening when origins,
 credentials, runtime, or numeric configuration are invalid. It runs
 `dist-node/livehost-server.mjs`, not TypeScript or `tsx`.
+
+### Production environment contract
+
+| Variable | Production contract |
+| --- | --- |
+| `LOCUS_DEPLOYMENT` | Optional; production entry defaults it to `production`. Set only to `production` for this service. |
+| `LOCUS_ALLOWED_ORIGINS` | Required; comma-separated exact browser origins. |
+| `LOCUS_BEARER_TOKEN` | Required secret; at least 16 characters. Clients use it as a Bearer token or through the configured cookie. |
+| `HOST` | Optional bind address; defaults to `127.0.0.1`. Production providers normally use `0.0.0.0`. |
+| `PORT` | Optional integer from 1 through 65535; defaults to `8787`. |
+| `SHUTDOWN_TIMEOUT_MS` | Optional positive integer; defaults to `5000`. |
+| `LOCUS_AUTH_COOKIE_NAME` | Optional cookie name; defaults to `locus_auth`. |
+| `LOCUS_TRUSTED_PROXY_PEERS` | Optional comma-separated immediate proxy peer addresses. Leave unset for direct mode. |
+| `LOCUS_FORWARDED_FOR_HOP` | Optional only with trusted peers; `first` or `last`. |
+| `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, `LOCUS_MAX_HOSTED_REPORTS`, `LOCUS_HOSTED_REPORT_RETENTION_MS`, `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS` | Optional positive-integer lifecycle limits. Defaults are described below; the idle and sweep relationships are validated before listening. |
+| `VITE_HOSTED_TEST_WS_URL` | Frontend build-time public endpoint setting, not read by the Node service. It is the next frontend-wiring phase. |
+| `CLOUDFLARE_API_TOKEN`, `TOWL_DEPLOYED_WS_URL` | Worker compatibility deployment/probe only; not required by the Node authority. |
+
+The local readiness endpoint is unauthenticated `GET /healthz`. It returns 200
+with `{ "ready": true }` only after every hosted application is ready, and 503
+otherwise. A provider should check this endpoint locally through its proxy;
+the repository does not provision that proxy, TLS, DNS, process supervisor, or
+public endpoint.
 
 ## Authority lifetime and restart contract
 
@@ -188,7 +226,7 @@ through `LOCUS_ALLOWED_ORIGINS`; missing and `null` origins reject in this
 production composition. Bootstrap HTTP and WebSocket requests independently
 authenticate the same principal. Non-browser clients may use an
 `Authorization: Bearer` header. Browser deployments provision an HttpOnly
-`livehost_auth` cookie (name configurable with
+`locus_auth` cookie (name configurable with
 `LOCUS_AUTH_COOKIE_NAME`) at the proxy/application identity boundary; this
 server does not create login routes or cookies. The token is never placed in
 bootstrap state or query parameters.
