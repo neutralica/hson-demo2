@@ -1,5 +1,16 @@
 # Hosted-test deployment
 
+## Worker command
+
+From the parent deployment workspace, `npm run deploy:worker` deploys only
+this Cloudflare Worker and Durable Object adapter. It does not publish the
+static Vite application, deploy the persistent Node service, commit a release,
+or push Git state. The parent command verifies clean, gitlink-pinned
+`hson-live` and `hson-demo2` checkouts; builds; checks the `hson-live` public
+entrypoints and built package surface; and typechecks this package before it
+checks for `CLOUDFLARE_API_TOKEN` and invokes Wrangler. See
+[`../DEPLOYMENT.md`](../DEPLOYMENT.md) for the full local preflight.
+
 ## Architecture
 
 The browser application is a static Vite build. The repository contains no

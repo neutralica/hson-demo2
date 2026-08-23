@@ -23,8 +23,9 @@
     "check:cloudflare": "tsc -p tsconfig.cloudflare.json --noEmit",
     "cloudflare:dev": "wrangler dev --config wrangler.jsonc",
     "cloudflare:deploy": "wrangler deploy --config wrangler.jsonc",
+    "preflight:cloudflare": "test -n \"${CLOUDFLARE_API_TOKEN:-}\" || (echo 'CLOUDFLARE_API_TOKEN is required for Worker deployment.' >&2; exit 1)",
     "cloudflare:types": "wrangler types --config wrangler.jsonc --include-runtime false tests/harness/runtimes/cloudflare/worker-configuration.d.ts",
-   "deploy:worker": "npm run build:hson-live && npm run check:cloudflare && npm run cloudflare:deploy",
+   "deploy:worker": "npm --prefix .. run preflight:worker && npm run preflight:cloudflare && npm run cloudflare:deploy",
     "preview": "vite preview",
 
     "diagnose:towl-deployed": "tsx tests/runners/towl/diagnose-deployed-towl.node.mts",
