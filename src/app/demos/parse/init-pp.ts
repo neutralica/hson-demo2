@@ -35,6 +35,10 @@ export type ParsingPanelsInitOptions = Readonly<{
   scheduler?: ParsingVerificationCoordinatorOptions<BrowserCircuitAdmission>["scheduler"];
   transport?: ParsingVerificationTransport;
   certify?: ParsingVerificationCoordinatorOptions<BrowserCircuitAdmission>["certify"];
+  initialSource?: Readonly<{
+    entry: Fmt;
+    load(signal: AbortSignal): Promise<string>;
+  }>;
 }>;
 
 function make_panel_id(): string {
@@ -85,7 +89,9 @@ export function init_parsing_panels(
   const formats = Object.keys(pp.panels) as readonly Fmt[];
   let active: Fmt | null = null;
   let invalidOwner: Fmt | null = null;
+  let hasAuthoredInput = false;
   let invalidClearTimer: ReturnType<typeof setTimeout> | undefined;
+  const initialSourceAbort = new AbortController();
   let disposed = false;
 
   function clear_invalid_timer(): void {
@@ -216,6 +222,7 @@ export function init_parsing_panels(
 
   function handleInput(format: Fmt): void {
     if (disposed) return;
+    hasAuthoredInput = true;
     active = format;
     const source = getValue(pp.panels[format]);
     pp.panels[format].bytes.text.set(`${encBytes(source)}`);
@@ -246,11 +253,22 @@ export function init_parsing_panels(
   }
   render(verification.snapshot());
 
+  if (options.initialSource !== undefined) {
+    void options.initialSource.load(initialSourceAbort.signal).then((source) => {
+      if (disposed || initialSourceAbort.signal.aborted || hasAuthoredInput) return;
+      setPanelValueAndBytes(options.initialSource!.entry, source);
+      verification.edit(options.initialSource!.entry, source);
+    }).catch(() => {
+      // Parsing Panels remains usable if an optional demonstration fixture is unavailable.
+    });
+  }
+
   return Object.freeze({
     verification,
     dispose() {
       if (disposed) return;
       disposed = true;
+      initialSourceAbort.abort();
       clear_invalid_timer();
       verification.dispose();
       pp.root.data.set("verification-status", "disposed");

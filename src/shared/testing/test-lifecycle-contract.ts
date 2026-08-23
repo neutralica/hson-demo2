@@ -86,6 +86,8 @@ export type TestLifecycleEvent =
       status: TestLifecycleTerminalStatus;
       durationMs: number;
       error?: TestLifecycleError;
+      /** Internal hosted original-run structured case diagnostic. */
+      diagnostic?: import("../hosted-tests/hosted-test-action.types").HostedTestCaseDiagnostic;
     }>)
   | (TestLifecycleEventBase & Readonly<{
       t: "output";

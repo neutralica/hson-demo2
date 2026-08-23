@@ -51,7 +51,7 @@ import {
 import { create_livehost_locus_registry } from "hson-live/livehost";
 import { create_application_locus_store, type ApplicationLocusStore } from "./application-locus-store";
 import { create_application_idle_sweep, type ApplicationIdleSweep } from "./application-idle-sweep";
-import { HOSTED_TEST_RUN_OPTIONS } from "./hosted-test-scheduling";
+import { HOSTED_TEST_RICH_RUN_OPTIONS, HOSTED_TEST_RUN_OPTIONS } from "./hosted-test-scheduling";
 import { observe_hosted_test_timeline, type HostedTestTimelineObserver } from "../../../src/shared/hosted-tests/hosted-test-timeline";
 
 export { HOSTED_TEST_COORDINATOR_HOST_ID } from "../../../src/shared/hosted-tests/hosted-test-application.types";
@@ -171,6 +171,8 @@ export type HostedTestApplicationOptions = Readonly<{
   timeline?: HostedTestTimelineObserver;
   /** Production control-plane barrier: execution begins after initial report projection acknowledges readiness. */
   requireReportReady?: boolean;
+  /** Internal deployment-rich execution mode; normal hosted runs retain their existing cost profile. */
+  retainRichDiagnostics?: boolean;
   assignExecutor?: (suite: TestExecutorDiscovery["catalog"]["suites"][number]) => string;
   lifecycle?: Readonly<{
     maxReports: number;
@@ -668,7 +670,13 @@ export function create_hosted_test_application(
               });
             }
             activeReport.reduce(event);
-          }, { ...HOSTED_TEST_RUN_OPTIONS, signal: executionControl.signal });
+          }, {
+            ...(options.retainRichDiagnostics === true ? HOSTED_TEST_RICH_RUN_OPTIONS : HOSTED_TEST_RUN_OPTIONS),
+            ...(options.retainRichDiagnostics === true
+              ? { richDiagnosticContext: { runId, suite: HOSTED_TEST_SELECTED_RUN_TARGET } }
+              : {}),
+            signal: executionControl.signal,
+          });
         } else {
           result = Object.freeze({
             ok: false,

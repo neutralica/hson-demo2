@@ -41,13 +41,25 @@ const PP_HEADER_LABELcss = {
   lineHeight: "1",
 };
 
+const WIKIPEDIA_FIXTURE_URL = "/fixtures/parse/wikipedia-main-page.html";
+
+function load_wikipedia_fixture(signal: AbortSignal): Promise<string> {
+  return fetch(WIKIPEDIA_FIXTURE_URL, { signal }).then(async (response) => {
+    if (!response.ok) throw new Error(`Parsing Panels Wikipedia fixture failed to load (${response.status}).`);
+    return response.text();
+  });
+}
+
 
 export function mount_parsing_panels(
   host: LiveTree,
   options: ParsingPanelsInitOptions = {},
 ): MountedParsingPanels {
   const pp = pp_factory(host);
-  const controller = init_parsing_panels(pp, options);
+  const controller = init_parsing_panels(pp, {
+    ...options,
+    initialSource: options.initialSource ?? Object.freeze({ entry: "html" as const, load: load_wikipedia_fixture }),
+  });
   return Object.freeze({ ...pp, verification: controller.verification, dispose: controller.dispose });
 }
 

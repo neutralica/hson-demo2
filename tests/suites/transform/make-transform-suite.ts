@@ -52,10 +52,11 @@ export function make_transform_test_suite(
           input,
           sub,
           preview: input.length ? _snip(input) : "—",
+          expected,
         },
 
 
-        run: () => {
+        run: (context) => {
           const base = {
             entry,
             dual: true,
@@ -66,7 +67,7 @@ export function make_transform_test_suite(
           const report = hson._circuit_test(atom, {
             ...base,
             verbose: true,
-            capture: false,
+            capture: context?.richDiagnostics === true,
           });
 
           const didPass = report.ok;
@@ -77,8 +78,17 @@ export function make_transform_test_suite(
             const msg = expected === "pass"
               ? (f0?.error ? `${f0.step}: ${f0.error}` : `loop failed (ok=false)`)
               : `expected failure, but loop passed`;
-
-            throw new Error(msg);
+            return {
+              metaPatch: _freeze({
+                fixture: group,
+                input,
+                sub,
+                preview: input.length ? _snip(input) : "—",
+                expected,
+              }),
+              assertRows: _freeze([{ ok: false, label: msg, actual: didPass, expected: shouldPass }]),
+              ...(context?.richDiagnostics === true ? { loopReport: report } : {}),
+            };
           }
 
           return {
@@ -89,6 +99,7 @@ export function make_transform_test_suite(
               preview: input.length ? _snip(input) : "—",
               expected,
             }),
+            ...(context?.richDiagnostics === true ? { loopReport: report } : {}),
           };
         },
       }));

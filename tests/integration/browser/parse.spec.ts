@@ -5,6 +5,19 @@ import type * as BrowserTransformOracle from "../../helpers/transform/browser-tr
 const VALID_HSON = '<div id="browser-parse" "hello browser"/>';
 const LOCALLY_PARSED = /^(Parsed · waiting|Queued|Verifying \d\/6|Checking browser|Verified)$/;
 
+test("Parsing Panels lazily seeds the Wikipedia HTML demonstration", async ({ page }) => {
+  const fixtureRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().endsWith("/fixtures/parse/wikipedia-main-page.html")) fixtureRequests.push(request.url());
+  });
+  await reach_demo(page);
+  expect(fixtureRequests).toEqual([]);
+  await open_demo(page, "parse");
+  const html = page.getByTestId("parse-html-editor");
+  await expect(html).toHaveValue(/page-Main_Page/, { timeout: 15_000 });
+  expect(fixtureRequests).toHaveLength(1);
+});
+
 test("Parse transforms valid-invalid-valid input without duplicate surfaces", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);

@@ -1,6 +1,9 @@
 // tests.types.ts
 
 import type { Artifact, FixtureAtom, LoopOpts, LoopReport } from "hson-live/diagnostics";
+import type { HostedTestCaseDiagnostic } from "../../../src/shared/hosted-tests/hosted-test-action.types";
+import type { HostedTestRunId } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
+import type { HostedTestRunTarget } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
 import type {
   CaseMeta,
   TestDescriptorMetadata,
@@ -36,6 +39,7 @@ export type TestEvent = (
     assertRows?: readonly TestAssertRow[];
     expected?: TestExpected;
     metaPatch?: Record<string, string>; // ADDED
+    diagnostic?: HostedTestCaseDiagnostic;
   }
   | {
     t: "case_cancelled";
@@ -110,14 +114,18 @@ export type TestCase = Readonly<{
   expected?: TestExpected;
   expectedError?: TestExpectedError;
   timeoutMs?: number;
-  run: () => void | RunCaseRet | Promise<void | RunCaseRet>;
+  run: (context?: RunCaseContext) => void | RunCaseRet | Promise<void | RunCaseRet>;
   cleanup?: () => void | Promise<void>;
 }>;
 
 export type RunCaseRet = Readonly<{
   metaPatch?: Record<string, string>;
   assertRows?: readonly TestAssertRow[];
+  /** Original transformer evidence, normalized by the shared hosted diagnostic helper. */
+  loopReport?: LoopReport;
 }>;
+
+export type RunCaseContext = Readonly<{ richDiagnostics?: boolean }>;
 
 export type TestSuite = Readonly<{
   suite: string;
@@ -136,6 +144,10 @@ export type RunOptions = Readonly<{
   yieldAfterMs?: number; // elapsed execution budget between event-loop yields
   yieldBetweenSuites?: boolean;
   includePassedDiagnostics?: boolean;
+  /** Internal hosted mode: retain complete original-run case diagnostics. */
+  richDiagnostics?: boolean;
+  /** Hosted identity needed to construct the retained, structured original-run diagnostic. */
+  richDiagnosticContext?: Readonly<{ runId: HostedTestRunId; suite: HostedTestRunTarget }>;
   caseTimeoutMs?: number;
   signal?: AbortSignal;
   /** Internal run-local scheduling/reporting clock; defaults to performance.now(). */

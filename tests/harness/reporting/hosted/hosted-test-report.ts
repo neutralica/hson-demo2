@@ -106,6 +106,7 @@ export const HOSTED_TEST_REPORT_SCHEMA = hson.liveMap.schema.define((s) => {
         durationMs: finiteNumber.nullable,
         ms: finiteNumber.nullable,
         err: s.string.nullable,
+        diagnostic: s.unknown.nullable,
         errors: s.array(lifecycleError),
         evidenceRefs: s.array(s.string),
         executorId: s.string.nullable,
@@ -186,6 +187,7 @@ export function make_initial_hosted_test_report(
         durationMs: null,
         ms: null,
         err: null,
+        diagnostic: null,
         errors: [],
         evidenceRefs: [],
         executorId: null,
@@ -238,6 +240,11 @@ function clone_value(value: JsonValue): JsonValue {
 
 function clone_optional_value(value: JsonValue | undefined): JsonValue | undefined {
   return value === undefined ? undefined : clone_value(value);
+}
+
+/** Locus accepts mutable JSON wire values; diagnostics are frozen structured test results. */
+function serialize_structured_diagnostic(value: unknown): JsonValue {
+  return JSON.parse(JSON.stringify(value)) as JsonValue;
 }
 
 function clone_op(op: LiveMapOp): LiveMapOp {
@@ -775,6 +782,7 @@ export function make_hosted_test_report(
           durationMs,
           ms: durationMs,
           err: event.error?.message ?? null,
+          diagnostic: event.diagnostic === undefined ? null : serialize_structured_diagnostic(event.diagnostic),
           errors: event.error === undefined ? [] : [normalized_error(event.error, event.executorId)],
           executorId: event.executorId,
           lastSequence: event.sequence,

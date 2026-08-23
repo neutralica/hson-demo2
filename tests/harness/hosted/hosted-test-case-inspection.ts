@@ -2,32 +2,13 @@ import type { LoopReport } from "hson-live/diagnostics";
 import type { HostedTestCaseDiagnostic } from "../../../src/shared/hosted-tests/hosted-test-action.types";
 import type { HostedTestRunId } from "../../../src/shared/hosted-tests/hosted-test-report-wire.types";
 import type { HostedTestRunTarget } from "../../../src/shared/hosted-tests/hosted-test-suite-contract";
-import type { CaseKey, TestAssertRow, TestEvent, TestSuite } from "../core/test-contracts";
+import type { CaseKey, TestEvent, TestSuite } from "../core/test-contracts";
 import type { ExecutableTestRegistration, TestExecutorRegistry } from "../core/test-executor";
+import { normalize_hosted_test_case_diagnostic, transform_terminal_assertions } from "../core/hosted-test-case-diagnostic";
 import { all_hosted_executable_suites, type HostedTestRuntimeKind } from "./hosted-all-test-suites";
 import { all_deterministic_transform_test_suites } from "./deterministic-transform-test-suites";
 import { with_hosted_dom_runtime, with_hosted_node_globals } from "../runtimes/dom/hosted-dom-mutex";
 import { run_test_suites } from "../core/test-runner";
-
-function display_value(value: unknown): string | null {
-  if (value === null) return "null";
-  if (value === undefined) return "undefined";
-  if (typeof value === "string") return value;
-  try {
-    return JSON.stringify(value, null, 2) ?? String(value);
-  } catch {
-    return String(value);
-  }
-}
-
-function assertions(rows: readonly TestAssertRow[] | undefined) {
-  return Object.freeze((rows ?? []).map((row) => Object.freeze({
-    ok: row.ok,
-    label: row.label,
-    actual: display_value(row.actual),
-    expected: display_value(row.expected),
-  })));
-}
 
 async function run_one(runtime: HostedTestRuntimeKind, suite: TestSuite): Promise<Extract<TestEvent, { t: "case_end" }>> {
   let finished: Extract<TestEvent, { t: "case_end" }> | undefined;
@@ -84,44 +65,6 @@ function match_registration(registration: ExecutableTestRegistration): HostedTes
   });
 }
 
-function normalize_loop_report(
-  runId: HostedTestRunId,
-  suiteId: HostedTestRunTarget,
-  caseKey: string,
-  caseSuite: string,
-  name: string,
-  ms: number,
-  report: LoopReport,
-  input: string | null,
-): HostedTestCaseDiagnostic {
-  return Object.freeze({
-    type: "transform",
-    runId,
-    suite: suiteId,
-    caseKey,
-    caseSuite,
-    caseId: caseKey.slice(caseKey.indexOf("::") + 2),
-    name,
-    status: report.ok ? "pass" : "fail",
-    ms,
-    error: report.failures[0]?.error ?? null,
-    assertions: Object.freeze([]),
-    values: Object.freeze([{ label: "input", value: input }]),
-    artifacts: Object.freeze((report.artifacts ?? []).map((artifact) => Object.freeze({
-      lap: artifact.lap,
-      label: artifact.label ?? `lap ${artifact.lap} ${artifact.fmt}`,
-      format: artifact.fmt,
-      text: artifact.text,
-      node: artifact.node,
-    }))),
-    trace: Object.freeze((report.trace ?? []).map((step) => Object.freeze({
-      ok: step.ok,
-      step: step.step,
-      error: step.error ?? null,
-    }))),
-  });
-}
-
 async function inspect_match(
   request: HostedTestCaseInspectionRequest,
   match: HostedTestCaseInspectionMatch,
@@ -133,35 +76,27 @@ async function inspect_match(
     return with_hosted_dom_runtime(async () => {
       const startedAt = performance.now();
       const report = await capture();
-      return normalize_loop_report(
-        request.runId,
-        request.suite,
-        request.caseKey,
-        match.testCase.suite,
-        match.testCase.name,
-        performance.now() - startedAt,
-        report,
-        match.testCase.meta?.input ?? null,
-      );
+      const assertRows = transform_terminal_assertions(report, match.testCase.expected);
+      return normalize_hosted_test_case_diagnostic({
+        runId: request.runId, suite: request.suite,
+        caseSuite: match.testCase.suite, caseId: match.testCase.caseId, name: match.testCase.name,
+        status: report.ok ? "pass" : "fail", ms: performance.now() - startedAt,
+        ...(match.testCase.meta === undefined ? {} : { metadata: match.testCase.meta }),
+        ...(assertRows === undefined ? {} : { assertRows }),
+        loopReport: report,
+      });
     });
   }
 
   const event = await run_one(match.runtime, match.suite);
 
-  return Object.freeze({
-    type: "ordinary",
-    runId: request.runId,
-    suite: request.suite,
-    caseKey: request.caseKey,
-    caseSuite: event.suite,
-    caseId: event.caseId, name: event.name,
-    status: event.status,
-    ms: event.ms,
-    error: event.err ?? null,
-    assertions: assertions(event.assertRows),
-    values: Object.freeze(Object.entries({ ...match.testCase.meta, ...event.metaPatch }).map(([label, value]) => Object.freeze({ label, value }))),
-    artifacts: Object.freeze([]),
-    trace: Object.freeze([]),
+  return normalize_hosted_test_case_diagnostic({
+    runId: request.runId, suite: request.suite,
+    caseSuite: event.suite, caseId: event.caseId, name: event.name,
+    status: event.status, ms: event.ms,
+    ...(event.err === undefined ? {} : { error: event.err }),
+    ...(event.assertRows === undefined ? {} : { assertRows: event.assertRows }),
+    metadata: { ...match.testCase.meta, ...event.metaPatch },
   });
 }
 

@@ -2,8 +2,6 @@
 
 import { freeze as _freeze } from "../../../helpers/freeze";
 import type { FixtureBundle } from "../../../harness/core/test-contracts";
-import { json_CARS, json_invertebrae } from "../large/json-chunks.mock";
-import { json_homepage } from "../large/json-homepage-string.mock";
 
 
 
@@ -120,13 +118,7 @@ export const JSON_FIXTURES_LEGACY = _freeze({
   json__Rudiments: jsonRudiments,
   json__Samples: jsonSamples,
   json__nastyJson: nastyJson,
-  json__biggish: {
-    json__CARS: json_CARS,
-    json__invertebrae: json_invertebrae,
-    json__homepage: json_homepage
-  }
   // Add your “old gold standards” here, but keep them *flat*.
-  // html__wikipedia_home: html_wikipedia,  // maybe keep “hero” separate
 } satisfies FixtureBundle);
 
 

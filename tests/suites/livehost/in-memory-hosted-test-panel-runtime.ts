@@ -36,13 +36,20 @@ function make_socket_pair(): readonly [LocusSocketLike, LocusSocketLike] {
 
 export function make_in_memory_hosted_test_runtime(
   executorRegistry: TestExecutorRegistry,
+  options: Readonly<{
+    retainRichDiagnostics?: boolean;
+    runSelected?: typeof run_fresh_node_selected_test_ids;
+  }> = {},
 ): HostedTestPanelRuntime {
   const application = create_hosted_test_application({
     executorRegistry,
     ...(executorRegistry.executor.id === "local-node-livehost"
       ? { runSelected: run_fresh_node_selected_test_ids }
-      : {}),
+      : options.runSelected === undefined
+        ? {}
+        : { runSelected: options.runSelected }),
     discovery: make_test_executor_discovery(executorRegistry),
+    ...(options.retainRichDiagnostics === true ? { retainRichDiagnostics: true } : {}),
   });
   const disposers: (() => void)[] = [];
   function connect(id: string): LocusSocketLike {

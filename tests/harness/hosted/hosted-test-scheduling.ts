@@ -8,3 +8,9 @@ export const HOSTED_TEST_RUN_OPTIONS: RunOptions = Object.freeze({
   yieldAfterMs: HOSTED_TEST_EVENT_LOOP_BUDGET_MS,
   yieldBetweenSuites: false,
 });
+
+export const HOSTED_TEST_RICH_RUN_OPTIONS: RunOptions = Object.freeze({
+  ...HOSTED_TEST_RUN_OPTIONS,
+  richDiagnostics: true,
+  includePassedDiagnostics: true,
+});

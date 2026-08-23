@@ -9,6 +9,7 @@ import { circuit_locus_integration_suite } from "../../../suites/livehost/circui
 import { circuit_worker_parity_suite } from "../../../suites/livehost/circuit-worker-parity-suite";
 import { phase3b_process_cancellation_suite } from "../../../suites/livehost/phase3b-process-cancellation-suite";
 import { phase3b_panel_cancellation_suite } from "../../../suites/livehost/phase3b-panel-cancellation-suite";
+import { phase1_rich_evidence_suite } from "../../../suites/livehost/phase1-rich-evidence-suite";
 import { hosted_test_lifecycle_suite } from "../../../suites/livehost/hosted-test-lifecycle-suite";
 import { all_browser_locus_test_suites } from "./browser/browser-test-suites";
 
@@ -49,6 +50,7 @@ export function make_local_node_locus_executor_registry(): TestExecutorRegistry 
     circuit_worker_parity_suite(),
     phase3b_process_cancellation_suite(),
     phase3b_panel_cancellation_suite(),
+    phase1_rich_evidence_suite(),
   ]);
 }
 
@@ -76,6 +78,7 @@ export function make_node_livehost_hosted_test_executor_registry(): TestExecutor
     circuit_worker_parity_suite(),
     phase3b_process_cancellation_suite(),
     phase3b_panel_cancellation_suite(),
+    phase1_rich_evidence_suite(),
     ...all_browser_locus_test_suites(),
   ]);
 }

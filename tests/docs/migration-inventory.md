@@ -277,13 +277,7 @@ The twelve entries marked as removed were internal re-export shims: ten LiveHost
 | `src/tests/test-data/htmlstring-new.html` | fixture | `tests/fixtures/transform/html/htmlstring-new.html` |
 | `src/tests/test-data/htmlstring.html` | fixture | `tests/fixtures/transform/html/htmlstring.html` |
 | `src/tests/test-data/json-fixtures.ts` | fixture | `tests/fixtures/transform/json/json-fixtures.ts` |
-| `src/tests/test-data/large-fixtures/html-gwern.mock.ts` | fixture | `tests/fixtures/transform/large/html-gwern.mock.ts` |
-| `src/tests/test-data/large-fixtures/html-hackernews.mock.ts` | fixture | `tests/fixtures/transform/large/html-hackernews.mock.ts` |
-| `src/tests/test-data/large-fixtures/html-mdn-homepage.html` | fixture | `tests/fixtures/transform/large/html-mdn-homepage.html` |
-| `src/tests/test-data/large-fixtures/html-wikipedia.mock.ts` | fixture | `tests/fixtures/transform/large/html-wikipedia.mock.ts` |
 | `src/tests/test-data/large-fixtures/invalid-html.ts` | fixture | `tests/fixtures/transform/large/invalid-html.ts` |
-| `src/tests/test-data/large-fixtures/json-chunks.mock.ts` | fixture | `tests/fixtures/transform/large/json-chunks.mock.ts` |
-| `src/tests/test-data/large-fixtures/json-homepage-string.mock.ts` | fixture | `tests/fixtures/transform/large/json-homepage-string.mock.ts` |
 | `src/tests/test-surface/run-test-surface-enumeration.node.mts` | runner | `tests/runners/harness/run-test-surface-enumeration.node.mts` |
 | `src/tests/test-system/fixtures/external-launcher-protocol-fixture.mjs` | fixture | `tests/fixtures/protocol/external-launcher-protocol-fixture.mjs` |
 | `src/tests/test-system/run-canonical-tests.node.mts` | runner | `tests/runners/harness/run-canonical-tests.node.mts` |

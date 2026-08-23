@@ -40,6 +40,8 @@ export type HostedTestPlannedCaseReport = Readonly<{
   durationMs: number | null;
   ms: number | null;
   err: string | null;
+  /** Complete original-run case diagnostic when hosted rich retention is enabled. */
+  diagnostic: JsonValue | null;
   errors: readonly HostedTestInfrastructureError[];
   evidenceRefs: readonly string[];
   executorId: string | null;

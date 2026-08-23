@@ -109,6 +109,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "switching authored origins increments once and does not create update loops",
   ], ["websocket"]),
   browser_suite("parse", [
+    "Parsing Panels lazily seeds the Wikipedia HTML demonstration",
     "Parse transforms valid-invalid-valid input without duplicate surfaces",
     "HSON bare primitives preserve Demo and Transform semantic identity",
     "Demo accepts adjacent and empty element text items without collapsing order",

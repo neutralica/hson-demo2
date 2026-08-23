@@ -4,11 +4,7 @@
 
 import { freeze as _freeze } from "../../../helpers/freeze";
 import type { FixtureBundle } from "../../../harness/core/test-contracts";
-import { html_gwern } from "../large/html-gwern.mock";
-import { html_hackerNews } from "../large/html-hackernews.mock";
-import { html_wikipedia } from "../large/html-wikipedia.mock";
 import { html_INVALID, json_INVALID } from "../large/invalid-html";
-import { html_homepage } from "../large/json-homepage-string.mock";
 
 
 
@@ -460,13 +456,6 @@ export const HTML_FIXTURES_LEGACY = _freeze({
   html__shouldPass: html_should_pass,
   html__attributeCases: htmlAttributeCases,
   html__problematic:html_problematic,
-  html__largeFormat: {
-    html_homepage,
-    html_wikipedia,
-    html_hackerNews,
-    html_gwern,
-  },
-  
 } satisfies FixtureBundle);
 
 export const TRANSFORM_FAILS = {

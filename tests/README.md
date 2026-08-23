@@ -75,7 +75,7 @@ Add a suite under the subject it tests, give every suite and case stable names, 
 
 Prefer coherent subsystem-focused reported suites of roughly 20–25 checks. Do not hide nearly 100 independently named claims in one aggregate without a real contract or runtime reason, and do not split completed certified corpora merely to raise visible suite counts.
 
-Add fixtures under the matching format or runtime folder and import them from their consumers. Keep the Wikipedia fixture in `fixtures/transform/large`; it remains the specialized legacy closure/performance case and is not a corpus descriptor.
+Add fixtures under the matching format or runtime folder and import them from their consumers. The Wikipedia HTML sample is a lazy static Parsing Panels demonstration at `public/fixtures/parse/wikipedia-main-page.html`; it is not a corpus descriptor.
 
 Shared helpers belong in `helpers/` only when multiple suites or subsystems use them. Otherwise keep them local to their owner.
 
