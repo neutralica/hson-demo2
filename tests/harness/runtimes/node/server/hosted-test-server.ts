@@ -29,6 +29,8 @@ export type HostedTestServerOptions = Readonly<{
   deployment?: NodeHostDeployment;
   security?: NodeApplicationSecurity;
   timeline?: HostedTestTimelineObserver;
+  /** Internal deployment capture mode: retain original-run structured case diagnostics. */
+  retainRichDiagnostics?: boolean;
   /** Private hosted-harness seam for lifecycle certification. */
   h2TestHooks?: H2ExecutorTestHooks;
   authorityLifecycle?: Readonly<{
@@ -73,6 +75,7 @@ export async function start_hosted_test_server(
     ...(options.runSelected === undefined ? {} : { runSelected: options.runSelected }),
     ...(options.security === undefined ? {} : { security: options.security }),
     ...(options.timeline === undefined ? {} : { timeline: options.timeline }),
+    ...(options.retainRichDiagnostics === true ? { retainRichDiagnostics: true } : {}),
     ...(options.h2TestHooks === undefined ? {} : { h2TestHooks: options.h2TestHooks }),
     lifecycle: {
       maxReports: authorityLifecycle.maxHostedReports,

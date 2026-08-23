@@ -65,6 +65,8 @@ export type NodeHostedTestsApplicationOptions = Readonly<{
   runSelected?: NonNullable<HostedTestApplicationOptions["runSelected"]>;
   security?: NodeApplicationSecurity;
   timeline?: HostedTestTimelineObserver;
+  /** Internal deployment capture mode: retain original-run structured case diagnostics. */
+  retainRichDiagnostics?: boolean;
   /** Private hosted-harness seam for lifecycle certification. */
   h2TestHooks?: H2ExecutorTestHooks;
   lifecycle?: Readonly<{
@@ -154,6 +156,7 @@ export async function create_node_hosted_tests_application(
       )),
     ...(options.lifecycle === undefined ? {} : { lifecycle: options.lifecycle }),
     ...(options.timeline === undefined ? {} : { timeline: options.timeline }),
+    ...(options.retainRichDiagnostics === true ? { retainRichDiagnostics: true } : {}),
     requireReportReady: true,
     assignExecutor(suite) {
       return suite.requirements.includes("browser")
