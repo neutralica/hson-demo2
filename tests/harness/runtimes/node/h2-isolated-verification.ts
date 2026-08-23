@@ -409,18 +409,24 @@ function host_playwright_browsers_path(): string {
 
 /** The host cache is only a provisioning source.  Children receive a copy in
  * their H2 workspace and never resolve Chromium from the developer cache. */
-async function prepare_playwright_browsers(workspace: string, preparedRoot: string): Promise<string> {
+async function prepare_playwright_browsers(workspace: string, preparedRoot: string, sourceDemo: string): Promise<string> {
   const source = host_playwright_browsers_path();
   const sourceInfo = await stat(source).catch(() => undefined);
   if (sourceInfo?.isDirectory() !== true) throw new Error("H2_PLAYWRIGHT_BROWSER_SOURCE_UNAVAILABLE");
-  const prepared = join(preparedRoot, "playwright-browsers-v2");
+  const browserManifest = JSON.parse(await readFile(join(sourceDemo, "node_modules", "playwright-core", "browsers.json"), "utf8")) as {
+    browsers?: readonly Readonly<{ name?: string; revision?: string }>[];
+  };
+  const revision = browserManifest.browsers?.find((entry) => entry.name === "chromium-headless-shell")?.revision;
+  if (revision === undefined || !/^\d+$/.test(revision)) throw new Error("H2_PLAYWRIGHT_BROWSER_REVISION_UNAVAILABLE");
+  const browserDirectory = `chromium_headless_shell-${revision}`;
+  if ((await stat(join(source, browserDirectory)).catch(() => undefined))?.isDirectory() !== true) {
+    throw new Error("H2_PLAYWRIGHT_BROWSER_SOURCE_UNAVAILABLE");
+  }
+  const prepared = join(preparedRoot, `playwright-browsers-v3-${browserDirectory}`);
   try { await stat(prepared); } catch {
     const staging = `${prepared}.staging-${randomUUID()}`;
-    await cp(source, staging, {
-      recursive: true,
-      dereference: false,
-      filter: (path) => basename(path) !== ".links",
-    });
+    await mkdir(staging, { recursive: true });
+    await cp(join(source, browserDirectory), join(staging, browserDirectory), { recursive: true, dereference: false });
     try { await rename(staging, prepared); }
     catch (error) {
       await rm(staging, { recursive: true, force: true });
@@ -580,7 +586,7 @@ export async function execute_h2_verification(options: H2ExecutorOptions, reques
     if (workspaceScanFailed) throw new Error("WORKSPACE_ACCOUNTING_FAILED");
     const dependencies = join(snapshotDemo, "node_modules");
     const playwrightBrowsersPath = descriptor.capabilityProfile === "browser-chromium" || descriptor.capabilityProfile === "mixed-node-browser"
-      ? await prepare_playwright_browsers(workspace, preparedRoot)
+      ? await prepare_playwright_browsers(workspace, preparedRoot, options.hsonDemo2Root)
       : undefined;
     await options.testHooks?.beforeExecution?.(workspace, snapshotDemo);
     const supervisor = create_node_process_supervisor({ stdoutLimitBytes: OUTPUT_LIMIT_BYTES, stderrLimitBytes: OUTPUT_LIMIT_BYTES, truncationMarker: "<H2_OUTPUT_TRUNCATED>", terminationGraceMs: 1_000, environmentMode: "replace" });

@@ -62,6 +62,12 @@ paths for Playwright attachments and bounded inline content only for small
 attachments. Directories remain present through run recovery and are deleted
 when the owning Node-hosted application is disposed.
 
+Hosted zero-retry runs retain screenshots on failure but do not stage traces
+for passing journeys. Local direct Playwright runs keep `retain-on-failure`
+tracing. H2 provisions only the immutable Chromium headless-shell revision
+declared by the pinned Playwright runtime; unrelated cached browser
+installations and FFmpeg are not copied into the disposable workspace.
+
 ## Module isolation decision
 
 The Node hosted-test executor loads the synthetic-DOM catalog and therefore initializes

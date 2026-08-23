@@ -34,7 +34,10 @@ export default defineConfig({
     actionTimeout: 5_000,
     navigationTimeout: 15_000,
     screenshot: "only-on-failure",
-    trace: "retain-on-failure",
+    // Hosted runs retain failure screenshots as bounded diagnostic evidence.
+    // Playwright otherwise stages a trace for every passing journey until the
+    // aggregate exits, which makes temporary diagnostics grow with suite size.
+    trace: liveHostExecution ? "off" : "retain-on-failure",
     video: "off",
   },
   projects: [{
