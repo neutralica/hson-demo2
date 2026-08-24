@@ -14,6 +14,9 @@ import {
 
 const PROTOCOL_VERSION = 1;
 const TOTAL_STAGES = 7;
+const CANCELLATION_INDEX = 0;
+const PROGRESS_ACK_INDEX = 1;
+const CONTROL_WORDS = 2;
 const WORKER_FAILURE_MESSAGES = Object.freeze({
   CIRCUIT_WORKER_EXECUTION_FAILED: "Worker could not execute the universal Transform circuit.",
   CIRCUIT_WORKER_PROTOCOL_VIOLATION: "Worker received an invalid protocol message.",
@@ -411,7 +414,8 @@ export function create_circuit_verification_service(
   function cancel_job(job: Job, reason: "cancelled" | "superseded"): void {
     if (job.settled || job.obsolete !== undefined) return;
     job.obsolete = reason;
-    Atomics.store(job.cancellation, 0, 1);
+    Atomics.store(job.cancellation, CANCELLATION_INDEX, 1);
+    Atomics.notify(job.cancellation, PROGRESS_ACK_INDEX);
     if (active === job) {
       try { if (worker !== undefined) send_worker(worker, { kind: "cancel", jobId: job.id }); } catch { /* worker loss owns failure */ }
       return;
@@ -535,6 +539,8 @@ export function create_circuit_verification_service(
       if (job.obsolete !== undefined) return;
       job.lastCompleted = reply.progress.completed;
       emit(job, reply.progress);
+      Atomics.add(job.cancellation, PROGRESS_ACK_INDEX, 1);
+      Atomics.notify(job.cancellation, PROGRESS_ACK_INDEX);
       return;
     }
     if (
@@ -658,7 +664,7 @@ export function create_circuit_verification_service(
       reject = rejectPromise;
     });
     nextJob += 1;
-    const cancellationBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT);
+    const cancellationBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * CONTROL_WORDS);
     const cancellation = new Int32Array(cancellationBuffer);
     const job: Job = {
       id: `circuit-${nextJob}`,
@@ -725,7 +731,8 @@ export function create_circuit_verification_service(
       reject_startup("CIRCUIT_SERVICE_DISPOSED", "Circuit verifier was disposed during startup.");
       const error = new CircuitVerificationServiceError("CIRCUIT_SERVICE_DISPOSED", "Circuit verifier is disposed.");
       if (active !== undefined) {
-        Atomics.store(active.cancellation, 0, 1);
+        Atomics.store(active.cancellation, CANCELLATION_INDEX, 1);
+        Atomics.notify(active.cancellation, PROGRESS_ACK_INDEX);
         settle_error(active, error);
         active = undefined;
       }

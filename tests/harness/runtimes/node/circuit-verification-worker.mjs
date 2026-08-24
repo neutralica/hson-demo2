@@ -4,6 +4,9 @@ import { verify_universal_circuit } from "hson-live/diagnostics/universal-circui
 const PROTOCOL_VERSION = 1;
 const MAX_SOURCE_LENGTH = 262_144;
 const MAX_PANEL_ID_LENGTH = 128;
+const CANCELLATION_INDEX = 0;
+const PROGRESS_ACK_INDEX = 1;
+const CONTROL_WORDS = 2;
 
 if (parentPort === null) throw new Error("CIRCUIT_WORKER_PARENT_REQUIRED");
 
@@ -47,7 +50,7 @@ function decodeMessage(value) {
       && value.jobId.length <= 128
       && decodeRequest(value.request) !== undefined
       && value.cancellation instanceof SharedArrayBuffer
-      && value.cancellation.byteLength === Int32Array.BYTES_PER_ELEMENT
+      && value.cancellation.byteLength === Int32Array.BYTES_PER_ELEMENT * CONTROL_WORDS
       ? value
       : undefined;
   }
@@ -120,12 +123,13 @@ parentPort.on("message", (raw) => {
     return;
   }
   const cancellation = new Int32Array(message.cancellation);
+  let expectedProgressAcknowledgments = 0;
   activeJobId = message.jobId;
   try {
     const verification = verify_universal_circuit(
       { entry: request.entry, source: request.source },
       {
-        shouldCancel: () => Atomics.load(cancellation, 0) !== 0,
+        shouldCancel: () => Atomics.load(cancellation, CANCELLATION_INDEX) !== 0,
         onProgress(progress) {
           parentPort.postMessage({
             kind: "progress",
@@ -134,6 +138,14 @@ parentPort.on("message", (raw) => {
             inputRevision: request.inputRevision,
             progress,
           });
+          expectedProgressAcknowledgments += 1;
+          while (
+            Atomics.load(cancellation, CANCELLATION_INDEX) === 0
+            && Atomics.load(cancellation, PROGRESS_ACK_INDEX) < expectedProgressAcknowledgments
+          ) {
+            const observed = Atomics.load(cancellation, PROGRESS_ACK_INDEX);
+            Atomics.wait(cancellation, PROGRESS_ACK_INDEX, observed);
+          }
         },
       },
     );

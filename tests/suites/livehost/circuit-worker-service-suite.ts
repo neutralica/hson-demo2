@@ -191,9 +191,15 @@ export function circuit_worker_service_suite(): TestSuite {
         expect(result.status === "cancelled" && result.operationCounts.parses <= 1, "closed listener must flip the atomic cancellation flag");
       }) }),
       Object.freeze({ suite: SUITE, caseId: "post-lap-cancellation-preserves-completed-operation-evidence", name: "post-lap cancellation preserves completed operation evidence", run: () => with_service(async (service) => {
-        const result = await service.submit(request("cancel-lap", 1), (progress) => progress.stage === "cw-lap-complete" ? false : undefined);
+        let completedEvidenceObserved = false;
+        const result = await service.submit(request("cancel-lap", 1), (progress) => {
+          if (progress.stage !== "cw-lap-complete") return undefined;
+          completedEvidenceObserved = progress.lap === 1 && progress.completed === 1;
+          return false;
+        });
         expect(
-          result.status === "cancelled"
+          completedEvidenceObserved
+            && result.status === "cancelled"
             && result.operationCounts.laps === 1
             && result.operationCounts.serializations >= 4
             && result.operationCounts.serializations <= 8,
