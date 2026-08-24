@@ -17,6 +17,10 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "prebuild": "npm run build:hson-live",
     "build": "vite build",
+    "test:cli": "node scripts/certified-package.mjs",
+    "pack": "node scripts/certified-package.mjs pack",
+    "certify": "node scripts/certified-package.mjs certify",
+    "artifact:location": "node scripts/certified-package.mjs location",
     "build:node-production": "npm run build:hson-live && esbuild tests/harness/runtimes/node/server/hosted-test-server-production-entry.node.ts --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/livehost-server.mjs && esbuild tests/harness/runtimes/node/circuit-verification-worker.mjs --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=dist-node/circuit-verification-worker.mjs",
     "start:production": "node dist-node/livehost-server.mjs",
     
