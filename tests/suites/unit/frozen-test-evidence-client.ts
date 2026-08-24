@@ -229,7 +229,7 @@ export function frozen_test_evidence_client_suite(): TestSuite {
         const client = make_frozen_test_evidence_client({ root: FROZEN_TEST_EVIDENCE_ROOT, fetch: async () => response(JSON.stringify(frozen_test_evidence_fixture())) });
         const index = await client.loadIndex();
         const copied = serialize_frozen_index_summary(index);
-        expect(copied.includes("Frozen test inventory") && copied.includes("transform/frozen-client::loads-index") && copied.includes("CERTIFICATION"), "summary should include category, suite, and case inventory");
+        expect(copied.includes("Test reports") && copied.includes("transform/frozen-client::loads-index") && copied.includes("CERTIFICATION"), "summary should include category, suite, and case inventory");
         expect(client.snapshot().rowEvidenceRequests === 0, "Copy Reports must not fetch row or full-report evidence");
       },
     },

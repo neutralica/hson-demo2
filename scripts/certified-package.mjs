@@ -5,11 +5,14 @@ import { fileURLToPath } from "node:url";
 
 export const PACK_STAGES = Object.freeze([
   "verify-source",
+  "build-runtime",
   "verify-package-surfaces",
-  "capture",
+  "capture-normal-evidence",
   "materialize",
-  "assemble-explorer",
+  "assemble-and-verify-explorer",
 ]);
+
+export const CERTIFICATION_RECEIPT = "certification-receipt.json";
 
 function is_deployment_root(path) {
   if (!existsSync(join(path, "package.json")) || !existsSync(join(path, "scripts", "capture-deployment-tests.mts"))) return false;
@@ -87,32 +90,39 @@ export function provision_local_frozen_evidence({ applicationRoot, explorerArtif
 
 export function execute_pack({ deploymentRoot, applicationRoot, run = run_command, environment = process.env }) {
   const locations = canonical_package_locations(deploymentRoot);
+  const verifiedEnvironment = applicationRoot === undefined
+    ? environment
+    : { ...environment, HSON_INVOKING_APPLICATION_ROOT: resolve(applicationRoot) };
   let stage = PACK_STAGES[0];
   let captureCandidate;
   let evidencePackage;
   try {
     console.log(`stage: ${stage}`);
-    npm(run, deploymentRoot, ["run", "verify"], environment);
+    npm(run, deploymentRoot, ["run", "verify"], verifiedEnvironment);
 
     stage = PACK_STAGES[1];
     console.log(`stage: ${stage}`);
-    npm(run, deploymentRoot, ["run", "verify:package-surface"], environment);
+    npm(run, deploymentRoot, ["-w", "hson-live", "run", "build"], verifiedEnvironment);
 
     stage = PACK_STAGES[2];
     console.log(`stage: ${stage}`);
-    captureCandidate = last_output_line(npm(run, deploymentRoot, ["run", "capture:deployment-tests"], environment), "CAPTURE");
+    npm(run, deploymentRoot, ["run", "verify:package-surface"], verifiedEnvironment);
 
     stage = PACK_STAGES[3];
     console.log(`stage: ${stage}`);
-    const materialized = parse_json_output(npm(run, deploymentRoot, ["run", "materialize:test-evidence", "--", captureCandidate], environment), "MATERIALIZATION");
-    evidencePackage = materialized.candidate;
-    if (typeof evidencePackage !== "string" || typeof materialized.publicRoot !== "string") throw new Error("PACK_MATERIALIZATION_CONTRACT_INVALID");
-    const acceptanceFile = join(evidencePackage, "accepted.json");
+    captureCandidate = last_output_line(npm(run, deploymentRoot, ["run", "capture:deployment-tests:normal"], verifiedEnvironment), "CAPTURE");
 
     stage = PACK_STAGES[4];
     console.log(`stage: ${stage}`);
+    const materialized = parse_json_output(npm(run, deploymentRoot, ["run", "materialize:test-evidence", "--", captureCandidate], verifiedEnvironment), "MATERIALIZATION");
+    evidencePackage = materialized.candidate;
+    if (typeof evidencePackage !== "string" || !/^\/test-evidence\/[0-9a-f]{40}$/.test(materialized.publicRoot) || !/^[0-9a-f]{64}$/.test(materialized.artifactSetSha256)) throw new Error("PACK_MATERIALIZATION_CONTRACT_INVALID");
+    const acceptanceFile = join(evidencePackage, "accepted.json");
+
+    stage = PACK_STAGES[5];
+    console.log(`stage: ${stage}`);
     npm(run, deploymentRoot, ["run", "prepare:static-production"], {
-      ...environment,
+      ...verifiedEnvironment,
       VITE_TEST_EVIDENCE_ROOT: materialized.publicRoot,
       TEST_EVIDENCE_ACCEPTANCE_FILE: acceptanceFile,
     });
@@ -128,6 +138,8 @@ export function execute_pack({ deploymentRoot, applicationRoot, run = run_comman
       evidencePackage,
       acceptanceFile,
       captureCandidate,
+      evidenceRoot: materialized.publicRoot,
+      artifactSetSha256: materialized.artifactSetSha256,
       ...(localEvidence === undefined ? {} : { localEvidence }),
     });
     console.log(JSON.stringify(result, null, 2));
@@ -145,22 +157,45 @@ export function execute_pack({ deploymentRoot, applicationRoot, run = run_comman
   }
 }
 
+export function write_certification_receipt(result, completedAt = new Date().toISOString()) {
+  const receiptPath = join(result.explorerArtifact, CERTIFICATION_RECEIPT);
+  const receipt = Object.freeze({
+    schemaVersion: 1,
+    kind: "hson-tests-explorer-certification",
+    certified: true,
+    completedAt,
+    authority: "npm -w hson-demo2 run test:inclusive-library-node",
+    evidenceRoot: result.evidenceRoot,
+    deploymentCommit: result.evidenceRoot?.split("/").at(-1),
+    evidenceArtifactSetSha256: result.artifactSetSha256,
+  });
+  writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { flag: "wx" });
+  return Object.freeze({ path: receiptPath, ...receipt });
+}
+
 export function execute_certification(options) {
   const run = options.run ?? run_command;
   const environment = options.environment ?? process.env;
   const locations = canonical_package_locations(options.deploymentRoot);
+  const verifiedEnvironment = options.applicationRoot === undefined
+    ? environment
+    : { ...environment, HSON_INVOKING_APPLICATION_ROOT: resolve(options.applicationRoot) };
   let stage = "verify-source";
   try {
     console.log(`stage: ${stage}`);
-    npm(run, options.deploymentRoot, ["run", "verify"], environment);
+    npm(run, options.deploymentRoot, ["run", "verify"], verifiedEnvironment);
     stage = "certification-authority";
     console.log(`stage: ${stage}`);
-    npm(run, options.deploymentRoot, ["-w", "hson-demo2", "run", "test:inclusive-library-node"], environment);
+    npm(run, options.deploymentRoot, ["-w", "hson-demo2", "run", "test:inclusive-library-node"], verifiedEnvironment);
   } catch (cause) {
     console.error(JSON.stringify({ pass: false, stage, outputDirectory: locations.explorerArtifact, evidencePackage: null, failureLocation: locations.workRoot }, null, 2));
     throw cause;
   }
-  return execute_pack(options);
+  const packed = execute_pack(options);
+  const receipt = (options.writeReceipt ?? write_certification_receipt)(packed);
+  const result = Object.freeze({ ...packed, certified: true, certificationReceipt: receipt });
+  console.log(JSON.stringify(result, null, 2));
+  return result;
 }
 
 export function inspect_report(path) {

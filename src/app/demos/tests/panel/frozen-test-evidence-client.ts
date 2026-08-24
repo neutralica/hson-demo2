@@ -2,6 +2,13 @@ import type { HostedTestCaseDiagnostic } from "../../../../shared/hosted-tests/h
 
 export const FROZEN_TEST_CATEGORIES = Object.freeze(["semantic", "browser", "certification"] as const);
 
+/** Browser-only projection order. Capture categories intentionally remain above. */
+export const FROZEN_TEST_EXPLORER_CATEGORIES = Object.freeze([
+  "transform", "livetree", "livemap", "locus", "livehost", "reflect", "unit", "browser", "certification", "dev",
+] as const);
+
+export type FrozenTestExplorerCategoryId = typeof FROZEN_TEST_EXPLORER_CATEGORIES[number];
+
 export type FrozenTestCategoryId = typeof FROZEN_TEST_CATEGORIES[number];
 export type FrozenTestStatus = "pass" | "fail" | "skip";
 export type FrozenTestRunStatus = "passed" | "failed" | "cancelled";
@@ -82,6 +89,31 @@ export type FrozenRowEvidenceSelection = Readonly<{
   testCase?: FrozenTestCase;
   reference: FrozenEvidenceReference;
 }>;
+
+/**
+ * The evidence index deliberately preserves its capture category. Its stable suite
+ * identifier is the presentation metadata available to the report explorer.
+ */
+export function frozen_test_explorer_category_candidates(suite: FrozenTestSuite): readonly FrozenTestExplorerCategoryId[] {
+  if (suite.category === "browser" || suite.category === "certification") return Object.freeze([suite.category]);
+  const categories: FrozenTestExplorerCategoryId[] = [];
+  if (suite.id.startsWith("transform/")) categories.push("transform");
+  if (suite.id.startsWith("livetree/") || suite.id.startsWith("livetree-")) categories.push("livetree");
+  if (suite.id.startsWith("livemap/") || suite.id.startsWith("livemap-")) categories.push("livemap");
+  if (suite.id.startsWith("livehost/locus/") || suite.id.startsWith("locus/")) categories.push("locus");
+  if (suite.id.startsWith("livehost/") && !suite.id.startsWith("livehost/locus/")) categories.push("livehost");
+  if (suite.id.startsWith("reflect/")) categories.push("reflect");
+  if (suite.id.startsWith("unit/")) categories.push("unit");
+  if (suite.id.startsWith("dev/") || suite.id.startsWith("integration/")) categories.push("dev");
+  return Object.freeze(categories);
+}
+
+export function frozen_test_explorer_category(suite: FrozenTestSuite): FrozenTestExplorerCategoryId {
+  const candidates = frozen_test_explorer_category_candidates(suite);
+  if (candidates.length === 1) return candidates[0]!;
+  const reason = candidates.length === 0 ? "has no" : `has multiple (${candidates.join(", ")})`;
+  throw new FrozenTestEvidenceError("FROZEN_INDEX_PRESENTATION_CATEGORY", `Suite ${suite.id} ${reason} report-explorer domain.`);
+}
 
 export type FrozenRetainedEvidence = Readonly<{
   id: string;

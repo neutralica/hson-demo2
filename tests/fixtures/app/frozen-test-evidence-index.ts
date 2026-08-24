@@ -51,12 +51,54 @@ export const FROZEN_TEST_EVIDENCE_COMMIT = COMMIT;
 export const FROZEN_TEST_EVIDENCE_ROOT = `/test-evidence/${COMMIT}`;
 
 export function complete_frozen_test_evidence_inventory_fixture(): Record<string, any> {
+  const semanticDomains = [
+    { id: "transform", suites: 36, cases: 314 },
+    { id: "livetree", suites: 36, cases: 314 },
+    { id: "livemap", suites: 36, cases: 314 },
+    { id: "locus", suites: 36, cases: 314 },
+    { id: "livehost", suites: 36, cases: 314 },
+    { id: "reflect", suites: 35, cases: 314 },
+    { id: "unit", suites: 35, cases: 314 },
+    { id: "dev", suites: 35, cases: 307 },
+  ] as const;
   const categoryPlan = [
     { id: "semantic", suites: 285, cases: 2505, shape: "cases" },
     { id: "browser", suites: 17, cases: 81, shape: "browser-journeys" },
     { id: "certification", suites: 57, cases: 0, shape: "certification-aggregate" },
   ] as const;
-  const suites = categoryPlan.flatMap((plan) => {
+  const semanticSuites = semanticDomains.flatMap((domain) => {
+    const baseCases = Math.floor(domain.cases / domain.suites);
+    const remainder = domain.cases % domain.suites;
+    return Array.from({ length: domain.suites }, (_, suiteIndex) => {
+      const suiteId = domain.id === "locus"
+        ? `livehost/locus/suite-${String(suiteIndex).padStart(3, "0")}`
+        : `${domain.id}/suite-${String(suiteIndex).padStart(3, "0")}`;
+      const caseCount = baseCases + (suiteIndex < remainder ? 1 : 0);
+      return {
+        category: "semantic",
+        id: suiteId,
+        title: `${domain.id} representative suite ${suiteIndex}`,
+        order: suiteIndex,
+        status: "pass",
+        executionShape: "cases",
+        counts: lifecycle(caseCount),
+        timing: timing(suiteIndex + 1),
+        evidence: suiteIndex === 0 ? evidence(`suites/${domain.id}-000.json`) : { available: false },
+        cases: Array.from({ length: caseCount }, (_, caseIndex) => ({
+          id: `${suiteId}::case-${String(caseIndex).padStart(3, "0")}`,
+          caseId: `case-${String(caseIndex).padStart(3, "0")}`,
+          title: `${domain.id} representative case ${caseIndex}`,
+          order: caseIndex,
+          status: "pass",
+          timing: timing(caseIndex + 0.5),
+          evidence: caseIndex === 0 ? evidence(`cases/${domain.id}-${suiteIndex}-${caseIndex}.json`) : { available: false },
+        })),
+      };
+    });
+  });
+  const suites = [
+    ...semanticSuites,
+    ...categoryPlan.filter((plan) => plan.id !== "semantic").flatMap((plan) => {
     const baseCases = Math.floor(plan.cases / plan.suites);
     const remainder = plan.cases % plan.suites;
     return Array.from({ length: plan.suites }, (_, suiteIndex) => {
@@ -83,7 +125,8 @@ export function complete_frozen_test_evidence_inventory_fixture(): Record<string
         })),
       };
     });
-  });
+    }),
+  ];
   return {
     deployment: { hsonDeployCommit: COMMIT },
     accounting: { inventory: { suites: 359, cases: 2586 } },

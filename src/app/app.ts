@@ -30,10 +30,10 @@ const _shortpause = () => _sleep(PHASE_LINGER * 0.15);
 export async function run_app(root: LiveTree): Promise<void> {
   const applicationUrl = new URL(globalThis.location.href);
   const entry = classify_towl_entry_url(applicationUrl);
-  const frozenEvidence = applicationUrl.searchParams.get("frozen-evidence");
-  const frozenCase = applicationUrl.searchParams.get("frozen-case");
-  const frozenSuite = applicationUrl.searchParams.get("frozen-suite");
-  const selectsFrozenInspector = /^[0-9a-f]{40}$/.test(frozenEvidence ?? "") && ((frozenCase === null) !== (frozenSuite === null));
+  const evidence = applicationUrl.searchParams.get("evidence");
+  const testCase = applicationUrl.searchParams.get("case");
+  const suite = applicationUrl.searchParams.get("suite");
+  const selectsFrozenInspector = /^[0-9a-f]{40}$/.test(evidence ?? "") && ((testCase === null) !== (suite === null));
   set_view(entry.selectsTowl ? "towl" : selectsFrozenInspector ? "test" : null);
   const widgets = demo_shell_locations.activeWidgets.snap().filter((widget) => widget !== "bling");
   demo_shell_locations.activeWidgets.set(canonicalize_widget_ids(

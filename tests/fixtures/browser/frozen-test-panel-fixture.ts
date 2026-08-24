@@ -7,9 +7,11 @@ declare global {
 }
 
 const host = hson.liveTree.queryDom("#frozen-test-panel-fixture").graft();
-const missingRoot = new URL(location.href).searchParams.has("missing-root");
-const panel = missingRoot
-  ? mount_test_panels_with_mode(host, "frozen", async (root) => mount_frozen_test_panel(root))
+const fixtureUrl = new URL(location.href);
+const missingRoot = fixtureUrl.searchParams.has("missing-root");
+const evidenceRoot = fixtureUrl.searchParams.get("evidence-root");
+const panel = missingRoot || evidenceRoot !== null
+  ? mount_test_panels_with_mode(host, "frozen", async (root) => mount_frozen_test_panel(root, evidenceRoot === null ? {} : { evidenceRoot }))
   : mount_test_panels(host);
 await panel.ready;
 const acquisition = host.find.byId("test-panel-branch")?.attrs.get("data-test-acquisition");

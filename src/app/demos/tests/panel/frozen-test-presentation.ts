@@ -50,7 +50,7 @@ export function serialize_frozen_row_artifact(artifact: FrozenRowArtifact): stri
 export function serialize_frozen_index_summary(index: FrozenTestEvidenceIndex): string {
   const totalCases = index.suites.reduce((total, suite) => total + suite.cases.length, 0);
   const lines = [
-    "Frozen test inventory",
+    "Test reports",
     `deployment: ${index.deployment.hsonDeployCommit}`,
     ...(index.capture?.candidateId === undefined ? [] : [`capture: ${String(index.capture.candidateId)}`]),
     ...(index.capture?.capturedAt === undefined ? [] : [`captured: ${String(index.capture.capturedAt)}`]),
@@ -78,7 +78,7 @@ export function mount_frozen_generic_evidence(
 ): FrozenEvidenceSurface {
   const id = artifact.owner === "case" ? artifact.caseId : artifact.suiteId;
   const root = host.create.div().attrs.setMany({
-    role: "region", "aria-label": `Frozen evidence for ${id}`,
+    role: "region", "aria-label": `Evidence for ${id}`,
     "data-testid": "frozen-row-evidence", "data-frozen-evidence-owner": artifact.owner,
   }).css.setMany({
     position: "absolute", inset: "0", zIndex: "120", display: "grid", gridTemplateRows: "auto minmax(0,1fr)",
@@ -88,10 +88,10 @@ export function mount_frozen_generic_evidence(
   const header = root.create.header().css.setMany({ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: "1rem", borderBottom: "1px solid #49534d", paddingBottom: ".75rem" });
   const identity = header.create.div();
   identity.create.div().attrs.set("data-testid", "frozen-inspector-navigation")
-    .text.set(`Archived ${artifact.owner} evidence · Browser Back returns to the tests explorer`)
+    .text.set(`Saved ${artifact.owner} evidence · Browser Back returns to the tests explorer`)
     .css.setMany({ color: "#7dd8cf", marginBottom: ".35rem" });
   identity.create.div().text.set(id).css.setMany({ color: "#d7ff70", overflowWrap: "anywhere" });
-  const close = header.create.button().attrs.setMany({ type: "button", "aria-label": "Close frozen evidence" }).text.set("[ close ]")
+  const close = header.create.button().attrs.setMany({ type: "button", "aria-label": "Close evidence" }).text.set("[ close ]")
     .css.setMany({ color: "#d7ff70", border: "1px solid #49534d", padding: ".35rem .6rem", cursor: "pointer" });
   root.create.pre().attrs.set("data-testid", "frozen-row-evidence-text").text.set(serialize_frozen_row_artifact(artifact))
     .css.setMany({ whiteSpace: "pre-wrap", overflow: "auto", minHeight: "0", margin: "0", paddingTop: "1rem" });
