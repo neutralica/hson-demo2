@@ -1,3 +1,5 @@
+import type { HostedTestCaseDiagnostic } from "../../../../shared/hosted-tests/hosted-test-action.types";
+
 export const FROZEN_TEST_CATEGORIES = Object.freeze(["semantic", "browser", "certification"] as const);
 
 export type FrozenTestCategoryId = typeof FROZEN_TEST_CATEGORIES[number];
@@ -68,11 +70,55 @@ export type FrozenTestCategory = Readonly<{
 
 export type FrozenTestEvidenceIndex = Readonly<{
   deployment: Readonly<{ hsonDeployCommit: string }> & Readonly<Record<string, unknown>>;
+  capture?: Readonly<Record<string, unknown>>;
   selectionCategories: readonly FrozenTestCategoryId[];
   categories: readonly FrozenTestCategory[];
   suites: readonly FrozenTestSuite[];
   accounting: Readonly<Record<string, unknown>>;
 }>;
+
+export type FrozenRowEvidenceSelection = Readonly<{
+  category: FrozenTestCategoryId;
+  suite: FrozenTestSuite;
+  testCase?: FrozenTestCase;
+  reference: FrozenEvidenceReference;
+}>;
+
+export type FrozenRetainedEvidence = Readonly<{
+  id: string;
+  sequence: number;
+  timestamp: number;
+  executorId: string;
+  kind: "stdout" | "stderr" | "runtime_warning" | "raw_process_output" | "protocol_control" | "artifact";
+  name: string;
+  content: string;
+  truncated: boolean;
+  knownBytes: number | null;
+  reference: string | null;
+  mediaType: string | null;
+}>;
+
+export type FrozenCaseArtifact = Readonly<{
+  owner: "case";
+  category: FrozenTestCategoryId;
+  suiteId: string;
+  caseId: string;
+  testCase: Readonly<Record<string, unknown>>;
+  diagnostic: HostedTestCaseDiagnostic | null;
+  errors: readonly Readonly<Record<string, unknown>>[];
+  evidence: readonly FrozenRetainedEvidence[];
+}>;
+
+export type FrozenSuiteArtifact = Readonly<{
+  owner: "suite";
+  category: FrozenTestCategoryId;
+  suiteId: string;
+  suite: Readonly<Record<string, unknown>>;
+  errors: readonly Readonly<Record<string, unknown>>[];
+  evidence: readonly FrozenRetainedEvidence[];
+}>;
+
+export type FrozenRowArtifact = FrozenCaseArtifact | FrozenSuiteArtifact;
 
 export class FrozenTestEvidenceError extends Error {
   constructor(readonly code: string, message: string, options?: ErrorOptions) {
@@ -87,7 +133,8 @@ export type FrozenTestEvidenceClient = Readonly<{
   root: string;
   deploymentCommit: string;
   loadIndex(): Promise<FrozenTestEvidenceIndex>;
-  loadRowEvidence(reference: FrozenEvidenceReference): Promise<unknown>;
+  loadRowEvidence(selection: FrozenRowEvidenceSelection): Promise<FrozenRowArtifact>;
+  snapshot(): Readonly<{ indexRequests: number; rowEvidenceRequests: number; cachedRowArtifacts: number }>;
 }>;
 
 function fail(code: string, message: string): never {
@@ -173,6 +220,145 @@ function evidence_path(value: unknown, at: string): string {
     fail("FROZEN_INDEX_EVIDENCE_PATH", `${at} must not escape the evidence package.`);
   }
   return path;
+}
+
+function artifact_record(value: unknown, at: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) fail("FROZEN_ROW_EVIDENCE_MALFORMED", `${at} must be an object.`);
+  return value as Record<string, unknown>;
+}
+
+function artifact_array(value: unknown, at: string): unknown[] {
+  if (!Array.isArray(value)) fail("FROZEN_ROW_EVIDENCE_MALFORMED", `${at} must be an array.`);
+  return value;
+}
+
+function artifact_string(value: unknown, at: string, nullable = false): string | null {
+  if (nullable && value === null) return null;
+  if (typeof value !== "string") fail("FROZEN_ROW_EVIDENCE_MALFORMED", `${at} must be a string${nullable ? " or null" : ""}.`);
+  return value;
+}
+
+function expected_artifact_path(owner: "case" | "suite", id: string): string {
+  const bytes = new TextEncoder().encode(id);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `${owner === "case" ? "cases" : "suites"}/${btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}.json`;
+}
+
+function validate_retained_evidence(value: unknown, at: string): FrozenRetainedEvidence {
+  const entry = artifact_record(value, at);
+  const kind = entry.kind;
+  if (kind !== "stdout" && kind !== "stderr" && kind !== "runtime_warning" && kind !== "raw_process_output" && kind !== "protocol_control" && kind !== "artifact") {
+    fail("FROZEN_ROW_EVIDENCE_MALFORMED", `${at}.kind is invalid.`);
+  }
+  if (typeof entry.sequence !== "number" || !Number.isInteger(entry.sequence) || entry.sequence < 0
+    || typeof entry.timestamp !== "number" || !Number.isFinite(entry.timestamp)
+    || typeof entry.truncated !== "boolean"
+    || (entry.knownBytes !== null && (typeof entry.knownBytes !== "number" || !Number.isInteger(entry.knownBytes) || entry.knownBytes < 0))) {
+    fail("FROZEN_ROW_EVIDENCE_MALFORMED", `${at} has invalid retained evidence metadata.`);
+  }
+  return Object.freeze({
+    id: artifact_string(entry.id, `${at}.id`)!,
+    sequence: entry.sequence,
+    timestamp: entry.timestamp,
+    executorId: artifact_string(entry.executorId, `${at}.executorId`)!,
+    kind,
+    name: artifact_string(entry.name, `${at}.name`)!,
+    content: artifact_string(entry.content, `${at}.content`)!,
+    truncated: entry.truncated,
+    knownBytes: entry.knownBytes as number | null,
+    reference: artifact_string(entry.reference, `${at}.reference`, true),
+    mediaType: artifact_string(entry.mediaType, `${at}.mediaType`, true),
+  });
+}
+
+function validate_errors(value: unknown, at: string): readonly Readonly<Record<string, unknown>>[] {
+  return Object.freeze(artifact_array(value, at).map((item, index) => Object.freeze({ ...artifact_record(item, `${at}[${index}]`) })));
+}
+
+function validate_evidence_refs(value: unknown, evidence: readonly FrozenRetainedEvidence[], at: string): void {
+  const refs = artifact_array(value, at);
+  if (refs.some((item) => typeof item !== "string") || new Set(refs).size !== refs.length
+    || refs.length !== evidence.length || refs.some((id) => !evidence.some((entry) => entry.id === id))) {
+    fail("FROZEN_ROW_EVIDENCE_MALFORMED", `${at} does not exactly own the retained evidence entries.`);
+  }
+}
+
+function validate_diagnostic(value: unknown, selection: FrozenRowEvidenceSelection): HostedTestCaseDiagnostic | null {
+  if (value === null) return null;
+  const diagnostic = artifact_record(value, "row.case.diagnostic");
+  const item = selection.testCase!;
+  if (diagnostic.caseKey !== item.id || diagnostic.caseSuite !== selection.suite.id || diagnostic.caseId !== item.caseId) {
+    fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", `Nested diagnostic identity does not match ${item.id}.`);
+  }
+  if ((diagnostic.type !== "ordinary" && diagnostic.type !== "transform")
+    || diagnostic.status !== item.status
+    || typeof diagnostic.name !== "string" || typeof diagnostic.ms !== "number" || !Number.isFinite(diagnostic.ms)
+    || (diagnostic.error !== null && typeof diagnostic.error !== "string")) {
+    fail("FROZEN_ROW_EVIDENCE_MALFORMED", "row.case.diagnostic has invalid scalar fields.");
+  }
+  for (const [index, value] of artifact_array(diagnostic.assertions, "row.case.diagnostic.assertions").entries()) {
+    const assertion = artifact_record(value, `row.case.diagnostic.assertions[${index}]`);
+    if (typeof assertion.ok !== "boolean" || typeof assertion.label !== "string"
+      || (assertion.actual !== null && typeof assertion.actual !== "string")
+      || (assertion.expected !== null && typeof assertion.expected !== "string")) {
+      fail("FROZEN_ROW_EVIDENCE_MALFORMED", `row.case.diagnostic.assertions[${index}] is invalid.`);
+    }
+  }
+  for (const [index, value] of artifact_array(diagnostic.values, "row.case.diagnostic.values").entries()) {
+    const item = artifact_record(value, `row.case.diagnostic.values[${index}]`);
+    if (typeof item.label !== "string" || (item.value !== null && typeof item.value !== "string")) fail("FROZEN_ROW_EVIDENCE_MALFORMED", `row.case.diagnostic.values[${index}] is invalid.`);
+  }
+  for (const [index, value] of artifact_array(diagnostic.artifacts, "row.case.diagnostic.artifacts").entries()) {
+    const item = artifact_record(value, `row.case.diagnostic.artifacts[${index}]`);
+    if (typeof item.lap !== "number" || !Number.isFinite(item.lap) || typeof item.label !== "string"
+      || (item.format !== "hson" && item.format !== "json" && item.format !== "html")
+      || typeof item.text !== "string" || (item.node !== null && typeof item.node !== "string")) {
+      fail("FROZEN_ROW_EVIDENCE_MALFORMED", `row.case.diagnostic.artifacts[${index}] is invalid.`);
+    }
+  }
+  for (const [index, value] of artifact_array(diagnostic.trace, "row.case.diagnostic.trace").entries()) {
+    const item = artifact_record(value, `row.case.diagnostic.trace[${index}]`);
+    if (typeof item.ok !== "boolean" || typeof item.step !== "string" || (item.error !== null && typeof item.error !== "string")) fail("FROZEN_ROW_EVIDENCE_MALFORMED", `row.case.diagnostic.trace[${index}] is invalid.`);
+  }
+  return Object.freeze({ ...diagnostic }) as HostedTestCaseDiagnostic;
+}
+
+export function validate_frozen_row_artifact(value: unknown, selection: FrozenRowEvidenceSelection): FrozenRowArtifact {
+  const reference = selection.reference;
+  if (reference.available !== true || reference.path === undefined || reference.rawBytes === undefined) {
+    fail("FROZEN_EVIDENCE_UNAVAILABLE", "This row has no frozen evidence artifact.");
+  }
+  if (selection.category !== selection.suite.category) fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", "Selected category and suite do not agree.");
+  const owner = selection.testCase === undefined ? "suite" : "case";
+  const ownerId = selection.testCase?.id ?? selection.suite.id;
+  if (reference.path !== expected_artifact_path(owner, ownerId)) {
+    fail("FROZEN_ROW_EVIDENCE_PATH_MISMATCH", `Artifact path does not match ${ownerId}.`);
+  }
+  const wrapper = artifact_record(value, "row");
+  if (wrapper.category !== selection.category || wrapper.suiteId !== selection.suite.id) {
+    fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", `Artifact wrapper does not match ${ownerId}.`);
+  }
+  const evidence = Object.freeze(artifact_array(wrapper.evidence, "row.evidence").map((item, index) => validate_retained_evidence(item, `row.evidence[${index}]`)));
+  if (owner === "case") {
+    const indexedCase = selection.testCase!;
+    if (wrapper.caseId !== indexedCase.id) fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", `Case wrapper does not match ${indexedCase.id}.`);
+    const testCase = artifact_record(wrapper.case, "row.case");
+    if (testCase.id !== indexedCase.id || testCase.caseId !== indexedCase.caseId || testCase.status !== indexedCase.status) {
+      fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", `Nested case does not match ${indexedCase.id}.`);
+    }
+    const errors = validate_errors(testCase.errors, "row.case.errors");
+    validate_evidence_refs(testCase.evidenceRefs, evidence, "row.case.evidenceRefs");
+    const diagnostic = validate_diagnostic(testCase.diagnostic, selection);
+    if (diagnostic === null && errors.length === 0 && evidence.length === 0) fail("FROZEN_ROW_EVIDENCE_MALFORMED", "Case artifact contains no retained evidence.");
+    return Object.freeze({ owner, category: selection.category, suiteId: selection.suite.id, caseId: indexedCase.id, testCase: Object.freeze({ ...testCase }), diagnostic, errors, evidence });
+  }
+  const suite = artifact_record(wrapper.suite, "row.suite");
+  if (suite.id !== selection.suite.id || suite.status !== selection.suite.status) fail("FROZEN_ROW_EVIDENCE_ID_MISMATCH", `Nested suite does not match ${selection.suite.id}.`);
+  const errors = validate_errors(suite.errors, "row.suite.errors");
+  validate_evidence_refs(wrapper.evidenceRefs, evidence, "row.evidenceRefs");
+  if (errors.length === 0 && evidence.length === 0) fail("FROZEN_ROW_EVIDENCE_MALFORMED", "Suite artifact contains no retained evidence.");
+  return Object.freeze({ owner, category: selection.category, suiteId: selection.suite.id, suite: Object.freeze({ ...suite }), errors, evidence });
 }
 
 function evidence(value: unknown, at: string): FrozenEvidenceReference | undefined {
@@ -329,6 +515,7 @@ export function decode_frozen_test_evidence_index(value: unknown, expectedCommit
 
   return Object.freeze({
     deployment: Object.freeze({ ...deploymentSource, hsonDeployCommit: deploymentCommit }),
+    ...(source.capture === undefined ? {} : { capture: Object.freeze({ ...record(source.capture, "index.capture") }) }),
     selectionCategories: Object.freeze(selectionCategories),
     categories: Object.freeze(categories),
     suites: Object.freeze(suites),
@@ -344,8 +531,13 @@ export function make_frozen_test_evidence_client(options: Readonly<{
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
   let cached: FrozenTestEvidenceIndex | undefined;
   let pending: Promise<FrozenTestEvidenceIndex> | undefined;
+  const rowArtifacts = new Map<string, Promise<Readonly<{ value: unknown; rawBytes: number }>>>();
+  let indexRequests = 0;
+  let rowEvidenceRequests = 0;
 
-  async function fetch_json(path: string, kind: "index" | "row"): Promise<unknown> {
+  async function fetch_json(path: string, kind: "index" | "row"): Promise<Readonly<{ value: unknown; rawBytes: number }>> {
+    if (kind === "index") indexRequests += 1;
+    else rowEvidenceRequests += 1;
     let response: Awaited<ReturnType<FetchLike>>;
     try {
       response = await fetcher(`${configured.root}/${path}`, { method: "GET", credentials: "same-origin" });
@@ -354,7 +546,8 @@ export function make_frozen_test_evidence_client(options: Readonly<{
     }
     if (!response.ok) fail("FROZEN_EVIDENCE_HTTP", `${kind} evidence request failed with HTTP ${response.status}.`);
     const bytes = await response.text();
-    try { return JSON.parse(bytes) as unknown; }
+    const rawBytes = new TextEncoder().encode(bytes).byteLength;
+    try { return Object.freeze({ value: JSON.parse(bytes) as unknown, rawBytes }); }
     catch (cause) { throw new FrozenTestEvidenceError("FROZEN_EVIDENCE_JSON", `${kind} evidence is not valid JSON.`, { cause }); }
   }
 
@@ -363,17 +556,27 @@ export function make_frozen_test_evidence_client(options: Readonly<{
     deploymentCommit: configured.deploymentCommit,
     loadIndex() {
       if (cached !== undefined) return Promise.resolve(cached);
-      pending ??= fetch_json("index.json", "index").then((value) => {
+      pending ??= fetch_json("index.json", "index").then(({ value }) => {
         cached = decode_frozen_test_evidence_index(value, configured.deploymentCommit);
         return cached;
       }).finally(() => { pending = undefined; });
       return pending;
     },
-    async loadRowEvidence(reference) {
+    async loadRowEvidence(selection) {
+      const reference = selection.reference;
       if (reference.available !== true || reference.path === undefined) fail("FROZEN_EVIDENCE_UNAVAILABLE", "This row has no frozen evidence artifact.");
       const path = evidence_path(reference.path, "row evidence path");
-      return fetch_json(path, "row");
+      let artifact = rowArtifacts.get(path);
+      if (artifact === undefined) {
+        artifact = fetch_json(path, "row");
+        rowArtifacts.set(path, artifact);
+        artifact.catch(() => { if (rowArtifacts.get(path) === artifact) rowArtifacts.delete(path); });
+      }
+      const loaded = await artifact;
+      if (reference.rawBytes !== loaded.rawBytes) fail("FROZEN_ROW_EVIDENCE_SIZE_MISMATCH", `Artifact ${path} expected ${reference.rawBytes} bytes but received ${loaded.rawBytes}.`);
+      return validate_frozen_row_artifact(loaded.value, selection);
     },
+    snapshot: () => Object.freeze({ indexRequests, rowEvidenceRequests, cachedRowArtifacts: rowArtifacts.size }),
   });
   return client;
 }

@@ -94,6 +94,12 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "Transform View renders the reproduced circuit in-app without changing the authoritative run",
     "bling switches one navigation model between amoebic and historical plain presentations",
   ], ["websocket"]),
+  browser_suite("frozen-test-panel", [
+    "frozen panel loads one immutable index and presents all authoritative groups without live acquisition",
+    "frozen row View, Copy, and Copy Reports use validated lazy artifacts and truthful controls",
+    "frozen row evidence failures stay local and never fall back to live acquisition",
+    "frozen panel shows blocking root and HTTP failures without falling back to live acquisition",
+  ]),
   browser_suite("parse-verification-performance", [
     "measure Phase 3 edit-to-certificate stages without imposing a budget",
   ]),
