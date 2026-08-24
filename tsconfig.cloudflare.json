@@ -16,6 +16,7 @@
     "noEmit": true
   },
   "include": [
+    "src/vite-env.d.ts",
     "tests/harness/runtimes/cloudflare/**/*.ts",
     "tests/harness/runtimes/dom/jsdom.types.d.ts"
   ],
