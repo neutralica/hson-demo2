@@ -63,10 +63,12 @@ test("rapid edits debounce to and certify only the newest revision", async ({ pa
   const assertNoErrors = monitor_application_errors(page);
   await open_parsing_panels(page);
   const editor = page.getByTestId("parse-hson-editor");
+  const initialRevision = Number(await page.getByTestId("parse-root").getAttribute("data-verification-revision"));
+  expect(Number.isSafeInteger(initialRevision)).toBe(true);
   await editor.fill('<div data-edit="1" "obsolete one"/>');
   await editor.fill('<div data-edit="2" "obsolete two"/>');
   await editor.fill('<div data-edit="3" "latest"/>');
-  await expect(page.getByTestId("parse-root")).toHaveAttribute("data-verification-revision", "3");
+  await expect(page.getByTestId("parse-root")).toHaveAttribute("data-verification-revision", String(initialRevision + 3));
   await expect_verified(page, "hson");
   await expect(page.getByTestId("parse-html-editor")).toHaveValue(/data-edit="3"/);
   await expect(page.getByTestId("parse-html-editor")).not.toHaveValue(/obsolete/);
