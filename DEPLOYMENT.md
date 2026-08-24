@@ -95,21 +95,20 @@ subdomain is required; keeping TOWL on the LiveDemo origin preserves room
 credentials in the same local-storage boundary and reuses the same assets and
 WebSocket configuration.
 
-Set the public WebSocket endpoint while building the Vite frontend:
+Frozen public test exploration is built with an accepted immutable evidence root:
 
 ```sh
-VITE_HOSTED_TEST_WS_URL=wss://<node-service-host> npm run build
+VITE_TEST_EVIDENCE_ROOT=/test-evidence/<exact-40-hex-hson-deploy-commit> npm run build
 ```
 
-`VITE_HOSTED_TEST_WS_URL` is public build-time configuration, not a secret.
-Changing it requires rebuilding and redeploying the frontend. Production builds
-require an explicit `wss://` URL, apart from `ws://localhost`, `ws://127.0.0.1`,
-or `ws://[::1]` used only for local production simulation. TOWL and circuit
-verification normally inherit this endpoint; their optional
-`VITE_TOWL_WS_URL` and `VITE_CIRCUIT_VERIFICATION_WS_URL` overrides are only for
-intentional split-service or compatibility testing. If it is absent, the test panel reports:
-
-> Hosted tests are unavailable because VITE_HOSTED_TEST_WS_URL was not configured for this deployment.
+The frozen public panel uses ordinary HTTP to load its index and explicit row
+evidence artifacts; it never starts hosted tests or opens a hosted-test
+WebSocket. `VITE_HOSTED_TEST_WS_URL` remains public configuration for the
+live/internal test runner and, when explicit overrides are absent, the existing
+TOWL and circuit-verification clients. Their optional `VITE_TOWL_WS_URL` and
+`VITE_CIRCUIT_VERIFICATION_WS_URL` overrides remain available for split-service
+or compatibility testing. Missing frozen evidence is a visible frozen
+infrastructure error, never a live-test fallback.
 
 An explicit runtime `url` remains available for tests and embedding and takes
 precedence over the Vite value.
@@ -174,7 +173,8 @@ credentials, runtime, or numeric configuration are invalid. It runs
 | `LOCUS_TRUSTED_PROXY_PEERS` | Optional comma-separated immediate proxy peer addresses. Leave unset for direct mode. |
 | `LOCUS_FORWARDED_FOR_HOP` | Optional only with trusted peers; `first` or `last`. |
 | `LOCUS_MAX_TOWL_ROOMS`, `LOCUS_TOWL_IDLE_MS`, `LOCUS_MAX_HOSTED_REPORTS`, `LOCUS_HOSTED_REPORT_RETENTION_MS`, `LOCUS_AUTHORITY_SWEEP_INTERVAL_MS` | Optional positive-integer lifecycle limits. Defaults are described below; the idle and sweep relationships are validated before listening. |
-| `VITE_HOSTED_TEST_WS_URL` | Required public frontend build-time Node WebSocket origin; hosted tests derive `/hosted-tests`, TOWL derives `/towl`, and circuit verification derives `/circuit-verification`. |
+| `VITE_TEST_EVIDENCE_ROOT` | Required immutable public frozen-test evidence root: `/test-evidence/<exact-40-hex-hson-deploy-commit>`. |
+| `VITE_HOSTED_TEST_WS_URL` | Live/internal hosted-test endpoint. Existing TOWL and circuit clients inherit it only when their explicit endpoint overrides are absent; frozen public test exploration does not use it. |
 | `CLOUDFLARE_API_TOKEN`, `TOWL_DEPLOYED_WS_URL` | Worker compatibility deployment/probe only; not required by the Node authority. |
 
 The local readiness endpoint is unauthenticated `GET /healthz`. It returns 200
@@ -254,9 +254,9 @@ restarted by the platform if it exits.
 
 Provider dashboard work remains intentionally provider-specific: create the
 persistent Node service, set its build context and start command, attach a
-public TLS hostname, enable WebSocket forwarding, then set
-`VITE_HOSTED_TEST_WS_URL` in the frontend build settings and rebuild the static
-site.
+public TLS hostname, and enable WebSocket forwarding for live features. Build
+the public frozen test site with its accepted immutable evidence root; it has no
+visitor-triggered hosted-test endpoint requirement.
 
 ## Hosted-test timing boundaries
 

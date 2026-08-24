@@ -65,7 +65,6 @@ export type FrozenTestCategory = Readonly<{
   summary: Readonly<Record<string, number>>;
   timing: FrozenTestTiming;
   evidenceAvailable: boolean;
-  report: FrozenEvidenceReference;
 }>;
 
 export type FrozenTestEvidenceIndex = Readonly<{
@@ -434,8 +433,6 @@ export function decode_frozen_test_evidence_index(value: unknown, expectedCommit
     const id = category_id(entry.id, `${at}.id`);
     if (categoryIds.has(id)) fail("FROZEN_INDEX_DUPLICATE_ID", `Duplicate category id ${id}.`);
     categoryIds.add(id);
-    const report = evidence(entry.report, `${at}.report`);
-    if (report?.available !== true) fail("FROZEN_INDEX_EVIDENCE_METADATA", `${at}.report must contain the explicit canonical report artifact.`);
     if (typeof entry.evidenceAvailable !== "boolean") fail("FROZEN_INDEX_MALFORMED", `${at}.evidenceAvailable must be boolean.`);
     return Object.freeze({
       id,
@@ -445,7 +442,6 @@ export function decode_frozen_test_evidence_index(value: unknown, expectedCommit
       summary: numeric_summary(entry.summary, `${at}.summary`),
       timing: timing(entry.timing, `${at}.timing`),
       evidenceAvailable: entry.evidenceAvailable,
-      report,
     });
   });
   if (categories.length !== FROZEN_TEST_CATEGORIES.length || FROZEN_TEST_CATEGORIES.some((id) => !categoryIds.has(id))) {
