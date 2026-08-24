@@ -119,17 +119,15 @@ assert.ok(
 );
 
 const largeStdout = await run("large-stdout");
-assert.equal(largeStdout.result.ok, true, "bounded stdout does not hide the independently scanned completion");
+assert.equal(largeStdout.result.ok, false, "stdout limit is a terminal supervision failure even when a completion frame is later observed");
 assert.ok(Buffer.byteLength(largeStdout.result.stdout, "utf8") <= EXTERNAL_LIBRARY_LAUNCHER_STDOUT_LIMIT_BYTES);
 assert.match(largeStdout.result.stdout, /stdout-head/);
-assert.match(largeStdout.result.stdout, /stdout-tail/);
 assert.match(largeStdout.result.stdout, new RegExp(EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER));
 
 const largeStderr = await run("large-stderr");
-assert.equal(largeStderr.result.ok, true, "bounded stderr preserves a valid stdout completion");
+assert.equal(largeStderr.result.ok, false, "stderr limit is a terminal supervision failure");
 assert.ok(Buffer.byteLength(largeStderr.result.stderr, "utf8") <= EXTERNAL_LIBRARY_LAUNCHER_STDERR_LIMIT_BYTES);
 assert.match(largeStderr.result.stderr, /stderr-head/);
-assert.match(largeStderr.result.stderr, /stderr-tail/);
 assert.match(largeStderr.result.stderr, new RegExp(EXTERNAL_LIBRARY_LAUNCHER_TRUNCATION_MARKER));
 
 console.log("external launcher completion protocol: ok (14 process-boundary cases)");
