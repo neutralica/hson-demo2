@@ -10,6 +10,7 @@ import type { Panels, PanelViewMode, PanelShell } from "../../ui/panels/panels.t
 import { mk_div_id, mk_div_cls, mk_span_cls } from "../../utils/makers";
 import { init_parsing_panels, type ParsingPanelsController, type ParsingPanelsInitOptions } from "./init-pp";
 import { PP_ROOTcss, PP_GRIDcss, PP_TEXTWRAPcss, PP_WATERMARKcss } from "./pp.css";
+import { hson } from "hson-live";
 
 
 export type PpFactoryOpts = {

@@ -101,7 +101,7 @@ export const TOC_BTNcss: CssMap = {
   cursor: "pointer",
   userSelect: "none",
   textAlign: "right",
-  lineHeight: "2",
+  lineHeight: "2rem",
   paddingRight: "2rem",
   color: _colors.bluelike,
   fontWeight: _fontWeight.main,
@@ -113,7 +113,7 @@ export const TOC_BTNcss: CssMap = {
 
 export const TOC_BTN_ACTIVEcss: CssMap = {
   // textDecoration: "underline",
-  // textUnderlineOffset: "4px",
+  fontSize: _fontSize.smol,
   opacity: "1",
   fontWeight: _fontWeight.fat,
   background: "transparent",

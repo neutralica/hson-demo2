@@ -17,8 +17,9 @@ import { create_splash_run, type SplashRun } from "./phases/phase-2-splash/splas
 import { classify_towl_entry_url } from "./demos/towl/towl.room";
 import { canonicalize_widget_ids, demo_shell_locations, set_view } from "./state/store";
 import { read_bling_preference } from "./state/local-preferences";
+import { hson } from "hson-live";
 
-
+  (window as any).hson = hson;
 const gcss = CssManager.api();
 let demoShell: DemoShellController | undefined;
 
