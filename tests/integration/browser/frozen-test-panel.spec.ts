@@ -8,7 +8,7 @@ import { monitor_application_errors } from "./app-test-support";
 
 const ACCEPTED_EVIDENCE_COMMIT = "d1db60517707f1ca2659404f500ff9ec4752407d";
 const ACCEPTED_EVIDENCE_ROOT = `/test-evidence/${ACCEPTED_EVIDENCE_COMMIT}`;
-const ACCEPTED_INDEX_PATH = resolve(process.cwd(), `../hson-deploy/static-production${ACCEPTED_EVIDENCE_ROOT}/index.json`);
+const ACCEPTED_INDEX_PATH = resolve(process.cwd(), `../static-production${ACCEPTED_EVIDENCE_ROOT}/index.json`);
 const EXPLORER_CATEGORIES = ["transform", "livetree", "livemap", "locus", "livehost", "reflect", "unit", "browser", "certification", "dev"];
 
 function artifact_path(owner: "cases" | "suites", id: string): string {

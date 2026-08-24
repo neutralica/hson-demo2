@@ -5,7 +5,8 @@ const TRANSFORM_SUITE = "transform/legacy/html";
 const TRANSFORM_CASE = "test:transform/legacy/html::html__level3.inlinewhitespace";
 const TRANSFORM_FIRST_ARTIFACT = "<span>a\n<b>b</b>\nc</span>";
 
-test("long clean run keeps one advancing Logger readout beside the local stopwatch", async ({ page }) => {
+// Retired with the public live-test UI; running projection remains covered by the internal presentation runner.
+test.skip("long clean run keeps one advancing Logger readout beside the local stopwatch", async ({ page }) => {
   test.setTimeout(90_000);
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
@@ -38,7 +39,8 @@ test("long clean run keeps one advancing Logger readout beside the local stopwat
   assertNoErrors();
 });
 
-test("Transform View renders the reproduced circuit in-app without changing the authoritative run", async ({ page, context }) => {
+// Retired with live execution; frozen explorer View/Copy behavior has its own browser journey.
+test.skip("Transform View renders the reproduced circuit in-app without changing the authoritative run", async ({ page, context }) => {
   const assertNoErrors = monitor_application_errors(page);
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await reach_demo(page);
@@ -200,7 +202,9 @@ test("bling switches one navigation model between amoebic and historical plain p
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(plain).toBeVisible();
   await expect(plain.locator("[data-menu-key]")).toHaveCount(menuOrder.length);
-  for (const key of menuOrder) await expect(plain.getByRole("button", { name: key, exact: true })).toBeVisible();
+  for (const key of menuOrder) {
+    await expect(plain.getByRole("button", { name: key === "test" ? "tests" : key, exact: true })).toBeVisible();
+  }
 
   await plain.getByRole("button", { name: "bling", exact: true }).click();
   await expect(amoebic).toHaveAttribute("data-amoebi-transition", "entering");

@@ -243,7 +243,8 @@ test("keyboard Color Sudoku activation stays inside the canonical shell lifecycl
   await expect(page.locator("#demo-layer")).toHaveCount(1);
 });
 
-test("hosted panel discovers curated categories and runs one canonical category", async ({ page }) => {
+// Retired: /tests is an immutable evidence explorer; live selection and execution remain CLI/LiveHost authority.
+test.skip("hosted panel discovers curated categories and runs one canonical category", async ({ page }) => {
   const assertNoErrors = monitor_application_errors(page);
   await reach_demo(page);
 

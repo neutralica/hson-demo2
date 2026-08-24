@@ -102,7 +102,7 @@ expect_surface(
 );
 const browserSurfaceInventory: readonly BrowserSurfaceInventory[] = Object.freeze(await Promise.all(browserSpecs.map(async (path) => {
   const source = await readFile(path, "utf8");
-  const cases = [...source.matchAll(/^\s*test(?:\.(?:skip|fixme|only))?\s*\(/gm)].length;
+  const cases = [...source.matchAll(/^\s*test(?:\.(?:fixme|only))?\s*\(/gm)].length;
   expect_surface(cases > 0, `browser spec ${relative(demoRoot, path)} declares no Playwright journeys`);
   return Object.freeze({ path: relative(demoRoot, path) as BrowserSurfaceInventory["path"], cases });
 })));

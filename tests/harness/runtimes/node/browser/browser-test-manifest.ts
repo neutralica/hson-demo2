@@ -57,8 +57,7 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "an invalid ordinary room query keeps the fresh shell neutral and TOWL inert",
     "widget membership lazily mounts and recreates disposable widget instances",
     "keyboard Color Sudoku activation stays inside the canonical shell lifecycle",
-    "hosted panel discovers curated categories and runs one canonical category",
-  ], ["websocket"]),
+  ]),
   browser_suite("build", [
     "Build preview and HTML output recover across edits and navigation",
   ]),
@@ -90,12 +89,12 @@ export const BROWSER_SUITE_MANIFEST = Object.freeze([
     "Cellsheet full remount restores samples, default layout, and no selection",
   ]),
   browser_suite("final-presentation", [
-    "long clean run keeps one advancing Logger readout beside the local stopwatch",
-    "Transform View renders the reproduced circuit in-app without changing the authoritative run",
     "bling switches one navigation model between amoebic and historical plain presentations",
-  ], ["websocket"]),
+  ]),
   browser_suite("frozen-test-panel", [
     "localhost application mount loads one immutable frozen index without browser execution",
+    "accepted evidence maps every suite once and mounts in the report explorer",
+    "test report explorer uses report-loading terminology",
     "frozen case inspector URL supports Back, Forward, refresh, and direct reopening",
     "frozen row View, Copy, and Copy Reports use validated lazy artifacts and truthful controls",
     "frozen row evidence failures stay local and never fall back to live acquisition",
