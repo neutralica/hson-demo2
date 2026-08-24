@@ -56,7 +56,7 @@ const STYLES = Object.freeze({
   casePass: { color: "#9ddf8b" },
   caseFail: { color: "#ff8778" },
   caseSkip: { color: "#c4b070" },
-  actions: { display: "grid", gridTemplateColumns: "40px 62px 40px", gap: "4px", alignItems: "center", justifyContent: "start", color: "#81948a", whiteSpace: "nowrap" },
+  actions: { display: "grid", gridTemplateColumns: "30px 42px 30px", gap: "4px", alignItems: "center", justifyContent: "start", color: "#81948a", whiteSpace: "nowrap" },
   action: { color: "#d7ff70", border: "0", padding: "2px", cursor: "pointer", font: "inherit", textAlign: "left" },
   evidenceSize: { textAlign: "center" },
   rowError: { gridColumn: "1 / -1", color: "#ff8778", whiteSpace: "pre-wrap", overflowWrap: "anywhere" },
