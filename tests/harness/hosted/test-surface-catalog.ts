@@ -109,6 +109,7 @@ const DEMO_TEST_SCRIPTS = Object.freeze({
   "test:stage4b-panel-node": "tests/runners/harness/run-stage-4b-panel.node.mts",
   "test:stage5a-corpus-node": "tests/runners/harness/run-stage-5a-corpus.node.mts",
   "test:phase1-convergence-node": "tests/runners/harness/run-phase-1-convergence.node.mts",
+  "test:phase1-largest-transform-capacity-proof-node": "tests/runners/livehost/run-phase1-largest-transform-capacity-proof.node.mts",
   "test:phase2a-lifecycle-node": "tests/runners/harness/run-phase-2a-lifecycle.node.mts",
   "test:phase2b-presentation-node": "tests/runners/harness/run-phase-2b-presentation.node.mts",
   "test:presentation-cleanup-node": "tests/runners/harness/run-test-presentation-cleanup.node.mts",
