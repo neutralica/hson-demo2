@@ -6,6 +6,7 @@ import { live_demo_shell_lifecycle_suite } from "./live-demo-shell-lifecycle";
 import { live_demo_small_state_suite } from "./live-demo-small-state";
 import { cellsheet_evaluator_suite, cellsheet_relations_suite } from "./cellsheet-evaluator";
 import { cellsheet_state_suite } from "./cellsheet-state";
+import { frozen_test_evidence_client_suite } from "./frozen-test-evidence-client";
 import type { TestCase, TestSuite } from "../../harness/core/test-contracts";
 import type { CssManager } from "hson-live/livetree";
 
@@ -25,6 +26,7 @@ export const all_unit_tests = () => [
     cellsheet_evaluator_suite(),
     cellsheet_relations_suite(),
     cellsheet_state_suite(),
+    frozen_test_evidence_client_suite(),
 
 ];
 

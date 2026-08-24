@@ -20,7 +20,7 @@ import { mount_oklch } from "../../demos/oklch/mount-oklch";
 import { mount_parsing_panels } from "../../demos/parse/pp-factory";
 import { mount_point_panel } from "../../demos/pointer/point-factory";
 import { POINT_SLOTcss, POINT_HOSTcss } from "../../demos/pointer/point.css";
-import { mount_test_panels } from "../../demos/tests/panel/mount-tp";
+import { mount_test_panels } from "../../demos/tests/panel/mount-test-panels";
 import { mount_towl_panel } from "../../demos/towl/mount-towl";
 import { classify_towl_room_url, create_towl_room_url, is_direct_towl_path, towl_departure_url } from "../../demos/towl/towl.room";
 import mount_color_sudoku from "../../demos/mount-color-sudoku";

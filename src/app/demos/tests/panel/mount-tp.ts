@@ -4,7 +4,7 @@ import  { mk_div_id, mk_div_id_txt } from "../../../utils/makers";
 import { create_test_chips } from "./test-helpers";
 import type { TestSummary, UiLevel } from "../../../../shared/testing/test-contracts";
 import { TEST_ROW_CONTAINERcss, TP_CONTROL_ROWcss, TEST_RUN_BTNcss, TEST_CLEAR_BTNcss, TEST_SELECTORcss, TEST_CONTENTcss, TEST_LOG_PANEcss, TEST_INSPECTOR_PANEcss, TEST_LOGGERcss, TP_BRANCHcss, TP_LOG_ROWcss, TP_ROOTcss } from "./tp.css";
-import type { TestPanel, TestPanels } from "./tp.types";
+import type { TestPanel } from "./tp.types";
 import { make_hosted_test_panel_adapter } from "./hosted-test-panel-adapter";
 import { make_remote_hosted_test_runtime } from "./hosted-test-panel-runtime";
 import type { HostedTestPanelAdapter } from "./hosted-test-panel-adapter";
@@ -803,23 +803,8 @@ export function tp_factory(options: Readonly<{
         },
     } as const;
 }
-export function mount_test_panels(host: LiveTree): TestPanels {
-    const old = host.find.byId("test-panels-root");
-    if (old) old.remove();
-
-    const root = host.create.div()
-        .id.set("test-panels-root")
-        .css.setMany(TP_ROOTcss);
-
+export function mount_live_test_panel(root: LiveTree): TestPanel {
     const tp = tp_factory();
     tp.mount(root);
-    return {
-        root,
-        tp,
-        testSurface: tp.branch,
-        dispose: () => {
-            tp.dispose();
-            root.remove();
-        },
-    };
+    return tp;
 }
